@@ -1,127 +1,129 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/13] libata: separate out ata_dev_reread_id()
-Date: Mon, 23 Apr 2007 02:41:05 +0900
-Message-ID: <11772636651116-git-send-email-htejun@gmail.com>
+Subject: [PATCH 04/13] libata: during revalidation, check n_sectors after device is configured
+Date: Mon, 23 Apr 2007 02:41:06 +0900
+Message-ID: <11772636663728-git-send-email-htejun@gmail.com>
 References: <11772636651400-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:40595 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652AbXDVRlM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2007 13:41:12 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1535304ana
-        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2007 10:41:11 -0700 (PDT)
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <11772636651400-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-Separate out ata_dev_reread_id() from ata_dev_revalidate().
-ata_dev_reread_id() reads IDENTIFY page and determines whether the
-same device is still there.  ata_dev_revalidate() reconfigures after
-reread completes.  This will be used by ACPI update.
+Device might be resized during ata_dev_configure() due to HPA or
+(later) ACPI _GTF.  Currently it's worked around by caching n_sectors
+before turning off HPA.  The cached original size is overwritten if
+the device is reconfigured without being hardreset - which always
+happens after configuring trasnfer mode.  If the device gets hardreset
+for some reason after that, revalidation fails with -ENODEV.
+
+This patch makes size checking more robust by moving n_sectors check
+from ata_dev_reread_id() to ata_dev_revalidate() after the device is
+fully configured.  No matter what happens during configuration, a
+device must have the same n_sectors after fully configured to be
+treated as the same device.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   47 ++++++++++++++++++++++++++++++++------------
- drivers/ata/libata.h      |    3 +-
- 2 files changed, 36 insertions(+), 14 deletions(-)
+ drivers/ata/libata-core.c |   33 +++++++++++++++------------------
+ include/linux/libata.h    |    1 -
+ 2 files changed, 15 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6d0a946..7a6e8fd 100644
+index 7a6e8fd..2171af6 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3562,8 +3562,8 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- }
+@@ -1862,7 +1862,6 @@ int ata_dev_configure(struct ata_device *dev)
+ 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
  
- /**
-- *	ata_dev_revalidate - Revalidate ATA device
-- *	@dev: device to revalidate
-+ *	ata_dev_reread_id - Re-read IDENTIFY data
-+ *	@adev: target ATA device
-  *	@readid_flags: read ID flags
-  *
-  *	Re-read IDENTIFY page and make sure @dev is still attached to
-@@ -3575,29 +3575,50 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
-  *	RETURNS:
-  *	0 on success, negative errno otherwise
-  */
--int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
-+int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
- {
- 	unsigned int class = dev->class;
- 	u16 *id = (void *)dev->ap->sector_buf;
- 	int rc;
+ 		dev->n_sectors = ata_id_n_sectors(id);
+-		dev->n_sectors_boot = dev->n_sectors;
  
--	if (!ata_dev_enabled(dev)) {
--		rc = -ENODEV;
--		goto fail;
+ 		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
+ 		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
+@@ -3519,7 +3518,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 	const u16 *old_id = dev->id;
+ 	unsigned char model[2][ATA_ID_PROD_LEN + 1];
+ 	unsigned char serial[2][ATA_ID_SERNO_LEN + 1];
+-	u64 new_n_sectors;
+ 
+ 	if (dev->class != new_class) {
+ 		ata_dev_printk(dev, KERN_INFO, "class mismatch %d != %d\n",
+@@ -3531,7 +3529,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 	ata_id_c_string(new_id, model[1], ATA_ID_PROD, sizeof(model[1]));
+ 	ata_id_c_string(old_id, serial[0], ATA_ID_SERNO, sizeof(serial[0]));
+ 	ata_id_c_string(new_id, serial[1], ATA_ID_SERNO, sizeof(serial[1]));
+-	new_n_sectors = ata_id_n_sectors(new_id);
+ 
+ 	if (strcmp(model[0], model[1])) {
+ 		ata_dev_printk(dev, KERN_INFO, "model number mismatch "
+@@ -3545,19 +3542,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 		return 0;
+ 	}
+ 
+-	if (dev->class == ATA_DEV_ATA && dev->n_sectors != new_n_sectors) {
+-		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
+-			       "%llu != %llu\n",
+-			       (unsigned long long)dev->n_sectors,
+-			       (unsigned long long)new_n_sectors);
+-		/* Are we the boot time size - if so we appear to be the
+-		   same disk at this point and our HPA got reapplied */
+-		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
+-		    && ata_id_hpa_enabled(new_id))
+-			return 1;
+-		return 0;
 -	}
 -
- 	/* read ID data */
- 	rc = ata_dev_read_id(dev, &class, readid_flags, id);
- 	if (rc)
--		goto fail;
-+		return rc;
+ 	return 1;
+ }
  
- 	/* is the device still there? */
--	if (!ata_dev_same_device(dev, class, id)) {
--		rc = -ENODEV;
--		goto fail;
--	}
-+	if (!ata_dev_same_device(dev, class, id))
-+		return -ENODEV;
+@@ -3610,6 +3594,7 @@ int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
+  */
+ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
+ {
++	u64 n_sectors = dev->n_sectors;
+ 	int rc;
  
- 	memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
-+	return 0;
-+}
-+
-+/**
-+ *	ata_dev_revalidate - Revalidate ATA device
-+ *	@dev: device to revalidate
-+ *	@readid_flags: read ID flags
-+ *
-+ *	Re-read IDENTIFY page, make sure @dev is still attached to the
-+ *	port and reconfigure it according to the new IDENTIFY page.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno otherwise
-+ */
-+int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
-+{
-+	int rc;
-+
-+	if (!ata_dev_enabled(dev))
-+		return -ENODEV;
-+
-+	/* re-read ID */
-+	rc = ata_dev_reread_id(dev, readid_flags);
-+	if (rc)
-+		goto fail;
+ 	if (!ata_dev_enabled(dev))
+@@ -3622,8 +3607,20 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
  
  	/* configure device according to the new ID */
  	rc = ata_dev_configure(dev);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5f4d40c..c40665a 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -75,7 +75,8 @@ extern unsigned ata_exec_internal_sg(struct ata_device *dev,
- extern unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd);
- extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 			   unsigned int flags, u16 *id);
--extern int ata_dev_revalidate(struct ata_device *dev, unsigned int flags);
-+extern int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags);
-+extern int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags);
- extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_port *ap);
- extern int sata_set_spd_needed(struct ata_port *ap);
+-	if (rc == 0)
+-		return 0;
++	if (rc)
++		goto fail;
++
++	/* verify n_sectors hasn't changed */
++	if (dev->class == ATA_DEV_ATA && dev->n_sectors != n_sectors) {
++		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
++			       "%llu != %llu\n",
++			       (unsigned long long)n_sectors,
++			       (unsigned long long)dev->n_sectors);
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	return 0;
+ 
+  fail:
+ 	ata_dev_printk(dev, KERN_ERR, "revalidation failed (errno=%d)\n", rc);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d8cfc72..3cffbf6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -448,7 +448,6 @@ struct ata_device {
+ 	struct scsi_device	*sdev;		/* attached SCSI device */
+ 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
+ 	u64			n_sectors;	/* size of device, if ATA */
+-	u64			n_sectors_boot;	/* size of ATA device at startup */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
 -- 
 1.5.0.3
 
