@@ -1,29 +1,35 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Loud "pop" coming from hard drive on reboot
-Date: Mon, 23 Apr 2007 19:27:49 -0400
-Message-ID: <462D40F5.5050704@redhat.com>
-References: <88SeR-5Sf-15@gated-at.bofh.it> <46265307.7060405@rtr.ca>	 <46265966.1040102@redhat.com> <200704182322.20514.bzolnier@gmail.com>	 <46268D27.9070809@redhat.com> <1177197606.7316.44.camel@twins>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/7] Asynchronous Notification for ATAPI devices (v2)
+Date: Mon, 23 Apr 2007 16:59:32 -0700
+Message-ID: <20070423165932.28699529.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34266 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:34412 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbXDWXaY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Apr 2007 19:30:24 -0400
-In-Reply-To: <1177197606.7316.44.camel@twins>
+	id S1030812AbXDXACP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Apr 2007 20:02:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, Stephen.Clark@seclark.us, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, 7eggert@gmx.de, emisca <emisca.ml@gmail.com>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
+To: jeff@garzik.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Peter Zijlstra wrote:
-> 
-> but I have an increasing seek error rate as well. I got the ST disk
-> because thinkwiki suggested it.
-> 
+This patch series implements Asynchronous Notification (AN) for SATA
+ATAPI devices as defined in SATA 2.5 and AHCI 1.1 and higher.  Drives
+which support this feature will send a notification when new media is
+inserted and removed, preventing the need for user space to poll for
+new media.  This support is exposed to user space via a flag that will
+be set in /sys/block/sr*/capability_flags.  If the flag is set, user
+space can disable polling for the new media, and the genhd driver will
+send a KOBJ_CHANGE event with the envp set to MEDIA_CHANGE_EVENT=1.
 
-Apparently Seagate has their own definition of seek error rate.
-Large numbers are normal, or at least very common.
+Note that this patch only implements support for directly attached
+drives - AN with drives attached to a port multiplier requires 
+additional changes.
 
-Now I wonder if they have their own way of doing retract count...
+Thanks!
+Kristen
+
+-- 
+-- 
