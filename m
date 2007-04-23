@@ -1,50 +1,87 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] libata: improve ATA ACPI support
-Date: Mon, 23 Apr 2007 17:06:35 +0900
-Message-ID: <462C690B.1090802@gmail.com>
-References: <11772636651400-git-send-email-htejun@gmail.com> <20070422192500.2e1014fd@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_ali: More work
+Date: Mon, 23 Apr 2007 11:53:29 +0100
+Message-ID: <20070423115329.4c27fc70@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:59205 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753699AbXDWIHx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Apr 2007 04:07:53 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1703287ana
-        for <linux-ide@vger.kernel.org>; Mon, 23 Apr 2007 01:07:52 -0700 (PDT)
-In-Reply-To: <20070422192500.2e1014fd@the-village.bc.nu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53843 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161356AbXDWKuA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Apr 2007 06:50:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->> * after successfully executing _GTF taskfiles, IDENTIFY page is
->>   reloaded
-> 
-> Interesting question we should sort out: What is our identify page as
-> supplied to the user meant to be ?
-> 
-> The old IDE one started off as the "identify data at boot" (which is
-> useful) and mutated through a million "kind of boot but mangled" and "not
-> boot" versions of the identify data, all of which are useless to
-> userspace.
-> 
-> Having the "boot" data (for some definition of boot) is important in
-> order to know things like the BIOS view of the disk geometry and HPA (eg
-> for partitioning), having the current data is useless as its already
-> available via SG_IO.
+Still don't know why some people see problems with ATAPI devices
+specifically but here are some more small fixes done while searching for
+the root problem (some of these fixes are overconservative but that can
+be fixed *after* the thing works fully)
 
-AFAIK, IDENTIFY using SG_IO is the way to obtain ID data.
-HDIO_GET_IDENTITY is only added for backward compatibility and as a
-sideway to obtain ATAPI IDENTIFY page while IDENTIFY_PACKET_DEVICE via
-SG_IO is broken.  libata tries pretty hard to keep the cached IDENTIFY
-page up-to-date and I'm pretty sure it stays in sync with the drive most
-of the time.  I think HDIO_GET_IDENTITY's meaning is something like
-"give me IDENTIFY page of the device as seen by the driver" and doesn't
-really matter as long as it can be used to get general idea about the
-device.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
--- 
-tejun
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc6-mm1/drivers/ata/pata_ali.c linux-2.6.21-rc6-mm1/drivers/ata/pata_ali.c
+--- linux.vanilla-2.6.21-rc6-mm1/drivers/ata/pata_ali.c	2007-04-12 14:15:03.000000000 +0100
++++ linux-2.6.21-rc6-mm1/drivers/ata/pata_ali.c	2007-04-23 11:34:40.423648592 +0100
+@@ -346,6 +346,16 @@
+ 	return 0;
+ }
+ 
++static int ali_check_atapi_dma_20(struct ata_queued_cmd *qc)
++{
++	if (qc->dma_dir == DMA_TO_DEVICE)
++		return -1;
++	/* Don't do DMA except for whole blocks */
++	if (qc->nbytes & 511)
++		return -1;
++	return 0;
++}
++
+ static struct scsi_host_template ali_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -389,7 +399,6 @@
+ 
+ 	.qc_prep 	= ata_qc_prep,
+ 	.qc_issue	= ata_qc_issue_prot,
+-	.check_atapi_dma= ali_check_atapi_dma,
+ 
+ 	.data_xfer	= ata_data_xfer,
+ 
+@@ -432,7 +441,7 @@
+ 
+ 	.qc_prep 	= ata_qc_prep,
+ 	.qc_issue	= ata_qc_issue_prot,
+-	.check_atapi_dma= ali_check_atapi_dma,
++	.check_atapi_dma= ali_check_atapi_dma_20,
+ 
+ 	.data_xfer	= ata_data_xfer,
+ 
+@@ -629,22 +638,22 @@
+ 		.udma_mask = 0x1f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+-	/* Revision 0xC3 is UDMA100 */
++	/* Revision 0xC3 is UDMA66 for now */
+ 	static struct ata_port_info info_c3 = {
+ 		.sht = &ali_sht,
+ 		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x3f,
++		.udma_mask = 0x1f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+-	/* Revision 0xC4 is UDMA133 */
++	/* Revision 0xC4 is UDMA100 */
+ 	static struct ata_port_info info_c4 = {
+ 		.sht = &ali_sht,
+ 		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x7f,
++		.udma_mask = 0x3f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+ 	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
