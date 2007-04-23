@@ -1,42 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] sl82c105: Switch to ref counting API
-Date: Mon, 23 Apr 2007 18:04:02 +0400
-Message-ID: <462CBCD2.3080302@ru.mvista.com>
-References: <20070423145445.45f5dc6a@the-village.bc.nu>
+From: Russell Sloan <russell.sloan@lingua-data.com>
+Subject: Re: SATA timeout value
+Date: Mon, 23 Apr 2007 11:11:54 -0400
+Message-ID: <14380803.14661177341114878.JavaMail.servlet@perfora>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:63148 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754058AbXDWODH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Apr 2007 10:03:07 -0400
-In-Reply-To: <20070423145445.45f5dc6a@the-village.bc.nu>
+Received: from mout.perfora.net ([74.208.4.194]:49536 "EHLO mout.perfora.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752984AbXDWPL4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Apr 2007 11:11:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+I'm using SG_IO and I'm curently passing in:
+  sg_io_hdr_t.timeout = 5;
 
-Alan Cox wrote:
+This should be a 5 ms timeout, correct?  I've tried a few different values, from 5 to 1000 and it still takes 90+ seconds for it to timeout and return to my program.
 
-> Not sure how this one got missed in the great purge some time ago but it
-> did. 
+I will try HDIO and see if that behaves any differently.
 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+
+
+Russell Sloan wrote:
+> Hi everyone,
 > 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc6-mm1/drivers/ide/pci/sl82c105.c linux-2.6.21-rc6-mm1/drivers/ide/pci/sl82c105.c
-> --- linux.vanilla-2.6.21-rc6-mm1/drivers/ide/pci/sl82c105.c	2007-04-12 14:15:04.000000000 +0100
-> +++ linux-2.6.21-rc6-mm1/drivers/ide/pci/sl82c105.c	2007-04-23 11:58:55.016516864 +0100
-> @@ -349,7 +349,7 @@
->  	/*
->  	 * The bridge should be part of the same device, but function 0.
->  	 */
-> -	bridge = pci_find_slot(dev->bus->number,
-> +	bridge = pci_get_bus_and_slot(dev->bus->number,
->  			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> Can someone point me to the area in the SATA code that is responsible
+> for timing out while checking on a drive connection?
+> 
+> I have a drive that shuts its SATA interface down while it is doing a
+> Security Erase, and then powers back up when it's done.  When I poll
+> the drive asking for its status during the Erase, it is "not there"
+> but the driver takes quite a while to report back.  I'd like to
+> reduce the time that the driver spends checking for the drive.
 
-   Isn't it better to use pci_get_slot()?
+What tool do you use to issue the query?  If the program uses SG_IO, the
+timeout is specified by the program.  If it uses something else (one of
+HDIO ioctls), timeouts are hardcoded in the ioctl functions in
+libata-scsi.c - currently 10secs.
 
-WBR, Sergei
+-- 
+tejun
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
