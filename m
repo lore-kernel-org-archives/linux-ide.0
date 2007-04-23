@@ -1,117 +1,62 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patch] IDE fix for 2.6.21-final (Revert "adjust legacy IDE resource setting (v2)")
-Date: Mon, 23 Apr 2007 23:32:38 +0200
-Message-ID: <200704232332.38519.bzolnier@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2/3] 2.6.21-rc7: known regressions (v2)
+Date: Mon, 23 Apr 2007 23:48:57 +0200
+Message-ID: <20070423214857.GC3468@stusta.de>
+References: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:25378 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754243AbXDWVWS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Apr 2007 17:22:18 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so40125uga
-        for <linux-ide@vger.kernel.org>; Mon, 23 Apr 2007 14:22:17 -0700 (PDT)
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Olaf Kirch <okir@lst.de>, lenb@kernel.org, linux-acpi@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Stephen Clark <Stephen.Clark@seclark.us>, netdev@vger.kernel.org, David Miller <davem@davemloft.net>, Robert Peterson <rpeterso@redhat.com>, linux-driver@qlogic.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Beulich <jbeulich@novell.com>, Alan Cox <alan@redhat.com>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+This email lists some known regressions in Linus' tree compared to 2.6.20.
+
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way
+possibly involved with one or more of these issues.
+
+Due to the huge amount of recipients, please trim the Cc when answering.
 
 
-Please pull from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/pci/probe.c |   45 +++++++++++++--------------------------------
- 1 files changed, 13 insertions(+), 32 deletions(-)
+Subject    : ACPI: Crashes + hangs during modprobe processor
+                   unless "processor.nocst"
+References : http://bugzilla.kernel.org/show_bug.cgi?id=8346
+Submitter  : Olaf Kirch <okir@lst.de>
+Status     : unknown
 
 
-commit 01abc2aa0f447bce2f6beb06dd0607ba0f01c5bb
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Mon Apr 23 23:19:36 2007 +0200
+Subject    : kernels fail to boot with drives on ATIIXP controller
+             (ACPI/IRQ related)
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
+             http://lkml.org/lkml/2007/3/4/257
+Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Status     : unknown
 
-    Revert "adjust legacy IDE resource setting (v2)"
-    
-    This reverts commit ed8ccee0918ad063a4741c0656fda783e02df627.
-    
-    It causes hang on boot for some users and we don't yet know why:
-    
-    http://bugzilla.kernel.org/show_bug.cgi?id=7562
-    
-    http://lkml.org/lkml/2007/4/20/404
-    http://lkml.org/lkml/2007/3/25/113
-    
-    Just reverse it for 2.6.21-final, having broken X server is somehow
-    better than unbootable system.
-    
-    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index a4a9682..2fe1d69 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -682,34 +682,7 @@ static void pci_read_irq(struct pci_dev *dev)
- 	dev->irq = irq;
- }
- 
--static void change_legacy_io_resource(struct pci_dev * dev, unsigned index,
--                                      unsigned start, unsigned end)
--{
--	unsigned base = start & PCI_BASE_ADDRESS_IO_MASK;
--	unsigned len = (end | ~PCI_BASE_ADDRESS_IO_MASK) - base + 1;
--
--	/*
--	 * Some X versions get confused when the BARs reported through
--	 * /sys or /proc differ from those seen in config space, thus
--	 * try to update the config space values, too.
--	 */
--	if (!(pci_resource_flags(dev, index) & IORESOURCE_IO))
--		printk(KERN_WARNING "%s: cannot adjust BAR%u (not I/O)\n",
--		       pci_name(dev), index);
--	else if (pci_resource_len(dev, index) != len)
--		printk(KERN_WARNING "%s: cannot adjust BAR%u (size %04X)\n",
--		       pci_name(dev), index, (unsigned)pci_resource_len(dev, index));
--	else {
--		printk(KERN_INFO "%s: trying to change BAR%u from %04X to %04X\n",
--		       pci_name(dev), index,
--		       (unsigned)pci_resource_start(dev, index), base);
--		pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4, base);
--	}
--	pci_resource_start(dev, index) = start;
--	pci_resource_end(dev, index)   = end;
--	pci_resource_flags(dev, index) =
--		IORESOURCE_IO | IORESOURCE_PCI_FIXED | PCI_BASE_ADDRESS_SPACE_IO;
--}
-+#define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
- 
- /**
-  * pci_setup_device - fill in class and map information of a device
-@@ -762,12 +735,20 @@ static int pci_setup_device(struct pci_dev * dev)
- 			u8 progif;
- 			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
- 			if ((progif & 1) == 0) {
--				change_legacy_io_resource(dev, 0, 0x1F0, 0x1F7);
--				change_legacy_io_resource(dev, 1, 0x3F6, 0x3F6);
-+				dev->resource[0].start = 0x1F0;
-+				dev->resource[0].end = 0x1F7;
-+				dev->resource[0].flags = LEGACY_IO_RESOURCE;
-+				dev->resource[1].start = 0x3F6;
-+				dev->resource[1].end = 0x3F6;
-+				dev->resource[1].flags = LEGACY_IO_RESOURCE;
- 			}
- 			if ((progif & 4) == 0) {
--				change_legacy_io_resource(dev, 2, 0x170, 0x177);
--				change_legacy_io_resource(dev, 3, 0x376, 0x376);
-+				dev->resource[2].start = 0x170;
-+				dev->resource[2].end = 0x177;
-+				dev->resource[2].flags = LEGACY_IO_RESOURCE;
-+				dev->resource[3].start = 0x376;
-+				dev->resource[3].end = 0x376;
-+				dev->resource[3].flags = LEGACY_IO_RESOURCE;
- 			}
- 		}
- 		break;
+Subject    : ali_pata: boot from CD fails
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : boot failure: rtl8139: exception in interrupt routine
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : qla2xxx driver no longer works
+References : http://lkml.org/lkml/2007/4/16/49
+             http://lkml.org/lkml/2007/4/20/224
+Submitter  : David Miller <davem@davemloft.net>
+             Robert Peterson <rpeterso@redhat.com>
+Handled-By : David Miller <davem@davemloft.net>
+Patch      : http://lkml.org/lkml/2007/4/16/234
+Status     : patch was suggested
+
+
