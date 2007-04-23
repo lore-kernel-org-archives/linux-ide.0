@@ -1,46 +1,50 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/13] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
-Date: Mon, 23 Apr 2007 17:00:20 +0900
-Message-ID: <462C6794.7000506@gmail.com>
-References: <11772636651400-git-send-email-htejun@gmail.com>	<11772636662936-git-send-email-htejun@gmail.com>	<20070422185351.12adf7d8@the-village.bc.nu>	<462BA35C.5040702@gmail.com> <20070422191449.726e0fb4@the-village.bc.nu>
+Subject: Re: [PATCHSET] libata: improve ATA ACPI support
+Date: Mon, 23 Apr 2007 17:06:35 +0900
+Message-ID: <462C690B.1090802@gmail.com>
+References: <11772636651400-git-send-email-htejun@gmail.com> <20070422192500.2e1014fd@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20070422191449.726e0fb4@the-village.bc.nu>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.242]:59205 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753699AbXDWIHx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Apr 2007 04:07:53 -0400
+Received: by an-out-0708.google.com with SMTP id b33so1703287ana
+        for <linux-ide@vger.kernel.org>; Mon, 23 Apr 2007 01:07:52 -0700 (PDT)
+In-Reply-To: <20070422192500.2e1014fd@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 Alan Cox wrote:
-> You can end up with _SDD methods for SFF format controllers (or what we
-> think of as SFF format controllers) when we don't have the knowledge to
-> drive them in their full super-whizzo method (eg Marvell)
+>> * after successfully executing _GTF taskfiles, IDENTIFY page is
+>>   reloaded
 > 
->> The ACPI spec says the layout is dependent on controller interface and I
->>  can see reasons why we need to follow that but not the other way
->> around.  Do you have counter-examples?
+> Interesting question we should sort out: What is our identify page as
+> supplied to the user meant to be ?
 > 
-> The first problem is the words "the spec". 
+> The old IDE one started off as the "identify data at boot" (which is
+> useful) and mutated through a million "kind of boot but mangled" and "not
+> boot" versions of the identify data, all of which are useless to
+> userspace.
 > 
-> Agreed that STM/GTM are not safe except when expected (and not always safe
-> when they are) but that ought to be ok as we then set all the modes
-> properly ourselves afterwards.
+> Having the "boot" data (for some definition of boot) is important in
+> order to know things like the BIOS view of the disk geometry and HPA (eg
+> for partitioning), having the current data is useless as its already
+> available via SG_IO.
 
-I agree that there are cases where we drive a controller in different
-way than how the BIOS configured it and as a result we can end up with
-unmatching ACPI nodes, but I think that it's safer to ignore unmatched
-ACPI nodes than to do what seems likely without really knowing what's
-going on.
-
-There just isn't a generic way to determine which node matches which
-device.  The first two ports might map to the first IDE channel or port
-1 and 3 (ata_piix).  Or each port might map to a separate IDE channel
-with slave spot disabled.  Even if we support 'best effort' matching, it
-is something that only the LLD knows how it should be done and whether
-it's safe or not.  IMHO, we're better off just ignoring ATA ACPI
-hierarchy if it doesn't match the expectation of the driver.
+AFAIK, IDENTIFY using SG_IO is the way to obtain ID data.
+HDIO_GET_IDENTITY is only added for backward compatibility and as a
+sideway to obtain ATAPI IDENTIFY page while IDENTIFY_PACKET_DEVICE via
+SG_IO is broken.  libata tries pretty hard to keep the cached IDENTIFY
+page up-to-date and I'm pretty sure it stays in sync with the drive most
+of the time.  I think HDIO_GET_IDENTITY's meaning is something like
+"give me IDENTIFY page of the device as seen by the driver" and doesn't
+really matter as long as it can be used to get general idea about the
+device.
 
 -- 
 tejun
