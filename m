@@ -1,53 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 5/7] genhd: send async notification on media change
-Date: Tue, 24 Apr 2007 17:20:03 +0900
-Message-ID: <462DBDB3.9010102@gmail.com>
-References: <20070424074856.005152262@intel.com> <20070423170010.5514072e.kristen.c.accardi@intel.com>
+From: Olivier Galibert <galibert@pobox.com>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Tue, 24 Apr 2007 12:23:04 +0200
+Message-ID: <20070424102304.GA58841@dspnet.fr.eu.org>
+References: <20070424074856.005152262@intel.com> <20070423165943.0cc67bc5.kristen.c.accardi@intel.com> <20070424090713.65657495@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070423170010.5514072e.kristen.c.accardi@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754600AbXDXKXI@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070424090713.65657495@the-village.bc.nu>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 List-Id: linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
-> Send an uevent to user space to indicate that a media change event has occurred.
-> 
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> 
-> Index: 2.6-git/block/genhd.c
-> ===================================================================
-> --- 2.6-git.orig/block/genhd.c
-> +++ 2.6-git/block/genhd.c
-> @@ -643,6 +643,25 @@ struct seq_operations diskstats_op = {
->  	.show	= diskstats_show
->  };
->  
-> +static void media_change_notify_thread(struct work_struct *work)
-> +{
-> +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
-> +	char event[] = "MEDIA_CHANGE=1";
-> +	char *envp[] = { event, NULL };
-> +
-> +	/*
-> +	 * set enviroment vars to indicate which event this is for
-> +	 * so that user space will know to go check the media status.
-> +	 */
-> +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
-> +}
-> +
-> +void genhd_media_change_notify(struct gendisk *disk)
-> +{
-> +	schedule_work(&disk->async_notify);
-> +}
-> +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+Sorry for replying to Alan's reply, I missed the original mail.
 
-genhd might go away while async_notify work is in-flight.  You'll need
-to either grab a reference or wait for the work to finish in release
-routine.
+> > +#define ata_id_has_AN(id)	\
+> > +	((id[76] && (~id[76])) & ((id)[78] & (1 << 5)))
 
--- 
-tejun
+(a && ~a) & (b & 32)
+
+I don't think that does what you think it does, because at that point
+it's a funny way to write 0 ((0 or 1) binary-and (0 or 32)).
+
+I'm not even sure what it is you want.  If for the first part you
+wanted (id[76] != 0x00 && id[76] != 0xff), please write just that,
+thanks :-)
+
+  OG.
