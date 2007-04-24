@@ -1,43 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA timeout value
-Date: Tue, 24 Apr 2007 17:25:51 +0900
-Message-ID: <462DBF0F.1080903@gmail.com>
-References: <32623559.31421177346818776.JavaMail.servlet@perfora>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Tue, 24 Apr 2007 17:20:03 +0900
+Message-ID: <462DBDB3.9010102@gmail.com>
+References: <20070424074856.005152262@intel.com> <20070423170010.5514072e.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:43934 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031049AbXDXIZ6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 04:25:58 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so358306nzf
-        for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 01:25:57 -0700 (PDT)
-In-Reply-To: <32623559.31421177346818776.JavaMail.servlet@perfora>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070423170010.5514072e.kristen.c.accardi@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell Sloan <russell.sloan@lingua-data.com>
-Cc: linux-ide@vger.kernel.org
 
-Russell Sloan wrote:
-> Yes, it looks like it's trying very hard to talk to the drive (which
-> is a good thing under normal circumstances), but the drive isn't
-> there anymore.  It's SATA hardware is powered down at this point.  It
-> doesn't sound like the right way of doing things, but it's the
-> behavior of the drive I'm working with.
+Kristen Carlson Accardi wrote:
+> Send an uevent to user space to indicate that a media change event has occurred.
 > 
-> I actually have a 5-disk RAID that I'm working with, 3 connected
-> directly to a SiI 3124 and two behind a 4726 PMP.  The messages for
-> the 3 direct connects are the same.  I see similar activity for the 3
-> PMP drives.
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > 
-> Attached is a text file with a complete listing of the activity for
-> each of the 5 drives after the command is issued to each.
+> Index: 2.6-git/block/genhd.c
+> ===================================================================
+> --- 2.6-git.orig/block/genhd.c
+> +++ 2.6-git/block/genhd.c
+> @@ -643,6 +643,25 @@ struct seq_operations diskstats_op = {
+>  	.show	= diskstats_show
+>  };
+>  
+> +static void media_change_notify_thread(struct work_struct *work)
+> +{
+> +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> +	char event[] = "MEDIA_CHANGE=1";
+> +	char *envp[] = { event, NULL };
+> +
+> +	/*
+> +	 * set enviroment vars to indicate which event this is for
+> +	 * so that user space will know to go check the media status.
+> +	 */
+> +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> +}
+> +
+> +void genhd_media_change_notify(struct gendisk *disk)
+> +{
+> +	schedule_work(&disk->async_notify);
+> +}
+> +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
 
-Ah, right.  After the timeout, libata error handling kicks in and tries
-to verify that the drive is there and working.  As the device is
-completely unresponsive, it takes some time before libata EH to give up
-the device.  I honestly don't know how to solve this.  :-(
+genhd might go away while async_notify work is in-flight.  You'll need
+to either grab a reference or wait for the work to finish in release
+routine.
 
 -- 
 tejun
