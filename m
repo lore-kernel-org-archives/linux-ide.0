@@ -1,72 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [patch 1/7] libata: check for AN support
-Date: Tue, 24 Apr 2007 17:03:29 +0900
-Message-ID: <462DB9D1.2070106@gmail.com>
-References: <20070424074856.005152262@intel.com> <20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
+Date: Tue, 24 Apr 2007 09:07:13 +0100
+Message-ID: <20070424090713.65657495@the-village.bc.nu>
+References: <20070424074856.005152262@intel.com>
+	<20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:16071 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031033AbXDXIDf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 04:03:35 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1847414wra
-        for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 01:03:35 -0700 (PDT)
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46165 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031035AbXDXIDt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 04:03:49 -0400
 In-Reply-To: <20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Hello,
-
-Kristen Carlson Accardi wrote:
->  static unsigned int ata_print_id = 1;
-> @@ -1744,6 +1745,23 @@ int ata_dev_configure(struct ata_device 
->  		}
->  		dev->cdb_len = (unsigned int) rc;
->  
 > +		/*
 > +		 * check to see if this ATAPI device supports
 > +		 * Asynchronous Notification
 > +		 */
 > +		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id))
 > +		{
+
+Bracketing police ^^^
+
 > +			/* issue SET feature command to turn this on */
 > +			rc = ata_dev_set_AN(dev);
-
-Please don't store err_mask into int rc.  Please store it to a separate
-err_mask variable and report it when printing error message.
-
 > +			if (rc) {
 > +				ata_dev_printk(dev, KERN_ERR,
 > +						"unable to set AN\n");
 > +				rc = -EINVAL;
-
-Wouldn't -EIO be more appropriate?
-
 > +				goto err_out_nosup;
-> +			}
-> +			dev->flags |= ATA_DFLAG_AN;
-> +		}
-> +
 
-Not NACKing.  Just notes for future improvements.  We need to be more
-careful here.  ATA/ATAPI world is filled with braindamaged devices and I
-bet there are devices which advertises it can do AN but chokes when AN
-is enabled.
+How fatal is this - do we need to ignore the device at this point or
+should we just pretend (possibly correctly) that the device itself does
+not support notification. 
 
-This should be handled similarly to ACPI failure.  Currently ACPI does
-the following.
+> @@ -299,6 +305,8 @@ struct ata_taskfile {
+>  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+>  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+>  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+> +#define ata_id_has_AN(id)	\
+> +	((id[76] && (~id[76])) & ((id)[78] & (1 << 5)))
 
-1. try once, if fail, record that ACPI failed.  return error to trigger
-retry.
-2. try again, if fail again, ignore error if possible (!FROZEN) and turn
-off ACPI.
+Might be nice to check ATA version as well to be paranoid but this all
+looks ok as its a reserved field since way back when.
 
-This fallback mechanism for optional features can probably be
-generalized and used for both ACPI and AN.
-
--- 
-tejun
