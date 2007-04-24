@@ -1,97 +1,27 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 7/7] libata: send event when AN received
-Date: Tue, 24 Apr 2007 14:38:27 -0700
-Message-ID: <20070424143827.4a2b672e.kristen.c.accardi@intel.com>
-References: <20070424074856.005152262@intel.com>
-	<20070423170024.73b74a37.kristen.c.accardi@intel.com>
-	<20070424090910.1d145c24@the-village.bc.nu>
+From: sjackerman@comcast.net
+Subject: Re: Problem with Linux SATA driver and Acard ARC-770 Bridge chip
+Date: Tue, 24 Apr 2007 19:38:10 -0400
+Message-ID: <9089167.1177457890189.JavaMail.root@wombat.diezmil.com>
+References: <00cc01c786b6$0ff98890$6e01a8c0@sjaquad>
+Reply-To: sjackerman@comcast.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070424090910.1d145c24@the-village.bc.nu>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wombat.diezmil.com ([209.190.27.106]:52515 "EHLO
+	wombat.diezmil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754654AbXDXXiL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 19:38:11 -0400
+Received: from wombat.diezmil.com (wombat.diezmil.com [127.0.0.1])
+	by wombat.diezmil.com (8.13.8/8.13.8) with ESMTP id l3ONcA5I021574
+	for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 19:38:10 -0400
+In-Reply-To: <00cc01c786b6$0ff98890$6e01a8c0@sjaquad>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-When we get an SDB FIS with the 'N' bit set, we should send
-an event to user space to indicate that there has been a
-media change.  This will be done via the block device. 
+Apologies for the double post. I subscribed to openSubscriber first, then to the list. When I didn't see my first post I posted again.
 
-changed from last version:
-* Make sure that port_addr is within ATA_MAX_DEVICES
-
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Index: 2.6-git/drivers/ata/ahci.c
-===================================================================
---- 2.6-git.orig/drivers/ata/ahci.c
-+++ 2.6-git/drivers/ata/ahci.c
-@@ -1147,6 +1147,28 @@ static void ahci_host_intr(struct ata_po
- 		return;
- 	}
- 
-+	if (status & PORT_IRQ_SDB_FIS) {
-+		/*
-+		 * if this is an ATAPI device with AN turned on,
-+		 * then we should interrogate the device to
-+		 * determine the cause of the interrupt
-+		 *
-+		 * for AN - this we should check the SDB FIS
-+		 * and find the I and N bits set
-+		 */
-+		const u32 *f = pp->rx_fis + RX_FIS_SDB;
-+
-+		/* check the 'N' bit in word 0 of the FIS */
-+		if (f[0] & (1 << 15)) {
-+			int port_addr =  ((f[0] & 0x00000f00) >> 8);
-+			struct ata_device *adev;
-+			if (port_addr < ATA_MAX_DEVICES) {
-+				adev = &ap->device[port_addr];
-+				if (adev->flags & ATA_DFLAG_AN)
-+					ata_scsi_media_change_notify(adev);
-+			}
-+		}
-+	}
- 	if (ap->sactive)
- 		qc_active = readl(port_mmio + PORT_SCR_ACT);
- 	else
-Index: 2.6-git/include/linux/libata.h
-===================================================================
---- 2.6-git.orig/include/linux/libata.h
-+++ 2.6-git/include/linux/libata.h
-@@ -737,6 +737,7 @@ extern void ata_host_init(struct ata_hos
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-+extern void ata_scsi_media_change_notify(struct ata_device *atadev);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
-Index: 2.6-git/drivers/ata/libata-scsi.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-scsi.c
-+++ 2.6-git/drivers/ata/libata-scsi.c
-@@ -3057,6 +3057,22 @@ static void ata_scsi_remove_dev(struct a
- }
- 
- /**
-+ *	ata_scsi_media_change_notify - send media change event
-+ *	@atadev: Pointer to the disk device with media change event
-+ *
-+ *	Tell the block layer to send a media change notification
-+ *	event.
-+ *
-+ * 	LOCKING:
-+ * 	interrupt context, may not sleep.
-+ */
-+void ata_scsi_media_change_notify(struct ata_device *atadev)
-+{
-+	genhd_media_change_notify(atadev->sdev->disk);
-+}
-+EXPORT_SYMBOL_GPL(ata_scsi_media_change_notify);
-+
-+/**
-  *	ata_scsi_hotplug - SCSI part of hotplug
-  *	@work: Pointer to ATA port to perform SCSI hotplug on
-  *
+--
+This message was sent on behalf of sjackerman@comcast.net at openSubscriber.com
+http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/6565989.html
