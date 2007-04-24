@@ -1,50 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Tue, 24 Apr 2007 09:07:13 +0100
-Message-ID: <20070424090713.65657495@the-village.bc.nu>
-References: <20070424074856.005152262@intel.com>
-	<20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 2/7] genhd: expose AN to user space
+Date: Tue, 24 Apr 2007 17:05:07 +0900
+Message-ID: <462DBA33.9060207@gmail.com>
+References: <20070424074856.005152262@intel.com> <20070423165950.7d64bd8e.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46165 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031035AbXDXIDt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 04:03:49 -0400
-In-Reply-To: <20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
+Received: from nz-out-0506.google.com ([64.233.162.229]:34847 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608AbXDXIFR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 04:05:17 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so354436nzf
+        for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 01:05:16 -0700 (PDT)
+In-Reply-To: <20070423165950.7d64bd8e.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-> +		/*
-> +		 * check to see if this ATAPI device supports
-> +		 * Asynchronous Notification
-> +		 */
-> +		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id))
-> +		{
+Kristen Carlson Accardi wrote:
+> +static struct disk_attribute disk_attr_capability = {
+> +	.attr = {.name = "capability_flags", .mode = S_IRUGO },
+> +	.show	= disk_capability_read
+> +};
 
-Bracketing police ^^^
+How about just "capability"?  I think that would be more consistent with
+other attributes.
 
-> +			/* issue SET feature command to turn this on */
-> +			rc = ata_dev_set_AN(dev);
-> +			if (rc) {
-> +				ata_dev_printk(dev, KERN_ERR,
-> +						"unable to set AN\n");
-> +				rc = -EINVAL;
-> +				goto err_out_nosup;
-
-How fatal is this - do we need to ignore the device at this point or
-should we just pretend (possibly correctly) that the device itself does
-not support notification. 
-
-> @@ -299,6 +305,8 @@ struct ata_taskfile {
->  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
->  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
->  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
-> +#define ata_id_has_AN(id)	\
-> +	((id[76] && (~id[76])) & ((id)[78] & (1 << 5)))
-
-Might be nice to check ATA version as well to be paranoid but this all
-looks ok as its a reserved field since way back when.
-
+-- 
+tejun
