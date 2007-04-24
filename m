@@ -1,320 +1,153 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2 pata-2.6] ide: make void and rename ide_dma_timeout() method
-Date: Wed, 25 Apr 2007 00:05:16 +0400
-Message-ID: <200704250005.16183.sshtylyov@ru.mvista.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Tue, 24 Apr 2007 13:53:27 -0700
+Message-ID: <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
+References: <20070424074856.005152262@intel.com>
+	<20070423165943.0cc67bc5.kristen.c.accardi@intel.com>
+	<20070424090713.65657495@the-village.bc.nu>
+	<20070424102304.GA58841@dspnet.fr.eu.org>
+	<20070424084904.61932994.kristen.c.accardi@intel.com>
+	<20070424180552.GA17319@dspnet.fr.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:10013 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1423087AbXDXUDj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2007 16:03:39 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070424180552.GA17319@dspnet.fr.eu.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Olivier Galibert <galibert@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Since ide_dma_timeout() method's result is discarded, make it return 'void'.
-While at it, drop 'ide_' from the method's name, drop the '__' prefix from
-the default method's name, and do some cleanups in this method driver-wise:
+Check to see if an ATAPI device supports Asynchronous Notification.
+If so, enable it.
 
-- in ide-dma.c, au1xxx-ide.c, and pdc202xx_old.c, define/use 'hwif' variable;
+changes from last version: 
+* fix typo in ata_id_has_AN and make word 76 test more clear
+* If we fail to set the AN feature, just print a warning and continue
+ 
+Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-- in au1xxx-ide.c, get rid of commented out printk();
-
-- in sl82c105.c, get rid of unnecessary variables.
-
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
- drivers/ide/arm/icside.c       |   11 +++++------
- drivers/ide/ide-dma.c          |   17 ++++++++++-------
- drivers/ide/ide-io.c           |    2 +-
- drivers/ide/ide.c              |    2 +-
- drivers/ide/mips/au1xxx-ide.c  |   12 ++++++------
- drivers/ide/pci/hpt366.c       |    6 +++---
- drivers/ide/pci/pdc202xx_old.c |   13 ++++++++-----
- drivers/ide/pci/sgiioc4.c      |    2 +-
- drivers/ide/pci/sl82c105.c     |   13 +++++--------
- drivers/ide/ppc/pmac.c         |    2 +-
- include/linux/ide.h            |    4 ++--
- 11 files changed, 43 insertions(+), 41 deletions(-)
-
-Index: linux-2.6/drivers/ide/arm/icside.c
+Index: 2.6-git/drivers/ata/libata-core.c
 ===================================================================
---- linux-2.6.orig/drivers/ide/arm/icside.c
-+++ linux-2.6/drivers/ide/arm/icside.c
-@@ -448,17 +448,16 @@ static int icside_dma_test_irq(ide_drive
- 			ICS_ARCIN_V6_INTRSTAT_1)) & 1;
- }
+--- 2.6-git.orig/drivers/ata/libata-core.c
++++ 2.6-git/drivers/ata/libata-core.c
+@@ -70,6 +70,7 @@ const unsigned long sata_deb_timing_long
+ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
++static unsigned int ata_dev_set_AN(struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_device *dev);
  
--static int icside_dma_timeout(ide_drive_t *drive)
-+static void icside_dma_timeout(ide_drive_t *drive)
- {
- 	printk(KERN_ERR "%s: DMA timeout occurred: ", drive->name);
+ static unsigned int ata_print_id = 1;
+@@ -1744,6 +1745,22 @@ int ata_dev_configure(struct ata_device 
+ 		}
+ 		dev->cdb_len = (unsigned int) rc;
  
- 	if (icside_dma_test_irq(drive))
--		return 0;
-+		return;
- 
--	ide_dump_status(drive, "DMA timeout",
--		HWIF(drive)->INB(IDE_STATUS_REG));
-+	ide_dump_status(drive, "DMA timeout", HWIF(drive)->INB(IDE_STATUS_REG));
- 
--	return icside_dma_end(drive);
-+	icside_dma_end(drive);
- }
- 
- static void icside_dma_lost_irq(ide_drive_t *drive)
-@@ -489,7 +488,7 @@ static void icside_dma_init(ide_hwif_t *
- 	hwif->dma_start		= icside_dma_start;
- 	hwif->ide_dma_end	= icside_dma_end;
- 	hwif->ide_dma_test_irq	= icside_dma_test_irq;
--	hwif->ide_dma_timeout	= icside_dma_timeout;
-+	hwif->dma_timeout	= icside_dma_timeout;
- 	hwif->dma_lost_irq	= icside_dma_lost_irq;
- 
- 	hwif->drives[0].autodma = hwif->autodma;
-Index: linux-2.6/drivers/ide/ide-dma.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-dma.c
-+++ linux-2.6/drivers/ide/ide-dma.c
-@@ -855,16 +855,19 @@ void ide_dma_lost_irq (ide_drive_t *driv
- 
- EXPORT_SYMBOL(ide_dma_lost_irq);
- 
--int __ide_dma_timeout (ide_drive_t *drive)
-+void ide_dma_timeout (ide_drive_t *drive)
- {
-+	ide_hwif_t *hwif = HWIF(drive);
++		/*
++		 * check to see if this ATAPI device supports
++		 * Asynchronous Notification
++		 */
++		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
++			int err;
++			/* issue SET feature command to turn this on */
++			err = ata_dev_set_AN(dev);
++			if (err)
++				ata_dev_printk(dev, KERN_ERR,
++						"unable to set AN, err %x\n",
++						err);
++			else
++				dev->flags |= ATA_DFLAG_AN;
++		}
 +
- 	printk(KERN_ERR "%s: timeout waiting for DMA\n", drive->name);
--	if (HWIF(drive)->ide_dma_test_irq(drive))
--		return 0;
+ 		if (ata_id_cdb_intr(dev->id)) {
+ 			dev->flags |= ATA_DFLAG_CDB_INTR;
+ 			cdb_intr_string = ", CDB intr";
+@@ -3525,6 +3542,42 @@ static unsigned int ata_dev_set_xfermode
+ }
  
--	return HWIF(drive)->ide_dma_end(drive);
-+	if (hwif->ide_dma_test_irq(drive))
-+		return;
+ /**
++ *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
++ *                       with sector count set to indicate
++ *                       Asynchronous Notification feature
++ *	@dev: Device to which command will be sent
++ *
++ *	Issue SET FEATURES - SATA FEATURES command to device @dev
++ *	on port @ap.
++ *
++ *	LOCKING:
++ *	PCI/etc. bus probe sem.
++ *
++ *	RETURNS:
++ *	0 on success, AC_ERR_* mask otherwise.
++ */
++static unsigned int ata_dev_set_AN(struct ata_device *dev)
++{
++	struct ata_taskfile tf;
++	unsigned int err_mask;
 +
-+	hwif->ide_dma_end(drive);
- }
- 
--EXPORT_SYMBOL(__ide_dma_timeout);
-+EXPORT_SYMBOL(ide_dma_timeout);
- 
- /*
-  * Needed for allowing full modular support of ide-driver
-@@ -1015,8 +1018,8 @@ void ide_setup_dma (ide_hwif_t *hwif, un
- 		hwif->ide_dma_end = &__ide_dma_end;
- 	if (!hwif->ide_dma_test_irq)
- 		hwif->ide_dma_test_irq = &__ide_dma_test_irq;
--	if (!hwif->ide_dma_timeout)
--		hwif->ide_dma_timeout = &__ide_dma_timeout;
-+	if (!hwif->dma_timeout)
-+		hwif->dma_timeout = &ide_dma_timeout;
- 	if (!hwif->dma_lost_irq)
- 		hwif->dma_lost_irq = &ide_dma_lost_irq;
- 
-Index: linux-2.6/drivers/ide/ide-io.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-io.c
-+++ linux-2.6/drivers/ide/ide-io.c
-@@ -1350,7 +1350,7 @@ static ide_startstop_t ide_dma_timeout_r
- 						hwif->INB(IDE_STATUS_REG));
- 	} else {
- 		printk(KERN_WARNING "%s: DMA timeout retry\n", drive->name);
--		(void) hwif->ide_dma_timeout(drive);
-+		hwif->dma_timeout(drive);
- 	}
- 
- 	/*
-Index: linux-2.6/drivers/ide/ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide.c
-+++ linux-2.6/drivers/ide/ide.c
-@@ -497,7 +497,7 @@ static void ide_hwif_restore(ide_hwif_t 
- 	hwif->dma_host_on		= tmp_hwif->dma_host_on;
- 	hwif->dma_host_off		= tmp_hwif->dma_host_off;
- 	hwif->dma_lost_irq		= tmp_hwif->dma_lost_irq;
--	hwif->ide_dma_timeout		= tmp_hwif->ide_dma_timeout;
-+	hwif->dma_timeout		= tmp_hwif->dma_timeout;
- 
- 	hwif->OUTB			= tmp_hwif->OUTB;
- 	hwif->OUTBSYNC			= tmp_hwif->OUTBSYNC;
-Index: linux-2.6/drivers/ide/mips/au1xxx-ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/mips/au1xxx-ide.c
-+++ linux-2.6/drivers/ide/mips/au1xxx-ide.c
-@@ -488,16 +488,16 @@ static void auide_init_dbdma_dev(dbdev_t
-   
- #if defined(CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA)
- 
--static int auide_dma_timeout(ide_drive_t *drive)
-+static void auide_dma_timeout(ide_drive_t *drive)
- {
--//      printk("%s\n", __FUNCTION__);
-+	ide_hwif_t *hwif = HWIF(drive);
- 
- 	printk(KERN_ERR "%s: DMA timeout occurred: ", drive->name);
- 
--	if (HWIF(drive)->ide_dma_test_irq(drive))
--		return 0;
-+	if (hwif->ide_dma_test_irq(drive))
-+		return;
- 
--	return HWIF(drive)->ide_dma_end(drive);
-+	hwif->ide_dma_end(drive);
- }
- 					
- 
-@@ -720,7 +720,7 @@ static int au_ide_probe(struct device *d
- 
- #ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
- 	hwif->dma_off_quietly		= &auide_dma_off_quietly;
--	hwif->ide_dma_timeout           = &auide_dma_timeout;
-+	hwif->dma_timeout		= &auide_dma_timeout;
- 
- 	hwif->ide_dma_check             = &auide_dma_check;
- 	hwif->dma_exec_cmd              = &auide_dma_exec_cmd;
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -798,10 +798,10 @@ static int hpt370_ide_dma_end(ide_drive_
- 	return __ide_dma_end(drive);
- }
- 
--static int hpt370_ide_dma_timeout(ide_drive_t *drive)
-+static void hpt370_dma_timeout(ide_drive_t *drive)
- {
- 	hpt370_irq_timeout(drive);
--	return __ide_dma_timeout(drive);
-+	ide_dma_timeout(drive);
- }
- 
- /* returns 1 if DMA IRQ issued, 0 otherwise */
-@@ -1352,7 +1352,7 @@ static void __devinit init_hwif_hpt366(i
- 	} else if (chip_type >= HPT370) {
- 		hwif->dma_start 	= &hpt370_ide_dma_start;
- 		hwif->ide_dma_end	= &hpt370_ide_dma_end;
--		hwif->ide_dma_timeout	= &hpt370_ide_dma_timeout;
-+		hwif->dma_timeout	= &hpt370_dma_timeout;
- 	} else
- 		hwif->dma_lost_irq	= &hpt366_dma_lost_irq;
- 
-Index: linux-2.6/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_old.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_old.c
-@@ -277,11 +277,14 @@ static void pdc202xx_dma_lost_irq(ide_dr
- 	ide_dma_lost_irq(drive);
- }
- 
--static int pdc202xx_ide_dma_timeout(ide_drive_t *drive)
-+static void pdc202xx_dma_timeout(ide_drive_t *drive)
- {
--	if (HWIF(drive)->resetproc != NULL)
--		HWIF(drive)->resetproc(drive);
--	return __ide_dma_timeout(drive);
-+	ide_hwif_t *hwif = HWIF(drive);
++	/* set up set-features taskfile */
++	DPRINTK("set features - SATA features\n");
 +
-+	if (hwif->resetproc != NULL)
-+		hwif->resetproc(drive);
++	ata_tf_init(dev, &tf);
++	tf.command = ATA_CMD_SET_FEATURES;
++	tf.feature = SETFEATURES_SATA_ENABLE;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_NODATA;
++	tf.nsect = SATA_AN;
 +
-+	ide_dma_timeout(drive);
- }
- 
- static void pdc202xx_reset_host (ide_hwif_t *hwif)
-@@ -351,7 +354,7 @@ static void __devinit init_hwif_pdc202xx
- 
- 	hwif->ide_dma_check = &pdc202xx_config_drive_xfer_rate;
- 	hwif->dma_lost_irq = &pdc202xx_dma_lost_irq;
--	hwif->ide_dma_timeout = &pdc202xx_ide_dma_timeout;
-+	hwif->dma_timeout = &pdc202xx_dma_timeout;
- 
- 	if (hwif->pci_dev->device != PCI_DEVICE_ID_PROMISE_20246) {
- 		if (!(hwif->udma_four))
-Index: linux-2.6/drivers/ide/pci/sgiioc4.c
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++
++	DPRINTK("EXIT, err_mask=%x\n", err_mask);
++	return err_mask;
++}
++
++/**
+  *	ata_dev_init_params - Issue INIT DEV PARAMS command
+  *	@dev: Device to which command will be sent
+  *	@heads: Number of heads (taskfile parameter)
+Index: 2.6-git/include/linux/ata.h
 ===================================================================
---- linux-2.6.orig/drivers/ide/pci/sgiioc4.c
-+++ linux-2.6/drivers/ide/pci/sgiioc4.c
-@@ -608,7 +608,7 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
- 	hwif->dma_host_on = &sgiioc4_dma_host_on;
- 	hwif->dma_host_off = &sgiioc4_dma_host_off;
- 	hwif->dma_lost_irq = &sgiioc4_dma_lost_irq;
--	hwif->ide_dma_timeout = &__ide_dma_timeout;
-+	hwif->dma_timeout = &ide_dma_timeout;
+--- 2.6-git.orig/include/linux/ata.h
++++ 2.6-git/include/linux/ata.h
+@@ -194,6 +194,12 @@ enum {
+ 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
+ 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
  
- 	hwif->INB = &sgiioc4_INB;
- }
-Index: linux-2.6/drivers/ide/pci/sl82c105.c
++	SETFEATURES_SATA_ENABLE = 0x10, /* Enable use of SATA feature */
++	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
++
++	/* SETFEATURE Sector counts for SATA features */
++	SATA_AN			= 0x05,  /* Asynchronous Notification */
++
+ 	/* ATAPI stuff */
+ 	ATAPI_PKT_DMA		= (1 << 0),
+ 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+@@ -299,6 +305,8 @@ struct ata_taskfile {
+ #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+ #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+ #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
++#define ata_id_has_AN(id)	\
++	(((id[76] != 0x0000) && (id[76] != 0xffff)) && ((id)[78] & (1 << 5)))
+ #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
+ #define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
+ #define ata_id_u32(id,n)	\
+Index: 2.6-git/include/linux/libata.h
 ===================================================================
---- linux-2.6.orig/drivers/ide/pci/sl82c105.c
-+++ linux-2.6/drivers/ide/pci/sl82c105.c
-@@ -241,15 +241,12 @@ static void sl82c105_dma_start(ide_drive
- 	ide_dma_start(drive);
- }
+--- 2.6-git.orig/include/linux/libata.h
++++ 2.6-git/include/linux/libata.h
+@@ -136,6 +136,7 @@ enum {
+ 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
+ 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
+ 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
++	ATA_DFLAG_AN		= (1 << 5), /* device supports Async notification */
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
  
--static int sl82c105_ide_dma_timeout(ide_drive_t *drive)
-+static void sl82c105_dma_timeout(ide_drive_t *drive)
- {
--	ide_hwif_t *hwif	= HWIF(drive);
--	struct pci_dev *dev	= hwif->pci_dev;
--
--	DBG(("sl82c105_ide_dma_timeout(drive:%s)\n", drive->name));
-+	DBG(("sl82c105_dma_timeout(drive:%s)\n", drive->name));
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+@@ -174,6 +175,7 @@ enum {
+ 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
++	ATA_FLAG_AN		= (1 << 17), /* controller supports AN */
  
--	sl82c105_reset_host(dev);
--	return __ide_dma_timeout(drive);
-+	sl82c105_reset_host(HWIF(drive)->pci_dev);
-+	ide_dma_timeout(drive);
- }
- 
- static int sl82c105_ide_dma_on(ide_drive_t *drive)
-@@ -438,7 +435,7 @@ static void __devinit init_hwif_sl82c105
- 	hwif->dma_off_quietly		= &sl82c105_dma_off_quietly;
- 	hwif->dma_lost_irq		= &sl82c105_dma_lost_irq;
- 	hwif->dma_start			= &sl82c105_dma_start;
--	hwif->ide_dma_timeout		= &sl82c105_ide_dma_timeout;
-+	hwif->dma_timeout		= &sl82c105_dma_timeout;
- 
- 	if (!noautodma)
- 		hwif->autodma = 1;
-Index: linux-2.6/drivers/ide/ppc/pmac.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ppc/pmac.c
-+++ linux-2.6/drivers/ide/ppc/pmac.c
-@@ -2056,7 +2056,7 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
- 	hwif->ide_dma_test_irq = &pmac_ide_dma_test_irq;
- 	hwif->dma_host_off = &pmac_ide_dma_host_off;
- 	hwif->dma_host_on = &pmac_ide_dma_host_on;
--	hwif->ide_dma_timeout = &__ide_dma_timeout;
-+	hwif->dma_timeout = &ide_dma_timeout;
- 	hwif->dma_lost_irq = &pmac_ide_dma_lost_irq;
- 
- 	hwif->atapi_dma = 1;
-Index: linux-2.6/include/linux/ide.h
-===================================================================
---- linux-2.6.orig/include/linux/ide.h
-+++ linux-2.6/include/linux/ide.h
-@@ -736,7 +736,7 @@ typedef struct hwif_s {
- 	void (*dma_host_on)(ide_drive_t *drive);
- 	void (*dma_host_off)(ide_drive_t *drive);
- 	void (*dma_lost_irq)(ide_drive_t *drive);
--	int (*ide_dma_timeout)(ide_drive_t *drive);
-+	void (*dma_timeout)(ide_drive_t *drive);
- 
- 	void (*OUTB)(u8 addr, unsigned long port);
- 	void (*OUTBSYNC)(ide_drive_t *drive, u8 addr, unsigned long port);
-@@ -1304,7 +1304,7 @@ extern int ide_dma_setup(ide_drive_t *);
- extern void ide_dma_start(ide_drive_t *);
- extern int __ide_dma_end(ide_drive_t *);
- extern void ide_dma_lost_irq(ide_drive_t *);
--extern int __ide_dma_timeout(ide_drive_t *);
-+extern void ide_dma_timeout(ide_drive_t *);
- #endif /* CONFIG_BLK_DEV_IDEDMA_PCI */
- 
- #else
-
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
