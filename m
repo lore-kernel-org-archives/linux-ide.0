@@ -1,35 +1,54 @@
-From: Olivier Galibert <galibert@pobox.com>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Wed, 25 Apr 2007 02:49:46 +0200
-Message-ID: <20070425004946.GA63747@dspnet.fr.eu.org>
-References: <20070424074856.005152262@intel.com> <20070423165943.0cc67bc5.kristen.c.accardi@intel.com> <20070424090713.65657495@the-village.bc.nu> <20070424102304.GA58841@dspnet.fr.eu.org> <20070424084904.61932994.kristen.c.accardi@intel.com> <20070424180552.GA17319@dspnet.fr.eu.org> <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
+Date: Wed, 25 Apr 2007 13:01:02 +0900
+Message-ID: <462ED27E.6070600@gmail.com>
+References: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.233]:24964 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161579AbXDYECB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Apr 2007 00:02:01 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so109272nzf
+        for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 21:02:01 -0700 (PDT)
+In-Reply-To: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sjackerman@comcast.net
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Apr 24, 2007 at 01:53:27PM -0700, Kristen Carlson Accardi wrote:
-> Check to see if an ATAPI device supports Asynchronous Notification.
-> If so, enable it.
+sjackerman@comcast.net wrote:
+> Hello-
 > 
-> changes from last version: 
-> * fix typo in ata_id_has_AN and make word 76 test more clear
-> * If we fail to set the AN feature, just print a warning and continue
->  
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> We manufacture a SATA to CF adaptor that uses an Acard Technology
+> ARC-770 SATA to IDE bridge chip:
 > 
-> @@ -299,6 +305,8 @@ struct ata_taskfile {
->  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
->  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
->  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
-> +#define ata_id_has_AN(id)	\
-> +	(((id[76] != 0x0000) && (id[76] != 0xffff)) && ((id)[78] & (1 << 5)))
+> http://www.acscontrol.com/Index_ACS.asp?Page=/Pages/Products/CompactFlash/SATA_To_CF_Adapter.htm
+> 
+> 
+> The adaptor works correctly and can be 'seen' in the BIOS, in DOS, in
+> Windows XP, XP MCE and Vista. However the adaptor doesn't work
+> correctly or can't be 'seen' in Linux. A similiar adaptor based upon
+> a Marvell bridge chip works correctly in Linux.
+> 
+> We have now verified that this doesn't work on an in-house Intel 865
+> chipset motherboard running RIP Linux v2.6.20. A customer has
+> verified that this also doesn't work on Intel 875 or Via chipset
+> motherboards under Linux.
+> 
+> Here are the Linux Kernel error messages that are produced by this
+> kernel running on a Intel D865GLC motherboard trying to talk to our
+> ARC-770 based adaptor on SATA-0 :
+> 
+> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10 
+> scsi2 : ata_piix ata1.00: CFA, max PIO4, 8005536 sectors: LBA 
+> ata1.00: ata1: dev 0 multi count 0 ata1.00: qc timeout (cmd 0xef) 
+> ata1.00: failed to set xfermode (err_mask=0x4)
 
-(id)[76] I guess ?  Sorry for being a pain :/
+Can you give a shot at 2.6.21-rc7.  The problem should have been fixed
+there.
 
-  OG.
+-- 
+tejun
