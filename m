@@ -1,25 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.21-rc7-mm1 BUG at kernel/sched-clock.c:175 init_sched_clock()
-Date: Wed, 25 Apr 2007 17:54:32 +0900
-Message-ID: <20070425085432.GD17130@htj.dyndns.org>
-References: <462E4C4D.9020806@gmail.com> <20070425011654.222a2b4b.akpm@linux-foundation.org> <462F1481.8010807@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.21-rc7-mm1 BUG at kernel/sched-clock.c:175
+ init_sched_clock()
+Date: Wed, 25 Apr 2007 01:55:59 -0700
+Message-ID: <20070425015559.e6ed537c.akpm@linux-foundation.org>
+References: <462E4C4D.9020806@gmail.com>
+	<20070425011654.222a2b4b.akpm@linux-foundation.org>
+	<462F1481.8010807@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:12163 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423319AbXDYIyi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Apr 2007 04:54:38 -0400
-Received: by py-out-1112.google.com with SMTP id a29so131001pyi
-        for <linux-ide@vger.kernel.org>; Wed, 25 Apr 2007 01:54:38 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:41920 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423323AbXDYI4G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Apr 2007 04:56:06 -0400
 In-Reply-To: <462F1481.8010807@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <htejun@gmail.com>
 Cc: "Berck E. Nash" <flyboy@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Wed, Apr 25, 2007 at 05:42:41PM +0900, Tejun Heo wrote:
+On Wed, 25 Apr 2007 17:42:41 +0900 Tejun Heo <htejun@gmail.com> wrote:
+
 > Andrew Morton wrote:
 > >> [    2.953862] RIP: 0010:[<ffffffff803ae98b>]  [<ffffffff803ae98b>] scsi_schedule_eh+0xa/0x57
 > >> [    3.058672]  [<ffffffff803e1e01>] ata_port_schedule_eh+0x4c/0x50
@@ -45,28 +47,24 @@ On Wed, Apr 25, 2007 at 05:42:41PM +0900, Tejun Heo wrote:
 > 
 > No, that would break host probing.  The port is in frozen (controller
 > initialized and IRQs masked off) state, so it's not allowed to take
-> interrupt.  If interrupt triggers at this point, it's low level driver
+> interrupt.
+
+Sounds dodgy.  What happens if the IRQ line is shared with some other
+device?  We'll enter ahci_interrupt().  We've alread set up ->port_map and
+->n_ports so we're wholly dependent upon that read from HOST_IRQ_STAT
+returning zeroes.
+
+        /* sigh.  0xffffffff is a valid return from h/w */
+
+if that happens we're dead, aren't we?
+
+
+>  If interrupt triggers at this point, it's low level driver
 > bug.  Berck, how reliably can you reproduce this problem?  Can you post
 > the result of 'lspci -nn'?
 
-Berck, does this patch fix your problem?
+Berck doesn't apepar to be sharing that IRQ, so it'll be something else.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 72c286e..a128717 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1369,10 +1369,14 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
- 
- static void ahci_freeze(struct ata_port *ap)
- {
-+	void __iomem *mmio = ap->host->iomap[AHCI_PCI_BAR];
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 
- 	/* turn IRQ off */
- 	writel(0, port_mmio + PORT_IRQ_MASK);
-+
-+	/* clear IRQ pending bit */
-+	writel(1 << ap->port_no, mmio + HOST_IRQ_STAT);
- }
- 
- static void ahci_thaw(struct ata_port *ap)
+However do note that if CONFIG_DEBUG_SHIRQ is enabled, request_irq() will
+deliberately run the handler, to catch buggy drivers.
+
