@@ -1,54 +1,57 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
-Date: Wed, 25 Apr 2007 13:01:02 +0900
-Message-ID: <462ED27E.6070600@gmail.com>
-References: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: [PATCH 0/3] hotplug polling, respin
+Date: Tue, 24 Apr 2007 23:25:38 -0700
+Message-ID: <20070425062538.GU7810@curie-int.orbis-terrarum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+epxrXWOh++2HLjY"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:24964 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161579AbXDYECB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Apr 2007 00:02:01 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so109272nzf
-        for <linux-ide@vger.kernel.org>; Tue, 24 Apr 2007 21:02:01 -0700 (PDT)
-In-Reply-To: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com>
+Received: from b01.ext.isohunt.com ([208.71.112.51]:39161 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1423227AbXDYGZd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Apr 2007 02:25:33 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sjackerman@comcast.net
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-sjackerman@comcast.net wrote:
-> Hello-
-> 
-> We manufacture a SATA to CF adaptor that uses an Acard Technology
-> ARC-770 SATA to IDE bridge chip:
-> 
-> http://www.acscontrol.com/Index_ACS.asp?Page=/Pages/Products/CompactFlash/SATA_To_CF_Adapter.htm
-> 
-> 
-> The adaptor works correctly and can be 'seen' in the BIOS, in DOS, in
-> Windows XP, XP MCE and Vista. However the adaptor doesn't work
-> correctly or can't be 'seen' in Linux. A similiar adaptor based upon
-> a Marvell bridge chip works correctly in Linux.
-> 
-> We have now verified that this doesn't work on an in-house Intel 865
-> chipset motherboard running RIP Linux v2.6.20. A customer has
-> verified that this also doesn't work on Intel 875 or Via chipset
-> motherboards under Linux.
-> 
-> Here are the Linux Kernel error messages that are produced by this
-> kernel running on a Intel D865GLC motherboard trying to talk to our
-> ARC-770 based adaptor on SATA-0 :
-> 
-> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10 
-> scsi2 : ata_piix ata1.00: CFA, max PIO4, 8005536 sectors: LBA 
-> ata1.00: ata1: dev 0 multi count 0 ata1.00: qc timeout (cmd 0xef) 
-> ata1.00: failed to set xfermode (err_mask=0x4)
 
-Can you give a shot at 2.6.21-rc7.  The problem should have been fixed
-there.
+--+epxrXWOh++2HLjY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-tejun
+I've been (very) slowly working on re-spinning Tejun's PMP work.
+
+As the very first in the body of work, here is the patchset to implement
+hotplug polling.
+
+The last submission of this
+(http://thread.gmane.org/gmane.linux.ide/13467) already had a tentative
+ACK, pending a link power-saving patchset, that I can't find more
+details on.
+
+I only have sata_nv and sata_sil24 online for testing, but it does work
+fine for both of those (and Tejun had previously tested many more
+controllers).
+
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Council Member
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--+epxrXWOh++2HLjY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.2 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFGLvRiPpIsIjIzwiwRAnkbAKCyR+DGGZza2Du58fgVZeyIiyoiBwCg/JzE
+iKtNWDkxuedeER1CcG3/qfc=
+=JRXr
+-----END PGP SIGNATURE-----
+
+--+epxrXWOh++2HLjY--
