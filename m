@@ -1,77 +1,72 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/10] sata_nv: add back some verbosity into ADMA error_handler
-Date: Thu, 26 Apr 2007 00:19:22 -0700
-Message-ID: <200704260719.l3Q7JMhB023682@shell0.pdx.osdl.net>
+Subject: [patch 08/10] drivers/ata/pata_cmd640.c: fix build with CONFIG_PM=n
+Date: Thu, 26 Apr 2007 00:19:26 -0700
+Message-ID: <200704260719.l3Q7JQ8B023700@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:60355 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:57036 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933238AbXDZHTa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 03:19:30 -0400
+	by vger.kernel.org with ESMTP id S933256AbXDZHTe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 03:19:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
 
-From: Robert Hancock <hancockr@shaw.ca>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-Some debug output in the ADMA error_handler function was removed recently,
-but it may be useful in certain cases, like NCQ commands timing out.  Add
-it back in, but make it a bit more intelligent so that it only prints if
-command(s) are active and only prints the CPBs for those commands.  That
-way it won't spew at inappropriate times like suspend/resume.
+This is grubby, but all the ata drivers do it this way.
 
-[akpm@osdl.org: cleanup]
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+Would it not be better to do
+
+#define ata_scsi_device_resume NULL
+
+in libata.h, remove all those ifdefs?
+
+(updated version, ug, ug)
+
 Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/sata_nv.c |   31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+ drivers/ata/pata_cmd640.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff -puN drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler drivers/ata/sata_nv.c
---- a/drivers/ata/sata_nv.c~sata_nv-add-back-some-verbosity-into-adma-error_handler
-+++ a/drivers/ata/sata_nv.c
-@@ -1455,11 +1455,38 @@ static void nv_adma_error_handler(struct
- 			}
- 		}
+diff -puN drivers/ata/pata_cmd640.c~drivers-ata-pata_cmd640c-fix-build-with-config_pm=n drivers/ata/pata_cmd640.c
+--- a/drivers/ata/pata_cmd640.c~drivers-ata-pata_cmd640c-fix-build-with-config_pm=n
++++ a/drivers/ata/pata_cmd640.c
+@@ -181,8 +181,10 @@ static struct scsi_host_template cmd640_
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
++#ifdef CONFIG_PM
+ 	.resume			= ata_scsi_device_resume,
+ 	.suspend		= ata_scsi_device_suspend,
++#endif
+ };
  
-+		if (ata_tag_valid(ap->active_tag) || ap->sactive) {
-+			u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
-+			u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
-+			u32 gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
-+			u32 status = readw(mmio + NV_ADMA_STAT);
-+
-+			ata_port_printk(ap, KERN_ERR, "EH in ADMA mode, "
-+				"notifier 0x%X notifier_error 0x%X gen_ctl "
-+				"0x%X status 0x%X\n",
-+				notifier, notifier_error, gen_ctl, status);
-+
-+			for (i = 0; i < NV_ADMA_MAX_CPBS; i++) {
-+				struct nv_adma_cpb *cpb = &pp->cpb[i];
-+				if ((ata_tag_valid(ap->active_tag) &&
-+						i == ap->active_tag) ||
-+						ap->sactive & (1 << i))
-+					ata_port_printk(ap, KERN_ERR, "CPB %d: "
-+						"ctl_flags 0x%x, resp_flags "
-+						"0x%x\n",
-+						i, cpb->ctl_flags,
-+						cpb->resp_flags);
-+			}
-+		}
-+
- 		/* Push us back into port register mode for error handling. */
- 		nv_adma_register_mode(ap);
+ static struct ata_port_operations cmd640_port_ops = {
+@@ -267,7 +269,11 @@ static int cmd640_init_one(struct pci_de
+ static int cmd640_reinit_one(struct pci_dev *pdev)
+ {
+ 	cmd640_hardware_init(pdev);
++#ifdef CONFIG_PM
+ 	return ata_pci_device_resume(pdev);
++#else
++	return 0;
++#endif
+ }
  
--		/* Mark all of the CPBs as invalid to prevent them from being executed */
--		for( i=0;i<NV_ADMA_MAX_CPBS;i++)
-+		/*
-+		 * Mark all of the CPBs as invalid to prevent them from being
-+		 * executed
-+		*/
-+		for (i = 0; i< NV_ADMA_MAX_CPBS; i++)
- 			pp->cpb[i].ctl_flags &= ~NV_CPB_CTL_CPB_VALID;
+ static const struct pci_device_id cmd640[] = {
+@@ -280,7 +286,9 @@ static struct pci_driver cmd640_pci_driv
+ 	.id_table	= cmd640,
+ 	.probe 		= cmd640_init_one,
+ 	.remove		= ata_pci_remove_one,
++#ifdef CONFIG_PM
+ 	.suspend	= ata_pci_device_suspend,
++#endif
+ 	.resume		= cmd640_reinit_one,
+ };
  
- 		/* clear CPB fetch count */
 _
