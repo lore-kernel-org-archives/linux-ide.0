@@ -1,34 +1,51 @@
-From: Craig Metz <cmetz@inner.net>
-Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
-Date: Wed, 25 Apr 2007 22:35:33 -0400
-Message-ID: <20070426023534.68007582C@rmail.inner.net>
-References: <010501c78736$aad2e480$0703a8c0@SJAWINXP>
+From: "Alok kataria" <alokkataria1@gmail.com>
+Subject: use_clustering (sht) bit set to 0 in AHCI ?
+Date: Thu, 26 Apr 2007 11:19:04 +0530
+Message-ID: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rmail.inner.net ([199.33.248.12]:3497 "EHLO rmail.inner.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754680AbXDZCYT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Apr 2007 22:24:19 -0400
-In-reply-to: <010501c78736$aad2e480$0703a8c0@SJAWINXP> 
+Received: from nz-out-0506.google.com ([64.233.162.225]:24544 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743AbXDZFtF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 01:49:05 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so590403nzf
+        for <linux-ide@vger.kernel.org>; Wed, 25 Apr 2007 22:49:04 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Steven J. Ackerman" <sjackerman@comcast.net>
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-In message <010501c78736$aad2e480$0703a8c0@SJAWINXP>, you write:
->> Here are the Linux Kernel error messages that are produced by this
->> kernel running on a Intel D865GLC motherboard trying to talk to our
->> ARC-770 based adaptor on SATA-0 :
->> 
->> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10 
->> scsi2 : ata_piix ata1.00: CFA, max PIO4, 8005536 sectors: LBA 
->> ata1.00: ata1: dev 0 multi count 0 ata1.00: qc timeout (cmd 0xef) 
->> ata1.00: failed to set xfermode (err_mask=0x4)
->
->Can you give a shot at 2.6.21-rc7.  The problem should have been fixed
->there.
+Hi Jeff,
 
-  I am also having problems with this device, but on both an ICH5 and on a
-VIA pre-AHCI SATA controller. I just tried 2.6.21-rc7 - it fails in exactly the
-same way as with 2.6.20.
+I recently got a new AHCI disk, and was using the AHCI-libata driver to run
+this. I noticed that the scattergather lists that were being built for
+the I/O on this device were just of PAGE_SIZE length, even though i
+was doing IO on
+contiguous pages.
 
-									-Craig
+Through a little instrumentation i figured out that the use_clustering
+bit in the ahci_sht (scsi_host_template) is set to zero. Due to which
+we are not putting consecutive bios into one sg in blk_rq_map_sg.
+
+I tried changing the clustering bit to 1, but encountered a panic at
+the initialization of the disks  during the bootup process, and so
+couldn't entirely get hold of the panic mesg.
+I was wondering, though the max segment size suported with this driver
+is 65536, why was i not able to feed in bigger SG's to this driver.
+
+I searched on the net and the intel ahci arch doc too but couldn't
+find anything relative to the clustering support for AHCI.
+
+It would be great help if you could let me know about the possible
+problems with clustering on AHCI  ? why is it off by default in the
+driver ? or anything else that might help.
+
+Thanks & Regards,
+Alok Kataria.
+
+Principal Dev. Engg.
+Calsoft Pvt. Ltd.
+Pune, India.
