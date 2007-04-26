@@ -1,51 +1,74 @@
-From: "Alok kataria" <alokkataria1@gmail.com>
-Subject: use_clustering (sht) bit set to 0 in AHCI ?
-Date: Thu, 26 Apr 2007 11:19:04 +0530
-Message-ID: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: BUG: Null pointer dereference in fs/open.c
+Date: Thu, 26 Apr 2007 08:33:56 +0200
+Message-ID: <20070426063356.GA3640@kernel.dk>
+References: <Pine.LNX.4.64.0704231356480.25153@server.thyself> <Pine.LNX.4.64.0704231633210.25153@server.thyself> <Pine.LNX.4.64.0704240347470.25153@server.thyself> <20070423215810.5a24ed9a.akpm@linux-foundation.org> <Pine.LNX.4.64.0704240507110.25153@server.thyself> <20070423221726.ccfa982c.akpm@linux-foundation.org> <Pine.LNX.4.64.0704240527030.25153@server.thyself> <20070425004816.bd0c240a.akpm@linux-foundation.org> <Pine.LNX.4.64.0704251701290.25153@server.thyself> <20070425160534.00c3a3d4.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.225]:24544 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743AbXDZFtF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 01:49:05 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so590403nzf
-        for <linux-ide@vger.kernel.org>; Wed, 25 Apr 2007 22:49:04 -0700 (PDT)
+Received: from rgminet01.oracle.com ([148.87.113.118]:11288 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932962AbXDZGfT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 02:35:19 -0400
 Content-Disposition: inline
+In-Reply-To: <20070425160534.00c3a3d4.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: William Heimbigner <icxcnika@mar.tar.cc>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org
 
-Hi Jeff,
+On Wed, Apr 25 2007, Andrew Morton wrote:
+> > # pktsetup 2 /dev/sr0
+> > [19982.934793] drivers/scsi/scsi_lib.c:838: setting error to 134217730
+> > [19982.941070]  [<c010521a>] show_trace_log_lvl+0x1a/0x30
+> > [19982.946256]  [<c0105952>] show_trace+0x12/0x20
+> > [19982.950744]  [<c0105a46>] dump_stack+0x16/0x20
+> > [19982.955232]  [<c034543a>] scsi_io_completion+0x28a/0x3a0
+> > [19982.960586]  [<c034556b>] scsi_blk_pc_done+0x1b/0x30
+> > [19982.965594]  [<c0340d0c>] scsi_finish_command+0x4c/0x60
+> > [19982.970861]  [<c0345c07>] scsi_softirq_done+0x77/0xe0
+> > [19982.975955]  [<c0257f8b>] blk_done_softirq+0x6b/0x80
+> > [19982.980962]  [<c01243a2>] __do_softirq+0x62/0xc0
+> > [19982.985624]  [<c0124455>] do_softirq+0x55/0x60
+> > [19982.990112]  [<c0124be5>] ksoftirqd+0x65/0x100
+> > [19982.994599]  [<c0132963>] kthread+0xa3/0xd0
+> > [19982.998827]  [<c0104e17>] kernel_thread_helper+0x7/0x10
+> > [19983.004095]  =======================
+> > [19983.009065] cdrom: This disc doesn't have any tracks I recognize!
+> 
+> So what has happened here is that this code, in ide-cd.c's
+> cdrom_decode_status() is now triggering:
+> 
+> 	} else if (blk_pc_request(rq) || rq->cmd_type == REQ_TYPE_ATA_PC) {
+> 		/* All other functions, except for READ. */
+> 		unsigned long flags;
+> 
+> 		/*
+> 		 * if we have an error, pass back CHECK_CONDITION as the
+> 		 * scsi status byte
+> 		 */
+> 		if (blk_pc_request(rq) && !rq->errors)
+> 			rq->errors = SAM_STAT_CHECK_CONDITION;
+> 
+> 
+> I suspect this is a bug introduced by
+> 406c9b605cbc45151c03ac9a3f95e9acf050808c (in which case it'll be the third
+> bug so far).
+> 
+> Perhaps the IDE driver was previously not considering these requests to be
+> of type blk_pc_request(), and after
+> 406c9b605cbc45151c03ac9a3f95e9acf050808c it _is_ treating them as
+> blk_pc_request() and is incorrectly reporting an error.  Or something like
+> that.
 
-I recently got a new AHCI disk, and was using the AHCI-libata driver to run
-this. I noticed that the scattergather lists that were being built for
-the I/O on this device were just of PAGE_SIZE length, even though i
-was doing IO on
-contiguous pages.
+But it IS a block pc request. We've been setting the sam stats on
+->errors for block pc request for a long time.
 
-Through a little instrumentation i figured out that the use_clustering
-bit in the ahci_sht (scsi_host_template) is set to zero. Due to which
-we are not putting consecutive bios into one sg in blk_rq_map_sg.
+> Guys: help!
 
-I tried changing the clustering bit to 1, but encountered a panic at
-the initialization of the disks  during the bootup process, and so
-couldn't entirely get hold of the panic mesg.
-I was wondering, though the max segment size suported with this driver
-is 65536, why was i not able to feed in bigger SG's to this driver.
+I'm not sure what your question is, if someone can some up what the what
+goes wrong and what the expected result is, I can try and help.
 
-I searched on the net and the intel ahci arch doc too but couldn't
-find anything relative to the clustering support for AHCI.
+-- 
+Jens Axboe
 
-It would be great help if you could let me know about the possible
-problems with clustering on AHCI  ? why is it off by default in the
-driver ? or anything else that might help.
-
-Thanks & Regards,
-Alok Kataria.
-
-Principal Dev. Engg.
-Calsoft Pvt. Ltd.
-Pune, India.
