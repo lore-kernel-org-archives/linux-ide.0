@@ -1,177 +1,151 @@
 From: akpm@linux-foundation.org
-Subject: [patch 03/10] libata-acpi: add infrastructure for drivers to use _GTM/_STM methods
-Date: Thu, 26 Apr 2007 00:19:23 -0700
-Message-ID: <200704260719.l3Q7JNOU023685@shell0.pdx.osdl.net>
+Subject: [patch 07/10] pata_hpt3x2n: Add HPT371N support and other bits
+Date: Thu, 26 Apr 2007 00:19:25 -0700
+Message-ID: <200704260719.l3Q7JQ48023697@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:56941 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:34356 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933267AbXDZHTw (ORCPT
+	by vger.kernel.org with ESMTP id S933286AbXDZHTw (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2007 03:19:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@redhat.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
 
-From: Alan Cox <alan@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+
+Yes its no longer 3x2n but 3xxn, I can rename it if you want Jeff
+
+- Don't reset both ports each time (Sergei)
+- If we can't get a DPLL then abort entirely
+- Use ioport access for clock (from drivers/ide)
+- Add HPT371N support (from drivers/ide)
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-acpi.c |   87 +++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-acpi.h |   47 +++++++++++++++++++
- 2 files changed, 133 insertions(+), 1 deletion(-)
+ drivers/ata/pata_hpt3x2n.c |   45 +++++++++++++++++++++++++++++------
+ 1 file changed, 38 insertions(+), 7 deletions(-)
 
-diff -puN drivers/ata/libata-acpi.c~libata-acpi-add-infrastructure-for-drivers-to-use drivers/ata/libata-acpi.c
---- a/drivers/ata/libata-acpi.c~libata-acpi-add-infrastructure-for-drivers-to-use
-+++ a/drivers/ata/libata-acpi.c
-@@ -15,7 +15,7 @@
- #include <linux/libata.h>
- #include <linux/pci.h>
- #include "libata.h"
--
-+#include "libata-acpi.h"
- #include <acpi/acpi_bus.h>
- #include <acpi/acnames.h>
- #include <acpi/acnamesp.h>
-@@ -707,3 +707,88 @@ out:
- }
+diff -puN drivers/ata/pata_hpt3x2n.c~pata_hpt3x2n-add-hpt371n-support-and-other-bits drivers/ata/pata_hpt3x2n.c
+--- a/drivers/ata/pata_hpt3x2n.c~pata_hpt3x2n-add-hpt371n-support-and-other-bits
++++ a/drivers/ata/pata_hpt3x2n.c
+@@ -8,10 +8,10 @@
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+  * Portions Copyright (C) 2003		Red Hat Inc
++ * Portions Copyright (C) 2005-2006	MontaVista Software, Inc.
+  *
+  *
+  * TODO
+- *	371N
+  *	Work out best PLL policy
+  */
  
+@@ -142,6 +142,7 @@ static int hpt3x2n_cable_detect(struct a
+ /**
+  *	hpt3x2n_pre_reset	-	reset the hpt3x2n bus
+  *	@ap: ATA port to reset
++ *	@deadline: deadline jiffies for the operation
+  *
+  *	Perform the initial reset handling for the 3x2n series controllers.
+  *	Reset the hardware and state machine,
+@@ -151,8 +152,7 @@ static int hpt3xn_pre_reset(struct ata_p
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	/* Reset the state machine */
+-	pci_write_config_byte(pdev, 0x50, 0x37);
+-	pci_write_config_byte(pdev, 0x54, 0x37);
++	pci_write_config_byte(pdev, 0x50 + 4 * ap->port_no, 0x37);
+ 	udelay(100);
  
-+int ata_acpi_gtm(const struct ata_port *ap, void *handle, struct acpi_gtm *gtm)
-+{
-+	acpi_status status;
-+	struct acpi_buffer output;
-+
-+	output.length = ACPI_ALLOCATE_BUFFER;
-+	output.pointer = NULL;
-+
-+	status = acpi_evaluate_object(handle, "_GTM", NULL, &output);
-+
-+	if (ACPI_FAILURE(status)) {
-+		ata_port_printk(ap, KERN_ERR, "ACPI get timing mode failed.\n");
-+		return -EINVAL;
+ 	return ata_std_prereset(ap, deadline);
+@@ -434,8 +434,9 @@ static int hpt3x2n_pci_clock(struct pci_
+ {
+ 	unsigned long freq;
+ 	u32 fcnt;
++	unsigned long iobase = pci_resource_start(pdev, 4);
+ 
+-	pci_read_config_dword(pdev, 0x70/*CHECKME*/, &fcnt);
++	fcnt = inl(iobase + 0x90);	/* Not PCI readable for some chips */
+ 	if ((fcnt >> 12) != 0xABCDE) {
+ 		printk(KERN_WARNING "hpt3xn: BIOS clock data not set.\n");
+ 		return 33;	/* Not BIOS set */
+@@ -504,6 +505,7 @@ static int hpt3x2n_init_one(struct pci_d
+ 	unsigned int pci_mhz;
+ 	unsigned int f_low, f_high;
+ 	int adjust;
++	unsigned long iobase = pci_resource_start(dev, 4);
+ 
+ 	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
+ 	class_rev &= 0xFF;
+@@ -513,6 +515,11 @@ static int hpt3x2n_init_one(struct pci_d
+ 			if (class_rev < 6)
+ 				return -ENODEV;
+ 			break;
++		case PCI_DEVICE_ID_TTI_HPT371:
++			if (class_rev < 2)
++				return -ENODEV;
++			/* 371N if rev > 1 */
++			break;
+ 		case PCI_DEVICE_ID_TTI_HPT372:
+ 			/* 372N if rev >= 1*/
+ 			if (class_rev == 0)
+@@ -540,6 +547,19 @@ static int hpt3x2n_init_one(struct pci_d
+ 	irqmask &= ~0x10;
+ 	pci_write_config_byte(dev, 0x5a, irqmask);
+ 
++	/*
++	 * HPT371 chips physically have only one channel, the secondary one,
++	 * but the primary channel registers do exist!  Go figure...
++	 * So,  we manually disable the non-existing channel here
++	 * (if the BIOS hasn't done this already).
++	 */
++	if (dev->device == PCI_DEVICE_ID_TTI_HPT371) {
++		u8 mcr1;
++		pci_read_config_byte(dev, 0x50, &mcr1);
++		mcr1 &= ~0x04;
++		pci_write_config_byte(dev, 0x50, mcr1);
 +	}
-+	if (output.length < sizeof(struct acpi_gtm) || output.pointer == NULL) {
-+		ata_port_printk(ap, KERN_ERR, "ACPI get timing provided invalid data.\n");
-+		return -EINVAL;
++
+ 	/* Tune the PLL. HPT recommend using 75 for SATA, 66 for UDMA133 or
+ 	   50 for UDMA100. Right now we always use 66 */
+ 
+@@ -558,14 +578,24 @@ static int hpt3x2n_init_one(struct pci_d
+ 			break;
+ 		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
+ 	}
+-	if (adjust == 8)
+-		printk(KERN_WARNING "hpt3xn: DPLL did not stabilize.\n");
++	if (adjust == 8) {
++		printk(KERN_WARNING "hpt3x2n: DPLL did not stabilize.\n");
++		return -ENODEV;
 +	}
-+	memcpy(gtm, output.pointer, sizeof(struct acpi_gtm));
-+	kfree(output.pointer);
-+	return 0;
-+}
-+
-+int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm)
-+{
-+	acpi_status status;
-+	struct acpi_object_list         input;
-+	union acpi_object               in_params[3];
-+
-+	in_params[0].type = ACPI_TYPE_BUFFER;
-+	in_params[0].buffer.length = sizeof(struct acpi_gtm);
-+	in_params[0].buffer.pointer = (u8 *)stm;
-+	/* Buffers for id may need byteswapping ? */
-+	in_params[1].type = ACPI_TYPE_BUFFER;
-+	in_params[1].buffer.length = 512;
-+	in_params[1].buffer.pointer = (u8 *)ap->device[0].id;
-+	in_params[2].type = ACPI_TYPE_BUFFER;
-+	in_params[2].buffer.length = 512;
-+	in_params[2].buffer.pointer = (u8 *)ap->device[1].id;
-+
-+	input.count = 3;
-+	input.pointer = in_params;
-+
-+	status = acpi_evaluate_object(handle, "_STM", &input, NULL);
-+
-+	if (ACPI_FAILURE(status)) {
-+		ata_port_printk(ap, KERN_ERR, "ACPI set timing mode failed.\n");
-+		return -EINVAL;
+ 
+ 	/* Set our private data up. We only need a few flags so we use
+ 	   it directly */
+ 	port->private_data = NULL;
+-	if (pci_mhz > 60)
++	if (pci_mhz > 60) {
+ 		port->private_data = (void *)PCI66;
++		/*
++		 * On  HPT371N, if ATA clock is 66 MHz we must set bit 2 in
++		 * the MISC. register to stretch the UltraDMA Tss timing.
++		 * NOTE: This register is only writeable via I/O space.
++		 */
++		if (dev->device == PCI_DEVICE_ID_TTI_HPT371)
++			outb(inb(iobase + 0x9c) | 0x04, iobase + 0x9c);
 +	}
-+	return 0;
-+}
-+
-+static void *ata_pata_find_handle(struct device *dev, int port)
-+{
-+	acpi_handle handle;
-+	acpi_integer devfn;
-+
-+	if (libata_noacpi)
-+		return NULL;
-+	if (pata_get_dev_handle(dev, &handle, &devfn) < 0)
-+		return NULL;
-+	return acpi_get_child(handle, port);
-+}
-+
-+void *ata_pata_acpi_handle(const struct ata_port *ap)
-+{
-+	return ata_pata_find_handle(ap->host->dev, ap->port_no);
-+}
-+
-+int ata_pata_acpi_present(struct pci_dev *pdev)
-+{
-+	int present = 0;
-+
-+	if(ata_pata_find_handle(&pdev->dev, 0))
-+		present |= 1;
-+	if(ata_pata_find_handle(&pdev->dev, 1))
-+		present |= 2;
-+	return present;
-+}
-+
-+
-+EXPORT_SYMBOL_GPL(ata_acpi_gtm);
-+EXPORT_SYMBOL_GPL(ata_acpi_stm);
-+EXPORT_SYMBOL_GPL(ata_pata_acpi_handle);
-+EXPORT_SYMBOL_GPL(ata_pata_acpi_present);
-diff -puN /dev/null drivers/ata/libata-acpi.h
---- /dev/null
-+++ a/drivers/ata/libata-acpi.h
-@@ -0,0 +1,47 @@
-+/*
-+ *  libata-acpi.h - helper library for ATA ACPI drivers
-+ *
-+ *  Copyright 2007 Red Hat, Inc.  All rights reserved.
-+ *  Copyright 2007 Alan Cox
-+ *
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2, or (at your option)
-+ *  any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; see the file COPYING.  If not, write to
-+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ *
-+ *
-+ *  libata documentation is available via 'make {ps|pdf}docs',
-+ *  as Documentation/DocBook/libata.*
-+ *
-+ */
-+
-+#ifndef __LIBATA_ACPI_H__
-+#define __LIBATA_ACPI_H__
-+
-+struct acpi_drive
-+{
-+	u32 pio;
-+	u32 dma;
-+};
-+
-+struct acpi_gtm {
-+	struct acpi_drive drive[2];
-+	u32 flags;
-+};
-+
-+extern int ata_acpi_gtm(const struct ata_port *p, void *handle, struct acpi_gtm *gtm);
-+extern int ata_acpi_stm(const struct ata_port *ap, void *handle, struct acpi_gtm *stm);
-+extern void *ata_pata_acpi_handle(const struct ata_port *ap);
-+extern int ata_pata_acpi_present(struct pci_dev *pdev);
-+
-+#endif
+ 
+ 	/* Now kick off ATA set up */
+ 	port_info[0] = port_info[1] = port;
+@@ -574,6 +604,7 @@ static int hpt3x2n_init_one(struct pci_d
+ 
+ static const struct pci_device_id hpt3x2n[] = {
+ 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT366), },
++	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT371), },
+ 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT372), },
+ 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT302), },
+ 	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT372N), },
 _
