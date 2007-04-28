@@ -1,21 +1,23 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: PATCH:
-Date: Sat, 28 Apr 2007 17:47:12 -0400
-Message-ID: <4633C0E0.60706@rtr.ca>
+Subject: PATCH: libata: add support for ATA_16 on ATAPI
+Date: Sat, 28 Apr 2007 17:48:59 -0400
+Message-ID: <4633C14B.6030403@rtr.ca>
+References: <4633C0E0.60706@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4667 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:4675 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752892AbXD1VrP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Apr 2007 17:47:15 -0400
+	id S1754075AbXD1VtB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 28 Apr 2007 17:49:01 -0400
+In-Reply-To: <4633C0E0.60706@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-(resending..)
+resending.. again.. with a Subject line this time :)
 
 This patch adds support for issuing ATA_16 passthru commands
 to ATAPI devices managed by libata.  It requires the previous
@@ -25,7 +27,7 @@ A boot/module parameter, "ata16_passthru=1" can be used to
 globally disable this feature, if ever desired.
 
 Signed-Off-By: Mark Lord <mlord@pobox.com>
----
+--- 
 diff -u --recursive --new-file --exclude-from=old/Documentation/dontdiff old/drivers/ata/libata-core.c new/drivers/ata/libata-core.c
 --- old/drivers/ata/libata-core.c	2007-02-02 12:29:10.000000000 -0500
 +++ new/drivers/ata/libata-core.c	2007-02-02 12:29:03.000000000 -0500
