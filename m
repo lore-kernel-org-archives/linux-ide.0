@@ -1,78 +1,77 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Sun, 29 Apr 2007 04:48:03 +0900
-Message-ID: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
-References: <46225E18.7070404@panasas.com>
-	<462261E8.5090005@panasas.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [patch 02/10] sata_nv: add back some verbosity into ADMA
+ error_handler
+Date: Sat, 28 Apr 2007 13:56:17 -0600
+Message-ID: <4633A6E1.9040907@shaw.ca>
+References: <200704260719.l3Q7JMhB023682@shell0.pdx.osdl.net>
+ <46339C63.1020206@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mfo11.iij4u.or.jp ([210.138.174.81]:59982 "EHLO
-	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031231AbXD1Tzt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Apr 2007 15:55:49 -0400
-In-Reply-To: <462261E8.5090005@panasas.com>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:54163 "EHLO
+	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031275AbXD1T4T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Apr 2007 15:56:19 -0400
+Received: from pd2mr1so.prod.shaw.ca
+ (pd2mr1so-qfe3.prod.shaw.ca [10.0.141.110]) by l-daemon
+ (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JH80059A4PVE3C0@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 28 Apr 2007 13:56:19 -0600 (MDT)
+Received: from pn2ml10so.prod.shaw.ca ([10.0.121.80])
+ by pd2mr1so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
+ 5 2006)) with ESMTP id <0JH800G344PVKCP0@pd2mr1so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Sat, 28 Apr 2007 13:56:19 -0600 (MDT)
+Received: from [192.168.1.113] ([70.64.1.86])
+ by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JH800EPU4PUS060@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 28 Apr 2007 13:56:18 -0600 (MDT)
+In-reply-to: <46339C63.1020206@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com, osd-dev@open-osd.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] bidi support: bidirectional request
-Date: Sun, 15 Apr 2007 20:33:28 +0300
-
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 645d24b..16a02ee 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -322,6 +322,7 @@ struct request {
->      void *end_io_data;
+Jeff Garzik wrote:
+> akpm@linux-foundation.org wrote:
+>> From: Robert Hancock <hancockr@shaw.ca>
+>>
+>> Some debug output in the ADMA error_handler function was removed 
+>> recently,
+>> but it may be useful in certain cases, like NCQ commands timing out.  Add
+>> it back in, but make it a bit more intelligent so that it only prints if
+>> command(s) are active and only prints the CPBs for those commands.  That
+>> way it won't spew at inappropriate times like suspend/resume.
+>>
+>> [akpm@osdl.org: cleanup]
+>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+>> Cc: Jeff Garzik <jeff@garzik.org>
+>> Cc: Tejun Heo <htejun@gmail.com>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/ata/sata_nv.c |   31 +++++++++++++++++++++++++++++--
+>>  1 file changed, 29 insertions(+), 2 deletions(-)
 > 
->      struct request_io_part uni;
-> +    struct request_io_part bidi_read;
->  };
+> Robert, is this patch still wanted?
+> 
+> It looks OK; I've held because I thought it was created to debug a 
+> special situation.
+> 
+> But I might be mistaken...
+> 
+>     Jeff
 
-Would be more straightforward to have:
+Wait a minute, this patch is essentially already merged in mainline:
 
-struct request_io_part in;
-struct request_io_part out;
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=2cb27853b7cbf0c908444e25c61b62fa336b88cd
+
+The only part that hasn't been merged is the whitespace cleanup that 
+Andrew added in his tree.
+
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
 
->  /*
-> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
->      return &req->uni;
->  }
->
-> +static inline struct request_io_part* rq_out(struct request* req)
-> +{
-> +    WARN_ON_BIDI_FLAG(req);
-> +    return &req->uni;
-> +}
-> +
-> +static inline struct request_io_part* rq_in(struct request* req)
-> +{
-> +    WARN_ON_BIDI_FLAG(req);
-> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
-> +        return &req->uni;
-> +
-> +    if (likely(req->cmd_flags & REQ_BIDI))
-> +        return &req->bidi_read;
-> +
-> +    return &req->uni;
-> +}
-> +
-> +static inline struct request_io_part* rq_io(struct request* req,
-> +                                            enum dma_data_direction dir)
-> +{
-> +    if (dir == DMA_FROM_DEVICE)
-> +        return rq_in(req);
-> +
-> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
-> +    return &req->uni;
-> +}
-
-static inline struct request_io_part* rq_io(struct request* req)
-{
-	return (req is WRITE) ? &req->out : &req->in;
-}
