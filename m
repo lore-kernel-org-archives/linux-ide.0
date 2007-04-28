@@ -1,32 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 07/10] pata_hpt3x2n: Add HPT371N support and other bits
-Date: Sat, 28 Apr 2007 15:13:50 -0400
-Message-ID: <46339CEE.3050406@garzik.org>
-References: <200704260719.l3Q7JQ48023697@shell0.pdx.osdl.net>
+Subject: Re: [patch 01/10] ata: printk warning fixes
+Date: Sat, 28 Apr 2007 15:16:49 -0400
+Message-ID: <46339DA1.6060706@garzik.org>
+References: <200704260719.l3Q7JLr7023679@shell0.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53665 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53673 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754784AbXD1TNy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Apr 2007 15:13:54 -0400
-In-Reply-To: <200704260719.l3Q7JQ48023697@shell0.pdx.osdl.net>
+	id S1751717AbXD1TQv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 28 Apr 2007 15:16:51 -0400
+In-Reply-To: <200704260719.l3Q7JLr7023679@shell0.pdx.osdl.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+akpm@linux-foundation.org wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
 > 
-> Yes its no longer 3x2n but 3xxn, I can rename it if you want Jeff
+> drivers/ata/libata-core.c: In function 'ata_hpa_resize':
+> drivers/ata/libata-core.c:986: warning: format '%lld' expects type 'long long int', but argument 5 has type 'u64'
+> drivers/ata/libata-core.c:986: warning: format '%lld' expects type 'long long int', but argument 6 has type 'u64'
+> drivers/ata/libata-core.c:990: warning: format '%lld' expects type 'long long int', but argument 4 has type 'u64'
+> drivers/ata/libata-core.c:990: warning: format '%lld' expects type 'long long int', but argument 5 has type 'u64'
+> drivers/ata/libata-core.c:1003: warning: format '%lld' expects type 'long long int', but argument 4 has type 'u64'
+> 
+> Also fix various 80-col bustage.
+> 
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Choose whatever you feel is the best long term name; I have no 
-preference here.
+applied
 
-If you do rename, please follow this slightly special procedure:
-
-* add a MODULE_ALIAS() for the old name
-* send me a patch with everything BUT the file move.  I will do the 
-rename in git.
 
