@@ -1,50 +1,34 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Handle drives that require a spin-up command
- before first access
-Date: Sat, 28 Apr 2007 14:41:15 -0400
-Message-ID: <4633954B.6040306@garzik.org>
-References: <4625497F.7010109@rtr.ca>
+Subject: Re: [PATCH] libata: add missing call to ->cable_detect() in new EH
+ path
+Date: Sat, 28 Apr 2007 14:46:36 -0400
+Message-ID: <4633968C.7040504@garzik.org>
+References: <20070422170553.GL10619@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53322 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53378 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1163504AbXD1SlT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Apr 2007 14:41:19 -0400
-In-Reply-To: <4625497F.7010109@rtr.ca>
+	id S1161399AbXD1Sqi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 28 Apr 2007 14:46:38 -0400
+In-Reply-To: <20070422170553.GL10619@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
+Tejun Heo wrote:
+> ->cable_detect() used to be called on by the old ata_bus_probe() path.
+> Add invocation to ata_eh_revalidate_and_attach() right after IDENTIFYs
+> are done.
 > 
-> (S)ATA drives can be configured for "power-up in standby",
-> a mode whereby a specific "spin up now!" command is required
-> before the first media access.
-> 
-> Currently, a drive with this feature enabled can not be used at all
-> with libata, and once in this mode, the drive becomes a doorstop.
-> 
-> The older drivers/ide subsystem at least enumerates the drive,
-> so that it can be woken up after the fact from a userspace HDIO_*
-> command, but not libata.
-> 
-> This patch adds support to libata for the "power-up in standby"
-> mode where a "spin up now!" command (SET_FEATURES) is needed.
-> With this, libata will recognize such drives, spin them up,
-> and then re-IDENTIFY them if necessary to get a full/complete
-> set of drive features data.
-> 
-> Drives in this state are determined by looking for
-> special values in id[2], as documented in the current ATA specs.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> ---
+>  drivers/ata/libata-eh.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
 
 applied
-
-though I'm curious where the verify step went, that was in the previous 
-rev of the patch
 
 
