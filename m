@@ -1,34 +1,29 @@
-From: Mark Lord <liml@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: libata fails to recover from HSM violation involving DRQ status
-Date: Sat, 28 Apr 2007 16:18:04 -0400
-Message-ID: <4633ABFC.1020606@rtr.ca>
+Date: Sat, 28 Apr 2007 21:30:26 +0100
+Message-ID: <20070428213026.51855392@the-village.bc.nu>
 References: <4633AB75.7070107@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2804 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbXD1USG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Apr 2007 16:18:06 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45385 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750962AbXD1U0x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Apr 2007 16:26:53 -0400
 In-Reply-To: <4633AB75.7070107@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Tejun,
-> 
-> While working on the new hdparm (version 7.0, released today),
-> I ran into trouble when a buggy SG_IO/ATA_16 packet caused
-> the libata EH to get confused.
-> 
-> I triggered this by accident, issuing an IDENTIFY command
-> which incorrectly specified ATA_PROT_NODATA.  My error, for sure,
-> but libata never recovered from the "stuck DRQ bit" that resulted.
-...
+> In the IDE driver, we had code to try and cope with stuck DRQ,
+> by just looping and reading from the data port a few times.
+> That could have been done better, but it worked a lot of the time,
+> back in those simpler days.
 
-This was on 2.6.21, with ata_piix.
+It works very well. The current "old" IDE has some changes in the area
+but those are basically to handle one or two controllers whose internal
+state machine flushes the data queue so we don't hang the box solid
+trying to flush it ourselves.
 
-Cheers
