@@ -1,44 +1,78 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 08/10] drivers/ata/pata_cmd640.c: fix build with CONFIG_PM=n
-Date: Sat, 28 Apr 2007 15:17:10 -0400
-Message-ID: <46339DB6.2030505@garzik.org>
-References: <200704260719.l3Q7JQ8B023700@shell0.pdx.osdl.net>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 29 Apr 2007 04:48:03 +0900
+Message-ID: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
+References: <46225E18.7070404@panasas.com>
+	<462261E8.5090005@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53693 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754118AbXD1TRM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Apr 2007 15:17:12 -0400
-In-Reply-To: <200704260719.l3Q7JQ8B023700@shell0.pdx.osdl.net>
+Received: from mfo11.iij4u.or.jp ([210.138.174.81]:59982 "EHLO
+	mfo11.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031231AbXD1Tzt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Apr 2007 15:55:49 -0400
+In-Reply-To: <462261E8.5090005@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
+To: bharrosh@panasas.com
+Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com, osd-dev@open-osd.org
 
-akpm@linux-foundation.org wrote:
-> From: Andrew Morton <akpm@linux-foundation.org>
-> 
-> This is grubby, but all the ata drivers do it this way.
-> 
-> Would it not be better to do
-> 
-> #define ata_scsi_device_resume NULL
-> 
-> in libata.h, remove all those ifdefs?
-> 
-> (updated version, ug, ug)
-> 
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/ata/pata_cmd640.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 15 Apr 2007 20:33:28 +0300
 
-applied 8-9
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 645d24b..16a02ee 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -322,6 +322,7 @@ struct request {
+>      void *end_io_data;
+> 
+>      struct request_io_part uni;
+> +    struct request_io_part bidi_read;
+>  };
+
+Would be more straightforward to have:
+
+struct request_io_part in;
+struct request_io_part out;
 
 
+>  /*
+> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
+>      return &req->uni;
+>  }
+>
+> +static inline struct request_io_part* rq_out(struct request* req)
+> +{
+> +    WARN_ON_BIDI_FLAG(req);
+> +    return &req->uni;
+> +}
+> +
+> +static inline struct request_io_part* rq_in(struct request* req)
+> +{
+> +    WARN_ON_BIDI_FLAG(req);
+> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
+> +        return &req->uni;
+> +
+> +    if (likely(req->cmd_flags & REQ_BIDI))
+> +        return &req->bidi_read;
+> +
+> +    return &req->uni;
+> +}
+> +
+> +static inline struct request_io_part* rq_io(struct request* req,
+> +                                            enum dma_data_direction dir)
+> +{
+> +    if (dir == DMA_FROM_DEVICE)
+> +        return rq_in(req);
+> +
+> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
+> +    return &req->uni;
+> +}
+
+static inline struct request_io_part* rq_io(struct request* req)
+{
+	return (req is WRITE) ? &req->out : &req->in;
+}
