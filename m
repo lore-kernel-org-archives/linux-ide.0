@@ -1,42 +1,38 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
-Date: Mon, 30 Apr 2007 01:43:58 +0900
-Message-ID: <4634CB4E.30402@gmail.com>
-References: <010501c78736$aad2e480$0703a8c0@SJAWINXP> <20070426023534.68007582C@rmail.inner.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata fails to recover from HSM violation involving DRQ status
+Date: Sun, 29 Apr 2007 12:47:20 -0400
+Message-ID: <4634CC18.4080208@rtr.ca>
+References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca> <4634CAEC.4010700@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:23634 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753895AbXD2QoE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Apr 2007 12:44:04 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so1681221nzf
-        for <linux-ide@vger.kernel.org>; Sun, 29 Apr 2007 09:44:04 -0700 (PDT)
-In-Reply-To: <20070426023534.68007582C@rmail.inner.net>
+Received: from rtr.ca ([64.26.128.89]:4658 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753957AbXD2QrX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Apr 2007 12:47:23 -0400
+In-Reply-To: <4634CAEC.4010700@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Craig Metz <cmetz@inner.net>
-Cc: "Steven J. Ackerman" <sjackerman@comcast.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Craig Metz wrote:
-> In message <010501c78736$aad2e480$0703a8c0@SJAWINXP>, you write:
->>> Here are the Linux Kernel error messages that are produced by this
->>> kernel running on a Intel D865GLC motherboard trying to talk to our
->>> ARC-770 based adaptor on SATA-0 :
->>>
->>> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10 
->>> scsi2 : ata_piix ata1.00: CFA, max PIO4, 8005536 sectors: LBA 
->>> ata1.00: ata1: dev 0 multi count 0 ata1.00: qc timeout (cmd 0xef) 
->>> ata1.00: failed to set xfermode (err_mask=0x4)
->> Can you give a shot at 2.6.21-rc7.  The problem should have been fixed
->> there.
-> 
->   I am also having problems with this device, but on both an ICH5 and on a
-> VIA pre-AHCI SATA controller. I just tried 2.6.21-rc7 - it fails in exactly the
-> same way as with 2.6.20.
+Tejun Heo wrote:
+> So, this is specific to SATA (the host side at least) piix && PIO READ,
+> right?  I think we can fit this code nicely into
+> piix_sata_error_handler() if we make sure that it triggers under the
+> right condition - after a PIO READ command fails due to HSM violation
+> caused by stuck DRQ.
 
-Can you please post full dmesg?
+Yeah, so far it's just PIO FROM DEVICE on a "SATA" device on ata_piix.
+It *may* be more widespread than that, but we'll have to test some others.
 
--- 
-tejun
+> Can you please perform similar test on a native PATA device connected to
+> native PATA controller?  I'm curious whether SRST makes real silicons
+> forget about the on-going command.
+
+I'll dig through some other hardware here and see what I have.
+This'll take a few hours.
+
+Cheers
+
