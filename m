@@ -1,45 +1,57 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/13] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
-Date: Sun, 29 Apr 2007 11:56:31 +0900
-Message-ID: <4634095F.2050803@gmail.com>
-References: <11772636662936-git-send-email-htejun@gmail.com> <46339951.3080508@garzik.org>
+Subject: Re: [PATCH 09/13] libata-acpi: clean up ata_acpi_exec_tfs()
+Date: Sun, 29 Apr 2007 11:56:46 +0900
+Message-ID: <4634096E.2060708@gmail.com>
+References: <1177263666341-git-send-email-htejun@gmail.com> <463399C4.80505@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46339951.3080508@garzik.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.233]:48262 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754228AbXD2C5n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Apr 2007 22:57:43 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1296794wra
+        for <linux-ide@vger.kernel.org>; Sat, 28 Apr 2007 19:57:42 -0700 (PDT)
+In-Reply-To: <463399C4.80505@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: mjg59@srcf.ucam.org, rdunlap@xenotime.net, trenn@suse.de, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, kristen.c.accardi@intel.com, lenb@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
 > Tejun Heo wrote:
->> Whether a controller needs IDE or SATA ACPI hierarchy is determined by
->> the programming interface of the controller not by whether the
->> controller is SATA or PATA, or it supports slave device or not.  This
->> patch adds ATA_FLAG_ACPI_SATA port flags which tells libata-acpi that
->> the port needs SATA ACPI nodes, and sets the flag for ahci and
->> sata_sil24.
+>> This patch cleans up ata_acpi_exec_tfs() and its friends.
+>>
+>> * Rename taskfile_array to ata_acpi_gtf and make it __packed as it's
+>>   used as argument to ACPI method, and use pointer to ata_acpi_gtf and
+>>   number of taskfiles to represent _GTF taskfiles instead of a pointer
+>>   casted into unsigned long and byte count.  This makes argument
+>>   re-checking in do_drive_set_taskfiles() unnecessary.
+>>
+>> * Pointer in void * not in unsigned long.
+>>
+>> * Clean up do_drive_get_GTF() error handling and make
+>>   do_drive_get_GTF() return number of taskfiles on success, 0 if _GTF
+>>   doesn't exist or doesn't contain valid ata.  -errno on other errors.
+>>
+>> * Remove superflous check for acpi->buffer.pointer.
+>>
+>> * Update taskfile_load_raw() such that printed messages look similar
+>>   to the messages printed by ata_eh_report().
 >>
 >> Signed-off-by: Tejun Heo <htejun@gmail.com>
 >> ---
->>  drivers/ata/ahci.c        |    3 ++-
->>  drivers/ata/libata-acpi.c |   10 +++++-----
->>  drivers/ata/sata_sil24.c  |    3 ++-
->>  include/linux/libata.h    |    1 +
->>  4 files changed, 10 insertions(+), 7 deletions(-)
+>>  drivers/ata/libata-acpi.c |  219
+>> ++++++++++++++++++++++-----------------------
+>>  1 files changed, 107 insertions(+), 112 deletions(-)
 > 
-> I don't think the situation is as static as a compiled-in driver flag
-> implies.  And I'm not really convinced a driver flag is needed, or wanted.
+> ACK
 > 
-> If anything, the only flag we /may/ need could be a
-> ATA_FLAG_NEVER_EVER_DO_ACPI_FOR_THIS_CONTROLLER.
+> As an aside, I hate the "do_" prefix on functions.  It is utterly
+> redundant.
 
-Can you please elaborate a bit?  As I wrote while talking with Alan, I
-really don't know how to do auto-matching.  Personally, I don't think
-there is a way to do that safely but will be happy to implement it if
-someone can enlighten me.  :-)
+Okay, will drop.
 
 -- 
 tejun
