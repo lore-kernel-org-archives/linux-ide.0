@@ -1,48 +1,97 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata fails to recover from HSM violation involving DRQ status
-Date: Sun, 29 Apr 2007 09:13:39 -0400
-Message-ID: <46349A03.9090300@rtr.ca>
-References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 29 Apr 2007 18:48:59 +0300
+Message-ID: <4634BE6B.3000808@panasas.com>
+References: <46225E18.7070404@panasas.com>	<462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1250 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755268AbXD2NNk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Apr 2007 09:13:40 -0400
-In-Reply-To: <46349695.7080706@rtr.ca>
+Received: from gw-e.panasas.com ([65.194.124.178]:52861 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756505AbXD2Ptz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Apr 2007 11:49:55 -0400
+In-Reply-To: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
+
+FUJITA Tomonori wrote:
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Subject: [PATCH 4/4] bidi support: bidirectional request
+> Date: Sun, 15 Apr 2007 20:33:28 +0300
+> 
+>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>> index 645d24b..16a02ee 100644
+>> --- a/include/linux/blkdev.h
+>> +++ b/include/linux/blkdev.h
+>> @@ -322,6 +322,7 @@ struct request {
+>>      void *end_io_data;
+>>
+>>      struct request_io_part uni;
+>> +    struct request_io_part bidi_read;
+>>  };
+> 
+> Would be more straightforward to have:
+> 
+> struct request_io_part in;
+> struct request_io_part out;
+> 
+
+Yes I wish I could do that. For bidi supporting drivers this is the most logical.
+But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
+the hotish paths, this means we will need a pointer to a uni request_io_part.
+This is bad because:
+1st- There is no defined stage in a request life where to definitely set that pointer,
+     specially in the preparation stages.
+2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
+     very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
+     (not sent yet) but a more long term solution is needed. Once such hacks are
+     cleaned up we can do what you say. This is exactly why I use the access functions
+     rq_uni/rq_io/rq_in/rq_out and not open code access.
 
 > 
->>> Ah.. one more thing, is this draining also needed after DMA commands or
->>> only after PIO commands?
+>>  /*
+>> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
+>>      return &req->uni;
+>>  }
+>>
+>> +static inline struct request_io_part* rq_out(struct request* req)
+>> +{
+>> +    WARN_ON_BIDI_FLAG(req);
+>> +    return &req->uni;
+>> +}
+>> +
+>> +static inline struct request_io_part* rq_in(struct request* req)
+>> +{
+>> +    WARN_ON_BIDI_FLAG(req);
+>> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
+>> +        return &req->uni;
+>> +
+>> +    if (likely(req->cmd_flags & REQ_BIDI))
+>> +        return &req->bidi_read;
+>> +
+>> +    return &req->uni;
+>> +}
+>> +
+>> +static inline struct request_io_part* rq_io(struct request* req,
+>> +                                            enum dma_data_direction dir)
+>> +{
+>> +    if (dir == DMA_FROM_DEVICE)
+>> +        return rq_in(req);
+>> +
+>> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
+>> +    return &req->uni;
+>> +}
 > 
-> My drive doesn't do IDENTIFY_DMA, so I fed it a READ_DMA instead
-> with "no data", and libata recovered without draining. 
+> static inline struct request_io_part* rq_io(struct request* req)
+> {
+> 	return (req is WRITE) ? &req->out : &req->in;
+> }
 
-More specifically, here's what happens for READ_DMA(1 sector)
-with "NON_DATA" specified (same circustances as the failed IDENTIFY):
+Again I'm all for it. But this is a to deep of a change. Too many things changing
+at once. If we keep the access functions than it does not matter, we can do it later.
 
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata1.00: cmd c8/00:01:00:00:00/00:00:00:00:00/40 tag 0 cdb 0x0 data 0
-         res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
-ata1: port is slow to respond, please be patient (Status 0xd0)
-ata1: port failed to respond (30 secs, Status 0xd0)
-ata1: soft resetting port
-ATA: abnormal status 0xD0 on port 0x000101f7
-ATA: abnormal status 0xD0 on port 0x000101f7
-ata1.00: configured for UDMA/100
-ata1: EH complete
-SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Boaz
 
-So no draining, and all is well again.
-Odds look pretty good that this is just a PIO thing.
-
--ml
