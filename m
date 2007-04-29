@@ -1,64 +1,42 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata fails to recover from HSM violation involving DRQ status
-Date: Mon, 30 Apr 2007 01:42:20 +0900
-Message-ID: <4634CAEC.4010700@gmail.com>
-References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca>
+Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
+Date: Mon, 30 Apr 2007 01:43:58 +0900
+Message-ID: <4634CB4E.30402@gmail.com>
+References: <010501c78736$aad2e480$0703a8c0@SJAWINXP> <20070426023534.68007582C@rmail.inner.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:23011 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.229]:23634 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905AbXD2Qmc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Apr 2007 12:42:32 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so1680895nzf
-        for <linux-ide@vger.kernel.org>; Sun, 29 Apr 2007 09:42:31 -0700 (PDT)
-In-Reply-To: <46349A03.9090300@rtr.ca>
+	with ESMTP id S1753895AbXD2QoE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Apr 2007 12:44:04 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so1681221nzf
+        for <linux-ide@vger.kernel.org>; Sun, 29 Apr 2007 09:44:04 -0700 (PDT)
+In-Reply-To: <20070426023534.68007582C@rmail.inner.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Craig Metz <cmetz@inner.net>
+Cc: "Steven J. Ackerman" <sjackerman@comcast.net>, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
->>>> Ah.. one more thing, is this draining also needed after DMA commands or
->>>> only after PIO commands?
->>
->> My drive doesn't do IDENTIFY_DMA, so I fed it a READ_DMA instead
->> with "no data", and libata recovered without draining. 
+Craig Metz wrote:
+> In message <010501c78736$aad2e480$0703a8c0@SJAWINXP>, you write:
+>>> Here are the Linux Kernel error messages that are produced by this
+>>> kernel running on a Intel D865GLC motherboard trying to talk to our
+>>> ARC-770 based adaptor on SATA-0 :
+>>>
+>>> ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 10 
+>>> scsi2 : ata_piix ata1.00: CFA, max PIO4, 8005536 sectors: LBA 
+>>> ata1.00: ata1: dev 0 multi count 0 ata1.00: qc timeout (cmd 0xef) 
+>>> ata1.00: failed to set xfermode (err_mask=0x4)
+>> Can you give a shot at 2.6.21-rc7.  The problem should have been fixed
+>> there.
 > 
-> More specifically, here's what happens for READ_DMA(1 sector)
-> with "NON_DATA" specified (same circustances as the failed IDENTIFY):
-> 
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: cmd c8/00:01:00:00:00/00:00:00:00:00/40 tag 0 cdb 0x0 data 0
->         res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
-> ata1: port is slow to respond, please be patient (Status 0xd0)
-> ata1: port failed to respond (30 secs, Status 0xd0)
-> ata1: soft resetting port
-> ATA: abnormal status 0xD0 on port 0x000101f7
-> ATA: abnormal status 0xD0 on port 0x000101f7
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-> sda: Write Protect is off
-> sda: Mode Sense: 00 3a 00 00
-> SCSI device sda: write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> 
-> So no draining, and all is well again.
-> Odds look pretty good that this is just a PIO thing.
+>   I am also having problems with this device, but on both an ICH5 and on a
+> VIA pre-AHCI SATA controller. I just tried 2.6.21-rc7 - it fails in exactly the
+> same way as with 2.6.20.
 
-So, this is specific to SATA (the host side at least) piix && PIO READ,
-right?  I think we can fit this code nicely into
-piix_sata_error_handler() if we make sure that it triggers under the
-right condition - after a PIO READ command fails due to HSM violation
-caused by stuck DRQ.
-
-Can you please perform similar test on a native PATA device connected to
-native PATA controller?  I'm curious whether SRST makes real silicons
-forget about the on-going command.
-
-Thanks.
+Can you please post full dmesg?
 
 -- 
 tejun
