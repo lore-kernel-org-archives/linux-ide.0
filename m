@@ -1,82 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Sun, 29 Apr 2007 13:49:48 -0500
-Message-ID: <1177872588.3688.79.camel@mulgrave.il.steeleye.com>
-References: <46225E18.7070404@panasas.com>	<462261E8.5090005@panasas.com>
-	 <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
-	 <4634BE6B.3000808@panasas.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata fails to recover from HSM violation involving DRQ status
+Date: Sun, 29 Apr 2007 15:05:39 -0400
+Message-ID: <4634EC83.1030109@rtr.ca>
+References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca> <4634CAEC.4010700@gmail.com> <4634CC18.4080208@rtr.ca> <4634E8B3.4050301@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:53795 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754409AbXD2Su4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Apr 2007 14:50:56 -0400
-In-Reply-To: <4634BE6B.3000808@panasas.com>
+Received: from rtr.ca ([64.26.128.89]:1414 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418AbXD2TFm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Apr 2007 15:05:42 -0400
+In-Reply-To: <4634E8B3.4050301@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, 2007-04-29 at 18:48 +0300, Boaz Harrosh wrote:
-> FUJITA Tomonori wrote:
-> > From: Boaz Harrosh <bharrosh@panasas.com>
-> > Subject: [PATCH 4/4] bidi support: bidirectional request
-> > Date: Sun, 15 Apr 2007 20:33:28 +0300
-> > 
-> >> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> >> index 645d24b..16a02ee 100644
-> >> --- a/include/linux/blkdev.h
-> >> +++ b/include/linux/blkdev.h
-> >> @@ -322,6 +322,7 @@ struct request {
-> >>      void *end_io_data;
-> >>
-> >>      struct request_io_part uni;
-> >> +    struct request_io_part bidi_read;
-> >>  };
-> > 
-> > Would be more straightforward to have:
-> > 
-> > struct request_io_part in;
-> > struct request_io_part out;
-> > 
-> 
-> Yes I wish I could do that. For bidi supporting drivers this is the most logical.
-> But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
-> the hotish paths, this means we will need a pointer to a uni request_io_part.
-> This is bad because:
-> 1st- There is no defined stage in a request life where to definitely set that pointer,
->      specially in the preparation stages.
-> 2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
->      very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
->      (not sent yet) but a more long term solution is needed. Once such hacks are
->      cleaned up we can do what you say. This is exactly why I use the access functions
->      rq_uni/rq_io/rq_in/rq_out and not open code access.
+.. And here is another test of un-hacked 2.6.21,
+this time for ata_piix with a pure PATA configuration.
+Again, it passes with flying colours.
 
-I'm still not really convinced about this approach.  The primary job of
-the block layer is to manage and merge READ and WRITE requests.  It
-serves a beautiful secondary function of queueing for arbitrary requests
-it doesn't understand (REQ_TYPE_BLOCK_PC or REQ_TYPE_SPECIAL ... or
-indeed any non REQ_TYPE_FS).
 
-bidirectional requests fall into the latter category (there's nothing
-really we can do to merge them ... they're just transported by the block
-layer).  The only unusual feature is that they carry two bios.  I think
-the drivers that actually support bidirectional will be a rarity, so it
-might even be advisable to add it to the queue capability (refuse
-bidirectional requests at the top rather than perturbing all the drivers
-to process them).
+ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ffa0 irq 14
+ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ffa8 irq 15
+scsi0 : ata_piix
+ata1.00: ATA-7: Maxtor 6Y160L0, YAR41BW0, max UDMA/133
+ata1.00: 320173056 sectors, multi 16: LBA48 
+ata1.00: configured for UDMA/100
+scsi1 : ata_piix
+ata2.00: ATAPI, max UDMA/66
+ata2.01: ATAPI, max MWDMA2
+ata2.00: configured for UDMA/66
+ata2.01: configured for MWDMA2
+scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6Y160L0   YAR4 PQ: 0 ANSI: 5
+SCSI device sda: 320173056 512-byte hdwr sectors (163929 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+SCSI device sda: 320173056 512-byte hdwr sectors (163929 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3
+sd 0:0:0:0: Attached scsi disk sda
+scsi 1:0:0:0: CD-ROM            PIONEER  DVD-RW  DVR-111D 1.23 PQ: 0 ANSI: 5
+scsi 1:0:1:0: CD-ROM            PLEXTOR  CD-R   PX-W1210A 1.08 PQ: 0 ANSI: 5
 
-So, what about REQ_TYPE_BIDIRECTIONAL rather than REQ_BIDI?  That will
-remove it from the standard path and put it on the special command type
-path where we can process it specially.  Additionally, if you take this
-approach, you can probably simply chain the second bio through
-req->special as an additional request in the stream.  The only thing
-that would then need modification would be the dequeue of the block
-driver (it would have to dequeue both requests and prepare them) and
-that needs to be done only for drivers handling bidirectional requests.
+....
 
-James
+####### hdparm --drq-hsm-error /dev/sda:
 
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: cmd ec/00:00:00:00:00/00:00:00:00:00/40 tag 0 cdb 0x0 data 0 
+         res 58/00:ff:00:00:00/00:00:00:00:00/40 Emask 0x2 (HSM violation)
+ata1: soft resetting port
+ata1.00: configured for UDMA/100
+ata1: EH complete
+SCSI device sda: 320173056 512-byte hdwr sectors (163929 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+####### hdparm --drq-hsm-error /dev/cdrom:
+
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: cmd a1/00:00:00:00:00/00:00:00:00:00/40 tag 0 cdb 0x1e data 0 
+         res 58/00:02:00:00:02/00:00:00:00:00/40 Emask 0x2 (HSM violation)
+ata2: soft resetting port
+ata2.00: configured for UDMA/66
+ata2.01: configured for MWDMA2
+ata2: EH complete
 
