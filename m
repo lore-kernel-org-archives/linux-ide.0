@@ -1,46 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates
-Date: Mon, 30 Apr 2007 18:11:42 -0400
-Message-ID: <4636699E.5040200@garzik.org>
-References: <20070429161542.GA12501@havoc.gtf.org> <46364901.4000907@redhat.com> <46364C04.4050208@garzik.org> <4636685E.2010701@redhat.com>
+From: Bob Stewart <bob@evoria.net>
+Subject: Disk corruption somewhere between 2.6.20.3 and 2.6.20.6?
+Date: Mon, 30 Apr 2007 15:21:49 -0700 (PDT)
+Message-ID: <898154.58386.qm@web903.biz.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43414 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946857AbXD3WLo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Apr 2007 18:11:44 -0400
-In-Reply-To: <4636685E.2010701@redhat.com>
+Received: from web903.biz.mail.mud.yahoo.com ([216.252.100.43]:44658 "HELO
+	web903.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1946866AbXD3W2b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 18:28:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Chuck Ebbert wrote:
-> Jeff Garzik wrote:
->> Chuck Ebbert wrote:
->>> Jeff Garzik wrote:
->>>> Jeff Garzik (8):
->>>>       libata/IDE: remove combined mode quirk
->>> You can't just remove the "combined_mode=" kernel parameter or
->>> every Linux user who uses that will get an unbootable kernel
->>> with no good way of diagnosing the problem. It should still
->>> be accepted and just print a warning.
->> No, most modern distros will simply Just Work(tm) due to mount by label,
->> udev, and similar gadgets.
->>
->> As long as you have at least one (if not both) ATA drivers, you have a
->> kernel that will boot your hardware.  And by definition those using
->> combined_mode= do indeed have the necessary drivers.
-> 
-> OK, this is a kernel parameter and should be fine. But you can't remove
-> *module* parameters for drivers needed for booting or the initrd will
-> fail to load the module with "unknown parameter" and users can't boot.
+After upgrading my kernel to 2.6.20.6 recently, I 
+started having random drive errors on both ext3 and xfs
+filesystems.  On boot, my two data drives (one ide and one sata)
+would come up with fsck errors.  Somehow the root drive was
+spared.  One of the first symptoms of the problem was 
+"illegal filename" when trying to remove files copied by "cp -axu"
+as part of a backup operation.  I fell back to 2.6.20.3, and these 
+problems seem to have gone away.  The motherboard is an Asus 
+A7NX8 using sata_sil and amd74xx drivers.  Is this
+a known problem?  I'm kinda reluctant to try later kernels
+on this machine now.
 
-No module parameters were removed.
-
-	Jeff
-
-
-
+Bob
