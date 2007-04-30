@@ -1,35 +1,33 @@
-From: "Berck E. Nash" <flyboy@gmail.com>
-Subject: Re: 2.6.21-rc7-mm1 BUG at kernel/sched-clock.c:175 init_sched_clock()
-Date: Mon, 30 Apr 2007 06:07:49 -0600
-Message-ID: <4635DC15.6090705@gmail.com>
-References: <462E4C4D.9020806@gmail.com> <20070425011654.222a2b4b.akpm@linux-foundation.org> <462F1481.8010807@gmail.com> <20070425085432.GD17130@htj.dyndns.org> <20070425093044.GE17130@htj.dyndns.org> <462FE982.7030906@gmail.com> <46354620.4060902@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Mon, 30 Apr 2007 09:05:57 -0400
+Message-ID: <4635E9B5.1020708@rtr.ca>
+References: <46225E18.7070404@panasas.com> <462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp> <4634BE6B.3000808@panasas.com> <1177872588.3688.79.camel@mulgrave.il.steeleye.com> <20070430111157.GI21015@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:63214 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423181AbXD3MHx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 08:07:53 -0400
-Received: by py-out-1112.google.com with SMTP id a29so1312403pyi
-        for <linux-ide@vger.kernel.org>; Mon, 30 Apr 2007 05:07:52 -0700 (PDT)
-In-Reply-To: <46354620.4060902@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:3829 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423233AbXD3NGA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Apr 2007 09:06:00 -0400
+In-Reply-To: <20070430111157.GI21015@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <tomof@acm.org>, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
 
-Tejun Heo wrote:
+Jens Axboe wrote:
+>
+> So basically just add a struct request pointer, so you can do rq =
+> rq->next_rq or something for the next data phase. I bet this would be a
+> LOT less invasive as well, and we can get by with a few helpers to
+> support it.
 
-> Hmmm... Once properly initialized, ahci is highly unlikely to cause
-> runaway IRQs which results in nobody cared.  It has proper IRQ mask and
-> pending bits allowing the driver to reliably detect when and why the
-> controller is raising interrupt and disable it if necessary.  Can you
-> try without the NVIDIA module?
+Hey, I want a way to issue those (linked requests) from userspace (SG_IO), too.
+Specifically for use with the new SMART Command Transport (SCT) feature set
+on modern SATA drives.  As well as for a disk recovery utility I'm working on.
 
-I'm beginning to think it was a one-time hardware error of some sort.
-I've been running 2.6.21-rc7-mm2 for awhile now and the problem hasn't
-reoccurred, so I think you can consider the matter settled...
+Sounds generally useful, that.
 
-Thanks,
-Berck
+
