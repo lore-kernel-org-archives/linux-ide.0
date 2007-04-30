@@ -1,60 +1,38 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.21-rc7-mm2 2/2] sata_promise: move port reset from
- error intr to EH prereset
-Date: Mon, 30 Apr 2007 11:27:46 +0200
-Message-ID: <4635B692.5040507@gmail.com>
-References: <200704290203.l3T23UeQ009873@harpo.it.uu.se>
+Subject: Re: libata fails to recover from HSM violation involving DRQ status
+Date: Mon, 30 Apr 2007 12:58:25 +0900
+Message-ID: <46356961.9020803@gmail.com>
+References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca> <4634CAEC.4010700@gmail.com> <4634CC18.4080208@rtr.ca> <4634E8B3.4050301@rtr.ca> <4634ED0D.1090709@rtr.ca> <46353E63.7070000@gmail.com> <463565A6.3040506@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nz-out-0506.google.com ([64.233.162.234]:6541 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030827AbXD3TuT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 15:50:19 -0400
+	with ESMTP id S1030853AbXD3Ttx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 15:49:53 -0400
 Received: by nz-out-0506.google.com with SMTP id o1so2031854nzf
-        for <linux-ide@vger.kernel.org>; Mon, 30 Apr 2007 12:50:19 -0700 (PDT)
-In-Reply-To: <200704290203.l3T23UeQ009873@harpo.it.uu.se>
+        for <linux-ide@vger.kernel.org>; Mon, 30 Apr 2007 12:49:53 -0700 (PDT)
+In-Reply-To: <463565A6.3040506@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
+Mark Lord wrote:
+> Tejun Heo wrote:
+>>
+>> Hmmm... that's very weird.  I've never seen such problems.  The report
+>> messages are printed in ata_eh_report() and both the cmd and res lines
+>> are printed by single invocation to printk().  Is the log captured using
+>> serial console?  I think it could be transmission error or buffer
+>> overflow on serial link.
+> 
+> Naw, just "dmesg > file", so it should be a pretty reliable capture.
+> Just odd.  Something weird.
 
-Mikael Pettersson wrote:
-> @@ -647,12 +650,10 @@ static void pdc_error_intr(struct ata_po
->  			   | PDC_PCI_SYS_ERR | PDC1_PCI_PARITY_ERR))
->  		ac_err_mask |= AC_ERR_HOST_BUS;
->  
-> -	if (sata_scr_valid(ap))
-> -		ehi->serror |= pdc_sata_scr_read(ap, SCR_ERROR);
-> -
-> +	ehi->action |= ATA_EH_SOFTRESET;
->  	qc->err_mask |= ac_err_mask;
->  
-> -	pdc_reset_port(ap);
-> +	ata_port_freeze(ap);
->  }
-
-You really don't wanna schedule ATA_EH_SOFTRESET and freeze the port on
-every error.  If you do that, ATAPI devices will be reset after each
-CHECK CONDITION and it probably won't work properly.  FWIW, libata EH
-automatically issues softreset if the port is frozen (as that's the only
-way to thaw the port), so setting EH_SOFTRESET is optional if you freeze
-the port.
-
-Another problem is that EH may issue other commands to while trying to
-recover - e.g. PACKET - REQUEST SENSE or READ LOG PAGE.  This only
-happens if the port is ready for commands, IOW, !frozen.  Before, the
-pdc_reset_port() used to be called on entry to EH if it's not frozen but
-it's not after this patch.  Is this safe?
-
-I think adding a call to pdc_reset_port() to prereset() and freezing the
-port if the port is in weird state should do it but I dunno much about
-the controller.
-
-Thanks.
+The format string is pretty long with a lot of parameters.  Maybe we're
+hitting some obscure bug in printk and friends?
 
 -- 
 tejun
