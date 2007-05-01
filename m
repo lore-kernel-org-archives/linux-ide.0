@@ -1,66 +1,62 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: System freezes with kernel >2.6.19 - sata_nv
-Date: Tue, 01 May 2007 04:24:28 +0200
-Message-ID: <4636A4DC.8070606@gmail.com>
-References: <46351BE2.70901@yahoo.de> <4635BF4A.3050509@gmail.com> <46367F58.7000609@shaw.ca>
+Subject: Re: libata fails to recover from HSM violation involving DRQ status
+Date: Tue, 01 May 2007 04:47:11 +0200
+Message-ID: <4636AA2F.7050904@gmail.com>
+References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca> <4634CAEC.4010700@gmail.com> <4634CC18.4080208@rtr.ca> <4634E8B3.4050301@rtr.ca> <4634ED0D.1090709@rtr.ca> <46353E63.7070000@gmail.com> <46362BAC.4030909@rtr.ca> <4636888A.10507@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.237]:35892 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754349AbXEACZn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 22:25:43 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1783792wra
-        for <linux-ide@vger.kernel.org>; Mon, 30 Apr 2007 19:25:42 -0700 (PDT)
-In-Reply-To: <46367F58.7000609@shaw.ca>
+Received: from nz-out-0506.google.com ([64.233.162.237]:57710 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754520AbXEACs3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Apr 2007 22:48:29 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so2118035nzf
+        for <linux-ide@vger.kernel.org>; Mon, 30 Apr 2007 19:48:28 -0700 (PDT)
+In-Reply-To: <4636888A.10507@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Stefan <gentoopower@yahoo.de>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> Tejun Heo wrote:
->> Stefan wrote:
->>> Hi folks,
->>>
->>> yesterday I upgraded  kernel 2.6.19 to 2.6.20 (gentoo kernel). Now my
->>> box locks up about 10 min after boot.
->>> After that I tested with a vanilla 2.6.21.1 it shows the same behavior.
->>> I'm attaching a kern log file from the 2.6.20. The 2.6.21.1 locked up so
->>> hard, that there was no trace left in the log file.
->>> If I switch back to 2.6.19 everything is fine again.
->>> If necessary I will hook up a laptop to this box, so I can capture
->>> messages via netconsole.
->>
->> Yes please.
->>
->>> This machine is running an AMD X2 64, NFORCE4 (ASUS A8N-E)
->>>
->>> I haven't been following the development of libata for a while, but from
->>> the 2.6.20 changelog It looks like there have been some major changes.
->>>
->>> Just let me know what kind of information you need in order to narrow it
->>> down.
->>
->> Does giving 'sata_nv.adma=0' kernel parameter make any difference?
+Mark Lord wrote:
+> Mark Lord wrote:
+>> Tejun Heo wrote:
+>>> Mark Lord wrote:
+>>>> Mark Lord wrote:
+>>>>> ###### Test stuck DRQ on VIA-sata (disk):
+>>>>>
+>>>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>>>> ata1.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+>>>>>         res 58/00:00:00:00:00/00:00:00:00:00/a0 Emask 0x2 (HSM
+>>>>> violation)
+>>>> Why do we not always put a '\n' in front of that last line above ??
+>>>> Sometimes it seems to have it, and lots of times it does not have a
+>>>> '\n'.
+>>>> Weird.
+>>>>
+>>>>> ###### Test stuck DRQ on VIA-pata (ATAPI DVD/RW):
+>>>>> ###### Notice how the first "ata4.00: cmd ..." line is *missing*:
+>>>>>
+>>>>>         res 58/00:02:00:00:02/00:00:00:00:00/40 Emask 0x2 (HSM
+>>>>> violation)
+>>>>> ata4: soft resetting port
+>>>>> ata4.00: configured for UDMA/66
+>>>>> ata4: EH complete
+>>>> And in this case, the first line of diagnostics (the "cmd" line)
+>>>> is always missing.  Why?
+> ..
+>> Well, from looking at the code, we see that the last thing
+>> before the "res" line is a "%s" for dma_str[qc->dma_dir].
+>> If qc->dma_dir is corrupted (or just not set), then we'll get
+>> semi-random garbage, which must be what's happening here.
 > 
-> If adma=0 words, then that means it's either an ADMA related problem or
-> that SAMSUNG HD401LJ drive has some problems with NCQ (since ADMA off
-> means NCQ off as well). I would say the latter is more likely.
+> WRONG.  The qc->dma_dir turns out to be just fine (3) in this case.
+> 
+> And.. the messages look fine with "dmesg", but syslogd records only
+> the "res.." line in /var/log/messages.
 
-I don't have first hand experience with the particular model but I'll be
-surprised if they screwed their firmware up with new generation of
-harddisks.  Firmware on the previous generation drives was pretty good
-and they don't get worse usually.
-
-> We should really have some kind of "noncq" kernel parameter we can use
-> to help debugging these problems. Though, later kernels are supposed to
-> switch it off automatically after too many errors..
-
-Till now there hasn't been any case where a broken NCQ prevented a
-machine from booting but, yeah, having such thing would be nice for
-debugging.
+Oh well, it's probably throttling or just eating messages at its whim.  :-)
 
 -- 
 tejun
