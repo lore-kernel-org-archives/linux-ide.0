@@ -1,32 +1,88 @@
-From: Craig Metz <cmetz@inner.net>
-Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
-Date: Tue, 01 May 2007 14:05:43 -0400
-Message-ID: <20070501180543.9E127582C@rmail.inner.net>
-References: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com> <4636D7CE.9070702@gmail.com> <4637379F.7070805@rtr.ca> <20070501142706.31A38582C@rmail.inner.net> <46377C4A.3080602@rtr.ca>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: 2.6.20 libata cdrom
+Date: Tue, 1 May 2007 20:11:50 +0200
+Message-ID: <200705012011.50772.bzolnier@gmail.com>
+References: <20070427175205.GD7809@electro-mechanical.com> <46373AEE.6070908@rtr.ca> <20070501131818.GA18521@electro-mechanical.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rmail.inner.net ([199.33.248.12]:3308 "EHLO rmail.inner.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755180AbXEARyc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 May 2007 13:54:32 -0400
-In-reply-to: <46377C4A.3080602@rtr.ca> 
+Received: from ug-out-1314.google.com ([66.249.92.172]:11362 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755210AbXEASAl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 May 2007 14:00:41 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so97924uga
+        for <linux-ide@vger.kernel.org>; Tue, 01 May 2007 11:00:40 -0700 (PDT)
+In-Reply-To: <20070501131818.GA18521@electro-mechanical.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, sjackerman@comcast.net, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, albertcc@tw.ibm.com
+To: William Thompson <wt@electro-mechanical.com>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com
 
-In message <46377C4A.3080602@rtr.ca>, you write:
->Craig Metz wrote:
->>
->>   What do I need to run in order to extract the full IDENTIFY data for you?
->> Keep in mind that I can't get a kernel booted that will fully see this devic
->> (i.e., no SCSI disk is ever allocated)
->
->That's tough, then.  Does it behave the same regardless of CF card?
 
-  Yes. I've tried three different models of SanDisk card and a Lexar.
+Hi,
 
->Can I get hold of one of those adaptors here?
+On Tuesday 01 May 2007, William Thompson wrote:
+> On Tue, May 01, 2007 at 09:04:46AM -0400, Mark Lord wrote:
+> > William Thompson wrote:
+> > >
+> > >+scsi2 : ata_piix
+> > >+ata_port_schedule_eh: port EH scheduled
+> > >+ata_scsi_error: ENTER
+> > >+ata_port_flush_task: ENTER
+> > >+ata_port_flush_task: flush #1
+> > >+ata2: ata_port_flush_task: flush #2
+> > >+ata2: ata_port_flush_task: EXIT
+> > >+ata_eh_autopsy: ENTER
+> > >+ata_eh_recover: ENTER
+> > >+ata_eh_prep_resume: ENTER
+> > >+ata_eh_prep_resume: EXIT
+> > >+__ata_port_freeze: ata2 port frozen
+> > >+ata_std_softreset: ENTER
+> > >+ata_std_softreset: about to softreset, devmask=1
+> > >+ata_bus_softreset: ata2: bus reset via SRST
+> > >+ata_dev_classify: found ATA device by sig
+> > >+ata_dev_classify: unknown device
+> > >+ata_std_softreset: EXIT, classes[0]=1 [1]=5
+> > >+ata_std_postreset: ENTER
+> > >+ata_std_postreset: EXIT
+> > >+ata_eh_thaw_port: ata2 port thawed
+> > >+ata_eh_revalidate_and_attach: ENTER
+> > >+ata2.00: ata_dev_read_id: ENTER, host 2, dev 0
+> > >+ata_exec_command_pio: ata2: cmd 0xEC
+> > >+ata_hsm_move: ata2: protocol 2 task_state 1 (dev_stat 0x51)
+> > >+ata_hsm_move: ata2: protocol 2 task_state 3 (dev_stat 0x51)
+> > >+ata_port_flush_task: ENTER
+> > >+ata_port_flush_task: flush #1
+> > >+ata2: ata_port_flush_task: flush #2
+> > >+ata2: ata_port_flush_task: EXIT
+> > >+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x1)
+> > >+ata_eh_revalidate_and_attach: EXIT
+> > ..
+> > 
+> > Yep.  Libata seems to be treating the ATAPI drive as ATA.
+> > 
+> > Tejun, don't we have a fallback for when IDENTIFY fails?
+> > If the drive rejects it (err=0x04), then this can mean only one thing:
+> > unsupported command, so we next must try PACKET_IDENTIFY.
+> 
+> Is it doing that just for this drive?  I use libata on another machine (Dell
+> Dimension 2400) and it finds the cdrom just fine.
+> 
+> The one thing I do know, the machine with the non-working libata cdrom also
+> does not work with the ide driver *ONLY IF* DMA is turned on.
 
-  I believe that Steve from ACS was willing to help with hardware.
+Please give 2.6.21 kernel w/ IDE subsystem and DMA enabled a try
+(2.6.21 kernel contains some important updates for both piix IDE driver
+and DMA tuning code).
 
-									-Craig
+Also there is a newer firmware for this drive (PD03, your drive uses PD02),
+although the changelog doesn't say anything about DMA problems it wouldn't
+hurt to give it a try:
+
+http://support.us.dell.com/support/downloads/download.aspx?c=us&l=en&s=gen&releaseid=R20664&formatcnt=1&libid=0&fileid=20516
+
+Thanks,
+Bart
