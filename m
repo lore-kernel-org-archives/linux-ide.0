@@ -1,49 +1,29 @@
-From: William Thompson <wt@electro-mechanical.com>
-Subject: Re: 2.6.20 libata cdrom
-Date: Tue, 1 May 2007 13:21:17 -0400
-Message-ID: <20070501172117.GA20328@electro-mechanical.com>
-References: <20070427175205.GD7809@electro-mechanical.com> <4635C35D.1020807@gmail.com> <20070430202107.GF5942@electro-mechanical.com> <4636C2C7.8090206@gmail.com> <20070501121703.GH5942@electro-mechanical.com> <46373AEE.6070908@rtr.ca> <20070501131818.GA18521@electro-mechanical.com> <46374354.7040307@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
+Date: Tue, 01 May 2007 13:43:38 -0400
+Message-ID: <46377C4A.3080602@rtr.ca>
+References: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com> <4636D7CE.9070702@gmail.com> <4637379F.7070805@rtr.ca> <20070501142706.31A38582C@rmail.inner.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.electro-mechanical.com ([216.184.71.30]:53092 "EHLO
-	mail.electro-mechanical.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754955AbXEARVU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 May 2007 13:21:20 -0400
-Content-Disposition: inline
-In-Reply-To: <46374354.7040307@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:2611 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076AbXEARnl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 May 2007 13:43:41 -0400
+In-Reply-To: <20070501142706.31A38582C@rmail.inner.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, Jeff Garzik <jgarzik@pobox.com>
+To: Craig Metz <cmetz@inner.net>
+Cc: Tejun Heo <htejun@gmail.com>, sjackerman@comcast.net, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, albertcc@tw.ibm.com
 
-On Tue, May 01, 2007 at 03:40:36PM +0200, Tejun Heo wrote:
-> >> Tejun, don't we have a fallback for when IDENTIFY fails?
-> >> If the drive rejects it (err=0x04), then this can mean only one thing:
-> >> unsupported command, so we next must try PACKET_IDENTIFY.
-> 
-> Up until now, we've been depending on the device giving us the correct
-> signature on reset.  This is the first reported case which screws that
-> up.  Gee... Two crazy screwed up devices today.  What's going on?
+Craig Metz wrote:
+>
+>   What do I need to run in order to extract the full IDENTIFY data for you?
+> Keep in mind that I can't get a kernel booted that will fully see this device.
+> (i.e., no SCSI disk is ever allocated)
 
-libata-pata is getting it's field testing now!
+That's tough, then.  Does it behave the same regardless of CF card?
+Can I get hold of one of those adaptors here?
 
-> > Is it doing that just for this drive?  I use libata on another machine (Dell
-> > Dimension 2400) and it finds the cdrom just fine.
-> 
-> That specific cdrom is crazy.  It's telling libata that it's a disk when
-> it apparently isn't.
-
-Wasn't sure, I thought it was something with the chipset.  Every Dell
-Dimension L series machine has done this to me (The DMA thing, that is).
-Some gateways have as well.
-
-> > The one thing I do know, the machine with the non-working libata cdrom also
-> > does not work with the ide driver *ONLY IF* DMA is turned on.
-> 
-> This is probably as Mark explained in the other thread.
-> 
-> Anyways, oh well, it looks like we need fallback mechanism to the other
-> IDENTIFY command after all.  Jeff, any ideas or objections?
-
-Got a patch or anything I can do to test?
+Cheers
