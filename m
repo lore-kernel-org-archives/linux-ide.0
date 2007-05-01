@@ -1,43 +1,32 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: flushing cache after block io
-Date: Tue, 01 May 2007 13:46:56 -0400
-Message-ID: <46377D10.9090605@rtr.ca>
-References: <97bec2470705010658s48c70ba2pc5310efa533a96ea@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Craig Metz <cmetz@inner.net>
+Subject: Re: Problems with Linux SATA driver and ARC-770 IDE Bridge chip
+Date: Tue, 01 May 2007 14:05:43 -0400
+Message-ID: <20070501180543.9E127582C@rmail.inner.net>
+References: <5760903.1177441381244.JavaMail.root@wombat.diezmil.com> <4636D7CE.9070702@gmail.com> <4637379F.7070805@rtr.ca> <20070501142706.31A38582C@rmail.inner.net> <46377C4A.3080602@rtr.ca>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4057 "EHLO mail.rtr.ca"
+Received: from rmail.inner.net ([199.33.248.12]:3308 "EHLO rmail.inner.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755124AbXEARq7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 May 2007 13:46:59 -0400
-In-Reply-To: <97bec2470705010658s48c70ba2pc5310efa533a96ea@mail.gmail.com>
+	id S1755180AbXEARyc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 May 2007 13:54:32 -0400
+In-reply-to: <46377C4A.3080602@rtr.ca> 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bahadir Balban <bahadir.lists@googlemail.com>, Russell King <rmk@arm.linux.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, sjackerman@comcast.net, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, albertcc@tw.ibm.com
 
+In message <46377C4A.3080602@rtr.ca>, you write:
+>Craig Metz wrote:
+>>
+>>   What do I need to run in order to extract the full IDENTIFY data for you?
+>> Keep in mind that I can't get a kernel booted that will fully see this devic
+>> (i.e., no SCSI disk is ever allocated)
+>
+>That's tough, then.  Does it behave the same regardless of CF card?
 
-Bahadir Balban wrote:
-> On an ARM core with write-allocate writeback cache, there can be cache
-> inconsistencies when an executable file is read from a block device
-> into memory.
-> 
-> On a compact flash block device driver, I got around this problem by
-> flushing the caches for the pages that bio buffers use on every bio
-> read. E.g.
-> 
-> cflash_read_sectors(dev, sect_begin, nsect, buf);
-> flush_icache_range(buf, buf + nsect*512);
-> 
-> Now I have the same problem with a ATA harddisk connected with a
-> PDC20269 controller. The question is where would be the best
-> high-level place to put these flushes so that it works regardless of
-> what block IO driver is used?
+  Yes. I've tried three different models of SanDisk card and a Lexar.
 
-Russell, didn't you go through all of this pain and fix it
-a year or two ago?
+>Can I get hold of one of those adaptors here?
 
-Bahadir, exactly what kernel/version is this with?
+  I believe that Steve from ACS was willing to help with hardware.
 
-
+									-Craig
