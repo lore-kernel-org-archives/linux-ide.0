@@ -1,24 +1,40 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: 2.6.20 libata cdrom
-Date: Tue, 01 May 2007 09:51:37 -0400
-Message-ID: <463745E9.2040902@rtr.ca>
-References: <20070427175205.GD7809@electro-mechanical.com> <4635C35D.1020807@gmail.com> <20070430202107.GF5942@electro-mechanical.com> <4636C2C7.8090206@gmail.com> <20070501121703.GH5942@electro-mechanical.com> <46373AEE.6070908@rtr.ca> <20070501131818.GA18521@electro-mechanical.com> <46374354.7040307@gmail.com>
+From: "Bahadir Balban" <bahadir.lists@googlemail.com>
+Subject: flushing cache after block io
+Date: Tue, 1 May 2007 14:58:55 +0100
+Message-ID: <97bec2470705010658s48c70ba2pc5310efa533a96ea@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4784 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423533AbXEANvl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 May 2007 09:51:41 -0400
-In-Reply-To: <46374354.7040307@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.236]:50328 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423555AbXEAN65 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 May 2007 09:58:57 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so2224526nzf
+        for <linux-ide@vger.kernel.org>; Tue, 01 May 2007 06:58:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: William Thompson <wt@electro-mechanical.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
->Gee... Two crazy screwed up devices today.  What's going on?
+Hi,
 
-libata is finally seeing use by non-kernel developers.
+On an ARM core with write-allocate writeback cache, there can be cache
+inconsistencies when an executable file is read from a block device
+into memory.
 
-Cheers
+On a compact flash block device driver, I got around this problem by
+flushing the caches for the pages that bio buffers use on every bio
+read. E.g.
+
+cflash_read_sectors(dev, sect_begin, nsect, buf);
+flush_icache_range(buf, buf + nsect*512);
+
+Now I have the same problem with a ATA harddisk connected with a
+PDC20269 controller. The question is where would be the best
+high-level place to put these flushes so that it works regardless of
+what block IO driver is used?
+
+
+Thanks,
+Bahadir
