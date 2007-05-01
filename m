@@ -1,55 +1,60 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 2.6.21-rc7-mm2 2/2] sata_promise: move port reset from error intr to EH prereset
-Date: Tue, 1 May 2007 22:29:48 +0200 (MEST)
-Message-ID: <200705012029.l41KTmR5009121@harpo.it.uu.se>
+From: Jesse Barnes <jesse.barnes@intel.com>
+Subject: Re: [git patches] libata updates
+Date: Tue, 1 May 2007 14:34:39 -0700
+Message-ID: <200705011434.40440.jesse.barnes@intel.com>
+References: <20070429161542.GA12501@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:48669 "EHLO aun.it.uu.se"
+Received: from mga03.intel.com ([143.182.124.21]:47629 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422997AbXEAUaJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 May 2007 16:30:09 -0400
+	id S1423684AbXEAVeb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 May 2007 17:34:31 -0400
+In-Reply-To: <20070429161542.GA12501@havoc.gtf.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, mikpe@it.uu.se
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, 30 Apr 2007 11:27:46 +0200, Tejun Heo wrote:
->Mikael Pettersson wrote:
->> @@ -647,12 +650,10 @@ static void pdc_error_intr(struct ata_po
->>  			   | PDC_PCI_SYS_ERR | PDC1_PCI_PARITY_ERR))
->>  		ac_err_mask |= AC_ERR_HOST_BUS;
->>  
->> -	if (sata_scr_valid(ap))
->> -		ehi->serror |= pdc_sata_scr_read(ap, SCR_ERROR);
->> -
->> +	ehi->action |= ATA_EH_SOFTRESET;
->>  	qc->err_mask |= ac_err_mask;
->>  
->> -	pdc_reset_port(ap);
->> +	ata_port_freeze(ap);
->>  }
->
->You really don't wanna schedule ATA_EH_SOFTRESET and freeze the port on
->every error.  If you do that, ATAPI devices will be reset after each
->CHECK CONDITION and it probably won't work properly.
+On Sunday, April 29, 2007 9:15 am Jeff Garzik wrote:
+> Noteworthy changes:
+> * remove combined mode PCI quirk.  IDE driver selection (libata or
+>   old-IDE) is now determined purely by module load order.
+> * new driver API, that is far more like other kernel APIs:
+>   alloc...register...unregister...free.
+> * More Alan PATA work
+> * Lots of other little bits.
 
-Would that be hal polling to see if media has been inserted?
+>  drivers/pci/quirks.c                |  113 ----
 
->  FWIW, libata EH
->automatically issues softreset if the port is frozen (as that's the only
->way to thaw the port), so setting EH_SOFTRESET is optional if you freeze
->the port.
->
->Another problem is that EH may issue other commands to while trying to
->recover - e.g. PACKET - REQUEST SENSE or READ LOG PAGE.  This only
->happens if the port is ready for commands, IOW, !frozen.  Before, the
->pdc_reset_port() used to be called on entry to EH if it's not frozen but
->it's not after this patch.  Is this safe?
+Looks like you removed the combined_mode quirk (yay!) but didn't update
+kernel-parameters.txt...  might confuse people.  Here's a patch to remove
+mention of it from the documentation.
 
-Oh dear. I assumed EH would only want to inspect the standard
-status registers, and that's why I wanted to delay the reset.
-If EH wants to talk to the device then it's a very bad idea to
-not have issued a pdc_reset_port() first.
+Signed-off-by:  Jesse Barnes <jesse.barnes@intel.com>
 
-Jeff, please toss this patch in the dust bin.
+Thanks,
+Jesse
 
-/Mikael
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 84c3bd0..49b1ea3 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -722,14 +722,6 @@ and is between 256 and 4096 characters. It is defined in the file
+ 	inport.irq=	[HW] Inport (ATI XL and Microsoft) busmouse driver
+ 			Format: <irq>
+ 
+-	combined_mode=	[HW] control which driver uses IDE ports in combined
+-			mode: legacy IDE driver, libata, or both
+-			(in the libata case, libata.atapi_enabled=1 may be
+-			useful as well).  Note that using the ide or libata
+-			options may affect your device naming (e.g. by
+-			changing hdc to sdb).
+-			Format: combined (default), ide, or libata
+-
+ 	inttest=	[IA64]
+ 
+ 	io7=		[HW] IO7 for Marvel based alpha systems
