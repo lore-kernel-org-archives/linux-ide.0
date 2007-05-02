@@ -1,45 +1,68 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] libata: fix kernel-doc parameters
-Date: Tue, 1 May 2007 17:35:55 -0700
-Message-ID: <20070501173555.6e95c3bb.randy.dunlap@oracle.com>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: [git patches] libata updates
+Date: Tue, 01 May 2007 20:48:34 -0400
+Message-ID: <4637DFE2.5020706@seclark.us>
+References: <20070429161542.GA12501@havoc.gtf.org> <46364C04.4050208@garzik.org> <46364FFA.9050500@seclark.us> <200705011438.07499.jesse.barnes@intel.com> <4637C30C.5000109@seclark.us> <4637C3F4.5030800@redhat.com>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:51323 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992533AbXEBAb5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 May 2007 20:31:57 -0400
+Received: from smtpout06-04.prod.mesa1.secureserver.net ([64.202.165.227]:59633
+	"HELO smtpout06.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S2992614AbXEBAsi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 May 2007 20:48:38 -0400
+In-Reply-To: <4637C3F4.5030800@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Jesse Barnes <jesse.barnes@intel.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Chuck Ebbert wrote:
 
-Warning(linux-2.6.21-git4//drivers/ata/libata-core.c:904): No description found for parameter 'new_sectors'
-Warning(linux-2.6.21-git4//drivers/ata/libata-core.c:941): No description found for parameter 'new_sectors'
+>Stephen Clark wrote:
+>  
+>
+>>I'm running fc6 but with kernel 2.6.21 from kernel.org - compiled with
+>>the .config file from fc6.
+>>
+>>My system is a asus laptop with an ich7 chipset which has both sata and
+>>pata controllers. My
+>>laptop only brings out the pata controller interface and both my hd and
+>>od are on the second
+>>channel of the pata.
+>>
+>>So can I configure out the old ide and just have ata_piix automatically
+>>control them both in
+>>2.6.21?
+>>
+>>    
+>>
+>
+>Sure, just edit the .config. You may need to play with options to mkinitrd
+>though; I don't think it will include the PATA drivers for you automatically.
+>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>Please read the FAQ at  http://www.tux.org/lkml/
+>
+>  
+>
+It worked - no combined_mode=libata and my hd is doing 45mb/sec.
+Thanks to all who replied.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/libata-core.c |    2 ++
- 1 file changed, 2 insertions(+)
+Steve
 
---- linux-2.6.21-git4.orig/drivers/ata/libata-core.c
-+++ linux-2.6.21-git4/drivers/ata/libata-core.c
-@@ -895,6 +895,7 @@ static u64 ata_read_native_max_address(s
- /**
-  *	ata_set_native_max_address_ext	-	LBA48 native max set
-  *	@dev: Device to query
-+ *	@new_sectors: new max sectors value to set for the device
-  *
-  *	Perform an LBA48 size set max upon the device in question. Return the
-  *	actual LBA48 size or zero if the command fails.
-@@ -932,6 +933,7 @@ static u64 ata_set_native_max_address_ex
- /**
-  *	ata_set_native_max_address	-	LBA28 native max set
-  *	@dev: Device to query
-+ *	@new_sectors: new max sectors value to set for the device
-  *
-  *	Perform an LBA28 size set max upon the device in question. Return the
-  *	actual LBA28 size or zero if the command fails.
+-- 
+
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
+
+
+
