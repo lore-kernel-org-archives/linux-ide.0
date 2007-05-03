@@ -1,41 +1,51 @@
-From: "Jeroen Janssen" <jeroen.janssen@gmail.com>
-Subject: VIA VT6420 SATA suspend/resume problem in 2.6.20?
-Date: Thu, 3 May 2007 14:42:59 +0200
-Message-ID: <e34e42440705030542r1574dfdre143e2d43edd44d6@mail.gmail.com>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: flushing cache after block io
+Date: Thu, 3 May 2007 14:23:28 +0100
+Message-ID: <20070503132327.GB21024@flint.arm.linux.org.uk>
+References: <97bec2470705010658s48c70ba2pc5310efa533a96ea@mail.gmail.com> <46377D10.9090605@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:1610 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031057AbXECMnB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 08:43:01 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so503724wra
-        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 05:43:00 -0700 (PDT)
+Received: from caramon.arm.linux.org.uk ([217.147.92.249]:3193 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059AbXECNXh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 09:23:37 -0400
 Content-Disposition: inline
+In-Reply-To: <46377D10.9090605@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Bahadir Balban <bahadir.lists@googlemail.com>, linux-ide@vger.kernel.org
 
-Hello,
+On Tue, May 01, 2007 at 01:46:56PM -0400, Mark Lord wrote:
+> 
+> Bahadir Balban wrote:
+> >On an ARM core with write-allocate writeback cache, there can be cache
+> >inconsistencies when an executable file is read from a block device
+> >into memory.
+> >
+> >On a compact flash block device driver, I got around this problem by
+> >flushing the caches for the pages that bio buffers use on every bio
+> >read. E.g.
+> >
+> >cflash_read_sectors(dev, sect_begin, nsect, buf);
+> >flush_icache_range(buf, buf + nsect*512);
+> >
+> >Now I have the same problem with a ATA harddisk connected with a
+> >PDC20269 controller. The question is where would be the best
+> >high-level place to put these flushes so that it works regardless of
+> >what block IO driver is used?
+> 
+> Russell, didn't you go through all of this pain and fix it
+> a year or two ago?
 
-I have a board with a VIA 6420 chipset and a SATA harddisk running on
-2.6.20 (Fedora Core 6).
+I thought so.
 
-When I suspend the system, it goes to sleep instantly, but when I
-wakeup the system, it takes about 2 x 30 seconds for the SATA disk to
-be accessable again.
+> Bahadir, exactly what kernel/version is this with?
 
-I searched the mailinglist and could not really find if this is a
-known problem (although I noticed that there's some work going on in
-the acpi power management).
+Bahadir must be using an old kernel.
 
-Does anyone if this is a known problem? (and if so, is there a
-solution available?)
-How can I pinpoint the exact problem?
-
-If you need any specific logging, just let me know and I'll provide them.
-
-Best regards,
-
-Jeroen Janssen
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
