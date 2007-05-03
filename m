@@ -1,59 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems w/ Sil3124 + Port Multiplier
-Date: Thu, 03 May 2007 13:37:03 +0200
-Message-ID: <4639C95F.9080507@gmail.com>
-References: <463828F6.7020209@jogback.se> <46388862.1020709@gmail.com> <4638928E.60700@jogback.se> <4639A6A3.20001@gmail.com> <4639C1DB.3030501@jogback.se>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [Fwd: Re: PATCH: libata: add support for ATA_16 on ATAPI]
+Date: Thu, 03 May 2007 08:18:44 -0400
+Message-ID: <4639D324.5090908@pobox.com>
+References: <46394ADA.1020400@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.233]:29684 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754003AbXECLhT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 07:37:19 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so484054wra
-        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 04:37:17 -0700 (PDT)
-In-Reply-To: <4639C1DB.3030501@jogback.se>
+Received: from srv5.dvmed.net ([207.36.208.214]:39226 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031188AbXECMSs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 May 2007 08:18:48 -0400
+In-Reply-To: <46394ADA.1020400@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Lars_Michael_Jogb=E4ck?= <lm@jogback.se>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Lars Michael Jogb=E4ck wrote:
-> Tejun Heo wrote:
->> I was hoping to see some error logs but no.  Hardware_ECC_Recovered
->> count seems high (385707184) but I dunno whether the value is normal=
- or
->> not.  Different manufacturers use different norms in counting them. =
- If
->> you have other disks of the same model, you can compare the values a=
-nd
->> see whether if it's unusually high.
->>  =20
-> I think that is normal for that kind of disk. This is another disk bu=
-t
-> the same model (this one is attached to a 3ware 9500-controller)
-> and it shows the same.
+Mark Lord wrote:
+> Jeff?
+> This has been pending for a very long time now.
+> 
+> This patch brings libata up to similar standards as Linux IDE
+> with support for things like hdparm -I (identify) and -C (check power)
+> among others on ATAPI drives.
+> 
+> Andrew, can you pick this up for -mm ??
+> 
+> ???
 
-I see.
+My reluctance stems mainly from the modifications to the hot path.  ATA 
+and ATAPI need wholly different command simulations, so I don't like 
+your modification of sending both ATA and ATAPI devices to the same 
+simulation function -- only to have to disambiguate with an ATA-or-ATAPI 
+test.
 
-> May  1 23:53:36 cleopatra kernel: ata5.00: tag 0 cmd 0xea Emask 0x4 s=
-tat
-> 0x40 err 0x0 (timeout)
->=20
-> and then it continues with approx 1/hour of the above. So it seems
-> something is strange in the interface between the drive and the
-> computer. I can swap the drive (it's in an raid5-array) to another dr=
-ive
-> of the same model if helps in any way; but I suspect that it will sho=
-w
-> the same result.
+I would rather keep the branch in the queuecommand hook the same.  That 
+should keep the ATA device callpath unchanged, while enabling what you 
+want on the ATAPI callpath.
 
-The fact that the first slot is always the one causing problem bothers
-me.  Can you try to connect the disk to a different controller and use
-different power connector?  Let's see to which the problem is attached =
--
-disk, port or something else.
+	Jeff
 
---=20
-tejun
+
+
+
+
