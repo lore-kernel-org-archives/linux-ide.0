@@ -1,45 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: VIA VT6420 SATA suspend/resume problem in 2.6.20?
-Date: Thu, 03 May 2007 16:45:47 +0200
-Message-ID: <4639F59B.1080009@gmail.com>
-References: <e34e42440705030542r1574dfdre143e2d43edd44d6@mail.gmail.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] pata_scc: fix compilation
+Date: Thu, 3 May 2007 23:44:59 +0400
+Message-ID: <20070503194459.GC5836@martell.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.232]:17724 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754260AbXECOp4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 10:45:56 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so462433wxd
-        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 07:45:56 -0700 (PDT)
-In-Reply-To: <e34e42440705030542r1574dfdre143e2d43edd44d6@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:8347 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1767861AbXECTpF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 15:45:05 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so521548uga
+        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 12:45:04 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeroen Janssen <jeroen.janssen@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: akpm@osdl.org, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-Jeroen Janssen wrote:
-> Hello,
-> 
-> I have a board with a VIA 6420 chipset and a SATA harddisk running on
-> 2.6.20 (Fedora Core 6).
-> 
-> When I suspend the system, it goes to sleep instantly, but when I
-> wakeup the system, it takes about 2 x 30 seconds for the SATA disk to
-> be accessable again.
-> 
-> I searched the mailinglist and could not really find if this is a
-> known problem (although I noticed that there's some work going on in
-> the acpi power management).
-> 
-> Does anyone if this is a known problem? (and if so, is there a
-> solution available?)
-> How can I pinpoint the exact problem?
-> 
-> If you need any specific logging, just let me know and I'll provide them.
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-The result of dmesg after resume would be nice.
+ drivers/ata/pata_scc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
--- 
-tejun
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -1142,14 +1142,14 @@ static int scc_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	static int printed_version;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+ 	const struct ata_port_info *ppi[] = { &scc_port_info[board_idx], NULL };
+-	struct device *dev = &pdev->dev;
++	struct ata_host *host;
+ 	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
+ 
+-	host = ata_port_alloc_pinfo(&pdev->dev, ppi, 1);
++	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 1);
+ 	if (!host)
+ 		return -ENOMEM;
+ 
+
