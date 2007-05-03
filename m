@@ -1,46 +1,103 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [Fwd: Re: PATCH: libata: add support for ATA_16 on ATAPI]
-Date: Thu, 03 May 2007 09:34:10 -0400
-Message-ID: <4639E4D2.5080108@rtr.ca>
-References: <46394ADA.1020400@rtr.ca> <4639D324.5090908@pobox.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
+Date: Thu, 03 May 2007 16:44:10 +0200
+Message-ID: <4639F53A.6000902@gmail.com>
+References: <343456.16264.qm@web52604.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4989 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754180AbXECNeN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 May 2007 09:34:13 -0400
-In-Reply-To: <4639D324.5090908@pobox.com>
+Received: from nz-out-0506.google.com ([64.233.162.228]:23388 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162050AbXECOoW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2007 10:44:22 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so529332nzf
+        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 07:44:22 -0700 (PDT)
+In-Reply-To: <343456.16264.qm@web52604.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Cc: linux-ide@vger.kernel.org, conke.hu@gmail.com
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Jeff?
->> This has been pending for a very long time now.
->>
->> This patch brings libata up to similar standards as Linux IDE
->> with support for things like hdparm -I (identify) and -C (check power)
->> among others on ATAPI drives.
->>
->> Andrew, can you pick this up for -mm ??
->>
->> ???
+Srihari Vijayaraghavan wrote:
+> Hardware:
+> ASUS M2A-VM (with the latest BIOS - 0402)
+> AMD AM2
+> Seagate IDE hard drive & LG IDE DVDRW
 > 
-> My reluctance stems mainly from the modifications to the hot path.  ATA 
-> and ATAPI need wholly different command simulations, so I don't like 
-> your modification of sending both ATA and ATAPI devices to the same 
-> simulation function -- only to have to disambiguate with an ATA-or-ATAPI 
-> test.
+> All works rather very nicely expect for the SATA :-).
 > 
-> I would rather keep the branch in the queuecommand hook the same.  That 
-> should keep the ATA device callpath unchanged, while enabling what you 
-> want on the ATAPI callpath.
+> No luck detecting the 2 Seagate ST3250620NS SATA-II
+> drives (Kernel.org's 2.6.21):
+> Linux version 2.6.21 (hari@fedora7) (gcc version 4.1.2
+> 20070424 (Red Hat 4.1.2-1
+> 1)) #3 SMP Mon Apr 30 18:49:04 EST 2007
+> Command line: ro root=LABEL=/1234 rhgb quiet
+> ...
+> ahci 0000:00:12.0: version 2.1
+> ACPI: PCI Interrupt 0000:00:12.0[A] -> GSI 22 (level,
+> low) -> IRQ 22
+> PM: Adding info for No Bus:timer
+> sr0: scsi3-mmc drive: 40x/40x writer dvd-ram cd/rw
+> xa/form2 cdda tray
+> Uniform CD-ROM driver Revision: 3.20
+> sr 0:0:1:0: Attached scsi CD-ROM sr0
+> PM: Adding info for No Bus:seq
+> PM: Adding info for No Bus:sequencer
+> PM: Adding info for No Bus:sequencer2
+> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3
+> Gbps 0xf impl SATA mode
+> ahci 0000:00:12.0: flags: 64bit ncq ilck pm led clo
+> pmp pio slum part 
+> ata3: SATA max UDMA/133 cmd 0xffffc2000006a100 ctl
+> 0x0000000000000000 bmdma 0x00
+> 00000000000000 irq 22
+> ata4: SATA max UDMA/133 cmd 0xffffc2000006a180 ctl
+> 0x0000000000000000 bmdma 0x00
+> 00000000000000 irq 22
+> ata5: SATA max UDMA/133 cmd 0xffffc2000006a200 ctl
+> 0x0000000000000000 bmdma 0x00
+> 00000000000000 irq 22
+> ata6: SATA max UDMA/133 cmd 0xffffc2000006a280 ctl
+> 0x0000000000000000 bmdma 0x00
+> 00000000000000 irq 22
+> scsi2 : ahci
+> PM: Adding info for No Bus:host2
+> ata3: softreset failed (1st FIS failed)
+> ata3: softreset failed, retrying in 5 secs
+> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata3.00: qc timeout (cmd 0xec)
+> ata3.00: failed to IDENTIFY (I/O error,
+> err_mask=0x104)
+> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata3.00: qc timeout (cmd 0xec)
+> ata3.00: failed to IDENTIFY (I/O error,
+> err_mask=0x104)
+> ata3.00: limiting speed to UDMA7:PIO5
+> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata3.00: qc timeout (cmd 0xec)
+> ata3.00: failed to IDENTIFY (I/O error,
+> err_mask=0x104)
+> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> scsi3 : ahci
+> PM: Adding info for No Bus:host3
+> ata4: softreset failed (1st FIS failed)
+> ata4: softreset failed, retrying in 5 secs
+> ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata4.00: qc timeout (cmd 0xec)
+> ata4.00: failed to IDENTIFY (I/O error,
+> err_mask=0x104)
+> ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata4.00: qc timeout (cmd 0xec)
+> ata4.00: failed to IDENTIFY (I/O error,
+> err_mask=0x104)
+> ata4.00: limiting speed to UDMA7:PIO5
+> ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> 
+> (curiously irq 22 is exclusive to libata & irq count
+> is at 0)
 
-Sure thing.  Just elaborate a teensy bit more on what's going on inside
-Jeff's mind, and I'll code something up to mimic.
+Can you post dmesg with kernel parameter 'pci=nomsi' set?
 
-Thanks.
+-- 
+tejun
