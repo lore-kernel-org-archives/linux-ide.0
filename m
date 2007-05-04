@@ -1,66 +1,69 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
- parameter
-Date: Fri, 04 May 2007 11:49:18 +0200
-Message-ID: <463B019E.7010700@gmail.com>
-References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com>
+From: "Jeroen Janssen" <jeroen.janssen@gmail.com>
+Subject: Re: [PATCH] sata_via: add missing PM hooks
+Date: Fri, 4 May 2007 15:21:11 +0200
+Message-ID: <e34e42440705040621n5d6b8c98g84796a3ce3fcbfb8@mail.gmail.com>
+References: <e34e42440705030542r1574dfdre143e2d43edd44d6@mail.gmail.com>
+	 <4639F59B.1080009@gmail.com>
+	 <e34e42440705040122r2ec59952w2684039868808fcb@mail.gmail.com>
+	 <463AF6C6.1050402@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020600070503020907040403"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:20091 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031361AbXEDJt3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 05:49:29 -0400
-Received: by py-out-1112.google.com with SMTP id a29so636945pyi
-        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 02:49:29 -0700 (PDT)
-In-Reply-To: <4608A0BD.2010209@gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.242]:26924 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755165AbXEDNVN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 09:21:13 -0400
+Received: by an-out-0708.google.com with SMTP id b33so824506ana
+        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 06:21:12 -0700 (PDT)
+In-Reply-To: <463AF6C6.1050402@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020600070503020907040403
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Hi,
 
-Matí­as Alejandro Torres wrote:
-> CORRECTION:
-> 
-> I tried with the irqpoll parameter (used in the right way) and the sata
-> disk is detected but lots of "unexpected IRQ trap at vector a0" are
-> displayed. When the pci=nomsi flag is set, no warning/error is shown and
-> the SATA disk is detected properly.
-> 
-> 
-> This is for kernel version 2.6.17, I must be falling asleep.
+Thanks very much! This indeed solved the problem.
+Anything I can to help get it included in the next kernel release?
 
-Matias, are you still there?  If so, can you please test the attached
-patch and see whether it fixes your problem - ie. boots okay without
-'pci=nomsi'?
+Best regards,
 
--- 
-tejun
+Jeroen Janssen
 
---------------020600070503020907040403
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-Index: tree0/drivers/pci/quirks.c
-===================================================================
---- tree0.orig/drivers/pci/quirks.c
-+++ tree0/drivers/pci/quirks.c
-@@ -1761,6 +1761,7 @@ static void __devinit quirk_disable_msi(
- 	}
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_8131_BRIDGE, quirk_disable_msi);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x5a3f, quirk_disable_msi); /* RS480 PCI bridge */
- 
- /* Go through the list of Hypertransport capabilities and
-  * return 1 if a HT MSI capability is found and enabled */
-
---------------020600070503020907040403--
+On 5/4/07, Tejun Heo <htejun@gmail.com> wrote:
+> For some reason, sata_via is missing PM hooks.  Add them.
+>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This patch is against 2.6.21 but you can use it over 2.6.20 too.  Does
+> this fix your problem?
+>
+> Index: tree0/drivers/ata/sata_via.c
+> ===================================================================
+> --- tree0.orig/drivers/ata/sata_via.c
+> +++ tree0/drivers/ata/sata_via.c
+> @@ -97,6 +97,10 @@ static struct pci_driver svia_pci_driver
+>         .name                   = DRV_NAME,
+>         .id_table               = svia_pci_tbl,
+>         .probe                  = svia_init_one,
+> +#ifdef CONFIG_PM
+> +       .suspend                = ata_pci_device_suspend,
+> +       .resume                 = ata_pci_device_resume,
+> +#endif
+>         .remove                 = ata_pci_remove_one,
+>  };
+>
+> @@ -116,6 +120,10 @@ static struct scsi_host_template svia_sh
+>         .slave_configure        = ata_scsi_slave_config,
+>         .slave_destroy          = ata_scsi_slave_destroy,
+>         .bios_param             = ata_std_bios_param,
+> +#ifdef CONFIG_PM
+> +       .suspend                = ata_scsi_device_suspend,
+> +       .resume                 = ata_scsi_device_resume,
+> +#endif
+>  };
+>
+>  static const struct ata_port_operations vt6420_sata_ops = {
+>
