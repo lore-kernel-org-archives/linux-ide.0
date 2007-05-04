@@ -1,83 +1,45 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
-Date: Fri, 04 May 2007 08:41:41 +0200
-Message-ID: <463AD5A5.2080404@gmail.com>
-References: <214881.21738.qm@web52612.mail.re2.yahoo.com>
+Subject: Re: libata /dev/scd0 problem: mount after burn fails without eject
+Date: Fri, 04 May 2007 10:16:32 +0200
+Message-ID: <463AEBE0.7010506@gmail.com>
+References: <20070501135951.GA17072@janus> <46374C11.1010702@rtr.ca> <6bffcb0e0705010731v44cfad1awf4342121245f7ab3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:41835 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767688AbXEDGly (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 02:41:54 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so770893nzf
-        for <linux-ide@vger.kernel.org>; Thu, 03 May 2007 23:41:53 -0700 (PDT)
-In-Reply-To: <214881.21738.qm@web52612.mail.re2.yahoo.com>
+Received: from py-out-1112.google.com ([64.233.166.181]:22946 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965737AbXEDIQp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 04:16:45 -0400
+Received: by py-out-1112.google.com with SMTP id a29so624045pyi
+        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 01:16:44 -0700 (PDT)
+In-Reply-To: <6bffcb0e0705010731v44cfad1awf4342121245f7ab3@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Cc: linux-ide@vger.kernel.org, conke.hu@gmail.com
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Mark Lord <lkml@rtr.ca>, Frank van Maarseveen <frankvm@frankvm.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-Hello,
+Michal Piotrowski wrote:
+> On 01/05/07, Mark Lord <lkml@rtr.ca> wrote:
+>> Forwarding to linux-scsi and linux-ide mailing lists.
+>>
+>> Frank van Maarseveen wrote:
+>> > Tested on 2.6.20.6 and 2.6.21.1
+>> >
+>> > I decided to swich from the old IDE drivers to libata and now there
+>> > seems to be a little but annoying problem: cannot mount an ISO image
+>> > after burning it.
+>> >
+>> > May  1 14:32:55 kernel: attempt to access beyond end of device
+>> > May  1 14:32:55 kernel: sr0: rw=0, want=68, limit=4
+>> > May  1 14:32:55 kernel: isofs_fill_super: bread failed, dev=sr0,
+>> iso_blknum=16, block=16
+>> >
+>> > an "eject" command seems to fix the state of the PATA DVD writer
+>> > or driver. The problem occurs for burning a CD and for DVD too with
+>> > identical error messages.
 
-Srihari Vijayaraghavan wrote:
-> ahci 0000:00:12.0: AHCI 0001.0100 32 slots 4 ports 3
-> Gbps 0xf impl SATA mode
-> ahci 0000:00:12.0: flags: 64bit ncq ilck pm led clo
-> pmp pio slum part 
-> ata3: SATA max UDMA/133 cmd 0xffffc2000006a100 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 22
-> ata4: SATA max UDMA/133 cmd 0xffffc2000006a180 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 22
-> ata5: SATA max UDMA/133 cmd 0xffffc2000006a200 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 22
-> ata6: SATA max UDMA/133 cmd 0xffffc2000006a280 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 22
-> scsi2 : ahci
-> PM: Adding info for No Bus:host2
-> ata3: softreset failed (1st FIS failed)
-> ata3: softreset failed, retrying in 5 secs
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: qc timeout (cmd 0xec)
-> ata3.00: failed to IDENTIFY (I/O error,
-> err_mask=0x104)
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: qc timeout (cmd 0xec)
-> ata3.00: failed to IDENTIFY (I/O error,
-> err_mask=0x104)
-> ata3.00: limiting speed to UDMA7:PIO5
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: qc timeout (cmd 0xec)
-> ata3.00: failed to IDENTIFY (I/O error,
-> err_mask=0x104)
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> scsi3 : ahci
-> 
-> I've made a couple of more observations also:
-> With the SATA controller mode set to AHCI in the BIOS,
-> the Seagate SeaToolsDos diagnostic tool wouldn't
-> detect the drives. (Perhaps because it's a legacy OS)
-> 
-> By  setting it to IDE controller mode, the diagnostics
-> ran & completed successfully on both the drives, thus
-> I believe the drives, cables, power connectors etc.
-> are working fine as expected.
-> 
-> The above dmesg is after setting the SATA controller
-> back to AHCI mode in the BIOS.
-
-Hmm...  It's fishy.  The first SRST is failing.  Following hardreset
-succeeds but IDENTIFY issued after that times out.  This doesn't seem to
-be IRQ delivery problem.  Conke Hu, any ideas?
-
-> (I'm using the yahoo web interface to post these
-> emails. If it makes it hard to read, on your request,
-> I'm happy to provide the kernel logs as email
-> attachments).
-
-I can read it but attachment with mime type set to plain text should be
-easier.
+Right after burning, if you run 'fuser -v /dev/sr0', what does it say?
 
 -- 
 tejun
