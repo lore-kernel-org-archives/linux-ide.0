@@ -1,170 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/2] libata: implement libata.spindown_compat
-Date: Fri, 04 May 2007 21:28:48 +0200
-Message-ID: <463B8970.9070105@gmail.com>
-References: <463B88EC.1080304@gmail.com>
+From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
+Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
+ parameter
+Date: Fri, 04 May 2007 16:30:01 -0300
+Message-ID: <463B89B9.8050104@gmail.com>
+References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com> <463B71FA.8090005@gmail.com> <463B74DB.8060509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060100060206080600050208"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:21813 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423073AbXEDT3C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 15:29:02 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so967477nzf
-        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 12:29:02 -0700 (PDT)
-In-Reply-To: <463B88EC.1080304@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.238]:50347 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423079AbXEDTaG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 15:30:06 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so843805wxd
+        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 12:30:06 -0700 (PDT)
+In-Reply-To: <463B74DB.8060509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Mark Lord <lkml@rtr.ca>, hancockr@shaw.ca, cebbert@redhat.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, emisca.ml@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Stephen.Clark@seclark.us, fabio.comolli@gmail.com, a.p.zijlstra@chello.nl
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de
 
-Now that libata uses sd->manage_start_stop, libata spins down disk on
-shutdown.  In an attempt to compensate libata's previous shortcoming,
-some distros sync and spin down disks attached via libata in their
-shutdown(8).  Some disks spin back up just to spin down again on
-STANDBYNOW1 if the command is issued when the disk is spun down, so
-this double spinning down causes problem.
+This is a multi-part message in MIME format.
+--------------060100060206080600050208
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch implements module parameter libata.spindown_compat which,
-when set to one (default value), prevents libata from spinning down
-disks on shutdown thus avoiding double spinning down.  Note that
-libata spins down disks for suspend to mem and disk, so with
-libata.spindown_compat set to one, disks should be properly spun down
-in all cases without modifying shutdown(8).
 
-shutdown(8) should be fixed eventually.  Some drive do spin up on
-SYNCHRONZE_CACHE even when their cache is clean.  Those disks
-currently spin up briefly when sd tries to shutdown the device and
-then the machine powers off immediately, which can't be good for the
-head.  We can't skip SYNCHRONIZE_CACHE during shudown as it can be
-dangerous data integrity-wise.
+> Well, making it work without pci=nomsi is the whole point here.  I dunno
+> why this simple thing doesn't work.  Can you post the result of 'lspci
+> -nn' so that we can see the numeric ID?
+>   
+I would really like to know the answer to that, but i'm hundred of miles 
+away. Attached to this email is the output of  lspci -nn .
 
-So, this spindown_compat parameter is already scheduled for removal by
-the end of the next year and here's what shutdown(8) should do.
+Maybe you have the wrong id of the pci bridge:
 
-  * Check whether /sys/modules/libata/parameters/spindown_compat
-    exists.  If it does, write 0 to it.
 
-  * For each libata harddisk {
-	* Check whether /sys/class/scsi_disk/h:c:i:l/manage_start_stop
-	  exists.  Iff it doesn't, synchronize cache and spin the disk
-	  down as before.
-  }
 
-The above procedure will make shutdown(8) work properly with kernels
-before this change, ones with this workaround and later ones without
-it.
+00:02.0 PCI bridge [0604]: ATI Technologies Inc RS480 PCI-X Root Port 
+[1002:5a34]
 
-To accelerate shutdown(8) updates, if the compat mode is in use, this
-patch prints BIG FAT warning for five seconds during shutdown (the
-optimal interval to annoy the user just the right amount discovered by
-hours of tireless usability testing).
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x5a3f, quirk_disable_msi); /* RS480 PCI bridge */
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- Documentation/feature-removal-schedule.txt |   19 +++++++++++++++++++
- drivers/ata/libata-core.c                  |    6 ++++++
- drivers/ata/libata-scsi.c                  |   28 +++++++++++++++++++++++++++-
- drivers/ata/libata.h                       |    1 +
- 4 files changed, 53 insertions(+), 1 deletions(-)
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index 5c88ba1..78b3aa6 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -314,3 +314,22 @@ Why:	Code was merged, then submitter imm
- Who:	David S. Miller <davem@davemloft.net>
- 
- ---------------------------
-+
-+What:	libata.spindown_compat module parameter
-+When:	Dec 2008
-+Why:	halt(8) synchronizes caches for and spins down libata disks
-+	because libata didn't use to spin down disk on system halt
-+	(only synchronized caches).
-+	Spin down on system halt is now implemented and can be tested
-+	using sysfs node /sys/class/scsi_disk/h:c:i:l/manage_start_stop.
-+	Because issuing spin down command to an already spun down disk
-+	makes some disks spin up just to spin down again, the old
-+	behavior needs to be maintained till userspace tool is updated
-+	to check the sysfs node and not to spin down disks with the
-+	node set to one.
-+	This module parameter is to give userspace tool the time to
-+	get updated and should be removed after userspace is
-+	reasonably updated.
-+Who:	Tejun Heo <htejun@gmail.com>
-+
-+---------------------------
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ce5e080..4a81549 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -101,6 +101,12 @@ int libata_noacpi = 1;
- module_param_named(noacpi, libata_noacpi, int, 0444);
- MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in suspend/resume when set");
- 
-+int ata_spindown_compat = 1;
-+module_param_named(spindown_compat, ata_spindown_compat, int, 0644);
-+MODULE_PARM_DESC(spindown_compat, "Enable backward compatible spindown "
-+		 "behavior.  Will be removed.  More info can be found in "
-+		 "Documentation/feature-removal-schedule.txt\n");
-+
- MODULE_AUTHOR("Jeff Garzik");
- MODULE_DESCRIPTION("Library module for ATA devices");
- MODULE_LICENSE("GPL");
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8f80019..dd81fa7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -944,9 +944,35 @@ static unsigned int ata_scsi_start_stop_
- 		}
- 
- 		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
--	} else
-+	} else {
-+		/* XXX: This is for backward compatibility, will be
-+		 * removed.  Read Documentation/feature-removal-schedule.txt
-+		 * for more info.
-+		 */
-+		if (ata_spindown_compat &&
-+		    (system_state == SYSTEM_HALT ||
-+		     system_state == SYSTEM_POWER_OFF)) {
-+			static int warned = 0;
-+
-+			if (!warned) {
-+				spin_unlock_irq(qc->ap->lock);
-+				ata_dev_printk(qc->dev, KERN_WARNING,
-+					"DISK MIGHT NOT BE SPUN DOWN PROPERLY. "
-+					"UPDATE SHUTDOWN UTILITY\n");
-+				ata_dev_printk(qc->dev, KERN_WARNING,
-+					"For more info, visit "
-+					"http://linux-ata.org/shutdown.html\n");
-+				warned = 1;
-+				ssleep(5);
-+				spin_lock_irq(qc->ap->lock);
-+			}
-+			scmd->result = SAM_STAT_GOOD;
-+			return 1;
-+		}
-+
- 		/* Issue ATA STANDBY IMMEDIATE command */
- 		tf->command = ATA_CMD_STANDBYNOW1;
-+	}
- 
- 	/*
- 	 * Standby and Idle condition timers could be implemented but that
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5f4d40c..316bf8a 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -58,6 +58,7 @@ extern int atapi_enabled;
- extern int atapi_dmadir;
- extern int libata_fua;
- extern int libata_noacpi;
-+extern int ata_spindown_compat;
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
--- 
-1.4.3.4
 
+--------------060100060206080600050208
+Content-Type: text/plain;
+ name="lspci.nn.2.6.20.4-generic-with-pci-quirks-patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="lspci.nn.2.6.20.4-generic-with-pci-quirks-patch"
+
+00:00.0 Host bridge [0600]: ATI Technologies Inc RS480 Host Bridge [1002:5950] (rev 10)
+00:02.0 PCI bridge [0604]: ATI Technologies Inc RS480 PCI-X Root Port [1002:5a34]
+00:12.0 SATA controller [0106]: ATI Technologies Inc SB600 Non-Raid-5 SATA [1002:4380]
+00:13.0 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI0) [1002:4387]
+00:13.1 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI1) [1002:4388]
+00:13.2 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI2) [1002:4389]
+00:13.3 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI3) [1002:438a]
+00:13.4 USB Controller [0c03]: ATI Technologies Inc SB600 USB (OHCI4) [1002:438b]
+00:13.5 USB Controller [0c03]: ATI Technologies Inc SB600 USB Controller (EHCI) [1002:4386]
+00:14.0 SMBus [0c05]: ATI Technologies Inc SB600 SMBus [1002:4385] (rev 13)
+00:14.1 IDE interface [0101]: ATI Technologies Inc SB600 IDE [1002:438c]
+00:14.2 Audio device [0403]: ATI Technologies Inc SB600 Azalia [1002:4383]
+00:14.3 ISA bridge [0601]: ATI Technologies Inc SB600 PCI to LPC Bridge [1002:438d]
+00:14.4 PCI bridge [0604]: ATI Technologies Inc SB600 PCI to PCI Bridge [1002:4384]
+00:18.0 Host bridge [0600]: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration [1022:1100]
+00:18.1 Host bridge [0600]: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map [1022:1101]
+00:18.2 Host bridge [0600]: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller [1022:1102]
+00:18.3 Host bridge [0600]: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control [1022:1103]
+01:00.0 VGA compatible controller [0300]: nVidia Corporation G71 [GeForce 7300 GS] [10de:01df] (rev a1)
+02:06.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL-8110SC/8169SC Gigabit Ethernet [10ec:8167] (rev 10)
+
+--------------060100060206080600050208--
