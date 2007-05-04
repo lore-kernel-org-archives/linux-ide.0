@@ -1,68 +1,87 @@
-From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
-Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
- parameter
-Date: Fri, 04 May 2007 10:45:38 -0300
-Message-ID: <463B3902.3050903@gmail.com>
-References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com>
+From: Komuro <komurojun-mbn@nifty.com>
+Subject: [FW  ide-cs] Re: jvc cdrom drive
+Date: Fri, 4 May 2007 23:32:38 +0900
+Message-ID: <20070504233238.ca55c2d1.komurojun-mbn@nifty.com>
+References: <1178202559.3767.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:50067 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754180AbXEDNpo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 09:45:44 -0400
-Received: by an-out-0708.google.com with SMTP id b33so832283ana
-        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 06:45:44 -0700 (PDT)
-In-Reply-To: <463B019E.7010700@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1178202559.3767.21.camel@localhost.localdomain>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: Richard Kennedy <richard@rsk.demon.co.uk>
+Cc: linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Tejun Heo escribi=F3:
-> Mat=ED=ADas Alejandro Torres wrote:
->  =20
->> CORRECTION:
->>
->> I tried with the irqpoll parameter (used in the right way) and the s=
-ata
->> disk is detected but lots of "unexpected IRQ trap at vector a0" are
->> displayed. When the pci=3Dnomsi flag is set, no warning/error is sho=
-wn and
->> the SATA disk is detected properly.
->>
->>
->> This is for kernel version 2.6.17, I must be falling asleep.
->>    =20
->
-> Matias, are you still there?  If so, can you please test the attached
-> patch and see whether it fixes your problem - ie. boots okay without
-> 'pci=3Dnomsi'?
->
->  =20
-> ---------------------------------------------------------------------=
----
->
-> Index: tree0/drivers/pci/quirks.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- tree0.orig/drivers/pci/quirks.c
-> +++ tree0/drivers/pci/quirks.c
-> @@ -1761,6 +1761,7 @@ static void __devinit quirk_disable_msi(
->  	}
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_8131_BR=
-IDGE, quirk_disable_msi);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x5a3f, quirk_disable_msi=
-); /* RS480 PCI bridge */
-> =20
->  /* Go through the list of Hypertransport capabilities and
->   * return 1 if a HT MSI capability is found and enabled */
->  =20
-Okey, I'll try the patch and let you know how it goes. I'm sorry for no=
-t=20
-having test it but I'm been studing a lot these last few days. Tonight=20
-I'll test it. Thanks!
+On Thu, 03 May 2007 15:29:19 +0100
+Richard Kennedy <richard@rsk.demon.co.uk> wrote:
+
+
+IDE bugs should be posted to the linux-ide mailing list.
+
+
+> Hi all, 
+> I have a JVC MP-CDX1 cdrom drive that came with my laptop which used to
+> work with ide-cs but stopped working with newer kernels.
+> 
+> I added its ident to ide-cs.c (see patch below) and the drive now is
+> detected and gets mounted when plugged in and seems to work correctly.
+> 
+> But when I eject the card, pccardctl eject 0, the laptop locks up
+> completely, there are no messages in the log, and the fan goes to full
+> speed so I guess the cpu is running at 100%.
+> Any ideas what's going wrong or how to debug it ? 
+> Is there anything else I need to patch to get this working ?
+> 
+> Thanks
+> Richard
+> 
+> card info :- 
+> 
+> PRODID_1="KME"
+> PRODID_2="KXLC005"
+> PRODID_3="00"
+> PRODID_4=""
+> MANFID=0032,2904
+> FUNCID=8
+> 
+> log messages on insert :- 
+> 
+> May  3 11:22:52 mininote kernel: pccard: PCMCIA card inserted into slot 0
+> May  3 11:22:52 mininote kernel: cs: memory probe 0xa0000000-0xa0ffffff: clean.
+> May  3 11:22:52 mininote kernel: pcmcia: registering new device pcmcia0.0
+> May  3 11:22:53 mininote kernel: hdc: UJDB130, ATAPI CD/DVD-ROM drive
+> May  3 11:22:53 mininote kernel: ide1 at 0x190-0x197,0x396 on irq 3
+> May  3 11:22:53 mininote kernel: ide-cs: hdc: Vpp = 0.0
+> May  3 11:22:54 mininote kernel: hdc: ATAPI 20X CD-ROM drive, 128kB Cache
+> May  3 11:22:54 mininote kernel: Uniform CD-ROM driver Revision: 3.20
+> May  3 11:23:04 mininote hald: mounted /dev/hdc on behalf of uid 500
+> May  3 11:23:34 mininote hald: unmounted /dev/hdc from '/media/FC_4 i386 ftp #1' on behalf of uid 500
+> May  3 11:24:17 mininote kernel: pccard: card ejected from slot 0
+> << lockup happened here >>
+> 
+> patch
+> --- linux-2.6.21.1/drivers/ide/legacy/ide-cs.c.orig	2007-05-02 12:09:57.000000000 +0100
+> +++ linux-2.6.21.1/drivers/ide/legacy/ide-cs.c	2007-05-02 12:12:40.000000000 +0100
+> @@ -362,6 +362,7 @@
+>  	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
+>  	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
+>  	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
+> +	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),        /* KME KXLCOO5 JVC MP-CDX1 */
+>  	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
+>  	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
+>  	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
+> 
+>    
+> 
+
+Best Regards
+Komuro
