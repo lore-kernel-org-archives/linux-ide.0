@@ -1,47 +1,54 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: libata /dev/scd0 problem: mount after burn fails without eject
-Date: Fri, 4 May 2007 10:44:52 +0200
-Message-ID: <20070504084452.GA20388@janus>
-References: <20070501135951.GA17072@janus> <46374C11.1010702@rtr.ca> <6bffcb0e0705010731v44cfad1awf4342121245f7ab3@mail.gmail.com> <463AEBE0.7010506@gmail.com> <20070504083735.GA20072@janus> <463AF1C5.4090401@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_via: add missing PM hooks
+Date: Fri, 04 May 2007 11:03:02 +0200
+Message-ID: <463AF6C6.1050402@gmail.com>
+References: <e34e42440705030542r1574dfdre143e2d43edd44d6@mail.gmail.com>	 <4639F59B.1080009@gmail.com> <e34e42440705040122r2ec59952w2684039868808fcb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <463AF1C5.4090401@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Frank van Maarseveen <frankvm@frankvm.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Mark Lord <lkml@rtr.ca>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>, bzolnier@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.180]:53598 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933040AbXEDJDT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 05:03:19 -0400
+Received: by py-out-1112.google.com with SMTP id a29so630193pyi
+        for <linux-ide@vger.kernel.org>; Fri, 04 May 2007 02:03:19 -0700 (PDT)
+In-Reply-To: <e34e42440705040122r2ec59952w2684039868808fcb@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeroen Janssen <jeroen.janssen@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, May 04, 2007 at 10:41:41AM +0200, Tejun Heo wrote:
-> Frank van Maarseveen wrote:
-> > On Fri, May 04, 2007 at 10:16:32AM +0200, Tejun Heo wrote:
-> >> Michal Piotrowski wrote:
-> >>> On 01/05/07, Mark Lord <lkml@rtr.ca> wrote:
-> >>>> Forwarding to linux-scsi and linux-ide mailing lists.
-> >>>>
-> >>>> Frank van Maarseveen wrote:
-> >>>>> Tested on 2.6.20.6 and 2.6.21.1
-> >>>>>
-> >>>>> I decided to swich from the old IDE drivers to libata and now there
-> >>>>> seems to be a little but annoying problem: cannot mount an ISO image
-> >>>>> after burning it.
-> >>>>>
-> >>>>> May  1 14:32:55 kernel: attempt to access beyond end of device
-> >>>>> May  1 14:32:55 kernel: sr0: rw=0, want=68, limit=4
-> >>>>> May  1 14:32:55 kernel: isofs_fill_super: bread failed, dev=sr0,
-> >>>> iso_blknum=16, block=16
-> >>>>> an "eject" command seems to fix the state of the PATA DVD writer
-> >>>>> or driver. The problem occurs for burning a CD and for DVD too with
-> >>>>> identical error messages.
-> >> Right after burning, if you run 'fuser -v /dev/sr0', what does it say?
-> > 
-> > Tried the fuser as root to be sure but it didn't show anything.
-> 
-> I guess sr is forgetting to set media changed flag somewhere.
+For some reason, sata_via is missing PM hooks.  Add them.
 
-Plausible. I get the same kernel messages when I try to mount the CD
-before burning.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+This patch is against 2.6.21 but you can use it over 2.6.20 too.  Does
+this fix your problem?
 
--- 
-Frank
+Index: tree0/drivers/ata/sata_via.c
+===================================================================
+--- tree0.orig/drivers/ata/sata_via.c
++++ tree0/drivers/ata/sata_via.c
+@@ -97,6 +97,10 @@ static struct pci_driver svia_pci_driver
+ 	.name			= DRV_NAME,
+ 	.id_table		= svia_pci_tbl,
+ 	.probe			= svia_init_one,
++#ifdef CONFIG_PM
++	.suspend		= ata_pci_device_suspend,
++	.resume			= ata_pci_device_resume,
++#endif
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+@@ -116,6 +120,10 @@ static struct scsi_host_template svia_sh
+ 	.slave_configure	= ata_scsi_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
++#ifdef CONFIG_PM
++	.suspend		= ata_scsi_device_suspend,
++	.resume			= ata_scsi_device_resume,
++#endif
+ };
+ 
+ static const struct ata_port_operations vt6420_sata_ops = {
