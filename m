@@ -1,45 +1,34 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Recent ipr breakage (ata_do_eh api change)
-Date: Fri, 04 May 2007 10:15:00 -0500
-Message-ID: <463B4DF4.70908@linux.vnet.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Recent ipr breakage (ata_do_eh api change)
+Date: Fri, 04 May 2007 11:21:57 -0400
+Message-ID: <463B4F95.5080307@pobox.com>
+References: <463B4DF4.70908@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:35310 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933082AbXEDPQb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2007 11:16:31 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l44FGVOW013655
-	for <linux-ide@vger.kernel.org>; Fri, 4 May 2007 11:16:31 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l44FGU7V178308
-	for <linux-ide@vger.kernel.org>; Fri, 4 May 2007 09:16:30 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l44FGTTS028678
-	for <linux-ide@vger.kernel.org>; Fri, 4 May 2007 09:16:29 -0600
+Received: from srv5.dvmed.net ([207.36.208.214]:48780 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933084AbXEDPWP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 May 2007 11:22:15 -0400
+In-Reply-To: <463B4DF4.70908@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, thlin@linux.vnet.ibm.com
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: akpm@linux-foundation.org, Tejun Heo <htejun@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, thlin@linux.vnet.ibm.com
 
-I just noticed that the following patch (git-libata-all-ipr-fix)
-is currently in mainline which results in inducing a compiler warning:
+Brian King wrote:
+> This looks like a fix for a compile problem with the libata-all
+> branch. I did some poking around and it looks like the ata_do_eh
+> api change is in Jeff's #all branch, but not in #upstream, so
+> I am assuming the ipr patch mentioned above should be reverted
+> in mainline for now.
 
-http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=120bda35ff8514c937dac6d4e5c7dc6c01c699ac;hp=771b8dad9653d2659e0ffcc237184cb16c317788
 
-This looks like a fix for a compile problem with the libata-all
-branch. I did some poking around and it looks like the ata_do_eh
-api change is in Jeff's #all branch, but not in #upstream, so
-I am assuming the ipr patch mentioned above should be reverted
-in mainline for now.
+At the moment, there is no #upstream branch.  It's all, um, upstream :)
 
-Thanks,
+What you see in #ALL is the combination of #reset-seq and #mv-ahci branches.
 
-Brian
+	Jeff
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+
