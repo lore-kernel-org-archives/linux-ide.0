@@ -1,38 +1,31 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2 pata-2.6] ide: make void and rename ide_dma_timeout() method
-Date: Sat, 5 May 2007 20:51:21 +0200
-Message-ID: <200705052051.21906.bzolnier@gmail.com>
-References: <200704250005.16183.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] use mutex instead of semaphore in IDE driver
+Date: Sat, 5 May 2007 20:55:35 +0200
+Message-ID: <200705052055.36061.bzolnier@gmail.com>
+References: <20070426092032.GB6468@traven>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:16330 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933253AbXEEUHz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 16:07:55 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so854329uga
-        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 13:07:53 -0700 (PDT)
-In-Reply-To: <200704250005.16183.sshtylyov@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.191]:23637 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933264AbXEEUH4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 16:07:56 -0400
+Received: by mu-out-0910.google.com with SMTP id g7so1128719muf
+        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 13:07:55 -0700 (PDT)
+In-Reply-To: <20070426092032.GB6468@traven>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-On Tuesday 24 April 2007, Sergei Shtylyov wrote:
-> Since ide_dma_timeout() method's result is discarded, make it return 'void'.
-> While at it, drop 'ide_' from the method's name, drop the '__' prefix from
-> the default method's name, and do some cleanups in this method driver-wise:
+On Thursday 26 April 2007, Matthias Kaehlcke wrote:
+> the IDE driver uses a semaphore as mutex. use the mutex API instead of
+> the (binary) semaphore
 > 
-> - in ide-dma.c, au1xxx-ide.c, and pdc202xx_old.c, define/use 'hwif' variable;
-> 
-> - in au1xxx-ide.c, get rid of commented out printk();
-> 
-> - in sl82c105.c, get rid of unnecessary variables.
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
 applied
