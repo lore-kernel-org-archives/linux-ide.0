@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/11] libata-acpi: miscellaneous cleanups
-Date: Sat, 5 May 2007 23:50:39 +0900
-Message-ID: <1178376639694-git-send-email-htejun@gmail.com>
+Subject: [PATCH 02/11] libata: during revalidation, check n_sectors after device is configured
+Date: Sat, 5 May 2007 23:50:38 +0900
+Message-ID: <1178376638617-git-send-email-htejun@gmail.com>
 References: <11783766373569-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -14,119 +14,116 @@ To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, alan@lxorguk.uku
 Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-* Add missing LOCKING: and RETURNS: to function comment.
+Device might be resized during ata_dev_configure() due to HPA or
+(later) ACPI _GTF.  Currently it's worked around by caching n_sectors
+before turning off HPA.  The cached original size is overwritten if
+the device is reconfigured without being hardreset - which always
+happens after configuring trasnfer mode.  If the device gets hardreset
+for some reason after that, revalidation fails with -ENODEV.
 
-* Don't conditionalize warning messages with ata_msg_probe().  Print
-  directly with KERN_WARNING.
-
-* Drop duplicate debug messages.
+This patch makes size checking more robust by moving n_sectors check
+from ata_dev_reread_id() to ata_dev_revalidate() after the device is
+fully configured.  No matter what happens during configuration, a
+device must have the same n_sectors after fully configured to be
+treated as the same device.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-acpi.c |   51 ++++++++++++++++++++------------------------
- 1 files changed, 23 insertions(+), 28 deletions(-)
+ drivers/ata/libata-core.c |   33 +++++++++++++++------------------
+ include/linux/libata.h    |    1 -
+ 2 files changed, 15 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 4d36d25..ae2077e 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -175,21 +175,17 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9d0d753..f53aa87 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1891,7 +1891,6 @@ int ata_dev_configure(struct ata_device *dev)
+ 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
  
- 	out_obj = output.pointer;
- 	if (out_obj->type != ACPI_TYPE_BUFFER) {
--		if (ata_msg_probe(ap))
--			ata_dev_printk(dev, KERN_DEBUG, "%s: Run _GTF: "
--				"error: expected object type of "
--				" ACPI_TYPE_BUFFER, got 0x%x\n",
--				__FUNCTION__, out_obj->type);
-+		ata_dev_printk(dev, KERN_WARNING,
-+			       "_GTF unexpected object type 0x%x\n",
-+			       out_obj->type);
- 		rc = -EINVAL;
- 		goto out_free;
+ 		dev->n_sectors = ata_id_n_sectors(id);
+-		dev->n_sectors_boot = dev->n_sectors;
+ 
+ 		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
+ 		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
+@@ -3554,7 +3553,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 	const u16 *old_id = dev->id;
+ 	unsigned char model[2][ATA_ID_PROD_LEN + 1];
+ 	unsigned char serial[2][ATA_ID_SERNO_LEN + 1];
+-	u64 new_n_sectors;
+ 
+ 	if (dev->class != new_class) {
+ 		ata_dev_printk(dev, KERN_INFO, "class mismatch %d != %d\n",
+@@ -3566,7 +3564,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 	ata_id_c_string(new_id, model[1], ATA_ID_PROD, sizeof(model[1]));
+ 	ata_id_c_string(old_id, serial[0], ATA_ID_SERNO, sizeof(serial[0]));
+ 	ata_id_c_string(new_id, serial[1], ATA_ID_SERNO, sizeof(serial[1]));
+-	new_n_sectors = ata_id_n_sectors(new_id);
+ 
+ 	if (strcmp(model[0], model[1])) {
+ 		ata_dev_printk(dev, KERN_INFO, "model number mismatch "
+@@ -3580,19 +3577,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 		return 0;
  	}
  
- 	if (out_obj->buffer.length % REGS_PER_GTF) {
--		if (ata_msg_drv(ap))
--			ata_dev_printk(dev, KERN_ERR,
--				"%s: unexpected GTF length (%d) or addr (0x%p)\n",
--				__FUNCTION__, out_obj->buffer.length,
--				out_obj->buffer.pointer);
-+		ata_dev_printk(dev, KERN_WARNING,
-+			       "unexpected _GTF length (%d)\n",
-+			       out_obj->buffer.length);
- 		rc = -EINVAL;
- 		goto out_free;
- 	}
-@@ -320,6 +316,12 @@ static int ata_dev_set_taskfiles(struct ata_device *dev,
-  * @ap: the ata_port for the drive
-  *
-  * This applies to both PATA and SATA drives.
-+ *
-+ * LOCKING:
-+ * EH context.
-+ *
-+ * RETURNS:
-+ * 0 on success, -errno on failure.
-  */
- int ata_acpi_exec_tfs(struct ata_port *ap)
- {
-@@ -345,24 +347,14 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
- 		ret = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
- 		if (ret == 0)
- 			continue;
--		if (ret < 0) {
--			if (ata_msg_probe(ap))
--				ata_port_printk(ap, KERN_DEBUG,
--					"%s: get_GTF error (%d)\n",
--					__FUNCTION__, ret);
-+		if (ret < 0)
- 			break;
--		}
- 		gtf_count = ret;
- 
- 		ret = ata_dev_set_taskfiles(dev, gtf, gtf_count);
- 		kfree(ptr_to_free);
--		if (ret < 0) {
--			if (ata_msg_probe(ap))
--				ata_port_printk(ap, KERN_DEBUG,
--					"%s: set_taskfiles error (%d)\n",
--					__FUNCTION__, ret);
-+		if (ret < 0)
- 			break;
--		}
- 	}
- 
- 	return ret;
-@@ -377,6 +369,12 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
-  * ATM this function never returns a failure.  It is an optional
-  * method and if it fails for whatever reason, we should still
-  * just keep going.
-+ *
-+ * LOCKING:
-+ * EH context.
-+ *
-+ * RETURNS:
-+ * 0 on success, -errno on failure.
-  */
- int ata_acpi_push_id(struct ata_device *dev)
- {
-@@ -416,12 +414,9 @@ int ata_acpi_push_id(struct ata_device *dev)
- 	swap_buf_le16(dev->id, ATA_ID_WORDS);
- 
- 	err = ACPI_FAILURE(status) ? -EIO : 0;
--	if (err < 0) {
--		if (ata_msg_probe(ap))
--			ata_dev_printk(dev, KERN_DEBUG,
--				       "%s _SDD error: status = 0x%x\n",
--				       __FUNCTION__, status);
+-	if (dev->class == ATA_DEV_ATA && dev->n_sectors != new_n_sectors) {
+-		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
+-			       "%llu != %llu\n",
+-			       (unsigned long long)dev->n_sectors,
+-			       (unsigned long long)new_n_sectors);
+-		/* Are we the boot time size - if so we appear to be the
+-		   same disk at this point and our HPA got reapplied */
+-		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
+-		    && ata_id_hpa_enabled(new_id))
+-			return 1;
+-		return 0;
 -	}
-+	if (err < 0)
-+		ata_dev_printk(dev, KERN_WARNING,
-+			       "ACPI _SDD failed (AE 0x%x)\n", status);
+-
+ 	return 1;
+ }
  
- 	/* always return success */
- out:
+@@ -3645,6 +3629,7 @@ int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
+  */
+ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
+ {
++	u64 n_sectors = dev->n_sectors;
+ 	int rc;
+ 
+ 	if (!ata_dev_enabled(dev))
+@@ -3657,8 +3642,20 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
+ 
+ 	/* configure device according to the new ID */
+ 	rc = ata_dev_configure(dev);
+-	if (rc == 0)
+-		return 0;
++	if (rc)
++		goto fail;
++
++	/* verify n_sectors hasn't changed */
++	if (dev->class == ATA_DEV_ATA && dev->n_sectors != n_sectors) {
++		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
++			       "%llu != %llu\n",
++			       (unsigned long long)n_sectors,
++			       (unsigned long long)dev->n_sectors);
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	return 0;
+ 
+  fail:
+ 	ata_dev_printk(dev, KERN_ERR, "revalidation failed (errno=%d)\n", rc);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d8cfc72..3cffbf6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -448,7 +448,6 @@ struct ata_device {
+ 	struct scsi_device	*sdev;		/* attached SCSI device */
+ 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
+ 	u64			n_sectors;	/* size of device, if ATA */
+-	u64			n_sectors_boot;	/* size of ATA device at startup */
+ 	unsigned int		class;		/* ATA_DEV_xxx */
+ 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
+ 	u8			pio_mode;
 -- 
 1.5.0.3
 
