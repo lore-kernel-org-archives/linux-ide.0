@@ -1,39 +1,169 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH pata-2.6] hpt366: simplify UltraDMA filtering (take 2)
-Date: Sat, 5 May 2007 23:12:59 +0200
-Message-ID: <200705052312.59821.bzolnier@gmail.com>
-References: <200705060024.54748.sshtylyov@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: fix ADMA freeze/thaw/irq_clear issues
+Date: Sat, 05 May 2007 15:36:36 -0600
+Message-ID: <463CF8E4.6000902@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:58885 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073AbXEEVJr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 17:09:47 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so860154uga
-        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 14:09:45 -0700 (PDT)
-In-Reply-To: <200705060024.54748.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:2409 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933822AbXEEVh4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 17:37:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, web01@danzon.com
 
-On Saturday 05 May 2007, Sergei Shtylyov wrote:
-> Simplify UltraDMA mode filtering in the driver:
-> 
-> - make use of the newly introduced 'udma_mask' field of 'ide_pci_device_t' to
->   set the correct hwif->ultra_mask, modifying init_setup_hpt366() to select
->   the correct mask based on the chip revision;
-> 
-> - replace 'max_mode' field of the 'struct hpt_info' with 'max_ultra' specifying
->   the maximum UltraDMA mode allowed;
-> 
-> - rewrite hpt3xx_udma_filter() to differ the filters based on the 'chip_type'
->   field, and only use it for HPT366 and HPT370[A] where it's really necessary.
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+This patch fixes some problems with ADMA-capable controllers with regard to freeze,
+thaw and irq_clear libata callbacks. Freeze and thaw didn't switch the ADMA-specific
+interrupts on or off, and more critically the irq_clear function didn't respect
+the restriction that the notifier clear registers for both ports have to be written
+at the same time even when only one port is being cleared. This could result in
+timeouts on one port when error handling (i.e. as a result of hotplug)
+occurred on the other port.
 
-applied
+As well, this fixes some issues in the interrupt handler: we shouldn't check any
+ADMA status if the port has ADMA switched off because of an ATAPI device, and
+it also checks to see if any ADMA interrupt has been raised even when we are in
+port-register mode.
+
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+
+--- linux-2.6.21.1/drivers/ata/sata_nv.c	2007-04-27 15:49:26.000000000 -0600
++++ linux-2.6.21.1edit/drivers/ata/sata_nv.c	2007-05-05 15:25:04.000000000 -0600
+@@ -257,6 +257,8 @@ static void nv_adma_port_stop(struct ata
+ static int nv_adma_port_suspend(struct ata_port *ap, pm_message_t mesg);
+ static int nv_adma_port_resume(struct ata_port *ap);
+ #endif
++static void nv_adma_freeze(struct ata_port *ap);
++static void nv_adma_thaw(struct ata_port *ap);
+ static void nv_adma_error_handler(struct ata_port *ap);
+ static void nv_adma_host_stop(struct ata_host *host);
+ static void nv_adma_post_internal_cmd(struct ata_queued_cmd *qc);
+@@ -446,8 +448,8 @@ static const struct ata_port_operations 
+ 	.bmdma_status		= ata_bmdma_status,
+ 	.qc_prep		= nv_adma_qc_prep,
+ 	.qc_issue		= nv_adma_qc_issue,
+-	.freeze			= nv_ck804_freeze,
+-	.thaw			= nv_ck804_thaw,
++	.freeze			= nv_adma_freeze,
++	.thaw			= nv_adma_thaw,
+ 	.error_handler		= nv_adma_error_handler,
+ 	.post_internal_cmd	= nv_adma_post_internal_cmd,
+ 	.data_xfer		= ata_data_xfer,
+@@ -810,8 +812,16 @@ static irqreturn_t nv_adma_interrupt(int
+ 			u16 status;
+ 			u32 gen_ctl;
+ 			u32 notifier, notifier_error;
++			
++			/* if ADMA is disabled, use standard ata interrupt handler */
++			if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
++				u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
++					>> (NV_INT_PORT_SHIFT * i);
++				handled += nv_host_intr(ap, irq_stat);
++				continue;
++			}
+ 
+-			/* if in ATA register mode, use standard ata interrupt handler */
++			/* if in ATA register mode, check for standard interrupts */
+ 			if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
+ 				u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
+ 					>> (NV_INT_PORT_SHIFT * i);
+@@ -821,7 +831,6 @@ static irqreturn_t nv_adma_interrupt(int
+ 					    command is active, to prevent losing interrupts. */
+ 					irq_stat |= NV_INT_DEV;
+ 				handled += nv_host_intr(ap, irq_stat);
+-				continue;
+ 			}
+ 
+ 			notifier = readl(mmio + NV_ADMA_NOTIFIER);
+@@ -907,22 +916,77 @@ static irqreturn_t nv_adma_interrupt(int
+ 	return IRQ_RETVAL(handled);
+ }
+ 
++static void nv_adma_freeze(struct ata_port *ap)
++{
++	struct nv_adma_port_priv *pp = ap->private_data;
++	void __iomem *mmio = pp->ctl_block;
++	u16 tmp;
++
++	nv_ck804_freeze(ap);
++
++	if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)
++		return;
++
++	/* clear any outstanding CK804 notifications */
++	writeb( NV_INT_ALL << (ap->port_no * NV_INT_PORT_SHIFT),
++		ap->host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804);
++
++	/* Disable interrupt */
++	tmp = readw(mmio + NV_ADMA_CTL);
++	writew( tmp & ~(NV_ADMA_CTL_AIEN | NV_ADMA_CTL_HOTPLUG_IEN),
++		mmio + NV_ADMA_CTL);
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
++}
++
++static void nv_adma_thaw(struct ata_port *ap)
++{
++	struct nv_adma_port_priv *pp = ap->private_data;
++	void __iomem *mmio = pp->ctl_block;
++	u16 tmp;
++
++	nv_ck804_thaw(ap);
++
++	if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)
++		return;
++
++	/* Enable interrupt */
++	tmp = readw(mmio + NV_ADMA_CTL);
++	writew( tmp | (NV_ADMA_CTL_AIEN | NV_ADMA_CTL_HOTPLUG_IEN),
++		mmio + NV_ADMA_CTL);
++	readw( mmio + NV_ADMA_CTL );	/* flush posted write */
++}
++
+ static void nv_adma_irq_clear(struct ata_port *ap)
+ {
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	void __iomem *mmio = pp->ctl_block;
+-	u16 status = readw(mmio + NV_ADMA_STAT);
+-	u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
+-	u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
+-	void __iomem *dma_stat_addr = ap->ioaddr.bmdma_addr + ATA_DMA_STATUS;
++	u32 notifier_clears[2];
+ 
+-	/* clear ADMA status */
+-	writew(status, mmio + NV_ADMA_STAT);
+-	writel(notifier | notifier_error,
+-	       pp->notifier_clear_block);
++	if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
++		ata_bmdma_irq_clear(ap);
++		return;
++	}
++
++	/* clear any outstanding CK804 notifications */
++	writeb( NV_INT_ALL << (ap->port_no * NV_INT_PORT_SHIFT),
++		ap->host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804);
+ 
+-	/** clear legacy status */
+-	iowrite8(ioread8(dma_stat_addr), dma_stat_addr);
++	/* clear ADMA status */
++	writew(0xffff, mmio + NV_ADMA_STAT);
++	
++	/* clear notifiers - note both ports need to be written with
++	   something even though we are only clearing on one */
++	if (ap->port_no == 0) {
++		notifier_clears[0] = 0xFFFFFFFF;
++		notifier_clears[1] = 0;
++	} else {
++		notifier_clears[0] = 0;
++		notifier_clears[1] = 0xFFFFFFFF;
++	}
++	pp = ap->host->ports[0]->private_data;
++	writel(notifier_clears[0], pp->notifier_clear_block);
++	pp = ap->host->ports[1]->private_data;
++	writel(notifier_clears[1], pp->notifier_clear_block);
+ }
+ 
+ static void nv_adma_post_internal_cmd(struct ata_queued_cmd *qc)
+
