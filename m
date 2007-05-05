@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/11] libata: separate out ata_dev_reread_id()
-Date: Sat, 5 May 2007 23:50:37 +0900
-Message-ID: <117837663763-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/11] libata-acpi: miscellaneous cleanups
+Date: Sat, 5 May 2007 23:50:39 +0900
+Message-ID: <1178376639694-git-send-email-htejun@gmail.com>
 References: <11783766373569-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -14,108 +14,119 @@ To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, alan@lxorguk.uku
 Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Separate out ata_dev_reread_id() from ata_dev_revalidate().
-ata_dev_reread_id() reads IDENTIFY page and determines whether the
-same device is still there.  ata_dev_revalidate() reconfigures after
-reread completes.  This will be used by ACPI update.
+* Add missing LOCKING: and RETURNS: to function comment.
+
+* Don't conditionalize warning messages with ata_msg_probe().  Print
+  directly with KERN_WARNING.
+
+* Drop duplicate debug messages.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   47 ++++++++++++++++++++++++++++++++------------
- drivers/ata/libata.h      |    3 +-
- 2 files changed, 36 insertions(+), 14 deletions(-)
+ drivers/ata/libata-acpi.c |   51 ++++++++++++++++++++------------------------
+ 1 files changed, 23 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ca67484..9d0d753 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3597,8 +3597,8 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- }
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 4d36d25..ae2077e 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -175,21 +175,17 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
  
- /**
-- *	ata_dev_revalidate - Revalidate ATA device
-- *	@dev: device to revalidate
-+ *	ata_dev_reread_id - Re-read IDENTIFY data
-+ *	@adev: target ATA device
-  *	@readid_flags: read ID flags
+ 	out_obj = output.pointer;
+ 	if (out_obj->type != ACPI_TYPE_BUFFER) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(dev, KERN_DEBUG, "%s: Run _GTF: "
+-				"error: expected object type of "
+-				" ACPI_TYPE_BUFFER, got 0x%x\n",
+-				__FUNCTION__, out_obj->type);
++		ata_dev_printk(dev, KERN_WARNING,
++			       "_GTF unexpected object type 0x%x\n",
++			       out_obj->type);
+ 		rc = -EINVAL;
+ 		goto out_free;
+ 	}
+ 
+ 	if (out_obj->buffer.length % REGS_PER_GTF) {
+-		if (ata_msg_drv(ap))
+-			ata_dev_printk(dev, KERN_ERR,
+-				"%s: unexpected GTF length (%d) or addr (0x%p)\n",
+-				__FUNCTION__, out_obj->buffer.length,
+-				out_obj->buffer.pointer);
++		ata_dev_printk(dev, KERN_WARNING,
++			       "unexpected _GTF length (%d)\n",
++			       out_obj->buffer.length);
+ 		rc = -EINVAL;
+ 		goto out_free;
+ 	}
+@@ -320,6 +316,12 @@ static int ata_dev_set_taskfiles(struct ata_device *dev,
+  * @ap: the ata_port for the drive
   *
-  *	Re-read IDENTIFY page and make sure @dev is still attached to
-@@ -3610,29 +3610,50 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
-  *	RETURNS:
-  *	0 on success, negative errno otherwise
+  * This applies to both PATA and SATA drives.
++ *
++ * LOCKING:
++ * EH context.
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
   */
--int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
-+int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
+ int ata_acpi_exec_tfs(struct ata_port *ap)
  {
- 	unsigned int class = dev->class;
- 	u16 *id = (void *)dev->ap->sector_buf;
- 	int rc;
+@@ -345,24 +347,14 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 		ret = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
+ 		if (ret == 0)
+ 			continue;
+-		if (ret < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_port_printk(ap, KERN_DEBUG,
+-					"%s: get_GTF error (%d)\n",
+-					__FUNCTION__, ret);
++		if (ret < 0)
+ 			break;
+-		}
+ 		gtf_count = ret;
  
--	if (!ata_dev_enabled(dev)) {
--		rc = -ENODEV;
--		goto fail;
+ 		ret = ata_dev_set_taskfiles(dev, gtf, gtf_count);
+ 		kfree(ptr_to_free);
+-		if (ret < 0) {
+-			if (ata_msg_probe(ap))
+-				ata_port_printk(ap, KERN_DEBUG,
+-					"%s: set_taskfiles error (%d)\n",
+-					__FUNCTION__, ret);
++		if (ret < 0)
+ 			break;
+-		}
+ 	}
+ 
+ 	return ret;
+@@ -377,6 +369,12 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+  * ATM this function never returns a failure.  It is an optional
+  * method and if it fails for whatever reason, we should still
+  * just keep going.
++ *
++ * LOCKING:
++ * EH context.
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
+  */
+ int ata_acpi_push_id(struct ata_device *dev)
+ {
+@@ -416,12 +414,9 @@ int ata_acpi_push_id(struct ata_device *dev)
+ 	swap_buf_le16(dev->id, ATA_ID_WORDS);
+ 
+ 	err = ACPI_FAILURE(status) ? -EIO : 0;
+-	if (err < 0) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(dev, KERN_DEBUG,
+-				       "%s _SDD error: status = 0x%x\n",
+-				       __FUNCTION__, status);
 -	}
--
- 	/* read ID data */
- 	rc = ata_dev_read_id(dev, &class, readid_flags, id);
- 	if (rc)
--		goto fail;
-+		return rc;
++	if (err < 0)
++		ata_dev_printk(dev, KERN_WARNING,
++			       "ACPI _SDD failed (AE 0x%x)\n", status);
  
- 	/* is the device still there? */
--	if (!ata_dev_same_device(dev, class, id)) {
--		rc = -ENODEV;
--		goto fail;
--	}
-+	if (!ata_dev_same_device(dev, class, id))
-+		return -ENODEV;
- 
- 	memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
-+	return 0;
-+}
-+
-+/**
-+ *	ata_dev_revalidate - Revalidate ATA device
-+ *	@dev: device to revalidate
-+ *	@readid_flags: read ID flags
-+ *
-+ *	Re-read IDENTIFY page, make sure @dev is still attached to the
-+ *	port and reconfigure it according to the new IDENTIFY page.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno otherwise
-+ */
-+int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
-+{
-+	int rc;
-+
-+	if (!ata_dev_enabled(dev))
-+		return -ENODEV;
-+
-+	/* re-read ID */
-+	rc = ata_dev_reread_id(dev, readid_flags);
-+	if (rc)
-+		goto fail;
- 
- 	/* configure device according to the new ID */
- 	rc = ata_dev_configure(dev);
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5f4d40c..c40665a 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -75,7 +75,8 @@ extern unsigned ata_exec_internal_sg(struct ata_device *dev,
- extern unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd);
- extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 			   unsigned int flags, u16 *id);
--extern int ata_dev_revalidate(struct ata_device *dev, unsigned int flags);
-+extern int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags);
-+extern int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags);
- extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_port *ap);
- extern int sata_set_spd_needed(struct ata_port *ap);
+ 	/* always return success */
+ out:
 -- 
 1.5.0.3
 
