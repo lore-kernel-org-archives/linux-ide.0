@@ -1,46 +1,39 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH pata-2.6 fix queue] hpt366: don't check enablebits for HPT36x
-Date: Sat, 5 May 2007 23:20:16 +0200
-Message-ID: <200705052320.16144.bzolnier@gmail.com>
-References: <200705042318.37367.sshtylyov@ru.mvista.com> <200705052130.53793.bzolnier@gmail.com> <463CE681.9050000@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6] hpt366: simplify UltraDMA filtering (take 2)
+Date: Sat, 5 May 2007 23:12:59 +0200
+Message-ID: <200705052312.59821.bzolnier@gmail.com>
+References: <200705060024.54748.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:58070 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:58885 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933605AbXEEVJs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 17:09:48 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so860156uga
-        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 14:09:47 -0700 (PDT)
-In-Reply-To: <463CE681.9050000@ru.mvista.com>
+	with ESMTP id S1753073AbXEEVJr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 17:09:47 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so860154uga
+        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 14:09:45 -0700 (PDT)
+In-Reply-To: <200705060024.54748.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: michal.kepien@poczta.onet.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 On Saturday 05 May 2007, Sergei Shtylyov wrote:
-> Hello.
+> Simplify UltraDMA mode filtering in the driver:
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> - make use of the newly introduced 'udma_mask' field of 'ide_pci_device_t' to
+>   set the correct hwif->ultra_mask, modifying init_setup_hpt366() to select
+>   the correct mask based on the chip revision;
 > 
-> >>HPT36x chip don't seem to have the channel enable bits, so prevent the IDE core
-> >>from checking them...
+> - replace 'max_mode' field of the 'struct hpt_info' with 'max_ultra' specifying
+>   the maximum UltraDMA mode allowed;
 > 
-> >>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> - rewrite hpt3xx_udma_filter() to differ the filters based on the 'chip_type'
+>   field, and only use it for HPT366 and HPT370[A] where it's really necessary.
 > 
-> > applied
-> 
->     I'm getting "403 Forbidden" trying to browse this patch (and 
-> ide-cs-recognize-2gb-compactflash-from-transcend.patch as well).
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Should be fixed now - sorry for that.
-
-While at it I replaced mine version of "the hpt366: simplify UltraDMA
-filtering (take 2)" with the official one ;) and fixed my damn scripts
-to always do "chmod 644 pata-2.6/patches/*.patch" before pushing updates
-to kernel.org.
-
-Bart
+applied
