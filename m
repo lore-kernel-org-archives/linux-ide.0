@@ -1,391 +1,415 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/11] libata: reimplement ACPI invocation
+Subject: [PATCH 07/11] libata-acpi: clean up ata_acpi_exec_tfs()
 Date: Sat, 5 May 2007 23:50:39 +0900
-Message-ID: <11783766393667-git-send-email-htejun@gmail.com>
+Message-ID: <1178376639566-git-send-email-htejun@gmail.com>
 References: <11783766373569-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.177]:63729 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423304AbXEEPxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2007 11:53:37 -0400
+Received: by py-out-1112.google.com with SMTP id a29so909621pyi
+        for <linux-ide@vger.kernel.org>; Sat, 05 May 2007 08:53:37 -0700 (PDT)
 In-Reply-To: <11783766373569-git-send-email-htejun@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, lenb@kernel.org, linux-acpi@vger.kernel.org, hare@suse.de, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-This patch reimplements ACPI invocation such that, instead of
-exporting ACPI details to the rest of libata, ACPI event handlers -
-ata_acpi_on_resume() and ata_acpi_on_devcfg() - are used.  These two
-functions are responsible for determining whether specific ACPI method
-is used and when.
+This patch cleans up ata_acpi_exec_tfs() and its friends.
 
-On resume, _GTF is scheduled by setting ATA_DFLAG_ACPI_PENDING device
-flag.  This is done this way to avoid performing the action on wrong
-device device (device swapping while suspended).
+* Rename taskfile_array to ata_acpi_gtf and make it __packed as it's
+  used as argument to ACPI method, and use pointer to ata_acpi_gtf and
+  number of taskfiles to represent _GTF taskfiles instead of a pointer
+  casted into unsigned long and byte count.  This makes argument
+  re-checking in do_drive_set_taskfiles() unnecessary.
 
-On every ata_dev_configure(), ata_acpi_on_devcfg() is called, which
-performs _SDD and _GTF.  _GTF is performed only after resuming and, if
-SATA, hardreset as the ACPI spec specifies.  As _GTF may contain
-arbitrary commands, IDENTIFY page is re-read after _GTF taskfiles are
-executed.
+* Pointer in void * not in unsigned long.
 
-If one of ACPI methods fails, ata_acpi_on_devcfg() retries on the
-first failure.  If it fails again on the second try, ACPI is disabled
-on the device.  Note that successful configuration clears ACPI failed
-status.
+* Clean up do_drive_get_GTF() error handling and make
+  do_drive_get_GTF() return number of taskfiles on success, 0 if _GTF
+  doesn't exist or doesn't contain valid ata.  -errno on other errors.
 
-With all feature checks moved to the above two functions,
-do_drive_set_taskfiles() is trivial and thus collapsed into
-ata_acpi_exec_tfs(), which is now static and converted to return the
-number of executed taskfiles to be used by ata_acpi_on_resume().  As
-failures are handled properly, ata_acpi_push_id() now returns -errno
-on errors instead of unconditional zero.
+* Remove superflous check for acpi->buffer.pointer.
+
+* Update taskfile_load_raw() such that printed messages look similar
+  to the messages printed by ata_eh_report().
+
+* s/do_drive_get_GTF/ata_dev_get_GTF/
+  s/do_drive_set_taskfiles/ata_dev_set_taskfiles/
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-acpi.c |  204 +++++++++++++++++++++++++++-----------------
- drivers/ata/libata-core.c |   16 ++--
- drivers/ata/libata-eh.c   |    3 +
- drivers/ata/libata.h      |   14 +--
- include/linux/libata.h    |    2 +
- 5 files changed, 140 insertions(+), 99 deletions(-)
+ drivers/ata/libata-acpi.c |  226 ++++++++++++++++++++++-----------------------
+ 1 files changed, 111 insertions(+), 115 deletions(-)
 
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index ae2077e..e09df44 100644
+index eda4263..4d36d25 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -273,91 +273,47 @@ static int taskfile_load_raw(struct ata_device *dev,
+@@ -28,9 +28,9 @@
+ #define SATA_ADR(root,pmp)	(((root) << 16) | (pmp))
+ 
+ #define REGS_PER_GTF		7
+-struct taskfile_array {
+-	u8	tfa[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
+-};
++struct ata_acpi_gtf {
++	u8	tf[REGS_PER_GTF];	/* regs. 0x1f1 - 0x1f7 */
++} __packed;
+ 
+ /*
+  *	Helper - belongs in the PCI layer somewhere eventually
+@@ -101,10 +101,10 @@ void ata_acpi_associate(struct ata_host *host)
  }
  
  /**
-- * ata_dev_set_taskfiles - write the drive taskfile settings from _GTF
-- * @dev: target ATA device
-- * @gtf: pointer to array of _GTF taskfiles to execute
-- * @gtf_count: number of taskfiles
-- *
-- * This applies to both PATA and SATA drives.
-- *
-- * Execute taskfiles in @gtf.
-- *
-- * LOCKING:
-- * EH context.
-- *
-- * RETURNS:
-- * 0 on success, -errno on failure.
-- */
--static int ata_dev_set_taskfiles(struct ata_device *dev,
--				 struct ata_acpi_gtf *gtf, int gtf_count)
--{
--	struct ata_port *ap = dev->ap;
--	int ix;
--
--	if (ata_msg_probe(ap))
--		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
--			       __FUNCTION__, ap->port_no);
--
--	if (!(ap->flags & ATA_FLAG_ACPI_SATA))
--		return 0;
--
--	if (!ata_dev_enabled(dev) || (ap->flags & ATA_FLAG_DISABLED))
--		return -ENODEV;
--
--	/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
--	for (ix = 0; ix < gtf_count; ix++)
--		 taskfile_load_raw(dev, gtf++);
--
--	return 0;
--}
--
--/**
-  * ata_acpi_exec_tfs - get then write drive taskfile settings
-- * @ap: the ata_port for the drive
-+ * @dev: target ATA device
+- * do_drive_get_GTF - get the drive bootup default taskfile settings
++ * ata_dev_get_GTF - get the drive bootup default taskfile settings
+  * @dev: target ATA device
+- * @gtf_length: number of bytes of _GTF data returned at @gtf_address
+- * @gtf_address: buffer containing _GTF taskfile arrays
++ * @gtf: output parameter for buffer containing _GTF taskfile arrays
++ * @ptr_to_free: pointer which should be freed
   *
-- * This applies to both PATA and SATA drives.
-+ * Evaluate _GTF and excute returned taskfiles.
+  * This applies to both PATA and SATA drives.
   *
-  * LOCKING:
-  * EH context.
+@@ -114,24 +114,28 @@ void ata_acpi_associate(struct ata_host *host)
+  * The <variable number> is not known in advance, so have ACPI-CA
+  * allocate the buffer as needed and return it, then free it later.
   *
-  * RETURNS:
-- * 0 on success, -errno on failure.
-+ * Number of executed taskfiles on success, 0 if _GTF doesn't exist or
-+ * doesn't contain valid data.  -errno on other errors.
+- * The returned @gtf_length and @gtf_address are only valid if the
+- * function return value is 0.
++ * LOCKING:
++ * EH context.
++ *
++ * RETURNS:
++ * Number of taskfiles on success, 0 if _GTF doesn't exist or doesn't
++ * contain valid data.  -errno on other errors.
   */
--int ata_acpi_exec_tfs(struct ata_port *ap)
-+static int ata_acpi_exec_tfs(struct ata_device *dev)
+-static int do_drive_get_GTF(struct ata_device *dev, unsigned int *gtf_length,
+-			    unsigned long *gtf_address, unsigned long *obj_loc)
++static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
++			   void **ptr_to_free)
  {
--	int ix, ret = 0;
--
--	/*
--	 * TBD - implement PATA support.  For now,
--	 * we should not run GTF on PATA devices since some
--	 * PATA require execution of GTM/STM before GTF.
--	 */
--	if (!(ap->flags & ATA_FLAG_ACPI_SATA))
+ 	struct ata_port *ap = dev->ap;
+ 	acpi_status status;
+ 	struct acpi_buffer output;
+ 	union acpi_object *out_obj;
+-	int err = -ENODEV;
++	int rc = 0;
+ 
+-	*gtf_length = 0;
+-	*gtf_address = 0UL;
+-	*obj_loc = 0UL;
++	/* set up output buffer */
++	output.length = ACPI_ALLOCATE_BUFFER;
++	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
+ 
+ 	if (!dev->acpi_handle)
 -		return 0;
--
--	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
--		struct ata_device *dev = &ap->device[ix];
--		struct ata_acpi_gtf *gtf = NULL;
--		int gtf_count;
--		void *ptr_to_free = NULL;
--
--		if (!ata_dev_enabled(dev))
--			continue;
--
--		ret = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
--		if (ret == 0)
--			continue;
--		if (ret < 0)
--			break;
--		gtf_count = ret;
--
--		ret = ata_dev_set_taskfiles(dev, gtf, gtf_count);
--		kfree(ptr_to_free);
--		if (ret < 0)
--			break;
-+	struct ata_acpi_gtf *gtf = NULL;
-+	void *ptr_to_free = NULL;
-+	int gtf_count, i, rc;
-+
-+	/* get taskfiles */
-+	rc = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
-+	if (rc < 0)
-+		return rc;
-+	gtf_count = rc;
-+
-+	/* execute them */
-+	for (i = 0, rc = 0; i < gtf_count; i++) {
-+		int tmp;
-+
-+		/* ACPI errors are eventually ignored.  Run till the
-+		 * end even after errors.
-+		 */
-+		tmp = taskfile_load_raw(dev, gtf++);
-+		if (!rc)
-+			rc = tmp;
++		goto out_free;
+ 
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
+@@ -143,23 +147,20 @@ static int do_drive_get_GTF(struct ata_device *dev, unsigned int *gtf_length,
+ 				"ata_dev_present: %d, PORT_DISABLED: %lu\n",
+ 				__FUNCTION__, ata_dev_enabled(dev),
+ 				ap->flags & ATA_FLAG_DISABLED);
+-		goto out;
++		goto out_free;
  	}
  
--	return ret;
-+	kfree(ptr_to_free);
+-	/* Setting up output buffer */
+-	output.length = ACPI_ALLOCATE_BUFFER;
+-	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
+-
+ 	/* _GTF has no input parameters */
+-	err = -EIO;
+-	status = acpi_evaluate_object(dev->acpi_handle, "_GTF",
+-				      NULL, &output);
++	status = acpi_evaluate_object(dev->acpi_handle, "_GTF", NULL, &output);
 +
-+	if (rc == 0)
-+		return gtf_count;
+ 	if (ACPI_FAILURE(status)) {
+-		if (ata_msg_probe(ap))
+-			ata_dev_printk(dev, KERN_DEBUG,
+-				"%s: Run _GTF error: status = 0x%x\n",
+-				__FUNCTION__, status);
+-		goto out;
++		if (status != AE_NOT_FOUND) {
++			ata_dev_printk(dev, KERN_WARNING,
++				       "_GTF evaluation failed (AE 0x%x)\n",
++				       status);
++			rc = -EIO;
++		}
++		goto out_free;
+ 	}
+ 
+ 	if (!output.length || !output.pointer) {
+@@ -169,43 +170,43 @@ static int do_drive_get_GTF(struct ata_device *dev, unsigned int *gtf_length,
+ 				__FUNCTION__,
+ 				(unsigned long long)output.length,
+ 				output.pointer);
+-		kfree(output.pointer);
+-		goto out;
++		goto out_free;
+ 	}
+ 
+ 	out_obj = output.pointer;
+ 	if (out_obj->type != ACPI_TYPE_BUFFER) {
+-		kfree(output.pointer);
+ 		if (ata_msg_probe(ap))
+ 			ata_dev_printk(dev, KERN_DEBUG, "%s: Run _GTF: "
+ 				"error: expected object type of "
+ 				" ACPI_TYPE_BUFFER, got 0x%x\n",
+ 				__FUNCTION__, out_obj->type);
+-		err = -ENOENT;
+-		goto out;
++		rc = -EINVAL;
++		goto out_free;
+ 	}
+ 
+-	if (!out_obj->buffer.length || !out_obj->buffer.pointer ||
+-	    out_obj->buffer.length % REGS_PER_GTF) {
++	if (out_obj->buffer.length % REGS_PER_GTF) {
+ 		if (ata_msg_drv(ap))
+ 			ata_dev_printk(dev, KERN_ERR,
+ 				"%s: unexpected GTF length (%d) or addr (0x%p)\n",
+ 				__FUNCTION__, out_obj->buffer.length,
+ 				out_obj->buffer.pointer);
+-		err = -ENOENT;
+-		goto out;
++		rc = -EINVAL;
++		goto out_free;
+ 	}
+ 
+-	*gtf_length = out_obj->buffer.length;
+-	*gtf_address = (unsigned long)out_obj->buffer.pointer;
+-	*obj_loc = (unsigned long)out_obj;
++	*ptr_to_free = out_obj;
++	*gtf = (void *)out_obj->buffer.pointer;
++	rc = out_obj->buffer.length / REGS_PER_GTF;
++
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: returning "
+-			"gtf_length=%d, gtf_address=0x%lx, obj_loc=0x%lx\n",
+-			__FUNCTION__, *gtf_length, *gtf_address, *obj_loc);
+-	err = 0;
+-out:
+-	return err;
++			"gtf=%p, gtf_count=%d, ptr_to_free=%p\n",
++			__FUNCTION__, *gtf, rc, *ptr_to_free);
++	return rc;
++
++ out_free:
++	kfree(output.pointer);
 +	return rc;
  }
  
  /**
-@@ -376,7 +332,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
-  * RETURNS:
-  * 0 on success, -errno on failure.
-  */
--int ata_acpi_push_id(struct ata_device *dev)
-+static int ata_acpi_push_id(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->ap;
- 	int err;
-@@ -396,7 +352,7 @@ int ata_acpi_push_id(struct ata_device *dev)
- 		if (ata_msg_probe(ap))
- 			ata_dev_printk(dev, KERN_DEBUG,
- 				"%s: Not a SATA device\n", __FUNCTION__);
--		goto out;
-+		return 0;
- 	}
- 
- 	/* Give the drive Identify data to the drive via the _SDD method */
-@@ -418,9 +374,99 @@ int ata_acpi_push_id(struct ata_device *dev)
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "ACPI _SDD failed (AE 0x%x)\n", status);
- 
--	/* always return success */
--out:
--	return 0;
-+	return err;
-+}
-+
-+/**
-+ * ata_acpi_on_resume - ATA ACPI hook called on resume
-+ * @ap: target ATA port
-+ *
-+ * This function is called when @ap is resumed - right after port
-+ * itself is resumed but before any EH action is taken.
-+ *
+@@ -224,68 +225,78 @@ out:
+  * function also waits for idle after writing control and before
+  * writing the remaining registers.
+  *
+- * LOCKING: TBD:
+- * Inherited from caller.
 + * LOCKING:
 + * EH context.
-+ */
-+void ata_acpi_on_resume(struct ata_port *ap)
-+{
-+	int i;
++ *
++ * RETURNS:
++ * 0 on success, -errno on failure.
+  */
+-static void taskfile_load_raw(struct ata_device *dev,
+-			      const struct taskfile_array *gtf)
++static int taskfile_load_raw(struct ata_device *dev,
++			      const struct ata_acpi_gtf *gtf)
+ {
+ 	struct ata_port *ap = dev->ap;
+-	struct ata_taskfile tf;
+-	unsigned int err;
++	struct ata_taskfile tf, rtf;
++	unsigned int err_mask;
+ 
+-	if (ata_msg_probe(ap))
+-		ata_dev_printk(dev, KERN_DEBUG, "%s: (0x1f1-1f7): hex: "
+-			"%02x %02x %02x %02x %02x %02x %02x\n",
+-			__FUNCTION__,
+-			gtf->tfa[0], gtf->tfa[1], gtf->tfa[2],
+-			gtf->tfa[3], gtf->tfa[4], gtf->tfa[5], gtf->tfa[6]);
+-
+-	if ((gtf->tfa[0] == 0) && (gtf->tfa[1] == 0) && (gtf->tfa[2] == 0)
+-	    && (gtf->tfa[3] == 0) && (gtf->tfa[4] == 0) && (gtf->tfa[5] == 0)
+-	    && (gtf->tfa[6] == 0))
+-		return;
++	if ((gtf->tf[0] == 0) && (gtf->tf[1] == 0) && (gtf->tf[2] == 0)
++	    && (gtf->tf[3] == 0) && (gtf->tf[4] == 0) && (gtf->tf[5] == 0)
++	    && (gtf->tf[6] == 0))
++		return 0;
+ 
+ 	ata_tf_init(dev, &tf);
+ 
+ 	/* convert gtf to tf */
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE; /* TBD */
+ 	tf.protocol = ATA_PROT_NODATA;
+-	tf.feature = gtf->tfa[0];	/* 0x1f1 */
+-	tf.nsect   = gtf->tfa[1];	/* 0x1f2 */
+-	tf.lbal    = gtf->tfa[2];	/* 0x1f3 */
+-	tf.lbam    = gtf->tfa[3];	/* 0x1f4 */
+-	tf.lbah    = gtf->tfa[4];	/* 0x1f5 */
+-	tf.device  = gtf->tfa[5];	/* 0x1f6 */
+-	tf.command = gtf->tfa[6];	/* 0x1f7 */
+-
+-	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-	if (err && ata_msg_probe(ap))
++	tf.feature = gtf->tf[0];	/* 0x1f1 */
++	tf.nsect   = gtf->tf[1];	/* 0x1f2 */
++	tf.lbal    = gtf->tf[2];	/* 0x1f3 */
++	tf.lbam    = gtf->tf[3];	/* 0x1f4 */
++	tf.lbah    = gtf->tf[4];	/* 0x1f5 */
++	tf.device  = gtf->tf[5];	/* 0x1f6 */
++	tf.command = gtf->tf[6];	/* 0x1f7 */
 +
-+	/* schedule _GTF */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++)
-+		ap->device[i].flags |= ATA_DFLAG_ACPI_PENDING;
++	if (ata_msg_probe(ap))
++		ata_dev_printk(dev, KERN_DEBUG, "executing ACPI cmd "
++			       "%02x/%02x:%02x:%02x:%02x:%02x:%02x\n",
++			       tf.command, tf.feature, tf.nsect,
++			       tf.lbal, tf.lbam, tf.lbah, tf.device);
++
++	rtf = tf;
++	err_mask = ata_exec_internal(dev, &rtf, NULL, DMA_NONE, NULL, 0);
++	if (err_mask) {
+ 		ata_dev_printk(dev, KERN_ERR,
+-			"%s: ata_exec_internal failed: %u\n",
+-			__FUNCTION__, err);
++			"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x failed "
++			"(Emask=0x%x Stat=0x%02x Err=0x%02x)\n",
++			tf.command, tf.feature, tf.nsect, tf.lbal, tf.lbam,
++			tf.lbah, tf.device, err_mask, rtf.command, rtf.feature);
++		return -EIO;
++	}
++
++	return 0;
  }
  
-+/**
-+ * ata_acpi_on_devcfg - ATA ACPI hook called on device donfiguration
-+ * @dev: target ATA device
-+ *
-+ * This function is called when @dev is about to be configured.
-+ * IDENTIFY data might have been modified after this hook is run.
+ /**
+- * do_drive_set_taskfiles - write the drive taskfile settings from _GTF
++ * ata_dev_set_taskfiles - write the drive taskfile settings from _GTF
+  * @dev: target ATA device
+- * @gtf_length: total number of bytes of _GTF taskfiles
+- * @gtf_address: location of _GTF taskfile arrays
++ * @gtf: pointer to array of _GTF taskfiles to execute
++ * @gtf_count: number of taskfiles
+  *
+  * This applies to both PATA and SATA drives.
+  *
+- * Write {gtf_address, length gtf_length} in groups of
+- * REGS_PER_GTF bytes.
++ * Execute taskfiles in @gtf.
 + *
 + * LOCKING:
 + * EH context.
 + *
 + * RETURNS:
-+ * Positive number if IDENTIFY data needs to be refreshed, 0 if not,
-+ * -errno on failure.
-+ */
-+int ata_acpi_on_devcfg(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->ap;
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+	int acpi_sata = ap->flags & ATA_FLAG_ACPI_SATA;
-+	int rc;
-+
-+	/* XXX: _STM isn't implemented yet, skip if IDE for now */
-+	if (!acpi_sata)
-+		return 0;
- 
-+	if (!dev->acpi_handle)
-+		return 0;
-+
-+	/* do we need to do _GTF? */
-+	if (!(dev->flags & ATA_DFLAG_ACPI_PENDING) &&
-+	    !(acpi_sata && (ehc->i.flags & ATA_EHI_DID_HARDRESET)))
-+		return 0;
-+
-+	/* do _SDD if SATA */
-+	if (acpi_sata) {
-+		rc = ata_acpi_push_id(dev);
-+		if (rc)
-+			goto acpi_err;
-+	}
-+
-+	/* do _GTF */
-+	rc = ata_acpi_exec_tfs(dev);
-+	if (rc < 0)
-+		goto acpi_err;
-+
-+	dev->flags &= ~ATA_DFLAG_ACPI_PENDING;
-+
-+	/* refresh IDENTIFY page if any _GTF command has been executed */
-+	if (rc > 0) {
-+		rc = ata_dev_reread_id(dev, 0);
-+		if (rc < 0) {
-+			ata_dev_printk(dev, KERN_ERR, "failed to IDENTIFY "
-+				       "after ACPI commands\n");
-+			return rc;
-+		}
-+	}
-+
-+	return 0;
-+
-+ acpi_err:
-+	/* let EH retry on the first failure, disable ACPI on the second */
-+	if (dev->flags & ATA_DFLAG_ACPI_FAILED) {
-+		ata_dev_printk(dev, KERN_WARNING, "ACPI on devcfg failed the "
-+			       "second time, disabling (errno=%d)\n", rc);
-+
-+		dev->acpi_handle = NULL;
-+
-+		/* if port is working, request IDENTIFY reload and continue */
-+		if (!(ap->pflags & ATA_PFLAG_FROZEN))
-+			rc = 1;
-+	}
-+	dev->flags |= ATA_DFLAG_ACPI_FAILED;
-+	return rc;
-+}
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7967ef9..d254487 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1823,7 +1823,8 @@ static void ata_dev_config_ncq(struct ata_device *dev,
- int ata_dev_configure(struct ata_device *dev)
++ * 0 on success, -errno on failure.
+  */
+-static int do_drive_set_taskfiles(struct ata_device *dev,
+-				  unsigned int gtf_length,
+-				  unsigned long gtf_address)
++static int ata_dev_set_taskfiles(struct ata_device *dev,
++				 struct ata_acpi_gtf *gtf, int gtf_count)
  {
  	struct ata_port *ap = dev->ap;
--	int print_info = ap->eh_context.i.flags & ATA_EHI_PRINTINFO;
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
- 	const u16 *id = dev->id;
- 	unsigned int xfer_mask;
- 	char revbuf[7];		/* XYZ-99\0 */
-@@ -1840,15 +1841,10 @@ int ata_dev_configure(struct ata_device *dev)
- 	if (ata_msg_probe(ap))
- 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER\n", __FUNCTION__);
+-	int err = -ENODEV;
+-	int gtf_count = gtf_length / REGS_PER_GTF;
+ 	int ix;
+-	struct taskfile_array	*gtf;
  
--	/* set _SDD */
--	rc = ata_acpi_push_id(dev);
--	if (rc) {
--		ata_dev_printk(dev, KERN_WARNING, "failed to set _SDD(%d)\n",
--			rc);
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
+@@ -295,29 +306,13 @@ static int do_drive_set_taskfiles(struct ata_device *dev,
+ 		return 0;
+ 
+ 	if (!ata_dev_enabled(dev) || (ap->flags & ATA_FLAG_DISABLED))
+-		goto out;
+-	if (!gtf_count)		/* shouldn't be here */
+-		goto out;
+-
+-	if (gtf_length % REGS_PER_GTF) {
+-		if (ata_msg_drv(ap))
+-			ata_dev_printk(dev, KERN_ERR,
+-				"%s: unexpected GTF length (%d)\n",
+-				__FUNCTION__, gtf_length);
+-		goto out;
+-	}
++		return -ENODEV;
+ 
+-	for (ix = 0; ix < gtf_count; ix++) {
+-		gtf = (struct taskfile_array *)
+-			(gtf_address + ix * REGS_PER_GTF);
++	/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
++	for (ix = 0; ix < gtf_count; ix++)
++		 taskfile_load_raw(dev, gtf++);
+ 
+-		/* send all TaskFile registers (0x1f1-0x1f7) *in*that*order* */
+-		taskfile_load_raw(dev, gtf);
 -	}
 -
--	/* retrieve and execute the ATA task file of _GTF */
--	ata_acpi_exec_tfs(ap);
-+	/* let ACPI work its magic */
-+	rc = ata_acpi_on_devcfg(dev);
-+	if (rc)
-+		return rc;
+-	err = 0;
+-out:
+-	return err;
++	return 0;
+ }
  
- 	/* print device capabilities */
- 	if (ata_msg_probe(ap))
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2bff9ad..b68673b 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2399,6 +2399,9 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
- 	if (ap->ops->port_resume)
- 		rc = ap->ops->port_resume(ap);
+ /**
+@@ -328,11 +323,7 @@ out:
+  */
+ int ata_acpi_exec_tfs(struct ata_port *ap)
+ {
+-	int ix;
+-	int ret = 0;
+-	unsigned int gtf_length;
+-	unsigned long gtf_address;
+-	unsigned long obj_loc;
++	int ix, ret = 0;
  
-+	/* tell ACPI that we're resuming */
-+	ata_acpi_on_resume(ap);
-+
- 	/* give devices time to request EH */
- 	timeout = jiffies + HZ; /* 1s max */
- 	while (1) {
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 29037cd..bee7cbc 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -99,18 +99,12 @@ extern struct ata_port *ata_port_alloc(struct ata_host *host);
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern void ata_acpi_associate(struct ata_host *host);
--extern int ata_acpi_exec_tfs(struct ata_port *ap);
--extern int ata_acpi_push_id(struct ata_device *dev);
-+extern void ata_acpi_on_resume(struct ata_port *ap);
-+extern int ata_acpi_on_devcfg(struct ata_device *adev);
- #else
- static inline void ata_acpi_associate(struct ata_host *host) { }
--static inline int ata_acpi_exec_tfs(struct ata_port *ap)
--{
--	return 0;
--}
--static inline int ata_acpi_push_id(struct ata_device *dev)
--{
--	return 0;
--}
-+static inline void ata_acpi_on_resume(struct ata_port *ap) { }
-+static inline int ata_acpi_on_devcfg(struct ata_device *adev) { return 0; }
- #endif
+ 	/*
+ 	 * TBD - implement PATA support.  For now,
+@@ -344,12 +335,16 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
  
- /* libata-scsi.c */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9a517e6..e43edc9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -136,6 +136,8 @@ enum {
- 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
- 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
- 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
-+	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
-+	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+ 		struct ata_device *dev = &ap->device[ix];
++		struct ata_acpi_gtf *gtf = NULL;
++		int gtf_count;
++		void *ptr_to_free = NULL;
  
- 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+-		ret = do_drive_get_GTF(dev, &gtf_length, &gtf_address,
+-				       &obj_loc);
++		ret = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
++		if (ret == 0)
++			continue;
+ 		if (ret < 0) {
+ 			if (ata_msg_probe(ap))
+ 				ata_port_printk(ap, KERN_DEBUG,
+@@ -357,9 +352,10 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 					__FUNCTION__, ret);
+ 			break;
+ 		}
++		gtf_count = ret;
+ 
+-		ret = do_drive_set_taskfiles(dev, gtf_length, gtf_address);
+-		kfree((void *)obj_loc);
++		ret = ata_dev_set_taskfiles(dev, gtf, gtf_count);
++		kfree(ptr_to_free);
+ 		if (ret < 0) {
+ 			if (ata_msg_probe(ap))
+ 				ata_port_printk(ap, KERN_DEBUG,
 -- 
 1.5.0.3
 
