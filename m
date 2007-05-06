@@ -1,73 +1,93 @@
-From: Sven Lemke <catnip@web.de>
-Subject: [SOLVED] Re: sata_promise - another sata dvd writer problem
-Date: Sun, 06 May 2007 19:46:44 +0200
-Message-ID: <463E1484.4090803@web.de>
-References: <200705061533.l46FXOF8025759@harpo.it.uu.se>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6] hpt366: simplify UltraDMA filtering (take 2)
+Date: Sun, 06 May 2007 23:06:08 +0400
+Message-ID: <463E2720.500@ru.mvista.com>
+References: <200705060024.54748.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:37693 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797AbXEFRyD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 May 2007 13:54:03 -0400
-In-Reply-To: <200705061533.l46FXOF8025759@harpo.it.uu.se>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:24233 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755073AbXEFTEe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 May 2007 15:04:34 -0400
+In-Reply-To: <200705060024.54748.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Mikael Pettersson <mikpe@it.uu.se>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-> On Sun, 06 May 2007 16:35:11 +0200, Sven Lemke wrote:
->
->> sata_promise 0000:00:0b.0: version 2.05
->> ...
->> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata2.00: ATAPI, max UDMA/33
->> ata2.00: applying bridge limits
->> ata2.00: configured for UDMA/33
->> sd 0:0:0:0: [sda] Attached SCSI disk
->> sd 0:0:0:0: Attached scsi generic sg0 type 0
->> scsi 1:0:0:0: CD-ROM TSSTcorp CD/DVDW SH-S183L SB01 PQ: 0 ANSI: 5
->> ...
->> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->> ata2.00: (port_status 0x20200000)
->> ata2.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
->>          res 40/00:02:00:60:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
-> etc
->
-> Probably fallout from a mistake I made in the error decoding update.
-> Apply the patch below, try again, and let us know if it works or not.
->
-> /Mikael
->
-> --- linux-2.6.21-mm1/drivers/ata/sata_promise.c.~1~	2007-05-05 22:24:41.000000000 +0200
-> +++ linux-2.6.21-mm1/drivers/ata/sata_promise.c	2007-05-05 22:25:21.000000000 +0200
-> @@ -653,6 +653,8 @@ static void pdc_error_intr(struct ata_po
->  	qc->err_mask |= ac_err_mask;
+Hello, I wrote:
+> Simplify UltraDMA mode filtering in the driver:
+
+> - make use of the newly introduced 'udma_mask' field of 'ide_pci_device_t' to
+>   set the correct hwif->ultra_mask, modifying init_setup_hpt366() to select
+>   the correct mask based on the chip revision;
+
+> - replace 'max_mode' field of the 'struct hpt_info' with 'max_ultra' specifying
+>   the maximum UltraDMA mode allowed;
+
+> - rewrite hpt3xx_udma_filter() to differ the filters based on the 'chip_type'
+>   field, and only use it for HPT366 and HPT370[A] where it's really necessary.
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> Index: linux-2.6/drivers/ide/pci/hpt366.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ide/pci/hpt366.c
+> +++ linux-2.6/drivers/ide/pci/hpt366.c
+> @@ -1502,9 +1490,33 @@ static int __devinit init_setup_hpt366(s
 >  
->  	pdc_reset_port(ap);
+>  	pci_read_config_byte(dev, PCI_REVISION_ID, &rev);
+>  
+> -	if (rev > 6)
+> +	switch (rev) {
+> +	case 0:
+> +	case 1:
+> +	case 2:
+> +		/*
+> +		 * HPT36x chips are single channel and
+> +		 * do not seem to have the channel enable bit...
+> +		 */
+> +		d->channels = 1;
+> +		d->enablebits[0].reg = 0;
 > +
-> +	ata_port_abort(ap);
->  }
+> +		d->udma_mask = HPT366_ALLOW_ATA66_3 ?
+> +			      (HPT366_ALLOW_ATA66_4 ? 0x1f : 0x0f) : 0x07;
+> +		break;
+> +	case 3:
+> +	case 4:
+> +		d->udma_mask = HPT370_ALLOW_ATA100_5 ? 0x3f : 0x1f;
+> +		break;
+> +	default:
+>  		rev = 6;
+> -		
+> +		/* fall thru */
+> +	case 5:
+> +	case 6:
+> +		d->udma_mask = HPT372_ALLOW_ATA133_6 ? 0x7f : 0x3f;
+> +		break;
+> +	}
+> +
+>  	d->name = chipset_names[rev];
 >  
->  static inline unsigned int pdc_host_intr( struct ata_port *ap,
->
-This solves the problem. Great job!!
+>  	pci_set_drvdata(dev, info[rev]);
+> @@ -1512,12 +1524,7 @@ static int __devinit init_setup_hpt366(s
+>  	if (rev > 2)
+>  		goto init_single;
+>  
+> -	/*
+> -	 * HPT36x chips are single channel and
+> -	 * do not seem to have the channel enable bit...
+> -	 */
+>  	d->channels = 1;
 
-dmesg:
-...
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata2.00: ATAPI, max UDMA/33
-ata2.00: applying bridge limits
-ata2.00: configured for UDMA/33
-...
-scsi 1:0:0:0: CD-ROM TSSTcorp CD/DVDW SH-S183L SB01 PQ: 0 ANSI: 5
-...
-sr 1:0:0:0: Attached scsi CD-ROM sr0
-...
+    Duh, don't know how this slipped in!
+    Bart, could you please this duplicate line?
 
+> -	d->enablebits[0].reg = 0;
+>  
+>  	if ((dev2 = pci_get_slot(dev->bus, dev->devfn + 1)) != NULL) {
+>  	  	u8  pin1 = 0, pin2 = 0;
 
-Thanks a lot,
-Sven
-
+TIA, Sergei
