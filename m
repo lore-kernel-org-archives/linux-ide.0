@@ -1,52 +1,53 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: 2.6.21-mm1: many processes end up in D state
-Date: Sun, 6 May 2007 01:46:54 +0200 (MEST)
-Message-ID: <200705052346.l45NksOb022632@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
+Date: Sun, 06 May 2007 11:33:03 +0200
+Message-ID: <463DA0CF.8080508@gmail.com>
+References: <754241.548.qm@web52606.mail.re2.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:50792 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755442AbXEEXsW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 May 2007 19:48:22 -0400
+Received: from nz-out-0506.google.com ([64.233.162.229]:9529 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754706AbXEFJdR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 May 2007 05:33:17 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so1269512nzf
+        for <linux-ide@vger.kernel.org>; Sun, 06 May 2007 02:33:17 -0700 (PDT)
+In-Reply-To: <754241.548.qm@web52606.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, mikpe@it.uu.se
-Cc: akpm@osdl.org, jgarzik@pobox.com, jirislaby@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Cc: linux-ide@vger.kernel.org, conke.hu@gmail.com
 
-On Sat, 05 May 2007 17:30:51 +0200, Tejun Heo wrote:
-> Mikael Pettersson wrote:
-> >> I.e. no freezing of ports...
-> > 
-> > Your patch to delete the 'return 1;' on error is correct,
-> > and makes the code match exactly the behaviour of previous
-> > versions of sata_promise, except for the additional error
-> > decoding.
-> > 
-> > ahci and sata_sil24 do the return in this situation. I don't
-> > yet understand why they can get away with it while sata_promise
-> > cannot, but for now the return should be removed.
+Srihari Vijayaraghavan wrote:
+> I had a significant breakthrough: when I removed two out of four 1 GB modules
+> (just a stab in the dark to see if the system stability problem I reported to
+> LKML ( http://marc.info/?l=linux-kernel&m=117813911431765&w=2 ; a few sample
+> oops messages attached for reference) goes away, I stuck a gold mine: now the
+> SATA controller detects both the drives :-)).
 > 
-> That's because sata_sil24 and ahci call either ata_port_abort() or
-> ata_port_freeze() prior to finishing error_intr routine.  Both functions
-> abort all in-flight command and schedule EH.
+> So, it'd seem the SATA controller wouldn't work fine when one has a lot of RAM
+> on this board. The manual/manufacture's website claim it supports 8 GB of DDR2
+> 800, while I only have 4, yet there are a few severe problems already: like
+> this SATA drive detection problem & the system instability.
+> 
+> I now got things working very reliably (even without pci=nomsi) with 2 GB of
+> RAM (3 times longer kernel compile torture time with 2 GB, without kernel
+> issues, with both pairs of RAM individually, compared with all of 4 GB where
+> the system is plagued with instability). I intent to check how far below 4095M
+> I could use mem= parameter with, without destablising the system, assuming if
+> at all mem= parameters going to help.
+> 
+> For the record, here's the complete dmesg of the current working system as an
+> attachment (dmesg-2.6.21.1-2gigs):
+> 
+> Thank you for your insight into the problem. If there are any tricks involved
+> in making use of all 4 GB of RAM with SATA drives & with system stability,
+> I'll be very happy to learn them :-)).
 
-Ah. Thanks, that clarifies things.
+It might be that you just have a bad ram module.  Does the machine work
+properly if you exchange the installed two modules with the other two?
+memtet86 time, I guess.
 
-Jiri: please test the patch below instead. That is, revert to
-the original code _with_ the 'return 1;', and then add this
-patch to it. It should have pretty much the same effect as
-removing the 'return 1;', however calling ata_port_abort()
-is more in line with libata's new-style error handling.
-
-/Mikael
-
---- linux-2.6.21-mm1/drivers/ata/sata_promise.c.~1~	2007-05-05 22:24:41.000000000 +0200
-+++ linux-2.6.21-mm1/drivers/ata/sata_promise.c	2007-05-05 22:25:21.000000000 +0200
-@@ -653,6 +653,8 @@ static void pdc_error_intr(struct ata_po
- 	qc->err_mask |= ac_err_mask;
- 
- 	pdc_reset_port(ap);
-+
-+	ata_port_abort(ap);
- }
- 
- static inline unsigned int pdc_host_intr( struct ata_port *ap,
+-- 
+tejun
