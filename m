@@ -1,86 +1,55 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.21-mm1 2/2] sata_promise: SATAII-150/300 TX4 port numbering fix
-Date: Sun, 6 May 2007 22:14:01 +0200 (MEST)
-Message-ID: <200705062014.l46KE1U3026752@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET] libata: reimplement suspend/resume support and fix
+ spindown on poweroff
+Date: Sun, 06 May 2007 22:24:54 +0200
+Message-ID: <463E3996.2070200@gmail.com>
+References: <463B88EC.1080304@gmail.com> <b637ec0b0705061311v1f9997k1c1d9b959b87082d@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:56153 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755243AbXEFUOG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 May 2007 16:14:06 -0400
+Received: from py-out-1112.google.com ([64.233.166.179]:40973 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834AbXEFU0J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 May 2007 16:26:09 -0400
+Received: by py-out-1112.google.com with SMTP id a29so1039927pyi
+        for <linux-ide@vger.kernel.org>; Sun, 06 May 2007 13:26:08 -0700 (PDT)
+In-Reply-To: <b637ec0b0705061311v1f9997k1c1d9b959b87082d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <lkml@rtr.ca>, hancockr@shaw.ca, cebbert@redhat.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, emisca.ml@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Stephen.Clark@seclark.us, a.p.zijlstra@chello.nl
 
-There is a known problem with sata_promise on SATAII-150/300 TX4
-controller cards: it enumerates drives in an order that differs
-from the port numbers printed on the controller cards. However,
-Promise's BIOS and Linux driver both get the order right.
+Fabio Comolli wrote:
+> Doesn't apply to today Linus' git tree:
+> 
+> [fcomolli@tycho linux-2.6]$ git pull  git://htj.dyndns.org/libata-tj
+> spindown
+> remote: Generating pack...
+> remote: Done counting 14283 objects.
+> remote: Result has 11254 objects.
+> remote: Deltifying 11254 objects.
+> remote:  100% (11254/11254) done
+> Indexing 11254 objects.
+> remote: Total 11254 (delta 9842), reused 11241 (delta 9832)
+> 100% (11254/11254) done
+> Resolving 9842 deltas.
+> 100% (9842/9842) done
+> 1948 objects were added to complete this thin pack.
+> 100% (44114/44114) done
+> Auto-merged Documentation/feature-removal-schedule.txt
+> CONFLICT (content): Merge conflict in
+> Documentation/feature-removal-schedule.txt
+> Automatic merge failed; fix conflicts and then commit the result.
+> 
+> I don't know git enough to identify the conflict. Can anyone help me?
 
-I investigated Promise's Linux driver (v1.01.0.23), and found
-that it explicitly changes the mapping from logical port number
-to ATA engine MMIO address on the SATAII TX4 cards. It does this
-on all SATAII TX4 cards, without inspecting revision etc. The
-SATAII TX2plus cards continue to use the same mapping that was
-used for the first-generation chips.
+That's a conflict in feature-removal-schedule.txt document.  Open the
+file, look for <<<< or >>>> and fix them up, do "git-update-index
+Documentation/feature-removal-schedule.txt" followed by "git commit" and
+you should be done.  Alternatively, you can just test the spindown
+branch as-is by doing 'git-fetch git://htj.dyndns.org/libata-tj
+spindown:spindown', then 'git checkout spindown'.
 
-This patch updates sata_promise to use the new port number to
-ATA engine mapping on SATAII TX4 cards, which fixes the drive
-enumeration order problem on those cards. Tested on several
-1st and 2nd generation TX2plus and TX4 chips.
-
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
-Changes since previous submission: ported to libata#ALL and the
-new init model, updated to apply after the fix for the 2nd error
-decode regression.
-
- drivers/ata/sata_promise.c |   22 ++++++++++++++++++----
- 1 files changed, 18 insertions(+), 4 deletions(-)
-
---- linux-2.6.21-mm1/drivers/ata/sata_promise.c.~1~	2007-05-06 20:29:28.000000000 +0200
-+++ linux-2.6.21-mm1/drivers/ata/sata_promise.c	2007-05-06 20:30:39.000000000 +0200
-@@ -45,7 +45,7 @@
- #include "sata_promise.h"
- 
- #define DRV_NAME	"sata_promise"
--#define DRV_VERSION	"2.06"
-+#define DRV_VERSION	"2.07"
- 
- 
- enum {
-@@ -926,6 +926,7 @@ static int pdc_ata_init_one (struct pci_
- 	struct ata_host *host;
- 	void __iomem *base;
- 	int n_ports, i, rc;
-+	int is_sataii_tx4;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -964,10 +965,23 @@ static int pdc_ata_init_one (struct pci_
- 	}
- 	host->iomap = pcim_iomap_table(pdev);
- 
--	for (i = 0; i < host->n_ports; i++)
-+	is_sataii_tx4 = 0;
-+	if ((pi->flags & (PDC_FLAG_GEN_II|PDC_FLAG_4_PORTS)) == (PDC_FLAG_GEN_II|PDC_FLAG_4_PORTS)) {
-+		is_sataii_tx4 = 1;
-+		dev_printk(KERN_INFO, &pdev->dev, "applying SATAII TX4 port numbering workaround\n");
-+	}
-+	for (i = 0; i < host->n_ports; i++) {
-+		static const unsigned char sataii_tx4_port_remap[4] = { 3, 1, 0, 2};
-+		int ata_nr;
-+
-+		ata_nr = i;
-+		if (is_sataii_tx4)
-+			ata_nr = sataii_tx4_port_remap[i];
-+
- 		pdc_ata_setup_port(host->ports[i],
--				   base + 0x200 + i * 0x80,
--				   base + 0x400 + i * 0x100);
-+				   base + 0x200 + ata_nr * 0x80,
-+				   base + 0x400 + ata_nr * 0x100);
-+	}
- 
- 	/* initialize adapter */
- 	pdc_host_init(host);
+-- 
+tejun
