@@ -1,105 +1,52 @@
-From: "Fabio Comolli" <fabio.comolli@gmail.com>
-Subject: Re: [PATCHSET] libata: reimplement suspend/resume support and fix spindown on poweroff
-Date: Sun, 6 May 2007 22:11:11 +0200
-Message-ID: <b637ec0b0705061311v1f9997k1c1d9b959b87082d@mail.gmail.com>
-References: <463B88EC.1080304@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.21-mm1 1/2] sata_promise: fix another error decode regression
+Date: Sun, 6 May 2007 22:12:31 +0200 (MEST)
+Message-ID: <200705062012.l46KCVoK026743@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.224]:1079 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbXEFULN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 May 2007 16:11:13 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1221312wxd
-        for <linux-ide@vger.kernel.org>; Sun, 06 May 2007 13:11:12 -0700 (PDT)
-In-Reply-To: <463B88EC.1080304@gmail.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:56130 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755239AbXEFUMn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 May 2007 16:12:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <lkml@rtr.ca>, hancockr@shaw.ca, cebbert@redhat.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, emisca.ml@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Stephen.Clark@seclark.us, a.p.zijlstra@chello.nl
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org
 
-Doesn't apply to today Linus' git tree:
+The sata_promise error decode update changed pdc_host_intr()
+to return and not complete the qc after detecting an error.
+Unfortunately not completing the qc:s causes them to always
+time out on error, which is wrong and has nasty side-effects.
 
-[fcomolli@tycho linux-2.6]$ git pull  git://htj.dyndns.org/libata-tj spindown
-remote: Generating pack...
-remote: Done counting 14283 objects.
-remote: Result has 11254 objects.
-remote: Deltifying 11254 objects.
-remote:  100% (11254/11254) done
-Indexing 11254 objects.
-remote: Total 11254 (delta 9842), reused 11241 (delta 9832)
- 100% (11254/11254) done
-Resolving 9842 deltas.
- 100% (9842/9842) done
-1948 objects were added to complete this thin pack.
- 100% (44114/44114) done
-Auto-merged Documentation/feature-removal-schedule.txt
-CONFLICT (content): Merge conflict in Documentation/feature-removal-schedule.txt
-Automatic merge failed; fix conflicts and then commit the result.
+This patch updates pdc_error_intr() to call ata_port_abort(),
+similar to ahci and sata_sil24. Doing this is important as it
+makes EH see the original error and not a bogus timeout.
 
-I don't know git enough to identify the conflict. Can anyone help me?
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+---
+Thanks to Tejun for educating me about the significance of
+ata_port_abort()/ata_port_freeze() in ahci and sata_sil24's
+error intr paths.
 
-Thanks in advance.
-Fabio
+ drivers/ata/sata_promise.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
 
-
-
-On 5/4/07, Tejun Heo <htejun@gmail.com> wrote:
-> Hello,
->
-> This is another take at using sdev->manage_start_stop to reimplement
-> suspend/resume and fix spindown on poweroff.  As Robert pointed out in
-> the other thread[1], sadly, ATA spec does NOT require cache flush on
-> standby and some distros don't flush cache prior to put the drive into
-> standby mode during shutdown.  This means that we can't skip cache flush
-> in the kernel shutdown path because data loss is possible.  Also, we
-> just can't switch to new method because there are drives which spin up
-> if told to spin down while it's already spun down.
->
-> So, that leaves us with migrating to new behavior (kernel side
-> sync/shutdown) while maintaining backward compatibility.  This patchset
-> tries to do that by supplying a scheduled-to-be-removed module parameter
-> libata.spindown_compat which defaults to 1.  When set, it makes libata
-> skip spindown during shutdown sequence thus maintaining the old behavior
-> of issuing only cache flush on shutdown.
->
-> So, distros should update their shutdown(8) to do the followings.
->
->   * Check whether /sys/modules/libata/parameters/spindown_compat
->     exists.  If it does, write 0 to it.
->
->   * For each libata harddisk {
->         * Check whether /sys/class/scsi_disk/h:c:i:l/manage_start_stop
->           exists.  Iff it doesn't, synchronize cache and spin the disk
->           down as before.
->   }
->
-> If shutdown(8) does the above, nothing will change on older kernels
-> (some drives will spin up and have to do emergency unload but they
-> aren't too many) and everything should work properly on kernels with
-> spindown_compat or later ones which won't have it.  If shutdown(8) isn't
-> updated, the kernel will behave the same way as older kernels would.
->
-> To accelerate userland update, if shutdown(8) isn't updated
-> (spindown_compat not cleared), libata will complain loudly about it,
-> point the user to http://linux-ata.org/shutdown.html (which should be
-> written) and pause for 5 seconds during shutdown.  Hopefully, this makes
-> the users bug distros sufficiently so that userland tools can be updated
-> quickly.  Note that the pausing happens only during shutdown not during
-> reboot or suspend, so it shouldn't be too much of annoyance.
->
-> This change requires sdev->manage_start_stop updates from scsi-misc-2.6.
->  The merged git tree can be found at...
->
->   http://htj.dyndns.org/git/?p=libata-tj.git;a=shortlog;h=spindown
->   git://htj.dyndns.org/libata-tj spindown
->
-> Thanks.
->
-> --
-> tejun
->
-> [1] http://thread.gmane.org/gmane.linux.ide/18167
->
+--- linux-2.6.21-mm1/drivers/ata/sata_promise.c.~1~	2007-05-06 20:29:01.000000000 +0200
++++ linux-2.6.21-mm1/drivers/ata/sata_promise.c	2007-05-06 20:29:28.000000000 +0200
+@@ -45,7 +45,7 @@
+ #include "sata_promise.h"
+ 
+ #define DRV_NAME	"sata_promise"
+-#define DRV_VERSION	"2.05"
++#define DRV_VERSION	"2.06"
+ 
+ 
+ enum {
+@@ -653,6 +653,8 @@ static void pdc_error_intr(struct ata_po
+ 	qc->err_mask |= ac_err_mask;
+ 
+ 	pdc_reset_port(ap);
++
++	ata_port_abort(ap);
+ }
+ 
+ static inline unsigned int pdc_host_intr( struct ata_port *ap,
