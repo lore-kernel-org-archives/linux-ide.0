@@ -1,87 +1,56 @@
-From: Harald Dunkel <harald.dunkel@t-online.de>
-Subject: Re: [PATCH] Re: 2.6.19.1, sata_sil: sata dvd writer doesn't work
-Date: Mon, 07 May 2007 20:21:57 +0200
-Message-ID: <463F6E45.504@t-online.de>
-References: <46362672.7080103@gmx.net> <4636EA85.40809@t-online.de> <46371628.9060905@gmail.com> <46379CA1.601@t-online.de> <463AEAF9.3000103@gmail.com> <463B6E3F.5000300@t-online.de> <463EFF88.7050308@gmail.com>
+From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
+Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
+ parameter
+Date: Mon, 07 May 2007 17:05:40 -0300
+Message-ID: <463F8694.4000708@gmail.com>
+References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com> <463B71FA.8090005@gmail.com> <463B74DB.8060509@gmail.com> <463B89B9.8050104@gmail.com> <463B8B3C.9010509@gmail.com> <463CC22C.20902@gmail.com> <463CC52E.8050500@gmail.com> <463EF97D.1000805@gmail.com> <463F41E0.30009@gmail.com> <463F473B.90307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout06.sul.t-online.com ([194.25.134.19]:55769 "EHLO
-	mailout06.sul.t-online.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934487AbXEGSWI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 14:22:08 -0400
-In-Reply-To: <463EFF88.7050308@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.239]:15393 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966439AbXEGUFr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 16:05:47 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1515835wxd
+        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 13:05:46 -0700 (PDT)
+In-Reply-To: <463F473B.90307@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Daniel Beichl <daniel_beichl@gmx.net>
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de
 
-Hi Tejun,
+Tejun Heo escribi=F3:
+> Mat=ED=ADas Alejandro Torres wrote:
+>  =20
+>> $ patch -p1 --dry-run <../patch
+>>
+>> patching file drivers/pci/quirks.c
+>> Hunk #1 FAILED at 1624.
+>> 1 out of 1 hunk FAILED -- saving rejects to file
+>> drivers/pci/quirks.c.rej (empty file)
+>>    =20
+>
+> The patch applies okay to 2.6.21.1.  Please apply it on top of
+> unmodified 2.6.21.1.
+>
+> Thanks.
 
-Your last patch contained zero bytes. Please check.
+The patch works in 2.6.21.1,
 
-Tejun Heo wrote:
-> 
-> Please report the result of...
-> 
-> $ strace xine <whatever you need to play dvd> > out 2>&1
-> 
+[    0.000000] Kernel command line:=20
+root=3DUUID=3D5875415d-590b-47be-8e7c-30e4c073c6d2 ro
+=2E...
+[    3.748000] PCI: MSI quirk detected. MSI deactivated.
+=2E...
+[    7.112000] PM: Adding info for No Bus:host1
+[    7.596000] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    7.596000] ata2.00: ATA-7: HDS728080PLA380, PF2OA6EA, max UDMA/133
+[    7.596000] ata2.00: 160836480 sectors, multi 0: LBA48 NCQ (depth 31=
+/32)
+[    7.596000] ata2.00: configured for UDMA/133
+[    7.596000] scsi2 : ahci
 
-out.gz is >400KByte compressed. See private EMail. Below is
-the output in kern.log. This time it is the correct output
-(hopefully). After this the drive was unaccessible.
-
-
-Regards
-
-Harri
-=============================================================
-May  7 20:16:10 pluto kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-May  7 20:16:10 pluto kernel: ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0xad data 2052 in
-May  7 20:16:10 pluto kernel:          res 40/00:00:00:10:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-May  7 20:16:10 pluto kernel: ata2: soft resetting port
-May  7 20:16:10 pluto kernel: CLASSIFY TF 00/01:01:01:14:eb/a0 <6>ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-May  7 20:16:10 pluto kernel: ata2.00: XXX: IDENTIFY
-May  7 20:16:10 pluto kernel: 00: 6d58 2c35 985e 35e8  5e2c e898 2c35 985e
-May  7 20:16:10 pluto kernel: 08: 35e8 5e2c c8b8 0c15  b87e 15c8 7e0c c8b8
-May  7 20:16:10 pluto kernel: 10: 0c15 b87e 15c8 7e0c  e898 2c35 985e 66aa
-May  7 20:16:10 pluto kernel: 18: 6e1e c8b8 0c15 cc0d  66bc 3d43 9ae8 6f71
-May  7 20:16:10 pluto kernel: 20: b71a 63ac 090c bbd0  0166 a966 06a9 7e0c
-May  7 20:16:10 pluto kernel: 28: c8b8 0c15 b87e 15c8  7e0c c8b8 0c15 985e
-May  7 20:16:10 pluto kernel: 30: 35e8 512c e898 2e35  9a5e 35ee 5e2c e898
-May  7 20:16:10 pluto kernel: 38: 2c35 985e 35e8 5e2c  e898 2c35 985e 35ef
-May  7 20:16:10 pluto kernel: 40: 5e2f e8e0 2c4d 9826  3590 5e2c e898 2c35
-May  7 20:16:10 pluto kernel: 48: 985e 35e8 5e2c e898  2a37 985e 3580 5e6c
-May  7 20:16:10 pluto kernel: 50: e898 2c35 985e 75e8  1e2c e898 2c35 d85e
-May  7 20:16:10 pluto kernel: 58: 31ef 5e2c e898 2c35  985e 35e8 5e2c e898
-May  7 20:16:10 pluto kernel: 60: 2c35 985e 35e8 5e2c  e898 2c35 985e 35e8
-May  7 20:16:10 pluto kernel: 68: 5e2c e898 2c35 985e  35e8 5e2c e898 2c35
-May  7 20:16:10 pluto kernel: 70: 985e 35e8 5e2c e898  2c35 985e 35e8 5e2c
-May  7 20:16:10 pluto kernel: 78: e898 2c35 985e 35e8  5e2c e898 2c35 985e
-May  7 20:16:10 pluto kernel: 80: 35e8 5e2c e898 2c35  985e 35e8 5e2c e898
-May  7 20:16:10 pluto kernel: 88: 2c35 985e 35e8 5e2c  e898 2c35 985e 35e8
-May  7 20:16:10 pluto kernel: 90: 5e2c e898 2c35 985e  35e8 5e2c e898 2c35
-May  7 20:16:10 pluto kernel: 98: 985e 35e8 5e2c e898  2c35 985e 35e8 5e2c
-May  7 20:16:10 pluto kernel: a0: e898 2c35 985e 35e8  5e2c e898 2c35 985e
-May  7 20:16:10 pluto kernel: a8: 35e8 5e2c e898 2c35  985e 35e8 5e2c e898
-May  7 20:16:10 pluto kernel: b0: 2c35 985e 35e8 5e2c  e898 2c35 985e 35e8
-May  7 20:16:10 pluto kernel: b8: 5e2c e898 2c35 985e  35e8 5e2c e898 2c35
-May  7 20:16:10 pluto kernel: c0: 985e 35e8 5e2c e898  2c35 985e 35e8 5e2c
-May  7 20:16:10 pluto kernel: c8: e898 2c35 985e 35e8  5e2c e898 2c35 985e
-May  7 20:16:10 pluto kernel: d0: 35e8 5e2c e898 2c35  985e 35e8 5e2c e898
-May  7 20:16:10 pluto kernel: d8: 2c35 985e 35e8 5e2c  e898 2c35 985e 35e8
-May  7 20:16:10 pluto kernel: e0: 5e2c e898 2c35 985e  35e8 5e2c e898 2c35
-May  7 20:16:10 pluto kernel: e8: 985e 35e8 5e2c e898  2c35 985e 35e8 5e2c
-May  7 20:16:10 pluto kernel: f0: e898 2c35 985e 35e8  5e2c e898 2c35 985e
-May  7 20:16:10 pluto kernel: f8: 35e8 5e2c e898 2c35  985e 35e8 5e2c 743d
-May  7 20:16:10 pluto kernel: ata2.00: failed to IDENTIFY (device reports illegal type, err_mask=0x0)
-May  7 20:16:10 pluto kernel: ata2.00: revalidation failed (errno=-22)
-May  7 20:16:10 pluto kernel: ata2.00: disabled
-May  7 20:16:11 pluto kernel: ata2: EH complete
-May  7 20:16:11 pluto kernel: cdrom: This disc doesn't have any tracks I recognize!
-May  7 20:16:48 pluto kernel: Buffer I/O error on device sr0, logical block 0
-May  7 20:16:48 pluto kernel: Buffer I/O error on device sr0, logical block 1
-:
-:
+Thanks, Matias
 
