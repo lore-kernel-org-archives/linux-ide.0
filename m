@@ -1,56 +1,88 @@
-From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
-Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
- parameter
-Date: Mon, 07 May 2007 17:05:40 -0300
-Message-ID: <463F8694.4000708@gmail.com>
-References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com> <463B71FA.8090005@gmail.com> <463B74DB.8060509@gmail.com> <463B89B9.8050104@gmail.com> <463B8B3C.9010509@gmail.com> <463CC22C.20902@gmail.com> <463CC52E.8050500@gmail.com> <463EF97D.1000805@gmail.com> <463F41E0.30009@gmail.com> <463F473B.90307@gmail.com>
+From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
+Date: Tue, 8 May 2007 06:37:14 +1000 (EST)
+Message-ID: <47878.46146.qm@web52606.mail.re2.yahoo.com>
+References: <463DA0CF.8080508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.239]:15393 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966439AbXEGUFr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 16:05:47 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1515835wxd
-        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 13:05:46 -0700 (PDT)
-In-Reply-To: <463F473B.90307@gmail.com>
+Received: from web52606.mail.re2.yahoo.com ([206.190.48.209]:47307 "HELO
+	web52606.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S966669AbXEGUhT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 16:37:19 -0400
+In-Reply-To: <463DA0CF.8080508@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, gregkh@suse.de
+Cc: linux-ide@vger.kernel.org, conke.hu@gmail.com
 
-Tejun Heo escribi=F3:
-> Mat=ED=ADas Alejandro Torres wrote:
->  =20
->> $ patch -p1 --dry-run <../patch
->>
->> patching file drivers/pci/quirks.c
->> Hunk #1 FAILED at 1624.
->> 1 out of 1 hunk FAILED -- saving rejects to file
->> drivers/pci/quirks.c.rej (empty file)
->>    =20
->
-> The patch applies okay to 2.6.21.1.  Please apply it on top of
-> unmodified 2.6.21.1.
->
-> Thanks.
+--- Tejun Heo <htejun@gmail.com> wrote:
+> Srihari Vijayaraghavan wrote:
 
-The patch works in 2.6.21.1,
+[...]
 
-[    0.000000] Kernel command line:=20
-root=3DUUID=3D5875415d-590b-47be-8e7c-30e4c073c6d2 ro
-=2E...
-[    3.748000] PCI: MSI quirk detected. MSI deactivated.
-=2E...
-[    7.112000] PM: Adding info for No Bus:host1
-[    7.596000] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    7.596000] ata2.00: ATA-7: HDS728080PLA380, PF2OA6EA, max UDMA/133
-[    7.596000] ata2.00: 160836480 sectors, multi 0: LBA48 NCQ (depth 31=
-/32)
-[    7.596000] ata2.00: configured for UDMA/133
-[    7.596000] scsi2 : ahci
+> > Thank you for your insight into the problem. If there are any tricks
+> involved
+> > in making use of all 4 GB of RAM with SATA drives & with system stability,
+> > I'll be very happy to learn them :-)).
+> 
+> It might be that you just have a bad ram module.  Does the machine work
+> properly if you exchange the installed two modules with the other two?
+> memtet86 time, I guess.
 
-Thanks, Matias
+With the new case, new power supply & a few extra fans to keep the system
+ventilated nicely, memtest86+ ran 8 hours of 6 successful runs without an
+issue. Before that it would be fine on only DDR2 667, but not at DDR2 800
+mode. (all the Corsair 6400 DIMMs are DDR 800 by specification, of course. ie,
+nothing is overclocked)
 
+Having proven the hardware stability (I'm sure now Linux stability will
+greatly improve also), system stability is no longer a concern for me.
+
+Even now, when 4 GB of RAM is installed, by default, the SATA drives aren't
+recongnised in Linux, except when I pass mem=4095MB. If I pass mem=4095M, alas
+only 3.6 of RAM is detected under Linux!
+
+Here's the relevant section from dmesg:
+ BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009f000 (usable)
+ BIOS-e820: 000000000009f000 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 00000000dfee0000 (usable)
+ BIOS-e820: 00000000dfee0000 - 00000000dfee3000 (ACPI NVS)
+ BIOS-e820: 00000000dfee3000 - 00000000dfef0000 (ACPI data)
+ BIOS-e820: 00000000dfef0000 - 00000000dff00000 (reserved)
+ BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
+ BIOS-e820: 00000000fec00000 - 0000000100000000 (reserved)
+ BIOS-e820: 0000000100000000 - 0000000120000000 (usable)
+Entering add_active_range(0, 0, 159) 0 entries of 3200 used
+Entering add_active_range(0, 256, 917216) 1 entries of 3200 used
+end_pfn_map = 1048576
+...
+Memory: 3570504k/3668864k available (2465k kernel code, 97972k reserved, 1445k
+data, 332k init)
+...
+
+Surprisingly, this usable ~3.6 GB equals to the initial two e820 sections
+only. I believe, when mem= parameter is used, the third 'usable' section
+(between 0x100000000 - 0x120000000) isn't used at all by Linux.
+
+I wonder if there is a trick involved in using mem= or memmap= needs to used
+also (if so, I don't know yet how to construct memmap= parameter).
+
+To recap:
+    System is very stable with the new case, power supply & fans
+    SATA drives aren't by default detected when 4 GB of RAM is used
+    SATA drives are detected by default when only 2 GB of RAM is physically
+installed (ie, with both pairs of 2 GB of DIMMs individually)
+    SATA drives are detected when mem=4095M (the reported memory size in the
+BIOS) is used, but only ~3.6 GB of RAM is used (suspected that the final e820
+usable section, though detected, is not used).
+
+Thank you for your help so far. I really appreciated that.
+
+Hari
+
+
+Send instant messages to your online friends http://au.messenger.yahoo.com 
