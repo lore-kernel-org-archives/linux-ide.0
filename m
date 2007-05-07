@@ -1,32 +1,93 @@
-From: William Thompson <wt@electro-mechanical.com>
-Subject: Re: [PATCH] libata: fallback to the other IDENTIFY on device error
-Date: Mon, 7 May 2007 14:05:47 -0400
-Message-ID: <20070507180547.GB4215@electro-mechanical.com>
-References: <20070427175205.GD7809@electro-mechanical.com> <4635C35D.1020807@gmail.com> <20070430202107.GF5942@electro-mechanical.com> <4636C2C7.8090206@gmail.com> <20070501121703.GH5942@electro-mechanical.com> <46373AEE.6070908@rtr.ca> <20070501131818.GA18521@electro-mechanical.com> <46374354.7040307@gmail.com> <20070501172117.GA20328@electro-mechanical.com> <463F56F2.3010106@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH pata-2.6] hpt366: simplify UltraDMA filtering (take 2)
+Date: Mon, 7 May 2007 20:24:13 +0200
+Message-ID: <200705072024.13695.bzolnier@gmail.com>
+References: <200705060024.54748.sshtylyov@ru.mvista.com> <463E2720.500@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.electro-mechanical.com ([216.184.71.30]:13806 "EHLO
-	mail.electro-mechanical.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966083AbXEGSFy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 14:05:54 -0400
+Received: from ug-out-1314.google.com ([66.249.92.170]:35983 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934500AbXEGSM2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 14:12:28 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1172366uga
+        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 11:12:27 -0700 (PDT)
+In-Reply-To: <463E2720.500@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <463F56F2.3010106@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, May 07, 2007 at 06:42:26PM +0200, Tejun Heo wrote:
-> It seems the world isn't as frank as we thought and some devices lie
-> about who they are.  Fallback to the other IDENTIFY if IDENTIFY fails
-> with device error.  As this is the strategy used by IDE for a long
-> time, it shouldn't cause too much problem.
+On Sunday 06 May 2007, Sergei Shtylyov wrote:
+> Hello, I wrote:
+> > Simplify UltraDMA mode filtering in the driver:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: William Thompson <wt@electro-mechanical.com>
-> ---
-> Willam, please verify this fixes your problem.  Jeff, after all, we
-> seem to need this.  :-(
+> > - make use of the newly introduced 'udma_mask' field of 'ide_pci_device_t' to
+> >   set the correct hwif->ultra_mask, modifying init_setup_hpt366() to select
+> >   the correct mask based on the chip revision;
+> 
+> > - replace 'max_mode' field of the 'struct hpt_info' with 'max_ultra' specifying
+> >   the maximum UltraDMA mode allowed;
+> 
+> > - rewrite hpt3xx_udma_filter() to differ the filters based on the 'chip_type'
+> >   field, and only use it for HPT366 and HPT370[A] where it's really necessary.
+> > 
+> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > 
+> > Index: linux-2.6/drivers/ide/pci/hpt366.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/ide/pci/hpt366.c
+> > +++ linux-2.6/drivers/ide/pci/hpt366.c
+> > @@ -1502,9 +1490,33 @@ static int __devinit init_setup_hpt366(s
+> >  
+> >  	pci_read_config_byte(dev, PCI_REVISION_ID, &rev);
+> >  
+> > -	if (rev > 6)
+> > +	switch (rev) {
+> > +	case 0:
+> > +	case 1:
+> > +	case 2:
+> > +		/*
+> > +		 * HPT36x chips are single channel and
+> > +		 * do not seem to have the channel enable bit...
+> > +		 */
+> > +		d->channels = 1;
+> > +		d->enablebits[0].reg = 0;
+> > +
+> > +		d->udma_mask = HPT366_ALLOW_ATA66_3 ?
+> > +			      (HPT366_ALLOW_ATA66_4 ? 0x1f : 0x0f) : 0x07;
+> > +		break;
+> > +	case 3:
+> > +	case 4:
+> > +		d->udma_mask = HPT370_ALLOW_ATA100_5 ? 0x3f : 0x1f;
+> > +		break;
+> > +	default:
+> >  		rev = 6;
+> > -		
+> > +		/* fall thru */
+> > +	case 5:
+> > +	case 6:
+> > +		d->udma_mask = HPT372_ALLOW_ATA133_6 ? 0x7f : 0x3f;
+> > +		break;
+> > +	}
+> > +
+> >  	d->name = chipset_names[rev];
+> >  
+> >  	pci_set_drvdata(dev, info[rev]);
+> > @@ -1512,12 +1524,7 @@ static int __devinit init_setup_hpt366(s
+> >  	if (rev > 2)
+> >  		goto init_single;
+> >  
+> > -	/*
+> > -	 * HPT36x chips are single channel and
+> > -	 * do not seem to have the channel enable bit...
+> > -	 */
+> >  	d->channels = 1;
+> 
+>     Duh, don't know how this slipped in!
+>     Bart, could you please this duplicate line?
 
-Even though you have a different libata-core.c than I, the patch does work!
+done (duplicate line has been removed)
