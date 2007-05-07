@@ -1,25 +1,33 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [PATCH pata-2.6 fix queue] hpt366: don't check enablebits for HPT36x
-Date: Mon, 7 May 2007 00:53:38 +0200
-Message-ID: <20070506225338.GA28300@apps.cwi.nl>
-References: <200705042318.37367.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: regressions
+Date: Sun, 06 May 2007 21:04:12 -0400
+Message-ID: <463E7B0C.50502@garzik.org>
+References: <200705062049.l46KnD424997@apps.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751884AbXEFWxy@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200705042318.37367.sshtylyov@ru.mvista.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, michal.kepien@poczta.onet.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:41747 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751744AbXEGBEP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 May 2007 21:04:15 -0400
+In-Reply-To: <200705062049.l46KnD424997@apps.cwi.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andries.Brouwer@cwi.nl
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, May 04, 2007 at 11:18:37PM +0400, Sergei Shtylyov wrote:
-> HPT36x chip don't seem to have the channel enable bits,
-> so prevent the IDE core from checking them...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Andries.Brouwer@cwi.nl wrote:
+> 2.6.21 breaks HPT366 - back to 2.6.20
 
-Earlier this evening I reported that HPT366 was broken in 2.6.21.
-I confirm that this fixes it for me.
+I thought Bart/Sergei had fixed this.  Are you using libata or old-IDE 
+driver?
 
-Andries
+
+> 2.6.20 breaks ZIP - back to 2.6.19
+
+What does this mean?  How is it broken?
+
+	Jeff
+
+
