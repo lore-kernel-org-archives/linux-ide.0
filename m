@@ -1,49 +1,71 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 0/7] Asynchronous Notification for ATAPI devices (v2) -
- resend
-Date: Mon, 7 May 2007 08:20:56 -0700
-Message-ID: <20070507082056.dd0b2f9e.kristen.c.accardi@intel.com>
-References: <20070504111222.c2e373cf.kristen.c.accardi@intel.com>
-	<463DAAC6.3060300@gmail.com>
+Subject: Re: [patch 6/7] SCSI: save disk in scsi_device - resend
+Date: Mon, 7 May 2007 08:29:28 -0700
+Message-ID: <20070507082928.17878961.kristen.c.accardi@intel.com>
+References: <20070424074856.005152262@intel.com>
+	<20070504111733.f507501d.kristen.c.accardi@intel.com>
+	<1178310648.3711.56.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14848 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934283AbXEGPYF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 May 2007 11:24:05 -0400
-In-Reply-To: <463DAAC6.3060300@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1178310648.3711.56.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-On Sun, 06 May 2007 12:15:34 +0200
-Tejun Heo <htejun@gmail.com> wrote:
+On Fri, 04 May 2007 15:30:48 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-> Kristen Carlson Accardi wrote:
-> > This patch series implements Asynchronous Notification (AN) for SATA
-> > ATAPI devices as defined in SATA 2.5 and AHCI 1.1 and higher.  Drives
-> > which support this feature will send a notification when new media is
-> > inserted and removed, preventing the need for user space to poll for
-> > new media.  This support is exposed to user space via a flag that will
-> > be set in /sys/block/sr*/capability_flags.  If the flag is set, user
-> > space can disable polling for the new media, and the genhd driver will
-> > send a KOBJ_CHANGE event with the envp set to MEDIA_CHANGE_EVENT=1.
+> On Fri, 2007-05-04 at 11:17 -0700, Kristen Carlson Accardi wrote:
+> > Give anyone who has access to scsi_device access to the genhd struct as well.
 > > 
-> > Note that this patch only implements support for directly attached
-> > drives - AN with drives attached to a port multiplier requires 
-> > additional changes.
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > Index: 2.6-git/drivers/scsi/sd.c
+> > ===================================================================
+> > --- 2.6-git.orig/drivers/scsi/sd.c
+> > +++ 2.6-git/drivers/scsi/sd.c
+> > @@ -1711,6 +1711,7 @@ static int sd_probe(struct device *dev)
+> >  
+> >  	dev_set_drvdata(dev, sdkp);
+> >  	add_disk(gd);
+> > +	sdp->disk = gd;
+> >  
+> >  	sdev_printk(KERN_NOTICE, sdp, "Attached scsi %sdisk %s\n",
+> >  		    sdp->removable ? "removable " : "", gd->disk_name);
+> > Index: 2.6-git/drivers/scsi/sr.c
+> > ===================================================================
+> > --- 2.6-git.orig/drivers/scsi/sr.c
+> > +++ 2.6-git/drivers/scsi/sr.c
+> > @@ -604,6 +604,7 @@ static int sr_probe(struct device *dev)
+> >  	if (sdev->media_change_notify)
+> >  		disk->flags |= GENHD_FL_MEDIA_CHANGE_NOTIFY;
+> >  	add_disk(disk);
+> > +	sdev->disk = disk;
+> >  
+> >  	sdev_printk(KERN_DEBUG, sdev,
+> >  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+> > Index: 2.6-git/include/scsi/scsi_device.h
+> > ===================================================================
+> > --- 2.6-git.orig/include/scsi/scsi_device.h
+> > +++ 2.6-git/include/scsi/scsi_device.h
+> > @@ -138,7 +138,7 @@ struct scsi_device {
+> >  
+> >  	struct device		sdev_gendev;
+> >  	struct class_device	sdev_classdev;
+> > -
+> > +	struct gendisk 		*disk;
+> >  	struct execute_work	ew; /* used to get process context on put */
+> >  
+> >  	enum scsi_device_state sdev_state;
 > 
-> No objection from me.  BTW, you're not setting ATA_FLAG_AN anywhere in
-> the patch series, will that be a separate patch?
+> If you're going to do this, you need to take on board removing the
+> struct gendisk from all the ULD structures (since it's now become
+> generic).
 > 
-> -- 
-> tejun
+> James
 > 
 
-Yes - unfortunately I realized I'd forgotten to add that file to my
-quilt patch about 5 minutes after I sent it :).  I thought if there were
-no other revisions to this patch, I'd just send a separate one, otherwise
-I'd incorporate it into the next version.
+Ok - I can send that as a separate patch series, or I can include it
+in this one.  Which is preferred?
