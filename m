@@ -1,48 +1,49 @@
-From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
-Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
- parameter
-Date: Mon, 07 May 2007 12:12:32 -0300
-Message-ID: <463F41E0.30009@gmail.com>
-References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com> <463B71FA.8090005@gmail.com> <463B74DB.8060509@gmail.com> <463B89B9.8050104@gmail.com> <463B8B3C.9010509@gmail.com> <463CC22C.20902@gmail.com> <463CC52E.8050500@gmail.com> <463EF97D.1000805@gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 0/7] Asynchronous Notification for ATAPI devices (v2) -
+ resend
+Date: Mon, 7 May 2007 08:20:56 -0700
+Message-ID: <20070507082056.dd0b2f9e.kristen.c.accardi@intel.com>
+References: <20070504111222.c2e373cf.kristen.c.accardi@intel.com>
+	<463DAAC6.3060300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:55218 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934132AbXEGPMj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 11:12:39 -0400
-Received: by an-out-0708.google.com with SMTP id d18so149557and
-        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 08:12:38 -0700 (PDT)
-In-Reply-To: <463EF97D.1000805@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:14848 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934283AbXEGPYF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 May 2007 11:24:05 -0400
+In-Reply-To: <463DAAC6.3060300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, gregkh@suse.de
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-Tejun Heo escribi=F3:
-> Tejun Heo wrote:
->  =20
->> Mat=ED=ADas Alejandro Torres wrote:
->>    =20
->>> May be it disables MSI for some other device/bridge/what ever:
->>>      =20
->> Right, that device gotta be PCI-e or PCI-x bridge and the disk
->> controller lives in a different bus.  Please apply the attached patc=
-h.
->> This one really should fix the problem.  :-)
->>    =20
->
-> Ping.
->
->  =20
-Pong.
+On Sun, 06 May 2007 12:15:34 +0200
+Tejun Heo <htejun@gmail.com> wrote:
 
-$ patch -p1 --dry-run <../patch
+> Kristen Carlson Accardi wrote:
+> > This patch series implements Asynchronous Notification (AN) for SATA
+> > ATAPI devices as defined in SATA 2.5 and AHCI 1.1 and higher.  Drives
+> > which support this feature will send a notification when new media is
+> > inserted and removed, preventing the need for user space to poll for
+> > new media.  This support is exposed to user space via a flag that will
+> > be set in /sys/block/sr*/capability_flags.  If the flag is set, user
+> > space can disable polling for the new media, and the genhd driver will
+> > send a KOBJ_CHANGE event with the envp set to MEDIA_CHANGE_EVENT=1.
+> > 
+> > Note that this patch only implements support for directly attached
+> > drives - AN with drives attached to a port multiplier requires 
+> > additional changes.
+> 
+> No objection from me.  BTW, you're not setting ATA_FLAG_AN anywhere in
+> the patch series, will that be a separate patch?
+> 
+> -- 
+> tejun
+> 
 
-patching file drivers/pci/quirks.c
-Hunk #1 FAILED at 1624.
-1 out of 1 hunk FAILED -- saving rejects to file=20
-drivers/pci/quirks.c.rej (empty file)
-
+Yes - unfortunately I realized I'd forgotten to add that file to my
+quilt patch about 5 minutes after I sent it :).  I thought if there were
+no other revisions to this patch, I'd just send a separate one, otherwise
+I'd incorporate it into the next version.
