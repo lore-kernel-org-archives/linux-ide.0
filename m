@@ -1,27 +1,153 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Albert Lee <albertcc@tw.ibm.com>
 Subject: Re: [PATCH] libata: disable_irq() during polling IDENTIFY
-Date: Mon, 7 May 2007 12:18:45 +0100
-Message-ID: <20070507121845.5d7cd1f8@the-village.bc.nu>
-References: <463EAB4D.3000309@tw.ibm.com>
-	<463ED8B9.4060501@gmail.com>
+Date: Mon, 07 May 2007 19:19:01 +0800
+Message-ID: <463F0B25.40103@tw.ibm.com>
+References: <463EAB4D.3000309@tw.ibm.com> <463ED8B9.4060501@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42905 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932526AbXEGLOw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 07:14:52 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:34493 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932929AbXEGLTO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 07:19:14 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l47BJDTB018637
+	for <linux-ide@vger.kernel.org>; Mon, 7 May 2007 07:19:13 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l47BJDCx148234
+	for <linux-ide@vger.kernel.org>; Mon, 7 May 2007 05:19:13 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l47BJCT0019343
+	for <linux-ide@vger.kernel.org>; Mon, 7 May 2007 05:19:13 -0600
 In-Reply-To: <463ED8B9.4060501@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
 
+Tejun Heo wrote:
+> [cc'ing Bartlomiej and Mark, hi]
+> 
+> Hello, Albert.
+> 
+> Albert Lee wrote:
+> 
+>>Problem:
+>>  Kernel got "irq 5: nobody cared" when using
+>>  libata + polling IDENTIFY + Promise 20275 adapter + Benq DW1620 drive.
+>>
+>>  Detail message available in bug 8441 (http://bugzilla.kernel.org/show_bug.cgi?id=8441).
+>>
+>>Cause:
+>> The Benq DW1620 drive raises INTRQ during polling IDENTIFY PACKET DEVICE,
+>> even if nIEN = 1.
+> 
+> 
+> Aieeee...
+> 
+> 
+>>Proposed fix:
+>>  disable_irq() during polling IDENTIFY to work around, the same as what IDE subsystem does.
+>>
+>>Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+>>---
+>>Some controller like Intel ICH4 is immune from the problem, with the same kernel
+>>and the same Benq DW1620 drive. So, adding the ATA_FLAG_IDENT_IRQ_OFF flag for
+>>those adapters that needs the workaround. Patch against 2.6.21.1 for your review, thanks.
+> 
+> 
+> I guess piix is masking the interrupt at the host side.
+> 
+> Another interesting aspect is that the SATA spec says the device is
+> recommended to ignore nIEN while the controller is recommended to not
+> set nIEN when it sends FIS to the device.  ie. nIEN should be
+> implemented on the host controller.  I bet there are controllers out
+> there which doesn't do host-side masking and there will be more and more
+> devices which ignore nIEN, so we're likely to see similar problems on
+> SATA too.
+> 
+> 
+>>+	/* Disable IRQ since some devices like Benq DW1620 raises INTRQ
+>>+	 * when IDENTIFY PACKET DEVICE, even with polling IDENTIFY.
+>>+	 */
+>>+	if (ap->flags & ATA_FLAG_IDENT_IRQ_OFF) {
+>>+		if (host->irq)
+>>+			disable_irq(host->irq);
+>>+
+>>+		if (host->irq2)
+>>+			disable_irq(host->irq2);
+>>+	}
+>>+
+>> 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+>> 				     id, sizeof(id[0]) * ATA_ID_WORDS);
+>>+
+>>+	/* Re-enable IRQ */
+>>+	if (ap->flags & ATA_FLAG_IDENT_IRQ_OFF) {
+>>+		if (host->irq)
+>>+			enable_irq(host->irq);
+>>+
+>>+		if (host->irq2)
+>>+			enable_irq(host->irq2);
+>>+	}
+>>+
+> 
+> 
 > Yeap, this is how IDE deals with polling commands but I'm not sure how
 > it's supposed to work with PCI IRQ sharing.  Bartlomiej, can you
 > enlighten me here?
+> 
+> Also, this is a problem for not only IDENTIFY but all polling commands.
 
-Simple answer: Badly. If you've got the IRQ shared it mucks up the
-behaviour of the other device especially when its doing PIO.
+Yes, other command might also assert INTRQ during polling.
+However, for the specific BENQ DW1620 drive, only IDENTIFY_PACKET_DEVICE
+has such behavior; other commands like READ or REQUEST_SENSE are ok.
+
+> 
+> One solution I can think of is to let IRQ handler ack IRQ
+> unconditionally during polling commands - ie. just read the TF Status
+> register once and tell the IRQ subsystem that the IRQ is handled.  This
+> shouldn't affect the operation of polling as the only side effect of
+> reading Status is clearing pending IRQ && will give us a nice way to
+> deal with the SATA bridge chip which chokes on nIEN.  Considering the
+> sorry state of nIEN in SATA, I guess this might be the best way to deal
+> with this.
+> 
+> Albert, can you please test whether this works?  Modifying
+> ata_interrupt() such that it reads TF Status if ATA_TFLAG_POLLING should
+> do the trick.
+> 
+
+Yes, reading the Status register and acking interrupt also fixes the
+problem (patch attached below). 
+
+--
+albert
+
+diff -Nrup linux-2.6.21.1-ori/drivers/ata/libata-core.c linux-2.6.21.1-mod3/drivers/ata/libata-core.c
+--- linux-2.6.21.1-ori/drivers/ata/libata-core.c	2007-05-04 11:22:23.000000000 +0800
++++ linux-2.6.21.1-mod3/drivers/ata/libata-core.c	2007-05-07 17:44:21.000000000 +0800
+@@ -5224,9 +5224,14 @@ irqreturn_t ata_interrupt (int irq, void
+ 			struct ata_queued_cmd *qc;
+ 
+ 			qc = ata_qc_from_tag(ap, ap->active_tag);
+-			if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)) &&
+-			    (qc->flags & ATA_QCFLAG_ACTIVE))
+-				handled |= ata_host_intr(ap, qc);
++			if (qc && (qc->flags & ATA_QCFLAG_ACTIVE)) {
++				if (qc->tf.flags & ATA_TFLAG_POLLING) {
++					ata_chk_status(ap);
++					handled = 1;
++				} else {
++					handled |= ata_host_intr(ap, qc);
++				}
++			}
+ 		}
+ 	}
+ 
+
+
+
+
 
