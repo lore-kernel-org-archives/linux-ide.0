@@ -1,51 +1,35 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: 2.6.21-mm1: many processes end up in D state
-Date: Mon, 07 May 2007 11:52:45 +0200
-Message-ID: <463EF6ED.7060404@gmail.com>
-References: <200705052346.l45NksOb022632@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA SB600 works in 2.6.20.4 but not in 2.6.21-rc5 with irqpoll
+ parameter
+Date: Mon, 07 May 2007 12:03:41 +0200
+Message-ID: <463EF97D.1000805@gmail.com>
+References: <4608807F.6040202@gmail.com> <4608820D.2000203@gmail.com> <46088328.8070601@gmail.com> <460883FB.1030000@gmail.com> <460896D8.8040203@gmail.com> <460899D4.6070708@gmail.com> <4608A0BD.2010209@gmail.com> <463B019E.7010700@gmail.com> <463B71FA.8090005@gmail.com> <463B74DB.8060509@gmail.com> <463B89B9.8050104@gmail.com> <463B8B3C.9010509@gmail.com> <463CC22C.20902@gmail.com> <463CC52E.8050500@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:27951 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.224]:32905 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754241AbXEGJwv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 05:52:51 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so1490343nzf
-        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 02:52:50 -0700 (PDT)
-In-Reply-To: <200705052346.l45NksOb022632@harpo.it.uu.se>
+	with ESMTP id S1754287AbXEGKDw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2007 06:03:52 -0400
+Received: by nz-out-0506.google.com with SMTP id o1so1492518nzf
+        for <linux-ide@vger.kernel.org>; Mon, 07 May 2007 03:03:51 -0700 (PDT)
+In-Reply-To: <463CC52E.8050500@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: htejun@gmail.com, akpm@osdl.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de
 
-Mikael Pettersson napsal(a):
-> Jiri: please test the patch below instead. That is, revert to
-> the original code _with_ the 'return 1;', and then add this
-> patch to it. It should have pretty much the same effect as
-> removing the 'return 1;', however calling ata_port_abort()
-> is more in line with libata's new-style error handling.
-> 
-> /Mikael
-> 
-> --- linux-2.6.21-mm1/drivers/ata/sata_promise.c.~1~	2007-05-05 22:24:41.000000000 +0200
-> +++ linux-2.6.21-mm1/drivers/ata/sata_promise.c	2007-05-05 22:25:21.000000000 +0200
-> @@ -653,6 +653,8 @@ static void pdc_error_intr(struct ata_po
->  	qc->err_mask |= ac_err_mask;
->  
->  	pdc_reset_port(ap);
-> +
-> +	ata_port_abort(ap);
->  }
->  
->  static inline unsigned int pdc_host_intr( struct ata_port *ap,
-> 
+Tejun Heo wrote:
+> Mat=ED=ADas Alejandro Torres wrote:
+>> May be it disables MSI for some other device/bridge/what ever:
+>=20
+> Right, that device gotta be PCI-e or PCI-x bridge and the disk
+> controller lives in a different bus.  Please apply the attached patch=
+=2E
+> This one really should fix the problem.  :-)
 
-Yes, no freezing anymore.
+Ping.
 
-thanks,
--- 
-http://www.fi.muni.cz/~xslaby/            Jiri Slaby
-faculty of informatics, masaryk university, brno, cz
-e-mail: jirislaby gmail com, gpg pubkey fingerprint:
-B674 9967 0407 CE62 ACC8  22A0 32CC 55C3 39D4 7A7E
+--=20
+tejun
