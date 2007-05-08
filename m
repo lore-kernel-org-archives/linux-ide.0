@@ -1,38 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: disable_irq() during polling IDENTIFY
-Date: Tue, 8 May 2007 14:57:39 +0100
-Message-ID: <20070508145739.2a879736@the-village.bc.nu>
-References: <463EAB4D.3000309@tw.ibm.com>
-	<463ED8B9.4060501@gmail.com>
-	<463F0B25.40103@tw.ibm.com>
-	<463F0DAD.5060307@gmail.com>
-	<463F1374.1010100@tw.ibm.com>
-	<20070507152856.5e817490@the-village.bc.nu>
-	<46407E34.7030800@rtr.ca>
+From: Richard Kennedy <richard@rsk.demon.co.uk>
+Subject: [PATCH] pata_pcmcia.c: add card ident for jvc cdrom
+Date: Tue, 08 May 2007 15:20:56 +0100
+Message-ID: <1178634056.3835.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33332 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S968005AbXEHNxv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 May 2007 09:53:51 -0400
-In-Reply-To: <46407E34.7030800@rtr.ca>
+Received: from anchor-post-34.mail.demon.net ([194.217.242.92]:3414 "EHLO
+	anchor-post-34.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S968076AbXEHOU7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 May 2007 10:20:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: albertl@mail.com, albertcc@tw.ibm.com, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-> > Oh yes, and also some controllers will corrupt their data stream if you
-> > do this during a PIO transfer of a block of ATA data.
-> 
-> I also believe that to be true, but don't know exactly which hardware
-> has that issue.
+update pata_pcmcia to add card ident for JVC MP-CDX1 cdrom drive
+card info:
+PRODID_1="KME"
+PRODID_2="KXLC005"
+PRODID_3="00"
+MANFID=0032,2904
 
-Some stuff which needs to block local irqs during the transfer anyway (eg
-ancient VIA) which therefore doesn't raise that problem much if our
-locking is careful (right now we block local irq but we can spin_lock
-happily in these as they are almost always uniprocessor anyway)
+Signed-off-by: Richard Kennedy <richard@rsk.demon.co.uk>
+---
+patch against 2.6.21.1
 
-There is also some intel stuff with this problem (PIIX4 errata 15, 440MX
-errata 13.
+This gets my laptop cd drive working with the new libata driver.
+thanks
+Richard
+
+--- linux-2.6.21.1/drivers/ata/pata_pcmcia.c	2007-04-27 22:49:26.000000000 +0100
++++ linux-2.6.21.1/drivers/ata/pata_pcmcia.c.new	2007-05-08 12:18:35.000000000 +0100
+@@ -322,6 +322,7 @@ static struct pcmcia_device_id pcmcia_de
+ 	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x0704),
++	PCMCIA_DEVICE_MANF_CARD(0x0032, 0x2904),
+ 	PCMCIA_DEVICE_MANF_CARD(0x0045, 0x0401),	/* SanDisk CFA */
+ 	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
+ 	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
+ 
+
