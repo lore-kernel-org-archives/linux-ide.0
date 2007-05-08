@@ -1,37 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
-Date: Tue, 08 May 2007 17:03:05 +0200
-Message-ID: <46409129.1080606@gmail.com>
-References: <816997.34722.qm@web52603.mail.re2.yahoo.com>	 <46407C86.1010304@gmail.com> <5767b9100705080800y648dae38w2c374857bf2b7ab7@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: disable_irq() during polling IDENTIFY (take 2)
+Date: Tue, 08 May 2007 11:16:50 -0400
+Message-ID: <46409462.3060706@garzik.org>
+References: <463EAB4D.3000309@tw.ibm.com>	<463ED8B9.4060501@gmail.com>	<463F0B25.40103@tw.ibm.com>	<463F0DAD.5060307@gmail.com>	<463F1374.1010100@tw.ibm.com>	<463F1509.30100@gmail.com>	<46405F50.5090901@tw.ibm.com>	<20070508130025.7693980c@the-village.bc.nu>	<464066A4.1010008@gmail.com>	<20070508132046.70a4d9ed@the-village.bc.nu>	<46406C9A.4000802@gmail.com> <20070508134540.509f4704@the-village.bc.nu> <464073B1.80303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:59611 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933977AbXEHPDR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 May 2007 11:03:17 -0400
-Received: by py-out-1112.google.com with SMTP id a29so1506193pyi
-        for <linux-ide@vger.kernel.org>; Tue, 08 May 2007 08:03:16 -0700 (PDT)
-In-Reply-To: <5767b9100705080800y648dae38w2c374857bf2b7ab7@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:59012 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966249AbXEHPRJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 May 2007 11:17:09 -0400
+In-Reply-To: <464073B1.80303@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Conke Hu <conke.hu@gmail.com>
-Cc: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, albertl@mail.com, albertcc@tw.ibm.com, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
 
-Conke Hu wrote:
-> On 5/8/07, Tejun Heo <htejun@gmail.com> wrote:
->> (snip)
->> Conke Hu, please respond.
->> (snip)
-> 
-> i have left AMD and i doubt if it's still good for me to discuss any
-> questions regarding AMD chipset :(
-> 
-> what's more, now i am busy hunting for my next job, but "I WILL BE
-> BACK" when i get my new job :)
+Tejun Heo wrote:
+> Albert, if Jeff agrees with pushing HSM or data transfer to workqueue,
+> are you interested in doing that?  The HSM is your baby after all.  :-)
 
-Sorry, didn't know that.  Good luck with the job hunting.  :-)
 
--- 
-tejun
+It's always been my desire to do PIO from a workqueue if possible, since 
+it is so slow.
+
+	Jeff
+
+
