@@ -1,40 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Re: 2.6.19.1, sata_sil: sata dvd writer doesn't work
-Date: Tue, 08 May 2007 16:52:52 +0200
-Message-ID: <46408EC4.9080904@gmail.com>
-References: <46362672.7080103@gmx.net>	<4636DCA9.9050803@gmail.com>	<4636FBB7.3030605@gmx.net>	<463AE631.9030701@gmail.com>	<463B7903.4070206@gmx.net>	<463EE239.8060709@gmail.com>	<463F634E.2070103@gmx.net>	<46408C4B.8020401@gmail.com> <20070508155119.4207bbc6@the-village.bc.nu>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [PATCH] libata: disable_irq() during polling IDENTIFY (take 2)
+Date: Tue, 08 May 2007 22:59:52 +0800
+Message-ID: <46409068.4040902@tw.ibm.com>
+References: <463EAB4D.3000309@tw.ibm.com>	<463ED8B9.4060501@gmail.com>	<463F0B25.40103@tw.ibm.com>	<463F0DAD.5060307@gmail.com>	<463F1374.1010100@tw.ibm.com>	<463F1509.30100@gmail.com>	<46405F50.5090901@tw.ibm.com>	<20070508130025.7693980c@the-village.bc.nu>	<464066A4.1010008@gmail.com>	<20070508132046.70a4d9ed@the-village.bc.nu>	<46406C9A.4000802@gmail.com> <20070508134540.509f4704@the-village.bc.nu> <464073B1.80303@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:28981 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968055AbXEHOxD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 May 2007 10:53:03 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1748854wxd
-        for <linux-ide@vger.kernel.org>; Tue, 08 May 2007 07:53:02 -0700 (PDT)
-In-Reply-To: <20070508155119.4207bbc6@the-village.bc.nu>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:48030 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934156AbXEHPAQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 May 2007 11:00:16 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l48F0FWm023706
+	for <linux-ide@vger.kernel.org>; Tue, 8 May 2007 11:00:15 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l48F0F71175438
+	for <linux-ide@vger.kernel.org>; Tue, 8 May 2007 09:00:15 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l48F0Eek005941
+	for <linux-ide@vger.kernel.org>; Tue, 8 May 2007 09:00:15 -0600
+In-Reply-To: <464073B1.80303@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Daniel Beichl <daniel_beichl@gmx.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, albertl@mail.com, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
 
-Alan Cox wrote:
->>> A thing that crossed my mind was a timing issue. Perhaps the dmaing of <
->>> 60 bytes is that
->>> fast that the interrupt that causes it is not yet handled correctly. But
->>> this is just a very wild guess.
->> I don't think that can happen.  Controllers are required to queue
->> interrupt till FIFO is flushed.  Can you post dmesg after such errors?
+Tejun Heo wrote:
+
 > 
-> Random finger in the air guess - the FIFO on the SIL DMA engine is 64
-> bytes long ? Perhaps this is something Jeff can query with his contacts
-> at Silicon Image ?
+> I guess it's about time to listen what Jeff thinks.
+> 
+> Albert, if Jeff agrees with pushing HSM or data transfer to workqueue,
+> are you interested in doing that?  The HSM is your baby after all.  :-)
+> 
 
-That sounds plausible.  I have pretty good relationship with SIMG.  I'll
-ask them.
+Moving HSM task to the workqueue looks good idea. The mouse cursor of my
+X desktop doesn't move smoothly when blocks of PIO are going in hard irq.
+Hopefully we can do better with that.
 
-Thanks.
+Yes, I am interested in doing it, if Jeff also ack.
+--
+albert
 
--- 
-tejun
