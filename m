@@ -1,95 +1,76 @@
-From: "Henry Su" <henry.su@amd.com>
-Subject: =?utf-7?B?K0FGcy1wYXRjaCtBRjAtIEFkZCB0aGUgZGV2aWNlIElEcyBmb3IgQQ==?=
-	=?utf-7?B?TUQvQVRJIFNCNzAw?=
-Date: Wed, 9 May 2007 19:15:12 +0800
-Message-ID: <FFECF24D2A7F6D418B9511AF6F3586020197F6A6@shacnexch2.atitech.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] pci-quirks: disable MSI on RS400-200 and RS480, take #2
+Date: Wed, 09 May 2007 14:23:02 +0200
+Message-ID: <4641BD26.1020501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-7"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:37743 "EHLO
-	outbound3-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755180AbXEILPU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 07:15:20 -0400
-Content-class: urn:content-classes:message
+Received: from py-out-1112.google.com ([64.233.166.182]:2004 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756806AbXEIMXR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 08:23:17 -0400
+Received: by py-out-1112.google.com with SMTP id a29so139683pyi
+        for <linux-ide@vger.kernel.org>; Wed, 09 May 2007 05:23:16 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: greg@kroah.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xiaosuzi520@hotmail.com
+To: Greg K-H <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
 
-From: henry.su+AEA-amd.com
-Adding the device ID for AMD/ATI SB700.
-Signed-off-by:henry su +ADw-henry.su+AEA-amd.com+AD4-
-------------------------------------------
---- linux-2.6.21.1.orig/include/linux/pci+AF8-ids.h	2007-05-10 06:30:23.000000000 +-0800
-+-+-+- linux-2.6.21.1/include/linux/pci+AF8-ids.h	2007-05-10 07:10:18.000000000 +-0800
-+AEAAQA- -371,6 +-371,9 +AEAAQA-
- +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SRAID	0x4381
- +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SMBUS	0x4385
- +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE	0x438c
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SATA	0x4390
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SMBUS	0x4395
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE	0x439c
- 
- +ACM-define PCI+AF8-VENDOR+AF8-ID+AF8-VLSI		0x1004
- +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-VLSI+AF8-82C592	0x0005
+MSI doesn't work on RS400-200 and RS480 requiring pci=3Dnomsi kernel
+boot parameter for ahci to work.  This patch renames quirk_svw_msi()
+to quirk_disable_all_msi() and use it to disable MSI on those chips.
 
---- linux-2.6.21.1.orig/drivers/i2c/busses/i2c-piix4.c	2007-05-10 06:30:14.000000000 +-0800
-+-+-+- linux-2.6.21.1/drivers/i2c/busses/i2c-piix4.c	2007-05-10 07:14:06.000000000 +-0800
-+AEAAQA- -399,6 +-399,8 +AEAAQA- static struct pci+AF8-device+AF8-id piix4+AF8-ids+AFsAXQ- 
- 	  .driver+AF8-data +AD0- 0 +AH0-,
- 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SMBUS),
- 	  .driver+AF8-data +AD0- 0 +AH0-,
-+-	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SMBUS),
-+-	  .driver+AF8-data +AD0- 0 +AH0-,
- 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-SERVERWORKS, PCI+AF8-DEVICE+AF8-ID+AF8-SERVERWORKS+AF8-OSB4),
- 	  .driver+AF8-data +AD0- 0 +AH0-,
- 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-SERVERWORKS, PCI+AF8-DEVICE+AF8-ID+AF8-SERVERWORKS+AF8-CSB5),
---- linux-2.6.21.1.orig/drivers/ata/pata+AF8-atiixp.c	2007-05-10 06:30:14.000000000 +-0800
-+-+-+- linux-2.6.21.1/drivers/ata/pata+AF8-atiixp.c	2007-05-10 07:17:07.000000000 +-0800
-+AEAAQA- -283,6 +-283,7 +AEAAQA- static const struct pci+AF8-device+AF8-id atiixp
- 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE), +AH0-,
- 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE), +AH0-,
- 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE), +AH0-,
-+-	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE), +AH0-,
- 
- 	+AHs- +AH0-,
- +AH0AOw-
+  http://thread.gmane.org/gmane.linux.ide/17820
+  http://thread.gmane.org/gmane.linux.ide/17516
+  https://bugzilla.novell.com/show_bug.cgi?id=3D263893
 
---- linux-2.6.21.1.orig/drivers/ide/pci/atiixp.c	2007-05-10 06:30:17.000000000 +-0800
-+-+-+- linux-2.6.21.1/drivers/ide/pci/atiixp.c	2007-05-10 07:18:39.000000000 +-0800
-+AEAAQA- -353,6 +-353,7 +AEAAQA- static struct pci+AF8-device+AF8-id atiixp+AF8-pci+AF8-t
- 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
- 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
- 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
-+-	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE, PCI+AF8-ANY+AF8-ID, 
-+-PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
- 	+AHs- 0, +AH0-,
- +AH0AOw-
- MODULE+AF8-DEVICE+AF8-TABLE(pci, atiixp+AF8-pci+AF8-tbl)+ADs-
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Mat=ED=ADas Alejandro Torres <torresmat@gmail.com>
+---
+Okay, this is the fixed version and should probably included in
+-stable too as there have been quite some number of reports which got
+resolved by adding 'pci=3Dnomsi'.  Verified by Mat=ED=ADas Alejandro To=
+rres.
 
---- linux-2.6.21.1.orig/drivers/ata/ahci.c	2007-05-10 06:30:14.000000000 +-0800
-+-+-+- linux-2.6.21.1/drivers/ata/ahci.c	2007-05-10 07:41:41.000000000 +-0800
-+AEAAQA- -415,6 +-415,7 +AEAAQA- static const struct pci+AF8-device+AF8-id ahci+AF8-p
- 	/+ACo- ATI +ACo-/
- 	+AHs- PCI+AF8-VDEVICE(ATI, 0x4380), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB600 non-raid +ACo-/
- 	+AHs- PCI+AF8-VDEVICE(ATI, 0x4381), board+AF8-ahci +AH0-, /+ACo- ATI SB600 raid +ACo-/
-+-	+AHs- PCI+AF8-VDEVICE(ATI, 0x4390), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 +ACo-/
- 
- 	/+ACo- VIA +ACo-/
- 	+AHs- PCI+AF8-VDEVICE(VIA, 0x3349), board+AF8-ahci+AF8-vt8251 +AH0-, /+ACo- VIA VT8251 +ACo-/
+Thanks.
 
---- linux-2.6.21.1.orig/drivers/pci/quirks.c	2007-05-10 06:30:17.000000000 +-0800
-+-+-+- linux-2.6.21.1/drivers/pci/quirks.c	2007-05-10 07:49:33.000000000 +-0800
-+AEAAQA- -875,6 +-875,7 +AEAAQA- static void +AF8AXw-devinit quirk+AF8-sb600+AF8-sata(s
- 	+AH0-
- +AH0-
- DECLARE+AF8-PCI+AF8-FIXUP+AF8-HEADER(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SATA, quirk+AF8-sb600+AF8-sata)+ADs-
-+-DECLARE+AF8-PCI+AF8-FIXUP+AF8-HEADER(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, 
-+-PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SATA, quirk+AF8-sb600+AF8-sata)+ADs-
- 
- /+ACo-
-  +ACo-	Serverworks CSB5 IDE does not fully support native mode
-
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 3411483..1e3070e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1624,18 +1624,20 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_N
+ 			quirk_nvidia_ck804_pcie_aer_ext_cap);
+=20
+ #ifdef CONFIG_PCI_MSI
+-/* The Serverworks PCI-X chipset does not support MSI. We cannot easil=
+y rely
+- * on setting PCI_BUS_FLAGS_NO_MSI in its bus flags because there are =
+actually
+- * some other busses controlled by the chipset even if Linux is not aw=
+are of it.
+- * Instead of setting the flag on all busses in the machine, simply di=
+sable MSI
+- * globally.
++/* Some chipsets do not support MSI. We cannot easily rely on setting
++ * PCI_BUS_FLAGS_NO_MSI in its bus flags because there are actually
++ * some other busses controlled by the chipset even if Linux is not
++ * aware of it.  Instead of setting the flag on all busses in the
++ * machine, simply disable MSI globally.
+  */
+-static void __init quirk_svw_msi(struct pci_dev *dev)
++static void __init quirk_disable_all_msi(struct pci_dev *dev)
+ {
+ 	pci_no_msi();
+ 	printk(KERN_WARNING "PCI: MSI quirk detected. MSI deactivated.\n");
+ }
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVE=
+RWORKS_GCNB_LE, quirk_svw_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVE=
+RWORKS_GCNB_LE, quirk_disable_all_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200=
+, quirk_disable_all_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, qu=
+irk_disable_all_msi);
+=20
+ /* Disable MSI on chipsets that are known to not support it */
+ static void __devinit quirk_disable_msi(struct pci_dev *dev)
