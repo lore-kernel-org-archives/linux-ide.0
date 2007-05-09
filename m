@@ -1,46 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [git patches] IDE update
-Date: Wed, 09 May 2007 16:20:38 -0700 (PDT)
-Message-ID: <20070509.162038.21595311.davem@davemloft.net>
-References: <200705100046.05280.bzolnier@gmail.com>
-	<46424F38.7010405@garzik.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/7] Asynchronous Notification for ATAPI devices (resend)
+Date: Wed, 9 May 2007 16:37:56 -0700
+Message-ID: <20070509163756.dd8136c7.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60048
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1759263AbXEIXUi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 19:20:38 -0400
-In-Reply-To: <46424F38.7010405@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: jeff@garzik.org
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+List-Id: linux-ide@vger.kernel.org
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Wed, 09 May 2007 18:46:16 -0400
+Hi Jeff,
+Here are the AN patches again, they have not changed with the exception
+of patch #1, which does set the host flag in board_ahci and board_ahci_pi
+now (thanks Tejun).
 
-> Bartlomiej Zolnierkiewicz wrote:
-> > Bartlomiej Zolnierkiewicz (11):
-> >       ide: fix UDMA/MWDMA/SWDMA masks (v3)
-> >       ide: rework the code for selecting the best DMA transfer mode (v3)
-> >       ide: add ide_tune_dma() helper
-> >       ide: make /proc/ide/ optional
-> >       ide: split off ioctl handling from IDE settings (v2)
-> >       ide: move IDE settings handling to ide-proc.c
-> >       ide: cable detection fixes (take 2)
-> >       ide: add "initializing" argument to ide_register_hw()
-> >       ide: add ide_proc_register_port()
-> >       ide: legacy PCI bus order probing fixes
-> >       ide: fix PIO setup on resume for ATAPI devices
-> > 
-> > 
-> > [ sorry but the patch is too big to be included ]
-> 
-> 
-> The limit was raised to 400K IIRC.
+This patch series implements Asynchronous Notification (AN) for SATA
+ATAPI devices as defined in SATA 2.5 and AHCI 1.1 and higher.  Drives
+which support this feature will send a notification when new media is
+inserted and removed, preventing the need for user space to poll for
+new media.  This support is exposed to user space via a flag that will
+be set in /sys/block/sr*/capability_flags.  If the flag is set, user
+space can disable polling for the new media, and the genhd driver will
+send a KOBJ_CHANGE event with the envp set to MEDIA_CHANGE_EVENT=1.
 
-On lkml but not linux-ide, I'll go and bump it up there too.
+Note that this patch only implements support for directly attached
+drives - AN with drives attached to a port multiplier requires 
+additional changes.
 
-There, done...
+Thanks!
+Kristen
+
+-- 
