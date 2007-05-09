@@ -1,50 +1,95 @@
-From: Dominik Schulz <lkml@ds.gauner.org>
-Subject: Possible Bug in sata_via when trying to burn
-Date: Wed, 09 May 2007 11:55:23 +0200
-Message-ID: <46419A8B.2060605@ds.gauner.org>
+From: "Henry Su" <henry.su@amd.com>
+Subject: =?utf-7?B?K0FGcy1wYXRjaCtBRjAtIEFkZCB0aGUgZGV2aWNlIElEcyBmb3IgQQ==?=
+	=?utf-7?B?TUQvQVRJIFNCNzAw?=
+Date: Wed, 9 May 2007 19:15:12 +0800
+Message-ID: <FFECF24D2A7F6D418B9511AF6F3586020197F6A6@shacnexch2.atitech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="utf-7"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gauner.org ([85.10.240.115]:45556 "EHLO mail.gauner.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758063AbXEIKdt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 May 2007 06:33:49 -0400
+Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:37743 "EHLO
+	outbound3-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755180AbXEILPU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 07:15:20 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk
+Cc: greg@kroah.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xiaosuzi520@hotmail.com
 
-Hi,
-I'd like to report a possible bug in the sata_via module.
+From: henry.su+AEA-amd.com
+Adding the device ID for AMD/ATI SB700.
+Signed-off-by:henry su +ADw-henry.su+AEA-amd.com+AD4-
+------------------------------------------
+--- linux-2.6.21.1.orig/include/linux/pci+AF8-ids.h	2007-05-10 06:30:23.000000000 +-0800
++-+-+- linux-2.6.21.1/include/linux/pci+AF8-ids.h	2007-05-10 07:10:18.000000000 +-0800
++AEAAQA- -371,6 +-371,9 +AEAAQA-
+ +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SRAID	0x4381
+ +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SMBUS	0x4385
+ +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE	0x438c
++-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SATA	0x4390
++-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SMBUS	0x4395
++-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE	0x439c
+ 
+ +ACM-define PCI+AF8-VENDOR+AF8-ID+AF8-VLSI		0x1004
+ +ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-VLSI+AF8-82C592	0x0005
 
-I - and at least one other user [1] - am not able to use a cd writer
-attached to the VIA 6421 chip on Linux.
+--- linux-2.6.21.1.orig/drivers/i2c/busses/i2c-piix4.c	2007-05-10 06:30:14.000000000 +-0800
++-+-+- linux-2.6.21.1/drivers/i2c/busses/i2c-piix4.c	2007-05-10 07:14:06.000000000 +-0800
++AEAAQA- -399,6 +-399,8 +AEAAQA- static struct pci+AF8-device+AF8-id piix4+AF8-ids+AFsAXQ- 
+ 	  .driver+AF8-data +AD0- 0 +AH0-,
+ 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SMBUS),
+ 	  .driver+AF8-data +AD0- 0 +AH0-,
++-	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SMBUS),
++-	  .driver+AF8-data +AD0- 0 +AH0-,
+ 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-SERVERWORKS, PCI+AF8-DEVICE+AF8-ID+AF8-SERVERWORKS+AF8-OSB4),
+ 	  .driver+AF8-data +AD0- 0 +AH0-,
+ 	+AHs- PCI+AF8-DEVICE(PCI+AF8-VENDOR+AF8-ID+AF8-SERVERWORKS, PCI+AF8-DEVICE+AF8-ID+AF8-SERVERWORKS+AF8-CSB5),
+--- linux-2.6.21.1.orig/drivers/ata/pata+AF8-atiixp.c	2007-05-10 06:30:14.000000000 +-0800
++-+-+- linux-2.6.21.1/drivers/ata/pata+AF8-atiixp.c	2007-05-10 07:17:07.000000000 +-0800
++AEAAQA- -283,6 +-283,7 +AEAAQA- static const struct pci+AF8-device+AF8-id atiixp
+ 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE), +AH0-,
+ 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE), +AH0-,
+ 	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE), +AH0-,
++-	+AHs- PCI+AF8-VDEVICE(ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE), +AH0-,
+ 
+ 	+AHs- +AH0-,
+ +AH0AOw-
 
-The current setup works perfectly on windows, so I think it's not a
-hardware problem.
+--- linux-2.6.21.1.orig/drivers/ide/pci/atiixp.c	2007-05-10 06:30:17.000000000 +-0800
++-+-+- linux-2.6.21.1/drivers/ide/pci/atiixp.c	2007-05-10 07:18:39.000000000 +-0800
++AEAAQA- -353,6 +-353,7 +AEAAQA- static struct pci+AF8-device+AF8-id atiixp+AF8-pci+AF8-t
+ 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
+ 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
+ 	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
++-	+AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE, PCI+AF8-ANY+AF8-ID, 
++-PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
+ 	+AHs- 0, +AH0-,
+ +AH0AOw-
+ MODULE+AF8-DEVICE+AF8-TABLE(pci, atiixp+AF8-pci+AF8-tbl)+ADs-
 
-Until Kernel 2.6.21 I wasn't even able to use the PATA Port of the
-mentioned controller. Now this works, but it would be great if one was
-also able to use this controller to burn cds.
+--- linux-2.6.21.1.orig/drivers/ata/ahci.c	2007-05-10 06:30:14.000000000 +-0800
++-+-+- linux-2.6.21.1/drivers/ata/ahci.c	2007-05-10 07:41:41.000000000 +-0800
++AEAAQA- -415,6 +-415,7 +AEAAQA- static const struct pci+AF8-device+AF8-id ahci+AF8-p
+ 	/+ACo- ATI +ACo-/
+ 	+AHs- PCI+AF8-VDEVICE(ATI, 0x4380), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB600 non-raid +ACo-/
+ 	+AHs- PCI+AF8-VDEVICE(ATI, 0x4381), board+AF8-ahci +AH0-, /+ACo- ATI SB600 raid +ACo-/
++-	+AHs- PCI+AF8-VDEVICE(ATI, 0x4390), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 +ACo-/
+ 
+ 	/+ACo- VIA +ACo-/
+ 	+AHs- PCI+AF8-VDEVICE(VIA, 0x3349), board+AF8-ahci+AF8-vt8251 +AH0-, /+ACo- VIA VT8251 +ACo-/
 
-The Problem seems to affect cd writers attached to this chip, sata as
-well as pata [2].
-
-Some details of my system:
-Debian etch, running the 2.6.21 Kernel.
-The CD-Writer is a NEC ND-3500AG attachted to the PATA Port of the VIA
-6421 Chip on an Abit AX8 V2.0 Motherboard.
-lspci -vvv is at [3]
-dmesg at [4]
-the wodim output when trying to blank a cd [5]
-kernel .config at [6]
-
-[1] - http://www.mail-archive.com/cdwrite@other.debian.org/msg10988.html
-[2] - http://www.mail-archive.com/cdwrite@other.debian.org/msg11017.html
-[3] - http://blog.gauner.org/dl/lspci.txt
-[4] - http://blog.gauner.org/dl/dmesg.txt
-[5] - http://blog.gauner.org/dl/wodim.txt
-[6] - http://blog.gauner.org/dl/config-2.6.21tex
+--- linux-2.6.21.1.orig/drivers/pci/quirks.c	2007-05-10 06:30:17.000000000 +-0800
++-+-+- linux-2.6.21.1/drivers/pci/quirks.c	2007-05-10 07:49:33.000000000 +-0800
++AEAAQA- -875,6 +-875,7 +AEAAQA- static void +AF8AXw-devinit quirk+AF8-sb600+AF8-sata(s
+ 	+AH0-
+ +AH0-
+ DECLARE+AF8-PCI+AF8-FIXUP+AF8-HEADER(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SATA, quirk+AF8-sb600+AF8-sata)+ADs-
++-DECLARE+AF8-PCI+AF8-FIXUP+AF8-HEADER(PCI+AF8-VENDOR+AF8-ID+AF8-ATI, 
++-PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SATA, quirk+AF8-sb600+AF8-sata)+ADs-
+ 
+ /+ACo-
+  +ACo-	Serverworks CSB5 IDE does not fully support native mode
 
 
