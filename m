@@ -1,23 +1,30 @@
 From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Subject: [PATCH] drivers/ata/pata_scc.c: compile error fix
 Date: Wed, 09 May 2007 15:14:00 +0900
-Message-ID: <200705090612.l496CGfm013469@toshiba.co.jp>
+Message-ID: <200705090612.l496CGpU010558@toshiba.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from imx9.toshiba.co.jp ([202.33.96.51]:63513 "EHLO
+	imx9.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934941AbXEIGlE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 02:41:04 -0400
+Received: from imx12.toshiba.co.jp (imx12 [61.202.160.132])
+	by imx9.toshiba.co.jp  with ESMTP id l496GLl1018115
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 9 May 2007 15:16:21 +0900 (JST)
+Received: from wall11.toshiba.co.jp (wall11 [133.199.90.149])
+	by imx12.toshiba.co.jp  with ESMTP id l496CJLt024365
+	for <linux-ide@vger.kernel.org>; Wed, 9 May 2007 15:12:19 +0900 (JST)
+Received: (from root@localhost)
+	by wall11.toshiba.co.jp  id l496CJ3p024562
+	for linux-ide@vger.kernel.org; Wed, 9 May 2007 15:12:19 +0900 (JST)
+Received: from mx.toshiba.co.jp (localhost [127.0.0.1])
+	by ovp11.toshiba.co.jp  with ESMTP id l496CHPk011260
+	for <linux-ide@vger.kernel.org>; Wed, 9 May 2007 15:12:18 +0900 (JST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kou.ishizaki@toshiba.co.jp
 
 The previous change (ata_probe_ent -> ata_host) was incomplete
 and generated compile error. This patch fix it.
@@ -45,3 +52,4 @@ diff -purN -X linux-powerpc-git/Documentation/dontdiff linux-powerpc-git/drivers
 +	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 1);
  	if (!host)
  		return -ENOMEM;
+ 
