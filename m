@@ -1,105 +1,54 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] libata: add human-readable error value decoding
-Date: Wed, 09 May 2007 20:18:43 -0600
-Message-ID: <46428103.3040003@shaw.ca>
+From: olof@lixom.net (Olof Johansson)
+Subject: [PATCH] pata_platform: don't use generic ata_port_start
+Date: Wed, 9 May 2007 23:00:20 -0500
+Message-ID: <20070510040020.GA17530@lixom.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:11280 "EHLO
-	pd4mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754056AbXEJCT3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2007 22:19:29 -0400
+Received: from lixom.net ([66.141.50.11]:58756 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754783AbXEJEbq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 May 2007 00:31:46 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
+To: jgarzik@pobox.com
+Cc: lethal@linux-sh.org, linux-ide@vger.kernel.org
 
-This adds human-readable decoding of the ATA status and error registers (similar
-to what drivers/ide does) as well as the SATA Serror register to libata error
-handling output. This prevents the need to pore through standards documents
-to figure out the meaning of the bits in these registers when looking at error
-reports. Some bits that drivers/ide decoded are not decoded here, since the bits
-are either command-dependent or obsolete, and properly parsing them would add
-too much complexity.
+Hi,
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+I have a system where I have a simple IDE controller that sits on a
+local bus without bus master dma capability, and thus no dma_mapping
+ops defined for the device/bus.
 
---- linux-2.6.21.1/drivers/ata/libata-eh.c	2007-04-27 15:49:26.000000000 -0600
-+++ linux-2.6.21.1edit/drivers/ata/libata-eh.c	2007-05-09 19:47:53.000000000 -0600
-@@ -1523,6 +1523,27 @@ static void ata_eh_report(struct ata_por
- 			ata_port_printk(ap, KERN_ERR, "(%s)\n", desc);
- 	}
- 
-+	if (ehc->i.serror)
-+		ata_port_printk(ap, KERN_ERR,
-+		  "SError: {%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
-+		  ehc->i.serror & SERR_DATA_RECOVERED ? "RecovDataErr " : "",
-+		  ehc->i.serror & SERR_COMM_RECOVERED ? "RecovCommErr " : "",
-+		  ehc->i.serror & SERR_DATA ? "UnrecovDataErr " : "",
-+		  ehc->i.serror & SERR_PERSISTENT ? "PersistErr " : "",
-+		  ehc->i.serror & SERR_PROTOCOL ? "ProtocolErr " : "",
-+		  ehc->i.serror & SERR_INTERNAL ? "HostInternalErr " : "",
-+		  ehc->i.serror & SERR_PHYRDY_CHG ? "PHYRdyChg " : "",
-+		  ehc->i.serror & SERR_PHY_INT_ERR ? "PHYInternalErr " : "",
-+		  ehc->i.serror & SERR_COMM_WAKE ? "CommWake " : "",
-+		  ehc->i.serror & SERR_10B_8B_ERR ? "10B8BErr " : "",
-+		  ehc->i.serror & SERR_DISPARITY ? "Disparity " : "",
-+		  ehc->i.serror & SERR_CRC ? "CRCErr " : "",
-+		  ehc->i.serror & SERR_HANDSHAKE ? "HandshakeErr " : "",
-+		  ehc->i.serror & SERR_LINK_SEQ_ERR ? "LinkSeqErr " : "",
-+		  ehc->i.serror & SERR_TRANS_ST_ERROR ? "TransStatTransErr " : "",
-+		  ehc->i.serror & SERR_UNRECOG_FIS ? "UnrecogFIS " : "",
-+		  ehc->i.serror & SERR_DEV_XCHG ? "DevExchanged " : "" );
-+
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		static const char *dma_str[] = {
- 			[DMA_BIDIRECTIONAL]	= "bidi",
-@@ -1552,6 +1573,29 @@ static void ata_eh_report(struct ata_por
- 			res->hob_feature, res->hob_nsect,
- 			res->hob_lbal, res->hob_lbam, res->hob_lbah,
- 			res->device, qc->err_mask, ata_err_string(qc->err_mask));
-+		
-+		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
-+		                    ATA_ERR) ) {
-+			if (res->command & ATA_BUSY)
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {Busy}\n" );
-+			else
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {%s%s%s%s}\n",
-+				  res->command & ATA_DRDY ? "DRDY " : "",
-+				  res->command & ATA_DF ? "DF " : "",
-+				  res->command & ATA_DRQ ? "DRQ " : "",
-+				  res->command & ATA_ERR ? "ERR " : "" );
-+		}
-+		
-+		if (cmd->command != ATA_CMD_PACKET &&
-+		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_IDNF | ATA_ABORTED)))
-+			ata_dev_printk(qc->dev, KERN_ERR,
-+			  "error: {%s%s%s%s}\n",
-+			  res->feature & ATA_ICRC ? "ICRC " : "",
-+			  res->feature & ATA_UNC ? "UNC " : "",
-+			  res->feature & ATA_IDNF ? "IDNF " : "",
-+			  res->feature & ATA_ABORTED ? "ABRT " : "" );
- 	}
+pata_platform works great for me, with the exception of using the generic
+ata_port_start which tries to do a dmam_alloc_coherent.
+
+Looks like it doesn't need to allocate a prd table at all, so replace it
+with a dummy function instead.
+
+
+Signed-off-by: Olof Johansson <olof@lixom.net>
+
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 4b82a54..a0aede1 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -48,6 +48,8 @@ static int pata_platform_set_mode(struct ata_port *ap, struct ata_device **unuse
+ 	return 0;
  }
  
---- linux-2.6.21.1/include/linux/ata.h	2007-04-27 15:49:26.000000000 -0600
-+++ linux-2.6.21.1edit/include/linux/ata.h	2007-05-09 19:25:54.000000000 -0600
-@@ -223,6 +223,15 @@ enum {
- 	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
- 	SERR_INTERNAL		= (1 << 11), /* host internal error */
- 	SERR_PHYRDY_CHG		= (1 << 16), /* PHY RDY changed */
-+	SERR_PHY_INT_ERR	= (1 << 17), /* PHY internal error */
-+	SERR_COMM_WAKE		= (1 << 18), /* Comm wake */
-+	SERR_10B_8B_ERR		= (1 << 19), /* 10b to 8b decode error */
-+	SERR_DISPARITY		= (1 << 20), /* Disparity */
-+	SERR_CRC		= (1 << 21), /* CRC error */
-+	SERR_HANDSHAKE		= (1 << 22), /* Handshake error */
-+	SERR_LINK_SEQ_ERR	= (1 << 23), /* Link sequence error */
-+	SERR_TRANS_ST_ERROR	= (1 << 24), /* Transport state transition error */
-+	SERR_UNRECOG_FIS	= (1 << 25), /* Unrecognized FIS */
- 	SERR_DEV_XCHG		= (1 << 26), /* device exchanged */
++static int ata_dummy_ret0(struct ata_port *ap)	{ return 0; }
++
+ static struct scsi_host_template pata_platform_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -91,7 +93,7 @@ static struct ata_port_operations pata_platform_port_ops = {
+ 	.irq_on			= ata_irq_on,
+ 	.irq_ack		= ata_irq_ack,
  
- 	/* struct ata_taskfile flags */
-
+-	.port_start		= ata_port_start,
++	.port_start		= ata_dummy_ret0,
+ };
+ 
+ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
