@@ -1,52 +1,36 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Thu, 10 May 2007 08:19:59 -0700
-Message-ID: <20070510081959.ba599dd0.rdunlap@xenotime.net>
-References: <20070510072247.063476979@intel.com>
-	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
-	<20070509220952.5fa34822.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: add human-readable error value decoding
+Date: Thu, 10 May 2007 12:40:05 -0400
+Message-ID: <46434AE5.8060605@garzik.org>
+References: <46428103.3040003@shaw.ca> <4642E92D.5010509@gmail.com> <46431D19.1070308@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:46907 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755000AbXEJPPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 May 2007 11:15:04 -0400
-Received: from midway.site ([71.245.96.31]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 10 May 2007 08:14:57 -0700
-In-Reply-To: <20070509220952.5fa34822.akpm@linux-foundation.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:57594 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754233AbXEJQkK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 May 2007 12:40:10 -0400
+In-Reply-To: <46431D19.1070308@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Wed, 9 May 2007 22:09:52 -0700 Andrew Morton wrote:
+Mark Lord wrote:
+> Same here, but I would like to see it in there under a CONFIG_DEBUG_LIBATA
+> kernel build option or something.  Kind of like the "FANCY_STATUS_DUMPS" 
+> flag
+> that drivers/ide used to have for this kind of stuff.
 
-> On Wed, 9 May 2007 16:38:09 -0700 Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
-> 
-> >  /**
-> > + *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
-> > + *                       with sector count set to indicate
-> > + *                       Asynchronous Notification feature
-> 
-> I think kenreldoc requires that all this be on a single line?
 
-Correct.
+The long term goal is to enable verbose output with a module option 
+and/or sysfs knob, rather than a compile-time switch.
 
-> > + *	@dev: Device to which command will be sent
-> > + *
-> > + *	Issue SET FEATURES - SATA FEATURES command to device @dev
-> > + *	on port @ap.
-> > + *
-> > + *	LOCKING:
-> > + *	PCI/etc. bus probe sem.
-> > + *
-> > + *	RETURNS:
-> > + *	0 on success, AC_ERR_* mask otherwise.
-> > + */
-> 
-> ooh, locking and return value documentation.  Often missed, and nice.
+That's what ata_msg_xxx is for.  We just don't have the knob yet. 
+Patches welcome...
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+	Jeff
+
+
+
