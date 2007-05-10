@@ -1,31 +1,42 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] pata_platform: don't use generic ata_port_start
-Date: Thu, 10 May 2007 13:22:12 +0900
-Message-ID: <20070510042212.GA26530@linux-sh.org>
-References: <20070510040020.GA17530@lixom.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Wed, 9 May 2007 22:09:52 -0700
+Message-ID: <20070509220952.5fa34822.akpm@linux-foundation.org>
+References: <20070510072247.063476979@intel.com>
+	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:44774 "EHLO smtp.ocgnet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754888AbXEJEkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 May 2007 00:40:49 -0400
-Content-Disposition: inline
-In-Reply-To: <20070510040020.GA17530@lixom.net>
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:35926 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755058AbXEJFKD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 May 2007 01:10:03 -0400
+In-Reply-To: <20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
 
-On Wed, May 09, 2007 at 11:00:20PM -0500, Olof Johansson wrote:
-> pata_platform works great for me, with the exception of using the generic
-> ata_port_start which tries to do a dmam_alloc_coherent.
-> 
-> Looks like it doesn't need to allocate a prd table at all, so replace it
-> with a dummy function instead.
-> 
-Looks fine, and works for me.
+On Wed, 9 May 2007 16:38:09 -0700 Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 
-> Signed-off-by: Olof Johansson <olof@lixom.net>
-> 
-Acked-by: Paul Mundt <lethal@linux-sh.org>
+>  /**
+> + *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
+> + *                       with sector count set to indicate
+> + *                       Asynchronous Notification feature
+
+I think kenreldoc requires that all this be on a single line?
+
+> + *	@dev: Device to which command will be sent
+> + *
+> + *	Issue SET FEATURES - SATA FEATURES command to device @dev
+> + *	on port @ap.
+> + *
+> + *	LOCKING:
+> + *	PCI/etc. bus probe sem.
+> + *
+> + *	RETURNS:
+> + *	0 on success, AC_ERR_* mask otherwise.
+> + */
+
+ooh, locking and return value documentation.  Often missed, and nice.
