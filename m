@@ -1,94 +1,67 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [patch 7/7] libata: send event when AN received
-Date: Wed, 9 May 2007 16:38:48 -0700
-Message-ID: <20070509163848.c9b948ff.kristen.c.accardi@intel.com>
-References: <20070510072247.063476979@intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: fallback to the other IDENTIFY on device error
+Date: Wed, 09 May 2007 20:08:26 -0400
+Message-ID: <4642627A.4030606@garzik.org>
+References: <20070427175205.GD7809@electro-mechanical.com> <4635C35D.1020807@gmail.com> <20070430202107.GF5942@electro-mechanical.com> <4636C2C7.8090206@gmail.com> <20070501121703.GH5942@electro-mechanical.com> <46373AEE.6070908@rtr.ca> <20070501131818.GA18521@electro-mechanical.com> <46374354.7040307@gmail.com> <20070501172117.GA20328@electro-mechanical.com> <463F56F2.3010106@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070510072247.063476979@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:50525 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759121AbXEJAIb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 May 2007 20:08:31 -0400
+In-Reply-To: <463F56F2.3010106@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: William Thompson <wt@electro-mechanical.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, albertcc@tw.ibm.com
 
-When we get an SDB FIS with the 'N' bit set, we should send
-an event to user space to indicate that there has been a
-media change.  This will be done via the block device. 
+Tejun Heo wrote:
+> It seems the world isn't as frank as we thought and some devices lie
+> about who they are.  Fallback to the other IDENTIFY if IDENTIFY fails
+> with device error.  As this is the strategy used by IDE for a long
+> time, it shouldn't cause too much problem.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: William Thompson <wt@electro-mechanical.com>
+> ---
+> Willam, please verify this fixes your problem.  Jeff, after all, we
+> seem to need this.  :-(
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ca67484..f543109 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1652,7 +1652,7 @@ int ata_dev_read_id(struct ata_device *d
+>  	struct ata_taskfile tf;
+>  	unsigned int err_mask = 0;
+>  	const char *reason;
+> -	int tried_spinup = 0;
+> +	int may_fallback = 1, tried_spinup = 0;
+>  	int rc;
+>  
+>  	if (ata_msg_ctl(ap))
+> @@ -1696,11 +1696,30 @@ int ata_dev_read_id(struct ata_device *d
+>  			return -ENOENT;
+>  		}
+>  
+> +		if (may_fallback && (err_mask == AC_ERR_DEV)) {
+> +			may_fallback = 0;
+> +
+> +			/* Device or controller might have reported
+> +			 * the wrong device class.  Give a shot at then
+> +			 * other IDENTIFY
+> +			 */
+> +			if (class == ATA_DEV_ATA)
+> +				class = ATA_DEV_ATAPI;
+> +			else
+> +				class = ATA_DEV_ATA;
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Index: 2.6-git/drivers/ata/ahci.c
-===================================================================
---- 2.6-git.orig/drivers/ata/ahci.c
-+++ 2.6-git/drivers/ata/ahci.c
-@@ -1218,6 +1218,28 @@ static void ahci_host_intr(struct ata_po
- 		return;
- 	}
- 
-+	if (status & PORT_IRQ_SDB_FIS) {
-+		/*
-+		 * if this is an ATAPI device with AN turned on,
-+		 * then we should interrogate the device to
-+		 * determine the cause of the interrupt
-+		 *
-+		 * for AN - this we should check the SDB FIS
-+		 * and find the I and N bits set
-+		 */
-+		const u32 *f = pp->rx_fis + RX_FIS_SDB;
-+
-+		/* check the 'N' bit in word 0 of the FIS */
-+		if (f[0] & (1 << 15)) {
-+			int port_addr =  ((f[0] & 0x00000f00) >> 8);
-+			struct ata_device *adev;
-+			if (port_addr < ATA_MAX_DEVICES) {
-+				adev = &ap->device[port_addr];
-+				if (adev->flags & ATA_DFLAG_AN)
-+					ata_scsi_media_change_notify(adev);
-+			}
-+		}
-+	}
- 	if (ap->sactive)
- 		qc_active = readl(port_mmio + PORT_SCR_ACT);
- 	else
-Index: 2.6-git/include/linux/libata.h
-===================================================================
---- 2.6-git.orig/include/linux/libata.h
-+++ 2.6-git/include/linux/libata.h
-@@ -721,6 +721,7 @@ extern void ata_host_init(struct ata_hos
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-+extern void ata_scsi_media_change_notify(struct ata_device *atadev);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
-Index: 2.6-git/drivers/ata/libata-scsi.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-scsi.c
-+++ 2.6-git/drivers/ata/libata-scsi.c
-@@ -3112,6 +3112,22 @@ static void ata_scsi_remove_dev(struct a
- }
- 
- /**
-+ *	ata_scsi_media_change_notify - send media change event
-+ *	@atadev: Pointer to the disk device with media change event
-+ *
-+ *	Tell the block layer to send a media change notification
-+ *	event.
-+ *
-+ * 	LOCKING:
-+ * 	interrupt context, may not sleep.
-+ */
-+void ata_scsi_media_change_notify(struct ata_device *atadev)
-+{
-+	genhd_media_change_notify(atadev->sdev->disk);
-+}
-+EXPORT_SYMBOL_GPL(ata_scsi_media_change_notify);
-+
-+/**
-  *	ata_scsi_hotplug - SCSI part of hotplug
-  *	@work: Pointer to ATA port to perform SCSI hotplug on
-  *
+The error handling should be more specific -- check and make sure the 
+error is 'command aborted'
 
--- 
+	Jeff
+
+
+
