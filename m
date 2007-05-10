@@ -1,52 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata reset-seq merge broke sata_sil on sh
-Date: Thu, 10 May 2007 13:53:48 +0200
-Message-ID: <464307CC.40701@gmail.com>
-References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: HDIO_DRIVE_CMD and hdparm
+Date: Thu, 10 May 2007 14:12:59 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761037AbXEJLyT@vger.kernel.org>
-In-Reply-To: <464301D3.5060306@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Some more thoughts.
+	Hi,
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Paul Mundt wrote:
-> [--snip, thanks a lot for the detailed report--]
->> However, if I go back before any of the reset changes were introduced,
->> things were working fine, and there were no problems with waiting for
->> the reset. Ideas?
-> 
-> Hmm... It worked so well on all my sil's.  I'm a bit puzzled because we
-> also failed the same condition before the change too.  The only change
-> is we're less patient with the initial tries but in the end we give more
-> than enough time to the device to prepare itself.
-> 
-> * Does your drive start spun down when it boots?  Can you post dmesg
-> with printk timestamp turned on with kernel prior to reset-seq merge?
-> 
-> * In ata_bus_softreset() and sata_std_hardreset(), there's msleep(150)
-> delay before checking the status post-reset.  Does increasing the delay
-> make any difference?  Please try to increase it exponentially till it
-> reaches 10sec.
+`hdparm -t' uses HDIO_DRIVE_CMD(null) to flush the disk's buffer.
+When using it on my own block device (the new PS3 disk storage driver), hdparm
+gives the following error message:
 
-* According to the report, things still work till 27c78b37 - commit for
-the actual merge and there's no related change till the current master
-from there.  So, which commit actually breaks detection?  Or is
-detection just flaky after b8cffc6a?
+| HDIO_DRIVE_CMD(null) (wait for flush complete) failed: Inappropriate ioctl for device
 
-* How does things work on 9b89391c?
+When using it on an ATA or SCSI device, no such error message is printed.
 
-Also, please turn on printk timestamp on all reports so that we can now
-the timeline of things.
+According to the hdparm sources, hdparm expects the HDIO_DRIVE_CMD(null) ioctl
+to either succeed, or to fail with errno EINVAL.
 
-Thanks.
+Apparently handling of ioctls is different for the different device types:
+  - ATA/SATA handle HDIO_DRIVE_CMD(null) (and a few other variants)
+    => fine for hdparm
+  - SCSI doesn't handle HDIO_DRIVE_CMD(null), and returns EINVAL
+    => fine for hdparm
+  - If a block device doesn't support the ioctl, blkdev_driver_ioctl() returns
+    ENOTTY
+    => hdparm error message
 
--- 
-tejun
+Which one is correct?
+  - blkdev_ioctl()/blkdev_driver_ioctl() return -ENOTTY
+  - scsi_cmd_ioctl() returns -ENOTTY
+  - scsi_ioctl() returns -EINVAL
+  - cdrom_ioctl() returns -ENOSYS to mean not handled, continue
+  - some block layer routines return -ENOIOCTLCMD to mean not handled, continue
+
+This causes constructs with different tests like e.g.:
+
+	sr_block_ioctl()
+	{
+		...
+		ret = cdrom_ioctl(...);
+		if (ret != -ENOSYS)
+			return ret;
+		...
+		return scsi_ioctl(...);
+	}
+
+	cdrom_ioctl()
+	{
+		...
+		ret = scsi_cmd_ioctl(...);
+		if (ret != -ENOTTY)
+			return ret;
+		...
+		return -ENOSYS;
+	}
+
+	blkdev_ioctl()
+	{
+		...
+		ret = blkdev_locked_ioctl(...);
+		...
+		if (ret != -ENOIOCTLCMD)
+			return ret;
+
+		return blkdev_driver_ioctl(...);
+	}
+
+My questions:
+  1. Does any of these have to be fixed?
+  2. Shall I add a dummy HDIO_DRIVE_CMD(null) handler to my block device to
+     return -EINVAL?
+  3. Shall I just ignore the hdparm error message?
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- Sony Network and Software Technology Center Europe (NSCE)
+Geert.Uytterhoeven@sonycom.com ------- The Corporate Village, Da Vincilaan 7-D1
+Voice +32-2-7008453 Fax +32-2-7008622 ---------------- B-1935 Zaventem, Belgium
