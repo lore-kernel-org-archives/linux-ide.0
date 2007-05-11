@@ -1,62 +1,80 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Re: 2.6.19.1, sata_sil: sata dvd writer doesn't work
-Date: Fri, 11 May 2007 10:33:28 +0200
-Message-ID: <46442A58.4040304@gmail.com>
-References: <46362672.7080103@gmx.net> <4636EA85.40809@t-online.de> <46371628.9060905@gmail.com> <46379CA1.601@t-online.de> <463AEAF9.3000103@gmail.com> <463B6E3F.5000300@t-online.de> <463EFF88.7050308@gmail.com> <463F6E45.504@t-online.de> <464088BF.5070106@gmail.com> <464206DB.1010506@t-online.de> <4643176A.80809@gmail.com> <4643803F.5040808@t-online.de>
+Subject: Re: libata reset-seq merge broke sata_sil on sh
+Date: Fri, 11 May 2007 11:39:20 +0200
+Message-ID: <464439C8.7090309@gmail.com>
+References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:14940 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758851AbXEKIdw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 04:33:52 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so913689nzf
-        for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 01:33:51 -0700 (PDT)
-In-Reply-To: <4643803F.5040808@t-online.de>
+Received: from py-out-1112.google.com ([64.233.166.176]:17571 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754381AbXEKJjd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 05:39:33 -0400
+Received: by py-out-1112.google.com with SMTP id a29so736355pyi
+        for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 02:39:33 -0700 (PDT)
+In-Reply-To: <20070511005217.GA23186@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harald Dunkel <harald.dunkel@t-online.de>
-Cc: linux-ide@vger.kernel.org, Daniel Beichl <daniel_beichl@gmx.net>
+To: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: garyhade@us.ibm.com
 
-Hello,
+[cc'ing Gary Hade for GoVault drive, Hello]
 
-Harald Dunkel wrote:
-> Hi Tejun,
+Hello, Paul.
+
+Paul Mundt wrote:
+> On Thu, May 10, 2007 at 03:08:59PM +0200, Tejun Heo wrote:
+>> Paul Mundt wrote:
+>>> The detection is simply flaky after that point, however before the
+>>> current master it never hit the 35 second point (and thus never implied
+>>> that the link was down). I'll double check the bisect log to see if there
+>>> was anything beyond that that may have caused it.
+>>>
+>>> The -ENODEV at least implies that the SRST fails, so at least that's a
+>>> starting point.
+>> If prereset() fails to get the initial DRDY before 10secs, it assumes
+>> something went wrong and escalates to hardreset.  sil family of
+>> controllers report 0xff status while the link is broken and it seems
+>> that your particular drive needs more than the current 150ms to recover
+>> phy link.  It probably went unnoticed till now because the device was
+>> never hardreset before.  If the diagnosis is correct, increasing the
+>> delay in hardreset should fix the problem.  Well, let's see.  :-)
+>>
+> Bumping the hardreset delay up does indeed fix it, I've had to bump it up
+> to 1200 before it started working (at 600 it still fails):
 > 
-> Setting the timeout to 15 did not help, either :-(. All your patches
-> are still in, of course.
+> [    0.967379] scsi0 : sata_sil
+> [    0.970425] scsi1 : sata_sil
+> [    0.973298] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
+> [    0.981331] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
+> [    1.299353] ata1: device not ready (errno=-19), forcing hardreset
+> [    2.817893] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [    2.826284] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+> [    2.831052] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
+> [    2.837548] ata1.00: 39070080 sectors, multi 0: LBA
+> [    2.842702] ata1.00: applying bridge limits
+> [    2.854162] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+> [    2.858938] ata1.00: configured for UDMA/100
+> [    3.172602] ata2: SATA link down (SStatus 0 SControl 310)
+> [    3.175736] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
+> 
+> I'm not sure if it matters or not, but this is an iVDR drive, so that
+> might also have additional implications.
 
-Hmm... I'm out of ideas.  I'll try it when I get back home.
+Don't have the flimsiest idea what an iVDR drive is but I take it that
+it's some sort of special purpose thing.  :-)
 
-> May 10 22:15:55 pluto kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr
-> 0x0 action 0x2 frozen
-> May 10 22:15:55 pluto kernel: ata2.00: cmd
-> a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0xad data 2052 in
-> May 10 22:15:55 pluto kernel:          res
-> 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> May 10 22:15:55 pluto kernel: ata2: soft resetting port
-> May 10 22:15:55 pluto kernel: CLASSIFY TF 00/01:01:01:14:eb/a0 <6>ata2:
-> SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> May 10 22:15:55 pluto kernel: ata2.00: XXX: IDENTIFY
-> May 10 22:15:55 pluto kernel: 00: 3b38 13ed f880 edbe  8013 bef8 13ed f880
-[--snip--]
-> May 10 22:15:55 pluto kernel: ata2.00: failed to IDENTIFY (device
-> reports illegal type, err_mask=0x0)
-> May 10 22:15:55 pluto kernel: ata2.00: revalidation failed (errno=-22)
-> May 10 22:15:55 pluto kernel: ata2.00: limiting speed to UDMA/33:PIO3
-> May 10 22:15:55 pluto kernel: ata2: failed to recover some devices,
-> retrying in 5 secs
-> May 10 22:16:00 pluto kernel: ata2: hard resetting port
-> May 10 22:16:01 pluto kernel: CLASSIFY TF 00/01:01:01:14:eb/a0 <6>ata2:
-> SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> May 10 22:16:01 pluto kernel: ata2.00: XXX: IDENTIFY
-> May 10 22:16:01 pluto kernel: 00: 85c0 0000 0000 0000  0000 0000 0000 0000
-[--snip--]
-> May 10 22:16:01 pluto kernel: ata2.00: configured for UDMA/33
-> May 10 22:16:01 pluto kernel: ata2: EH complete
+So, the HHD424020F7SV00 is the second device which isn't happy with
+150ms wait after reset.  The first one was Quantum GoVault.  It's a bit
+different in that the HHD only fails after hardreset.
 
-Well, at least one thing worked.  I'll push the patch upstream soon.
+Anyways, so, it seems we'll have to extent the 150ms wait.  I'll try to
+cook up a patch for that && parallel probing.
+
+Gary, IIRC, the requirement for GoVault was 3secs, right?  Paul, can you
+try to estimate the minimum required delay?  Please go down by 100ms and
+report where it breaks.
 
 Thanks.
 
