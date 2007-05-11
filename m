@@ -1,73 +1,56 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: libata reset-seq merge broke sata_sil on sh
-Date: Fri, 11 May 2007 09:52:17 +0900
-Message-ID: <20070511005217.GA23186@linux-sh.org>
-References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata fails to recover from HSM violation involving DRQ status
+Date: Thu, 10 May 2007 23:33:10 -0400
+Message-ID: <4643E3F6.4080009@rtr.ca>
+References: <4633AB75.7070107@rtr.ca>	<4633B0A6.6090705@garzik.org> <20070428222502.26fc9bbc@the-village.bc.nu> <4633BEE7.8020005@garzik.org> <4633BF6D.40902@rtr.ca> <46340E63.5070209@gmail.com> <4634163D.1040408@gmail.com> <463487F0.4040701@rtr.ca> <46349695.7080706@rtr.ca> <46349A03.9090300@rtr.ca> <4634CAEC.4010700@gmail.com> <4634CC18.4080208@rtr.ca> <463739E4.1030306@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:51301 "EHLO smtp.ocgnet.org"
+Received: from rtr.ca ([64.26.128.89]:4105 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630AbXEKAwu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 May 2007 20:52:50 -0400
-Content-Disposition: inline
-In-Reply-To: <4643196B.7070806@gmail.com>
+	id S1751747AbXEKDdN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 May 2007 23:33:13 -0400
+In-Reply-To: <463739E4.1030306@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, May 10, 2007 at 03:08:59PM +0200, Tejun Heo wrote:
-> Paul Mundt wrote:
-> > The detection is simply flaky after that point, however before the
-> > current master it never hit the 35 second point (and thus never implied
-> > that the link was down). I'll double check the bisect log to see if there
-> > was anything beyond that that may have caused it.
-> > 
-> > The -ENODEV at least implies that the SRST fails, so at least that's a
-> > starting point.
+Mark Lord wrote:
+> Mark Lord wrote:
+>> Tejun Heo wrote:
+>>> So, this is specific to SATA (the host side at least) piix && PIO READ,
+>>> right?  I think we can fit this code nicely into
+>>> piix_sata_error_handler() if we make sure that it triggers under the
+>>> right condition - after a PIO READ command fails due to HSM violation
+>>> caused by stuck DRQ.
+>>
+>> Yeah, so far it's just PIO FROM DEVICE on a "SATA" device on ata_piix.
+>> It *may* be more widespread than that, but we'll have to test some 
+>> others.
 > 
-> If prereset() fails to get the initial DRDY before 10secs, it assumes
-> something went wrong and escalates to hardreset.  sil family of
-> controllers report 0xff status while the link is broken and it seems
-> that your particular drive needs more than the current 150ms to recover
-> phy link.  It probably went unnoticed till now because the device was
-> never hardreset before.  If the diagnosis is correct, increasing the
-> delay in hardreset should fix the problem.  Well, let's see.  :-)
+> I retested this again today on my new pure-SATA notebook with ata_piix.
+> In this case, the DRQ drain is not necessary, but also doesn't harm 
+> anything.
+> Tested it both ways.  This is with a Hitachi HTS541612J9SA00 SATA drive.
 > 
-Bumping the hardreset delay up does indeed fix it, I've had to bump it up
-to 1200 before it started working (at 600 it still fails):
+> The original fault was on ata_piix SATA, with some kind of external
+> bridge (on the motherboard) to a Seagate PATA drive.  Sometime in the
+> next few days I'll have the exact same drive, but with a SATA interface,
+> and we'll try that in the pure-SATA situation.
+> 
+> This will tell us whether it's the bridge, or the drive, that was the 
+> issue.
+> 
+> The fix remains the same: drain the data fifo when DRQ is left high.
 
-[    0.967379] scsi0 : sata_sil
-[    0.970425] scsi1 : sata_sil
-[    0.973298] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
-[    0.981331] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
-[    1.299353] ata1: device not ready (errno=-19), forcing hardreset
-[    2.817893] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[    2.826284] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-[    2.831052] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
-[    2.837548] ata1.00: 39070080 sectors, multi 0: LBA
-[    2.842702] ata1.00: applying bridge limits
-[    2.854162] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-[    2.858938] ata1.00: configured for UDMA/100
-[    3.172602] ata2: SATA link down (SStatus 0 SControl 310)
-[    3.175736] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
+Okay, I finally got round to testing this with the new pure-SATA
+notebook I have here.  Same problem:  without draining the DRQ fifo,
+the system *never* recovers.
 
-I'm not sure if it matters or not, but this is an iVDR drive, so that
-might also have additional implications.
+But with the patch to drain DRQ, all is well.  That patch is now a keeper
+for my own kernels.  Tejun, did you want to cook up a better-placed variant
+of it for mainline?  I'm away for a few days now..
 
---
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4595d1f..4dad3fd 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3518,7 +3518,7 @@ int sata_std_hardreset(struct ata_port *ap, unsigned int *class,
- 	}
- 
- 	/* wait a while before checking status, see SRST for more info */
--	msleep(150);
-+	msleep(1200);
- 
- 	rc = ata_wait_ready(ap, deadline);
- 	/* link occupied, -ENODEV too is an error */
+Cheers
