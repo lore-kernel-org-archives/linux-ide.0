@@ -1,185 +1,42 @@
-From: tony@bakeyournoodle.com (Tony Breeds)
-Subject: [PATCH/RFC] Fix build failure for drivers/ata/pata_scc.c
-Date: Fri, 11 May 2007 16:49:54 +1000
-Message-ID: <20070511064954.GE15955@bakeyournoodle.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH/RFC 0/7] libata: push part of irq driven pio to workqueue
+Date: Fri, 11 May 2007 15:20:10 +0800
+Message-ID: <4644192A.8090809@tw.ibm.com>
+References: <463EAB4D.3000309@tw.ibm.com>	<463ED8B9.4060501@gmail.com>	<463F0B25.40103@tw.ibm.com>	<463F0DAD.5060307@gmail.com>	<463F1374.1010100@tw.ibm.com>	<463F1509.30100@gmail.com>	<46405F50.5090901@tw.ibm.com>	<20070508130025.7693980c@the-village.bc.nu>	<464066A4.1010008@gmail.com>	<20070508132046.70a4d9ed@the-village.bc.nu>	<46406C9A.4000802@gmail.com> <20070508134540.509f4704@the-village.bc.nu> <464073B1.80303@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761426AbXEKGuI@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel ML <linux-kernel@vger.kernel.org>
-Cc: Tejun Heo <htejun@gmail.com>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, cbe-oss-dev@ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:46265 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbXEKHUa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 03:20:30 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4B7KUsh032691
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 03:20:30 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4B7KQAI180978
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 01:20:29 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4B7KP6P016915
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 01:20:26 -0600
+In-Reply-To: <464073B1.80303@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
 
-The commit d4b2bab4f26345ea1803feb23ea92fbe3f6b77bc added deadline support to
-prereset and reset methods to libbata the pata_scc driver wasn't converted.
-This patch is a naive attempt to bring this driver up to scratch.
+1/7: set the state after "PIO data-in" to HSM_ST_IDLE instead of HSM_ST_LAST
+2/7: fix the ata_altstatus() in ata_hsm_qc_complete()
+3/7: move ata_altstatus() out from ata_hsm_move() to the pio data xfer functions
+4/7: move polling idle irq check to ata_host_intr()
+5/7: move and reduce locking to the pio data xfer functions
+6/7: push part of the irq driven pio out to workqueue
+7/7: ack unexpected INTRQ when polling
 
-Build failures are:
-drivers/ata/pata_scc.c: In function 'scc_pata_prereset':
-drivers/ata/pata_scc.c:870: error: too few arguments to function 'ata_std_prereset'
-drivers/ata/pata_scc.c: In function 'scc_error_handler':
-drivers/ata/pata_scc.c:916: warning: passing argument 2 of 'ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c:916: warning: passing argument 3 of 'ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c: In function 'scc_pata_prereset':
-drivers/ata/pata_scc.c:871: warning: control reaches end of non-void function
+This is not complete yet, still needs to check if this creates new race
+conditions with EH or causing trouble to other part.
 
-On a releated note scc_bus_post_reset() is (AFACT) identical to
-ata_bus_post_reset(), would a patch to make ata_bus_post_reset() assesable to
-drivers be accepted?
+Draft patch against 2.6.21.1 for your review.
 
-
-Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
-CC: Tejun Heo <htejun@gmail.com>
-CC: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-CC: Jeff Garzik <jgarzik@pobox.com>
-CC: linux-ide@vger.kernel.org
----
-
- drivers/ata/pata_scc.c |   48 ++++++++++++++++++++++++-----------------
- 1 file changed, 29 insertions(+), 19 deletions(-)
-
-Index: working/drivers/ata/pata_scc.c
-===================================================================
---- working.orig/drivers/ata/pata_scc.c
-+++ working/drivers/ata/pata_scc.c
-@@ -489,23 +489,26 @@ static unsigned int scc_devchk (struct a
-  *	Note: Original code is ata_bus_post_reset().
-  */
- 
--static void scc_bus_post_reset (struct ata_port *ap, unsigned int devmask)
-+static int scc_bus_post_reset(struct ata_port *ap, unsigned int devmask,
-+                              unsigned long deadline)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int dev0 = devmask & (1 << 0);
- 	unsigned int dev1 = devmask & (1 << 1);
--	unsigned long timeout;
-+	int rc;
- 
- 	/* if device 0 was found in ata_devchk, wait for its
- 	 * BSY bit to clear
- 	 */
--	if (dev0)
--		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-+	if (dev0) {
-+		rc = ata_wait_ready(ap, deadline);
-+		if (rc && rc != -ENODEV)
-+			return rc;
-+	}
- 
- 	/* if device 1 was found in ata_devchk, wait for
- 	 * register access, then wait for BSY to clear
- 	 */
--	timeout = jiffies + ATA_TMOUT_BOOT;
- 	while (dev1) {
- 		u8 nsect, lbal;
- 
-@@ -514,14 +517,15 @@ static void scc_bus_post_reset (struct a
- 		lbal = in_be32(ioaddr->lbal_addr);
- 		if ((nsect == 1) && (lbal == 1))
- 			break;
--		if (time_after(jiffies, timeout)) {
--			dev1 = 0;
--			break;
--		}
-+		if (time_after(jiffies, deadline))
-+			return -EBUSY;
- 		msleep(50);	/* give drive a breather */
- 	}
--	if (dev1)
--		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
-+	if (dev1) {
-+		rc = ata_wait_ready(ap, deadline);
-+		if (rc && rc != -ENODEV)
-+			return rc;
-+	}
- 
- 	/* is all this really necessary? */
- 	ap->ops->dev_select(ap, 0);
-@@ -529,6 +533,8 @@ static void scc_bus_post_reset (struct a
- 		ap->ops->dev_select(ap, 1);
- 	if (dev0)
- 		ap->ops->dev_select(ap, 0);
-+
-+	return 0;
- }
- 
- /**
-@@ -537,8 +543,8 @@ static void scc_bus_post_reset (struct a
-  *	Note: Original code is ata_bus_softreset().
-  */
- 
--static unsigned int scc_bus_softreset (struct ata_port *ap,
--				       unsigned int devmask)
-+static unsigned int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
-+                                      unsigned long deadline)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
-@@ -570,7 +576,7 @@ static unsigned int scc_bus_softreset (s
- 	if (scc_check_status(ap) == 0xFF)
- 		return 0;
- 
--	scc_bus_post_reset(ap, devmask);
-+	scc_bus_post_reset(ap, devmask, deadline);
- 
- 	return 0;
- }
-@@ -579,11 +585,13 @@ static unsigned int scc_bus_softreset (s
-  *	scc_std_softreset - reset host port via ATA SRST
-  *	@ap: port to reset
-  *	@classes: resulting classes of attached devices
-+ *	@deadline: deadline jiffies for the operation
-  *
-  *	Note: Original code is ata_std_softreset().
-  */
- 
--static int scc_std_softreset (struct ata_port *ap, unsigned int *classes)
-+static int scc_std_softreset (struct ata_port *ap, unsigned int *classes,
-+                              unsigned long deadline)
- {
- 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
- 	unsigned int devmask = 0, err_mask;
-@@ -607,7 +615,7 @@ static int scc_std_softreset (struct ata
- 
- 	/* issue bus reset */
- 	DPRINTK("about to softreset, devmask=%x\n", devmask);
--	err_mask = scc_bus_softreset(ap, devmask);
-+	err_mask = scc_bus_softreset(ap, devmask, deadline);
- 	if (err_mask) {
- 		ata_port_printk(ap, KERN_ERR, "SRST failed (err_mask=0x%x)\n",
- 				err_mask);
-@@ -676,10 +684,11 @@ static void scc_bmdma_stop (struct ata_q
- 
- 		if (reg & INTSTS_BMSINT) {
- 			unsigned int classes;
-+			unsigned long deadline = jiffies + ATA_TMOUT_BOOT;
- 			printk(KERN_WARNING "%s: Internal Bus Error\n", DRV_NAME);
- 			out_be32(bmid_base + SCC_DMA_INTST, INTSTS_BMSINT);
- 			/* TBD: SW reset */
--			scc_std_softreset(ap, &classes);
-+			scc_std_softreset(ap, &classes, deadline);
- 			continue;
- 		}
- 
-@@ -862,12 +871,13 @@ static void scc_bmdma_freeze (struct ata
- /**
-  *	scc_pata_prereset - prepare for reset
-  *	@ap: ATA port to be reset
-+ *	@deadline: deadline jiffies for the operation
-  */
- 
--static int scc_pata_prereset (struct ata_port *ap)
-+static int scc_pata_prereset (struct ata_port *ap, unsigned long deadline)
- {
- 	ap->cbl = ATA_CBL_PATA80;
--	return ata_std_prereset(ap);
-+	return ata_std_prereset(ap, deadline);
- }
- 
- /**
-Yours Tony
-
-  linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
-  Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
