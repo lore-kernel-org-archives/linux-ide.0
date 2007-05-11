@@ -1,41 +1,58 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/20] pata_pcmcia: recognize 2GB CompactFlash from Transcend
-Date: Thu, 10 May 2007 22:48:48 -0700
-Message-ID: <200705110548.l4B5mmj0007633@shell0.pdx.osdl.net>
+Subject: [patch 2/2] Use menuconfig objects: IDE
+Date: Thu, 10 May 2007 22:50:30 -0700
+Message-ID: <200705110550.l4B5oUu8007726@shell0.pdx.osdl.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:46436 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:41138 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758131AbXEKFtc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 01:49:32 -0400
+	by vger.kernel.org with ESMTP id S1754848AbXEKFvK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 01:51:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, Fabrice.Aeschbacher@siemens.com, alan@redhat.com, bzolnier@gmail.com, fabrice.aeschbacher@siemens.com, stuge-linux-pcmcia@cdy.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, jengelh@linux01.gwdg.de, jengelh@gmx.de
 
-From: "Aeschbacher, Fabrice" <Fabrice.Aeschbacher@siemens.com>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
 
-Allow the pata_pcmcia driver to automatically detect 2GB CompactFlash cards
-from Transcend.
+Use menuconfigs instead of menus, so the whole menu can be disabled at once
+instead of going through all options.
 
-Signed-off-by: Fabrice Aeschbacher <fabrice.aeschbacher@siemens.com>
-Cc: "Peter Stuge" <stuge-linux-pcmcia@cdy.org>
-Acked-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/pata_pcmcia.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/ide/Kconfig |   15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff -puN drivers/ata/pata_pcmcia.c~pata_pcmcia-recognize-2gb-compactflash-from-transcend drivers/ata/pata_pcmcia.c
---- a/drivers/ata/pata_pcmcia.c~pata_pcmcia-recognize-2gb-compactflash-from-transcend
-+++ a/drivers/ata/pata_pcmcia.c
-@@ -397,6 +397,7 @@ static struct pcmcia_device_id pcmcia_de
- 	PCMCIA_DEVICE_PROD_ID12("TOSHIBA", "MK2001MPL", 0xb4585a1a, 0x3489e003),
- 	PCMCIA_DEVICE_PROD_ID1("TRANSCEND    512M   ", 0xd0909443),
- 	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS1GCF80", 0x709b1bf1, 0x2a54d4b1),
-+	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS2GCF120", 0x709b1bf1, 0x969aa4f2),
- 	PCMCIA_DEVICE_PROD_ID12("TRANSCEND", "TS4GCF120", 0x709b1bf1, 0xf54a91c8),
- 	PCMCIA_DEVICE_PROD_ID12("WIT", "IDE16", 0x244e5994, 0x3e232852),
- 	PCMCIA_DEVICE_PROD_ID12("WEIDA", "TWTTI", 0xcc7cf69c, 0x212bb918),
+diff -puN drivers/ide/Kconfig~use-menuconfig-objects-ide drivers/ide/Kconfig
+--- a/drivers/ide/Kconfig~use-menuconfig-objects-ide
++++ a/drivers/ide/Kconfig
+@@ -4,13 +4,10 @@
+ # Andre Hedrick <andre@linux-ide.org>
+ #
+ 
+-if BLOCK
+-
+-menu "ATA/ATAPI/MFM/RLL support"
+-	depends on HAS_IOMEM
+-
+-config IDE
++menuconfig IDE
+ 	tristate "ATA/ATAPI/MFM/RLL support"
++	depends on BLOCK
++	depends on HAS_IOMEM
+ 	---help---
+ 	  If you say Y here, your kernel will be able to manage low cost mass
+ 	  storage units such as ATA/(E)IDE and ATAPI units. The most common
+@@ -1099,8 +1096,4 @@ config BLK_DEV_HD_ONLY
+ config BLK_DEV_HD
+ 	def_bool BLK_DEV_HD_IDE || BLK_DEV_HD_ONLY
+ 
+-endif
+-
+-endmenu
+-
+-endif
++endif # IDE
 _
