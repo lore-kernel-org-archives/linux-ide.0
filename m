@@ -1,82 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata reset-seq merge broke sata_sil on sh
-Date: Fri, 11 May 2007 11:39:20 +0200
-Message-ID: <464439C8.7090309@gmail.com>
-References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: sata_mv hotplug status?
+Date: Fri, 11 May 2007 13:29:44 +0200
+Message-ID: <464453A8.9080307@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:17571 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754381AbXEKJjd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 05:39:33 -0400
-Received: by py-out-1112.google.com with SMTP id a29so736355pyi
-        for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 02:39:33 -0700 (PDT)
-In-Reply-To: <20070511005217.GA23186@linux-sh.org>
+Received: from mail.syneticon.net ([213.239.212.131]:43997 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757813AbXEKLbO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 07:31:14 -0400
+Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
+	by mail2.syneticon.net (Postfix) with ESMTP id 219CC5CC8F
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 13:31:11 +0200 (CEST)
+Received: from localhost (filter1.syneticon.net [192.168.113.3])
+	by postfix1.syneticon.net (Postfix) with ESMTP id CFDA99481
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 13:31:10 +0200 (CEST)
+Received: from postfix1.syneticon.net ([192.168.113.4])
+	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
+	with ESMTP id qk-sCmgTHdR2 for <linux-ide@vger.kernel.org>;
+	Fri, 11 May 2007 11:31:07 +0000 (UTC)
+Received: from [192.168.10.145] (unknown [87.79.108.105])
+	by postfix1.syneticon.net (Postfix) with ESMTP
+	for <linux-ide@vger.kernel.org>; Fri, 11 May 2007 13:31:07 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: garyhade@us.ibm.com
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-[cc'ing Gary Hade for GoVault drive, Hello]
+I'm a little confused about sata_mv hotplug status.
 
-Hello, Paul.
+According to http://linux-ata.org/driver-status.html#marvell, the driver 
+has "full SATA control including hotplug".
 
-Paul Mundt wrote:
-> On Thu, May 10, 2007 at 03:08:59PM +0200, Tejun Heo wrote:
->> Paul Mundt wrote:
->>> The detection is simply flaky after that point, however before the
->>> current master it never hit the 35 second point (and thus never implied
->>> that the link was down). I'll double check the bisect log to see if there
->>> was anything beyond that that may have caused it.
->>>
->>> The -ENODEV at least implies that the SRST fails, so at least that's a
->>> starting point.
->> If prereset() fails to get the initial DRDY before 10secs, it assumes
->> something went wrong and escalates to hardreset.  sil family of
->> controllers report 0xff status while the link is broken and it seems
->> that your particular drive needs more than the current 150ms to recover
->> phy link.  It probably went unnoticed till now because the device was
->> never hardreset before.  If the diagnosis is correct, increasing the
->> delay in hardreset should fix the problem.  Well, let's see.  :-)
->>
-> Bumping the hardreset delay up does indeed fix it, I've had to bump it up
-> to 1200 before it started working (at 600 it still fails):
-> 
-> [    0.967379] scsi0 : sata_sil
-> [    0.970425] scsi1 : sata_sil
-> [    0.973298] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
-> [    0.981331] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
-> [    1.299353] ata1: device not ready (errno=-19), forcing hardreset
-> [    2.817893] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [    2.826284] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-> [    2.831052] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
-> [    2.837548] ata1.00: 39070080 sectors, multi 0: LBA
-> [    2.842702] ata1.00: applying bridge limits
-> [    2.854162] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-> [    2.858938] ata1.00: configured for UDMA/100
-> [    3.172602] ata2: SATA link down (SStatus 0 SControl 310)
-> [    3.175736] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
-> 
-> I'm not sure if it matters or not, but this is an iVDR drive, so that
-> might also have additional implications.
+A bit down on that same page, the matrix 
+http://linux-ata.org/driver-status.html#matrix says sata_mv - device 
+hotplug: no.
 
-Don't have the flimsiest idea what an iVDR drive is but I take it that
-it's some sort of special purpose thing.  :-)
+Which one is true? I guess the first says about drive hotplug, and the 
+second says about (PCI) device hotplug?
 
-So, the HHD424020F7SV00 is the second device which isn't happy with
-150ms wait after reset.  The first one was Quantum GoVault.  It's a bit
-different in that the HHD only fails after hardreset.
 
-Anyways, so, it seems we'll have to extent the 150ms wait.  I'll try to
-cook up a patch for that && parallel probing.
+Today, I tried to add a drive to that Marvell SATA controller:
 
-Gary, IIRC, the requirement for GoVault was 3secs, right?  Paul, can you
-try to estimate the minimum required delay?  Please go down by 100ms and
-report where it breaks.
+01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 
+MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
 
-Thanks.
+
+But it wasn't detected at all (no dmesg/kernel sign that the drive was 
+connected) - I had to reboot the machine to get that drive  detected.
+
+This would indicate that sata_mv doesn't support any sort of drive 
+*plug? Or do I have to take some extra steps to get the drives detected?
+
+I'm running 2.6.21 kernel.
+
 
 -- 
-tejun
+Tomasz Chmielewski
+http://wpkg.org
