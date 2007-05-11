@@ -1,34 +1,32 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: give devices one last chance even if recovery
- failed with -EINVAL
-Date: Fri, 11 May 2007 18:10:58 -0400
-Message-ID: <4644E9F2.3000706@garzik.org>
-References: <464465BB.5070203@gmail.com>
+Subject: Re: [PATCH 03/11] libata-acpi: s/CONFIG_SATA_ACPI/CONFIG_ATA_ACPI/
+Date: Fri, 11 May 2007 18:13:04 -0400
+Message-ID: <4644EA70.9020700@garzik.org>
+References: <11783766382010-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43614 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933947AbXEKWLA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 May 2007 18:11:00 -0400
-In-Reply-To: <464465BB.5070203@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <11783766382010-git-send-email-htejun@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: mjg59@srcf.ucam.org, rdunlap@xenotime.net, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, lenb@kernel.org, linux-acpi@vger.kernel.org, hare@suse.de, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> After certain errors, some devices report complete garbage on
-> IDENTIFY.  This can cause ata_dev_read_id() to fail with -EINVAL
-> resulting in immediate disabling of the device.  Give the device one
-> last chance after -EINVAL to allow recovery from such situations.  As
-> -EINVAL is triggered very rarely, this shouldn't cause any noticeable
-> affect on more common error paths.
+> ACPI applies to both SATA and PATA.  Drop the 'S' from the config
+> variable.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Harald Dunkel <harald.dunkel@t-online.de>
+> ---
+>  drivers/ata/Kconfig    |   26 +++++++++++++-------------
+>  drivers/ata/Makefile   |    2 +-
+>  drivers/ata/libata.h   |    2 +-
+>  include/linux/libata.h |    2 +-
+>  4 files changed, 16 insertions(+), 16 deletions(-)
 
-applied
+applied 3-4
+
+the code has been stirred, so I request resend of the other patches
 
 
