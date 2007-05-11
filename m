@@ -1,56 +1,34 @@
-From: Robert Hancock <hancockr@shaw.ca>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] libata: add human-readable error value decoding
-Date: Fri, 11 May 2007 17:10:36 -0600
-Message-ID: <4644F7EC.3080607@shaw.ca>
-References: <46428103.3040003@shaw.ca> <4642E92D.5010509@gmail.com>
- <4643AAF6.7080204@shaw.ca> <46449E59.90608@redhat.com>
- <4644A3AD.7000700@gmail.com>
+Date: Fri, 11 May 2007 19:22:44 -0400
+Message-ID: <4644FAC4.4010809@garzik.org>
+References: <46428103.3040003@shaw.ca> <4642E92D.5010509@gmail.com> <4643AAF6.7080204@shaw.ca> <46449E59.90608@redhat.com> <4644A3AD.7000700@gmail.com> <4644F7EC.3080607@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:30320 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbXEKXKl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 19:10:41 -0400
-In-reply-to: <4644A3AD.7000700@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:44058 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752040AbXEKXWs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 May 2007 19:22:48 -0400
+In-Reply-To: <4644F7EC.3080607@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Tejun Heo wrote:
-> Chuck Ebbert wrote:
->> Robert Hancock wrote:
->>>>> +          ehc->i.serror & SERR_TRANS_ST_ERROR ? "TransStatTransErr "
->>>>> : "",
->>>>> +          ehc->i.serror & SERR_UNRECOG_FIS ? "UnrecogFIS " : "",
->>>>> +          ehc->i.serror & SERR_DEV_XCHG ? "DevExchanged " : "" );
->>>> I'm not really convinced whether this is necessary.  The human readable
->>>> form is also a bit cryptic and can get quite long.  So, mild NACK from
->>>> me.
->>>>
->>> It certainly seems useful when debugging hotplug issues or random SATA
->>> problems which end up being caused by communication problems. Without
->>> this output, Joe User stands no chance of figuring out what's going on,
->>> and neither does Joe libata Developer unless they really care to dig
->>> through the spec and count bits to figure out what they mean. At least
->>> with this you can see that there was a CRC error, etc. and go from that..
->>>
->> Why not just document the error messages?
->>
->> And the scsi ones too, I can't seem to find what the sense codes mean.
-> 
-> They are well documented elsewhere - the standard documents.  For sense
-> codes, t10.org.  For SError bits, t13.org.  You can get drafts free of
-> charge.
+Robert Hancock wrote:
+> The ATA ones are more of a pain in that regard than SCSI though - SCSI 
+> has all distinct error codes for different errors, whereas ATA has 
+> bitmasks for everything..
 
-The ATA ones are more of a pain in that regard than SCSI though - SCSI 
-has all distinct error codes for different errors, whereas ATA has 
-bitmasks for everything..
+That should not affect implementation.  Either way, a table-driven 
+approach can easily work.
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+I favor decoding the SError status bits, but your names were far too 
+long.  "ProtocolErr" should be "Proto".  "10B8BErr" should be "10b8b". 
+HostInternalErr to HostInt.  PHYInternalErr to PHYInt.  etc.
+
+	Jeff
+
 
