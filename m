@@ -1,62 +1,52 @@
-From: akpm@linux-foundation.org
-Subject: [patch 19/20] SCSI: save disk in scsi_device
-Date: Thu, 10 May 2007 22:48:59 -0700
-Message-ID: <200705110548.l4B5mxgP007672@shell0.pdx.osdl.net>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:33761 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758612AbXEKGJP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 May 2007 02:09:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: tony@bakeyournoodle.com (Tony Breeds)
+Subject: [PATCH] drivers/ata/pata_hpt37x.c Remove unused static variable.
+Date: Fri, 11 May 2007 16:46:03 +1000
+Message-ID: <20070511064603.GC15955@bakeyournoodle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760800AbXEKGqS@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel ML <linux-kernel@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, kristen.c.accardi@intel.com
 
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Give anyone who has access to scsi_device access to the genhd struct as well.
+Remove unused static variable.
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+drivers/ata/pata_hpt37x.c: In function 'hpt37x_init_one':
+drivers/ata/pata_hpt37x.c:935: warning: unused variable 'info_hpt372_50'
+
+Signed-off-by: Tony Breeds <tony@bakeyournoodle.com>
+CC: Jeff Garzik <jgarzik@pobox.com>
+CC: Alan Cox <alan@redhat.com>
+CC: linux-ide@vger.kernel.org
 ---
 
- drivers/scsi/sd.c          |    1 +
- drivers/scsi/sr.c          |    1 +
- include/scsi/scsi_device.h |    2 +-
- 3 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/ata/pata_hpt37x.c |    9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff -puN drivers/scsi/sd.c~scsi-save-disk-in-scsi_device drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~scsi-save-disk-in-scsi_device
-+++ a/drivers/scsi/sd.c
-@@ -1673,6 +1673,7 @@ static int sd_probe(struct device *dev)
- 
- 	dev_set_drvdata(dev, sdkp);
- 	add_disk(gd);
-+	sdp->disk = gd;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
-diff -puN drivers/scsi/sr.c~scsi-save-disk-in-scsi_device drivers/scsi/sr.c
---- a/drivers/scsi/sr.c~scsi-save-disk-in-scsi_device
-+++ a/drivers/scsi/sr.c
-@@ -606,6 +606,7 @@ static int sr_probe(struct device *dev)
- 	if (sdev->media_change_notify)
- 		disk->flags |= GENHD_FL_MEDIA_CHANGE_NOTIFY;
- 	add_disk(disk);
-+	sdev->disk = disk;
- 
- 	sdev_printk(KERN_DEBUG, sdev,
- 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
-diff -puN include/scsi/scsi_device.h~scsi-save-disk-in-scsi_device include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h~scsi-save-disk-in-scsi_device
-+++ a/include/scsi/scsi_device.h
-@@ -140,7 +140,7 @@ struct scsi_device {
- 
- 	struct device		sdev_gendev;
- 	struct class_device	sdev_classdev;
--
-+	struct gendisk 		*disk;
- 	struct execute_work	ew; /* used to get process context on put */
- 
- 	enum scsi_device_state sdev_state;
-_
+Index: working/drivers/ata/pata_hpt37x.c
+===================================================================
+--- working.orig/drivers/ata/pata_hpt37x.c
++++ working/drivers/ata/pata_hpt37x.c
+@@ -931,15 +931,6 @@ static int hpt37x_init_one(struct pci_de
+ 		.udma_mask = 0x7f,
+ 		.port_ops = &hpt372_port_ops
+ 	};
+-	/* HPT371, 372 and friends - UDMA100 at 50MHz clock */
+-	static struct ata_port_info info_hpt372_50 = {
+-		.sht = &hpt37x_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS|ATA_FLAG_SRST,
+-		.pio_mask = 0x1f,
+-		.mwdma_mask = 0x07,
+-		.udma_mask = 0x3f,
+-		.port_ops = &hpt372_port_ops
+-	};
+ 	/* HPT374 - UDMA133 */
+ 	static struct ata_port_info info_hpt374 = {
+ 		.sht = &hpt37x_sht,
+Yours Tony
+
+  linux.conf.au        http://linux.conf.au/ || http://lca2008.linux.org.au/
+  Jan 28 - Feb 02 2008 The Australian Linux Technical Conference!
