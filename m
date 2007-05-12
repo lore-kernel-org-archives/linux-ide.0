@@ -1,170 +1,50 @@
-From: olof@lixom.net (Olof Johansson)
-Subject: [PATCH] pasemi: electra IDE/pata_platform glue
-Date: Sat, 12 May 2007 09:50:41 -0500
-Message-ID: <20070512145041.GA13025@lixom.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: sata_promise: which version/patch to test?
+Date: Sat, 12 May 2007 17:04:56 +0200 (MEST)
+Message-ID: <200705121504.l4CF4u83028056@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:46447 "EHLO mail.lixom.net"
+Received: from aun.it.uu.se ([130.238.12.36]:64986 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755016AbXELOsC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 May 2007 10:48:02 -0400
-Content-Disposition: inline
+	id S1755667AbXELPFA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 May 2007 11:05:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: paulus@samba.org
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: linux-ide@how.dk, linux-ide@vger.kernel.org
 
-Glue code to hook up the pata_platform on the PA Semi Electra eval board.
-CFE sets up device tree entries for the IDE interface, with device type
-'ide' and compatible field 'electra-ide'.
+On Thu, 10 May 2007 21:41:32 +0200, Peter Favrholdt wrote:
+>I would like to help by testing the most recent version of the 
+>sata_promise driver on my
+>
+>Promise Technology, Inc. PDC40718 (SATA 300 TX4) (rev 02)
+>
+>with 4 Seagate 500GB ES drives:
+>         Model Number:       ST3500630NS
+>         Firmware Revision:  3.AEE
+>         (with 1.5/3.0Gbps jumper removed = 3.0Gbps)
+>
+>This setup experienced a problem a while ago which was fixed using 
+>2.6.21-rc2 + Mikael Petterssons "force 1.5Gbps patch".
+>
+>Could someone provide a hint on what sources/patches I should get?
+>
+>E.g. vanilla 2.6.21.1 + ?
 
-We unfortunately need to modify the resources before calling the generic
-platform driver, since the device tree only has one register window in
-it and the driver expects two. Adding this as an of_platform driver
-instead doesn't give us any benefit, it just adds one more layer of
-register/probe functions.
+For a SATA 300 TX4 you should test version 2.07 of sata_promise.c.
+You can get it in 2.6.21-git16, or 2.6.21-mm2 plus the following
+two patches:
 
-Since CONFIG_PATA_PLATFORM depends on CONFIG_EMBEDDED, add that as a
-default for PPC_PASEMI.
+http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-1-error_intr-abort_port-2.6.21-mm2
+http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-2-sataii-tx4-port-numbering-fix-2.6.21-mm2
 
+or 2.6.21 plus the following three patches:
 
-Signed-off-by: Olof Johansson <olof@lixom.net>
+http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-1-separate-sata-pata-ops-2.6.21
+http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-2-error_intr-2.6.21
+http://user.it.uu.se/~mikpe/linux/patches/2.6/patch-sata_promise-3-sataii-tx4-port-numbering-fix-2.6.21
 
+Note that this corrects the longstanding mis-enumeration
+of ports on SATAII TX4 cards, so you may need to adjust
+your /etc/fstab and boot-time root= parameter if you're
+using hard-coded partition names.
 
-Index: 2.6.21/arch/powerpc/platforms/pasemi/Makefile
-===================================================================
---- 2.6.21.orig/arch/powerpc/platforms/pasemi/Makefile
-+++ 2.6.21/arch/powerpc/platforms/pasemi/Makefile
-@@ -1,3 +1,4 @@
- obj-y	+= setup.o pci.o time.o idle.o powersave.o iommu.o
- obj-$(CONFIG_PPC_PASEMI_MDIO)	+= gpio_mdio.o
-+obj-$(CONFIG_ELECTRA_IDE) += electra_ide.o
- obj-$(CONFIG_PPC_PASEMI_CPUFREQ) += cpufreq.o
-Index: 2.6.21/arch/powerpc/platforms/pasemi/electra_ide.c
-===================================================================
---- /dev/null
-+++ 2.6.21/arch/powerpc/platforms/pasemi/electra_ide.c
-@@ -0,0 +1,96 @@
-+/*
-+ * Copyright (C) 2007 PA Semi, Inc
-+ *
-+ * Maintained by: Olof Johansson <olof@lixom.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-+ */
-+
-+#include <linux/platform_device.h>
-+
-+#include <asm/prom.h>
-+#include <asm/system.h>
-+
-+/* The electra IDE interface is incredibly simple: Just a device on the localbus
-+ * with interrupts hooked up to one of the GPIOs. The device tree contains the
-+ * address window and interrupt mappings already, and the pata_platform driver handles
-+ * the rest. We just need to hook the two up.
-+ */
-+
-+#define MAX_IFS	4	/* really, we have only one */
-+
-+static struct platform_device *pdevs[MAX_IFS];
-+
-+static int __devinit electra_ide_init(void)
-+{
-+	struct device_node *np;
-+	struct resource r[3];
-+	int ret = 0;
-+	int i;
-+
-+	np = of_find_compatible_node(NULL, "ide", "electra-ide");
-+	i = 0;
-+
-+	while (np && i < MAX_IFS) {
-+		memset(r, 0, sizeof(r));
-+
-+		/* pata_platform wants two address ranges: one for the base registers,
-+		 * another for the control (altstatus). It's located at offset 0x3f6 in
-+		 * the window, but the device tree only has one large register window
-+		 * that covers both ranges. So we need to split it up by hand here:
-+		 */
-+
-+		ret = of_address_to_resource(np, 0, &r[0]);
-+		if (ret)
-+			goto out;
-+		ret = of_address_to_resource(np, 0, &r[1]);
-+		if (ret)
-+			goto out;
-+
-+		r[1].start += 0x3f6;
-+		r[0].end = r[1].start-1;
-+
-+		r[2].start = irq_of_parse_and_map(np, 0);
-+		r[2].end = irq_of_parse_and_map(np, 0);
-+		r[2].flags = IORESOURCE_IRQ;
-+
-+		pr_debug("registering platform device at 0x%lx/0x%lx, irq is %ld\n",
-+			 r[0].start, r[1].start, r[2].start);
-+		pdevs[i] = platform_device_register_simple("pata_platform", i, r, 3);
-+		if (IS_ERR(pdevs[i])) {
-+			ret = PTR_ERR(pdevs[i]);
-+			pdevs[i] = NULL;
-+			goto out;
-+		}
-+		np = of_find_compatible_node(np, "ide", "electra-ide");
-+	}
-+out:
-+	return ret;
-+}
-+module_init(electra_ide_init);
-+
-+static void __devexit electra_ide_exit(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_IFS; i++)
-+		if (pdevs[i])
-+			platform_device_unregister(pdevs[i]);
-+}
-+module_exit(electra_ide_exit);
-+
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR ("Olof Johansson <olof@lixom.net>");
-+MODULE_DESCRIPTION("PA Semi Electra IDE driver");
-Index: 2.6.21/arch/powerpc/platforms/pasemi/Kconfig
-===================================================================
---- 2.6.21.orig/arch/powerpc/platforms/pasemi/Kconfig
-+++ 2.6.21/arch/powerpc/platforms/pasemi/Kconfig
-@@ -6,6 +6,7 @@ config PPC_PASEMI
- 	select PPC_UDBG_16550
- 	select GENERIC_TBSYNC
- 	select PPC_NATIVE
-+	select EMBEDDED
- 	help
- 	  This option enables support for PA Semi's PWRficient line
- 	  of SoC processors, including PA6T-1682M
-@@ -26,4 +27,13 @@ config PPC_PASEMI_MDIO
- 	help
- 	  Driver for MDIO via GPIO on PWRficient platforms
- 
-+config ELECTRA_IDE
-+      tristate "Electra IDE driver"
-+      default y
-+      depends on PPC_PASEMI && ATA
-+      select PATA_PLATFORM
-+      help
-+	This includes driver support for the Electra on-board IDE
-+	interface.
-+
- endmenu
+/Mikael
