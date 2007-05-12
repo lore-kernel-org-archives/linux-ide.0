@@ -1,74 +1,52 @@
-From: Fred Moyer <fred@redhotpenguin.com>
-Subject: Re: [2.6.21.1] SATA freeze
-Date: Sat, 12 May 2007 12:09:43 -0700
-Message-ID: <464610F7.6030202@redhotpenguin.com>
-References: <fa.zU1kuoSgByTYCYqY+iCQ5rMJy34@ifi.uio.no> <46460C1B.6000609@shaw.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ata/scsi crash on halt
+Date: Sat, 12 May 2007 14:30:56 -0500
+Message-ID: <1178998256.3723.24.camel@mulgrave.il.steeleye.com>
+References: <20070512112537.4981f82d.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757767AbXELTJm@vger.kernel.org>
-In-Reply-To: <46460C1B.6000609@shaw.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:58051 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758296AbXELTbG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 May 2007 15:31:06 -0400
+In-Reply-To: <20070512112537.4981f82d.akpm@linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Robert Hancock wrote:
-> Fred Moyer wrote:
->> I just joined the list today so apologies if this email breaks any 
->> email client post threading.
->>
->> I have been seeing similar errors on two different systems.  I applied 
->> Robert's sata_nv patch posted to the list on May 5th, and approved 
->> today by Jeff Garzik.  I've taken several steps to insure that this 
->> isn't a faulty cable or drive issue.  This is running on a hp 
->> dl145g2.  Here is my lspci, dmesg, and relevant kernel config sections:
-> 
-> (snip)
-> 
->> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->> ata1.00: cmd b0/d2:f1:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 
->> 123392 in
->>          res 50/00:f1:00:4f:c2/00:00:00:00:00/00 Emask 0x202 (HSM 
->> violation)
->> ata1: soft resetting port
->> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata1.00: configured for UDMA/100
->> ata1: EH complete
-> 
-> This appears to be a different problem. Something is issuing 
-> SMART-related commands (smartd or smartctl perhaps) which the drive 
-> seems to be reacting strangely to. It apparently completed the command 
-> but never raised DRQ to request any data being transferred even though 
-> we expected it to. Maybe SMART is disabled on the drive and that's 
-> causing it to just toss these commands? CCing linux-ide in case anyone 
-> knows what would cause this.
+On Sat, 2007-05-12 at 11:25 -0700, Andrew Morton wrote:
+> [  715.196000] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+> [  715.196000] sd 2:0:0:0: [sda] Stopping disk
+> [  715.196000] ata3.00: DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY
+> [  715.196000] ata3.00: For more info, visit http://linux-ata.org/shutdown.html
+> [  715.196000] BUG: scheduling while atomic: swapper/0x00000100/0
+> [  715.196000]  [<c02e282d>] __sched_text_start+0x55/0x504
+> [  715.196000]  [<c0239faa>] scsi_done+0x0/0x1d
+> [  715.196000]  [<c02e32fb>] schedule_timeout+0x78/0x95
+> [  715.196000]  [<c011ffc2>] process_timeout+0x0/0x5
+> [  715.196000]  [<c011ff87>] msleep+0x10/0x18
+> [  715.196000]  [<c024d455>] ata_scsi_start_stop_xlat+0xe3/0x11b
 
-Here's smartctl -a for this drive - same output for both sda and sdb. 
-Smartd is currently running.  Any advice appreciated.
+This is a bug in libata ... there's a ssleep in the command translation
+path.  The commit that did it was this one:
 
-Previously on 2.6.15 I was seeing sdb remount as readonly under heavy 
-i/o.  I have not seen that issue yet with 2.6.21 (with Robert's patch 
-from May 5th for sata_nv), but that occurrence of remounts read-only was 
-infrequently, so that issue may be solved.
+commit 920a4b1038e442700a1cfac77ea7e20bd615a2c3
+Author: Tejun Heo <htejun@gmail.com>
+Date:   Fri May 4 21:28:48 2007 +0200
 
-app2 ~ # smartctl -a /dev/sda
-smartctl version 5.36 [x86_64-pc-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
+    libata: implement libata.spindown_compat
 
-Device: ATA      ST3808110AS      Version: n/a
-Serial number:             5LR8895K
-Device type: disk
-Local Time is: Sat May 12 12:05:58 2007 PDT
-Device does not support SMART
+I'm afraid the queuecommand path is not necessarily connected to a user
+process because of the way block scheduling works ... you can't call
+sleeping functions along it. 
 
-Error Counter logging not supported
+Ordinarily, what you'd do if you want to delay calling ->done() is to
+schedule a timer to handle it ... unfortunately I don't see an easy way
+of doing that because of the way this particular layering works.
 
-[GLTSD (Global Logging Target Save Disable) set. Enable Save with '-S on']
-Device does not support Self Test logging
+James
 
-app2 ~ # ps aux | grep smart
-root      5227  0.0  0.0   2892   672 ?        S    May11   0:00 
-/usr/sbin/smartd -p /var/run/smartd.pid
-root     19510  0.0  0.0   2648   648 pts/0    S+   12:07   0:00 grep 
---colour=auto smart
+
