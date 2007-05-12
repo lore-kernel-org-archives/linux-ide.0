@@ -1,69 +1,170 @@
-From: Andreas Arens <ari@goron.de>
-Subject: Re: [git patches] libata updates
-Date: Sat, 12 May 2007 12:06:11 +0200
-Message-ID: <f243ht$iqa$1@sea.gmane.org>
-References: <20070511223231.GA6551@havoc.gtf.org>
+From: olof@lixom.net (Olof Johansson)
+Subject: [PATCH] pasemi: electra IDE/pata_platform glue
+Date: Sat, 12 May 2007 09:50:41 -0500
+Message-ID: <20070512145041.GA13025@lixom.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:48212 "EHLO ciao.gmane.org"
+Received: from lixom.net ([66.141.50.11]:46447 "EHLO mail.lixom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755623AbXELKGf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 May 2007 06:06:35 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1HmoUT-0002qI-5E
-	for linux-ide@vger.kernel.org; Sat, 12 May 2007 12:06:17 +0200
-Received: from p50915a22.dip.t-dialin.net ([80.145.90.34])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 12 May 2007 12:06:17 +0200
-Received: from ari by p50915a22.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sat, 12 May 2007 12:06:17 +0200
+	id S1755016AbXELOsC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 May 2007 10:48:02 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: paulus@samba.org
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
+Glue code to hook up the pata_platform on the PA Semi Electra eval board.
+CFE sets up device tree entries for the IDE interface, with device type
+'ide' and compatible field 'electra-ide'.
 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-> upstream-linus
-> 
-..
-> Andrew Morton (1):
->       git-libata-all: sata_via build fix
-.. 
-> diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-> index 939c924..d105d2c 100644
-> --- a/drivers/ata/sata_via.c
-> +++ b/drivers/ata/sata_via.c
-> @@ -116,10 +116,6 @@ static struct scsi_host_template svia_sht = {
->  .slave_configure     = ata_scsi_slave_config,
->  .slave_destroy               = ata_scsi_slave_destroy,
->  .bios_param          = ata_std_bios_param,
-> -#ifdef CONFIG_PM
-> -     .suspend                = ata_scsi_device_suspend,
-> -     .resume                 = ata_scsi_device_resume,
-> -#endif
->  };
->  
->  static const struct ata_port_operations vt6420_sata_ops = {
-> @@ -415,7 +411,7 @@ static int vt6420_prepare_host(struct pci_dev *pdev,
-> struct ata_host **r_host)
->  struct ata_host *host;
->  int rc;
->  
-> -     rc = ata_pci_prepare_native_host(pdev, ppi, 2, &host);
-> +     rc = ata_pci_prepare_native_host(pdev, ppi, &host);
->  if (rc)
->  return rc;
->  *r_host = host;
+We unfortunately need to modify the resources before calling the generic
+platform driver, since the device tree only has one register window in
+it and the driver expects two. Adding this as an of_platform driver
+instead doesn't give us any benefit, it just adds one more layer of
+register/probe functions.
 
-This, additionally to the obvious build fix, again removes the suspend support.
-Is this intended?
+Since CONFIG_PATA_PLATFORM depends on CONFIG_EMBEDDED, add that as a
+default for PPC_PASEMI.
 
 
+Signed-off-by: Olof Johansson <olof@lixom.net>
 
+
+Index: 2.6.21/arch/powerpc/platforms/pasemi/Makefile
+===================================================================
+--- 2.6.21.orig/arch/powerpc/platforms/pasemi/Makefile
++++ 2.6.21/arch/powerpc/platforms/pasemi/Makefile
+@@ -1,3 +1,4 @@
+ obj-y	+= setup.o pci.o time.o idle.o powersave.o iommu.o
+ obj-$(CONFIG_PPC_PASEMI_MDIO)	+= gpio_mdio.o
++obj-$(CONFIG_ELECTRA_IDE) += electra_ide.o
+ obj-$(CONFIG_PPC_PASEMI_CPUFREQ) += cpufreq.o
+Index: 2.6.21/arch/powerpc/platforms/pasemi/electra_ide.c
+===================================================================
+--- /dev/null
++++ 2.6.21/arch/powerpc/platforms/pasemi/electra_ide.c
+@@ -0,0 +1,96 @@
++/*
++ * Copyright (C) 2007 PA Semi, Inc
++ *
++ * Maintained by: Olof Johansson <olof@lixom.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++ */
++
++#include <linux/platform_device.h>
++
++#include <asm/prom.h>
++#include <asm/system.h>
++
++/* The electra IDE interface is incredibly simple: Just a device on the localbus
++ * with interrupts hooked up to one of the GPIOs. The device tree contains the
++ * address window and interrupt mappings already, and the pata_platform driver handles
++ * the rest. We just need to hook the two up.
++ */
++
++#define MAX_IFS	4	/* really, we have only one */
++
++static struct platform_device *pdevs[MAX_IFS];
++
++static int __devinit electra_ide_init(void)
++{
++	struct device_node *np;
++	struct resource r[3];
++	int ret = 0;
++	int i;
++
++	np = of_find_compatible_node(NULL, "ide", "electra-ide");
++	i = 0;
++
++	while (np && i < MAX_IFS) {
++		memset(r, 0, sizeof(r));
++
++		/* pata_platform wants two address ranges: one for the base registers,
++		 * another for the control (altstatus). It's located at offset 0x3f6 in
++		 * the window, but the device tree only has one large register window
++		 * that covers both ranges. So we need to split it up by hand here:
++		 */
++
++		ret = of_address_to_resource(np, 0, &r[0]);
++		if (ret)
++			goto out;
++		ret = of_address_to_resource(np, 0, &r[1]);
++		if (ret)
++			goto out;
++
++		r[1].start += 0x3f6;
++		r[0].end = r[1].start-1;
++
++		r[2].start = irq_of_parse_and_map(np, 0);
++		r[2].end = irq_of_parse_and_map(np, 0);
++		r[2].flags = IORESOURCE_IRQ;
++
++		pr_debug("registering platform device at 0x%lx/0x%lx, irq is %ld\n",
++			 r[0].start, r[1].start, r[2].start);
++		pdevs[i] = platform_device_register_simple("pata_platform", i, r, 3);
++		if (IS_ERR(pdevs[i])) {
++			ret = PTR_ERR(pdevs[i]);
++			pdevs[i] = NULL;
++			goto out;
++		}
++		np = of_find_compatible_node(np, "ide", "electra-ide");
++	}
++out:
++	return ret;
++}
++module_init(electra_ide_init);
++
++static void __devexit electra_ide_exit(void)
++{
++	int i;
++
++	for (i = 0; i < MAX_IFS; i++)
++		if (pdevs[i])
++			platform_device_unregister(pdevs[i]);
++}
++module_exit(electra_ide_exit);
++
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR ("Olof Johansson <olof@lixom.net>");
++MODULE_DESCRIPTION("PA Semi Electra IDE driver");
+Index: 2.6.21/arch/powerpc/platforms/pasemi/Kconfig
+===================================================================
+--- 2.6.21.orig/arch/powerpc/platforms/pasemi/Kconfig
++++ 2.6.21/arch/powerpc/platforms/pasemi/Kconfig
+@@ -6,6 +6,7 @@ config PPC_PASEMI
+ 	select PPC_UDBG_16550
+ 	select GENERIC_TBSYNC
+ 	select PPC_NATIVE
++	select EMBEDDED
+ 	help
+ 	  This option enables support for PA Semi's PWRficient line
+ 	  of SoC processors, including PA6T-1682M
+@@ -26,4 +27,13 @@ config PPC_PASEMI_MDIO
+ 	help
+ 	  Driver for MDIO via GPIO on PWRficient platforms
+ 
++config ELECTRA_IDE
++      tristate "Electra IDE driver"
++      default y
++      depends on PPC_PASEMI && ATA
++      select PATA_PLATFORM
++      help
++	This includes driver support for the Electra on-board IDE
++	interface.
++
+ endmenu
