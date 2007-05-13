@@ -1,44 +1,73 @@
-From: olof@lixom.net (Olof Johansson)
-Subject: Re: [PATCH] pasemi: electra IDE/pata_platform glue
-Date: Sun, 13 May 2007 16:18:29 -0500
-Message-ID: <20070513211829.GA24022@lixom.net>
-References: <20070512145041.GA13025@lixom.net> <200705130111.03153.arnd@arndb.de> <20070513005830.38ba8e3b@the-village.bc.nu> <200705130248.22844.arnd@arndb.de>
+From: Stefan <gentoopower@yahoo.de>
+Subject: Re: System freezes with kernel >2.6.19 - sata_nv [added crash info
+ kern 2.6.21.1]
+Date: Sun, 13 May 2007 21:33:19 +0200
+Message-ID: <464767FF.5020907@yahoo.de>
+References: <46351BE2.70901@yahoo.de> <4635BF4A.3050509@gmail.com> <46367F58.7000609@shaw.ca> <4636A4DC.8070606@gmail.com> <4637CCEA.8020202@yahoo.de> <4637D3FA.2070403@shaw.ca> <463878E5.4020607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:40854 "EHLO mail.lixom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754985AbXEMVPh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 May 2007 17:15:37 -0400
-Content-Disposition: inline
-In-Reply-To: <200705130248.22844.arnd@arndb.de>
+Received: from moutng.kundenserver.de ([212.227.126.174]:57969 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753686AbXEMVdX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 May 2007 17:33:23 -0400
+In-Reply-To: <463878E5.4020607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linuxppc-dev@ozlabs.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, paulus@samba.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Hi,
+Tejun Heo wrote:
+> Robert Hancock wrote:
+>   
+>> Stefan wrote:
+>>     
+>>> Okay, I had time to set this up. I'm attaching the log messages I got
+>>> via netconsole.
+>>>
+>>> I tested about 20h with adma disabled, the crash won't occur.
+>>>
+>>> If I remove
+>>>
+>>> sata_nv.adma=0
+>>>
+>>> from boot options again it doesn't take long until my machine locks up.
+>>>
+>>> [Attached dmesg output with 2.6.21.1 kernel + crash info I got via
+>>> netconsole]
+>>>
+>>> I hope this is useful to you guys.
+>>>       
+>> It looks like you've got SError bits set from the controller, 0x200000
+>> means link layer CRC error (btw, we really should be decoding that error
+>> and printing it in human readable form rather than making people pore
+>> through the SATA spec and count bits).
+>>     
+>
+> Hmmm... Maybe, but most of the bits are nearly meaningless to end users
+> anyway.
+>
+>   
+>> First thing you should try is replacing the SATA cable to that drive.
+>>     
+>
+> Yeap, please apply some hardware debugging techniques - replacing /
+> reseating SATA cables and connecting it to different power connector.
+> But it's disturbing to see machine lock up even if CRC error occurs.
+> sata_nv non-adma interface locks the whole machine up too after certain
+> error conditions but I thought adma was saner than that.  I hope we can
+> work around this somehow.
+>
+> Thanks.
+>
+>   
+Hi folks, got some news:
 
-On Sun, May 13, 2007 at 02:48:22AM +0200, Arnd Bergmann wrote:
+I replaced cables, which didn't change anything. My PSU is strong enough
+to take a lot more, so I don't think it could be a power problem.
+Therefore I replaced the SAMSUNG HD401LJ with  ST3160812AS.
+With the seagate attached I don't get the crash. So this may be a
+problem in combination with the HD401LJ+ NFORCE4 + ADMA.
 
-> Olof, have you looked at which of the two ->set_mode functions is more
-> appropriate for electra? I would guess that you actually want to use
-> the ata_generic one.
-
-Actually, the pata_platform driver is _exactly_ what I want at this time,
-since we can't do bus master dma and it assumes that. It's a perfect fit,
-I see no reason to retool it.
-
-Another reason for why I'm not that excited about doing a generic
-of_platform driver is that it's likely that I'll do a new driver that
-uses one of the simple dma engines on our SoC to get the data over PIO
-(i.e still not bus master dma, but at least offloaded). That'd make the
-resulting number of users of a pata_of driver 0 until the next one comes
-around, with whatever that means with respect to bit-rot, etc.
-
-That driver will, on the other hand, likely be an of_platform one. But
-until then there's not much use in doing one.
-
-
--Olof
-
+--Stefan
