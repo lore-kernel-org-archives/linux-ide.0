@@ -1,36 +1,44 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [1/2] 2.6.22-rc1: known regressions
-Date: Sun, 13 May 2007 12:11:34 -0700
-Message-ID: <20070513121134.16eea69e.akpm@linux-foundation.org>
-References: <46475595.4050105@googlemail.com>
-	<Pine.LNX.4.64.0705131118160.3212@alien.or.mcafeemobile.com>
+From: olof@lixom.net (Olof Johansson)
+Subject: Re: [PATCH] pasemi: electra IDE/pata_platform glue
+Date: Sun, 13 May 2007 16:18:29 -0500
+Message-ID: <20070513211829.GA24022@lixom.net>
+References: <20070512145041.GA13025@lixom.net> <200705130111.03153.arnd@arndb.de> <20070513005830.38ba8e3b@the-village.bc.nu> <200705130248.22844.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:45391 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757314AbXEMTM6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 May 2007 15:12:58 -0400
-In-Reply-To: <Pine.LNX.4.64.0705131118160.3212@alien.or.mcafeemobile.com>
+Received: from lixom.net ([66.141.50.11]:40854 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754985AbXEMVPh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 May 2007 17:15:37 -0400
+Content-Disposition: inline
+In-Reply-To: <200705130248.22844.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Davide Libenzi <davidel@xmailserver.org>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, i2c@lm-sensors.org, Jean Delvare <khali@linux-fr.org>, Antonino Ingargiola <tritemio@gmail.com>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-fsdevel@vger.kernel.org, xfs-masters@oss.sgi.com, Jeremy Fitzhardinge <jeremy@goop.org>, David Chinner <dgc@sgi.com>, Charles Gagalac <charle97@yahoo.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@ozlabs.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, paulus@samba.org, linux-ide@vger.kernel.org
 
-On Sun, 13 May 2007 11:19:33 -0700 (PDT) Davide Libenzi <davidel@xmailserver.org> wrote:
+Hi,
 
-> On Sun, 13 May 2007, Michal Piotrowski wrote:
-> 
-> > Subject    : applications under wine freezes
-> > References : http://bugzilla.kernel.org/show_bug.cgi?id=8462
-> > Submitter  : Charles Gagalac <charle97@yahoo.com>
-> > Caused-By  : Davide Libenzi <davidel@xmailserver.org>
-> >              commit 6192bd536f96c6a0d969081bc71ae24f9319bfdc
-> > Handled-By : Davide Libenzi <davidel@xmailserver.org>
-> > Status     : problem is being debugged
-> 
-> This has been fixed. Confirmed by myself and Charles Gagalac. Patches have 
-> been sent to Andrew.
+On Sun, May 13, 2007 at 02:48:22AM +0200, Arnd Bergmann wrote:
 
-On Friday.  Should've got them into -rc1.  I suck.  Sorry.
+> Olof, have you looked at which of the two ->set_mode functions is more
+> appropriate for electra? I would guess that you actually want to use
+> the ata_generic one.
+
+Actually, the pata_platform driver is _exactly_ what I want at this time,
+since we can't do bus master dma and it assumes that. It's a perfect fit,
+I see no reason to retool it.
+
+Another reason for why I'm not that excited about doing a generic
+of_platform driver is that it's likely that I'll do a new driver that
+uses one of the simple dma engines on our SoC to get the data over PIO
+(i.e still not bus master dma, but at least offloaded). That'd make the
+resulting number of users of a pata_of driver 0 until the next one comes
+around, with whatever that means with respect to bit-rot, etc.
+
+That driver will, on the other hand, likely be an of_platform one. But
+until then there's not much use in doing one.
+
+
+-Olof
+
