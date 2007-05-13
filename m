@@ -1,249 +1,66 @@
-From: Fred Moyer <fred@redhotpenguin.com>
-Subject: Re: [2.6.21.1] SATA freeze
-Date: Sat, 12 May 2007 18:52:07 -0700
-Message-ID: <46466F47.6050800@redhotpenguin.com>
-References: <fa.zU1kuoSgByTYCYqY+iCQ5rMJy34@ifi.uio.no> <46460C1B.6000609@shaw.ca> <464610F7.6030202@redhotpenguin.com> <464663AE.6040409@shaw.ca>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] pasemi: electra IDE/pata_platform glue
+Date: Sun, 13 May 2007 12:20:10 +1000
+Message-ID: <1179022810.32247.54.camel@localhost.localdomain>
+References: <20070512145041.GA13025@lixom.net>
+	 <200705130111.03153.arnd@arndb.de>
+	 <20070513005830.38ba8e3b@the-village.bc.nu>
+	 <200705130248.22844.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from app2.redhotpenguin.com ([64.151.90.21]:58787 "EHLO
-	redhotpenguin.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755877AbXEMBv6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 May 2007 21:51:58 -0400
-In-Reply-To: <464663AE.6040409@shaw.ca>
+Received: from gate.crashing.org ([63.228.1.57]:57515 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755845AbXEMCU1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 May 2007 22:20:27 -0400
+In-Reply-To: <200705130248.22844.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@ozlabs.org, Olof Johansson <olof@lixom.net>, linux-ide@vger.kernel.org, paulus@samba.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Robert Hancock wrote:
-> Fred Moyer wrote:
->>> This appears to be a different problem. Something is issuing 
->>> SMART-related commands (smartd or smartctl perhaps) which the drive 
->>> seems to be reacting strangely to. It apparently completed the 
->>> command but never raised DRQ to request any data being transferred 
->>> even though we expected it to. Maybe SMART is disabled on the drive 
->>> and that's causing it to just toss these commands? CCing linux-ide in 
->>> case anyone knows what would cause this.
->>
->> Here's smartctl -a for this drive - same output for both sda and sdb. 
->> Smartd is currently running.  Any advice appreciated.
->>
-> Sounds like SMART is likely disabled on that drive. You can try doing 
-> "smartctl -s on /dev/sda" and see if that will turn it on.
+On Sun, 2007-05-13 at 02:48 +0200, Arnd Bergmann wrote:
+> On Sunday 13 May 2007, Alan Cox wrote:
+> > > Why not provide a proper pata_of.c driver based on ata_generic? That
+> > > will help the next person that has a builtin ata controller and wants
+> > > to get it running as an of_device.
+> > 
+> > Easier to use pata_platform I would think ? Just create the OF device and
+> > bind it to pata_platform.
 > 
+> Not sure I understand what you mean. pata_platform expects a platform_device,
+> which cannot be cast from an of_device.
 
-Sorry - that last post of mine was brain dead.  Here's the one with 
-(hopefully) useful data.
+Note that in the long run, we might have less problem with that sort of
+thing.
 
-app2 ~ # smartctl  -d ata -a /dev/sda
-smartctl version 5.36 [x86_64-pc-linux-gnu] Copyright (C) 2002-6 Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
+First, every device now has an OF node optionally attached to it (since
+I introduced dev_sysdata). This of_device doesn't really bring much more
+than OF type/name/compatible properties based probing.
 
-=== START OF INFORMATION SECTION ===
-Device Model:     ST3808110AS
-Serial Number:    5LR8895K
-Firmware Version: 3.AJJ
-User Capacity:    80,026,361,856 bytes
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   7
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Sat May 12 18:49:06 2007 PDT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+Then, the plans I have in mind for the future of that stuff are around
+the idea of registering "constructors" based on bus matches and device
+matches respectively.
 
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
+The kernel will then walk the whole OF device-tree at boot, and will
+instanciate devices using those constructors, passing them the struct
+device of whatever was the parent.
 
-General SMART Values:
-Offline data collection status:  (0x82) Offline data collection activity
-                                         was completed without error.
-                                         Auto Offline Data Collection: 
-Enabled.
-Self-test execution status:      (   0) The previous self-test routine 
-completed
-                                         without error or no self-test 
-has ever
-                                         been run.
-Total time to complete Offline
-data collection:                 ( 431) seconds.
-Offline data collection
-capabilities:                    (0x5b) SMART execute Offline immediate.
-                                         Auto Offline data collection 
-on/off support.
-                                         Suspend Offline collection upon new
-                                         command.
-                                         Offline surface scan supported.
-                                         Self-test supported.
-                                         No Conveyance Self-test supported.
-                                         Selective Self-test supported.
-SMART capabilities:            (0x0003) Saves SMART data before entering
-                                         power-saving mode.
-                                         Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                         General Purpose Logging supported.
-Short self-test routine
-recommended polling time:        (   2) minutes.
-Extended self-test routine
-recommended polling time:        (  27) minutes.
+Thus we could easily have platforms registers constructors for specific
+devices that build a platform device off an OF node. We can have a
+generic constructor that builds the PCI devices, etc... and we can have
+bus constructors to generate of_device's for things where they are
+useful, like plb4/5 on 4xx etc...
 
-SMART Attributes Data Structure revision number: 10
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE 
-UPDATED  WHEN_FAILED RAW_VALUE
-   1 Raw_Read_Error_Rate     0x000f   100   253   006    Pre-fail 
-Always       -       0
-   3 Spin_Up_Time            0x0002   097   094   000    Old_age 
-Always       -       0
-   4 Start_Stop_Count        0x0033   100   100   020    Pre-fail 
-Always       -       41
-   5 Reallocated_Sector_Ct   0x0033   098   098   036    Pre-fail 
-Always       -       80
-   7 Seek_Error_Rate         0x000f   073   060   030    Pre-fail 
-Always       -       23194052
-   9 Power_On_Hours          0x0032   096   096   000    Old_age 
-Always       -       3899
-  10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail 
-Always       -       0
-  12 Power_Cycle_Count       0x0033   100   100   020    Pre-fail 
-Always       -       108
-187 Unknown_Attribute       0x0032   001   001   000    Old_age   Always 
-       -       17863
-189 Unknown_Attribute       0x003a   100   100   000    Old_age   Always 
-       -       0
-190 Unknown_Attribute       0x0022   070   057   045    Old_age   Always 
-       -       2689188364318
-194 Temperature_Celsius     0x0022   030   043   000    Old_age   Always 
-       -       30 (Lifetime Min/Max 0/22)
-195 Hardware_ECC_Recovered  0x001a   048   045   000    Old_age   Always 
-       -       2474070
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always 
-       -       0
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age 
-Offline      -       0
-199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always 
-       -       7
-200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age 
-Offline      -       0
-202 TA_Increase_Count       0x0032   100   253   000    Old_age   Always 
-       -       0
+On top of that, I want to add some resource management to of_device and
+maybe kill things like ebus, vio, etc... device if possible (that is if
+the only difference to the base OF device can be resolved at
+construction time).
 
-SMART Error Log Version: 1
-ATA Error Count: 8 (device log contains only the most recent five errors)
-         CR = Command Register [HEX]
-         FR = Features Register [HEX]
-         SC = Sector Count Register [HEX]
-         SN = Sector Number Register [HEX]
-         CL = Cylinder Low Register [HEX]
-         CH = Cylinder High Register [HEX]
-         DH = Device/Head Register [HEX]
-         DC = Device Command Register [HEX]
-         ER = Error register [HEX]
-         ST = Status register [HEX]
-Powered_Up_Time is measured from power on, and printed as
-DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
-SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+Anyway, still only thoughts but that gives you an idea to where I'm
+heading.
 
-Error 8 occurred at disk power-on lifetime: 3753 hours (156 days + 9 hours)
-   When the command that caused the error occurred, the device was 
-active or idle.
+Ben.
+ 
 
-   After command completion occurred, registers were:
-   ER ST SC SN CL CH DH
-   -- -- -- -- -- -- --
-   84 51 00 78 7a 06 e0  Error: ICRC, ABRT at LBA = 0x00067a78 = 424568
-
-   Commands leading to the command that caused the error were:
-   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-   -- -- -- -- -- -- -- --  ----------------  --------------------
-   25 00 40 39 7a 06 e0 00      02:55:54.633  READ DMA EXT
-   b0 d0 01 00 4f c2 00 02      02:55:52.076  SMART READ DATA
-   b0 da 00 00 4f c2 00 00      02:55:51.992  SMART RETURN STATUS
-   35 00 08 10 52 04 e0 00      02:55:51.903  WRITE DMA EXT
-   35 00 a0 70 51 04 e0 00      02:55:51.892  WRITE DMA EXT
-
-Error 7 occurred at disk power-on lifetime: 3751 hours (156 days + 7 hours)
-   When the command that caused the error occurred, the device was 
-active or idle.
-
-   After command completion occurred, registers were:
-   ER ST SC SN CL CH DH
-   -- -- -- -- -- -- --
-   84 51 00 bf ec 43 e0  Error: ICRC, ABRT at LBA = 0x0043ecbf = 4451519
-
-   Commands leading to the command that caused the error were:
-   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-   -- -- -- -- -- -- -- --  ----------------  --------------------
-   25 00 08 b8 ec 43 e0 00      02:25:46.836  READ DMA EXT
-   b0 d0 01 00 4f c2 00 02      02:25:46.818  SMART READ DATA
-   b0 da 00 00 4f c2 00 00      02:25:44.880  SMART RETURN STATUS
-   35 00 08 f8 bc 04 e0 00      02:25:44.866  WRITE DMA EXT
-   35 00 20 d8 bc 04 e0 00      02:25:44.858  WRITE DMA EXT
-
-Error 6 occurred at disk power-on lifetime: 3751 hours (156 days + 7 hours)
-   When the command that caused the error occurred, the device was 
-active or idle.
-
-   After command completion occurred, registers were:
-   ER ST SC SN CL CH DH
-   -- -- -- -- -- -- --
-   84 51 00 88 7a 17 e0  Error: ICRC, ABRT at LBA = 0x00177a88 = 1538696
-
-   Commands leading to the command that caused the error were:
-   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-   -- -- -- -- -- -- -- --  ----------------  --------------------
-   25 00 08 81 7a 17 e0 00      01:55:42.014  READ DMA EXT
-   b0 d0 01 00 4f c2 00 02      01:55:41.990  SMART READ DATA
-   b0 da 00 00 4f c2 00 00      02:01:18.894  SMART RETURN STATUS
-   35 00 08 a0 21 04 e0 00      01:55:48.306  WRITE DMA EXT
-   35 00 98 08 21 04 e0 00      01:55:48.098  WRITE DMA EXT
-
-Error 5 occurred at disk power-on lifetime: 3750 hours (156 days + 6 hours)
-   When the command that caused the error occurred, the device was 
-active or idle.
-
-   After command completion occurred, registers were:
-   ER ST SC SN CL CH DH
-   -- -- -- -- -- -- --
-   84 51 00 b5 c9 73 e0  Error: ICRC, ABRT at LBA = 0x0073c9b5 = 7588277
-
-   Commands leading to the command that caused the error were:
-   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-   -- -- -- -- -- -- -- --  ----------------  --------------------
-   25 00 20 96 c9 73 e0 00      01:25:42.886  READ DMA EXT
-   b0 d0 01 00 4f c2 00 02      01:25:42.868  SMART READ DATA
-   35 00 08 ae b6 42 e0 00      01:25:42.456  WRITE DMA EXT
-   b0 da 00 00 4f c2 00 00      01:25:42.430  SMART RETURN STATUS
-   35 00 08 60 81 04 e0 00      01:25:42.376  WRITE DMA EXT
-
-Error 4 occurred at disk power-on lifetime: 3749 hours (156 days + 5 hours)
-   When the command that caused the error occurred, the device was 
-active or idle.
-
-   After command completion occurred, registers were:
-   ER ST SC SN CL CH DH
-   -- -- -- -- -- -- --
-   84 51 00 4d 94 3e e0  Error: ICRC, ABRT at LBA = 0x003e944d = 4101197
-
-   Commands leading to the command that caused the error were:
-   CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-   -- -- -- -- -- -- -- --  ----------------  --------------------
-   25 00 08 46 94 3e e0 00      00:55:35.846  READ DMA EXT
-   b0 d0 01 00 4f c2 00 02      00:55:35.774  SMART READ DATA
-   b0 da 00 00 4f c2 00 00      00:55:35.732  SMART RETURN STATUS
-   35 00 08 20 b3 04 e0 00      00:55:35.649  WRITE DMA EXT
-   35 00 90 90 b2 04 e0 00      00:55:35.337  WRITE DMA EXT
-
-SMART Self-test log structure revision number 1
-
-SMART Selective self-test log data structure revision number 1
-  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-     1        0        0  Not_testing
-     2        0        0  Not_testing
-     3        0        0  Not_testing
-     4        0        0  Not_testing
-     5        0        0  Not_testing
-Selective self-test flags (0x0):
-   After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
