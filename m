@@ -1,36 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
-Date: Mon, 14 May 2007 17:52:46 +0200
-Message-ID: <464885CE.5070404@gmail.com>
-References: <20070320150718.GF6152@htj.dyndns.org>	 <20070320151359.GG6152@htj.dyndns.org>	 <20070320152533.GH6152@htj.dyndns.org>	 <20070320152919.GA28403@infradead.org>	 <20070321070516.GJ6152@htj.dyndns.org> <1174490184.3618.11.camel@mulgrave.il.steeleye.com>
+From: "Rune Torgersen" <runet@innovsys.com>
+Subject: Libata state machine error in 2.6.18.1
+Date: Mon, 14 May 2007 10:59:50 -0500
+Message-ID: <DCEAAC0833DD314AB0B58112AD99B93B02E898EB@ismail.innsys.innovsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:57726 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbXENPxC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 11:53:02 -0400
-Received: by py-out-1112.google.com with SMTP id a29so1545492pyi
-        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 08:53:02 -0700 (PDT)
-In-Reply-To: <1174490184.3618.11.camel@mulgrave.il.steeleye.com>
+Received: from smtp.innovsys.com ([66.115.232.196]:57619 "EHLO
+	mail.innovsys.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757490AbXENQOB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 12:14:01 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+To: linux-ide@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2007-03-21 at 16:05 +0900, Tejun Heo wrote:
->> This patch breaks the existing libata suspend/resume support and thus
->> should not be applied before libata is updated.  So, please don't
->> apply it yet.
-> 
-> I don't have a git tree for this, but I'll  mark it in my email, just
-> say the word.
+Hi
+We're running 2.6.18 on an inhouse devloped embeded board.
+CPU is a Freescale 8280, and we have a SIL3124 controller talking to a
+Hitachi 320GB (Hitachi HDT725032VLA360) disk.
 
-It took quite some while but libata is updated now and this patch can go in.
+Once in a while we get the following error while formatiing the drive:
 
-Thanks.
+ata2: illegal qc_active transition (00000002->00000008)
+ata2.00: exception Emask 0x2 SAct 0x2 SErr 0x0 action 0x2 frozen
+ata2.00: tag 1 cmd 0x61 Emask 0x2 stat 0x50 err 0x0 (HSM violation)
+ata2: soft resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata2.00: revalidation failed (errno=-5)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: hard resetting port
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: configured for UDMA/100
+ata2: EH complete
 
--- 
-tejun
+
+Is this hardware (cabling, supply voltage) or software related?
+
