@@ -1,53 +1,269 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ASUS M2A-VM - AMD690G - SB600 Non-Raid-5 SATA - problem
-Date: Mon, 14 May 2007 11:10:09 +0200
-Message-ID: <46482771.4080602@gmail.com>
-References: <20070513050522.88081.qmail@web52609.mail.re2.yahoo.com>
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: [PATCH 2/5] Use mutex instead of semaphore in IDE driver
+Date: Mon, 14 May 2007 11:14:24 +0200
+Message-ID: <20070514091424.GH29206@traven>
+References: <20070514090256.GF29206@traven>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:52667 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755007AbXENJKT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 05:10:19 -0400
-Received: by py-out-1112.google.com with SMTP id a29so1436646pyi
-        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 02:10:19 -0700 (PDT)
-In-Reply-To: <20070513050522.88081.qmail@web52609.mail.re2.yahoo.com>
+Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:43720
+	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755319AbXENJLt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 05:11:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20070514090256.GF29206@traven>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-Srihari Vijayaraghavan wrote:
-> --- Tejun Heo <htejun@gmail.com> wrote:
->> Srihari Vijayaraghavan wrote:
->>>> Oh well, that's the price you have to pay when you 1. have a device
->>>> which can't access memory above 4G but 2. don't have IOMMU to do it for
->>>> the device.  If performance becomes problem, you can always get a
->>>> not-so-expensive external controller which can do 64.
-> 
-> Can the Skymaster S3132, based on Sil3132,
-> (http://umart.net/au/product_info.php?cPath=21_211&products_id=106108) do 64
-> bit DMA on Linux?
+The IDE driver uses a semaphore as mutex. Use the mutex API instead of
+the (binary) semaphore.
 
-Yeah, sil3124/32 can do 64bit alright.
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-> If so, I'm happy to buy that to isolate whether the current problem is limited
-> to SB600 SATA controller alone on AMD690G chipset.
+--
 
-I'm too.  Please let me know when you find out.  :-P
-
-> It'd be nice if somebody from AMD/ATI could confirm the 64 bit DMA capability
-> of SB600 SATA controller. (I observe a few AMD/ATI folks have been submitting
-> a few patches on LKML lately, so who knows.)
-
-Maybe you can cc the ATI person here if you know the address.
-
-> PS: FWIW, SB600 with your ahci fix has been working fine for the past week.
-> Thank you for that.
-
-Great.
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 7fff773..af67fd2 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -1178,11 +1178,11 @@ static int idedisk_ioctl(struct inode *inode, struct file *file,
+ 	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
+ 
+ read_val:
+-	down(&ide_setting_sem);
++	mutex_lock(&ide_setting_mtx);
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	err = *val;
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ 	return err >= 0 ? put_user(err, (long __user *)arg) : err;
+ 
+ set_val:
+@@ -1192,9 +1192,9 @@ set_val:
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			err = -EACCES;
+ 		else {
+-			down(&ide_setting_sem);
++			mutex_lock(&ide_setting_mtx);
+ 			err = setfunc(drive, arg);
+-			up(&ide_setting_sem);
++			mutex_unlock(&ide_setting_mtx);
+ 		}
+ 	}
+ 	return err;
+diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+index d50bd99..33907c6 100644
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -154,7 +154,7 @@ static int __ide_add_setting(ide_drive_t *drive, const char *name, int rw, int d
+ {
+ 	ide_settings_t **p = (ide_settings_t **) &drive->settings, *setting = NULL;
+ 
+-	down(&ide_setting_sem);
++	mutex_lock(&ide_setting_mtx);
+ 	while ((*p) && strcmp((*p)->name, name) < 0)
+ 		p = &((*p)->next);
+ 	if ((setting = kzalloc(sizeof(*setting), GFP_KERNEL)) == NULL)
+@@ -175,10 +175,10 @@ static int __ide_add_setting(ide_drive_t *drive, const char *name, int rw, int d
+ 	if (auto_remove)
+ 		setting->auto_remove = 1;
+ 	*p = setting;
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ 	return 0;
+ abort:
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ 	kfree(setting);
+ 	return -1;
+ }
+@@ -222,7 +222,7 @@ static void __ide_remove_setting (ide_drive_t *drive, char *name)
+  *
+  *	Automatically remove all the driver specific settings for this
+  *	drive. This function may not be called from IRQ context. The
+- *	caller must hold ide_setting_sem.
++ *	caller must hold ide_setting_mtx.
+  */
+ 
+ static void auto_remove_settings (ide_drive_t *drive)
+@@ -267,7 +267,7 @@ static ide_settings_t *ide_find_setting_by_name(ide_drive_t *drive, char *name)
+  *	@setting: drive setting
+  *
+  *	Read a drive setting and return the value. The caller
+- *	must hold the ide_setting_sem when making this call.
++ *	must hold the ide_setting_mtx when making this call.
+  *
+  *	BUGS: the data return and error are the same return value
+  *	so an error -EINVAL and true return of the same value cannot
+@@ -304,7 +304,7 @@ static int ide_read_setting(ide_drive_t *drive, ide_settings_t *setting)
+  *	@val: value
+  *
+  *	Write a drive setting if it is possible. The caller
+- *	must hold the ide_setting_sem when making this call.
++ *	must hold the ide_setting_mtx when making this call.
+  *
+  *	BUGS: the data return and error are the same return value
+  *	so an error -EINVAL and true return of the same value cannot
+@@ -365,7 +365,7 @@ static int set_xfer_rate (ide_drive_t *drive, int arg)
+  *	@drive: drive being configured
+  *
+  *	Add the generic parts of the system settings to the /proc files.
+- *	The caller must not be holding the ide_setting_sem.
++ *	The caller must not be holding the ide_setting_mtx.
+  */
+ 
+ void ide_add_generic_settings (ide_drive_t *drive)
+@@ -406,7 +406,7 @@ static int proc_ide_read_settings
+ 
+ 	proc_ide_settings_warn();
+ 
+-	down(&ide_setting_sem);
++	mutex_lock(&ide_setting_mtx);
+ 	out += sprintf(out, "name\t\t\tvalue\t\tmin\t\tmax\t\tmode\n");
+ 	out += sprintf(out, "----\t\t\t-----\t\t---\t\t---\t\t----\n");
+ 	while(setting) {
+@@ -426,7 +426,7 @@ static int proc_ide_read_settings
+ 		setting = setting->next;
+ 	}
+ 	len = out - page;
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ 	PROC_IDE_READ_RETURN(page,start,off,count,eof,len);
+ }
+ 
+@@ -506,16 +506,16 @@ static int proc_ide_write_settings(struct file *file, const char __user *buffer,
+ 				++p;
+ 			}
+ 
+-			down(&ide_setting_sem);
++			mutex_lock(&ide_setting_mtx);
+ 			setting = ide_find_setting_by_name(drive, name);
+ 			if (!setting)
+ 			{
+-				up(&ide_setting_sem);
++				mutex_unlock(&ide_setting_mtx);
+ 				goto parse_error;
+ 			}
+ 			if (for_real)
+ 				ide_write_setting(drive, setting, val * setting->div_factor / setting->mul_factor);
+-			up(&ide_setting_sem);
++			mutex_unlock(&ide_setting_mtx);
+ 		}
+ 	} while (!for_real++);
+ 	free_page((unsigned long)buf);
+@@ -703,7 +703,7 @@ EXPORT_SYMBOL(ide_proc_register_driver);
+  *	Clean up the driver specific /proc files and IDE settings
+  *	for a given drive.
+  *
+- *	Takes ide_setting_sem and ide_lock.
++ *	Takes ide_setting_mtx and ide_lock.
+  *	Caller must hold none of the locks.
+  */
+ 
+@@ -713,10 +713,10 @@ void ide_proc_unregister_driver(ide_drive_t *drive, ide_driver_t *driver)
+ 
+ 	ide_remove_proc_entries(drive->proc, driver->proc);
+ 
+-	down(&ide_setting_sem);
++	mutex_lock(&ide_setting_mtx);
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	/*
+-	 * ide_setting_sem protects the settings list
++	 * ide_setting_mtx protects the settings list
+ 	 * ide_lock protects the use of settings
+ 	 *
+ 	 * so we need to hold both, ide_settings_sem because we want to
+@@ -724,11 +724,11 @@ void ide_proc_unregister_driver(ide_drive_t *drive, ide_driver_t *driver)
+ 	 * a setting out that is being used.
+ 	 *
+ 	 * OTOH both ide_{read,write}_setting are only ever used under
+-	 * ide_setting_sem.
++	 * ide_setting_mtx.
+ 	 */
+ 	auto_remove_settings(drive);
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ }
+ 
+ EXPORT_SYMBOL(ide_proc_unregister_driver);
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index f2b547f..4811c61 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -817,9 +817,9 @@ EXPORT_SYMBOL(ide_register_hw);
+  *	Locks for IDE setting functionality
+  */
+ 
+-DECLARE_MUTEX(ide_setting_sem);
++DEFINE_MUTEX(ide_setting_mtx);
+ 
+-EXPORT_SYMBOL_GPL(ide_setting_sem);
++EXPORT_SYMBOL_GPL(ide_setting_mtx);
+ 
+ /**
+  *	ide_spin_wait_hwgroup	-	wait for group
+@@ -1181,11 +1181,11 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+ 	}
+ 
+ read_val:
+-	down(&ide_setting_sem);
++	mutex_lock(&ide_setting_mtx);
+ 	spin_lock_irqsave(&ide_lock, flags);
+ 	err = *val;
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+-	up(&ide_setting_sem);
++	mutex_unlock(&ide_setting_mtx);
+ 	return err >= 0 ? put_user(err, (long __user *)arg) : err;
+ 
+ set_val:
+@@ -1195,9 +1195,9 @@ set_val:
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			err = -EACCES;
+ 		else {
+-			down(&ide_setting_sem);
++			mutex_lock(&ide_setting_mtx);
+ 			err = setfunc(drive, arg);
+-			up(&ide_setting_sem);
++			mutex_unlock(&ide_setting_mtx);
+ 		}
+ 	}
+ 	return err;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index df4e6a5..3773a5b 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -25,6 +25,7 @@
+ #include <asm/system.h>
+ #include <asm/io.h>
+ #include <asm/semaphore.h>
++#include <asm/mutex.h>
+ 
+ /******************************************************************************
+  * IDE driver configuration options (play with these as desired):
+@@ -863,7 +864,7 @@ typedef struct hwgroup_s {
+ 
+ typedef struct ide_driver_s ide_driver_t;
+ 
+-extern struct semaphore ide_setting_sem;
++extern struct mutex ide_setting_mtx;
+ 
+ int set_io_32bit(ide_drive_t *, int);
+ int set_pio_mode(ide_drive_t *, int);
 
 -- 
-tejun
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
+
+
+   Usually when people are sad, they don't do anything. They just cry over
+     their condition. But when they get angry, they bring about a change
+                              (Malcolm X)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
