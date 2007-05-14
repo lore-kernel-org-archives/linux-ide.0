@@ -1,37 +1,55 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 08/20] drivers/ata: remove the wildcard from sata_nv driver
-Date: Mon, 14 May 2007 12:10:17 +0200
-Message-ID: <46483589.3060105@gmail.com>
-References: <200705110548.l4B5mnnx007636@shell0.pdx.osdl.net> <46445833.7050707@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B13B96E68@hkemmail01.nvidia.com> <46482BE1.4060309@gmail.com> <15F501D1A78BD343BE8F4D8DB854566B13CD865E@hkemmail01.nvidia.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 5/7] libata: move and reduce locking to the pio data
+ xfer functions
+Date: Mon, 14 May 2007 12:29:02 +0100
+Message-ID: <20070514122902.6eee494f@the-village.bc.nu>
+References: <463EAB4D.3000309@tw.ibm.com>
+	<463ED8B9.4060501@gmail.com>
+	<463F0B25.40103@tw.ibm.com>
+	<463F0DAD.5060307@gmail.com>
+	<463F1374.1010100@tw.ibm.com>
+	<463F1509.30100@gmail.com>
+	<46405F50.5090901@tw.ibm.com>
+	<20070508130025.7693980c@the-village.bc.nu>
+	<464066A4.1010008@gmail.com>
+	<20070508132046.70a4d9ed@the-village.bc.nu>
+	<46406C9A.4000802@gmail.com>
+	<20070508134540.509f4704@the-village.bc.nu>
+	<464073B1.80303@gmail.com>
+	<4644192A.8090809@tw.ibm.com>
+	<46441CA9.4030109@tw.ibm.com>
+	<46447FB5.3040306@gmail.com>
+	<20070511155504.37e12a12@the-village.bc.nu>
+	<46448469.7070704@gmail.com>
+	<20070511161252.14b61207@the-village.bc.nu>
+	<4644885B.3050006@gmail.com>
+	<20070511163953.5060c670@the-village.bc.nu>
+	<4644A109.6010704@gmail.com>
+	<20070511184651.0543d5ac@the-village.bc.nu>
+	<4644AD91.3000600@gmail.com>
+	<20070511230017.5905b10b@the-village.bc.nu>
+	<46481CAB.50405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:22389 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755081AbXENKL0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 06:11:26 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so1757446nzf
-        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 03:11:25 -0700 (PDT)
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B13CD865E@hkemmail01.nvidia.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46407 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755674AbXENLZD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 07:25:03 -0400
+In-Reply-To: <46481CAB.50405@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <pchen@nvidia.com>
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
 
-Peer Chen wrote:
-> As following, the scr registers' offset in sata_nv driver is 0x0 & 0x40,
-> but offset 0x0 in BAR5 memory map of AHCI controller is 'HBA
-> Capabilities register', the value of this register make the driver
-> believe there is always a HD drive being connected to port0,so error
-> happen.
-> ==============================================
-> 	NV_PORT0_SCR_REG_OFFSET		= 0x00,
-> 	NV_PORT1_SCR_REG_OFFSET		= 0x40, 
+> Yeah, it's not a water-tight solution.  I don't think we can do that
+> with IRQ enabled during transfer.  So, we can have either highly jerky
+> but reliable system if PIO is used or usually better behaving PIO with
+> some chance of getting nobody-cared.  Also, we can flag known buggy
+> devices/controllers such that IRQ is disabled over PIO by default.  I
+> think it's worth doing but this definitely should be debated better.
 
-OIC, no objection to the original patch and please fix this one.
-
-Thanks.
-
--- 
-tejun
+Which leaves us back at enable/disable_irq as with the old IDE - which
+*are* much better because most of the time the IRQ isn't shared. Sucks
+when it is but that is life.
