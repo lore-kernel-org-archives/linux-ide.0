@@ -1,135 +1,129 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/9] libata: during revalidation, check n_sectors after device is configured
+Subject: [PATCH 3/9] libata-acpi: add ATA_FLAG_ACPI_SATA port flag
 Date: Tue, 15 May 2007 03:28:15 +0900
-Message-ID: <1179167295984-git-send-email-htejun@gmail.com>
+Message-ID: <11791672951151-git-send-email-htejun@gmail.com>
 References: <11791672953697-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:17827 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757079AbXENS2Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 14:28:24 -0400
-Received: by nz-out-0506.google.com with SMTP id o1so1923764nzf
-        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 11:28:23 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.224]:26515 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757130AbXENS2Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 14:28:25 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1670179wxd
+        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 11:28:25 -0700 (PDT)
 In-Reply-To: <11791672953697-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, mjg59@srcf.ucam.org, rdunlap@xenotime.net, alan@lxorguk.ukuu.org.uk, forrest.zhao@gmail.com, lenb@kernel.org, linux-acpi@vger.kernel.org, hare@suse.de, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Device might be resized during ata_dev_configure() due to HPA or
-(later) ACPI _GTF.  Currently it's worked around by caching n_sectors
-before turning off HPA.  The cached original size is overwritten if
-the device is reconfigured without being hardreset - which always
-happens after configuring trasnfer mode.  If the device gets hardreset
-for some reason after that, revalidation fails with -ENODEV.
-
-This patch makes size checking more robust by moving n_sectors check
-from ata_dev_reread_id() to ata_dev_revalidate() after the device is
-fully configured.  No matter what happens during configuration, a
-device must have the same n_sectors after fully configured to be
-treated as the same device.
+Whether a controller needs IDE or SATA ACPI hierarchy is determined by
+the programming interface of the controller not by whether the
+controller is SATA or PATA, or it supports slave device or not.  This
+patch adds ATA_FLAG_ACPI_SATA port flags which tells libata-acpi that
+the port needs SATA ACPI nodes, and sets the flag for ahci and
+sata_sil24.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   33 +++++++++++++++------------------
- include/linux/libata.h    |    1 -
- 2 files changed, 15 insertions(+), 19 deletions(-)
+ drivers/ata/ahci.c        |    3 ++-
+ drivers/ata/libata-acpi.c |   10 +++++-----
+ drivers/ata/sata_sil24.c  |    3 ++-
+ include/linux/libata.h    |    1 +
+ 4 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6f266c8..d5939e6 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1919,7 +1919,6 @@ int ata_dev_configure(struct ata_device *dev)
- 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1ae443d..e00e1b9 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -173,7 +173,8 @@ enum {
  
- 		dev->n_sectors = ata_id_n_sectors(id);
--		dev->n_sectors_boot = dev->n_sectors;
+ 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-					  ATA_FLAG_SKIP_D2H_BSY,
++					  ATA_FLAG_SKIP_D2H_BSY |
++					  ATA_FLAG_ACPI_SATA,
+ };
  
- 		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
- 		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
-@@ -3632,7 +3631,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- 	const u16 *old_id = dev->id;
- 	unsigned char model[2][ATA_ID_PROD_LEN + 1];
- 	unsigned char serial[2][ATA_ID_SERNO_LEN + 1];
--	u64 new_n_sectors;
+ struct ahci_cmd_hdr {
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index ed4138e..0223673 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -321,7 +321,7 @@ static int do_drive_get_GTF(struct ata_device *dev, unsigned int *gtf_length,
  
- 	if (dev->class != new_class) {
- 		ata_dev_printk(dev, KERN_INFO, "class mismatch %d != %d\n",
-@@ -3644,7 +3642,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- 	ata_id_c_string(new_id, model[1], ATA_ID_PROD, sizeof(model[1]));
- 	ata_id_c_string(old_id, serial[0], ATA_ID_SERNO, sizeof(serial[0]));
- 	ata_id_c_string(new_id, serial[1], ATA_ID_SERNO, sizeof(serial[1]));
--	new_n_sectors = ata_id_n_sectors(new_id);
+ 	/* Don't continue if device has no _ADR method.
+ 	 * _GTF is intended for known motherboard devices. */
+-	if (!(ap->cbl == ATA_CBL_SATA)) {
++	if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
+ 		err = pata_get_dev_handle(gdev, &dev_handle, &pcidevfn);
+ 		if (err < 0) {
+ 			if (ata_msg_probe(ap))
+@@ -343,7 +343,7 @@ static int do_drive_get_GTF(struct ata_device *dev, unsigned int *gtf_length,
  
- 	if (strcmp(model[0], model[1])) {
- 		ata_dev_printk(dev, KERN_INFO, "model number mismatch "
-@@ -3658,19 +3655,6 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ 	/* Get this drive's _ADR info. if not already known. */
+ 	if (!dev->obj_handle) {
+-		if (!(ap->cbl == ATA_CBL_SATA)) {
++		if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
+ 			/* get child objects of dev_handle == channel objects,
+ 	 		 * + _their_ children == drive objects */
+ 			/* channel is ap->port_no */
+@@ -528,7 +528,7 @@ static int do_drive_set_taskfiles(struct ata_device *dev,
+ 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER: port#: %d\n",
+ 			       __FUNCTION__, ap->port_no);
+ 
+-	if (libata_noacpi || !(ap->cbl == ATA_CBL_SATA))
++	if (libata_noacpi || !(ap->flags & ATA_FLAG_ACPI_SATA))
  		return 0;
- 	}
  
--	if (dev->class == ATA_DEV_ATA && dev->n_sectors != new_n_sectors) {
--		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
--			       "%llu != %llu\n",
--			       (unsigned long long)dev->n_sectors,
--			       (unsigned long long)new_n_sectors);
--		/* Are we the boot time size - if so we appear to be the
--		   same disk at this point and our HPA got reapplied */
--		if (ata_ignore_hpa && dev->n_sectors_boot == new_n_sectors 
--		    && ata_id_hpa_enabled(new_id))
--			return 1;
--		return 0;
--	}
--
- 	return 1;
- }
+ 	if (!ata_dev_enabled(dev) || (ap->flags & ATA_FLAG_DISABLED))
+@@ -578,7 +578,7 @@ int ata_acpi_exec_tfs(struct ata_port *ap)
+ 	 * we should not run GTF on PATA devices since some
+ 	 * PATA require execution of GTM/STM before GTF.
+ 	 */
+-	if (!(ap->cbl == ATA_CBL_SATA))
++	if (!(ap->flags & ATA_FLAG_ACPI_SATA))
+ 		return 0;
  
-@@ -3723,6 +3707,7 @@ int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
-  */
- int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
- {
-+	u64 n_sectors = dev->n_sectors;
- 	int rc;
+ 	for (ix = 0; ix < ATA_MAX_DEVICES; ix++) {
+@@ -641,7 +641,7 @@ int ata_acpi_push_id(struct ata_device *dev)
+ 			       __FUNCTION__, dev->devno, ap->port_no);
  
- 	if (!ata_dev_enabled(dev))
-@@ -3735,8 +3720,20 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
+ 	/* Don't continue if not a SATA device. */
+-	if (!(ap->cbl == ATA_CBL_SATA)) {
++	if (!(ap->flags & ATA_FLAG_ACPI_SATA)) {
+ 		if (ata_msg_probe(ap))
+ 			ata_dev_printk(dev, KERN_DEBUG,
+ 				"%s: Not a SATA device\n", __FUNCTION__);
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index a69d78c..0cb6618 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -237,7 +237,8 @@ enum {
+ 	/* host flags */
+ 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY,
++				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY |
++				  ATA_FLAG_ACPI_SATA,
+ 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
  
- 	/* configure device according to the new ID */
- 	rc = ata_dev_configure(dev);
--	if (rc == 0)
--		return 0;
-+	if (rc)
-+		goto fail;
-+
-+	/* verify n_sectors hasn't changed */
-+	if (dev->class == ATA_DEV_ATA && dev->n_sectors != n_sectors) {
-+		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
-+			       "%llu != %llu\n",
-+			       (unsigned long long)n_sectors,
-+			       (unsigned long long)dev->n_sectors);
-+		rc = -ENODEV;
-+		goto fail;
-+	}
-+
-+	return 0;
- 
-  fail:
- 	ata_dev_printk(dev, KERN_ERR, "revalidation failed (errno=%d)\n", rc);
+ 	IRQ_STAT_4PORTS		= 0xf,
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 27d9362..b38a0f9 100644
+index b38a0f9..9b2122d 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -431,7 +431,6 @@ struct ata_device {
- 	struct scsi_device	*sdev;		/* attached SCSI device */
- 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
- 	u64			n_sectors;	/* size of device, if ATA */
--	u64			n_sectors_boot;	/* size of ATA device at startup */
- 	unsigned int		class;		/* ATA_DEV_xxx */
- 	u16			id[ATA_ID_WORDS]; /* IDENTIFY xxx DEVICE data */
- 	u8			pio_mode;
+@@ -173,6 +173,7 @@ enum {
+ 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
++	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+ 
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
 -- 
 1.5.0.3
 
