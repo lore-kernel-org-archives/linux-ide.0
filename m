@@ -1,55 +1,104 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 5/7] libata: move and reduce locking to the pio data
- xfer functions
-Date: Mon, 14 May 2007 12:29:02 +0100
-Message-ID: <20070514122902.6eee494f@the-village.bc.nu>
-References: <463EAB4D.3000309@tw.ibm.com>
-	<463ED8B9.4060501@gmail.com>
-	<463F0B25.40103@tw.ibm.com>
-	<463F0DAD.5060307@gmail.com>
-	<463F1374.1010100@tw.ibm.com>
-	<463F1509.30100@gmail.com>
-	<46405F50.5090901@tw.ibm.com>
-	<20070508130025.7693980c@the-village.bc.nu>
-	<464066A4.1010008@gmail.com>
-	<20070508132046.70a4d9ed@the-village.bc.nu>
-	<46406C9A.4000802@gmail.com>
-	<20070508134540.509f4704@the-village.bc.nu>
-	<464073B1.80303@gmail.com>
-	<4644192A.8090809@tw.ibm.com>
-	<46441CA9.4030109@tw.ibm.com>
-	<46447FB5.3040306@gmail.com>
-	<20070511155504.37e12a12@the-village.bc.nu>
-	<46448469.7070704@gmail.com>
-	<20070511161252.14b61207@the-village.bc.nu>
-	<4644885B.3050006@gmail.com>
-	<20070511163953.5060c670@the-village.bc.nu>
-	<4644A109.6010704@gmail.com>
-	<20070511184651.0543d5ac@the-village.bc.nu>
-	<4644AD91.3000600@gmail.com>
-	<20070511230017.5905b10b@the-village.bc.nu>
-	<46481CAB.50405@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: fix shutdown warning message printing
+Date: Mon, 14 May 2007 17:26:18 +0200
+Message-ID: <46487F9A.1080309@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46407 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755674AbXENLZD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 07:25:03 -0400
-In-Reply-To: <46481CAB.50405@gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.177]:27618 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754863AbXENP0b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 11:26:31 -0400
+Received: by py-out-1112.google.com with SMTP id a29so1536569pyi
+        for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 08:26:31 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, bzolnier@gmail.com, Mark Lord <liml@rtr.ca>
+To: Jeff Garzik <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>
 
-> Yeah, it's not a water-tight solution.  I don't think we can do that
-> with IRQ enabled during transfer.  So, we can have either highly jerky
-> but reliable system if PIO is used or usually better behaving PIO with
-> some chance of getting nobody-cared.  Also, we can flag known buggy
-> devices/controllers such that IRQ is disabled over PIO by default.  I
-> think it's worth doing but this definitely should be debated better.
+Unlocking ap->lock and ssleeping don't work because SCSI commands can
+be issued from completion path without context.  Reimplement delayed
+completion by allowing translation functions to override
+qc->scsidone(), storing the original completion function to
+scmd->scsi_done() and overriding qc->scsidone() with a function which
+schedules delayed invocation of scmd->scsi_done().
 
-Which leaves us back at enable/disable_irq as with the old IDE - which
-*are* much better because most of the time the IRQ isn't shared. Sucks
-when it is but that is life.
+This isn't pretty at all but all the ugly parts are thankfully
+contained in the stop translation path where the compat feature is
+implemented.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index dd81fa7..07b5a3d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -893,6 +893,23 @@ int ata_scsi_change_queue_depth(struct s
+ 	return queue_depth;
+ }
+ 
++/* XXX: for ata_spindown_compat */
++static void ata_delayed_done_timerfn(unsigned long arg)
++{
++	struct scsi_cmnd *scmd = (void *)arg;
++
++	scmd->scsi_done(scmd);
++}
++
++/* XXX: for ata_spindown_compat */
++static void ata_delayed_done(struct scsi_cmnd *scmd)
++{
++	static struct timer_list timer;
++
++	setup_timer(&timer, ata_delayed_done_timerfn, (unsigned long)scmd);
++	mod_timer(&timer, jiffies + 5 * HZ);
++}
++
+ /**
+  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+  *	@qc: Storage for translated ATA taskfile
+@@ -952,19 +969,21 @@ static unsigned int ata_scsi_start_stop_
+ 		if (ata_spindown_compat &&
+ 		    (system_state == SYSTEM_HALT ||
+ 		     system_state == SYSTEM_POWER_OFF)) {
+-			static int warned = 0;
++			static unsigned long warned = 0;
+ 
+-			if (!warned) {
+-				spin_unlock_irq(qc->ap->lock);
++			if (!test_and_set_bit(0, &warned)) {
+ 				ata_dev_printk(qc->dev, KERN_WARNING,
+ 					"DISK MIGHT NOT BE SPUN DOWN PROPERLY. "
+ 					"UPDATE SHUTDOWN UTILITY\n");
+ 				ata_dev_printk(qc->dev, KERN_WARNING,
+ 					"For more info, visit "
+ 					"http://linux-ata.org/shutdown.html\n");
+-				warned = 1;
+-				ssleep(5);
+-				spin_lock_irq(qc->ap->lock);
++
++				/* ->scsi_done is not used, use it for
++				 * delayed completion.
++				 */
++				scmd->scsi_done = qc->scsidone;
++				qc->scsidone = ata_delayed_done;
+ 			}
+ 			scmd->result = SAM_STAT_GOOD;
+ 			return 1;
+@@ -1488,14 +1507,14 @@ static int ata_scsi_translate(struct ata
+ 
+ early_finish:
+         ata_qc_free(qc);
+-	done(cmd);
++	qc->scsidone(cmd);
+ 	DPRINTK("EXIT - early finish (good or error)\n");
+ 	return 0;
+ 
+ err_did:
+ 	ata_qc_free(qc);
+ 	cmd->result = (DID_ERROR << 16);
+-	done(cmd);
++	qc->scsidone(cmd);
+ err_mem:
+ 	DPRINTK("EXIT - internal\n");
+ 	return 0;
