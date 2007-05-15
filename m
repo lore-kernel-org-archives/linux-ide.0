@@ -1,108 +1,206 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] libata: add human-readable error value decoding (v2)
-Date: Mon, 14 May 2007 17:54:31 -0600
-Message-ID: <4648F6B7.6090209@shaw.ca>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Fixing halt/shutdown for libata spindown handling
+Date: Mon, 14 May 2007 23:29:53 -0400
+Message-ID: <46492931.4080700@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010503040109080909050502"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:41242 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755288AbXENXzv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 19:55:51 -0400
+Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:44969 "EHLO
+	smtp121.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457AbXEODlL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 23:41:11 -0400
+Received: from [192.168.1.102] (c-24-34-179-5.hsd1.ma.comcast.net [24.34.179.5])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: ddrake@brontes3d.com)
+	by relay2.r2.iad.emailsrvr.com (SMTP Server) with ESMTP id D7B59450B83
+	for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 23:30:54 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
 
-This adds human-readable decoding of the ATA status and error registers (similar
-to what drivers/ide does) as well as the SATA Serror register to libata error
-handling output. This prevents the need to pore through standards documents
-to figure out the meaning of the bits in these registers when looking at error
-reports. Some bits that drivers/ide decoded are not decoded here, since the bits
-are either command-dependent or obsolete, and properly parsing them would add
-too much complexity.
+This is a multi-part message in MIME format.
+--------------010503040109080909050502
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This version reduces the length of the SError parsed output strings relative to the
-previous version of this patch.
+Hi,
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+I just took a quick look into modifying halt to work as suggested for 
+the new libata spindown code.
 
---- linux-2.6.21.1/drivers/ata/libata-eh.c	2007-04-27 15:49:26.000000000 -0600
-+++ linux-2.6.21.1edit/drivers/ata/libata-eh.c	2007-05-14 17:38:35.000000000 -0600
-@@ -1523,6 +1523,27 @@ static void ata_eh_report(struct ata_por
- 			ata_port_printk(ap, KERN_ERR, "(%s)\n", desc);
- 	}
- 
-+	if (ehc->i.serror)
-+		ata_port_printk(ap, KERN_ERR,
-+		  "SError: {%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
-+		  ehc->i.serror & SERR_DATA_RECOVERED ? "RecovData " : "",
-+		  ehc->i.serror & SERR_COMM_RECOVERED ? "RecovComm " : "",
-+		  ehc->i.serror & SERR_DATA ? "UnrecovData " : "",
-+		  ehc->i.serror & SERR_PERSISTENT ? "Persist " : "",
-+		  ehc->i.serror & SERR_PROTOCOL ? "Proto " : "",
-+		  ehc->i.serror & SERR_INTERNAL ? "HostInt " : "",
-+		  ehc->i.serror & SERR_PHYRDY_CHG ? "PHYRdyChg " : "",
-+		  ehc->i.serror & SERR_PHY_INT_ERR ? "PHYInt " : "",
-+		  ehc->i.serror & SERR_COMM_WAKE ? "CommWake " : "",
-+		  ehc->i.serror & SERR_10B_8B_ERR ? "10B8B " : "",
-+		  ehc->i.serror & SERR_DISPARITY ? "Dispar " : "",
-+		  ehc->i.serror & SERR_CRC ? "BadCRC " : "",
-+		  ehc->i.serror & SERR_HANDSHAKE ? "Handshk " : "",
-+		  ehc->i.serror & SERR_LINK_SEQ_ERR ? "LinkSeq " : "",
-+		  ehc->i.serror & SERR_TRANS_ST_ERROR ? "TrStaTrns " : "",
-+		  ehc->i.serror & SERR_UNRECOG_FIS ? "UnrecFIS " : "",
-+		  ehc->i.serror & SERR_DEV_XCHG ? "DevExch " : "" );
-+
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		static const char *dma_str[] = {
- 			[DMA_BIDIRECTIONAL]	= "bidi",
-@@ -1552,6 +1573,29 @@ static void ata_eh_report(struct ata_por
- 			res->hob_feature, res->hob_nsect,
- 			res->hob_lbal, res->hob_lbam, res->hob_lbah,
- 			res->device, qc->err_mask, ata_err_string(qc->err_mask));
-+		
-+		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
-+		                    ATA_ERR) ) {
-+			if (res->command & ATA_BUSY)
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {Busy}\n" );
-+			else
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {%s%s%s%s}\n",
-+				  res->command & ATA_DRDY ? "DRDY " : "",
-+				  res->command & ATA_DF ? "DF " : "",
-+				  res->command & ATA_DRQ ? "DRQ " : "",
-+				  res->command & ATA_ERR ? "ERR " : "" );
-+		}
-+		
-+		if (cmd->command != ATA_CMD_PACKET &&
-+		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_IDNF | ATA_ABORTED)))
-+			ata_dev_printk(qc->dev, KERN_ERR,
-+			  "error: {%s%s%s%s}\n",
-+			  res->feature & ATA_ICRC ? "ICRC " : "",
-+			  res->feature & ATA_UNC ? "UNC " : "",
-+			  res->feature & ATA_IDNF ? "IDNF " : "",
-+			  res->feature & ATA_ABORTED ? "ABRT " : "" );
- 	}
- }
- 
---- linux-2.6.21.1/include/linux/ata.h	2007-04-27 15:49:26.000000000 -0600
-+++ linux-2.6.21.1edit/include/linux/ata.h	2007-05-09 19:25:54.000000000 -0600
-@@ -223,6 +223,15 @@ enum {
- 	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
- 	SERR_INTERNAL		= (1 << 11), /* host internal error */
- 	SERR_PHYRDY_CHG		= (1 << 16), /* PHY RDY changed */
-+	SERR_PHY_INT_ERR	= (1 << 17), /* PHY internal error */
-+	SERR_COMM_WAKE		= (1 << 18), /* Comm wake */
-+	SERR_10B_8B_ERR		= (1 << 19), /* 10b to 8b decode error */
-+	SERR_DISPARITY		= (1 << 20), /* Disparity */
-+	SERR_CRC		= (1 << 21), /* CRC error */
-+	SERR_HANDSHAKE		= (1 << 22), /* Handshake error */
-+	SERR_LINK_SEQ_ERR	= (1 << 23), /* Link sequence error */
-+	SERR_TRANS_ST_ERROR	= (1 << 24), /* Transport state transition error */
-+	SERR_UNRECOG_FIS	= (1 << 25), /* Unrecognized FIS */
- 	SERR_DEV_XCHG		= (1 << 26), /* device exchanged */
- 
- 	/* struct ata_taskfile flags */
+Here's how it works in Gentoo at the moment: /sbin/halt is called 
+typically with the "-d -p -i -h" arguments. After doing some 
+halt-specific things (such as spinning down disks per the -h argument), 
+halt calls /sbin/shutdown which presumably finishes the task. This is 
+with sysvinit-2.86
 
+So, I was expecting to jump into the halt source code, find the "-h" 
+argument parsing, and see code for it spinning down all the disks.
+
+I was surprised to find that the /sbin/halt spin down implementation is 
+very limited, it only works for IDE disks (by working through 
+/proc/ide). This doesn't make sense to me, the libata commits state that 
+userspace shutdown is spinning down libata disks.
+
+So, this means that other distro's do it differently? I'd appreciate 
+some pointers to what happens elsewhere.
+
+I have attached the code from sysvinit which spins down the disks. It's 
+not modified by the patches below.
+
+Gentoo uses sysvinit from here:
+ftp://sunsite.unc.edu/pub/Linux/system/daemons/init/sysvinit-2.86.tar.gz
+
+Patched with:
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-docs.patch
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-shutdown-usage.patch
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-off-by-one.patch
+http://distfiles.gentoo.org/distfiles/sysvinit-2.86-kexec.patch
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-execl.patch
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-utmp-64bit.patch
+http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-shutdown-single.patch
+
+If I'm right and Gentoo is currently not spinning down SCSI/libata 
+disks, the only /sbin/halt modification required is to write 0 into
+/sys/modules/libata/parameters/spindown_compat right?
+
+Final question: should spindown_compat be set to 0 for both shutdown and 
+reboot, or just shutdown?
+
+Thanks,
+Daniel
+
+--------------010503040109080909050502
+Content-Type: text/x-csrc;
+ name="hddown.c"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="hddown.c"
+
+/*
+ * hddown.c	Find all disks on the system and
+ *		shut them down.
+ *
+ */
+char *v_hddown = "@(#)hddown.c  1.02  22-Apr-2003  miquels@cistron.nl";
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <string.h>
+#include <fcntl.h>
+#include <dirent.h>
+
+#ifdef __linux__
+
+#include <sys/ioctl.h>
+#include <linux/hdreg.h>
+
+#define MAX_DISKS	64
+#define PROC_IDE	"/proc/ide"
+#define DEV_BASE	"/dev"
+
+/*
+ *	Find all IDE disks through /proc.
+ */
+static int find_idedisks(char **dev, int maxdev)
+{
+	DIR *dd;
+	FILE *fp;
+	struct dirent *d;
+	char buf[256];
+	int i = 0;
+
+	if ((dd = opendir(PROC_IDE)) == NULL)
+		return -1;
+
+	while ((d = readdir(dd)) != NULL) {
+		if (strncmp(d->d_name, "hd", 2) != 0)
+			continue;
+		buf[0] = 0;
+		snprintf(buf, sizeof(buf), PROC_IDE "/%s/media", d->d_name);
+		if ((fp = fopen(buf, "r")) == NULL)
+			continue;
+		if (fgets(buf, sizeof(buf), fp) == 0 ||
+		    strcmp(buf, "disk\n") != 0) {
+			fclose(fp);
+			continue;
+		}
+		fclose(fp);
+		snprintf(buf, sizeof(buf), DEV_BASE "/%s", d->d_name);
+		dev[i++] = strdup(buf);
+		if (i >= maxdev)
+			break;
+	}
+	closedir(dd);
+	if (i < maxdev) dev[i] = NULL;
+
+	return 0;
+}
+
+/*
+ *	Put an IDE disk in standby mode.
+ *	Code stolen from hdparm.c
+ */
+static int do_standby_idedisk(char *device)
+{
+#ifndef WIN_STANDBYNOW1
+#define WIN_STANDBYNOW1 0xE0
+#endif
+#ifndef WIN_STANDBYNOW2
+#define WIN_STANDBYNOW2 0x94
+#endif
+	unsigned char args1[4] = {WIN_STANDBYNOW1,0,0,0};
+	unsigned char args2[4] = {WIN_STANDBYNOW2,0,0,0};
+	int fd;
+
+	if ((fd = open(device, O_RDWR)) < 0)
+		return -1;
+
+	if (ioctl(fd, HDIO_DRIVE_CMD, &args1) &&
+	    ioctl(fd, HDIO_DRIVE_CMD, &args2))
+		return -1;
+
+	return 0;
+}
+
+/*
+ *	First find all IDE disks, then put them in standby mode.
+ *	This has the side-effect of flushing the writecache,
+ *	which is exactly what we want on poweroff.
+ */
+int hddown(void)
+{
+	char *disks[MAX_DISKS+1];
+	int i;
+
+	if (find_idedisks(disks, MAX_DISKS) < 0)
+		return -1;
+
+	for (i = 0; disks[i] && i < MAX_DISKS; i++)
+		do_standby_idedisk(disks[i]);
+
+	return 0;
+}
+
+#else /* __linux__ */
+
+int hddown(void)
+{
+	return 0;
+}
+
+#endif /* __linux__ */
+
+#ifdef STANDALONE
+int main(int argc, char **argv)
+{
+	return (hddown() == 0);
+}
+#endif
+
+
+--------------010503040109080909050502--
