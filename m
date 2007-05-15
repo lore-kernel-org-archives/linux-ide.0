@@ -1,42 +1,49 @@
-From: Francesco Pretto <ceztko@gmail.com>
-Subject: Re: [PATCH] libata: track spindown status and skip =?utf-8?b?c3BpbmRvd25fY29tcGF0?= if possible
-Date: Tue, 15 May 2007 11:53:11 +0000 (UTC)
-Message-ID: <loom.20070515T133840-438@post.gmane.org>
-References: <46498B82.1030802@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: track spindown status and skip spindown_compat
+ if possible
+Date: Tue, 15 May 2007 14:03:12 +0200
+Message-ID: <4649A180.1050100@gmail.com>
+References: <46498B82.1030802@gmail.com> <loom.20070515T133840-438@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41398 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758782AbXEOLx2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 May 2007 07:53:28 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1Hnval-0000Mh-Fh
-	for linux-ide@vger.kernel.org; Tue, 15 May 2007 13:53:23 +0200
-Received: from host202-185-dynamic.1-79-r.retail.telecomitalia.it ([79.1.185.202])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 13:53:23 +0200
-Received: from ceztko by host202-185-dynamic.1-79-r.retail.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 13:53:23 +0200
+Received: from nz-out-0506.google.com ([64.233.162.237]:32415 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757407AbXEOMDr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 08:03:47 -0400
+Received: by nz-out-0506.google.com with SMTP id r28so108298nza
+        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 05:03:46 -0700 (PDT)
+In-Reply-To: <loom.20070515T133840-438@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Francesco Pretto <ceztko@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo <htejun <at> gmail.com> writes:
-
+Francesco Pretto wrote:
+> Tejun Heo <htejun <at> gmail.com> writes:
+>> Our assumption that most distros issue STANDBYNOW seems wrong.  The
+>> upstream sysvinit and thus many distros including gentoo and opensuse
+>> don't take any action for libata disks on spindown.  We can skip
+>> compat handling for these distros so that they don't need to update
+>> anything to take advantage of kernel-side shutdown.
+>>
 > 
-> Our assumption that most distros issue STANDBYNOW seems wrong.  The
-> upstream sysvinit and thus many distros including gentoo and opensuse
-> don't take any action for libata disks on spindown.  We can skip
-> compat handling for these distros so that they don't need to update
-> anything to take advantage of kernel-side shutdown.
->
+> Working around the workaround won't make confusion? Won't this break again
+> implementations that was actually issuing STANDBYNOW, assuming that they
+> actually exist? Only wondering, can't say for any init implementation in
+> particular.
 
-Working around the workaround won't make confusion? Won't this break again
-implementations that was actually issuing STANDBYNOW, assuming that they
-actually exist? Only wondering, can't say for any init implementation in
-particular.
+Yeah, it's a big mess.  With this patch applied, what happens is...
 
+* If your shutdown(8) does issue STANDBYNOW : you get the big fat
+warning and kernel won't issue STANDBYNOW.
+
+* If your shutdown(8) doesn't issue STANDBYNOW : kernel issues FLUSH
+CACHE followed by STANDBYNOW and all is well and dandy without any
+userland modification.
+
+I think it isn't too bad.  Any better ideas?
+
+-- 
+tejun
