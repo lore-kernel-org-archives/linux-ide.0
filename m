@@ -1,57 +1,34 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: libata reset-seq merge broke sata_sil on sh
-Date: Wed, 16 May 2007 09:30:02 +0900
-Message-ID: <20070516003002.GA18863@linux-sh.org>
-References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org> <464439C8.7090309@gmail.com> <20070512034928.GB29259@linux-sh.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch 1/2] sl82c105: Switch to ref counting API
+Date: Tue, 15 May 2007 23:22:58 +0200
+Message-ID: <200705152322.58529.bzolnier@gmail.com>
+References: <200705110550.l4B5oTbW007723@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:57302 "EHLO smtp.ocgnet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759349AbXEPAal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 May 2007 20:30:41 -0400
+Received: from ug-out-1314.google.com ([66.249.92.174]:35755 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760024AbXEPAqZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 20:46:25 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so2836uga
+        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 17:46:24 -0700 (PDT)
+In-Reply-To: <200705110550.l4B5oTbW007723@shell0.pdx.osdl.net>
 Content-Disposition: inline
-In-Reply-To: <20070512034928.GB29259@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, sshtylyov@ru.mvista.com
 
-On Sat, May 12, 2007 at 12:49:28PM +0900, Paul Mundt wrote:
-> On Fri, May 11, 2007 at 11:39:20AM +0200, Tejun Heo wrote:
-> > Paul Mundt wrote:
-> > > Bumping the hardreset delay up does indeed fix it, I've had to bump it up
-> > > to 1200 before it started working (at 600 it still fails):
-> > > 
-> > > [    0.967379] scsi0 : sata_sil
-> > > [    0.970425] scsi1 : sata_sil
-> > > [    0.973298] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
-> > > [    0.981331] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
-> > > [    1.299353] ata1: device not ready (errno=-19), forcing hardreset
-> > > [    2.817893] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> > > [    2.826284] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-> > > [    2.831052] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
-> > > [    2.837548] ata1.00: 39070080 sectors, multi 0: LBA
-> > > [    2.842702] ata1.00: applying bridge limits
-> > > [    2.854162] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-> > > [    2.858938] ata1.00: configured for UDMA/100
-> > > [    3.172602] ata2: SATA link down (SStatus 0 SControl 310)
-> > > [    3.175736] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
-> > > 
-> > > I'm not sure if it matters or not, but this is an iVDR drive, so that
-> > > might also have additional implications.
-> > 
-> > Don't have the flimsiest idea what an iVDR drive is but I take it that
-> > it's some sort of special purpose thing.  :-)
-> > 
-> http://www.ivdr.org
+On Friday 11 May 2007, akpm@linux-foundation.org wrote:
+> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > 
-> The GoVault appears to be a similar device, in that they're both
-> removeable cartridges.
+> Not sure how this one got missed in the great purge some time ago but it
+> did.
 > 
-> > Gary, IIRC, the requirement for GoVault was 3secs, right?  Paul, can you
-> > try to estimate the minimum required delay?  Please go down by 100ms and
-> > report where it breaks.
-> > 
-> 800ms was the lowest it would work at, 700ms still breaks.
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Ping?
+applied
