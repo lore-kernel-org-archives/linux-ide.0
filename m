@@ -1,206 +1,141 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Fixing halt/shutdown for libata spindown handling
-Date: Mon, 14 May 2007 23:29:53 -0400
-Message-ID: <46492931.4080700@gentoo.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010503040109080909050502"
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Tue, 15 May 2007 16:11:23 +1000
+Message-ID: <20070515061153.425BDDDEE8@ozlabs.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:44969 "EHLO
-	smtp121.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754457AbXEODlL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 May 2007 23:41:11 -0400
-Received: from [192.168.1.102] (c-24-34-179-5.hsd1.ma.comcast.net [24.34.179.5])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: ddrake@brontes3d.com)
-	by relay2.r2.iad.emailsrvr.com (SMTP Server) with ESMTP id D7B59450B83
-	for <linux-ide@vger.kernel.org>; Mon, 14 May 2007 23:30:54 -0400 (EDT)
+Received: from ozlabs.org ([203.10.76.45]:45456 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756773AbXEOGLy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 May 2007 02:11:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010503040109080909050502
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+This patch adds MMIO support to the pata_sil680 for taskfile IOs,
+based on what the old siimage does.
 
-Hi,
+I haven't bothered changing the chip setup stuff from PCI config
+cycles to MMIO though (siimage does it), I don't think it matters,
+I've only adapted it to use MMIO for taskfile accesses.
 
-I just took a quick look into modifying halt to work as suggested for 
-the new libata spindown code.
+I've tested it on a Cell blade and it seems to work fine.
 
-Here's how it works in Gentoo at the moment: /sbin/halt is called 
-typically with the "-d -p -i -h" arguments. After doing some 
-halt-specific things (such as spinning down disks per the -h argument), 
-halt calls /sbin/shutdown which presumably finishes the task. This is 
-with sysvinit-2.86
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-So, I was expecting to jump into the halt source code, find the "-h" 
-argument parsing, and see code for it spinning down all the disks.
+ drivers/ata/pata_sil680.c |   64 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 60 insertions(+), 4 deletions(-)
 
-I was surprised to find that the /sbin/halt spin down implementation is 
-very limited, it only works for IDE disks (by working through 
-/proc/ide). This doesn't make sense to me, the libata commits state that 
-userspace shutdown is spinning down libata disks.
-
-So, this means that other distro's do it differently? I'd appreciate 
-some pointers to what happens elsewhere.
-
-I have attached the code from sysvinit which spins down the disks. It's 
-not modified by the patches below.
-
-Gentoo uses sysvinit from here:
-ftp://sunsite.unc.edu/pub/Linux/system/daemons/init/sysvinit-2.86.tar.gz
-
-Patched with:
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-docs.patch
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-shutdown-usage.patch
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-off-by-one.patch
-http://distfiles.gentoo.org/distfiles/sysvinit-2.86-kexec.patch
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-execl.patch
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-utmp-64bit.patch
-http://sources.gentoo.org/viewcvs.py/*checkout*/gentoo-x86/sys-apps/sysvinit/files/sysvinit-2.86-shutdown-single.patch
-
-If I'm right and Gentoo is currently not spinning down SCSI/libata 
-disks, the only /sbin/halt modification required is to write 0 into
-/sys/modules/libata/parameters/spindown_compat right?
-
-Final question: should spindown_compat be set to 0 for both shutdown and 
-reboot, or just shutdown?
-
-Thanks,
-Daniel
-
---------------010503040109080909050502
-Content-Type: text/x-csrc;
- name="hddown.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="hddown.c"
-
-/*
- * hddown.c	Find all disks on the system and
- *		shut them down.
- *
- */
-char *v_hddown = "@(#)hddown.c  1.02  22-Apr-2003  miquels@cistron.nl";
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-#include <string.h>
-#include <fcntl.h>
-#include <dirent.h>
-
-#ifdef __linux__
-
-#include <sys/ioctl.h>
-#include <linux/hdreg.h>
-
-#define MAX_DISKS	64
-#define PROC_IDE	"/proc/ide"
-#define DEV_BASE	"/dev"
-
-/*
- *	Find all IDE disks through /proc.
- */
-static int find_idedisks(char **dev, int maxdev)
-{
-	DIR *dd;
-	FILE *fp;
-	struct dirent *d;
-	char buf[256];
-	int i = 0;
-
-	if ((dd = opendir(PROC_IDE)) == NULL)
-		return -1;
-
-	while ((d = readdir(dd)) != NULL) {
-		if (strncmp(d->d_name, "hd", 2) != 0)
-			continue;
-		buf[0] = 0;
-		snprintf(buf, sizeof(buf), PROC_IDE "/%s/media", d->d_name);
-		if ((fp = fopen(buf, "r")) == NULL)
-			continue;
-		if (fgets(buf, sizeof(buf), fp) == 0 ||
-		    strcmp(buf, "disk\n") != 0) {
-			fclose(fp);
-			continue;
-		}
-		fclose(fp);
-		snprintf(buf, sizeof(buf), DEV_BASE "/%s", d->d_name);
-		dev[i++] = strdup(buf);
-		if (i >= maxdev)
-			break;
-	}
-	closedir(dd);
-	if (i < maxdev) dev[i] = NULL;
-
-	return 0;
-}
-
-/*
- *	Put an IDE disk in standby mode.
- *	Code stolen from hdparm.c
- */
-static int do_standby_idedisk(char *device)
-{
-#ifndef WIN_STANDBYNOW1
-#define WIN_STANDBYNOW1 0xE0
-#endif
-#ifndef WIN_STANDBYNOW2
-#define WIN_STANDBYNOW2 0x94
-#endif
-	unsigned char args1[4] = {WIN_STANDBYNOW1,0,0,0};
-	unsigned char args2[4] = {WIN_STANDBYNOW2,0,0,0};
-	int fd;
-
-	if ((fd = open(device, O_RDWR)) < 0)
-		return -1;
-
-	if (ioctl(fd, HDIO_DRIVE_CMD, &args1) &&
-	    ioctl(fd, HDIO_DRIVE_CMD, &args2))
-		return -1;
-
-	return 0;
-}
-
-/*
- *	First find all IDE disks, then put them in standby mode.
- *	This has the side-effect of flushing the writecache,
- *	which is exactly what we want on poweroff.
- */
-int hddown(void)
-{
-	char *disks[MAX_DISKS+1];
-	int i;
-
-	if (find_idedisks(disks, MAX_DISKS) < 0)
-		return -1;
-
-	for (i = 0; disks[i] && i < MAX_DISKS; i++)
-		do_standby_idedisk(disks[i]);
-
-	return 0;
-}
-
-#else /* __linux__ */
-
-int hddown(void)
-{
-	return 0;
-}
-
-#endif /* __linux__ */
-
-#ifdef STANDALONE
-int main(int argc, char **argv)
-{
-	return (hddown() == 0);
-}
-#endif
-
-
---------------010503040109080909050502--
+Index: linux-cell/drivers/ata/pata_sil680.c
+===================================================================
+--- linux-cell.orig/drivers/ata/pata_sil680.c	2007-05-15 15:19:08.000000000 +1000
++++ linux-cell/drivers/ata/pata_sil680.c	2007-05-15 15:53:15.000000000 +1000
+@@ -35,6 +35,8 @@
+ #define DRV_NAME "pata_sil680"
+ #define DRV_VERSION "0.4.6"
+ 
++#define SIL680_MMIO_BAR		5
++
+ /**
+  *	sil680_selreg		-	return register base
+  *	@hwif: interface
+@@ -278,7 +280,7 @@ static struct ata_port_operations sil680
+  *	Returns the final clock settings.
+  */
+ 
+-static u8 sil680_init_chip(struct pci_dev *pdev)
++static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
+ {
+ 	u32 class_rev	= 0;
+ 	u8 tmpbyte	= 0;
+@@ -296,6 +298,8 @@ static u8 sil680_init_chip(struct pci_de
+ 	printk(KERN_INFO "sil680: BA5_EN = %d clock = %02X\n",
+ 			tmpbyte & 1, tmpbyte & 0x30);
+ 
++	*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
++
+ 	switch(tmpbyte & 0x30) {
+ 		case 0x00:
+ 			/* 133 clock attempt to force it on */
+@@ -339,7 +343,8 @@ static u8 sil680_init_chip(struct pci_de
+ 	return tmpbyte & 0x30;
+ }
+ 
+-static int sil680_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
++static int __devinit sil680_init_one(struct pci_dev *pdev,
++				     const struct pci_device_id *id)
+ {
+ 	static const struct ata_port_info info = {
+ 		.sht = &sil680_sht,
+@@ -359,18 +364,69 @@ static int sil680_init_one(struct pci_de
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 	static int printed_version;
++	struct ata_host *host;
++	void __iomem *mmio_base;
++	int rc, try_mmio;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+ 
+-	switch(sil680_init_chip(pdev))
+-	{
++	switch(sil680_init_chip(pdev, &try_mmio)) {
+ 		case 0:
+ 			ppi[0] = &info_slow;
+ 			break;
+ 		case 0x30:
+ 			return -ENODEV;
+ 	}
++
++	if (!try_mmio)
++		goto use_pio;
++
++	/* Try to acquire MMIO resources and fallback to PIO if
++	 * that fails
++	 */
++	rc = pcim_enable_device(pdev);
++	if (rc)
++		return rc;
++	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
++	if (rc)
++		goto use_pio;
++
++	/* Allocate host and set it up */
++	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
++	if (!host)
++		return -ENOMEM;
++	host->iomap = pcim_iomap_table(pdev);
++
++	/* Obsolete ? */
++	host->ports[0].flags |= ATA_FLAG_MMIO;
++	host->ports[1].flags |= ATA_FLAG_MMIO;
++
++	/* Setup DMA masks */
++	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
++	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
++	if (rc)
++		return rc;
++	pci_set_master(pdev);
++
++	/* Get MMIO base and initialize port addresses */
++	mmio_base = host->iomap[SIL680_MMIO_BAR];
++	host->ports[0]->ioaddr.bmdma_addr = mmio_base + 0x00;
++	host->ports[0]->ioaddr.cmd_addr = mmio_base + 0x80;
++	host->ports[0]->ioaddr.ctl_addr = mmio_base + 0x8a;
++	ata_std_ports(&host->ports[0]->ioaddr);
++	host->ports[1]->ioaddr.bmdma_addr = mmio_base + 0x08;
++	host->ports[1]->ioaddr.cmd_addr = mmio_base + 0xc0;
++	host->ports[1]->ioaddr.ctl_addr = mmio_base + 0xca;
++	ata_std_ports(&host->ports[1]->ioaddr);
++
++	/* Register & activate */
++	return ata_host_activate(host, pdev->irq, ata_interrupt, IRQF_SHARED,
++				 &sil680_sht);
++
++use_pio:
+ 	return ata_pci_init_one(pdev, ppi);
+ }
+ 
