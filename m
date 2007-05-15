@@ -1,40 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fixing halt/shutdown for libata spindown handling
-Date: Tue, 15 May 2007 12:42:07 +0200
-Message-ID: <46498E7F.6040201@gmail.com>
-References: <46492931.4080700@gentoo.org> <46496D47.9010504@gmail.com> <loom.20070515T122357-890@post.gmane.org>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Tue, 15 May 2007 07:08:18 -0400
+Message-ID: <20070515110818.GA23094@devserv.devel.redhat.com>
+References: <20070515061153.425BDDDEE8@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:52144 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462AbXEOKm0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 06:42:26 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so85873nza
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 03:42:25 -0700 (PDT)
-In-Reply-To: <loom.20070515T122357-890@post.gmane.org>
+Received: from mx1.redhat.com ([66.187.233.31]:58351 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754812AbXEOLIc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 May 2007 07:08:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20070515061153.425BDDDEE8@ozlabs.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Francesco Pretto <ceztko@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Francesco Pretto wrote:
-> Tejun Heo <htejun <at> gmail.com> writes:
->>> Final question: should spindown_compat be set to 0 for both shutdown and
->>> reboot, or just shutdown?
->> It doesn't really matter.  It just needs to be set while powering down.
->>  You can set it anywhere, during boot, in shutdown.
->>
->> Thanks.
->>
-> 
-> Hibernate/suspend shall be also considered. Setting it during boot it's one time
-> for every poweroff conditions, but i can't say if it's the best approach.
+On Tue, May 15, 2007 at 04:11:23PM +1000, Benjamin Herrenschmidt wrote:
+> +	if (!try_mmio)
+> +		goto use_pio;
 
-The compat thing is only for shutdown/powerdown.  Kernel will always
-flush and spindown disks on suspends.  So, really, it doesn't matter
-when you set the variable.
+Please use a different naming scheme "PIO" means something quite different
+in ATA
 
--- 
-tejun
+Rest looks fine although I'd be interested to know if you can measure any
+performance change.
+
+Alan
+
