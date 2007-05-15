@@ -1,34 +1,30 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch 2/2] Use menuconfig objects: IDE
-Date: Tue, 15 May 2007 23:26:42 +0200
-Message-ID: <200705152326.42927.bzolnier@gmail.com>
-References: <200705110550.l4B5oUu8007726@shell0.pdx.osdl.net>
+Subject: Re: [PATCH pata-2.6 fix queue] aec62xx: kill speedproc() method wrapper
+Date: Tue, 15 May 2007 23:43:12 +0200
+Message-ID: <200705152343.12956.bzolnier@gmail.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200705120122.34384.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:36336 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:35755 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759885AbXEPAq0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 20:46:26 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so2831uga
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 17:46:25 -0700 (PDT)
-In-Reply-To: <200705110550.l4B5oUu8007726@shell0.pdx.osdl.net>
+	with ESMTP id S1760543AbXEPAqa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 20:46:30 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so2836uga
+        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 17:46:30 -0700 (PDT)
+In-Reply-To: <200705120122.34384.sshtylyov@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, jengelh@linux01.gwdg.de, jengelh@gmx.de
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-On Friday 11 May 2007, akpm@linux-foundation.org wrote:
-> From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+On Friday 11 May 2007, Sergei Shtylyov wrote:
+> There's no reason to have the speedproc() method wrapper for the two quite
+> different chip families, so just get rid of it.
 > 
-> Use menuconfigs instead of menus, so the whole menu can be disabled at once
-> instead of going through all options.
-> 
-> Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 applied
