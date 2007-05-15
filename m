@@ -1,60 +1,79 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Fixing halt/shutdown for libata spindown handling
-Date: Tue, 15 May 2007 10:20:23 +0200
-Message-ID: <46496D47.9010504@gmail.com>
-References: <46492931.4080700@gentoo.org>
+Subject: [PATCH] libata: track spindown status and skip spindown_compat if
+ possible
+Date: Tue, 15 May 2007 12:29:22 +0200
+Message-ID: <46498B82.1030802@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:42621 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.227]:46161 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756184AbXEOIU4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 04:20:56 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so52599nza
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 01:20:56 -0700 (PDT)
-In-Reply-To: <46492931.4080700@gentoo.org>
+	with ESMTP id S1757107AbXEOK3n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 06:29:43 -0400
+Received: by nz-out-0506.google.com with SMTP id r28so82789nza
+        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 03:29:43 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: linux-ide@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello, Daniel.
+Our assumption that most distros issue STANDBYNOW seems wrong.  The
+upstream sysvinit and thus many distros including gentoo and opensuse
+don't take any action for libata disks on spindown.  We can skip
+compat handling for these distros so that they don't need to update
+anything to take advantage of kernel-side shutdown.
 
-Daniel Drake wrote:
-> I was surprised to find that the /sbin/halt spin down implementation is
-> very limited, it only works for IDE disks (by working through
-> /proc/ide). This doesn't make sense to me, the libata commits state that
-> userspace shutdown is spinning down libata disks.
-> 
-> So, this means that other distro's do it differently? I'd appreciate
-> some pointers to what happens elsewhere.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
 
-Debian (and thus probably ubuntu) issues STADNBYNOW without FLUSH.
-Opensuse doesn't seem to do anything and there's another distro which
-does both, not sure which tho.  Hmm... If the upstream sysvinit code
-doesn't contain spindown code, it's more likely we have more distros
-which don't do anything.  If that's the case, it will be worthwhile to
-detect that STANDBYNOW isn't issued and skip compat checking and just do
-it.  I'll come up with a patch, please wait a bit before releasing the
-update.
+This patch is generated on top of fix-shutdown-warning-message-printing.
 
-[--snip--]
-> If I'm right and Gentoo is currently not spinning down SCSI/libata
-> disks, the only /sbin/halt modification required is to write 0 into
-> /sys/modules/libata/parameters/spindown_compat right?
+  http://article.gmane.org/gmane.linux.ide/18823
 
-Yes, that will make all kernels from now on behave correctly, but doing
-FLUSH CACHE followed by STANDBYNOW on older kernels (kernels without
-manage_start_stop) would help.
+Jeff, I think we can avoid a lot of problems with this.  Those distros
+which didn't do anything on shutdown would still cause emergency
+unload on older kernels but at least it isn't a regression and things
+should just work on newer kernels.
 
-> Final question: should spindown_compat be set to 0 for both shutdown and
-> reboot, or just shutdown?
-
-It doesn't really matter.  It just needs to be set while powering down.
- You can set it anywhere, during boot, in shutdown.
-
+If you ack this, I'll update the shutdown.html page accordingly.
 Thanks.
 
--- 
-tejun
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 07b5a3d..b6a1de8 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -967,6 +967,7 @@ static unsigned int ata_scsi_start_stop_
+ 		 * for more info.
+ 		 */
+ 		if (ata_spindown_compat &&
++		    (qc->dev->flags & ATA_DFLAG_SPUNDOWN) &&
+ 		    (system_state == SYSTEM_HALT ||
+ 		     system_state == SYSTEM_POWER_OFF)) {
+ 			static unsigned long warned = 0;
+@@ -1394,6 +1395,14 @@ static void ata_scsi_qc_complete(struct
+ 		}
+ 	}
+ 
++	/* XXX: track spindown state for spindown_compat */
++	if (unlikely(qc->tf.command == ATA_CMD_STANDBY ||
++		     qc->tf.command == ATA_CMD_STANDBYNOW1))
++		qc->dev->flags |= ATA_DFLAG_SPUNDOWN;
++	else if (likely(system_state != SYSTEM_HALT &&
++			system_state != SYSTEM_POWER_OFF))
++		qc->dev->flags &= ~ATA_DFLAG_SPUNDOWN;
++
+ 	if (need_sense && !ap->ops->error_handler)
+ 		ata_dump_status(ap->print_id, &qc->result_tf);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 27d9362..a52734b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -140,6 +140,7 @@ enum {
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+ 	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
++	ATA_DFLAG_SPUNDOWN	= (1 << 10), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 16),
