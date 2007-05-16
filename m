@@ -1,233 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: IT821x: no DMA since 2.6.21
-Date: Wed, 16 May 2007 02:58:15 +0200
-Message-ID: <200705160258.15928.bzolnier@gmail.com>
-References: <20070515125308.3a9f6442@SiRiUS.home> <20070515123132.2e596d69@the-village.bc.nu>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] IDE updates/fixes
+Date: Tue, 15 May 2007 18:49:50 -0700 (PDT)
+Message-ID: <alpine.LFD.0.98.0705151847160.3890@woody.linux-foundation.org>
+References: <200705160127.55430.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:36007 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761051AbXEPAqk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 May 2007 20:46:40 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so2873uga
-        for <linux-ide@vger.kernel.org>; Tue, 15 May 2007 17:46:38 -0700 (PDT)
-In-Reply-To: <20070515123132.2e596d69@the-village.bc.nu>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761647AbXEPBv4@vger.kernel.org>
+In-Reply-To: <200705160127.55430.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Thomas Kuther <gimpel@sonnenkinder.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-Hi,
 
-On Tuesday 15 May 2007, Alan Cox wrote:
-> On Tue, 15 May 2007 12:53:08 +0200
-> Thomas Kuther <gimpel@sonnenkinder.org> wrote:
+On Wed, 16 May 2007, Bartlomiej Zolnierkiewicz wrote:
 > 
-> > Hi!
-> > 
-> > Since 2.6.21 I have a problem with the it821x driver on my ITE 8212
-> > controller.
-> > Now I saw some updates to it821x in 2.6.22-rc1 and gave that a try, but
-> > the problem persists.
+> * host driver fixes:
+>   - pdc202xx_old: mode programming rewrite (a lot of bugs fixed)
+>   - serverworks/sis5513: PIO mode setup fixes
+>   - sl82c105: MWDMA0/1 support by Sergei
+>   - cs5530/sc1200/sl82c105: ->speedproc support ("hdparm -X")
+
+> * 2nd part of cleanups basing on DMA tuning rework (which was merged
+>   in the previous IDE update) - quite straightforward code re-factoring
+>   (no functionality changes) and removal of no longer needed functions.
 > 
-> I've had multiple reports of this. I would recommend you use the libata
-> driver. IT821x hasn't changed over the past few releases so its someting
+>   This results in simpler, more generic code and in ~300 LOCs gone.
+> 
+> * some misc fixes/updates
 
-commit 0e9b4e535fec7e2a189952670937adfbe2826b63
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Sat May 5 22:03:50 2007 +0200
+Bartlomiej, this really was too late for the 2.6.22 merge window. I'm 
+going to pull it, since it seems borderline mostly fixes and the 
+refactoring should hopefully not change any functionality, but I really 
+don't enjoy it. Please don't do this again.
 
-    it821x: PIO mode setup fixes
-
-...
-
-*cough, cough* ;)
-
-> in the core IDE code that broke it [note it might not of course be that
-> the problem is in the core code..].
-
-The real problem seems to be that IT821x "virtual" ID misses info
-about supported DMA modes (while it seems to contain enabled DMA
-mode info).
-
-This would be the logical explanation why the driver broke after:
-
-commit 71ef51cc1756d1c56b57c70e7cc27a3559c81ee6
-Author: Jens Axboe <axboe@suse.de>
-Date:   Fri Jul 28 09:02:17 2006 +0200
-
-    [PATCH] it821x: fix ide dma setup bug
-
-    Only enable dma for a valid speed setting.
-
-    Signed-off-by: Jens Axboe <axboe@suse.de>
-
-commit 0a8348d08677ad77ee353f96eb8745c693a05a13
-Author: Jens Axboe <axboe@suse.de>
-Date:   Fri Jul 28 08:58:26 2006 +0200
-
-    [PATCH] ide: if the id fields looks screwy, disable DMA
-
-    It's the safer choice. Originally due to a bug in itx821x, but a
-    generally sound thing to do.
-
-    Signed-off-by: Jens Axboe <axboe@suse.de>
-
-
-Bogus ide_dma_enable() usage in it821x.c + loosy check in ide_dma_verbose()
-allowed the hardware to operate in DMA mode, when these bugs were fixed
-DMA support broke...
-
-> I have no plans at this point to debug the old IT821x driver due to time
-> constraints, and if anyone wants to have a crack at debugging this and
-> fixing it go for it.
-
-It seems that somebody has already debugged this issue to
-the aforementioned changes:
-
-http://lkml.org/lkml/2007/1/14/110
-
-
-Thomas, does the following patch against 2.6.22-rc1 fix the issue?
-
-[ Patch is based on the above theory and Alan's work on pata_it821x.
-  Sorry for no real description (TODO) but it's almost 3:00 am ... ]
----
- drivers/ide/ide-probe.c  |   12 ++++++------
- drivers/ide/pci/it821x.c |   36 +++++++++++++++++++++---------------
- 2 files changed, 27 insertions(+), 21 deletions(-)
-
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -717,7 +717,7 @@ EXPORT_SYMBOL_GPL(ide_undecoded_slave);
-  * This routine only knows how to look for drive units 0 and 1
-  * on an interface, so any setting of MAX_DRIVES > 2 won't work here.
-  */
--static void probe_hwif(ide_hwif_t *hwif)
-+static void probe_hwif(ide_hwif_t *hwif, void (*fixup)(ide_hwif_t *hwif))
- {
- 	unsigned int unit;
- 	unsigned long flags;
-@@ -820,6 +820,9 @@ static void probe_hwif(ide_hwif_t *hwif)
- 		return;
- 	}
- 
-+	if (fixup)
-+		fixup(hwif);
-+
- 	for (unit = 0; unit < MAX_DRIVES; ++unit) {
- 		ide_drive_t *drive = &hwif->drives[unit];
- 
-@@ -874,10 +877,7 @@ static int hwif_init(ide_hwif_t *hwif);
- 
- int probe_hwif_init_with_fixup(ide_hwif_t *hwif, void (*fixup)(ide_hwif_t *hwif))
- {
--	probe_hwif(hwif);
--
--	if (fixup)
--		fixup(hwif);
-+	probe_hwif(hwif, fixup);
- 
- 	if (!hwif_init(hwif)) {
- 		printk(KERN_INFO "%s: failed to initialize IDE interface\n",
-@@ -1404,7 +1404,7 @@ int ideprobe_init (void)
- 
- 	for (index = 0; index < MAX_HWIFS; ++index)
- 		if (probe[index])
--			probe_hwif(&ide_hwifs[index]);
-+			probe_hwif(&ide_hwifs[index], NULL);
- 	for (index = 0; index < MAX_HWIFS; ++index)
- 		if (probe[index])
- 			hwif_init(&ide_hwifs[index]);
-Index: b/drivers/ide/pci/it821x.c
-===================================================================
---- a/drivers/ide/pci/it821x.c
-+++ b/drivers/ide/pci/it821x.c
-@@ -262,7 +262,7 @@ static int it821x_tunepio(ide_drive_t *d
- 	}
- 
- 	if (itdev->smart)
--		goto set_drive_speed;
-+		return 0;
- 
- 	/* We prefer 66Mhz clock for PIO 0-3, don't care for PIO4 */
- 	itdev->want[unit][1] = pio_want[set_pio];
-@@ -271,7 +271,6 @@ static int it821x_tunepio(ide_drive_t *d
- 	it821x_clock_strategy(drive);
- 	it821x_program(drive, itdev->pio[unit]);
- 
--set_drive_speed:
- 	return ide_config_drive_speed(drive, XFER_PIO_0 + set_pio);
- }
- 
-@@ -455,12 +454,12 @@ static int it821x_tune_chipset (ide_driv
- 			default:
- 				return 1;
- 		}
-+
-+		return ide_config_drive_speed(drive, speed);
- 	}
--	/*
--	 *	In smart mode the clocking is done by the host controller
--	 * 	snooping the mode we picked. The rest of it is not our problem
--	 */
--	return ide_config_drive_speed(drive, speed);
-+
-+	/* don't touch anything in the smart mode */
-+	return 0;
- }
- 
- /**
-@@ -556,6 +555,7 @@ static void __devinit it821x_fixups(ide_
- 		ide_drive_t *drive = &hwif->drives[i];
- 		struct hd_driveid *id;
- 		u16 *idbits;
-+		u8 unit = drive->dn & 1;
- 
- 		if(!drive->present)
- 			continue;
-@@ -567,9 +567,22 @@ static void __devinit it821x_fixups(ide_
- 			/* In raid mode the ident block is slightly buggy
- 			   We need to set the bits so that the IDE layer knows
- 			   LBA28. LBA48 and DMA ar valid */
--			id->capability |= 3;		/* LBA28, DMA */
-+			id->capability |= 2;		/* LBA28 */
- 			id->command_set_2 |= 0x0400;	/* LBA48 valid */
- 			id->cfs_enable_2 |= 0x0400;	/* LBA48 on */
-+			/*
-+			 * If BIOS configured the device for DMA then set
-+			 * MWDMA0 mode as enabled/support - just to tell
-+			 * IDE core that DMA is supported (it821x hardware
-+			 * takes care of DMA mode programming).
-+			 */
-+			if (inb(hwif->dma_status) & (1 << (5 + unit))) {
-+				id->capability |= 1;
-+				id->dma_mword |= 0x0101;
-+				drive->current_speed = XFER_MW_DMA_0;
-+			} else {
-+				drive->current_speed = XFER_PIO_0;
-+			}
- 			/* Reporting logic */
- 			printk(KERN_INFO "%s: IT8212 %sRAID %d volume",
- 				drive->name,
-@@ -578,13 +591,6 @@ static void __devinit it821x_fixups(ide_
- 				if(idbits[129] != 1)
- 					printk("(%dK stripe)", idbits[146]);
- 				printk(".\n");
--			/* Now the core code will have wrongly decided no DMA
--			   so we need to fix this */
--			hwif->dma_off_quietly(drive);
--#ifdef CONFIG_IDEDMA_ONLYDISK
--			if (drive->media == ide_disk)
--#endif
--				ide_set_dma(drive);
- 		} else {
- 			/* Non RAID volume. Fixups to stop the core code
- 			   doing unsupported things */
+		Linus
