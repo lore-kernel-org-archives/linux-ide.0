@@ -1,78 +1,158 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 8/8] libata: ack more unsolicited INTRQ
-Date: Wed, 16 May 2007 15:29:55 +0800
-Message-ID: <464AB2F3.7030103@tw.ibm.com>
-References: <464AACDF.1030903@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: "Henry Su" <henry.su@amd.com>
+Subject: =?utf-7?B?UkU6ICtBRnMtUEFUQ0grQUYwLWFkZCB0aGUgSURFIGRldmljZSBJRA==?=
+	=?utf-7?B?IGZvciBBVEkgU0I3MDA=?=
+Date: Wed, 16 May 2007 15:32:20 +0800
+Message-ID: <FFECF24D2A7F6D418B9511AF6F35860201A9F05E@shacnexch2.atitech.com>
+References: <200705160037.03542.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7978C.568AFCF1"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:34961 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755531AbXEPHaD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 03:30:03 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l4G7QLhP028873
-	for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 03:26:21 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4G7TvEO142946
-	for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 01:29:57 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4G7TuYf001408
-	for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 01:29:57 -0600
-In-Reply-To: <464AACDF.1030903@tw.ibm.com>
+Received: from outbound-blu.frontbridge.com ([65.55.251.16]:2198 "EHLO
+	outbound7-blu-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756358AbXEPHec (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 03:34:32 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <200705160037.03542.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?utf-7?B?Z21haWwrQUY4LWF0aQ==?= <henry.su.ati@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-patch 8/8: ack more unsolicited irq
+This is a multi-part message in MIME format.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>
----
-To address Alan's concern about the unsolicited irq (hopefully),
-this patch tries to ack irq that happens after HSM accessing the port
-but before the data transfer that actually triggers INTRQ.
+------_=_NextPart_001_01C7978C.568AFCF1
+Content-Type: text/plain;
+	charset="utf-7"
+Content-Transfer-Encoding: 7bit
 
-For a typical transaction:
-0. wait for irq or polling for device not busy
-1. hsm starts accessing the port (ATA_PFLAG_HSM_WQ set)
-2. hsm transfer the "head" part of the data
-3. hsm acquires ap->lock
-4. hsm transfer the "tail" part of the data (which may trigger INTRQ)
-5. hsm clears ATA_PFLAG_HSM_WQ and release ap->lock
+hi Bart,
+ I resend 4 patches for adding the device IDs(SMBus,IDE and SATA) of  ATI SB700, the attached file is the complete patch,
+could you please apply it if there are something wrong with the mailer?
 
-This patch allows the irq handler to ack irqs that occur during
-1 and 2. (Another patch 5/8 acks irq before 1 and when polling.)
+Many Thanks
+Henry
 
-As previously discussed, the possible issue with this patch is:
-Some ATA/ATAPI devices might be unhappy if the STATUS register
-is read during data transfer (not sure if this is true or not).
-(Patch 5/8 doesn't have such issue.) 
+-----Original Message-----
+From: Bartlomiej Zolnierkiewicz +AFs-mailto:bzolnier+AEA-gmail.com+AF0- 
+Sent: Wednesday, May 16, 2007 6:37 AM
+To: gmail+AF8-ati
+Cc: Henry Su+ADs- linux-ide+AEA-vger.kernel.org
+Subject: Re: +AFs-PATCH+AF0-add the IDE device ID for ATI SB700
 
 
-diff -Nrup 07_irq_wq_fix/drivers/ata/libata-core.c 08_possible_ack/drivers/ata/libata-core.c
---- 07_irq_wq_fix/drivers/ata/libata-core.c	2007-05-16 13:53:37.000000000 +0800
-+++ 08_possible_ack/drivers/ata/libata-core.c	2007-05-16 13:53:45.000000000 +0800
-@@ -5723,8 +5723,14 @@ inline unsigned int ata_host_intr (struc
- 		ap->print_id, qc->tf.protocol, ap->hsm_task_state);
- 
- 	/* HSM accessing the port from the workqueue */
--	if (ap->pflags & ATA_PFLAG_HSM_WQ)
-+	if (ap->pflags & ATA_PFLAG_HSM_WQ) {
-+		/* HSM is not transfering the last piece
-+		 * of data that triggers INTRQ yet.
-+		 * ack unsolicited irq.
-+		 */
-+		ata_chk_status(ap);
- 		goto idle_irq;
-+	}
- 
- 	/* polling, while HSM not yet active in wq */
- 	if (qc->tf.flags & ATA_TFLAG_POLLING) {
+Hi,
 
+On Monday 14 May 2007, gmail+AF8-ati wrote:
++AD4- From: henry.su.ati+AEA-gmail.com
++AD4- add the IDE device ids to atiixp+AF8-pci+AF8-tbl struct in atiixp.c for ATI SB700.
++AD4- Signed-off-by: Luugi Marsan +ADw-luugi.marsan+AEA-amd.com+AD4-
+
+This patch is somehow missing the chunk adding PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE
+define to +ADw-linux/pci+AF8-ids.h+AD4- and thus makes atiixp.c fail to compile.
+
+Please resend the complete patch.
+
+PS your mailer seems to encode patches in some strange way (whitespaces are
+mangled and saved email contained MIME encoded text instead of plain-text) so
+I had to apply this change by hand.  Not really a problem for this particular
+patch +ADs-) but definitively something needing fixing.
+
+Thanks,
+Bart
+
++AD4- -----------------------------------------------------
++AD4- diff -Nur linux-2.6.21.1.org/drivers/ide/pci/atiixp.c linux-2.6.21.1/drivers/ide/pci/atiixp.c
++AD4- --- linux-2.6.21.1.org/drivers/ide/pci/atiixp.c 2007-05-13 04:47:25.000000000 +-0800
++AD4- +-+-+- linux-2.6.21.1/drivers/ide/pci/atiixp.c 2007-05-13 05:14:08.000000000 +-0800
++AD4- +AEAAQA- -353,6 +-353,7 +AEAAQA-
++AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
++AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
++AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
++AD4- +- +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
++AD4-   +AHs- 0, +AH0-,
++AD4-  +AH0AOw-
++AD4-  MODULE+AF8-DEVICE+AF8-TABLE(pci, atiixp+AF8-pci+AF8-tbl)+ADs-
+
+
+
+------_=_NextPart_001_01C7978C.568AFCF1
+Content-Type: application/octet-stream;
+	name="=?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?="
+Content-Transfer-Encoding: base64
+Content-Description: =?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?=
+Content-Disposition: attachment;
+	filename="=?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?="
+
+ZGlmZiAtTnVyIGxpbnV4LTIuNi4yMS4xLm9yaWcvaW5jbHVkZS9saW51eC9wY2lfaWRzLmggbGlu
+dXgtMi42LjIxLjEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgKLS0tIGxpbnV4LTIuNi4yMS4xLm9y
+aWcvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgJMjAwNy0wNS0xNiAxMzoyODo1NC40MDUzODYwMDAg
+KzA4MDAKKysrIGxpbnV4LTIuNi4yMS4xL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDctMDUt
+MTYgMTM6NDU6MjkuOTM2NjM2MDAwICswODAwCkBAIC0zNzEsNiArMzcxLDkgQEAKICNkZWZpbmUg
+UENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NSQUlECTB4NDM4MQogI2RlZmluZSBQQ0lfREVWSUNF
+X0lEX0FUSV9JWFA2MDBfU01CVVMJMHg0Mzg1CiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lY
+UDYwMF9JREUJMHg0MzhjCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9TQVRBCTB4
+NDM5MAorI2RlZmluZSBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBfU01CVVMJMHg0Mzk1CisjZGVm
+aW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9JREUJMHg0MzljCiAKICNkZWZpbmUgUENJX1ZF
+TkRPUl9JRF9WTFNJCQkweDEwMDQKICNkZWZpbmUgUENJX0RFVklDRV9JRF9WTFNJXzgyQzU5Mgkw
+eDAwMDUKCmRpZmYgLU51ciBsaW51eC0yLjYuMjEuMS5vcmlnL2RyaXZlcnMvaTJjL2J1c3Nlcy9p
+MmMtcGlpeDQuYyBsaW51eC0yLjYuMjEuMS9kcml2ZXJzL2kyYy9idXNzZXMvaTJjLXBpaXg0LmMK
+LS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9pMmMvYnVzc2VzL2kyYy1waWl4NC5jCTIw
+MDctMDUtMTYgMTM6Mjc6NTMuMDE0NzYxMDAwICswODAwCisrKyBsaW51eC0yLjYuMjEuMS9kcml2
+ZXJzL2kyYy9idXNzZXMvaTJjLXBpaXg0LmMJMjAwNy0wNS0xNiAxMzo0MDoyMS41NDYwMTEwMDAg
+KzA4MDAKQEAgLTIzLDcgKzIzLDcgQEAKICAgIFN1cHBvcnRzOgogCUludGVsIFBJSVg0LCA0NDBN
+WAogCVNlcnZlcndvcmtzIE9TQjQsIENTQjUsIENTQjYsIEhULTEwMDAKLQlBVEkgSVhQMjAwLCBJ
+WFAzMDAsIElYUDQwMCwgU0I2MDAKKwlBVEkgSVhQMjAwLCBJWFAzMDAsIElYUDQwMCwgU0I2MDAs
+IFNCNzAwCiAJU01TQyBWaWN0b3J5NjYKIAogICAgTm90ZTogd2UgYXNzdW1lIHRoZXJlIGNhbiBv
+bmx5IGJlIG9uZSBkZXZpY2UsIHdpdGggb25lIFNNQnVzIGludGVyZmFjZS4KQEAgLTM5OSw2ICsz
+OTksOCBAQAogCSAgLmRyaXZlcl9kYXRhID0gMCB9LAogCXsgUENJX0RFVklDRShQQ0lfVkVORE9S
+X0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NNQlVTKSwKIAkgIC5kcml2ZXJfZGF0
+YSA9IDAgfSwKKwl7IFBDSV9ERVZJQ0UoUENJX1ZFTkRPUl9JRF9BVEksIFBDSV9ERVZJQ0VfSURf
+QVRJX0lYUDcwMF9TTUJVUyksCisJICAuZHJpdmVyX2RhdGEgPSAwIH0sCiAJeyBQQ0lfREVWSUNF
+KFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfT1NC
+NCksCiAJICAuZHJpdmVyX2RhdGEgPSAwIH0sCiAJeyBQQ0lfREVWSUNFKFBDSV9WRU5ET1JfSURf
+U0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNSksCgpkaWZmIC1OdXIg
+bGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL2F0YS9wYXRhX2F0aWl4cC5jIGxpbnV4LTIuNi4y
+MS4xL2RyaXZlcnMvYXRhL3BhdGFfYXRpaXhwLmMKLS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJp
+dmVycy9hdGEvcGF0YV9hdGlpeHAuYwkyMDA3LTA1LTE2IDEzOjI3OjQ5Ljc2NDc2MTAwMCArMDgw
+MAorKysgbGludXgtMi42LjIxLjEvZHJpdmVycy9hdGEvcGF0YV9hdGlpeHAuYwkyMDA3LTA1LTE2
+IDEzOjM3OjQ3LjAxNDc2MTAwMCArMDgwMApAQCAtMjgzLDYgKzI4Myw3IEBACiAJeyBQQ0lfVkRF
+VklDRShBVEksIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDMwMF9JREUpLCB9LAogCXsgUENJX1ZERVZJ
+Q0UoQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA0MDBfSURFKSwgfSwKIAl7IFBDSV9WREVWSUNF
+KEFUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX0lERSksIH0sCisJeyBQQ0lfVkRFVklDRShB
+VEksIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9JREUpLCB9LAogCiAJeyB9LAogfTsKCmRpZmYg
+LU51ciBsaW51eC0yLjYuMjEuMS5vcmlnL2RyaXZlcnMvYXRhL2FoY2kuYyBsaW51eC0yLjYuMjEu
+MS9kcml2ZXJzL2F0YS9haGNpLmMKLS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9hdGEv
+YWhjaS5jCTIwMDctMDUtMTYgMTM6Mjc6NDkuNzE3ODg2MDAwICswODAwCisrKyBsaW51eC0yLjYu
+MjEuMS9kcml2ZXJzL2F0YS9haGNpLmMJMjAwNy0wNS0xNiAxMzo0Mjo0MC4xNTUzODYwMDAgKzA4
+MDAKQEAgLTQxNSw2ICs0MTUsNyBAQAogCS8qIEFUSSAqLwogCXsgUENJX1ZERVZJQ0UoQVRJLCAw
+eDQzODApLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjYwMCBub24tcmFpZCAqLwogCXsg
+UENJX1ZERVZJQ0UoQVRJLCAweDQzODEpLCBib2FyZF9haGNpIH0sIC8qIEFUSSBTQjYwMCByYWlk
+ICovCisJeyBQQ0lfVkRFVklDRShBVEksIDB4NDM5MCksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyog
+QVRJIFNCNzAwIG5vbi1yYWlkICovCiAKIAkvKiBWSUEgKi8KIAl7IFBDSV9WREVWSUNFKFZJQSwg
+MHgzMzQ5KSwgYm9hcmRfYWhjaV92dDgyNTEgfSwgLyogVklBIFZUODI1MSAqLwoKZGlmZiAtTnVy
+IGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9pZGUvcGNpL2F0aWl4cC5jIGxpbnV4LTIuNi4y
+MS4xL2RyaXZlcnMvaWRlL3BjaS9hdGlpeHAuYwotLS0gbGludXgtMi42LjIxLjEub3JpZy9kcml2
+ZXJzL2lkZS9wY2kvYXRpaXhwLmMJMjAwNy0wNS0xNiAxMzoyNzo1My42NzEwMTEwMDAgKzA4MDAK
+KysrIGxpbnV4LTIuNi4yMS4xL2RyaXZlcnMvaWRlL3BjaS9hdGlpeHAuYwkyMDA3LTA1LTE2IDEz
+OjQzOjUxLjk1MjI2MTAwMCArMDgwMApAQCAtMzUzLDYgKzM1Myw3IEBACiAJeyBQQ0lfVkVORE9S
+X0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQMzAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FO
+WV9JRCwgMCwgMCwgMH0sCiAJeyBQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElf
+SVhQNDAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMH0sCiAJeyBQQ0lfVkVO
+RE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX0lERSwgUENJX0FOWV9JRCwgUENJ
+X0FOWV9JRCwgMCwgMCwgMX0sCisJeyBQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9B
+VElfSVhQNzAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMX0sCiAJeyAwLCB9
+LAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBhdGlpeHBfcGNpX3RibCk7CgpkaWZmIC1O
+dXIgbGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL3BjaS9xdWlya3MuYyBsaW51eC0yLjYuMjEu
+MS9kcml2ZXJzL3BjaS9xdWlya3MuYwotLS0gbGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL3Bj
+aS9xdWlya3MuYwkyMDA3LTA1LTE2IDEzOjI4OjA5LjcwMjI2MTAwMCArMDgwMAorKysgbGludXgt
+Mi42LjIxLjEvZHJpdmVycy9wY2kvcXVpcmtzLmMJMjAwNy0wNS0xNiAxMzo0MToyNi4xNTUzODYw
+MDAgKzA4MDAKQEAgLTg3NSw2ICs4NzUsNyBAQAogCX0KIH0KIERFQ0xBUkVfUENJX0ZJWFVQX0hF
+QURFUihQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NBVEEsIHF1
+aXJrX3NiNjAwX3NhdGEpOworREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURf
+QVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBfU0FUQSwgcXVpcmtfc2I2MDBfc2F0YSk7CiAK
+IC8qCiAgKglTZXJ2ZXJ3b3JrcyBDU0I1IElERSBkb2VzIG5vdCBmdWxseSBzdXBwb3J0IG5hdGl2
+ZSBtb2RlCg==
+
+------_=_NextPart_001_01C7978C.568AFCF1--
 
