@@ -1,61 +1,84 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.22-rc1-mm1: IDE compile error
-Date: Wed, 16 May 2007 20:55:52 +0200
-Message-ID: <20070516185552.GA4086@stusta.de>
-References: <20070515201914.16944e04.akpm@linux-foundation.org>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/3] 2.6.22-rc1: known regressions v2
+Date: Wed, 16 May 2007 22:31:39 +0200
+Message-ID: <464B6A2B.9020703@googlemail.com>
+References: <464B6743.9000607@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:36466 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759214AbXEPSzz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 14:55:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20070515201914.16944e04.akpm@linux-foundation.org>
+Received: from ug-out-1314.google.com ([66.249.92.175]:18010 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756168AbXEPUbt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 16:31:49 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so193365uga
+        for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 13:31:48 -0700 (PDT)
+In-Reply-To: <464B6743.9000607@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>, bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, xfs-masters@oss.sgi.com, David Chinner <dgc@sgi.com>, Jeremy Fitzhardinge <jeremy@goop.org>, "Cherwin R. Nooitmeer" <cherwin@gmail.com>, Christoph Lameter <clameter@sgi.com>, Dave Airlie <airlied@linux.ie>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oleg Nesterov <oleg@tv-sign.ru>, Alex Dubov <oakad@yahoo.com>, Pierre Ossman <drzeus@drzeus.cx>
 
-On Tue, May 15, 2007 at 08:19:14PM -0700, Andrew Morton wrote:
->...
-> - Added an i386 early-startup development tree, as git-newsetup.patch ("H. 
->   Peter Anvin" <hpa@zytor.com>)
->...
-> Changes since 2.6.21-mm2:
->...
->  git-newsetup.patch
->...
->  git trees
->...
+Hi all,
 
-This breaks the compilation of the oldest of our IDE disk drivers:
+Here is a list of some known regressions in 2.6.22-rc1.
 
-<--  snip  -->
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-...
-  LD      .tmp_vmlinux1
-drivers/built-in.o: In function `hd_init':
-hd.c:(.init.text+0x44a7d): undefined reference to `drive_info'
-hd.c:(.init.text+0x44a89): undefined reference to `drive_info'
-hd.c:(.init.text+0x44a95): undefined reference to `drive_info'
-hd.c:(.init.text+0x44aa1): undefined reference to `drive_info'
-hd.c:(.init.text+0x44aad): undefined reference to `drive_info'
-drivers/built-in.o:hd.c:(.init.text+0x44ab9): more undefined references to `drive_info' follow
-make[1]: *** [.tmp_vmlinux1] Error 1
 
-<--  snip  -->
 
-Considering the fact that we have two more recent drivers with the same 
-functionality, it might be an option to simply remove this driver...
+File systems
 
-cu
-Adrian
+Subject    : 2.6.21-git10/11: files getting truncated on xfs
+References : http://lkml.org/lkml/2007/5/9/410
+Submitter  : Jeremy Fitzhardinge <jeremy@goop.org>
+Handled-By : David Chinner <dgc@sgi.com>
+Patch      : http://lkml.org/lkml/2007/5/12/93
+Status     : patch was suggested
 
--- 
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
+Memory management
+
+Subject    : kernel BUG at include/linux/slub_def.h:88 kmalloc_index()
+References : http://bugzilla.kernel.org/show_bug.cgi?id=8476
+Submitter  : Cherwin R. Nooitmeer <cherwin@gmail.com>
+Status     : Unknown
+
+
+
+SATA/PATA
+
+Subject    : libata crash on halt
+References : http://marc.info/?l=linux-ide&m=117899827710565&w=2
+Submitter  : Andrew Morton <akpm@linux-foundation.org>
+Caused-By  : Tejun Heo <htejun@gmail.com>
+             commit 920a4b1038e442700a1cfac77ea7e20bd615a2c3
+Status     : problem is being debugged
+
+Subject    : libata reset-seq merge broke sata_sil on sh
+References : http://lkml.org/lkml/2007/5/10/63
+Submitter  : Paul Mundt <lethal@linux-sh.org>
+Handled-By : Tejun Heo <htejun@gmail.com>
+Caused-By  : commit 4750def52cb2c21732dda9aa1d43a07db37b0186
+Status     : problem is being debugged
+
+
+
+Suspend
+
+Subject    : Broken suspend on SMP with tifm
+References : http://lkml.org/lkml/2007/5/13/161
+Submitter  : Rafael J. Wysocki <rjw@sisk.pl>
+Status     : patch was suggested
+
+
+
+Regards,
+Michal
+
+--
+Michal K. K. Piotrowski
+Kernel Monkeys
+(http://kernel.wikidot.com/start)
