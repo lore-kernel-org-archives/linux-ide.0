@@ -1,23 +1,23 @@
 From: "Fortier,Vincent [Montreal]" <Vincent.Fortier1@EC.GC.CA>
 Subject: SATA intel High loads due to writes vs ata_piix switch
-Date: Wed, 16 May 2007 14:33:27 -0400
-Message-ID: <8E8F647D7835334B985D069AE964A4F7028FE7F0@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
+Date: Wed, 16 May 2007 14:46:18 -0400
+Message-ID: <8E8F647D7835334B985D069AE964A4F7028FE7F1@ECQCMTLMAIL1.quebec.int.ec.gc.ca>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C797E8.B1A11012"
+	boundary="----_=_NextPart_001_01C797EA.7D775BDA"
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fwstl1-1.wul.qc.ec.gc.ca ([205.211.132.24]:4532 "EHLO
 	ecqcmtlbh.quebec.int.ec.gc.ca" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757290AbXEPSyT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 14:54:19 -0400
+	by vger.kernel.org with ESMTP id S1763123AbXEPSyQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 14:54:16 -0400
 content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C797E8.B1A11012
+------_=_NextPart_001_01C797EA.7D775BDA
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -62,13 +62,14 @@ results but it didn't worked.  Here is what I did:
 4- Updated the /boot/grub/device.map to -> (hd0)   /dev/sda  (instead
 of: (hd0)   /dev/hda)
 5- Updated the grub mmenu.lst to switch hda to sda like: kernel
-/vmlinuz-2.6.20.10-cfs-sarge-686-envcan root=3D/dev/sda2 ro vga=3D0x305
-At boot the libata ata_piix module loaded before the Uniform
+/vmlinuz-2.6.20.10-cfs-sarge-686-envcan root=3D/dev/sda2 ro vga=3D0x305 =
+At
+boot the libata ata_piix module loaded before the Uniform
 "Multi-Platform E-IDE driver Revision: 7.00alpha2" and detected both my
 hd & dvdrw as scsi devices BUT finally ended up in a oops:
 pivot_root: No such file or directory
-/sbin/init: 432: Cannot open dev/console: No such file
-Kernel panic - not syncing: Attempted to kill init
+/sbin/init: 432: Cannot open dev/console: No such file Kernel panic -
+not syncing: Attempted to kill init
 
 
 LOADS TESTINGS:
@@ -215,7 +216,7 @@ Environnement Canada
 
 
 
-------_=_NextPart_001_01C797E8.B1A11012
+------_=_NextPart_001_01C797EA.7D775BDA
 Content-Type: text/plain;
 	name="dmesg.2.6.20.10.txt"
 Content-Transfer-Encoding: base64
@@ -762,7 +763,7 @@ OF0gRkFUOiBEaXJlY3RvcnkgYnJlYWQoYmxvY2sgMzE3MjYpIGZhaWxlZApbMTE4NDMyNS44MDE2
 NjFdIHNjc2kgMTowOjA6MDogcmVqZWN0aW5nIEkvTyB0byBkZWFkIGRldmljZQpbMTE4NDMyNS44
 MDE2NjNdIEZBVDogRGlyZWN0b3J5IGJyZWFkKGJsb2NrIDMxNzI3KSBmYWlsZWQK
 
-------_=_NextPart_001_01C797E8.B1A11012
+------_=_NextPart_001_01C797EA.7D775BDA
 Content-Type: text/plain;
 	name="lspci-2.6.20.10.txt"
 Content-Transfer-Encoding: base64
@@ -1014,4 +1015,4 @@ MSA8NHVzCgkJTGluazogQVNQTSBEaXNhYmxlZCBSQ0IgMTI4IGJ5dGVzIENvbW1DbGsrIEV4dFN5
 bmNoLQoJCUxpbms6IFNwZWVkIDIuNUdiL3MsIFdpZHRoIHgxNgoJQ2FwYWJpbGl0aWVzOiBbMTAw
 XSBWaXJ0dWFsIENoYW5uZWwKCUNhcGFiaWxpdGllczogWzEyOF0gUG93ZXIgQnVkZ2V0aW5nCgo=
 
-------_=_NextPart_001_01C797E8.B1A11012--
+------_=_NextPart_001_01C797EA.7D775BDA--
