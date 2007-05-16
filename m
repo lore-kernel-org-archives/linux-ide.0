@@ -1,43 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Serial ATA (SATA) shutdown info
-Date: Wed, 16 May 2007 12:46:03 +0200
-Message-ID: <464AE0EB.9080300@gmail.com>
-References: <1179232945.16527.25.camel@quest.netsplit.com>	 <711b967b0705150834sdd14538x459119386c19a7ac@mail.gmail.com> <1179243992.16527.56.camel@quest.netsplit.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Wed, 16 May 2007 08:05:21 -0400
+Message-ID: <20070516120521.GA28020@devserv.devel.redhat.com>
+References: <20070516002204.B4AF6DDEC2@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:43631 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbXEPKqR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 06:46:17 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so150622wra
-        for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 03:46:16 -0700 (PDT)
-In-Reply-To: <1179243992.16527.56.camel@quest.netsplit.com>
+Received: from mx1.redhat.com ([66.187.233.31]:54682 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756600AbXEPMF1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 May 2007 08:05:27 -0400
+Content-Disposition: inline
+In-Reply-To: <20070516002204.B4AF6DDEC2@ozlabs.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Scott James Remnant <scott@ubuntu.com>
-Cc: linux-ide@vger.kernel.org, 114683@bugs.launchpad.net
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Hello, Scott.
-
-Scott James Remnant wrote:
-> Since we've been running with 2.6.x and libata for a while, without
-> bothering to do this, is there any harm in continuing to not do this?
-
-No, I don't think so.
-
-> It's obviously not a regression for us, and we can answer "upgrade to
-> 7.10" quite cheerfully if it turns out there are people with bugs (which
-> they will have always had).
-
-If that works for you and your userbase, you don't need to do anything.
-
+On Wed, May 16, 2007 at 10:21:34AM +1000, Benjamin Herrenschmidt wrote:
+> This patch adds MMIO support to the pata_sil680 for taskfile IOs,
+> based on what the old siimage does.
 > 
-> I'll keep an eye on the thread you linked to, if we don't even need to
-> write any zeros, we're definitely happy people :-)
+> I haven't bothered changing the chip setup stuff from PCI config
+> cycles to MMIO though (siimage does it), I don't think it matters,
+> I've only adapted it to use MMIO for taskfile accesses.
+> 
+> I've tested it on a Cell blade and it seems to work fine.
+> 
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Me happy too.  :-)
+Acked-by: Alan Cox <alan@redhat.com>
 
--- 
-tejun
+All we need now is >4GB support and its perfection ..
+
