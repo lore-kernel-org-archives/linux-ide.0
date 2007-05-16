@@ -1,46 +1,37 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] ide/pci/serverworks.c: Fix corruption/timeouts with MegaIDE
- in RAID mode
-Date: Wed, 16 May 2007 13:37:15 +0100
-Message-ID: <20070516133715.23194a96@the-village.bc.nu>
+Subject: Re: IT821x: no DMA since 2.6.21
+Date: Wed, 16 May 2007 13:40:21 +0100
+Message-ID: <20070516134021.0fefa16b@the-village.bc.nu>
+References: <20070515125308.3a9f6442@SiRiUS.home>
+	<20070515123132.2e596d69@the-village.bc.nu>
+	<200705160258.15928.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59376 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45924 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758419AbXEPMcq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 08:32:46 -0400
+	with ESMTP id S1757107AbXEPMfu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 08:35:50 -0400
+In-Reply-To: <200705160258.15928.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Thomas Kuther <gimpel@sonnenkinder.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-It turns out from customer reports to Red Hat and some PCI dumps that the
-MegaIDE in RAID mode doesn't provide the drive tuning data that the
-serverworks driver expects but sometimes does provide something that
-fools the code.
+> The real problem seems to be that IT821x "virtual" ID misses info
+> about supported DMA modes (while it seems to contain enabled DMA
+> mode info).
 
-For the RAID class case skip the oem setup and don't trust the BIOS data.
-We then tune from scratch and this sorts it out. (This has been confirmed
-on an afflicted IBM blade)
+It does at least for the RAID volumes which are quite peculiar and seem
+to have been defined by flipping bits until Windows worked 8)
 
-[libata serverworks.c never trusts the BIOS in the first place so is
-accidentally immune]
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> [ Patch is based on the above theory and Alan's work on pata_it821x.
+>   Sorry for no real description (TODO) but it's almost 3:00 am ... ]
 
---- drivers/ide/pci/serverworks.c~	2007-05-16 13:10:16.428324088 +0100
-+++ drivers/ide/pci/serverworks.c	2007-05-16 13:10:16.428324088 +0100
-@@ -158,6 +158,12 @@
- 	pci_read_config_word(dev, 0x4A, &csb5_pio);
- 	pci_read_config_byte(dev, 0x54, &ultra_enable);
- 
-+	/* If we are in RAID mode (eg AMI MegaIDE) then we can't it
-+	   turns out trust the firmware configuration */
-+
-+	if ((dev->class >> 8) != PCI_CLASS_STORAGE_IDE)
-+		goto oem_setup_failed;
-+
- 	/* Per Specified Design by OEM, and ASIC Architect */
- 	if ((dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
- 	    (dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
+Thanks for doing that. I've got a potential patch for libata and the
+smart mode problem. Turns out that Tejun's sanity checks in the bus reset
+path are too smart for the firmware ;)
+
+Alan
