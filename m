@@ -1,45 +1,90 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: track spindown status and skip spindown_compat
- if possible
-Date: Wed, 16 May 2007 01:22:12 -0400
-Message-ID: <464A9504.1020405@garzik.org>
-References: <46498B82.1030802@gmail.com>
+From: "Peer Chen" <pchen@nvidia.com>
+Subject: RE: [PATCH] drivers/ata: correct a wrong free function for sata_nv driver
+Date: Wed, 16 May 2007 13:31:34 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B13DEF520@hkemmail01.nvidia.com>
+References: <15F501D1A78BD343BE8F4D8DB854566B13CD8F45@hkemmail01.nvidia.com> <464A94D7.30300@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53465 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762713AbXEPFWP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 May 2007 01:22:15 -0400
-In-Reply-To: <46498B82.1030802@gmail.com>
+Received: from hqemgate01.nvidia.com ([216.228.112.170]:17707 "EHLO
+	HQEMGATE01.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758781AbXEPFaf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 01:30:35 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <464A94D7.30300@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Daniel Drake <dsd@gentoo.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Our assumption that most distros issue STANDBYNOW seems wrong.  The
-> upstream sysvinit and thus many distros including gentoo and opensuse
-> don't take any action for libata disks on spindown.  We can skip
-> compat handling for these distros so that they don't need to update
-> anything to take advantage of kernel-side shutdown.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> 
-> This patch is generated on top of fix-shutdown-warning-message-printing.
-> 
->   http://article.gmane.org/gmane.linux.ide/18823
-> 
-> Jeff, I think we can avoid a lot of problems with this.  Those distros
-> which didn't do anything on shutdown would still cause emergency
-> unload on older kernels but at least it isn't a regression and things
-> should just work on newer kernels.
-> 
-> If you ack this, I'll update the shutdown.html page accordingly.
-> Thanks.
+Sorry for posting a fault patch,following is the right one.
 
-applied to #upstream-fixes
+Signed-off-by: Peer Chen <pchen@nvidia.com>
+
+===================================
+--- linux-2.6.22-rc1/drivers/ata/sata_nv.c.orig
++++ linux-2.6.22-rc1/drivers/ata/sata_nv.c
+@@ -1619,7 +1619,7 @@ static void nv_remove_one (struct pci_de
+ 	struct nv_host_priv *hpriv = host->private_data;
+ 
+ 	ata_pci_remove_one(pdev);
+-	kfree(hpriv);
++	devm_kfree(&pdev->dev, hpriv);
+ }
+ 
+ #ifdef CONFIG_PM
+
+============================= 
 
 
+BRs
+Peer Chen
+
+-----Original Message-----
+From: Jeff Garzik [mailto:jeff@garzik.org] 
+Sent: Wednesday, May 16, 2007 1:21 PM
+To: Peer Chen
+Cc: linux-kernel@vger.kernel.org; akpm@linux-foundation.org; IDE/ATA
+development list
+Subject: Re: [PATCH] drivers/ata: correct a wrong free function for
+sata_nv driver
+
+Peer Chen wrote:
+> For sata_nv driver in kernel 2.6.21 onward, Inside nv_init_one(),use
+> 'hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);' but
+> using the kfree(hpriv) to free that data struction in nv_remove_one(),
+> which will cause system hang when removing the sata_nv module.
+> 
+> Change the 'kfree()' function to 'devm_kfree' will fix this bug.
+> 
+> The patch base on kernel 2.6.22-rc1.
+> 
+> Signed-off-by: Peer Chen <pchen@nvidia.com>
+> =====================================
+> --- linux-2.6.22-rc1/drivers/ata/sata_nv.c.orig
+> +++ linux-2.6.22-rc1/drivers/ata/sata_nv.c
+> @@ -1619,7 +1619,7 @@ static void nv_remove_one (struct pci_de
+>  	struct nv_host_priv *hpriv = host->private_data;
+>  
+>  	ata_pci_remove_one(pdev);
+> -	kfree(hpriv);
+> +	devm_kfree(&pci_dev->dev, hpriv);
+
+This patch is complete crap.  It doesn't even compile.  There is no 
+variable "pci_dev" in this function at all.
+
+It is highly discouraging that you cannot even bother to compile your 
+own submissions to the second (or third) most popular operating system 
+in the world.
+
+	Jeff
+
+
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
