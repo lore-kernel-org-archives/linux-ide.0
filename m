@@ -1,158 +1,128 @@
-From: "Henry Su" <henry.su@amd.com>
-Subject: =?utf-7?B?UkU6ICtBRnMtUEFUQ0grQUYwLWFkZCB0aGUgSURFIGRldmljZSBJRA==?=
-	=?utf-7?B?IGZvciBBVEkgU0I3MDA=?=
-Date: Wed, 16 May 2007 15:32:20 +0800
-Message-ID: <FFECF24D2A7F6D418B9511AF6F35860201A9F05E@shacnexch2.atitech.com>
-References: <200705160037.03542.bzolnier@gmail.com>
+From: Thomas Kuther <gimpel@sonnenkinder.org>
+Subject: Re: IT821x: no DMA since 2.6.21
+Date: Wed, 16 May 2007 10:09:24 +0200
+Message-ID: <20070516100924.11273ce4@SiRiUS.home>
+References: <20070515125308.3a9f6442@SiRiUS.home>
+	<20070515123132.2e596d69@the-village.bc.nu>
+	<200705160258.15928.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7978C.568AFCF1"
+Content-Type: multipart/signed; boundary="Sig_Z=lelvDWPvyqql7advK=R+_";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-blu.frontbridge.com ([65.55.251.16]:2198 "EHLO
-	outbound7-blu-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756358AbXEPHec (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 03:34:32 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200705160037.03542.bzolnier@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:52942 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1760726AbXEPIJc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 May 2007 04:09:32 -0400
+In-Reply-To: <200705160258.15928.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, =?utf-7?B?Z21haWwrQUY4LWF0aQ==?= <henry.su.ati@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+--Sig_Z=lelvDWPvyqql7advK=R+_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-------_=_NextPart_001_01C7978C.568AFCF1
-Content-Type: text/plain;
-	charset="utf-7"
-Content-Transfer-Encoding: 7bit
+On Mi, 16.05.07 02:58 Bartlomiej Zolnierkiewicz wrote:
 
-hi Bart,
- I resend 4 patches for adding the device IDs(SMBus,IDE and SATA) of  ATI SB700, the attached file is the complete patch,
-could you please apply it if there are something wrong with the mailer?
+>=20
+> Hi,
+>=20
+> On Tuesday 15 May 2007, Alan Cox wrote:
+> > On Tue, 15 May 2007 12:53:08 +0200
+> > Thomas Kuther <gimpel@sonnenkinder.org> wrote:
+> >=20
+> > > Hi!
+> > >=20
+> > > Since 2.6.21 I have a problem with the it821x driver on my ITE
+> > > 8212 controller.
+> > > Now I saw some updates to it821x in 2.6.22-rc1 and gave that a
+> > > try, but the problem persists.
+> >=20
+> > I've had multiple reports of this. I would recommend you use the
+> > libata driver. IT821x hasn't changed over the past few releases so
+> > its someting
+>=20
+> commit 0e9b4e535fec7e2a189952670937adfbe2826b63
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date:   Sat May 5 22:03:50 2007 +0200
+>=20
+>     it821x: PIO mode setup fixes
+>=20
+> ...
+>=20
+> *cough, cough* ;)
+>=20
+> > in the core IDE code that broke it [note it might not of course be
+> > that the problem is in the core code..].
+>=20
+> The real problem seems to be that IT821x "virtual" ID misses info
+> about supported DMA modes (while it seems to contain enabled DMA
+> mode info).
+>=20
+> This would be the logical explanation why the driver broke after:
+>=20
+> [...]
+>=20
+> It seems that somebody has already debugged this issue to
+> the aforementioned changes:
+>=20
+> http://lkml.org/lkml/2007/1/14/110
+>=20
+>=20
+> Thomas, does the following patch against 2.6.22-rc1 fix the issue?
+>=20
 
-Many Thanks
-Henry
+Hi Bartlomiej,
 
------Original Message-----
-From: Bartlomiej Zolnierkiewicz +AFs-mailto:bzolnier+AEA-gmail.com+AF0- 
-Sent: Wednesday, May 16, 2007 6:37 AM
-To: gmail+AF8-ati
-Cc: Henry Su+ADs- linux-ide+AEA-vger.kernel.org
-Subject: Re: +AFs-PATCH+AF0-add the IDE device ID for ATI SB700
+yes, this patch completely fixes it. Looks very good now even.
+I loaded it with option noraid=3D1
 
+------------------------------8<----------------------------
+IT8212: IDE controller at PCI slot 0000:00:09.0
+ACPI: PCI Interrupt 0000:00:09.0[A] -> GSI 17 (level, low) -> IRQ 18
+IT8212: chipset revision 17
+it8212: forcing bypass mode.
+it821x: controller in pass through mode.
+IT8212: 100% native mode on irq 18
+    ide2: BM-DMA at 0xdc00-0xdc07, BIOS settings: hde:pio, hdf:pio
+    ide3: BM-DMA at 0xdc08-0xdc0f, BIOS settings: hdg:pio, hdh:pio
+Probing IDE interface ide2...
+hde: SAMSUNG SP2514N, ATA DISK drive
+hdf: Maxtor 6Y120L0, ATA DISK drive
+hde: selected mode 0x45
+hdf: selected mode 0x46
+ide2 at 0xec00-0xec07,0xe802 on irq 18
+hde: max request size: 512KiB
+hde: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=3D30401/255/63,
+UDMA(100) hde: cache flushes supported
+ hde: hde1
+hdf: max request size: 128KiB
+hdf: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=3D65535/16/63,
+UDMA(133) hdf: cache flushes supported
+-------------------------------------->8------------------------------
+So all those drive seek errors are gone too.
+Hdparm does not complain anymore, speed is OK.
+Nice, so I can get rid of libata again, as all other drives run with the
+IDE layer too.=20
 
-Hi,
+Many thanks!
 
-On Monday 14 May 2007, gmail+AF8-ati wrote:
-+AD4- From: henry.su.ati+AEA-gmail.com
-+AD4- add the IDE device ids to atiixp+AF8-pci+AF8-tbl struct in atiixp.c for ATI SB700.
-+AD4- Signed-off-by: Luugi Marsan +ADw-luugi.marsan+AEA-amd.com+AD4-
+Shall I test it without "noraid=3D1" too?=20
 
-This patch is somehow missing the chunk adding PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE
-define to +ADw-linux/pci+AF8-ids.h+AD4- and thus makes atiixp.c fail to compile.
+Regards,
+Thomas
 
-Please resend the complete patch.
+--Sig_Z=lelvDWPvyqql7advK=R+_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-PS your mailer seems to encode patches in some strange way (whitespaces are
-mangled and saved email contained MIME encoded text instead of plain-text) so
-I had to apply this change by hand.  Not really a problem for this particular
-patch +ADs-) but definitively something needing fixing.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.3 (GNU/Linux)
 
-Thanks,
-Bart
+iD8DBQFGSrw5MQFfAqZTGfwRAnCMAJwI4Dg4D3h9m8DZx8lL0tvyY4zvBQCfQb47
+lvqdb7kOlEni0XN3ktVsS1A=
+=CIlj
+-----END PGP SIGNATURE-----
 
-+AD4- -----------------------------------------------------
-+AD4- diff -Nur linux-2.6.21.1.org/drivers/ide/pci/atiixp.c linux-2.6.21.1/drivers/ide/pci/atiixp.c
-+AD4- --- linux-2.6.21.1.org/drivers/ide/pci/atiixp.c 2007-05-13 04:47:25.000000000 +-0800
-+AD4- +-+-+- linux-2.6.21.1/drivers/ide/pci/atiixp.c 2007-05-13 05:14:08.000000000 +-0800
-+AD4- +AEAAQA- -353,6 +-353,7 +AEAAQA-
-+AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP300+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
-+AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP400+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 0+AH0-,
-+AD4-   +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
-+AD4- +- +AHs- PCI+AF8-VENDOR+AF8-ID+AF8-ATI, PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE, PCI+AF8-ANY+AF8-ID, PCI+AF8-ANY+AF8-ID, 0, 0, 1+AH0-,
-+AD4-   +AHs- 0, +AH0-,
-+AD4-  +AH0AOw-
-+AD4-  MODULE+AF8-DEVICE+AF8-TABLE(pci, atiixp+AF8-pci+AF8-tbl)+ADs-
-
-
-
-------_=_NextPart_001_01C7978C.568AFCF1
-Content-Type: application/octet-stream;
-	name="=?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?="
-Content-Transfer-Encoding: base64
-Content-Description: =?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?=
-Content-Disposition: attachment;
-	filename="=?utf-7?B?U0I3MDArQUY4LVBhdGNoZXM=?="
-
-ZGlmZiAtTnVyIGxpbnV4LTIuNi4yMS4xLm9yaWcvaW5jbHVkZS9saW51eC9wY2lfaWRzLmggbGlu
-dXgtMi42LjIxLjEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgKLS0tIGxpbnV4LTIuNi4yMS4xLm9y
-aWcvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgJMjAwNy0wNS0xNiAxMzoyODo1NC40MDUzODYwMDAg
-KzA4MDAKKysrIGxpbnV4LTIuNi4yMS4xL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCTIwMDctMDUt
-MTYgMTM6NDU6MjkuOTM2NjM2MDAwICswODAwCkBAIC0zNzEsNiArMzcxLDkgQEAKICNkZWZpbmUg
-UENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NSQUlECTB4NDM4MQogI2RlZmluZSBQQ0lfREVWSUNF
-X0lEX0FUSV9JWFA2MDBfU01CVVMJMHg0Mzg1CiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lY
-UDYwMF9JREUJMHg0MzhjCisjZGVmaW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9TQVRBCTB4
-NDM5MAorI2RlZmluZSBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBfU01CVVMJMHg0Mzk1CisjZGVm
-aW5lIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9JREUJMHg0MzljCiAKICNkZWZpbmUgUENJX1ZF
-TkRPUl9JRF9WTFNJCQkweDEwMDQKICNkZWZpbmUgUENJX0RFVklDRV9JRF9WTFNJXzgyQzU5Mgkw
-eDAwMDUKCmRpZmYgLU51ciBsaW51eC0yLjYuMjEuMS5vcmlnL2RyaXZlcnMvaTJjL2J1c3Nlcy9p
-MmMtcGlpeDQuYyBsaW51eC0yLjYuMjEuMS9kcml2ZXJzL2kyYy9idXNzZXMvaTJjLXBpaXg0LmMK
-LS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9pMmMvYnVzc2VzL2kyYy1waWl4NC5jCTIw
-MDctMDUtMTYgMTM6Mjc6NTMuMDE0NzYxMDAwICswODAwCisrKyBsaW51eC0yLjYuMjEuMS9kcml2
-ZXJzL2kyYy9idXNzZXMvaTJjLXBpaXg0LmMJMjAwNy0wNS0xNiAxMzo0MDoyMS41NDYwMTEwMDAg
-KzA4MDAKQEAgLTIzLDcgKzIzLDcgQEAKICAgIFN1cHBvcnRzOgogCUludGVsIFBJSVg0LCA0NDBN
-WAogCVNlcnZlcndvcmtzIE9TQjQsIENTQjUsIENTQjYsIEhULTEwMDAKLQlBVEkgSVhQMjAwLCBJ
-WFAzMDAsIElYUDQwMCwgU0I2MDAKKwlBVEkgSVhQMjAwLCBJWFAzMDAsIElYUDQwMCwgU0I2MDAs
-IFNCNzAwCiAJU01TQyBWaWN0b3J5NjYKIAogICAgTm90ZTogd2UgYXNzdW1lIHRoZXJlIGNhbiBv
-bmx5IGJlIG9uZSBkZXZpY2UsIHdpdGggb25lIFNNQnVzIGludGVyZmFjZS4KQEAgLTM5OSw2ICsz
-OTksOCBAQAogCSAgLmRyaXZlcl9kYXRhID0gMCB9LAogCXsgUENJX0RFVklDRShQQ0lfVkVORE9S
-X0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NNQlVTKSwKIAkgIC5kcml2ZXJfZGF0
-YSA9IDAgfSwKKwl7IFBDSV9ERVZJQ0UoUENJX1ZFTkRPUl9JRF9BVEksIFBDSV9ERVZJQ0VfSURf
-QVRJX0lYUDcwMF9TTUJVUyksCisJICAuZHJpdmVyX2RhdGEgPSAwIH0sCiAJeyBQQ0lfREVWSUNF
-KFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfT1NC
-NCksCiAJICAuZHJpdmVyX2RhdGEgPSAwIH0sCiAJeyBQQ0lfREVWSUNFKFBDSV9WRU5ET1JfSURf
-U0VSVkVSV09SS1MsIFBDSV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfQ1NCNSksCgpkaWZmIC1OdXIg
-bGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL2F0YS9wYXRhX2F0aWl4cC5jIGxpbnV4LTIuNi4y
-MS4xL2RyaXZlcnMvYXRhL3BhdGFfYXRpaXhwLmMKLS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJp
-dmVycy9hdGEvcGF0YV9hdGlpeHAuYwkyMDA3LTA1LTE2IDEzOjI3OjQ5Ljc2NDc2MTAwMCArMDgw
-MAorKysgbGludXgtMi42LjIxLjEvZHJpdmVycy9hdGEvcGF0YV9hdGlpeHAuYwkyMDA3LTA1LTE2
-IDEzOjM3OjQ3LjAxNDc2MTAwMCArMDgwMApAQCAtMjgzLDYgKzI4Myw3IEBACiAJeyBQQ0lfVkRF
-VklDRShBVEksIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDMwMF9JREUpLCB9LAogCXsgUENJX1ZERVZJ
-Q0UoQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA0MDBfSURFKSwgfSwKIAl7IFBDSV9WREVWSUNF
-KEFUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX0lERSksIH0sCisJeyBQQ0lfVkRFVklDRShB
-VEksIFBDSV9ERVZJQ0VfSURfQVRJX0lYUDcwMF9JREUpLCB9LAogCiAJeyB9LAogfTsKCmRpZmYg
-LU51ciBsaW51eC0yLjYuMjEuMS5vcmlnL2RyaXZlcnMvYXRhL2FoY2kuYyBsaW51eC0yLjYuMjEu
-MS9kcml2ZXJzL2F0YS9haGNpLmMKLS0tIGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9hdGEv
-YWhjaS5jCTIwMDctMDUtMTYgMTM6Mjc6NDkuNzE3ODg2MDAwICswODAwCisrKyBsaW51eC0yLjYu
-MjEuMS9kcml2ZXJzL2F0YS9haGNpLmMJMjAwNy0wNS0xNiAxMzo0Mjo0MC4xNTUzODYwMDAgKzA4
-MDAKQEAgLTQxNSw2ICs0MTUsNyBAQAogCS8qIEFUSSAqLwogCXsgUENJX1ZERVZJQ0UoQVRJLCAw
-eDQzODApLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjYwMCBub24tcmFpZCAqLwogCXsg
-UENJX1ZERVZJQ0UoQVRJLCAweDQzODEpLCBib2FyZF9haGNpIH0sIC8qIEFUSSBTQjYwMCByYWlk
-ICovCisJeyBQQ0lfVkRFVklDRShBVEksIDB4NDM5MCksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyog
-QVRJIFNCNzAwIG5vbi1yYWlkICovCiAKIAkvKiBWSUEgKi8KIAl7IFBDSV9WREVWSUNFKFZJQSwg
-MHgzMzQ5KSwgYm9hcmRfYWhjaV92dDgyNTEgfSwgLyogVklBIFZUODI1MSAqLwoKZGlmZiAtTnVy
-IGxpbnV4LTIuNi4yMS4xLm9yaWcvZHJpdmVycy9pZGUvcGNpL2F0aWl4cC5jIGxpbnV4LTIuNi4y
-MS4xL2RyaXZlcnMvaWRlL3BjaS9hdGlpeHAuYwotLS0gbGludXgtMi42LjIxLjEub3JpZy9kcml2
-ZXJzL2lkZS9wY2kvYXRpaXhwLmMJMjAwNy0wNS0xNiAxMzoyNzo1My42NzEwMTEwMDAgKzA4MDAK
-KysrIGxpbnV4LTIuNi4yMS4xL2RyaXZlcnMvaWRlL3BjaS9hdGlpeHAuYwkyMDA3LTA1LTE2IDEz
-OjQzOjUxLjk1MjI2MTAwMCArMDgwMApAQCAtMzUzLDYgKzM1Myw3IEBACiAJeyBQQ0lfVkVORE9S
-X0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQMzAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FO
-WV9JRCwgMCwgMCwgMH0sCiAJeyBQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElf
-SVhQNDAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMH0sCiAJeyBQQ0lfVkVO
-RE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX0lERSwgUENJX0FOWV9JRCwgUENJ
-X0FOWV9JRCwgMCwgMCwgMX0sCisJeyBQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9B
-VElfSVhQNzAwX0lERSwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgMX0sCiAJeyAwLCB9
-LAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBhdGlpeHBfcGNpX3RibCk7CgpkaWZmIC1O
-dXIgbGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL3BjaS9xdWlya3MuYyBsaW51eC0yLjYuMjEu
-MS9kcml2ZXJzL3BjaS9xdWlya3MuYwotLS0gbGludXgtMi42LjIxLjEub3JpZy9kcml2ZXJzL3Bj
-aS9xdWlya3MuYwkyMDA3LTA1LTE2IDEzOjI4OjA5LjcwMjI2MTAwMCArMDgwMAorKysgbGludXgt
-Mi42LjIxLjEvZHJpdmVycy9wY2kvcXVpcmtzLmMJMjAwNy0wNS0xNiAxMzo0MToyNi4xNTUzODYw
-MDAgKzA4MDAKQEAgLTg3NSw2ICs4NzUsNyBAQAogCX0KIH0KIERFQ0xBUkVfUENJX0ZJWFVQX0hF
-QURFUihQQ0lfVkVORE9SX0lEX0FUSSwgUENJX0RFVklDRV9JRF9BVElfSVhQNjAwX1NBVEEsIHF1
-aXJrX3NiNjAwX3NhdGEpOworREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURf
-QVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBfU0FUQSwgcXVpcmtfc2I2MDBfc2F0YSk7CiAK
-IC8qCiAgKglTZXJ2ZXJ3b3JrcyBDU0I1IElERSBkb2VzIG5vdCBmdWxseSBzdXBwb3J0IG5hdGl2
-ZSBtb2RlCg==
-
-------_=_NextPart_001_01C7978C.568AFCF1--
-
+--Sig_Z=lelvDWPvyqql7advK=R+_--
