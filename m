@@ -1,158 +1,57 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [PATCH] libata: Add MMIO support to pata_sil680
-Date: Wed, 16 May 2007 10:21:34 +1000
-Message-ID: <20070516002204.B4AF6DDEC2@ozlabs.org>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: libata reset-seq merge broke sata_sil on sh
+Date: Wed, 16 May 2007 09:30:02 +0900
+Message-ID: <20070516003002.GA18863@linux-sh.org>
+References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org> <464439C8.7090309@gmail.com> <20070512034928.GB29259@linux-sh.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:50613 "EHLO ozlabs.org"
+Received: from smtp.ocgnet.org ([64.20.243.3]:57302 "EHLO smtp.ocgnet.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758927AbXEPAWG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 May 2007 20:22:06 -0400
+	id S1759349AbXEPAal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 May 2007 20:30:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20070512034928.GB29259@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-This patch adds MMIO support to the pata_sil680 for taskfile IOs,
-based on what the old siimage does.
+On Sat, May 12, 2007 at 12:49:28PM +0900, Paul Mundt wrote:
+> On Fri, May 11, 2007 at 11:39:20AM +0200, Tejun Heo wrote:
+> > Paul Mundt wrote:
+> > > Bumping the hardreset delay up does indeed fix it, I've had to bump it up
+> > > to 1200 before it started working (at 600 it still fails):
+> > > 
+> > > [    0.967379] scsi0 : sata_sil
+> > > [    0.970425] scsi1 : sata_sil
+> > > [    0.973298] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
+> > > [    0.981331] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
+> > > [    1.299353] ata1: device not ready (errno=-19), forcing hardreset
+> > > [    2.817893] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> > > [    2.826284] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+> > > [    2.831052] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
+> > > [    2.837548] ata1.00: 39070080 sectors, multi 0: LBA
+> > > [    2.842702] ata1.00: applying bridge limits
+> > > [    2.854162] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+> > > [    2.858938] ata1.00: configured for UDMA/100
+> > > [    3.172602] ata2: SATA link down (SStatus 0 SControl 310)
+> > > [    3.175736] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
+> > > 
+> > > I'm not sure if it matters or not, but this is an iVDR drive, so that
+> > > might also have additional implications.
+> > 
+> > Don't have the flimsiest idea what an iVDR drive is but I take it that
+> > it's some sort of special purpose thing.  :-)
+> > 
+> http://www.ivdr.org
+> 
+> The GoVault appears to be a similar device, in that they're both
+> removeable cartridges.
+> 
+> > Gary, IIRC, the requirement for GoVault was 3secs, right?  Paul, can you
+> > try to estimate the minimum required delay?  Please go down by 100ms and
+> > report where it breaks.
+> > 
+> 800ms was the lowest it would work at, 700ms still breaks.
 
-I haven't bothered changing the chip setup stuff from PCI config
-cycles to MMIO though (siimage does it), I don't think it matters,
-I've only adapted it to use MMIO for taskfile accesses.
-
-I've tested it on a Cell blade and it seems to work fine.
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
-
-This version uses a better name "use_ioports" for the fallback
-label in the probe code.
-
- drivers/ata/pata_sil680.c |   70 ++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 62 insertions(+), 8 deletions(-)
-
-Index: linux-cell/drivers/ata/pata_sil680.c
-===================================================================
---- linux-cell.orig/drivers/ata/pata_sil680.c	2007-05-15 16:15:11.000000000 +1000
-+++ linux-cell/drivers/ata/pata_sil680.c	2007-05-16 10:15:43.000000000 +1000
-@@ -35,6 +35,8 @@
- #define DRV_NAME "pata_sil680"
- #define DRV_VERSION "0.4.6"
- 
-+#define SIL680_MMIO_BAR		5
-+
- /**
-  *	sil680_selreg		-	return register base
-  *	@hwif: interface
-@@ -278,7 +280,7 @@ static struct ata_port_operations sil680
-  *	Returns the final clock settings.
-  */
- 
--static u8 sil680_init_chip(struct pci_dev *pdev)
-+static u8 sil680_init_chip(struct pci_dev *pdev, int *try_mmio)
- {
- 	u32 class_rev	= 0;
- 	u8 tmpbyte	= 0;
-@@ -293,8 +295,10 @@ static u8 sil680_init_chip(struct pci_de
- 
- 	pci_read_config_byte(pdev, 0x8A, &tmpbyte);
- 
--	printk(KERN_INFO "sil680: BA5_EN = %d clock = %02X\n",
--			tmpbyte & 1, tmpbyte & 0x30);
-+	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
-+		tmpbyte & 1, tmpbyte & 0x30);
-+
-+	*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
- 
- 	switch(tmpbyte & 0x30) {
- 		case 0x00:
-@@ -315,8 +319,8 @@ static u8 sil680_init_chip(struct pci_de
- 	}
- 
- 	pci_read_config_byte(pdev,   0x8A, &tmpbyte);
--	printk(KERN_INFO "sil680: BA5_EN = %d clock = %02X\n",
--			tmpbyte & 1, tmpbyte & 0x30);
-+	dev_dbg(&pdev->dev, "sil680: BA5_EN = %d clock = %02X\n",
-+		tmpbyte & 1, tmpbyte & 0x30);
- 
- 	pci_write_config_byte(pdev,  0xA1, 0x72);
- 	pci_write_config_word(pdev,  0xA2, 0x328A);
-@@ -339,7 +343,8 @@ static u8 sil680_init_chip(struct pci_de
- 	return tmpbyte & 0x30;
- }
- 
--static int sil680_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-+static int __devinit sil680_init_one(struct pci_dev *pdev,
-+				     const struct pci_device_id *id)
- {
- 	static const struct ata_port_info info = {
- 		.sht = &sil680_sht,
-@@ -359,18 +364,67 @@ static int sil680_init_one(struct pci_de
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
- 	static int printed_version;
-+	struct ata_host *host;
-+	void __iomem *mmio_base;
-+	int rc, try_mmio;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
- 
--	switch(sil680_init_chip(pdev))
--	{
-+	switch(sil680_init_chip(pdev, &try_mmio)) {
- 		case 0:
- 			ppi[0] = &info_slow;
- 			break;
- 		case 0x30:
- 			return -ENODEV;
- 	}
-+
-+	if (!try_mmio)
-+		goto use_ioports;
-+
-+	/* Try to acquire MMIO resources and fallback to PIO if
-+	 * that fails
-+	 */
-+	rc = pcim_enable_device(pdev);
-+	if (rc)
-+		return rc;
-+	rc = pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
-+	if (rc)
-+		goto use_ioports;
-+
-+	/* Allocate host and set it up */
-+	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
-+	if (!host)
-+		return -ENOMEM;
-+	host->iomap = pcim_iomap_table(pdev);
-+
-+	/* Setup DMA masks */
-+	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
-+	if (rc)
-+		return rc;
-+	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
-+	if (rc)
-+		return rc;
-+	pci_set_master(pdev);
-+
-+	/* Get MMIO base and initialize port addresses */
-+	mmio_base = host->iomap[SIL680_MMIO_BAR];
-+	host->ports[0]->ioaddr.bmdma_addr = mmio_base + 0x00;
-+	host->ports[0]->ioaddr.cmd_addr = mmio_base + 0x80;
-+	host->ports[0]->ioaddr.ctl_addr = mmio_base + 0x8a;
-+	host->ports[0]->ioaddr.altstatus_addr = mmio_base + 0x8a;
-+	ata_std_ports(&host->ports[0]->ioaddr);
-+	host->ports[1]->ioaddr.bmdma_addr = mmio_base + 0x08;
-+	host->ports[1]->ioaddr.cmd_addr = mmio_base + 0xc0;
-+	host->ports[1]->ioaddr.ctl_addr = mmio_base + 0xca;
-+	host->ports[1]->ioaddr.altstatus_addr = mmio_base + 0xca;
-+	ata_std_ports(&host->ports[1]->ioaddr);
-+
-+	/* Register & activate */
-+	return ata_host_activate(host, pdev->irq, ata_interrupt, IRQF_SHARED,
-+				 &sil680_sht);
-+
-+use_ioports:
- 	return ata_pci_init_one(pdev, ppi);
- }
- 
+Ping?
