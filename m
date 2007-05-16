@@ -1,56 +1,43 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patches] IDE updates/fixes
-Date: Wed, 16 May 2007 12:07:57 +0200
-Message-ID: <200705161207.57716.bzolnier@gmail.com>
-References: <200705160127.55430.bzolnier@gmail.com> <alpine.LFD.0.98.0705151847160.3890@woody.linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Serial ATA (SATA) shutdown info
+Date: Wed, 16 May 2007 12:46:03 +0200
+Message-ID: <464AE0EB.9080300@gmail.com>
+References: <1179232945.16527.25.camel@quest.netsplit.com>	 <711b967b0705150834sdd14538x459119386c19a7ac@mail.gmail.com> <1179243992.16527.56.camel@quest.netsplit.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:14165 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756634AbXEPJzx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 05:55:53 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so494794nza
-        for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 02:55:52 -0700 (PDT)
-In-Reply-To: <alpine.LFD.0.98.0705151847160.3890@woody.linux-foundation.org>
-Content-Disposition: inline
+Received: from wr-out-0506.google.com ([64.233.184.234]:43631 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755169AbXEPKqR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 06:46:17 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so150622wra
+        for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 03:46:16 -0700 (PDT)
+In-Reply-To: <1179243992.16527.56.camel@quest.netsplit.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Scott James Remnant <scott@ubuntu.com>
+Cc: linux-ide@vger.kernel.org, 114683@bugs.launchpad.net
 
-On Wednesday 16 May 2007, Linus Torvalds wrote:
+Hello, Scott.
+
+Scott James Remnant wrote:
+> Since we've been running with 2.6.x and libata for a while, without
+> bothering to do this, is there any harm in continuing to not do this?
+
+No, I don't think so.
+
+> It's obviously not a regression for us, and we can answer "upgrade to
+> 7.10" quite cheerfully if it turns out there are people with bugs (which
+> they will have always had).
+
+If that works for you and your userbase, you don't need to do anything.
+
 > 
-> On Wed, 16 May 2007, Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > * host driver fixes:
-> >   - pdc202xx_old: mode programming rewrite (a lot of bugs fixed)
-> >   - serverworks/sis5513: PIO mode setup fixes
-> >   - sl82c105: MWDMA0/1 support by Sergei
-> >   - cs5530/sc1200/sl82c105: ->speedproc support ("hdparm -X")
-> 
-> > * 2nd part of cleanups basing on DMA tuning rework (which was merged
-> >   in the previous IDE update) - quite straightforward code re-factoring
-> >   (no functionality changes) and removal of no longer needed functions.
-> > 
-> >   This results in simpler, more generic code and in ~300 LOCs gone.
-> > 
-> > * some misc fixes/updates
-> 
-> Bartlomiej, this really was too late for the 2.6.22 merge window. I'm 
-> going to pull it, since it seems borderline mostly fixes and the 
+> I'll keep an eye on the thread you linked to, if we don't even need to
+> write any zeros, we're definitely happy people :-)
 
-Thanks.
+Me happy too.  :-)
 
-> refactoring should hopefully not change any functionality, but I really 
-
-Moreover most of these patches have been in IDE tree and -mm for
-over 2 months so they really should be fine.
-
-> don't enjoy it. Please don't do this again.
-
-OK and sorry for that.
-
-Bart
+-- 
+tejun
