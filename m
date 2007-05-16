@@ -1,33 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 8/8] libata: ack more unsolicited INTRQ
-Date: Wed, 16 May 2007 14:02:01 +0100
-Message-ID: <20070516140201.29d0f6f0@the-village.bc.nu>
-References: <464AACDF.1030903@tw.ibm.com>
-	<464AB2F3.7030103@tw.ibm.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6 fix queue] aec62xx: kill speedproc() method wrapper
+Date: Wed, 16 May 2007 18:20:00 +0400
+Message-ID: <464B1310.2080808@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200705120122.34384.sshtylyov@ru.mvista.com> <200705152343.12956.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36377 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758648AbXEPM6G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 08:58:06 -0400
-In-Reply-To: <464AB2F3.7030103@tw.ibm.com>
+Received: from h155.mvista.com ([63.81.120.155]:16495 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754604AbXEPOS1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 May 2007 10:18:27 -0400
+In-Reply-To: <200705152343.12956.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: albertcc@tw.ibm.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> As previously discussed, the possible issue with this patch is:
-> Some ATA/ATAPI devices might be unhappy if the STATUS register
-> is read during data transfer (not sure if this is true or not).
-> (Patch 5/8 doesn't have such issue.) 
+Hello.
 
-Some older intel eats your disk if you do that.
+Bartlomiej Zolnierkiewicz wrote:
 
-Neither of these approaches quite work. Much as I dislike the "old IDE"
-disable/enable irq approach it does look like that is the only safe
-answer for some controllers.
+>>There's no reason to have the speedproc() method wrapper for the two quite
+>>different chip families, so just get rid of it.
 
-Alan
---
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> applied
+
+    I forgot to notice/mention the side effect: there would be no speedproc() 
+method installed if hwif->dma_base happens to be 0.
+
+MBR, Sergei
