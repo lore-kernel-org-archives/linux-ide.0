@@ -1,34 +1,245 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6 fix queue] aec62xx: kill speedproc() method wrapper
-Date: Wed, 16 May 2007 18:20:00 +0400
-Message-ID: <464B1310.2080808@ru.mvista.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200705120122.34384.sshtylyov@ru.mvista.com> <200705152343.12956.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: implement ata_wait_after_reset()
+Date: Wed, 16 May 2007 18:44:53 +0200
+Message-ID: <464B3505.20004@gmail.com>
+References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org> <464439C8.7090309@gmail.com> <20070512034928.GB29259@linux-sh.org> <20070516003002.GA18863@linux-sh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:16495 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754604AbXEPOS1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 May 2007 10:18:27 -0400
-In-Reply-To: <200705152343.12956.bzolnier@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.226]:24555 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760206AbXEPQpf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 12:45:35 -0400
+Received: by nz-out-0506.google.com with SMTP id r28so628556nza
+        for <linux-ide@vger.kernel.org>; Wed, 16 May 2007 09:45:34 -0700 (PDT)
+In-Reply-To: <20070516003002.GA18863@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-Hello.
+On certain device/controller combination, 0xff status is asserted
+after reset and doesn't get cleared during 150ms post-reset wait.  As
+0xff status is interpreted as no device (for good reasons), this can
+lead to misdetection on such cases.
 
-Bartlomiej Zolnierkiewicz wrote:
+This patch implements ata_wait_after_reset() which replaces the 150ms
+sleep and waits upto ATA_TMOUT_FF_WAIT if status is 0xff.
+ATA_TMOUT_FF_WAIT is currently 800ms which is enough for
+HHD424020F7SV00 to get detected but not enough for Quantum GoVault
+drive which is known to take upto 2s.
 
->>There's no reason to have the speedproc() method wrapper for the two quite
->>different chip families, so just get rid of it.
+Without parallel probing, spending 2s on 0xff port would incur too
+much delay on ata_piix's which use 0xff to indicate empty port and
+doesn't have SCR register, so GoVault needs to wait till parallel
+probing.
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
 
-> applied
+This patch is against the current libata-dev#upstream +
+pata_scc-fix-build-failure[1].
 
-    I forgot to notice/mention the side effect: there would be no speedproc() 
-method installed if hwif->dma_base happens to be 0.
+  [1] http://article.gmane.org/gmane.linux.kernel/528405
 
-MBR, Sergei
+Paul, please verify this fixes your problem.  You can skip the
+pata_scc patch, it will cause pata_scc part to be rejected but doesn't
+matter.
+
+Jeff, added 800ms delay is sad but this seems to be the only way to
+avoid iVDR drive detection regression for 2.6.22.  I'll cook up
+parallel probing for 2.6.23.
+
+Thanks.
+
+ drivers/ata/ahci.c          |   11 +------
+ drivers/ata/libata-core.c   |   67 +++++++++++++++++++++++++++++++++++---------
+ drivers/ata/pata_scc.c      |   13 +-------
+ drivers/ata/sata_inic162x.c |    2 -
+ include/linux/libata.h      |    8 +++++
+ 5 files changed, 67 insertions(+), 34 deletions(-)
+
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -947,15 +947,8 @@ static int ahci_softreset(struct ata_por
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 	readl(port_mmio + PORT_CMD_ISSUE);	/* flush */
+ 
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	rc = ata_wait_ready(ap, deadline);
+ 	/* link occupied, -ENODEV too is an error */
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -3008,6 +3008,55 @@ int ata_busy_sleep(struct ata_port *ap,
+ }
+ 
+ /**
++ *	ata_wait_after_reset - wait before checking status after reset
++ *	@ap: port containing status register to be polled
++ *	@deadline: deadline jiffies for the operation
++ *
++ *	After reset, we need to pause a while before reading status.
++ *	Also, certain combination of controller and device report 0xff
++ *	for some duration (e.g. until SATA PHY is up and running)
++ *	which is interpreted as empty port in ATA world.  This
++ *	function also waits for such devices to get out of 0xff
++ *	status.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++void ata_wait_after_reset(struct ata_port *ap, unsigned long deadline)
++{
++	unsigned long until = jiffies + ATA_TMOUT_FF_WAIT;
++
++	if (time_before(until, deadline))
++		deadline = until;
++
++	/* Spec mandates ">= 2ms" before checking status.  We wait
++	 * 150ms, because that was the magic delay used for ATAPI
++	 * devices in Hale Landis's ATADRVR, for the period of time
++	 * between when the ATA command register is written, and then
++	 * status is checked.  Because waiting for "a while" before
++	 * checking status is fine, post SRST, we perform this magic
++	 * delay here as well.
++	 *
++	 * Old drivers/ide uses the 2mS rule and then waits for ready.
++	 */
++	msleep(150);
++
++	/* Wait for 0xff to clear.  Some SATA devices take a long time
++	 * to clear 0xff after reset.  For example, HHD424020F7SV00
++	 * iVDR needs >= 800ms while.  Quantum GoVault needs even more
++	 * than that.
++	 */
++	while (1) {
++		u8 status = ata_chk_status(ap);
++
++		if (status != 0xff || time_after(jiffies, deadline))
++			return;
++
++		msleep(50);
++	}
++}
++
++/**
+  *	ata_wait_ready - sleep until BSY clears, or timeout
+  *	@ap: port containing status register to be polled
+  *	@deadline: deadline jiffies for the operation
+@@ -3117,17 +3166,8 @@ static int ata_bus_softreset(struct ata_
+ 	udelay(20);	/* FIXME: flush */
+ 	iowrite8(ap->ctl, ioaddr->ctl_addr);
+ 
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 *
+-	 * Old drivers/ide uses the 2mS rule and then waits for ready
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	/* Before we perform post reset processing we want to see if
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+@@ -3543,8 +3583,8 @@ int sata_std_hardreset(struct ata_port *
+ 		return 0;
+ 	}
+ 
+-	/* wait a while before checking status, see SRST for more info */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	rc = ata_wait_ready(ap, deadline);
+ 	/* link occupied, -ENODEV too is an error */
+@@ -6847,6 +6887,7 @@ EXPORT_SYMBOL_GPL(ata_port_disable);
+ EXPORT_SYMBOL_GPL(ata_ratelimit);
+ EXPORT_SYMBOL_GPL(ata_wait_register);
+ EXPORT_SYMBOL_GPL(ata_busy_sleep);
++EXPORT_SYMBOL_GPL(ata_wait_after_reset);
+ EXPORT_SYMBOL_GPL(ata_wait_ready);
+ EXPORT_SYMBOL_GPL(ata_port_queue_task);
+ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -218,6 +218,13 @@ enum {
+ 	ATA_TMOUT_INTERNAL	= 30 * HZ,
+ 	ATA_TMOUT_INTERNAL_QUICK = 5 * HZ,
+ 
++	/* FIXME: GoVault needs 2s but we can't afford that without
++	 * parallel probing.  800ms is enough for iVDR disk
++	 * HHD424020F7SV00.  Increase to 2secs when parallel probing
++	 * is in place.
++	 */
++	ATA_TMOUT_FF_WAIT	= 4 * HZ / 5,
++
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		= 0,
+ 	BUS_DMA			= 1,
+@@ -734,6 +741,7 @@ extern void ata_host_resume(struct ata_h
+ extern int ata_ratelimit(void);
+ extern int ata_busy_sleep(struct ata_port *ap,
+ 			  unsigned long timeout_pat, unsigned long timeout);
++extern void ata_wait_after_reset(struct ata_port *ap, unsigned long deadline);
+ extern int ata_wait_ready(struct ata_port *ap, unsigned long deadline);
+ extern void ata_port_queue_task(struct ata_port *ap, work_func_t fn,
+ 				void *data, unsigned long delay);
+Index: work/drivers/ata/pata_scc.c
+===================================================================
+--- work.orig/drivers/ata/pata_scc.c
++++ work/drivers/ata/pata_scc.c
+@@ -557,17 +557,8 @@ static unsigned int scc_bus_softreset(st
+ 	udelay(20);
+ 	out_be32(ioaddr->ctl_addr, ap->ctl);
+ 
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 *
+-	 * Old drivers/ide uses the 2mS rule and then waits for ready
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	/* Before we perform post reset processing we want to see if
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -446,7 +446,7 @@ static int inic_hardreset(struct ata_por
+ 		struct ata_taskfile tf;
+ 
+ 		/* wait a while before checking status */
+-		msleep(150);
++		ata_wait_after_reset(ap, deadline);
+ 
+ 		rc = ata_wait_ready(ap, deadline);
+ 		/* link occupied, -ENODEV too is an error */
