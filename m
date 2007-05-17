@@ -1,43 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Serial ATA (SATA) shutdown info
-Date: Thu, 17 May 2007 11:18:26 +0200
-Message-ID: <464C1DE2.8080501@gmail.com>
-References: <1179232945.16527.25.camel@quest.netsplit.com>	 <711b967b0705150834sdd14538x459119386c19a7ac@mail.gmail.com>	 <1179243992.16527.56.camel@quest.netsplit.com> <464AE0EB.9080300@gmail.com> <1179317806.16527.73.camel@quest.netsplit.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 8/8] libata: ack more unsolicited INTRQ
+Date: Thu, 17 May 2007 10:28:05 +0100
+Message-ID: <20070517102805.1f5add4b@the-village.bc.nu>
+References: <464AACDF.1030903@tw.ibm.com>
+	<464AB2F3.7030103@tw.ibm.com>
+	<20070516140201.29d0f6f0@the-village.bc.nu>
+	<464C1972.6050205@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.225]:63687 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754078AbXEQJS5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 May 2007 05:18:57 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so882022nza
-        for <linux-ide@vger.kernel.org>; Thu, 17 May 2007 02:18:55 -0700 (PDT)
-In-Reply-To: <1179317806.16527.73.camel@quest.netsplit.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53825 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754612AbXEQJYT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 May 2007 05:24:19 -0400
+In-Reply-To: <464C1972.6050205@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Scott James Remnant <scott@ubuntu.com>
-Cc: linux-ide@vger.kernel.org, 114683@bugs.launchpad.net
+To: albertl@mail.com
+Cc: albertcc@tw.ibm.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>
 
-Scott James Remnant wrote:
-> On Wed, 2007-05-16 at 12:46 +0200, Tejun Heo wrote:
-> 
->>> I'll keep an eye on the thread you linked to, if we don't even need to
->>> write any zeros, we're definitely happy people :-)
->> Me happy too.  :-)
->>
-> Out of interest, do you know there is a hysterical need to sync() before
-> one calls reboot()?
-> 
-> I would have thought the kernel takes care of making sure it's own data
-> structures are flushed to disk anyway, but I can't see the reference in
-> the kernel code for where it might do this.
+> Even if the unsolicited irq happens, maybe the current code has
+> good chance to handle it?
+> e.g. ata_irq_task() already reads the status before data transfer,
+> thus possibly clearing some of unsolicited irqs.
+> e.g. maybe the data transfer in the workqueue is quick enough?
 
-I dunno.  I seem to recall there was discussion about disk driver not
-flushing cache or something like that years ago but I could be imagining
-things.  With recent kernels, there's no reason for userland to do that
-before shutting down.  Kernel always flushes caches during shutdown, but
-we can also afford some paranoia there as that doesn't cause any harm.
+Probably not given the PIO cycle time.
 
--- 
-tejun
+> If yes, hopefully the ATA_PFLAG_HSM_WQ is soon cleared, and
+> then the interrupt handler can come in ack the irq. (Much the same
+> way when the irq handler encounters "early irq" by bad devices.)
+
+We seem to have three classes of controller here
+
+- Those that need IRQs off for transfers anyway (eg ancient VIA)
+- Those that we must not touch the status bits for but can otherwise
+  behave sanely (Some PIIX, ICH and possibly some others)
+- Those that behave sanely
+
+The first lot are really "No change" and not found on SMP boxes anyway
+The final ones would I think work with your patch (some testing required)
+
+The best I can see that we could do with the Intel ones would be to use
+disable_irq/enable_irq, especially as they are rarely found in native
+mode so usually have a private IRQ. The only problem is that we must
+disable_irq before we take the other locks otherwise we can deadlock in
+disable_irq waiting for the irq handlers to finish while the IRQ handler
+is trying to take the lock so never does.
+
+
