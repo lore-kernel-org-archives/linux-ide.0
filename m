@@ -1,41 +1,32 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_via: pcim_iomap_regions() conversion missed BAR5
-Date: Thu, 17 May 2007 13:37:12 +0200
-Message-ID: <464C3E68.30608@gmail.com>
-References: <464C29DC.80901@deadlyninja.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide.c: microscopic size and readability optimization
+Date: Thu, 17 May 2007 13:06:43 +0100
+Message-ID: <20070517130643.39fbfe29@the-village.bc.nu>
+References: <20070517112554.GA32183@zmei.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:64590 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755512AbXEQLhd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 May 2007 07:37:33 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so915865nza
-        for <linux-ide@vger.kernel.org>; Thu, 17 May 2007 04:37:33 -0700 (PDT)
-In-Reply-To: <464C29DC.80901@deadlyninja.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55523 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754962AbXEQMCJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 May 2007 08:02:09 -0400
+In-Reply-To: <20070517112554.GA32183@zmei.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Valenzuela <tim@deadlyninja.com>, Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: bbpetkov@yahoo.de
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-pcim_iomap_regions() conversion missed BAR5.  Fix it.
+On Thu, 17 May 2007 13:25:54 +0200
+Borislav Petkov <bbpetkov@yahoo.de> wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Sorry, dunno how I missed that during testing. :-( Please verify this
-fixes your problem.
+> -----
+> From: bbpetkov@yahoo.de
+> 
+> A very small size (object file 432 bytes smaller) and readability optimization of ide.c
+> 
+> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index d105d2c..ac4f43c 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -441,7 +441,7 @@ static int vt6421_prepare_host(struct pc
- 		return -ENOMEM;
- 	}
- 
--	rc = pcim_iomap_regions(pdev, 0x1f, DRV_NAME);
-+	rc = pcim_iomap_regions(pdev, 0x3f, DRV_NAME);
- 	if (rc) {
- 		dev_printk(KERN_ERR, &pdev->dev, "failed to request/iomap "
- 			   "PCI BARs (errno=%d)\n", rc);
+Bad idea. Now you won't know which of the conditions caused the BUG() to
+occur.
+
