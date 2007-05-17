@@ -1,30 +1,64 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Thu, 17 May 2007 09:59:11 +0900
-Message-ID: <20070517005911.GB25935@linux-sh.org>
-References: <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org> <464439C8.7090309@gmail.com> <20070512034928.GB29259@linux-sh.org> <20070516003002.GA18863@linux-sh.org> <464B3505.20004@gmail.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: Fixing halt/shutdown for libata spindown handling
+Date: Wed, 16 May 2007 21:16:05 -0400
+Message-ID: <464BACD5.3030003@gentoo.org>
+References: <46492931.4080700@gentoo.org> <46496D47.9010504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:40529 "EHLO smtp.ocgnet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757903AbXEQA7u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 May 2007 20:59:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20070517005016.GA25935@linux-sh.org> <464B3505.20004@gmail.com>
+Received: from smtp141.iad.emailsrvr.com ([207.97.245.141]:51854 "EHLO
+	smtp141.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756382AbXEQBRK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2007 21:17:10 -0400
+In-Reply-To: <46496D47.9010504@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, May 16, 2007 at 06:44:53PM +0200, Tejun Heo wrote:
-> +	/* FIXME: GoVault needs 2s but we can't afford that without
-> +	 * parallel probing.  800ms is enough for iVDR disk
-> +	 * HHD424020F7SV00.  Increase to 2secs when parallel probing
-> +	 * is in place.
-> +	 */
-> +	ATA_TMOUT_FF_WAIT	= 4 * HZ / 5,
-> +
+Hi Tejun,
 
-Changing this to 4 * HZ / 4 gets rid of the occasional COMRESET failure.
-So it would seem that 800ms is good enough for the common case, but it
-seems to be cutting it pretty close..
+Thanks for the fast response and action.
+
+Tejun Heo wrote:
+> it.  I'll come up with a patch, please wait a bit before releasing the
+> update.
+
+The patch has been merged into libata-dev.git so I'd like to revisit 
+this topic now.
+
+Am I right in saying, to fix 2.6.21, the following patches are needed, 
+and no others, in this order:
+
+sd: fix return value of sd_sync_cache()
+3721050afc6cb6ddf6de0f782e2054ebcc225e9b
+(not sure if this one is required?)
+
+[SCSI] sd: implement START/STOP management
+3c94c5a2fb43a654e777f509d5032b0db8ed09f
+
+libata: reimplement suspend/resume support using sdev->manage_start_stop
+9666f4009c22f6520ac3fb8a19c9e32ab973e828
+
+libata: implement libata.spindown_compat
+920a4b1038e442700a1cfac77ea7e20bd615a2c3
+
+libata: fix shutdown warning message printing
+da071b42f73dabbd0daf7ea4c3ff157d53b00648
+
+libata: track spindown status and skip spindown_compat if possible
+13b8d09f5de0aaa3153bbccc98baf247387823dc
+
+
+Additionally, no userspace modifications are needed, at least while 
+Gentoo's shutdown/halt programs are not attempting to spin down libata 
+disks?
+
+I note that the patch titled "SCSI: kill sht->suspend/resume" (not 
+included in the above tree) is not yet merged into Linus' tree. Am I 
+right in saying it's not required for the disk spindown stuff to work 
+properly?
+
+Thanks!
+Daniel
