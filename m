@@ -1,59 +1,33 @@
 From: Ben Collins <ben.collins@ubuntu.com>
-Subject: [PATCH/REDIFF] Cleanup libata HPA support
-Date: Fri, 18 May 2007 11:06:23 -0400
-Message-ID: <1179500783.6510.226.camel@cunning>
+Subject: Re: [PATCH/REDIFF] Cleanup libata HPA support
+Date: Fri, 18 May 2007 12:06:43 -0400
+Message-ID: <1179504403.6510.235.camel@cunning>
+References: <1179500783.6510.226.camel@cunning>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adelie.ubuntu.com ([82.211.81.139]:40131 "EHLO
+Received: from adelie.ubuntu.com ([82.211.81.139]:50083 "EHLO
 	adelie.ubuntu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755321AbXERPGR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 May 2007 11:06:17 -0400
+	with ESMTP id S1756137AbXERQGg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 May 2007 12:06:36 -0400
+In-Reply-To: <1179500783.6510.226.camel@cunning>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: alan@lxorguk.ukuu.org.uk, Kyle McMartin <kyle@ubuntu.com>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-(Rediffed against latest git)
+On Fri, 2007-05-18 at 11:06 -0400, Ben Collins wrote:
+> (Rediffed against latest git)
 
-The original HPA patch that Kyle worked on has gone into current git
-without some fixes that we worked through late in the Ubuntu feisty
-release. Here's the main copy of the notes I sent to Alan a few weeks
-ago in regards to the original patch, and a repatch against current git
-to fix things up. Note we have released feisty with the patch attached
-(albeit we have HPA enabled by default), and we have not had any reports
-directly attributed to it. However, in gutsy (devel for next release,
-based on current stock linux-2.6.git), we are already seeing reports of
-the same issues we already fixed. 
+Added error check for ata_dev_read_id (Thanks tj)
 
-The issues we saw were mainly that some controllers didn't return the
-correct size from the SET_MAX command (sata_nv is a good example). So I
-added a re IDENTIFY after the SET_MAX, and compared all the numbers. If
-re-id was correct, but return value from SET_MAX wasn't we print a
-warning and use the IDENTIFY value regardless (since that's what the
-device is going to use).
-
-ata_hpa_resize() was changed to handle everything in a single call (checks
-for HPA support of the device, and whether ignore_hpa is set or not), and
-it also sets dev->n_sectors before returning.
-
-So far with this patch, we were able to fix all the problems we were
-seeing with it (except the sata_nv issue where we had to revert to not
-using adma for NO_DATA transactions, already reported to libata-dev).
-We've not had any reports of further problems.
-
-CC: Kyle McMartin <kyle@ubuntu.com>
-CC: linux-ide@vger.kernel.org
-CC: alan@lxorguk.ukuu.org.uk
-CC: Jeff Garzik <jgarzik@pobox.com>
-Signed-off-by: Ben Collins <bcollins@ubuntu.com>
-
- libata-core.c |  134 ++++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 93 insertions(+), 41 deletions(-)
+Also, since hpa is disabled by default, print the native size, even when
+HPA isn't asked for (so users and developers can know that it may need
+to be used).
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d3ea7f5..9a6962b 100644
+index d3ea7f5..3c8eb77 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
 @@ -814,16 +814,19 @@ void ata_id_c_string(const u16 *id, unsigned char *s,
@@ -84,7 +58,7 @@ index d3ea7f5..9a6962b 100644
  }
  
  static u64 ata_tf_to_lba(struct ata_taskfile *tf)
-@@ -965,52 +968,101 @@ static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
+@@ -965,52 +968,107 @@ static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
  }
  
  /**
@@ -132,29 +106,28 @@ index d3ea7f5..9a6962b 100644
   */
  
 -static u64 ata_hpa_resize(struct ata_device *dev)
-+static void ata_hpa_resize(struct ata_device *dev)
++static int ata_hpa_resize(struct ata_device *dev)
  {
 -	u64 sectors = dev->n_sectors;
  	u64 hpa_sectors;
--	
++
++	if (!ata_id_hpa_enabled(dev->id))
++		return 0;
++
++	hpa_sectors = ata_hpa_get_native_size(dev);
+ 	
 -	if (ata_id_has_lba48(dev->id))
 -		hpa_sectors = ata_read_native_max_address_ext(dev);
 -	else
 -		hpa_sectors = ata_read_native_max_address(dev);
++	ata_dev_printk(dev, KERN_INFO, "%s: sectors = %lld, hpa_sectors = %lld\n",
++		__FUNCTION__, dev->n_sectors, hpa_sectors);
  
-+	if (!ata_id_hpa_enabled(dev->id) || !ata_ignore_hpa)
-+		return;
-+
-+	hpa_sectors = ata_hpa_get_native_size(dev);
-+	
- 	/* if no hpa, both should be equal */
+-	/* if no hpa, both should be equal */
 -	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, "
 -				"hpa_sectors = %lld\n",
 -		__FUNCTION__, (long long)sectors, (long long)hpa_sectors);
-+	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, hpa_sectors = %lld\n",
-+		__FUNCTION__, dev->n_sectors, hpa_sectors);
-+
-+	if (hpa_sectors > dev->n_sectors) {
++	if (ata_ignore_hpa && hpa_sectors > dev->n_sectors) {
 +		u64 ret_sectors;
  
 -	if (hpa_sectors > sectors) {
@@ -197,13 +170,20 @@ index d3ea7f5..9a6962b 100644
 +			rc = ata_dev_read_id(dev, &dev->class,
 +					     ATA_READID_POSTRESET, id);
 +
-+			dev->n_sectors = ata_id_n_sectors(id);
++			if (rc) {
++				ata_dev_printk(dev, KERN_ERR,
++					"Failed to reread ID after SET_MAX (%d)\n",
++					rc);
++				return -EIO;
++			}
++
++			memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
++			dev->n_sectors = ata_id_n_sectors(dev->id);
 +
 +			if (dev->n_sectors == hpa_sectors) {
 +				ata_dev_printk(dev, KERN_INFO,
 +					"Native size increased to %llu sectors\n",
 +					hpa_sectors);
-+				memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
 +			} else {
 +				ata_dev_printk(dev, KERN_ERR,
 +					"Failed to set native size, "
@@ -213,21 +193,24 @@ index d3ea7f5..9a6962b 100644
  		}
  	}
 -	return sectors;
-+	return;
++	return 0;
  }
  
  static u64 ata_id_n_sectors(const u16 *id)
-@@ -1939,8 +1991,8 @@ int ata_dev_configure(struct ata_device *dev)
+@@ -1939,8 +1997,10 @@ int ata_dev_configure(struct ata_device *dev)
  					dev->flags |= ATA_DFLAG_FLUSH_EXT;
  			}
  
 -			if (ata_id_hpa_enabled(dev->id))
 -				dev->n_sectors = ata_hpa_resize(dev);
 +			/* Check for HPA, and resize if requested */
-+			ata_hpa_resize(dev);
++			rc = ata_hpa_resize(dev);
++			if (rc)
++				goto err_out_nosup;
  
  			/* config NCQ */
  			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
+
 
 -- 
 Ubuntu   : http://www.ubuntu.com/
