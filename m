@@ -1,50 +1,114 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: [patch] Add the device IDs for AMD/ATI SB700
-Date: Fri, 18 May 2007 15:44:44 -0400
-Message-ID: <20070518194444.GA27229@redhat.com>
-References: <FFECF24D2A7F6D418B9511AF6F3586020197F6A6@shacnexch2.atitech.com> <4641C066.8080100@garzik.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] drivers/ata: Add the SW NCQ support to sata_nv for
+ MCP51/MCP55/MCP61
+Date: Fri, 18 May 2007 17:31:48 -0600
+Message-ID: <464E3764.90900@shaw.ca>
+References: <fa.NGBsZzMiMJ9x7V/pv+sqAv36hwA@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51197 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754964AbXERTo5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 May 2007 15:44:57 -0400
-Content-Disposition: inline
-In-Reply-To: <4641C066.8080100@garzik.org>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:48133 "EHLO
+	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754767AbXERXcE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 May 2007 19:32:04 -0400
+In-reply-to: <fa.NGBsZzMiMJ9x7V/pv+sqAv36hwA@ifi.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Henry Su <henry.su@amd.com>, alan@lxorguk.ukuu.org.uk, greg@kroah.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xiaosuzi520@hotmail.com
+To: Kuan Luo <kluo@nvidia.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Wed, May 09, 2007 at 08:36:54AM -0400, Jeff Garzik wrote:
- > Henry Su wrote:
- > > From: henry.su@amd.com
- > > Adding the device ID for AMD/ATI SB700.
- > > Signed-off-by:henry su <henry.su@amd.com>
- > 
- > Time to train new people...
- > 
- > You need to split up your patches:
- > * send I2C and PCI quirk patches to GregKH
- > * send drivers/ide/* stuff to Bart
- > * send drivers/ata/* patches to me
+Kuan Luo wrote:
+> Thanks for your comment, see the explaination inline.
+> We'll apply your advice in later patch.
 
-Additionally, these patches seem to be hurrendously MIME damaged.
-patch(1) sees this..
+...
 
-diff -Nur linux-2.6.21.1.orig/include/linux/pci+AF8-ids.h linux-2.6.21.1/include/linux/pci+AF8-ids.h
---- linux-2.6.21.1.orig/include/linux/pci+AF8-ids.h 2007-05-16 13:28:54.405386000 +-0800
-+-+-+- linux-2.6.21.1/include/linux/pci+AF8-ids.h      2007-05-16 13:45:29.936636000 +-0800
-+AEAAQA- -371,6 +-371,9 +AEAAQA-
-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SRAID 0x4381
-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-SMBUS 0x4385
-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP600+AF8-IDE   0x438c
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SATA  0x4390
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-SMBUS 0x4395
-+-+ACM-define PCI+AF8-DEVICE+AF8-ID+AF8-ATI+AF8-IXP700+AF8-IDE   0x439c
+> Please don't duplicate this code in the driver, this is part of libata 
+> core in libata-scsi.c. Add an export for these functions if you need to 
+> use them in the driver.
+> [kuan]: These calls are declared in static type . I can't export them
+> and don't want to
+> modify libata code.
 
-	Dave
+If you really need these functions then they should be made non-static 
+and exported. Duplicating the code is not a solution.
+
+I'm not so sure you actually need all that, though. I suspect you can 
+likely handle the deferring of commands if you detect an FPDMA data 
+phase inside the qc_issue function only (like you already do in some 
+cases) instead of having to mess with deferring them at the SCSI layer.
+
+> I'm still puzzling out how this stuff all works, but it looks like this 
+> code makes you stop sending new commands if:
+> 
+> -the port is in the FPDMA Data Phase (DMA Setup FIS received but the 
+> transfer is not complete yet) - I assume the hardware doesn't handle 
+> this itself, which seems rather unique
+> -we previously deferred a command inside of qc_issue because we were in 
+> the FPDMA data phase
+> -we previously saw dhfis_flags not equal to qc_active, or we got a 
+> BACKOUT interrupt (whatever exactly that means), both of which set some 
+> value in the back_byte
+> [kuan]: 
+> -If we got BACKOUT interrupt, it means that a command just sent by
+> driver
+> backed out.The driver should resend the command.So new commands should
+> be defered.
+> -If dhfis_flags != qc_active, it indicates that the last command doesn't
+> generate a device to host register FIS .
+> After sending some commands, I found that the last command sometimes has
+> this problem 
+> but previous commands are normal.In this case, we need resend the last
+> command.
+> Both cases set back_byte. 
+
+The case where the command didn't generate a D2H FIS should likely be 
+investigated further, otherwise we don't necessarily know that this 
+workaround will work in all cases?
+
+> This code seems a bit odd. Isn't this tossing out a bunch of potential 
+> error status, etc?
+> [kuan]:
+> If there are commands in queue, the driver can  send  a new command 
+> only after receiving dhfis intr of previous command and before receiving
+> any dmasetup fis intr.
+> In this place,  i do the last check before sending the command.
+
+But the D2H FIS can contain an error indication, correct? If that 
+happens here it won't detect this. In this situation error handling 
+should be triggered.
+
+> 	+	done_mask = pp->qc_active ^ sactive;
+> 	+	if (unlikely(done_mask & sactive)) {
+> 	+		ata_port_printk(ap, KERN_ERR, "illegal qc_active
+> transition "
+> 	+				"(%08x->%08x)\n", ap->qc_active,
+> sactive);
+> 	+		return -EINVAL;
+> 	+	}	
+> 
+> Shouldn't this trigger error handling if it happens instead of just 
+> printing an error?
+> [kuan]:
+> I think the error handling can be triggered by timeout. In fact, 
+> this case should seldom happen.
+
+There have been reports of some drives with bad NCQ implementations that 
+return completion status for commands that were not issued. If we detect 
+this case we should raise an HSM violation which will disable NCQ on 
+this drive if it happens repeatedly. See the code in ahci.c in 
+ahci_host_intr.
+
+This comment still applies:
+
+> Additional/general comments:
+> 
+> Think you need some code to handle suspend and resume (re-enable SATA 
+> MMIO space, etc.)
 
 -- 
-http://www.codemonkey.org.uk
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
+
