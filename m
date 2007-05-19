@@ -1,47 +1,60 @@
 From: "Indan Zupancic" <indan@nul.nu>
-Subject: Re: [PATCH] sata_sil: Greatly improve DMA support
-Date: Sat, 19 May 2007 18:20:30 +0200 (CEST)
-Message-ID: <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
-References: <20070519053532.GA32522@havoc.gtf.org>
+Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
+Date: Sat, 19 May 2007 18:39:14 +0200 (CEST)
+Message-ID: <2229.81.207.0.53.1179592754.squirrel@secure.samage.net>
+References: <20070510072005.GA27316@linux-sh.org>
+    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
+    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
+    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon.samage.net ([85.17.153.66]:49508 "EHLO neon.samage.net"
+Received: from neon.samage.net ([85.17.153.66]:52519 "EHLO neon.samage.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754436AbXESQUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 May 2007 12:20:32 -0400
-In-Reply-To: <20070519053532.GA32522@havoc.gtf.org>
+	id S1754053AbXESQjS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 May 2007 12:39:18 -0400
+In-Reply-To: <464B3505.20004@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-On Sat, May 19, 2007 07:35, Jeff Garzik wrote:
->
-> Since Alan expressed a desire to see Large Block Transfer (LBT) support
-> in pata_sil680, I though I would re-post my patch for adding LBT support
-> to sata_sil.
->
-> Silicon Image's Large Block Transfer (LBT) support is a vendor-specific
-> DMA scatter/gather engine, which enables 64-bit DMA addresses (where
-> supported by platform) and eliminates the annoying 64k DMA boundary
-> found in legacy PCI IDE BMDMA engines.
->
-> This hardware is open hardware.  Docs for both PATA and SATA can be
-> found at http://gkernel.sourceforge.net/specs/sii/
->
-> LBT support works the same way in both pata_sil680 and sata_sil, so
-> maybe a motivated individual could take use this patch as an inspiration
-> for doing the same thing with pata_sil680.
->
-> NOTE:  This patch works for me on x86 and x86-64.  However, other
-> testers reported problems, which is why it is not upstream.
+Hello,
 
-This patch seems to work with my SiI 3512, though I don't notice any
-difference, neither a speedup, nor a slowdown. Hdparm gives the same
-speeds (-tT), and cp -a'ing kernel sources is abysmal slow in both cases,
-(need to look into that one) so I didn't really test it that well.
+Disabling sd_resume() gives me a "quick" resume again (few seconds),
+though it doesn't get rid of the COMRESET errors:
+
+[    2.476417] ata1: device not ready (errno=-19), forcing hardreset
+[    2.476440] ata2: SATA link down (SStatus 0 SControl 310)
+[    2.824896] usb_endpoint usbdev2.3_ep00: PM: resume from 0, parent 2-1 still 2
+[    2.824902] usb 2-1:1.0: PM: resume from 2, parent 2-1 still 2
+[    2.824906] usb 2-1:1.1: PM: resume from 2, parent 2-1 still 2
+[    2.824910] usb 2-1:1.2: PM: resume from 2, parent 2-1 still 2
+[    2.824914] usb_endpoint usbdev2.3_ep05: PM: resume from 0, parent 2-1:1.2 still 2
+[    2.824919] usb_endpoint usbdev2.3_ep85: PM: resume from 0, parent 2-1:1.2 still 2
+[    2.824923] usb_endpoint usbdev2.3_ep81: PM: resume from 0, parent 2-1:1.0 still 2
+[    2.825392] Restarting tasks ... done.
+[    2.931812] ata1: COMRESET failed (errno=-19)
+[    2.931880] ata1: reset failed (errno=-19), retrying in 10 secs
+[    3.136543] usb 2-1: USB disconnect, address 3
+[    3.249382] usb 2-1: new full speed USB device using ohci_hcd and address 4
+[    3.396768] usb 2-1: configuration #1 chosen from 1 choice
+[    4.225560] usb 2-1: reset full speed USB device using ohci_hcd and address 4
+[    4.372298] usbcore: registered new interface driver speedtch
+[    4.456118] speedtch 2-1:1.0: found stage 1 firmware speedtch-1.bin.0.00
+[    4.621056] speedtch 2-1:1.0: found stage 2 firmware speedtch-2.bin.0.00
+[    9.153941] ATM dev 0: ADSL line is synchronising
+[   12.918440] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   12.921971] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[   12.924924] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+
+Doesn't the controller generate an interrupt when it detects a harddisk?
+Is it really needed to do polling?
+
+Idea: What about implementing a sata_sil specific .check_status function,
+instead of using the generic ata_check_status()? That one could check other
+registers to find out what's really going on in the case ENODEV is returned
+by ata_check_status(), or something like that.
 
 Greetings,
 
