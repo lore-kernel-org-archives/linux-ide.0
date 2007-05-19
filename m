@@ -1,63 +1,63 @@
-From: "Indan Zupancic" <indan@nul.nu>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Sat, 19 May 2007 18:39:14 +0200 (CEST)
-Message-ID: <2229.81.207.0.53.1179592754.squirrel@secure.samage.net>
-References: <20070510072005.GA27316@linux-sh.org>
-    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
-    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
-    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [Pkg-sysvinit-devel] [PATCH] libata: remove	libata.spindown_compat
+Date: Sat, 19 May 2007 18:47:54 +0200
+Message-ID: <464F2A3A.5060602@gmail.com>
+References: <464C6A0E.7020601@gmail.com> <1179572779.23670.13.camel@localhost.localdomain> <464EDBFB.3050307@gmail.com> <20070519134836.GA3750@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon.samage.net ([85.17.153.66]:52519 "EHLO neon.samage.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754053AbXESQjS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 May 2007 12:39:18 -0400
-In-Reply-To: <464B3505.20004@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.225]:11127 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757476AbXESQsN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 May 2007 12:48:13 -0400
+Received: by nz-out-0506.google.com with SMTP id r28so1682653nza
+        for <linux-ide@vger.kernel.org>; Sat, 19 May 2007 09:48:12 -0700 (PDT)
+In-Reply-To: <20070519134836.GA3750@khazad-dum.debian.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Miquel van Smoorenburg <miquels@cistron.nl>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Daniel Drake <dsd@gentoo.org>, Francesco Pretto <ceztko@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, pkg-sysvinit-devel@lists.alioth.debian.org
 
-Hello,
+Henrique de Moraes Holschuh wrote:
+> Well, the reason I raised the ruckus in the first place was just the
+> emergency unload, yes.  I didn't know about any missing cache flushes (and
+> AFAIK we never had any reported to us).  We will have to fix that in halt(8)
+> IMHO, just in case.  And probably hdparm/sdparm should also know to not
+> standby or sleep disks without a cache flush, either.
+> 
+> I also don't know the history of halt(8), Miquel does... so I have not much
+> else to comment.
 
-Disabling sd_resume() gives me a "quick" resume again (few seconds),
-though it doesn't get rid of the COMRESET errors:
+OIC, hmm.. STANDBYNOW for cache flushing.  Interesting.
 
-[    2.476417] ata1: device not ready (errno=-19), forcing hardreset
-[    2.476440] ata2: SATA link down (SStatus 0 SControl 310)
-[    2.824896] usb_endpoint usbdev2.3_ep00: PM: resume from 0, parent 2-1 still 2
-[    2.824902] usb 2-1:1.0: PM: resume from 2, parent 2-1 still 2
-[    2.824906] usb 2-1:1.1: PM: resume from 2, parent 2-1 still 2
-[    2.824910] usb 2-1:1.2: PM: resume from 2, parent 2-1 still 2
-[    2.824914] usb_endpoint usbdev2.3_ep05: PM: resume from 0, parent 2-1:1.2 still 2
-[    2.824919] usb_endpoint usbdev2.3_ep85: PM: resume from 0, parent 2-1:1.2 still 2
-[    2.824923] usb_endpoint usbdev2.3_ep81: PM: resume from 0, parent 2-1:1.0 still 2
-[    2.825392] Restarting tasks ... done.
-[    2.931812] ata1: COMRESET failed (errno=-19)
-[    2.931880] ata1: reset failed (errno=-19), retrying in 10 secs
-[    3.136543] usb 2-1: USB disconnect, address 3
-[    3.249382] usb 2-1: new full speed USB device using ohci_hcd and address 4
-[    3.396768] usb 2-1: configuration #1 chosen from 1 choice
-[    4.225560] usb 2-1: reset full speed USB device using ohci_hcd and address 4
-[    4.372298] usbcore: registered new interface driver speedtch
-[    4.456118] speedtch 2-1:1.0: found stage 1 firmware speedtch-1.bin.0.00
-[    4.621056] speedtch 2-1:1.0: found stage 2 firmware speedtch-2.bin.0.00
-[    9.153941] ATM dev 0: ADSL line is synchronising
-[   12.918440] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   12.921971] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
-[   12.924924] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+> At least now it is clear what we need halt(8) to do (in Debian, anyway):
+> 
+> 1. check if we have a responsible kernel or not through sysfs.
+> 
+> 	1a: kernel is responsible, and can spin down disks at shutdown
+> 
+> 		- if given -h on command line, use sysfs to tell kernel
+> 		  to spin down *all* disk devices we can find in sysfs,
+> 		  and don't send any taskfiles or IOCTLs to the disks.
+> 
+> 	1b: kernel is missing this essential feature
+> 
+> 		- keep doing what we are doing now, but issue a cache
+> 		  flush before we send any standby commands.
+> 
+> 2. push that to Debian unstable, and also to stable-proposed-updates, or at
+> the very least to backports.org.
+> 
+> This will give maximum compatibility with the kernel, and fix the
+> cache-not-flushed-before-spindown issue.
 
-Doesn't the controller generate an interrupt when it detects a harddisk?
-Is it really needed to do polling?
+Yeap, right.  It would be great if you can push the updates upstream so
+that other distros can use it too.  Also, some configurations might
+prefer halt not touching the sysfs nodes so that the user can configure
+mange_start_stop, but I guess that kind of stuff is up to distro.
 
-Idea: What about implementing a sata_sil specific .check_status function,
-instead of using the generic ata_check_status()? That one could check other
-registers to find out what's really going on in the case ENODEV is returned
-by ata_check_status(), or something like that.
+Thanks.
 
-Greetings,
-
-Indan
-
-
+-- 
+tejun
