@@ -1,63 +1,73 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [Pkg-sysvinit-devel] [PATCH] libata: remove	libata.spindown_compat
-Date: Sat, 19 May 2007 10:48:36 -0300
-Message-ID: <20070519134836.GA3750@khazad-dum.debian.net>
-References: <464C6A0E.7020601@gmail.com> <1179572779.23670.13.camel@localhost.localdomain> <464EDBFB.3050307@gmail.com>
+From: "Indan Zupancic" <indan@nul.nu>
+Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
+Date: Sat, 19 May 2007 17:54:10 +0200 (CEST)
+Message-ID: <1800.81.207.0.53.1179590050.squirrel@secure.samage.net>
+References: <20070510072005.GA27316@linux-sh.org>
+    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
+    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
+    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48617 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757852AbXESNso (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 May 2007 09:48:44 -0400
-Content-Disposition: inline
-In-Reply-To: <464EDBFB.3050307@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763519AbXESPy3@vger.kernel.org>
+In-Reply-To: <464B3505.20004@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Miquel van Smoorenburg <miquels@cistron.nl>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Daniel Drake <dsd@gentoo.org>, Francesco Pretto <ceztko@gmail.com>, Chuck Ebbert <cebbert@redhat.com>, pkg-sysvinit-devel@lists.alioth.debian.org
 
-On Sat, 19 May 2007, Tejun Heo wrote:
-> > To fix this issue, halt(8) started issueing WIN_STANDBYNOW1 (0xE0) and
-> > WIN_STANDBYNOW2 (0x94) ioctls before halt and poweroff, as that was more
-> > reliable than "flush cache" and the effect was the same.
-> 
-> One culprit there is that, according to the spec, STANDBYNOW doesn't
-> necessarily imply cache flush and AFAIK issuing STANDBYNOW to libata
-> devices is to avoid emergency unload.  Can you comment on this Henrique?
+On Wed, May 16, 2007 18:44, Tejun Heo wrote:
+> On certain device/controller combination, 0xff status is asserted
+> after reset and doesn't get cleared during 150ms post-reset wait.  As
+> 0xff status is interpreted as no device (for good reasons), this can
+> lead to misdetection on such cases.
+>
+> This patch implements ata_wait_after_reset() which replaces the 150ms
+> sleep and waits upto ATA_TMOUT_FF_WAIT if status is 0xff.
+> ATA_TMOUT_FF_WAIT is currently 800ms which is enough for
+> HHD424020F7SV00 to get detected but not enough for Quantum GoVault
+> drive which is known to take upto 2s.
+>
+> Without parallel probing, spending 2s on 0xff port would incur too
+> much delay on ata_piix's which use 0xff to indicate empty port and
+> doesn't have SCR register, so GoVault needs to wait till parallel
+> probing.
 
-Well, the reason I raised the ruckus in the first place was just the
-emergency unload, yes.  I didn't know about any missing cache flushes (and
-AFAIK we never had any reported to us).  We will have to fix that in halt(8)
-IMHO, just in case.  And probably hdparm/sdparm should also know to not
-standby or sleep disks without a cache flush, either.
+Using sata_sil (SiI 3512) with a ST3120827AS disk here.
 
-I also don't know the history of halt(8), Miquel does... so I have not much
-else to comment.
+For me the COMRESET happens after resume (s2ram):
 
-At least now it is clear what we need halt(8) to do (in Debian, anyway):
+[    2.174342] sd 0:0:0:0: [sda] Starting disk
+[    2.476407] ata1: device not ready (errno=-19), forcing hardreset
+[    2.476429] ata2: SATA link down (SStatus 0 SControl 310)
+[    2.931793] ata1: COMRESET failed (errno=-19)
+[    2.931797] ata1: reset failed (errno=-19), retrying in 10 secs
+[   12.918421] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   12.921957] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[   12.925908] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
 
-1. check if we have a responsible kernel or not through sysfs.
+With your patch applied the output is:
 
-	1a: kernel is responsible, and can spin down disks at shutdown
+[    2.173369] sd 0:0:0:0: [sda] Starting disk
+[    2.475431] ata1: device not ready (errno=-19), forcing hardreset
+[    2.475453] ata2: SATA link down (SStatus 0 SControl 310)
+[    3.592930] ata1: COMRESET failed (errno=-19)
+[    3.592934] ata1: reset failed (errno=-19), retrying in 9 secs
+[   12.917446] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   12.920969] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[   12.924945] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
 
-		- if given -h on command line, use sysfs to tell kernel
-		  to spin down *all* disk devices we can find in sysfs,
-		  and don't send any taskfiles or IOCTLs to the disks.
+Resume takes now ten seconds or more, while it used to take only a few seconds,
+what changed? A few kernel versions ago (2.6.21-rc or so?) it retried in 5 seconds
+instead of 10, but even that is too long.
 
-	1b: kernel is missing this essential feature
+Maybe a silly question, but why do we wait for the harddisk to show up? Maybe that
+makes a little bit of sense at bootup, but for resume from ram, where nothing is
+supposed to have changed, it seems a bit strange. Why not wait when something tries
+to access the harddisk or something?
 
-		- keep doing what we are doing now, but issue a cache
-		  flush before we send any standby commands.
+I wonder if sil_pci_device_resume() and sd_resume() know about each other...
+I'll disable sd_resume() and see how that goes.
 
-2. push that to Debian unstable, and also to stable-proposed-updates, or at
-the very least to backports.org.
+Greetings,
 
-This will give maximum compatibility with the kernel, and fix the
-cache-not-flushed-before-spindown issue.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Indan
