@@ -1,73 +1,50 @@
 From: "Indan Zupancic" <indan@nul.nu>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Sat, 19 May 2007 17:54:10 +0200 (CEST)
-Message-ID: <1800.81.207.0.53.1179590050.squirrel@secure.samage.net>
-References: <20070510072005.GA27316@linux-sh.org>
-    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
-    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
-    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
+Subject: Re: [PATCH] sata_sil: Greatly improve DMA support
+Date: Sat, 19 May 2007 18:20:30 +0200 (CEST)
+Message-ID: <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
+References: <20070519053532.GA32522@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763519AbXESPy3@vger.kernel.org>
-In-Reply-To: <464B3505.20004@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from neon.samage.net ([85.17.153.66]:49508 "EHLO neon.samage.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754436AbXESQUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 May 2007 12:20:32 -0400
+In-Reply-To: <20070519053532.GA32522@havoc.gtf.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Wed, May 16, 2007 18:44, Tejun Heo wrote:
-> On certain device/controller combination, 0xff status is asserted
-> after reset and doesn't get cleared during 150ms post-reset wait.  As
-> 0xff status is interpreted as no device (for good reasons), this can
-> lead to misdetection on such cases.
+On Sat, May 19, 2007 07:35, Jeff Garzik wrote:
 >
-> This patch implements ata_wait_after_reset() which replaces the 150ms
-> sleep and waits upto ATA_TMOUT_FF_WAIT if status is 0xff.
-> ATA_TMOUT_FF_WAIT is currently 800ms which is enough for
-> HHD424020F7SV00 to get detected but not enough for Quantum GoVault
-> drive which is known to take upto 2s.
+> Since Alan expressed a desire to see Large Block Transfer (LBT) support
+> in pata_sil680, I though I would re-post my patch for adding LBT support
+> to sata_sil.
 >
-> Without parallel probing, spending 2s on 0xff port would incur too
-> much delay on ata_piix's which use 0xff to indicate empty port and
-> doesn't have SCR register, so GoVault needs to wait till parallel
-> probing.
+> Silicon Image's Large Block Transfer (LBT) support is a vendor-specific
+> DMA scatter/gather engine, which enables 64-bit DMA addresses (where
+> supported by platform) and eliminates the annoying 64k DMA boundary
+> found in legacy PCI IDE BMDMA engines.
+>
+> This hardware is open hardware.  Docs for both PATA and SATA can be
+> found at http://gkernel.sourceforge.net/specs/sii/
+>
+> LBT support works the same way in both pata_sil680 and sata_sil, so
+> maybe a motivated individual could take use this patch as an inspiration
+> for doing the same thing with pata_sil680.
+>
+> NOTE:  This patch works for me on x86 and x86-64.  However, other
+> testers reported problems, which is why it is not upstream.
 
-Using sata_sil (SiI 3512) with a ST3120827AS disk here.
-
-For me the COMRESET happens after resume (s2ram):
-
-[    2.174342] sd 0:0:0:0: [sda] Starting disk
-[    2.476407] ata1: device not ready (errno=-19), forcing hardreset
-[    2.476429] ata2: SATA link down (SStatus 0 SControl 310)
-[    2.931793] ata1: COMRESET failed (errno=-19)
-[    2.931797] ata1: reset failed (errno=-19), retrying in 10 secs
-[   12.918421] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   12.921957] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
-[   12.925908] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
-
-With your patch applied the output is:
-
-[    2.173369] sd 0:0:0:0: [sda] Starting disk
-[    2.475431] ata1: device not ready (errno=-19), forcing hardreset
-[    2.475453] ata2: SATA link down (SStatus 0 SControl 310)
-[    3.592930] ata1: COMRESET failed (errno=-19)
-[    3.592934] ata1: reset failed (errno=-19), retrying in 9 secs
-[   12.917446] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   12.920969] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
-[   12.924945] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
-
-Resume takes now ten seconds or more, while it used to take only a few seconds,
-what changed? A few kernel versions ago (2.6.21-rc or so?) it retried in 5 seconds
-instead of 10, but even that is too long.
-
-Maybe a silly question, but why do we wait for the harddisk to show up? Maybe that
-makes a little bit of sense at bootup, but for resume from ram, where nothing is
-supposed to have changed, it seems a bit strange. Why not wait when something tries
-to access the harddisk or something?
-
-I wonder if sil_pci_device_resume() and sd_resume() know about each other...
-I'll disable sd_resume() and see how that goes.
+This patch seems to work with my SiI 3512, though I don't notice any
+difference, neither a speedup, nor a slowdown. Hdparm gives the same
+speeds (-tT), and cp -a'ing kernel sources is abysmal slow in both cases,
+(need to look into that one) so I didn't really test it that well.
 
 Greetings,
 
 Indan
+
+
