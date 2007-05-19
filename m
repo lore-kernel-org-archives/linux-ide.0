@@ -1,47 +1,84 @@
 From: "Indan Zupancic" <indan@nul.nu>
-Subject: sd_resume redundant?  [was: [PATCH] libata: implement
-     ata_wait_after_reset()]
-Date: Sun, 20 May 2007 00:33:17 +0200 (CEST)
-Message-ID: <4764.81.207.0.53.1179613997.squirrel@secure.samage.net>
+Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
+Date: Sun, 20 May 2007 00:54:49 +0200 (CEST)
+Message-ID: <2318.81.207.0.53.1179615289.squirrel@secure.samage.net>
 References: <20070510072005.GA27316@linux-sh.org>
     <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
     <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
     <20070511005217.GA23186@li <464B3505.20004@gmail.com>
-    <2229.81.207.0.53.1179592754.squirrel@secure.samage.net>
-    <464F4548.6020101@gmail.com> <464F4A58.2050607@gmail.com>
+    <1800.81.207.0.53.1179590050.squirrel@secure.samage.net>
+    <464F409D.9030408@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon.samage.net ([85.17.153.66]:49180 "EHLO neon.samage.net"
+Received: from neon.samage.net ([85.17.153.66]:42018 "EHLO neon.samage.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754078AbXESWdX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 May 2007 18:33:23 -0400
-In-Reply-To: <464F4A58.2050607@gmail.com>
+	id S1761575AbXESWyy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 May 2007 18:54:54 -0400
+In-Reply-To: <464F409D.9030408@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Paul Mundt <lethal@linux-sh.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-On Sat, May 19, 2007 21:04, Tejun Heo wrote:
-> Tejun Heo wrote:
->> Yeah, if SCR registers are accessible, 0xff doesn't indicate the device
->> isn't there, so the whole skip-0xff logic probably shouldn't apply in
->> such cases, but we can also achieve pretty good result by just making
->> the first reset tries a bit more aggressive.
+On Sat, May 19, 2007 20:23, Tejun Heo wrote:
+> Indan Zupancic wrote:
+>> Resume takes now ten seconds or more, while it used to take only a few seconds,
+>> what changed? A few kernel versions ago (2.6.21-rc or so?) it retried in 5 seconds
+>> instead of 10, but even that is too long.
 >
-> So, here's the patch.
+> There are two different things at play here...
 >
-> Paul, can you please test this patch without the previous patch?  Indan,
-> this should reduce the resume delay.  Please test.  But you'll still
-> feel some added delay compared to 2.6.20 due to the mentioned
-> suspend/resume change.
+> 1. We dropped libata specific suspend/resume implementation in favor of
+> sd driven one.  Unfortunately, the new implementation currently can't do
+> background spinup, so that's probably why you can feel the delay.  We
+> need to figure out how to do background spinup with the new implementation.
 
-This removed the COMRESET errors indeed, and with sd_resume()
-disabled everything is speedy again (2s or so. Still a desktop pc).
-I didn't try with sd_resume enabled.
+What are the advantages of that, except slower resume? ;-)
 
-Everything seems to work fine without sd_resume(), so why is it needed?
+> 2. To make reset finish in defined time, each reset try now has defined
+> deadlines.  I was trying to be conservative so I chose 10sec for the
+> first try.
+
+Right. So to me it seems that failed, because the undefined reset time is just
+replaced with a fixed ad hoc sleep, which is longer than any undefined reset
+mechanism. So where did the advantage go? Better to go back to how it was,
+is my impression. Or make that deadline 10 seconds and after that give up,
+instead of the other way round. Or just move to async reset.
+
+>  It's driven by timing table near the top of libata-eh.c, so
+> adjusting the table is easy and maybe we can be a bit more aggressive
+> with the first two tries.  But if we solve #1, this shouldn't matter too
+> much.
+
+#2 seems totally unrelated to #1, as #1 is about spinup, and #2 about reset.
+Only relation is that #2 slows down #1 because #1 needs to wait on #2.
+
+
+>> Maybe a silly question, but why do we wait for the harddisk to show up? Maybe that
+>> makes a little bit of sense at bootup, but for resume from ram, where nothing is
+>> supposed to have changed, it seems a bit strange. Why not wait when something tries
+>> to access the harddisk or something?
+>
+> I hope it's explained now.
+
+Almost. Explained is why we wait on the disk, but that's only the sd_resume part.
+It's still unclear why resume must wait till the reset is done.
+
+
+>> I wonder if sil_pci_device_resume() and sd_resume() know about each other...
+>> I'll disable sd_resume() and see how that goes.
+>
+> Yeap, that should work.  In most configurations, devices spin up
+> immediately after power is restored.  sd_resume() just waits for the
+> device to be revalidated in such cases.
+
+And it kicks the disk into action. Why? Only thing it does is sending a START_STOP
+command. I assume that causes the disk to spin up. But for e.g. laptopmode I can
+imagine that's quite annoying. I think sd_resume() is totally unnecessary and can
+be removed, because it seems wrong to always force the harddisk to spin up,
+background spin up or not.
 
 Greetings,
 
