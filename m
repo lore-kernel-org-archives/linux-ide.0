@@ -1,31 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] sata_sil: Greatly improve DMA support
-Date: Sat, 19 May 2007 17:31:11 -0400
-Message-ID: <464F6C9F.4060503@garzik.org>
-References: <fa.SqfRJHzGgf3m6sdJPwJTwHDPSuw@ifi.uio.no> <464F2D83.6000506@shaw.ca> <464F6BB1.9050609@garzik.org>
+Date: Sat, 19 May 2007 18:03:44 -0400
+Message-ID: <464F7440.10900@garzik.org>
+References: <20070519053532.GA32522@havoc.gtf.org> <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58248 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58364 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754709AbXESVbN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 19 May 2007 17:31:13 -0400
-In-Reply-To: <464F6BB1.9050609@garzik.org>
+	id S1756755AbXESWDr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 May 2007 18:03:47 -0400
+In-Reply-To: <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
+To: Indan Zupancic <indan@nul.nu>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
-> rotfl.  Boy am I dumb.  I -thought- my patch, written months ago, 
-> included that bit.  But obviously it does not.  Let's add that...
+Indan Zupancic wrote:
+> This patch seems to work with my SiI 3512, though I don't notice any
+> difference, neither a speedup, nor a slowdown. Hdparm gives the same
+> speeds (-tT), and cp -a'ing kernel sources is abysmal slow in both cases,
+> (need to look into that one) so I didn't really test it that well.
 
-Or not.  It just gets rid of the 64k boundary -and- allows for larger 
-scatter/gather entries.  LBT does not add 64-bit DMA support.
 
-That answers that :)  Thanks for poking me to take a trip down memory 
-lane...
+It won't result in much of a speedup, except in situations where IOMMU 
+or other situation that causes you to run into the 64k boundary being an 
+issue -- generally only on huge transfers.
+
+A good measure is to dd(1) to/from the block device, rather than using a 
+filesystem.  As has been shown on LKML, the filesystem can really slow 
+things down in some cases.
 
 	Jeff
 
