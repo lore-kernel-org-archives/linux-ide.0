@@ -1,160 +1,99 @@
 From: "Indan Zupancic" <indan@nul.nu>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Sun, 20 May 2007 15:26:34 +0200 (CEST)
-Message-ID: <1678.81.207.0.53.1179667594.squirrel@secure.samage.net>
-References: <20070510072005.GA27316@linux-sh.org>
-    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
-    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
-    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
-    <1800.81.207.0.53.1179590050.squirrel@secure.samage.net>
-    <464F409D.9030408@gmail.com>
-    <2318.81.207.0.53.1179615289.squirrel@secure.samage.net>
-    <465019E6.2000302@gmail.com>
+Subject: Re: [PATCH] sata_sil: Greatly improve DMA support
+Date: Sun, 20 May 2007 15:38:50 +0200 (CEST)
+Message-ID: <4028.81.207.0.53.1179668330.squirrel@secure.samage.net>
+References: <20070519053532.GA32522@havoc.gtf.org>
+    <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
+    <464F7440.10900@garzik.org>
+    <2741.81.207.0.53.1179616929.squirrel@secure.samage.net>
+    <465020B8.1010605@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon.samage.net ([85.17.153.66]:46209 "EHLO neon.samage.net"
+Received: from neon.samage.net ([85.17.153.66]:34399 "EHLO neon.samage.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755926AbXETN0j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 May 2007 09:26:39 -0400
-In-Reply-To: <465019E6.2000302@gmail.com>
+	id S1755980AbXETNix (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 May 2007 09:38:53 -0400
+In-Reply-To: <465020B8.1010605@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Paul Mundt <lethal@linux-sh.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello Tejun,
-
-Thanks for your answers.
-
-On Sun, May 20, 2007 11:50, Tejun Heo wrote:
+On Sun, May 20, 2007 12:19, Tejun Heo wrote:
 > Indan Zupancic wrote:
->>> 1. We dropped libata specific suspend/resume implementation in favor of
->>> sd driven one.  Unfortunately, the new implementation currently can't do
->>> background spinup, so that's probably why you can feel the delay.  We
->>> need to figure out how to do background spinup with the new implementation.
+>> On Sun, May 20, 2007 00:03, Jeff Garzik wrote:
+>>> Indan Zupancic wrote:
+>>>> This patch seems to work with my SiI 3512, though I don't notice any
+>>>> difference, neither a speedup, nor a slowdown. Hdparm gives the same
+>>>> speeds (-tT), and cp -a'ing kernel sources is abysmal slow in both cases,
+>>>> (need to look into that one) so I didn't really test it that well.
+>>>
+>>> It won't result in much of a speedup, except in situations where IOMMU
+>>> or other situation that causes you to run into the 64k boundary being an
+>>> issue -- generally only on huge transfers.
+>>>
+>>> A good measure is to dd(1) to/from the block device, rather than using a
+>>> filesystem.  As has been shown on LKML, the filesystem can really slow
+>>> things down in some cases.
 >>
->> What are the advantages of that, except slower resume? ;-)
->
-> The change was made primarily to make libata spin down disks properly on
-> power down and hibernate.  I don't like the added delay either but it's
-> better than shortening the lifespan of harddisks.
-
-Ah, it fixes that "weird noise on shutdown" problem? Fair enough.
-
-
->  Making resuming
-> asynchronous is planned but we need more infrastructure to do that
-> properly.  The previous implementation worked but it also might try to
-> spin up a lot of disks at once which can't be good for PSU.  I'm not
-> sure yet how to do that properly with sd driving suspend/resume.
-
-Don't controllers support spread spin up of disks, to avoid the peak load?
-I think I saw something about that in the SiI 3512 spec I downloaded. So
-maybe something like a special spin up method which can be implemented
-by drivers, and if it isn't, the current start stop thing is used?
-
-
->>> 2. To make reset finish in defined time, each reset try now has defined
->>> deadlines.  I was trying to be conservative so I chose 10sec for the
->>> first try.
+>> I didn't really expect a speedup, it's more that I've no regression to report.
 >>
->> Right. So to me it seems that failed, because the undefined reset time is just
->> replaced with a fixed ad hoc sleep, which is longer than any undefined reset
->> mechanism. So where did the advantage go? Better to go back to how it was,
->> is my impression. Or make that deadline 10 seconds and after that give up,
->> instead of the other way round. Or just move to async reset.
->
-> Well, yeah, your case degraded for sure but a lot of hotplug or error
-> handling cases are now much better which often used to take more than 30
-> secs in many cases.  There are just a lot of cases and a lot of weird
-> devices.  Aiming generally acceptable delay on most cases is of higher
-> priority than optimizing specific cases.
-
-What I meant is that the deadline isn't effective because if it can't be done within
-that time, it's just retried after 10 seconds or whatever, basically rendering the
-deadline useless. But now I understand that the retry is done in the background,
-and that it was just the sd_resume that caused everything to wait on it.
-
-
-> That said, the 10 sec delayed
-> retry you're seeing is primarily caused by incorrect interpretation of
-> 0xff status on sata_sil, so with that fixed, it shouldn't be too much of
-> a problem.
-
-True.
-
->>>  It's driven by timing table near the top of libata-eh.c, so
->>> adjusting the table is easy and maybe we can be a bit more aggressive
->>> with the first two tries.  But if we solve #1, this shouldn't matter too
->>> much.
+>> I could benchmark the patch more thoroughly, but right now I'm more worried
+>> about the crawling cp I just discovered. Talking about filesystems slowing down
+>> things...
 >>
->> #2 seems totally unrelated to #1, as #1 is about spinup, and #2 about reset.
->> Only relation is that #2 slows down #1 because #1 needs to wait on #2.
->
-> Not that easy.  Many drives don't respond to reset while they're
-> spinning up.
-
-Bugger. So it seems like a good idea to do the reset and spinup async together.
-
-
->>>> Maybe a silly question, but why do we wait for the harddisk to show up? Maybe that
->>>> makes a little bit of sense at bootup, but for resume from ram, where nothing is
->>>> supposed to have changed, it seems a bit strange. Why not wait when something tries
->>>> to access the harddisk or something?
->>> I hope it's explained now.
+>> Test:
 >>
->> Almost. Explained is why we wait on the disk, but that's only the sd_resume part.
->> It's still unclear why resume must wait till the reset is done.
->
-> Port reset itself is asynchronous.  The wait is solely from sd_resume.
-
-The whole resetting, or just the retry after 10 seconds? But it becomes clear now that
-you're right that the spinup problem is solved if sd_resume does background spin up.
-
-
->>>> I wonder if sil_pci_device_resume() and sd_resume() know about each other...
->>>> I'll disable sd_resume() and see how that goes.
->>> Yeap, that should work.  In most configurations, devices spin up
->>> immediately after power is restored.  sd_resume() just waits for the
->>> device to be revalidated in such cases.
+>> $ cp -a linux-2.6/ /tmp/
 >>
->> And it kicks the disk into action. Why? Only thing it does is sending a START_STOP
->> command. I assume that causes the disk to spin up. But for e.g. laptopmode I can
->> imagine that's quite annoying. I think sd_resume() is totally unnecessary and can
->> be removed, because it seems wrong to always force the harddisk to spin up,
->> background spin up or not.
+>> done on the same ext3 partition. linux-2.6 contains source and git repo only,
+>> I'm compiling stuff with O=../obj.
+>>
+>> $ vmstat 10
+>> procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+>>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+>>  0  1      0   4168   3316 195700    0    0   739   494  530  393 15  3 66 16
+>>  0  3      4   4120   2040 198196    0    0 14677 14111 1247  435  0 17  0 83
+>>  0  1      4   3588   1444 199696    0    0  8892  9472 1362  438  0 12  0 88
+>>  1  0      4   3772   4228 196012    0    0   764   454 1161  345  0  4  0 96
+>>  0  1      4   3548   6156 193088    0    0   793   851 1158  340  0  4  0 96
+>>  0  1      4   3852   7608 189096    0    0   798   523 1160  474  1  4  0 95
+>>  1  1      4   3612   8684 186048    0    0  1244   864 1178  430  2  5  0 93
+>>  0  1      4  90660   9308  96396    0    0   853   906 1244  578  7  6  0 87
+>>  0  1      4  72280   9816 112368    0    0   830   854 1278  429 12  5  0 83
+>>  1  0      4  52488  10296 130560    0    0   935   861 1178  418  1  6  0 94
+>>  0  1      4  30500  10788 149776    0    0   977   858 1178  371  0  6  0 94
+>>  0  1      4   9792  11244 167856    0    0   918  1394 1182  350  1  5  0 94
+>>  0  1      4   4016  11216 172504    0    0  1017   858 1181  382  1  6  0 94
+>>  0  1      4   3660  11484 171484    0    0   966   861 1182  410  1  6  0 94
+>>
+>> It never finished, as I had no patience to copy about 900 Mb with this rate.
+>>
+>> As it's a git tree, I suppose it's heavily fragmented, but this is still rather
+>> pathetic. Should I blame cp, or is something else wrong? Any ideas how
+>> to figure this one out would be appreciated. Sorry for the off-topicness.
 >
-> Most ATA drives would spin up immediately when power is reapplied unless
-> configured otherwise and you can configure whether sd_resume issues
-> START_STOP or not by echoing to sysfs node
-> /sys/class/scsi_disk/h:c:i:l/manage_start_stop.  The drawback here is
-> you won't get proper spindown if you turn it off.
+> Do things improve if you change the io scheduler to deadline?
+>
+>   # echo deadline > /sys/block/sda/queue/scheduler
 
-Thanks for the pointer, I'll fiddle with it. What do you mean with "proper" here?
-Not at all, or in a forced way because power goes away?
+I also tried noop, anticipatory, and now deadline, but it doesn't matter.
 
-(And what does the 'allow_restart' option do?)
+> Also worth looking at is the following bug entry.
+>
+>   http://bugzilla.kernel.org/show_bug.cgi?id=7372
+>
+> There seems to be weird interaction among the scheduler / VM / IO.  The
+> exact cause is still not verified.  :-(
 
->  Adding fine-grained
-> control can be useful.  Wanna give it a try?  Shouldn't be too difficult
-> and, as manage_start_stop is just added, I think we can still change its
-> API.
+I know, I posted a bugreport too, but for starvation with the anticipatory scheduler.
 
-Well, manage_start_stop could be split up into manage_start and manage_stop,
-but I don't know how useful that is in practice. Maybe it makes more sense to
-check /proc/sys/vm/laptop_mode and then decide whether to start the disk.
-Or just remember the disk state and restore that?
-
-My impression is that these options aren't that useful other than for debugging,
-but that normally the right thing should be done automatically. (Not spinning
-down at reboot, not spinning up at bootup if the disk isn't used, not spinning up
-after resume if the disk wasn't spinning before suspend, etc.)
-
-Perhaps a silly question, but how can you ever set manage_start_stop to 0 before
-the disk is started at bootup? You can change it before doing suspend, but not at
-bootup. So is this option at the right place?
+Anyway, that bug seems unrelated to my case, as they have system unresponsiveness
+or other nastiness, while I only have a crawling cp, which I blame on weaknesses
+within ext3, a badly designed cp program and very fragmented filesystem. I just need
+to verify that, somehow. I'll try with older kernels later.
 
 Greetings,
 
