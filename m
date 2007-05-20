@@ -1,101 +1,98 @@
 From: "Indan Zupancic" <indan@nul.nu>
-Subject: Re: [PATCH] sata_sil: Greatly improve DMA support
-Date: Sun, 20 May 2007 15:38:50 +0200 (CEST)
-Message-ID: <4028.81.207.0.53.1179668330.squirrel@secure.samage.net>
-References: <20070519053532.GA32522@havoc.gtf.org>
-    <1441.81.207.0.53.1179591630.squirrel@secure.samage.net>
-    <464F7440.10900@garzik.org>
-    <2741.81.207.0.53.1179616929.squirrel@secure.samage.net>
-    <465020B8.1010605@gmail.com>
+Subject: Re: sd_resume redundant?  [was: [PATCH] libata: implement      
+     ata_wait_after_reset()]
+Date: Sun, 20 May 2007 16:27:42 +0200 (CEST)
+Message-ID: <1345.81.207.0.53.1179671262.squirrel@secure.samage.net>
+References: <20070510072005.GA27316@linux-sh.org>
+    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>
+    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>
+    <20070511005217.GA23186@li <464B3505.20004@gmail.com>
+    <2229.81.207.0.53.1179592754.squirrel@secure.samage.net>
+    <464F4548.6020101@gmail.com> <464F4A58.2050607@gmail.com>
+    <4764.81.207.0.53.1179613997.squirrel@secure.samage.net>
+    <46501ACF.6020702@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from neon.samage.net ([85.17.153.66]:34399 "EHLO neon.samage.net"
+Received: from neon.samage.net ([85.17.153.66]:45642 "EHLO neon.samage.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755980AbXETNix (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 May 2007 09:38:53 -0400
-In-Reply-To: <465020B8.1010605@gmail.com>
+	id S1755580AbXETO1w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 May 2007 10:27:52 -0400
+In-Reply-To: <46501ACF.6020702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Paul Mundt <lethal@linux-sh.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-On Sun, May 20, 2007 12:19, Tejun Heo wrote:
+On Sun, May 20, 2007 11:54, Tejun Heo wrote:
 > Indan Zupancic wrote:
->> On Sun, May 20, 2007 00:03, Jeff Garzik wrote:
->>> Indan Zupancic wrote:
->>>> This patch seems to work with my SiI 3512, though I don't notice any
->>>> difference, neither a speedup, nor a slowdown. Hdparm gives the same
->>>> speeds (-tT), and cp -a'ing kernel sources is abysmal slow in both cases,
->>>> (need to look into that one) so I didn't really test it that well.
+>> On Sat, May 19, 2007 21:04, Tejun Heo wrote:
+>>> Tejun Heo wrote:
+>>>> Yeah, if SCR registers are accessible, 0xff doesn't indicate the device
+>>>> isn't there, so the whole skip-0xff logic probably shouldn't apply in
+>>>> such cases, but we can also achieve pretty good result by just making
+>>>> the first reset tries a bit more aggressive.
+>>> So, here's the patch.
 >>>
->>> It won't result in much of a speedup, except in situations where IOMMU
->>> or other situation that causes you to run into the 64k boundary being an
->>> issue -- generally only on huge transfers.
->>>
->>> A good measure is to dd(1) to/from the block device, rather than using a
->>> filesystem.  As has been shown on LKML, the filesystem can really slow
->>> things down in some cases.
+>>> Paul, can you please test this patch without the previous patch?  Indan,
+>>> this should reduce the resume delay.  Please test.  But you'll still
+>>> feel some added delay compared to 2.6.20 due to the mentioned
+>>> suspend/resume change.
 >>
->> I didn't really expect a speedup, it's more that I've no regression to report.
->>
->> I could benchmark the patch more thoroughly, but right now I'm more worried
->> about the crawling cp I just discovered. Talking about filesystems slowing down
->> things...
->>
->> Test:
->>
->> $ cp -a linux-2.6/ /tmp/
->>
->> done on the same ext3 partition. linux-2.6 contains source and git repo only,
->> I'm compiling stuff with O=../obj.
->>
->> $ vmstat 10
->> procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
->>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
->>  0  1      0   4168   3316 195700    0    0   739   494  530  393 15  3 66 16
->>  0  3      4   4120   2040 198196    0    0 14677 14111 1247  435  0 17  0 83
->>  0  1      4   3588   1444 199696    0    0  8892  9472 1362  438  0 12  0 88
->>  1  0      4   3772   4228 196012    0    0   764   454 1161  345  0  4  0 96
->>  0  1      4   3548   6156 193088    0    0   793   851 1158  340  0  4  0 96
->>  0  1      4   3852   7608 189096    0    0   798   523 1160  474  1  4  0 95
->>  1  1      4   3612   8684 186048    0    0  1244   864 1178  430  2  5  0 93
->>  0  1      4  90660   9308  96396    0    0   853   906 1244  578  7  6  0 87
->>  0  1      4  72280   9816 112368    0    0   830   854 1278  429 12  5  0 83
->>  1  0      4  52488  10296 130560    0    0   935   861 1178  418  1  6  0 94
->>  0  1      4  30500  10788 149776    0    0   977   858 1178  371  0  6  0 94
->>  0  1      4   9792  11244 167856    0    0   918  1394 1182  350  1  5  0 94
->>  0  1      4   4016  11216 172504    0    0  1017   858 1181  382  1  6  0 94
->>  0  1      4   3660  11484 171484    0    0   966   861 1182  410  1  6  0 94
->>
->> It never finished, as I had no patience to copy about 900 Mb with this rate.
->>
->> As it's a git tree, I suppose it's heavily fragmented, but this is still rather
->> pathetic. Should I blame cp, or is something else wrong? Any ideas how
->> to figure this one out would be appreciated. Sorry for the off-topicness.
+>> This removed the COMRESET errors indeed, and with sd_resume()
+>> disabled everything is speedy again (2s or so. Still a desktop pc).
+>> I didn't try with sd_resume enabled.
 >
-> Do things improve if you change the io scheduler to deadline?
+> Can you try to measure with sd_resume in place?
+
+[    2.173366] sd 0:0:0:0: [sda] Starting disk
+[    2.475422] ata2: SATA link down (SStatus 0 SControl 310)
+[    5.478403] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[    5.481928] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[    5.485904] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[    5.485913] ata1.00: configured for UDMA/100
+[    5.505109] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+[    5.505461] sd 0:0:0:0: [sda] Write Protect is off
+[    5.505465] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    5.505612] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or
+FUA
+...
+[    6.157259] Restarting tasks ... done.
+
+
+And with echo 0 > /sys/class/scsi_disk/0\:0\:0\:0/manage_start_stop:
+
+[    2.476476] ata2: SATA link down (SStatus 0 SControl 310)
+...
+[    2.825479] Restarting tasks ... done.
+...
+[    5.022076] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[    5.025605] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[    5.028594] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+[    5.028606] ata1.00: configured for UDMA/100
+[    5.028720] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+[    5.028767] sd 0:0:0:0: [sda] Write Protect is off
+[    5.028773] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    5.028831] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or
+FUA
+
+So over all it takes half a second longer to detect the disk, but because everything waits on it,
+it takes more than three seconds longer to resume.
+
+Setting manage_start_stop to 0 fixes it and is good enough for me, I didn't notice anything bad yet
+because of the unmanaged stop. Implementing background spin up will fix it too.
+
+
+>> Everything seems to work fine without sd_resume(), so why is it needed?
 >
->   # echo deadline > /sys/block/sda/queue/scheduler
+> Because not all disks spin up without being told to do so and like it or
+> not spinning disks up on resume is the default behavior.  As I wrote in
+> the other reply, it would be worthwhile to make it configurable.
 
-I also tried noop, anticipatory, and now deadline, but it doesn't matter.
+Not even after they receive a read command? Ugh.
 
-> Also worth looking at is the following bug entry.
->
->   http://bugzilla.kernel.org/show_bug.cgi?id=7372
->
-> There seems to be weird interaction among the scheduler / VM / IO.  The
-> exact cause is still not verified.  :-(
-
-I know, I posted a bugreport too, but for starvation with the anticipatory scheduler.
-
-Anyway, that bug seems unrelated to my case, as they have system unresponsiveness
-or other nastiness, while I only have a crawling cp, which I blame on weaknesses
-within ext3, a badly designed cp program and very fragmented filesystem. I just need
-to verify that, somehow. I'll try with older kernels later.
-
-Greetings,
+Greeting,
 
 Indan
 
