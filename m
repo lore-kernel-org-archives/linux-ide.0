@@ -1,169 +1,87 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Sun, 20 May 2007 19:09:18 +0200
-Message-ID: <465080BE.3000201@gmail.com>
-References: <20070510072005.GA27316@linux-sh.org>    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>    <20070511005217.GA23186@li <464B3505.20004@gmail.com>    <1800.81.207.0.53.1179590050.squirrel@secure.samage.net>    <464F409D.9030408@gmail.com>    <2318.81.207.0.53.1179615289.squirrel@secure.samage.net>    <465019E6.2000302@gmail.com> <1678.81.207.0.53.1179667594.squirrel@secure.samage.net>
+Subject: Re: sd_resume redundant?  [was: [PATCH] libata: implement       
+    ata_wait_after_reset()]
+Date: Sun, 20 May 2007 19:17:51 +0200
+Message-ID: <465082BF.2070306@gmail.com>
+References: <20070510072005.GA27316@linux-sh.org>    <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com>    <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com>    <20070511005217.GA23186@li <464B3505.20004@gmail.com>    <2229.81.207.0.53.1179592754.squirrel@secure.samage.net>    <464F4548.6020101@gmail.com> <464F4A58.2050607@gmail.com>    <4764.81.207.0.53.1179613997.squirrel@secure.samage.net>    <46501ACF.6020702@gmail.com> <1345.81.207.0.53.1179671262.squirrel@secure.samage.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.228]:14649 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.224]:18105 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755947AbXETRJl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 May 2007 13:09:41 -0400
-Received: by nz-out-0506.google.com with SMTP id z3so90582nzf
-        for <linux-ide@vger.kernel.org>; Sun, 20 May 2007 10:09:40 -0700 (PDT)
-In-Reply-To: <1678.81.207.0.53.1179667594.squirrel@secure.samage.net>
+	with ESMTP id S1755234AbXETRS2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 May 2007 13:18:28 -0400
+Received: by nz-out-0506.google.com with SMTP id z3so92001nzf
+        for <linux-ide@vger.kernel.org>; Sun, 20 May 2007 10:18:27 -0700 (PDT)
+In-Reply-To: <1345.81.207.0.53.1179671262.squirrel@secure.samage.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Indan Zupancic <indan@nul.nu>
 Cc: Paul Mundt <lethal@linux-sh.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
 Indan Zupancic wrote:
->> The change was made primarily to make libata spin down disks properly on
->> power down and hibernate.  I don't like the added delay either but it's
->> better than shortening the lifespan of harddisks.
+>> Can you try to measure with sd_resume in place?
 > 
-> Ah, it fixes that "weird noise on shutdown" problem? Fair enough.
-
-Yeap, finally.
-
->>  Making resuming
->> asynchronous is planned but we need more infrastructure to do that
->> properly.  The previous implementation worked but it also might try to
->> spin up a lot of disks at once which can't be good for PSU.  I'm not
->> sure yet how to do that properly with sd driving suspend/resume.
+> [    2.173366] sd 0:0:0:0: [sda] Starting disk
+> [    2.475422] ata2: SATA link down (SStatus 0 SControl 310)
+> [    5.478403] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [    5.481928] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+> [    5.485904] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+> [    5.485913] ata1.00: configured for UDMA/100
+> [    5.505109] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+> [    5.505461] sd 0:0:0:0: [sda] Write Protect is off
+> [    5.505465] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> [    5.505612] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or
+> FUA
+> ...
+> [    6.157259] Restarting tasks ... done.
 > 
-> Don't controllers support spread spin up of disks, to avoid the peak load?
-> I think I saw something about that in the SiI 3512 spec I downloaded. So
-> maybe something like a special spin up method which can be implemented
-> by drivers, and if it isn't, the current start stop thing is used?
-
-What they support is allowing drivers to control spin up, and it needs
-support from the HDD (many seem to do these days) && BIOS (so that it
-doesn't spin up the disks during POST) too.  To do that properly, we
-need a repository which distributes spinup tokens such that we can do
-parallel, not thundering herd, spinups.
-
->>> Right. So to me it seems that failed, because the undefined reset time is just
->>> replaced with a fixed ad hoc sleep, which is longer than any undefined reset
->>> mechanism. So where did the advantage go? Better to go back to how it was,
->>> is my impression. Or make that deadline 10 seconds and after that give up,
->>> instead of the other way round. Or just move to async reset.
->> Well, yeah, your case degraded for sure but a lot of hotplug or error
->> handling cases are now much better which often used to take more than 30
->> secs in many cases.  There are just a lot of cases and a lot of weird
->> devices.  Aiming generally acceptable delay on most cases is of higher
->> priority than optimizing specific cases.
 > 
-> What I meant is that the deadline isn't effective because if it can't be done within
-> that time, it's just retried after 10 seconds or whatever, basically rendering the
-> deadline useless. But now I understand that the retry is done in the background,
-> and that it was just the sd_resume that caused everything to wait on it.
-
-The deadline table sets limits to the maximum time a try can take &&
-when the next attempt is made.  So, the initial deadline of 10 secs
-means that the first try is allowed to take upto 10secs and no matter
-when or why it fails, the next attempt is made after 10sec is passed.  I
-would love to bang devices harder but a lot of creepy device are out
-there and I'm pretty sure some of them would crap themselves if pushed
-too hard.  :-(
-
-Anyways, in your case, the problem was that sata_sil wasted the first
-try for no good reason.  I'm not determined whether we need more
-aggressive deadlines for early tries for cases like this.  It's
-something to think about.
-
->>>>  It's driven by timing table near the top of libata-eh.c, so
->>>> adjusting the table is easy and maybe we can be a bit more aggressive
->>>> with the first two tries.  But if we solve #1, this shouldn't matter too
->>>> much.
->>> #2 seems totally unrelated to #1, as #1 is about spinup, and #2 about reset.
->>> Only relation is that #2 slows down #1 because #1 needs to wait on #2.
->> Not that easy.  Many drives don't respond to reset while they're
->> spinning up.
+> And with echo 0 > /sys/class/scsi_disk/0\:0\:0\:0/manage_start_stop:
 > 
-> Bugger. So it seems like a good idea to do the reset and spinup async together.
-
-There are a lot of cases.  Depending on various configuration and whims,
-some drives spin up when power is reapplied and don't respond to reset
-till it's ready.  Some drives don't spin up when power is reapplied but
-spin up when PHY is woken up and don't respond to reset till it's ready.
- Yet others just sit quiet and respond to reset nicely but don't spin up
-till told to do so.
-
-So, well, I agree that the best strategy is doing it all asynchronously.
-
->>>>> Maybe a silly question, but why do we wait for the harddisk to show up? Maybe that
->>>>> makes a little bit of sense at bootup, but for resume from ram, where nothing is
->>>>> supposed to have changed, it seems a bit strange. Why not wait when something tries
->>>>> to access the harddisk or something?
->>>> I hope it's explained now.
->>> Almost. Explained is why we wait on the disk, but that's only the sd_resume part.
->>> It's still unclear why resume must wait till the reset is done.
->> Port reset itself is asynchronous.  The wait is solely from sd_resume.
+> [    2.476476] ata2: SATA link down (SStatus 0 SControl 310)
+> ...
+> [    2.825479] Restarting tasks ... done.
+> ...
+> [    5.022076] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [    5.025605] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+> [    5.028594] ata1.00: ata_hpa_resize 1: sectors = 234441648, hpa_sectors = 234441648
+> [    5.028606] ata1.00: configured for UDMA/100
+> [    5.028720] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+> [    5.028767] sd 0:0:0:0: [sda] Write Protect is off
+> [    5.028773] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> [    5.028831] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or
+> FUA
 > 
-> The whole resetting, or just the retry after 10 seconds? But it becomes clear now that
-> you're right that the spinup problem is solved if sd_resume does background spin up.
+> So over all it takes half a second longer to detect the disk, but
+> because everything waits on it, it takes more than three seconds
+> longer to resume.
 
-The whole resetting.  ATA controller/port resume itself is completely
-asynchronous.  The resume method just kicks EH thread and tells it to
-wake the thing up and returns.  The EH thread asynchronously resets the
-port, revalidates all the devices and see if any new ones are attached, etc.
+Eeeek.  Extra three secs doesn't sound too hot.  :-(
 
-The culprit is that while EH thread is active all commands are deferred,
-so the START_STOP command sd_resume() issues waits in the SCSI midlayer
-queue till EH is complete.  That's why doing it asynchronously is
-tricky.  I'm not sure whether we would be able to do it without
-separating libata from SCSI so that libata has its own suspend/resume
-functions.  :-(
+> Setting manage_start_stop to 0 fixes it and is good enough for me, I
+> didn't notice anything bad yet because of the unmanaged
+> stop. Implementing background spin up will fix it too.
 
->> Most ATA drives would spin up immediately when power is reapplied unless
->> configured otherwise and you can configure whether sd_resume issues
->> START_STOP or not by echoing to sysfs node
->> /sys/class/scsi_disk/h:c:i:l/manage_start_stop.  The drawback here is
->> you won't get proper spindown if you turn it off.
+Just commenting out sd_resume() would be a better solution for your
+case tho.
+
+>>> Everything seems to work fine without sd_resume(), so why is it needed?
+>> Because not all disks spin up without being told to do so and like it or
+>> not spinning disks up on resume is the default behavior.  As I wrote in
+>> the other reply, it would be worthwhile to make it configurable.
 > 
-> Thanks for the pointer, I'll fiddle with it. What do you mean with "proper" here?
-> Not at all, or in a forced way because power goes away?
+> Not even after they receive a read command? Ugh.
 
-Well, basically, your drive isn't told that the power is gonna go off.
-Power just goes off and your drive has to do emergency head unload which
-sometimes causes the funny noise.
+After receiving a command which requires media access, they do.  What
+I was saying is that the current default behavior is to spin up all
+devices on resume and part of that is achieved by sd_resume().
 
-> (And what does the 'allow_restart' option do?)
+Hmmm... skipping START_STOP during sd_resume() actually is a pretty
+good solution for ATA devices.  I'll think about it.
 
-That's for SCSI and doesn't matter for ATA.  ATA drives restart
-themselves automatically when media access is needed anyway.
-
->>  Adding fine-grained
->> control can be useful.  Wanna give it a try?  Shouldn't be too difficult
->> and, as manage_start_stop is just added, I think we can still change its
->> API.
-> 
-> Well, manage_start_stop could be split up into manage_start and manage_stop,
-> but I don't know how useful that is in practice. Maybe it makes more sense to
-> check /proc/sys/vm/laptop_mode and then decide whether to start the disk.
-> Or just remember the disk state and restore that?
->
-> My impression is that these options aren't that useful other than for debugging,
-> but that normally the right thing should be done automatically. (Not spinning
-> down at reboot, not spinning up at bootup if the disk isn't used, not spinning up
-> after resume if the disk wasn't spinning before suspend, etc.)
-> 
-> Perhaps a silly question, but how can you ever set manage_start_stop to 0 before
-> the disk is started at bootup? You can change it before doing suspend, but not at
-> bootup. So is this option at the right place?
-
-The problem is sorta complicated because it involves all devices which
-use SCSI midlayer.  libata, USB, all the regular SCSI disks, whatnot, so
-it's really hard to sell to linux-scsi people if you choose a default
-behavior which is specific to libata devices.  What can be done is
-adding a configurable option which doesn't change the default behavior
-and configure it in the low level driver.  This is how manage_start_stop
-is configured.  The default value is zero but libata sets it to one
-while registering each device, so the default value for all libata
-devices is 1 (this should answer your last question).
+Thanks.
 
 -- 
 tejun
