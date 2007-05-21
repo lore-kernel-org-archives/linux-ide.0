@@ -1,54 +1,45 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] ata_piix: clean up
-Date: Mon, 21 May 2007 15:15:51 +0100
-Message-ID: <20070521151551.651e3836@the-village.bc.nu>
+Subject: [PATCH] libata: Kiss post_set_mode goodbye
+Date: Mon, 21 May 2007 15:20:33 +0100
+Message-ID: <20070521152033.40eadbdf@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34680 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44019 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753689AbXEUOLp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 10:11:45 -0400
+	with ESMTP id S1755817AbXEUOQ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 10:16:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
-With cable methods in place we don't need a custom error handler for SATA
-so get rid of it
+As of the -mm tree we don't have post_set_mode users any more.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc1-mm1/drivers/ata/ata_piix.c linux-2.6.22-rc1-mm1/drivers/ata/ata_piix.c
---- linux.vanilla-2.6.22-rc1-mm1/drivers/ata/ata_piix.c	2007-05-18 16:21:46.000000000 +0100
-+++ linux-2.6.22-rc1-mm1/drivers/ata/ata_piix.c	2007-05-18 16:46:34.000000000 +0100
-@@ -155,7 +155,6 @@
- static int piix_init_one (struct pci_dev *pdev,
- 				    const struct pci_device_id *ent);
- static void piix_pata_error_handler(struct ata_port *ap);
--static void piix_sata_error_handler(struct ata_port *ap);
- static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev);
- static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
- static void ich_set_dmamode (struct ata_port *ap, struct ata_device *adev);
-@@ -364,7 +363,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc1-mm1/include/linux/libata.h linux-2.6.22-rc1-mm1/include/linux/libata.h
+--- linux.vanilla-2.6.22-rc1-mm1/include/linux/libata.h	2007-05-18 16:22:56.000000000 +0100
++++ linux-2.6.22-rc1-mm1/include/linux/libata.h	2007-05-18 16:38:16.000000000 +0100
+@@ -575,8 +575,6 @@
+ 	void (*phy_reset) (struct ata_port *ap); /* obsolete */
+ 	int  (*set_mode) (struct ata_port *ap, struct ata_device **r_failed_dev);
  
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= piix_sata_error_handler,
-+	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 
- 	.irq_handler		= ata_interrupt,
-@@ -641,12 +640,6 @@
- 			   ata_std_postreset);
- }
- 
--static void piix_sata_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL,
--			   ata_std_postreset);
--}
+-	void (*post_set_mode) (struct ata_port *ap);
 -
- /**
-  *	piix_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
+ 	int (*cable_detect) (struct ata_port *ap);
+ 
+ 	int  (*check_atapi_dma) (struct ata_queued_cmd *qc);
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc1-mm1/drivers/ata/libata-core.c linux-2.6.22-rc1-mm1/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.22-rc1-mm1/drivers/ata/libata-core.c	2007-05-18 16:22:53.000000000 +0100
++++ linux-2.6.22-rc1-mm1/drivers/ata/libata-core.c	2007-05-18 16:40:23.000000000 +0100
+@@ -2892,9 +2902,6 @@
+ 	if (used_dma && (ap->host->flags & ATA_HOST_SIMPLEX))
+ 		ap->host->simplex_claimed = ap;
+ 
+-	/* step5: chip specific finalisation */
+-	if (ap->ops->post_set_mode)
+-		ap->ops->post_set_mode(ap);
+  out:
+ 	if (rc)
+ 		*r_failed_dev = dev;
