@@ -1,52 +1,67 @@
-From: Mauro Carvalho Chehab <mchehab@infradead.org>
-Subject: Re: [3/5] 2.6.22-rc2: known regressions
-Date: Mon, 21 May 2007 07:44:04 -0300
-Message-ID: <1179744244.4138.47.camel@localhost>
-References: <464F6DC9.80805@googlemail.com>
-	 <464F74D5.9080204@googlemail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_hpt366: Enable bits are unreliable so don't use them
+Date: Mon, 21 May 2007 14:52:49 +0100
+Message-ID: <20070521145249.67bf910b@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52299 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756165AbXEUNo4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 09:44:56 -0400
-In-Reply-To: <464F74D5.9080204@googlemail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50797 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755966AbXEUNtB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 09:49:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, video4linux@list.redhat.com, Hans Verkuil <hverkuil@xs4all.nl>, Robert Fitzsimons <robfitz@273k.net>
+To: jeff@garzik.org, akpm@osdl.org, linux-ide@vger.kernel.org
 
-Hi Michal,
+Various people had problems with both old and new IDE when hpt366 enable
+bits started getting honoured. It turns out they are not reliable so
+don't rely on them
 
-Em Dom, 2007-05-20 =C3=A0s 00:06 +0200, Michal Piotrowski escreveu:
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-> V4L
->=20
-> Subject    : V4L ABI breakage
-> References : http://lkml.org/lkml/2007/5/14/42
-> Submitter  : Robert Fitzsimons <robfitz@273k.net>
-> Caused-By  : Hans Verkuil <hverkuil@xs4all.nl>
->              Mauro Carvalho Chehab <mchehab@infradead.org>
->              commit 206ebaf32795cf1582b1e2ff2ec6a560c9e986b8
-> Status     : Unknown
-
-I was traveling abroad last week, without access to my devel
-environment. Hans is currently working on a definitive fix for the
-issue. His schedule is to have a proper solution until next week.
-
-=46or now, it is better just to revert the bad changes. I've committed =
-a
-patch on my tree for that:
-
-http://git.kernel.org/?p=3Dlinux/kernel/git/mchehab/v4l-dvb.git;a=3Dcom=
-mitdiff;h=3D15ac2d293b08b6975c6ca1a80eb839d4cb0dddbf
-
-I'm currently running some tests on my environment with the fix patches
-I currently have. I should send a pull request to Linus later today.
-
---=20
-Cheers,
-Mauro
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc1-mm1/drivers/ata/pata_hpt366.c linux-2.6.22-rc1-mm1/drivers/ata/pata_hpt366.c
+--- linux.vanilla-2.6.22-rc1-mm1/drivers/ata/pata_hpt366.c	2007-05-18 16:21:46.000000000 +0100
++++ linux-2.6.22-rc1-mm1/drivers/ata/pata_hpt366.c	2007-05-18 17:15:23.000000000 +0100
+@@ -220,32 +220,6 @@
+ 	return ATA_CBL_PATA80;
+ }
+ 
+-static int hpt36x_pre_reset(struct ata_port *ap, unsigned long deadline)
+-{
+-	static const struct pci_bits hpt36x_enable_bits[] = {
+-		{ 0x50, 1, 0x04, 0x04 },
+-		{ 0x54, 1, 0x04, 0x04 }
+-	};
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-
+-	if (!pci_test_config_bits(pdev, &hpt36x_enable_bits[ap->port_no]))
+-		return -ENOENT;
+-
+-	return ata_std_prereset(ap, deadline);
+-}
+-
+-/**
+- *	hpt36x_error_handler	-	reset the hpt36x bus
+- *	@ap: ATA port to reset
+- *
+- *	Perform the reset handling for the 366/368
+- */
+-
+-static void hpt36x_error_handler(struct ata_port *ap)
+-{
+-	ata_bmdma_drive_eh(ap, hpt36x_pre_reset, ata_std_softreset, NULL, ata_std_postreset);
+-}
+-
+ /**
+  *	hpt366_set_piomode		-	PIO setup
+  *	@ap: ATA interface
+@@ -351,7 +325,7 @@
+ 
+ 	.freeze		= ata_bmdma_freeze,
+ 	.thaw		= ata_bmdma_thaw,
+-	.error_handler	= hpt36x_error_handler,
++	.error_handler	= ata_bmdma_error_handler,
+ 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
+ 	.cable_detect	= hpt36x_cable_detect,
+ 
