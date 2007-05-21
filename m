@@ -1,55 +1,52 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: use_clustering (sht) bit set to 0 in AHCI ?
-Date: Mon, 21 May 2007 14:17:26 +0200
-Message-ID: <20070521121726.GT14746@kernel.dk>
-References: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com>
+From: Mauro Carvalho Chehab <mchehab@infradead.org>
+Subject: Re: [3/5] 2.6.22-rc2: known regressions
+Date: Mon, 21 May 2007 07:44:04 -0300
+Message-ID: <1179744244.4138.47.camel@localhost>
+References: <464F6DC9.80805@googlemail.com>
+	 <464F74D5.9080204@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:26554 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755576AbXEUMSU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 08:18:20 -0400
-Content-Disposition: inline
-In-Reply-To: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:52299 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756165AbXEUNo4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2007 09:44:56 -0400
+In-Reply-To: <464F74D5.9080204@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alok kataria <alokkataria1@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, video4linux@list.redhat.com, Hans Verkuil <hverkuil@xs4all.nl>, Robert Fitzsimons <robfitz@273k.net>
 
-On Thu, Apr 26 2007, Alok kataria wrote:
-> Hi Jeff,
-> 
-> I recently got a new AHCI disk, and was using the AHCI-libata driver to run
-> this. I noticed that the scattergather lists that were being built for
-> the I/O on this device were just of PAGE_SIZE length, even though i
-> was doing IO on
-> contiguous pages.
-> 
-> Through a little instrumentation i figured out that the use_clustering
-> bit in the ahci_sht (scsi_host_template) is set to zero. Due to which
-> we are not putting consecutive bios into one sg in blk_rq_map_sg.
-> 
-> I tried changing the clustering bit to 1, but encountered a panic at
-> the initialization of the disks  during the bootup process, and so
-> couldn't entirely get hold of the panic mesg.
-> I was wondering, though the max segment size suported with this driver
-> is 65536, why was i not able to feed in bigger SG's to this driver.
-> 
-> I searched on the net and the intel ahci arch doc too but couldn't
-> find anything relative to the clustering support for AHCI.
-> 
-> It would be great help if you could let me know about the possible
-> problems with clustering on AHCI  ? why is it off by default in the
-> driver ? or anything else that might help.
+Hi Michal,
 
-It's a good question. If you look at the documentation, it states that
-ahci supports up to 64k sg entries and each can have a size of up to 4mb
-(bits 0 through 21). So as far as I can tell, clustering should work
-with a segment size up to those 4mb.
+Em Dom, 2007-05-20 =C3=A0s 00:06 +0200, Michal Piotrowski escreveu:
 
-ahci has always had clustering disabled, perhaps Jeff can expand on why?
+> V4L
+>=20
+> Subject    : V4L ABI breakage
+> References : http://lkml.org/lkml/2007/5/14/42
+> Submitter  : Robert Fitzsimons <robfitz@273k.net>
+> Caused-By  : Hans Verkuil <hverkuil@xs4all.nl>
+>              Mauro Carvalho Chehab <mchehab@infradead.org>
+>              commit 206ebaf32795cf1582b1e2ff2ec6a560c9e986b8
+> Status     : Unknown
 
--- 
-Jens Axboe
+I was traveling abroad last week, without access to my devel
+environment. Hans is currently working on a definitive fix for the
+issue. His schedule is to have a proper solution until next week.
+
+=46or now, it is better just to revert the bad changes. I've committed =
+a
+patch on my tree for that:
+
+http://git.kernel.org/?p=3Dlinux/kernel/git/mchehab/v4l-dvb.git;a=3Dcom=
+mitdiff;h=3D15ac2d293b08b6975c6ca1a80eb839d4cb0dddbf
+
+I'm currently running some tests on my environment with the fix patches
+I currently have. I should send a pull request to Linus later today.
+
+--=20
+Cheers,
+Mauro
 
