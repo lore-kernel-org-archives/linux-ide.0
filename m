@@ -1,54 +1,50 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: new libata-code breaks functionality of sata_sis
-Date: Wed, 23 May 2007 00:42:22 +0200
-Message-ID: <465371CE.70201@gmx.net>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
+Date: Mon, 21 May 2007 15:02:02 +0900
+Message-ID: <20070521060202.GA14877@linux-sh.org>
+References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <464B3505.20004@gmail.com> <2229.81.207.0.53.1179592754.squirrel@secure.samage.net> <464F4548.6020101@gmail.com> <464F4A58.2050607@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40666 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1761287AbXEVWmX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 May 2007 18:42:23 -0400
+Received: from smtp.ocgnet.org ([64.20.243.3]:41001 "EHLO smtp.ocgnet.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758041AbXEWAIe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 May 2007 20:08:34 -0400
+Content-Disposition: inline
+In-Reply-To: <464F4A58.2050607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com
-Cc: "linux.ide" <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Indan Zupancic <indan@nul.nu>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-a  SiS180  controller is connected with a PATA-disk.
-Starting with 2.6.22-rc1 the disk is no longer working.
+On Sat, May 19, 2007 at 09:04:56PM +0200, Tejun Heo wrote:
+> Tejun Heo wrote:
+> > Yeah, if SCR registers are accessible, 0xff doesn't indicate the device
+> > isn't there, so the whole skip-0xff logic probably shouldn't apply in
+> > such cases, but we can also achieve pretty good result by just making
+> > the first reset tries a bit more aggressive.
+> 
+> So, here's the patch.
+> 
+> Paul, can you please test this patch without the previous patch?  Indan,
+> this should reduce the resume delay.  Please test.  But you'll still
+> feel some added delay compared to 2.6.20 due to the mentioned
+> suspend/resume change.
+> 
+Seems to work ok:
 
-sata_sis 0000:01:07.0: version 0.7
-ACPI: PCI Interrupt Link [APC4] enabled at IRQ 19
-ACPI: PCI Interrupt 0000:01:07.0[A] -> Link [APC4] -> GSI 19 (level,
-low) -> IRQ 16
-sata_sis 0000:01:07.0: Detected SiS 180/181 chipset in combined mode
-scsi0 : sata_sis
-scsi1 : sata_sis
-ata1: PATA max UDMA/133 cmd 0x00019000 ctl 0x00019402 bmdma 0x0001a000 irq 0
-ata2: PATA max UDMA/133 cmd 0x00019800 ctl 0x00019c02 bmdma 0x0001a008 irq 0
-ata1: port disabled. ignoring.
-ata2: port disabled. ignoring.
-ATA: abnormal status 0x7F on port 0x00019807
-
-ata2 must be a SATA port.
-this problem can be solved by the patch.
-
-ata1 must not be disabled
-For this problem i have no solution.
-
-
---- a/drivers/ata/sata_sis.c       2007-05-22 11:05:38.000000000 +0200
-+++ b/drivers/ata/sata_sis.c  2007-05-23 00:24:28.000000000 +0200
-@@ -255,7 +255,7 @@
- {
-        static int printed_version;
-        struct ata_port_info pi = sis_port_info;
--       const struct ata_port_info *ppi[] = { &pi, NULL };
-+       const struct ata_port_info *ppi[] = { &pi, &pi };
-        struct ata_host *host;
-        u32 genctl, val;
-        u8 pmr;
-
-
-
+[    0.977254] scsi0 : sata_sil
+[    0.980243] scsi1 : sata_sil
+[    0.983207] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
+[    0.991183] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
+[    2.578436] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[    2.586828] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+[    2.591596] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
+[    2.598094] ata1.00: 39070080 sectors, multi 0: LBA
+[    2.603248] ata1.00: applying bridge limits
+[    2.614710] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
+[    2.619489] ata1.00: configured for UDMA/100
+[    2.933096] ata2: SATA link down (SStatus 0 SControl 310)
+[    2.936265] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
+[    2.945002] sd 0:0:0:0: [sda] 39070080 512-byte hardware sectors (20004 MB)
+[    2.951473] sd 0:0:0:0: [sda] Write Protect is off
