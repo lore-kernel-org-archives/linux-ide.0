@@ -1,27 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Add Seagate STT20000A to DMA blacklist.
-Date: Mon, 21 May 2007 20:02:43 -0400
-Message-ID: <46523323.20304@garzik.org>
-References: <fa.6aGWKqGWP2vDWJvVhFqggIUaWVk@ifi.uio.no> <fa.70JldrzRTUl84Jt2lSquANqNr2Q@ifi.uio.no> <fa.xozW+S/WBbGA8Gv2z3FmAe/XymA@ifi.uio.no> <4651E2AF.2080109@shaw.ca> <20070521183102.GA14537@redhat.com>
+Subject: Re: [PATCH] pata_hpt366: Enable bits are unreliable so don't use
+ them
+Date: Mon, 21 May 2007 20:02:51 -0400
+Message-ID: <4652332B.9010709@garzik.org>
+References: <20070521145249.67bf910b@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46668 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46674 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755874AbXEVACr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 May 2007 20:02:47 -0400
-In-Reply-To: <20070521183102.GA14537@redhat.com>
+	id S1757282AbXEVACx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 May 2007 20:02:53 -0400
+In-Reply-To: <20070521145249.67bf910b@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Jones <davej@redhat.com>, Robert Hancock <hancockr@shaw.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Dave Jones wrote:
-> http://bugzilla.kernel.org/show_bug.cgi?id=1044 points out an
-> additional hard disk that doesn't handle DMA transfers correctly.
-> This patch is the libata variant of the earlier patch to drivers/ide/
+Alan Cox wrote:
+> Various people had problems with both old and new IDE when hpt366 enable
+> bits started getting honoured. It turns out they are not reliable so
+> don't rely on them
 > 
-> Signed-off-by: Dave Jones <davej@redhat.com>
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
 applied
 
