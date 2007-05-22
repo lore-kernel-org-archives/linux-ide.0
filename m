@@ -1,64 +1,70 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: use_clustering (sht) bit set to 0 in AHCI ?
-Date: Tue, 22 May 2007 09:45:39 +0200
-Message-ID: <20070522074538.GP4705@kernel.dk>
-References: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com> <20070521121726.GT14746@kernel.dk> <46520C68.7090105@garzik.org>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+Date: Tue, 22 May 2007 10:16:24 +0200
+Message-ID: <18002.42712.248696.433735@alkaid.it.uu.se>
+References: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:5430 "EHLO kernel.dk"
+Received: from aun.it.uu.se ([130.238.12.36]:62968 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755626AbXEVHsG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 May 2007 03:48:06 -0400
-Content-Disposition: inline
-In-Reply-To: <46520C68.7090105@garzik.org>
+	id S1756673AbXEVIQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 May 2007 04:16:34 -0400
+In-Reply-To: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alok kataria <alokkataria1@gmail.com>, linux-ide@vger.kernel.org
+To: Hans A Eide <h.a.eide@usit.uio.no>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, May 21 2007, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >ahci has always had clustering disabled, perhaps Jeff can expand on why?
-> 
-> 
-> Just historical reasons.  libata had clustering disabled by default in 
-> the beginning, for all drivers.  Then we enabled it globally by changing 
-> the value of ATA_SHT_USE_CLUSTERING...  but apparently forgot to change 
-> drivers which use their own value rather than ATA_SHT_USE_CLUSTERING.
-> 
-> Feel free to submit a patch turning it on...
+[added cc:linux-ide]
 
-The below works for me, but it's only lightly tested. I booted it up and
-ran some large IO tests, I've verified really large IO sizes as well
-(using blktrace, I've verified ios up to 9216KiB being accepted and
-completed by the drive).
+Hans A Eide writes:
+ > 
+ >  > Evan Harris wrote:
+ >  >>
+ >  >> I have a card that mirrors this one from your list:
+ >  >>
+ >  >> Retail name: SATA300 TX4
+ >  >> Chip label: PDC40718-GP  SATAII300
+ >  >> Vendor-Device number: 105a:3d17 (rev 02)
+ >  >>
+ >  >> Through testing, I've found linux 2.6.16 and 2.6.17 find the  
+ > ports in
+ >  >> this order (the list is ordered by linux detection):
+ >  >>
+ >  >> 1. silkscreen port 3
+ >  >> 2. silkscreen port 2
+ >  >> 3. silkscreen port 4
+ >  >> 4. silkscreen port 1
+ >  >>> NOTE: the patch I have submitted (
+ >  >>> http://marc.theaimsgroup.com/?l=linux- 
+ > ide&m=114082978311290&w=2 ) is a
+ >  >>> solution that doesn't know about the older Promise SATA  
+ > controllers,
+ >  >>> which are not affected with the "new wiring" problem, so the older
+ >  >>> controllers will appear screwed if you use it.
+ >  >>>
+ >  >>> Hopefully we will collect enough info about all the SATA Promise
+ >  >>> controllers to distinguish the new and the old wiring controllers,
+ >  >>> then produce a new patch that will be a correct solution to the  
+ > "new
+ >  >>> wiring" problem.
+ >  >
+ >  > Mikael Pettersson has been doing some excellent work recently on
+ >  > sata_promise.  If enough data has been collected on this sata_promise
+ >  > port enumeration problem, maybe the data could be collated and  
+ > proposed
+ >  > via Mikael as a patch?
+ >  >
+ >  > 	Jeff
+ > 
+ > Sorry, any updates on this?
 
------
+You should have posted this to linux-ide not linux-scsi.
 
-From: Jens Axboe <jens.axboe@oracle.com>
+The Promise SATAII TX4 port enumeration issue is fixed in
+current 2.6.22-rc kernels. A patch for 2.6.21 can be found
+in <http://marc.info/?l=linux-ide&m=117728096711046&w=2>.
 
-ahci: enable sg segment clustering
-
-The specification states that ahci supports segments up to 4MiB in size,
-so enable clustering.
-
-Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e00e1b9..bfcd8ec 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -54,7 +54,7 @@ enum {
- 	AHCI_MAX_PORTS		= 32,
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
- 	AHCI_DMA_BOUNDARY	= 0xffffffff,
--	AHCI_USE_CLUSTERING	= 0,
-+	AHCI_USE_CLUSTERING	= 1,
- 	AHCI_MAX_CMDS		= 32,
- 	AHCI_CMD_SZ		= 32,
- 	AHCI_CMD_SLOT_SZ	= AHCI_MAX_CMDS * AHCI_CMD_SZ,
-
--- 
-Jens Axboe
-
+/Mikael
