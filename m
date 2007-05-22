@@ -1,70 +1,44 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
-Date: Tue, 22 May 2007 10:16:24 +0200
-Message-ID: <18002.42712.248696.433735@alkaid.it.uu.se>
-References: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] ata_piix: add short 40c quirk for Acer Aspire 2030, take
+ #2
+Date: Tue, 22 May 2007 11:34:22 +0200
+Message-ID: <4652B91E.9000208@gmail.com>
+References: <4651810A.8020809@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:62968 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756673AbXEVIQe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 May 2007 04:16:34 -0400
-In-Reply-To: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
+Received: from wx-out-0506.google.com ([66.249.82.234]:44136 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755983AbXEVJec (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2007 05:34:32 -0400
+Received: by wx-out-0506.google.com with SMTP id h29so174170wxd
+        for <linux-ide@vger.kernel.org>; Tue, 22 May 2007 02:34:31 -0700 (PDT)
+In-Reply-To: <4651810A.8020809@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans A Eide <h.a.eide@usit.uio.no>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: mail.pandor@gmail.com
 
-[added cc:linux-ide]
+Acer Aspire 2023WLMi uses short 40c cable.  Add quirk for it.
 
-Hans A Eide writes:
- > 
- >  > Evan Harris wrote:
- >  >>
- >  >> I have a card that mirrors this one from your list:
- >  >>
- >  >> Retail name: SATA300 TX4
- >  >> Chip label: PDC40718-GP  SATAII300
- >  >> Vendor-Device number: 105a:3d17 (rev 02)
- >  >>
- >  >> Through testing, I've found linux 2.6.16 and 2.6.17 find the  
- > ports in
- >  >> this order (the list is ordered by linux detection):
- >  >>
- >  >> 1. silkscreen port 3
- >  >> 2. silkscreen port 2
- >  >> 3. silkscreen port 4
- >  >> 4. silkscreen port 1
- >  >>> NOTE: the patch I have submitted (
- >  >>> http://marc.theaimsgroup.com/?l=linux- 
- > ide&m=114082978311290&w=2 ) is a
- >  >>> solution that doesn't know about the older Promise SATA  
- > controllers,
- >  >>> which are not affected with the "new wiring" problem, so the older
- >  >>> controllers will appear screwed if you use it.
- >  >>>
- >  >>> Hopefully we will collect enough info about all the SATA Promise
- >  >>> controllers to distinguish the new and the old wiring controllers,
- >  >>> then produce a new patch that will be a correct solution to the  
- > "new
- >  >>> wiring" problem.
- >  >
- >  > Mikael Pettersson has been doing some excellent work recently on
- >  > sata_promise.  If enough data has been collected on this sata_promise
- >  > port enumeration problem, maybe the data could be collated and  
- > proposed
- >  > via Mikael as a patch?
- >  >
- >  > 	Jeff
- > 
- > Sorry, any updates on this?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Steve H. <mail.pandor@gmail.com>
+---
+Model name in comment was incorrect.  Updated.
 
-You should have posted this to linux-ide not linux-scsi.
+ ata_piix.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-The Promise SATAII TX4 port enumeration issue is fixed in
-current 2.6.22-rc kernels. A patch for 2.6.21 can be found
-in <http://marc.info/?l=linux-ide&m=117728096711046&w=2>.
-
-/Mikael
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 13b6b1d..683057c 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -579,6 +579,7 @@ static const struct ich_laptop ich_lapto
+ 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
+ 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
+ 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
++	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
+ 	/* end marker */
+ 	{ 0, }
+ };
