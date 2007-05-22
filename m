@@ -1,30 +1,27 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_sil680: compile fix
-Date: Mon, 21 May 2007 20:02:33 -0400
-Message-ID: <46523319.8010802@garzik.org>
-References: <464ED193.2020805@gmail.com>
+Subject: Re: Add Seagate STT20000A to DMA blacklist.
+Date: Mon, 21 May 2007 20:02:43 -0400
+Message-ID: <46523323.20304@garzik.org>
+References: <fa.6aGWKqGWP2vDWJvVhFqggIUaWVk@ifi.uio.no> <fa.70JldrzRTUl84Jt2lSquANqNr2Q@ifi.uio.no> <fa.xozW+S/WBbGA8Gv2z3FmAe/XymA@ifi.uio.no> <4651E2AF.2080109@shaw.ca> <20070521183102.GA14537@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46657 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46668 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755280AbXEVACf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 May 2007 20:02:35 -0400
-In-Reply-To: <464ED193.2020805@gmail.com>
+	id S1755874AbXEVACr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 May 2007 20:02:47 -0400
+In-Reply-To: <20070521183102.GA14537@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Dave Jones <davej@redhat.com>, Robert Hancock <hancockr@shaw.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Recent mmio change broke compilation if PM is turned on.  Fix it.
+Dave Jones wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=1044 points out an
+> additional hard disk that doesn't handle DMA transfers correctly.
+> This patch is the libata variant of the earlier patch to drivers/ide/
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> ---
->  pata_sil680.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> Signed-off-by: Dave Jones <davej@redhat.com>
 
 applied
 
