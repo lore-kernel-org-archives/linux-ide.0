@@ -1,44 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: add short 40c quirk for Acer Aspire 2030, take
- #2
-Date: Tue, 22 May 2007 11:34:22 +0200
-Message-ID: <4652B91E.9000208@gmail.com>
-References: <4651810A.8020809@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Tue, 22 May 2007 14:12:11 -0700
+Message-ID: <20070522141211.fe00333f.akpm@linux-foundation.org>
+References: <20070510072247.063476979@intel.com>
+	<20070509163835.56ad28e0.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.234]:44136 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755983AbXEVJec (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2007 05:34:32 -0400
-Received: by wx-out-0506.google.com with SMTP id h29so174170wxd
-        for <linux-ide@vger.kernel.org>; Tue, 22 May 2007 02:34:31 -0700 (PDT)
-In-Reply-To: <4651810A.8020809@gmail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51810 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756660AbXEVVP5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2007 17:15:57 -0400
+In-Reply-To: <20070509163835.56ad28e0.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: mail.pandor@gmail.com
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
-Acer Aspire 2023WLMi uses short 40c cable.  Add quirk for it.
+On Wed, 9 May 2007 16:38:35 -0700
+Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Steve H. <mail.pandor@gmail.com>
----
-Model name in comment was incorrect.  Updated.
+> Send an uevent to user space to indicate that a media change event has occurred.
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> Index: 2.6-git/block/genhd.c
+> ===================================================================
+> --- 2.6-git.orig/block/genhd.c
+> +++ 2.6-git/block/genhd.c
+> @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+>  	.show	= diskstats_show
+>  };
+>  
+> +static void media_change_notify_thread(struct work_struct *work)
+> +{
+> +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> +	char event[] = "MEDIA_CHANGE=1";
+> +	char *envp[] = { event, NULL };
+> +
+> +	/*
+> +	 * set enviroment vars to indicate which event this is for
+> +	 * so that user space will know to go check the media status.
+> +	 */
+> +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> +	put_device(gd->driverfs_dev);
+> +}
+> +
+> +void genhd_media_change_notify(struct gendisk *disk)
+> +{
+> +	get_device(disk->driverfs_dev);
+> +	schedule_work(&disk->async_notify);
+> +}
+> +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+> +
+>  struct gendisk *alloc_disk(int minors)
+>  {
+>  	return alloc_disk_node(minors, -1);
+> @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+>  		kobj_set_kset_s(disk,block_subsys);
+>  		kobject_init(&disk->kobj);
+>  		rand_initialize_disk(disk);
+> +		INIT_WORK(&disk->async_notify,
+> +			media_change_notify_thread);
+>  	}
+>  	return disk;
 
- ata_piix.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 13b6b1d..683057c 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -579,6 +579,7 @@ static const struct ich_laptop ich_lapto
- 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
- 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
- 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
-+	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
- 	/* end marker */
- 	{ 0, }
- };
+Why does this do a schedule_work() rather than calling kobject_uevent_env()
+directly?
