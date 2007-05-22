@@ -1,38 +1,64 @@
-From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Subject: Re: [PATCH] ahci: disable 64bit dma on sb600
-Date: Tue, 22 May 2007 16:59:09 +1000 (EST)
-Message-ID: <232730.3937.qm@web52601.mail.re2.yahoo.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: use_clustering (sht) bit set to 0 in AHCI ?
+Date: Tue, 22 May 2007 09:45:39 +0200
+Message-ID: <20070522074538.GP4705@kernel.dk>
+References: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com> <20070521121726.GT14746@kernel.dk> <46520C68.7090105@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web52601.mail.re2.yahoo.com ([206.190.48.204]:29480 "HELO
-	web52601.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758750AbXEVG7K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2007 02:59:10 -0400
+Received: from brick.kernel.dk ([80.160.20.94]:5430 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755626AbXEVHsG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 May 2007 03:48:06 -0400
+Content-Disposition: inline
+In-Reply-To: <46520C68.7090105@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: wolke.liu@amd.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alok kataria <alokkataria1@gmail.com>, linux-ide@vger.kernel.org
 
-> Tejun Heo <htejun@gmail.com> wrote:
-> > SB600 claims it can do 64bit DMA but it can't.  Disable it.
-[...]
-> > Srihari, can you test this against 2.6.22-rc1-git7 just in case?  I'll
-> > send this upstream after you ack.
+On Mon, May 21 2007, Jeff Garzik wrote:
+> Jens Axboe wrote:
+> >ahci has always had clustering disabled, perhaps Jeff can expand on why?
+> 
+> 
+> Just historical reasons.  libata had clustering disabled by default in 
+> the beginning, for all drivers.  Then we enabled it globally by changing 
+> the value of ATA_SHT_USE_CLUSTERING...  but apparently forgot to change 
+> drivers which use their own value rather than ATA_SHT_USE_CLUSTERING.
+> 
+> Feel free to submit a patch turning it on...
 
-It's merged in today's git (quickly tested it & it's working good as expected)
-:-). Impressive.
+The below works for me, but it's only lightly tested. I booted it up and
+ran some large IO tests, I've verified really large IO sizes as well
+(using blktrace, I've verified ios up to 9216KiB being accepted and
+completed by the drive).
 
-Well done & thank you Tejun & others!
+-----
 
-Thanks
+From: Jens Axboe <jens.axboe@oracle.com>
 
-PS: Time to find other bugs & bug other maintainers :-).
+ahci: enable sg segment clustering
 
+The specification states that ahci supports segments up to 4MiB in size,
+so enable clustering.
 
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-      ___________________________________________________________________________________
-How would you spend $50,000 to create a more sustainable environment in Australia?  Go to Yahoo!7 Answers and share your idea.
-http://advision.webevents.yahoo.com/aunz/lifestyle/answers/y7ans-babp_reg.html
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index e00e1b9..bfcd8ec 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -54,7 +54,7 @@ enum {
+ 	AHCI_MAX_PORTS		= 32,
+ 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+ 	AHCI_DMA_BOUNDARY	= 0xffffffff,
+-	AHCI_USE_CLUSTERING	= 0,
++	AHCI_USE_CLUSTERING	= 1,
+ 	AHCI_MAX_CMDS		= 32,
+ 	AHCI_CMD_SZ		= 32,
+ 	AHCI_CMD_SLOT_SZ	= AHCI_MAX_CMDS * AHCI_CMD_SZ,
+
+-- 
+Jens Axboe
 
