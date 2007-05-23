@@ -1,36 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
-Date: Thu, 24 May 2007 01:22:54 +0100
-Message-ID: <20070524012254.729352c8@the-village.bc.nu>
-References: <200705240131.32021.uwe.koziolek@gmx.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH pata-2.6 fix queue] aec62xx: kill speedproc() method wrapper
+Date: Thu, 24 May 2007 01:33:03 +0200
+Message-ID: <200705240133.03704.bzolnier@gmail.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200705152343.12956.bzolnier@gmail.com> <464B1310.2080808@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32989 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756792AbXEXASM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 20:18:12 -0400
-In-Reply-To: <200705240131.32021.uwe.koziolek@gmx.net>
+Received: from ug-out-1314.google.com ([66.249.92.173]:3072 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756792AbXEXBX7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 21:23:59 -0400
+Received: by ug-out-1314.google.com with SMTP id 70so758433ugb
+        for <linux-ide@vger.kernel.org>; Wed, 23 May 2007 18:23:58 -0700 (PDT)
+In-Reply-To: <464B1310.2080808@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-> the pata133 sis controllers does not support a drive present status
-> in the pci configspace like the older sis controllers, check removed.
 
-Are you sure about this - I've no idea about the SATA/PATA combo but the
-pure PATA 133Mhz (MuTOL 96x) chipsets seem to do so correctly.
- 
-> Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
+Hi,
 
-> +static void sis_133_error_handler(struct ata_port *ap)
-> +{
-> +	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL, ata_std_postreset);
-> +}
+On Wednesday 16 May 2007, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> >>There's no reason to have the speedproc() method wrapper for the two quite
+> >>different chip families, so just get rid of it.
+> 
+> >>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> > applied
+> 
+>     I forgot to notice/mention the side effect: there would be no speedproc() 
+> method installed if hwif->dma_base happens to be 0.
 
-NAK - if this is needed then you can simply set .error_handler to use the
-default bmdma handler rather than adding the function
+It doesn't sound too nice since ->autotune is always set and ->tuneproc
+uses ->speedproc unconditionally (=> OOPS).
 
-Alan
+Looks like we really need an extra
+
+if (atp850)
+	choose atp850 speedproc
+else
+	choose atp86x speedproc
+
+before hwif->dma_base check... or maybe even separate ->init_hwif
+methods for atp850 and atp86x.
+
+Thanks,
+Bart
