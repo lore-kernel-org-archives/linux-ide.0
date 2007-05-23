@@ -1,50 +1,28 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
-Date: Mon, 21 May 2007 15:02:02 +0900
-Message-ID: <20070521060202.GA14877@linux-sh.org>
-References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <464B3505.20004@gmail.com> <2229.81.207.0.53.1179592754.squirrel@secure.samage.net> <464F4548.6020101@gmail.com> <464F4A58.2050607@gmail.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: sata_mv driver
+Date: Tue, 22 May 2007 21:21:24 -0400
+Message-ID: <20070523012124.GA17463@animx.eu.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:41001 "EHLO smtp.ocgnet.org"
+Received: from animx.eu.org ([216.98.75.249]:54414 "EHLO animx.eu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758041AbXEWAIe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 May 2007 20:08:34 -0400
+	id S1756947AbXEWCLx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 May 2007 22:11:53 -0400
+Received: from wakko by animx.eu.org with local
+	(Exim 4.64 #1 (Debian Bug?  What bug /\oo/\))
+	id 1HqfXY-0004Xn-KI
+	for linux-ide@vger.kernel.org; Tue, 22 May 2007 21:21:24 -0400
 Content-Disposition: inline
-In-Reply-To: <464F4A58.2050607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Indan Zupancic <indan@nul.nu>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
+To: linux-ide@vger.kernel.org
 
-On Sat, May 19, 2007 at 09:04:56PM +0200, Tejun Heo wrote:
-> Tejun Heo wrote:
-> > Yeah, if SCR registers are accessible, 0xff doesn't indicate the device
-> > isn't there, so the whole skip-0xff logic probably shouldn't apply in
-> > such cases, but we can also achieve pretty good result by just making
-> > the first reset tries a bit more aggressive.
-> 
-> So, here's the patch.
-> 
-> Paul, can you please test this patch without the previous patch?  Indan,
-> this should reduce the resume delay.  Please test.  But you'll still
-> feel some added delay compared to 2.6.20 due to the mentioned
-> suspend/resume change.
-> 
-Seems to work ok:
+In kernel 2.6.20, this driver is marked as experimental.  How well does this
+driver work?  I was concidering a supermicro 8 port sata controller and it
+appears to use this driver.  I really do not wish to use anything that is
+experimental.
 
-[    0.977254] scsi0 : sata_sil
-[    0.980243] scsi1 : sata_sil
-[    0.983207] ata1: SATA max UDMA/100 cmd 0xfd000280 ctl 0xfd00028a bmdma 0xfd000200 irq 0
-[    0.991183] ata2: SATA max UDMA/100 cmd 0xfd0002c0 ctl 0xfd0002ca bmdma 0xfd000208 irq 0
-[    2.578436] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[    2.586828] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-[    2.591596] ata1.00: ATA-5: HHD424020F7SV00, 00MLA0A5, max UDMA/100
-[    2.598094] ata1.00: 39070080 sectors, multi 0: LBA
-[    2.603248] ata1.00: applying bridge limits
-[    2.614710] ata1.00: ata_hpa_resize 1: sectors = 39070080, hpa_sectors = 39070080
-[    2.619489] ata1.00: configured for UDMA/100
-[    2.933096] ata2: SATA link down (SStatus 0 SControl 310)
-[    2.936265] scsi 0:0:0:0: Direct-Access     ATA      HHD424020F7SV00  00ML PQ: 0 ANSI: 5
-[    2.945002] sd 0:0:0:0: [sda] 39070080 512-byte hardware sectors (20004 MB)
-[    2.951473] sd 0:0:0:0: [sda] Write Protect is off
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
