@@ -1,48 +1,38 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [BUG] 2.6.21.1: ide-pci is not finding ide controller.
-Date: Wed, 23 May 2007 16:53:56 -0500
-Message-ID: <20070523215356.GD5921@austin.ibm.com>
-References: <20070523201118.GZ5921@austin.ibm.com> <4654A375.4080807@ru.mvista.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Thu, 24 May 2007 08:48:38 +1000
+Message-ID: <1179960518.32247.948.camel@localhost.localdomain>
+References: <20070515061239.611A2DDEE9@ozlabs.org>
+	 <1179209697.32247.153.camel@localhost.localdomain>
+	 <20070523144217.5abd9fdf@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:50513 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869AbXEWVyB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 17:54:01 -0400
-Content-Disposition: inline
-In-Reply-To: <4654A375.4080807@ru.mvista.com>
+Received: from gate.crashing.org ([63.228.1.57]:58418 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757316AbXEWWtq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 May 2007 18:49:46 -0400
+In-Reply-To: <20070523144217.5abd9fdf@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-On Thu, May 24, 2007 at 12:26:29AM +0400, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Linas Vepstas wrote:
-> >I've got a rather old x86 box that I'm booting 2.6.21.1 on;
-> >this kernel is not finding an ide controller on it. 
-> 
-> >The motherboard has 4 ide controllers total; two olde-fashioned
-> >ones (PIIX4, using the original 40-pin IDE ribbon cable) and two 
-> 
->    You should have said "channels". PIIX4 has only one IDE controller.
+On Wed, 2007-05-23 at 14:42 +0100, Alan Cox wrote:
 
-Right. I wrote "drive" in the first email, and then quickly
-changed that :-)
+> I'm going to have to NAK this on further review as it will break SRST
+> handling in some cases. Until ata_bus_softreset has been fixed (see
+> FIXME: entries) we shouldn't push this patch mainstream, or if we have
+> then someone should fix the software reset posting as SRST only has an
+> effect if the timing is honoured. 
 
->    Actually, it was a bug that I've introduced into 
->    drivers/ide/pci/hpt366.c -- the patch has been already merged into 
-> 2.6.22-rc1:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=fdb0d72be4decaade6cedb5012ddd679a4817b5f
+Hrm... so all MMIO drivers (PDC, etc...) are broken you think ? 
 
+What would be the solution there ? A read to flush the posted write to
+the control register would work in the middle of a soft reset ? If yes,
+what register do you suggest we read ?
 
-OK, great, thanks!
+Ben.
 
-I'll give this a spin. If it works, I'll suggest backporting it to the
-stable branch 2.6.21.2. 
-
---linas
 
