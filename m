@@ -1,64 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv BUG: at drivers/ata/sata_mv.c:1236 mv_qc_issue()
-Date: Wed, 23 May 2007 09:24:54 -0400
-Message-ID: <465440A6.5080904@rtr.ca>
-References: <4631CE7C.3000703@wpkg.org> <46540376.6000700@wpkg.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Wed, 23 May 2007 14:42:17 +0100
+Message-ID: <20070523144217.5abd9fdf@the-village.bc.nu>
+References: <20070515061239.611A2DDEE9@ozlabs.org>
+	<1179209697.32247.153.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1966 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756250AbXEWNY6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 May 2007 09:24:58 -0400
-In-Reply-To: <46540376.6000700@wpkg.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39230 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755063AbXEWNhu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 09:37:50 -0400
+In-Reply-To: <1179209697.32247.153.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Tomasz Chmielewski wrote:
-..
-> The error I mentioned before - BUG: at drivers/ata/sata_mv.c:1236 
-> mv_qc_issue() - happened on /dev/sda drive.
-> 
-> As it appears, my /dev/sdb drive just dies (has multiple badblocks). It 
-> causes similar errors when I tried to dd if=/dev/ero of=/dev/sdb.
-> 
-> It triggered two bugs:
-> 
-> BUG: at drivers/ata/sata_mv.c:657 mv_start_dma()
+On Tue, 15 May 2007 16:14:57 +1000
+Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
 
-Heh.. that one is just the driver being way too clever for itself.
-This fix (below) should take care of it.
+> That one is the right one. I think the only diffs vs. the previous
+> one that was missing a quilt ref are I wasn't initializing altstatus
+> address and I turned some printk's into dev_dbg() as that's really
+> what they are.
 
-> BUG: at drivers/ata/sata_mv.c:1201 mv_qc_issue()
+I'm going to have to NAK this on further review as it will break SRST
+handling in some cases. Until ata_bus_softreset has been fixed (see
+FIXME: entries) we shouldn't push this patch mainstream, or if we have
+then someone should fix the software reset posting as SRST only has an
+effect if the timing is honoured.
 
-That one should be harmless, and is likely a side-effect of
-not completely resetting the engine & variables after an error.
-
-This whole driver needs a lot of TLC, something I just might
-be into doing shortly.    Meanwhile:
-
-
-This patch removes some unhelpful paranoia from sata_mv.c,
-now choosing to actually *recover* rather than simply complain.
-
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
---- linux/drivers/ata/sata_mv.c.orig	2007-04-26 12:02:46.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2007-05-23 09:18:42.000000000 -0400
-@@ -650,11 +650,8 @@
-  */
- static void mv_start_dma(void __iomem *base, struct mv_port_priv *pp)
- {
--	if (!(MV_PP_FLAG_EDMA_EN & pp->pp_flags)) {
--		writelfl(EDMA_EN, base + EDMA_CMD_OFS);
--		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
--	}
--	WARN_ON(!(EDMA_EN & readl(base + EDMA_CMD_OFS)));
-+	writelfl(EDMA_EN, base + EDMA_CMD_OFS);
-+	pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
- }
- 
- /**
+Alan
