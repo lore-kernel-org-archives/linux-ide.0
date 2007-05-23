@@ -1,70 +1,48 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: [PATCH 2.6.22-rc2] libata: sata_sis fixes
-Date: Thu, 24 May 2007 01:31:31 +0200
-Message-ID: <200705240131.32021.uwe.koziolek@gmx.net>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Thu, 24 May 2007 09:43:39 +1000
+Message-ID: <1179963820.32247.996.camel@localhost.localdomain>
+References: <20070515061239.611A2DDEE9@ozlabs.org>
+	 <1179209697.32247.153.camel@localhost.localdomain>
+	 <20070523144217.5abd9fdf@the-village.bc.nu>
+	 <1179960518.32247.948.camel@localhost.localdomain>
+	 <20070524003123.77b9c81c@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50845 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755898AbXEWXbv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 May 2007 19:31:51 -0400
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:46211 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756108AbXEWXnw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 May 2007 19:43:52 -0400
+In-Reply-To: <20070524003123.77b9c81c@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-The sata_sis driver supports SATA and PATA ports. The broken support
-of both types in one controller is fixed.
+On Thu, 2007-05-24 at 00:31 +0100, Alan Cox wrote:
+> 
+> Anything non taskfile, which is tricky to do arbitarily for all
+> controllers - this is why I didn't just stuff in a simple fix and post it.
 
-the pata133 sis controllers does not support a drive present status
-in the pci configspace like the older sis controllers, check removed.
+We might have to provide an optional ->flush() that is device specific ?
+Config space access would do the job nicely in most cases though. If
+it's really only for SRST which can be slow. If it's for the 400ns of
+writing the command, then we have a deeper problem but I would expect
+MMIO chipsets to be smarter than that ...
 
-Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
+> For BMDMA controllers most of them have a load of other MMIO registers
+> we can read (eg the SIL680 has the PRD table address you can read
+> harmlessly), once we get beyond SFF BMDMA however it will be controller
+> dependant and we probably have to actually specify what register is used
+> for dummy posting reads when we set up the device. For I/O space we don't
+> get posting so life is easy. 
 
---- a/drivers/ata/sata_sis.c	2007-05-22 11:05:38.000000000 +0200
-+++ b/drivers/ata/sata_sis.c	2007-05-23 00:24:28.000000000 +0200
-@@ -255,7 +255,7 @@
- {
- 	static int printed_version;
- 	struct ata_port_info pi = sis_port_info;
--	const struct ata_port_info *ppi[] = { &pi, NULL };
-+	const struct ata_port_info *ppi[] = { &pi, &pi };
- 	struct ata_host *host;
- 	u32 genctl, val;
- 	u8 pmr;
---- a/drivers/ata/pata_sis.c	2007-05-22 11:05:38.000000000 +0200
-+++ b/drivers/ata/pata_sis.c	2007-05-23 23:10:33.000000000 +0200
-@@ -154,6 +154,19 @@
- 
- 
- /**
-+ *	sis_133_error_handler - Probe specified port on PATA host controller
-+ *	@ap: Port to probe
-+ *
-+ *	LOCKING:
-+ *	None (inherited from caller).
-+ */
-+
-+static void sis_133_error_handler(struct ata_port *ap)
-+{
-+	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL, ata_std_postreset);
-+}
-+
-+/**
-  *	sis_error_handler - Probe specified port on PATA host controller
-  *	@ap: Port to probe
-  *
-@@ -540,7 +553,7 @@
- 
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
--	.error_handler		= sis_error_handler,
-+	.error_handler		= sis_133_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 	.cable_detect		= sis_133_cable_detect,
- 
+Ah yes, the PRD table pointer is a good option too... We could introduce
+a ->flush() and have a default sff version that reads that pointer ?
+
+Cheers,
+Ben.
+
 
