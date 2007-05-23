@@ -1,81 +1,90 @@
-From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Re: JMicron JMB361 sporadically failing to initialize from at least 2.6.18.4 to 2.6.22-rc2
-Date: Wed, 23 May 2007 01:48:03 -0400
-Message-ID: <76366b180705222248w79ae8d6ai9d59224e21b804f4@mail.gmail.com>
-References: <76366b180705211748u670e3084j8df5246eca82a925@mail.gmail.com>
-	 <20070522020708.5dff26da@the-village.bc.nu>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: [PATCH] ata: pata_platform: Disable prereset logic.
+Date: Wed, 23 May 2007 15:44:08 +0900
+Message-ID: <20070523064408.GA29593@linux-sh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:15377 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756694AbXEWFsE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 01:48:04 -0400
-Received: by nz-out-0506.google.com with SMTP id o37so114560nzf
-        for <linux-ide@vger.kernel.org>; Tue, 22 May 2007 22:48:04 -0700 (PDT)
-In-Reply-To: <20070522020708.5dff26da@the-village.bc.nu>
+Received: from smtp.ocgnet.org ([64.20.243.3]:42311 "EHLO smtp.ocgnet.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756617AbXEWGpE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 May 2007 02:45:04 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, ethanhsiao@jmicron.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Everyone, I tried rebuilding 2.6.22-rc2 last night with CONFIG_IDE
-disabled, but it still produces the same problem. The relevant config
-options:
+On a number of boards the current prereset logic seems to misbehave:
 
-# CONFIG_IDE is not set
-CONFIG_ATA=y
-CONFIG_ATA_ACPI=y
-CONFIG_SATA_AHCI=y
-CONFIG_ATA_PIIX=y
-CONFIG_PATA_JMICRON=y
+scsi0 : pata_platform
+ata1: PATA max PIO0 cmd 0xb06001f0 ctl 0xb06003f6 bmdma 0x00000000 irq 0
+ata1: device not ready (errno=-19), forcing hardreset
+ata1: BUG: prereset() requested invalid reset type
 
-Ethan, you mention that this is a known issue.. I can't find any link
-to this problem. This is happening on a cleanly rebuilt kernel, so I'm
-not sure if this has to do with Debian 4.0r0 probing the module
-incorrectly. I already have the OS installed, and I figured a newer
-kernel would have resolved this issue. Unlike the bug report I linked
-to, I am not seeing the driver detect JMB363 & JMB361 in the same boot
-log. Even when everything works, it only detects a JMB361.
+This triggers when there is no card inserted in the slot.
 
-A working boot looks like this:
+Simply disabling the prereset gets rid of this, and doesn't seem to cause
+any problems for either PCMCIA or CF cards when they're actually present.
 
-JMB361: IDE controller at PCI slot 0000:04:00.1
-ACPI: PCI Interrupt 0000:04:00.1[B] -> GSI 18 (level, low) -> IRQ 58
-JMB361: chipset revision 2
-JMB361: 100% native mode on irq 58
-    ide0: BM-DMA at 0xa000-0xa007, BIOS settings: hda:pio, hdb:pio
-    ide1: BM-DMA at 0xa008-0xa00f, BIOS settings: hdc:DMA, hdd:DMA
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
 
-No use of acpi=off, noapic, nolapic seems to affect the JMB361 from
-being detected properly or not.
+--
 
-Any next steps? Ethan, do you have more information about this
-particular issue with the DQ6 motherboard?
+ drivers/ata/pata_platform.c |   15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-Thanks -Andrew
-
-On 5/21/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> > Does anyone know what is causing this and if it is fixed in any dev
-> > branch? I've tried the stock Debian etch netinst 2.6.18.4 kernel, as
-> > well as my own build of 2.6.21.1 and 2.6.22-rc2 and they all exhibit
-> > the same problem.
-> >
-> > Let me know what I can do to help debug this on my end.
->
-> What configuration options have you got selected - in particular if you
-> have the libata support for SATA enabled then the kernel configures the
-> hardware to expose the AHCI interface for SATA and the PATA interface
-> separately. This requires you to be using the libata drivers for both the
-> SATA and PATA components of the hardware if you wish to use both.
->
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index cbb7866..8a569c7 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -1,7 +1,7 @@
+ /*
+  * Generic platform device PATA driver
+  *
+- * Copyright (C) 2006  Paul Mundt
++ * Copyright (C) 2006 - 2007  Paul Mundt
+  *
+  * Based on pata_pcmcia:
+  *
+@@ -22,7 +22,7 @@
+ #include <linux/pata_platform.h>
+ 
+ #define DRV_NAME "pata_platform"
+-#define DRV_VERSION "1.0"
++#define DRV_VERSION "1.1"
+ 
+ static int pio_mask = 1;
+ 
+@@ -30,7 +30,8 @@ static int pio_mask = 1;
+  * Provide our own set_mode() as we don't want to change anything that has
+  * already been configured..
+  */
+-static int pata_platform_set_mode(struct ata_port *ap, struct ata_device **unused)
++static int pata_platform_set_mode(struct ata_port *ap,
++				  struct ata_device **unused)
+ {
+ 	int i;
+ 
+@@ -48,6 +49,12 @@ static int pata_platform_set_mode(struct ata_port *ap, struct ata_device **unuse
+ 	return 0;
+ }
+ 
++static void pata_platform_error_handler(struct ata_port *ap)
++{
++	ata_bmdma_drive_eh(ap, NULL, ata_std_softreset, NULL,
++			ata_std_postreset);
++}
++
+ static int ata_dummy_ret0(struct ata_port *ap)	{ return 0; }
+ 
+ static struct scsi_host_template pata_platform_sht = {
+@@ -80,7 +87,7 @@ static struct ata_port_operations pata_platform_port_ops = {
+ 
+ 	.freeze			= ata_bmdma_freeze,
+ 	.thaw			= ata_bmdma_thaw,
+-	.error_handler		= ata_bmdma_error_handler,
++	.error_handler		= pata_platform_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.cable_detect		= ata_cable_unknown,
+ 
