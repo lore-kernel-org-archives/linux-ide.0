@@ -1,38 +1,46 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] ata: pata_platform: Disable prereset logic.
-Date: Wed, 23 May 2007 18:48:58 +0900
-Message-ID: <20070523094858.GA30352@linux-sh.org>
-References: <20070523064408.GA29593@linux-sh.org> <4653F62C.4070700@gmail.com> <20070523083026.GA29851@linux-sh.org> <46540981.9080603@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: -ENODEV during prereset isn't an error
+Date: Wed, 23 May 2007 11:58:52 +0200
+Message-ID: <4654105C.5030908@gmail.com>
+References: <20070523064408.GA29593@linux-sh.org> <4653F62C.4070700@gmail.com> <20070523083026.GA29851@linux-sh.org> <46540981.9080603@gmail.com> <20070523094858.GA30352@linux-sh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ocgnet.org ([64.20.243.3]:51457 "EHLO smtp.ocgnet.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757475AbXEWJty (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 May 2007 05:49:54 -0400
-Content-Disposition: inline
-In-Reply-To: <46540981.9080603@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.225]:52749 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758049AbXEWJ7V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 05:59:21 -0400
+Received: by nz-out-0506.google.com with SMTP id o37so164143nzf
+        for <linux-ide@vger.kernel.org>; Wed, 23 May 2007 02:59:20 -0700 (PDT)
+In-Reply-To: <20070523094858.GA30352@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, May 23, 2007 at 11:29:37AM +0200, Tejun Heo wrote:
-> Paul Mundt wrote:
-> > On Wed, May 23, 2007 at 10:07:08AM +0200, Tejun Heo wrote:
-> >> Paul Mundt wrote:
-> >>> On a number of boards the current prereset logic seems to misbehave:
-> >>>
-> >>> scsi0 : pata_platform
-> >>> ata1: PATA max PIO0 cmd 0xb06001f0 ctl 0xb06003f6 bmdma 0x00000000 irq 0
-> >>> ata1: device not ready (errno=-19), forcing hardreset
-> >>> ata1: BUG: prereset() requested invalid reset type
-> >>>
-> >>> This triggers when there is no card inserted in the slot.
-> >>>
-> > ata_wait_ready() works fine, it reports 0xff immediately (and this is
-> > what I would expect when there is no card inserted).
-> 
-> Does the attached patch fix your problem?
-> 
-Yes, that works fine, thanks.
+During prereset, -ENODEV return from ata_wait_ready() is not an error.
+This causes unnecessary bug message on controllers which uses 0xff to
+indicate empty port.  Fix it.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Paul Mundt <lethal@linux-sh.org>
+---
+
+This one is for 2.6.22 too.  Thanks.
+
+ libata-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a6de57e..79f2175 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3368,7 +3368,7 @@ int ata_std_prereset(struct ata_port *ap
+ 	 */
+ 	if (!(ap->flags & ATA_FLAG_SKIP_D2H_BSY) && !ata_port_offline(ap)) {
+ 		rc = ata_wait_ready(ap, deadline);
+-		if (rc) {
++		if (rc && rc != -ENODEV) {
+ 			ata_port_printk(ap, KERN_WARNING, "device not ready "
+ 					"(errno=%d), forcing hardreset\n", rc);
+ 			ehc->i.action |= ATA_EH_HARDRESET;
