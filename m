@@ -1,40 +1,36 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
-Date: Wed, 23 May 2007 20:13:02 -0400
-Message-ID: <20070524001302.GA18571@devserv.devel.redhat.com>
-References: <20070515061239.611A2DDEE9@ozlabs.org> <1179209697.32247.153.camel@localhost.localdomain> <20070523144217.5abd9fdf@the-village.bc.nu> <1179960518.32247.948.camel@localhost.localdomain> <20070524003123.77b9c81c@the-village.bc.nu> <1179963820.32247.996.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
+Date: Thu, 24 May 2007 01:22:54 +0100
+Message-ID: <20070524012254.729352c8@the-village.bc.nu>
+References: <200705240131.32021.uwe.koziolek@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53379 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756014AbXEXANN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 May 2007 20:13:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1179963820.32247.996.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32989 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756792AbXEXASM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 May 2007 20:18:12 -0400
+In-Reply-To: <200705240131.32021.uwe.koziolek@gmx.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, Alan Cox <alan@redhat.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Uwe Koziolek <uwe.koziolek@gmx.net>
+Cc: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Thu, May 24, 2007 at 09:43:39AM +1000, Benjamin Herrenschmidt wrote:
-> We might have to provide an optional ->flush() that is device specific ?
+> the pata133 sis controllers does not support a drive present status
+> in the pci configspace like the older sis controllers, check removed.
 
-Probably
+Are you sure about this - I've no idea about the SATA/PATA combo but the
+pure PATA 133Mhz (MuTOL 96x) chipsets seem to do so correctly.
+ 
+> Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
 
-> Config space access would do the job nicely in most cases though. If
-> it's really only for SRST which can be slow. If it's for the 400ns of
-> writing the command, then we have a deeper problem but I would expect
-> MMIO chipsets to be smarter than that ...
+> +static void sis_133_error_handler(struct ata_port *ap)
+> +{
+> +	ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, NULL, ata_std_postreset);
+> +}
 
-There are errata for config space and posting in some chipsets  and as you
-says its slow. The 400nS command writing bit applies too - they chipsets are
-not that smart in my experience.
+NAK - if this is needed then you can simply set .error_handler to use the
+default bmdma handler rather than adding the function
 
-> Ah yes, the PRD table pointer is a good option too... We could introduce
-> a ->flush() and have a default sff version that reads that pointer ?
-
-Normal SFF is I/O cycles so the default SFF one would be NULL which is 
-just perfect 8). SIL680/3112 would register a PRD read and the rest can do
-whatever their non SFF design does.
-
+Alan
