@@ -1,58 +1,96 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata interface fatal error
-Date: Thu, 24 May 2007 15:45:55 +0200
-Message-ID: <46559713.9070201@gmail.com>
-References: <4655923E.5000409@effenberger.org>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: 2.6.22-rc2: known regressions with patches
+Date: Thu, 24 May 2007 16:04:18 +0200
+Message-ID: <46559B62.5040903@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:50901 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097AbXEXNqS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 09:46:18 -0400
-Received: by wx-out-0506.google.com with SMTP id t15so353079wxc
-        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 06:46:17 -0700 (PDT)
-In-Reply-To: <4655923E.5000409@effenberger.org>
+Received: from ug-out-1314.google.com ([66.249.92.174]:34799 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbXEXOEi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 10:04:38 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so884131ugf
+        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 07:04:37 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Effenberger <florian@effenberger.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, viro@zeniv.linux.org.uk, Uwe Bugla <uwe.bugla@gmx.de>, Ken Chen <kenchen@google.com>, xfs-masters@oss.sgi.com, Jeremy Fitzhardinge <jeremy@goop.org>, David Chinner <dgc@sgi.com>, Andrea Righi <righiandr@users.sourceforge.net>, Christoph Lameter <clameter@sgi.com>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Alan Cox <alan@redhat.com>, Andi Kleen <ak@suse.de>, discuss@x86-64.org, Ben Collins <ben.collins@ubuntu.com>
 
-Hello,
+Hi all,
 
-Florian Effenberger wrote:
-> We installed Debian Etch with the pre-compiled kernel, but when doing
-> heavy SATA data transfer, the drives seem to make trouble. Even with the
-> latest kernel, 2.6.21.2, we receive:
-> 
-> ===
-> ata3.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x2 frozen
-> ata3.00: (irq_stat 0x08000000, interface fatal error)
-> ata3.00: cmd 61/80:00:00:91:91/00:00:1d:00:00/40 tag 0 cdb 0x0 data
-> 65536 out
->          res 40/00:04:00:91:91/00:00:1d:00:00/40 Emask 0x10 (ATA bus error)
-> ata3: soft resetting port
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: configured for UDMA/133
-> ata3: EH complete
-> SCSI device sdc: 625142448 512-byte hdwr sectors (320073 MB)
-> sdc: Write Protect is off
-> sdc: Mode Sense: 00 3a 00 00
-> SCSI device sdc: write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> ===
+Here is a list of some known regressions in 2.6.22-rc2
+with patches available.
 
-Looks like a genuine transmission/interface error to me.  How often does
-this occur?  Please try to connect the drive to another port using and
-possibly different power lane.  Also, testing with another drive is a
-good way to track down where the problem is.
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-> MD5 sums of copied files are right and we experience no other problems.
-> Is this a driver bug? If so, can I be of any help in debugging it?
 
-Yeah, libata EH is working properly so there shouldn't be any problem
-other than the error messages and a bit slower transfer speed.
 
--- 
-tejun
+Block devices
+
+Subject    : loop devices limited to one single device
+References : http://lkml.org/lkml/2007/5/16/229
+Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+Handled-By : Ken Chen <kenchen@google.com>
+Patch      : http://lkml.org/lkml/2007/5/21/483
+Status     : patch available
+
+
+
+=46ile systems
+
+Subject    : 2.6.21-git10/11: files getting truncated on xfs
+References : http://lkml.org/lkml/2007/5/9/410
+Submitter  : Jeremy Fitzhardinge <jeremy@goop.org>
+Handled-By : David Chinner <dgc@sgi.com>
+Patch      : http://lkml.org/lkml/2007/5/12/93
+Status     : patch available
+
+
+
+Memory management
+
+Subject    : bug in i386 MTRR initialization
+References : http://lkml.org/lkml/2007/5/19/93
+Submitter  : Andrea Righi <righiandr@users.sourceforge.net>
+Status     : patch available
+
+
+
+SATA/PATA
+
+Subject    : pata_via appears to incorrectly detects 40-pin cable
+References : http://lkml.org/lkml/2007/5/17/273
+             http://bugzilla.kernel.org/show_bug.cgi?id=3D8142
+Submitter  : Francis Russell <francisrussell@btopenworld.com>
+Status     : Not really a regression. Alan seems to have a general fix.
+             (Tejun Heo)
+
+Subject    : libata reset-seq merge broke sata_sil on sh
+References : http://lkml.org/lkml/2007/5/10/63
+Submitter  : Paul Mundt <lethal@linux-sh.org>
+Handled-By : Tejun Heo <htejun@gmail.com>
+Caused-By  : commit 4750def52cb2c21732dda9aa1d43a07db37b0186
+Patch      : http://lkml.org/lkml/2007/5/19/161
+Status     : patch available
+
+
+
+x86-64
+
+Subject    : BUG: at mm/slab.c:777 __find_general_cachep()
+References : http://lkml.org/lkml/2007/5/18/17
+Submitter  : Jeff Garzik <jeff@garzik.org>
+Handled-By : Ben Collins <ben.collins@ubuntu.com>
+Patch      : http://lkml.org/lkml/2007/5/18/19
+Status     : patch available
+
+
+
+Regards,
+Michal
+
+--
+"Najbardziej brakowa=B3o mi twojego milczenia."
+-- Andrzej Sapkowski "Co=B6 wi=EAcej"
+
