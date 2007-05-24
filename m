@@ -1,56 +1,64 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6 fix queue] hpt366: don't check enablebits for
- HPT36x
-Date: Fri, 25 May 2007 01:47:04 +0400
-Message-ID: <465607D8.3030207@ru.mvista.com>
-References: <200705042318.37367.sshtylyov@ru.mvista.com> <4655F43D.2090402@ru.mvista.com> <20070524203414.GO5921@austin.ibm.com> <4655FB3F.2070605@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: HPT366 not enabled by kernel 2.6.21.2
+Date: Fri, 25 May 2007 00:15:02 +0200
+Message-ID: <200705250015.02222.bzolnier@gmail.com>
+References: <48969.80.228.60.226.1180041664.squirrel@yurusanai.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:3915 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751031AbXEXVpe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 17:45:34 -0400
-In-Reply-To: <4655FB3F.2070605@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:13815 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbXEXWCO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 18:02:14 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so971726ugf
+        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 15:02:13 -0700 (PDT)
+In-Reply-To: <48969.80.228.60.226.1180041664.squirrel@yurusanai.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Linas Vepstas <linas@austin.ibm.com>, bzolnier@gmail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andries.Brouwer@cwi.nl, michal.kepien@poczta.onet.pl
+To: Pascal Schmidt <pasukaru@yurusanai.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Hello, I wrote:
 
->>>> HPT36x chip don't seem to have the channel enable bits, so prevent 
->>>> the IDE core from checking them...
+[ adding linux-ide ML and Sergei to cc: ]
 
->>>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Hi,
 
->>>>     d->channels = 1;
->>>> +    d->enablebits[0].reg = 0;
+On Thursday 24 May 2007, Pascal Schmidt wrote:
+> 
+> Hello!
+> 
+> I recently upgraded my kernel to 2.6.21 (.1 and .2 with identical
+> results) and my second IDE controller, a HPT366 on a PCI card,
+> doesn't get enabled any more. The latest previous kernel I used was
+> 2.6.19.7, where the HPT366 worked.
+> 
+> Here's the HPT366 part of the 2.6.21.2 dmesg:
+> 
+> HPT366: IDE controller at PCI slot 0000:02:0a.0
+> ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 18 (level, low) -> IRQ 18
+> HPT366: chipset revision 1
+> HPT366: using 33 MHz PCI clock
+> HPT366: 100% native mode on irq 18
+> HPT366: neither IDE port enabled (BIOS)
+> ACPI: PCI Interrupt 0000:02:0a.1[A] -> GSI 18 (level, low) -> IRQ 18
+> HPT366: using 33 MHz PCI clock
+> HPT366: neither IDE port enabled (BIOS)
+> 
+> There is a flash disk connected to the primary channel (master)
+> which also shows up in the controller's BIOS screen, so I don't
+> think it's true that both ports are disabled.
+> 
+> Under 2.6.17.9 the "neither IDE port enabled" message doesn't
+> happen and hde gets detected.
 
->> The original patch worked for me.
+The fix from Sergei (queued for 2.6.21.3) is here:
 
->>>   Linas, Andries, Michal, cound you try this instead:
->>>
->>>     d->enablebits[0].mask = d->enablebits[0].val = 0x10;
+http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob_plain;f=queue-2.6.21/hpt366-don-t-check-enablebits-for-hpt36x.patch;h=0833e0a37e23ed103a18ca93684201e1cb94a0a9
 
->> Based on the printk's from my system, this should work fine.
->> The config register had 0x33 in it, so 0x33 & mask == val for me.
->> I'll reply tommorrow if this doesn't work.
+[ it has already been merged into 2.6.22 tree ]
 
->    It probably won't work the way it should anyway -- the secondary 
-> channel (and controller in this case) uses another bit in this register 
-> and the controllers get registered with IDE core "in pair".
-
-    Maybe it will though, after reading some more "secret" stuff. :-)
-
-> Highpoint 
-> knows how to make broken hardware. :-)
-
-   It's alos known for lousy documentation. And even that they're not readily 
-giving out. :-)
-
->> --linas
-
-MBR, Sergei
-
+Thanks,
+Bart
