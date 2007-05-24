@@ -1,35 +1,68 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.22-rc2: known regressions with patches
-Date: Thu, 24 May 2007 09:54:16 -0700
-Message-ID: <20070524095416.d3371632.akpm@linux-foundation.org>
-References: <46559B62.5040903@googlemail.com>
-	<20070524161116.047c55e9@the-village.bc.nu>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: 2.6.22-rc1-mm1: IDE compile error
+Date: Thu, 24 May 2007 11:53:40 -0700
+Message-ID: <4655DF34.7000507@zytor.com>
+References: <20070515201914.16944e04.akpm@linux-foundation.org>	<20070516185552.GA4086@stusta.de>	<200705240145.38055.bzolnier@gmail.com> <20070524115549.01c0e1ca@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752075AbXEXQz1@vger.kernel.org>
-In-Reply-To: <20070524161116.047c55e9@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, viro@zeniv.linux.org.uk, Uwe Bugla <uwe.bugla@gmx.de>, Ken Chen <kenchen@google.com>, xfs-masters@oss.sgi.com, Jeremy Fitzhardinge <jeremy@goop.org>, David Chinner <dgc@sgi.com>, Andrea Righi <righiandr@users.sourceforge.net>, Christoph Lameter <clameter@sgi.com>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Alan Cox <alan@redhat.com>, Andi Kleen <ak@suse.de>, discuss@x86-64.org, Ben Collins <ben.collins@ubuntu.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([192.83.249.54]:51068 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbXEXS4X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 14:56:23 -0400
+In-Reply-To: <20070524115549.01c0e1ca@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 24 May 2007 16:11:16 +0100 Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-
-> > Subject    : pata_via appears to incorrectly detects 40-pin cable
-> > References : http://lkml.org/lkml/2007/5/17/273
-> >              http://bugzilla.kernel.org/show_bug.cgi?id=8142
-> > Submitter  : Francis Russell <francisrussell@btopenworld.com>
-> > Status     : Not really a regression. Alan seems to have a general fix.
-> >              (Tejun Heo)
+Alan Cox wrote:
+>>> hd.c:(.init.text+0x44a7d): undefined reference to `drive_info'
+>>> hd.c:(.init.text+0x44a89): undefined reference to `drive_info'
+>>> hd.c:(.init.text+0x44a95): undefined reference to `drive_info'
+>>> hd.c:(.init.text+0x44aa1): undefined reference to `drive_info'
+>>> hd.c:(.init.text+0x44aad): undefined reference to `drive_info'
+>>> drivers/built-in.o:hd.c:(.init.text+0x44ab9): more undefined references to `drive_info' follow
+>>> make[1]: *** [.tmp_vmlinux1] Error 1
+>>>
+>>> <--  snip  -->
+>>>
+>>> Considering the fact that we have two more recent drivers with the same 
+>>> functionality, it might be an option to simply remove this driver...
+>> Care to send a patch?
 > 
-> The laptop one has been resolved, tested and fired at Andrew.
+> hd.c can drive MFM and RLL disks and drivers/ide cannot. Although it
+> really wants burying further down the config tree the ability to read MFM
+> and RLL disks when recovering ancient data is useful and people do
+> actually use this driver now and then rescuing stuff like twenty year old
+> datasets.
+> 
+> It thus needs fixing not removing.
 
-Do you recall the Subject: on that patch?
+Why is this driver parked in drivers/ide/legacy when the companion
+driver, xd.c, is in drivers/block (where hd.c used to be at one point,
+too)?  Especially so since it's not really for IDE, but for ST-506.
 
-> Note btw that the bugzilla and email refer to two differing bugs. The
-> SATA one (bugzilla ref) has gone to Jeff and is a different fix.
+HOWEVER, the code that fails above hard-assumes that the ST-506 disks
+that you have are your primary system drives, which is obviously a wrong
+assumption -- ST-506 drives were obsolete quite a while before Linux
+existed[1].
 
-And that?
+xd.c, on the other hand, seems to actually go out and query the hardware
+directly.  I guess this is understandably, since this controller would
+never have been primary.
 
-Thanks.
+If hd.c is pure legacy, which it obviously is, should we remove the code
+to assume the BIOS settings are the MFM/RLL settings (i.e. the __i386__
+clause), and instead do something more like the __arm__ clause which
+means that "if you really want to use this you have to specify the
+parameters manually"?
+
+	-hpa
+
+
+[1] The 386-16 that I had access to at Northwestern, which with 0.59
+BogoMIPS was the slowest Linux system in existence until Linux was
+ported to other architectures, might have been an ST-506 drive, but I'm
+not sure.
