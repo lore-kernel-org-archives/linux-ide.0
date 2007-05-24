@@ -1,65 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: JMicron JMB363 issue fixed / ICH8 RAID volume trace
-Date: Thu, 24 May 2007 11:48:44 +0200
-Message-ID: <46555F7C.4000804@gmail.com>
-References: <76366b180705231843i19f88582xaf22ba0d58313feb@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Thu, 24 May 2007 10:54:07 +0100
+Message-ID: <20070524105407.64514929@the-village.bc.nu>
+References: <20070515061239.611A2DDEE9@ozlabs.org>
+	<1179209697.32247.153.camel@localhost.localdomain>
+	<20070523144217.5abd9fdf@the-village.bc.nu>
+	<1179960518.32247.948.camel@localhost.localdomain>
+	<20070524003123.77b9c81c@the-village.bc.nu>
+	<1179963820.32247.996.camel@localhost.localdomain>
+	<20070524001302.GA18571@devserv.devel.redhat.com>
+	<1179978137.32247.1035.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:57548 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798AbXEXJtA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 05:49:00 -0400
-Received: by nz-out-0506.google.com with SMTP id o37so562872nzf
-        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 02:49:00 -0700 (PDT)
-In-Reply-To: <76366b180705231843i19f88582xaf22ba0d58313feb@mail.gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45302 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754965AbXEXJuq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 05:50:46 -0400
+In-Reply-To: <1179978137.32247.1035.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew@ishiboo.com>
-Cc: "ethanhsiao@jmicron.com" <ethanhsiao@jmicron.com>, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Alan Cox <alan@redhat.com>, jgarzik@pobox.com, Linux IDE <linux-ide@vger.kernel.org>
 
-Andrew Paprocki wrote:
-> Ethan, I believe my 2.6.22-rc2 kernel *is* working with respect to the
-> libata problem. By removing CONFIG_IDE, the system now works fine. The
-> reason why I thought that libata was still having a problem was
-> because the system would hang after agpgart printed:
-> "agpgart: detected an Intel 965G chipset."
-> 
-> I *thought* the system was once again waiting for the root drive to
-> become available, but it turns out it was actually hung. I found
-> another user with a Gigabyte board with the same issue. I also have
-> 4GB ram.. http://lists.opensuse.org/opensuse-amd64/2007-04/msg00001.html
-> 
-> I added "mem=4096M" to the boot line and now everything is working
-> properly. The IDE subsystem is off and libata is handling everything.
-> I'll post on the kernel mailing list to see if this is a known issue
-> w/ agpgart or amd64+4gb.
-> 
-> I do see some trace print out complaining about reads past the end of
-> the device.. Does anyone have an idea if these are harmful? They are
-> coming from my ICH8 RAID volumes:
-> 
-> sda: sda1
-> sda: p1 exceeds device capacity
-> sdb: unknown partition table
-> sdc: sdc1
-> sdc: p1 exceeds device capacity
-> sdf1
-> sdf: p1 exceeds device capacity
-> ...
-> attempt to access beyond end of device
-> sda: rw=0, want=1953533832, limit=976773168
-> Buffer I/O error on device sda1, logical block 244191472
-> (repeats about 25 times)
-> attempt to access beyond end of device
-> sdf: rw=0, want=1875410824, limit=625142448
-> (repeats about 25 times)
-> sdc: rw=0, want=1875410824, limit=625142448
-> attempt to access beyond end of device
-> (repeats about 25 times)
+> Currently libata does the 400ns thingy in the inline ata_pause() which
+> unconditionally does ata_altstatus(); ndelay(400); (and thus does it on
+> PIO, MMIO, anything ...).
 
-What does 'fdisk -l' say?
+It might actually improve performance for PATA if we did as we'll get rid
+of an excess (expensive) PCI read access for non MMIO cases.
 
--- 
-tejun
