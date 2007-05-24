@@ -1,64 +1,54 @@
-From: Florian Effenberger <florian@effenberger.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: libata interface fatal error
-Date: Thu, 24 May 2007 16:08:34 +0200
-Message-ID: <46559C62.2040509@effenberger.org>
-References: <4655923E.5000409@effenberger.org> <46559713.9070201@gmail.com>
+Date: Thu, 24 May 2007 16:21:15 +0200
+Message-ID: <46559F5B.4090700@gmail.com>
+References: <4655923E.5000409@effenberger.org> <46559713.9070201@gmail.com> <46559C62.2040509@effenberger.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:50424 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbXEXOIh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 10:08:37 -0400
-In-Reply-To: <46559713.9070201@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.239]:39569 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbXEXOVb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 10:21:31 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so51215nzf
+        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 07:21:30 -0700 (PDT)
+In-Reply-To: <46559C62.2040509@effenberger.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Florian Effenberger <florian@effenberger.org>
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi,
+Florian Effenberger wrote:
+>> Looks like a genuine transmission/interface error to me.  How often does
+>> this occur?  Please try to connect the drive to another port using and
+>> possibly different power lane.  Also, testing with another drive is a
+>> good way to track down where the problem is.
+> 
+> it occurs as soon as the drive is being used heavily (load of about 2,x
+> on the machine when running our test scripts). About 15 times in 2 or 3
+> hours. Will try to change port, power supply and drive.
+> 
+>> Yeah, libata EH is working properly so there shouldn't be any problem
+>> other than the error messages and a bit slower transfer speed.
+> 
+> So, even if the errors are still there, there is nothing real to worry
+> about for me?
 
-thanks for the fast reply!
+Data integrity wise there should be no problem but your error rate is
+pretty high and eventually will make libata turn off NCQ and/or speed
+down PHY speed.
 
-> Looks like a genuine transmission/interface error to me.  How often does
-> this occur?  Please try to connect the drive to another port using and
-> possibly different power lane.  Also, testing with another drive is a
-> good way to track down where the problem is.
+> There are now new errors with hard errors, is this still ok?
+> 
+> ===
+> ata4.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
+> ata4.00: cmd 60/80:00:00:09:97/00:00:0a:00:00/40 tag 0 cdb 0x0 data
+> 65536 in
+>          res 40/00:04:00:67:14/00:00:1c:00:00/40 Emask 0x4 (timeout)
 
-it occurs as soon as the drive is being used heavily (load of about 2,x 
-on the machine when running our test scripts). About 15 times in 2 or 3 
-hours. Will try to change port, power supply and drive.
+Yeap, your data is safe.  With timeouts, data transfer speed can be much
+lower tho.  It definitely seems something is wrong with your hardware setup.
 
-> Yeah, libata EH is working properly so there shouldn't be any problem
-> other than the error messages and a bit slower transfer speed.
-
-So, even if the errors are still there, there is nothing real to worry 
-about for me?
-
-There are now new errors with hard errors, is this still ok?
-
-===
-ata4.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
-ata4.00: cmd 60/80:00:00:09:97/00:00:0a:00:00/40 tag 0 cdb 0x0 data 65536 in
-          res 40/00:04:00:67:14/00:00:1c:00:00/40 Emask 0x4 (timeout)
-ata4: soft resetting port
-ata4: softreset failed (1st FIS failed)
-ata4: softreset failed, retrying in 5 secs
-ata4: hard resetting port
-ata4: port is slow to respond, please be patient (Status 0x80)
-ata4: port failed to respond (30 secs, Status 0x80)
-ata4: COMRESET failed (device not ready)
-ata4: hardreset failed, retrying in 5 secs
-ata4: hard resetting port
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-SCSI device sdd: 625142448 512-byte hdwr sectors (320073 MB)
-sdd: Write Protect is off
-sdd: Mode Sense: 00 3a 00 00
-SCSI device sdd: write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-===
-
-Florian
+-- 
+tejun
