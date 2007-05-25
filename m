@@ -1,42 +1,132 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: 2.6.22-rc1-mm1: IDE compile error
-Date: Thu, 24 May 2007 17:51:56 -0700
-Message-ID: <4656332C.7080909@zytor.com>
-References: <20070515201914.16944e04.akpm@linux-foundation.org>	<20070516185552.GA4086@stusta.de>	<200705240145.38055.bzolnier@gmail.com>	<20070524115549.01c0e1ca@the-village.bc.nu>	<4656284D.7080709@zytor.com>	<20070525011403.20e77ee7@the-village.bc.nu>	<46562B5A.2070008@zytor.com> <20070525013817.26061764@the-village.bc.nu>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Re: JMicron JMB363 issue fixed / ICH8 RAID volume trace
+Date: Thu, 24 May 2007 21:27:25 -0400
+Message-ID: <76366b180705241827u2228101eyf8c8b7aa62c594df@mail.gmail.com>
+References: <76366b180705231843i19f88582xaf22ba0d58313feb@mail.gmail.com>
+	 <46555F7C.4000804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_120457_15418233.1180056445542"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([192.83.249.54]:44556 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbXEYAyI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 20:54:08 -0400
-In-Reply-To: <20070525013817.26061764@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.180]:36873 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915AbXEYB10 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 21:27:26 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so261793wah
+        for <linux-ide@vger.kernel.org>; Thu, 24 May 2007 18:27:25 -0700 (PDT)
+In-Reply-To: <46555F7C.4000804@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "ethanhsiao@jmicron.com" <ethanhsiao@jmicron.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> The question I'm asking is: do you think it's better to remove this from
->> hd.c, or do you think it's better to add it back boot code BIOS
->> detection (and take the risk of poking an ST-506 disk with legacy data
->> with parameters which may belong to another disk -- keep in mind this
->> can permanently damage an ST-506 disk)?
-> 
-> To set it up the user will have to know the parameters and have typed
-> them into the BIOS (if it even has an option for it). I see no problem
+------=_Part_120457_15418233.1180056445542
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Sorry, see no problem which way?  My concern here is with getting
-incorrect data, not getting no data.  The BIOS probe amounts to pulling
-data out of two tables (INT 0x41/0x46, corresponding to BIOS drives 0x80
-and 0x81 -- the EDD 1.1 spec is quite specific that if implemented they
-follow the BIOS drive numbers, not the ATA port addresses), and hoping
-that they actually match the drives that hd.c uses.  That scares me,
-since we're talking about old legacy data here.
+Tejun, fdisk -l output is attached
 
-I'm not concerned with what's easy, I'm concerned with what's the right
-thing to do.
+Basically, in the ICH8 BIOS:
+/dev/sda + sdb = 2 500GB drives in RAID1 configuration
+/dev/sdc + sdd + sde + sdf = 4 320GB drives in RAID5 configuration
 
-	-hpa
+/dev/sdg is a 320GB boot drive connected to the JMB363 chipset
 
+Is there some kind of problem when probing these partitions because
+they are fake software RAID through the ICH8? The messages only spew
+at boot time.
+
+Thanks, -Andrew
+
+On 5/24/07, Tejun Heo <htejun@gmail.com> wrote:
+> Andrew Paprocki wrote:
+> > Ethan, I believe my 2.6.22-rc2 kernel *is* working with respect to the
+> > libata problem. By removing CONFIG_IDE, the system now works fine. The
+> > reason why I thought that libata was still having a problem was
+> > because the system would hang after agpgart printed:
+> > "agpgart: detected an Intel 965G chipset."
+> >
+> > I *thought* the system was once again waiting for the root drive to
+> > become available, but it turns out it was actually hung. I found
+> > another user with a Gigabyte board with the same issue. I also have
+> > 4GB ram.. http://lists.opensuse.org/opensuse-amd64/2007-04/msg00001.html
+> >
+> > I added "mem=4096M" to the boot line and now everything is working
+> > properly. The IDE subsystem is off and libata is handling everything.
+> > I'll post on the kernel mailing list to see if this is a known issue
+> > w/ agpgart or amd64+4gb.
+> >
+> > I do see some trace print out complaining about reads past the end of
+> > the device.. Does anyone have an idea if these are harmful? They are
+> > coming from my ICH8 RAID volumes:
+> >
+> > sda: sda1
+> > sda: p1 exceeds device capacity
+> > sdb: unknown partition table
+> > sdc: sdc1
+> > sdc: p1 exceeds device capacity
+> > sdf1
+> > sdf: p1 exceeds device capacity
+> > ...
+> > attempt to access beyond end of device
+> > sda: rw=0, want=1953533832, limit=976773168
+> > Buffer I/O error on device sda1, logical block 244191472
+> > (repeats about 25 times)
+> > attempt to access beyond end of device
+> > sdf: rw=0, want=1875410824, limit=625142448
+> > (repeats about 25 times)
+> > sdc: rw=0, want=1875410824, limit=625142448
+> > attempt to access beyond end of device
+> > (repeats about 25 times)
+>
+> What does 'fdisk -l' say?
+>
+> --
+> tejun
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
+------=_Part_120457_15418233.1180056445542
+Content-Type: text/plain; name=fdisk.052307.txt; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_f23yy1dy
+Content-Disposition: attachment; filename="fdisk.052307.txt"
+
+RGlzayAvZGV2L3NkYiBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKRGlz
+ayAvZGV2L3NkZCBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKRGlzayAv
+ZGV2L3NkZSBkb2Vzbid0IGNvbnRhaW4gYSB2YWxpZCBwYXJ0aXRpb24gdGFibGUKCkRpc2sgL2Rl
+di9zZGE6IDUwMC4xIEdCLCA1MDAxMDc4NjIwMTYgYnl0ZXMKMjU1IGhlYWRzLCA2MyBzZWN0b3Jz
+L3RyYWNrLCA2MDgwMSBjeWxpbmRlcnMKVW5pdHMgPSBjeWxpbmRlcnMgb2YgMTYwNjUgKiA1MTIg
+PSA4MjI1MjgwIGJ5dGVzCgogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0ICAgICAgICAgRW5kICAg
+ICAgQmxvY2tzICAgSWQgIFN5c3RlbQovZGV2L3NkYTEgICAqICAgICAgICAgICAxICAgICAgMTIx
+NjAyICAgOTc2NzY1OTUyICAgIDcgIEhQRlMvTlRGUwoKRGlzayAvZGV2L3NkYjogNTAwLjEgR0Is
+IDUwMDEwNzg2MjAxNiBieXRlcwoyNTUgaGVhZHMsIDYzIHNlY3RvcnMvdHJhY2ssIDYwODAxIGN5
+bGluZGVycwpVbml0cyA9IGN5bGluZGVycyBvZiAxNjA2NSAqIDUxMiA9IDgyMjUyODAgYnl0ZXMK
+CgpEaXNrIC9kZXYvc2RjOiAzMjAuMCBHQiwgMzIwMDcyOTMzMzc2IGJ5dGVzCjI1NSBoZWFkcywg
+NjMgc2VjdG9ycy90cmFjaywgMzg5MTMgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDE2
+MDY1ICogNTEyID0gODIyNTI4MCBieXRlcwoKICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAg
+ICAgIEVuZCAgICAgIEJsb2NrcyAgIElkICBTeXN0ZW0KL2Rldi9zZGMxICAgICAgICAgICAgICAg
+MSAgICAgIDExNjczOSAgIDkzNzcwNDQ0OCAgICA3ICBIUEZTL05URlMKCkRpc2sgL2Rldi9zZGQ6
+IDMyMC4wIEdCLCAzMjAwNzI5MzMzNzYgYnl0ZXMKMjU1IGhlYWRzLCA2MyBzZWN0b3JzL3RyYWNr
+LCAzODkxMyBjeWxpbmRlcnMKVW5pdHMgPSBjeWxpbmRlcnMgb2YgMTYwNjUgKiA1MTIgPSA4MjI1
+MjgwIGJ5dGVzCgoKRGlzayAvZGV2L3NkZTogMzIwLjAgR0IsIDMyMDA3MjkzMzM3NiBieXRlcwoy
+NTUgaGVhZHMsIDYzIHNlY3RvcnMvdHJhY2ssIDM4OTEzIGN5bGluZGVycwpVbml0cyA9IGN5bGlu
+ZGVycyBvZiAxNjA2NSAqIDUxMiA9IDgyMjUyODAgYnl0ZXMKCgpEaXNrIC9kZXYvc2RmOiAzMjAu
+MCBHQiwgMzIwMDcyOTMzMzc2IGJ5dGVzCjI1NSBoZWFkcywgNjMgc2VjdG9ycy90cmFjaywgMzg5
+MTMgY3lsaW5kZXJzClVuaXRzID0gY3lsaW5kZXJzIG9mIDE2MDY1ICogNTEyID0gODIyNTI4MCBi
+eXRlcwoKICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAg
+IElkICBTeXN0ZW0KL2Rldi9zZGYxICAgICAgICAgICAgICAgMSAgICAgIDExNjczOSAgIDkzNzcw
+NDQ0OCAgICA3ICBIUEZTL05URlMKCkRpc2sgL2Rldi9zZGc6IDMyMC4wIEdCLCAzMjAwNzI5MzMz
+NzYgYnl0ZXMKMjU1IGhlYWRzLCA2MyBzZWN0b3JzL3RyYWNrLCAzODkxMyBjeWxpbmRlcnMKVW5p
+dHMgPSBjeWxpbmRlcnMgb2YgMTYwNjUgKiA1MTIgPSA4MjI1MjgwIGJ5dGVzCgogICBEZXZpY2Ug
+Qm9vdCAgICAgIFN0YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAgSWQgIFN5c3RlbQovZGV2
+L3NkZzEgICAgICAgICAgICAgICAxICAgICAgIDMyNjgwICAgMjYyNTAwMzUyICAgIDcgIEhQRlMv
+TlRGUwovZGV2L3NkZzIgICAgICAgICAgIDMyNjgwICAgICAgIDMyNzEzICAgICAgMjYyMTQ0ICAg
+ODIgIExpbnV4IHN3YXAgLyBTb2xhcmlzCi9kZXYvc2RnMyAgICogICAgICAgMzI3MTMgICAgICAg
+Mzg5MTQgICAgNDk4MDYzMzYgICA4MyAgTGludXgK
+------=_Part_120457_15418233.1180056445542--
