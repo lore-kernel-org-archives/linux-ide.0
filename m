@@ -1,74 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] Add the device IDs for AMD/ATI SB700
-Date: Fri, 25 May 2007 07:30:04 -0400
-Message-ID: <4656C8BC.6060807@garzik.org>
-References: <FFECF24D2A7F6D418B9511AF6F35860201B3658E@shacnexch2.atitech.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
+Date: Fri, 25 May 2007 07:32:27 -0400
+Message-ID: <4656C94B.1090606@rtr.ca>
+References: <20070515061239.611A2DDEE9@ozlabs.org>	 <1179209697.32247.153.camel@localhost.localdomain>	 <20070523144217.5abd9fdf@the-village.bc.nu>	 <1179960518.32247.948.camel@localhost.localdomain>	 <20070524003123.77b9c81c@the-village.bc.nu> <46552A63.4080002@pobox.com>	 <20070524093316.GB10777@devserv.devel.redhat.com>	 <4655611E.6050805@garzik.org>	 <1180001330.32247.1058.camel@localhost.localdomain>	 <4655FBF5.5080707@rtr.ca> <1180047136.32247.1073.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54002 "EHLO mail.dvmed.net"
+Received: from rtr.ca ([64.26.128.89]:3326 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751312AbXEYLaL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 May 2007 07:30:11 -0400
-In-Reply-To: <FFECF24D2A7F6D418B9511AF6F35860201B3658E@shacnexch2.atitech.com>
+	id S1751243AbXEYLca (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 May 2007 07:32:30 -0400
+In-Reply-To: <1180047136.32247.1073.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Henry Su <henry.su@amd.com>
-Cc: alan@lxorguk.ukuu.org.uk, greg@kroah.com, bzolnier@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xiaosuzi520@hotmail.com
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>
 
-Henry Su wrote:
-> I check the latest kernel source code with git, and find out that the SMBus patch has not been applied yet, 
+Benjamin Herrenschmidt wrote:
+> On Thu, 2007-05-24 at 16:56 -0400, Mark Lord wrote:
+>> Benjamin Herrenschmidt wrote:
+>>> The only thing that I'm wondering about a bit is that ata_pause so far
+>>> uses read of altstatus which _is_ a taskfile register. It's my
+>>> understanding that we should avoid doing so in that case.
+>> Technically, altstatus is in the control block rather than the command block,
+>> so it doesn't really always behave the same as the regular "taskfile" regs.
+> 
+> So would altstatus be good enough to flush SRST toggles as well or do
+> you expect problems ?
 
-Correct.  When you don't see a patch in the upstream git tree 
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git 
-then the next step is consult the MAINTAINERS file, and determine to 
-whom you should send a follow-up patch, or simply contact about the 
-status of a patch you just sent.  In this case, SMBus is in drivers/i2c 
-sub-directory, which leads us to find in MAINTAINERS,
-
-I2C SUBSYSTEM
-P:      Jean Delvare
-M:      khali@linux-fr.org
-L:      i2c@lm-sensors.org
-T:      quilt http://khali.linux-fr.org/devel/linux-2.6/jdelvare-i2c/
-S:      Maintained
-
-That tells us the maintainer of the subsystem, and also ("T:") an 
-external reference (a tree) to where the maintainer posts accepted 
-patches, prior to sending them upstream.
-
-So for SMBus, you should make sure your SMBus changes appear in Jean 
-Delvare's quilt tree.  If they do not, create a new patch and send it to 
-Jean and CC i2c@lm-sensors.org and linux-kernel@vger.kernel.org.
-
-
-> and the patch for IDE  has not been  applied completely.one more device id should be added to pata_atiixp.c,
-> l list the patch as following, or you can fetch it from the attached file, could you please apply this for me? 
-
-Actually it has been applied -- the part that I maintain (drivers/ata/*) 
-is currently stored in a secondary tree, as described above.  Your patch 
-has been stored on the 'upstream' branch of 
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-Currently, the upstream Linux kernel is only accepting bug fixes.  I 
-merge ATA bug fixes (and sometimes simple PCI ID additions) into 
-libata-dev.git#upstream-fixes during this phase of development.  These 
-changes are sent upstream in 24-48 hours, to ensure that they will be 
-included in the next release (kernel 2.6.22).
-
-All other ATA changes are merged into libata-dev.git#upstream.  When 
-Linus releases kernel 2.6.22, the "merge window" opens, allowing 
-non-bug-fix changes to be submitted upstream.  When the merge window 
-opens, I submit everything in libata-dev.git#upstream to Linus and 
-Andrew Morton for inclusion in the official upstream kernel tree.
-
-That is our development process in a nutshell.
-
-The kernel development process is conducted entirely via email, so you 
-see why it is so important to learn how to email patches in the proper 
-format.
-
-	Jeff
-
-
+Dunno, really.  If one didn't have a known better idea, then it's worth trying.
