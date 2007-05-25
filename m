@@ -1,42 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
-Date: Fri, 25 May 2007 01:40:27 +0100
-Message-ID: <20070525014027.3feabe50@the-village.bc.nu>
-References: <20070515061239.611A2DDEE9@ozlabs.org>
-	<1179209697.32247.153.camel@localhost.localdomain>
-	<20070523144217.5abd9fdf@the-village.bc.nu>
-	<1179960518.32247.948.camel@localhost.localdomain>
-	<20070524003123.77b9c81c@the-village.bc.nu>
-	<1179963820.32247.996.camel@localhost.localdomain>
-	<20070524001302.GA18571@devserv.devel.redhat.com>
-	<1179978137.32247.1035.camel@localhost.localdomain>
-	<20070524105407.64514929@the-village.bc.nu>
-	<46556E5D.3070203@pobox.com>
-	<20070524120915.40b594a8@the-village.bc.nu>
-	<46562E03.3020503@garzik.org>
+Subject: Re: 2.6.22-rc1-mm1: IDE compile error
+Date: Fri, 25 May 2007 01:38:17 +0100
+Message-ID: <20070525013817.26061764@the-village.bc.nu>
+References: <20070515201914.16944e04.akpm@linux-foundation.org>
+	<20070516185552.GA4086@stusta.de>
+	<200705240145.38055.bzolnier@gmail.com>
+	<20070524115549.01c0e1ca@the-village.bc.nu>
+	<4656284D.7080709@zytor.com>
+	<20070525011403.20e77ee7@the-village.bc.nu>
+	<46562B5A.2070008@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35021 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35023 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750729AbXEYAfp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 20:35:45 -0400
-In-Reply-To: <46562E03.3020503@garzik.org>
+	with ESMTP id S1750811AbXEYAfr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 20:35:47 -0400
+In-Reply-To: <46562B5A.2070008@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux IDE <linux-ide@vger.kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> #define DELAY400NS  { pio_inbyte( CB_ASTAT ); pio_inbyte( CB_ASTAT );  \
->                        pio_inbyte( CB_ASTAT ); pio_inbyte( CB_ASTAT ); }
-> 
-> 
+> The question I'm asking is: do you think it's better to remove this from
+> hd.c, or do you think it's better to add it back boot code BIOS
+> detection (and take the risk of poking an ST-506 disk with legacy data
+> with parameters which may belong to another disk -- keep in mind this
+> can permanently damage an ST-506 disk)?
 
-Totally unrelated. Hal is using the cycle time of the four I/O reads to
-do the 400nS delay. Its a neat way to do the delay on boxes without
-modern CPUs and nice timing features and perhaps one we should use on
-those boxes but its not relevant to the question of how you post an MMIO
-command write.
+To set it up the user will have to know the parameters and have typed
+them into the BIOS (if it even has an option for it). I see no problem
 
-Alan
