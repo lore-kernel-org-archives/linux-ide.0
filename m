@@ -1,39 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: JMicron JMB363 issue fixed / ICH8 RAID volume trace
-Date: Fri, 25 May 2007 12:10:57 +0200
-Message-ID: <4656B631.8060305@gmail.com>
-References: <76366b180705231843i19f88582xaf22ba0d58313feb@mail.gmail.com>	 <46555F7C.4000804@gmail.com> <76366b180705241827u2228101eyf8c8b7aa62c594df@mail.gmail.com>
+From: Vasily Averin <vvs@sw.ru>
+Subject: Re: VIA VT6420: SATA disconnects
+Date: Fri, 25 May 2007 14:14:15 +0400
+Message-ID: <4656B6F7.4030805@sw.ru>
+References: <46569341.4020801@sw.ru> <465694E4.9020601@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:43673 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbXEYKLK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2007 06:11:10 -0400
-Received: by py-out-1112.google.com with SMTP id a73so1307501pye
-        for <linux-ide@vger.kernel.org>; Fri, 25 May 2007 03:11:09 -0700 (PDT)
-In-Reply-To: <76366b180705241827u2228101eyf8c8b7aa62c594df@mail.gmail.com>
+Received: from mailhub.sw.ru ([195.214.233.200]:5274 "EHLO relay.sw.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752233AbXEYKOf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 May 2007 06:14:35 -0400
+In-Reply-To: <465694E4.9020601@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew@ishiboo.com>
-Cc: "ethanhsiao@jmicron.com" <ethanhsiao@jmicron.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, j.e.van.grootheest@caiway.nl, devel@openvz.org
 
-Andrew Paprocki wrote:
-> Tejun, fdisk -l output is attached
-> 
-> Basically, in the ICH8 BIOS:
-> /dev/sda + sdb = 2 500GB drives in RAID1 configuration
-> /dev/sdc + sdd + sde + sdf = 4 320GB drives in RAID5 configuration
-> 
-> /dev/sdg is a 320GB boot drive connected to the JMB363 chipset
-> 
-> Is there some kind of problem when probing these partitions because
-> they are fake software RAID through the ICH8? The messages only spew
-> at boot time.
+Jeff Garzik wrote:
+> RHEL5 SATA is unfortunately way out of date :(  The next RHEL5 update 
+> should include a boatload of fixes.
 
-OIC, you need to use dm-raid to use those fake RAIDs properly.  If you
-don't intend to access the RAIDs, you don't need to care.
+Is SATA update included into RHEL5 testkernels? And do you probably know if they are accessible somewhere (like in http://people.redhat.com/~jbaron/rhel4/ for RHEL4 testkernels)?
 
--- 
-tejun
+thank you,
+	Vasily Averin
