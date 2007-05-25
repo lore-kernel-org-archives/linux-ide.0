@@ -1,38 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Add MMIO support to pata_sil680
-Date: Thu, 24 May 2007 20:51:26 -0400
-Message-ID: <4656330E.2000604@garzik.org>
-References: <20070515061239.611A2DDEE9@ozlabs.org>	<1179209697.32247.153.camel@localhost.localdomain>	<20070523144217.5abd9fdf@the-village.bc.nu>	<1179960518.32247.948.camel@localhost.localdomain>	<20070524003123.77b9c81c@the-village.bc.nu>	<1179963820.32247.996.camel@localhost.localdomain>	<20070524001302.GA18571@devserv.devel.redhat.com>	<1179978137.32247.1035.camel@localhost.localdomain>	<20070524105407.64514929@the-village.bc.nu>	<46556E5D.3070203@pobox.com>	<20070524120915.40b594a8@the-village.bc.nu>	<46562E03.3020503@garzik.org> <20070525014027.3feabe50@the-village.bc.nu>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: 2.6.22-rc1-mm1: IDE compile error
+Date: Thu, 24 May 2007 17:51:56 -0700
+Message-ID: <4656332C.7080909@zytor.com>
+References: <20070515201914.16944e04.akpm@linux-foundation.org>	<20070516185552.GA4086@stusta.de>	<200705240145.38055.bzolnier@gmail.com>	<20070524115549.01c0e1ca@the-village.bc.nu>	<4656284D.7080709@zytor.com>	<20070525011403.20e77ee7@the-village.bc.nu>	<46562B5A.2070008@zytor.com> <20070525013817.26061764@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49721 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053AbXEYAva (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 May 2007 20:51:30 -0400
-In-Reply-To: <20070525014027.3feabe50@the-village.bc.nu>
+Received: from terminus.zytor.com ([192.83.249.54]:44556 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbXEYAyI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2007 20:54:08 -0400
+In-Reply-To: <20070525013817.26061764@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux IDE <linux-ide@vger.kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Alan Cox wrote:
->> #define DELAY400NS  { pio_inbyte( CB_ASTAT ); pio_inbyte( CB_ASTAT );  \
->>                        pio_inbyte( CB_ASTAT ); pio_inbyte( CB_ASTAT ); }
->>
->>
+>> The question I'm asking is: do you think it's better to remove this from
+>> hd.c, or do you think it's better to add it back boot code BIOS
+>> detection (and take the risk of poking an ST-506 disk with legacy data
+>> with parameters which may belong to another disk -- keep in mind this
+>> can permanently damage an ST-506 disk)?
 > 
-> Totally unrelated. Hal is using the cycle time of the four I/O reads to
-> do the 400nS delay. Its a neat way to do the delay on boxes without
-> modern CPUs and nice timing features and perhaps one we should use on
-> those boxes but its not relevant to the question of how you post an MMIO
-> command write.
+> To set it up the user will have to know the parameters and have typed
+> them into the BIOS (if it even has an option for it). I see no problem
 
-It illustrates (as well as our experience to date) that AltStatus use 
-for the delay is just fine.
+Sorry, see no problem which way?  My concern here is with getting
+incorrect data, not getting no data.  The BIOS probe amounts to pulling
+data out of two tables (INT 0x41/0x46, corresponding to BIOS drives 0x80
+and 0x81 -- the EDD 1.1 spec is quite specific that if implemented they
+follow the BIOS drive numbers, not the ATA port addresses), and hoping
+that they actually match the drives that hd.c uses.  That scares me,
+since we're talking about old legacy data here.
 
-	Jeff
+I'm not concerned with what's easy, I'm concerned with what's the right
+thing to do.
 
-
+	-hpa
 
