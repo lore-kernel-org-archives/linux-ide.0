@@ -1,115 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming
-Date: Fri, 25 May 2007 19:05:21 +0100
-Message-ID: <20070525190521.6667c202@the-village.bc.nu>
-References: <20070202151856.GD1625@htj.dyndns.org>
-	<20070430182939.GD4156@artsapartment.org>
-	<4636ADBE.8080508@gmail.com>
-	<20070524195943.GC7734@artsapartment.org>
-	<4655FBA4.9050702@garzik.org>
-	<4655FDBF.3000401@gmail.com>
-	<46571A0A.2030305@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6 fix queue] hpt366: don't check enablebits for
+ HPT36x
+Date: Fri, 25 May 2007 22:12:25 +0400
+Message-ID: <46572709.5040900@ru.mvista.com>
+References: <200705042318.37367.sshtylyov@ru.mvista.com> <4655F43D.2090402@ru.mvista.com> <20070524203414.GO5921@austin.ibm.com> <4655FB3F.2070605@ru.mvista.com> <465607D8.3030207@ru.mvista.com> <20070525175830.GA4323@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55778 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752481AbXEYSAo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2007 14:00:44 -0400
-In-Reply-To: <46571A0A.2030305@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:10172 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752779AbXEYSKz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2007 14:10:55 -0400
+In-Reply-To: <20070525175830.GA4323@austin.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Art Haas <ahaas@airmail.net>, linux-ide@vger.kernel.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andries.Brouwer@cwi.nl, michal.kepien@poczta.onet.pl
 
-On Fri, 25 May 2007 19:16:58 +0200
-Tejun Heo <htejun@gmail.com> wrote:
+Linas Vepstas wrote:
 
-> Fix various bugs in pio/mwdma mode programming.
-> 
-> * Control bits in the timing register wasn't cleared properly while
->   programming PIO mode.
-> 
-> * MWDMA mode programming cleared the wrong part of control bits.
-> 
-> * MWDMA mode programming cleared udma_mask even when the controller
->   doesn't support UDMA.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Art Haas <ahaas@airmail.net>
+>>>>> Linas, Andries, Michal, cound you try this instead:
 
-Acked-by: Alan Cox <alan@redhat.com>
+>>>>>   d->enablebits[0].mask = d->enablebits[0].val = 0x10;
 
-> ---
-> Patch is against libata-dev#upstream.  Thanks.
+>>>  It probably won't work the way it should anyway -- the secondary 
+>>>channel (and controller in this case) uses another bit in this register 
+>>>and the controllers get registered with IDE core "in pair".
+
+> Setting d->enablebits[0].mask = d->enablebits[0].val = 0x10; makes
+> my system bootable, and so this works well enough for me.  Without this
+> patch, mainline 2.6.21.1 is broken, and so I'll say it again:
 > 
->  drivers/ata/ata_piix.c |   23 +++++++++++++++++------
->  1 file changed, 17 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 9c07b88..924e447 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -685,8 +685,14 @@ static void piix_set_piomode (struct ata
->  	if (adev->class == ATA_DEV_ATA)
->  		control |= 4;	/* PPE enable */
->  
-> +	/* PIO configuration clears DTE unconditionally.  It will be
-> +	 * programmed in set_dmamode which is guaranteed to be called
-> +	 * after set_piomode if any DMA mode is available.
-> +	 */
->  	pci_read_config_word(dev, master_port, &master_data);
->  	if (is_slave) {
-> +		/* clear TIME1|IE1|PPE1|DTE1 */
-> +		master_data &= 0xff0f;
->  		/* Enable SITRE (seperate slave timing register) */
->  		master_data |= 0x4000;
->  		/* enable PPE1, IE1 and TIME1 as needed */
-> @@ -694,12 +700,14 @@ static void piix_set_piomode (struct ata
->  		pci_read_config_byte(dev, slave_port, &slave_data);
->  		slave_data &= (ap->port_no ? 0x0f : 0xf0);
->  		/* Load the timing nibble for this slave */
-> -		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
-> +		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
-> +						<< (ap->port_no ? 4 : 0);
->  	} else {
-> -		/* Master keeps the bits in a different format */
-> -		master_data &= 0xccf8;
-> +		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
-> +		master_data &= 0xccf0;
->  		/* Enable PPE, IE and TIME as appropriate */
->  		master_data |= control;
-> +		/* load ISP and RCT */
->  		master_data |=
->  			(timings[pio][0] << 12) |
->  			(timings[pio][1] << 8);
-> @@ -816,7 +824,7 @@ static void do_pata_set_dmamode (struct
->  			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
->  			master_data |= control << 4;
->  			pci_read_config_byte(dev, 0x44, &slave_data);
-> -			slave_data &= (0x0F + 0xE1 * ap->port_no);
-> +			slave_data &= (ap->port_no ? 0x0f : 0xf0);
->  			/* Load the matching timing */
->  			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
->  			pci_write_config_byte(dev, 0x44, slave_data);
-> @@ -828,8 +836,11 @@ static void do_pata_set_dmamode (struct
->  				(timings[pio][0] << 12) |
->  				(timings[pio][1] << 8);
->  		}
-> -		udma_enable &= ~(1 << devid);
-> -		pci_write_config_word(dev, master_port, master_data);
-> +
-> +		if (ap->udma_mask) {
-> +			udma_enable &= ~(1 << devid);
-> +			pci_write_config_word(dev, master_port, master_data);
-> +		}
->  	}
->  	/* Don't scribble on 0x48 if the controller does not support UDMA */
->  	if (ap->udma_mask)
+> Please submit a patch to the stable branch so that this gets generically
+> fixed!  I'll happily Ack it. 
 
+    Already done. I hope it'll be in 2.6.21.3...
 
--- 
---
-Sick of rip off UK rail fares ? Learn how to get far cheaper fares
-		http://zeniv.linux.org.uk/~alan/GTR/
+> --linas
+
+WBR, Sergei
