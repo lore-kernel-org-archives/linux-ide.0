@@ -1,35 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Thu, 24 May 2007 23:15:56 -0400
-Message-ID: <465654EC.9080805@garzik.org>
-References: <20070510072247.063476979@intel.com>	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>	<20070509220952.5fa34822.akpm@linux-foundation.org> <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
+Subject: Re: [patch] NCQ blacklist Maxtor 6B200M0/BANC1B10
+Date: Thu, 24 May 2007 23:16:35 -0400
+Message-ID: <46565513.1090705@garzik.org>
+References: <ecd3e9720704291931m742accd1h7d9f2c5d4362b7dc@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50761 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50782 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750705AbXEYDQA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 May 2007 23:16:00 -0400
-In-Reply-To: <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
+	id S1751167AbXEYDQh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 May 2007 23:16:37 -0400
+In-Reply-To: <ecd3e9720704291931m742accd1h7d9f2c5d4362b7dc@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+To: Simon Griph <wslnptc@gmail.com>
+Cc: htejun@gmail.com, linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
-> Check to see if an ATAPI device supports Asynchronous Notification.
-> If so, enable it.
+Simon Griph wrote:
+> With NCQ enabled, this drive always hangs when under load and remains
+> hung until the next cold boot.
 > 
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> ---
-> Andrew, I cleaned up the function header to properly comply with kernel
-> doc requirements.  Other than that, this patch is the same.  
+> Very similar to: http://thread.gmane.org/gmane.linux.ide/17640
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 0abd72d..17e27e9 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3373,6 +3373,7 @@ static const struct ata_blacklist_entry
+> ata_device_blacklist [] = {
+>        /* NCQ is broken */
+>        { "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
+>        /* NCQ hard hangs device under heavier load, needs hard power 
+> cycle */
+> +       { "Maxtor 6B200M0",     "BANC1B10",     ATA_HORKAGE_NONCQ },
 
-I would ask for a simple revision:  update ata_dev_set_AN() such that it 
-takes a second argument 'enable'.  This boolean indicates to the 
-function whether SETFEATURES_SATA_ENABLE or SETFEATURES_SATA_DISABLE 
-should be passed to the device.
+Has this been verified under multiple controllers?
 
-Otherwise than that, it's ready to merge I would say.
 
