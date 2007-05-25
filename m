@@ -1,50 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: use_clustering (sht) bit set to 0 in AHCI ?
-Date: Thu, 24 May 2007 23:06:04 -0400
-Message-ID: <4656529C.4050701@garzik.org>
-References: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com> <20070521121726.GT14746@kernel.dk> <46520C68.7090105@garzik.org> <20070522074538.GP4705@kernel.dk>
+Subject: Re: [patch 0/7] Asynchronous Notification for ATAPI devices (resend)
+Date: Thu, 24 May 2007 23:14:13 -0400
+Message-ID: <46565485.3000602@garzik.org>
+References: <20070509163756.dd8136c7.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50683 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753291AbXEYDGJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 May 2007 23:06:09 -0400
-In-Reply-To: <20070522074538.GP4705@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070509163756.dd8136c7.kristen.c.accardi@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alok kataria <alokkataria1@gmail.com>, linux-ide@vger.kernel.org
 
-Jens Axboe wrote:
-> On Mon, May 21 2007, Jeff Garzik wrote:
->> Jens Axboe wrote:
->>> ahci has always had clustering disabled, perhaps Jeff can expand on why?
->>
->> Just historical reasons.  libata had clustering disabled by default in 
->> the beginning, for all drivers.  Then we enabled it globally by changing 
->> the value of ATA_SHT_USE_CLUSTERING...  but apparently forgot to change 
->> drivers which use their own value rather than ATA_SHT_USE_CLUSTERING.
->>
->> Feel free to submit a patch turning it on...
+Kristen Carlson Accardi wrote:
+> Hi Jeff,
+> Here are the AN patches again, they have not changed with the exception
+> of patch #1, which does set the host flag in board_ahci and board_ahci_pi
+> now (thanks Tejun).
 > 
-> The below works for me, but it's only lightly tested. I booted it up and
-> ran some large IO tests, I've verified really large IO sizes as well
-> (using blktrace, I've verified ios up to 9216KiB being accepted and
-> completed by the drive).
+> This patch series implements Asynchronous Notification (AN) for SATA
+> ATAPI devices as defined in SATA 2.5 and AHCI 1.1 and higher.  Drives
+> which support this feature will send a notification when new media is
+> inserted and removed, preventing the need for user space to poll for
+> new media.  This support is exposed to user space via a flag that will
+> be set in /sys/block/sr*/capability_flags.  If the flag is set, user
+> space can disable polling for the new media, and the genhd driver will
+> send a KOBJ_CHANGE event with the envp set to MEDIA_CHANGE_EVENT=1.
 > 
-> -----
-> 
-> From: Jens Axboe <jens.axboe@oracle.com>
-> 
-> ahci: enable sg segment clustering
-> 
-> The specification states that ahci supports segments up to 4MiB in size,
-> so enable clustering.
-> 
-> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> Note that this patch only implements support for directly attached
+> drives - AN with drives attached to a port multiplier requires 
+> additional changes.
 
-applied
+Patches look OK to me...  it will take some coordination for the 
+non-libata bits.  I think Andrew mentioned some of this.  And if the 
+SCSI bits get stuck in the SCSI maintainer's bit bucket, let me know.
+
+	Jeff
+
 
 
