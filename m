@@ -1,69 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
-Date: Fri, 25 May 2007 04:23:31 -0400
-Message-ID: <46569D03.7030503@garzik.org>
-References: <200705250948.52588.uwe.koziolek@gmx.net>
+From: Tony Vroon <chainsaw@gentoo.org>
+Subject: Re: [patch 03/11] Optional LED trigger for libata
+Date: Fri, 25 May 2007 09:36:03 +0100
+Message-ID: <46569FF3.2000202@gentoo.org>
+References: <200705232126.l4NLQfXT032526@shell0.pdx.osdl.net> <46565758.508@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52770 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760856AbXEYIXf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 May 2007 04:23:35 -0400
-In-Reply-To: <200705250948.52588.uwe.koziolek@gmx.net>
+Received: from ganymede.vroon.org ([195.66.242.11]:54486 "EHLO
+	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbXEYIpG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2007 04:45:06 -0400
+In-Reply-To: <46565758.508@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: htejun@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Uwe Koziolek wrote:
-> --- a/drivers/ata/sata_sis.c	2007-05-22 11:05:38.000000000 +0200
-> +++ b/drivers/ata/sata_sis.c	2007-05-23 00:24:28.000000000 +0200
-> @@ -255,7 +255,7 @@
->  {
->  	static int printed_version;
->  	struct ata_port_info pi = sis_port_info;
-> -	const struct ata_port_info *ppi[] = { &pi, NULL };
-> +	const struct ata_port_info *ppi[] = { &pi, &pi };
->  	struct ata_host *host;
->  	u32 genctl, val;
->  	u8 pmr;
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-applied this part
+Jeff Garzik wrote:
+> akpm@linux-foundation.org wrote:
+>> From: Tony Vroon <chainsaw@gentoo.org>
+>>
+>> This adds an optional wrapper around ata_ac_issue_prot that triggers the
+>> LED layer.  This is used for the PMU LED on G5 towers (IDE trigger).  My
+>> test platform is a PowerMac 7,3 (Dual G5 2.0GHz, June 2004) with a K2
+>> (sata_svw) controller.  Now respun as a single patch, and the function
+>> name
+>> shortened as requested.
+>>
+>> Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
+>> Acked-by: Tejun Heo <htejun@gmail.com>
+>> Cc: Jeff Garzik <jeff@garzik.org>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>> ---
+>>
+>>  drivers/ata/libata-core.c |   21 +++++++++++++++++++++
+>>  drivers/ata/sata_svw.c    |    2 +-
+>>  include/linux/libata.h    |    1 +
+>>  3 files changed, 23 insertions(+), 1 deletion(-)
+> 
+> 
+> After sitting on this for a time, I still cannot summon any interest in
+> taking this patch.  It slows down the hot path for pretty lights.
 
+Jeff,
 
-> --- a/drivers/ata/pata_sis.c	2007-05-22 11:05:38.000000000 +0200
-> +++ b/drivers/ata/pata_sis.c	2007-05-25 07:50:50.000000000 +0200
-> @@ -146,7 +146,8 @@
->  
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
->  
-> -	if (!pci_test_config_bits(pdev, &sis_enable_bits[ap->port_no]))
-> +	if ((pdev->device != 0x0180) && (pdev->device != 0x0181) &&
-> +	    !pci_test_config_bits(pdev, &sis_enable_bits[ap->port_no]))
->  		return -ENOENT;
->  
->  	return ata_std_prereset(ap, deadline);
+Would a conditional on ADB_PMU_LED_IDE (instead of the more generic
+LEDS_TRIGGER_IDE_DISK) alleviate your concerns? This can only be enabled
+on PPC platforms and would make sure that the hot path is not polluted
+anywhere else.
 
-I think you misunderstood what Alan and I were saying.
+Regards,
+Tony V.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-If you remove the enable-bits check, then logically, all the function 
-does is call ata_std_prereset.  Thus, your error handler only needs to 
-the standard function for 0x180 and 0x181, ata_std_prereset() rather 
-than sis_pre_reset().
-
-Further, once your ata_bmdma_drive_eh() has been reduced entirely to 
-calling standard functions, you need not use sis_error_handler() at all, 
-because _that_ has been reduced to ata_bmdma_error_handler().
-
-As a result, the following line
-
-	.error_handler		= ata_bmdma_error_handler,
-
-is functionally equivalent to your patch, but without custom code to 
-produce that effect.
-
-	Jeff
-
-
+iD8DBQFGVp/yp5vW4rUFj5oRCOlXAJwMpRiboqDnMcFdHxX7BU+Y1S1SxACePgeP
+q4yyJJzNBeJeF1YakPXrIOo=
+=ehsX
+-----END PGP SIGNATURE-----
