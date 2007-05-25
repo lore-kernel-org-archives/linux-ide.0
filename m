@@ -1,33 +1,49 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: replace ap->cbl tests with ATA_FLAG_SATA tests
-Date: Thu, 24 May 2007 23:05:56 -0400
-Message-ID: <46565294.50905@garzik.org>
-References: <4651C9EB.2040707@gmail.com>
+Subject: Re: use_clustering (sht) bit set to 0 in AHCI ?
+Date: Thu, 24 May 2007 23:06:04 -0400
+Message-ID: <4656529C.4050701@garzik.org>
+References: <35f686220704252249y6d4fe0c3y1a772119c7b6657f@mail.gmail.com> <20070521121726.GT14746@kernel.dk> <46520C68.7090105@garzik.org> <20070522074538.GP4705@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50673 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50683 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753129AbXEYDF6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 May 2007 23:05:58 -0400
-In-Reply-To: <4651C9EB.2040707@gmail.com>
+	id S1753291AbXEYDGJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 May 2007 23:06:09 -0400
+In-Reply-To: <20070522074538.GP4705@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Alok kataria <alokkataria1@gmail.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> ap->cbl == ATA_CBL_SATA indicates SATA cable while ap->flags &
-> ATA_FLAG_SATA indicates SATA host port.  Till now they always gave the
-> same result but SATA/PATA bridge handling will change that.  Switch to
-> ATA_FLAG_SATA test if we're testing for host port type.
+Jens Axboe wrote:
+> On Mon, May 21 2007, Jeff Garzik wrote:
+>> Jens Axboe wrote:
+>>> ahci has always had clustering disabled, perhaps Jeff can expand on why?
+>>
+>> Just historical reasons.  libata had clustering disabled by default in 
+>> the beginning, for all drivers.  Then we enabled it globally by changing 
+>> the value of ATA_SHT_USE_CLUSTERING...  but apparently forgot to change 
+>> drivers which use their own value rather than ATA_SHT_USE_CLUSTERING.
+>>
+>> Feel free to submit a patch turning it on...
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> ---
->  libata-core.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> The below works for me, but it's only lightly tested. I booted it up and
+> ran some large IO tests, I've verified really large IO sizes as well
+> (using blktrace, I've verified ios up to 9216KiB being accepted and
+> completed by the drive).
+> 
+> -----
+> 
+> From: Jens Axboe <jens.axboe@oracle.com>
+> 
+> ahci: enable sg segment clustering
+> 
+> The specification states that ahci supports segments up to 4MiB in size,
+> so enable clustering.
+> 
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
 applied
 
