@@ -1,47 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/3] Unify dma blacklist in ide-dma.c and libata-core.c
-Date: Sat, 26 May 2007 17:59:47 +0100
-Message-ID: <20070526175947.7dffbec5@the-village.bc.nu>
-References: <20070521145042.GA6957@redhat.com>
-	<20070521171551.0f81a0be@the-village.bc.nu>
-	<7v3b1pbgeo.fsf_-_@assigned-by-dhcp.cox.net>
-	<7vveela1lv.fsf_-_@assigned-by-dhcp.cox.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH, RFT, v4] sata_mv: convert to new EH
+Date: Sat, 26 May 2007 16:56:53 -0400
+Message-ID: <46589F15.8080003@garzik.org>
+References: <20070225233454.GA31282@havoc.gtf.org>  <1173158201.3416.8.camel@obelisk.thedillows.org>  <45ED039E.20608@garzik.org> <1173164261.3416.15.camel@obelisk.thedillows.org> <4656EB26.40504@garzik.org> <4657A678.8090308@garzik.org> <Pine.LNX.4.64.0705252335590.8327@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60234 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752772AbXEZQzI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 May 2007 12:55:08 -0400
-In-Reply-To: <7vveela1lv.fsf_-_@assigned-by-dhcp.cox.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:36035 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752783AbXEZU45 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 May 2007 16:56:57 -0400
+In-Reply-To: <Pine.LNX.4.64.0705252335590.8327@twinlark.arctic.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Junio C Hamano <junkio@cox.net>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Dave Jones <davej@redhat.com>
+To: dean gaudet <dean@arctic.org>, Dave Dillow <dave@thedillows.org>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, 21 May 2007 22:06:36 -0700
-Junio C Hamano <junkio@cox.net> wrote:
-
-> This introduces a shared header file that defines the entries
-> for two dma blacklists in ide-dma.c and libata-core.c to make it
-> easier to keep them in sync.
+dean gaudet wrote:
+> On Fri, 25 May 2007, Jeff Garzik wrote:
 > 
-> Signed-off-by: Junio C Hamano <junkio@cox.net>
-
-NAK
-
-This makes stuff so much more ugly its not funny
-
-> ---
+>> Already uncovered and fixed a few bugs in v3.
+>>
+>> Here's v4 of the sata_mv new-EH patch.
 > 
->  * Removes more lines than it adds.  I am not proud of the
->    DMA_BLACK_LIST macro in ide-dma.c which relies on the
->    compiler doing a sane thing for compile time constant
->    expression to initialize the list, but that hopefully can be
->    fixed in the next patch.
+> you asked for test results with 2.6.21.3 ... that seems to boot fine,
+> and i've tested reading from the disks only and it seems to be working
+> fine.  ditto for 2.6.22-rc3.
+> 
+> but 2.6.22-rc3 + your v4 patch fails... i'll send you the serial console
+> outputs offline.
 
-The basic concept is sound but it would be better to make sure
-the ATA_HORKAGE macros and struct ata_blacklist_entry as well as all the
-blacklist stuff was placed together in one file to avoid the horrors you
-are proposing and then used by both driver sets.
+Well, I have the same hardware as dean, and do not see the 
+BUG_ON/WARN_ON traces that he sees.  These are the same two code 
+locations that caused spewage before.  This only difference I see is 
+that he is testing with an NCQ-capable disk, and I am not -- which could 
+be a very significant difference.  Dave also appears to have an 
+NCQ-capable disk.
+
+Dave's output (sent privately to me) was different -- errors and 
+corruption -- rather than the BUG_ON/WARN_ON stuff both he and dean sent 
+in March 2007, which is interesting.
+
+Dave, any chance you could try 2.6.22-rc3 + my v4 patch, on a different 
+hard drive?  Preferably a non-Maxtor, or at least not another Maxtor 
+6L200S0.  If that's a big deal, don't worry about it.  I just want to 
+rule out buggy firmware and/or bad hard drive in your case.
+
+dean's output (backtraces matching March 2007 reports) was what I 
+expected, and if I can reproduce that with an NCQ-capable disk locally, 
+I should be able to fix it from there without trouble.  Probably just 
+some hardware bits accidentally kicking into NCQ mode, when they should not.
+
+	Jeff
+
+
+
+
+
