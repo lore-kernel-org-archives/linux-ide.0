@@ -1,31 +1,26 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: [PATCH, RFT, v4] sata_mv: convert to new EH
-Date: Sat, 26 May 2007 00:53:07 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0705252335590.8327@twinlark.arctic.org>
-References: <20070225233454.GA31282@havoc.gtf.org>
- <1173158201.3416.8.camel@obelisk.thedillows.org>  <45ED039E.20608@garzik.org>
- <1173164261.3416.15.camel@obelisk.thedillows.org> <4656EB26.40504@garzik.org>
- <4657A678.8090308@garzik.org>
+From: Florian Effenberger <florian@effenberger.org>
+Subject: Re: libata interface fatal error
+Date: Sat, 26 May 2007 11:43:16 +0200
+Message-ID: <46580134.7010107@effenberger.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755666AbXEZHxS@vger.kernel.org>
-In-Reply-To: <4657A678.8090308@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Dave Dillow <dave@thedillows.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from garfield.effenberger.org ([85.214.43.221]:54848 "EHLO
+	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515AbXEZJn1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 May 2007 05:43:27 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: htejun@gmail.com, jeff@garzik.org
 
-On Fri, 25 May 2007, Jeff Garzik wrote:
+Hi,
 
-> Already uncovered and fixed a few bugs in v3.
-> 
-> Here's v4 of the sata_mv new-EH patch.
+it seems that the speed is never lowered, I always see "SATA link up 3.0 
+Gbps (SStatus 123 SControl 300)".
 
-you asked for test results with 2.6.21.3 ... that seems to boot fine,
-and i've tested reading from the disks only and it seems to be working
-fine.  ditto for 2.6.22-rc3.
+Can I manually lower the speed via a kernel parameter?
 
-but 2.6.22-rc3 + your v4 patch fails... i'll send you the serial console
-outputs offline.
-
--dean
+Thanks
+Florian
