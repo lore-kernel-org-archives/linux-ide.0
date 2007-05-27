@@ -1,147 +1,80 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: always use polling SETXFER
-Date: Sun, 27 May 2007 15:10:40 +0200
-Message-ID: <46598350.6030403@gmail.com>
+From: "Gregor Jasny" <gjasny@googlemail.com>
+Subject: Re: Linux v2.6.22-rc3
+Date: Sun, 27 May 2007 17:01:19 +0200
+Message-ID: <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
+References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:25992 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773AbXE0NKz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 May 2007 09:10:55 -0400
-Received: by nz-out-0506.google.com with SMTP id n1so667236nzf
-        for <linux-ide@vger.kernel.org>; Sun, 27 May 2007 06:10:54 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.189]:61397 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753547AbXE0PBV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 May 2007 11:01:21 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1514907mue
+        for <linux-ide@vger.kernel.org>; Sun, 27 May 2007 08:01:19 -0700 (PDT)
+In-Reply-To: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Several people have reported LITE-ON LTR-48246S detection failed
-because SETXFER fails.  It seems the device raises IRQ too early after
-SETXFER.  This is controller independent.  The same problem has been
-reported for different controllers.
+Hi,
 
-So, now we have pata_via where the controller raises IRQ before it's
-ready after SETXFER and a device which does similar thing.  This patch
-makes libata always execute SETXFER via polling.  As this only happens
-during EH, performance impact is nil.  Setting ATA_TFLAG_POLLING is
-also moved from issue hot path to ata_dev_set_xfermode() - the only
-place where SETXFER can be issued.
+2007/5/26, Linus Torvalds <torvalds@linux-foundation.org>:
+> What more could you possibly want? Some ATA updates? USB suspend problem
 
-Note that ATA_TFLAG_POLLING applies only to drivers which implement
-SFF TF interface and use libata HSM.  More advanced controllers ignore
-the flag.  This doesn't matter for this fix as SFF TF controllers are
-the problematic ones.
+22-rc3 broke the CDROM in my Dell notebook.  After I've switched to
+libata som time ago, I've got some delays/timeouts during boot [1].
+But the drive works as expected. With 2.6.22-rc3 I've got the
+following messages during bootup:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |   13 ++++---------
- drivers/ata/pata_via.c    |   12 ++++++------
- include/linux/libata.h    |    1 -
- 3 files changed, 10 insertions(+), 16 deletions(-)
+[   19.343211] ata_piix 0000:00:07.1: version 2.11
+[   19.343598] scsi0 : ata_piix
+[   19.344068] scsi1 : ata_piix
+[   19.344426] ata1: PATA max UDMA/33 cmd 0x000101f0 ctl 0x000103f6
+bmdma 0x00010860 irq 14
+[   19.345135] ata2: PATA max UDMA/33 cmd 0x00010170 ctl 0x00010376
+bmdma 0x00010868 irq 15
+[    0.653333] Marking TSC unstable due to: possible TSC halt in C2.
+[    0.656666] Time: acpi_pm clocksource has been installed.
+[    0.656666] Switched to NOHz mode on CPU #0
+[    0.779999] ata1.00: ata_hpa_resize 1: sectors = 78242976,
+hpa_sectors = 78242976
+[    0.779999] ata1.00: ATA-7: SAMSUNG MP0402H, UC100-14, max UDMA/100
+[    0.796666] ata1.00: 78242976 sectors, multi 8: LBA48
+[    0.816666] ata1.00: ata_hpa_resize 1: sectors = 78242976,
+hpa_sectors = 78242976
+[    0.829999] ata1.00: configured for UDMA/33
+[    1.376666] Clocksource tsc unstable (delta = -496149826 ns)
+[   10.866665] ata2: SRST failed (errno=-16)
+[   20.899997] ata2: SRST failed (errno=-16)
+[   55.946661] ata2: SRST failed (errno=-16)
+[   60.966660] ata2: SRST failed (errno=-16)
+[   60.979993] ata2: reset failed, giving up
+[   60.993327] scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG
+MP0402H  UC10 PQ: 0 ANSI: 5
+[   61.009993] sd 0:0:0:0: [sda] 78242976 512-byte hardware sectors (40060 MB)
+[   61.023327] sd 0:0:0:0: [sda] Write Protect is off
+[   61.039993] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   61.039993] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[   61.056660] sd 0:0:0:0: [sda] 78242976 512-byte hardware sectors (40060 MB)
+[   61.069993] sd 0:0:0:0: [sda] Write Protect is off
+[   61.086660] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   61.086660] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[   61.103327]  sda: sda1 sda2 sda3 sda4
+[   61.546660] sd 0:0:0:0: [sda] Attached SCSI disk
+[   61.563327] sd 0:0:0:0: Attached scsi generic sg0 type 0
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3ca9c61..4d6de65 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3932,10 +3932,13 @@ static unsigned int ata_dev_set_xfermode
- 	/* set up set-features taskfile */
- 	DPRINTK("set features - xfer mode\n");
- 
-+	/* Some controllers and ATAPI devices show flaky interrupt
-+	 * behavior after setting xfer mode.  Use polling instead.
-+	 */
- 	ata_tf_init(dev, &tf);
- 	tf.command = ATA_CMD_SET_FEATURES;
- 	tf.feature = SETFEATURES_XFER;
--	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_POLLING;
- 	tf.protocol = ATA_PROT_NODATA;
- 	tf.nsect = dev->xfer_mode;
- 
-@@ -5413,14 +5416,6 @@ unsigned int ata_qc_issue_prot(struct at
- 		}
- 	}
- 
--	/* Some controllers show flaky interrupt behavior after
--	 * setting xfer mode.  Use polling instead.
--	 */
--	if (unlikely(qc->tf.command == ATA_CMD_SET_FEATURES &&
--		     qc->tf.feature == SETFEATURES_XFER) &&
--	    (ap->flags & ATA_FLAG_SETXFER_POLLING))
--		qc->tf.flags |= ATA_TFLAG_POLLING;
--
- 	/* select the device */
- 	ata_dev_select(ap, qc->dev->devno, 1, 0);
- 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index a8462f1..63eca29 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -452,7 +452,7 @@ static int via_init_one(struct pci_dev *
- 	/* Early VIA without UDMA support */
- 	static const struct ata_port_info via_mwdma_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops
-@@ -460,7 +460,7 @@ static int via_init_one(struct pci_dev *
- 	/* Ditto with IRQ masking required */
- 	static const struct ata_port_info via_mwdma_info_borked = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops_noirq,
-@@ -468,7 +468,7 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 33 devices (and borked 66) */
- 	static const struct ata_port_info via_udma33_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7,
-@@ -477,7 +477,7 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 66 devices */
- 	static const struct ata_port_info via_udma66_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x1f,
-@@ -486,7 +486,7 @@ static int via_init_one(struct pci_dev *
- 	/* VIA UDMA 100 devices */
- 	static const struct ata_port_info via_udma100_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x3f,
-@@ -495,7 +495,7 @@ static int via_init_one(struct pci_dev *
- 	/* UDMA133 with bad AST (All current 133) */
- 	static const struct ata_port_info via_udma133_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7f,	/* FIXME: should check north bridge */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 85f7b1b..a6a3113 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -171,7 +171,6 @@ enum {
- 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
--	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+AFAIR the drive, a  SAMSUNG CD-ROM SN-124, is somehow misbehaving and
+listed with ATA_HORKAGE_NODMA in the dma blacklist.
 
+Is there a patch I can apply?
+
+Thanks,
+Gregor
+
+[1] http://lkml.org/lkml/2007/3/1/243
