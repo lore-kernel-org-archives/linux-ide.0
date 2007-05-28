@@ -1,48 +1,77 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_sis: FIFO whack
-Date: Mon, 28 May 2007 18:01:53 -0400
-Message-ID: <465B5151.4090504@garzik.org>
-References: <20070525205024.2f83995d@the-village.bc.nu>
+From: Junio C Hamano <junkio@cox.net>
+Subject: Re: [PATCH 3/3] Make ide dma blacklist handling a bit saner.
+Date: Mon, 28 May 2007 16:03:29 -0700
+Message-ID: <7vfy5ga6v2.fsf@assigned-by-dhcp.cox.net>
+References: <20070521145042.GA6957@redhat.com>
+	<7v3b1pbgeo.fsf_-_@assigned-by-dhcp.cox.net>
+	<7vps4ta1iy.fsf_-_@assigned-by-dhcp.cox.net>
+	<200705282141.42507.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48622 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751490AbXE1WB6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 May 2007 18:01:58 -0400
-In-Reply-To: <20070525205024.2f83995d@the-village.bc.nu>
+Received: from fed1rmmtao107.cox.net ([68.230.241.39]:32903 "EHLO
+	fed1rmmtao107.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbXE1XDb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 May 2007 19:03:31 -0400
+In-Reply-To: <200705282141.42507.bzolnier@gmail.com> (Bartlomiej
+	Zolnierkiewicz's message of "Mon, 28 May 2007 21:41:42 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Dave Jones <davej@redhat.com>
 
-Alan Cox wrote:
-> If you are using a SiS controller and the BIOS didn't set it up then the
-> FIFO may be left active when we try and set up the CD. Not convinced this
-> matters but I'd prefer to be safe
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc2-mm1/drivers/ata/pata_sis.c linux-2.6.22-rc2-mm1/drivers/ata/pata_sis.c
-> --- linux.vanilla-2.6.22-rc2-mm1/drivers/ata/pata_sis.c	2007-05-25 17:39:06.000000000 +0100
-> +++ linux-2.6.22-rc2-mm1/drivers/ata/pata_sis.c	2007-05-25 18:22:21.000000000 +0100
-> @@ -149,6 +149,9 @@
->  	if (!pci_test_config_bits(pdev, &sis_enable_bits[ap->port_no]))
->  		return -ENOENT;
->  
-> +	/* Clear the FIFO settings. We can't enable the FIFO until
-> +	   we know we are poking at a disk */
-> +	pci_write_config_byte(pdev, 0x4B, 0);
->  	return ata_std_prereset(ap, deadline);
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> writes:
+
+> The change itself looks good but IMO it is worth doing it before patch #2/3
+> (it would also make it possible for me to merge this patch immediately).
+
+Yes, I should have considered that the earlier #2/3 needs
+coordination between you and Jeff.
+
+> When it comes to patch #2 - Alan's comment may be a bit harsh but he seems
+> to be right - there should be a common library-like file (ata-blacklist.c
+> or ata-quirks.c or whatever name you like) containing ata_device_blacklist[].
+>
+> This would require slight modification of ide_in_drive_list() to teach
+> it about ATA_HORKAGE_DMA ... Please also note that <linux/ata.h> is used by both
+> IDE and libata so it should be a good place to put struct ata_blacklist_entry
+> and ATA_HORKAGE_* macros.
+
+Thanks for the hint.  Alan is correct to point out that I
+cheated. ;-)  If I understand correctly, the change would
+involve:
+
+ - create a new file that has ata_device_blacklist[] whose type
+   is "struct ata_blacklist_entry" (i.e. matches libata-core),
+   by separating the table out of ata/libata-core.c.
+
+   Q1. should that file go to drivers/ata/ or drivers/ide/?
+
+ - make that file depended on when either libata and/or IDE is
+   selected.
+
+   Q2. Kconfig dependency rule is needed for this, perhaps.  How
+   should that look like?
+
+ - some out-of-tree drivers might be using ide_in_drive_list()
+   and relying on it to take "struct drive_list_entry"; create a
+   new function, ide_in_device_list(), that takes "struct
+   ata_blacklist_entry" as its parameter.
+
+   Q3. Is the 'out-of-tree drivers' a real issue, and if so, is
+   the above a reasonable avenue to take?
+
+ - convert in-tree callers to use ide_in_device_list() instead,
+   feeding it ata_device_blacklist[], and remove drive_blacklist[]
+   from drivers/ide/ide-dma.c.
+
+   Q4. What would you like to do for drive_whitelist[]?
+
+> Care to respin both patches?
+
+Before the questions are answered I cannot respin the earlier
+#2/3, but I can certainly respin #3/3.
 
 
-Should I queue this into #upstream (2.6.23) or #upstream-fixes 
-(2.6.22-rc) branch?
-
-I lean towards #upstream since it is so late in the 2.6.22-rc cycle, 
-because of your comment "Not convinced this matters".
-
-	Jeff
 
 
