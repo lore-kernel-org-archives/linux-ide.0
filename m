@@ -1,43 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] NCQ blacklist Maxtor 6B200M0/BANC1B10
-Date: Mon, 28 May 2007 09:00:26 -0400
-Message-ID: <465AD26A.4050502@garzik.org>
-References: <ecd3e9720704291931m742accd1h7d9f2c5d4362b7dc@mail.gmail.com>
+Subject: Re: [PATCH] ata_piix: fix pio/mwdma programming
+Date: Mon, 28 May 2007 09:02:31 -0400
+Message-ID: <465AD2E7.2080600@garzik.org>
+References: <20070202151856.GD1625@htj.dyndns.org> <20070430182939.GD4156@artsapartment.org> <4636ADBE.8080508@gmail.com> <20070524195943.GC7734@artsapartment.org> <4655FBA4.9050702@garzik.org> <4655FDBF.3000401@gmail.com> <46571A0A.2030305@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45676 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45696 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751662AbXE1NAa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 May 2007 09:00:30 -0400
-In-Reply-To: <ecd3e9720704291931m742accd1h7d9f2c5d4362b7dc@mail.gmail.com>
+	id S1753610AbXE1NCg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 May 2007 09:02:36 -0400
+In-Reply-To: <46571A0A.2030305@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Griph <wslnptc@gmail.com>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Art Haas <ahaas@airmail.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Simon Griph wrote:
-> With NCQ enabled, this drive always hangs when under load and remains
-> hung until the next cold boot.
+Tejun Heo wrote:
+> Fix various bugs in pio/mwdma mode programming.
 > 
-> Very similar to: http://thread.gmane.org/gmane.linux.ide/17640
+> * Control bits in the timing register wasn't cleared properly while
+>   programming PIO mode.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 0abd72d..17e27e9 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3373,6 +3373,7 @@ static const struct ata_blacklist_entry
-> ata_device_blacklist [] = {
->        /* NCQ is broken */
->        { "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
->        /* NCQ hard hangs device under heavier load, needs hard power 
-> cycle */
-> +       { "Maxtor 6B200M0",     "BANC1B10",     ATA_HORKAGE_NONCQ },
->        { "Maxtor 6B250S0",     "BANC1B70",     ATA_HORKAGE_NONCQ },
->        /* Blacklist entries taken from Silicon Image 3124/3132
->           Windows driver .inf file - also several Linux problem reports */
+> * MWDMA mode programming cleared the wrong part of control bits.
+> 
+> * MWDMA mode programming cleared udma_mask even when the controller
+>   doesn't support UDMA.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Art Haas <ahaas@airmail.net>
+> ---
+> Patch is against libata-dev#upstream.  Thanks.
+> 
+>  drivers/ata/ata_piix.c |   23 +++++++++++++++++------
+>  1 file changed, 17 insertions(+), 6 deletions(-)
 
-applied
+applied to #upstream
 
 
