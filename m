@@ -1,59 +1,84 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Linux v2.6.22-rc3
-Date: Tue, 29 May 2007 11:28:36 +0200
-Message-ID: <465BF244.5080200@gmail.com>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>	 <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>	 <46599E6B.1000209@pobox.com>	 <9d2cd630705270907y4722653cpf79f073fa8f12f08@mail.gmail.com>	 <alpine.LFD.0.98.0705270922030.26602@woody.linux-foundation.org>	 <9d2cd630705271315x7030c91ew2f175c921c022880@mail.gmail.com>	 <465AA536.6080608@gmail.com> <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions with patches
+Date: Tue, 29 May 2007 14:53:39 +0200
+Message-ID: <465C2253.4070307__42863.6762583212$1180443322$gmane$org@googlemail.com>
+References: <465C203A.1020200@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:15797 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757645AbXE2LUA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2007 07:20:00 -0400
-Received: by py-out-1112.google.com with SMTP id a29so831976pyi
-        for <linux-ide@vger.kernel.org>; Tue, 29 May 2007 04:20:00 -0700 (PDT)
-In-Reply-To: <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <465C203A.1020200@googlemail.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Ben Collins <bcollins@ubuntu.com>, yoshfuji@linux-ipv6.org, Maximilian Engelhardt <maxi@daemonizer.de>, linux-wireless@vger.kernel.org, developers@islsm.org, =?ISO-8859-2?Q?Bj=F6rn_Steinbrink?= <B.Steinbrink@gmx.de>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Alan Cox <alan@redhat.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Horst H. von Brand" <vonbrand@inf.utfsm.cl>
 List-Id: linux-ide@vger.kernel.org
-To: Gregor Jasny <gjasny@googlemail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello, Gregor.
+Hi all,
 
-Gregor Jasny wrote:
-> [   18.639188] ata_piix 0000:00:07.1: version 2.11
-> [   18.639718] scsi0 : ata_piix
-> [   18.640189] scsi1 : ata_piix
-> [   18.640541] ata1: PATA max UDMA/33 cmd 0x000101f0 ctl 0x000103f6
-> bmdma 0x00010860 irq 14
-> [   18.641148] ata2: PATA max UDMA/33 cmd 0x00010170 ctl 0x00010376
-> bmdma 0x00010868 irq 15
-> [    0.653333] Marking TSC unstable due to: possible TSC halt in C2.
-> [    0.656666] Time: acpi_pm clocksource has been installed.
-> [    0.656666] Switched to NOHz mode on CPU #0
-> [    0.779999] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-> hpa_sectors = 78242976
-> [    0.779999] ata1.00: ATA-7: SAMSUNG MP0402H, UC100-14, max UDMA/100
-> [    0.796666] ata1.00: 78242976 sectors, multi 8: LBA48
-> [    0.816666] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-> hpa_sectors = 78242976
-> [    0.829999] ata1.00: configured for UDMA/33
-> [    1.376666] Clocksource tsc unstable (delta = -496294688 ns)
-> [   10.866665] ata2: SRST failed (errno=-16)
-> [   20.899997] ata2: SRST failed (errno=-16)
-> [   55.946661] ata2: SRST failed (errno=-16)
-> [   60.966660] ata2: SRST failed (errno=-16)
-> [   60.979993] ata2: reset failed, giving up
+Here is a list of some known regressions in 2.6.22-rc3
+with patches available.
 
-Aieee, so the drive doesn't like the new SRST sequence.  Indan pointed
-me to your original posting and before the reset sequence update your
-drive was reset successfully but only after 30sec delay, right?  If you
-change the first entry in ata_eh_reset_timeouts[] table at the top of
-libata-eh.c to 35 * HZ, does it work?
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-Thanks.
 
--- 
-tejun
 
+Networking
+
+Subject    : Oops with prism54 in 2.6.22-rc3
+References : http://lkml.org/lkml/2007/5/26/54
+Submitter  : Maximilian Engelhardt <maxi@daemonizer.de>
+Handled-By : Bj=F6rn Steinbrink <B.Steinbrink@gmx.de>=20
+Patch      : http://lkml.org/lkml/2007/5/27/182
+Status     : patch available
+
+
+Subject    : OOPS triggered by ip(8) deconfiguring a network interface
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8491
+Submitter  : Ben Collins <bcollins@ubuntu.com>
+Patch      : http://marc.info/?l=3Dlinux-netdev&m=3D117915849224816&w=3D=
+2
+             commit 5632c5152aa621885d87ea0b8fdd5a6bb9f69c6f
+Status     : bug probably fixed
+
+SATA/PATA
+
+Subject    : pata_via appears to incorrectly detects 40-pin cable
+References : http://lkml.org/lkml/2007/5/17/273
+Submitter  : Francis Russell <francisrussell@btopenworld.com>
+Status     : Not really a regression. Alan seems to have a general fix.
+             (Tejun Heo)
+
+Subject    : libata reset-seq merge broke sata_sil on sh
+References : http://lkml.org/lkml/2007/5/10/63
+Submitter  : Paul Mundt <lethal@linux-sh.org>
+Handled-By : Tejun Heo <htejun@gmail.com>
+Caused-By  : commit 4750def52cb2c21732dda9aa1d43a07db37b0186
+Patch      : http://lkml.org/lkml/2007/5/19/161
+Status     : patch available
+
+
+
+Sparc64
+
+Subject    : arch/sparc64/time.c doesn't compile on Ultra 1 (no PCI)
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8540
+Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
+Status     : patch available
+
+
+
+Regards,
+Michal
+
+--
+"Najbardziej brakowa=B3o mi twojego milczenia."
+-- Andrzej Sapkowski "Co=B6 wi=EAcej"
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
