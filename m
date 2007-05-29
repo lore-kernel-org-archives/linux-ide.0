@@ -1,49 +1,39 @@
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-Subject: Re: [2/4] 2.6.22-rc3: known regressions
-Date: Tue, 29 May 2007 08:01:45 -0700
-Message-ID: <20070529080145.60be9018@freepuppy>
-References: <465C188F.9000900@googlemail.com>
-	<465C22F4.8080505@googlemail.com>
+From: "Gregor Jasny" <gjasny@googlemail.com>
+Subject: Re: Linux v2.6.22-rc3
+Date: Tue, 29 May 2007 17:19:32 +0200
+Message-ID: <9d2cd630705290819m1e52059cwc749c18e284dffbe@mail.gmail.com>
+References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
+	 <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
+	 <46599E6B.1000209@pobox.com>
+	 <9d2cd630705270907y4722653cpf79f073fa8f12f08@mail.gmail.com>
+	 <alpine.LFD.0.98.0705270922030.26602@woody.linux-foundation.org>
+	 <9d2cd630705271315x7030c91ew2f175c921c022880@mail.gmail.com>
+	 <465AA536.6080608@gmail.com>
+	 <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com>
+	 <465BF244.5080200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759139AbXE2PKu@vger.kernel.org>
-In-Reply-To: <465C22F4.8080505@googlemail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Ruben <nahoo82@terra.es>, linux-pci@atrey.karlin.mff.cuni.cz, Greg KH <greg@kroah.com>, "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, tom.l.nguyen@intel.com, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.172]:40307 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbXE2PTe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2007 11:19:34 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1884851ugf
+        for <linux-ide@vger.kernel.org>; Tue, 29 May 2007 08:19:32 -0700 (PDT)
+In-Reply-To: <465BF244.5080200@gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Tue, 29 May 2007 14:56:20 +0200
-Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+2007/5/29, Tejun Heo <htejun@gmail.com>:
+> Aieee, so the drive doesn't like the new SRST sequence.  Indan pointed
+> me to your original posting and before the reset sequence update your
+> drive was reset successfully but only after 30sec delay, right?  If you
+> change the first entry in ata_eh_reset_timeouts[] table at the top of
+> libata-eh.c to 35 * HZ, does it work?
 
-> Hi all,
-> 
-> Here is a list of some known regressions in 2.6.22-rc3.
-> 
-> Feel free to add new regressions/remove fixed etc.
-> http://kernelnewbies.org/known_regressions
-> 
-> 
-> 
-> Networking
-> 
-> Subject    : Network card not usable - sky2
-> References : http://bugzilla.kernel.org/show_bug.cgi?id=8539
-> Submitter  : Ruben <nahoo82@terra.es>
-> Status     : Unknown
-> 
-
-
-Not a regression. Read the bug report:
-	Most recent kernel where this bug did *NOT* occur:
-
-	It's been happening for a long time (I'd say always).
-
-
-
-There is a regression since 2.6.22-rc1 where the b44 driver has
-receive performance/interrupt lockup issues.
-
--- 
-Stephen Hemminger <shemminger@linux-foundation.org>
+No, it even times out after 35 seconds. I've raised the first timeout
+to 60 seconds but still no success.
