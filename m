@@ -1,17 +1,23 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: Re: [2/3] 2.6.22-rc3: known regressions with patches
 Date: Tue, 29 May 2007 14:53:39 +0200
-Message-ID: <465C2253.4070307__42863.6762583212$1180443322$gmane$org@googlemail.com>
+Message-ID: <465C2253.4070307__22082.9973034144$1180443323$gmane$org@googlemail.com>
 References: <465C203A.1020200@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <sparclinux-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.175]:37691 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172AbXE2Mxt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2007 08:53:49 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1851518ugf
+        for <linux-ide@vger.kernel.org>; Tue, 29 May 2007 05:53:48 -0700 (PDT)
 In-Reply-To: <465C203A.1020200@googlemail.com>
-Sender: sparclinux-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, Ben Collins <bcollins@ubuntu.com>, yoshfuji@linux-ipv6.org, Maximilian Engelhardt <maxi@daemonizer.de>, linux-wireless@vger.kernel.org, developers@islsm.org, =?ISO-8859-2?Q?Bj=F6rn_Steinbrink?= <B.Steinbrink@gmx.de>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Alan Cox <alan@redhat.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Horst H. von Brand" <vonbrand@inf.utfsm.cl>
-List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
@@ -77,8 +83,3 @@ Michal
 
 
 
--
-To unsubscribe from this list: send the line "unsubscribe sparclinux" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
