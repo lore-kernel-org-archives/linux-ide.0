@@ -1,62 +1,84 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: cirrus ep93xx pata driver
-Date: Mon, 28 May 2007 22:58:59 -0400
-Message-ID: <465B96F3.4000609@garzik.org>
-References: <44FC0779.9030405@garzik.org> <20060921115533.GA26960@xi.wantstofly.org> <4513B21A.30507@garzik.org> <20070128202117.GA6147@xi.wantstofly.org> <465B816E.5060407@garzik.org> <20070529014859.GB529@xi.wantstofly.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: implement ata_wait_after_reset()
+Date: Tue, 29 May 2007 09:33:37 +0200
+Message-ID: <465BD751.8000708@gmail.com>
+References: <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <464307CC.40701@gmail.com> <20070510072005.GA27316@linux-sh.org> <464301D3.5060306@gmail.com> <20070510124645.GA18534@linux-sh.org> <4643196B.7070806@gmail.com> <20070511005217.GA23186@linux-sh.org> <464439C8.7090309@gmail.com> <20070512034928.GB29259@linux-sh.org> <20070516003002.GA18863@linux-sh.org> <464B3505.20004@gmail.com> <465B8277.9010001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49862 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393AbXE2C7D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 May 2007 22:59:03 -0400
-In-Reply-To: <20070529014859.GB529@xi.wantstofly.org>
+Received: from nz-out-0506.google.com ([64.233.162.226]:52519 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345AbXE2Hew (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2007 03:34:52 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so1135707nzf
+        for <linux-ide@vger.kernel.org>; Tue, 29 May 2007 00:34:52 -0700 (PDT)
+In-Reply-To: <465B8277.9010001@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Paul Mundt <lethal@linux-sh.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, garyhade@us.ibm.com
 
-Lennert Buytenhek wrote:
-> On Mon, May 28, 2007 at 09:27:10PM -0400, Jeff Garzik wrote:
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> -    msleep(150);
+>> +    /* wait a while before checking status */
+>> +    ata_wait_after_reset(ap, deadline);
+> [...]
+>> -    msleep(150);
+>> +    /* wait a while before checking status */
+>> +    ata_wait_after_reset(ap, deadline);
+>>  
+>>      /* Before we perform post reset processing we want to see if
+>>       * the bus shows 0xFF because the odd clown forgets the D7
+>> @@ -3543,8 +3583,8 @@ int sata_std_hardreset(struct ata_port *
+>>          return 0;
+>>      }
+>>  
+>> -    /* wait a while before checking status, see SRST for more info */
+>> -    msleep(150);
+>> +    /* wait a while before checking status */
+>> +    ata_wait_after_reset(ap, deadline);
+>>  
+>>      rc = ata_wait_ready(ap, deadline);
+> [...]
+>> -    msleep(150);
+>> +    /* wait a while before checking status */
+>> +    ata_wait_after_reset(ap, deadline);
+>>  
+>>      /* Before we perform post reset processing we want to see if
+>>       * the bus shows 0xFF because the odd clown forgets the D7
+>> Index: work/drivers/ata/sata_inic162x.c
+>> ===================================================================
+>> --- work.orig/drivers/ata/sata_inic162x.c
+>> +++ work/drivers/ata/sata_inic162x.c
+>> @@ -446,7 +446,7 @@ static int inic_hardreset(struct ata_por
+>>          struct ata_taskfile tf;
+>>  
+>>          /* wait a while before checking status */
+>> -        msleep(150);
+>> +        ata_wait_after_reset(ap, deadline);
+>>  
+>>          rc = ata_wait_ready(ap, deadline);
+> [...]
 > 
->> I know it's probably a low priority, but could you rediff this against 
->> the current libata?
->>
->> I'm wondering where we are in terms of hooks that you need.  Since you 
->> posted this we added some hooks for the pata_scc driver, most notably 
->> ->irq_on() hooks.  And other code you modify, such as the 
->> ata_bus_reset() function, is slated for deletion once all drivers have 
->> been converted over to the new EH (done, in testing).
+> The main thing that bothers me is not the increase in delay, but the
+> fact that this create converts a delay/Status-poll sequence into a
+> delay/Status-poll/Status-poll sequence.
 > 
-> The main problem on ep93xx is that the IDE registers aren't accessible
-> via memory space or I/O space reads/writes -- instead, you get to put
-> the address/data on the bus by hand, twiddle the nRD/nWR lines by hand,
-> enforcing PIO timings as you go along by manually delaying for the right
-> number of nanoseconds, etc.
+> ata_wait_after_reset() immediately before ata_wait_ready() seems highly
+> redundant.  Why not just poll Status once?
 
-Nod, your patch explained that :)
+I was trying to minimize code disturbance around reset such that
+ata_wait_after_reset() can be drop-in replacement for msleep(150).  This
+was for two reasons 1. as this patch was to fix regression I didn't want
+to introduce a lot of change into -rcX and 2. I was lazy.  :-)
 
+As dont-consider-0xff-as-port-empty-if-sstatus-available patch fixes the
+regression nicely, I think we can delay this to 2.6.23.  I'll merge
+ata_wait_after_reset() into ata_wait_ready() (or the other way around).
 
-> The libata methods I added hooks for were all methods that check
-> ATA_FLAG_MMIO and do {read,write}[bwl] or {in,out}[bwl] accesses
-> based on the state of that flag.  What I did in those cases was to
-> verbatim cut-'n-paste the libata code into pata_ep93xx, changing
-> the {read,write,in,out}[bwl] calls into calls to pata_ep93xx's
-> accessor functions.  Of course, this is ugly, duplicates code, and
-> will break whenever someone adds new code to libata that accesses
-> the task file registers directly.
+Thanks.
 
-Well, judging solely from the patch you sent, it looks like we already 
-have the necessary hooks for everything you need.  After reviewing each 
-modification, ata_devchk() appeared to be the only function that did not 
-have a directly corresponding hook.  Several of your modifications were 
-to old-EH functions that your driver never calls, etc.
-
-So if you could refresh the patch from Jan 28th, I bet recent API 
-improvements can get it into upstream-mergeable shape, without having to 
-create low-level IO accessor hooks.
-
-	Jeff
-
-
+-- 
+tejun
