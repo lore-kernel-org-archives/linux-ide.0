@@ -1,49 +1,35 @@
-From: Junio C Hamano <junkio@cox.net>
-Subject: [PATCH 3/3] ide_in_drive_list(): "ALL" is not a wildcard anymore.
-Date: Mon, 28 May 2007 16:11:15 -0700
-Message-ID: <7vsl9g7dd8.fsf@assigned-by-dhcp.cox.net>
-References: <20070521145042.GA6957@redhat.com>
-	<7v3b1pbgeo.fsf_-_@assigned-by-dhcp.cox.net>
-	<7vps4ta1iy.fsf_-_@assigned-by-dhcp.cox.net>
-	<200705282141.42507.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: cirrus ep93xx pata driver
+Date: Mon, 28 May 2007 21:27:10 -0400
+Message-ID: <465B816E.5060407@garzik.org>
+References: <44FC0779.9030405@garzik.org> <20060921115533.GA26960@xi.wantstofly.org> <4513B21A.30507@garzik.org> <20070128202117.GA6147@xi.wantstofly.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fed1rmmtao103.cox.net ([68.230.241.43]:36986 "EHLO
-	fed1rmmtao103.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763548AbXE1XL1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 May 2007 19:11:27 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:49516 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751786AbXE2B1N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 May 2007 21:27:13 -0400
+In-Reply-To: <20070128202117.GA6147@xi.wantstofly.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Dave Jones <davej@redhat.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linux-ide@vger.kernel.org
 
-This removes the support to treat "ALL" as a wildcard for
-firmware revision.  This is made a separate patch, as it will
-break out-of-tree ide drivers that feed its own table that uses
-"ALL" as the wildcard to ide_in_drive_list().
+I know it's probably a low priority, but could you rediff this against 
+the current libata?
 
-Signed-off-by: Junio C Hamano <junkio@cox.net>
----
+I'm wondering where we are in terms of hooks that you need.  Since you 
+posted this we added some hooks for the pata_scc driver, most notably 
+->irq_on() hooks.  And other code you modify, such as the 
+ata_bus_reset() function, is slated for deletion once all drivers have 
+been converted over to the new EH (done, in testing).
 
- * This is a respin of earlier "3/3 Make ide dma blacklist handling a bit saner."
+I'm betting libata-core only has a little way to go before pata_ep93xx 
+will work.
 
- drivers/ide/ide-dma.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+	Jeff
 
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index 230ea12..3107b5e 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -148,7 +148,6 @@ int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *driv
- 	for ( ; drive_table->id_model ; drive_table++)
- 		if ((!strcmp(drive_table->id_model, id->model)) &&
- 		    (!drive_table->id_firmware ||
--		     !strcmp(drive_table->id_firmware, "ALL") || /* to be removed later */
- 		     strstr(id->fw_rev, drive_table->id_firmware)))
- 			return 1;
- 	return 0;
--- 
-1.5.2.86.g99b5-dirty
 
 
