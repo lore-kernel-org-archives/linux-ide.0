@@ -1,100 +1,86 @@
 From: "Daniel J Blueman" <daniel.blueman@gmail.com>
-Subject: Re: Compact Flash performance...
-Date: Thu, 31 May 2007 22:39:29 +0100
-Message-ID: <6278d2220705311439x40f7b1c1l7cef54acd2e8fcea@mail.gmail.com>
-References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
-	 <465E3FF0.9010709@rtr.ca>
-	 <6278d2220705310222rde9ad28ndfd8feced84a3c6f@mail.gmail.com>
-	 <465EBE20.6090803@rtr.ca>
-	 <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
-	 <465F360D.6020603@rtr.ca>
+Subject: Compact Flash performance...
+Date: Wed, 30 May 2007 23:10:18 +0100
+Message-ID: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:19306 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbXEaVjb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 17:39:31 -0400
-Received: by an-out-0708.google.com with SMTP id d31so123358and
-        for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 14:39:30 -0700 (PDT)
-In-Reply-To: <465F360D.6020603@rtr.ca>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760130AbXE3WKm@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-On 31/05/07, Mark Lord <liml@rtr.ca> wrote:
-> Daniel J Blueman wrote:
-> > Whoops, yes. Here is the expected data:
-[snip]
->
-> Thanks.  I'll use that data to update/validate future versions of hdparm.
-> At UDMA66, it *should* be capable of the 40MByte/sec realm of readback perf,
-> assuming the card itself is really that fast.
+I have a SanDisk Extreme IV 4GB CF card, capable of 40MB/s read, but
+am seeing 30MB/s read [1], connected directly to the IDE bus on my
+ICH8 controller.
 
-hdparm in the other identify mode does list the UDMA3/4 modes twice
-[1], which looks odd.
+How can I find out if this would be a timing or configuration issue?
+On 2.6.20.5 [2], the 120nS timing looks to be right [3], but perhaps
+no multi-word transfer is hurting here...alas, it can't be enabled
+with the libata subsystem and 'hdparm -m', so what else?
 
-> I don't know too much about the specifics, though, but perhaps the
-> card is only capable of full speed in PIO6, which requires special cabling
-> and is currently unsupported in libata (?).
-
-Seems less likely, as the Extreme IV reader (and another) supports
-UDMA mode 4; in PIO mode 6, they apparently top out at 17MB/s [2],
-which seems reasonable.
-
-> Another factor, is that hdparm performs discrete, non-overlapping,
-> reads of 1MByte chunks for its timing test.  Some drives cannot achieve
-> full performance with such (relatively) large gaps between IO's.
-
-100MB transfers still achieve 32MB/s:
-
-# dd if=/dev/sdb of=/dev/null bs=100000k count=10
-10+0 records in
-10+0 records out
-1024000000 bytes (1.0 GB) copied, 31.9328 seconds, 32.1 MB/s
-
-> Also, just for fun, you could try "hdparm --direct -t /dev/sdb"
-
-# hdparm --direct -t /dev/sdb
-
-/dev/sdb:
- Timing O_DIRECT disk reads:   96 MB in  3.05 seconds =  31.47 MB/sec
-
-It is conceivable that the controller in the two particular readers
-which get 40MB/s are doing some kind of prefetching, but seems seems
-like an extreme gain.
-
-I'll check things out with the IDE PIIX code also. Thanks for your help!
-  Daniel
-
-> Cheers
+Daniel
 
 --- [1]
 
-# hdparm -i /dev/sdb
-
+# hdparm -t /dev/sdb
 /dev/sdb:
-
- Model=SanDisk SDCFX-4096                      , FwRev=HDX 4.04,
-SerialNo=    116802D2807J3335
- Config={ HardSect NotMFM Removeable DTR>10Mbs nonMagnetic }
- RawCHS=7964/16/63, TrkSize=0, SectSize=576, ECCbytes=4
- BuffType=DualPort, BuffSize=1kB, MaxMultSect=4, MultSect=?0?
- CurCHS=7964/16/63, CurSects=8027712, LBA=yes, LBAsects=8027712
- IORDY=no, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 udma2 udma3 *udma4 udma3 *udma4
- AdvancedPM=no WriteCache=disabled
- Drive conforms to: Unspecified:  ATA/ATAPI-4
-
- * signifies the current active mode
+ Timing buffered disk reads:   94 MB in  3.05 seconds =  30.79 MB/sec
 
 --- [2]
 
-http://www.robgalbraith.com/bins/content_page.asp?cid=7-7896-8475
+ata7: PATA max UDMA/100 cmd 0x000000000001bc00 ctl 0x000000000001b882
+bmdma 0x000000000001b400 irq 17
+ata7.00: CFA: SanDisk SDCFX-4096, HDX 4.04, max UDMA/66
+ata7.00: 8027712 sectors, multi 0: LBA
+ata7.00: configured for UDMA/66
+ATA: abnormal status 0x7F on port 0x000000000001b807
+scsi 6:0:0:0: Direct-Access     ATA      SanDisk SDCFX-40 HDX  PQ: 0 ANSI: 5
+SCSI device sdb: 8027712 512-byte hdwr sectors (4110 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: 00 3a 00 00
+SCSI device sdb: write cache: disabled, read cache: enabled, doesn't
+support DPO or FUA
+SCSI device sdb: 8027712 512-byte hdwr sectors (4110 MB)
+sdb: sdb1
+sd 6:0:0:0: Attached scsi removable disk sdb
+
+--- [3]
+
+# hdparm -I /dev/sdb
+
+/dev/sdb:
+
+CompactFlash ATA device, with removable media
+        Model Number:       SanDisk SDCFX-4096
+        Serial Number:      116802D2807J3335
+        Firmware Revision:  HDX 4.04
+Standards:
+        Supported: 4
+        Likely used: 4
+Configuration:
+        Logical         max     current
+        cylinders       7964    7964
+        heads           16      16
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:    8027712
+        LBA    user addressable sectors:    8027712
+        device size with M = 1024*1024:        3919 MBytes
+        device size with M = 1000*1000:        4110 MBytes (4 GB)
+Capabilities:
+        LBA, IORDY(may be)(cannot be disabled)
+        Standby timer values: spec'd by Vendor
+        R/W multiple sector transfer: Max = 4   Current = 0
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 *udma4
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+        Enabled Supported:
+                Write cache
+           *    CFA feature set
 -- 
 Daniel J Blueman
