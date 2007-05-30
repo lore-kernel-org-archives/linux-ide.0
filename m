@@ -1,42 +1,68 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
-Date: Wed, 30 May 2007 10:20:47 +0200
-Message-ID: <465D33DF.9040708@gmx.net>
-References: <200705250948.52588.uwe.koziolek@gmx.net> <20070525153230.325258e9@the-village.bc.nu>
+From: David Milburn <dmilburn@redhat.com>
+Subject: sata_nv: Hitachi HDS7250S - ADMA
+Date: Wed, 30 May 2007 12:09:47 -0500
+Message-ID: <465DAFDB.6000705@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34852 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750825AbXE3IUt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 May 2007 04:20:49 -0400
-In-Reply-To: <20070525153230.325258e9@the-village.bc.nu>
+Received: from mx1.redhat.com ([66.187.233.31]:34966 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754541AbXE3RDc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 May 2007 13:03:32 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l4UH3UwE030979
+	for <linux-ide@vger.kernel.org>; Wed, 30 May 2007 13:03:30 -0400
+Received: from pobox.hsv.redhat.com (pobox.hsv.redhat.com [172.16.16.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l4UH3UVj025739
+	for <linux-ide@vger.kernel.org>; Wed, 30 May 2007 13:03:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux.ide" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+Hello,
 
->   
->> The sata_sis driver supports SATA and PATA ports. The broken support
->> of both types in one controller is fixed.
->>
->> the PATA-port of SiS180 controller does not support a drive present status
->> in the pci configspace like the other SiS PATA controllers, check skipped.
->>
->> Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
->>     
->
-> Needs checking with SiS because they submitted code that uses those
-> enable bits and its been in drivers/ide for years with respect of the
-> MuTOL ATA133. No argument about the SATA one if you've checked the docs
-> and seen the bug.
->
->   
-How should I proceed. I can submit both patches:
-- exclude SiS180 from enable bit checking or
-- exclude MuTol ATA133 from enable bit checking with different
-error_handler.
+Running the 2.6.22-rc2 kernel on a system with:
 
-Uwe
+nVidia Corporation CK804 Serial ATA Controller (rev f3)
+HITACHI HDS7250S K2AO
+
+Is it possible that this drive/firmware doen't handle AMDA mode correctly?
+
+We are seeing the following errors:
+
+=========portion of dmesg==============
+Error handler scsi_eh_0 waking up
+ata1: EH in ADMA mode, notifier 0x0 notifier_error 0x0 gen_ctl 0x1501000 status 0x400 next cpb count 0x2 next cpb idx 0x0
+ata1: CPB 0: ctl_flags 0x1f, resp_flags 0x2
+ata1: CPB 1: ctl_flags 0x1f, resp_flags 0x2
+     .
+     .
+     .
+ata1: CPB 17: ctl_flags 0x1f, resp_flags 0x0
+ata1: timeout waiting for ADMA IDLE, stat=0x400
+ata1: timeout waiting for ADMA LEGACY, stat=0x400
+ata1.00: exception Emask 0x0 SAct 0x3ffff SErr 0x0 action 0x2 frozen
+ata1.00: cmd 61/e8:00:25:b3:9f/01:00:01:00:00/40 tag 0 cdb 0x0 data 249856 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+    .
+    .
+    .
+ata1.00: cmd 60/80:88:ed:16:7e/00:00:01:00:00/40 tag 17 cdb 0x0 data 65536 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1: soft resetting port
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ata_hpa_resize 1: sectors = 976773168, hpa_sectors = 976773168
+ata1.00: ata_hpa_resize 1: sectors = 976773168, hpa_sectors = 976773168
+ata1.00: configured for UDMA/133
+scsi_eh_0: flush retry cmd: ffff81010c5b1380
+    .
+    .
+    .
+ata1: EH complete
+scsi_restart_operations: waking up host to restart
+Error handler scsi_eh_0 sleeping
+=====================================
+
+Thanks,
+David
