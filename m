@@ -1,74 +1,100 @@
-From: Mark Lord <liml@rtr.ca>
+From: "Daniel J Blueman" <daniel.blueman@gmail.com>
 Subject: Re: Compact Flash performance...
-Date: Thu, 31 May 2007 16:54:37 -0400
-Message-ID: <465F360D.6020603@rtr.ca>
-References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>	 <465E3FF0.9010709@rtr.ca>	 <6278d2220705310222rde9ad28ndfd8feced84a3c6f@mail.gmail.com>	 <465EBE20.6090803@rtr.ca> <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
+Date: Thu, 31 May 2007 22:39:29 +0100
+Message-ID: <6278d2220705311439x40f7b1c1l7cef54acd2e8fcea@mail.gmail.com>
+References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
+	 <465E3FF0.9010709@rtr.ca>
+	 <6278d2220705310222rde9ad28ndfd8feced84a3c6f@mail.gmail.com>
+	 <465EBE20.6090803@rtr.ca>
+	 <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
+	 <465F360D.6020603@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2962 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751540AbXEaUyk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 May 2007 16:54:40 -0400
-In-Reply-To: <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
+Received: from an-out-0708.google.com ([209.85.132.242]:19306 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbXEaVjb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 17:39:31 -0400
+Received: by an-out-0708.google.com with SMTP id d31so123358and
+        for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 14:39:30 -0700 (PDT)
+In-Reply-To: <465F360D.6020603@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel J Blueman <daniel.blueman@gmail.com>
-Cc: Mark Lord <lkml@rtr.ca>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Daniel J Blueman wrote:
+On 31/05/07, Mark Lord <liml@rtr.ca> wrote:
+> Daniel J Blueman wrote:
+> > Whoops, yes. Here is the expected data:
+[snip]
 >
-> Whoops, yes. Here is the expected data:
-> 
-> # hdparm --Istdout /dev/sdb
-> 
-> /dev/sdb:
-> 848a 1f1c 0000 0010 0000 0240 003f 007a
-> 7e40 0000 2020 2020 3131 3638 3032 4432
-> 3830 374a 3333 3335 0002 0002 0004 4844
-> 5820 342e 3034 5361 6e44 6973 6b20 5344
-> 4346 582d 3430 3936 2020 2020 2020 2020
-> 2020 2020 2020 2020 2020 2020 2020 0004
-> 0000 0300 0000 0200 0000 0007 1f1c 0010
-> 003f 7e40 007a 0100 7e40 007a 0000 0007
-> 0003 0078 0078 0078 0078 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0010 0000 0020 4004 4000 0000 0004 4000
-> 101f 0000 0000 0000 0000 2000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0082 001b 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
+> Thanks.  I'll use that data to update/validate future versions of hdparm.
+> At UDMA66, it *should* be capable of the 40MByte/sec realm of readback perf,
+> assuming the card itself is really that fast.
 
-Thanks.  I'll use that data to update/validate future versions of hdparm.
-At UDMA66, it *should* be capable of the 40MByte/sec realm of readback perf,
-assuming the card itself is really that fast.
+hdparm in the other identify mode does list the UDMA3/4 modes twice
+[1], which looks odd.
 
-I don't know too much about the specifics, though, but perhaps the
-card is only capable of full speed in PIO6, which requires special cabling
-and is currently unsupported in libata (?).
+> I don't know too much about the specifics, though, but perhaps the
+> card is only capable of full speed in PIO6, which requires special cabling
+> and is currently unsupported in libata (?).
 
-Another factor, is that hdparm performs discrete, non-overlapping,
-reads of 1MByte chunks for its timing test.  Some drives cannot achieve
-full performance with such (relatively) large gaps between IO's.
+Seems less likely, as the Extreme IV reader (and another) supports
+UDMA mode 4; in PIO mode 6, they apparently top out at 17MB/s [2],
+which seems reasonable.
 
-Also, just for fun, you could try "hdparm --direct -t /dev/sdb"
+> Another factor, is that hdparm performs discrete, non-overlapping,
+> reads of 1MByte chunks for its timing test.  Some drives cannot achieve
+> full performance with such (relatively) large gaps between IO's.
 
-Cheers
+100MB transfers still achieve 32MB/s:
+
+# dd if=/dev/sdb of=/dev/null bs=100000k count=10
+10+0 records in
+10+0 records out
+1024000000 bytes (1.0 GB) copied, 31.9328 seconds, 32.1 MB/s
+
+> Also, just for fun, you could try "hdparm --direct -t /dev/sdb"
+
+# hdparm --direct -t /dev/sdb
+
+/dev/sdb:
+ Timing O_DIRECT disk reads:   96 MB in  3.05 seconds =  31.47 MB/sec
+
+It is conceivable that the controller in the two particular readers
+which get 40MB/s are doing some kind of prefetching, but seems seems
+like an extreme gain.
+
+I'll check things out with the IDE PIIX code also. Thanks for your help!
+  Daniel
+
+> Cheers
+
+--- [1]
+
+# hdparm -i /dev/sdb
+
+/dev/sdb:
+
+ Model=SanDisk SDCFX-4096                      , FwRev=HDX 4.04,
+SerialNo=    116802D2807J3335
+ Config={ HardSect NotMFM Removeable DTR>10Mbs nonMagnetic }
+ RawCHS=7964/16/63, TrkSize=0, SectSize=576, ECCbytes=4
+ BuffType=DualPort, BuffSize=1kB, MaxMultSect=4, MultSect=?0?
+ CurCHS=7964/16/63, CurSects=8027712, LBA=yes, LBAsects=8027712
+ IORDY=no, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 udma2 udma3 *udma4 udma3 *udma4
+ AdvancedPM=no WriteCache=disabled
+ Drive conforms to: Unspecified:  ATA/ATAPI-4
+
+ * signifies the current active mode
+
+--- [2]
+
+http://www.robgalbraith.com/bins/content_page.asp?cid=7-7896-8475
+-- 
+Daniel J Blueman
