@@ -1,93 +1,47 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [git patches] libata fixes
-Date: Thu, 31 May 2007 16:31:57 +0800
-Message-ID: <465E87FD.1070102@tw.ibm.com>
-References: <20070525220307.GA2914@havoc.gtf.org>
-Reply-To: albertl@mail.com
+From: "Daniel J Blueman" <daniel.blueman@gmail.com>
+Subject: Re: Compact Flash performance...
+Date: Thu, 31 May 2007 10:18:48 +0100
+Message-ID: <6278d2220705310218x2736f652wb8d17095a9a82e6f@mail.gmail.com>
+References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
+	 <75b66ecd0705301531q1ba78d39od07d2611573c9150@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:34154 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbXEaIcb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 04:32:31 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4V8WIvL013217
-	for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 04:32:18 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4V8WDxW243522
-	for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 02:32:18 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4V8WDMZ001239
-	for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 02:32:13 -0600
-In-Reply-To: <20070525220307.GA2914@havoc.gtf.org>
+Received: from wr-out-0506.google.com ([64.233.184.238]:20540 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756656AbXEaJSu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 05:18:50 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so95228wra
+        for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 02:18:49 -0700 (PDT)
+In-Reply-To: <75b66ecd0705301531q1ba78d39od07d2611573c9150@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
-> And a few trivial documentation patches.
-> 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-> 
-> to receive the following updates:
-> 
->  drivers/ata/libata-scsi.c  |    5 ++-
->  drivers/ata/pata_artop.c   |    2 +-
->  drivers/ata/pata_hpt37x.c  |   27 ++++++++++---------------
->  drivers/ata/pata_it821x.c  |    3 +-
->  drivers/ata/pata_scc.c     |   46 ++++++++++++++++++++++++++-----------------
->  drivers/ata/pata_via.c     |    9 ++++---
->  drivers/ata/sata_mv.c      |   44 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/sata_promise.c |    2 +-
->  drivers/ata/sata_sis.c     |    2 +-
->  drivers/ata/sata_via.c     |    3 ++
->  10 files changed, 98 insertions(+), 45 deletions(-)
-> 
-> Alan Cox (2):
->       pata: Trivia
->       pata_hpt37x: Further improvements based on the IDE updates and vendor drivers
-> 
-> Jeff Garzik (4):
->       [libata] sata_promise: fix flags typo
->       [libata] sata_mv: add TODO list
->       [libata] Fix decoding of 6-byte commands
->       [libata] sata_via, pata_via: Add PCI IDs.
-> 
-> Tony Breeds (1):
->       Fix build failure for drivers/ata/pata_scc.c
-> 
-> Uwe Koziolek (1):
->       libata: sata_sis fixes
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 242c43e..b3900cf 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1050,14 +1050,15 @@ static unsigned int ata_scsi_flush_xlat(struct ata_queued_cmd *qc)
->  static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
->  {
->  	u64 lba = 0;
-> -	u32 len = 0;
-> +	u32 len;
->  
->  	VPRINTK("six-byte command\n");
->  
-> +	lba |= ((u64)(cdb[1] & 0x1f)) << 16;
->  	lba |= ((u64)cdb[2]) << 8;
->  	lba |= ((u64)cdb[3]);
->  
-> -	len |= ((u32)cdb[4]);
-> +	len = cdb[4];
->  
->  	*plba = lba;
->  	*plen = len;
+On 30/05/07, Lee Revell <rlrevell@joe-job.com> wrote:
+> On 5/30/07, Daniel J Blueman <daniel.blueman@gmail.com> wrote:
+> > I have a SanDisk Extreme IV 4GB CF card, capable of 40MB/s read, but
+> > am seeing 30MB/s read [1], connected directly to the IDE bus on my
+> > ICH8 controller.
+>
+> How do you know it's capable of 40MB/s read?
 
-Oops, I overlooked the MSB bits. :(
-Thanks for catching this.
---
-albert
+Hi Lee,
 
+There are various reports of users getting 40MB/s == 38.1MiB/s with
+UDMA mode 6 media readers (which are few and far between):
+
+http://www.robgalbraith.com/bins/content_page.asp?cid=7-7896-8475
+http://www.it-enquirer.com/media/screenshots/sandisk-extreme-bench.png
+
+If a particular reader is able to get 40MB/s through the CF interface,
+then this most likely will be achievable with ICH8+Linux also, but
+perhaps parameters need to be tuned or the right IDE configuration
+needs to be reached etc.
+
+> Lee
+-- 
+Daniel J Blueman
