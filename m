@@ -1,120 +1,48 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Compact Flash performance...
-Date: Thu, 31 May 2007 00:56:56 +0200
-Message-ID: <200705310056.56449.bzolnier@gmail.com>
-References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
+From: "sam song" <sam_song@usish.com>
+Subject: Re: Adaptec RAID 1200A (Highpoint
+	HPT370A)access problem
+Date: Thu, 31 May 2007 09:45:12 +0800
+Message-ID: <003301c7a325$6094cb30$5f39a8c0@usish.com.cn>
+References: <001501c79f46$d78fc880$6501a8c0@k7n>
+	<465DA6F4.7020203@t-online.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:14617 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbXE3WoK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 May 2007 18:44:10 -0400
-Received: by an-out-0708.google.com with SMTP id d31so778532and
-        for <linux-ide@vger.kernel.org>; Wed, 30 May 2007 15:44:08 -0700 (PDT)
-In-Reply-To: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <smartmontools-support-bounces@lists.sourceforge.net>
+In-Reply-To: <465DA6F4.7020203@t-online.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
+	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=smartmontools-support>
+List-Post: <mailto:smartmontools-support@lists.sourceforge.net>
+List-Help: <mailto:smartmontools-support-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
+	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=subscribe>
+Sender: smartmontools-support-bounces@lists.sourceforge.net
+Errors-To: smartmontools-support-bounces@lists.sourceforge.net
+To: 'Christian Franke' <Christian.Franke@t-online.de>, 'BitBucket' <file1303@gmail.com>
+Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: Daniel J Blueman <daniel.blueman@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-
-Hi,
-
-Since you are using libata ata_piix driver and not IDE piix one
-Jeff and/or Alan are the right people to ask this question...
-
-Anyway...
-
-On Thursday 31 May 2007, Daniel J Blueman wrote:
-> I have a SanDisk Extreme IV 4GB CF card, capable of 40MB/s read, but
-> am seeing 30MB/s read [1], connected directly to the IDE bus on my
-> ICH8 controller.
+> This controller's driver is likely implemented as a SCSI miniport
+> driver. These usually don't support SMART, even if the RAID
+> functionality is not used.
+> http://smartmontools.sourceforge.net/#FAQ-win-ata-as-scsi
 > 
-> How can I find out if this would be a timing or configuration issue?
-> On 2.6.20.5 [2], the 120nS timing looks to be right [3], but perhaps
+> Christian
 
-multi-word DMA cycle timing seems to be configured OK
+Hello Christian,
 
-Shouldn't really matter since it is for multi-word DMA transfers
-and this device is using UDMA transfers.
+May you confirm the conclusion for Adaptec 3085/3805 RAID controller under
+Linux platform? If I need to access SMART data of SATA Disk behind it, is it
+a MUST to do some work on its Linux driver?
 
-> no multi-word transfer is hurting here...alas, it can't be enabled
-> with the libata subsystem and 'hdparm -m', so what else?
+Thanks in advance,
 
--m is for multi sector PIO transfers and probably won't help here
+Sam
 
-Everything (except harmless "abnormal status" garbage) seems fine.
 
-Where does the max 40MB/s come from?  Were you able to get this device to
-work with this speed using some other controller and/or other OS-es?
-
-Thanks,
-Bart
-
-> Daniel
-> 
-> --- [1]
-> 
-> # hdparm -t /dev/sdb
-> /dev/sdb:
->  Timing buffered disk reads:   94 MB in  3.05 seconds =  30.79 MB/sec
-> 
-> --- [2]
-> 
-> ata7: PATA max UDMA/100 cmd 0x000000000001bc00 ctl 0x000000000001b882
-> bmdma 0x000000000001b400 irq 17
-> ata7.00: CFA: SanDisk SDCFX-4096, HDX 4.04, max UDMA/66
-> ata7.00: 8027712 sectors, multi 0: LBA
-> ata7.00: configured for UDMA/66
-> ATA: abnormal status 0x7F on port 0x000000000001b807
-> scsi 6:0:0:0: Direct-Access     ATA      SanDisk SDCFX-40 HDX  PQ: 0 ANSI: 5
-> SCSI device sdb: 8027712 512-byte hdwr sectors (4110 MB)
-> sdb: Write Protect is off
-> sdb: Mode Sense: 00 3a 00 00
-> SCSI device sdb: write cache: disabled, read cache: enabled, doesn't
-> support DPO or FUA
-> SCSI device sdb: 8027712 512-byte hdwr sectors (4110 MB)
-> sdb: sdb1
-> sd 6:0:0:0: Attached scsi removable disk sdb
-> 
-> --- [3]
-> 
-> # hdparm -I /dev/sdb
-> 
-> /dev/sdb:
-> 
-> CompactFlash ATA device, with removable media
->         Model Number:       SanDisk SDCFX-4096
->         Serial Number:      116802D2807J3335
->         Firmware Revision:  HDX 4.04
-> Standards:
->         Supported: 4
->         Likely used: 4
-> Configuration:
->         Logical         max     current
->         cylinders       7964    7964
->         heads           16      16
->         sectors/track   63      63
->         --
->         CHS current addressable sectors:    8027712
->         LBA    user addressable sectors:    8027712
->         device size with M = 1024*1024:        3919 MBytes
->         device size with M = 1000*1000:        4110 MBytes (4 GB)
-> Capabilities:
->         LBA, IORDY(may be)(cannot be disabled)
->         Standby timer values: spec'd by Vendor
->         R/W multiple sector transfer: Max = 4   Current = 0
->         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 *udma4
->              Cycle time: min=120ns recommended=120ns
->         PIO: pio0 pio1 pio2 pio3 pio4
->              Cycle time: no flow control=120ns  IORDY flow control=120ns
-> Commands/features:
->         Enabled Supported:
->                 Write cache
->            *    CFA feature set
-> -- 
-> Daniel J Blueman
+-------------------------------------------------------------------------
+This SF.net email is sponsored by DB2 Express
+Download DB2 Express C - the FREE version of DB2 express and take
+control of your XML. No limits. Just data. Click to get it now.
+http://sourceforge.net/powerbar/db2/
