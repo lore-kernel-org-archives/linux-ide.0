@@ -1,103 +1,74 @@
-From: Thomas Kuther <gimpel@sonnenkinder.org>
-Subject: Re: IT821x: no DMA since 2.6.21
-Date: Thu, 31 May 2007 21:23:35 +0200
-Message-ID: <20070531212335.77486121@SiRiUS.home>
-References: <20070515125308.3a9f6442@SiRiUS.home>
-	<200705161146.19497.bzolnier@gmail.com>
-	<20070518114722.3109a4a6@SiRiUS.home>
-	<200705241146.24079.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Compact Flash performance...
+Date: Thu, 31 May 2007 16:54:37 -0400
+Message-ID: <465F360D.6020603@rtr.ca>
+References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>	 <465E3FF0.9010709@rtr.ca>	 <6278d2220705310222rde9ad28ndfd8feced84a3c6f@mail.gmail.com>	 <465EBE20.6090803@rtr.ca> <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_rqCRT/oMloihT7BCmfcXVHi";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45464 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757527AbXEaTXo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 31 May 2007 15:23:44 -0400
-In-Reply-To: <200705241146.24079.bzolnier@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:2962 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751540AbXEaUyk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 31 May 2007 16:54:40 -0400
+In-Reply-To: <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Daniel J Blueman <daniel.blueman@gmail.com>
+Cc: Mark Lord <lkml@rtr.ca>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
---Sig_rqCRT/oMloihT7BCmfcXVHi
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Daniel J Blueman wrote:
+>
+> Whoops, yes. Here is the expected data:
+> 
+> # hdparm --Istdout /dev/sdb
+> 
+> /dev/sdb:
+> 848a 1f1c 0000 0010 0000 0240 003f 007a
+> 7e40 0000 2020 2020 3131 3638 3032 4432
+> 3830 374a 3333 3335 0002 0002 0004 4844
+> 5820 342e 3034 5361 6e44 6973 6b20 5344
+> 4346 582d 3430 3936 2020 2020 2020 2020
+> 2020 2020 2020 2020 2020 2020 2020 0004
+> 0000 0300 0000 0200 0000 0007 1f1c 0010
+> 003f 7e40 007a 0100 7e40 007a 0000 0007
+> 0003 0078 0078 0078 0078 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0010 0000 0020 4004 4000 0000 0004 4000
+> 101f 0000 0000 0000 0000 2000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0082 001b 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
+> 0000 0000 0000 0000 0000 0000 0000 0000
 
-On Do, 24.05.07 11:46 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-wrote:
+Thanks.  I'll use that data to update/validate future versions of hdparm.
+At UDMA66, it *should* be capable of the 40MByte/sec realm of readback perf,
+assuming the card itself is really that fast.
 
->=20
-> Hi,
->=20
-> [...]
->=20
-> Improved patch - this time the issue should be fixed for good (I was
-> looking only at the RAID specific part of the fixups and I overlooked
-> the fact that the original code was clearing too much of
-> id->field_valid), there is now also an extra debugging printk to give
-> us some more info.
->=20
-> Please give it a try.
->=20
-> [ recal_intr warning (which should be harmless) is not fixed by this
->   patch because it is a different problem and requires some more
-> work. ]
->=20
+I don't know too much about the specifics, though, but perhaps the
+card is only capable of full speed in PIO6, which requires special cabling
+and is currently unsupported in libata (?).
 
-Hi,
+Another factor, is that hdparm performs discrete, non-overlapping,
+reads of 1MByte chunks for its timing test.  Some drives cannot achieve
+full performance with such (relatively) large gaps between IO's.
 
-Sorry again for late response.
+Also, just for fun, you could try "hdparm --direct -t /dev/sdb"
 
-This patch works. At least it restores the behaviour before .21 :)
-----------------------------
-IT8212: IDE controller at PCI slot 0000:00:09.0
-ACPI: PCI Interrupt 0000:00:09.0[A] -> GSI 17 (level, low) -> IRQ 18
-IT8212: chipset revision 17
-it821x: controller in smart mode.
-IT8212: 100% native mode on irq 18
-    ide2: BM-DMA at 0xdc00-0xdc07, BIOS settings: hde:pio, hdf:pio
-    ide3: BM-DMA at 0xdc08-0xdc0f, BIOS settings: hdg:pio, hdh:pio
-Probing IDE interface ide2...
-hde: SAMSUNG SP2514N, ATA DISK drive
-hdf: Maxtor 6Y120L0, ATA DISK drive
-hde: field_valid=3D0007 capability=3D2f dma_mword=3D0007 dma_status=3D04
-hde: Performing identify fixups.
-hdf: field_valid=3D0007 capability=3D2f dma_mword=3D0007 dma_status=3D04
-hdf: Performing identify fixups.
-hde: selected mode 0x22
-hdf: selected mode 0x22
-ide2 at 0xec00-0xec07,0xe802 on irq 18
-hde: max request size: 128KiB
-hde: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=3D30401/255/63,
-DMA hde:hde: recal_intr: status=3D0x51 { DriveReady SeekComplete Error }
-hde: recal_intr: error=3D0x04 { DriveStatusError }
-ide: failed opcode was: unknown
- hde1
-hdf: max request size: 128KiB
-hdf: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=3D65535/16/63, DMA
- hdf:hdf: recal_intr: status=3D0x51 { DriveReady SeekComplete Error }
-hdf: recal_intr: error=3D0x04 { DriveStatusError }
-ide: failed opcode was: unknown
- hdf1
-----------------------------------------
-
-hdparm does not complain, and disk IO speed is OK.
-
-Regards,
-Tom
-
-
---Sig_rqCRT/oMloihT7BCmfcXVHi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.3 (GNU/Linux)
-
-iD8DBQFGXyC7MQFfAqZTGfwRAhzVAJ93E0X/j1UFRprEGFTv4qDpqFwtQwCgi34H
-TrdLwFBD/gxfqWhMflaFq5k=
-=KaT3
------END PGP SIGNATURE-----
-
---Sig_rqCRT/oMloihT7BCmfcXVHi--
+Cheers
