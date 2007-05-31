@@ -1,48 +1,32 @@
-From: "sam song" <sam_song@usish.com>
-Subject: Re: Adaptec RAID 1200A (Highpoint
-	HPT370A)access problem
-Date: Thu, 31 May 2007 09:45:12 +0800
-Message-ID: <003301c7a325$6094cb30$5f39a8c0@usish.com.cn>
-References: <001501c79f46$d78fc880$6501a8c0@k7n>
-	<465DA6F4.7020203@t-online.de>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: Compact Flash performance...
+Date: Wed, 30 May 2007 23:24:32 -0400
+Message-ID: <465E3FF0.9010709@rtr.ca>
+References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <smartmontools-support-bounces@lists.sourceforge.net>
-In-Reply-To: <465DA6F4.7020203@t-online.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=smartmontools-support>
-List-Post: <mailto:smartmontools-support@lists.sourceforge.net>
-List-Help: <mailto:smartmontools-support-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=subscribe>
-Sender: smartmontools-support-bounces@lists.sourceforge.net
-Errors-To: smartmontools-support-bounces@lists.sourceforge.net
-To: 'Christian Franke' <Christian.Franke@t-online.de>, 'BitBucket' <file1303@gmail.com>
-Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:3887 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756004AbXEaDYd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 May 2007 23:24:33 -0400
+In-Reply-To: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Daniel J Blueman <daniel.blueman@gmail.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-> This controller's driver is likely implemented as a SCSI miniport
-> driver. These usually don't support SMART, even if the RAID
-> functionality is not used.
-> http://smartmontools.sourceforge.net/#FAQ-win-ata-as-scsi
+Daniel J Blueman wrote:
+> I have a SanDisk Extreme IV 4GB CF card, capable of 40MB/s read, but
+> am seeing 30MB/s read [1], connected directly to the IDE bus on my
+> ICH8 controller.
 > 
-> Christian
+> How can I find out if this would be a timing or configuration issue?
+> On 2.6.20.5 [2], the 120nS timing looks to be right [3], but perhaps
+> no multi-word transfer is hurting here...alas, it can't be enabled
+> with the libata subsystem and 'hdparm -m', so what else?
 
-Hello Christian,
+Please post the output from "hdparm --Istdout /dev/sdb" for this card.
 
-May you confirm the conclusion for Adaptec 3085/3805 RAID controller under
-Linux platform? If I need to access SMART data of SATA Disk behind it, is it
-a MUST to do some work on its Linux driver?
-
-Thanks in advance,
-
-Sam
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+Thanks
