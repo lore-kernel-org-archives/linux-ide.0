@@ -1,54 +1,90 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Compact Flash performance...
-Date: Thu, 31 May 2007 18:00:12 -0600
-Message-ID: <465F618C.1020200@shaw.ca>
-References: <fa.XmtWMJk5gwBC00HJh+5O62Vx8eA@ifi.uio.no>
- <fa.fl4+oXGwE5VC39h2DLdFoBUbqV4@ifi.uio.no>
- <fa.+cW0LouEqSiZ6zrmBDeBJxRjPTg@ifi.uio.no>
- <fa.PM7erd/Gm1gq8ZshwTBJwux7o6o@ifi.uio.no>
- <fa.MYVClL+Q9g/jFTcUNWOeysiV0Ig@ifi.uio.no>
- <fa.Q4zXu+xtMAT5H5vbl/zgxZk/Ivo@ifi.uio.no>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Linux v2.6.22-rc3
+Date: Fri, 01 Jun 2007 09:58:48 +0900
+Message-ID: <465F6F48.8080804@gmail.com>
+References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>  <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>  <46599E6B.1000209@pobox.com>  <9d2cd630705270907y4722653cpf79f073fa8f12f08@mail.gmail.com>  <alpine.LFD.0.98.0705270922030.26602@woody.linux-foundation.org>  <9d2cd630705271315x7030c91ew2f175c921c022880@mail.gmail.com>  <465AA536.6080608@gmail.com> <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com> <465BF244.5080200@gmail.com> <alpine.LFD.0.98.0705290924350.26602@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:52528 "EHLO
-	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbXFAAAM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 20:00:12 -0400
-In-reply-to: <fa.Q4zXu+xtMAT5H5vbl/zgxZk/Ivo@ifi.uio.no>
+Received: from nz-out-0506.google.com ([64.233.162.227]:5686 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754686AbXFAA7z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 31 May 2007 20:59:55 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so357920nzf
+        for <linux-ide@vger.kernel.org>; Thu, 31 May 2007 17:59:53 -0700 (PDT)
+In-Reply-To: <alpine.LFD.0.98.0705290924350.26602@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Daniel J Blueman <daniel.blueman@gmail.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Gregor Jasny <gjasny@googlemail.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> To maximize throughput, some kind of host-queuing would be needed,
->> or just have the driver sit in a tight loop, starting the next I/O
->> immediately when the previous one finishes.  Linux isn't that quick 
->> (yet).
-> 
-> 
-> I was talking on IRC with Tejun just recently.  There are several 
-> controllers (and/or "situations") like this, where some amount of host 
-> queueing would permit greater throughput, even when NCQ is not 
-> supported.  sata_sx4 is the most dramatic example, where host queueing 
-> could potentially increase speed by a factor of 10 or more, since it is 
-> penalized by an awful two-irq-per-command (w/ a per-host bottleneck to 
-> boot) setup.  Silicon Image has a "command buffer".  And overall, I 
-> designed ->qc_prep() hook separate from ->qc_issue() to enable the 
-> prepartion of multiple commands such that it only takes a simple "go" 
-> I/O to start a transaction, immediately after the previous one ends.
-> 
->     Jeff
+Hello, Linus.  Sorry about late response.  I'm still recovering from jet
+lag.
 
-Theoretically NVIDIA nForce4 ADMA could likely do this as well, as it 
-seems to allow chaining up multiple commands to execute in succession 
-(assuming they're not NCQ)..
+Linus Torvalds wrote:
+> On Tue, 29 May 2007, Tejun Heo wrote:
+>> Aieee, so the drive doesn't like the new SRST sequence.
+> 
+> It would appear that the old code largely ignored the SRST error entirely, 
+> no?
+
+Yes, we used to ignore some error conditions, which sometimes led to
+very long timeout sequence after hotplugging under certain circumstances
+- a few 30sec timeouts for the reset and another 30sec for the following
+IDENTIFY (because reset didn't fail after the timeouts).
+
+> If we *used* to do (in ata_bus_post_reset()):
+> 
+> 	if (dev0)
+> 		ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK, ATA_TMOUT_BOOT);
+> 
+> and you changed that to actually care about the return value:
+> 
+> 	if (dev0) {
+> 		rc = ata_wait_ready(ap, deadline);
+> 		if (rc && rc != -ENODEV)
+> 			return rc;
+> 	}
+> 
+> (in _two_ places). That change also changed the same "post_reset" handling 
+> in a totally _different_ way: it used to do ata_busy_sleep() twice, now it 
+> still does it twice, but it does it with the same "timeout" value, so if 
+> the first one times out, then the second one won't be given any timeout AT 
+> ALL!
+> 
+> And to make matters worse: the first timeout seems to be for ANOTHER PORT 
+> ENTIRELY! So you seem to break port 1 even if the timeout happened on port 
+> 0, as far as I can read that sequence. 
+
+Yes, the whole operation uses single timeout.  If the given time runs
+out, it fails for both devices on the channel.  This is because reset
+timeout is channel wide.  After SRST, both devices are required to
+respond in certain time (30secs max per spec).  If anyone of the device
+doesn't respond, it isn't clear what we can or can't do with the bus -
+reset protocol itself requires responding master, cable detection needs
+both devices working, etc...
+
+> So I think your ata_bus_post_reset() changes are rather suspect. The fact 
+> that you don't change the timeout, and use the same deadline for two 
+> different ports (and for multiple commands to the same port, afaik), seems 
+> rather suspect. The old code also didn't care about failures in certain 
+> phases of the reset sequence, and it appears that it did so for good 
+> reason.
+
+Gregor's cdrom has broken SRST support which is extremely rare and
+broken.  The reason why it works flawlessly with the ide driver is
+because the ide driver doesn't issue SRST during probing and libata
+worked after 30sec timeout before reset-seq change because libata didn't
+use to check reset failures in some cases and the device just worked
+when issued commands even when it didn't report ready status after reset.
+
+I'll try to add some code in the reset path and see where the device
+fails reset protocol.  Hopefully, we can work around it.  If it doesn't,
+maybe we'll need to issue IDENTIFY and see whether that works after
+reset timeout.  :-(
+
+Thanks.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
