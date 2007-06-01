@@ -1,23 +1,31 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
 Date: Fri, 01 Jun 2007 14:20:55 +0200
-Message-ID: <46600F27.1090202__145.452578044747$1180700605$gmane$org@googlemail.com>
+Message-ID: <46600F27.1090202__1528.44975605166$1180700939$gmane$org@googlemail.com>
 References: <465FED20.3090206@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761118AbXFAMVq@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
 In-Reply-To: <465FED20.3090206@googlemail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Mark Salyzyn <aacraid@adaptec.com>, Yinghai Lu <yhlu.kernel@gmail.com>, Vivek Goyal <vgoyal@in.ibm.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Robert de Rooy <robert.de.rooy@gmail.com>, sparclinux@vger.kernel.org, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>, linux-pcmcia@lists.infradead.org, Vivek Goyal <vgoyal@in.ibm.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Mark Salyzyn <aacraid@adaptec.com>, Gregor Jasny <gjasny@googlemail.com>, Yinghai Lu <yhlu.kernel@gmail.com>, Alan Cox <alan@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>
 List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
 Here is a list of some known regressions in 2.6.22-rc3.
 
-=46eel free to add new regressions/remove fixed etc.
+Feel free to add new regressions/remove fixed etc.
 http://kernelnewbies.org/known_regressions
 
 
