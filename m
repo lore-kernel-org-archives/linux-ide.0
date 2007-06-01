@@ -1,53 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.22 libata spindown
-Date: Fri, 01 Jun 2007 16:39:57 -0400
-Message-ID: <4660841D.5050003@garzik.org>
-References: <4ac8254d0706011314g5468f02m3cf5a5281bd30018@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
+Date: Fri, 1 Jun 2007 13:46:07 -0700
+Message-ID: <20070601134607.ce4a37bd.akpm@linux-foundation.org>
+References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55739 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762503AbXFAUj7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Jun 2007 16:39:59 -0400
-In-Reply-To: <4ac8254d0706011314g5468f02m3cf5a5281bd30018@mail.gmail.com>
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:40969 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762874AbXFAUqX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 16:46:23 -0400
+In-Reply-To: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tuncer Ayaz <tuncer.ayaz@gmail.com>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Geller Sandor <wildy@petra.hos.u-szeged.hu>
+Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-Tuncer Ayaz wrote:
-> I'm still seeing the libata warning that disks were not spun down
-> properly on the following two setups and am wondering whether I need
-> a new shutdown binary or the changeset mentioned below is not meant
-> to fix what I'm triggering by halt'ing.
+On Wed, 30 May 2007 11:30:00 +0200 (CEST)
+Geller Sandor <wildy@petra.hos.u-szeged.hu> wrote:
+
+> Hi,
 > 
-> If it's not a bug I will try to update my shutdown utility and if
-> that does not work I promise not to bother lkml about a problem
-> caused by my userland. If it is a bug I hope it will be of interest
-> for 2.6.22 bug tracking.
+> I saw a similar report yesterday with '2.6.21.1 - 97% wait time on IDE 
+> operations' subject.
 > 
-> Setup 1:
-> SATA 1 Disks
-> AMD64 3200+
-> nVidia nForce 3 250 (Ultra?)
-> Debian i386 Unstable
+> After upgrading from 2.6.20.7 kernel to 2.6.21.1 my system started to 
+> reset infrequenly the IDE bus. In the syslog DMA timeout, resetting IDE 
+> bus messages appeared. I've changed the two disks attached to the HPT374 
+> controller, and always the first disk had problems. I've replaced cables, 
+> plugged the disks into other IDE ports, but it was only a matter of time 
+> to experience an IDE reset. When I upgraded to 2.6.21.3 the resets became 
+> much more frequent, this time even DMA was disabled too on the first disk. 
+> I turned DMA back Manually with hdparm, and a few seconds of intense IO 
+> activity resulted in another IDE reset.
 > 
-> Setup 2:
-> SATA 2 disks
-> Core 2 Duo E6600
-> Intel 975X
-> Debian x86_64 Unstable
+> Reverting back to 2.6.20.12 the problem seems to be gone. BTW I'm using 
+> the PATA driver for the HTP374, not the libata one.
 > 
-> Just to be clear what warning I'm talking about:
-> DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY
-> For more info, visit http://linux-ata.org/shutdown.html
+> Is this a known problem/ is there a way I can help locating the cause of 
+> the problem?
+> 
 
-
-IIRC, Debian was the one OS that really did need a shutdown utility 
-update, as the message says :)
-
-	Jeff
-
-
+(cc's added)
