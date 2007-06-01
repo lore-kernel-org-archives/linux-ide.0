@@ -1,29 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Linux v2.6.22-rc3
-Date: Fri, 01 Jun 2007 14:48:45 -0400
-Message-ID: <46606A0D.2040002@garzik.org>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org> <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>  <46599E6B.1000209@pobox.com>  <9d2cd630705270907y4722653cpf79f073fa8f12f08@mail.gmail.com> <alpine.LFD.0.98.0705270922030.26602@woody.linux-foundation.org>  <9d2cd630705271315x7030c91ew2f175c921c022880@mail.gmail.com>  <465AA536.6080608@gmail.com> <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com> <465BF244.5080200@gmail.com> <alpine.LFD.0.98.0705290924350.26602@woody.linux-foundation.org> <465F6F48.8080804@gmail.com> <alpine.LFD.0.98.0705311830360.26602@woody.linux-foundation.org> <465F8230.2040105@gmail.com> <46604E62.1000105@pobox.com> <alpine.LFD.0.98.0706010955390.3957@woody.linux-foundation.org> <466058F8.4050107@pobox.com> <alpine.LFD.0.98.0706011047000.3957@woody.linux-foundation.org> <46606851.3060905@pobox.com>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
+Date: Fri, 1 Jun 2007 12:54:58 -0700
+Message-ID: <86802c440706011254k4aa5bc05rf63e573b1e0ed9bd@mail.gmail.com>
+References: <20070601175344.GA13721@in.ibm.com>
+	 <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54691 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761941AbXFASsu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Jun 2007 14:48:50 -0400
-In-Reply-To: <46606851.3060905@pobox.com>
+Received: from wa-out-1112.google.com ([209.85.146.182]:32645 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762378AbXFATy7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 15:54:59 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so633288wah
+        for <linux-ide@vger.kernel.org>; Fri, 01 Jun 2007 12:54:58 -0700 (PDT)
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@linux-foundation.org>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
 
-Jeff Garzik wrote:
-> Upon quick review, it appears it should be 110ms.  And actually the spec 
-> says 3ms.  But to answer your question anyway... :)
+On 6/1/07, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
+> Agree, but overstated somewhat.
+>
+> The card in question that the regression is reported against is not a
+> released card and as such could have a flawed environment, Hardware,
+> Firmware or other Incompatibility. The fix for the root cause will
+> likely not touch the driver or the kernel
 
+So aacraid.reset_devices=1 works with Vivek's test system?
 
-Actually the 3ms is the DRQ assertion delay.
-
-	Jeff
-
-
+YH
