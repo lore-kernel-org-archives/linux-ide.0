@@ -1,67 +1,81 @@
-From: =?GB2312?B?0+HB1Q==?= <yulin@starsoftcomm.com>
-Subject: Re: YuLin: Where can I get the newest source of sata_sis?
-Date: Fri, 01 Jun 2007 12:26:22 +0800
-Message-ID: <465F9FEE.7030409@starsoftcomm.com>
-References: <465E92EA.2050608@starsoftcomm.com> <465F206B.1080908@gmx.net>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
+Date: Fri, 01 Jun 2007 14:20:55 +0200
+Message-ID: <46600F27.1090202__47495.921343989$1180700505$gmane$org@googlemail.com>
+References: <465FED20.3090206@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.starsoftcomm.com ([211.100.62.25]:38353 "EHLO
-	mail.starsoftcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885AbXFAE0c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 00:26:32 -0400
-In-Reply-To: <465F206B.1080908@gmx.net>
+Received: from wr-out-0506.google.com ([64.233.184.234]:54095 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761069AbXFAMV3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 08:21:29 -0400
+Received: by wr-out-0506.google.com with SMTP id i21so470502wra
+        for <linux-ide@vger.kernel.org>; Fri, 01 Jun 2007 05:21:27 -0700 (PDT)
+In-Reply-To: <465FED20.3090206@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Mark Salyzyn <aacraid@adaptec.com>, Yinghai Lu <yhlu.kernel@gmail.com>, Vivek Goyal <vgoyal@in.ibm.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
 
-Uwe Koziolek =D0=B4=B5=C0:
->> hi,
->>
->> When we used 2.6.18 and 2.6.20 on ASUS sis-671 motherboard, We have =
-some
->> problem: cannot find the harddisk controller.
->> In BIOS, the SATA mode is 2P+2IDE.
->>
->> The official kernel 2.6.18, 2.6.20 and new 2.6.21 does not work, i g=
-et
->> some information about sata_sis 0.7.1 from you, may I get it ?
->>
->> We are so urgent, please help me.
->>
->> Thank you very much!!!!
->>    =20
-> Asus is selling a P5X-MX SE motherboard with a SiS968
-> southbridge. The SiS671 Northbridge is not intresting for the SATA-su=
-pport.
-> Currently it is only planned to support this chipset in
-> AHCI-mode. You should select the AHCI mode for the SATA-ports in the
-> BIOS. The ahci driver should support your board.
-> kernel 2.6.20 should be sufficient.
-> If this does not work, please provide the output of
-> lspci -vvxxx and the selected mode for the SATA-port.
->
-> regards
-> Uwe Koziolek
->
->
->
->
->
->  =20
-new message:
-SATA harddisk mode: IDE in BIOS
-Port on SATA2 on motherboard failed. Dmesg said "ata2: SATA link down
-(SStatus 0 SControl 0)".
-Port on SATA1 on motherboard successed, found the harddisk and partitio=
-ns.
+Hi all,
 
-What is the difference between SATA1 port and SATA2 port on motherboard=
-,
-is it a number of SATA port or different SATA version?
+Here is a list of some known regressions in 2.6.22-rc3.
 
-=BA=C7=BA=C7=A1=A3
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+
+
+PCMCIA
+
+Subject    : libata and legacy ide pcmcia failure
+References : http://lkml.org/lkml/2007/5/17/305
+Submitter  : Robert de Rooy <robert.de.rooy@gmail.com>
+Status     : Unknown
+
+
+
+SATA/PATA
+
+Subject    : 22-rc3 broke the CDROM in Dell notebook
+References : http://lkml.org/lkml/2007/5/27/63
+Submitter  : Gregor Jasny <gjasny@googlemail.com>
+Handled-By : Tejun Heo <htejun@gmail.com>
+             Jeff Garzik <jeff@garzik.org>
+Caused-By  : Tejun Heo <htejun@gmail.com>
+             commit d4b2bab4f26345ea1803feb23ea92fbe3f6b77bc
+Status     : problem is being debugged
+
+
+
+SCSI
+
+Subject    : aacraid: adapter kernel panic'd fffffffd (kexec)
+References : http://lkml.org/lkml/2007/5/29/491
+Submitter  : Yinghai Lu <yhlu.kernel@gmail.com>
+Handled-By : Salyzyn, Mark <mark_salyzyn@adaptec.com>
+             Vivek Goyal <vgoyal@in.ibm.com>
+Status     : problem is being debugged
+
+
+
+Sparc64
+
+Subject    : 2.6.22-rc broke X on Ultra5
+References : http://lkml.org/lkml/2007/5/22/78
+Submitter  : Mikael Pettersson <mikpe@it.uu.se>
+Handled-By : David Miller <davem@davemloft.net>
+Status     : problem is being debugged
+
+
+
+Regards,
+Michal
+
+--
+"Najbardziej brakowa=B3o mi twojego milczenia."
+-- Andrzej Sapkowski "Co=B6 wi=EAcej"
 
 
