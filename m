@@ -1,47 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
-Date: Sat, 02 Jun 2007 00:53:56 +0400
-Message-ID: <46608764.5060807@ru.mvista.com>
-References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <20070601134607.ce4a37bd.akpm@linux-foundation.org>
+From: "Tuncer Ayaz" <tuncer.ayaz@gmail.com>
+Subject: Re: 2.6.22 libata spindown
+Date: Fri, 1 Jun 2007 22:55:56 +0200
+Message-ID: <4ac8254d0706011355y71f9c0b1q237617c6c0fb89c7@mail.gmail.com>
+References: <4ac8254d0706011314g5468f02m3cf5a5281bd30018@mail.gmail.com>
+	 <4660841D.5050003@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:52504 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763542AbXFAUwZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 16:52:25 -0400
-In-Reply-To: <20070601134607.ce4a37bd.akpm@linux-foundation.org>
+Received: from wx-out-0506.google.com ([66.249.82.236]:41166 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764630AbXFAUz5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 16:55:57 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so624901wxc
+        for <linux-ide@vger.kernel.org>; Fri, 01 Jun 2007 13:55:57 -0700 (PDT)
+In-Reply-To: <4660841D.5050003@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geller Sandor <wildy@petra.hos.u-szeged.hu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello.
+On 6/1/07, Jeff Garzik <jeff@garzik.org> wrote:
+> Tuncer Ayaz wrote:
+> > I'm still seeing the libata warning that disks were not spun down
+> > properly on the following two setups and am wondering whether I need
+> > a new shutdown binary or the changeset mentioned below is not meant
+> > to fix what I'm triggering by halt'ing.
+> >
+> > If it's not a bug I will try to update my shutdown utility and if
+> > that does not work I promise not to bother lkml about a problem
+> > caused by my userland. If it is a bug I hope it will be of interest
+> > for 2.6.22 bug tracking.
+> >
+> > Setup 1:
+> > SATA 1 Disks
+> > AMD64 3200+
+> > nVidia nForce 3 250 (Ultra?)
+> > Debian i386 Unstable
+> >
+> > Setup 2:
+> > SATA 2 disks
+> > Core 2 Duo E6600
+> > Intel 975X
+> > Debian x86_64 Unstable
+> >
+> > Just to be clear what warning I'm talking about:
+> > DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY
+> > For more info, visit http://linux-ata.org/shutdown.html
+>
+>
+> IIRC, Debian was the one OS that really did need a shutdown utility
+> update, as the message says :)
 
-Andrew Morton wrote:
-
->>I saw a similar report yesterday with '2.6.21.1 - 97% wait time on IDE 
->>operations' subject.
-
->>After upgrading from 2.6.20.7 kernel to 2.6.21.1 my system started to 
->>reset infrequenly the IDE bus. In the syslog DMA timeout, resetting IDE 
->>bus messages appeared. I've changed the two disks attached to the HPT374 
->>controller, and always the first disk had problems. I've replaced cables, 
->>plugged the disks into other IDE ports, but it was only a matter of time 
->>to experience an IDE reset. When I upgraded to 2.6.21.3 the resets became 
->>much more frequent, this time even DMA was disabled too on the first disk. 
->>I turned DMA back Manually with hdparm, and a few seconds of intense IO 
->>activity resulted in another IDE reset.
-
->>Reverting back to 2.6.20.12 the problem seems to be gone. BTW I'm using 
->>the PATA driver for the HTP374, not the libata one.
-
->>Is this a known problem/ is there a way I can help locating the cause of 
->>the problem?
-
-    Yes, please post the boot log and the IDE reset log too for starters...
-
-> (cc's added)
-
-WBR, Sergei
+Thanks for the confirmation.
