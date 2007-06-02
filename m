@@ -1,62 +1,63 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
-Date: Sat, 02 Jun 2007 22:53:14 +0100
-Message-ID: <4661E6CA.1080203@dgreaves.com>
-References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] HPA Detect From Resume
+Date: Sun, 3 Jun 2007 00:24:24 +0200
+Message-ID: <200706030024.24485.bzolnier@gmail.com>
+References: <46456120.6070401@cs.drexel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:41823 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759065AbXFBVxS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 2 Jun 2007 17:53:18 -0400
-In-Reply-To: <46613C53.8010205@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:26782 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762054AbXFBWPY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jun 2007 18:15:24 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so469727ugf
+        for <linux-ide@vger.kernel.org>; Sat, 02 Jun 2007 15:15:22 -0700 (PDT)
+In-Reply-To: <46456120.6070401@cs.drexel.edu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
+To: Lee Trager <lt73@cs.drexel.edu>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> David Greaves wrote:
->> I have 2 ide disks. If I enable SMART and hibernate/suspend2disk, SMART is
->> disabled when I resume.
->>
->> Same as in 2.6.21.1
-> 
-> According to the ATA standard, the device (drive) itself is responsible
-> for preserving SMART enabled status over power cycles.  It seems your
-> drive doesn't wanna do that.  I don't think mangling with SMART setup in
-> the kernel is wise thing to do.  Bruce, any ideas?  Maybe hook smartd
-> such that it gets suspend/resume events?
 
-Sorry, FYI, I made the same mistake as when I reported the wol problem - I was
-booting 2.6.21.1.
+Hi,
 
-I am having problems with 2.6.22-rc3 but when it does suspend/resume I can
-confirm that the problem is still there (of course).
+On Saturday 12 May 2007, Lee Trager wrote:
+> Currently when system which have HPA require HPA to be detected and
+> disabled upon resume from RAM or disk. The current IDE drivers do not do
+> this nor does libata(obviously it since it doesn't support HPA yet). I
+> have implemented this into the current IDE drivers and it has been
+> tested by many others since 7/15/2006 in bug number
+> 6840(http://bugzilla.kernel.org/show_bug.cgi?id=6840) and it has been
+> confirmed to work fine with no problems.
 
-However your comments still stand.
+Big thanks for working on this bug.
 
-One unpleasant side effect is that I get
+The patch looks good, applied.
 
-hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hda: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xb0
-hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hda: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xb0
-...
-and
-hdb: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hdb: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xb0
-hdb: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hdb: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xb0
-...
+> --- linux-2.6.21.1-old/include/linux/ide.h	2007-05-01 02:54:12.000000000 -0400
+> +++ linux-2.6.21.1/include/linux/ide.h	2007-04-28 01:06:20.000000000 -0400
+> @@ -1005,6 +1005,7 @@
+>  	int		(*probe)(ide_drive_t *);
+>  	void		(*remove)(ide_drive_t *);
+>  	void		(*shutdown)(ide_drive_t *);
+> +	void		(*resume)(ide_drive_t *);
+>  } ide_driver_t;
 
-when the system comes back (induced from smartd I guess) until I do a:
- smartctl -son
+ide_driver_t changed a bit in 2.6.22 due to /proc/ide/ rework so this
+chunk (and one chunk in ide-disk.c) rejected to apply.  Fixed them by hand.
 
-David
+> @@ -1279,7 +1281,12 @@
+>  	rqpm.pm_step = ide_pm_state_start_resume;
+>  	rqpm.pm_state = PM_EVENT_ON;
+>  
+> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> +
+> +	if (err == 0 && drv->resume)
+> +		drv->resume(drive);
+> +
+
+Added extra drv != NULL check (there may be no IDE device driver et all).
