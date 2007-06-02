@@ -1,121 +1,88 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] serverworks: fix CSB6 tuning logic
-Date: Sat, 2 Jun 2007 21:05:01 +0200
-Message-ID: <200706022105.01965.bzolnier@gmail.com>
+Subject: Re: IT821x: no DMA since 2.6.21
+Date: Sat, 2 Jun 2007 23:32:49 +0200
+Message-ID: <200706022332.49229.bzolnier@gmail.com>
+References: <20070515125308.3a9f6442@SiRiUS.home> <200705241146.24079.bzolnier@gmail.com> <20070531212335.77486121@SiRiUS.home>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:5906 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:47387 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756531AbXFBS7g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jun 2007 14:59:36 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so450194ugf
-        for <linux-ide@vger.kernel.org>; Sat, 02 Jun 2007 11:59:36 -0700 (PDT)
+	with ESMTP id S1756964AbXFBVTd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jun 2007 17:19:33 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so464033ugf
+        for <linux-ide@vger.kernel.org>; Sat, 02 Jun 2007 14:19:32 -0700 (PDT)
+In-Reply-To: <20070531212335.77486121@SiRiUS.home>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Thomas Kuther <gimpel@sonnenkinder.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Thursday 31 May 2007, Thomas Kuther wrote:
+> On Do, 24.05.07 11:46 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> wrote:
+> 
+> > 
+> > Hi,
+> > 
+> > [...]
+> > 
+> > Improved patch - this time the issue should be fixed for good (I was
+> > looking only at the RAID specific part of the fixups and I overlooked
+> > the fact that the original code was clearing too much of
+> > id->field_valid), there is now also an extra debugging printk to give
+> > us some more info.
+> > 
+> > Please give it a try.
+> > 
+> > [ recal_intr warning (which should be harmless) is not fixed by this
+> >   patch because it is a different problem and requires some more
+> > work. ]
+> > 
+> 
+> Hi,
+> 
+> Sorry again for late response.
+> 
+> This patch works. At least it restores the behaviour before .21 :)
+> ----------------------------
+> IT8212: IDE controller at PCI slot 0000:00:09.0
+> ACPI: PCI Interrupt 0000:00:09.0[A] -> GSI 17 (level, low) -> IRQ 18
+> IT8212: chipset revision 17
+> it821x: controller in smart mode.
+> IT8212: 100% native mode on irq 18
+>     ide2: BM-DMA at 0xdc00-0xdc07, BIOS settings: hde:pio, hdf:pio
+>     ide3: BM-DMA at 0xdc08-0xdc0f, BIOS settings: hdg:pio, hdh:pio
+> Probing IDE interface ide2...
+> hde: SAMSUNG SP2514N, ATA DISK drive
+> hdf: Maxtor 6Y120L0, ATA DISK drive
+> hde: field_valid=0007 capability=2f dma_mword=0007 dma_status=04
+> hde: Performing identify fixups.
+> hdf: field_valid=0007 capability=2f dma_mword=0007 dma_status=04
+> hdf: Performing identify fixups.
+> hde: selected mode 0x22
+> hdf: selected mode 0x22
+> ide2 at 0xec00-0xec07,0xe802 on irq 18
+> hde: max request size: 128KiB
+> hde: 488397168 sectors (250059 MB) w/8192KiB Cache, CHS=30401/255/63,
+> DMA hde:hde: recal_intr: status=0x51 { DriveReady SeekComplete Error }
+> hde: recal_intr: error=0x04 { DriveStatusError }
+> ide: failed opcode was: unknown
+>  hde1
+> hdf: max request size: 128KiB
+> hdf: 240121728 sectors (122942 MB) w/2048KiB Cache, CHS=65535/16/63, DMA
+>  hdf:hdf: recal_intr: status=0x51 { DriveReady SeekComplete Error }
+> hdf: recal_intr: error=0x04 { DriveStatusError }
+> ide: failed opcode was: unknown
+>  hdf1
+> ----------------------------------------
+> 
+> hdparm does not complain, and disk IO speed is OK.
 
-Problem noticed by Joe Zbiciak, see
+I'm glad that the issue is finally fixed. :)
 
-	http://kerneltrap.org/node/8252
-
-for details.
-
-On CSB6 the driver is using BIOS settings and not programming DMA/PIO timings
-itself.  However the logic was completely broken and resulted in wrong timings
-being silently allowed (instead of being corrected by the driver).
-
-This bug would explain some data corruption/timeout issues with Serverworks
-MegaIDE in RAID mode that Alan Cox has fixed recently with:
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=2074a106f52b6371885afbd714e929d60d0e3f64
-
-For 2.6.23 we may be better off with completely switching the driver to always
-programming timings (libata pata_serverworks.c driver is doing things this way
-and there were no problems reported so far) but for 2.6.22 lets fix the bug
-in the simplest and the least intrusive way.
-
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/serverworks.c |   40 +++++++++++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 13 deletions(-)
-
-Index: b/drivers/ide/pci/serverworks.c
-===================================================================
---- a/drivers/ide/pci/serverworks.c
-+++ b/drivers/ide/pci/serverworks.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/serverworks.c		Version 0.10	Jun 2 2007
-+ * linux/drivers/ide/pci/serverworks.c		Version 0.11	Jun 2 2007
-  *
-  * Copyright (C) 1998-2000 Michel Aubry
-  * Copyright (C) 1998-2000 Andrzej Krzysztofowicz
-@@ -176,35 +176,49 @@ static int svwks_tune_chipset (ide_drive
- 				return 0;
- 			} else if ((dma_timing) &&
- 				   ((dma_stat&(1<<(5+unit)))==(1<<(5+unit)))) {
--				u8 dmaspeed = dma_timing;
-+				u8 dmaspeed;
- 
--				if ((dmaspeed & 0x20) == 0x20)
-+				switch (dma_timing & 0x77) {
-+				case 0x20:
- 					dmaspeed = XFER_MW_DMA_2;
--				else if ((dmaspeed & 0x21) == 0x21)
-+					break;
-+				case 0x21:
- 					dmaspeed = XFER_MW_DMA_1;
--				else if ((dmaspeed & 0x77) == 0x77)
-+					break;
-+				case 0x77:
- 					dmaspeed = XFER_MW_DMA_0;
--				else
-+					break;
-+				default:
- 					goto dma_pio;
-+				}
-+
- 				drive->current_speed = drive->init_speed = dmaspeed;
- 				return 0;
- 			}
- dma_pio:
- 			if (pio_timing) {
--				u8 piospeed = pio_timing;
-+				u8 piospeed;
- 
--				if ((piospeed & 0x20) == 0x20)
-+				switch (pio_timing & 0x7f) {
-+				case 0x20:
- 					piospeed = XFER_PIO_4;
--				else if ((piospeed & 0x22) == 0x22)
-+					break;
-+				case 0x22:
- 					piospeed = XFER_PIO_3;
--				else if ((piospeed & 0x34) == 0x34)
-+					break;
-+				case 0x34:
- 					piospeed = XFER_PIO_2;
--				else if ((piospeed & 0x47) == 0x47)
-+					break;
-+				case 0x47:
- 					piospeed = XFER_PIO_1;
--				else if ((piospeed & 0x5d) == 0x5d)
-+					break;
-+				case 0x5d:
- 					piospeed = XFER_PIO_0;
--				else
-+					break;
-+				default:
- 					goto oem_setup_failed;
-+				}
-+
- 				drive->current_speed = drive->init_speed = piospeed;
- 				return 0;
- 			}
+Thanks,
+Bart
