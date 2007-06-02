@@ -1,36 +1,72 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: Compact Flash performance...
-Date: Sat, 2 Jun 2007 07:10:06 +0200
-Message-ID: <20070602051005.GQ943@1wt.eu>
-References: <6278d2220705301510y2d81f69eu38fb778d32de05e1@mail.gmail.com> <465E3FF0.9010709@rtr.ca> <6278d2220705310222rde9ad28ndfd8feced84a3c6f@mail.gmail.com> <465EBE20.6090803@rtr.ca> <6278d2220705311025q6ee030e2kd44b7302a50ac902@mail.gmail.com> <465F360D.6020603@rtr.ca> <6278d2220705311439x40f7b1c1l7cef54acd2e8fcea@mail.gmail.com> <465F4D4E.6050305@rtr.ca> <465F4E20.5080503@garzik.org> <465F4FA2.8030200@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Linux v2.6.22-rc3
+Date: Sat, 02 Jun 2007 16:50:42 +0900
+Message-ID: <46612152.8040203@gmail.com>
+References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org> <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>  <46599E6B.1000209@pobox.com>  <9d2cd630705270907y4722653cpf79f073fa8f12f08@mail.gmail.com> <alpine.LFD.0.98.0705270922030.26602@woody.linux-foundation.org>  <9d2cd630705271315x7030c91ew2f175c921c022880@mail.gmail.com>  <465AA536.6080608@gmail.com> <9d2cd630705280707h4921900fxc93a07a87f0bdf66@mail.gmail.com> <465BF244.5080200@gmail.com> <alpine.LFD.0.98.0705290924350.26602@woody.linux-foundation.org> <465F6F48.8080804@gmail.com> <alpine.LFD.0.98.0705311830360.26602@woody.linux-foundation.org> <465F8230.2040105@gmail.com> <46604E62.1000105@pobox.com> <alpine.LFD.0.98.0706010955390.3957@woody.linux-foundation.org> <466058F8.4050107@pobox.com> <alpine.LFD.0.98.0706011047000.3957@woody.linux-foundation.org> <46606851.3060905@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756782AbXFBFKf@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <465F4FA2.8030200@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Daniel J Blueman <daniel.blueman@gmail.com>, bzolnier@gmail.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.236]:16508 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755308AbXFBLjW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jun 2007 07:39:22 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so715993nzf
+        for <linux-ide@vger.kernel.org>; Sat, 02 Jun 2007 04:39:20 -0700 (PDT)
+In-Reply-To: <46606851.3060905@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Thu, May 31, 2007 at 06:43:46PM -0400, Mark Lord wrote:
-> Jeff Garzik wrote:
-> >Mark Lord wrote:
-> >>Some cards may perform better when their "memory" interface is used
-> >>instead of the "I/O" interface, or vice-versa.  I'm not sure which
-> >>of the two methods was selected by libata (probably the "memory" 
-> >>interface).
-> >
-> >I am very CF-ignorant.  How does libata select a memory or I/O interface 
-> >on a CF device?
+Hello, Jeff, Linus.
+
+Jeff Garzik wrote:
+> Linus Torvalds wrote:
+>>
+>> On Fri, 1 Jun 2007, Jeff Garzik wrote:
+>>> With these old PATA devices, device reset is "six of one, half-dozen
+>>> of the
+>>> other."  Using SRST is the only way to kick some ATAPI devices into
+>>> working:
+>>> http://suif.stanford.edu/~csapuntz/blackmagic.html#reset
+>>
+>> Well, wouldn't it be a good thing to
+>>  1) if BUSY/DRQ is set even before you try the problem, obviously skip
+>> the     two polite cases, and go to #4
+>>  2) try to just do an IDENTIFY  3) if that doesn't work, do a HOST
+>> RESET and then try again
+>>  4) if that doesn't work, do the full SRST
+>>
+>> (or some variation of the above).
 > 
-> Right.  Usually we cannot select them, as it's the wires between
-> the ATA chipset (motherboard) and the CFCARD that determine this.
+> Skipping reset means it doesn't get the device away from a state that
+> the previous boot may have configured itself to... standard "I didn't do
+> reset" problems you see with any hardware.  Transfer modes and
+> removeable media status notification are the most notable that are left
+> in a semi-random state, but there are many other minor feature bits that
+> fall into this category as well.
 
-CF cards support 3 modes (MEM, I/O and True IDE), and neither MEM nor I/O
-modes can talk IDE. Most often, the PIN 9 is simply shorted to the ground
-at the connector to set the card in True IDE mode, which makes it emulate
-a standard IDE disk.
+libata configures most of the stuff, so I don't think we'll see big
+surprises even if we skip SRST during probing but I agree that it's nice
+to give good kicks in the devices' asses during probing.
 
-Cheers,
-Willy
+We can try IDENTIFY/IDENTIFY_PACKET with short timeout first and then
+issue reset if the device isn't in reset blacklist, but it would make
+probe sequence....
+
+ IDENTIFY -> reset -> IDENTIFY -> configure -> IDENTIFY for reval
+
+Which doesn't seem too attractive.  We can use the result from the first
+IDENTIFY for configuration but it's probably a good idea to re-read
+IDENTIFY page after reset.
+
+It would be best if we can handle these braindead SRST-impaired devices
+in the common code, if that's not feasible, we should at least provide
+some option to allow correct (without timeout) detection of these devices.
+
+Thanks.
+
+-- 
+tejun
+
