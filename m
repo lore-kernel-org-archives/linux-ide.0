@@ -1,41 +1,27 @@
-From: Geller Sandor <wildy@petra.hos.u-szeged.hu>
-Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
-Date: Sat, 2 Jun 2007 00:41:03 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0706020035200.19399@petra.hos.u-szeged.hu>
-References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu>
- <20070601134607.ce4a37bd.akpm@linux-foundation.org> <46608764.5060807@ru.mvista.com>
- <Pine.LNX.4.62.0706012311320.16639@petra.hos.u-szeged.hu> <46608EFE.1030202@ru.mvista.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: 2.6.22 libata spindown
+Date: Sat, 2 Jun 2007 00:23:58 -0300
+Message-ID: <20070602032358.GA8815@khazad-dum.debian.net>
+References: <4ac8254d0706011314g5468f02m3cf5a5281bd30018@mail.gmail.com> <4660841D.5050003@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eos.fwall.u-szeged.hu ([160.114.120.248]:40900 "EHLO
-	eos.fwall.u-szeged.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894AbXFAWlJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jun 2007 18:41:09 -0400
-In-Reply-To: <46608EFE.1030202@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759383AbXFBDYT@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4660841D.5050003@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tuncer Ayaz <tuncer.ayaz@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, 2 Jun 2007, Sergei Shtylyov wrote:
+On Fri, 01 Jun 2007, Jeff Garzik wrote:
+> IIRC, Debian was the one OS that really did need a shutdown utility 
+> update, as the message says :)
 
->> The log of a typical IDE reset is available here:
->
->> http://petra.hos.u-szeged.hu/~wildy/syslog.gz
->
->> This was the worst case: the IDE bus was resetted during the system boot.
->
->   Could you try setting HPT374_ALLOW_ATA133_6 to 0 in 
-> drivers/ide/pci/hpt366.c and rebuild/reboot the kernel?
+Actually, editing /etc/init.d/halt is enough.  Find the hddown="-h" and
+change it to hddown="".
 
-
-Hi Sergei,
-
-This looks promising. Using a vanilla 2.6.22-rc3 I was able to reproduce 
-the problem within a few seconds. With the above modification the machine 
-is running under heavy disk I/O without problems since 30 minutes...
-
-Regards,
-
-   Geller Sandor <wildy@petra.hos.u-szeged.hu>
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
