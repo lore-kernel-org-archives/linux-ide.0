@@ -1,70 +1,39 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [PATCH] libata: always use polling SETXFER
-Date: Sun, 3 Jun 2007 11:17:29 -0700
-Message-ID: <20070603111729.8fe17e7a.akpm@linux-foundation.org>
-References: <46598350.6030403@gmail.com>
-	<4662E5B3.4020205@garzik.org>
+Date: Sun, 3 Jun 2007 11:45:24 -0700 (PDT)
+Message-ID: <alpine.LFD.0.98.0706031141491.23741@woody.linux-foundation.org>
+References: <46598350.6030403@gmail.com> <4662E5B3.4020205@garzik.org>
+ <200706031924.46238.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:53368 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750812AbXFCSRn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 14:17:43 -0400
-In-Reply-To: <4662E5B3.4020205@garzik.org>
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:55059 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750750AbXFCSqI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 14:46:08 -0400
+In-Reply-To: <200706031924.46238.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Sun, 03 Jun 2007 12:00:51 -0400 Jeff Garzik <jeff@garzik.org> wrote:
 
-> Tejun Heo wrote:
-> > Several people have reported LITE-ON LTR-48246S detection failed
-> > because SETXFER fails.  It seems the device raises IRQ too early after
-> > SETXFER.  This is controller independent.  The same problem has been
-> > reported for different controllers.
-> > 
-> > So, now we have pata_via where the controller raises IRQ before it's
-> > ready after SETXFER and a device which does similar thing.  This patch
-> > makes libata always execute SETXFER via polling.  As this only happens
-> > during EH, performance impact is nil.  Setting ATA_TFLAG_POLLING is
-> > also moved from issue hot path to ata_dev_set_xfermode() - the only
-> > place where SETXFER can be issued.
-> > 
-> > Note that ATA_TFLAG_POLLING applies only to drivers which implement
-> > SFF TF interface and use libata HSM.  More advanced controllers ignore
-> > the flag.  This doesn't matter for this fix as SFF TF controllers are
-> > the problematic ones.
-> > 
-> > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> > ---
-> >  drivers/ata/libata-core.c |   13 ++++---------
-> >  drivers/ata/pata_via.c    |   12 ++++++------
-> >  include/linux/libata.h    |    1 -
-> >  3 files changed, 10 insertions(+), 16 deletions(-)
-> 
-> To Linus and Andrew:
-> 
-> After discussion and a minor revision (mostly to the description), I am 
-> OK with this patch.
-> 
-> At this point, I am only reluctant to push it for 2.6.22 since it is so 
-> late in the -rc series.
-> 
-> If we have another -rc, I would probably be OK with pushing it for 
-> 2.6.22, otherwise I would prefer to wait for 2.6.23.
-> 
-> Comments solicited, from all involved...
-> 
 
-I'd expect there will be two or three more -rcs - the regression list is
-pretty big.
+On Sun, 3 Jun 2007, Bartlomiej Zolnierkiewicz wrote:
+> 
+> The patch should be safe (drivers/ide has been doing SETXFER this way for
+> ages) and fixes real user problems (which becomes even more important now as
+> distros are converting to libata PATA).
 
-Another option would be to merge into 2.6.23, backport into 2.6.22.x later
-on.
+I hadn't realized that Fedora 7 had converted entirely to libata, but 
+considering that it apparently has, I can almost guarantee that the Fedora 
+people would need to merge that patch, whether it's in the standard kernel 
+or not. If it hit me with an all-intel chipset (and not even a very 
+strange drive), it will hit others.
 
-But I'd say the thing to do is to merge it immediately is we're reasonably
-confident - we can always take it out again or fix it if it breaks.
+Of course, maybe that TDK drive really is more unusual than I thought it 
+was, so I can't really back that gut feel up. But yeah, I think we might 
+as well merge it sooner rather than later - we'll have to bite the bullet 
+at some point anyway.
 
+			Linus
