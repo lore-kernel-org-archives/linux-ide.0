@@ -1,77 +1,74 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] libata: always use polling SETXFER
-Date: Sun, 3 Jun 2007 19:24:46 +0200
-Message-ID: <200706031924.46238.bzolnier@gmail.com>
-References: <46598350.6030403@gmail.com> <4662E5B3.4020205@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
+Date: Sun, 03 Jun 2007 21:36:48 +0400
+Message-ID: <4662FC30.2000602@ru.mvista.com>
+References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <46608EFE.1030202@ru.mvista.com> <Pine.LNX.4.62.0706020035200.19399@petra.hos.u-szeged.hu> <200706030138.15353.bzolnier@gmail.com> <Pine.LNX.4.62.0706031224030.25438@petra.hos.u-szeged.hu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:2110 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753638AbXFCRLJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 13:11:09 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so565570ugf
-        for <linux-ide@vger.kernel.org>; Sun, 03 Jun 2007 10:11:08 -0700 (PDT)
-In-Reply-To: <4662E5B3.4020205@garzik.org>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:3385 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753987AbXFCRfT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 13:35:19 -0400
+In-Reply-To: <Pine.LNX.4.62.0706031224030.25438@petra.hos.u-szeged.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Geller Sandor <wildy@petra.hos.u-szeged.hu>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Geller Sandor wrote:
+Hello.
 
-Hi,
+>>>>> The log of a typical IDE reset is available here:
 
-On Sunday 03 June 2007, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Several people have reported LITE-ON LTR-48246S detection failed
-> > because SETXFER fails.  It seems the device raises IRQ too early after
-> > SETXFER.  This is controller independent.  The same problem has been
-> > reported for different controllers.
-> > 
-> > So, now we have pata_via where the controller raises IRQ before it's
-> > ready after SETXFER and a device which does similar thing.  This patch
-> > makes libata always execute SETXFER via polling.  As this only happens
-> > during EH, performance impact is nil.  Setting ATA_TFLAG_POLLING is
-> > also moved from issue hot path to ata_dev_set_xfermode() - the only
-> > place where SETXFER can be issued.
-> > 
-> > Note that ATA_TFLAG_POLLING applies only to drivers which implement
-> > SFF TF interface and use libata HSM.  More advanced controllers ignore
-> > the flag.  This doesn't matter for this fix as SFF TF controllers are
-> > the problematic ones.
-> > 
-> > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> > ---
-> >  drivers/ata/libata-core.c |   13 ++++---------
-> >  drivers/ata/pata_via.c    |   12 ++++++------
-> >  include/linux/libata.h    |    1 -
-> >  3 files changed, 10 insertions(+), 16 deletions(-)
-> 
-> To Linus and Andrew:
-> 
-> After discussion and a minor revision (mostly to the description), I am 
-> OK with this patch.
-> 
-> At this point, I am only reluctant to push it for 2.6.22 since it is so 
-> late in the -rc series.
-> 
-> If we have another -rc, I would probably be OK with pushing it for 
-> 2.6.22, otherwise I would prefer to wait for 2.6.23.
-> 
-> Comments solicited, from all involved...
+>>>>> http://petra.hos.u-szeged.hu/~wildy/syslog.gz
 
-I have a feeling that we are needlessly wasting time on this.
+>>>>> This was the worst case: the IDE bus was resetted during the system 
+>>>>> boot.
 
-The patch should be safe (drivers/ide has been doing SETXFER this way for
-ages) and fixes real user problems (which becomes even more important now as
-distros are converting to libata PATA).
+>>>>   Could you try setting HPT374_ALLOW_ATA133_6 to 0 in
+>>>> drivers/ide/pci/hpt366.c and rebuild/reboot the kernel?
 
-So.. can we get this almost 3 months old patch merged finally?
+>>> Hi Sergei,
 
-http://thread.gmane.org/gmane.linux.ide/17096/focus=17116
+>>> This looks promising. Using a vanilla 2.6.22-rc3 I was able to reproduce
+>>> the problem within a few seconds. With the above modification the 
+>>> machine
+>>> is running under heavy disk I/O without problems since 30 minutes...
 
-Thanks,
-Bart
+>> Did it fix the problem for good?
+
+> It seems so far. There hasn't been any problem since I've applied the fix.
+
+>> Sergei, do we need to disallow UDMA6 completely on HPT734 or
+>> is it only an issue with some problematic devices (=> blacklist)?
+
+    Note that I didn't change what the old code was doing in this regard -- 
+although the HPT374 spec does *not* say that UDMA6 is supported, it had been 
+enabled. What have *really* changed for HPT374 was:
+
+- in 2.6.20-rc1, the driver switched to using the actual 33 MHz timing table
+   instead of the old one, matching 50 MHz (and so, severely underclocked);
+
+- in 2.6.2-rc1, the driver switched from 33 MHz PCI to 66 MHz DPLL clock.
+
+    Disallowing UDMA6 would clock the chip with 50 MHz DPLL, howewer, the 
+original report claimed that something has changed to worse between 2.6.21.1 
+and .3 but nothing changed in drivers/ide/ between those releases...
+
+>> Either way we need to fix it somehow for 2.6.22.
+
+> For the record: this HTP374 is running with a quite outdated firmware 
+> (1.22) - maybe newer firmwares work correctly. I'm going to upgrade the 
+> firmware to the latest one (which was released in 2004...), but 
+> unfortunately in the upcoming 2-3 weeks I won't have access to this 
+> machine, so I can't check the case within the release cycle of 2.6.22. 
+> If you were interested I would post the result of the firmware upgrade.
+
+    I don't think this will matter...
+
+> Regards,
+>   Sandor
+
+MBR, Sergei
