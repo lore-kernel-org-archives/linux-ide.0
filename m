@@ -1,74 +1,79 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
-Date: Sun, 03 Jun 2007 21:36:48 +0400
-Message-ID: <4662FC30.2000602@ru.mvista.com>
-References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <46608EFE.1030202@ru.mvista.com> <Pine.LNX.4.62.0706020035200.19399@petra.hos.u-szeged.hu> <200706030138.15353.bzolnier@gmail.com> <Pine.LNX.4.62.0706031224030.25438@petra.hos.u-szeged.hu>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
+Subject: [PATCH] Replace C code with call to ARRAY_SIZE() macro.
+Date: Sun, 3 Jun 2007 13:43:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706031339110.24621@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:3385 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753987AbXFCRfT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 13:35:19 -0400
-In-Reply-To: <Pine.LNX.4.62.0706031224030.25438@petra.hos.u-szeged.hu>
+Received: from nic.NetDirect.CA ([216.16.235.2]:54762 "EHLO
+	rubicon.netdirect.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164AbXFCRos (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 13:44:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geller Sandor <wildy@petra.hos.u-szeged.hu>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Geller Sandor wrote:
-Hello.
 
->>>>> The log of a typical IDE reset is available here:
+Delete the unnecessary macro ARY_LEN and use ARRAY_SIZE directly.
 
->>>>> http://petra.hos.u-szeged.hu/~wildy/syslog.gz
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
 
->>>>> This was the worst case: the IDE bus was resetted during the system 
->>>>> boot.
+---
 
->>>>   Could you try setting HPT374_ALLOW_ATA133_6 to 0 in
->>>> drivers/ide/pci/hpt366.c and rebuild/reboot the kernel?
+ drivers/ide/ide-cd.c |    6 +++---
+ drivers/ide/ide-cd.h |    2 --
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
->>> Hi Sergei,
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 252ab82..1486eb2 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -481,7 +481,7 @@ void cdrom_analyze_sense_data(ide_drive_t *drive,
+ 		else
+ 			printk("  Unknown Error Type: ");
 
->>> This looks promising. Using a vanilla 2.6.22-rc3 I was able to reproduce
->>> the problem within a few seconds. With the above modification the 
->>> machine
->>> is running under heavy disk I/O without problems since 30 minutes...
+-		if (sense->sense_key < ARY_LEN(sense_key_texts))
++		if (sense->sense_key < ARRAY_SIZE(sense_key_texts))
+ 			s = sense_key_texts[sense->sense_key];
 
->> Did it fix the problem for good?
+ 		printk("%s -- (Sense key=0x%02x)\n", s, sense->sense_key);
+@@ -491,7 +491,7 @@ void cdrom_analyze_sense_data(ide_drive_t *drive,
+ 				 sense->ascq);
+ 			s = buf;
+ 		} else {
+-			int lo = 0, mid, hi = ARY_LEN(sense_data_texts);
++			int lo = 0, mid, hi = ARRAY_SIZE(sense_data_texts);
+ 			unsigned long key = (sense->sense_key << 16);
+ 			key |= (sense->asc << 8);
+ 			if (!(sense->ascq >= 0x80 && sense->ascq <= 0xdd))
+@@ -524,7 +524,7 @@ void cdrom_analyze_sense_data(ide_drive_t *drive,
 
-> It seems so far. There hasn't been any problem since I've applied the fix.
+ 		if (failed_command != NULL) {
 
->> Sergei, do we need to disallow UDMA6 completely on HPT734 or
->> is it only an issue with some problematic devices (=> blacklist)?
+-			int lo=0, mid, hi= ARY_LEN (packet_command_texts);
++			int lo=0, mid, hi= ARRAY_SIZE(packet_command_texts);
+ 			s = NULL;
 
-    Note that I didn't change what the old code was doing in this regard -- 
-although the HPT374 spec does *not* say that UDMA6 is supported, it had been 
-enabled. What have *really* changed for HPT374 was:
+ 			while (hi > lo) {
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index ad1f2ed..228b29c 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -498,8 +498,6 @@ struct cdrom_info {
+  * Descriptions of ATAPI error codes.
+  */
 
-- in 2.6.20-rc1, the driver switched to using the actual 33 MHz timing table
-   instead of the old one, matching 50 MHz (and so, severely underclocked);
+-#define ARY_LEN(a) ((sizeof(a) / sizeof(a[0])))
+-
+ /* This stuff should be in cdrom.h, since it is now generic... */
 
-- in 2.6.2-rc1, the driver switched from 33 MHz PCI to 66 MHz DPLL clock.
+ /* ATAPI sense keys (from table 140 of ATAPI 2.6) */
+-- 
+========================================================================
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry
+Waterloo, Ontario, CANADA
 
-    Disallowing UDMA6 would clock the chip with 50 MHz DPLL, howewer, the 
-original report claimed that something has changed to worse between 2.6.21.1 
-and .3 but nothing changed in drivers/ide/ between those releases...
-
->> Either way we need to fix it somehow for 2.6.22.
-
-> For the record: this HTP374 is running with a quite outdated firmware 
-> (1.22) - maybe newer firmwares work correctly. I'm going to upgrade the 
-> firmware to the latest one (which was released in 2004...), but 
-> unfortunately in the upcoming 2-3 weeks I won't have access to this 
-> machine, so I can't check the case within the release cycle of 2.6.22. 
-> If you were interested I would post the result of the firmware upgrade.
-
-    I don't think this will matter...
-
-> Regards,
->   Sandor
-
-MBR, Sergei
+http://fsdev.net/wiki/index.php?title=Main_Page
+========================================================================
