@@ -1,58 +1,70 @@
-From: "Gregor Jasny" <gjasny@googlemail.com>
-Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
-Date: Sun, 3 Jun 2007 19:46:52 +0200
-Message-ID: <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
-	 <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
-	 <466196AD.3090502@garzik.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] libata: always use polling SETXFER
+Date: Sun, 3 Jun 2007 11:17:29 -0700
+Message-ID: <20070603111729.8fe17e7a.akpm@linux-foundation.org>
+References: <46598350.6030403@gmail.com>
+	<4662E5B3.4020205@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:55251 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbXFCRqy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 13:46:54 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1477092mue
-        for <linux-ide@vger.kernel.org>; Sun, 03 Jun 2007 10:46:52 -0700 (PDT)
-In-Reply-To: <466196AD.3090502@garzik.org>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53368 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750812AbXFCSRn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jun 2007 14:17:43 -0400
+In-Reply-To: <4662E5B3.4020205@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-2007/6/2, Jeff Garzik <jeff@garzik.org>:
-> Does this patch change the behavior at all?
+On Sun, 03 Jun 2007 12:00:51 -0400 Jeff Garzik <jeff@garzik.org> wrote:
 
-No. It still times out. I've raised the first timeout to 60 seconds
-but still no luck.
+> Tejun Heo wrote:
+> > Several people have reported LITE-ON LTR-48246S detection failed
+> > because SETXFER fails.  It seems the device raises IRQ too early after
+> > SETXFER.  This is controller independent.  The same problem has been
+> > reported for different controllers.
+> > 
+> > So, now we have pata_via where the controller raises IRQ before it's
+> > ready after SETXFER and a device which does similar thing.  This patch
+> > makes libata always execute SETXFER via polling.  As this only happens
+> > during EH, performance impact is nil.  Setting ATA_TFLAG_POLLING is
+> > also moved from issue hot path to ata_dev_set_xfermode() - the only
+> > place where SETXFER can be issued.
+> > 
+> > Note that ATA_TFLAG_POLLING applies only to drivers which implement
+> > SFF TF interface and use libata HSM.  More advanced controllers ignore
+> > the flag.  This doesn't matter for this fix as SFF TF controllers are
+> > the problematic ones.
+> > 
+> > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> > ---
+> >  drivers/ata/libata-core.c |   13 ++++---------
+> >  drivers/ata/pata_via.c    |   12 ++++++------
+> >  include/linux/libata.h    |    1 -
+> >  3 files changed, 10 insertions(+), 16 deletions(-)
+> 
+> To Linus and Andrew:
+> 
+> After discussion and a minor revision (mostly to the description), I am 
+> OK with this patch.
+> 
+> At this point, I am only reluctant to push it for 2.6.22 since it is so 
+> late in the -rc series.
+> 
+> If we have another -rc, I would probably be OK with pushing it for 
+> 2.6.22, otherwise I would prefer to wait for 2.6.23.
+> 
+> Comments solicited, from all involved...
+> 
 
-[   19.403632] ata_piix 0000:00:07.1: version 2.11
-[   19.404013] scsi0 : ata_piix
-[   19.404482] scsi1 : ata_piix
-[   19.404836] ata1: PATA max UDMA/33 cmd 0x000101f0 ctl 0x000103f6
-bmdma 0x00010860 irq 14
-[   19.405443] ata2: PATA max UDMA/33 cmd 0x00010170 ctl 0x00010376
-bmdma 0x00010868 irq 15
-[    0.663333] Marking TSC unstable due to: possible TSC halt in C2.
-[    0.666666] Time: acpi_pm clocksource has been installed.
-[    0.666666] Switched to NOHz mode on CPU #0
-[    0.716666] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-hpa_sectors = 78242976
-[    0.716666] ata1.00: ATA-7: SAMSUNG MP0402H, UC100-14, max UDMA/100
-[    0.733333] ata1.00: 78242976 sectors, multi 8: LBA48
-[    0.753333] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-hpa_sectors = 78242976
-[    0.766666] ata1.00: configured for UDMA/33
-[    1.379999] Clocksource tsc unstable (delta = -498119555 ns)
-[   10.793332] ata2: SRST failed (errno=-16)
-[   20.813331] ata2: SRST failed (errno=-16)
-[   55.833327] ata2: SRST failed (errno=-16)
-[   60.853327] ata2: SRST failed (errno=-16)
-[   60.866660] ata2: reset failed, giving up
-[   60.879993] scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG
-MP0402H  UC10 PQ: 0 ANSI: 5
+I'd expect there will be two or three more -rcs - the regression list is
+pretty big.
 
-Cheers,
-Gregor
+Another option would be to merge into 2.6.23, backport into 2.6.22.x later
+on.
+
+But I'd say the thing to do is to merge it immediately is we're reasonably
+confident - we can always take it out again or fix it if it breaks.
+
