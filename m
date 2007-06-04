@@ -1,67 +1,52 @@
-From: Jose Alberto Reguero <jareguero@telefonica.net>
-Subject: Add support to Marvell 6121 in the mv-ahci-pata branch
-Date: Mon, 4 Jun 2007 20:52:25 +0200
-Message-ID: <200706042052.25583.jareguero@telefonica.net>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
+Date: Mon, 04 Jun 2007 22:24:50 +0200
+Message-ID: <46647512.1000408@gmx.net>
+References: <200705250948.52588.uwe.koziolek@gmx.net>	<20070525153230.325258e9@the-village.bc.nu>	<465D33DF.9040708@gmx.net> <20070604163022.1adf136f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_p9FZG0Vp3dGBHJU"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.telefonica.net ([213.4.149.66]:15229 "EHLO
-	ctsmtpout4.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756358AbXFDSwb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 14:52:31 -0400
-Received: from jar.dominio (80.25.230.35) by ctsmtpout4.frontal.correo (7.2.056.6) (authenticated as jareguero$telefonica.net)
-        id 46643EC200006970 for linux-ide@vger.kernel.org; Mon, 4 Jun 2007 20:52:29 +0200
+Received: from mail.gmx.net ([213.165.64.20]:42988 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751914AbXFDUYw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Jun 2007 16:24:52 -0400
+In-Reply-To: <20070604163022.1adf136f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux.ide" <linux-ide@vger.kernel.org>
 
---Boundary-00=_p9FZG0Vp3dGBHJU
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+How should I proceed. I can submit both patches:
+>> - exclude SiS180 from enable bit checking or
+>> - exclude MuTol ATA133 from enable bit checking with different
+>> error_handler.
+>>     
+>
+> Been away but - SiS180 wants excluding anyway according to all the docs,
+> the MuToL does appear to be working correctly with enable bits and we've
+> got no failure cases in old/new IDE so leave it alone (for now anyway)
+>   
+I have checked some SiS 5513 config spaces with ATA133 for the enable
+bits. In all cases Alans
+code would work. But I dont know why the necesary bits are set. May be
+the hardware is different
+to the documentation or the BIOS is setting these bits for compatibility
+issue.
 
-This patch add support to Marvell 6121.
+The change of the error handler for SiS180 is really needed. The change
+of the errorhandler for
+Pre ATA133 chips is not reasonable.  The change of the  errorhandler 
+for  SiS5513  ATA133
+controller is not mandatory.
 
-Looking at the code I think that AHCI_FLAG_MV_PATA flag must be assigned to 
-the PATA port.
+My suggestion: exclude only the SiS180 from the enable bits.
 
-Signed-off-by: Jose Alberto Reguero <jareguero@telefonica.net>
+But i want to have an ok , or a vote for the other variant.
 
-Jose Alberto
+Uwe
 
---Boundary-00=_p9FZG0Vp3dGBHJU
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="ahci_6121.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="ahci_6121.diff"
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 21df81e..8a2a56c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -528,6 +528,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 
- 	/* Marvell */
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
-+	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
- 
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-@@ -2104,7 +2105,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	switch(ent->driver_data) {
- 	case board_ahci_mv:
--		mvp_port = 4;		/* count starts from zero */
-+		if (pdev->device == 0x6121)
-+			mvp_port = 2;		/* count starts from zero */
-+		else
-+			mvp_port = 4;		/* count starts from zero */
- 		break;
- 
- 	default:
 
---Boundary-00=_p9FZG0Vp3dGBHJU--
+
+
