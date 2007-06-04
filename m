@@ -1,135 +1,63 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata fix
-Date: Mon, 4 Jun 2007 16:54:16 -0400
-Message-ID: <20070604205416.GG20299@havoc.gtf.org>
+From: "Fabio Comolli" <fabio.comolli@gmail.com>
+Subject: Re: 2.6.22-rc2: known regressions with patches
+Date: Mon, 4 Jun 2007 23:04:31 +0200
+Message-ID: <b637ec0b0706041404j7647fd7ele5243ef9a42b536c@mail.gmail.com>
+References: <46559B62.5040903@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:37346 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841AbXFDUyU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jun 2007 16:54:20 -0400
+Received: from wx-out-0506.google.com ([66.249.82.227]:14962 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756862AbXFDVEc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 17:04:32 -0400
+Received: by wx-out-0506.google.com with SMTP id t15so1303086wxc
+        for <linux-ide@vger.kernel.org>; Mon, 04 Jun 2007 14:04:31 -0700 (PDT)
+In-Reply-To: <46559B62.5040903@googlemail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, viro@zeniv.linux.org.uk, Uwe Bugla <uwe.bugla@gmx.de>, Ken Chen <kenchen@google.com>, xfs-masters@oss.sgi.com, Jeremy Fitzhardinge <jeremy@goop.org>, David Chinner <dgc@sgi.com>, Andrea Righi <righiandr@users.sourceforge.net>, Christoph Lameter <clameter@sgi.com>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Francis Russell <francisrussell@btopenworld.com>, Alan Cox <alan@redhat.com>, Andi Kleen <ak@suse.de>, discuss@x86-64.org, Ben Collins <ben.collins@ubuntu.com>
 
+Hi.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+> Block devices
+>
+> Subject    : loop devices limited to one single device
+> References : http://lkml.org/lkml/2007/5/16/229
+> Submitter  : Uwe Bugla <uwe.bugla@gmx.de>
+> Handled-By : Ken Chen <kenchen@google.com>
+> Patch      : http://lkml.org/lkml/2007/5/21/483
+> Status     : patch available
+>
 
-to receive the following updates:
+I just noticed that I have this issue; anyway, this patch works fine
+for me (with -rc3)
 
- drivers/ata/libata-core.c |   13 ++++---------
- drivers/ata/pata_via.c    |   12 ++++++------
- include/linux/libata.h    |    1 -
- 3 files changed, 10 insertions(+), 16 deletions(-)
+[root@tycho mnt]# mkdir 1  2  3  4  5 6
+[root@tycho mnt]# for i in `ls`
+> do
+> mount -o loop=/dev/loop$i /home/F-7-i386-DVD.iso /mnt/$i
+> done
+[root@tycho mnt]# df -k
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sda2              4061572   2910092    941408  76% /
+/dev                    515908        36    515872   1% /dev
+none                    515908        16    515892   1% /dev/shm
+/dev/sda4             27617068   7206108  19008084  28% /home
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/1
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/2
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/3
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/4
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/5
+/home/F-7-i386-DVD.iso
+                       2832620   2832620         0 100% /mnt/6
 
-Tejun Heo (1):
-      libata: always use polling SETXFER
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index af62514..4733f00 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3933,10 +3933,13 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
- 	/* set up set-features taskfile */
- 	DPRINTK("set features - xfer mode\n");
- 
-+	/* Some controllers and ATAPI devices show flaky interrupt
-+	 * behavior after setting xfer mode.  Use polling instead.
-+	 */
- 	ata_tf_init(dev, &tf);
- 	tf.command = ATA_CMD_SET_FEATURES;
- 	tf.feature = SETFEATURES_XFER;
--	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_POLLING;
- 	tf.protocol = ATA_PROT_NODATA;
- 	tf.nsect = dev->xfer_mode;
- 
-@@ -5414,14 +5417,6 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
- 		}
- 	}
- 
--	/* Some controllers show flaky interrupt behavior after
--	 * setting xfer mode.  Use polling instead.
--	 */
--	if (unlikely(qc->tf.command == ATA_CMD_SET_FEATURES &&
--		     qc->tf.feature == SETFEATURES_XFER) &&
--	    (ap->flags & ATA_FLAG_SETXFER_POLLING))
--		qc->tf.flags |= ATA_TFLAG_POLLING;
--
- 	/* select the device */
- 	ata_dev_select(ap, qc->dev->devno, 1, 0);
- 
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index a8462f1..63eca29 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -452,7 +452,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* Early VIA without UDMA support */
- 	static const struct ata_port_info via_mwdma_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops
-@@ -460,7 +460,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* Ditto with IRQ masking required */
- 	static const struct ata_port_info via_mwdma_info_borked = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.port_ops = &via_port_ops_noirq,
-@@ -468,7 +468,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* VIA UDMA 33 devices (and borked 66) */
- 	static const struct ata_port_info via_udma33_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7,
-@@ -477,7 +477,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* VIA UDMA 66 devices */
- 	static const struct ata_port_info via_udma66_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x1f,
-@@ -486,7 +486,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* VIA UDMA 100 devices */
- 	static const struct ata_port_info via_udma100_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x3f,
-@@ -495,7 +495,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* UDMA133 with bad AST (All current 133) */
- 	static const struct ata_port_info via_udma133_info = {
- 		.sht = &via_sht,
--		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
-+		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7f,	/* FIXME: should check north bridge */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 85f7b1b..a6a3113 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -171,7 +171,6 @@ enum {
- 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
- 					      * Register FIS clearing BSY */
- 	ATA_FLAG_DEBUGMSG	= (1 << 13),
--	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+Regards,
+Fabio
