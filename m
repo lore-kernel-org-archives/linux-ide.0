@@ -1,37 +1,98 @@
-From: Michel Lespinasse <walken@zoy.org>
-Subject: Re: SATA hotswap and write caches
-Date: Sun, 3 Jun 2007 17:53:41 -0700
-Message-ID: <20070604005341.GA3315@zoy.org>
-References: <20070603104334.GH18680@zoy.org> <4662CF26.6060902@garzik.org>
+From: Nigel Cunningham <nigel@nigel.suspend2.net>
+Subject: Re: [PATCH] libata: CONFIG_PM=n compile fix
+Date: Mon, 04 Jun 2007 11:38:15 +1000
+Message-ID: <1180921096.7782.105.camel@nigel.suspend2.net>
+References: <20070527030954.GA18974@havoc.gtf.org>
+	 <20070603225840.GA25465@lixom.net>
+Reply-To: nigel@nigel.suspend2.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 64-142-28-230.dsl.static.sonic.net ([64.142.28.230]:60011 "EHLO
-	Angel.zoy.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284AbXFDAxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Jun 2007 20:53:42 -0400
-Content-Disposition: inline
-In-Reply-To: <4662CF26.6060902@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zUynkh+kkbSZHGRZzUhM"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752715AbXFDBie@vger.kernel.org>
+In-Reply-To: <20070603225840.GA25465@lixom.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
 
-On Sun, Jun 03, 2007 at 10:24:38AM -0400, Jeff Garzik wrote:
-> Michel Lespinasse wrote:
-> >* Is there anything one needs to know before hot-removing a drive ?
-> 
-> Make sure all data is flushed to the drive before removing it.
 
-Sure. Is there a way to do that, though, other than using /sbin/halt
-which seems to have, errr, undesirable side-effects :)
+--=-zUynkh+kkbSZHGRZzUhM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ideally it'd be very nice if that was doable through /sys or /proc files.
-It'd also be nice if disk standby was user-controllable in this way too.
-(or maybe both as one step, i.e. a way to tell the kernel we'd like to
-take the disk out in the safest way possible).
+Hi.
 
--- 
-Michel "Walken" Lespinasse
-"Bill Gates is a monocle and a Persian cat away from being the villain
-in a James Bond movie." -- Dennis Miller
+On Sun, 2007-06-03 at 17:58 -0500, Olof Johansson wrote:
+> CONFIG_PM=3Dn compile fix.
+>=20
+> Signed-off-by: Olof Johansson <olof@lixom.net>
+>=20
+> ---
+>=20
+> Hi,
+>=20
+> On Sat, May 26, 2007 at 11:09:54PM -0400, Jeff Garzik wrote:
+>=20
+> > This is checked into the 'mv-ahci-pata' branch of
+> > git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>=20
+> Didn't build for me without this change, since I had CONFIG_PM=3Dn.
+>=20
+>=20
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 21df81e..07d5a95 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1818,6 +1836,14 @@ static void ahci_post_internal_cmd(struct ata_queu=
+ed_cmd *qc)
+>  	}
+>  }
+> =20
+> +static int ahci_port_resume(struct ata_port *ap)
+> +{
+> +	ahci_power_up(ap);
+> +	ahci_start_port(ap);
+> +
+> +	return 0;
+> +}
+> +
+>  #ifdef CONFIG_PM
+>  static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg)
+>  {
+> @@ -1835,14 +1861,6 @@ static int ahci_port_suspend(struct ata_port *ap, =
+pm_message_t mesg)
+>  	return rc;
+>  }
+> =20
+> -static int ahci_port_resume(struct ata_port *ap)
+> -{
+> -	ahci_power_up(ap);
+> -	ahci_start_port(ap);
+> -
+> -	return 0;
+> -}
+> -
+>  static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t me=
+sg)
+>  {
+>  	struct ata_host *host =3D dev_get_drvdata(&pdev->dev);
+
+At first glance, this looked wrong to me, but I see Jeff is using
+ahci_port_resume from ahci_port_start, so it is right.
+
+Regards,
+
+Nigel
+
+--=-zUynkh+kkbSZHGRZzUhM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGY20HN0y+n1M3mo0RAoDAAJ0dX/nnrlfD0skCxdSma/qcy4GkqwCg5SV0
+hkZl462k2OElKYJV/Eil8fI=
+=X35S
+-----END PGP SIGNATURE-----
+
+--=-zUynkh+kkbSZHGRZzUhM--
