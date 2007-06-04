@@ -1,45 +1,135 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: always use polling SETXFER
-Date: Mon, 4 Jun 2007 16:38:58 -0400
-Message-ID: <20070604203858.GE20299@havoc.gtf.org>
-References: <46598350.6030403@gmail.com> <4662E5B3.4020205@garzik.org> <20070604154231.708b2b9b@the-village.bc.nu> <alpine.LFD.0.98.0706041332050.23741@woody.linux-foundation.org>
+Subject: [git patch] libata fix
+Date: Mon, 4 Jun 2007 16:54:16 -0400
+Message-ID: <20070604205416.GG20299@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:37235 "EHLO havoc.gtf.org"
+Received: from havoc.gtf.org ([69.61.125.42]:37346 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150AbXFDUi7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jun 2007 16:38:59 -0400
+	id S1751841AbXFDUyU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Jun 2007 16:54:20 -0400
 Content-Disposition: inline
-In-Reply-To: <alpine.LFD.0.98.0706041332050.23741@woody.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
-
-On Mon, Jun 04, 2007 at 01:34:21PM -0700, Linus Torvalds wrote:
-> Ok, I think everybody agreed.
-> 
-> Jeff, do you want me to just take the patch you sent earlier if I can 
-> still find it, or should I pull it from somewhere (btw, the changelog 
-> should probably be fixed, since there were at least two people who were 
-> confused by the fact that it mentioned VIA controllers and LITE-ON 
-> devices, even though it definitely wasn't restricted to that set).
-> 
-> I was going to do an -rc4 yesterday, but slipped, so since I slipped 
-> anyway, I would prefer to just get this in before doing the -rc..
-
-I'll send the patch in an hour or so.
-
-I'd like to get in the updated patch description, that documents we
-intentionally do not apply these workarounds in non-SFF drivers.
-
-That will eventually be relevant for, e.g. the upcoming Marvell PATA
-driver (libata-dev.git#mv-ahci-pata) that needs to care about this
-problem, but where the workaround does not exist at all, since the
-controller is ultra-modern.
-
-	Jeff
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
+to receive the following updates:
+
+ drivers/ata/libata-core.c |   13 ++++---------
+ drivers/ata/pata_via.c    |   12 ++++++------
+ include/linux/libata.h    |    1 -
+ 3 files changed, 10 insertions(+), 16 deletions(-)
+
+Tejun Heo (1):
+      libata: always use polling SETXFER
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index af62514..4733f00 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3933,10 +3933,13 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+ 	/* set up set-features taskfile */
+ 	DPRINTK("set features - xfer mode\n");
+ 
++	/* Some controllers and ATAPI devices show flaky interrupt
++	 * behavior after setting xfer mode.  Use polling instead.
++	 */
+ 	ata_tf_init(dev, &tf);
+ 	tf.command = ATA_CMD_SET_FEATURES;
+ 	tf.feature = SETFEATURES_XFER;
+-	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_POLLING;
+ 	tf.protocol = ATA_PROT_NODATA;
+ 	tf.nsect = dev->xfer_mode;
+ 
+@@ -5414,14 +5417,6 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
+ 		}
+ 	}
+ 
+-	/* Some controllers show flaky interrupt behavior after
+-	 * setting xfer mode.  Use polling instead.
+-	 */
+-	if (unlikely(qc->tf.command == ATA_CMD_SET_FEATURES &&
+-		     qc->tf.feature == SETFEATURES_XFER) &&
+-	    (ap->flags & ATA_FLAG_SETXFER_POLLING))
+-		qc->tf.flags |= ATA_TFLAG_POLLING;
+-
+ 	/* select the device */
+ 	ata_dev_select(ap, qc->dev->devno, 1, 0);
+ 
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index a8462f1..63eca29 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -452,7 +452,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* Early VIA without UDMA support */
+ 	static const struct ata_port_info via_mwdma_info = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.port_ops = &via_port_ops
+@@ -460,7 +460,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* Ditto with IRQ masking required */
+ 	static const struct ata_port_info via_mwdma_info_borked = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.port_ops = &via_port_ops_noirq,
+@@ -468,7 +468,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* VIA UDMA 33 devices (and borked 66) */
+ 	static const struct ata_port_info via_udma33_info = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x7,
+@@ -477,7 +477,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* VIA UDMA 66 devices */
+ 	static const struct ata_port_info via_udma66_info = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x1f,
+@@ -486,7 +486,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* VIA UDMA 100 devices */
+ 	static const struct ata_port_info via_udma100_info = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x3f,
+@@ -495,7 +495,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* UDMA133 with bad AST (All current 133) */
+ 	static const struct ata_port_info via_udma133_info = {
+ 		.sht = &via_sht,
+-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SETXFER_POLLING,
++		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x7f,	/* FIXME: should check north bridge */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 85f7b1b..a6a3113 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -171,7 +171,6 @@ enum {
+ 	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
+ 					      * Register FIS clearing BSY */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+-	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+ 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
