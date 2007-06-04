@@ -1,26 +1,58 @@
-From: Mark Lord <liml@rtr.ca>
+From: David Greaves <david@dgreaves.com>
 Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
-Date: Mon, 04 Jun 2007 12:29:25 -0400
-Message-ID: <46643DE5.3080904@rtr.ca>
-References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com>
+Date: Mon, 04 Jun 2007 18:22:57 +0100
+Message-ID: <46644A71.7060300@dgreaves.com>
+References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com> <46643DE5.3080904@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1392 "EHLO mail.rtr.ca"
+Received: from s2.ukfsn.org ([217.158.120.143]:48111 "EHLO mail.ukfsn.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754899AbXFDQ31 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jun 2007 12:29:27 -0400
-In-Reply-To: <4661E6CA.1080203@dgreaves.com>
+	id S1755818AbXFDRXB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Jun 2007 13:23:01 -0400
+In-Reply-To: <46643DE5.3080904@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: Mark Lord <liml@rtr.ca>
 Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 
-David Greaves wrote:
-> I have 2 ide disks. If I enable SMART and hibernate/suspend2disk, SMART is
-> disabled when I resume.
+Mark Lord wrote:
+> David Greaves wrote:
+>> I have 2 ide disks. If I enable SMART and hibernate/suspend2disk,
+>> SMART is
+>> disabled when I resume.
+> 
+> Just a thought:  This *may* be fixable at the drive, with "hdparm -K1".
 
-Just a thought:  This *may* be fixable at the drive, with "hdparm -K1".
+Thanks Mark, good idea.
+Just tried and it didn't help though :(
 
-Cheers 
+in fact, hda gave
+cu:~# hdparm -K1 /dev/hda
+
+/dev/hda:
+ setting drive keep features to 1 (on)
+ HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
+
+and in dmesg:
+hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
+hda: drive_cmd: error=0x04 { DriveStatusError }
+ide: failed opcode was: 0xef
+
+The drive, FWIW, is:
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda ATA II family
+Device Model:     ST320420A
+Serial Number:    3CL04RKY
+Firmware Version: 3.21
+User Capacity:    20,404,101,120 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   4
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Jun  4 18:20:46 2007 BST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+
+David
