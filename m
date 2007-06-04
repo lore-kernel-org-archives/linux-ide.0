@@ -1,29 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.22-rc2] libata: sata_sis fixes
-Date: Mon, 4 Jun 2007 16:30:22 +0100
-Message-ID: <20070604163022.1adf136f@the-village.bc.nu>
-References: <200705250948.52588.uwe.koziolek@gmx.net>
-	<20070525153230.325258e9@the-village.bc.nu>
-	<465D33DF.9040708@gmx.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
+Date: Mon, 04 Jun 2007 12:29:25 -0400
+Message-ID: <46643DE5.3080904@rtr.ca>
+References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34244 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756874AbXFDPZV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 11:25:21 -0400
-In-Reply-To: <465D33DF.9040708@gmx.net>
+Received: from rtr.ca ([64.26.128.89]:1392 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754899AbXFDQ31 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Jun 2007 12:29:27 -0400
+In-Reply-To: <4661E6CA.1080203@dgreaves.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe Koziolek <uwe.koziolek@gmx.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux.ide" <linux-ide@vger.kernel.org>
+To: David Greaves <david@dgreaves.com>
+Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 
-> How should I proceed. I can submit both patches:
-> - exclude SiS180 from enable bit checking or
-> - exclude MuTol ATA133 from enable bit checking with different
-> error_handler.
+David Greaves wrote:
+> I have 2 ide disks. If I enable SMART and hibernate/suspend2disk, SMART is
+> disabled when I resume.
 
-Been away but - SiS180 wants excluding anyway according to all the docs,
-the MuToL does appear to be working correctly with enable bits and we've
-got no failure cases in old/new IDE so leave it alone (for now anyway)
+Just a thought:  This *may* be fixable at the drive, with "hdparm -K1".
+
+Cheers 
