@@ -1,44 +1,37 @@
-From: olof@lixom.net (Olof Johansson)
-Subject: [PATCH] [2.6.22] libata: fix probe time irq printouts
-Date: Sun, 3 Jun 2007 18:35:10 -0500
-Message-ID: <20070603233510.GA25750@lixom.net>
+From: Michel Lespinasse <walken@zoy.org>
+Subject: Re: SATA hotswap and write caches
+Date: Sun, 3 Jun 2007 17:53:41 -0700
+Message-ID: <20070604005341.GA3315@zoy.org>
+References: <20070603104334.GH18680@zoy.org> <4662CF26.6060902@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:35244 "EHLO mail.lixom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751681AbXFCX3K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Jun 2007 19:29:10 -0400
+Received: from 64-142-28-230.dsl.static.sonic.net ([64.142.28.230]:60011 "EHLO
+	Angel.zoy.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751284AbXFDAxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 3 Jun 2007 20:53:42 -0400
 Content-Disposition: inline
+In-Reply-To: <4662CF26.6060902@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Most drivers don't seem to fill out the host->irq field, resulting in the
-wrong (no) irq being reported at probe time. For example, sil24 on my system:
+On Sun, Jun 03, 2007 at 10:24:38AM -0400, Jeff Garzik wrote:
+> Michel Lespinasse wrote:
+> >* Is there anything one needs to know before hot-removing a drive ?
+> 
+> Make sure all data is flushed to the drive before removing it.
 
-ata1: SATA max UDMA/100 cmd 0xd00008009001f000 ctl 0x0000000000000000 bmdma 0x0000000000000000 irq 0
-ata2: SATA max UDMA/100 cmd 0xd000080090021000 ctl 0x0000000000000000 bmdma 0x0000000000000000 irq 0
+Sure. Is there a way to do that, though, other than using /sbin/halt
+which seems to have, errr, undesirable side-effects :)
 
-Since they're allocated and set up in ata_host_activate(), just save
-them away there.
+Ideally it'd be very nice if that was doable through /sys or /proc files.
+It'd also be nice if disk standby was user-controllable in this way too.
+(or maybe both as one step, i.e. a way to tell the kernel we'd like to
+take the disk out in the safest way possible).
 
-
-Signed-off-by: Olof Johansson <olof@lixom.net>
-
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index af62514..7491b11 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6438,6 +6438,9 @@ int ata_host_activate(struct ata_host *host, int irq,
- 	if (rc)
- 		devm_free_irq(host->dev, irq, host);
- 
-+	/* Used to print device info at probe */
-+	host->irq = irq;
-+
- 	return rc;
- }
- 
+-- 
+Michel "Walken" Lespinasse
+"Bill Gates is a monocle and a Persian cat away from being the villain
+in a James Bond movie." -- Dennis Miller
