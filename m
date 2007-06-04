@@ -1,58 +1,67 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
-Date: Mon, 04 Jun 2007 18:22:57 +0100
-Message-ID: <46644A71.7060300@dgreaves.com>
-References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com> <46643DE5.3080904@rtr.ca>
+From: Jose Alberto Reguero <jareguero@telefonica.net>
+Subject: Add support to Marvell 6121 in the mv-ahci-pata branch
+Date: Mon, 4 Jun 2007 20:52:25 +0200
+Message-ID: <200706042052.25583.jareguero@telefonica.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_p9FZG0Vp3dGBHJU"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:48111 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755818AbXFDRXB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jun 2007 13:23:01 -0400
-In-Reply-To: <46643DE5.3080904@rtr.ca>
+Received: from smtp.telefonica.net ([213.4.149.66]:15229 "EHLO
+	ctsmtpout4.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756358AbXFDSwb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 14:52:31 -0400
+Received: from jar.dominio (80.25.230.35) by ctsmtpout4.frontal.correo (7.2.056.6) (authenticated as jareguero$telefonica.net)
+        id 46643EC200006970 for linux-ide@vger.kernel.org; Mon, 4 Jun 2007 20:52:29 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
+To: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> David Greaves wrote:
->> I have 2 ide disks. If I enable SMART and hibernate/suspend2disk,
->> SMART is
->> disabled when I resume.
-> 
-> Just a thought:  This *may* be fixable at the drive, with "hdparm -K1".
+--Boundary-00=_p9FZG0Vp3dGBHJU
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Thanks Mark, good idea.
-Just tried and it didn't help though :(
+This patch add support to Marvell 6121.
 
-in fact, hda gave
-cu:~# hdparm -K1 /dev/hda
+Looking at the code I think that AHCI_FLAG_MV_PATA flag must be assigned to 
+the PATA port.
 
-/dev/hda:
- setting drive keep features to 1 (on)
- HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
+Signed-off-by: Jose Alberto Reguero <jareguero@telefonica.net>
 
-and in dmesg:
-hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hda: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xef
+Jose Alberto
 
-The drive, FWIW, is:
-=== START OF INFORMATION SECTION ===
-Model Family:     Seagate Barracuda ATA II family
-Device Model:     ST320420A
-Serial Number:    3CL04RKY
-Firmware Version: 3.21
-User Capacity:    20,404,101,120 bytes
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   4
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Mon Jun  4 18:20:46 2007 BST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+--Boundary-00=_p9FZG0Vp3dGBHJU
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="ahci_6121.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="ahci_6121.diff"
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 21df81e..8a2a56c 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -528,6 +528,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 
+ 	/* Marvell */
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
++	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+ 
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+@@ -2104,7 +2105,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	switch(ent->driver_data) {
+ 	case board_ahci_mv:
+-		mvp_port = 4;		/* count starts from zero */
++		if (pdev->device == 0x6121)
++			mvp_port = 2;		/* count starts from zero */
++		else
++			mvp_port = 4;		/* count starts from zero */
+ 		break;
+ 
+ 	default:
 
-David
+--Boundary-00=_p9FZG0Vp3dGBHJU--
