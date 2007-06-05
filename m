@@ -1,27 +1,69 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches
-Date: Tue, 05 Jun 2007 12:19:18 -0700 (PDT)
-Message-ID: <20070605.121918.63995208.davem@davemloft.net>
-References: <46657866.7000108@googlemail.com>
-	<4665792B.8030005@googlemail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
+Date: Wed, 06 Jun 2007 00:08:40 +0400
+Message-ID: <4665C2C8.6030903@ru.mvista.com>
+References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <46608EFE.1030202@ru.mvista.com> <Pine.LNX.4.62.0706020035200.19399@petra.hos.u-szeged.hu> <200706030138.15353.bzolnier@gmail.com> <Pine.LNX.4.62.0706031224030.25438@petra.hos.u-szeged.hu> <4662FC30.2000602@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <4665792B.8030005@googlemail.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: michal.k.k.piotrowski@gmail.com
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, greg@kroah.com, mikem@beardog.cca.cpqcorp.net, tom.l.nguyen@intel.com, linux-ide@vger.kernel.org, lethal@linux-sh.org, htejun@gmail.com, jeff@garzik.org, alan@redhat.com, sparclinux@vger.kernel.org, vonbrand@inf.utfsm.cl
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns2.mvista.com ([63.81.120.155]:21956 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757201AbXFEUHK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Jun 2007 16:07:10 -0400
+In-Reply-To: <4662FC30.2000602@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Geller Sandor <wildy@petra.hos.u-szeged.hu>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
 
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Date: Tue, 05 Jun 2007 16:54:35 +0200
+Hello, I wrote:
 
-> Sparc64
-> 
-> Subject    : arch/sparc64/time.c doesn't compile on Ultra 1 (no PCI)
-> References : http://bugzilla.kernel.org/show_bug.cgi?id=8540
-> Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
-> Status     : patch available
+>>>> This looks promising. Using a vanilla 2.6.22-rc3 I was able to 
+>>>> reproduce
+>>>> the problem within a few seconds. With the above modification the 
+>>>> machine
+>>>> is running under heavy disk I/O without problems since 30 minutes...
 
-This patch is in Linus's tree.
+>>> Did it fix the problem for good?
+
+>> It seems so far. There hasn't been any problem since I've applied the 
+>> fix.
+
+>>> Sergei, do we need to disallow UDMA6 completely on HPT734 or
+>>> is it only an issue with some problematic devices (=> blacklist)?
+
+>    Note that I didn't change what the old code was doing in this regard 
+> -- although the HPT374 spec does *not* say that UDMA6 is supported, it 
+> had been enabled. What have *really* changed for HPT374 was:
+
+    No, I've lied (my memory haven't served and I've finally forgot to check 
+myself).  It was me who enabled it by default (that there should have been no 
+option to do this is another question). :-<
+
+> - in 2.6.20-rc1, the driver switched to using the actual 33 MHz timing 
+> table
+>   instead of the old one, matching 50 MHz (and so, severely underclocked);
+
+> - in 2.6.2-rc1, the driver switched from 33 MHz PCI to 66 MHz DPLL clock.
+
+>    Disallowing UDMA6 would clock the chip with 50 MHz DPLL, howewer, the 
+> original report claimed that something has changed to worse between 
+> 2.6.21.1 and .3 but nothing changed in drivers/ide/ between those 
+> releases...
+
+>>> Either way we need to fix it somehow for 2.6.22.
+
+>> For the record: this HTP374 is running with a quite outdated firmware 
+>> (1.22) - maybe newer firmwares work correctly. I'm going to upgrade 
+>> the firmware to the latest one (which was released in 2004...), but 
+>> unfortunately in the upcoming 2-3 weeks I won't have access to this 
+>> machine, so I can't check the case within the release cycle of 2.6.22. 
+>> If you were interested I would post the result of the firmware upgrade.
+
+>    I don't think this will matter...
+
+>> Regards,
+>>   Sandor
+
+MBR, Sergei
