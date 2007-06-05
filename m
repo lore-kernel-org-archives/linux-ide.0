@@ -1,26 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: legacy libata IDE missing reservation
-Date: Mon, 4 Jun 2007 19:51:57 -0400
-Message-ID: <20070604235157.GD31462@havoc.gtf.org>
+From: Natalie Protasevich <protasnb@yahoo.com>
+Subject: Fwd: [Bug 8441] libata: irq nobody cared during polling IDENTIFY
+Date: Mon, 4 Jun 2007 17:26:20 -0700 (PDT)
+Message-ID: <957059.85390.qm@web32009.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:38617 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757123AbXFDXv6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Jun 2007 19:51:58 -0400
-Content-Disposition: inline
+Received: from web32009.mail.mud.yahoo.com ([68.142.207.106]:35958 "HELO
+	web32009.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756714AbXFEAdD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 20:33:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+
+Hi,
+This is the bugzilla on the libata.
+
+> This patch needs a review.
+> Adding appropriate audience.
+
+Thanks,
+--Natalie
 
 
-FYI:  I noticed this weekend that libata does not reserve the legacy
-IDE control block I/O port region, like it does the command block
-I/O region.
 
-	Jeff
-
-
-
+       
+____________________________________________________________________________________
+Building a website is a piece of cake. Yahoo! Small Business gives you all the tools to get online.
+http://smallbusiness.yahoo.com/webhosting 
