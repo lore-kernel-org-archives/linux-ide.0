@@ -1,43 +1,50 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 8587] New: disk on promise pdc20378 disabled
- at boot
-Date: Tue, 5 Jun 2007 10:12:17 -0700
-Message-ID: <20070605101217.2d466b9e.akpm@linux-foundation.org>
-References: <200706051330.l55DUqVW020898@fire-2.osdl.org>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: [PATCH] Add configuration to specify availability of pata_platform
+Date: Tue, 5 Jun 2007 18:50:20 +0100
+Message-ID: <20070605175020.GD13353@trinity.fluff.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52016 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754878AbXFERMl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 13:12:41 -0400
-In-Reply-To: <200706051330.l55DUqVW020898@fire-2.osdl.org>
+Received: from trinity.fluff.org ([217.147.94.151]:2002 "EHLO
+	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755511AbXFERuV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 13:50:21 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mikael Pettersson <mikpe@csd.uu.se>
-Cc: linux-ide@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, jean.luc.coulon@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Tue, 5 Jun 2007 06:30:52 -0700
-bugme-daemon@bugzilla.kernel.org wrote:
+Add a hidden configuration for an architecture or machine to
+select to show that the pata_platform driver should be show
+in the configuration.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=8587
-> 
->            Summary: disk on promise pdc20378 disabled at boot
->     Kernel Version: 2.6.22-rc4
->             Status: NEW
->           Severity: normal
->              Owner: greg@kroah.com
->          Submitter: jean.luc.coulon@gmail.com
-> 
-> 
-> Most recent kernel where this bug did *NOT* occur: 2.6.22-rc3-git7
-> Distribution: Debian sid X86_64
-> Hardware Environment: PDC20378 in ASUS A8V Deluxe, Athlon64 3600+
-> Software Environment: sata_promise
-> Problem Description: disk is disabled
-> 
-> Steps to reproduce: boot the system
-> 
+This method is used to allow each individual machine/arch to
+specify this, instead of creating large "depends on" on the
+driver's Kconfig menu.
 
-If Jean really meant 2.6.22-rc3-git7 then this is a very recent regression.
+If this patch is acceptable, I will submit a patch to
+move ARCH_RPC to select ARCH_HAS_PATA_PLATFORM.
+
+Signed-off-by: Ben Dooks <ben-linux@fluff.org>
+ 
+Index: linux-2.6.22-rc4-simtec/drivers/ata/Kconfig
+===================================================================
+--- linux-2.6.22-rc4-simtec.orig/drivers/ata/Kconfig	2007-06-05 18:27:08.000000000 +0100
++++ linux-2.6.22-rc4-simtec/drivers/ata/Kconfig	2007-06-05 18:41:58.000000000 +0100
+@@ -548,9 +548,15 @@ config PATA_WINBOND_VLB
+ 	  Support for the Winbond W83759A controller on Vesa Local Bus
+ 	  systems.
+ 
++config ARCH_HAS_PATA_PLATFORM
++	bool
++	help
++	  Internal config to show the architecture has at least one
++	  machine which can use the pata_platform device support.
++
+ config PATA_PLATFORM
+ 	tristate "Generic platform device PATA support"
+-	depends on EMBEDDED || ARCH_RPC
++	depends on EMBEDDED || ARCH_RPC || ARCH_HAS_PATA_PLATFORM
+ 	help
+ 	  This option enables support for generic directly connected ATA
+ 	  devices commonly found on embedded systems.
