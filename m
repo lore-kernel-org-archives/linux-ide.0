@@ -1,90 +1,78 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 2/3] libata: move ata_altstatus() to pio data xfer functions
-Date: Tue, 05 Jun 2007 11:50:12 +0800
-Message-ID: <4664DD74.1030009@tw.ibm.com>
+Subject: [PATCH 3/3] libata: change the last state of pio read to HSM_ST_IDLE
+Date: Tue, 05 Jun 2007 11:53:09 +0800
+Message-ID: <4664DE25.30701@tw.ibm.com>
 References: <4664DB99.8010202@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:38923 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757523AbXFEDuP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 23:50:15 -0400
+Received: from e32.co.us.ibm.com ([32.97.110.150]:47533 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760909AbXFEDxP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jun 2007 23:53:15 -0400
 Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l553oEJl024059
-	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 23:50:14 -0400
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l553muZS032663
+	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 23:48:56 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l553oEn6259192
-	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 21:50:14 -0600
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l553rBCC261570
+	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 21:53:11 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l553oEEu014210
-	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 21:50:14 -0600
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l553rBJa017547
+	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 21:53:11 -0600
 In-Reply-To: <4664DB99.8010202@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-Patch 2/3:
- Move ata_altstatus() out from ata_hsm_move() to the pio data xfer functions
-such as ata_pio_sectors() and atapi_pio_bytes() where it makes more sense.
+Patch 3/3:
+  After reading the last pio block, the HSM is waiting for device
+to be idle, not waiting for the last interrupt.
+
+Change the state after "PIO data-in" to HSM_ST_IDLE instead of HSM_ST_LAST for accuracy.
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ---
-atapi_send_cdb() already calls ata_altstatus() inside.
-This patch makes ata_pio_sectors() and atapi_pio_bytes() do the same for consistency.
-
-diff -Nrup 01_remove_bad_flush/drivers/ata/libata-core.c 02_move_altstatus/drivers/ata/libata-core.c
---- 01_remove_bad_flush/drivers/ata/libata-core.c	2007-06-04 18:10:43.000000000 +0800
-+++ 02_move_altstatus/drivers/ata/libata-core.c	2007-06-04 18:16:24.000000000 +0800
-@@ -4524,6 +4524,8 @@ static void ata_pio_sectors(struct ata_q
- 			ata_pio_sector(qc);
- 	} else
- 		ata_pio_sector(qc);
+diff -Nrup 02_move_altstatus/drivers/ata/libata-core.c 03_read_state/drivers/ata/libata-core.c
+--- 02_move_altstatus/drivers/ata/libata-core.c	2007-06-04 18:16:24.000000000 +0800
++++ 03_read_state/drivers/ata/libata-core.c	2007-06-04 18:25:00.000000000 +0800
+@@ -4462,7 +4462,7 @@ static void ata_pio_sector(struct ata_qu
+ 	unsigned char *buf;
+ 
+ 	if (qc->curbytes == qc->nbytes - qc->sect_size)
+-		ap->hsm_task_state = HSM_ST_LAST;
++		ap->hsm_task_state = do_write ? HSM_ST_LAST : HSM_ST_IDLE;
+ 
+ 	page = sg[qc->cursg].page;
+ 	offset = sg[qc->cursg].offset + qc->cursg_ofs;
+@@ -4811,6 +4811,8 @@ int ata_hsm_move(struct ata_port *ap, st
+ 	 */
+ 	WARN_ON(in_wq != ata_hsm_ok_in_wq(ap, qc));
+ 
++	WARN_ON(ap->hsm_task_state == HSM_ST_IDLE);
 +
-+	ata_altstatus(ap); /* flush */
- }
+ fsm_start:
+ 	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
+ 		ap->print_id, qc->tf.protocol, ap->hsm_task_state, status);
+@@ -4968,8 +4970,7 @@ fsm_start:
  
- /**
-@@ -4698,6 +4700,7 @@ static void atapi_pio_bytes(struct ata_q
- 	VPRINTK("ata%u: xfering %d bytes\n", ap->print_id, bytes);
- 
- 	__atapi_pio_bytes(qc, bytes);
-+	ata_altstatus(ap); /* flush */
- 
- 	return;
- 
-@@ -4869,7 +4872,6 @@ fsm_start:
- 			 */
- 			ap->hsm_task_state = HSM_ST;
  			ata_pio_sectors(qc);
--			ata_altstatus(ap); /* flush */
- 		} else
- 			/* send CDB */
- 			atapi_send_cdb(ap, qc);
-@@ -4950,7 +4952,6 @@ fsm_start:
  
- 				if (!(qc->tf.flags & ATA_TFLAG_WRITE)) {
- 					ata_pio_sectors(qc);
--					ata_altstatus(ap);
- 					status = ata_wait_idle(ap);
- 				}
- 
-@@ -4970,13 +4971,11 @@ fsm_start:
- 			if (ap->hsm_task_state == HSM_ST_LAST &&
- 			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
+-			if (ap->hsm_task_state == HSM_ST_LAST &&
+-			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
++			if (ap->hsm_task_state == HSM_ST_IDLE) {
  				/* all data read */
--				ata_altstatus(ap);
  				status = ata_wait_idle(ap);
  				goto fsm_start;
- 			}
- 		}
- 
--		ata_altstatus(ap); /* flush */
- 		poll_next = 1;
+@@ -4980,6 +4981,7 @@ fsm_start:
  		break;
  
+ 	case HSM_ST_LAST:
++	case HSM_ST_IDLE:
+ 		if (unlikely(!ata_ok(status))) {
+ 			qc->err_mask |= __ac_err_mask(status);
+ 			ap->hsm_task_state = HSM_ST_ERR;
 
 
