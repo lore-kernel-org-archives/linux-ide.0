@@ -1,63 +1,58 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches
-Date: Tue, 05 Jun 2007 16:54:35 +0200
-Message-ID: <4665792B.8030005__5810.63594804636$1181055379$gmane$org@googlemail.com>
-References: <46657866.7000108@googlemail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6] aec62xx: kill speedproc() method wrapper (take
+ 2)
+Date: Tue, 05 Jun 2007 19:15:45 +0400
+Message-ID: <46657E21.8090804@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200705242046.14109.sshtylyov@ru.mvista.com> <200705282244.54862.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932739AbXFEOzg@vger.kernel.org>
-In-Reply-To: <46657866.7000108@googlemail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Greg KH <greg@kroah.com>, "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, Tom Long Nguyen <tom.l.nguyen@intel.com>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@redhat.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, "Horst H. von Brand" <vonbrand@inf.utfsm.cl>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:19251 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760992AbXFEPOO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 11:14:14 -0400
+In-Reply-To: <200705282244.54862.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi all,
+Hello.
 
-Here is a list of some known regressions in 2.6.22-rc4
-with patches available.
+Bartlomiej Zolnierkiewicz wrote:
 
-=46eel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+>>There's no reason to have the speedproc() method wrapper for the two quite
+>>different chip families, so just get rid of it.
 
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+>>---
+>>Tthis version of the patch properly installs the speedproc() method.
+>>Again, the patch has only been compile tested...
 
-PCI
+> applied after fixing the following trivial reject (not a problem
+> but I thought I would let you know in case I missed something):
 
-Subject    : Oops on 2.6.22-rc2 when unloading the cciss driver
-References : http://lkml.org/lkml/2007/5/24/172
-Submitter  : Mike Miller (OS Dev) <mikem@beardog.cca.cpqcorp.net>
-Patch      : http://lkml.org/lkml/2007/5/31/387
-Status     : patch available
+    Yes, you did. I've also recast the patch killing init_dma() method. Do I 
+need to resend it?
 
+> ***************
+> *** 1,5 ****
+>   /*
+> -  * linux/drivers/ide/pci/aec62xx.c            Version 0.23    May 23, 2007
+>    *
+>    * Copyright (C) 1999-2002    Andre Hedrick <andre@linux-ide.org>
+>    * Copyright (C) 2007         MontaVista Software, Inc. <source@mvista.com>
+> --- 1,5 ----
+>   /*
+> +  * linux/drivers/ide/pci/aec62xx.c            Version 0.24    May 24, 2007
+>    *
+>    * Copyright (C) 1999-2002    Andre Hedrick <andre@linux-ide.org>
+>    * Copyright (C) 2007         MontaVista Software, Inc. <source@mvista.com>
+> 
+> I don't know why but it was:
+> 
+> linux/drivers/ide/pci/aec62xx.c             Version 0.23    Apr 27, 2007
 
-
-SATA/PATA
-
-Subject    : libata reset-seq merge broke sata_sil on sh
-References : http://lkml.org/lkml/2007/5/10/63
-Submitter  : Paul Mundt <lethal@linux-sh.org>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Caused-By  : commit 4750def52cb2c21732dda9aa1d43a07db37b0186
-Patch      : http://lkml.org/lkml/2007/5/19/161
-Status     : patch available
-
-
-
-Sparc64
-
-Subject    : arch/sparc64/time.c doesn't compile on Ultra 1 (no PCI)
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8540
-Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
-Status     : patch available
-
-
-
-Regards,
-Michal
-
---
-"Najbardziej brakowa=B3o mi twojego milczenia."
--- Andrzej Sapkowski "Co=B6 wi=EAcej"
+MBR, Sergei
