@@ -1,58 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH pata-2.6] aec62xx: kill speedproc() method wrapper (take
- 2)
-Date: Tue, 05 Jun 2007 19:15:45 +0400
-Message-ID: <46657E21.8090804@ru.mvista.com>
-References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200705242046.14109.sshtylyov@ru.mvista.com> <200705282244.54862.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
+Date: Tue, 05 Jun 2007 11:33:29 -0400
+Message-ID: <46658249.8030606@rtr.ca>
+References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com> <46643DE5.3080904@rtr.ca> <46644A71.7060300@dgreaves.com> <4664E3F5.9080904@rtr.ca> <466526FA.3090506@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:19251 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760992AbXFEPOO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 11:14:14 -0400
-In-Reply-To: <200705282244.54862.bzolnier@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:3770 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932425AbXFEPdb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Jun 2007 11:33:31 -0400
+In-Reply-To: <466526FA.3090506@dgreaves.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 
-Hello.
-
-Bartlomiej Zolnierkiewicz wrote:
-
->>There's no reason to have the speedproc() method wrapper for the two quite
->>different chip families, so just get rid of it.
-
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->>---
->>Tthis version of the patch properly installs the speedproc() method.
->>Again, the patch has only been compile tested...
-
-> applied after fixing the following trivial reject (not a problem
-> but I thought I would let you know in case I missed something):
-
-    Yes, you did. I've also recast the patch killing init_dma() method. Do I 
-need to resend it?
-
-> ***************
-> *** 1,5 ****
->   /*
-> -  * linux/drivers/ide/pci/aec62xx.c            Version 0.23    May 23, 2007
->    *
->    * Copyright (C) 1999-2002    Andre Hedrick <andre@linux-ide.org>
->    * Copyright (C) 2007         MontaVista Software, Inc. <source@mvista.com>
-> --- 1,5 ----
->   /*
-> +  * linux/drivers/ide/pci/aec62xx.c            Version 0.24    May 24, 2007
->    *
->    * Copyright (C) 1999-2002    Andre Hedrick <andre@linux-ide.org>
->    * Copyright (C) 2007         MontaVista Software, Inc. <source@mvista.com>
+David Greaves wrote:
+> Mark Lord wrote:
+>> That's odd.  Could you try that again,
+>> with the latest (either v7.3 or v7.4) version of hdparm
+>> (from sourceforge) ?
 > 
-> I don't know why but it was:
-> 
-> linux/drivers/ide/pci/aec62xx.c             Version 0.23    Apr 27, 2007
+> Using Debian's 7.3 via apt-get experimental - is that OK or would you like me to
+> compile the upstream?
 
-MBR, Sergei
+No, what you have is good, thanks.
+
+> cu:~# hdparm -K1 /dev/hda
+> 
+> /dev/hda:
+>  setting drive keep features to 1 (on)
+>  HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
+> 
+> dmesg:
+> skge eth0: Link is up at 1000 Mbps, full duplex, flow control both
+> hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
+> hda: drive_cmd: error=0x04 { DriveStatusError }
+> ide: failed opcode was: 0xef
+
+I just find it odd that the drive rejects the command,
+but Seagate do seem to be the first to drop older features nowadays.
+But I thought their PATA units might have kept that functionality.
+
+I have some modern seagate SATA drives here -- I'll try it on those too,
+just for my own education.
+
+Thanks.
