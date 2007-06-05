@@ -1,87 +1,78 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 1/1] libata: print device model and firmware revision for
- ATAPI devices
-Date: Tue, 05 Jun 2007 13:01:33 +0800
-Message-ID: <4664EE2D.5040607@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Lee Trager <lt73@cs.drexel.edu>
+Subject: Re: [PATCH] HPA Detect From Resume
+Date: Tue, 05 Jun 2007 04:55:43 -0400
+Message-ID: <4665250F.9080000@cs.drexel.edu>
+References: <46456120.6070401@cs.drexel.edu> <200706030024.24485.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:45385 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbXFEFCE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 01:02:04 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l55520kF015813
-	for <linux-ide@vger.kernel.org>; Tue, 5 Jun 2007 01:02:00 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5551wE9256410
-	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 23:02:00 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5551v91014988
-	for <linux-ide@vger.kernel.org>; Mon, 4 Jun 2007 23:01:58 -0600
+Received: from pm2.irt.drexel.edu ([144.118.29.82]:34750 "EHLO
+	smtp.mail.drexel.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762694AbXFEI5n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 04:57:43 -0400
+In-Reply-To: <200706030024.24485.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-  For ATA/CFA devices, libata prints out the device model and firmware revision.
-Do the same for ATAPI devices.
+Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+>
+> On Saturday 12 May 2007, Lee Trager wrote:
+>   
+>> Currently when system which have HPA require HPA to be detected and
+>> disabled upon resume from RAM or disk. The current IDE drivers do not do
+>> this nor does libata(obviously it since it doesn't support HPA yet). I
+>> have implemented this into the current IDE drivers and it has been
+>> tested by many others since 7/15/2006 in bug number
+>> 6840(http://bugzilla.kernel.org/show_bug.cgi?id=6840) and it has been
+>> confirmed to work fine with no problems.
+>>     
+>
+> Big thanks for working on this bug.
+>
+> The patch looks good, applied.
+>
+>   
+>> --- linux-2.6.21.1-old/include/linux/ide.h	2007-05-01 02:54:12.000000000 -0400
+>> +++ linux-2.6.21.1/include/linux/ide.h	2007-04-28 01:06:20.000000000 -0400
+>> @@ -1005,6 +1005,7 @@
+>>  	int		(*probe)(ide_drive_t *);
+>>  	void		(*remove)(ide_drive_t *);
+>>  	void		(*shutdown)(ide_drive_t *);
+>> +	void		(*resume)(ide_drive_t *);
+>>  } ide_driver_t;
+>>     
+>
+> ide_driver_t changed a bit in 2.6.22 due to /proc/ide/ rework so this
+> chunk (and one chunk in ide-disk.c) rejected to apply.  Fixed them by hand.
+>
+>   
+>> @@ -1279,7 +1281,12 @@
+>>  	rqpm.pm_step = ide_pm_state_start_resume;
+>>  	rqpm.pm_state = PM_EVENT_ON;
+>>  
+>> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+>> +	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+>> +
+>> +	if (err == 0 && drv->resume)
+>> +		drv->resume(drive);
+>> +
+>>     
+>
+> Added extra drv != NULL check (there may be no IDE device driver et all).
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
+Thanks for cleaning it up I've been really busy lately. I just
+downloaded 2.6.22-rc3  and the patch still wasn't in there will it be in
+rc4 or is there something else I need to do? Also a few weeks ago I
+tested the HPA patch for libata and the same issue comes up. I'll look
+into releasing another patch for libata once its in the kernel and I
+have more time.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-Sometimes the error happens after identify but before the
-SCSI messages. Knowing the device model and firmware revision
-could also help.
-
-Dmesg looks like below after the patch.
-ata1.00: ATA-6: WDC WD2000JB-00KFA0, 08.05J08, max UDMA/100
-ata1.00: 390721968 sectors, multi 16: LBA48 
-ata5.00: ATAPI: LITE-ON CD-RW SOHR-5238S, 4S07, max UDMA/33
-For your review, thanks.
-
-diff -Nrup 00_libata-dev/drivers/ata/libata-core.c 01_atapi_dmesg/drivers/ata/libata-core.c
---- 00_libata-dev/drivers/ata/libata-core.c	2007-06-01 12:08:21.000000000 +0800
-+++ 01_atapi_dmesg/drivers/ata/libata-core.c	2007-06-04 15:33:19.000000000 +0800
-@@ -1900,6 +1900,13 @@ int ata_dev_configure(struct ata_device 
- 	if (ata_msg_probe(ap))
- 		ata_dump_id(id);
- 
-+	/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
-+	ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
-+			sizeof(fwrevbuf));
-+
-+	ata_id_c_string(dev->id, modelbuf, ATA_ID_PROD,
-+			sizeof(modelbuf));
-+
- 	/* ATA-specific feature tests */
- 	if (dev->class == ATA_DEV_ATA) {
- 		if (ata_id_is_cfa(id)) {
-@@ -1914,13 +1921,6 @@ int ata_dev_configure(struct ata_device 
- 
- 		dev->n_sectors = ata_id_n_sectors(id);
- 
--		/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
--		ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
--				sizeof(fwrevbuf));
--
--		ata_id_c_string(dev->id, modelbuf, ATA_ID_PROD,
--				sizeof(modelbuf));
--
- 		if (dev->id[59] & 0x100)
- 			dev->multi_count = dev->id[59] & 0xff;
- 
-@@ -2009,7 +2009,9 @@ int ata_dev_configure(struct ata_device 
- 
- 		/* print device info to dmesg */
- 		if (ata_msg_drv(ap) && print_info)
--			ata_dev_printk(dev, KERN_INFO, "ATAPI, max %s%s\n",
-+			ata_dev_printk(dev, KERN_INFO,
-+				       "ATAPI: %s, %s, max %s%s\n",
-+				       modelbuf, fwrevbuf,
- 				       ata_mode_string(xfer_mask),
- 				       cdb_intr_string);
- 	}
-
-
+Lee
