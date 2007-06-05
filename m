@@ -1,24 +1,18 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: Re: [4/5] 2.6.22-rc4: known regressions
 Date: Tue, 05 Jun 2007 16:44:01 +0200
-Message-ID: <466576B1.5020105__4141.89540683783$1181054703$gmane$org@googlemail.com>
+Message-ID: <466576B1.5020105__34693.1952670731$1181054782$gmane$org@googlemail.com>
 References: <46657407.1000108@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:32503 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbXFEOoS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 10:44:18 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so192423ugf
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jun 2007 07:44:18 -0700 (PDT)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932389AbXFEOpx@vger.kernel.org>
 In-Reply-To: <46657407.1000108@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@redhat.com>, Gregor Jasny <gjasny@googlemail.com>, Stephen Smalley <sds@tycho.nsa.gov>, James Morris <jmorris@namei.org>, Eric Paris <eparis@parisplace.org>, Ingo Molnar <mingo@elte.hu>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, linux-pm@lists.linux-foundation.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, Simon <sg02r@ecs.soton.ac.uk>, linux-usb-devel@lists.sourceforge.net, Greg Kroah-Hartman <gregkh@suse.de>
+List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
