@@ -1,78 +1,44 @@
-From: Lee Trager <lt73@cs.drexel.edu>
-Subject: Re: [PATCH] HPA Detect From Resume
-Date: Tue, 05 Jun 2007 04:55:43 -0400
-Message-ID: <4665250F.9080000@cs.drexel.edu>
-References: <46456120.6070401@cs.drexel.edu> <200706030024.24485.bzolnier@gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
+Date: Tue, 05 Jun 2007 10:03:54 +0100
+Message-ID: <466526FA.3090506@dgreaves.com>
+References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com> <46643DE5.3080904@rtr.ca> <46644A71.7060300@dgreaves.com> <4664E3F5.9080904@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pm2.irt.drexel.edu ([144.118.29.82]:34750 "EHLO
-	smtp.mail.drexel.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762694AbXFEI5n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 04:57:43 -0400
-In-Reply-To: <200706030024.24485.bzolnier@gmail.com>
+Received: from s2.ukfsn.org ([217.158.120.143]:39028 "EHLO mail.ukfsn.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761928AbXFEJD5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Jun 2007 05:03:57 -0400
+In-Reply-To: <4664E3F5.9080904@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
 
-Bartlomiej Zolnierkiewicz wrote:
-> Hi,
->
-> On Saturday 12 May 2007, Lee Trager wrote:
->   
->> Currently when system which have HPA require HPA to be detected and
->> disabled upon resume from RAM or disk. The current IDE drivers do not do
->> this nor does libata(obviously it since it doesn't support HPA yet). I
->> have implemented this into the current IDE drivers and it has been
->> tested by many others since 7/15/2006 in bug number
->> 6840(http://bugzilla.kernel.org/show_bug.cgi?id=6840) and it has been
->> confirmed to work fine with no problems.
->>     
->
-> Big thanks for working on this bug.
->
-> The patch looks good, applied.
->
->   
->> --- linux-2.6.21.1-old/include/linux/ide.h	2007-05-01 02:54:12.000000000 -0400
->> +++ linux-2.6.21.1/include/linux/ide.h	2007-04-28 01:06:20.000000000 -0400
->> @@ -1005,6 +1005,7 @@
->>  	int		(*probe)(ide_drive_t *);
->>  	void		(*remove)(ide_drive_t *);
->>  	void		(*shutdown)(ide_drive_t *);
->> +	void		(*resume)(ide_drive_t *);
->>  } ide_driver_t;
->>     
->
-> ide_driver_t changed a bit in 2.6.22 due to /proc/ide/ rework so this
-> chunk (and one chunk in ide-disk.c) rejected to apply.  Fixed them by hand.
->
->   
->> @@ -1279,7 +1281,12 @@
->>  	rqpm.pm_step = ide_pm_state_start_resume;
->>  	rqpm.pm_state = PM_EVENT_ON;
->>  
->> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
->> +	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
->> +
->> +	if (err == 0 && drv->resume)
->> +		drv->resume(drive);
->> +
->>     
->
-> Added extra drv != NULL check (there may be no IDE device driver et all).
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
-Thanks for cleaning it up I've been really busy lately. I just
-downloaded 2.6.22-rc3  and the patch still wasn't in there will it be in
-rc4 or is there something else I need to do? Also a few weeks ago I
-tested the HPA patch for libata and the same issue comes up. I'll look
-into releasing another patch for libata once its in the kernel and I
-have more time.
+Mark Lord wrote:
+> That's odd.  Could you try that again,
+> with the latest (either v7.3 or v7.4) version of hdparm
+> (from sourceforge) ?
 
-Lee
+Using Debian's 7.3 via apt-get experimental - is that OK or would you like me to
+compile the upstream?
+
+2.6.21.1
+
+cu:~# hdparm -V
+hdparm v7.3
+cu:~# hdparm -K1 /dev/hda
+
+/dev/hda:
+ setting drive keep features to 1 (on)
+ HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
+
+dmesg:
+skge eth0: Link is up at 1000 Mbps, full duplex, flow control both
+hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
+hda: drive_cmd: error=0x04 { DriveStatusError }
+ide: failed opcode was: 0xef
+
+David
