@@ -1,50 +1,43 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.22-rc3 hibernate(?) disables SMART on ide
-Date: Tue, 05 Jun 2007 11:33:29 -0400
-Message-ID: <46658249.8030606@rtr.ca>
-References: <46609290.5030701@dgreaves.com> <46613C53.8010205@gmail.com> <4661E6CA.1080203@dgreaves.com> <46643DE5.3080904@rtr.ca> <46644A71.7060300@dgreaves.com> <4664E3F5.9080904@rtr.ca> <466526FA.3090506@dgreaves.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 8587] New: disk on promise pdc20378 disabled
+ at boot
+Date: Tue, 5 Jun 2007 10:12:17 -0700
+Message-ID: <20070605101217.2d466b9e.akpm@linux-foundation.org>
+References: <200706051330.l55DUqVW020898@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3770 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932425AbXFEPdb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Jun 2007 11:33:31 -0400
-In-Reply-To: <466526FA.3090506@dgreaves.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52016 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754878AbXFERMl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2007 13:12:41 -0400
+In-Reply-To: <200706051330.l55DUqVW020898@fire-2.osdl.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Tejun Heo <htejun@gmail.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, IDE Linux <linux-ide@vger.kernel.org>, ballen@gravity.phys.uwm.edu
+To: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mikael Pettersson <mikpe@csd.uu.se>
+Cc: linux-ide@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, jean.luc.coulon@gmail.com
 
-David Greaves wrote:
-> Mark Lord wrote:
->> That's odd.  Could you try that again,
->> with the latest (either v7.3 or v7.4) version of hdparm
->> (from sourceforge) ?
+On Tue, 5 Jun 2007 06:30:52 -0700
+bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=8587
 > 
-> Using Debian's 7.3 via apt-get experimental - is that OK or would you like me to
-> compile the upstream?
-
-No, what you have is good, thanks.
-
-> cu:~# hdparm -K1 /dev/hda
+>            Summary: disk on promise pdc20378 disabled at boot
+>     Kernel Version: 2.6.22-rc4
+>             Status: NEW
+>           Severity: normal
+>              Owner: greg@kroah.com
+>          Submitter: jean.luc.coulon@gmail.com
 > 
-> /dev/hda:
->  setting drive keep features to 1 (on)
->  HDIO_DRIVE_CMD(keepsettings) failed: Input/output error
 > 
-> dmesg:
-> skge eth0: Link is up at 1000 Mbps, full duplex, flow control both
-> hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-> hda: drive_cmd: error=0x04 { DriveStatusError }
-> ide: failed opcode was: 0xef
+> Most recent kernel where this bug did *NOT* occur: 2.6.22-rc3-git7
+> Distribution: Debian sid X86_64
+> Hardware Environment: PDC20378 in ASUS A8V Deluxe, Athlon64 3600+
+> Software Environment: sata_promise
+> Problem Description: disk is disabled
+> 
+> Steps to reproduce: boot the system
+> 
 
-I just find it odd that the drive rejects the command,
-but Seagate do seem to be the first to drop older features nowadays.
-But I thought their PATA units might have kept that functionality.
-
-I have some modern seagate SATA drives here -- I'll try it on those too,
-just for my own education.
-
-Thanks.
+If Jean really meant 2.6.22-rc3-git7 then this is a very recent regression.
