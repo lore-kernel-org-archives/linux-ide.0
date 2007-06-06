@@ -1,36 +1,67 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: Re: Promise TX4 (PDC40718) hotplug support
-Date: Wed, 6 Jun 2007 16:26:54 +0200
-Message-ID: <20070606142654.GU13668@fi.muni.cz>
-References: <200706061425.l56EPCx5004324@harpo.it.uu.se>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH pata-2.6 fix] hpt366: disallow Ultra133 for HPT374
+Date: Wed, 6 Jun 2007 23:53:28 +0400
+Message-ID: <200706062353.28707.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:47366 "EHLO minas.ics.muni.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762436AbXFFO1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Jun 2007 10:27:00 -0400
+Received: from gateway-1237.mvista.com ([63.81.120.155]:34662 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932361AbXFFTvo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jun 2007 15:51:44 -0400
 Content-Disposition: inline
-In-Reply-To: <200706061425.l56EPCx5004324@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com, wildy@petra.hos.u-szeged.hu
+Cc: linux-ide@vger.kernel.orglinux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikael Pettersson wrote:
-: The Promise SATA hardware supports hotplug, but the driver
-: doesn't yet handle it.
-: 
-: It's on my TODO list. (When I get some spare time, sigh.)
+Eliminate UltraATA/133 support for HPT374 -- the chip isn't capable of this mode
+according to the manual, and doesn't even seem to tolerate 66 MHz DPLL clock...
 
-	OK, thanks. If you need testing of your code on my
-PDC40718, feel free to ask me.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
--Yenya
+---
+ drivers/ide/pci/hpt366.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
--- 
-| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
-| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
-| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
-> I will never go to meetings again because I think  face to face meetings <
-> are the biggest waste of time you can ever have.        --Linus Torvalds <
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.03	May 4, 2007
++ * linux/drivers/ide/pci/hpt366.c		Version 1.04	Jun 4, 2007
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -106,7 +106,8 @@
+  *   switch  to calculating  PCI clock frequency based on the chip's base DPLL
+  *   frequency
+  * - switch to using the  DPLL clock and enable UltraATA/133 mode by default on
+- *   anything  newer than HPT370/A
++ *   anything  newer than HPT370/A (except HPT374 that is not capable of this
++ *   mode according to the manual)
+  * - fold PCI clock detection and DPLL setup code into init_chipset_hpt366(),
+  *   also fixing the interchanged 25/40 MHz PCI clock cases for HPT36x chips;
+  *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
+@@ -365,7 +366,6 @@ static u32 sixty_six_base_hpt37x[] = {
+ };
+ 
+ #define HPT366_DEBUG_DRIVE_INFO		0
+-#define HPT374_ALLOW_ATA133_6		1
+ #define HPT371_ALLOW_ATA133_6		1
+ #define HPT302_ALLOW_ATA133_6		1
+ #define HPT372_ALLOW_ATA133_6		1
+@@ -450,7 +450,7 @@ static struct hpt_info hpt370a __devinit
+ 
+ static struct hpt_info hpt374 __devinitdata = {
+ 	.chip_type	= HPT374,
+-	.max_mode	= HPT374_ALLOW_ATA133_6 ? 4 : 3,
++	.max_mode	= 3,
+ 	.dpll_clk	= 48,
+ 	.settings	= hpt37x_settings
+ };
+
