@@ -1,116 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
-Date: Thu, 07 Jun 2007 16:27:03 +0900
-Message-ID: <4667B347.9040900@gmail.com>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>	 <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>	 <466196AD.3090502@garzik.org>	 <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>	 <46667466.4010500@gmail.com> <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 0/6] libata: ATA passthru fixes
+Date: Thu, 07 Jun 2007 15:44:39 +0800
+Message-ID: <4667B767.5060601@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050701090905060901020309"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:42724 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbXFGH1N (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2007 03:27:13 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so496046wah
-        for <linux-ide@vger.kernel.org>; Thu, 07 Jun 2007 00:27:12 -0700 (PDT)
-In-Reply-To: <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Gregor Jasny <gjasny@googlemail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
-
-This is a multi-part message in MIME format.
---------------050701090905060901020309
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:52208 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbXFGHpD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2007 03:45:03 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l577j2Ya028788
+	for <linux-ide@vger.kernel.org>; Thu, 7 Jun 2007 03:45:02 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l577j2b3107084
+	for <linux-ide@vger.kernel.org>; Thu, 7 Jun 2007 01:45:02 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l577j13D004739
+	for <linux-ide@vger.kernel.org>; Thu, 7 Jun 2007 01:45:02 -0600
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
 
-Gregor Jasny wrote:
-> 2007/6/6, Tejun Heo <htejun@gmail.com>:
->> Let's see where we're failing.
-> 
-> [  186.849280] ata_piix 0000:00:07.1: version 2.11
-> [  186.849665] scsi0 : ata_piix
-> [  186.850241] scsi1 : ata_piix
-> [  186.850596] ata1: PATA max UDMA/33 cmd 0x000101f0 ctl 0x000103f6
-> bmdma 0x00010860 irq 14
-> [  186.851203] ata2: PATA max UDMA/33 cmd 0x00010170 ctl 0x00010376
-> bmdma 0x00010868 irq 15
-> [    0.656666] Marking TSC unstable due to: possible TSC halt in C2.
-> [    0.659999] Time: acpi_pm clocksource has been installed.
-> [    0.659999] Switched to NOHz mode on CPU #0
-> [    0.659999] ata1: ata_bus_post_reset: EXIT3
-> [    0.709999] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-> hpa_sectors = 78242976
-> [    0.723333] ata1.00: ATA-7: SAMSUNG MP0402H, UC100-14, max UDMA/100
-> [    0.739999] ata1.00: 78242976 sectors, multi 8: LBA48
-> [    0.763333] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-> hpa_sectors = 78242976
-> [    0.776666] ata1.00: configured for UDMA/33
-> [    1.376666] Clocksource tsc unstable (delta = -498091579 ns)
-> [   10.799998] ata2: ata_bus_post_reset: EXIT1
-> [   10.813332] ata2: SRST failed (errno=-16)
-> [   20.836664] ata2: ata_bus_post_reset: EXIT1
-> [   20.849997] ata2: SRST failed (errno=-16)
-> [   55.869994] ata2: ata_bus_post_reset: EXIT1
-> [   55.883327] ata2: SRST failed (errno=-16)
-> [   60.903327] ata2: ata_bus_post_reset: EXIT1
-> [   60.916660] ata2: SRST failed (errno=-16)
-> [   60.929993] ata2: reset failed, giving up
-> [   60.946660] scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG
-> MP0402H  UC10 PQ: 0 ANSI: 5
+1/6: update protocol numbers
+2/6: support PIO multi commands
+3/6: map UDMA protocols
+4/6: always enforce correct DEV bit
+5/6: support ATAPI devices
+6/6: update cached device parameters
 
-Ah.. okay.  Now I see what's going on.  Jeff, this is another device
-which doesn't set nsect and lbal to 1 after reset.  Gregor, please try
-the attached patch.
+Patch against the libata-dev tree for your review, thanks.
 
-Thanks.
-
--- 
-tejun
-
---------------050701090905060901020309
-Content-Type: text/x-patch;
- name*0="libata-dont-test-slave-register-readiness-after-srst.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="libata-dont-test-slave-register-readiness-after-srst.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4733f00..bac5e1f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3042,7 +3042,6 @@ int ata_wait_ready(struct ata_port *ap, unsigned long deadline)
- static int ata_bus_post_reset(struct ata_port *ap, unsigned int devmask,
- 			      unsigned long deadline)
- {
--	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int dev0 = devmask & (1 << 0);
- 	unsigned int dev1 = devmask & (1 << 1);
- 	int rc, ret = 0;
-@@ -3059,22 +3058,9 @@ static int ata_bus_post_reset(struct ata_port *ap, unsigned int devmask,
- 		}
- 	}
- 
--	/* if device 1 was found in ata_devchk, wait for
--	 * register access, then wait for BSY to clear
--	 */
--	while (dev1) {
--		u8 nsect, lbal;
--
--		ap->ops->dev_select(ap, 1);
--		nsect = ioread8(ioaddr->nsect_addr);
--		lbal = ioread8(ioaddr->lbal_addr);
--		if ((nsect == 1) && (lbal == 1))
--			break;
--		if (time_after(jiffies, deadline))
--			return -EBUSY;
--		msleep(50);	/* give drive a breather */
--	}
-+	/* wait for device 1 */
- 	if (dev1) {
-+		ap->ops->dev_select(ap, 1);
- 		rc = ata_wait_ready(ap, deadline);
- 		if (rc) {
- 			if (rc != -ENODEV)
-
---------------050701090905060901020309--
