@@ -1,66 +1,40 @@
-From: "Gregor Jasny" <gjasny@googlemail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
-Date: Thu, 7 Jun 2007 22:37:03 +0200
-Message-ID: <9d2cd630706071337j76cfb3c0h93b1150064b2ce59@mail.gmail.com>
+Date: Thu, 7 Jun 2007 13:56:11 -0700 (PDT)
+Message-ID: <alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org>
 References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
-	 <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
-	 <466196AD.3090502@garzik.org>
-	 <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>
-	 <46667466.4010500@gmail.com>
-	 <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
-	 <4667B347.9040900@gmail.com>
+  <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
+ <466196AD.3090502@garzik.org>  <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>
+  <46667466.4010500@gmail.com> <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
+ <4667B347.9040900@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:62593 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759193AbXFGUhE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2007 16:37:04 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so793310mue
-        for <linux-ide@vger.kernel.org>; Thu, 07 Jun 2007 13:37:03 -0700 (PDT)
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53686 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755118AbXFGU4h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2007 16:56:37 -0400
 In-Reply-To: <4667B347.9040900@gmail.com>
-Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Gregor Jasny <gjasny@googlemail.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-2007/6/7, Tejun Heo <htejun@gmail.com>:
+
+
+On Thu, 7 Jun 2007, Tejun Heo wrote:
+>
 > Ah.. okay.  Now I see what's going on.  Jeff, this is another device
 > which doesn't set nsect and lbal to 1 after reset.  Gregor, please try
 > the attached patch.
 
-It works like a charm.
+Tejun, since Jeff is apparently traveling this week, and Gregor tested the 
+patch successfully (and it looks sane anyway - why in Gods name _would_ we 
+care what the initial setting of nsect/lbal is?), can you send this in 
+with the changelog and sign-off?
 
-Thanks for debugging.
+Maybe it can go through Andrew like the other patch (the sata_promise 
+irq/polling handling), but I can take it directly too. Whatever seems 
+best.
 
-Gregor
-
-
-[  307.605884] ata_piix 0000:00:07.1: version 2.11
-[  307.606268] scsi0 : ata_piix
-[  307.606728] scsi1 : ata_piix
-[  307.607080] ata1: PATA max UDMA/33 cmd 0x000101f0 ctl 0x000103f6
-bmdma 0x00010860 irq 14
-[  307.607790] ata2: PATA max UDMA/33 cmd 0x00010170 ctl 0x00010376
-bmdma 0x00010868 irq 15
-[    0.656666] Marking TSC unstable due to: possible TSC halt in C2.
-[    0.659999] Time: acpi_pm clocksource has been installed.
-[    0.659999] Switched to NOHz mode on CPU #0
-[    0.703333] ata1: ata_bus_post_reset: EXIT3
-[    0.709999] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-hpa_sectors = 78242976
-[    0.723333] ata1.00: ATA-7: SAMSUNG MP0402H, UC100-14, max UDMA/100
-[    0.739999] ata1.00: 78242976 sectors, multi 8: LBA48
-[    0.763333] ata1.00: ata_hpa_resize 1: sectors = 78242976,
-hpa_sectors = 78242976
-[    0.776666] ata1.00: configured for UDMA/33
-[    0.799999] ata2: ata_bus_post_reset: EXIT3
-[    0.973333] ata2.00: ATAPI, max UDMA/33
-[    1.146666] ata2.00: configured for UDMA/33
-[    1.159999] scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG
-MP0402H  UC10 PQ: 0 ANSI: 5
-[...]
-[    1.326666] scsi 1:0:0:0: CD-ROM            SAMSUNG  CD-ROM SN-124
-  N102 PQ: 0
+		Linus
