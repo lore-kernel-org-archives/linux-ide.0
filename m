@@ -1,86 +1,41 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH pata-2.6 fix] hpt366: disallow Ultra133 for HPT374
-Date: Wed, 6 Jun 2007 18:54:55 -0700
-Message-ID: <20070606185455.fc264488.akpm@linux-foundation.org>
-References: <200706062353.28707.sshtylyov@ru.mvista.com>
+From: David Mills <djmills@netspace.net.au>
+Subject: Rescue question
+Date: Thu, 7 Jun 2007 12:41:12 +0900
+Message-ID: <200706071241.12559.djmills@netspace.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38789 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935523AbXFGBzL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jun 2007 21:55:11 -0400
-In-Reply-To: <200706062353.28707.sshtylyov@ru.mvista.com>
+Received: from mail-out3.netspace.net.au ([203.10.110.76]:3644 "EHLO
+	mail.netspace.net.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751658AbXFGEBc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2007 00:01:32 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, wildy@petra.hos.u-szeged.hu, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 6 Jun 2007 23:53:28 +0400 Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+Hi,
 
-> Eliminate UltraATA/133 support for HPT374 -- the chip isn't capable of this mode
-> according to the manual, and doesn't even seem to tolerate 66 MHz DPLL clock...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> ---
->  drivers/ide/pci/hpt366.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> Index: linux-2.6/drivers/ide/pci/hpt366.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/pci/hpt366.c
-> +++ linux-2.6/drivers/ide/pci/hpt366.c
-> @@ -1,5 +1,5 @@
->  /*
-> - * linux/drivers/ide/pci/hpt366.c		Version 1.03	May 4, 2007
-> + * linux/drivers/ide/pci/hpt366.c		Version 1.04	Jun 4, 2007
+I have a notebook on which the hard disk has died - it won't boot and makes 
+funny noises.  I am hoping to copy as much data of the dead disk as possible.
 
-argh.  Please just delete this version numbering.  It's a sure-fire way of
-maximising patch conflicts.
+I have successfully used the SuSE linux installation DVD - booting the rescue 
+system then mounting the dead disk and an external USB disk and copying 
+valuable data across - in a similar situation in the past.
 
-It's 1.10 in Bart's tree.
+But this time it hangs on the point of loading the ata_piix module.
 
->   * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
->   * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-> @@ -106,7 +106,8 @@
->   *   switch  to calculating  PCI clock frequency based on the chip's base DPLL
->   *   frequency
->   * - switch to using the  DPLL clock and enable UltraATA/133 mode by default on
-> - *   anything  newer than HPT370/A
-> + *   anything  newer than HPT370/A (except HPT374 that is not capable of this
-> + *   mode according to the manual)
->   * - fold PCI clock detection and DPLL setup code into init_chipset_hpt366(),
->   *   also fixing the interchanged 25/40 MHz PCI clock cases for HPT36x chips;
->   *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
-> @@ -365,7 +366,6 @@ static u32 sixty_six_base_hpt37x[] = {
->  };
->  
->  #define HPT366_DEBUG_DRIVE_INFO		0
-> -#define HPT374_ALLOW_ATA133_6		1
->  #define HPT371_ALLOW_ATA133_6		1
->  #define HPT302_ALLOW_ATA133_6		1
->  #define HPT372_ALLOW_ATA133_6		1
-> @@ -450,7 +450,7 @@ static struct hpt_info hpt370a __devinit
->  
->  static struct hpt_info hpt374 __devinitdata = {
->  	.chip_type	= HPT374,
-> -	.max_mode	= HPT374_ALLOW_ATA133_6 ? 4 : 3,
-> +	.max_mode	= 3,
->  	.dpll_clk	= 48,
->  	.settings	= hpt37x_settings
->  };
+Could I prevent this module from loading?  Is there some other trick I can 
+try?
 
-The code in Bart's tree has
+I accept that the disk may be so dead as to not be possible to rescue any 
+data.
 
-static struct hpt_info hpt374 __devinitdata = {
-	.chip_type	= HPT374,
-	.max_ultra	= HPT374_ALLOW_ATA133_6 ? 6 : 5,
-	.dpll_clk	= 48,
-	.settings	= hpt37x_settings
-};
+Any help would be greatly appreciated.
 
-I can handle the renaming, but note that Bart's tree has different values
-as well.
+Thanks,
 
+David.
