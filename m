@@ -1,34 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] ide: ide-generic, add another device exception
-Date: Fri, 8 Jun 2007 09:59:31 -0400
-Message-ID: <20070608135931.GB24346@havoc.gtf.org>
-References: <20601315171560711667@wsc.cz> <200706081418.56217.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: claim ctl port for legacy SFF ports
+Date: Fri, 08 Jun 2007 23:12:01 +0900
+Message-ID: <466963B1.4070208@gmail.com>
+References: <20070604235157.GD31462@havoc.gtf.org> <20070608114119.GE29122@htj.dyndns.org> <20070608135517.GA24346@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:57155 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966995AbXFHN7d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Jun 2007 09:59:33 -0400
-Content-Disposition: inline
-In-Reply-To: <200706081418.56217.bzolnier@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.228]:24260 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968175AbXFHOMI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 10:12:08 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so745132nzf
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 07:12:08 -0700 (PDT)
+In-Reply-To: <20070608135517.GA24346@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Ingo Korb <ml@akana.de>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, Jun 08, 2007 at 02:18:55PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Monday 04 June 2007, Jiri Slaby wrote:
-> > ide-generic, add another device exception
+Jeff Garzik wrote:
+> On Fri, Jun 08, 2007 at 08:41:19PM +0900, Tejun Heo wrote:
+>> libata used to claim only cmd ports for legacy SFF ports.  Claim ctl
+>> ports too.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>> This has been this way as long as I can remember.  It's almost
+>> pleasant to see that it survived through all the devres/init rework.
+>> I guess it's time for a change.
 > 
-> ide-generic is a generic ISA IDE driver, this one is drivers/ide/pci/generic
-> (a generic IDE PCI driver) - fixed patch description to avoid confusion.
+> pci_request_regions() should claims everything, if Alan did his job :)
 > 
-> [ Yes, both drivers need a rename - patches are welcomed. ]
+> All this goes through ata_pci_init_one(), which guarantees it's PCI IDE.
 
-Probably best to do a rename from your side, in git.
+Allowing legacy to be used on non-PCI systems was your idea!  Alright,
+then we can drop a lot of junk from legacy SFF code.  Will prep another
+patch.  Please ignore two patches in this thread.
 
-	Jeff
-
-
-
+-- 
+tejun
