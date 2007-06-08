@@ -1,36 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
-Date: Fri, 8 Jun 2007 12:40:58 +0100
-Message-ID: <20070608124058.7948dee1@the-village.bc.nu>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
-	<9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
-	<466196AD.3090502@garzik.org>
-	<9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>
-	<46667466.4010500@gmail.com>
-	<9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
-	<4667B347.9040900@gmail.com>
-	<alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org>
-	<20070607224746.GA23290@havoc.gtf.org>
-	<46690D10.9040808@gmail.com>
-	<20070608122750.7f8ae0e0@the-village.bc.nu>
-	<46693E33.6080705@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: claim ctl port for legacy SFF ports
+Date: Fri, 8 Jun 2007 20:41:19 +0900
+Message-ID: <20070608114119.GE29122@htj.dyndns.org>
+References: <20070604235157.GD31462@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37262 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S968629AbXFHLgo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 07:36:44 -0400
-In-Reply-To: <46693E33.6080705@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.180]:15559 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966610AbXFHLlh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 07:41:37 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1027736wah
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 04:41:36 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20070604235157.GD31462@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> If we still have several rc's left, how about just removing it and
-> watching the fireworks?  Jeff?
+libata used to claim only cmd ports for legacy SFF ports.  Claim ctl
+ports too.
 
-Seems best to me - we know the current code breaks a load of systems and
-the change should not break anything but fix them all. If we ship without
-it being changed then a load of people are stuck with broken ATA.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+This has been this way as long as I can remember.  It's almost
+pleasant to see that it survived through all the devres/init rework.
+I guess it's time for a change.
+
+ drivers/ata/libata-sff.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index e35d134..99a9f98 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -712,6 +712,7 @@ int ata_pci_prepare_native_host(struct pci_dev *pdev,
+ struct ata_legacy_devres {
+ 	unsigned int	mask;
+ 	unsigned long	cmd_port[2];
++	unsigned long	ctl_port[2];
+ 	void __iomem *	cmd_addr[2];
+ 	void __iomem *	ctl_addr[2];
+ 	unsigned int	irq[2];
+@@ -764,12 +765,16 @@ static int ata_init_legacy_port(struct ata_port *ap,
+ 		ctl_port = ATA_SECONDARY_CTL;
+ 	}
+ 
+-	/* request cmd_port */
++	/* request cmd and ctl port */
+ 	if (request_region(cmd_port, 8, "libata"))
+ 		legacy_dr->cmd_port[port_no] = cmd_port;
+-	else {
++
++	if (request_region(ctl_port, 8, "libata"))
++		legacy_dr->ctl_port[port_no] = ctl_port;
++
++	if (!legacy_dr->cmd_port[port_no] || !legacy_dr->ctl_port[port_no]) {
+ 		dev_printk(KERN_WARNING, host->dev,
+-			   "0x%0lX IDE port busy\n", cmd_port);
++			   "0x%0lX/0x%0lX IDE port busy\n", cmd_port, ctl_port);
+ 		return -EBUSY;
+ 	}
+ 
