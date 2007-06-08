@@ -1,50 +1,72 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
-Date: Thu, 7 Jun 2007 18:47:46 -0400
-Message-ID: <20070607224746.GA23290@havoc.gtf.org>
-References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org> <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com> <466196AD.3090502@garzik.org> <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com> <46667466.4010500@gmail.com> <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com> <4667B347.9040900@gmail.com> <alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata and legacy ide pcmcia failure
+Date: Fri, 08 Jun 2007 16:10:43 +0900
+Message-ID: <466900F3.7040801@gmail.com>
+References: <464A0321.3080201@gmail.com>	<464C1575.8070005@gmail.com>	<464CB7C9.2080807@gmail.com>	<46503192.1040300@gmail.com>	<4650B9E3.7070409@gmail.com>	<46518798.2020808@gmail.com>	<4651B66E.6030505@gmail.com>	<4651B834.3060702@gmail.com>	<4651C4A1.6000101@gmail.com>	<4651C74B.7020108@gmail.com>	<46520B36.90409@garzik.org> <20070523150229.00a0c3c4@the-village.bc.nu> <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:55179 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765977AbXFGWrs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Jun 2007 18:47:48 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:6091 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756377AbXFHHLB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 03:11:01 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so927895wah
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 00:11:00 -0700 (PDT)
+In-Reply-To: <46685AE5.4010908@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: Robert de Rooy <robert.de.rooy@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
 
-On Thu, Jun 07, 2007 at 01:56:11PM -0700, Linus Torvalds wrote:
-> On Thu, 7 Jun 2007, Tejun Heo wrote:
-> > Ah.. okay.  Now I see what's going on.  Jeff, this is another device
-> > which doesn't set nsect and lbal to 1 after reset.  Gregor, please try
-> > the attached patch.
+Hello,
 
-> Tejun, since Jeff is apparently traveling this week, and Gregor tested the 
-> patch successfully (and it looks sane anyway - why in Gods name _would_ we 
-> care what the initial setting of nsect/lbal is?), can you send this in 
-> with the changelog and sign-off?
+Robert de Rooy wrote:
+> Jun  7 21:10:28 localhost kernel: ata3: soft resetting port
+> Jun  7 21:10:28 localhost kernel: ata3: reset complete
+> Jun  7 21:10:28 localhost kernel: ATA: abnormal status 0x80 on port
+> 0x00014107
+> Jun  7 21:10:28 localhost kernel: ATA: abnormal status 0x80 on port
+> 0x00014107
+> Jun  7 21:10:28 localhost kernel: ata3.00: issuing IDENTIFY
+> Jun  7 21:10:29 localhost kernel: ata3.00: IDENTIFY complete
+> Jun  7 21:10:29 localhost kernel: ata3.00: CFA: Memory Card Adapter,
+> 20011212, max PIO1
+> Jun  7 21:10:29 localhost kernel: ata3.00: 253696 sectors, multi 0: LBA
+> Jun  7 21:10:29 localhost kernel: ata3.00: issuing IDENTIFY
+> Jun  7 21:10:29 localhost kernel: ata3.00: IDENTIFY complete
+> Jun  7 21:10:29 localhost kernel: ata3.00: configured for PIO0
+> Jun  7 21:10:29 localhost kernel: ata3: EH complete
+> Jun  7 21:10:29 localhost kernel: scsi 3:0:0:0: Direct-Access    
+> ATA      Memory Card Adap 2001 PQ: 0 ANSI: 5
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] 253696 512-byte
+> hardware sectors (130 MB)
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] Write Protect is off
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] Write cache:
+> disabled, read cache: enabled, doesn't support DPO or FUA
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] 253696 512-byte
+> hardware sectors (130 MB)
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] Write Protect is off
+> Jun  7 21:10:29 localhost kernel: sd 3:0:0:0: [sdd] Write cache:
+> disabled, read cache: enabled, doesn't support DPO or FUA
 
-Ack'ing the sata_promise change was easy, but with this one it would
-be nice to wait a bit before changing the core probe code that [now]
-every ATA setup goes through, based on a single bug report.
+So, that made it go through detection okay.  That's a good news.
 
-The values assist in detecting ghost devices (same device appearing
-on both master and slave) and TF register malfunctions, and I would
-appreciate not breaking _that_ so late in 2.6.22-rc for a single
-report.  Thankfully we have -some- ghost device prevention code
-elsewhere, but this is part of it.
+> Jun  7 21:10:59 localhost kernel:  sdd:<3>ata3.00: exception Emask 0x0
+> SAct 0x0 SErr 0x0 action 0x2 frozen
+> Jun  7 21:10:59 localhost kernel: ata3.00: cmd
+> 20/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+> Jun  7 21:10:59 localhost kernel:          res
+> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
 
-Fedora 7 reports are starting to come in, and those will help point
-us in the right direction too.
+But, read for partition table failed miserably and took the device
+offline completely.
 
-I'll be home for a bit in 36 hours (->net driver fixes go then)
-and for good on Tuesday, so I'm hoping you can wait until then.
+Whee... Cc'ing linux-ide and Mark Lord.  The original thread is..
 
-	Jeff
+  http://thread.gmane.org/gmane.linux.kernel/530099
 
+Any ideas?
 
-
+-- 
+tejun
