@@ -1,42 +1,46 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Fri, 08 Jun 2007 18:11:01 -0400
-Message-ID: <4669D3F5.7040300@rtr.ca>
-References: <464A0321.3080201@gmail.com>	<464C1575.8070005@gmail.com> <464CB7C9.2080807@gmail.com>	<46503192.1040300@gmail.com> <4650B9E3.7070409@gmail.com>	<46518798.2020808@gmail.com> <4651B66E.6030505@gmail.com>	<4651B834.3060702@gmail.com> <4651C4A1.6000101@gmail.com>	<4651C74B.7020108@gmail.com> <46520B36.90409@garzik.org> <20070523150229.00a0c3c4@the-village.bc.nu> <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/1] ide: ide-generic, add another device exception
+Date: Sat, 9 Jun 2007 00:42:50 +0200
+Message-ID: <200706090042.50287.bzolnier@gmail.com>
+References: <20601315171560711667@wsc.cz> <200706081418.56217.bzolnier@gmail.com> <20070608223505.3ff1a662@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4259 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968664AbXFHWLD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Jun 2007 18:11:03 -0400
-In-Reply-To: <4669D2D8.3020806@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:37436 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S971143AbXFHW23 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 18:28:29 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1055615ugf
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 15:28:28 -0700 (PDT)
+In-Reply-To: <20070608223505.3ff1a662@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert de Rooy <robert.de.rooy@gmail.com>
-Cc: Mark Lord <mlord@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Ingo Korb <ml@akana.de>, linux-ide@vger.kernel.org
 
-Robert de Rooy wrote:
-> Mark Lord wrote:
->> I still don't see much evidence that interrupts are actually 
->> functioning here.
->> It would be good to see /proc/interrupts before/after libata tries to 
->> talk to it.
->>
->> Let's assume for the moment that interrupts are b0rken.
->> The legacy IDE driver can talk to such devices completely without 
->> interrupts,
->> if the IDE polling patch (below) is applied.
->>
->> So, Robert:  could you try again with the old IDE driver,
->> except apply this patch to it first?  This will give valuable info.
->
-> I tried the patch, but a get a kernel panic on boot with it. I can try 
-> to get a screenshot of it tomorrow.
+On Friday 08 June 2007, Alan Cox wrote:
+> On Fri, 8 Jun 2007 14:18:55 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> > On Monday 04 June 2007, Jiri Slaby wrote:
+> > > ide-generic, add another device exception
+> > 
+> > ide-generic is a generic ISA IDE driver, this one is drivers/ide/pci/generic
+> > (a generic IDE PCI driver) - fixed patch description to avoid confusion.
+> 
+> Nope ide-generic is a generic I/O based ST506 interface. It covers a bit
+> more than just ISA bus.
 
-Oh crap.  I did test it a couple of months ago, but my boot/root drive
-is libata not IDE -- so no panic on boot with it.  After booting, it worked
-just fine talking to PC-CARD CF devices using the polling.
+If so then can we finally get rid of hd.c?
 
-=ml
+> > [ Yes, both drivers need a rename - patches are welcomed. ]
+> 
+> Good way to break everyones module settings
+
+MODULE_ALIAS() should cover this up nicely.
+
+Thanks,
+Bart
