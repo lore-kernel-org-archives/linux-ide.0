@@ -1,44 +1,139 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH pata-2.6] hpt366: simplify UltraDMA filtering (take 3)
-Date: Fri, 8 Jun 2007 14:42:54 +0200
-Message-ID: <200706081442.54937.bzolnier@gmail.com>
-References: <200706062357.42432.sshtylyov@ru.mvista.com>
+Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
+Date: Fri, 8 Jun 2007 14:33:24 +0200
+Message-ID: <200706081433.25181.bzolnier@gmail.com>
+References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <200706050300.56079.bzolnier@gmail.com> <46655AEA.4020906@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:48482 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:48213 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968434AbXFHNJV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 09:09:21 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so950408ugf
-        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 06:09:19 -0700 (PDT)
-In-Reply-To: <200706062357.42432.sshtylyov@ru.mvista.com>
+	with ESMTP id S968454AbXFHNJT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2007 09:09:19 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so950349ugf
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2007 06:09:18 -0700 (PDT)
+In-Reply-To: <46655AEA.4020906@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+Cc: Geller Sandor <wildy@petra.hos.u-szeged.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wednesday 06 June 2007, Sergei Shtylyov wrote:
-> Simplify UltraDMA mode filtering in the driver:
+On Tuesday 05 June 2007, Sergei Shtylyov wrote:
+> Hello.
 > 
-> - make use of the newly introduced 'udma_mask' field of 'ide_pci_device_t' to
->   set the correct hwif->ultra_mask, modifying init_setup_hpt366() to select
->   the correct mask based on the chip revision;
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> - replace 'max_mode' field of the 'struct hpt_info' with 'max_ultra' specifying
->   the maximum UltraDMA mode allowed;
+> >>>>>>>The log of a typical IDE reset is available here:
 > 
-> - rewrite hpt3xx_udma_filter() to differ the filters based on the 'chip_type'
->   field, and only use it for HPT366 and HPT370[A] where it's really necessary.
+> >>>>>>>http://petra.hos.u-szeged.hu/~wildy/syslog.gz
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >>>>>>>This was the worst case: the IDE bus was resetted during the system 
+> >>>>>>>boot.
 > 
-> ---
-> This patch is against the top of the pata-2.6. I had to change it a bit due to
-> a fixes going in ahead. Tested on HPT370, will try to test on HPT371N later...
+> >>>>>>  Could you try setting HPT374_ALLOW_ATA133_6 to 0 in
+> >>>>>>drivers/ide/pci/hpt366.c and rebuild/reboot the kernel?
+> 
+> >>>>>Hi Sergei,
+> 
+> >>>>>This looks promising. Using a vanilla 2.6.22-rc3 I was able to reproduce
+> >>>>>the problem within a few seconds. With the above modification the 
+> >>>>>machine
+> >>>>>is running under heavy disk I/O without problems since 30 minutes...
+> 
+> >>>>Did it fix the problem for good?
+> 
+> >>>It seems so far. There hasn't been any problem since I've applied the fix.
+> 
+> >>>>Sergei, do we need to disallow UDMA6 completely on HPT734 or
+> >>>>is it only an issue with some problematic devices (=> blacklist)?
+> 
+> >>    Note that I didn't change what the old code was doing in this regard -- 
+> >>although the HPT374 spec does *not* say that UDMA6 is supported, it had been 
+> >>enabled. What have *really* changed for HPT374 was:
+> 
+> >>- in 2.6.20-rc1, the driver switched to using the actual 33 MHz timing table
+> >>   instead of the old one, matching 50 MHz (and so, severely underclocked);
+> 
+> >>- in 2.6.2-rc1, the driver switched from 33 MHz PCI to 66 MHz DPLL clock.
+> 
+> >>    Disallowing UDMA6 would clock the chip with 50 MHz DPLL, howewer, the 
+> 
+> > I felt inspired by this explanation (thanks!) and took a look at
+> > hpt374-opensource-v2.10 vendor driver.  Here is something interesting:
+> 
+> > glbdata.c:
+> 
+> > ...
+> > #ifdef CLOCK_66MHZ
+> > ULONG setting370_66[] = {
+> >         0xd029d5e,  0xd029d26,  0xc829ca6,  0xc829c84,  0xc829c62,
+> >         0x2c829d2c, 0x2c829c66, 0x2c829c62,
+> >         0x1c829c62, 0x1c9a9c62, 0x1c929c62, 0x1c8e9c62, 0x1c8a9c62,
+> >         0x1c8a9c62/*0x1cae9c62*/, 0x1c869c62, 0x1c869c62,
+> > };
+> > ...
+> 
+> > hpt366.c:
+> 
+> > ...
+> > static u32 sixty_six_base_hpt37x[] = {
+> >         /* XFER_UDMA_6 */       0x1c869c62,
+> >         /* XFER_UDMA_5 */       0x1cae9c62,     /* 0x1c8a9c62 */
+> > ...
+> 
+> > So we are using Dual ATA Clock for UDMA5 whereas vendor driver doesn't
+> 
+>     This is so in all other HPT drivers (and HPT371N datasheet has the same 
+> figures -- this chip is the only one supporting UDMA6 and having the default 
+> DPLL clock > 50 MHz).  Note that it means that there's no actual UDMA5 since 
+> the timing exactly matches that one used for UDMA4.
+> 
+> > (the only other mode which uses Dual ATA Clock, in both drivers, is rarely
+> > used UDMA3).
+> 
+>     And UDMA4 with 50 MHz clock.
+> 
+> > Thanks to this UDMA cycle time should be equal 22.5ns instead of 30ns
+> > (spec defines it at 16.8ns, ide_timings[] uses 20ns) when using 66 MHz DPLL
+> > clock.  In theory everything should play nice but the data manual for HPT374
+> 
+>     And it does -- on other chips.
 
-applied
+My beautiful theory failed... Oh, well... ;)
+
+> > contains weird note that Dual ATA Clock is meant to implement ATA100 read
+> > and write at different clocks (there is no more explanation to this).
+> 
+>     That's the thing that keeps me confused in the other datasheets too -- 
+> from my interpretation of their timing figures it seemed to control 2x ATA 
+> clock multipler. HPT370 datasheet just gives different timings and SCR2 values 
+> for reads/writes in UDMA5 (I've disabled this mode on HPT370 from which the 
+> read performance only gained -- not sure if it makes sense to restore the old 
+> clock turnaround hack).
+> 
+> > Geller reported that the problems started after migrating from 2.6.20.7 to
+> > 2.6.21.1 (the affected disks are using UDMA5) and at the same time the driver
+> > switched from 33 MHz PCI to 66 MHz DPLL clock.  Also the issue is completely
+> > fixed by using 50 MHz DPLL clock (UDMA5 timing for 50 MHz DPLL clock is
+> > 0x12848242 so UDMA cycle time equals 20ns and is smaller than the one
+> > obtained using 66 MHz DPLL clock).
+> 
+> 
+> > It all makes me wonder whether it is really safe to use Dual ATA Clock for
+> > UDMA5 and whether we should just be using "the offical" timing instead...
+> 
+>     Not sure. I had no problems with this on the HPT371N/302 and 371N was 
+> clocked by 66 MHz DPLL from the start (its default clock is 75 MHz however).
+>     I'm still holding to my hypothesis that HPT374 simply can't tolerate 66 
+> MHz DPLL clock, and the UDMA5 timing figures that you've cited seem to prove that.
+>     I'm going to post a patch today -- how about completely prohibiting UDMA6 
+> on HPT374?
+
+Sounds fine, in case somebody misses it we can introduce something like
+hpt374_allow_66mhz_dpll module parameter...
+
+Thanks,
+Bart
