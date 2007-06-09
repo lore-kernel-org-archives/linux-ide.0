@@ -1,127 +1,85 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: HPT374 IDE problem with 2.6.21.* kernels
-Date: Sat, 09 Jun 2007 14:13:20 +0400
-Message-ID: <466A7D40.4040703@ru.mvista.com>
-References: <Pine.LNX.4.62.0705301112170.1260@petra.hos.u-szeged.hu> <200706050300.56079.bzolnier@gmail.com> <46655AEA.4020906@ru.mvista.com> <200706081433.25181.bzolnier@gmail.com>
+From: Peter Favrholdt <linux-ide@how.dk>
+Subject: Re: sata_promise: which version/patch to test?
+Date: Sat, 09 Jun 2007 14:06:09 +0200
+Message-ID: <466A97B1.1040906@how.dk>
+References: <200705121504.l4CF4u83028056@harpo.it.uu.se>    <465A0D8F.8090309@how.dk>    <42957.194.237.142.21.1180331956.squirrel@ncircle.nullnet.fi>    <465B0A28.9050305@how.dk>    <51376.192.168.9.10.1180377924.squirrel@ncircle.nullnet.fi>    <465B2F1D.30509@how.dk>    <55161.192.168.9.10.1180381276.squirrel@ncircle.nullnet.fi>    <465B35E1.1040306@how.dk> <52314.194.237.142.21.1181199147.squirrel@ncircle.nullnet.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:7333 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751664AbXFIKLf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 9 Jun 2007 06:11:35 -0400
-In-Reply-To: <200706081433.25181.bzolnier@gmail.com>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:55605 "EHLO
+	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbXFIMFk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Jun 2007 08:05:40 -0400
+In-Reply-To: <52314.194.237.142.21.1181199147.squirrel@ncircle.nullnet.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Geller Sandor <wildy@petra.hos.u-szeged.hu>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tomi Orava <Tomi.Orava@ncircle.nullnet.fi>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
->>>>>>Sergei, do we need to disallow UDMA6 completely on HPT734 or
->>>>>>is it only an issue with some problematic devices (=> blacklist)?
+Tomi Orava wrote:
+ > Have you had time to check if the latest patch fixes our problems
+ > with promise-controller ?
+ >
+ > http://bugzilla.kernel.org/attachment.cgi?id=11694&action=view
+ >
+ > The above patch seems to apply to the latest rc4 kernel.
+ > I have not found the time to reboot my own server as of yet.
+ >
+ > Regards,
+ > Tomi Orava
 
->>>>   Note that I didn't change what the old code was doing in this regard -- 
->>>>although the HPT374 spec does *not* say that UDMA6 is supported, it had been 
->>>>enabled. What have *really* changed for HPT374 was:
+Hi Tomi,
 
->>>>- in 2.6.20-rc1, the driver switched to using the actual 33 MHz timing table
->>>>  instead of the old one, matching 50 MHz (and so, severely underclocked);
+I have tested - but it didn't solve the problem.
 
->>>>- in 2.6.2-rc1, the driver switched from 33 MHz PCI to 66 MHz DPLL clock.
+Best regards,
 
->>>>   Disallowing UDMA6 would clock the chip with 50 MHz DPLL, howewer, the 
+Peter
 
->>>I felt inspired by this explanation (thanks!) and took a look at
->>>hpt374-opensource-v2.10 vendor driver.  Here is something interesting:
->>
->>>glbdata.c:
->>
->>>...
->>>#ifdef CLOCK_66MHZ
->>>ULONG setting370_66[] = {
->>>        0xd029d5e,  0xd029d26,  0xc829ca6,  0xc829c84,  0xc829c62,
->>>        0x2c829d2c, 0x2c829c66, 0x2c829c62,
->>>        0x1c829c62, 0x1c9a9c62, 0x1c929c62, 0x1c8e9c62, 0x1c8a9c62,
->>>        0x1c8a9c62/*0x1cae9c62*/, 0x1c869c62, 0x1c869c62,
->>>};
->>>...
+[ 1076.900017] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x1380000 
+action 0x2 frozen
+[ 1076.900031] ata1.00: cmd c8/00:00:00:16:e6/00:00:00:00:00/e1 tag 0 
+cdb 0x0 data 131072 in
+[ 1076.900033]          res 40/00:01:09:4f:c2/00:00:00:00:00/00 Emask 
+0x4 (timeout)
+[ 1082.249590] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1086.951564] ata1: device not ready (errno=-16), forcing hardreset
+[ 1086.951573] ata1: hard resetting port
+[ 1092.465004] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1096.998967] ata1: COMRESET failed (errno=-16)
+[ 1096.998977] ata1: hard resetting port
+[ 1102.512501] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1107.046465] ata1: COMRESET failed (errno=-16)
+[ 1107.046474] ata1: hard resetting port
+[ 1112.559985] ata1: port is slow to respond, please be patient (Status 
+0xff)
+[ 1142.058746] ata1: COMRESET failed (errno=-16)
+[ 1142.058758] ata1: hard resetting port
+[ 1147.068505] ata1: COMRESET failed (errno=-16)
+[ 1147.068514] ata1: reset failed, giving up
+[ 1147.068517] ata1.00: disabled
+[ 1147.068531] ata1: EH complete
+[ 1147.068962] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+[ 1147.068968] end_request: I/O error, dev sda, sector 31856128
+[ 1147.068972] Buffer I/O error on device sda, logical block 3982016
+[ 1147.068978] Buffer I/O error on device sda, logical block 3982017
+[ 1147.068981] Buffer I/O error on device sda, logical block 3982018
+[ 1147.068985] Buffer I/O error on device sda, logical block 3982019
+[ 1147.068989] Buffer I/O error on device sda, logical block 3982020
+[ 1147.068992] Buffer I/O error on device sda, logical block 3982021
+[ 1147.068996] Buffer I/O error on device sda, logical block 3982022
+[ 1147.068999] Buffer I/O error on device sda, logical block 3982023
+[ 1147.069003] Buffer I/O error on device sda, logical block 3982024
+[ 1147.069006] Buffer I/O error on device sda, logical block 3982025
+[ 1147.069037] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+[ 1147.069041] end_request: I/O error, dev sda, sector 31856384
+[ 1147.071273] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+[ 1147.071282] end_request: I/O error, dev sda, sector 31856128
+[ 1147.072482] sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+[ 1147.072491] end_request: I/O error, dev sda, sector 31856128
 
->>>hpt366.c:
-
->>>...
->>>static u32 sixty_six_base_hpt37x[] = {
->>>        /* XFER_UDMA_6 */       0x1c869c62,
->>>        /* XFER_UDMA_5 */       0x1cae9c62,     /* 0x1c8a9c62 */
->>>...
-
->>>So we are using Dual ATA Clock for UDMA5 whereas vendor driver doesn't
-
->>    This is so in all other HPT drivers (and HPT371N datasheet has the same 
->>figures -- this chip is the only one supporting UDMA6 and having the default 
->>DPLL clock > 50 MHz).  Note that it means that there's no actual UDMA5 since 
->>the timing exactly matches that one used for UDMA4.
-
->>>(the only other mode which uses Dual ATA Clock, in both drivers, is rarely
->>>used UDMA3).
-
->>    And UDMA4 with 50 MHz clock.
-
->>>Thanks to this UDMA cycle time should be equal 22.5ns instead of 30ns
->>>(spec defines it at 16.8ns, ide_timings[] uses 20ns) when using 66 MHz DPLL
->>>clock.  In theory everything should play nice but the data manual for HPT374
-
->>    And it does -- on other chips.
-
-> My beautiful theory failed... Oh, well... ;)
-
-    Sigh, if we only knew why HPT decided that UDMA5 timings should be the 
-same as UDMA4 -- probably they had some reason...
-
->>>contains weird note that Dual ATA Clock is meant to implement ATA100 read
->>>and write at different clocks (there is no more explanation to this).
-
->>    That's the thing that keeps me confused in the other datasheets too -- 
->>from my interpretation of their timing figures it seemed to control 2x ATA 
->>clock multipler. HPT370 datasheet just gives different timings and SCR2 values 
->>for reads/writes in UDMA5 (I've disabled this mode on HPT370 from which the 
->>read performance only gained -- not sure if it makes sense to restore the old 
->>clock turnaround hack).
-
-    It used to clock the writes from DPLL in UDMA5, and clock UDMA5 reads and 
-all other modes from PCI... And the result was dog slow reads in UDMA5 which 
-UDMA4 was beating by about 8 MB/s... Maybe that's why UDMA4 timings were used 
-for UDMA5 in later chips by HPT -- but the real UDMA5 yielded faster transfer 
-speeds than UDMA4 for those chips...
-
->>>Geller reported that the problems started after migrating from 2.6.20.7 to
->>>2.6.21.1 (the affected disks are using UDMA5) and at the same time the driver
->>>switched from 33 MHz PCI to 66 MHz DPLL clock.  Also the issue is completely
->>>fixed by using 50 MHz DPLL clock (UDMA5 timing for 50 MHz DPLL clock is
->>>0x12848242 so UDMA cycle time equals 20ns and is smaller than the one
->>>obtained using 66 MHz DPLL clock).
-
->>>It all makes me wonder whether it is really safe to use Dual ATA Clock for
->>>UDMA5 and whether we should just be using "the offical" timing instead...
-
->>    Not sure. I had no problems with this on the HPT371N/302 and 371N was 
->>clocked by 66 MHz DPLL from the start (its default clock is 75 MHz however).
-
-    I meant to say 77... :-)
-
->>    I'm still holding to my hypothesis that HPT374 simply can't tolerate 66 
->>MHz DPLL clock, and the UDMA5 timing figures that you've cited seem to prove that.
->>    I'm going to post a patch today -- how about completely prohibiting UDMA6 
->>on HPT374?
-
-> Sounds fine, in case somebody misses it we can introduce something like
-> hpt374_allow_66mhz_dpll module parameter...
-
-    Don't think anybody will miss it. Anyway, chip spec doesn't say that it's 
-supported.
-
-> Thanks,
-> Bart
-
-MBR, Sergei
