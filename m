@@ -1,88 +1,85 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches v2
-Date: Sat, 09 Jun 2007 19:40:41 +0200
-Message-ID: <466AE619.2000706@googlemail.com>
-References: <466AE54A.3040902@googlemail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] Re: Linux v2.6.22-rc3
+Date: Sat, 9 Jun 2007 11:12:06 -0700 (PDT)
+Message-ID: <alpine.LFD.0.98.0706091054360.20321@woody.linux-foundation.org>
+References: <alpine.LFD.0.98.0705252008210.26602@woody.linux-foundation.org>
+ <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com>
+ <466196AD.3090502@garzik.org> <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com>
+ <46667466.4010500@gmail.com> <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com>
+ <4667B347.9040900@gmail.com> <alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org>
+ <20070607224746.GA23290@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <466AE54A.3040902@googlemail.com>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-usb-devel@lists.sourceforge.net, Jeff Garzik <jeff@garzik.org>, Greg Kroah-Hartman <gregkh@suse.de>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, James Morris <jmorris@namei.org>, linux-ide@vger.kernel.org, Simon <sg02r@ecs.soton.ac.uk>, Pavel Machek <pavel@ucw.cz>, linux-pm@lists.linux-foundation.org, Alan Cox <alan@redhat.com>, Eric Paris <eparis@parisplace.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Smalley <sds@tycho.nsa.gov>, Jean-Luc Coulon <jean.luc.coulon@gmail.com>, Paulo Pereira <pfmp.404@gmail.com>
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38173 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752458AbXFISMU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Jun 2007 14:12:20 -0400
+In-Reply-To: <20070607224746.GA23290@havoc.gtf.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Hi all,
-
-Here is a list of some known regressions in 2.6.22-rc4
-with patches available.
-
-Feel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
 
 
-SATA/PATA
+On Thu, 7 Jun 2007, Jeff Garzik wrote:
+>
+> Ack'ing the sata_promise change was easy, but with this one it would
+> be nice to wait a bit before changing the core probe code that [now]
+> every ATA setup goes through, based on a single bug report.
 
-Subject    : disk on promise pdc20378 disabled at boot
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8587
-Submitter  : Jean-Luc Coulon <jean.luc.coulon@gmail.com>
-Handled-By : Tejun Heo <htejun@gmail.com>
-Caused-By  : Tejun Heo <htejun@gmail.com>
-             commit 464cf177df7727efcc5506322fc5d0c8b896f545
-Patch      : http://lkml.org/lkml/2007/6/6/112
-Status     : patch available
+So what's the resolution? Right now this is apparently the reasong for 
+two of our current regressions, and we need to solve it.
 
+"Just wait" is not an option. The options are:
+ - fix things
+ - revert everything that caused the regressions
 
+and quite frankly, I don't think the second alternative is palatable to 
+anybody, including you.
 
-SELinux
+> The values assist in detecting ghost devices (same device appearing
+> on both master and slave) and TF register malfunctions, and I would
+> appreciate not breaking _that_ so late in 2.6.22-rc for a single
+> report.  Thankfully we have -some- ghost device prevention code
+> elsewhere, but this is part of it.
 
-Subject    : very high non-preempt latency in context_struct_compute_av()
-References : http://lkml.org/lkml/2007/6/4/78
-Submitter  : Ingo Molnar <mingo@elte.hu>
-Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
-             James Morris <jmorris@namei.org>
-Patch      : http://lkml.org/lkml/2007/6/7/334
-Status     : patch available
+Apparently this isn't even true. As far as I can tell, the old code used 
+to wait for lbal to be 1, but if it never became one, it would just 
+silently time out and not *do* anything about it. Later commands would 
+"just work", and the device would go its merry ways.
 
+IOW, the new code is *crap*. The old code was arguably not wonderful 
+either, but because of its nature, the old code not working didn't 
+actually matter all that much.
 
+So the biggest change (and the one that broke peoples machines) is that 
+the code that you claim matters, *never* apparently did matter, and now 
+that we've made it matter (by returning an error, and aborting the SRST 
+sequence as a failure), people are complaining.
 
-Suspend
+I really think we should apply Tejun's patch. Add a delay there, by all 
+means if you are nervous: but no, it shouldn't be 150ms. This is the 
+_post_ reset handling, we've already done the 150ms wait for the reset!
 
-Subject    : panic on s3 resume with uhci_hcd module
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8565
-Submitter  : Simon <sg02r@ecs.soton.ac.uk>
-Handled-By : Rafael J. Wysocki <rjw@sisk.pl>
-Patch      : http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.22-rc3=
-/patches/21-firewire-implement-suspend-resume-hooks.patch
-Status     : patch available
+In fact, if you look at ata_bus_post_reset(), you'll notice that for 
+port0, we just do the "ata_wait_ready()" call. Tejun's patch just made us 
+do the same (logical) thing for port1 too!  If you think it breaks due to 
+ome timeout issue, then the port0 thing was already broken.
 
+(And maybe we could make the 
 
+	ap->ops->dev_select(ap, 1);
+	rc = ata_wait_ready(ap, deadline);
 
-USB
+instead be a
 
-Subject    : list_add corruption. prev->next should be next (f7d28794), b=
-ut was f0df8ed4 (prev=3Df0df8ed4) Kernel Bug at lib/list_debug.c:33
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561
-Submitter  : Paulo Pereira <pfmp.404@gmail.com>
-Handled-By : Alan Stern <stern@rowland.harvard.edu>
-Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561#c8
-Status     : patch was suggested
+	ata_dev_select(ap, 1, 1, 1);
 
+and you'd wait even more? But that's actually a bigger change than Tejun's 
+thing, and it uses "ata_wait_idle()" rather than "ata_wait_ready()", and 
+doesn't return any status.. I dunno. But right now, we have several known 
+broken things, that apparently weren't broken before!)
 
-
-Regards,
-Michal
-
---
-"Najbardziej brakowa=B3o mi twojego milczenia."
--- Andrzej Sapkowski "Co=B6 wi=EAcej"
+		Linus
