@@ -1,74 +1,82 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [2/3] 2.6.22-rc4: known regressions v2
-Date: Sat, 09 Jun 2007 19:40:25 +0200
-Message-ID: <466AE609.1030605@googlemail.com>
-References: <466ADBE4.5090707@googlemail.com>
+Subject: Re: [2/2] 2.6.22-rc4: known regressions with patches v2
+Date: Sat, 09 Jun 2007 19:40:41 +0200
+Message-ID: <466AE619.2000706@googlemail.com>
+References: <466AE54A.3040902@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:5587 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750AbXFIRkp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Jun 2007 13:40:45 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1177071ugf
-        for <linux-ide@vger.kernel.org>; Sat, 09 Jun 2007 10:40:43 -0700 (PDT)
-In-Reply-To: <466ADBE4.5090707@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <466AE54A.3040902@googlemail.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jaroslav Kysela <perex@suse.cz>, Ben Collins <bcollins@ubuntu.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Robert de Rooy <robert.de.rooy@gmail.com>, Gregor Jasny <gjasny@googlemail.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mark Lord <mlord@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, Mikael Pettersson <mikpe@it.uu.se>
+Cc: Tejun Heo <htejun@gmail.com>, linux-usb-devel@lists.sourceforge.net, Jeff Garzik <jeff@garzik.org>, Greg Kroah-Hartman <gregkh@suse.de>, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, James Morris <jmorris@namei.org>, linux-ide@vger.kernel.org, Simon <sg02r@ecs.soton.ac.uk>, Pavel Machek <pavel@ucw.cz>, linux-pm@lists.linux-foundation.org, Alan Cox <alan@redhat.com>, Eric Paris <eparis@parisplace.org>, Andrew Morton <akpm@linux-foundation.org>, Stephen Smalley <sds@tycho.nsa.gov>, Jean-Luc Coulon <jean.luc.coulon@gmail.com>, Paulo Pereira <pfmp.404@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
-Here is a list of some known regressions in 2.6.22-rc4.
+Here is a list of some known regressions in 2.6.22-rc4
+with patches available.
 
-=46eel free to add new regressions/remove fixed etc.
+Feel free to add new regressions/remove fixed etc.
 http://kernelnewbies.org/known_regressions
-
-
-
-ALSA
-
-Subject    : snd-aoa causes badness in lib/kref.c:33
-References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8513
-Submitter  : Ben Collins <bcollins@ubuntu.com>
-Handled-By : Takashi Iwai <tiwai@suse.de>
-Status     : Unknown
-
-
-
-IDE
-
-Subject    : libata and legacy ide pcmcia failure
-References : http://lkml.org/lkml/2007/5/17/305
-Submitter  : Robert de Rooy <robert.de.rooy@gmail.com>
-Handled-By : Mark Lord <mlord@pobox.com>
-Status     : problem is being debugged
 
 
 
 SATA/PATA
 
-Subject    : 22-rc3 broke the CDROM in Dell notebook
-References : http://lkml.org/lkml/2007/5/27/63
-Submitter  : Gregor Jasny <gjasny@googlemail.com>
+Subject    : disk on promise pdc20378 disabled at boot
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8587
+Submitter  : Jean-Luc Coulon <jean.luc.coulon@gmail.com>
 Handled-By : Tejun Heo <htejun@gmail.com>
-             Jeff Garzik <jeff@garzik.org>
 Caused-By  : Tejun Heo <htejun@gmail.com>
-             commit d4b2bab4f26345ea1803feb23ea92fbe3f6b77bc
-Status     : problem is being debugged
+             commit 464cf177df7727efcc5506322fc5d0c8b896f545
+Patch      : http://lkml.org/lkml/2007/6/6/112
+Status     : patch available
 
 
 
-Sparc64
+SELinux
 
-Subject    : 2.6.22-rc broke X on Ultra5
-References : http://lkml.org/lkml/2007/5/22/78
-Submitter  : Mikael Pettersson <mikpe@it.uu.se>
-Handled-By : David Miller <davem@davemloft.net>
-Status     : problem is being debugged
+Subject    : very high non-preempt latency in context_struct_compute_av()
+References : http://lkml.org/lkml/2007/6/4/78
+Submitter  : Ingo Molnar <mingo@elte.hu>
+Handled-By : Stephen Smalley <sds@tycho.nsa.gov>
+             James Morris <jmorris@namei.org>
+Patch      : http://lkml.org/lkml/2007/6/7/334
+Status     : patch available
+
+
+
+Suspend
+
+Subject    : panic on s3 resume with uhci_hcd module
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8565
+Submitter  : Simon <sg02r@ecs.soton.ac.uk>
+Handled-By : Rafael J. Wysocki <rjw@sisk.pl>
+Patch      : http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.22-rc3=
+/patches/21-firewire-implement-suspend-resume-hooks.patch
+Status     : patch available
+
+
+
+USB
+
+Subject    : list_add corruption. prev->next should be next (f7d28794), b=
+ut was f0df8ed4 (prev=3Df0df8ed4) Kernel Bug at lib/list_debug.c:33
+References : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561
+Submitter  : Paulo Pereira <pfmp.404@gmail.com>
+Handled-By : Alan Stern <stern@rowland.harvard.edu>
+Patch      : http://bugzilla.kernel.org/show_bug.cgi?id=3D8561#c8
+Status     : patch was suggested
 
 
 
