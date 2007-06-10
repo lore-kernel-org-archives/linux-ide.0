@@ -1,46 +1,93 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: limit post SRST nsect/lbal wait to ~100ms
-Date: Sun, 10 Jun 2007 12:23:08 -0400
-Message-ID: <466C256C.9040509@garzik.org>
-References: <9d2cd630705270801m2826be60p3f802c502b26c531@mail.gmail.com> <466196AD.3090502@garzik.org> <9d2cd630706031046n2bd77585o7c0df1c5fea5167f@mail.gmail.com> <46667466.4010500@gmail.com> <9d2cd630706062322v2d73b32dp1da56f97e2069fff@mail.gmail.com> <4667B347.9040900@gmail.com> <alpine.LFD.0.98.0706071352440.4205@woody.linux-foundation.org> <20070607224746.GA23290@havoc.gtf.org> <alpine.LFD.0.98.0706091054360.20321@woody.linux-foundation.org> <466AF98C.80101@garzik.org> <20070610052620.GH29122@htj.dyndns.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_it821x: sync with IDE it821x driver
+Date: Sun, 10 Jun 2007 18:40:40 +0200
+Message-ID: <200706101840.40460.bzolnier@gmail.com>
+References: <200706090223.20933.bzolnier@gmail.com> <20070610165638.2db56f04@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39063 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751228AbXFJQXN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Jun 2007 12:23:13 -0400
-In-Reply-To: <20070610052620.GH29122@htj.dyndns.org>
+Received: from ug-out-1314.google.com ([66.249.92.171]:51549 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755465AbXFJQrS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jun 2007 12:47:18 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1304713ugf
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jun 2007 09:47:16 -0700 (PDT)
+In-Reply-To: <20070610165638.2db56f04@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> After SRST, libata used to wait for nsect/lbal to be set to 1/1 for
-> the slave device.  However, some ATAPI devices don't set nsect/lbal
-> after SRST and the wait itself isn't too useful as we're gonna wait
-> for !BSY right after that anyway.
+
+Hi Alan!
+
+On Sunday 10 June 2007, Alan Cox wrote:
+> > @@ -258,8 +259,14 @@ static void it821x_passthru_set_piomode(
+> >  	static const u8 pio_want[]    = { ATA_66, ATA_66, ATA_66, ATA_66, ATA_ANY };
+> >  
+> >  	struct it821x_dev *itdev = ap->private_data;
+> > +	struct ata_device *pair = ata_dev_pair(adev);
+> >  	int unit = adev->devno;
+> > -	int mode_wanted = adev->pio_mode - XFER_PIO_0;
+> > +	int mode_wanted = adev->pio_mode;
+> > +
+> > +	if (pair && adev->pio_mode > pair->pio_mode)
+> > +		mode_wanted = pair->pio_mode;
+> > +
+> > +	mode_wanted -= XFER_PIO_0;
 > 
-> Before reset-seq update, nsect/lbal wait failure used to be ignored
-> and caused 30sec delay during detection.  After reset-seq, all
-> timeouts are considered error conditions making libata fail to detect
-> such ATAPI devices.
+> NAK this too
+
+OK, I'm able to understand the meaning of "NAK" [1] but "this too"?
+
+[1] http://ozlabs.org/~rusty/index.cgi/2007/05/04
+
+;)
+
+> Please see it821x_program.
 > 
-> This patch limits nsect/lbal wait to around 100ms.  This should give
-> acceptable behavior to such ATAPI devices while not disturbing the
-> heavily used code path too much.
+> it821x_passthru_set_piomode computes the required mode and the preferred
+> clock for the mode
+> it821x_clock_strategy the computes the best clock to use
+> it821x_program the programs the device
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> Okay, here it is.  Sorry for the delay.
+> Whenever we issue a command it821x_passthru_dev_select then does a timing
+> mode switch and loads the PIO timing before doing the dev_select. The
+> same is also done when doing a qc_issue_prot so each qc_issue will have
+> the right timings loaded for the device.
 > 
->  drivers/ata/libata-core.c |   32 +++++++++++++++++++-------------
->  1 file changed, 19 insertions(+), 13 deletions(-)
+> So if you've got a problem case your diagnosis isn't one that makes a lot
+> of sense, and the fix is clearly wrong but I've not seen most of the
+> discussion between you and whoever you worked with to judge why.
+> 
+> One obvious possibility is that we are not currently doing timing
+> clipping for the address setup and merge for the 8bit timings. However
+> the docs I have strongly imply that the IT821x PIO/MWDMA timing register
+> is for data cycles only.
+> 
+> The other would be that there is some kind of pattern of interaction
+> between the ATA midlayer and the driver causing the wrong timings to get
+> loaded at some point.
+> 
+> Your "fix" would happen to work for both of these cases, but is wrong for
+> both of them.
+> 
+> If the register is switching all the timings then the fix is to switch
+> the PIO timing loaded to the lowest of the two initially (in _program)
+> and flip it back to the correct value at the start of the data transfer
+> sequence. We can then flip it back next qc_issue or indeed at the end of
+> the data xfer
+> 
+> If we've got an interaction problem then we need proper traces with
+> LIBATA debug turned right up so we can fix the actual case where the
+> switching occurs wrongly.
 
-Thanks.  Maybe Gregor can confirm this fixes his problem?
+PIO fix was directly ported from my it821x.c patch.  I now see that thanks
+to it821x_passthru_dev_select() it is not really needeed in pata_it821x.c.
 
-I'll ACK and push upstream then...
+OTOH DMA fixes are pata_it821x.c unique, I will respin the patch.
 
-
+Bart
