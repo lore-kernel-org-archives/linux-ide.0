@@ -1,35 +1,26 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 1/6] libata: update protocol numbers
-Date: Sun, 10 Jun 2007 18:31:59 -0400
-Message-ID: <466C7BDF.9030805@rtr.ca>
-References: <4667B767.5060601@tw.ibm.com> <4667B801.3060603@tw.ibm.com> <466B6C14.5040006@garzik.org>
+Subject: Re: 2.6.22-rc regression: smartctl does not work with SATA disk
+Date: Sun, 10 Jun 2007 18:33:25 -0400
+Message-ID: <466C7C35.7020105@rtr.ca>
+References: <Pine.LNX.4.64.0706101049130.6348@kai.makisara.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2485 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:2505 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758851AbXFJWcC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 10 Jun 2007 18:32:02 -0400
-In-Reply-To: <466B6C14.5040006@garzik.org>
+	id S1760062AbXFJWd1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 Jun 2007 18:33:27 -0400
+In-Reply-To: <Pine.LNX.4.64.0706101049130.6348@kai.makisara.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: albertl@mail.com, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Albert Lee wrote:
->> Patch 1/6:
->>  Update the ATA passthru protocol numbers according to the new spec.
->>
->> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> 
-> applied 1-4, 6 to #upstream-fixes
+Kai Makisara wrote:
+> The command 'smartctl -a /dev/sdb' fails with 2.6.22-rc4 kernel. The 
+> disk /dev/sdb is a SATA disk. The command does work still with a real SCSI 
+> disk.
 
-What about this one:  [PATCH 5/6] libata: support ATAPI devices  ??
-
-I'm quite happy to let Albert run with that,
-as he's busily maintaining the rest of the passthrough stuff.
-
-Cheers
-
+Last time I checked, one must supply the "-d ata" parameter to smartctl
+for it to work with libata drives.  Has this changed?
