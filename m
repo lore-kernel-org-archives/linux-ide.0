@@ -1,93 +1,90 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pata_it821x: sync with IDE it821x driver
-Date: Sun, 10 Jun 2007 18:40:40 +0200
-Message-ID: <200706101840.40460.bzolnier@gmail.com>
-References: <200706090223.20933.bzolnier@gmail.com> <20070610165638.2db56f04@the-village.bc.nu>
+Subject: [PATCH] pata_it821x: (partially) fix DMA in RAID mode
+Date: Sun, 10 Jun 2007 18:43:20 +0200
+Message-ID: <200706101843.20947.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.171]:51549 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755465AbXFJQrS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jun 2007 12:47:18 -0400
+	with ESMTP id S1757321AbXFJQrY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jun 2007 12:47:24 -0400
 Received: by ug-out-1314.google.com with SMTP id j3so1304713ugf
-        for <linux-ide@vger.kernel.org>; Sun, 10 Jun 2007 09:47:16 -0700 (PDT)
-In-Reply-To: <20070610165638.2db56f04@the-village.bc.nu>
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jun 2007 09:47:24 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>
 
 
-Hi Alan!
+Code intended to check DMA status was checking DMA command register.
 
-On Sunday 10 June 2007, Alan Cox wrote:
-> > @@ -258,8 +259,14 @@ static void it821x_passthru_set_piomode(
-> >  	static const u8 pio_want[]    = { ATA_66, ATA_66, ATA_66, ATA_66, ATA_ANY };
-> >  
-> >  	struct it821x_dev *itdev = ap->private_data;
-> > +	struct ata_device *pair = ata_dev_pair(adev);
-> >  	int unit = adev->devno;
-> > -	int mode_wanted = adev->pio_mode - XFER_PIO_0;
-> > +	int mode_wanted = adev->pio_mode;
-> > +
-> > +	if (pair && adev->pio_mode > pair->pio_mode)
-> > +		mode_wanted = pair->pio_mode;
-> > +
-> > +	mode_wanted -= XFER_PIO_0;
-> 
-> NAK this too
+Moreover firmware seems to "forget" to set DMA capable bit for the
+slave device (at least in RAID mode but without ITE RAID volumes) so
+check device ID for DMA capable bit when deciding whether to use DMA
+and remove DMA status check completely.
 
-OK, I'm able to understand the meaning of "NAK" [1] but "this too"?
+Thanks to Pavol =A9imo for the bugreport and testing the initial fix.
 
-[1] http://ozlabs.org/~rusty/index.cgi/2007/05/04
+This change unfortunately still doesn't fix DMA in RAID mode (which
+works fine with IDE it821x) but Alan is working on the missing pieces
+(pata_it821x vs libata EH issues).
 
-;)
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
 
-> Please see it821x_program.
-> 
-> it821x_passthru_set_piomode computes the required mode and the preferred
-> clock for the mode
-> it821x_clock_strategy the computes the best clock to use
-> it821x_program the programs the device
-> 
-> Whenever we issue a command it821x_passthru_dev_select then does a timing
-> mode switch and loads the PIO timing before doing the dev_select. The
-> same is also done when doing a qc_issue_prot so each qc_issue will have
-> the right timings loaded for the device.
-> 
-> So if you've got a problem case your diagnosis isn't one that makes a lot
-> of sense, and the fix is clearly wrong but I've not seen most of the
-> discussion between you and whoever you worked with to judge why.
-> 
-> One obvious possibility is that we are not currently doing timing
-> clipping for the address setup and merge for the 8bit timings. However
-> the docs I have strongly imply that the IT821x PIO/MWDMA timing register
-> is for data cycles only.
-> 
-> The other would be that there is some kind of pattern of interaction
-> between the ATA midlayer and the driver causing the wrong timings to get
-> loaded at some point.
-> 
-> Your "fix" would happen to work for both of these cases, but is wrong for
-> both of them.
-> 
-> If the register is switching all the timings then the fix is to switch
-> the PIO timing loaded to the lowest of the two initially (in _program)
-> and flip it back to the correct value at the start of the data transfer
-> sequence. We can then flip it back next qc_issue or indeed at the end of
-> the data xfer
-> 
-> If we've got an interaction problem then we need proper traces with
-> LIBATA debug turned right up so we can fix the actual case where the
-> switching occurs wrongly.
+ drivers/ata/pata_it821x.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-PIO fix was directly ported from my it821x.c patch.  I now see that thanks
-to it821x_passthru_dev_select() it is not really needeed in pata_it821x.c.
-
-OTOH DMA fixes are pata_it821x.c unique, I will respin the patch.
-
-Bart
+Index: b/drivers/ata/pata_it821x.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -2,6 +2,7 @@
+  * pata_it821x.c 	- IT821x PATA for new ATA layer
+  *			  (C) 2005 Red Hat Inc
+  *			  Alan Cox <alan@redhat.com>
++ *			  (C) 2007 Bartlomiej Zolnierkiewicz
+  *
+  * based upon
+  *
+@@ -79,7 +80,7 @@
+=20
+=20
+ #define DRV_NAME "pata_it821x"
+-#define DRV_VERSION "0.3.6"
++#define DRV_VERSION "0.3.7"
+=20
+ struct it821x_dev
+ {
+@@ -460,14 +461,8 @@ static unsigned int it821x_passthru_qc_i
+=20
+ static int it821x_smart_set_mode(struct ata_port *ap, struct ata_devic=
+e **unused)
+ {
+-	int dma_enabled =3D 0;
+ 	int i;
+=20
+-	/* Bits 5 and 6 indicate if DMA is active on master/slave */
+-	/* It is possible that BMDMA isn't allocated */
+-	if (ap->ioaddr.bmdma_addr)
+-		dma_enabled =3D ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-
+ 	for (i =3D 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev =3D &ap->device[i];
+ 		if (ata_dev_enabled(dev)) {
+@@ -476,7 +471,7 @@ static int it821x_smart_set_mode(struct=20
+ 			dev->dma_mode =3D XFER_MW_DMA_0;
+ 			/* We do need the right mode information for DMA or PIO
+ 			   and this comes from the current configuration flags */
+-			if (dma_enabled & (1 << (5 + i))) {
++			if (ata_id_has_dma(dev->id)) {
+ 				ata_dev_printk(dev, KERN_INFO, "configured for DMA\n");
+ 				dev->xfer_mode =3D XFER_MW_DMA_0;
+ 				dev->xfer_shift =3D ATA_SHIFT_MWDMA;
