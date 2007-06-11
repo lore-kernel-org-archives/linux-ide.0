@@ -1,98 +1,62 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Mon, 11 Jun 2007 13:20:38 -0700
-Message-ID: <20070611132038.cca35aec.kristen.c.accardi@intel.com>
-References: <20070510072247.063476979@intel.com>
-	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
-	<20070509220952.5fa34822.akpm@linux-foundation.org>
-	<20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
-	<465654EC.9080805@garzik.org>
+From: Robert de Rooy <robert.de.rooy@gmail.com>
+Subject: Re: libata and legacy ide pcmcia failure
+Date: Tue, 12 Jun 2007 00:36:05 +0200
+Message-ID: <466DCE55.30507@gmail.com>
+References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <465654EC.9080805@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.171]:20955 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751907AbXFKUgc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 16:36:32 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so2903ugf
+        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 13:36:31 -0700 (PDT)
+In-Reply-To: <466C7A9F.1080700@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Mark Lord <lkml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, Mark Lord <mlord@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Thu, 24 May 2007 23:15:56 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+Mark Lord wrote:
+> Russell King wrote:
+>>
+>> Before you do, it might help to build the ide-disk module and insert 
+>> that
+>> as well?
+>
+> ARrrggghh!!  Of course, that would explain the utter lack
+> of disk partition check messages, now wouldn't it!
+>
+> Thanks Russell !
+>
 
-> Kristen Carlson Accardi wrote:
-> > Check to see if an ATAPI device supports Asynchronous Notification.
-> > If so, enable it.
-> > 
-> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> > ---
-> > Andrew, I cleaned up the function header to properly comply with kernel
-> > doc requirements.  Other than that, this patch is the same.  
-> 
-> I would ask for a simple revision:  update ata_dev_set_AN() such that it 
-> takes a second argument 'enable'.  This boolean indicates to the 
-> function whether SETFEATURES_SATA_ENABLE or SETFEATURES_SATA_DISABLE 
-> should be passed to the device.
-> 
-> Otherwise than that, it's ready to merge I would say.
-> 
+Doh! yes that would obviously help.
+With this I can declare success!! I was able to read and write to the 
+card without any problems, although I did not try to stress it.
 
-Jeff - can you fold this into the original patch, or would you like me
-to resubmit the whole thing?
+Jun 12 00:19:42 localhost kernel: pccard: PCMCIA card inserted into slot 0
+Jun 12 00:19:42 localhost kernel: cs: memory probe 
+0xe8000000-0xefffffff: excluding 0xe8000000-0xefffffff
+Jun 12 00:19:42 localhost kernel: cs: memory probe 
+0xc0200000-0xcfffffff: excluding 0xc0200000-0xc11fffff 
+0xc1a00000-0xc21fffff 0xc2a00000-0xc31fffff 0xc3a00000-0xcc1fffff 
+0xcca00000-0xcd1fffff 0xcda00000-0xce1fffff 0xcea00000-0xcf1fffff 
+0xcfa00000-0xd01fffff
+Jun 12 00:19:42 localhost kernel: pcmcia: registering new device pcmcia0.0
+Jun 12 00:19:42 localhost kernel: Uniform Multi-Platform E-IDE driver 
+Revision: 7.00alpha2
+Jun 12 00:19:42 localhost kernel: ide: Assuming 33MHz system bus speed 
+for PIO modes; override with idebus=xx
+Jun 12 00:19:45 localhost kernel: hda: Memory Card Adapter, CFA DISK drive
+Jun 12 00:19:45 localhost kernel: ide0 at 0x4100-0x4107,0x410e on irq 3
+Jun 12 00:19:45 localhost kernel: ide-cs: hda: Vpp = 0.0
+Jun 12 00:19:45 localhost udevd-event[20730]: udev_rules_apply_format: 
+unknown format variable '$modalias'
+Jun 12 00:19:45 localhost kernel: hda: max request size: 128KiB
+Jun 12 00:19:45 localhost kernel: hda: 253696 sectors (129 MB) w/1KiB 
+Cache, CHS=991/16/16
+Jun 12 00:19:45 localhost kernel:  hda: hda1
+Jun 12 00:19:48 localhost hald: mounted /dev/hda1 on behalf of uid 0
 
-Kristen
-
-Modify ata_dev_set_AN to take a second argument 'enable'.  This
-boolean indicates to the function whether SETFEATURES_SATA_ENABLE
-or SETFEATURES_SATA_DISABLE should be passed to the device.
-
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-
-Index: 2.6-git/drivers/ata/libata-core.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-core.c
-+++ 2.6-git/drivers/ata/libata-core.c
-@@ -70,7 +70,7 @@ const unsigned long sata_deb_timing_long
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
--static unsigned int ata_dev_set_AN(struct ata_device *dev);
-+static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable);
- static void ata_dev_xfermask(struct ata_device *dev);
- 
- unsigned int ata_print_id = 1;
-@@ -2010,7 +2010,7 @@ int ata_dev_configure(struct ata_device 
- 		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
- 			int err;
- 			/* issue SET feature command to turn this on */
--			err = ata_dev_set_AN(dev);
-+			err = ata_dev_set_AN(dev, SETFEATURES_SATA_ENABLE);
- 			if (err)
- 				ata_dev_printk(dev, KERN_ERR,
- 						"unable to set AN, err %x\n",
-@@ -3966,6 +3966,7 @@ static unsigned int ata_dev_set_xfermode
- /**
-  *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
-  *	@dev: Device to which command will be sent
-+ *	@enable: Whether to enable or disable the feature
-  *
-  *	Issue SET FEATURES - SATA FEATURES command to device @dev
-  *	on port @ap with sector count set to indicate Asynchronous
-@@ -3977,7 +3978,7 @@ static unsigned int ata_dev_set_xfermode
-  *	RETURNS:
-  *	0 on success, AC_ERR_* mask otherwise.
-  */
--static unsigned int ata_dev_set_AN(struct ata_device *dev)
-+static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable)
- {
- 	struct ata_taskfile tf;
- 	unsigned int err_mask;
-@@ -3987,7 +3988,7 @@ static unsigned int ata_dev_set_AN(struc
- 
- 	ata_tf_init(dev, &tf);
- 	tf.command = ATA_CMD_SET_FEATURES;
--	tf.feature = SETFEATURES_SATA_ENABLE;
-+	tf.feature = enable;
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf.protocol = ATA_PROT_NODATA;
- 	tf.nsect = SATA_AN;
