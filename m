@@ -1,48 +1,69 @@
-From: John Fremlin <not@just.any.name>
-Subject: Re: [PATCH] AHCI powersaving and port-stopping (2.6.22-rc4)
-Date: Mon, 11 Jun 2007 14:20:54 +0000
-Message-ID: <87y7iqtvw9.fsf-genuine-vii@john.fremlin.org>
-References: <873b0yvk14.fsf-genuine-vii@john.fremlin.org>
-	<466D3319.6070008@googlemail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PROBLEM + PATCH] Sata port disabled by BIOS gets initialized
+Date: Tue, 12 Jun 2007 02:54:20 +0900
+Message-ID: <466D8C4C.8040605@gmail.com>
+References: <20056641.1181568752111.JavaMail.root@wombat.diezmil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:28723 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751871AbXFKOVQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 10:21:16 -0400
-In-Reply-To: <466D3319.6070008@googlemail.com> (Peter Ganzhorn's message of "Mon\, 11 Jun 2007 13\:33\:45 +0200")
+Received: from wr-out-0506.google.com ([64.233.184.235]:37915 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962AbXFKRz0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 13:55:26 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so1069238wra
+        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 10:55:25 -0700 (PDT)
+In-Reply-To: <20056641.1181568752111.JavaMail.root@wombat.diezmil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Ganzhorn <peter.ganzhorn@googlemail.com>
-Cc: linux-ide@vger.kernel.org, power@bughost.org
+To: shyam_iyer@dell.com
+Cc: linux-ide@vger.kernel.org
 
-Peter Ganzhorn <peter.ganzhorn@googlemail.com> writes:
+Hello,
 
-> I just wanted to have a look at the patch and see if it works for me - 
-> looks like somethings not all straight, I get this while booting:
->
-> ahci 0000:00:1f.2: version 2.2
-> ACPI: PCI Interrupt 0000:00:1f.2[C] -> GSI 19 (level, low) -> IRQ 19
-> ahci 0000:00:1f.2: nr_ports (3) and implemented port map (0x1) don't match
-> ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 3 ports 3 Gbps 0x1 impl SATA mode
-> ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part
-> PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> scsi0 : ahci
-> ata1: SATA max UDMA/133 cmd 0xffffc20000048100 ctl 0x0000000000000000
-> bmdma 0x0000000000000000 irq 0
-> WARNING: at drivers/ata/libata-eh.c:1917 ata_eh_set_powersave()
+shyam_iyer@dell.com wrote:
+>> What happens if the port is enabled by the kernel?
+> The BIOS tests for the device will not be performed for the port
+> since it is disabled by the BIOS, and there is a potential security
+> problem here if they get reenabled in the kernel.
 
-[...]
+You're trying to protect security by making OS not initialize PCS bits?
+ I'm sorry but there are millions of ways to breach that once one has
+root access to the OS (e.g. two liner script with setpci and echo to
+scsi scan sysfs node) or physical access to the machine (connect the
+drive to a different port or host).  If the user doesn't have either, OS
+security mechanisms work pretty well and are much more flexible and useful.
 
-> I hope this output from dmesg helps to make the patch better - if I
-> can do any further testing please let me know!
+Security-by-preserving-PCS just doesn't fly.  Please use Security Mode
+feature set for that.
 
-That is fine. The warning is expected. There is nothing wrong with
-it.
+> If the user decides to disable the port through the BIOS, the driver
+> needs to respect the user's wish to not use the port and carry on.
+> Here the end result is a forceful reinitialization of the port by the
+> driver against the user's wishes.
 
-This patch will stop the ports when they are idle. To turn it on, 
-      echo 1 > /sys/module/libata/parameters/powersave
+Well, currently, the Linux driver policy is to exploit the hardware
+capability to the maximum - e.g. we unlock HPA unconditionally and force
+multi-mode controllers into its best possible mode.  We try hard to
+ignore BIOS imposed settings/limits.
 
-[...]
+>> I'm not sure whether this is a good idea and it has potential to
+>> break a lot of other configurations.  That part of code is used for
+>> *all* ata_piix out there, so we need a really really good reason to
+>> change that.  So, please explain what you're trying to fix better.
+>> 
+> If the fix has a potential to break other things then there could be
+> a module parameter that would let the driver accept the bios
+> configuration for the pcs register and not modify the config space
+> through the driver.
 
+If reprogramming PCS does break specific cases, I'm willing to modify
+the driver such that it detects the condition and preserves PCS setting
+which is far better than requiring the user to enter some kernel
+parameter but you need to give me much better reason if we're gonna go
+that way.
+
+Thanks.
+
+-- 
+tejun
