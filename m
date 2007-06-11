@@ -1,114 +1,51 @@
-From: Peter Ganzhorn <peter.ganzhorn@googlemail.com>
-Subject: Re: [PATCH] AHCI powersaving and port-stopping (2.6.22-rc4)
-Date: Mon, 11 Jun 2007 13:33:45 +0200
-Message-ID: <466D3319.6070008@googlemail.com>
-References: <873b0yvk14.fsf-genuine-vii@john.fremlin.org>
+From: shyam_iyer@dell.com
+Subject: Re: Re: [PROBLEM + PATCH] Sata port disabled by BIOS gets initialized
+Date: Mon, 11 Jun 2007 09:32:32 -0400
+Message-ID: <20056641.1181568752111.JavaMail.root@wombat.diezmil.com>
+References: <466A3FF7.4090302@gmail.com>
+Reply-To: shyam_iyer@dell.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:65485 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbXFKLdt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 07:33:49 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1447605ugf
-        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 04:33:48 -0700 (PDT)
-In-Reply-To: <873b0yvk14.fsf-genuine-vii@john.fremlin.org>
+Received: from wombat.diezmil.com ([209.190.27.106]:59171 "EHLO
+	wombat.diezmil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbXFKNcd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 09:32:33 -0400
+Received: from wombat.diezmil.com (wombat.diezmil.com [127.0.0.1])
+	by wombat.diezmil.com (8.13.8/8.13.8) with ESMTP id l5BDWWxj018277
+	for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 09:32:32 -0400
+In-Reply-To: <466A3FF7.4090302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Fremlin <john@fremlin.org>
-Cc: linux-ide@vger.kernel.org, power@bughost.org
+To: linux-ide@vger.kernel.org
 
-I just wanted to have a look at the patch and see if it works for me - 
-looks like somethings not all straight, I get this while booting:
+>> Problem Sata disks are connected to onboard sata ports of PowerEdge  
+>> 1900 (ESB2 southbridge chipset). If one of the port is disabled in  
+>> the bios then they get enabled again by the ata_piix driver because  
+>> of a default port map being written to the Port control and status  
+>> register(0x91-93). Instead the driver should preserve the bios  
+>> setting by way of a fix like this.  
+ 
+>What happens if the port is enabled by the kernel?  
+The BIOS tests for the device will not be performed for the port since it is disabled by the BIOS, and there is a potential security problem here if they get reenabled in the kernel.
 
-ahci 0000:00:1f.2: version 2.2
-ACPI: PCI Interrupt 0000:00:1f.2[C] -> GSI 19 (level, low) -> IRQ 19
-ahci 0000:00:1f.2: nr_ports (3) and implemented port map (0x1) don't match
-ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 3 ports 3 Gbps 0x1 impl SATA mode
-ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-scsi0 : ahci
-ata1: SATA max UDMA/133 cmd 0xffffc20000048100 ctl 0x0000000000000000 
-bmdma 0x0000000000000000 irq 0
-WARNING: at drivers/ata/libata-eh.c:1917 ata_eh_set_powersave()
+If the user decides to disable the port through the BIOS, the driver needs to respect the user's wish to not use the port and carry on. Here the end result is a forceful reinitialization of the port by the driver against the user's wishes.
+ 
+>> Fix: The BIOS configured PCS value must be anded logically with the  
+>> default port map for the chipset. This way the BIOS information will  
+>> not be lost by the reinitialization of the config space by the  
+>> ata_piix driver. The below patch is against 2.6.21 kernel.  
+ 
+>I'm not sure whether this is a good idea and it has potential to break a  
+>lot of other configurations.  That part of code is used for *all*  
+>ata_piix out there, so we need a really really good reason to change  
+>that.  So, please explain what you're trying to fix better.  
+If the fix has a potential to break other things then there could be a module parameter that would let the driver accept the bios configuration for the pcs register and not modify the config space through the driver.
+ 
+--
+Shyam
 
-Call Trace:
- [<ffffffff804a99ce>] ata_eh_set_powersave+0x34e/0x370
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff804a9e27>] ata_do_eh+0xb7/0x16f0
- [<ffffffff80229f9d>] find_busiest_group+0x1bd/0x800
- [<ffffffff804aece0>] ahci_postreset+0x0/0x80
- [<ffffffff804ada70>] ahci_hardreset+0x0/0xf0
- [<ffffffff804aee20>] ahci_softreset+0x0/0x270
- [<ffffffff804a40f0>] ata_std_prereset+0x0/0xf0
- [<ffffffff8023b134>] lock_timer_base+0x34/0x70
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff804abc27>] ata_scsi_error+0x297/0x730
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff8048c893>] scsi_error_handler+0xe3/0x330
- [<ffffffff80229507>] __wake_up_common+0x47/0x80
- [<ffffffff8048c7b0>] scsi_error_handler+0x0/0x330
- [<ffffffff8024675b>] kthread+0x4b/0x80
- [<ffffffff8020a9a8>] child_rip+0xa/0x12
- [<ffffffff80246710>] kthread+0x0/0x80
- [<ffffffff8020a99e>] child_rip+0x0/0x12
-
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-ata1.00: ATA-7: Hitachi HTS541616J9SA00, SB4OC7DP, max UDMA/100
-ata1.00: 312581808 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-ata1.00: configured for UDMA/100
-scsi 0:0:0:0: Direct-Access     ATA      Hitachi HTS54161 SB4O PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
- sda: sda1 sda2 sda3 sda4
-sd 0:0:0:0: [sda] Attached SCSI disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-
-I hope this output from dmesg helps to make the patch better - if I can 
-do any further testing please let me know!
-
-Peter
-
-
-John Fremlin wrote:
-> Tejun Heo has made an excellent patch for saving power with the AHCI
-> chipset. It saves about 1 W on my Thinkpad X60s.
->
-> This patch will stop the ports when they are idle. To turn it on, 
->
->      echo 1 > /sys/module/libata/parameters/powersave
->
-> This is very different from the patch I posted a while ago turning on
-> a few bits in the CMD register (ALPE and ASP) and which Intel is
-> apparently now trying. That only saves around 250mW. Tejun's patch
-> saves about 1 W. It should also make the ALPE and ASP stuff irrelevant
-> because it performs the same operation in software where better
-> information about usage is (theoretically) available.
->
-> I have updated the patch for 2.6.22-rc4. That is the extent of my
-> involvement - if it works, thank Tejun Heo. But problems are quite
-> likely to have been introduced by my clumsy update, so if it doesn't
-> work, blame me first.
->
->   
-> ------------------------------------------------------------------------
->
-> _______________________________________________
-> Power mailing list
-> Power@bughost.org
-> http://www.bughost.org/mailman/listinfo/power
->   
-
+--
+This message was sent on behalf of shyam_iyer@dell.com at openSubscriber.com
+http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/6886790.html
