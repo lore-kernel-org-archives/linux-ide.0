@@ -1,71 +1,89 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pata_it821x: (partially) fix DMA in RAID mode
-Date: Mon, 11 Jun 2007 11:37:26 +0200
-Message-ID: <200706111137.26343.bzolnier@gmail.com>
-References: <200706101843.20947.bzolnier@gmail.com> <466CD502.6010201@garzik.org>
+Subject: [PATCH] pata_it821x: (partially) fix DMA in RAID mode
+Date: Mon, 11 Jun 2007 11:40:07 +0200
+Message-ID: <200706111140.08048.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:2845 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:2208 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754294AbXFKJ0L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 05:26:11 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1428031ugf
-        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 02:26:09 -0700 (PDT)
-In-Reply-To: <466CD502.6010201@garzik.org>
+	with ESMTP id S1755277AbXFKJ0N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 05:26:13 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1428038ugf
+        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 02:26:11 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday 11 June 2007, Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Code intended to check DMA status was checking DMA command register=
-=2E
-> >=20
-> > Moreover firmware seems to "forget" to set DMA capable bit for the
-> > slave device (at least in RAID mode but without ITE RAID volumes) s=
-o
-> > check device ID for DMA capable bit when deciding whether to use DM=
-A
-> > and remove DMA status check completely.
-> >=20
-> > Thanks to Pavol =A9imo for the bugreport and testing the initial fi=
-x.
-> >=20
-> > This change unfortunately still doesn't fix DMA in RAID mode (which
-> > works fine with IDE it821x) but Alan is working on the missing piec=
-es
-> > (pata_it821x vs libata EH issues).
-> >=20
-> > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > Cc: Tejun Heo <htejun@gmail.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >=20
-> >  drivers/ata/pata_it821x.c |   11 +++--------
-> >  1 file changed, 3 insertions(+), 8 deletions(-)
->=20
-> Patch is OK but it's mangled by your mailer:
->=20
-> @@ -79,7 +80,7 @@
-> =3D20
-> =3D20
->   #define DRV_NAME "pata_it821x"
-> =3D2D#define DRV_VERSION "0.3.6"
-> +#define DRV_VERSION "0.3.7"
-> =3D20
->   struct it821x_dev
->   {
-> @@ -460,14 +461,8 @@ static unsigned int it821x_passthru_qc_i
-> =3D20
->=20
-> =3D2D     int dma_enabled =3D3D 0;
->          int i;
-> =3D20
->=20
-> etc.
 
-Ah, non-ASCII char confused the mailer... resend.  Sorry for that.
+Code intended to check DMA status was checking DMA command register.
+
+Moreover firmware seems to "forget" to set DMA capable bit for the
+slave device (at least in RAID mode but without ITE RAID volumes) so
+check device ID for DMA capable bit when deciding whether to use DMA
+and remove DMA status check completely.
+
+Thanks to Pavol Simo for the bugreport and testing the initial fix.
+
+This change unfortunately still doesn't fix DMA in RAID mode (which
+works fine with IDE it821x) but Alan is working on the missing pieces
+(pata_it821x vs libata EH issues).
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Acked-by: Alan Cox <alan@redhat.com>
+Cc: Tejun Heo <htejun@gmail.com>
+---
+removed non-ASCII char from the patch description + added Alan's ACK
+
+ drivers/ata/pata_it821x.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+Index: b/drivers/ata/pata_it821x.c
+===================================================================
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -2,6 +2,7 @@
+  * pata_it821x.c 	- IT821x PATA for new ATA layer
+  *			  (C) 2005 Red Hat Inc
+  *			  Alan Cox <alan@redhat.com>
++ *			  (C) 2007 Bartlomiej Zolnierkiewicz
+  *
+  * based upon
+  *
+@@ -79,7 +80,7 @@
+ 
+ 
+ #define DRV_NAME "pata_it821x"
+-#define DRV_VERSION "0.3.6"
++#define DRV_VERSION "0.3.7"
+ 
+ struct it821x_dev
+ {
+@@ -460,14 +461,8 @@ static unsigned int it821x_passthru_qc_i
+ 
+ static int it821x_smart_set_mode(struct ata_port *ap, struct ata_device **unused)
+ {
+-	int dma_enabled = 0;
+ 	int i;
+ 
+-	/* Bits 5 and 6 indicate if DMA is active on master/slave */
+-	/* It is possible that BMDMA isn't allocated */
+-	if (ap->ioaddr.bmdma_addr)
+-		dma_enabled = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+-
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->device[i];
+ 		if (ata_dev_enabled(dev)) {
+@@ -476,7 +471,7 @@ static int it821x_smart_set_mode(struct 
+ 			dev->dma_mode = XFER_MW_DMA_0;
+ 			/* We do need the right mode information for DMA or PIO
+ 			   and this comes from the current configuration flags */
+-			if (dma_enabled & (1 << (5 + i))) {
++			if (ata_id_has_dma(dev->id)) {
+ 				ata_dev_printk(dev, KERN_INFO, "configured for DMA\n");
+ 				dev->xfer_mode = XFER_MW_DMA_0;
+ 				dev->xfer_shift = ATA_SHIFT_MWDMA;
