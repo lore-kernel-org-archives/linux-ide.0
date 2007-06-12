@@ -1,47 +1,42 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: [PROBLEM + PATCH] Sata port disabled by BIOS gets initialized
-Date: Tue, 12 Jun 2007 19:31:07 +0100
-Message-ID: <466EE66B.1040905@genesi-usa.com>
-References: <20056641.1181568752111.JavaMail.root@wombat.diezmil.com> <466D8C4C.8040605@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
+Date: Tue, 12 Jun 2007 23:11:18 +0400
+Message-ID: <466EEFD6.9030001@ru.mvista.com>
+References: <20070221011922.GA1777@freefall.freebsd.org> <200702210244.53514.bzolnier@gmail.com> <3063A690-4E3D-4A6E-A7DC-3E624121FBB8@freebsd.org> <200702210342.20775.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:1105 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbXFLTF1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 15:05:27 -0400
-In-Reply-To: <466D8C4C.8040605@gmail.com>
+Received: from h151.mvista.com ([63.81.120.155]:38505 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750778AbXFLTJd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jun 2007 15:09:33 -0400
+In-Reply-To: <200702210342.20775.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: shyam_iyer@dell.com, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Bartlomiej Zolnierkiewicz wrote:
+>>On Feb 20, 2007, at 5:44 PM, Bartlomiej Zolnierkiewicz wrote:
 
-Tejun Heo wrote:
-> Hello,
->
->> If the user decides to disable the port through the BIOS, the driver
->> needs to respect the user's wish to not use the port and carry on.
->> Here the end result is a forceful reinitialization of the port by the
->> driver against the user's wishes.
-> 
-> Well, currently, the Linux driver policy is to exploit the hardware
-> capability to the maximum - e.g. we unlock HPA unconditionally and force
-> multi-mode controllers into its best possible mode.  We try hard to
-> ignore BIOS imposed settings/limits.
+>>>On Wednesday 21 February 2007 02:19, Suleiman Souhlal wrote:
 
-Isn't there a case for speeding up boot and not wasting resources by
-respecting BIOS settings in this regard? If you have an 8-port
-controller on a board and one disk, forcing all of them enabled
-regardless of BIOS settings is just 7 redundant port scans.
+>>>>It can be changed via /proc/ide/hd?/settings.
 
-It should at least be an option - the default being to open up all
-gunports, an option to respect BIOS settings and only use the ones
-requested and enabled.. (I can see an edge case where a user disables
-a disk in the BIOS to stop another OS from looking at/for it, but
-wants the Linux system to boot from it)
+>>>Why do we need to change IDE DMA timeout dynamically?
 
--- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+>>I've used it to test error recovery (for example).
+
+> Seems quite useable for developers but I would prefer not to
+> expose it in production kernels for end users.
+
+    It seems that I have counter example of a customer asking if this timeout 
+can be done configurable. :-)
+    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, and if DMA is 
+not complete or interrupt pending, it may wait 10 more secs...
+
+> Thanks,
+> Bart
+
+MBR, Sergei
