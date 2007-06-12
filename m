@@ -1,42 +1,67 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
-Date: Tue, 12 Jun 2007 23:11:18 +0400
-Message-ID: <466EEFD6.9030001@ru.mvista.com>
-References: <20070221011922.GA1777@freefall.freebsd.org> <200702210244.53514.bzolnier@gmail.com> <3063A690-4E3D-4A6E-A7DC-3E624121FBB8@freebsd.org> <200702210342.20775.bzolnier@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] drivers/ata/sata_nv.c: make 3 functions static
+Date: Wed, 13 Jun 2007 01:03:20 +0200
+Message-ID: <20070612230320.GC3588@stusta.de>
+References: <20070606220313.8f7c1fab.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h151.mvista.com ([63.81.120.155]:38505 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750778AbXFLTJd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Jun 2007 15:09:33 -0400
-In-Reply-To: <200702210342.20775.bzolnier@gmail.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:33081 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754042AbXFLXDI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 19:03:08 -0400
+Content-Disposition: inline
+In-Reply-To: <20070606220313.8f7c1fab.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>, jgarzik@pobox.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
->>On Feb 20, 2007, at 5:44 PM, Bartlomiej Zolnierkiewicz wrote:
+This patch makes 3 needlessly global functions static.
 
->>>On Wednesday 21 February 2007 02:19, Suleiman Souhlal wrote:
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
->>>>It can be changed via /proc/ide/hd?/settings.
+---
 
->>>Why do we need to change IDE DMA timeout dynamically?
+ drivers/ata/sata_nv.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
->>I've used it to test error recovery (for example).
+--- linux-2.6.22-rc4-mm2/drivers/ata/sata_nv.c.old	2007-06-13 00:02:18.000000000 +0200
++++ linux-2.6.22-rc4-mm2/drivers/ata/sata_nv.c	2007-06-13 00:03:12.000000000 +0200
+@@ -314,7 +314,7 @@
+ static int nv_ncqintr_dmasetupfis(struct ata_port *ap);
+ static void ncq_clear_singlefis(struct ata_port *ap, u32 val);
+ static u32 ncq_ownfisintr_value (struct ata_port *ap);
+-void ncq_hotplug(struct ata_port *ap, u32 fis);
++static void ncq_hotplug(struct ata_port *ap, u32 fis);
+ static irqreturn_t nv_mcp55_interrupt(int irq, void *dev_instance);
+ static int ncq_interrupt(struct ata_port *ap, u32 fis);
+ static int nv_scsi_queuecmd(struct scsi_cmnd *cmd,
+@@ -1931,7 +1931,7 @@
+ 	ncq_clear(ap);
+ }
+ 
+-int nv_std_prereset(struct ata_port *ap, unsigned long deadline)
++static int nv_std_prereset(struct ata_port *ap, unsigned long deadline)
+ {
+ 	struct ata_eh_context *ehc = &ap->eh_context;
+ 
+@@ -2265,7 +2265,7 @@
+ 	return 0;
+ }
+ 
+-u32 ncq_valid_dhfisflag(struct nv_port_priv *pp)
++static u32 ncq_valid_dhfisflag(struct nv_port_priv *pp)
+ {
+ 	u32 valid = (pp->dhfis_flags == pp->qc_active);
+ 
+@@ -2332,7 +2332,7 @@
+ #endif
+ 
+ 
+-void ncq_hotplug(struct ata_port *ap, u32 fis)
++static void ncq_hotplug(struct ata_port *ap, u32 fis)
+ {
+ 	u32 serror;
+ 	struct ata_eh_info *ehi = &ap->eh_info;
 
-> Seems quite useable for developers but I would prefer not to
-> expose it in production kernels for end users.
-
-    It seems that I have counter example of a customer asking if this timeout 
-can be done configurable. :-)
-    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, and if DMA is 
-not complete or interrupt pending, it may wait 10 more secs...
-
-> Thanks,
-> Bart
-
-MBR, Sergei
