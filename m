@@ -1,47 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata passthru: support PIO multi commands
-Date: Tue, 12 Jun 2007 17:05:19 +0100
-Message-ID: <20070612170519.5f427a70@the-village.bc.nu>
-References: <200706112200.l5BM0qFn005767@hera.kernel.org>
-	<20070611233917.4bd8c6d7@the-village.bc.nu>
-	<466DE438.70108@garzik.org>
-	<20070612111621.10074408@the-village.bc.nu>
-	<466EB937.6050807@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
+ controllers.
+Date: Tue, 12 Jun 2007 12:18:57 -0400
+Message-ID: <466EC771.3040509@garzik.org>
+References: <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com> <20070612090940.GA9719@srcf.ucam.org> <20070612121819.GA20408@khazad-dum.debian.net> <20070612135010.GA12601@srcf.ucam.org> <20070612141714.GB20408@khazad-dum.debian.net> <20070612153828.GA13888@srcf.ucam.org> <466EBFF0.70100@garzik.org> <20070612155824.GB14044@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38614 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755401AbXFLQAM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 12:00:12 -0400
-In-Reply-To: <466EB937.6050807@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:56204 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753053AbXFLQTE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jun 2007 12:19:04 -0400
+In-Reply-To: <20070612155824.GB14044@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Arjan van de Ven <arjan@linux.intel.com>, =?ISO-8859-1?Q?Dagfinn_Ilmari_Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
-> ata_scsi_pass_thru() is not executed at ioctl submission time (block 
-> queue submission time), but rather immediately before it is issued to 
-> the drive.  At that point you know the bus is idle, all other commands 
-> have finished executing, and dev->multi_count is fresh not stale.  The 
-> code path goes from ata_scsi_pass_thru() to ata_qc_issue() without 
-> releasing the spinlock, even.
+Matthew Garrett wrote:
+> Excluding the corner case of an Expresscard SATA controller (where I 
+> suspect you'd want different policy), I doubt there are any cases where 
+> you have a laptop with hotplug capabilities without it being implemented 
+> as an ACPI bay.
 
-Think up to user space
+Cardbus card.
 
-Poorusersapp			set multicount to 4
+	Jeff
 
-Evilproprietarytuningdaemon	set multicount to 8
 
-Poorusersapp			issue I/O
 
-at which point an error is indeed best.
-
-> But the last point is true -- we should error rather than just warn 
-> there, AFAICS.
-
-Definitely. We've been asked "please do something stupid" and not even in
-a case where the requester may know better.
-
-Alan
