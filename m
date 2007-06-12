@@ -1,40 +1,54 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
-Date: Tue, 12 Jun 2007 11:17:14 -0300
-Message-ID: <20070612141714.GB20408@khazad-dum.debian.net>
-References: <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com> <20070612090940.GA9719@srcf.ucam.org> <20070612121819.GA20408@khazad-dum.debian.net> <20070612135010.GA12601@srcf.ucam.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata passthru: support PIO multi commands
+Date: Tue, 12 Jun 2007 11:18:15 -0400
+Message-ID: <466EB937.6050807@garzik.org>
+References: <200706112200.l5BM0qFn005767@hera.kernel.org>	<20070611233917.4bd8c6d7@the-village.bc.nu>	<466DE438.70108@garzik.org> <20070612111621.10074408@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59572 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751832AbXFLORV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 10:17:21 -0400
-Content-Disposition: inline
-In-Reply-To: <20070612135010.GA12601@srcf.ucam.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55543 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990AbXFLPSS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jun 2007 11:18:18 -0400
+In-Reply-To: <20070612111621.10074408@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, Jeff Garzik <jeff@garzik.org>, Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>
 
-On Tue, 12 Jun 2007, Matthew Garrett wrote:
-> On Tue, Jun 12, 2007 at 09:18:19AM -0300, Henrique de Moraes Holschuh wrote:
-> > On Tue, 12 Jun 2007, Matthew Garrett wrote:
-> > > 
-> > > On laptops, I suspect that we'll probably get an ACPI interrupt even if 
-> > > the AHCI hotplug pathway can't manage.
-> > 
-> > As long as we don't crash the drive or AHCI controller because we hotplugged
-> > it in a way it didn't like (like trying to hotplug a ICH5R would cause).
+Alan Cox wrote:
+>>>> +		if (multi_count != dev->multi_count)
+>>>> +			ata_dev_printk(dev, KERN_WARNING,
+>>>> +				       "invalid multi_count %u ignored\n",
+>>>> +				       multi_count);
+>>>> +	}
+>>> What limits log spamming here ?
+>> Intelligence of the user with privs?
 > 
-> Laptop bays are designed to deal with hotplugging PATA - I don't think 
-> this is too much of an issue :)
+> Not ever SG_IO call requires priviledges.
 
-The new SATA ones use the SATA hardware hotplug ;-)   Just like the pci-e
-cards use usb2.0 and pci-e hotplug...
+All calls relevant to this thread require CAP_SYS_RAWIO.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+
+> Issue a multi count sized write. Acidentally collide with another program
+> which mucks up the multiwrite count (for once it probably won't be HAL
+> making a mess ;)) and send data. The state of the disk at the point a
+> short multiwrite terminates is undefined, it may have written some of the
+> sectors, it may have blanked them all (Optical media) etc. Far better
+> just to error the invalid command - especially as in some cases without
+> Mark's fixes for DRQ cleanup on error it may even hang in one direction.
+
+ata_scsi_pass_thru() is not executed at ioctl submission time (block 
+queue submission time), but rather immediately before it is issued to 
+the drive.  At that point you know the bus is idle, all other commands 
+have finished executing, and dev->multi_count is fresh not stale.  The 
+code path goes from ata_scsi_pass_thru() to ata_qc_issue() without 
+releasing the spinlock, even.
+
+But the last point is true -- we should error rather than just warn 
+there, AFAICS.
+
+	Jeff
+
+
