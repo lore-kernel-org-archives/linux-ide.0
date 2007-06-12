@@ -1,66 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Tue, 12 Jun 2007 12:24:15 +0900
-Message-ID: <466E11DF.5020901@gmail.com>
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
+Date: Tue, 12 Jun 2007 00:59:28 -0300
+Message-ID: <20070612035928.GB9808@khazad-dum.debian.net>
+References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:51144 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbXFLDYZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 23:24:25 -0400
-Received: by nz-out-0506.google.com with SMTP id n1so1492615nzf
-        for <linux-ide@vger.kernel.org>; Mon, 11 Jun 2007 20:24:25 -0700 (PDT)
-In-Reply-To: <466DCF43.5060304@pobox.com>
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:55866 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756589AbXFLD7f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 23:59:35 -0400
+Content-Disposition: inline
+In-Reply-To: <466DFE09.3020408@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Robert de Rooy <robert.de.rooy@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Arjan van de Ven <arjan@linux.intel.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
-Mark Lord wrote:
-> Robert de Rooy wrote:
->> (after applying the ide-polling experimental patch)
->>
->> With this I can declare success!! I was able to read and write to the
->> card without any problems, although I did not try to stress it.
->>
->> Jun 12 00:19:42 localhost kernel: pccard: PCMCIA card inserted into
->> slot 0
->> Jun 12 00:19:42 localhost kernel: cs: memory probe
->> 0xe8000000-0xefffffff: excluding 0xe8000000-0xefffffff
->> Jun 12 00:19:42 localhost kernel: cs: memory probe
->> 0xc0200000-0xcfffffff: excluding 0xc0200000-0xc11fffff
->> 0xc1a00000-0xc21fffff 0xc2a00000-0xc31fffff 0xc3a00000-0xcc1fffff
->> 0xcca00000-0xcd1fffff 0xcda00000-0xce1fffff 0xcea00000-0xcf1fffff
->> 0xcfa00000-0xd01fffff
->> Jun 12 00:19:42 localhost kernel: pcmcia: registering new device
->> pcmcia0.0
->> Jun 12 00:19:42 localhost kernel: Uniform Multi-Platform E-IDE driver
->> Revision: 7.00alpha2
->> Jun 12 00:19:42 localhost kernel: ide: Assuming 33MHz system bus speed
->> for PIO modes; override with idebus=xx
->> Jun 12 00:19:45 localhost kernel: hda: Memory Card Adapter, CFA DISK
->> drive
->> Jun 12 00:19:45 localhost kernel: ide0 at 0x4100-0x4107,0x410e on irq 3
->> Jun 12 00:19:45 localhost kernel: ide-cs: hda: Vpp = 0.0
->> Jun 12 00:19:45 localhost udevd-event[20730]: udev_rules_apply_format:
->> unknown format variable '$modalias'
->> Jun 12 00:19:45 localhost kernel: hda: max request size: 128KiB
->> Jun 12 00:19:45 localhost kernel: hda: 253696 sectors (129 MB) w/1KiB
->> Cache, CHS=991/16/16
->> Jun 12 00:19:45 localhost kernel:  hda: hda1
->> Jun 12 00:19:48 localhost hald: mounted /dev/hda1 on behalf of uid 0
-> 
-> Okay, Tejun / Bart / Alan:
-> 
-> This proves that the device does work correctly in most respects
-> except for interrupt delivery.  The status bits are working and
-> it can be probed for, configured, and used.
+On Mon, 11 Jun 2007, Jeff Garzik wrote:
+> >>on/off doesn't really make sense if the question is "do you favor power
+> >>or do you favor performance".......
 
-libata can do most of this too by using ATA_FLAG_PIO_POLLING (doesn't
-cover nodata commands tho).
+Actually, it does if you think of it as "do you need hotplug right now or
+not?".
+
+> >How about just making it a numeric scale with 0 meaning no power saving
+> >and then some fixed number of levels (e.g 0-9)?
+> 
+> The original proposal seems far more intuitive than these alternatives.
+
+There is nothing intuitive about the text or the levels.  All cases need
+proper documentation.  I'd never expect link powersaving to kill hotplug,
+unless I read the AHCI docs.
+
+And enable/disable ain't intuitive either :(  But enable/disable is useful
+to get stuff like SATA bay hotplug, dock/undock and other stuff that needs
+hotplug to be working right, unless we can make that automatic so that power
+saving is always disabled in all situations we'd need hotplug to be working?
 
 -- 
-tejun
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
