@@ -1,52 +1,42 @@
-From: John Fremlin <not@just.any.name>
-Subject: AHCI aggressive powersaving
-Date: Tue, 12 Jun 2007 00:52:46 +0000
-Message-ID: <878xaqm1sx.fsf-genuine-vii@john.fremlin.org>
-References: <873b0yvk14.fsf-genuine-vii@john.fremlin.org>
-	<466D56B2.5080109@linux.intel.com>
-	<20070611124422.769cba7d.kristen.c.accardi@intel.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
+Date: Mon, 11 Jun 2007 22:11:48 -0300
+Message-ID: <20070612011148.GA9808@khazad-dum.debian.net>
+References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:64525 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752866AbXFLAxJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jun 2007 20:53:09 -0400
-In-Reply-To: <20070611124422.769cba7d.kristen.c.accardi@intel.com> (Kristen Carlson Accardi's message of "Mon\, 11 Jun 2007 12\:44\:22 -0700")
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758095AbXFLBMZ@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070611114839.907bcae2.kristen.c.accardi@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, linux-ide@vger.kernel.org, power@bughost.org
+Cc: jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
+List-Id: linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi <kristen.c.accardi@intel.com> writes:
-[...]
-> I've updated the hardware based patches and posted to the mailing list - 
-> they do indeed save anywhere from .6-1.5 watts depending on the system,
-> on my X60 they save about a watt.  I don't think that a hardware based
-> solution is irrelevant at all - it will usually be able to make faster
-> and more accurrate decisions about when to place the link into lower
-> power state than software could.
+On Mon, 11 Jun 2007, Kristen Carlson Accardi wrote:
+> Setting		Effect
+> ----------------------------------------------------------
+> min_power	ALPM is enabled, and link set to enter 
+> 		lowest power state (SLUMBER) when idle
+> 		Hot plug not allowed.
+> 
+> max_performance	ALPM is disabled, Hot Plug is allowed
+> 
+> medium_power	ALPM is enabled, and link set to enter
+> 		second lowest power state (PARTIAL) when
+> 		idle.  Hot plug not allowed.
 
-Fair enough. But could I point out that the patch I posted from Tejun
-Heo actually does "stop" the port, not just putting it into low power
-slumber modes.
+Just some food for thought:
 
-So, I think it might be able to save more power.
+If you split it into a enable/disable (0/1) attribute, and a level attribute
+(some sort of integer scale, or "min", "medium", "max" if you must use
+strings.  You could use four levels to mimic the PCI device power state, for
+example), it might make its usage more generic, and easier from userspace,
+as it decouples the need to turn it on/off from the need to know which level
+the user wants it set to when you turn it on.
 
-Please take a look at it. It is quite sophisticated and could be
-generalised to more chipsets. Perhaps, on AHCI it can be used in
-combination with the aggressive link power management.
-
-> Note that the previous implementation that was posted didn't work for me,
-> so I just redid everything.
-
-Was that my implementation? 
-
-I posted it in November last year. It certainly isn't as good as yours
-
-http://marc.info/?l=linux-kernel&m=116343039621877&w=2
-
-As you can see, I too thought it saved about 1 W, but Pavel Machek
-measured 250mW.
-
- 
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
