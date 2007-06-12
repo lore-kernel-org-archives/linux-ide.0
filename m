@@ -1,38 +1,119 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
-Date: Tue, 12 Jun 2007 09:18:19 -0300
-Message-ID: <20070612121819.GA20408@khazad-dum.debian.net>
-References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com> <20070612090940.GA9719@srcf.ucam.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: convert ide_find_best_mode() users to use ide_max_dma_mode()
+Date: Tue, 12 Jun 2007 17:30:56 +0400
+Message-ID: <466EA010.7090108@ru.mvista.com>
+References: <200706092210.52291.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070612090940.GA9719@srcf.ucam.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, Jeff Garzik <jeff@garzik.org>, Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:36764 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753818AbXFLN3L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Jun 2007 09:29:11 -0400
+In-Reply-To: <200706092210.52291.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 12 Jun 2007, Matthew Garrett wrote:
-> On Mon, Jun 11, 2007 at 08:59:46PM -0700, Arjan van de Ven wrote:
-> > that's a temporary shortcoming; even with these power savings you can 
-> > do hotplug as long as you're willing to poll for it at a reasonable 
-> > interval and are willing to wait the time between polls for a hotplug 
-> > to take effect..
+Bartlomiej Zolnierkiewicz wrote:
+> ide-timing.h:
+
+> * remove handling of DMA modes from ide_find_best_mode() and rename it to
+>   ide_find_best_pio_mode()
+
+> * drop no longer needed "map" argument from ide_find_best_pio_mode()
+>   and delete needless ->id check
+
+> * remove no longer needed XFER_SWDMA and XFER_UDMA* defines
+
+> au1xxx-ide.c:
+
+> * use ide_max_dma_mode() instead of ide_find_best_mode()
+
+> * remove needless CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA #ifdef
+
+> amd74xx.c:
 > 
-> On laptops, I suspect that we'll probably get an ACPI interrupt even if 
-> the AHCI hotplug pathway can't manage.
+> * store UDMA masks in amd_ide_chip[] and while at it make "base" field
+>   to be u8 instead of unsigned long
+> 
+> * convert the driver to use UDMA masks from amd_ide_chip[]
+> 
+> * use ide_max_dma_mode() and ide_find_best_pio_mode() instead
+>   of ide_find_best_mode()
+> 
+> * delete stale comment from amd74xx_ide_dma_check()
+> 
+> * remove no longer needed AMD_UDMA* defines
+> 
+> via82cxxx.c:
 
-As long as we don't crash the drive or AHCI controller because we hotplugged
-it in a way it didn't like (like trying to hotplug a ICH5R would cause).
+> * remove unused DISPLAY_VIA_TIMINGS define
 
-It is not like 1Hz would not be fast enough for laptop bays and docks, so
-the polling frequency would not be a problem.  I still prefer when levels
-and on/off are kept separate, but if it won't stand in the way of hotplug, I
-certainly don't care enough to bother.
+> * store UDMA masks in via_isa_bridges[] and while at it make "flags" field
+>   to be u8 instead of u16
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+> * convert the driver to use UDMA masks from via_isa_bridges[]
+
+> * use ide_max_dma_mode() and ide_find_best_pio_mode() instead
+>   of ide_find_best_mode()
+
+> * remove no longer needed VIA_UDMA* defines
+
+> pmac.c:
+
+> * use ide_max_dma_mode() instead of ide_find_best_mode()
+
+> There should be no functionality changes caused by this patch.
+
+    I'm afraid this hasn't been accomplished yet. ;-)
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> Index: b/drivers/ide/mips/au1xxx-ide.c
+> ===================================================================
+> --- a/drivers/ide/mips/au1xxx-ide.c
+> +++ b/drivers/ide/mips/au1xxx-ide.c
+> @@ -381,9 +381,7 @@ static int auide_dma_setup(ide_drive_t *
+>  
+>  static int auide_dma_check(ide_drive_t *drive)
+>  {
+> -	u8 speed;
+> -
+> -#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+> +	u8 speed = ide_max_dma_mode(drive);
+>  
+>  	if( dbdma_init_done == 0 ){
+
+    Ugh, coding style isnn't kosher here. :-)
+
+>  		auide_hwif.white_list = ide_in_drive_list(drive->id,
+> @@ -394,7 +392,6 @@ static int auide_dma_check(ide_drive_t *
+>  		auide_ddma_init(&auide_hwif);
+>  		dbdma_init_done = 1;
+>  	}
+> -#endif
+>  
+>  	/* Is the drive in our DMA black list? */
+>  
+> @@ -409,8 +406,6 @@ static int auide_dma_check(ide_drive_t *
+>  	else
+>  		drive->using_dma = 1;
+>  
+> -	speed = ide_find_best_mode(drive, XFER_PIO | XFER_MWDMA);
+> -	
+>  	if (drive->autodma && (speed & XFER_MODE) != XFER_PIO)
+
+    ide_max_dma_mode() returns 0 if DMA not available, so that if should have 
+looked this way:
+
+  	if (drive->autodma && speed)
+
+>  		return 0;
+
+    But is this really equivalent? Why there's no fallback call to 
+ide_find_best_pio_mode() like in other cases?
+
+MBR, Sergei
