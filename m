@@ -1,60 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
-Date: Wed, 13 Jun 2007 08:26:48 -0700
-Message-ID: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
-References: <20070611184146.448266229@intel.com>
-	 <20070611114820.5290a903.kristen.c.accardi@intel.com>
-	 <466DA9DD.8080004@garzik.org>
-	 <20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 0/3] AHCI Link Power Management
+Date: Wed, 13 Jun 2007 09:26:07 -0700
+Message-ID: <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
+References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com>
+	<466DFDB5.9030901@gmail.com>
+	<466E0642.5020506@linux.intel.com>
+	<466E1D51.9070007@gmail.com>
+	<20070613090430.GK13747@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+In-Reply-To: <20070613090430.GK13747@elf.ucw.cz>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Tejun Heo <htejun@gmail.com>, Arjan van de Ven <arjan@linux.intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2007-06-12 at 10:46 -0700, Kristen Carlson Accardi wrote:
-> Expose Power Management Policy option to users
+On Wed, 13 Jun 2007 11:04:30 +0200
+Pavel Machek <pavel@ucw.cz> wrote:
+
+> Hi!
 > 
-> This patch will modify the scsi subsystem to allow
-> users to set a power management policy for the link.
+> > >> I'm not sure about this.  We need better PM framework to support 
+> > >> powersaving in other controllers and some ahcis don't save much
+> > >> when only link power management is used,
+> > > 
+> > > do you have data to support this?
+> > 
+> > Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
+> > hardware.  Pavel, what was the notebook which didn't save much power
+> > with standard SATA power save but needed port to be completely turned off?
 > 
-> The scsi subsystem will create a new sysfs file for each
-> host in /sys/class/scsi_host called "link_power_management_policy".
-> This file can have 3 possible values:
+> Thinkpad x60. Some one Kristen probably used while developing the
+> patch :-).
 
-I'm afraid the host isn't really the right place to put the link power
-management policy (assuming you want to manage the individual links
-separately) because there isn't a one to one correspondence between
-links and hosts.
-
-To take the model I understand: SAS; the links are managed at the phy
-level, so the power policy should be set there and thus should probably
-be a property of the phy object, which doesn't even exist in the SCSI
-model, it only exists in the transport class.  It strikes me that even
-for ATA, the same thing is probably true.
-
-Now, I can see that the power management models of all the transports
-might share some similarities (particularly at this three stage granular
-level); if so, it might make sense to export helpers from the mid-layer
-for the transport classes to use for this.
-
-> Value		Meaning
-> -------------------------------------------------------------------
-> min_power	User wishes the link to conserve power as much as
-> 		possible, even at the cost of some performance
-> 
-> max_performance User wants priority to be on performance, not power
-> 		savings
-> 
-> medium_power	User wants power savings, with less performance cost
-> 		than min_power (but less power savings as well).
-
-These seem like nicely sane and generic values.
-
-James
-
-
+Yes - that confirms my conclusion that the first patch just wasn't
+done correctly - cause when I measure the power savings with a power
+meter on the X60 with my patches I see ~ 1W.
