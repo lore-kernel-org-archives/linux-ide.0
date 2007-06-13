@@ -1,16 +1,16 @@
-From: Mark Lord <liml@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: libata passthru: support PIO multi commands
-Date: Wed, 13 Jun 2007 14:40:45 -0400
-Message-ID: <46703A2D.6000207@rtr.ca>
+Date: Wed, 13 Jun 2007 22:55:45 +0400
+Message-ID: <46703DB1.9010702@ru.mvista.com>
 References: <200706112200.l5BM0qFn005767@hera.kernel.org>	<20070611233917.4bd8c6d7@the-village.bc.nu>	<466DE438.70108@garzik.org>	<20070612111621.10074408@the-village.bc.nu>	<466EB937.6050807@garzik.org> <20070612170519.5f427a70@the-village.bc.nu> <466F5D11.7000404@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3338 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754934AbXFMSkq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jun 2007 14:40:46 -0400
+Received: from h155.mvista.com ([63.81.120.155]:50579 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759627AbXFMSyD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jun 2007 14:54:03 -0400
 In-Reply-To: <466F5D11.7000404@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,34 +18,89 @@ To: albertl@mail.com
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Albert Lee wrote:
-> ..
+> Alan Cox wrote:
+> 
+>>>ata_scsi_pass_thru() is not executed at ioctl submission time (block 
+>>>queue submission time), but rather immediately before it is issued to 
+>>>the drive.  At that point you know the bus is idle, all other commands 
+>>>have finished executing, and dev->multi_count is fresh not stale.  The 
+>>>code path goes from ata_scsi_pass_thru() to ata_qc_issue() without 
+>>>releasing the spinlock, even.
+>>
+>>
+>>Think up to user space
+>>
+>>Poorusersapp			set multicount to 4
+>>
+>>Evilproprietarytuningdaemon	set multicount to 8
+>>
+>>Poorusersapp			issue I/O
+>>
+>>at which point an error is indeed best.
+>>
+>>
+>>
+>>>But the last point is true -- we should error rather than just warn 
+>>>there, AFAICS.
+>>
+>>
+>>Definitely. We've been asked "please do something stupid" and not even in
+>>a case where the requester may know better.
+>>
+> 
+> 
 > It looks like the ATA passthru commands contain more information than
 > what libata needs to execute a command.
 > 
 > e.g. protocol number:
 >      libata could possibly infer the protocol from the command opcode.
-> 
+
+    This is generally a bad practice to guess protocol based on opcode. What 
+if the code will have to handle a vendor unique command (or some other command 
+not yet known to it but known to issuer)?
+
 > e.g. multi_count:
 >      libata caches dev->multi_count. Passing multi_count along with
 >      each passthru command looks useless for libata.     
-> 
+
+    I'd agree here.
+
 > e.g. t_dir:
 >      libata could possible infer the direction from the command opcode
+
+    Bad idea again.
+
 >      or from the protocol number (e.g. 4: PIO_IN / 5: PIO_OUT).
 
-I wonder if the *intent* of the specification was that the low-level driver
-should perform whatever setup is necessary to issue the command as given.
+    This is reasonable if DMA direction can also be inferred from the protocol 
+number.
 
-So if the command specifies a multcount of 8, then the LLD should issue the
-appropriate initialization commands to use a multcount of 8, and then issue
-the given R/W MULT command, and then perhaps reset the multcount back to
-what it was normally (beforehand) ?
+> Due to the redundant info, there is possiblely inconsistency between
+> the parameters. e.g. t_dir vs protocol. e.g. command vs protocol.
 
-Ditto for the others.
+    I think it's better to allow inconsistency then to limit functionality.
+There's another option though -- let the caller specify the default protocol 
+for the command to be issued or override it if it *knows* what it's doing.
 
-I am *not* proposing that we actually do it this way,
-but rather just suggesting a possible rationale.
+> It seems the "redundant" parameters are designed to allow stateless SATL
+> implementation: The application/passthru command tells the stateless SATL
+> implementation the protocol and the multi_count, etc. Then SATL just
+> follows the instruction blindly, even if asked to do something stupid.
 
-What does the SAT spec say?  Any further hints as to the intent?
+> Currently libata
+>  - uses the passthru protocol number blindly
+>    (even if the application issues a DMA command with wrong PIO protocol.)
+>  - checks and warns about multi_count
+>  - ignores t_dir, byte_block and so on.
 
-Cheers
+> Maybe we need a strategy to deal with incorrect passed-thru commands?
+> say,
+>  - check and reject if something wrong
+>  - mimimal check and warn/ignore, if it doesn't hurt command execution
+
+- let the caller use defaults based on command code or override them.
+
+> --
+> albert
+
+MBR, Sergei
