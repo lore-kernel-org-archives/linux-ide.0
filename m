@@ -1,32 +1,60 @@
-From: "Stephen Jakeman" <stephen.jakeman@ircona.com>
-Subject: SATA_sil24 for 2.4
-Date: Wed, 13 Jun 2007 11:44:50 +0100
-Message-ID: <31F831E88F956C468206823D7BBCA4AB12F3EF@irc-dc-01>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
+Date: Wed, 13 Jun 2007 08:26:48 -0700
+Message-ID: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
+References: <20070611184146.448266229@intel.com>
+	 <20070611114820.5290a903.kristen.c.accardi@intel.com>
+	 <466DA9DD.8080004@garzik.org>
+	 <20070612104631.44dab4a3.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.ircona.com ([87.192.241.39]:46539 "EHLO mail.ircona.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754146AbXFMKox convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jun 2007 06:44:53 -0400
-Content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hello,
+On Tue, 2007-06-12 at 10:46 -0700, Kristen Carlson Accardi wrote:
+> Expose Power Management Policy option to users
+> 
+> This patch will modify the scsi subsystem to allow
+> users to set a power management policy for the link.
+> 
+> The scsi subsystem will create a new sysfs file for each
+> host in /sys/class/scsi_host called "link_power_management_policy".
+> This file can have 3 possible values:
 
-Could anybody point me to a driver for the Silicon
-Image SATA 3124 controller running under linux 2.4.
-I am currently using a microblaze core under uClinux
-And therefore cannot use the driver for the 2.6 kernel.
+I'm afraid the host isn't really the right place to put the link power
+management policy (assuming you want to manage the individual links
+separately) because there isn't a one to one correspondence between
+links and hosts.
 
-If no driver is available could somebody give me some advice
-As to what is the best way to back port the sata_sil24 driver
->From 2.6 to 2.4.
+To take the model I understand: SAS; the links are managed at the phy
+level, so the power policy should be set there and thus should probably
+be a property of the phy object, which doesn't even exist in the SCSI
+model, it only exists in the transport class.  It strikes me that even
+for ATA, the same thing is probably true.
 
-Regards,
+Now, I can see that the power management models of all the transports
+might share some similarities (particularly at this three stage granular
+level); if so, it might make sense to export helpers from the mid-layer
+for the transport classes to use for this.
 
-Stephen Jakeman
+> Value		Meaning
+> -------------------------------------------------------------------
+> min_power	User wishes the link to conserve power as much as
+> 		possible, even at the cost of some performance
+> 
+> max_performance User wants priority to be on performance, not power
+> 		savings
+> 
+> medium_power	User wants power savings, with less performance cost
+> 		than min_power (but less power savings as well).
+
+These seem like nicely sane and generic values.
+
+James
+
+
