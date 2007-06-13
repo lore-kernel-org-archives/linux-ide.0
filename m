@@ -1,40 +1,51 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 0/3] AHCI Link Power Management
-Date: Wed, 13 Jun 2007 09:26:07 -0700
-Message-ID: <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
-References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com>
-	<466DFDB5.9030901@gmail.com>
-	<466E0642.5020506@linux.intel.com>
-	<466E1D51.9070007@gmail.com>
-	<20070613090430.GK13747@elf.ucw.cz>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata passthru: support PIO multi commands
+Date: Wed, 13 Jun 2007 14:40:45 -0400
+Message-ID: <46703A2D.6000207@rtr.ca>
+References: <200706112200.l5BM0qFn005767@hera.kernel.org>	<20070611233917.4bd8c6d7@the-village.bc.nu>	<466DE438.70108@garzik.org>	<20070612111621.10074408@the-village.bc.nu>	<466EB937.6050807@garzik.org> <20070612170519.5f427a70@the-village.bc.nu> <466F5D11.7000404@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070613090430.GK13747@elf.ucw.cz>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Tejun Heo <htejun@gmail.com>, Arjan van de Ven <arjan@linux.intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:3338 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754934AbXFMSkq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jun 2007 14:40:46 -0400
+In-Reply-To: <466F5D11.7000404@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Wed, 13 Jun 2007 11:04:30 +0200
-Pavel Machek <pavel@ucw.cz> wrote:
-
-> Hi!
+Albert Lee wrote:
+> ..
+> It looks like the ATA passthru commands contain more information than
+> what libata needs to execute a command.
 > 
-> > >> I'm not sure about this.  We need better PM framework to support 
-> > >> powersaving in other controllers and some ahcis don't save much
-> > >> when only link power management is used,
-> > > 
-> > > do you have data to support this?
-> > 
-> > Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
-> > hardware.  Pavel, what was the notebook which didn't save much power
-> > with standard SATA power save but needed port to be completely turned off?
+> e.g. protocol number:
+>      libata could possibly infer the protocol from the command opcode.
 > 
-> Thinkpad x60. Some one Kristen probably used while developing the
-> patch :-).
+> e.g. multi_count:
+>      libata caches dev->multi_count. Passing multi_count along with
+>      each passthru command looks useless for libata.     
+> 
+> e.g. t_dir:
+>      libata could possible infer the direction from the command opcode
+>      or from the protocol number (e.g. 4: PIO_IN / 5: PIO_OUT).
 
-Yes - that confirms my conclusion that the first patch just wasn't
-done correctly - cause when I measure the power savings with a power
-meter on the X60 with my patches I see ~ 1W.
+I wonder if the *intent* of the specification was that the low-level driver
+should perform whatever setup is necessary to issue the command as given.
+
+So if the command specifies a multcount of 8, then the LLD should issue the
+appropriate initialization commands to use a multcount of 8, and then issue
+the given R/W MULT command, and then perhaps reset the multcount back to
+what it was normally (beforehand) ?
+
+Ditto for the others.
+
+I am *not* proposing that we actually do it this way,
+but rather just suggesting a possible rationale.
+
+What does the SAT spec say?  Any further hints as to the intent?
+
+Cheers
