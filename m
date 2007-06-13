@@ -1,67 +1,34 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] drivers/ata/sata_nv.c: make 3 functions static
-Date: Wed, 13 Jun 2007 01:03:20 +0200
-Message-ID: <20070612230320.GC3588@stusta.de>
-References: <20070606220313.8f7c1fab.akpm@linux-foundation.org>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: libata and legacy ide pcmcia failure
+Date: Wed, 13 Jun 2007 09:36:39 +0800
+Message-ID: <466F4A27.8070309@tw.ibm.com>
+References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:33081 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754042AbXFLXDI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 19:03:08 -0400
-Content-Disposition: inline
-In-Reply-To: <20070606220313.8f7c1fab.akpm@linux-foundation.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:42101 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753693AbXFMBhE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2007 21:37:04 -0400
+In-Reply-To: <466E11DF.5020901@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>, jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>, Robert de Rooy <robert.de.rooy@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-This patch makes 3 needlessly global functions static.
+> 
+> 
+> libata can do most of this too by using ATA_FLAG_PIO_POLLING (doesn't
+> cover nodata commands tho).
+> 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Hi Tejun,
 
----
+Polling of nodata commands was fixed in:
+http://marc.info/?l=linux-ide&m=116546272916399&w=2
 
- drivers/ata/sata_nv.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
---- linux-2.6.22-rc4-mm2/drivers/ata/sata_nv.c.old	2007-06-13 00:02:18.000000000 +0200
-+++ linux-2.6.22-rc4-mm2/drivers/ata/sata_nv.c	2007-06-13 00:03:12.000000000 +0200
-@@ -314,7 +314,7 @@
- static int nv_ncqintr_dmasetupfis(struct ata_port *ap);
- static void ncq_clear_singlefis(struct ata_port *ap, u32 val);
- static u32 ncq_ownfisintr_value (struct ata_port *ap);
--void ncq_hotplug(struct ata_port *ap, u32 fis);
-+static void ncq_hotplug(struct ata_port *ap, u32 fis);
- static irqreturn_t nv_mcp55_interrupt(int irq, void *dev_instance);
- static int ncq_interrupt(struct ata_port *ap, u32 fis);
- static int nv_scsi_queuecmd(struct scsi_cmnd *cmd,
-@@ -1931,7 +1931,7 @@
- 	ncq_clear(ap);
- }
- 
--int nv_std_prereset(struct ata_port *ap, unsigned long deadline)
-+static int nv_std_prereset(struct ata_port *ap, unsigned long deadline)
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
- 
-@@ -2265,7 +2265,7 @@
- 	return 0;
- }
- 
--u32 ncq_valid_dhfisflag(struct nv_port_priv *pp)
-+static u32 ncq_valid_dhfisflag(struct nv_port_priv *pp)
- {
- 	u32 valid = (pp->dhfis_flags == pp->qc_active);
- 
-@@ -2332,7 +2332,7 @@
- #endif
- 
- 
--void ncq_hotplug(struct ata_port *ap, u32 fis)
-+static void ncq_hotplug(struct ata_port *ap, u32 fis)
- {
- 	u32 serror;
- 	struct ata_eh_info *ehi = &ap->eh_info;
+--
+albert
 
