@@ -1,30 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata passthru: support PIO multi commands
-Date: Wed, 13 Jun 2007 14:55:06 -0400
-Message-ID: <46703D8A.4040403@garzik.org>
-References: <200706112200.l5BM0qFn005767@hera.kernel.org>	<20070611233917.4bd8c6d7@the-village.bc.nu>	<466DE438.70108@garzik.org>	<20070612111621.10074408@the-village.bc.nu>	<466EB937.6050807@garzik.org> <20070612170519.5f427a70@the-village.bc.nu> <466F5D11.7000404@tw.ibm.com> <46703DB1.9010702@ru.mvista.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [patch 0/3] AHCI Link Power Management
+Date: Wed, 13 Jun 2007 14:51:06 +0000
+Message-ID: <20070613145106.GA8053@ucw.cz>
+References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com> <466DFDB5.9030901@gmail.com> <466E0642.5020506@linux.intel.com> <466E1D51.9070007@gmail.com> <466E1EC6.90509@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38460 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753959AbXFMSzP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jun 2007 14:55:15 -0400
-In-Reply-To: <46703DB1.9010702@ru.mvista.com>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:2811 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754313AbXFMUQk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jun 2007 16:16:40 -0400
+Content-Disposition: inline
+In-Reply-To: <466E1EC6.90509@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: albertl@mail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Arjan van de Ven <arjan@linux.intel.com>
+Cc: Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Sergei Shtylyov wrote:
->    This is generally a bad practice to guess protocol based on opcode. 
-> What if the code will have to handle a vendor unique command (or some 
-> other command not yet known to it but known to issuer)?
+Hi!
 
-Agreed -- we simply cannot rely on guessing protocol from opcode, we 
-MUST take the protocol that is specified.
+> >Yeah, it was some Lenovo notebook.  Pavel is more 
+> >familiar with the
+> >hardware.  Pavel, what was the notebook which didn't 
+> >save much power
+> >with standard SATA power save but needed port to be 
+> >completely turned off?
+> 
+> Pavel, if you have time, could you measure this with 
+> Kristen's patch?
 
-	Jeff
+Kristen has same machine as me, and I have seen similar '1W' saving
+with previous version of the patch. I'd trust her results.
 
-
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
