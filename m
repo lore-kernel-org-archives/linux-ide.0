@@ -1,37 +1,34 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [patch 0/3] AHCI Link Power Management
-Date: Wed, 13 Jun 2007 11:04:30 +0200
-Message-ID: <20070613090430.GK13747@elf.ucw.cz>
-References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com> <466DFDB5.9030901@gmail.com> <466E0642.5020506@linux.intel.com> <466E1D51.9070007@gmail.com>
+From: Florian Effenberger <florian@effenberger.org>
+Subject: Re: libata interface fatal error
+Date: Wed, 13 Jun 2007 12:37:53 +0200
+Message-ID: <466FC901.4060907@effenberger.org>
+References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:56148 "EHLO amd.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752012AbXFMJEx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jun 2007 05:04:53 -0400
-Content-Disposition: inline
-In-Reply-To: <466E1D51.9070007@gmail.com>
+Received: from garfield.effenberger.org ([85.214.43.221]:59668 "EHLO
+	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078AbXFMKiA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jun 2007 06:38:00 -0400
+In-Reply-To: <4667D4F5.1060302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hi!
+Hi Tejun,
 
-> >> I'm not sure about this.  We need better PM framework to support 
-> >> powersaving in other controllers and some ahcis don't save much
-> >> when only link power management is used,
-> > 
-> > do you have data to support this?
-> 
-> Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
-> hardware.  Pavel, what was the notebook which didn't save much power
-> with standard SATA power save but needed port to be completely turned off?
+> Okay, there was a bug in link speed limit logic.  That's probably why
+> speed down to 1.5Gbps didn't kick in.  The attached patch contains the
+> fix and hack to force 1.5Gbps.  Please give it a shot.
 
-Thinkpad x60. Some one Kristen probably used while developing the
-patch :-).
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+thanks a lot for your patch, it seems to work, at least better than 
+without patch. :-)
+
+When rsyncing about 12 GB, no trouble occured. When doing heavy stress 
+tests, I receive errors again, but okay, maybe that's due to a hardware bug.
+
+Will your patch go into the vanilla kernel?
+
+Florian
