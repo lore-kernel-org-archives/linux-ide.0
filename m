@@ -1,34 +1,32 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: libata interface fatal error
-Date: Wed, 13 Jun 2007 12:37:53 +0200
-Message-ID: <466FC901.4060907@effenberger.org>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com>
+From: "Stephen Jakeman" <stephen.jakeman@ircona.com>
+Subject: SATA_sil24 for 2.4
+Date: Wed, 13 Jun 2007 11:44:50 +0100
+Message-ID: <31F831E88F956C468206823D7BBCA4AB12F3EF@irc-dc-01>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:59668 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078AbXFMKiA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jun 2007 06:38:00 -0400
-In-Reply-To: <4667D4F5.1060302@gmail.com>
+Received: from mail.ircona.com ([87.192.241.39]:46539 "EHLO mail.ircona.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754146AbXFMKox convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jun 2007 06:44:53 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: linux-ide@vger.kernel.org
 
-Hi Tejun,
+Hello,
 
-> Okay, there was a bug in link speed limit logic.  That's probably why
-> speed down to 1.5Gbps didn't kick in.  The attached patch contains the
-> fix and hack to force 1.5Gbps.  Please give it a shot.
+Could anybody point me to a driver for the Silicon
+Image SATA 3124 controller running under linux 2.4.
+I am currently using a microblaze core under uClinux
+And therefore cannot use the driver for the 2.6 kernel.
 
-thanks a lot for your patch, it seems to work, at least better than 
-without patch. :-)
+If no driver is available could somebody give me some advice
+As to what is the best way to back port the sata_sil24 driver
+>From 2.6 to 2.4.
 
-When rsyncing about 12 GB, no trouble occured. When doing heavy stress 
-tests, I receive errors again, but okay, maybe that's due to a hardware bug.
+Regards,
 
-Will your patch go into the vanilla kernel?
-
-Florian
+Stephen Jakeman
