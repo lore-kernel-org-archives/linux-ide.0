@@ -1,43 +1,75 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: libata interface fatal error
-Date: Thu, 14 Jun 2007 17:12:27 +0200
-Message-ID: <46715ADB.4020202@effenberger.org>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <466FC901.4060907@effenberger.org> <46710DDC.1030900@gmail.com> <467122B8.1090206@effenberger.org> <467133D7.7070000@gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
+Date: Thu, 14 Jun 2007 09:39:52 -0700
+Message-ID: <20070614093952.c8ebef17.kristen.c.accardi@intel.com>
+References: <20070611184146.448266229@intel.com>
+	<20070611114820.5290a903.kristen.c.accardi@intel.com>
+	<466DA9DD.8080004@garzik.org>
+	<20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+	<1181748408.3421.7.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:33474 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924AbXFNPMb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 11:12:31 -0400
-In-Reply-To: <467133D7.7070000@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hi Tejun,
+On Wed, 13 Jun 2007 08:26:48 -0700
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-> Okay, ich8.  I don't think the chipset is at fault here and you have a
-> lot of disks.  My primary suspect is power supply problem but things
-> like this are hard to prove.  With the merged speed down fix, libata
-> will do the right thing after a few errors, so ignoring the problem
-> wouldn't be a too bad idea.  If you're curious, you can try to connect
-> drives to different SATA ports and power lanes and see whether errors
-> follow the disk, port or power lane.
+> On Tue, 2007-06-12 at 10:46 -0700, Kristen Carlson Accardi wrote:
+> > Expose Power Management Policy option to users
+> > 
+> > This patch will modify the scsi subsystem to allow
+> > users to set a power management policy for the link.
+> > 
+> > The scsi subsystem will create a new sysfs file for each
+> > host in /sys/class/scsi_host called "link_power_management_policy".
+> > This file can have 3 possible values:
+> 
+> I'm afraid the host isn't really the right place to put the link power
+> management policy (assuming you want to manage the individual links
+> separately) because there isn't a one to one correspondence between
+> links and hosts.
+> 
+> To take the model I understand: SAS; the links are managed at the phy
+> level, so the power policy should be set there and thus should probably
+> be a property of the phy object, which doesn't even exist in the SCSI
+> model, it only exists in the transport class.  It strikes me that even
+> for ATA, the same thing is probably true.
+> 
+> Now, I can see that the power management models of all the transports
+> might share some similarities (particularly at this three stage granular
+> level); if so, it might make sense to export helpers from the mid-layer
+> for the transport classes to use for this.
 
-exactly, should be four disks in the machine.
+Ok - sorry for my ignorance about SCSI - but my sources (i.e. Arjan) tell 
+me that the problem is that Link in ATA land means something different than 
+Link in SCSI land, and that what I really need to do is leave this code under
+the Host class, but rename it to something that more accurately reflects
+what it means under SCSI.  So, is the word "segment" more appropriate?
+Should I rename the file to "segment_power_management_policy"?
 
-What power supply would you recommend for this type of disks? I think we 
-got a 450W Enermax, IIRC.
+Thanks,
+kristen
 
-What do you mean by "merged speed down fix"? Is your fix for the speed 
-down logic implemented in the current kernel, so I don't have to patch 
-anymore (except when I want to force 1.5Gbps right from the beginning)?
 
-All SATA parts are used, so reconnecting is not an option. But I can try 
-to switch the power supply (lanes).
-
-Thanks for all your kind help, that is much appreciated!
-Florian
+> 
+> > Value		Meaning
+> > -------------------------------------------------------------------
+> > min_power	User wishes the link to conserve power as much as
+> > 		possible, even at the cost of some performance
+> > 
+> > max_performance User wants priority to be on performance, not power
+> > 		savings
+> > 
+> > medium_power	User wants power savings, with less performance cost
+> > 		than min_power (but less power savings as well).
+> 
+> These seem like nicely sane and generic values.
+> 
+> James
+> 
