@@ -1,75 +1,70 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
-Date: Thu, 14 Jun 2007 09:39:52 -0700
-Message-ID: <20070614093952.c8ebef17.kristen.c.accardi@intel.com>
-References: <20070611184146.448266229@intel.com>
-	<20070611114820.5290a903.kristen.c.accardi@intel.com>
-	<466DA9DD.8080004@garzik.org>
-	<20070612104631.44dab4a3.kristen.c.accardi@intel.com>
-	<1181748408.3421.7.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: SATA problems
+Date: Thu, 14 Jun 2007 13:33:22 -0400
+Message-ID: <46717BE2.3000703@garzik.org>
+References: <8vX5T-4hg-5@gated-at.bofh.it> <8w0n1-15u-27@gated-at.bofh.it> <467173C4.1050500@lbsd.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:47656 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751229AbXFNRdY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Jun 2007 13:33:24 -0400
+In-Reply-To: <467173C4.1050500@lbsd.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nigel Kukard <nkukard@lbsd.net>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Wed, 13 Jun 2007 08:26:48 -0700
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
+Nigel Kukard wrote:
+>>> I'm stumped trying to track down the below intermittent problem.....
+>>>
+>>> I've confirmed this problem on 2.6.19, 2.6.20 and 2.6.21.
 
-> On Tue, 2007-06-12 at 10:46 -0700, Kristen Carlson Accardi wrote:
-> > Expose Power Management Policy option to users
-> > 
-> > This patch will modify the scsi subsystem to allow
-> > users to set a power management policy for the link.
-> > 
-> > The scsi subsystem will create a new sysfs file for each
-> > host in /sys/class/scsi_host called "link_power_management_policy".
-> > This file can have 3 possible values:
-> 
-> I'm afraid the host isn't really the right place to put the link power
-> management policy (assuming you want to manage the individual links
-> separately) because there isn't a one to one correspondence between
-> links and hosts.
-> 
-> To take the model I understand: SAS; the links are managed at the phy
-> level, so the power policy should be set there and thus should probably
-> be a property of the phy object, which doesn't even exist in the SCSI
-> model, it only exists in the transport class.  It strikes me that even
-> for ATA, the same thing is probably true.
-> 
-> Now, I can see that the power management models of all the transports
-> might share some similarities (particularly at this three stage granular
-> level); if so, it might make sense to export helpers from the mid-layer
-> for the transport classes to use for this.
+>>> Jun 14 07:55:52 nigel-m2v kernel: ata2.00: exception Emask 0x0 SAct 0x0
+>>> SErr 0x0 action 0x2 frozen
+>>> Jun 14 07:55:52 nigel-m2v kernel: ata2.00: cmd
+>>> ca/00:18:87:e7:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 12288 out
+>>> Jun 14 07:55:52 nigel-m2v kernel:          res
+>>> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> Jun 14 07:55:52 nigel-m2v kernel: ata2: soft resetting port
+>>> Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
+>>> 0x0001c807
+>>> Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
+>>> 0x0001c807
+>>> Jun 14 07:56:22 nigel-m2v kernel: ata2.00: qc timeout (cmd 0xef)
+>>> Jun 14 07:56:22 nigel-m2v kernel: ata2.00: failed to set xfermode
+>>> (err_mask=0x4)
 
-Ok - sorry for my ignorance about SCSI - but my sources (i.e. Arjan) tell 
-me that the problem is that Link in ATA land means something different than 
-Link in SCSI land, and that what I really need to do is leave this code under
-the Host class, but rename it to something that more accurately reflects
-what it means under SCSI.  So, is the word "segment" more appropriate?
-Should I rename the file to "segment_power_management_policy"?
+>> Try 2.6.22-rc4-gitX...
 
-Thanks,
-kristen
+> Is there a patch in particular I can maybe apply? I see you made a
+> couple of commits ... my problem is this is also happening on one of my
+> production boxes which has a few other patches applied, I'm a bit scared
+> of conflicts ... I don't really want to break anything by upgrading the
+> kernel.
+
+The two most relevant git commits:
+
+commit 51b94d2a5a90d4800e74d7348bcde098a28f4fb3
+Author: Tejun Heo <htejun@gmail.com>
+Date:   Fri Jun 8 13:46:55 2007 -0700
+
+     sata_promise: use TF interface for polling NODATA commands
+
+commit 464cf177df7727efcc5506322fc5d0c8b896f545
+Author: Tejun Heo <htejun@gmail.com>
+Date:   Sun May 27 15:10:40 2007 +0200
+
+     libata: always use polling SETXFER
+
+If you have a git tree local to you, "git-diff-tree -p $COMMIT" will 
+extract a patch, otherwise click "raw" after surfing to 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=$COMMIT
+
+Regards,
+
+	Jeff
 
 
-> 
-> > Value		Meaning
-> > -------------------------------------------------------------------
-> > min_power	User wishes the link to conserve power as much as
-> > 		possible, even at the cost of some performance
-> > 
-> > max_performance User wants priority to be on performance, not power
-> > 		savings
-> > 
-> > medium_power	User wants power savings, with less performance cost
-> > 		than min_power (but less power savings as well).
-> 
-> These seem like nicely sane and generic values.
-> 
-> James
-> 
