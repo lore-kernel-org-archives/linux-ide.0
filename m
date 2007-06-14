@@ -1,41 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 0/3] AHCI Link Power Management
-Date: Thu, 14 Jun 2007 16:56:43 +0900
-Message-ID: <4670F4BB.3060306@gmail.com>
-References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com>	<466DFDB5.9030901@gmail.com>	<466E0642.5020506@linux.intel.com>	<466E1D51.9070007@gmail.com>	<20070613090430.GK13747@elf.ucw.cz> <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
+Subject: Re: [PROBLEM + PATCH] Sata port disabled by BIOS gets initialized
+Date: Thu, 14 Jun 2007 18:27:26 +0900
+Message-ID: <467109FE.1080009@gmail.com>
+References: <20056641.1181568752111.JavaMail.root@wombat.diezmil.com> <466D8C4C.8040605@gmail.com> <466EE66B.1040905@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:7073 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbXFNH4u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 03:56:50 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so576412wah
-        for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 00:56:50 -0700 (PDT)
-In-Reply-To: <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
+Received: from nz-out-0506.google.com ([64.233.162.233]:2566 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbXFNJ1c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 05:27:32 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so525902nzf
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 02:27:31 -0700 (PDT)
+In-Reply-To: <466EE66B.1040905@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Arjan van de Ven <arjan@linux.intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Matt Sealey <matt@genesi-usa.com>
+Cc: shyam_iyer@dell.com, linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
->>>>> I'm not sure about this.  We need better PM framework to support 
->>>>> powersaving in other controllers and some ahcis don't save much
->>>>> when only link power management is used,
->>>> do you have data to support this?
->>> Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
->>> hardware.  Pavel, what was the notebook which didn't save much power
->>> with standard SATA power save but needed port to be completely turned off?
->> Thinkpad x60. Some one Kristen probably used while developing the
->> patch :-).
-> 
-> Yes - that confirms my conclusion that the first patch just wasn't
-> done correctly - cause when I measure the power savings with a power
-> meter on the X60 with my patches I see ~ 1W.
+Hello,
 
-Hmmm... Could it be that the controller doesn't enter powersave state
-when SControl is written to?
+Matt Sealey wrote:
+> Isn't there a case for speeding up boot and not wasting resources by
+> respecting BIOS settings in this regard? If you have an 8-port
+> controller on a board and one disk, forcing all of them enabled
+> regardless of BIOS settings is just 7 redundant port scans.
+
+Ports can be populated later with hotplug.
+
+> It should at least be an option - the default being to open up all
+> gunports, an option to respect BIOS settings and only use the ones
+> requested and enabled.. (I can see an edge case where a user disables
+> a disk in the BIOS to stop another OS from looking at/for it, but
+> wants the Linux system to boot from it)
+
+There hasn't been any actual need for such an option.  Yes, there are
+situations where such option might help theoretically but how much?  If
+you have an actual strong case for such option, I'm all ears.
 
 -- 
 tejun
