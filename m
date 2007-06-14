@@ -1,36 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Thu, 14 Jun 2007 18:39:35 +0900
-Message-ID: <46710CD7.9070901@gmail.com>
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com>
+Subject: Re: libata interface fatal error
+Date: Thu, 14 Jun 2007 18:43:56 +0900
+Message-ID: <46710DDC.1030900@gmail.com>
+References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <466FC901.4060907@effenberger.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:15563 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbXFNJjm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 05:39:42 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so602387wah
-        for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 02:39:42 -0700 (PDT)
-In-Reply-To: <466F4A27.8070309@tw.ibm.com>
+Received: from nz-out-0506.google.com ([64.233.162.239]:10191 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbXFNJoE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 05:44:04 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so529763nzf
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 02:44:03 -0700 (PDT)
+In-Reply-To: <466FC901.4060907@effenberger.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Mark Lord <mlord@pobox.com>, Robert de Rooy <robert.de.rooy@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Florian Effenberger <florian@effenberger.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Albert Lee wrote:
->>
->> libata can do most of this too by using ATA_FLAG_PIO_POLLING (doesn't
->> cover nodata commands tho).
->>
-> 
+Florian Effenberger wrote:
 > Hi Tejun,
 > 
-> Polling of nodata commands was fixed in:
-> http://marc.info/?l=linux-ide&m=116546272916399&w=2
+>> Okay, there was a bug in link speed limit logic.  That's probably why
+>> speed down to 1.5Gbps didn't kick in.  The attached patch contains the
+>> fix and hack to force 1.5Gbps.  Please give it a shot.
+> 
+> thanks a lot for your patch, it seems to work, at least better than
+> without patch. :-)
+> 
+> When rsyncing about 12 GB, no trouble occured. When doing heavy stress
+> tests, I receive errors again, but okay, maybe that's due to a hardware
+> bug.
+> 
+> Will your patch go into the vanilla kernel?
 
-Right.  Thanks for reminding me.  :-)
+I'm currently not sure what the root cause is
+
+1. if the controller is at fault, we need to force 1.5Gbps on the
+controller.
+
+2. if the drive model is broken, we need to blacklist the drives.
+
+3. if your specific configuration is broken (faulty hw, PSU, bad karma),
+the upstream speed limit fix patch should be enough.
+
+Can you post the result of 'hdparm -I /dev/sdX'?
 
 -- 
 tejun
