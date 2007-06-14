@@ -1,87 +1,41 @@
-From: "Miguel Medalha" <miguelmedalha@sapo.pt>
-Subject: Disk errors reported on boot - kernel 2.6.18
-Date: Thu, 14 Jun 2007 07:44:42 +0100
-Message-ID: <001201c7ae4f$7d829df0$0901a8c0@medalha>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 0/3] AHCI Link Power Management
+Date: Thu, 14 Jun 2007 16:56:43 +0900
+Message-ID: <4670F4BB.3060306@gmail.com>
+References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com>	<466DFDB5.9030901@gmail.com>	<466E0642.5020506@linux.intel.com>	<466E1D51.9070007@gmail.com>	<20070613090430.GK13747@elf.ucw.cz> <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay4.ptmail.sapo.pt ([212.55.154.24]:48971 "HELO sapo.pt"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752066AbXFNGve (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jun 2007 02:51:34 -0400
-Received: from unknown (HELO medalha) (miguelmedalha@sapo.pt@[82.155.56.159])
-          (envelope-sender <miguelmedalha@sapo.pt>)
-          by mta14 (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 14 Jun 2007 06:44:53 -0000
+Received: from wa-out-1112.google.com ([209.85.146.182]:7073 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbXFNH4u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 03:56:50 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so576412wah
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 00:56:50 -0700 (PDT)
+In-Reply-To: <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Arjan van de Ven <arjan@linux.intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Gentlemen
+Kristen Carlson Accardi wrote:
+>>>>> I'm not sure about this.  We need better PM framework to support 
+>>>>> powersaving in other controllers and some ahcis don't save much
+>>>>> when only link power management is used,
+>>>> do you have data to support this?
+>>> Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
+>>> hardware.  Pavel, what was the notebook which didn't save much power
+>>> with standard SATA power save but needed port to be completely turned off?
+>> Thinkpad x60. Some one Kristen probably used while developing the
+>> patch :-).
+> 
+> Yes - that confirms my conclusion that the first patch just wasn't
+> done correctly - cause when I measure the power savings with a power
+> meter on the X60 with my patches I see ~ 1W.
 
-I thought you might be interested in the following:
+Hmmm... Could it be that the controller doesn't enter powersave state
+when SControl is written to?
 
-I just installed CentOS 5 on a computer (kernel-2.6.18-8.1.4.el5.i686) . On 
-boot, I get an error message,
-related to 2 SATA disks. These errors did NOT appear on version 4.4 
-(kernel-smp-2.6.9-42.EL.i586) with the
-EXACT same hardware.
-
-Despite the error messages, the disks seem to be working with no problems.
-
-I searched the Net for these errors and they seem to appear with a wide
-range of disks, controlers and chip set brands, even with different Linux 
-distributions.
-The issue seems to be related to the last few kernel versions and is perhaps 
-a bug or ill
-implemented "feature" of libata or ata_piix.
-
-My configuration:
-
-- 2 Hitachi HDS722512VLSA80 SATA 120 GB Harddisks (first generation, no NCQ)
-- Intel P4 3GHz
-- Tyan Tomcat i875p (S5102) motherboard, Intel ICH5 disk controler
-- 1 GB ECC RAM
-- 2 Intel Gb NICs
-- 1 Intel 10/100 NIC
-
-Error message follows:
-
----------------------------------------------------------------------
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata1.00: tag 0 cmd 0xb0 Emask 0x1 stat 0x51 err 0x4 (device error)
-ata1: EH complete
----------------------------------------------------------------------
-
-This repeats another 5 times, after which come the statements:
-
----------------------------------------------------------------------
-SCSI device sda: 241254720 512-byte hdwr sectors (123522 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 241254720 512-byte hdwr sectors (123522 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-
-(Is this duplication normal?)
----------------------------------------------------------------------
-
-The whole thing is repeated for "ata2.00" and "SCSI device sdb"
-
-I connected both disks to a Promise PDC20378 Sata Controler available on the
-same board and the error disappears. The configuration stays EXACTLY the 
-same,
-I only switch both disks' SATA cables to the other 2 connectors.
-
-So, it is related to the use of the Intel 82801EB ICH5 controler that makes
-the Southbridge.
-
-Thank you
-Miguel Medalha 
-
+-- 
+tejun
