@@ -1,67 +1,76 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 9/9] libata: remove irq_on/off and rename freeze()/thaw()
- to irq_on/off
-Date: Fri, 15 Jun 2007 11:44:32 +0800
-Message-ID: <46720B20.6060402@tw.ibm.com>
-References: <46720353.90209@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Sonic Zhang <sonic.adi@gmail.com>
+Subject: [PATCH] [libata] Add irq_flags to struct pata_platform_info
+Date: Fri, 15 Jun 2007 17:45:49 +0800
+Message-ID: <1181900749.23447.7.camel@sevens.analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:45707 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885AbXFODog (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 23:44:36 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5F3iaB2023532
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 23:44:36 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5F3iaKn262840
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:44:36 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5F3iZbW002359
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:44:35 -0600
-In-Reply-To: <46720353.90209@tw.ibm.com>
+Received: from nwd2mail10.analog.com ([137.71.25.55]:9832 "EHLO
+	nwd2mail10.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbXFOJwd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jun 2007 05:52:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Linux IDE <linux-ide@vger.kernel.org>
-Cc: Doug Maxey <dwm@enoyolf.org>
+Cc: Jeff Garzik <jeff@garzik.org>
 
-Patch 9/9:
+On some embedded platforms, such as blackfin, the gpio interrupt for
+IDE interface is designed to be triggered with high voltage. The gpio
+port should be configured properly by set_irq_type() when register
+the irq. This patch enable the generic pata platform driver to
+accept platform irq flags data.
 
-  It seems  ->irq_on and ->irq_off are now only wrapped by freeze()/thaw() and unused elsewhere.
-This patch
-  - Remove ->irq_on and ->irq_off.
-  - Rename ->freeze and ->thaw to irq_on() and irq_off() to be specific.
+Signed-off-by: Sonic Zhang <sonic.adi@gmail.com>
+---
+ drivers/ata/pata_platform.c   |    6 ++++--
+ include/linux/pata_platform.h |    5 +++++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-Hopefully the LLDDs need to implement only one irq on/off by either host adapter masking,
-nIEN manipulation, or both or something else.
-
-No patch for this yet. Just some idea like below...
-
-diff -Nrup 09_freeze_thaw_pdc2027x/include/linux/libata.h 10_replace_irq_on_off/include/linux/libata.h
---- 09_freeze_thaw_pdc2027x/include/linux/libata.h	2007-06-12 13:35:19.000000000 +0800
-+++ 10_replace_irq_on_off/include/linux/libata.h	2007-06-15 11:43:47.000000000 +0800
-@@ -591,15 +591,13 @@ struct ata_port_operations {
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index cbb7866..79f841b 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -139,6 +139,7 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
+ 	struct resource *io_res, *ctl_res;
+ 	struct ata_host *host;
+ 	struct ata_port *ap;
++	struct pata_platform_info *pp_info;
+ 	unsigned int mmio;
+ 
+ 	/*
+@@ -208,11 +209,12 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
+ 
+ 	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
+ 
+-	pata_platform_setup_port(&ap->ioaddr, pdev->dev.platform_data);
++	pp_info = (struct pata_platform_info *)(pdev->dev.platform_data);
++	pata_platform_setup_port(&ap->ioaddr, pp_info);
+ 
+ 	/* activate */
+ 	return ata_host_activate(host, platform_get_irq(pdev, 0), ata_interrupt,
+-				 0, &pata_platform_sht);
++				 pp_info->irq_flags, &pata_platform_sht);
+ }
+ 
+ /**
+diff --git a/include/linux/pata_platform.h b/include/linux/pata_platform.h
+index 2d5fd64..5799e8d 100644
+--- a/include/linux/pata_platform.h
++++ b/include/linux/pata_platform.h
+@@ -8,6 +8,11 @@ struct pata_platform_info {
+ 	 * spacing used by ata_std_ports().
  	 */
- 	void (*eng_timeout) (struct ata_port *ap); /* obsolete */
+ 	unsigned int ioport_shift;
++	/* 
++	 * Indicate platform specific irq types and initial
++	 * IRQ flags when call request_irq()
++	 */
++	unsigned int irq_flags;
+ };
  
--	void (*freeze) (struct ata_port *ap);
--	void (*thaw) (struct ata_port *ap);
-+	u8 (*irq_on) (struct ata_port *);
-+	u8 (*irq_off) (struct ata_port *);
- 	void (*error_handler) (struct ata_port *ap);
- 	void (*post_internal_cmd) (struct ata_queued_cmd *qc);
- 
- 	irq_handler_t irq_handler;
- 	void (*irq_clear) (struct ata_port *);
--	u8 (*irq_on) (struct ata_port *);
--	u8 (*irq_off) (struct ata_port *);
- 	u8 (*irq_ack) (struct ata_port *ap, unsigned int chk_drq);
- 
- 	u32 (*scr_read) (struct ata_port *ap, unsigned int sc_reg);
-
- 
+ #endif /* __LINUX_PATA_PLATFORM_H */
+-- 
+1.5.1.3
 
 
