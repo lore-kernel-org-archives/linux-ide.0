@@ -1,157 +1,92 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/5] ide: add short cables support
-Date: Sat, 16 Jun 2007 00:54:12 +0400
-Message-ID: <4672FC74.6020601@ru.mvista.com>
-References: <200706101558.08990.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] HPA Detect From Resume
+Date: Sat, 16 Jun 2007 00:43:09 +0200
+Message-ID: <200706160043.09856.bzolnier@gmail.com>
+References: <46456120.6070401@cs.drexel.edu> <200706030024.24485.bzolnier@gmail.com> <4665250F.9080000@cs.drexel.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:8526 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754658AbXFOUw2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jun 2007 16:52:28 -0400
-In-Reply-To: <200706101558.08990.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:64985 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756203AbXFOX0u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jun 2007 19:26:50 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so964359ugf
+        for <linux-ide@vger.kernel.org>; Fri, 15 Jun 2007 16:26:49 -0700 (PDT)
+In-Reply-To: <4665250F.9080000@cs.drexel.edu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Lee Trager <lt73@cs.drexel.edu>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+Hi,
 
-> This patch allows users to override both host and device side cable detection
-> with "ideX=ata66" kernel parameter.  Thanks to this it should be now possible
-> to use UDMA > 2 modes on systems (laptops mainly) which use short 40-pin cable
-> instead of 80-pin one.
+On Tuesday 05 June 2007, Lee Trager wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Hi,
+> >
+> > On Saturday 12 May 2007, Lee Trager wrote:
+> >   
+> >> Currently when system which have HPA require HPA to be detected and
+> >> disabled upon resume from RAM or disk. The current IDE drivers do not do
+> >> this nor does libata(obviously it since it doesn't support HPA yet). I
+> >> have implemented this into the current IDE drivers and it has been
+> >> tested by many others since 7/15/2006 in bug number
+> >> 6840(http://bugzilla.kernel.org/show_bug.cgi?id=6840) and it has been
+> >> confirmed to work fine with no problems.
+> >>     
+> >
+> > Big thanks for working on this bug.
+> >
+> > The patch looks good, applied.
+> >
+> >   
+> >> --- linux-2.6.21.1-old/include/linux/ide.h	2007-05-01 02:54:12.000000000 -0400
+> >> +++ linux-2.6.21.1/include/linux/ide.h	2007-04-28 01:06:20.000000000 -0400
+> >> @@ -1005,6 +1005,7 @@
+> >>  	int		(*probe)(ide_drive_t *);
+> >>  	void		(*remove)(ide_drive_t *);
+> >>  	void		(*shutdown)(ide_drive_t *);
+> >> +	void		(*resume)(ide_drive_t *);
+> >>  } ide_driver_t;
+> >>     
+> >
+> > ide_driver_t changed a bit in 2.6.22 due to /proc/ide/ rework so this
+> > chunk (and one chunk in ide-disk.c) rejected to apply.  Fixed them by hand.
+> >
+> >   
+> >> @@ -1279,7 +1281,12 @@
+> >>  	rqpm.pm_step = ide_pm_state_start_resume;
+> >>  	rqpm.pm_state = PM_EVENT_ON;
+> >>  
+> >> -	return ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> >> +	err = ide_do_drive_cmd(drive, &rq, ide_head_wait);
+> >> +
+> >> +	if (err == 0 && drv->resume)
+> >> +		drv->resume(drive);
+> >> +
+> >>     
+> >
+> > Added extra drv != NULL check (there may be no IDE device driver et all).
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >   
+> Thanks for cleaning it up I've been really busy lately. I just
+> downloaded 2.6.22-rc3  and the patch still wasn't in there will it be in
+> rc4 or is there something else I need to do? Also a few weeks ago I
 
-> Next patches add automatic detection of some systems using short cables.
+IDE fixes went in 4 days after -rc4 so this patch will show up in -rc5.
 
-> Changes:
+> tested the HPA patch for libata and the same issue comes up. I'll look
+> into releasing another patch for libata once its in the kernel and I
+> have more time.
 
-> * Rename hwif->udma_four to hwif->cbl and make it u8.
+Please do.
 
-    Not sure if already short word "cable" was worth further shortening. :-)
-
-> Index: b/drivers/ide/pci/alim15x3.c
-> ===================================================================
-> --- a/drivers/ide/pci/alim15x3.c
-> +++ b/drivers/ide/pci/alim15x3.c
-> @@ -594,7 +594,7 @@ out:
->   *	FIXME: frobs bits that are not defined on newer ALi devicea
->   */
->  
-> -static unsigned int __devinit ata66_ali15x3 (ide_hwif_t *hwif)
-> +static u8 __devinit ata66_ali15x3(ide_hwif_t *hwif)
->  {
->  	struct pci_dev *dev	= hwif->pci_dev;
->  	unsigned int ata66	= 0;
-> @@ -657,7 +657,7 @@ static unsigned int __devinit ata66_ali1
->  
->  	local_irq_restore(flags);
->  
-> -	return(ata66);
-> +	return ata66 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
-
-    Ahem... I'd think it was about the right time to fix the abomination which
-those ata66 and cable_80_pin[2] are, something like this:
-
-static unsigned int __devinit ata66_ali15x3 (ide_hwif_t *hwif)
-{
-         struct pci_dev *dev     = hwif->pci_dev;
-         unsigned int cbl        = ATA_CBL_PATA40;
-         unsigned long flags;
-         u8 tmpbyte, mask	= hwif->channel ? 0x02 : 0x01;
-
-         local_irq_save(flags); /* Not sure if it's necessary... */
-
-         if (m5229_revision >= 0xC2) {
-                 /*
-                  * Ultra66 cable detection (from Host View)
-                  * m5229, 0x4a, bit0: primary, bit1: secondary
-		 * 0: 80 pin, 1: 40 pin
-                  */
-                 pci_read_config_byte(dev, 0x4a, &tmpbyte);
-                 /*
-                  * Allow ata66 if cable of current channel has 80 pins
-                  */
-                 cbl = (tmpbyte & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
-         } else {
-
-[Following code frankly speaking has no business being in this function]
-
-         local_irq_restore(flags); /* Not sure if it's necessary... */
-
-	return cbl;
->  }
->  
->  /**
-> Index: b/drivers/ide/pci/serverworks.c
-> ===================================================================
-> --- a/drivers/ide/pci/serverworks.c
-> +++ b/drivers/ide/pci/serverworks.c
-> @@ -329,9 +329,9 @@ static unsigned int __devinit init_chips
->  	return dev->irq;
->  }
->  
-> -static unsigned int __devinit ata66_svwks_svwks (ide_hwif_t *hwif)
-> +static u8 __devinit ata66_svwks_svwks(ide_hwif_t *hwif)
->  {
-> -	return 1;
-> +	return ATA_CBL_PATA80;
->  }
-
-    Hm, worth folding into ata66_svwks()...
-
->  /* On Dell PowerEdge servers with a CSB5/CSB6, the top two bits
-> @@ -341,7 +341,7 @@ static unsigned int __devinit ata66_svwk
->   * Bit 14 clear = primary IDE channel does not have 80-pin cable.
->   * Bit 14 set   = primary IDE channel has 80-pin cable.
->   */
-> -static unsigned int __devinit ata66_svwks_dell (ide_hwif_t *hwif)
-> +static u8 __devinit ata66_svwks_dell(ide_hwif_t *hwif)
->  {
->  	struct pci_dev *dev = hwif->pci_dev;
->  	if (dev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-
-    Isn't this check duplicating the check in ata66_svwks()?
-
-> @@ -359,18 +359,18 @@ static unsigned int __devinit ata66_svwk
->   *
->   * WARNING: this only works on Alpine hardware!
->   */
-> -static unsigned int __devinit ata66_svwks_cobalt (ide_hwif_t *hwif)
-> +static u8 __devinit ata66_svwks_cobalt(ide_hwif_t *hwif)
->  {
->  	struct pci_dev *dev = hwif->pci_dev;
->  	if (dev->subsystem_vendor == PCI_VENDOR_ID_SUN &&
-
-    Same question here...
-
-> Index: b/drivers/ide/pci/sis5513.c
-> ===================================================================
-> --- a/drivers/ide/pci/sis5513.c
-> +++ b/drivers/ide/pci/sis5513.c
-> @@ -796,7 +796,7 @@ static unsigned int __devinit init_chips
->  	return 0;
->  }
->  
-> -static unsigned int __devinit ata66_sis5513 (ide_hwif_t *hwif)
-> +static u8 __devinit ata66_sis5513(ide_hwif_t *hwif)
->  {
->  	u8 ata66 = 0;
->  
-> @@ -811,7 +811,8 @@ static unsigned int __devinit ata66_sis5
->  		pci_read_config_byte(hwif->pci_dev, 0x48, &reg48h);
->  		ata66 = (reg48h & mask) ? 0 : 1;
->  	}
-> -        return ata66;
-> +
-> +	return ata66 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
->  }
-
-    That doesn't look good as well. I think we should part with 'ata66' 
-variable here completely...
-
-MBR, Sergei
+Thanks,
+Bart
