@@ -1,110 +1,150 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH/RFC 5/9] libata: use freeze()/thaw() for polling
-Date: Fri, 15 Jun 2007 11:24:43 +0800
-Message-ID: <4672067B.5070609@tw.ibm.com>
+Subject: [PATCH/RFC 6/9] libata: add freeze()/thaw() to old EH LLDDs
+Date: Fri, 15 Jun 2007 11:26:21 +0800
+Message-ID: <467206DD.9000804@tw.ibm.com>
 References: <46720353.90209@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:33806 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbXFODYs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 23:24:48 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5F3Olwc006778
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 23:24:47 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:58591 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbXFOD00 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2007 23:26:26 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5F3QQSn032227
+	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 23:26:26 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5F3OlC9243344
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:24:47 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5F3QQjX205502
+	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:26:26 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5F3OliL006664
-	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:24:47 -0600
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5F3QPXK009307
+	for <linux-ide@vger.kernel.org>; Thu, 14 Jun 2007 21:26:25 -0600
 In-Reply-To: <46720353.90209@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Linux IDE <linux-ide@vger.kernel.org>
 Cc: Doug Maxey <dwm@enoyolf.org>, Tejun Heo <htejun@gmail.com>
 
-Patch 5/9:
-
-  This patch changes polling codes to use freeze()/thaw() for irq off/on.
-ata_qc_set_polling() is also removed since now unused.
-
-The reason for freeze()/thaw(): some ATAPI devices raises INTRQ even if nIEN = 1.
-Using the host adapter irq mask mechanism, if available, is more reliable than using the device nIEN bit.
-
-Considerations:
- 1. the semantic of freeze()/thaw() maybe more than irq off/on?
- 2. HSM, the new user of freeze()/thaw(), will call freeze()/thaw() more frequently than EH.
-    Can current implemention of freeze()/thaw() handle it?
+Patch 6/9:
+ Since now the polling code path uses freeze()/thaw() regardless of old EH or new EH.
+Add freeze()/thaw() to old EH LLDDs for use by the polling code.
 
 Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ---
 
-diff -Nrup 04_convert_freeze/drivers/ata/libata-core.c 05_convert_hsm_to_freeze/drivers/ata/libata-core.c
---- 04_convert_freeze/drivers/ata/libata-core.c	2007-06-11 17:37:24.000000000 +0800
-+++ 05_convert_hsm_to_freeze/drivers/ata/libata-core.c	2007-06-12 13:33:03.000000000 +0800
-@@ -4753,7 +4753,7 @@ static void ata_hsm_qc_complete(struct a
- 			qc = ata_qc_from_tag(ap, qc->tag);
- 			if (qc) {
- 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
--					ap->ops->irq_on(ap);
-+					ap->ops->thaw(ap);
- 					ata_qc_complete(qc);
- 				} else
- 					ata_port_freeze(ap);
-@@ -4769,7 +4769,7 @@ static void ata_hsm_qc_complete(struct a
- 	} else {
- 		if (in_wq) {
- 			spin_lock_irqsave(ap->lock, flags);
--			ap->ops->irq_on(ap);
-+			ap->ops->thaw(ap);
- 			ata_qc_complete(qc);
- 			spin_unlock_irqrestore(ap->lock, flags);
- 		} else
-@@ -5421,7 +5421,7 @@ unsigned int ata_qc_issue_prot(struct at
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_NODATA:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pata_ixp4xx_cf.c 06_add_freeze_thaw_to_lldd/drivers/ata/pata_ixp4xx_cf.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pata_ixp4xx_cf.c	2007-06-11 17:09:16.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pata_ixp4xx_cf.c	2007-06-12 14:38:03.000000000 +0800
+@@ -131,6 +131,9 @@ static struct ata_port_operations ixp4xx
+ 	.data_xfer	= ixp4xx_mmio_data_xfer,
+ 	.cable_detect	= ata_cable_40wire,
  
- 		ata_tf_to_host(ap, &qc->tf);
- 		ap->hsm_task_state = HSM_ST_LAST;
-@@ -5442,7 +5442,7 @@ unsigned int ata_qc_issue_prot(struct at
- 
- 	case ATA_PROT_PIO:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
- 
- 		ata_tf_to_host(ap, &qc->tf);
- 
-@@ -5471,7 +5471,7 @@ unsigned int ata_qc_issue_prot(struct at
- 	case ATA_PROT_ATAPI:
- 	case ATA_PROT_ATAPI_NODATA:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
- 
- 		ata_tf_to_host(ap, &qc->tf);
- 
-diff -Nrup 04_convert_freeze/include/linux/libata.h 05_convert_hsm_to_freeze/include/linux/libata.h
---- 04_convert_freeze/include/linux/libata.h	2007-06-11 17:37:24.000000000 +0800
-+++ 05_convert_hsm_to_freeze/include/linux/libata.h	2007-06-12 13:40:14.000000000 +0800
-@@ -1100,11 +1100,6 @@ static inline u8 ata_wait_idle(struct at
- 	return status;
++	.freeze		= ata_bmdma_freeze,
++	.thaw		= ata_bmdma_thaw,
++
+ 	.irq_clear	= ixp4xx_irq_clear,
+ 	.irq_on		= ata_irq_on,
+ 	.irq_off	= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pata_scc.c 06_add_freeze_thaw_to_lldd/drivers/ata/pata_scc.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pata_scc.c	2007-06-12 14:58:06.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pata_scc.c	2007-06-12 14:58:15.000000000 +0800
+@@ -879,6 +879,18 @@ static void scc_bmdma_freeze (struct ata
  }
  
--static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
--{
--	qc->tf.ctl |= ATA_NIEN;
--}
--
- static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
- 						       unsigned int tag)
- {
+ /**
++ *	scc_bmdma_thaw - Thaw BMDMA controller port
++ *	@ap: port to thaw
++ *
++ *	Note: Original code is ata_bmdma_thaw().
++ */
++
++static void scc_bmdma_thaw (struct ata_port *ap)
++{
++	scc_irq_on(ap);
++}
++
++/**
+  *	scc_pata_prereset - prepare for reset
+  *	@ap: ATA port to be reset
+  *	@deadline: deadline jiffies for the operation
+@@ -1025,6 +1037,7 @@ static const struct ata_port_operations 
+ 	.qc_issue		= ata_qc_issue_prot,
+ 
+ 	.freeze			= scc_bmdma_freeze,
++	.thaw			= scc_bmdma_thaw,
+ 	.error_handler		= scc_error_handler,
+ 	.post_internal_cmd	= scc_bmdma_stop,
+ 
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pdc_adma.c 06_add_freeze_thaw_to_lldd/drivers/ata/pdc_adma.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pdc_adma.c	2007-06-11 17:21:35.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pdc_adma.c	2007-06-12 14:45:21.000000000 +0800
+@@ -171,6 +171,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= adma_qc_issue,
+ 	.eng_timeout		= adma_eng_timeout,
+ 	.data_xfer		= ata_data_xfer,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= adma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_mv.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_mv.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_mv.c	2007-06-11 17:22:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_mv.c	2007-06-12 14:46:22.000000000 +0800
+@@ -453,6 +453,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+@@ -483,6 +486,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+@@ -513,6 +519,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_qstor.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_qstor.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_qstor.c	2007-06-11 17:24:00.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_qstor.c	2007-06-12 14:46:48.000000000 +0800
+@@ -157,6 +157,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= qs_qc_issue,
+ 	.data_xfer		= ata_data_xfer,
+ 	.eng_timeout		= qs_eng_timeout,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= qs_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_sx4.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_sx4.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_sx4.c	2007-06-11 17:25:03.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_sx4.c	2007-06-12 14:47:01.000000000 +0800
+@@ -203,6 +203,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= pdc20621_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
+ 	.eng_timeout		= pdc_eng_timeout,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= pdc20621_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
 
 
