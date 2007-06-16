@@ -1,49 +1,80 @@
-From: "Miguel Medalha" <miguelmedalha@sapo.pt>
-Subject: Re: Disk errors reported on boot - kernel 2.6.18
-Date: Sat, 16 Jun 2007 16:08:39 +0100
-Message-ID: <002101c7b028$38bab8d0$0901a8c0@medalha>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Combined mode quirk removal kills performance
+Date: Sat, 16 Jun 2007 11:36:53 -0400
+Message-ID: <46740395.6080702@garzik.org>
+References: <465EDF89.9050207@tuxrocks.com>	<20070601165054.114e8b9d.akpm@linux-foundation.org>	<4660B47A.1030604@garzik.org>	<20070601171938.87989b62.akpm@linux-foundation.org>	<4661B2CC.8030409@garzik.org> <20070616075347.96b2405d.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay4.ptmail.sapo.pt ([212.55.154.24]:48359 "HELO sapo.pt"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1757219AbXFPPIz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Jun 2007 11:08:55 -0400
-Received: from unknown (HELO medalha) (miguelmedalha@sapo.pt@[82.155.48.77])
-          (envelope-sender <miguelmedalha@sapo.pt>)
-          by mta15 (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 16 Jun 2007 15:08:51 -0000
+Received: from srv5.dvmed.net ([207.36.208.214]:36543 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757721AbXFPPg4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 16 Jun 2007 11:36:56 -0400
+In-Reply-To: <20070616075347.96b2405d.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-After my previous message on the same subject, I thought it would be useful 
-to report the following:
+Andrew Morton wrote:
+> So I revisited [...]
+> http://bugzilla.kernel.org/show_bug.cgi?id=8636
+> 
+> I don't see why it's not-a-bug.  The second guy (Stephen Clark) had to toss
+> out the FC6 kernel and build his own kernel to fix this regression.
 
-I recently installed a new disk on the same computer. This one is a Hitchi 
-HDS721616PLAT80.
+(I hope you don't mind me copying linux-ide)
 
-When this disk is connected to the ICH5 controller, the following error 
-lines appear on boot:
+The combined mode removal changed the driver load configuration.  Some 
+distros updated with that knowledge, but apparently Fedora did not.
 
--------------------------------------------------------------------
-hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-hda: drive_cmd: error=0x04 { DriveStatusError }
-ide: failed opcode was: 0xb0
--------------------------------------------------------------------
+Combined mode would explicitly reserve ports for libata in pci/quirks.c, 
+a horrible layering violation that created special case module load 
+order dependencies.
 
-The drive is working perfectly. I even verified it with a tool provided by 
-the manufacturer. SMART also does not report any error .
-The same disk gives no error whatsoever when connected to a ITE8212 IDE 
-Controler present on the same computer.
+The change made libata and the old-IDE driver behave like normal Linux 
+drivers.  They can both grab an entire PCI device and drive it 
+correctly, so -- just like every other situation where two drivers can 
+match the same PCI ID -- the one that loads first wins.
 
-The overall configuration of this machine was given on my previous post.
+Kernel configs need to be tweaked a bit, due to this change.  That's why 
+it was communicated in advance (but poorly, as it appears from your 
+questions and existing bug reports).  Two common results appear in bug 
+reports:
 
-Thank you for your attention.
-Best regards
-Miguel 
+1) One possible result of a complete lack of kconfig tweaking (blindly 
+hitting <enter> during 'make oldconfig') is falling back to the 
+most-compatible configuration, the legacy IDE driver (either libata or 
+old-IDE), with resultant slow performance.
+
+2) "no root! panic!" and similar I-cant-find-your-hard-drive results for 
+people with hardcoding root= configurations, for the minority where a 
+device moved from /dev/hdX -> /dev/sdX, or vice versa.
+
+The damage is hoped to be limited to:
+
+* Intel ICH5/6[/7?] users with combined mode enabled, which is a 
+not-small subset of all ICH[567] users.
+
+* Users that did /not/ choose the combined_mode=libata kernel command 
+line option, a popular option for restoring performance /broken/ by 
+running two drivers in tandem [i.e. the old way, recently removed].
+
+* In the combined mode configuration, one device is /dev/hdX (often the 
+CD-ROM) and one device is /dev/sdX, so only one of those devices will 
+move.  Standard LVM and mount-by-label/uuid found in standard distro 
+installs makes this move seamless for many.
+
+* ...in distros that hopefully took stock of their compatibility 
+picture, and modified their kernel configs and drivers accordingly. 
+Some distros were defaulting to combined_mode=libata (==libata drives 
+all applicable Intel ICHx IDE devices), others were not.  That affects 
+the decision about kernel config changes.
+
+	Jeff
+
+
+
+
 
