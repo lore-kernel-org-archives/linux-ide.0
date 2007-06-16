@@ -1,44 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Disk errors reported on boot - kernel 2.6.18
-Date: Sat, 16 Jun 2007 18:30:29 +0100
-Message-ID: <20070616183029.715c3662@the-village.bc.nu>
-References: <002101c7b028$38bab8d0$0901a8c0@medalha>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38150 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751090AbXFPRZT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jun 2007 13:25:19 -0400
-In-Reply-To: <002101c7b028$38bab8d0$0901a8c0@medalha>
-Sender: linux-ide-owner@vger.kernel.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Sat, 16 Jun 2007 21:09:26 +0200 (MEST)
+Message-ID: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Miguel Medalha <miguelmedalha@sapo.pt>
-Cc: linux-ide@vger.kernel.org
 
-> I recently installed a new disk on the same computer. This one is a Hitchi 
-> HDS721616PLAT80.
+On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
+> I've got a box here based on current Debian Stable.
+> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
 > 
-> When this disk is connected to the ICH5 controller, the following error 
-> lines appear on boot:
+> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+> just hangs up hard apparently trying to sync cache on a drive.
 > 
-> -------------------------------------------------------------------
-> hda: drive_cmd: status=0x51 { DriveReady SeekComplete Error }
-> hda: drive_cmd: error=0x04 { DriveStatusError }
-> ide: failed opcode was: 0xb0
+> I've run this process manually, so I know it is being performed properly.
+> 
+> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+> /proc/mdstat shows
+> root@storage1:~# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> unused devices: <none>
+> root@storage1:~#
+> 
+> Here is the final hangup.
+> 
+> http://www.fnarfbargle.com/CIMG1029.JPG
 
-Your new drive rejected a SMART command. It was asked (by user space I
-suspect - ie smartd) to do some kind of smart operation and reported
-51/04 - which is basically 'I do not know/support the command you have
-asked me to perform) - amd opcode 0xB0 is smart.
+Something sent a command to the disk on ata15 after the PHY had been
+offlined and the interface had been put in SLUMBER state (SStatus 614).
+Consequently the command timed out. Libata tried a soft reset, and then
+a hard reset, after which the machine hung.
 
-> The drive is working perfectly. I even verified it with a tool provided by 
-> the manufacturer. SMART also does not report any error .
-> The same disk gives no error whatsoever when connected to a ITE8212 IDE 
-> Controler present on the same computer.
+I don't think sata_promise is the guilty party here. Looks like some
+layer above sata_promise got confused about the state of the interface.
 
-The IT8212 with raid firmware doesn't support SMART so any smart
-configuration funnies would be hidden
+I did a quick sata_promise test here with kernel 2.6.22-rc4-git8 and FC4
+userspace, and there was no problem shutting the machine down.
 
-Alan
+/Mikael
