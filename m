@@ -1,38 +1,45 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: libata interface fatal error
-Date: Sat, 16 Jun 2007 12:23:36 +0200
-Message-ID: <4673BA28.2020106@effenberger.org>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Sat, 16 Jun 2007 15:52:33 +0400
+Message-ID: <4673CF01.6010402@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:37332 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbXFPKXm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jun 2007 06:23:42 -0400
-In-Reply-To: <4667D4F5.1060302@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hi there,
+G'day all,
 
-we tested out two 600W Fortron PSUs, also tried a BIOS update. Didn't 
-work out.
+I've got a box here based on current Debian Stable.
+It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
 
-We also tried the jumper on the disks labelled SSP (Spread Spectrum 
-Clocking), didn't work out out as well.
+Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+just hangs up hard apparently trying to sync cache on a drive.
 
-What seemed to help at least a little bit is to use the 12V connector on 
-the board, that is normally dedicated for graphic cards.
+I've run this process manually, so I know it is being performed properly.
 
-The best test to reproduce the problem, according to a colleague also 
-working on the machine, is a cat /dev/zero > zero.bin
+Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+/proc/mdstat shows
+root@storage1:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+unused devices: <none>
+root@storage1:~#
 
-Do you still think it is a PSU or hardware problem? Do you need more 
-details/logs?
+Here is the final hangup.
 
-Thanks!
-Florian
+http://www.fnarfbargle.com/CIMG1029.JPG
+
+They keyboard is responsive up until the "hard resetting port" when it just locks solid and requires 
+a power-cycle.
+
+It's not really something I want to bisect if I can avoid it give the lovely noise it makes when I 
+power it off. (this box only has a hard power switch, no reset or soft power buttons)
+
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
