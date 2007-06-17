@@ -1,42 +1,38 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
-Date: Sat, 16 Jun 2007 21:09:26 +0200 (MEST)
-Message-ID: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+From: "Miguel Medalha" <miguelmedalha@sapo.pt>
+Subject: Disk errors reported on boot - kernel 2.6.18
+Date: Sun, 17 Jun 2007 12:51:00 +0100
+Message-ID: <007201c7b0d5$c62bcb70$0901a8c0@medalha>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay1.ptmail.sapo.pt ([212.55.154.21]:58071 "HELO sapo.pt"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1756365AbXFQLvL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Jun 2007 07:51:11 -0400
+Received: from unknown (HELO medalha) (miguelmedalha@sapo.pt@[82.155.215.69])
+          (envelope-sender <miguelmedalha@sapo.pt>)
+          by mta13 (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 17 Jun 2007 11:51:07 -0000
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
-> I've got a box here based on current Debian Stable.
-> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
-> 
-> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
-> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
-> just hangs up hard apparently trying to sync cache on a drive.
-> 
-> I've run this process manually, so I know it is being performed properly.
-> 
-> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
-> /proc/mdstat shows
-> root@storage1:~# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> unused devices: <none>
-> root@storage1:~#
-> 
-> Here is the final hangup.
-> 
-> http://www.fnarfbargle.com/CIMG1029.JPG
+Hello
 
-Something sent a command to the disk on ata15 after the PHY had been
-offlined and the interface had been put in SLUMBER state (SStatus 614).
-Consequently the command timed out. Libata tried a soft reset, and then
-a hard reset, after which the machine hung.
+I received a message from Andrey Melnikoff. I tried to answer him but the 
+remote host keeps rejecting the message because he is "backlisted".
 
-I don't think sata_promise is the guilty party here. Looks like some
-layer above sata_promise got confused about the state of the interface.
+<temnota+news@kmv.ru>:
+217.13.212.5 does not like recipient.
+Remote host said: 553 5.3.0 <temnota+news@kmv.ru>... Too many spam messages. 
+Blacklisted. 2004/03/17
+Giving up on 217.13.212.5.
 
-I did a quick sata_promise test here with kernel 2.6.22-rc4-git8 and FC4
-userspace, and there was no problem shutting the machine down.
+I am sending this for his information.
 
-/Mikael
+Thank you! 
+
