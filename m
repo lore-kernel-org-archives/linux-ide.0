@@ -1,43 +1,65 @@
 From: Chr <chunkeey@web.de>
 Subject: Re: libata: ATA_PIIX missing ICH8M PCIIDs.
-Date: Mon, 18 Jun 2007 22:10:37 +0200
-Message-ID: <200706182210.37967.chunkeey@web.de>
-References: <39B20DF628532344BC7A2692CB6AEE07016FE54D@orsmsx420.amr.corp.intel.com>
+Date: Mon, 18 Jun 2007 22:14:33 +0200
+Message-ID: <200706182214.34162.chunkeey@web.de>
+References: <39B20DF628532344BC7A2692CB6AEE07016FE51B@orsmsx420.amr.corp.intel.com> <4676E15C.80300@garzik.org>
 Mime-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_qeudGDPJ6284aTR"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fmmailgate02.web.de ([217.72.192.227]:36088 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932588AbXFRUOi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 16:14:38 -0400
+In-Reply-To: <4676E15C.80300@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+
+--Boundary-00=_qeudGDPJ6284aTR
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:49877 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762374AbXFRULY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 16:11:24 -0400
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07016FE54D@orsmsx420.amr.corp.intel.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: linux-ide@vger.kernel.org
 
-On Monday, 18. June 2007, Gaston, Jason D wrote:
+On Monday, 18. June 2007, Jeff Garzik wrote:
+> Gaston, Jason D wrote:
+> > I don't think we want to have the same DeviceID supported in more then one driver.  Would they not conflict with each other?
 > 
-> I hate outlook...
->
+> In Fedora 7, CONFIG_IDE is disabled.  ata_piix drives all hardware at 
+> that point.
 > 
-> As PATA is going away, hopefully this will be a moot point.
-> 
-yes, PATA served well, but Intel has already done the necessary
-ceremony for PATA's funreal. ICH8M is maybe really the last
-chipset with a "native" IDE interface.
+> 	Jeff
 
-But, "There's life in the old dog yet." and AGP is not dead yet too! 
+here's a updated version. (thanks alan for pointing out that it's a ich_pata_133..) 
+OK/(N)ACK/...? 
 
-uahauh, it's a kind of spooky, with
-all of these zombies and braindead monsters like outlook. ;)
+-
+this patch adds a necessary PCIID for Santa Rosa's PATA controller.
 
-Thanks,
-	Chr.
-> 
-> 
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+-
 
 
+--Boundary-00=_qeudGDPJ6284aTR
+Content-Type: text/x-diff;
+  charset="iso-8859-1";
+  name="ich8m-add-pci-id.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="ich8m-add-pci-id.patch"
+
+=2D-- ata_piix.c.org	2007-06-17 12:58:17.000000000 +0200
++++ ata_piix.c	2007-06-17 13:00:24.000000000 +0200
+@@ -201,6 +201,8 @@ static const struct pci_device_id piix_p
+ 	/* ICH7/7-R (i945, i975) UDMA 100*/
+ 	{ 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++	/* ICH8 Mobile PATA Controller */
++	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+=20
+ 	/* NOTE: The following PCI ids must be kept in sync with the
+ 	 * list in drivers/pci/quirks.c.
+
+--Boundary-00=_qeudGDPJ6284aTR--
