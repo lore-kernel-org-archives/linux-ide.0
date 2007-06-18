@@ -1,35 +1,40 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH/RFC 7/9] libata: pdc_freeze() semantic change
-Date: Mon, 18 Jun 2007 14:14:55 +0900
-Message-ID: <467614CF.5070006@gmail.com>
-References: <46720353.90209@tw.ibm.com> <467207BF.9020409@tw.ibm.com>
+Subject: [PATCH] libata: more NONCQ devices
+Date: Mon, 18 Jun 2007 14:38:41 +0900
+Message-ID: <20070618053841.GP29122@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:16283 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbXFRFPA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 01:15:00 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2037580wah
-        for <linux-ide@vger.kernel.org>; Sun, 17 Jun 2007 22:15:00 -0700 (PDT)
-In-Reply-To: <467207BF.9020409@tw.ibm.com>
+Received: from nz-out-0506.google.com ([64.233.162.224]:48909 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbXFRFiq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 01:38:46 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so1276110nzf
+        for <linux-ide@vger.kernel.org>; Sun, 17 Jun 2007 22:38:46 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>, Mikael Pettersson <mikpe@it.uu.se>
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> Patch 7/9:
-> 
->  After checking the current implementations of freeze()/thaw(), it seems only pdc_freeze()
-> do more than simple irq masking. Remove the DMA disable code from pdc_freeze().
-> 
-> The question is the design/semantic of freeze()/thaw().
-> Maybe we should limit them to simple irq on/off?
+More for the NCQ blacklist.  One hitachi and one raptor.  Other
+members of these families of drives are already on the list, so no
+surprises.
 
-Yeap, we can do that but if we do so it would be better to use
-->irq_off/->irq_on hooks and kill ->freeze/->thaw.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
--- 
-tejun
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 047eabd..3562812 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3802,6 +3802,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
+ 	/* Drives which do spurious command completion */
+ 	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
++	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
++	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+ 
+ 	/* Devices with NCQ limits */
+ 
