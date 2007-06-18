@@ -1,28 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata: ATA_PIIX missing ICH8M PCIIDs.
-Date: Mon, 18 Jun 2007 21:44:13 +0100
-Message-ID: <20070618214413.6bae25f1@the-village.bc.nu>
-References: <200706182049.45315.chunkeey@web.de>
-	<39B20DF628532344BC7A2692CB6AEE07016FE51B@orsmsx420.amr.corp.intel.com>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
+Date: Mon, 18 Jun 2007 15:46:01 -0500
+Message-ID: <20070618204601.GF5836@austin.ibm.com>
+References: <20070618175713.GD5836@austin.ibm.com> <20070618212704.394912b8@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43150 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764174AbXFRUig (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 16:38:36 -0400
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07016FE51B@orsmsx420.amr.corp.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932720AbXFRUqW@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070618212704.394912b8@the-village.bc.nu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: chunkeey@web.de, linux-ide@vger.kernel.org
 
-On Mon, 18 Jun 2007 11:57:16 -0700
-"Gaston, Jason D" <jason.d.gaston@intel.com> wrote:
+On Mon, Jun 18, 2007 at 09:27:04PM +0100, Alan Cox wrote:
+> > ide_dma_timeout_retry() in ide-io.c 
+> >   prints the "hdc: DMA Timeout error" then calls
+> >   HWIF(drive)->ide_dma_end(drive);
+> >     which returns, and then calls 
+> >   hwif->INB(IDE_STATUS_REG) which is needed as an argument to ide_error()
+> > 
+> > But this hangs! -- The INB never returns.
+> > Now:  hwif->INB = ide_inb; in ide-iops.c
+> 
+> Yep and the I/O cycle never completes so the box hangs. This occurs if
+> the drive blows up and never switches IORDY to indicate completion. The
+> hpt will also do this sometimes if it gets addled by a confused drive,
+> while an intel one often won't.
 
-> I don't think we want to have the same DeviceID supported in more then one driver.  Would they not conflict with each other?
+So what do you suggest? (I could buy an alternate ide controller,
+and hope that goes away, or just buy a different hard drive. But
+that's beside the point).
 
-Nope  and drivers/ide is going away (eventually)
+I can prepare a patch, but only with a lot of guidance. I can test 
+& debug, I'm highly motivated just right now ... 
 
-Alan
+--linas
