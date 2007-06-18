@@ -1,53 +1,65 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: libata interface fatal error
-Date: Mon, 18 Jun 2007 13:28:49 +0200
-Message-ID: <46766C71.6030607@effenberger.org>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <4673BA28.2020106@effenberger.org> <4675F84D.3060207@gmail.com> <46766208.1080305@effenberger.org> <467664F6.4060607@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Mon, 18 Jun 2007 13:29:00 +0200 (MEST)
+Message-ID: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:41206 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760118AbXFRL2u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 07:28:50 -0400
-In-Reply-To: <467664F6.4060607@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:63047 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760660AbXFRL3H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jun 2007 07:29:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: htejun@gmail.com, mikpe@it.uu.se
+Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Hi Tejun,
-
-> Hmmm... Can you use a separate PSU to power two of the four drives and
-> see what happens?  Just power up a PSU as directed in the following
-> webpage and connect two of the harddrives to the PSU.
+On Mon, 18 Jun 2007 16:09:49 +0900, Tejun Heo wrote:
+> Mikael Pettersson wrote:
+> > On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
+> >> I've got a box here based on current Debian Stable.
+> >> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
+> >>
+> >> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
+> >> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
+> >> just hangs up hard apparently trying to sync cache on a drive.
+> >>
+> >> I've run this process manually, so I know it is being performed properly.
+> >>
+> >> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
+> >> /proc/mdstat shows
+> >> root@storage1:~# cat /proc/mdstat
+> >> Personalities : [raid6] [raid5] [raid4]
+> >> unused devices: <none>
+> >> root@storage1:~#
+> >>
+> >> Here is the final hangup.
+> >>
+> >> http://www.fnarfbargle.com/CIMG1029.JPG
+> > 
+> > Something sent a command to the disk on ata15 after the PHY had been
+> > offlined and the interface had been put in SLUMBER state (SStatus 614).
+> > Consequently the command timed out. Libata tried a soft reset, and then
+> > a hard reset, after which the machine hung.
 > 
->   http://modtown.co.uk/mt/article2.php?id=psumod
+> Hmm... weird.  Maybe device initiated power saving (DIPS) is active?
+> 
+> > I don't think sata_promise is the guilty party here. Looks like some
+> > layer above sata_promise got confused about the state of the interface.
+> 
+> But locking up hard after hardreset is a problem of sata_promise, no?
 
-thanks for that link, we will try that and keep you updated what happens!
+Maybe, maybe not. The original report doesn't specify where/how
+the machine hung.
 
-> I don't know.  Till now all the problem cases have been isolated to a
-> specific controller / drive combination (sata_promise and newer seagate
-> drives) or hardware configuration problem (most of them being PSU
-> issues), so I don't think we need such option yet.  If you have a
-> problematic hardware which pukes on 3.0Gbps, libata should do the right
-> thing after complaining a bit which IMHO isn't too bad.
+Brad: can you enable sysrq and check if the kernel responds to
+sysrq when it appears to hang, and if so, where it's executing?
 
-So, loss of data or data corruption can't occur, even when we have to 
-wait until the speed is limited?
+sata_promise just passes sata_std_hardreset to ata_do_eh.
+I've certainly seen EH hardresets work before, so I'm assuming
+that something in this particular situation (PHY offlined,
+kernel close to shutting down) breaks things.
 
-Florian
+FWIW, I'm seeing scsi layer accesses (cache flushes) after things
+like rmmod sata_promise. They error out and don't seem to cause
+any harm, but the fact that they occur at all makes me nervous.
 
-
-
-
-
-
-
-
-
-
-
-
-
+/Mikael
