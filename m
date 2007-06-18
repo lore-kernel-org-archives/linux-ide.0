@@ -1,81 +1,79 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Mon, 18 Jun 2007 12:57:13 -0500
-Message-ID: <20070618175713.GD5836@austin.ibm.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: libata: ATA_PIIX missing ICH8M PCIIDs.
+Date: Mon, 18 Jun 2007 10:57:57 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE07016FE477@orsmsx420.amr.corp.intel.com>
+References: <200706181552.37776.chunkeey@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764632AbXFRR52@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:23469 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761054AbXFRR56 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 13:57:58 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <200706181552.37776.chunkeey@web.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Chr <chunkeey@web.de>, linux-ide@vger.kernel.org
+
+=46YI: DID 2850 is the PATA IDE controller.  Most likely, the laptop do=
+es not have SATA drives and is running off of PATA. =20
+
+The old IDE subsystem (piix.c) is where I added that PATA DID to.
+#define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850 in pci_ids.h
+
+Jason
 
 
 
-I've got a hard lockup in the ide subsystem, probably
-due to some irq spew or something like that.
-
-I've just bought a brand new Maxtor 320GB disk driver 
-for the insane price of $70 US to replace another 
-failing drive. It works well under light load;
-I was able to copy about 60GB to it. However, 
-under heavy load, such as reconstruction of an MD 
-RAID-1 array, it'll lock up the kernel.  Which means
-that my system won't boot :-(
-
-I'm running 2.6.21.1, although the problem seems to occur 
-in 2.6.19 and 2.6.18 too; its been there a while; I vageuly
-remember similar problems in 2.6.5 or 2.6.10.
-
-I get an 
-"hdc: dma_timer_expiry: dma status == 0x21" 
-
-and 10 seconds later,
-
-"hdc: DMA Timeout error"
-
-at which point the system is locked up hard.
-Magic sysreq does not work at all. The hard drive activity light 
-stays fully lit.  Inserting printk's into the kernel, I find the
-hang to be in a surprising place: 
-
-
-ide_dma_timeout_retry() in ide-io.c 
-  prints the "hdc: DMA Timeout error" then calls
-  HWIF(drive)->ide_dma_end(drive);
-    which returns, and then calls 
-  hwif->INB(IDE_STATUS_REG) which is needed as an argument to ide_error()
-
-But this hangs! -- The INB never returns.
-Now:  hwif->INB = ide_inb; in ide-iops.c
-
-So putting a printk into ide_inb() shows that
-the printk before the readb() is printed, and the
-printk after the readb is not (!!)
-
-I find this rather surpriseing, as I can't imagine how the
-readb can fail. My current vague theory is that doing this
-readb makes the hard drive go really nuts, and it probably
-ties some interrupt line high, and so the linux kernel 
-gets stuck trying to handle the irq flood. I just don't know
-enough about the i386 architecture, or about interrupts, to 
-prove or disprove this.
-
-Background: this is on an old dual-cpu intel (coppermine??)
-box; the controller is an HighPoint HPT366 on the motherboard.
-This is an old parallel ATA (80-pin cable) setup.
-
-I can get the system to boot by sneaking in an 
-"hdparm -d0 /dev/hdc" early in the boot process, to turn off 
-the use of DMA, but it seems that PIO is so slow, that it takes 
-forever to get NFS started.
-
-I can get it to boot, by unplugging /dev/hdc. Unfortunately,
-given the RAID mirroring, the only usable copy of /, /usr is on
-/dev/hda and te only usable copy of /home is on /dev/hdc, so 
-I'm screwed ... 
-
-Any suggestions, experiments, experimental patches, data gathering,
-etc. is welcome. The sooner, the better... 
-
---linas
+>-----Original Message-----
+>From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-
+>owner@vger.kernel.org] On Behalf Of Chr
+>Sent: Monday, June 18, 2007 6:53 AM
+>To: linux-ide@vger.kernel.org
+>Cc: chunkeey@web.de
+>Subject: Re: libata: ATA_PIIX missing ICH8M PCIIDs.
+>
+>On Monday, 18. June 2007, Alan Cox wrote:
+>> On Mon, 18 Jun 2007 15:20:06 +0200
+>> Chr <chunkeey@web.de> wrote:
+>>
+>> > Hi,
+>> >
+>> > I got a new laptop and I had a little problem that the DVD drive w=
+asn't
+>recognized by
+>> > libata's piix driver (but the old IDE Subsystem found it!).
+>> >
+>> > So, after adding the new pciid 8086:2850 it works!
+>> > But, I don't know if it's ich_pata_100 or ich_pata_133 since the
+>> > dvd/cd drives only goes up to udma2 speeds.
+>>
+>> Its ich_pata_133 - all the newer chips are. They work even better if=
+ you
+>> set them into AHCI mode in the BIOS and then they should "just work"=
+ with
+>> recent kernels as the AHCI driver now matches by class.
+>>
+>> Alan
+>>
+>>
+>
+>No go.. I've tried 2.6.20-1-amd64 (debian sid) and a vanilla 2.6.22-rc=
+5.
+>
+>(The "problem" is that there are no options for that in the BIOS.
+>The BIOS itself is only useful on these laptops, if you want to set a =
+BIOS
+>password, setting the system clock or change the boot order... and not=
+hing
+>else)
+>
+>Thanks,
+>=A0=A0=A0=A0=A0=A0=A0=A0Chr.
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" i=
+n
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
