@@ -1,55 +1,46 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
-Date: Mon, 18 Jun 2007 15:40:55 +0400
-Message-ID: <46766F47.1080405@wasp.net.au>
-References: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: CF flash IDE failure to attach with 2.6.20+
+Date: Mon, 18 Jun 2007 12:57:42 +0100
+Message-ID: <20070618125742.28a0bc57@the-village.bc.nu>
+References: <11172839.post@talk.nabble.com>
+	<46766BD3.4040702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: htejun@gmail.com, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32785 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752888AbXFRLwJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 07:52:09 -0400
+In-Reply-To: <46766BD3.4040702@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew_hall <andrew.a.hall@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-Mikael Pettersson wrote:
+On Mon, 18 Jun 2007 20:26:11 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
->>> I don't think sata_promise is the guilty party here. Looks like some
->>> layer above sata_promise got confused about the state of the interface.
->> But locking up hard after hardreset is a problem of sata_promise, no?
+> Andrew_hall wrote:
+> > We have a series of machines that use CF as a boot media. Since upgrading to
+> > 2.6.20 (tried .9-.14), system will boot (from the flash media) but then fail
+> > to initialise the same media. Here is the dmesg from 2.6.20.14:
+> > 
+> > ata_piix 0000:00:1f.2: version 2.00ac7
+> > ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+> > ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+> > PCI: Setting latency timer of device 0000:00:1f.2 to 64
+> > ata1: SATA max UDMA/133 cmd 0xFA00 ctl 0xF902 bmdma 0xF600 irq 19
+> > ata2: SATA max UDMA/133 cmd 0xF800 ctl 0xF702 bmdma 0xF608 irq 19
+> > scsi0 : ata_piix
+> > ata1.00: ATA-0, max MWDMA2, 990864 sectors: LBA
+> > ata1.00: ata1: dev 0 multi count 0
+> > ata1.00: applying bridge limits
+> > ata1.00: configured for MWDMA2
 > 
-> Maybe, maybe not. The original report doesn't specify where/how
-> the machine hung.
+> For some reason, mwdma doesn't work in libata now.  I'm not sure why
+> tho.  Alan, can you enlighten us?
 
-It hangs in the process of trying to power it off. Unmount everything and halt the machine.
+No idea at all. All my hardware is still happy. 2.6.20 is an "old" kernel
+however so it does predate the fixes you did for ata_piix mode setup ?
 
-I've tried halt with and without the -h.
-
-With the -h you can hear the drives spin down, then it tries to spin them up again and hangs.
-
-Without the -h it just hangs hard where you see in the photo.
-
-> Brad: can you enable sysrq and check if the kernel responds to
-> sysrq when it appears to hang, and if so, where it's executing?
-
-All my kernels have sysrq enabled. Once the hard reset is displayed on the screen everything locks.
-
-> sata_promise just passes sata_std_hardreset to ata_do_eh.
-> I've certainly seen EH hardresets work before, so I'm assuming
-> that something in this particular situation (PHY offlined,
-> kernel close to shutting down) breaks things.
-
-That is my thought. I thought on a .22-rc kernel if I used halt -h and it spun the disks down that 
-the kernel would detect that and not try to flush the caches on them, or have I read something 
-incorrectly?
-
-> FWIW, I'm seeing scsi layer accesses (cache flushes) after things
-> like rmmod sata_promise. They error out and don't seem to cause
-> any harm, but the fact that they occur at all makes me nervous.
-
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
