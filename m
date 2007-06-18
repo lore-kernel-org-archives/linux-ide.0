@@ -1,29 +1,34 @@
-From: Florian Effenberger <florian@effenberger.org>
-Subject: Re: libata interface fatal error
-Date: Mon, 18 Jun 2007 13:32:21 +0200
-Message-ID: <46766D45.6040908@effenberger.org>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <4673BA28.2020106@effenberger.org> <4675F84D.3060207@gmail.com> <46766208.1080305@effenberger.org> <467664F6.4060607@gmail.com> <46766C71.6030607@effenberger.org> <46766CCD.9040505@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
+Date: Mon, 18 Jun 2007 20:33:37 +0900
+Message-ID: <46766D91.90303@gmail.com>
+References: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from garfield.effenberger.org ([85.214.43.221]:41221 "EHLO
-	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760490AbXFRLcW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 07:32:22 -0400
-In-Reply-To: <46766CCD.9040505@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.183]:43436 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbXFRLdn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 07:33:43 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2134882wah
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 04:33:42 -0700 (PDT)
+In-Reply-To: <200706181129.l5IBT0Sa002063@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Hi,
+Mikael Pettersson wrote:
+> FWIW, I'm seeing scsi layer accesses (cache flushes) after things
+> like rmmod sata_promise. They error out and don't seem to cause
+> any harm, but the fact that they occur at all makes me nervous.
 
-> Nope, there's nothing to worry about.
+That's okay.  On rmmod, as the low level device (ATA) goes away first
+just as in hot unplug, sd gets notified *after* the device is gone but
+sd still tries to clean up and issues the commands which are properly
+rejected by the SCSI midlayer as the device is marked offline already,
+so nothing to worry about there.
 
-okay, thanks a lot so far, it is good to know that developers are there 
-to help. ;-)
-
-I will let you know how it turned out with the second PSU.
-
-Florian
+-- 
+tejun
