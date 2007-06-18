@@ -1,53 +1,45 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata interface fatal error
-Date: Mon, 18 Jun 2007 19:56:54 +0900
-Message-ID: <467664F6.4060607@gmail.com>
-References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <4673BA28.2020106@effenberger.org> <4675F84D.3060207@gmail.com> <46766208.1080305@effenberger.org>
+Subject: Re: CF flash IDE failure to attach with 2.6.20+
+Date: Mon, 18 Jun 2007 20:26:11 +0900
+Message-ID: <46766BD3.4040702@gmail.com>
+References: <11172839.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:35074 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760429AbXFRK5A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 06:57:00 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2124495wah
-        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 03:56:59 -0700 (PDT)
-In-Reply-To: <46766208.1080305@effenberger.org>
+Received: from py-out-1112.google.com ([64.233.166.177]:3965 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbXFRL0T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 07:26:19 -0400
+Received: by py-out-1112.google.com with SMTP id a29so3025749pyi
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 04:26:18 -0700 (PDT)
+In-Reply-To: <11172839.post@talk.nabble.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Effenberger <florian@effenberger.org>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Andrew_hall <andrew.a.hall@gmail.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-Florian Effenberger wrote:
-> Hi,
+Andrew_hall wrote:
+> We have a series of machines that use CF as a boot media. Since upgrading to
+> 2.6.20 (tried .9-.14), system will boot (from the flash media) but then fail
+> to initialise the same media. Here is the dmesg from 2.6.20.14:
 > 
->> The controller being ich8, I'm pretty sure it isn't a driver problem.
-> 
-> I think so, too. The Intel chipsets have shown to be very good in the past.
-> 
->> Do the errors occur on all four drives?  Also, if things work after
->> speed is downgraded to 1.5Gbps, it doesn't really matter.  There's no
->> noticeable performance difference for single disk anyway.
-> 
-> Yes, they do occur on all drives, as far as I know. With 1.5Gbps, the
-> error doesn't occur much as often and not under normal circumstances,
-> only when doing a real hard stress test.
+> ata_piix 0000:00:1f.2: version 2.00ac7
+> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+> PCI: Setting latency timer of device 0000:00:1f.2 to 64
+> ata1: SATA max UDMA/133 cmd 0xFA00 ctl 0xF902 bmdma 0xF600 irq 19
+> ata2: SATA max UDMA/133 cmd 0xF800 ctl 0xF702 bmdma 0xF608 irq 19
+> scsi0 : ata_piix
+> ata1.00: ATA-0, max MWDMA2, 990864 sectors: LBA
+> ata1.00: ata1: dev 0 multi count 0
+> ata1.00: applying bridge limits
+> ata1.00: configured for MWDMA2
 
-Hmmm... Can you use a separate PSU to power two of the four drives and
-see what happens?  Just power up a PSU as directed in the following
-webpage and connect two of the harddrives to the PSU.
+For some reason, mwdma doesn't work in libata now.  I'm not sure why
+tho.  Alan, can you enlighten us?
 
-  http://modtown.co.uk/mt/article2.php?id=psumod
-
-> Would it make sense to downgrade to 1.5 Gbps via a boot option?
-
-I don't know.  Till now all the problem cases have been isolated to a
-specific controller / drive combination (sata_promise and newer seagate
-drives) or hardware configuration problem (most of them being PSU
-issues), so I don't think we need such option yet.  If you have a
-problematic hardware which pukes on 3.0Gbps, libata should do the right
-thing after complaining a bit which IMHO isn't too bad.
+Thanks.
 
 -- 
 tejun
