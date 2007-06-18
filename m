@@ -1,100 +1,38 @@
-From: "Sonic Zhang" <sonic.adi@gmail.com>
-Subject: Fwd: [PATCH] [libata] Add irq_flags to struct pata_platform_info
-Date: Mon, 18 Jun 2007 10:55:21 +0800
-Message-ID: <4e5ebad50706171955m58512c69rb94f9f996377117d@mail.gmail.com>
-References: <1181900749.23447.7.camel@sevens.analog.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata interface fatal error
+Date: Mon, 18 Jun 2007 12:10:31 +0900
+Message-ID: <4675F7A7.8000109@gmail.com>
+References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <466FC901.4060907@effenberger.org> <46710DDC.1030900@gmail.com> <467122B8.1090206@effenberger.org> <467133D7.7070000@gmail.com> <46715ADB.4020202@effenberger.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:43656 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093AbXFRCzW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jun 2007 22:55:22 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2015035mue
-        for <linux-ide@vger.kernel.org>; Sun, 17 Jun 2007 19:55:21 -0700 (PDT)
-In-Reply-To: <1181900749.23447.7.camel@sevens.analog.com>
-Content-Disposition: inline
+Received: from nz-out-0506.google.com ([64.233.162.235]:3415 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491AbXFRDKg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jun 2007 23:10:36 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so1255195nzf
+        for <linux-ide@vger.kernel.org>; Sun, 17 Jun 2007 20:10:35 -0700 (PDT)
+In-Reply-To: <46715ADB.4020202@effenberger.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>
+To: Florian Effenberger <florian@effenberger.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Any comments for this patch?
+Hello,
 
-Thank you.
+Florian Effenberger wrote:
+> What power supply would you recommend for this type of disks? I think we
+> got a 450W Enermax, IIRC.
 
-Sonic Zhang
+Most power supplies should be able to do 4 disks without any problem
+unless it's broken.
 
----------- Forwarded message ----------
-From: Sonic Zhang <sonic.adi@gmail.com>
-Date: Jun 15, 2007 5:45 PM
-Subject: [PATCH] [libata] Add irq_flags to struct pata_platform_info
-To: Linux IDE <linux-ide@vger.kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>
+> What do you mean by "merged speed down fix"? Is your fix for the speed
+> down logic implemented in the current kernel, so I don't have to patch
+> anymore (except when I want to force 1.5Gbps right from the beginning)?
 
+Yeap, kernel will automatically downgrade to 1.5Gbps after several failures.
 
-On some embedded platforms, such as blackfin, the gpio interrupt for
-IDE interface is designed to be triggered with high voltage. The gpio
-port should be configured properly by set_irq_type() when register
-the irq. This patch enable the generic pata platform driver to
-accept platform irq flags data.
-
-Signed-off-by: Sonic Zhang <sonic.adi@gmail.com>
----
- drivers/ata/pata_platform.c   |    6 ++++--
- include/linux/pata_platform.h |    5 +++++
- 2 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index cbb7866..79f841b 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -139,6 +139,7 @@ static int __devinit pata_platform_probe(struct
-platform_device *pdev)
-        struct resource *io_res, *ctl_res;
-        struct ata_host *host;
-        struct ata_port *ap;
-+       struct pata_platform_info *pp_info;
-        unsigned int mmio;
-
-        /*
-@@ -208,11 +209,12 @@ static int __devinit pata_platform_probe(struct
-platform_device *pdev)
-
-        ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
-
--       pata_platform_setup_port(&ap->ioaddr, pdev->dev.platform_data);
-+       pp_info = (struct pata_platform_info *)(pdev->dev.platform_data);
-+       pata_platform_setup_port(&ap->ioaddr, pp_info);
-
-        /* activate */
-        return ata_host_activate(host, platform_get_irq(pdev, 0), ata_interrupt,
--                                0, &pata_platform_sht);
-+                                pp_info->irq_flags, &pata_platform_sht);
- }
-
- /**
-diff --git a/include/linux/pata_platform.h b/include/linux/pata_platform.h
-index 2d5fd64..5799e8d 100644
---- a/include/linux/pata_platform.h
-+++ b/include/linux/pata_platform.h
-@@ -8,6 +8,11 @@ struct pata_platform_info {
-         * spacing used by ata_std_ports().
-         */
-        unsigned int ioport_shift;
-+       /*
-+        * Indicate platform specific irq types and initial
-+        * IRQ flags when call request_irq()
-+        */
-+       unsigned int irq_flags;
- };
-
- #endif /* __LINUX_PATA_PLATFORM_H */
---
-1.5.1.3
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
