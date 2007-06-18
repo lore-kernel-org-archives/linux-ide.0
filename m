@@ -1,36 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: linas@austin.ibm.com (Linas Vepstas)
 Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Mon, 18 Jun 2007 22:04:41 +0100
-Message-ID: <20070618220441.3a3af8ca@the-village.bc.nu>
-References: <20070618175713.GD5836@austin.ibm.com>
-	<20070618212704.394912b8@the-village.bc.nu>
-	<20070618204601.GF5836@austin.ibm.com>
+Date: Mon, 18 Jun 2007 16:22:38 -0500
+Message-ID: <20070618212238.GI5836@austin.ibm.com>
+References: <20070618175713.GD5836@austin.ibm.com> <20070618212704.394912b8@the-village.bc.nu> <20070618204601.GF5836@austin.ibm.com> <20070618220441.3a3af8ca@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33887 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764150AbXFRU7G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 16:59:06 -0400
-In-Reply-To: <20070618204601.GF5836@austin.ibm.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:37449 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759098AbXFRVWr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 17:22:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20070618220441.3a3af8ca@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> So what do you suggest? (I could buy an alternate ide controller,
-> and hope that goes away, or just buy a different hard drive. But
-> that's beside the point).
+On Mon, Jun 18, 2007 at 10:04:41PM +0100, Alan Cox wrote:
+> 
+> If you've got a nice repeatable problem 
 
-The DMA timeout itself could be all sorts of things - crap driver, crap
-hardware, PCI bus contention, noise, problem disk, phase of the moon.
+Very highly repeatable :-(
 
-> I can prepare a patch, but only with a lot of guidance. I can test 
-> & debug, I'm highly motivated just right now ... 
+> please try using the libata
+> driver. That handles the error paths differently and doesn't try a FIFO
+> drain which might matter in this case I guess.
 
-If you've got a nice repeatable problem please try using the libata
-driver. That handles the error paths differently and doesn't try a FIFO
-drain which might matter in this case I guess.
+Dohh, yes, of course. Completely forgot about that. (I assume you mean 
+CONFIG_ATA).  Will report tommorrow.
 
-Alan
+--linas
