@@ -1,61 +1,35 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Machine hanging on synchronize cache on shutdown 2.6.22-rc4-git[45678]
-Date: Mon, 18 Jun 2007 16:09:49 +0900
-Message-ID: <46762FBD.20209@gmail.com>
-References: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
+Subject: Re: libata interface fatal error
+Date: Mon, 18 Jun 2007 16:13:46 +0900
+Message-ID: <467630AA.5050108@gmail.com>
+References: <200706180705.l5I75U6r000348@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:40073 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756077AbXFRHJ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 03:09:56 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2065568wah
-        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 00:09:56 -0700 (PDT)
-In-Reply-To: <200706161909.l5GJ9Q9P021615@harpo.it.uu.se>
+Received: from nz-out-0506.google.com ([64.233.162.228]:19387 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757323AbXFRHNw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 03:13:52 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so1290899nzf
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 00:13:51 -0700 (PDT)
+In-Reply-To: <200706180705.l5I75U6r000348@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: brad@wasp.net.au, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-
-Hello,
+Cc: Tomi.Orava@ncircle.nullnet.fi, florian@effenberger.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
 Mikael Pettersson wrote:
-> On Sat, 16 Jun 2007 15:52:33 +0400, Brad Campbell wrote:
->> I've got a box here based on current Debian Stable.
->> It's got 15 Maxtor SATA drives in it on 4 Promise TX4 controllers.
->>
->> Using kernel 2.6.21.x it shuts down, but of course with a huge "clack" as 15 drives all do emergency 
->> head parks simultaneously. I thought I'd upgrade to 2.6.22-rc to get around this but the machine 
->> just hangs up hard apparently trying to sync cache on a drive.
->>
->> I've run this process manually, so I know it is being performed properly.
->>
->> Prior to shutdown, all nfsd processes are stopped, filesystems unmounted and md arrays stopped.
->> /proc/mdstat shows
->> root@storage1:~# cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4]
->> unused devices: <none>
->> root@storage1:~#
->>
->> Here is the final hangup.
->>
->> http://www.fnarfbargle.com/CIMG1029.JPG
+> Yes, this is familiar. Several people have reported problems with
+> Seagate's 7200.10 disks in 3Gbps operation on sata_promise.
+> Unfortunately the error reports don't really give a clue as to what
+> the root cause is.
 > 
-> Something sent a command to the disk on ata15 after the PHY had been
-> offlined and the interface had been put in SLUMBER state (SStatus 614).
-> Consequently the command timed out. Libata tried a soft reset, and then
-> a hard reset, after which the machine hung.
+> I used to be able to forcibly trigger similar errors with their
+> 7200.9 disks, but I can't seem to do that any more.
 
-Hmm... weird.  Maybe device initiated power saving (DIPS) is active?
-
-> I don't think sata_promise is the guilty party here. Looks like some
-> layer above sata_promise got confused about the state of the interface.
-
-But locking up hard after hardreset is a problem of sata_promise, no?
-
-Thanks.
+Maybe we need to limit link speed to 1.5Gbps for these drives on
+sata_promise?
 
 -- 
 tejun
