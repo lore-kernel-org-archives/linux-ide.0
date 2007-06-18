@@ -1,118 +1,99 @@
-From: <Stuart_Hayes@Dell.com>
-Subject: RE: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Mon, 18 Jun 2007 13:11:40 -0500
-Message-ID: <DFEF91B22ED07447AB6AA4B237F913F9B18A05@ausx3mpc125.aus.amer.dell.com>
-References: <20070618175713.GD5836@austin.ibm.com>
+From: Chr <chunkeey@web.de>
+Subject: Re: libata: ATA_PIIX missing ICH8M PCIIDs.
+Date: Mon, 18 Jun 2007 20:49:45 +0200
+Message-ID: <200706182049.45315.chunkeey@web.de>
+References: <39B20DF628532344BC7A2692CB6AEE07016FE477@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:40682 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537AbXFRSLl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 14:11:41 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070618175713.GD5836@austin.ibm.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:35307 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764344AbXFRStt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2007 14:49:49 -0400
+In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07016FE477@orsmsx420.amr.corp.intel.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linas@austin.ibm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Cc: linux-ide@vger.kernel.org
 
+On Monday, 18. June 2007, Gaston, Jason D wrote:
+> FYI: DID 2850 is the PATA IDE controller.  Most likely, the laptop do=
+es not have SATA drives and is running off of PATA. =20
+>=20
+> The old IDE subsystem (piix.c) is where I added that PATA DID to.
+> #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850 in pci_ids.h
+>=20
+> Jason
+>=20
 
-I think reading the IDE status register clears the interrupt in the IDE
-device, which might be causing the drive to think it's OK to generate
-another interrupt.  This could either cause it to get stuck trying to
-service an interrupt that is never getting cleared as you suggested, or
-possibly when the next IRQ comes in the IDE IRQ handler gets stuck
-waiting for a spinlock that the code you're looking at already owns...?
+Yes, I've already said that the old IDE subsystem knows about ICH 8M=20
+(read the stuff in the brackets in the original post!).
 
-Perhaps a printk in the IDE IRQ handler would be informative?  It
-wouldn't help you figure out how it got where it is, but it might help
-you figure out why the system is hanging.
+But one day the old ide subsystem will be gone...
+that's why I've added the PCIID to ata_piix.c "today", so I don't have =
+to do it "tomorrow".
 
-Stuart
- 
+Another thing, Kconfig's description clearly states: "
+config ATA_PIIX
+	tristate "Intel ESB, ICH, PIIX3, PIIX4 PATA/SATA support"
+=2E..
+	  This option enables support for ICH5/6/7/8 Serial ATA
+	  and support for PATA on the Intel ESB/ICH/PIIX3/PIIX4 series
+	  host controllers.
+"
 
------Original Message-----
-From: linux-ide-owner@vger.kernel.org
-[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Linas Vepstas
-Sent: Monday, June 18, 2007 12:57 PM
-To: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [BUG] ide dma_timer_expiry, then hard lockup
+so, either change the description to:
+"... support for PATA on the Intel ESB/ICH(all old chipsets 0,2,3M,3,4,=
+5,6,7,7-R; but
+not 8M, because you have use the old subsystem, for your "new" technolo=
+gy!)/PIIX3/PIIX4 series"
 
+or accept the 1+1=3D2 logic and merge the patch into the git.=20
+(hint: but only after changing ich_pata_100 to ich_pata_133 of course!)
 
+:D
 
-I've got a hard lockup in the ide subsystem, probably due to some irq
-spew or something like that.
-
-I've just bought a brand new Maxtor 320GB disk driver for the insane
-price of $70 US to replace another failing drive. It works well under
-light load; I was able to copy about 60GB to it. However, under heavy
-load, such as reconstruction of an MD
-RAID-1 array, it'll lock up the kernel.  Which means that my system
-won't boot :-(
-
-I'm running 2.6.21.1, although the problem seems to occur in 2.6.19 and
-2.6.18 too; its been there a while; I vageuly remember similar problems
-in 2.6.5 or 2.6.10.
-
-I get an
-"hdc: dma_timer_expiry: dma status == 0x21" 
-
-and 10 seconds later,
-
-"hdc: DMA Timeout error"
-
-at which point the system is locked up hard.
-Magic sysreq does not work at all. The hard drive activity light stays
-fully lit.  Inserting printk's into the kernel, I find the hang to be in
-a surprising place: 
-
-
-ide_dma_timeout_retry() in ide-io.c 
-  prints the "hdc: DMA Timeout error" then calls
-  HWIF(drive)->ide_dma_end(drive);
-    which returns, and then calls 
-  hwif->INB(IDE_STATUS_REG) which is needed as an argument to
-ide_error()
-
-But this hangs! -- The INB never returns.
-Now:  hwif->INB = ide_inb; in ide-iops.c
-
-So putting a printk into ide_inb() shows that
-the printk before the readb() is printed, and the
-printk after the readb is not (!!)
-
-I find this rather surpriseing, as I can't imagine how the
-readb can fail. My current vague theory is that doing this
-readb makes the hard drive go really nuts, and it probably
-ties some interrupt line high, and so the linux kernel 
-gets stuck trying to handle the irq flood. I just don't know
-enough about the i386 architecture, or about interrupts, to 
-prove or disprove this.
-
-Background: this is on an old dual-cpu intel (coppermine??)
-box; the controller is an HighPoint HPT366 on the motherboard.
-This is an old parallel ATA (80-pin cable) setup.
-
-I can get the system to boot by sneaking in an 
-"hdparm -d0 /dev/hdc" early in the boot process, to turn off 
-the use of DMA, but it seems that PIO is so slow, that it takes 
-forever to get NFS started.
-
-I can get it to boot, by unplugging /dev/hdc. Unfortunately,
-given the RAID mirroring, the only usable copy of /, /usr is on
-/dev/hda and te only usable copy of /home is on /dev/hdc, so 
-I'm screwed ... 
-
-Any suggestions, experiments, experimental patches, data gathering,
-etc. is welcome. The sooner, the better... 
-
---linas
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,=20
+	Chr.
+ =20
+>
+> >On Monday, 18. June 2007, Alan Cox wrote:
+> >> On Mon, 18 Jun 2007 15:20:06 +0200
+> >> Chr <chunkeey@web.de> wrote:
+> >>
+> >> > Hi,
+> >> >
+> >> > I got a new laptop and I had a little problem that the DVD drive=
+ wasn't
+> >recognized by
+> >> > libata's piix driver (but the old IDE Subsystem found it!).
+> >> >
+> >> > So, after adding the new pciid 8086:2850 it works!
+> >> > But, I don't know if it's ich_pata_100 or ich_pata_133 since the
+> >> > dvd/cd drives only goes up to udma2 speeds.
+> >>
+> >> Its ich_pata_133 - all the newer chips are. They work even better =
+if you
+> >> set them into AHCI mode in the BIOS and then they should "just wor=
+k" with
+> >> recent kernels as the AHCI driver now matches by class.
+> >>
+> >> Alan
+> >>
+> >>
+> >
+> >No go.. I've tried 2.6.20-1-amd64 (debian sid) and a vanilla 2.6.22-=
+rc5.
+> >
+> >(The "problem" is that there are no options for that in the BIOS.
+> >The BIOS itself is only useful on these laptops, if you want to set =
+a BIOS
+> >password, setting the system clock or change the boot order... and n=
+othing
+> >else)
+> >
+> >Thanks,
+> >=A0=A0=A0=A0=A0=A0=A0=A0Chr.
+> >-
