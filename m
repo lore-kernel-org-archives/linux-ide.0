@@ -1,52 +1,27 @@
-From: Theo Baumgartner <tbaumgartner@swissonline.ch>
-Subject: sata_promise error handling
-Date: Tue, 19 Jun 2007 18:59:06 +0200
-Message-ID: <200706191859.07050.tbaumgartner@swissonline.ch>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Pioneer DVR-111 problems with DMA
+Date: Tue, 19 Jun 2007 13:36:12 -0400
+Message-ID: <4678140C.5020804@rtr.ca>
+References: <560608.38945.qm@web54404.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:44207 "EHLO
-	viefep24-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751438AbXFSQ7W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 12:59:22 -0400
-Received: from 77-56-252-80.dclient.hispeed.ch ([77.56.252.80])
-          by viefep24-int.chello.at
-          (InterMail vM.7.08.02.00 201-2186-121-20061213) with ESMTP
-          id <20070619165919.KWSA12976.viefep24-int.chello.at@77-56-252-80.dclient.hispeed.ch>
-          for <linux-ide@vger.kernel.org>; Tue, 19 Jun 2007 18:59:19 +0200
-Content-Disposition: inline
+Received: from rtr.ca ([64.26.128.89]:4633 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751856AbXFSRgO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jun 2007 13:36:14 -0400
+In-Reply-To: <560608.38945.qm@web54404.mail.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Vlad <vladc6@yahoo.com>
+Cc: linux-ide@vger.kernel.org, amills@acpmagazines.com.au
 
-Hello
+Vlad wrote:
+> Hi,
+> 
+> I'd like to bring to your attention an article that claims the Pioneer
+> DVR-111 drive doesn't work with libata because the drive needs the
+> nodma option:
 
-I'm making a backup of some disks with dd (disk image) and sata_promise reported these errors:
-
-----------------------------------------------------------------------------------------------------------------------
-ata8.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata8.00: cmd c8/00:08:40:83:7a/00:00:00:00:00/e4 tag 0 cdb 0x0 data 4096 in
-         res 50/00:00:47:83:7a/00:00:00:00:00/e4 Emask 0x1 (device error)
-ata8.00: configured for UDMA/133
-ata8: EH complete
-sd 7:0:0:0: [sdh] 488397168 512-byte hardware sectors (250059 MB)
-sd 7:0:0:0: [sdh] Write Protect is off
-sd 7:0:0:0: [sdh] Mode Sense: 00 3a 00 00
-sd 7:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata5.00: cmd 25/00:08:e8:af:02/00:00:10:00:00/e0 tag 0 cdb 0x0 data 4096 in
-         res 50/00:00:ef:af:02/00:00:10:00:00/e0 Emask 0x1 (device error)
-ata5.00: configured for UDMA/133
-ata5: EH complete
-sd 4:0:0:0: [sde] 488397168 512-byte hardware sectors (250059 MB)
-sd 4:0:0:0: [sde] Write Protect is off
-sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-----------------------------------------------------------------------------------------------------------------------
-
-Can I ignore them (EH handled them) or do i have to worry that the dd images are corrupted
-(don't wanna make an md5sum of a 250gb disk and image)?
-
-Theo
+Not on my systems -- works fine.
