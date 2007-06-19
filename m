@@ -1,41 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Tue, 19 Jun 2007 18:24:38 +0400
-Message-ID: <4677E726.1080602@ru.mvista.com>
-References: <20070618175713.GD5836@austin.ibm.com>	<20070618212704.394912b8@the-village.bc.nu>	<20070618204601.GF5836@austin.ibm.com>	<20070618220441.3a3af8ca@the-village.bc.nu>	<4677E3BC.3040307@ru.mvista.com> <20070619151919.79c79af1@the-village.bc.nu>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: bug in libata [was Re: [BUG] ide dma_timer_expiry, then hard lockup
+Date: Tue, 19 Jun 2007 09:56:08 -0500
+Message-ID: <20070619145608.GA13904@austin.ibm.com>
+References: <20070618175713.GD5836@austin.ibm.com> <20070618212704.394912b8@the-village.bc.nu> <20070618204601.GF5836@austin.ibm.com> <20070618220441.3a3af8ca@the-village.bc.nu> <20070618212238.GI5836@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37739 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752516AbXFSOWz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Jun 2007 10:22:55 -0400
-In-Reply-To: <20070619151919.79c79af1@the-village.bc.nu>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:35604 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752293AbXFSO4M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 10:56:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20070618212238.GI5836@austin.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linas Vepstas <linas@austin.ibm.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux@highpoint-tech.com
 
-Alan Cox wrote:
+On Mon, Jun 18, 2007 at 04:22:38PM -0500, linas wrote:
+> On Mon, Jun 18, 2007 at 10:04:41PM +0100, Alan Cox wrote:
+> > please try using the libata
+> > driver. 
 
->>>>I can prepare a patch, but only with a lot of guidance. I can test 
->>>>& debug, I'm highly motivated just right now ... 
+Its worse. I get a hard hang (sysrq doesn't work) during boot, 
+just when the system goes to read the partition table.
 
->>>If you've got a nice repeatable problem please try using the libata
->>>driver. That handles the error paths differently and doesn't try a FIFO
->>>drain which might matter in this case I guess.
+Recap: this is an older dual cpu intel box, with a vintage
+HTP366 (and not a newer HPT370) on the system planar.  I'm
+testing a configration that works fine with the old ide
+drivers.
 
->>    FIFO drain for DMA commands?
+It looks like libata and scsi comes up. The disk is correctly
+recognized; i.e. its brand, model number & size are correctly 
+reported. printk shows that it hangs in msdos_partition, trying 
+to read the partition table. The drive light is on full-solid,
+again suggesting a possible irq storm.
 
-> Welcome to the old IDE layer which I am so glad I left behind 8)
+Same behaviour for both 2.6.22-rc5-git1 and for 2.6.22-rc4-mm2
 
-> ide_ata_error will try and do a PIO flush regardless of the command type
-> if DRQ_STAT is asserted. See ide_dma_intr -> ide_error -> ...
+I seem to have trouble turning on scsi logging; it doesn't
+seem to generate any output ... 
 
-    Indeed... but the thing is we don't know what's asserted in this case -- 
-remember, it's reading the status register that locks everything up...
+Any suggestions on how to proceed? 
 
-> Alan
-
-MBR, Sergei
+--linas
