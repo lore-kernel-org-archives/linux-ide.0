@@ -1,63 +1,200 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Tue, 19 Jun 2007 20:43:40 +0200
-Message-ID: <200706192043.40298.bzolnier@gmail.com>
-References: <20070618175713.GD5836@austin.ibm.com> <4677FFF1.2010308@ru.mvista.com> <20070619164854.GR5836@austin.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.22-rc5 1/2] sata_promise: cleanups
+Date: Tue, 19 Jun 2007 21:53:30 +0200 (MEST)
+Message-ID: <200706191953.l5JJrU4K002663@alkaid.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:20728 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754091AbXFSS2x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 14:28:53 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so172335ugf
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jun 2007 11:28:52 -0700 (PDT)
-In-Reply-To: <20070619164854.GR5836@austin.ibm.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:45303 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932716AbXFSTxl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jun 2007 15:53:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Stuart_Hayes@dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+This patch applies some trivial cleanups to sata_promise:
+- repair whitespace damage
+- correct comment at board_2057x_pata definition
+- pull SATAII TX4 support code out to separate functions
+- rename ata_nr to ata_no for consistency with libata's port_no
+- remove some init-time debug printks (requested by Jeff)
 
-Hi,
+This patch should cause no behavioural changes, except for
+the removed printks.
 
-On Tuesday 19 June 2007, Linas Vepstas wrote:
-> On Tue, Jun 19, 2007 at 08:10:25PM +0400, Sergei Shtylyov wrote:
-> > 
-> > >I'm thinking that trying to debug libata is a better idea, rather than
-> > >investing time in ide, right?  Although at the moment, libata works even 
-> > >less; see other email.
-> > 
-> >    Which makes me think this really is some *hardware* issue.
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+--
+ drivers/ata/sata_promise.c |   56 ++++++++++++++++++---------------------------
+ 1 files changed, 23 insertions(+), 33 deletions(-)
 
-Linas, have you checked that there are no firmware updates available
-for this drive?
-
-> There are two distinct issues.
-> -- libata locks up in partition table read on an hpt366+old maxtor disk
->    that has ben working fine for many years with old ide driver. (It
->    still works fine when I boot to the alternate ide-based kernel).
-> 
-> -- ide driver locks up on hpt366+new maxtor disk under heavy 
->    i/o load. I was able to copy 60GB from old to new disk without a
->    problem; however, raid reconstruction locks it up, maybe after 5-15
->    seconds.
-> 
->    This probably is "hardware related"; its something that the new 
->    hard drive does. Given that its being sold at a big discount, it
->    may even be that the sellers know that this is a crappy disk. :-)
-> 
->    All I want is some way of resetting the disk, and continuing on.
-
-It would be useful to see hdparm --Istdout output for *both* disks.
-
-> I'm stalled in debugging; I'm not sue what I'm looking for.
-
-Sergei, do you think that testing the drive with DMA disabled may
-tell us something new?
-
-Thanks,
-Bart
+--- linux-2.6.22-rc5/drivers/ata/sata_promise.c.~1~	2007-06-19 20:38:13.000000000 +0200
++++ linux-2.6.22-rc5/drivers/ata/sata_promise.c	2007-06-19 20:40:28.000000000 +0200
+@@ -45,8 +45,7 @@
+ #include "sata_promise.h"
+ 
+ #define DRV_NAME	"sata_promise"
+-#define DRV_VERSION	"2.07"
+-
++#define DRV_VERSION	"2.08"
+ 
+ enum {
+ 	PDC_MAX_PORTS		= 4,
+@@ -94,7 +93,7 @@ enum {
+ 	board_20319		= 2,	/* FastTrak S150 TX4 */
+ 	board_20619		= 3,	/* FastTrak TX4000 */
+ 	board_2057x		= 4,	/* SATAII150 Tx2plus */
+-	board_2057x_pata	= 5,	/* SATAII150 Tx2plus */
++	board_2057x_pata	= 5,	/* SATAII150 Tx2plus PATA port */
+ 	board_40518		= 6,	/* SATAII150 Tx4 */
+ 
+ 	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
+@@ -124,7 +123,6 @@ enum {
+ 	PDC_FLAG_4_PORTS	= (1 << 26), /* 4 ports */
+ };
+ 
+-
+ struct pdc_port_priv {
+ 	u8			*pkt;
+ 	dma_addr_t		pkt_dma;
+@@ -340,7 +338,6 @@ static const struct pci_device_id pdc_at
+ 	{ }	/* terminate list */
+ };
+ 
+-
+ static struct pci_driver pdc_ata_pci_driver = {
+ 	.name			= DRV_NAME,
+ 	.id_table		= pdc_ata_pci_tbl,
+@@ -348,7 +345,6 @@ static struct pci_driver pdc_ata_pci_dri
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-
+ static int pdc_common_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+@@ -438,7 +434,6 @@ static u32 pdc_sata_scr_read (struct ata
+ 	return readl(ap->ioaddr.scr_addr + (sc_reg * 4));
+ }
+ 
+-
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
+ 			       u32 val)
+ {
+@@ -657,8 +652,8 @@ static void pdc_error_intr(struct ata_po
+ 	ata_port_abort(ap);
+ }
+ 
+-static inline unsigned int pdc_host_intr( struct ata_port *ap,
+-                                          struct ata_queued_cmd *qc)
++static inline unsigned int pdc_host_intr(struct ata_port *ap,
++					 struct ata_queued_cmd *qc)
+ {
+ 	unsigned int handled = 0;
+ 	void __iomem *port_mmio = ap->ioaddr.cmd_addr;
+@@ -685,10 +680,10 @@ static inline unsigned int pdc_host_intr
+ 		handled = 1;
+ 		break;
+ 
+-        default:
++	default:
+ 		ap->stats.idle_irq++;
+ 		break;
+-        }
++	}
+ 
+ 	return handled;
+ }
+@@ -701,6 +696,18 @@ static void pdc_irq_clear(struct ata_por
+ 	readl(mmio + PDC_INT_SEQMASK);
+ }
+ 
++static inline int pdc_is_sataii_tx4(unsigned long flags)
++{
++	const unsigned long mask = PDC_FLAG_GEN_II | PDC_FLAG_4_PORTS;
++	return (flags & mask) == mask;
++}
++
++static inline unsigned int pdc_port_no_to_ata_no(unsigned int port_no, int is_sataii_tx4)
++{
++	static const unsigned char sataii_tx4_port_remap[4] = { 3, 1, 0, 2};
++	return is_sataii_tx4 ? sataii_tx4_port_remap[port_no] : port_no;
++}
++
+ static irqreturn_t pdc_interrupt (int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+@@ -807,7 +814,6 @@ static void pdc_tf_load_mmio(struct ata_
+ 	ata_tf_load(ap, tf);
+ }
+ 
+-
+ static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf)
+ {
+ 	WARN_ON (tf->protocol == ATA_PROT_DMA ||
+@@ -867,7 +873,6 @@ static void pdc_ata_setup_port(struct at
+ 	ap->ioaddr.scr_addr		= scr_addr;
+ }
+ 
+-
+ static void pdc_host_init(struct ata_host *host)
+ {
+ 	void __iomem *mmio = host->iomap[PDC_MMIO_BAR];
+@@ -955,10 +960,8 @@ static int pdc_ata_init_one (struct pci_
+ 
+ 	if (pi->flags & PDC_FLAG_SATA_PATA) {
+ 		u8 tmp = readb(base + PDC_FLASH_CTL+1);
+-		if (!(tmp & 0x80)) {
++		if (!(tmp & 0x80))
+ 			ppi[n_ports++] = pi + 1;
+-			dev_printk(KERN_INFO, &pdev->dev, "PATA port found\n");
+-		}
+ 	}
+ 
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+@@ -968,22 +971,12 @@ static int pdc_ata_init_one (struct pci_
+ 	}
+ 	host->iomap = pcim_iomap_table(pdev);
+ 
+-	is_sataii_tx4 = 0;
+-	if ((pi->flags & (PDC_FLAG_GEN_II|PDC_FLAG_4_PORTS)) == (PDC_FLAG_GEN_II|PDC_FLAG_4_PORTS)) {
+-		is_sataii_tx4 = 1;
+-		dev_printk(KERN_INFO, &pdev->dev, "applying SATAII TX4 port numbering workaround\n");
+-	}
++	is_sataii_tx4 = pdc_is_sataii_tx4(pi->flags);
+ 	for (i = 0; i < host->n_ports; i++) {
+-		static const unsigned char sataii_tx4_port_remap[4] = { 3, 1, 0, 2};
+-		int ata_nr;
+-
+-		ata_nr = i;
+-		if (is_sataii_tx4)
+-			ata_nr = sataii_tx4_port_remap[i];
+-
++		unsigned int ata_no = pdc_port_no_to_ata_no(i, is_sataii_tx4);
+ 		pdc_ata_setup_port(host->ports[i],
+-				   base + 0x200 + ata_nr * 0x80,
+-				   base + 0x400 + ata_nr * 0x100);
++				   base + 0x200 + ata_no * 0x80,
++				   base + 0x400 + ata_no * 0x100);
+ 	}
+ 
+ 	/* initialize adapter */
+@@ -1002,19 +995,16 @@ static int pdc_ata_init_one (struct pci_
+ 				 &pdc_ata_sht);
+ }
+ 
+-
+ static int __init pdc_ata_init(void)
+ {
+ 	return pci_register_driver(&pdc_ata_pci_driver);
+ }
+ 
+-
+ static void __exit pdc_ata_exit(void)
+ {
+ 	pci_unregister_driver(&pdc_ata_pci_driver);
+ }
+ 
+-
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Promise ATA TX2/TX4/TX4000 low-level driver");
+ MODULE_LICENSE("GPL");
