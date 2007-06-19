@@ -1,27 +1,63 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Pioneer DVR-111 problems with DMA
-Date: Tue, 19 Jun 2007 13:36:12 -0400
-Message-ID: <4678140C.5020804@rtr.ca>
-References: <560608.38945.qm@web54404.mail.yahoo.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
+Date: Tue, 19 Jun 2007 20:43:40 +0200
+Message-ID: <200706192043.40298.bzolnier@gmail.com>
+References: <20070618175713.GD5836@austin.ibm.com> <4677FFF1.2010308@ru.mvista.com> <20070619164854.GR5836@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4633 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856AbXFSRgO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Jun 2007 13:36:14 -0400
-In-Reply-To: <560608.38945.qm@web54404.mail.yahoo.com>
+Received: from ug-out-1314.google.com ([66.249.92.168]:20728 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbXFSS2x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 14:28:53 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so172335ugf
+        for <linux-ide@vger.kernel.org>; Tue, 19 Jun 2007 11:28:52 -0700 (PDT)
+In-Reply-To: <20070619164854.GR5836@austin.ibm.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vlad <vladc6@yahoo.com>
-Cc: linux-ide@vger.kernel.org, amills@acpmagazines.com.au
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Stuart_Hayes@dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Vlad wrote:
-> Hi,
+
+Hi,
+
+On Tuesday 19 June 2007, Linas Vepstas wrote:
+> On Tue, Jun 19, 2007 at 08:10:25PM +0400, Sergei Shtylyov wrote:
+> > 
+> > >I'm thinking that trying to debug libata is a better idea, rather than
+> > >investing time in ide, right?  Although at the moment, libata works even 
+> > >less; see other email.
+> > 
+> >    Which makes me think this really is some *hardware* issue.
+
+Linas, have you checked that there are no firmware updates available
+for this drive?
+
+> There are two distinct issues.
+> -- libata locks up in partition table read on an hpt366+old maxtor disk
+>    that has ben working fine for many years with old ide driver. (It
+>    still works fine when I boot to the alternate ide-based kernel).
 > 
-> I'd like to bring to your attention an article that claims the Pioneer
-> DVR-111 drive doesn't work with libata because the drive needs the
-> nodma option:
+> -- ide driver locks up on hpt366+new maxtor disk under heavy 
+>    i/o load. I was able to copy 60GB from old to new disk without a
+>    problem; however, raid reconstruction locks it up, maybe after 5-15
+>    seconds.
+> 
+>    This probably is "hardware related"; its something that the new 
+>    hard drive does. Given that its being sold at a big discount, it
+>    may even be that the sellers know that this is a crappy disk. :-)
+> 
+>    All I want is some way of resetting the disk, and continuing on.
 
-Not on my systems -- works fine.
+It would be useful to see hdparm --Istdout output for *both* disks.
+
+> I'm stalled in debugging; I'm not sue what I'm looking for.
+
+Sergei, do you think that testing the drive with DMA disabled may
+tell us something new?
+
+Thanks,
+Bart
