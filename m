@@ -1,116 +1,100 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: CF flash IDE failure to attach with 2.6.20+
-Date: Tue, 19 Jun 2007 14:00:54 +0900
-Message-ID: <46776306.5030300@gmail.com>
-References: <11172839.post@talk.nabble.com>	<46766BD3.4040702@gmail.com> <20070618125742.28a0bc57@the-village.bc.nu> <46770edc.101d640a.4fdf.4eae@mx.google.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070006070709030707030809"
+From: linux@horizon.com
+Subject: 2.6.22-rc4 BUG, old IDE driver
+Date: 19 Jun 2007 01:50:51 -0400
+Message-ID: <20070619055051.9102.qmail@science.horizon.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:10814 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbXFSFBB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 01:01:01 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2465997wah
-        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2007 22:01:00 -0700 (PDT)
-In-Reply-To: <46770edc.101d640a.4fdf.4eae@mx.google.com>
+Received: from science.horizon.com ([192.35.100.1]:18156 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751327AbXFSF5d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 01:57:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Hall <andrew.a.hall@gmail.com>
-Cc: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, 'Jeff Garzik' <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
+Cc: linux@horizon.com
 
-This is a multi-part message in MIME format.
---------------070006070709030707030809
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+(I sent this to linux-RAID, then actually read it and noticed that the
+crash was in the IDE code.  Reposting here.)
 
-Andrew Hall wrote:
->>> For some reason, mwdma doesn't work in libata now.  I'm not sure why
->>> tho.  Alan, can you enlighten us?
->> No idea at all. All my hardware is still happy. 2.6.20 is an "old"
->> kernel
->> however so it does predate the fixes you did for ata_piix mode setup ?
-> 
-> Old - yes, but more stable in all other respects it seems to the .21 series.
-> Are these patches available for me to try on .20 or are there dependencies
-> on 21? 
-> 
+This is 2.6.22-rv4 + linuxpps, on a venerable and stable 32-bit system
+(P3 processor, 400BX motherboard, ECC RAM).  That drive has been giving me
+hassles from time to time, but is working fine after a reboot...
 
-I suppose you were using ata_piix too in older kernel, right?  Can you
-post the boot dmesg of 2.6.19?  We used to ignore mwdma mode before and
-enabled it at some point after that.  That may be the cause here.
+(Errors start at 09:06:56)
+hdk: dma_timer_expiry: dma status == 0x20
+hdk: DMA timeout retry
+hdk: timeout waiting for DMA
+hdk: dma_timer_expiry: dma status == 0x20
+hdk: DMA timeout retry
+hdk: timeout waiting for DMA
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
 
-Also, please try the attached patch on top of 2.6.20.
+(repeat many times)
 
--- 
-tejun
+(Time is now 10:45:44)
+ide5: reset: success
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+hdk: task_out_intr: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+pdc202xx_new: Secondary channel reset.
+ide5: reset: success
+hdk: task_out_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+BUG: unable to handle kernel paging request at virtual address 30000000
+ printing eip:
+b02554b1
+*pde = 00000000
+Oops: 0000 [#1]
+CPU:    0
+EIP:    0060:[<b02554b1>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.22-rc4 #27)
+EIP is at ide_outsl+0x5/0x9
+eax: 00009400   ebx: b0457624   ecx: 00000080   edx: 00009400
+esi: 30000000   edi: b0457624   ebp: 00000080   esp: efc7dda8
+ds: 007b   es: 007b   fs: 0000  gs: 0000  ss: 0068
+Process md7_raid10 (pid: 360, ti=efc7d000 task=eff1e500 task.ti=efc7d000)
+Stack: b04576b8 b025605d 30000000 b0457624 30000000 b0457624 b04576b8 b025875c 
+       00000001 b1985000 00000004 b04576b8 00000001 b0850370 b025910f b0850370 
+       b04576b8 06e94ed8 b025933a 00000000 00000019 efc7de64 b03e6520 b04576b8 
+Call Trace:
+ [<b025605d>] ata_output_data+0x4d/0x64
+ [<b025875c>] ide_pio_sector+0xea/0x121
+ [<b025910f>] ide_pio_datablock+0x46/0x5c
+ [<b025933a>] pre_task_out_intr+0x9a/0xa5
+ [<b0254a3b>] ide_do_request+0x6e7/0x89a
+ [<b01d4505>] blk_remove_plug+0x4e/0x5a
+ [<b01d452e>] __generic_unplug_device+0x1d/0x1f
+ [<b01d51a8>] __make_request+0x386/0x489
+ [<b01d3901>] generic_make_request+0x186/0x1b3
+ [<b0290f63>] md_wakeup_thread+0x25/0x27
+ [<b029640c>] md_check_recovery+0x3ff/0x407
+ [<b01d535c>] generic_unplug_device+0x3e/0x44
+ [<b01d4505>] blk_remove_plug+0x4e/0x5a
+ [<b028eab6>] raid10d+0xaa/0x8a5
+ [<b010245b>] common_interrupt+0x23/0x28
+ [<b033e722>] schedule_timeout+0x13/0x95
+ [<b029584b>] md_thread+0xc1/0xd7
+ [<b0121405>] autoremove_wake_function+0x0/0x35
+ [<b029578a>] md_thread+0x0/0xd7
+ [<b01212b0>] kthread+0x36/0x5a
+ [<b012127a>] kthread+0x0/0x5a
+ [<b01025db>] kernel_thread_helper+0x7/0x10
+ =======================
+Code: 89 c2 f3 66 6d 5f c3 57 89 d7 89 c2 f3 6d 5f c3 89 d0 89 ca ee c3 0f b7 c0 66 ef c3 56 89 d6 89 c2 f3 66 6f 5e c3 56 89 d6 89 c2 <f3> 6f 5e c3 c7 80 08 05 00 00 a3 64 25 b0 c7 80 0c 05 00 00 96 
+EIP: [<b02554b1>] ide_outsl+0x5/0x9 SS:ESP 0068:efc7dda8
+note: md7_raid10[360] exited with preempt_count 1
 
---------------070006070709030707030809
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 9c07b88..924e447 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -685,8 +685,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	if (adev->class == ATA_DEV_ATA)
- 		control |= 4;	/* PPE enable */
- 
-+	/* PIO configuration clears DTE unconditionally.  It will be
-+	 * programmed in set_dmamode which is guaranteed to be called
-+	 * after set_piomode if any DMA mode is available.
-+	 */
- 	pci_read_config_word(dev, master_port, &master_data);
- 	if (is_slave) {
-+		/* clear TIME1|IE1|PPE1|DTE1 */
-+		master_data &= 0xff0f;
- 		/* Enable SITRE (seperate slave timing register) */
- 		master_data |= 0x4000;
- 		/* enable PPE1, IE1 and TIME1 as needed */
-@@ -694,12 +700,14 @@ static void piix_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 		pci_read_config_byte(dev, slave_port, &slave_data);
- 		slave_data &= (ap->port_no ? 0x0f : 0xf0);
- 		/* Load the timing nibble for this slave */
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
-+		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
-+						<< (ap->port_no ? 4 : 0);
- 	} else {
--		/* Master keeps the bits in a different format */
--		master_data &= 0xccf8;
-+		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
-+		master_data &= 0xccf0;
- 		/* Enable PPE, IE and TIME as appropriate */
- 		master_data |= control;
-+		/* load ISP and RCT */
- 		master_data |=
- 			(timings[pio][0] << 12) |
- 			(timings[pio][1] << 8);
-@@ -816,7 +824,7 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
- 			master_data &= 0xFF4F;  /* Mask out IORDY|TIME1|DMAONLY */
- 			master_data |= control << 4;
- 			pci_read_config_byte(dev, 0x44, &slave_data);
--			slave_data &= (0x0F + 0xE1 * ap->port_no);
-+			slave_data &= (ap->port_no ? 0x0f : 0xf0);
- 			/* Load the matching timing */
- 			slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << (ap->port_no ? 4 : 0);
- 			pci_write_config_byte(dev, 0x44, slave_data);
-@@ -828,8 +836,11 @@ static void do_pata_set_dmamode (struct ata_port *ap, struct ata_device *adev, i
- 				(timings[pio][0] << 12) |
- 				(timings[pio][1] << 8);
- 		}
--		udma_enable &= ~(1 << devid);
--		pci_write_config_word(dev, master_port, master_data);
-+
-+		if (ap->udma_mask) {
-+			udma_enable &= ~(1 << devid);
-+			pci_write_config_word(dev, master_port, master_data);
-+		}
- 	}
- 	/* Don't scribble on 0x48 if the controller does not support UDMA */
- 	if (ap->udma_mask)
-
---------------070006070709030707030809--
+The system seemed to still be running, but I rebooted as a precaution.
