@@ -1,48 +1,52 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Tue, 19 Jun 2007 11:48:54 -0500
-Message-ID: <20070619164854.GR5836@austin.ibm.com>
-References: <20070618175713.GD5836@austin.ibm.com> <DFEF91B22ED07447AB6AA4B237F913F9B18A05@ausx3mpc125.aus.amer.dell.com> <4677E30B.4020101@ru.mvista.com> <20070619150502.GO5836@austin.ibm.com> <4677FFF1.2010308@ru.mvista.com>
+From: Theo Baumgartner <tbaumgartner@swissonline.ch>
+Subject: sata_promise error handling
+Date: Tue, 19 Jun 2007 18:59:06 +0200
+Message-ID: <200706191859.07050.tbaumgartner@swissonline.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:44463 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757122AbXFSQsz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Jun 2007 12:48:55 -0400
+Received: from viefep18-int.chello.at ([213.46.255.22]:44207 "EHLO
+	viefep24-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751438AbXFSQ7W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2007 12:59:22 -0400
+Received: from 77-56-252-80.dclient.hispeed.ch ([77.56.252.80])
+          by viefep24-int.chello.at
+          (InterMail vM.7.08.02.00 201-2186-121-20061213) with ESMTP
+          id <20070619165919.KWSA12976.viefep24-int.chello.at@77-56-252-80.dclient.hispeed.ch>
+          for <linux-ide@vger.kernel.org>; Tue, 19 Jun 2007 18:59:19 +0200
 Content-Disposition: inline
-In-Reply-To: <4677FFF1.2010308@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Stuart_Hayes@Dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Jun 19, 2007 at 08:10:25PM +0400, Sergei Shtylyov wrote:
-> 
-> >I'm thinking that trying to debug libata is a better idea, rather than
-> >investing time in ide, right?  Although at the moment, libata works even 
-> >less; see other email.
-> 
->    Which makes me think this really is some *hardware* issue.
+Hello
 
-There are two distinct issues.
--- libata locks up in partition table read on an hpt366+old maxtor disk
-   that has ben working fine for many years with old ide driver. (It
-   still works fine when I boot to the alternate ide-based kernel).
+I'm making a backup of some disks with dd (disk image) and sata_promise reported these errors:
 
--- ide driver locks up on hpt366+new maxtor disk under heavy 
-   i/o load. I was able to copy 60GB from old to new disk without a
-   problem; however, raid reconstruction locks it up, maybe after 5-15
-   seconds.
+----------------------------------------------------------------------------------------------------------------------
+ata8.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata8.00: cmd c8/00:08:40:83:7a/00:00:00:00:00/e4 tag 0 cdb 0x0 data 4096 in
+         res 50/00:00:47:83:7a/00:00:00:00:00/e4 Emask 0x1 (device error)
+ata8.00: configured for UDMA/133
+ata8: EH complete
+sd 7:0:0:0: [sdh] 488397168 512-byte hardware sectors (250059 MB)
+sd 7:0:0:0: [sdh] Write Protect is off
+sd 7:0:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 7:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata5.00: cmd 25/00:08:e8:af:02/00:00:10:00:00/e0 tag 0 cdb 0x0 data 4096 in
+         res 50/00:00:ef:af:02/00:00:10:00:00/e0 Emask 0x1 (device error)
+ata5.00: configured for UDMA/133
+ata5: EH complete
+sd 4:0:0:0: [sde] 488397168 512-byte hardware sectors (250059 MB)
+sd 4:0:0:0: [sde] Write Protect is off
+sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+----------------------------------------------------------------------------------------------------------------------
 
-   This probably is "hardware related"; its something that the new 
-   hard drive does. Given that its being sold at a big discount, it
-   may even be that the sellers know that this is a crappy disk. :-)
+Can I ignore them (EH handled them) or do i have to worry that the dd images are corrupted
+(don't wanna make an md5sum of a 250gb disk and image)?
 
-   All I want is some way of resetting the disk, and continuing on.
-
-I'm stalled in debugging; I'm not sue what I'm looking for.
-
---linas
-
-
+Theo
