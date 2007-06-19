@@ -1,49 +1,62 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Tue, 19 Jun 2007 19:51:19 +0400
-Message-ID: <4677FB77.1050903@ru.mvista.com>
-References: <20070618175713.GD5836@austin.ibm.com>	<20070618212704.394912b8@the-village.bc.nu>	<20070618204601.GF5836@austin.ibm.com>	<20070618220441.3a3af8ca@the-village.bc.nu>	<4677E3BC.3040307@ru.mvista.com> <20070619151919.79c79af1@the-village.bc.nu> <4677E726.1080602@ru.mvista.com> <4677F881.6060200@rtr.ca>
+Date: Tue, 19 Jun 2007 20:10:25 +0400
+Message-ID: <4677FFF1.2010308@ru.mvista.com>
+References: <20070618175713.GD5836@austin.ibm.com> <DFEF91B22ED07447AB6AA4B237F913F9B18A05@ausx3mpc125.aus.amer.dell.com> <4677E30B.4020101@ru.mvista.com> <20070619150502.GO5836@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:38165 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:38321 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752806AbXFSPtg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Jun 2007 11:49:36 -0400
-In-Reply-To: <4677F881.6060200@rtr.ca>
+	id S1753723AbXFSQIm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Jun 2007 12:08:42 -0400
+In-Reply-To: <20070619150502.GO5836@austin.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linas Vepstas <linas@austin.ibm.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: Stuart_Hayes@Dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
+Hello.
 
->>>>>> I can prepare a patch, but only with a lot of guidance. I can test 
->>>>>> & debug, I'm highly motivated just right now ... 
+Linas Vepstas wrote:
 
->>>>> If you've got a nice repeatable problem please try using the libata
->>>>> driver. That handles the error paths differently and doesn't try a 
->>>>> FIFO
->>>>> drain which might matter in this case I guess.
+>>Stuart_Hayes@Dell.com wrote:
 
->>>>    FIFO drain for DMA commands?
+>>>I think reading the IDE status register clears the interrupt in the IDE
+>>>device, which might be causing the drive to think it's OK to generate
+>>>another interrupt.
 
->>> Welcome to the old IDE layer which I am so glad I left behind 8)
+>>   This is not how IDE drives are supposed to act -- they won't proceed any 
+>>further until "interrupt pending" condition is cleared, so these aren't 
+>>supposed to be "stacked". This behavior however is not strictly specified 
+>>by ATA standards IIRC, but I can't readily imagine such situaltion anyway 
+>>unless tagged command queueing  (which is not supported by IDE core) and/or 
+>>ATAPI command overlapping is in action...
 
->>> ide_ata_error will try and do a PIO flush regardless of the command type
->>> if DRQ_STAT is asserted. See ide_dma_intr -> ide_error -> ...
+> The problem only manifests during high io load; perhaps a missing mutex
+> somewhere is blasting one thing too many out to the hard drive?
 
->>    Indeed... but the thing is we don't know what's asserted in this 
->> case -- remember, it's reading the status register that locks 
->> everything up...
+    Hm... not sure about this.
 
-> Exactly.  And IORDY shouldn't really apply there,
-> unless some nitwit standards person wrote it into a spec..
+>>>This could either cause it to get stuck trying to
+>>>service an interrupt that is never getting cleared as you suggested, or
+>>>possibly when the next IRQ comes in the IDE IRQ handler gets stuck
+>>>waiting for a spinlock that the code you're looking at already owns...?
 
-    Wrote what? IORDY throttling does *apply* to both data and non-data 
-register accesses, of course.
+>>   I could also imagine the HPT366 chip going mad and stalling the reads if 
+>>the taskfile regs forever because of the incomplete DMA or even the drive 
+>>going mad and not replying to I/O cycles with proper -IORDY handshake (i.e. 
+>>holding it low all the time)...
 
-> -ml
+> In my case, ctrl-alt-sysrq doesn't work, which makes it hard to debug.
+
+> I'm thinking that trying to debug libata is a better idea, rather than
+> investing time in ide, right?  Although at the moment, libata works even 
+> less; see other email.
+
+    Which makes me think this really is some *hardware* issue.
+
+> --linas
 
 MBR, Sergei
