@@ -1,54 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Wed, 20 Jun 2007 18:01:23 +0100
-Message-ID: <20070620180123.642316ae@the-village.bc.nu>
-References: <20070618175713.GD5836@austin.ibm.com>
-	<4677FFF1.2010308@ru.mvista.com>
-	<20070619164854.GR5836@austin.ibm.com>
-	<200706192043.40298.bzolnier@gmail.com>
-	<46783777.10607@ru.mvista.com>
-	<20070620162845.GY5836@austin.ibm.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Hard lockup with ata_piix 2.6.21.1: strange traceback, too
+Date: Wed, 20 Jun 2007 17:12:13 -0400
+Message-ID: <4679982D.2030000@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36322 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751677AbXFTQ4p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jun 2007 12:56:45 -0400
-In-Reply-To: <20070620162845.GY5836@austin.ibm.com>
+Received: from rtr.ca ([64.26.128.89]:4619 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbXFTVMO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jun 2007 17:12:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stuart_Hayes@dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> Google seems to show that there is no publically available 
-> firmware updates for Maxtor disks.
+Hi guys,
 
-There are for some but only if you irritate the tech support people.
+I'm debugging a system here based on ICH7/ata_piix.
+When we hot-pull a drive, it locks up solid.
+That's fine, but I'd like to find/fix the lockup.
 
-> hours at high cpu usage.... There were maybe a a dozen DriveReady
-> SeekComplete Timeout errors clustered a few minutes apart.  
+So as part of poking around, I rebuilt the kernel with frame pointers,
+and inserted a WARN_ON(1) into ata_busy_sleep() to see who was calling it
+just before things locked up. 
 
-That suggests the drive is having problems occassionally and that the DMA
-path code then blows up when they occur.
+Here's the result:  http://rtr.ca/libata.png
 
-> Is there a way of viewing the contents of he command queue on
-> the hard drive, to see if the command actually made it across?
+Can anyone here make sense of that traceback??
+Are we *really* recursing inside the EH code?
 
-queue ? You are overestimating IDE ;)
-
-When the command is written you wait 400nS and then BSY is supposed to be
-asserted. DRQ and other bits then handshake the data at the software
-level with IORDY doing it at the hardware level for PIO (except in early
-drives/low speeds where its done by the prayer and timing tolerance
-approach)
-
-Its unlikely the command got lost. The IRQ could have done but the error
-path tries to spot that case by reading the status register - which
-hangs. So in theory it could be a lost IRQ and if the reset works we'll
-find that out.
-
-Alan
-
-
+Thanks
