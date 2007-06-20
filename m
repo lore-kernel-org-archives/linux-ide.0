@@ -1,44 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_it821x: (partially) fix DMA in RAID mode
-Date: Wed, 20 Jun 2007 19:56:50 -0400
-Message-ID: <4679BEC2.5040007@garzik.org>
-References: <200706111140.08048.bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: more NONCQ devices
+Date: Wed, 20 Jun 2007 19:56:57 -0400
+Message-ID: <4679BEC9.4040901@garzik.org>
+References: <20070618053841.GP29122@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45875 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45880 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756954AbXFTX4x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Jun 2007 19:56:53 -0400
-In-Reply-To: <200706111140.08048.bzolnier@gmail.com>
+	id S1757706AbXFTX47 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jun 2007 19:56:59 -0400
+In-Reply-To: <20070618053841.GP29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> Code intended to check DMA status was checking DMA command register.
+Tejun Heo wrote:
+> More for the NCQ blacklist.  One hitachi and one raptor.  Other
+> members of these families of drives are already on the list, so no
+> surprises.
 > 
-> Moreover firmware seems to "forget" to set DMA capable bit for the
-> slave device (at least in RAID mode but without ITE RAID volumes) so
-> check device ID for DMA capable bit when deciding whether to use DMA
-> and remove DMA status check completely.
-> 
-> Thanks to Pavol Simo for the bugreport and testing the initial fix.
-> 
-> This change unfortunately still doesn't fix DMA in RAID mode (which
-> works fine with IDE it821x) but Alan is working on the missing pieces
-> (pata_it821x vs libata EH issues).
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Acked-by: Alan Cox <alan@redhat.com>
-> Cc: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
-> removed non-ASCII char from the patch description + added Alan's ACK
+>  drivers/ata/libata-core.c |    2 ++
+>  1 file changed, 2 insertions(+)
 > 
->  drivers/ata/pata_it821x.c |   11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 047eabd..3562812 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3802,6 +3802,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>  	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
+>  	/* Drives which do spurious command completion */
+>  	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
+> +	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+> +	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
 
 applied
 
