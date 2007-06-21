@@ -1,61 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 19/19] ide: use PIO/MMIO operations directly where possible
-Date: Thu, 21 Jun 2007 20:19:17 +0200
-Message-ID: <200706212019.18001.bzolnier@gmail.com>
-References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain> <20070112042807.28794.8251.sendpatchset@localhost.localdomain> <467AB253.8010902@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: ide/dma not working from 2.6.19 to 2.6.21
+Date: Thu, 21 Jun 2007 22:17:36 +0400
+Message-ID: <467AC0C0.5020300@ru.mvista.com>
+References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <467A9923.6010203@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:15025 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755865AbXFUSDg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 14:03:36 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so631702ugf
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jun 2007 11:03:35 -0700 (PDT)
-In-Reply-To: <467AB253.8010902@ru.mvista.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:64696 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754190AbXFUSPy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jun 2007 14:15:54 -0400
+In-Reply-To: <467A9923.6010203@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bahadir Balban <bahadir.balban@gmail.com>
+Cc: linux-ide@vger.kernel.org
+
+I wrote:
+
+>> ide0 at 0x90050050-0x90050057,0x90050062 on irq 84
+>> <7>Probing IDE interface ide1...
+>> <6>hda: max request size: 512KiB
+>> <4>hda: lost interrupt
+>> <4>hda: lost interrupt
+>> <4>hda: lost interrupt
+
+>    Hm, that's interesting -- I'm not sure how the driver rewrite could 
+> have affected the interrupt delivery for PIO commands (there's no prior 
+> "DMA interrupt recovery" messages).  Might be some other issue here...
+
+>> <6>hda: 160836480 sectors (82348 MB) w/1719KiB Cache, 
+>> CHS=16383/255/63, UDMA(33)
+>> <4>hda: lost interrupt
+>> <6>hda: cache flushes supported
+>> <6> hda: <4>hda: dma_timer_expiry: dma status == 0x21
+>> <4>hda: DMA timeout error
+>> hda: dma timeout error: status=0x51 { DriveReady SeekComplete Error }
+>> hda: dma timeout error: error=0x84 { DriveStatusError BadCRC }
+
+>    This is too familiar -- that's how the driver used to behave on
+
+    ...non-x86 targets before the 2.6.20-rc1 change -- although it usually 
+exhibited it on higher speeds until the IDE core fekk back to UltraATA/33 or 
+/44, then it started to work...
+
+>> Does IDE support in linux depend on certain BIOS settings or any other
+>> motherboard specific details? I am asking because neither the new ata
+>> nor the old ide layer worked for the cards I tried on ARM (JMB363,
+>> IT8212, Promise TX2 133 -> worked only with 2.6.19 old ide layer).
+
+>    As for the Promise -- it used to before 2.2.20-rc1, and it shouldn't 
+> since.
+
+    I meant "used to depend on BIOS settings" here.
+
+MBR, Sergei
 
 
-Hi Sergei,
-
-On Thursday 21 June 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> > [PATCH] ide: use PIO/MMIO operations directly where possible
-> 
-> > This results in smaller/faster/simpler code and allows future optimizations.
-> > Also remove no longer needed ide[_mm]_{inl,outl}() and ide_hwif_t.{INL,OUTL}.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > Index: a/drivers/ide/pci/hpt366.c
-> > ===================================================================
-> > --- a.orig/drivers/ide/pci/hpt366.c
-> > +++ a/drivers/ide/pci/hpt366.c
-> > @@ -836,7 +836,7 @@ static int hpt374_ide_dma_test_irq(ide_d
-> >  		return 0;
-> >  	}
-> >  
-> > -	dma_stat = hwif->INB(hwif->dma_status);
-> > +	dma_stat = inb(hwif->dma_status);
-> >  	/* return 1 if INTR asserted */
-> >  	if (dma_stat & 4)
-> >  		return 1;
-> 
->     Hmm... this driver *still* has a lot more indirect I/O accessors -- I 
-> wonder why only this one had been converted then?
-
-The reason for this is that my patch was done before some of your patches
-for HPT IDE driver and I never really got to doing follow-up patch.
-
-IIRC piix.c and and tc86c100.c may also want an update.
-
-Thanks,
-Bart
