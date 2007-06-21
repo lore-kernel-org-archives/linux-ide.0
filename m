@@ -1,90 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/5] ide: add short cables support
-Date: Thu, 21 Jun 2007 21:38:23 +0200
-Message-ID: <200706212138.23623.bzolnier@gmail.com>
-References: <200706101558.08990.bzolnier@gmail.com> <200706160140.28380.bzolnier@gmail.com> <467569BD.9070506@ru.mvista.com>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
+Date: Thu, 21 Jun 2007 14:47:31 -0500
+Message-ID: <20070621194731.GB8840@austin.ibm.com>
+References: <20070618175713.GD5836@austin.ibm.com> <4677FFF1.2010308@ru.mvista.com> <20070619164854.GR5836@austin.ibm.com> <200706192043.40298.bzolnier@gmail.com> <46783777.10607@ru.mvista.com> <20070620162845.GY5836@austin.ibm.com> <20070620180123.642316ae@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:61196 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483AbXFUTnu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 15:43:50 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so650982ugf
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jun 2007 12:43:49 -0700 (PDT)
-In-Reply-To: <467569BD.9070506@ru.mvista.com>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:45330 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754423AbXFUTrd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jun 2007 15:47:33 -0400
 Content-Disposition: inline
+In-Reply-To: <20070620180123.642316ae@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Stuart_Hayes@dell.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sunday 17 June 2007, Sergei Shtylyov wrote:
+On Wed, Jun 20, 2007 at 06:01:23PM +0100, Alan Cox wrote:
+> 
+> Its unlikely the command got lost. The IRQ could have done but the error
+> path tries to spot that case by reading the status register - which
+> hangs. So in theory it could be a lost IRQ and if the reset works we'll
+> find that out.
 
-[ ... ]
+OK, here's the libata trace info (transcribed by hand, may have typos,
+the numerical values should be correct).
 
-> >>>Index: b/drivers/ide/pci/alim15x3.c
-> >>>===================================================================
-> >>>--- a/drivers/ide/pci/alim15x3.c
-> >>>+++ b/drivers/ide/pci/alim15x3.c
-> >>>@@ -594,7 +594,7 @@ out:
-> >>>  *	FIXME: frobs bits that are not defined on newer ALi devicea
-> >>>  */
-> >>> 
-> >>>-static unsigned int __devinit ata66_ali15x3 (ide_hwif_t *hwif)
-> >>>+static u8 __devinit ata66_ali15x3(ide_hwif_t *hwif)
-> >>> {
-> >>> 	struct pci_dev *dev	= hwif->pci_dev;
-> >>> 	unsigned int ata66	= 0;
-> >>>@@ -657,7 +657,7 @@ static unsigned int __devinit ata66_ali1
-> >>> 
-> >>> 	local_irq_restore(flags);
-> >>> 
-> >>>-	return(ata66);
-> >>>+	return ata66 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
-> 
-> >>    Ahem... I'd think it was about the right time to fix the abomination which
-> >>those ata66 and cable_80_pin[2] are, something like this:
-> 
-> >>static unsigned int __devinit ata66_ali15x3 (ide_hwif_t *hwif)
-> >>{
-> >>         struct pci_dev *dev     = hwif->pci_dev;
-> >>         unsigned int cbl        = ATA_CBL_PATA40;
-> >>         unsigned long flags;
-> >>         u8 tmpbyte, mask	= hwif->channel ? 0x02 : 0x01;
-> >>
-> >>         local_irq_save(flags); /* Not sure if it's necessary... */
-> >>
-> >>         if (m5229_revision >= 0xC2) {
-> >>                 /*
-> >>                  * Ultra66 cable detection (from Host View)
-> >>                  * m5229, 0x4a, bit0: primary, bit1: secondary
-> >>		 * 0: 80 pin, 1: 40 pin
-> >>                  */
-> >>                 pci_read_config_byte(dev, 0x4a, &tmpbyte);
-> >>                 /*
-> >>                  * Allow ata66 if cable of current channel has 80 pins
-> >>                  */
-> >>                 cbl = (tmpbyte & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
-> >>         } else {
-> 
-> >>[Following code frankly speaking has no business being in this function]
-> 
-> > patch #3/5 already takes care of cable_80_pin[2] part,
-> 
->     I really should have looked thru all the series but lacked the time. :-<
-> 
-> > ata66 part was left as an exercise for the reader ;-)
-> 
->     Hm, now that I've looked at that patch I saw both these things killed.
-> What, you don't know your own code? ;-)
+This is during the first read of the partition table, during boot.
 
-It seems that I indeed dealt with ata66 part already... :-)
+ata_scsi_dumb_cb: CDB(:1:0,0,0) 28 00 00 00 00 00 00 00 08
+ata_scsi_translate: ENTER
+scsi_10_lba_len: ten-byte command
+ata_sg_setup: ENTER, ata1
+ata_sg_setup: 1 sg elements mapped
+ata_fill_sg: PRD[0] = (0x2FEEF000, 0x1000)
+ata1: ata_dev_select: ENTER, device 0, wait 1
+ata_tf_load: feat 0x0 nsect 0x8 lba 0x0 0x0 0x0
+ata_tf_load: device 0xE0
+ata_exec_command: ta1: cmd 0xc8
+ata_scsi_translate: EXIT
 
-However I had something different in mind while writing about code gymnastics
-- code unrelated to cable detection should be split off from ata66_ali15x3. 
+then, 30 seconds later:
 
-Thanks,
-Bart
+sd 0:0:0:0 [sda] Done: 0xeff3aba0 TIMEOUT
+sd 0:0:0:0 [sda] Result: host_byte=DID_OK driver_byte=DRV_OK, SUG_OK
+sd 0:0:0:0 [sda] CDB: Read(10): 28 00 00 ... 00 08 00
+sd 0:0:0:0 [sda] scsi host busy 1 failed 0
+ata_scsi_timed_out: ENTER
+ata_scsi_timed_out: EXIT, ret=0
+ata_port_flush_task: ENTER
+ata_port_flush_task: flush #1
+ata1: ata_port_flush_task: flush #2
+ata_port_flush_task: EXIT
+
+Then a hard hang here.
+
+This was on 2.6.22-rc5-git1
+Again, this disk and controller combo work spotlessly when using 
+the ide drivers.
+
+
+--linas
