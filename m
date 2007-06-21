@@ -1,143 +1,109 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 20 Jun 2007 20:06:42 -0400
-Message-ID: <20070621000642.GA28972@havoc.gtf.org>
+From: "Andrew Hall" <andrew.a.hall@gmail.com>
+Subject: RE: CF flash IDE failure to attach with 2.6.20+
+Date: Thu, 21 Jun 2007 11:05:43 +1000
+Message-ID: <4679cefc.06d7720a.0280.ffff9cce@mx.google.com>
+References: <11172839.post@talk.nabble.com>	<46766BD3.4040702@gmail.com> <20070618125742.28a0bc57@the-village.bc.nu> <46770edc.101d640a.4fdf.4eae@mx.google.com> <46776306.5030300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757033AbXFUAGz@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:55892 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752508AbXFUBGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jun 2007 21:06:06 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so128303wah
+        for <linux-ide@vger.kernel.org>; Wed, 20 Jun 2007 18:06:05 -0700 (PDT)
+In-Reply-To: <46776306.5030300@gmail.com>
+Content-Language: en-au
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: 'Tejun Heo' <htejun@gmail.com>
+Cc: 'Alan Cox' <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, 'Jeff Garzik' <jeff@garzik.org>
 
+> I suppose you were using ata_piix too in older kernel, right?  Can you
+> post the boot dmesg of 2.6.19?  We used to ignore mwdma mode before and
+> enabled it at some point after that.  That may be the cause here.
+> 
+> Also, please try the attached patch on top of 2.6.20.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Sorry guys, I've actually got it wrong. The hardware that I have been
+testing on has a different chipset: Intel ICH8, to what I was using
+previously with success with 2.6.19 (this was ICH4 based hardware) - so the
+driver is actually different now. 
 
-to receive the following updates:
+Tejun, your patch for 2.6.20 failed with the same errors.
 
- drivers/ata/ahci.c        |    2 +-
- drivers/ata/libata-core.c |    4 +++-
- drivers/ata/pata_amd.c    |    2 ++
- drivers/ata/pata_it821x.c |   13 ++++---------
- 4 files changed, 10 insertions(+), 11 deletions(-)
+For completeness I have tested the newer ICH8 hardware with everything from
+2.6.15 through to 2.6.21.5 using the ata_piix drivers and it (the Compact
+Flash) fails in all kernels. Here is the (relevant) dmesg from 2.6.21.5
+showing the CF being disabled:
 
-Bartlomiej Zolnierkiewicz (1):
-      pata_it821x: (partially) fix DMA in RAID mode
+ata_piix 0000:00:1f.2: version 2.10ac1
+ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+ata1: SATA max UDMA/133 cmd 0x0001fa00 ctl 0x0001f902 bmdma 0x0001f600 irq
+19
+ata2: SATA max UDMA/133 cmd 0x0001f800 ctl 0x0001f702 bmdma 0x0001f608 irq
+19
+scsi0 : ata_piix
+ata1.00: ATA-0: CF CARD 512MB, 20070131, max MWDMA2
+ata1.00: 990864 sectors, multi 0: LBA
+ata1.00: applying bridge limits
+ata1.00: configured for MWDMA2
+scsi1 : ata_piix
+ATA: abnormal status 0x7F on port 0x0001f807
+scsi 0:0:0:0: Direct-Access     ATA      CF CARD 512MB    2007 PQ: 0 ANSI: 5
+SCSI device sda: 990864 512-byte hdwr sectors (507 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support
+DPO or FUA
+SCSI device sda: 990864 512-byte hdwr sectors (507 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: disabled, read cache: enabled, doesn't support
+DPO or FUA
+ sda:<3>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: port failed to respond (30 secs, Status 0xd0)
+ata1: soft resetting port
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: soft resetting port
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1.00: limiting speed to MWDMA2:PIO3
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: soft resetting port
+ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
+ata1.00: revalidation failed (errno=-5)
+ata1.00: disabled
+ata1: EH complete
+sd 0:0:0:0: SCSI error: return code = 0x00040000
+end_request: I/O error, dev sda, sector 0
 
-Henrik Kretzschmar (1):
-      kerneldoc fix in libata
+Here is the lspci -v for the controller:
 
-Peer Chen (1):
-      PATA: Add the MCP73/77 support to PATA driver
+00:1f.2 IDE interface: Intel Corporation 82801H (ICH8 Family) 4 port SATA
+IDE Controller (rev 02) (prog-if 8f [Master SecP SecO PriP PriO])
+        Subsystem: Intel Corporation 82801H (ICH8 Family) 4 port SATA IDE
+Controller
+        Flags: bus master, 66Mhz, medium devsel, latency 0, IRQ 19
+        I/O ports at fa00 [size=8]
+        I/O ports at f900 [size=4]
+        I/O ports at f800 [size=8]
+        I/O ports at f700 [size=4]
+        I/O ports at f600 [size=16]
+        I/O ports at f500 [size=16]
+        Capabilities: [70] Power Management version 3
 
-Stas Sergeev (1):
-      fix module_param mistake in it821x
+Please let me know if there is any further information I can provide to help
+fix this issue.
 
-Tejun Heo (2):
-      libata: more NONCQ devices
-      ahci: fix PORTS_IMPL override
+Thanks,
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 545f330..ca5229d 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -527,7 +527,7 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 
- 	/* fixup zero port_map */
- 	if (!port_map) {
--		port_map = (1 << ahci_nr_ports(hpriv->cap)) - 1;
-+		port_map = (1 << ahci_nr_ports(cap)) - 1;
- 		dev_printk(KERN_WARNING, &pdev->dev,
- 			   "PORTS_IMPL is zero, forcing 0x%x\n", port_map);
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 047eabd..adfae9d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3659,7 +3659,7 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- 
- /**
-  *	ata_dev_reread_id - Re-read IDENTIFY data
-- *	@adev: target ATA device
-+ *	@dev: target ATA device
-  *	@readid_flags: read ID flags
-  *
-  *	Re-read IDENTIFY page and make sure @dev is still attached to
-@@ -3802,6 +3802,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
- 	/* Drives which do spurious command completion */
- 	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
-+	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
-+	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 
- 	/* Devices with NCQ limits */
- 
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index b439351..a16f629 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -693,6 +693,8 @@ static const struct pci_device_id amd[] = {
- 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	8 },
- 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	8 },
- 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	8 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	8 },
- 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
- 
- 	{ },
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index b3456d7..dab4e7c 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -2,6 +2,7 @@
-  * pata_it821x.c 	- IT821x PATA for new ATA layer
-  *			  (C) 2005 Red Hat Inc
-  *			  Alan Cox <alan@redhat.com>
-+ *			  (C) 2007 Bartlomiej Zolnierkiewicz
-  *
-  * based upon
-  *
-@@ -79,7 +80,7 @@
- 
- 
- #define DRV_NAME "pata_it821x"
--#define DRV_VERSION "0.3.6"
-+#define DRV_VERSION "0.3.7"
- 
- struct it821x_dev
- {
-@@ -460,14 +461,8 @@ static unsigned int it821x_passthru_qc_issue_prot(struct ata_queued_cmd *qc)
- 
- static int it821x_smart_set_mode(struct ata_port *ap, struct ata_device **unused)
- {
--	int dma_enabled = 0;
- 	int i;
- 
--	/* Bits 5 and 6 indicate if DMA is active on master/slave */
--	/* It is possible that BMDMA isn't allocated */
--	if (ap->ioaddr.bmdma_addr)
--		dma_enabled = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
--
- 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
- 		struct ata_device *dev = &ap->device[i];
- 		if (ata_dev_enabled(dev)) {
-@@ -476,7 +471,7 @@ static int it821x_smart_set_mode(struct ata_port *ap, struct ata_device **unused
- 			dev->dma_mode = XFER_MW_DMA_0;
- 			/* We do need the right mode information for DMA or PIO
- 			   and this comes from the current configuration flags */
--			if (dma_enabled & (1 << (5 + i))) {
-+			if (ata_id_has_dma(dev->id)) {
- 				ata_dev_printk(dev, KERN_INFO, "configured for DMA\n");
- 				dev->xfer_mode = XFER_MW_DMA_0;
- 				dev->xfer_shift = ATA_SHIFT_MWDMA;
-@@ -799,7 +794,7 @@ MODULE_VERSION(DRV_VERSION);
- 
- 
- module_param_named(noraid, it8212_noraid, int, S_IRUGO);
--MODULE_PARM_DESC(it8212_noraid, "Force card into bypass mode");
-+MODULE_PARM_DESC(noraid, "Force card into bypass mode");
- 
- module_init(it821x_init);
- module_exit(it821x_exit);
