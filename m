@@ -1,113 +1,71 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: ide/dma not working from 2.6.19 to 2.6.21
-Date: Thu, 21 Jun 2007 17:29:41 +0200 (MEST)
-Message-ID: <200706211529.l5LFTfav005957@harpo.it.uu.se>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/2] 2.6.22-rc5: known regressions v2
+Date: Thu, 21 Jun 2007 18:35:07 +0200
+Message-ID: <467AA8BB.2060305@googlemail.com>
+References: <467AA5D2.3020500@googlemail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:38623 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752937AbXFUP3q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jun 2007 11:29:46 -0400
+Received: from ug-out-1314.google.com ([66.249.92.172]:42263 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757553AbXFUQfq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 12:35:46 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so614274ugf
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jun 2007 09:35:46 -0700 (PDT)
+In-Reply-To: <467AA5D2.3020500@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bahadir.balban@gmail.com, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Rodney Gordon II <meff@spherevision.org>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>, Andi Kleen <ak@suse.de>, discuss@x86-64.org, Ioan Ionita <opslynx@gmail.com>
 
-On Thu, 21 Jun 2007 12:47:30 +0100, "Bahadir Balban" <bahadir.balban@gmail.com> wrote:
-> I have a PCI Promise TX2 Ultra133 controller with a harddisk on an ARM
-> platform (which is a barebone system with no BIOS). This setup used to
-> work with the old linux-ide drivers on 2.6.19 but it does not work
-> with 2.6.22-rc4, or 2.6.21. Here's the error output:
-> 
-> PDC20269: chipset revision 2
-> <6>PDC20269: ROM enabled at 0xa0210000
-> PDC20269: ROM enabled at 0xa0210000
-> PDC20269: PLL input clock is 37736 kHz
-> PDC20269: PLL input clock is 37736 kHz
-> <6>PDC20269: 100% native mode on irq 84
-> PDC20269: 100% native mode on irq 84
-> <7>PCI: Enabling bus mastering for device 0000:07:01.0
-> <6>    ide0: BM-DMA at 0x90050040-0x90050047    ide0: BM-DMA at
-> 0x90050040-0x90050047, BIOS settings
-> : hda:pio, hdb:pio, BIOS settings: hda:pio, hdb:pio
-> 
-> <6>    ide1: BM-DMA at 0x90050048-0x9005004f    ide1: BM-DMA at
-> 0x90050048-0x9005004f, BIOS settings
-> : hdc:pio, hdd:pio, BIOS settings: hdc:pio, hdd:pio
-> 
-> <7>Probing IDE interface ide0...
-> hda: HDS728080PLAT20, hda: HDS728080PLAT20, ATA DISK drive
-> ATA DISK drive
-> <4>Warning: Primary channel requires an 80-pin cable for operation.
-> Warning: Primary channel requires an 80-pin cable for operation.
-> <4>hda reduced to Ultra33 mode.
-> hda reduced to Ultra33 mode.
-> ide0 at 0x90050050-0x90050057,0x90050062 on irq 84ide0 at
-> 0x90050050-0x90050057,0x90050062 on irq 84
-> 
-> <7>Probing IDE interface ide1...
-> <7>Probing IDE interface ide1...
-> <6>hda: max request size: 512KiB
-> hda: max request size: 512KiB
-> <4>hda: lost interrupt
-> hda: lost interrupt
-> <4>hda: lost interrupt
-> hda: lost interrupt
-> <4>hda: lost interrupt
-> hda: lost interrupt
-> <6>hda: 160836480 sectors (82348 MB)hda: 160836480 sectors (82348 MB)
-> w/1719KiB Cache w/1719KiB Cach
-> e, CHS=16383/255/63, CHS=16383/255/63, UDMA(33), UDMA(33)
-> 
-> <4>hda: lost interrupt
-> hda: lost interrupt
-> <6>hda: cache flushes supported
-> hda: cache flushes supported
-> <6> hda: hda:<4>hda: dma_timer_expiry: dma status == 0x21
-> <4>hda: dma_timer_expiry: dma status == 0x21
-> <4>hda: DMA timeout error
-> hda: DMA timeout error
-> hda: dma timeout error: status=0x51 { hda: dma timeout error:
-> status=0x51 { DriveReady DriveReady Se
-> ekComplete SeekComplete Error Error }
-> }
-> hda: dma timeout error: error=0x84 { hda: dma timeout error:
-> error=0x84 { DriveStatusError DriveStat
-> usError BadCRC BadCRC }}
-> 
-> ide: failed opcode was: ide: failed opcode was: unknown
-> unknown
-> <4>hda: lost interrupt
-> hda: lost interrupt
-> 
-> On 2.6.21 I have been using:
-> CONFIG_IDE=y
-> CONFIG_BLK_DEV_IDE=y
-> CONFIG_BLK_DEV_IDEDISK=y
-> CONFIG_BLK_DEV_IDECD=y
-> CONFIG_BLK_DEV_IDEDMA=y
-> CONFIG_BLK_DEV_PDC202XX_NEW=y
-> CONFIG_IDE_GENERIC=y
-> CONFIG_BLK_DEV_IDEPCI=y
-> CONFIG_IDEPCI_SHARE_IRQ=y
-> CONFIG_BLK_DEV_OFFBOARD=y
-> CONFIG_BLK_DEV_GENERIC=y
-> CONFIG_BLK_DEV_IDEDMA_PCI=y
-> 
-> On 2.6.19 I have exactly the same but also:
-> 
-> CONFIG_IDEDMA_PCI_AUTO=y
-> CONFIG_IDEDMA_AUTO=y
-> 
-> Could this have caused a problem?
-> 
-> Does IDE support in linux depend on certain BIOS settings or any other
-> motherboard specific details? I am asking because neither the new ata
-> nor the old ide layer worked for the cards I tried on ARM (JMB363,
-> IT8212, Promise TX2 133 -> worked only with 2.6.19 old ide layer).
+Hi all,
 
-Try kernel 2.6.21 or newer and the libata driver for this card
-instead (pata_pdc2027x). I'm using that in a PowerMac whose
-firmware doesn't initialise the card at boot, and it works for me.
+Here is a list of some known regressions in 2.6.22-rc5.
 
-What kind of ARM board is this?
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-/Mikael
+(BTW. There is a new category called "Will be fixed in 2.6.23")
+
+
+
+SATA/PATA
+
+Subject    : libata IT821X driver still fails! Hard-freezes system
+References : http://lkml.org/lkml/2007/6/14/82
+Submitter  : Rodney Gordon II <meff@spherevision.org>
+Status     : unknown
+
+
+
+Sparc64
+
+Subject    : random invalid instruction occourances on sparc32 (sun4c)
+References : http://lkml.org/lkml/2007/6/17/111
+Submitter  : Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Status     : problem is being debugged
+
+Subject    : 2.6.22-rc broke X on Ultra5
+References : http://lkml.org/lkml/2007/5/22/78
+Submitter  : Mikael Pettersson <mikpe@it.uu.se>
+Handled-By : David Miller <davem@davemloft.net>
+Status     : problem is being debugged
+
+
+
+x86-64
+
+Subject    : x86-64 2.6.22-rc2 random segfaults
+References : http://lkml.org/lkml/2007/5/24/275
+Submitter  : Ioan Ionita <opslynx@gmail.com>
+Status     : Unknown
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
