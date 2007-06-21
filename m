@@ -1,42 +1,99 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 126X DVD drive? (odd ide-cd output)
-Date: Thu, 21 Jun 2007 14:38:32 +0200
-Message-ID: <20070621123831.GM18863@kernel.dk>
-References: <Pine.LNX.4.64.0706202155440.1605@lancer.cnet.absolutedigital.net>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI  controllers.
+Date: Thu, 21 Jun 2007 15:08:32 +0200
+Message-ID: <20070621130831.GN18863@kernel.dk>
+References: <20070611184146.448266229@intel.com> <20070620142342.404856fe.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:8063 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:29144 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753499AbXFUMjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jun 2007 08:39:22 -0400
+	id S1750950AbXFUNJX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jun 2007 09:09:23 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0706202155440.1605@lancer.cnet.absolutedigital.net>
+In-Reply-To: <20070620142342.404856fe.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Cal Peake <cp@absolutedigital.net>
-Cc: Kernel IDE Mailing List <linux-ide@vger.kernel.org>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
-On Wed, Jun 20 2007, Cal Peake wrote:
-> Hello,
+On Wed, Jun 20 2007, Kristen Carlson Accardi wrote:
+> Enable Aggressive Link Power management for AHCI controllers.
 > 
-> It seems if I boot with a disc in the drive (in this case a dual fs 
-> ISO-9660/UDF DVD-R) the drive speed gets reported incorrectly:
+> This patch will set the correct bits to turn on Aggressive
+> Link Power Management (ALPM) for the ahci driver.  This
+> will cause the controller and disk to negotiate a lower
+> power state for the link when there is no activity (see
+> the AHCI 1.x spec for details).  This feature is mutually
+> exclusive with Hot Plug, so when ALPM is enabled, Hot Plug
+> is disabled.  ALPM will be enabled by default, but it is
+> settable via the scsi host syfs interface.  Possible 
+> settings for this feature are:
 > 
-> hdc: DVDRW DRW-6S160P, ATAPI CD/DVD-ROM drive
-> hdc: ATAPI 126X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
+> Setting		Effect
+> ----------------------------------------------------------
+> min_power	ALPM is enabled, and link set to enter 
+> 		lowest power state (SLUMBER) when idle
+> 		Hot plug not allowed.
 > 
-> normal output (w/ no disc) is:
+> max_performance	ALPM is disabled, Hot Plug is allowed
 > 
-> hdc: DVDRW DRW-6S160P, ATAPI CD/DVD-ROM drive
-> hdc: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
+> medium_power	ALPM is enabled, and link set to enter
+> 		second lowest power state (PARTIAL) when
+> 		idle.  Hot plug not allowed.
 > 
-> Kernel is 2.6.22-rc5-gf1518a08.
-> 
-> Harmless, but odd...
+> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Sounds like a firmware bug. From a drive with a 'DVDRW' vendor string,
-that's not highly surprising :-)
+A suggestion (it comes with a patch!) - default to max_power/almp off,
+not min_power. For two reasons:
+
+- There's such a big performance difference between the two, you really
+  want max_power when booting.
+
+- It's a lot better to default to no change, than default to enabling
+  something new.
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 841cf0a..e7a2072 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -786,8 +786,7 @@ static int ahci_disable_alpm(struct ata_port *ap)
+ 	return 0;
+ }
+ 
+-static int ahci_enable_alpm(struct ata_port *ap,
+-	enum scsi_host_link_pm policy)
++static int ahci_enable_alpm(struct ata_port *ap, enum scsi_host_link_pm policy)
+ {
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+@@ -808,19 +807,19 @@ static int ahci_enable_alpm(struct ata_port *ap,
+ 		return -EINVAL;
+ 	}
+ 
+-	switch(policy) {
++	switch (policy) {
+ 	case SHOST_MAX_PERFORMANCE:
+-		ahci_disable_alpm(ap);
+-		ap->pm_policy = policy;
+-		return 0;
+ 	case SHOST_NOT_AVAILABLE:
+-	case SHOST_MIN_POWER:
+ 		/*
+  		 * if we came here with SHOST_NOT_AVAILABLE,
+  		 * it just means this is the first time we
+- 		 * have tried to enable - so try to do
+- 		 * min_power
++ 		 * have tried to enable - default to max performance,
++		 * and let the user go to lower power modes on request.
+  		 */
++		ahci_disable_alpm(ap);
++		ap->pm_policy = SHOST_MAX_PERFORMANCE;
++		return 0;
++	case SHOST_MIN_POWER:
+ 		ap->pm_policy = SHOST_MIN_POWER;
+ 
+ 		/* configure HBA to enter SLUMBER */
 
 -- 
 Jens Axboe
