@@ -1,118 +1,43 @@
-From: "Bahadir Balban" <bahadir.balban@gmail.com>
-Subject: ide/dma not working from 2.6.19 to 2.6.21
-Date: Thu, 21 Jun 2007 12:47:30 +0100
-Message-ID: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 126X DVD drive? (odd ide-cd output)
+Date: Thu, 21 Jun 2007 14:38:32 +0200
+Message-ID: <20070621123831.GM18863@kernel.dk>
+References: <Pine.LNX.4.64.0706202155440.1605@lancer.cnet.absolutedigital.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:1075 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbXFULrx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 07:47:53 -0400
-Received: by py-out-1112.google.com with SMTP id a29so912901pyi
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jun 2007 04:47:40 -0700 (PDT)
+Received: from brick.kernel.dk ([80.160.20.94]:8063 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753499AbXFUMjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jun 2007 08:39:22 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0706202155440.1605@lancer.cnet.absolutedigital.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Cal Peake <cp@absolutedigital.net>
+Cc: Kernel IDE Mailing List <linux-ide@vger.kernel.org>
 
-Hi,
+On Wed, Jun 20 2007, Cal Peake wrote:
+> Hello,
+> 
+> It seems if I boot with a disc in the drive (in this case a dual fs 
+> ISO-9660/UDF DVD-R) the drive speed gets reported incorrectly:
+> 
+> hdc: DVDRW DRW-6S160P, ATAPI CD/DVD-ROM drive
+> hdc: ATAPI 126X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
+> 
+> normal output (w/ no disc) is:
+> 
+> hdc: DVDRW DRW-6S160P, ATAPI CD/DVD-ROM drive
+> hdc: ATAPI 48X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(66)
+> 
+> Kernel is 2.6.22-rc5-gf1518a08.
+> 
+> Harmless, but odd...
 
-I have a PCI Promise TX2 Ultra133 controller with a harddisk on an ARM
-platform (which is a barebone system with no BIOS). This setup used to
-work with the old linux-ide drivers on 2.6.19 but it does not work
-with 2.6.22-rc4, or 2.6.21. Here's the error output:
+Sounds like a firmware bug. From a drive with a 'DVDRW' vendor string,
+that's not highly surprising :-)
 
-PDC20269: chipset revision 2
-<6>PDC20269: ROM enabled at 0xa0210000
-PDC20269: ROM enabled at 0xa0210000
-PDC20269: PLL input clock is 37736 kHz
-PDC20269: PLL input clock is 37736 kHz
-<6>PDC20269: 100% native mode on irq 84
-PDC20269: 100% native mode on irq 84
-<7>PCI: Enabling bus mastering for device 0000:07:01.0
-<6>    ide0: BM-DMA at 0x90050040-0x90050047    ide0: BM-DMA at
-0x90050040-0x90050047, BIOS settings
-: hda:pio, hdb:pio, BIOS settings: hda:pio, hdb:pio
+-- 
+Jens Axboe
 
-<6>    ide1: BM-DMA at 0x90050048-0x9005004f    ide1: BM-DMA at
-0x90050048-0x9005004f, BIOS settings
-: hdc:pio, hdd:pio, BIOS settings: hdc:pio, hdd:pio
-
-<7>Probing IDE interface ide0...
-hda: HDS728080PLAT20, hda: HDS728080PLAT20, ATA DISK drive
-ATA DISK drive
-<4>Warning: Primary channel requires an 80-pin cable for operation.
-Warning: Primary channel requires an 80-pin cable for operation.
-<4>hda reduced to Ultra33 mode.
-hda reduced to Ultra33 mode.
-ide0 at 0x90050050-0x90050057,0x90050062 on irq 84ide0 at
-0x90050050-0x90050057,0x90050062 on irq 84
-
-<7>Probing IDE interface ide1...
-<7>Probing IDE interface ide1...
-<6>hda: max request size: 512KiB
-hda: max request size: 512KiB
-<4>hda: lost interrupt
-hda: lost interrupt
-<4>hda: lost interrupt
-hda: lost interrupt
-<4>hda: lost interrupt
-hda: lost interrupt
-<6>hda: 160836480 sectors (82348 MB)hda: 160836480 sectors (82348 MB)
-w/1719KiB Cache w/1719KiB Cach
-e, CHS=16383/255/63, CHS=16383/255/63, UDMA(33), UDMA(33)
-
-<4>hda: lost interrupt
-hda: lost interrupt
-<6>hda: cache flushes supported
-hda: cache flushes supported
-<6> hda: hda:<4>hda: dma_timer_expiry: dma status == 0x21
-<4>hda: dma_timer_expiry: dma status == 0x21
-<4>hda: DMA timeout error
-hda: DMA timeout error
-hda: dma timeout error: status=0x51 { hda: dma timeout error:
-status=0x51 { DriveReady DriveReady Se
-ekComplete SeekComplete Error Error }
-}
-hda: dma timeout error: error=0x84 { hda: dma timeout error:
-error=0x84 { DriveStatusError DriveStat
-usError BadCRC BadCRC }}
-
-ide: failed opcode was: ide: failed opcode was: unknown
-unknown
-<4>hda: lost interrupt
-hda: lost interrupt
-
-On 2.6.21 I have been using:
-CONFIG_IDE=y
-CONFIG_BLK_DEV_IDE=y
-CONFIG_BLK_DEV_IDEDISK=y
-CONFIG_BLK_DEV_IDECD=y
-CONFIG_BLK_DEV_IDEDMA=y
-CONFIG_BLK_DEV_PDC202XX_NEW=y
-CONFIG_IDE_GENERIC=y
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-CONFIG_BLK_DEV_OFFBOARD=y
-CONFIG_BLK_DEV_GENERIC=y
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-
-On 2.6.19 I have exactly the same but also:
-
-CONFIG_IDEDMA_PCI_AUTO=y
-CONFIG_IDEDMA_AUTO=y
-
-Could this have caused a problem?
-
-Does IDE support in linux depend on certain BIOS settings or any other
-motherboard specific details? I am asking because neither the new ata
-nor the old ide layer worked for the cards I tried on ARM (JMB363,
-IT8212, Promise TX2 133 -> worked only with 2.6.19 old ide layer).
-
-Finally is there a simplest, known-to-work pci ide controller you can
-suggest? So that I can start looking from there.
-
-Thank you,
-Bahadir
