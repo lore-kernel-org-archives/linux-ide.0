@@ -1,48 +1,74 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 19/19] ide: use PIO/MMIO operations directly where possible
-Date: Thu, 21 Jun 2007 21:16:03 +0400
-Message-ID: <467AB253.8010902@ru.mvista.com>
-References: <20070112042621.28794.6937.sendpatchset@localhost.localdomain> <20070112042807.28794.8251.sendpatchset@localhost.localdomain>
+Subject: [RFT] hpt366: reset DMA state machine on timeouts
+Date: Thu, 21 Jun 2007 21:54:47 +0400
+Message-ID: <200706212154.47398.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:64327 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:64531 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754737AbXFUROW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jun 2007 13:14:22 -0400
-In-Reply-To: <20070112042807.28794.8251.sendpatchset@localhost.localdomain>
+	id S1756669AbXFURxG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jun 2007 13:53:06 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linas@austin.ibm.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Reset HPT36x's DMA state machine on a DMA timeout the way it's done for HPT370.
 
-Bartlomiej Zolnierkiewicz wrote:
-> [PATCH] ide: use PIO/MMIO operations directly where possible
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-> This results in smaller/faster/simpler code and allows future optimizations.
-> Also remove no longer needed ide[_mm]_{inl,outl}() and ide_hwif_t.{INL,OUTL}.
+---
+Linas, here's what I've come up with -- this should apply against 2.6.21.y.
+Compile-tested only, not for merging.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ drivers/ide/pci/hpt366.c |   24 +++++++++++++++++++++++-
+ 1 files changed, 23 insertions(+), 1 deletion(-)
 
-> Index: a/drivers/ide/pci/hpt366.c
-> ===================================================================
-> --- a.orig/drivers/ide/pci/hpt366.c
-> +++ a/drivers/ide/pci/hpt366.c
-> @@ -836,7 +836,7 @@ static int hpt374_ide_dma_test_irq(ide_d
->  		return 0;
->  	}
->  
-> -	dma_stat = hwif->INB(hwif->dma_status);
-> +	dma_stat = inb(hwif->dma_status);
->  	/* return 1 if INTR asserted */
->  	if (dma_stat & 4)
->  		return 1;
-
-    Hmm... this driver *still* has a lot more indirect I/O accessors -- I 
-wonder why only this one had been converted then?
-
-MBR, Sergei
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -752,6 +752,26 @@ static int hpt366_config_drive_xfer_rate
+  * This is specific to the HPT366 UDMA chipset
+  * by HighPoint|Triones Technologies, Inc.
+  */
++static int hpt366_ide_dma_timeout(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct pci_dev *dev	= hwif->pci_dev;
++	u8 mcr1 = 0, mcr2	= 0;
++	u8 dma_cmd		= inb(hwif->dma_command);
++
++	/* Stop DMA */
++	outb(dma_cmd & ~0x01, hwif->dma_command);
++
++	/* Clear bus master state machine and S/G counter */
++	pci_read_config_byte (dev, 0x51, &mcr2);
++	pci_write_config_byte(dev, 0x51, (mcr2 | 0x03));
++	/* Clear buffers 0/1 */
++	pci_read_config_byte (dev, 0x50, &mcr1);
++	pci_write_config_byte(dev, 0x50, (mcr1 | 0x0c));
++
++	return __ide_dma_timeout(drive);
++}
++
+ static int hpt366_ide_dma_lostirq(ide_drive_t *drive)
+ {
+ 	struct pci_dev *dev = HWIF(drive)->pci_dev;
+@@ -1368,8 +1388,10 @@ static void __devinit init_hwif_hpt366(i
+ 		hwif->dma_start 	= &hpt370_ide_dma_start;
+ 		hwif->ide_dma_end	= &hpt370_ide_dma_end;
+ 		hwif->ide_dma_timeout	= &hpt370_ide_dma_timeout;
+-	} else
++	} else {
++		hwif->ide_dma_timeout	= &hpt366_ide_dma_timeout;
+ 		hwif->ide_dma_lostirq	= &hpt366_ide_dma_lostirq;
++	}
+ 
+ 	if (!noautodma)
+ 		hwif->autodma = 1;
 
