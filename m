@@ -1,81 +1,59 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [RFT] hpt366: reset DMA state machine on timeouts
-Date: Fri, 22 Jun 2007 11:36:47 -0500
-Message-ID: <20070622163646.GG8840@austin.ibm.com>
-References: <200706212154.47398.sshtylyov@ru.mvista.com> <20070622151359.GD8840@austin.ibm.com> <467BEB9C.1070407@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: Add pata_dma option so users can disable pata_dma
+ as they can with old-ide
+Date: Fri, 22 Jun 2007 12:53:03 -0400
+Message-ID: <467BFE6F.7050300@rtr.ca>
+References: <20070622144939.026ed6ac@the-village.bc.nu>	<467BE435.5000001@rtr.ca> <20070622165221.2ce648f6@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:57334 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757416AbXFVQgs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 12:36:48 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l5MGVwin004530
-	for <linux-ide@vger.kernel.org>; Fri, 22 Jun 2007 12:31:58 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5MGalq5268058
-	for <linux-ide@vger.kernel.org>; Fri, 22 Jun 2007 10:36:47 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5MGalDL001121
-	for <linux-ide@vger.kernel.org>; Fri, 22 Jun 2007 10:36:47 -0600
-Content-Disposition: inline
-In-Reply-To: <467BEB9C.1070407@ru.mvista.com>
+Received: from rtr.ca ([64.26.128.89]:4106 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676AbXFVQxH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jun 2007 12:53:07 -0400
+In-Reply-To: <20070622165221.2ce648f6@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, davej@redhat.com, linux-ide@vger.kernel.org
 
-On Fri, Jun 22, 2007 at 07:32:44PM +0400, Sergei Shtylyov wrote:
+Alan Cox wrote:
+> On Fri, 22 Jun 2007 11:01:09 -0400
+> Mark Lord <liml@rtr.ca> wrote:
 > 
-> >>Reset HPT36x's DMA state machine on a DMA timeout the way it's done for 
-> >>HPT370.
-> >>drivers/ide/pci/hpt366.c |   24 +++++++++++++++++++++++-
+>> Alan Cox wrote:
+>>> Allow
+>>>
+>>> 	libata.pata_dma=0
+>>>
+>>> to disable DMA (default is 1)
+>>>
+>>> SATA is unaffected as disabling DMA for SATA makes no sense at all.
+>>>
+>>> Signed-off-by: Alan Cox <alan@redhat.com>
+>> Alan,
+>>
+>> Should we really be piling up like this on global boot/module options
+>> rather than run-time flags on individual channels/devices ?
+>>
+>> I can imagine systems with internal notebook drives that want dma=1,
+>> plus Cardbus CF devices that require dma=0.
+>>
+>> With a single global flag, how does one do that?
 > 
-> >This worked great!  
->
->    I hope you meant those messages were preceeded by DMA timeouts 
->    (otherwise this code wouldn't come into action).
+> We need proper tuning as well but there is huge value (with distro hat
+> on especially) in a single "try this to get it installed and then we can
+> debug it" button. Same with the old IDE. Trying to guide users through
+> selecting specific channels/devices is going to be painful. I want
+> something that I can tell people to get them 'off the ground' and work
+> with them to sort the rest.
 
-Oops, I was wrong ... 
+Oh for sure.  I'm just thinking that some form of on-the-fly tunable
+would be of even greater value here, in addition to the boot/load default flag.
 
-Scads of 
-Jun 21 20:22:30 localhost kernel: [  434.574301] hdc: task_out_intr:
-status=0x50 { DriveReady SeekComplete }
-Jun 21 20:22:30 localhost kernel: [  434.574318] ide: failed opcode was:
-unknown
+I think a /sys/ "dma" attribute (pick a name) might be most appropriate,
+or we just just implement HDIO_[GS]ET_DMA as a simpler/lazier mechanism.
 
-> >from it (I put in a printk to verify this).
-> 
->    You mean into my ide_dma_timeout() method?
+Cheers
 
-Ooops, I lied. I have so many printk's in there, that I got confused.
-No, in fact, it looks like I did NOT see your handler run. 
-
-Per Alan Cox, I have to go back and see if dropping the
-UDMA speeds and/or replacing the cable will help.
-
->    What's strange is that it never seemed to be necessary before your great 
-> new drive... ;-)
-
-At $70 for 320GB, how can one say "no"?  Frye's had a mound of them,
-shoulder-high.
-
- MAXTOR STM3320620A
-
->    So, providing its data certainly wouldn't hurt -- perhaps we just should 
-> blacklist it instead -- maybe there's a UDMA speed at which this wouldn't 
-> happen, and we could just limit the drive to it.
-
-I'll experiment with the UDMA settings.
-
->    In fact, it should be turned off after 3 DMA errors (causing PIO 
->    retries).
-
-I'd like to see this turned into a rate. If the system gets one error
-a month, and has been up for 3 months, the third error should not shut
-things down. The room that this is in is hot; the machine might be
-occasionally bumped. A low error rate is acceptable; its more acceptable
-than a mysterious slow-down of performance after 3 months. 
-
---linas
