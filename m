@@ -1,42 +1,77 @@
-From: William Thompson <wt@electro-mechanical.com>
-Subject: Error in syslog on 2.6.20
-Date: Fri, 22 Jun 2007 14:40:18 -0400
-Message-ID: <20070622184018.GA20301@electro-mechanical.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: SATA update in 2.4, ICH8
+Date: Fri, 22 Jun 2007 21:13:44 +0200
+Message-ID: <20070622191344.GB3629@1wt.eu>
+References: <87y7idiwjd.fsf@naruto.ifr.lan> <20070621182119.GB26637@1wt.eu> <87myysfqo4.fsf@naruto.ifr.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760905AbXFVTFY@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 1wt.eu ([62.212.114.60]:3085 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750755AbXFVTNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jun 2007 15:13:52 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <87myysfqo4.fsf@naruto.ifr.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Vincent Bernat <Vincent.Bernat@wallix.com>
+Cc: linux-ide@vger.kernel.org, JF Taltavull <jean-francois.taltavull@wallix.com>, Jeff Garzik <jeff@garzik.org>
 
-I'm not on either list, keep me in CC.
+On Fri, Jun 22, 2007 at 08:29:15AM +0200, Vincent Bernat wrote:
+> Hi Willy !
+> 
+> > I do not have any idea right now. I recall having had some difficulties some
+> > time ago with ata_piix when piix itself was not disabled, but those were in
+> > the early libata times. I *believe*  it's OK now but you might want to
+> > check.
+> 
+> I will try to compile a kernel without piix enabled and keep you in touch.
 
-I noticed the following error on a cdrom device:
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
-         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata2: soft resetting port
-ata2.00: configured for MWDMA2
-ata2: EH complete
+OK, I've read your other mail, it does not work either.
 
-This is the device when it was found:
-libata version 2.00 loaded.
-ata_piix 0000:00:1f.1: version 2.00ac7
-ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
-ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
-scsi0 : ata_piix
-ata1.00: ATA-4, max UDMA/66, 16514064 sectors: LBA
-ata1.00: ata1: dev 0 multi count 8
-ata1.00: configured for UDMA/66
-scsi1 : ata_piix
-ata2.00: ATAPI, max MWDMA2
-ata2.00: configured for MWDMA2
-scsi 0:0:0:0: Direct-Access     ATA      WDC WD84AA       05.0 PQ: 0 ANSI: 5
-scsi 1:0:0:0: CD-ROM            LITEON   CD-ROM LTN486S   YQSM PQ: 0 ANSI: 5
+> > Also, is your CDROM driver parallel ATA or SATA ? It is not clear to me from
+> > your logs. Because if it is ATA, you should need to run with piix enabled just
+> > for it,  and, if my memory  serves me correctly, to  start piix before
+> > ata_piix.
+> 
+> This is a SATA CDROM. There is no PATA controller on the motherboard.
 
-I have a program that does a scsi TEST UNIT READY on many devices once every
-.1 second.  The problem occured when I ejected the cdrom and closed the tray
-again with valid media in the drive.  My program noticed media removed and
-inserted, then said the device was dead/unpollable.  This is when I saw this
-error.
+I've never tested any SATA CDROM yet. I don't even know if they work with
+2.4 libata. So most likely you have more experience than me in this area.
+If you have any other SATA controller on another machine on which you would
+test the drive, it could help up determine whether it's the CDROM which is
+causing the trouble or this specific controller+driver combination.
+
+> > BTW, what motherboard is it ?
+> 
+> It is a Dell OptiPlex 745.
+
+OK, so it's a desktop. Not that this is an excuse for it not to work, but it
+generally is less of a problem to upgrade to 2.6 when changing a desktop than
+it is on a server with all the applications that run on it.
+
+> > And provided that the CDROM drive finally works,
+> > or that we find a valid reason for it not to work, are you implicitly asking
+> > for mainline inclusion of your patch (or a fixed one) or is it here just for
+> > explanation purposes ?
+> 
+> If ICH8 can work with a 2.4  with just this tiny patch, yes, it could be
+> included into mainline.
+
+OK. At least I would wait for the reason of the failure to be either fixed
+or known.
+
+> In this case, we may want to  add more ICH8 PCI
+> ID (I have only included the ones that appear in lspci for me).
+
+I would prefer that we merge only things which we can test, in order to avoid
+painful experiences to people who trust the 2.4 branch. The 2.4 scope is not
+to support everything people have, but to reliably support what people
+absolutely need. On a scale of acceptability, I would say that new notebook
+drivers are unlikely to be merged, desktop drivers may still be merged provided
+they are trivial, and that server drivers will be merged if they are required
+to support unexpected hardware replacement.
+
+Regards,
+Willy
+
