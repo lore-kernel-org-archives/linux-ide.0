@@ -1,36 +1,28 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [RFC: 2.6 patch] schedule BLK_DEV_IDE_SATA for removal
-Date: Fri, 22 Jun 2007 01:52:11 +0200
-Message-ID: <20070621235211.GH23017@stusta.de>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [RFC: 2.6 patch] schedule BLK_DEV_IDE_SATA for removal
+Date: Fri, 22 Jun 2007 11:39:45 +0800
+Message-ID: <1182483586.10524.33.camel@shinybook.infradead.org>
+References: <20070621235211.GH23017@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:35914 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755133AbXFUXvw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 19:51:52 -0400
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:49649 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbXFVDjT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jun 2007 23:39:19 -0400
+In-Reply-To: <20070621235211.GH23017@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Users should use the libata based drivers for SATA drives.
+On Fri, 2007-06-22 at 01:52 +0200, Adrian Bunk wrote:
+> Users should use the libata based drivers for SATA drives.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+NAK. Not all IDE drivers are converted yet. Not even all the relatively
+common ones.
 
----
---- linux-2.6.22-rc4-mm2/Documentation/feature-removal-schedule.txt.old	2007-06-21 23:41:03.000000000 +0200
-+++ linux-2.6.22-rc4-mm2/Documentation/feature-removal-schedule.txt	2007-06-21 23:42:03.000000000 +0200
-@@ -347,3 +347,10 @@
- Who:	Jean Delvare <khali@linux-fr.org>
- 
- ---------------------------
-+
-+What:  CONFIG_BLK_DEV_IDE_SATA
-+When:  December 2007
-+Why:   users should use the libata based drivers for SATA
-+Who:   Adrian Bunk <bunk@stusta.de>
-+
-+---------------------------
+-- 
+dwmw2
 
