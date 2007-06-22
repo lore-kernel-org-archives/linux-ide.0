@@ -1,40 +1,59 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: Stop mapping ROMs
-Date: Fri, 22 Jun 2007 17:59:21 +0400
-Message-ID: <467BD5B9.3080307@ru.mvista.com>
-References: <20070622142252.2ec0d148@the-village.bc.nu>
+Subject: Re: SATA: Is "DPO and FUA" ever supported?
+Date: Fri, 22 Jun 2007 18:15:08 +0400
+Message-ID: <467BD96C.4090005@ru.mvista.com>
+References: <467A7D5A.9070009@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:8233 "EHLO imap.sh.mvista.com"
+Received: from homer.mvista.com ([63.81.120.155]:8426 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754763AbXFVN5k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2007 09:57:40 -0400
-In-Reply-To: <20070622142252.2ec0d148@the-village.bc.nu>
+	id S1753816AbXFVON0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jun 2007 10:13:26 -0400
+In-Reply-To: <467A7D5A.9070009@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-ide@vger.kernel.org
 
 Hello.
 
-Alan Cox wrote:
+Michael Tokarev wrote:
 
-> Various old IDE drivers go mapping ROM devices for no apparent reason and
-> without using the ROM mapping API we now have. They don't actually use
+> On each and every machine out there, and on every dmesg
+> output posted on numerous mailinglists, I see messages
+> similar to this:
 
-    Hm, do you mean the sysfs based aproach? I've tried that and somehow it 
-failed to work for me -- that's because I deferred removing this stuff from 
-the drivers.
+> scsi 0:0:0:0: Direct-Access     ATA      ST3250620NS      3.AE PQ: 0 ANSI: 5
+> SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
+> SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
-> the ROM they map and the new libata drivers are happy without it being
+> for SATA disk drives.  And I wonder -- are those features
+> supported at all by linux, and/or are there disk drives
+> out there which supports it as well?
 
-    I guess ROMs used to be mappen just for dumping BIOSes...
+    Don't know, the bits have just quite recently been included into ATA spec, 
+IIRC...
 
-> mapped so rather than port them lets just junk it for the next -rc1.
+> For my Seagate ST3250620NS SATA drive (it's a "server" drive,
+> whatever it means), I can see -- at least --
 
-    I'd agree to the patch -- the drivers were mapping ROMs in a bad way, 
-often using the default addresses.
+>            *    Mandatory FLUSH_CACHE
+>            *    FLUSH_CACHE_EXT
+
+> reported by hdparm -I.  I wonder what "FLUSH CACHE EXT" means,
+
+    It reports LBA48 of a failing sector while FLUSH CACHE can only report LBA28.
+
+> and whenever it can be used to support DPO and/or FUA...
+
+    DPO and FUA bits are a part of SCSI CDB and so only affect the block range 
+specified by the command in question while FLUSH CACHE [EXT] operates on the 
+whole cache -- so, it's not equivalent.
+
+> Thanks.
+> 
+> /mjt
 
 MBR, Sergei
