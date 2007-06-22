@@ -1,74 +1,42 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
-	controllers.
-Date: Fri, 22 Jun 2007 21:00:00 +0200
-Message-ID: <20070622190000.GK30033@kernel.dk>
-References: <20070611184146.448266229@intel.com> <20070620142342.404856fe.kristen.c.accardi@intel.com> <20070621130831.GN18863@kernel.dk> <20070622101509.16d0e93d.kristen.c.accardi@intel.com>
+From: William Thompson <wt@electro-mechanical.com>
+Subject: Error in syslog on 2.6.20
+Date: Fri, 22 Jun 2007 14:40:18 -0400
+Message-ID: <20070622184018.GA20301@electro-mechanical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:28320 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760089AbXFVTAp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2007 15:00:45 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760905AbXFVTFY@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070622101509.16d0e93d.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
-On Fri, Jun 22 2007, Kristen Carlson Accardi wrote:
-> On Thu, 21 Jun 2007 15:08:32 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
-> 
-> > On Wed, Jun 20 2007, Kristen Carlson Accardi wrote:
-> > > Enable Aggressive Link Power management for AHCI controllers.
-> > > 
-> > > This patch will set the correct bits to turn on Aggressive
-> > > Link Power Management (ALPM) for the ahci driver.  This
-> > > will cause the controller and disk to negotiate a lower
-> > > power state for the link when there is no activity (see
-> > > the AHCI 1.x spec for details).  This feature is mutually
-> > > exclusive with Hot Plug, so when ALPM is enabled, Hot Plug
-> > > is disabled.  ALPM will be enabled by default, but it is
-> > > settable via the scsi host syfs interface.  Possible 
-> > > settings for this feature are:
-> > > 
-> > > Setting		Effect
-> > > ----------------------------------------------------------
-> > > min_power	ALPM is enabled, and link set to enter 
-> > > 		lowest power state (SLUMBER) when idle
-> > > 		Hot plug not allowed.
-> > > 
-> > > max_performance	ALPM is disabled, Hot Plug is allowed
-> > > 
-> > > medium_power	ALPM is enabled, and link set to enter
-> > > 		second lowest power state (PARTIAL) when
-> > > 		idle.  Hot plug not allowed.
-> > > 
-> > > Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> > 
-> > A suggestion (it comes with a patch!) - default to max_power/almp off,
-> > not min_power. For two reasons:
-> > 
-> > - There's such a big performance difference between the two, you really
-> >   want max_power when booting.
-> > 
-> > - It's a lot better to default to no change, than default to enabling
-> >   something new.
-> 
-> Sounds reasonable to me.  Distros/users can decide if they want to have
-> scripts that enable this after boot to run at min_power. 
+I'm not on either list, keep me in CC.
 
-Exactly, it needs to be handled by some power management daemon anyway
-and be integrated with power savings in general. You could use io load
-to determine when to enable/disable alpm, for instance.
+I noticed the following error on a cdrom device:
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata2: soft resetting port
+ata2.00: configured for MWDMA2
+ata2: EH complete
 
-> Acked-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+This is the device when it was found:
+libata version 2.00 loaded.
+ata_piix 0000:00:1f.1: version 2.00ac7
+ata1: PATA max UDMA/100 cmd 0x1F0 ctl 0x3F6 bmdma 0xFFA0 irq 14
+ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xFFA8 irq 15
+scsi0 : ata_piix
+ata1.00: ATA-4, max UDMA/66, 16514064 sectors: LBA
+ata1.00: ata1: dev 0 multi count 8
+ata1.00: configured for UDMA/66
+scsi1 : ata_piix
+ata2.00: ATAPI, max MWDMA2
+ata2.00: configured for MWDMA2
+scsi 0:0:0:0: Direct-Access     ATA      WDC WD84AA       05.0 PQ: 0 ANSI: 5
+scsi 1:0:0:0: CD-ROM            LITEON   CD-ROM LTN486S   YQSM PQ: 0 ANSI: 5
 
-Will you integrate it into the next posting?
-
--- 
-Jens Axboe
-
+I have a program that does a scsi TEST UNIT READY on many devices once every
+.1 second.  The problem occured when I ejected the cdrom and closed the tray
+again with valid media in the drive.  My program noticed media removed and
+inserted, then said the device was dead/unpollable.  This is when I saw this
+error.
