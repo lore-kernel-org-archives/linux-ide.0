@@ -1,65 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Add pata_dma option so users can disable
- pata_dma as they can with old-ide
-Date: Fri, 22 Jun 2007 16:52:21 +0100
-Message-ID: <20070622165221.2ce648f6@the-village.bc.nu>
-References: <20070622144939.026ed6ac@the-village.bc.nu>
-	<467BE435.5000001@rtr.ca>
+Subject: Re: [RFT] hpt366: reset DMA state machine on timeouts
+Date: Fri, 22 Jun 2007 16:54:31 +0100
+Message-ID: <20070622165431.3b4997f7@the-village.bc.nu>
+References: <200706212154.47398.sshtylyov@ru.mvista.com>
+	<20070622151359.GD8840@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58106 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50569 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757578AbXFVPqs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 11:46:48 -0400
-In-Reply-To: <467BE435.5000001@rtr.ca>
+	with ESMTP id S1757266AbXFVPtm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 11:49:42 -0400
+In-Reply-To: <20070622151359.GD8840@austin.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jeff@garzik.org, davej@redhat.com, linux-ide@vger.kernel.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-On Fri, 22 Jun 2007 11:01:09 -0400
-Mark Lord <liml@rtr.ca> wrote:
+>    I'm not sure what to do if this had been the only disk in the system.
+>    Maybe if the eror reate exceed 100/minute, then dma is turned off 
+>    permanently?
 
-> Alan Cox wrote:
-> > Allow
-> > 
-> > 	libata.pata_dma=0
-> > 
-> > to disable DMA (default is 1)
-> > 
-> > SATA is unaffected as disabling DMA for SATA makes no sense at all.
-> > 
-> > Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> Alan,
-> 
-> Should we really be piling up like this on global boot/module options
-> rather than run-time flags on individual channels/devices ?
-> 
-> I can imagine systems with internal notebook drives that want dma=1,
-> plus Cardbus CF devices that require dma=0.
-> 
-> With a single global flag, how does one do that?
+Turn off UDMA and you turn off cable side error protection, so if your
+error is caused by noise you just did the electronic version of a long
+walk off a short pier.
 
-We need proper tuning as well but there is huge value (with distro hat
-on especially) in a single "try this to get it installed and then we can
-debug it" button. Same with the old IDE. Trying to guide users through
-selecting specific channels/devices is going to be painful. I want
-something that I can tell people to get them 'off the ground' and work
-with them to sort the rest.
+Degradation policies for IDE are tricky things.
 
-One possibility I did consider was it being a set of bit flags
-
-Default 0x7
-
-0x01		- Disk DMA
-0x02		- CF DMA
-0x04		- ATAPI DMA
-
-then you'd tell folks "try 0" and "try 1" to get them up and going and
-most would be blissfully unaware of the details of bitflags but still
-happy
-
-Jeff - any preference.
+Alan
