@@ -1,115 +1,114 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] ide: Stop mapping ROMs
-Date: Fri, 22 Jun 2007 14:22:52 +0100
-Message-ID: <20070622142252.2ec0d148@the-village.bc.nu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: libata and legacy ide pcmcia failure
+Date: Fri, 22 Jun 2007 09:32:54 -0400
+Message-ID: <467BCF86.8060508@rtr.ca>
+References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com> <467BB7DB.4090004@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34825 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750718AbXFVNRe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 09:17:34 -0400
+Received: from rtr.ca ([64.26.128.89]:3346 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751403AbXFVNc5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Jun 2007 09:32:57 -0400
+In-Reply-To: <467BB7DB.4090004@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Robert de Rooy <robert.de.rooy@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, albertl@mail.com, Mark Lord <mlord@pobox.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Various old IDE drivers go mapping ROM devices for no apparent reason and
-without using the ROM mapping API we now have. They don't actually use
-the ROM they map and the new libata drivers are happy without it being
-mapped so rather than port them lets just junk it for the next -rc1.
+Robert de Rooy wrote:
+>
+> I did another try with libata pcmcia support using 2.6.22-rc5 which 
+> already includes the nodata polling fix, in combination with 
+> disable-dev_init_param-and-setxfermode-for-CFA.patch and the 
+> timing-debug.patch
+...
+> Jun 22 13:19:44 localhost kernel: ata3.00: issuing IDENTIFY
+> Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
+> Jun 22 13:19:45 localhost kernel: ata3.00: CFA: Memory Card Adapter, 
+> 20011212, max PIO1
+> Jun 22 13:19:45 localhost kernel: ata3.00: 253696 sectors, multi 0: LBA
+> Jun 22 13:19:45 localhost kernel: ata3.00: issuing IDENTIFY
+> Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
+> Jun 22 13:19:45 localhost kernel: ata3.00: configured for PIO0
+> Jun 22 13:19:45 localhost kernel: ata3: EH complete
+> Jun 22 13:19:45 localhost kernel: scsi 2:0:0:0: Direct-Access     
+> ATA      Memory Card Adap 2001 PQ: 0 ANSI: 5
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte 
+> hardware sectors (130 MB)
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache: 
+> disabled, read cache: enabled, doesn't support DPO or FUA
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte 
+> hardware sectors (130 MB)
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
+> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache: 
+> disabled, read cache: enabled, doesn't support DPO or FUA
+> Jun 22 13:20:15 localhost kernel:  sdb:<3>ata3.00: exception Emask 0x0 
+> SAct 0x0 SErr 0x0 action 0x2 frozen
+> Jun 22 13:20:15 localhost kernel: ata3.00: cmd 
+> 20/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+> Jun 22 13:20:15 localhost kernel:          res 
+> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jun 22 13:20:15 localhost kernel: ata3: soft resetting port
+> Jun 22 13:20:15 localhost kernel: ata3: reset complete
+> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port 
+> 0x00014107
+> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port 
+> 0x00014107
+> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port 
+> 0x00014107
+> Jun 22 13:20:15 localhost kernel: ata3.00: issuing IDENTIFY
+> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port 
+> 0x00014107
+...
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Mmm.. I don't know about the first failure there,
+but after that it gets into the "stuck DRQ" state
+which libata makes no attempt to handle at present.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/aec62xx.c linux-2.6.22-rc4-mm2/drivers/ide/pci/aec62xx.c
---- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/aec62xx.c	2007-06-07 14:26:08.000000000 +0100
-+++ linux-2.6.22-rc4-mm2/drivers/ide/pci/aec62xx.c	2007-06-18 15:57:40.000000000 +0100
-@@ -174,12 +174,6 @@
- {
- 	int bus_speed = system_bus_clock();
- 
--	if (dev->resource[PCI_ROM_RESOURCE].start) {
--		pci_write_config_dword(dev, PCI_ROM_ADDRESS, dev->resource[PCI_ROM_RESOURCE].start | PCI_ROM_ADDRESS_ENABLE);
--		printk(KERN_INFO "%s: ROM enabled at 0x%08lx\n", name,
--			(unsigned long)dev->resource[PCI_ROM_RESOURCE].start);
--	}
--
- 	if (bus_speed <= 33)
- 		pci_set_drvdata(dev, (void *) aec6xxx_33_base);
- 	else
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/hpt34x.c linux-2.6.22-rc4-mm2/drivers/ide/pci/hpt34x.c
---- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/hpt34x.c	2007-06-07 14:25:58.000000000 +0100
-+++ linux-2.6.22-rc4-mm2/drivers/ide/pci/hpt34x.c	2007-06-18 15:58:51.000000000 +0100
-@@ -120,17 +120,10 @@
- 	pci_write_config_byte(dev, HPT34X_PCI_INIT_REG, 0x00);
- 	pci_read_config_word(dev, PCI_COMMAND, &cmd);
- 
--	if (cmd & PCI_COMMAND_MEMORY) {
--		if (pci_resource_start(dev, PCI_ROM_RESOURCE)) {
--			pci_write_config_dword(dev, PCI_ROM_ADDRESS,
--				dev->resource[PCI_ROM_RESOURCE].start | PCI_ROM_ADDRESS_ENABLE);
--			printk(KERN_INFO "HPT345: ROM enabled at 0x%08lx\n",
--				(unsigned long)dev->resource[PCI_ROM_RESOURCE].start);
--		}
-+	if (cmd & PCI_COMMAND_MEMORY)
- 		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0xF0);
--	} else {
-+	else
- 		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x20);
--	}
- 
- 	/*
- 	 * Since 20-23 can be assigned and are R/W, we correct them.
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/hpt366.c linux-2.6.22-rc4-mm2/drivers/ide/pci/hpt366.c
---- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/hpt366.c	2007-06-07 14:26:08.000000000 +0100
-+++ linux-2.6.22-rc4-mm2/drivers/ide/pci/hpt366.c	2007-06-18 15:59:08.000000000 +0100
-@@ -993,14 +993,6 @@
- 	 */
- 	*info = *(struct hpt_info *)pci_get_drvdata(dev);
- 
--	/*
--	 * FIXME: Not portable. Also, why do we enable the ROM in the first place?
--	 * We don't seem to be using it.
--	 */
--	if (dev->resource[PCI_ROM_RESOURCE].start)
--		pci_write_config_dword(dev, PCI_ROM_ADDRESS,
--			dev->resource[PCI_ROM_RESOURCE].start | PCI_ROM_ADDRESS_ENABLE);
--
- 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, (L1_CACHE_BYTES / 4));
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x78);
- 	pci_write_config_byte(dev, PCI_MIN_GNT, 0x08);
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_new.c linux-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_new.c
---- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_new.c	2007-06-07 14:25:58.000000000 +0100
-+++ linux-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_new.c	2007-06-18 15:59:28.000000000 +0100
-@@ -369,13 +369,6 @@
- 	int f, r;
- 	u8 pll_ctl0, pll_ctl1;
- 
--	if (dev->resource[PCI_ROM_RESOURCE].start) {
--		pci_write_config_dword(dev, PCI_ROM_ADDRESS,
--			dev->resource[PCI_ROM_RESOURCE].start | PCI_ROM_ADDRESS_ENABLE);
--		printk(KERN_INFO "%s: ROM enabled at 0x%08lx\n", name,
--			(unsigned long)dev->resource[PCI_ROM_RESOURCE].start);
--	}
--
- #ifdef CONFIG_PPC_PMAC
- 	apple_kiwi_init(dev);
- #endif
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_old.c linux-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_old.c
---- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_old.c	2007-06-07 14:26:08.000000000 +0100
-+++ linux-2.6.22-rc4-mm2/drivers/ide/pci/pdc202xx_old.c	2007-06-18 15:59:40.000000000 +0100
-@@ -314,14 +314,6 @@
- static unsigned int __devinit init_chipset_pdc202xx(struct pci_dev *dev,
- 							const char *name)
- {
--	/* This doesn't appear needed */
--	if (dev->resource[PCI_ROM_RESOURCE].start) {
--		pci_write_config_dword(dev, PCI_ROM_ADDRESS,
--			dev->resource[PCI_ROM_RESOURCE].start | PCI_ROM_ADDRESS_ENABLE);
--		printk(KERN_INFO "%s: ROM enabled at 0x%08lx\n", name,
--			(unsigned long)dev->resource[PCI_ROM_RESOURCE].start);
--	}
--
- 	return dev->irq;
+Here is an additional patch, which hopefully will apply to your kernel
+to handle the stuck DRQ.  You may need to hand tweak it, though,
+as I'm not entirely certain as to where to place the new call
+to ata_drain_fifo().  It's currently on an error recovery path
+which works for DMA, but your device is using PIO.  It may still get
+hit as-is, but..  Give it a try.
+
+
+--- linux/drivers/ata/libata-sff.c.orig	2007-04-26 12:02:46.000000000 -0400
++++ linux/drivers/ata/libata-sff.c	2007-04-29 08:29:27.000000000 -0400
+@@ -413,6 +413,24 @@
+ 	ap->ops->irq_on(ap);
  }
  
++static void ata_drain_fifo (struct ata_port *ap, struct ata_queued_cmd *qc)
++{
++	u8 stat = ata_chk_status(ap);
++	/*
++	 * Try to clear stuck DRQ if necessary.
++	 */
++	if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
++		unsigned int i, limit = 512;
++		printk("Draining up to %u words from data FIFO.\n", limit);
++		for (i = 0; i < limit ; ++i) {
++			ioread16(ap->ioaddr.data_addr);
++			if (!(ata_chk_status(ap) & ATA_DRQ))
++				break;
++		}
++		printk("Drained %u/%u words.\n", i, limit);
++	}
++}
++
+ /**
+  *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
+  *	@ap: port to handle error for
+@@ -469,7 +487,7 @@
+ 	}
+ 
+ 	ata_altstatus(ap);
+-	ata_chk_status(ap);
++	ata_drain_fifo(ap, qc);
+ 	ap->ops->irq_clear(ap);
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
