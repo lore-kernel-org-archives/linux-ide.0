@@ -1,53 +1,65 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [BUG] ide dma_timer_expiry, then hard lockup
-Date: Fri, 22 Jun 2007 19:39:32 +0400
-Message-ID: <467BED34.4080004@ru.mvista.com>
-References: <20070618175713.GD5836@austin.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Add pata_dma option so users can disable
+ pata_dma as they can with old-ide
+Date: Fri, 22 Jun 2007 16:52:21 +0100
+Message-ID: <20070622165221.2ce648f6@the-village.bc.nu>
+References: <20070622144939.026ed6ac@the-village.bc.nu>
+	<467BE435.5000001@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:9141 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756726AbXFVPhu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2007 11:37:50 -0400
-In-Reply-To: <20070618175713.GD5836@austin.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58106 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757578AbXFVPqs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 11:46:48 -0400
+In-Reply-To: <467BE435.5000001@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, davej@redhat.com, linux-ide@vger.kernel.org
 
-Linas Vepstas wrote:
+On Fri, 22 Jun 2007 11:01:09 -0400
+Mark Lord <liml@rtr.ca> wrote:
 
-> I've got a hard lockup in the ide subsystem, probably
-> due to some irq spew or something like that.
+> Alan Cox wrote:
+> > Allow
+> > 
+> > 	libata.pata_dma=0
+> > 
+> > to disable DMA (default is 1)
+> > 
+> > SATA is unaffected as disabling DMA for SATA makes no sense at all.
+> > 
+> > Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> Alan,
+> 
+> Should we really be piling up like this on global boot/module options
+> rather than run-time flags on individual channels/devices ?
+> 
+> I can imagine systems with internal notebook drives that want dma=1,
+> plus Cardbus CF devices that require dma=0.
+> 
+> With a single global flag, how does one do that?
 
-> I've just bought a brand new Maxtor 320GB disk driver 
-> for the insane price of $70 US to replace another 
-> failing drive. It works well under light load;
-> I was able to copy about 60GB to it. However, 
-> under heavy load, such as reconstruction of an MD 
-> RAID-1 array, it'll lock up the kernel.  Which means
-> that my system won't boot :-(
+We need proper tuning as well but there is huge value (with distro hat
+on especially) in a single "try this to get it installed and then we can
+debug it" button. Same with the old IDE. Trying to guide users through
+selecting specific channels/devices is going to be painful. I want
+something that I can tell people to get them 'off the ground' and work
+with them to sort the rest.
 
-> I'm running 2.6.21.1, although the problem seems to occur 
-> in 2.6.19 and 2.6.18 too; its been there a while; I vageuly
-> remember similar problems in 2.6.5 or 2.6.10.
+One possibility I did consider was it being a set of bit flags
 
-    Ah... so you're saying that the old disk works OK, yet you've already 
-observed alike behavior on other disks... That speaks against blacklisting the 
-drive.
+Default 0x7
 
-> I can get the system to boot by sneaking in an 
-> "hdparm -d0 /dev/hdc" early in the boot process, to turn off 
+0x01		- Disk DMA
+0x02		- CF DMA
+0x04		- ATAPI DMA
 
-    Could probably do the same trick and specify the lower DMA speed by using 
--X n option (where n ranges from 64 to 70 for UltraDMA modes 0 to 6) and see 
-if it changes anything...
+then you'd tell folks "try 0" and "try 1" to get them up and going and
+most would be blissfully unaware of the details of bitflags but still
+happy
 
-> the use of DMA, but it seems that PIO is so slow, that it takes 
-> forever to get NFS started.
-
-    You can use 'ide=nodma' kernel option for this.
-
-MBR, Sergei
+Jeff - any preference.
