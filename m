@@ -1,38 +1,53 @@
-From: Vincent Bernat <Vincent.Bernat@wallix.com>
-Subject: Re: SATA update in 2.4, ICH8
-Date: Fri, 22 Jun 2007 09:51:52 +0200
-Message-ID: <87abusfmuf.fsf@naruto.ifr.lan>
-References: <87y7idiwjd.fsf@naruto.ifr.lan> <20070621182119.GB26637@1wt.eu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC: 2.6 patch] schedule BLK_DEV_IDE_SATA for removal
+Date: Fri, 22 Jun 2007 10:02:16 +0100
+Message-ID: <20070622100216.45abf2b3@the-village.bc.nu>
+References: <20070621235211.GH23017@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.wallix.com ([212.43.221.50]:45431 "EHLO postman.wallix.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbXFVHwH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2007 03:52:07 -0400
-In-Reply-To: <20070621182119.GB26637@1wt.eu> (Willy Tarreau's message of "Thu,
-	21 Jun 2007 20:21:19 +0200")
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51771 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751708AbXFVI6e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 04:58:34 -0400
+In-Reply-To: <20070621235211.GH23017@stusta.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Willy Tarreau <w@1wt.eu>
-Cc: linux-ide@vger.kernel.org, JF Taltavull <jean-francois.taltavull@wallix.com>, Jeff Garzik <jeff@garzik.org>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-OoO Pendant le journal t=E9l=E9vis=E9 du jeudi 21 juin 2007, vers 20:21=
-, Willy
-Tarreau <w@1wt.eu> disait:
+On Fri, 22 Jun 2007 01:52:11 +0200
+Adrian Bunk <bunk@stusta.de> wrote:
 
-> I do not have any idea right now. I recall having had some difficulti=
-es some
-> time ago with ata_piix when piix itself was not disabled, but those w=
-ere in
-> the early libata times. I *believe*  it's OK now but you might want t=
-o
-> check.
+> Users should use the libata based drivers for SATA drives.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> ---
+> --- linux-2.6.22-rc4-mm2/Documentation/feature-removal-schedule.txt.old	2007-06-21 23:41:03.000000000 +0200
+> +++ linux-2.6.22-rc4-mm2/Documentation/feature-removal-schedule.txt	2007-06-21 23:42:03.000000000 +0200
+> @@ -347,3 +347,10 @@
+>  Who:	Jean Delvare <khali@linux-fr.org>
+>  
+>  ---------------------------
+> +
+> +What:  CONFIG_BLK_DEV_IDE_SATA
+> +When:  December 2007
+> +Why:   users should use the libata based drivers for SATA
+> +Who:   Adrian Bunk <bunk@stusta.de>
+> +
+> +---------------------------
 
-There is no change when disabling ATA/IDE support.
---=20
-Vincent Bernat
-118 rue de Tocqueville, 75017 Paris
-Tel: +33 1 53 42 12 86
-http://www.wallix.com
+NAK this for now
+
+For the standard SATA controllers it is probably true now and will
+definitely be true by December 2007 but there is lots of stuff out there
+which uses SATA/PATA bridges on older PATA controllers such as the
+VIA and HPT controllers. While support for them varies between rock solid
+(VIA) and passable (HPT), I don't think its yet time to bump those people
+towards libata forcibly at all.
+
+About the only thing this would meaningfully obsolete would be
+ide/pci/siimage.c for SI3112 and some PCI identifiers from ide/pci/piix.c.
+
