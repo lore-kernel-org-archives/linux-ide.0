@@ -1,266 +1,40 @@
-From: Robert de Rooy <robert.de.rooy@gmail.com>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Fri, 22 Jun 2007 13:51:55 +0200
-Message-ID: <467BB7DB.4090004@gmail.com>
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide: Fix a theoretical Ooops case
+Date: Fri, 22 Jun 2007 14:20:05 +0100
+Message-ID: <20070622142005.7a20d4c4@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.183]:60613 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbXFVLvv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 07:51:51 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so734093ika
-        for <linux-ide@vger.kernel.org>; Fri, 22 Jun 2007 04:51:49 -0700 (PDT)
-In-Reply-To: <46710CD7.9070901@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34821 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752085AbXFVNOs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 09:14:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, Mark Lord <mlord@pobox.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: akpm@osdl.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Albert Lee wrote:
->   
->>> libata can do most of this too by using ATA_FLAG_PIO_POLLING (doesn't
->>> cover nodata commands tho).
->>>
->>>       
->> Hi Tejun,
->>
->> Polling of nodata commands was fixed in:
->> http://marc.info/?l=linux-ide&m=116546272916399&w=2
->>     
->
-> Right.  Thanks for reminding me.  :-)
->
->   
+Found by a static analyser. It is in theory possible we dereference
+dev->id when it has become invalid. Re-order to avoid this.
 
-I did another try with libata pcmcia support using 2.6.22-rc5 which 
-already includes the nodata polling fix, in combination with 
-disable-dev_init_param-and-setxfermode-for-CFA.patch and the 
-timing-debug.patch
+Not needed for new-ide as we no longer support the crazy exabyte nest stuff
 
-Jun 22 13:19:44 localhost kernel: pccard: PCMCIA card inserted into slot 1
-Jun 22 13:19:44 localhost kernel: cs: memory probe 
-0xe8000000-0xefffffff: excluding 0xe8000000-0xefffffff
-Jun 22 13:19:44 localhost kernel: cs: memory probe 
-0xc0200000-0xcfffffff: excluding 0xc0200000-0xc11fffff 
-0xc1a00000-0xc21fffff 0xc2a00000-0xc31fffff 0xc3a00000-0xcc1fffff 
-0xcca00000-0xcd1fffff 0xcda00000-0xce1fffff 0xcea00000-0xcf1fffff 
-0xcfa00000-0xd01fffff
-Jun 22 13:19:44 localhost kernel: pcmcia: registering new device pcmcia1.0
-Jun 22 13:19:44 localhost kernel: scsi2 : pata_pcmcia
-Jun 22 13:19:44 localhost kernel: ata3: PATA max PIO0 cmd 0x00014100 ctl 
-0x0001410e bmdma 0x00000000 irq 0
-Jun 22 13:19:44 localhost kernel: ata3: soft resetting port
-Jun 22 13:19:44 localhost kernel: ata3: reset complete
-Jun 22 13:19:44 localhost kernel: ata3.00: issuing IDENTIFY
-Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
-Jun 22 13:19:45 localhost kernel: ata3.00: CFA: Memory Card Adapter, 
-20011212, max PIO1
-Jun 22 13:19:45 localhost kernel: ata3.00: 253696 sectors, multi 0: LBA
-Jun 22 13:19:45 localhost kernel: ata3.00: issuing IDENTIFY
-Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
-Jun 22 13:19:45 localhost kernel: ata3.00: configured for PIO0
-Jun 22 13:19:45 localhost kernel: ata3: EH complete
-Jun 22 13:19:45 localhost kernel: scsi 2:0:0:0: Direct-Access     
-ATA      Memory Card Adap 2001 PQ: 0 ANSI: 5
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte 
-hardware sectors (130 MB)
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache: 
-disabled, read cache: enabled, doesn't support DPO or FUA
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte 
-hardware sectors (130 MB)
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache: 
-disabled, read cache: enabled, doesn't support DPO or FUA
-Jun 22 13:20:15 localhost kernel:  sdb:<3>ata3.00: exception Emask 0x0 
-SAct 0x0 SErr 0x0 action 0x2 frozen
-Jun 22 13:20:15 localhost kernel: ata3.00: cmd 
-20/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
-Jun 22 13:20:15 localhost kernel:          res 
-40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Jun 22 13:20:15 localhost kernel: ata3: soft resetting port
-Jun 22 13:20:15 localhost kernel: ata3: reset complete
-Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port 
-0x00014107
-Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port 
-0x00014107
-Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:15 localhost kernel: ata3.00: issuing IDENTIFY
-Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:15 localhost last message repeated 4 times
-Jun 22 13:20:15 localhost kernel: ata3.00: IDENTIFY complete
-Jun 22 13:20:15 localhost kernel: ata3.00: failed to IDENTIFY (I/O 
-error, err_mask=0x2)
-Jun 22 13:20:15 localhost kernel: ata3.00: revalidation failed (errno=-5)
-Jun 22 13:20:15 localhost kernel: ata3: failed to recover some devices, 
-retrying in 5 secs
-Jun 22 13:20:20 localhost kernel: ata3: soft resetting port
-Jun 22 13:20:20 localhost kernel: ata3: reset complete
-Jun 22 13:20:20 localhost kernel: ATA: abnormal status 0x80 on port 
-0x00014107
-Jun 22 13:20:20 localhost kernel: ATA: abnormal status 0x80 on port 
-0x00014107
-Jun 22 13:20:20 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:20 localhost kernel: ata3.00: issuing IDENTIFY
-Jun 22 13:20:20 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:20 localhost last message repeated 4 times
-Jun 22 13:20:20 localhost kernel: ata3.00: IDENTIFY complete
-Jun 22 13:20:20 localhost kernel: ata3.00: failed to IDENTIFY (I/O 
-error, err_mask=0x2)
-Jun 22 13:20:20 localhost kernel: ata3.00: revalidation failed (errno=-5)
-Jun 22 13:20:20 localhost kernel: ata3: failed to recover some devices, 
-retrying in 5 secs
-Jun 22 13:20:25 localhost kernel: ata3: soft resetting port
-Jun 22 13:20:25 localhost kernel: ata3: reset complete
-Jun 22 13:20:25 localhost kernel: ATA: abnormal status 0xB8 on port 
-0x00014107
-Jun 22 13:20:25 localhost kernel: ATA: abnormal status 0xB8 on port 
-0x00014107
-Jun 22 13:20:25 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:25 localhost kernel: ata3.00: issuing IDENTIFY
-Jun 22 13:20:25 localhost kernel: ATA: abnormal status 0x58 on port 
-0x00014107
-Jun 22 13:20:25 localhost last message repeated 4 times
-Jun 22 13:20:25 localhost kernel: ata3.00: IDENTIFY complete
-Jun 22 13:20:25 localhost kernel: ata3.00: failed to IDENTIFY (I/O 
-error, err_mask=0x2)
-Jun 22 13:20:25 localhost kernel: ata3.00: revalidation failed (errno=-5)
-Jun 22 13:20:25 localhost kernel: ata3.00: disabled
-Jun 22 13:20:26 localhost kernel: ata3: EH complete
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: Dev sdb: unable to read RDB block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: end_request: I/O error, dev sdb, sector 0
-Jun 22 13:20:26 localhost kernel: Buffer I/O error on device sdb, 
-logical block 0
-Jun 22 13:20:26 localhost kernel:  unable to read partition table
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Attached SCSI 
-removable disk
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: Attached scsi generic sg2 
-type 0
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:26 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:27 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] READ CAPACITY failed
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Sense not available.
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Asking for cache 
-data failed
-Jun 22 13:20:43 localhost kernel: sd 2:0:0:0: [sdb] Assuming drive 
-cache: write through
-Jun 22 13:20:48 localhost kernel: pccard: card ejected from slot 1
-Jun 22 13:20:48 localhost kernel: sd 2:0:0:0: [sdb] Stopping disk
-Jun 22 13:20:48 localhost kernel: sd 2:0:0:0: [sdb] START_STOP FAILED
-Jun 22 13:20:48 localhost kernel: sd 2:0:0:0: [sdb] Result: 
-hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK,SUGGEST_OK
+Signed-off-by: Alan Cox <alan@redhat.com>
+
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/ide/ide-probe.c linux-2.6.22-rc4-mm2/drivers/ide/ide-probe.c
+--- linux.vanilla-2.6.22-rc4-mm2/drivers/ide/ide-probe.c	2007-06-07 14:26:08.000000000 +0100
++++ linux-2.6.22-rc4-mm2/drivers/ide/ide-probe.c	2007-06-18 16:45:28.000000000 +0100
+@@ -574,11 +574,11 @@
+ 			/* look for ATAPI device */
+ 			(void) do_probe(drive, WIN_PIDENTIFY);
+ 		}
+-		if (strstr(drive->id->model, "E X A B Y T E N E S T"))
+-			enable_nest(drive);
+ 		if (!drive->present)
+ 			/* drive not found */
+ 			return 0;
++		if (strstr(drive->id->model, "E X A B Y T E N E S T"))
++			enable_nest(drive);
+ 	
+ 		/* identification failed? */
+ 		if (!drive->id_read) {
