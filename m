@@ -1,55 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA RAID5 speed drop of 100 MB/s
-Date: Sat, 23 Jun 2007 16:54:16 +0900
-Message-ID: <467CD1A8.5070700@gmail.com>
-References: <20070620224847.GA5488@alinoe.com> <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: how to handle pata_via when controller not in fully-pci-native
+ mode (two irqs?)
+Date: Sat, 23 Jun 2007 10:33:49 +0100
+Message-ID: <20070623103349.23cad9b7@the-village.bc.nu>
+References: <467C689E.3050800@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:44590 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185AbXFWHyW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 03:54:22 -0400
-Received: by py-out-1112.google.com with SMTP id u77so729656pyb
-        for <linux-ide@vger.kernel.org>; Sat, 23 Jun 2007 00:54:22 -0700 (PDT)
-In-Reply-To: <467CC5C5.6040201@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49701 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753218AbXFWJ2A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 05:28:00 -0400
+In-Reply-To: <467C689E.3050800@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Carlo Wood <carlo@alinoe.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Matt Sealey <matt@genesi-usa.com>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Carlo Wood wrote:
->> The dmesg output of 33480a0ede8dcc7e6483054279008f972bd56fd3 (thus
->> "before") is:
-> [...]
->> And the dmesg output of 551c012d7eea3dc5ec063c7ff9c718d39e77634f (thus
->> "after") is:
-> [...]
-> 
-> Your disk configurations are quite radically different between the two
-> kernels (see attached diff for key highlights).
-> 
-> The new behavior of the more recent kernel (551c012d7...) is that it now
-> fully drives your hardware :)  The reset problems go away, NCQ is
-> enabled, and if you had 3.0Gbps drives (you don't) they would be driven
-> at a faster speed.
-> 
-> Given that some drives might be better tuned for benchmarks in
-> non-queued mode, and that a major behavior difference is that your
-> drives are now NCQ-enabled, the first thing I would suggest you try is
-> disabling NCQ:
->     http://linux-ata.org/faq.html#ncq
-> 
-> Other indicators are the other changes in the "ahci 0000:00:1f.2:
-> flags:" line, which do affect other behaviors, though none so important
-> to RAID5 performance as NCQ, I would think.
-> 
-> Turning on NCQ also potentially affects barrier behavior in RAID, though
-> I'm guessing that is not a factor here.
+On Sat, 23 Jun 2007 01:26:06 +0100
+Matt Sealey <matt@genesi-usa.com> wrote:
 
-Ah.. right.  That should have enabled NCQ.  Me slow today.  :-)
+> There are several different ways you can set it up from having a single
+> IRQ (true PCI native), to using PCI register access but with IRQ routing
+> through a certain pair of interrupts (14/15 or 10/11) or by having real
+> legacy ISA access (ports in the low memory ranges and the old 14/15 pair
+> we all remember from the first ATA controllers).
 
--- 
-tejun
+SFF8038i is the standard you want for PCI ATA controllers.
+
+> noticed a strange patch on the linuxppc-dev mailing list by a Freescale
+> employee which changed the PCI class code of a ULI controller which
+> somehow made the libata driver for that controller consider it a
+> not-quite-native driver; I am not sure how that was meant to work but
+> it was obviously a platform-specific solution.
+
+Its part of the spec. The native/legacy/non-ide status of a device is
+determined according to the SFF spec from the PCI class information bits.
+
+> 
+> Does anyone have an idea how we can integrate this 'quirk' of the
+> non-native native PCI mode and support two IRQs properly so we can
+> have pata_via work on Pegasos (distros are dropping the old drivers
+> as we speak..)
+
+The simplest way is probably to load the pci class and programming
+interface bits correctly for the device to match how your IRQ setup has
+been arranged. See page 78 of the VIA 8231 spec if you have it, and load
+the programming class in the boot firmware or in a PCI header quirk)
+
+Alan
+
+
