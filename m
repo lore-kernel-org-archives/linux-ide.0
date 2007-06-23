@@ -1,37 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Add pata_dma option so users can disable
- pata_dma as they can with old-ide
-Date: Fri, 22 Jun 2007 20:26:10 +0100
-Message-ID: <20070622202610.3b805cfe@the-village.bc.nu>
-References: <20070622144939.026ed6ac@the-village.bc.nu>
-	<20070622165221.2ce648f6@the-village.bc.nu>
-	<467BFE6F.7050300@rtr.ca>
-	<200706222104.25482.bzolnier@gmail.com>
+From: Matt Sealey <matt@genesi-usa.com>
+Subject: how to handle pata_via when controller not in fully-pci-native mode
+ (two irqs?)
+Date: Sat, 23 Jun 2007 01:26:06 +0100
+Message-ID: <467C689E.3050800@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60527 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760930AbXFVTUj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 15:20:39 -0400
-In-Reply-To: <200706222104.25482.bzolnier@gmail.com>
+Received: from mithrandir.softwarenexus.net ([66.98.186.96]:2827 "EHLO
+	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491AbXFWAZ3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jun 2007 20:25:29 -0400
+Received: from 82-46-178-156.cable.ubr06.king.blueyonder.co.uk ([82.46.178.156] helo=[192.168.2.228])
+	by mail.genesi-usa.com with esmtpa (Exim 4.66 (FreeBSD))
+	(envelope-from <matt@genesi-usa.com>)
+	id 1I1tC7-000PMT-4p
+	for linux-ide@vger.kernel.org; Sat, 23 Jun 2007 00:09:39 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, jeff@garzik.org, davej@redhat.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> > I think a /sys/ "dma" attribute (pick a name) might be most appropriate,
-> > or we just just implement HDIO_[GS]ET_DMA as a simpler/lazier mechanism.
-> 
-> The problem is that libata lacks any locking needed for having this
-> (and other useful) settings tunable on per device basis.
+Just bringing this up again as it's about that time of year.
 
-Actually libata does have the paths for it and uses them when drives are
-hotplugged. Tejun posted an explanation of how to implement it a while
-ago when I proposed a totally bogus implementation - it has to be done
-via the EH code.
+There's an issue with some Via southbridges (the only notable and confirmed
+example I have being the VT8231 on the PegasosPPC) which can be configured
+such that they report that they are in "PCI Native Mode", but in fact handle
+(and report) legacy ATA interrupts through the ISA Bridge configuration.
 
-So we'd add user mode masks to each device and the sysfs nodes would
-update that mask and trigger the EH processing to halt activity, retune
-the disks and continue
+There are several different ways you can set it up from having a single
+IRQ (true PCI native), to using PCI register access but with IRQ routing
+through a certain pair of interrupts (14/15 or 10/11) or by having real
+legacy ISA access (ports in the low memory ranges and the old 14/15 pair
+we all remember from the first ATA controllers).
+
+My problem with the driver is twofold; first, the old IDE block driver had a
+hack applied which singles out the Pegasos as a quirk and maps two
+interrupts into the "hwif" depending on the channel being set up. I
+wrote a simple heuristic test which checks the IDE controller and
+ISA bridge configuration and works out the correct IDE interrupts to
+use. I can submit this patch but since the IDE block layer is going the
+way of the dodo I see no point in it.
+
+The second and REAL problem is that I see no real way in libata to
+place detection of this quirk for the updated (and better) driver. I
+noticed a strange patch on the linuxppc-dev mailing list by a Freescale
+employee which changed the PCI class code of a ULI controller which
+somehow made the libata driver for that controller consider it a
+not-quite-native driver; I am not sure how that was meant to work but
+it was obviously a platform-specific solution.
+
+Does anyone have an idea how we can integrate this 'quirk' of the
+non-native native PCI mode and support two IRQs properly so we can
+have pata_via work on Pegasos (distros are dropping the old drivers
+as we speak..)
+
+-- 
+Matt Sealey <matt@genesi-usa.com>
+Genesi, Manager, Developer Relations
