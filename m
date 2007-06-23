@@ -1,40 +1,51 @@
-From: Paul Mackerras <paulus@samba.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFC: 2.6 patch] schedule BLK_DEV_IDE_SATA for removal
-Date: Sat, 23 Jun 2007 13:56:28 +1000
-Message-ID: <18044.39404.380472.887065@cargo.ozlabs.ibm.com>
-References: <20070621235211.GH23017@stusta.de>
-	<1182483586.10524.33.camel@shinybook.infradead.org>
-	<20070622101019.0f3b0d3d@the-village.bc.nu>
+Date: Sat, 23 Jun 2007 00:20:29 -0400
+Message-ID: <467C9F8D.8020000@garzik.org>
+References: <20070621235211.GH23017@stusta.de>	<1182483586.10524.33.camel@shinybook.infradead.org>	<20070622101019.0f3b0d3d@the-village.bc.nu> <18044.39404.380472.887065@cargo.ozlabs.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:44311 "EHLO ozlabs.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:35536 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750936AbXFWD4q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2007 23:56:46 -0400
-In-Reply-To: <20070622101019.0f3b0d3d@the-village.bc.nu>
+	id S1751015AbXFWEVL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Jun 2007 00:21:11 -0400
+In-Reply-To: <18044.39404.380472.887065@cargo.ozlabs.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: David Woodhouse <dwmw2@infradead.org>, Adrian Bunk <bunk@stusta.de>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Paul Mackerras <paulus@samba.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <dwmw2@infradead.org>, Adrian Bunk <bunk@stusta.de>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox writes:
-
-> On Fri, 22 Jun 2007 11:39:45 +0800
-> David Woodhouse <dwmw2@infradead.org> wrote:
+Paul Mackerras wrote:
+> Alan Cox writes:
 > 
-> > On Fri, 2007-06-22 at 01:52 +0200, Adrian Bunk wrote:
-> > > Users should use the libata based drivers for SATA drives.
-> > 
-> > NAK. Not all IDE drivers are converted yet. Not even all the relatively
-> > common ones.
+>> On Fri, 22 Jun 2007 11:39:45 +0800
+>> David Woodhouse <dwmw2@infradead.org> wrote:
+>>
+>>> On Fri, 2007-06-22 at 01:52 +0200, Adrian Bunk wrote:
+>>>> Users should use the libata based drivers for SATA drives.
+>>> NAK. Not all IDE drivers are converted yet. Not even all the relatively
+>>> common ones.
+>> All the common SATA ones are. Just the PowerPC people are falling behind.
+>> Really we should obsolete powerpc instead ;)
 > 
-> All the common SATA ones are. Just the PowerPC people are falling behind.
-> Really we should obsolete powerpc instead ;)
+> What SATA drive uses a non-libata driver on PowerPC?  In fact the
+> sata_svw driver used for SATA drives on G5s was one of the early
+> libata drivers.  Or are you talking about PATA?
 
-What SATA drive uses a non-libata driver on PowerPC?  In fact the
-sata_svw driver used for SATA drives on G5s was one of the early
-libata drivers.  Or are you talking about PATA?
+This entire thread is confused :)
 
-Paul.
+Going back to $subject, it is relevant only to the scant few old-IDE 
+drivers that do indeed successfully probe and talk to SATA drives, from 
+SATA controllers.
+
+The vast majority have always used libata for SATA, but another option 
+did indeed exist before libata appeared, for a few controllers.
+
+Alan was just having a bit of fun at dwmw2's expense, since we do indeed 
+want to see libata drivers for PowerPC PATA as well :)
+
+	Jeff
+
+
