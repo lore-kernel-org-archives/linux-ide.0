@@ -1,47 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/6] qd65xx: fix PIO mode selection
-Date: Sat, 23 Jun 2007 22:13:15 +0400
-Message-ID: <467D62BB.2030305@ru.mvista.com>
-References: <200706232002.07091.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PROBLEM]: hdparm strange behaviour for 2.6.21 and later
+Date: Sat, 23 Jun 2007 20:28:58 +0200
+Message-ID: <200706232028.58193.bzolnier@gmail.com>
+References: <200706161958.05313.djart@linux.gr> <4676E47E.5050209@rtr.ca> <200706201807.41646.djart@linux.gr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-7"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:15155 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752951AbXFWSLd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 14:11:33 -0400
-In-Reply-To: <200706232002.07091.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:46902 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754395AbXFWSNo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 14:13:44 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1021877ugf
+        for <linux-ide@vger.kernel.org>; Sat, 23 Jun 2007 11:13:43 -0700 (PDT)
+In-Reply-To: <200706201807.41646.djart@linux.gr>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Thanos Kyritsis <djart@linux.gr>
+Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> PIO4 is a maximum PIO mode supported by a driver.  Using "255" as a max_mode
-> argument to ide_get_best_pio_mode() could result in wrong timings being used
-> by a driver (for "pio" equal to 5) or OOPS (for "pio" values > 5 && < 255).
+
+Hi,
+
+On Wednesday 20 June 2007, Thanos Kyritsis wrote:
+> On Monday 18 June 2007, Mark Lord wrote:
+> > Thanos Kyritsis wrote:
+> [snip]
+> > > /etc/rc.d/rc.local contains the following:
+> > > /usr/sbin/hdparm -q -d1 -q -u1 -q -c1 -q -k1 /dev/hda
+> > > /usr/sbin/hdparm -q -d1 -q -u1 -q -c1 -q -k1 /dev/hdb
+> [snip]
 > 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > Sounds like a (kernel) timing issue.
+> > The "-q" option gets rid of some intermediary printf's,
+> > and nothing else.  So with -q, the ioctl() calls happen
+> > much closer together in time.  Without -q, the intermediary
+> > printf's likely cause a resched, giving the kernel more time
+> > to complete anything left over from the earlier call.
 
-> ---
->  drivers/ide/legacy/qd65xx.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+It could be that some assumptions that I've taken when
+fixing DMA tuning locking were wrong...
+
+> > ????
+> >
+> > Any difference with a modern version of hdparm?
 > 
-> Index: b/drivers/ide/legacy/qd65xx.c
-> ===================================================================
-> --- a/drivers/ide/legacy/qd65xx.c
-> +++ b/drivers/ide/legacy/qd65xx.c
-> @@ -258,8 +258,7 @@ static void qd6580_tune_drive (ide_drive
->  	int recovery_time = 415; /* worst case values from the dos driver */
->  
->  	if (drive->id && !qd_find_disk_type(drive, &active_time, &recovery_time)) {
-> -		pio = ide_get_best_pio_mode(drive, pio, 255, &d);
-> -		pio = min_t(u8, pio, 4);
-> +		pio = ide_get_best_pio_mode(drive, pio, 4, &d);
->  
->  		switch (pio) {
->  			case 0: break;
+> The same issue happens when using hdparm 7.4 as well as 7.5.
 
-MBR, Sergei
+Adding a couple of printk-s to ide.c::set_using_dma() and
+ide.c::ide_spin_wait_hwgroup() will for sure help in debugging
+it further.
+
+Also could you try running UP kernel without PREEMPT and see
+if it makes difference?
+
+Thanks,
+Bart
