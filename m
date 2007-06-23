@@ -1,50 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC: 2.6 patch] schedule BLK_DEV_IDE_SATA for removal
-Date: Sat, 23 Jun 2007 00:20:29 -0400
-Message-ID: <467C9F8D.8020000@garzik.org>
-References: <20070621235211.GH23017@stusta.de>	<1182483586.10524.33.camel@shinybook.infradead.org>	<20070622101019.0f3b0d3d@the-village.bc.nu> <18044.39404.380472.887065@cargo.ozlabs.ibm.com>
+Subject: Re: how to handle pata_via when controller not in fully-pci-native
+ mode (two irqs?)
+Date: Sat, 23 Jun 2007 00:23:25 -0400
+Message-ID: <467CA03D.9060908@garzik.org>
+References: <467C689E.3050800@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35536 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35558 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751015AbXFWEVL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Jun 2007 00:21:11 -0400
-In-Reply-To: <18044.39404.380472.887065@cargo.ozlabs.ibm.com>
+	id S1751032AbXFWEX1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Jun 2007 00:23:27 -0400
+In-Reply-To: <467C689E.3050800@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <dwmw2@infradead.org>, Adrian Bunk <bunk@stusta.de>, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matt Sealey <matt@genesi-usa.com>
+Cc: linux-ide@vger.kernel.org
 
-Paul Mackerras wrote:
-> Alan Cox writes:
+Matt Sealey wrote:
+> Just bringing this up again as it's about that time of year.
 > 
->> On Fri, 22 Jun 2007 11:39:45 +0800
->> David Woodhouse <dwmw2@infradead.org> wrote:
->>
->>> On Fri, 2007-06-22 at 01:52 +0200, Adrian Bunk wrote:
->>>> Users should use the libata based drivers for SATA drives.
->>> NAK. Not all IDE drivers are converted yet. Not even all the relatively
->>> common ones.
->> All the common SATA ones are. Just the PowerPC people are falling behind.
->> Really we should obsolete powerpc instead ;)
-> 
-> What SATA drive uses a non-libata driver on PowerPC?  In fact the
-> sata_svw driver used for SATA drives on G5s was one of the early
-> libata drivers.  Or are you talking about PATA?
+> There's an issue with some Via southbridges (the only notable and confirmed
+> example I have being the VT8231 on the PegasosPPC) which can be configured
+> such that they report that they are in "PCI Native Mode", but in fact handle
+> (and report) legacy ATA interrupts through the ISA Bridge configuration.
 
-This entire thread is confused :)
+pata_via calls ata_pci_init_one(), which supports the two-interrupt 
+legacy configuration just fine.  The two-interrupt configuration is 
+normal for a majority of pata_* drivers (and a few others), and has been 
+working for years.
 
-Going back to $subject, it is relevant only to the scant few old-IDE 
-drivers that do indeed successfully probe and talk to SATA drives, from 
-SATA controllers.
-
-The vast majority have always used libata for SATA, but another option 
-did indeed exist before libata appeared, for a few controllers.
-
-Alan was just having a bit of fun at dwmw2's expense, since we do indeed 
-want to see libata drivers for PowerPC PATA as well :)
+It sounds like you need to upgrade your BIOS to fix the requisite PCI 
+config register, or need to add a PCI quirk for your platform, so that 
+libata two-irq code will automagically start working for you.
 
 	Jeff
 
