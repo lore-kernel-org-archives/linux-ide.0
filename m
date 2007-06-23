@@ -1,113 +1,150 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/6] ide: add ide_pci_device_t.host_flags
-Date: Sat, 23 Jun 2007 23:19:13 +0400
-Message-ID: <467D7231.7080701@ru.mvista.com>
-References: <200706232005.50076.bzolnier@gmail.com>
+Subject: Re: [PATCH 5/6] ide: add ata_dev_has_iordy() helper
+Date: Sat, 23 Jun 2007 23:36:50 +0400
+Message-ID: <467D7652.7070105@ru.mvista.com>
+References: <200706232005.10968.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:15369 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:15417 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752440AbXFWTRc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 15:17:32 -0400
-In-Reply-To: <200706232005.50076.bzolnier@gmail.com>
+	with ESMTP id S1755546AbXFWTfI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jun 2007 15:35:08 -0400
+In-Reply-To: <200706232005.10968.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
-> * Rename ide_pci_device_t.flags to ide_pci_device_t.host_flags
->   and IDEPCI_FLAG_ISA_PORTS flag to IDE_HFLAG_ISA_PORTS.
 
-    Erm, do you intend also adding device_flags field? :-O ;-)
+    This one is actually arguable...
 
-> * Add IDE_HFLAG_SINGLE flag for single channel devices.
+> * Add ata_dev_has_iordy() helper.
 
-> * Convert core code and all IDE PCI drivers to use IDE_HFLAG_SINGLE
->   and remove no longer needed ide_pci_device_t.channels field.
+    I thought IDE subsys make use of only 'ide_' prefixes. :-)
+
+> * Use it in sl82c105 host driver so it always gets the correct info
+>   (use_iordy was incorrectly set for "pio" != 255 cases).
+
+    Hm, why incorrectly? ATA specs say PIO3/4 *must* use IORDY flow control, 
+IIRC... :-/
+    Maybe you meant the mode is being later adjusted by max_mode thereshold -- 
+well, that's a common issue in ide_get_best_pio_mode().
+
+> * Remove no longer needed ide_pio_data_t.use_iordy field.
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-    Sorry, NAK this one. ;-)
-
-> Index: b/drivers/ide/pci/hpt366.c
+> Index: b/drivers/ide/ide-lib.c
 > ===================================================================
-> --- a/drivers/ide/pci/hpt366.c
-> +++ b/drivers/ide/pci/hpt366.c
-> @@ -1490,7 +1490,7 @@ static int __devinit init_setup_hpt366(s
->  		 * HPT36x chips are single channel and
->  		 * do not seem to have the channel enable bit...
->  		 */
-> -		d->channels = 1;
-> +		d->host_flags |= IDE_HFLAG_SINGLE;
->  		d->enablebits[0].reg = 0;
-
-    Probablly worth submitting a patch to fix up the enablebit here...
-Well, one we get Linas HPT366/Maxtor issue sorted out...
-
->  		d->udma_mask = HPT366_ALLOW_ATA66_3 ?
-> Index: b/drivers/ide/pci/scc_pata.c
-> ===================================================================
-> --- a/drivers/ide/pci/scc_pata.c
-> +++ b/drivers/ide/pci/scc_pata.c
-> @@ -731,9 +731,9 @@ static void __devinit init_hwif_scc(ide_
->        .init_setup	= init_setup_scc,		\
->        .init_iops	= init_iops_scc,		\
->        .init_hwif	= init_hwif_scc,		\
-> -      .channels	= 1,					\
->        .autodma	= AUTODMA,				\
->        .bootable	= ON_BOARD,				\
-> +      .host_flags = IDE_HFLAG_SINGLE,			\
-
-    Erm, why misaligned?
-
-> Index: b/drivers/ide/pci/serverworks.c
-> ===================================================================
-> --- a/drivers/ide/pci/serverworks.c
-> +++ b/drivers/ide/pci/serverworks.c
-> @@ -448,9 +448,12 @@ static int __devinit init_setup_csb6 (st
->  			d->bootable = ON_BOARD;
->  	}
+> --- a/drivers/ide/ide-lib.c
+> +++ b/drivers/ide/ide-lib.c
+> @@ -267,18 +267,15 @@ u8 ide_get_best_pio_mode (ide_drive_t *d
+>  {
+>  	int pio_mode;
+>  	int cycle_time = 0;
+> -	int use_iordy = 0;
+>  	struct hd_driveid* id = drive->id;
+>  	int overridden  = 0;
 >  
-> -	d->channels = ((dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE ||
-> -			dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2) &&
-> -		       (!(PCI_FUNC(dev->devfn) & 1))) ? 1 : 2;
-> +	if ((dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE ||
-> +	    dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2) &&
+>  	if (mode_wanted != 255) {
+>  		pio_mode = mode_wanted;
+> -		use_iordy = (pio_mode > 2);
+>  	} else if (!drive->id) {
+>  		pio_mode = 0;
+>  	} else if ((pio_mode = ide_scan_pio_blacklist(id->model)) != -1) {
+>  		printk(KERN_INFO "%s: is on PIO blacklist\n", drive->name);
+> -		use_iordy = (pio_mode > 2);
+>  	} else {
+>  		pio_mode = id->tPIO;
+>  		if (pio_mode > 2) {	/* 2 is maximum allowed tPIO value */
+> @@ -287,7 +284,6 @@ u8 ide_get_best_pio_mode (ide_drive_t *d
+>  		}
+>  		if (id->field_valid & 2) {	  /* drive implements ATA2? */
+>  			if (id->capability & 8) { /* drive supports use_iordy? */
 
-    I'd have left that aligning space alone. :-)
+    The comment above needs fixing too -- kill reference to use_iordy.
 
-> +	    (!(PCI_FUNC(dev->devfn) & 1)))
-> +		d->host_flags |= IDE_HFLAG_SINGLE;
-> +	else
- > +		d->host_flags &= IDE_HFLAG_SINGLE;
-
-    Here's the offending code! Should've been:
-
-		d->host_flags &= ~IDE_HFLAG_SINGLE;
-
->  	return ide_setup_pci_device(dev, d);
->  }
-> @@ -485,17 +485,17 @@ static ide_pci_device_t serverworks_chip
->  		.init_setup	= init_setup_csb6,
->  		.init_chipset	= init_chipset_svwks,
->  		.init_hwif	= init_hwif_svwks,
-> -		.channels	= 1,	/* 2 */
->  		.autodma	= AUTODMA,
->  		.bootable	= ON_BOARD,
-> +		.host_flags	= IDE_HFLAG_SINGLE,
->  	},{	/* 4 */
->  		.name		= "SvrWks HT1000",
->  		.init_setup	= init_setup_svwks,
->  		.init_chipset	= init_chipset_svwks,
->  		.init_hwif	= init_hwif_svwks,
-> -		.channels	= 1,	/* 2 */
->  		.autodma	= AUTODMA,
->  		.bootable	= ON_BOARD,
-> +		.host_flags	= IDE_HFLAG_SINGLE,
+> -				use_iordy = 1;
+>  				cycle_time = id->eide_pio_iordy;
+>  				if (id->eide_pio_modes & 7) {
+>  					overridden = 0;
+> @@ -325,7 +321,6 @@ u8 ide_get_best_pio_mode (ide_drive_t *d
+>  	if (d) {
+>  		d->pio_mode = pio_mode;
+>  		d->cycle_time = cycle_time ? cycle_time : ide_pio_timings[pio_mode].cycle_time;
+> -		d->use_iordy = use_iordy;
 >  	}
->  };
+>  	return pio_mode;
+>  }
+> Index: b/drivers/ide/pci/sl82c105.c
+> ===================================================================
+> --- a/drivers/ide/pci/sl82c105.c
+> +++ b/drivers/ide/pci/sl82c105.c
+> @@ -52,9 +52,10 @@
+>   * Convert a PIO mode and cycle time to the required on/off times
+>   * for the interface.  This has protection against runaway timings.
+>   */
+> -static unsigned int get_pio_timings(ide_pio_data_t *p)
+> +static unsigned int get_pio_timings(ide_drive_t *drive, ide_pio_data_t *p)
+>  {
+>  	unsigned int cmd_on, cmd_off;
+> +	u8 iordy = 0;
+>  
+>  	cmd_on  = (ide_pio_timings[p->pio_mode].active_time + 29) / 30;
+>  	cmd_off = (p->cycle_time - 30 * cmd_on + 29) / 30;
+> @@ -65,7 +66,10 @@ static unsigned int get_pio_timings(ide_
+>  	if (cmd_off == 0)
+>  		cmd_off = 1;
+>  
+> -	return (cmd_on - 1) << 8 | (cmd_off - 1) | (p->use_iordy ? 0x40 : 0x00);
+> +	if (p->pio_mode > 2 || ata_dev_has_iordy(drive->id))
+> +		iordy = 0x40;
+
+    This logic, although mimicking the old one from ide_get_best_pio_mode(), 
+is not quite correct. As have been noted before, when you set a PIO mode using 
+Set Transfer Mode subcode of the Set Features command, you're always selecting 
+the flow control mode, i.e. using IORDY. So, the last condition in this if 
+stmt should probably be the first, if not the sole one...
+
+> +	return (cmd_on - 1) << 8 | (cmd_off - 1) | iordy;
+>  }
+>  
+>  /*
+> @@ -82,7 +86,7 @@ static u8 sl82c105_tune_pio(ide_drive_t 
+>  
+>  	pio = ide_get_best_pio_mode(drive, pio, 5, &p);
+>  
+> -	drv_ctrl = get_pio_timings(&p);
+> +	drv_ctrl = get_pio_timings(drive, &p);
+>  
+>  	/*
+>  	 * Store the PIO timings so that we can restore them
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1363,6 +1363,11 @@ extern void ide_toggle_bounce(ide_drive_
+>  extern int ide_set_xfer_rate(ide_drive_t *drive, u8 rate);
+>  int ide_use_fast_pio(ide_drive_t *);
+>  
+> +static inline int ata_dev_has_iordy(struct hd_driveid *id)
+> +{
+> +	return ((id->field_valid & 2) && (id->capability & 8)) ? 1 : 0;
+> +}
+> +
+>  u8 ide_dump_status(ide_drive_t *, const char *, u8);
+>  
+>  typedef struct ide_pio_timings_s {
+> @@ -1374,7 +1379,6 @@ typedef struct ide_pio_timings_s {
+>  
+>  typedef struct ide_pio_data_s {
+>  	u8 pio_mode;
+> -	u8 use_iordy;
+>  	unsigned int cycle_time;
+>  } ide_pio_data_t;
+>  
 
 MBR, Sergei
