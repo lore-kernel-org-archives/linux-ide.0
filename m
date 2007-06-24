@@ -1,81 +1,74 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Frequent SATA resets with sata_nv (fwd)
-Date: Sun, 24 Jun 2007 13:53:28 -0600
-Message-ID: <467ECBB8.2030706@shaw.ca>
-References: <fa.Z5bo5y2TvW4efa6slAJpcdPwqAA@ifi.uio.no>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:16558 "EHLO
-	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbXFXTxg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 15:53:36 -0400
-In-reply-to: <fa.Z5bo5y2TvW4efa6slAJpcdPwqAA@ifi.uio.no>
-Sender: linux-ide-owner@vger.kernel.org
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: sata_promise disk error 2.6.22-rc5 with hrt1 patch
+Date: Sun, 24 Jun 2007 23:30:42 +0200 (MEST)
+Message-ID: <200706242130.l5OLUgY8004346@harpo.it.uu.se>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754956AbXFXVbG@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: gf435@gmx.net, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Matthew \"Cheetah\" Gabeler-Lee" <cheetah-lkmlsata@fastcat.org>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-(ccing linux-ide)
+(cc: linux-ide added)
 
-Matthew "Cheetah" Gabeler-Lee wrote:
-> (Please cc me on replies)
+On Sun, 24 Jun 2007 20:49:05 +0200, otto Meier wrote:
+> I got the following in my logs:
 > 
-> I have three samsung hdds (/sys/block/sda/device/model says SAMSUNG 
-> SP2504C) in a raid configuration.  My system frequently (2-3x/day) 
-> experiences temporary lockups, which produce messages as below in my 
-> dmesg/syslog.  The system recovers, but the hang is annoying to say the 
-> least.
+> Jun 24 19:06:40 gate2 kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr
+> 0x0 action 0x0
+> Jun 24 19:06:40 gate2 kernel: ata4.00: (port_status 0x00001000)
+> Jun 24 19:06:40 gate2 kernel: ata4.00: cmd
+> 35/00:00:c1:17:92/00:04:17:00:00/e0 tag 0 cdb 0x0 data 524288 out
+> Jun 24 19:06:40 gate2 kernel:          res
+> 50/00:00:c0:1b:92/00:00:17:00:00/e0 Emask 0x20 (host bus error)
+> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
+> 488397168, hpa_sectors = 488397168
+> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
+> 488397168, hpa_sectors = 488397168
+> Jun 24 19:06:40 gate2 kernel: ata4.00: configured for UDMA/133
+> Jun 24 19:06:40 gate2 kernel: ata4: EH complete
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] 488397168 512-byte
+> hardware sectors (250059 MB)
+> Jun 24 19:06:40 gate2 kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr
+> 0x0 action 0x0
+> Jun 24 19:06:40 gate2 kernel: ata4.00: (port_status 0x00001000)
+> Jun 24 19:06:40 gate2 kernel: ata4.00: cmd
+> 25/00:00:c1:15:92/00:02:17:00:00/e0 tag 0 cdb 0x0 data 262144 in
+> Jun 24 19:06:40 gate2 kernel:          res
+> 50/00:00:c0:17:92/00:00:17:00:00/e0 Emask 0x20 (host bus error)
+> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
+> 488397168, hpa_sectors = 488397168
+> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
+> 488397168, hpa_sectors = 488397168
+> Jun 24 19:06:40 gate2 kernel: ata4.00: configured for UDMA/133
+> Jun 24 19:06:40 gate2 kernel: ata4: EH complete
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write Protect is off
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write cache: enabled,
+> read cache: enabled, doesn't support DPO or FUA
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] 488397168 512-byte
+> hardware sectors (250059 MB)
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write Protect is off
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write cache: enabled,
+> read cache: enabled, doesn't support DPO or FUA
 > 
-> All three drives are connected to sata_nv ports.  Oddly, it almost 
-> always happens on ata6 or ata7 (the second and third ports of that 4 
-> port setup on my motherboard).  There is an identical drive connected at 
-> ata5, but I've only once or twice seen it hit that drive.
+> The system continued without seeing other effects.
 > 
-> Googling around lkml.org, I found a few threads investigating what look 
-> like very similar problems, some of which never seemed to find the 
-> solution, but one of which came up with a fairly quick answer it seemed, 
-> namely that the drive's NCQ implementation was horked: 
-> http://lkml.org/lkml/2007/4/18/32
+> It is runnuning a 2.6.22-rc5 kernel with hrt1 patch.
+> The drive ist part of a raid5 with 4 identical drives
 > 
-> While I don't have older logs to verify exactly when this started, it 
-> was fairly recent, perhaps around my 2.6.20.1 to 2.6.21.1 kernel 
-> upgrade.
+> lspci -vvv gives:
 > 
-> Any other info or tests I can provide/run to help?
-> 
-> Syslog snippet:
-> Jun 21 10:35:23 cheetah kernel: ata6: EH in ADMA mode, notifier 0x0 notifier_error 0x0 gen_ctl 0x1501000 status 0x400 next cpb count 0x0 next cpb idx 0x0
-> Jun 21 10:35:24 cheetah kernel: ata6: CPB 0: ctl_flags 0x9, resp_flags 0x0
-> Jun 21 10:35:24 cheetah kernel: ata6: timeout waiting for ADMA IDLE, stat=0x400
-> Jun 21 10:35:24 cheetah kernel: ata6: timeout waiting for ADMA LEGACY, stat=0x400
-> Jun 21 10:35:24 cheetah kernel: ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> Jun 21 10:35:24 cheetah kernel: ata6.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
-> Jun 21 10:35:24 cheetah kernel:          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Jun 21 10:35:24 cheetah kernel: ata6: soft resetting port
-> Jun 21 10:35:24 cheetah kernel: ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> Jun 21 10:35:24 cheetah kernel: ata6.00: configured for UDMA/133
-> Jun 21 10:35:24 cheetah kernel: ata6: EH complete
-> Jun 21 10:35:24 cheetah kernel: SCSI device sdb: 488397168 512-byte hdwr sectors (250059 MB)
-> Jun 21 10:35:24 cheetah kernel: sdb: Write Protect is off
-> Jun 21 10:35:24 cheetah kernel: sdb: Mode Sense: 00 3a 00 00
-> Jun 21 10:35:24 cheetah kernel: SCSI device sdb: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> 02:06.0 Mass storage controller: Promise Technology, Inc. PDC40718 (SATA
+> 300 TX4) (rev 02)
 
-Unfortunately, this kind of problem is rather difficult to diagnose. 
-Essentially what's happened is that we've sent a command (in this case a 
-cache flush) to the controller but it's given no indication that it's 
-done anything with it (somewhat different from the case in the link you 
-mentioned above, where the controller indicates it's sent the command 
-and is waiting for completion). This could be some kind of drive issue 
-or drive/controller incompatibility, a controller bug, the driver doing 
-something the controller doesn't expect..
+The 300 TX4 model is causing transient errors for several people,
+and we don't yet know why. In your case, port_status 0x00001000
+means that "host bus is busy more than 256 clock cycles for every
+ATA I/O transfer" (quoting the docs). Basically it's a timeout.
 
-Does this drive actually support NCQ? I can't tell from this part of the 
-  log.
+As long as it's transient, don't worry.
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+You may want to try without hrt1 to see if hrt1 is causing the issue.
 
+/Mikael
