@@ -1,38 +1,33 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: SATA RAID5 speed drop of 100 MB/s
-Date: Sun, 24 Jun 2007 11:01:11 +0200 (MEST)
-Message-ID: <200706240901.l5O91BK2025032@harpo.it.uu.se>
+From: Florian Effenberger <florian@effenberger.org>
+Subject: Re: libata interface fatal error
+Date: Sun, 24 Jun 2007 13:32:34 +0200
+Message-ID: <467E5652.3060500@effenberger.org>
+References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <4673BA28.2020106@effenberger.org> <4675F84D.3060207@gmail.com> <46766208.1080305@effenberger.org> <467664F6.4060607@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:53098 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753316AbXFXJJD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Jun 2007 05:09:03 -0400
+Received: from garfield.effenberger.org ([85.214.43.221]:55163 "EHLO
+	garfield.effenberger.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754087AbXFXLch (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 07:32:37 -0400
+In-Reply-To: <467664F6.4060607@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: eyal@eyal.emu.id.au, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-On Sun, 24 Jun 2007 10:54:56 +1000, Eyal Lebedinsky wrote:
-> Jeff Garzik wrote:
-> [trim]
-> > Given that some drives might be better tuned for benchmarks in
-> > non-queued mode, and that a major behavior difference is that your
-> > drives are now NCQ-enabled, the first thing I would suggest you try is
-> > disabling NCQ:
-> >     http://linux-ata.org/faq.html#ncq
-> 
-> I see in my bootup messages:
-> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata6.00: ATA-7: WDC WD3200YS-01PGB0, 21.00M21, max UDMA/133
-> ata6.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 0/1)
-> ata6.00: configured for UDMA/133
-> 
-> and I wonder how to interpret "NCQ (depth 0/1)". Does this drive
-> support NCQ or not?
-> 
-> Controller:	Promise SATA-II-150-TX4.
-> Kernel:		2.6.21.5, x86
+Hi there,
 
-Your drive does, but the driver for your controller does not (yet).
+sorry, it seems it was all a false alert and our mainboard was 
+defective. At the end, it turned on only sometimes. To test it, we 
+wanted to install Windows, which didn't work as well.
 
-/Mikael
+Now the dealer changed the motherboard, and we are just fine with 3.0 
+Gbps and Kernel 2.6.21.5.
+
+Sorry for the big confusion and for your great help! I didn't know the 
+board was defective in the first place, there have been no indications 
+like that...
+
+Florian
