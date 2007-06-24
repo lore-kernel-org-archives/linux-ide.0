@@ -1,98 +1,67 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/6] ide: add ata_dev_has_iordy() helper
-Date: Sun, 24 Jun 2007 20:54:35 +0400
-Message-ID: <467EA1CB.8000800@ru.mvista.com>
-References: <200706232005.10968.bzolnier@gmail.com> <467D7652.7070105@ru.mvista.com> <200706240009.49033.bzolnier@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: SATA RAID5 speed drop of 100 MB/s
+Date: Sun, 24 Jun 2007 12:59:10 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0706241257190.12207@p34.internal.lan>
+References: <20070620224847.GA5488@alinoe.com> <4679B2DE.9090903@garzik.org>
+ <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org>
+ <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org>
+ <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey>
+ <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan> <467E9356.1030200@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:18579 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750927AbXFXQwz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 12:52:55 -0400
-In-Reply-To: <200706240009.49033.bzolnier@gmail.com>
+Received: from lucidpixels.com ([75.144.35.66]:33299 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbXFXQ7K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Jun 2007 12:59:10 -0400
+In-Reply-To: <467E9356.1030200@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, Jeff Garzik <jeff@garzik.org>, Carlo Wood <carlo@alinoe.com>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
 
->>>* Use it in sl82c105 host driver so it always gets the correct info
->>>  (use_iordy was incorrectly set for "pio" != 255 cases).
 
->>    Hm, why incorrectly? ATA specs say PIO3/4 *must* use IORDY flow control, 
->>IIRC... :-/
+On Sun, 24 Jun 2007, Michael Tokarev wrote:
 
-    Moreover, it was me who added that! :-)
+> Justin Piszcz wrote:
+>> Don't forget about max_sectors_kb either (for all drives in the SW RAID5
+>> array)
+>>
+>> max_sectors_kb = 8
+>> $ dd if=/dev/zero of=file.out6 bs=1M count=10240
+>> 10737418240 bytes (11 GB) copied, 55.4848 seconds, 194 MB/s
+>>
+>> max_sectors_kb = 128
+>> 10737418240 bytes (11 GB) copied, 22.6298 seconds, 474 MB/s
+>
+> Well.  You're comparing something different.  Yes, this
+> thread is about linux software raid5 in the first place,
+> but I were commenting about [NT]CQ within a single drive.
+>
+> Overall, yes, the larger your reads/writes to the drive
+> becomes, the faster its linear performance is.  Yet you
+> have to consider real workload instead of very synthetic
+> dd test.  It may be good approcsimation of a streaming
+> video workload (when you feed a large video file over
+> network or something like that), but even with this,
+> you probably want to feed several files at once (different
+> files to different clients), so single-threaded test
+> here isn't very useful.  IMHO anyway, and good for a
+> personal computer test.
+>
+> /mjt
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-	use_iordy = (pio_mode > 2);
+Concerning NCQ/no NCQ, without NCQ I get an additional 15-50MB/s in speed 
+per various bonnie++ tests.
 
->>>Index: b/drivers/ide/pci/sl82c105.c
->>>===================================================================
->>>--- a/drivers/ide/pci/sl82c105.c
->>>+++ b/drivers/ide/pci/sl82c105.c
->>>@@ -52,9 +52,10 @@
->>>  * Convert a PIO mode and cycle time to the required on/off times
->>>  * for the interface.  This has protection against runaway timings.
->>>  */
->>>-static unsigned int get_pio_timings(ide_pio_data_t *p)
->>>+static unsigned int get_pio_timings(ide_drive_t *drive, ide_pio_data_t *p)
->>> {
->>> 	unsigned int cmd_on, cmd_off;
->>>+	u8 iordy = 0;
-
->>> 	cmd_on  = (ide_pio_timings[p->pio_mode].active_time + 29) / 30;
->>> 	cmd_off = (p->cycle_time - 30 * cmd_on + 29) / 30;
->>>@@ -65,7 +66,10 @@ static unsigned int get_pio_timings(ide_
->>> 	if (cmd_off == 0)
->>> 		cmd_off = 1;
-
->>>-	return (cmd_on - 1) << 8 | (cmd_off - 1) | (p->use_iordy ? 0x40 : 0x00);
->>>+	if (p->pio_mode > 2 || ata_dev_has_iordy(drive->id))
->>>+		iordy = 0x40;
-
->>    This logic, although mimicking the old one from ide_get_best_pio_mode(), 
->>is not quite correct. As have been noted before, when you set a PIO mode using 
-
-    It was actully correct enough, just superfluous -- it was me who was 
-incorrect, mistaking || for &&. :-<
-
->>Set Transfer Mode subcode of the Set Features command, you're always selecting 
->>the flow control mode, i.e. using IORDY. So, the last condition in this if 
-
-    So, what actually would need fixing in *all* the drivers if one was aiming 
-at ATA-1 compatibility is *not* issuing that subcommand to such drives...
-
-> Oh yes, I keep forgetting about it - some nice FIXME comment
-> in <linux/ata.h> would be of a great help. :-)
-
-    Well, some drivers (like pdc202xx_*) don't do the IORDY thing right for 
-PIO modes < 3 as well...
-
->>stmt should probably be the first, if not the sole one...
-
-> Fixed, new patch below.
-
-> [PATCH] ide: add ata_dev_has_iordy() helper (take 2)
-
-> * Add ata_dev_has_iordy() helper and use it sl82c105 host driver.
-
-> * Remove no longer needed ide_pio_data_t.use_iordy field.
-
-> v2:
-> * Fix issues noticed by Sergei:
->   - correct patch description
->   - remove stale comment from ide_get_best_pio_mode()
-
-    I meant something like changing use_iordy to IORDY but it's good as is now...
-
->   - use only ata_dev_has_iordy() in sl82c105 host driver
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+# Average of 3 runs with NCQ on for Quad Raptor 150 RAID 5 Software RAID:
+p34-ncq-on,7952M,43916.3,96.6667,151943,28.6667,75794.3,18.6667,48991.3,99,181687,24,558.033,0.333333,16:100000:16/64,867.667,9,29972.7,98.3333,2801.67,16,890.667,9.33333,27743,94.3333,2115.33,15.6667
+# Average of 3 runs with NCQ off for Quad Raptor 150 RAID 5 Software RAID:
+p34-ncq-off,7952M,42470,97.3333,200409,36.3333,90240.3,22.6667,48656,99,198853,27,546.467,0,16:100000:16/64,972.333,10,21833,72.3333,3697,21,995,10.6667,27901.7,95.6667,2681,20.6667
 
