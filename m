@@ -1,75 +1,46 @@
 From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: SATA RAID5 speed drop of 100 MB/s
-Date: Sun, 24 Jun 2007 19:48:09 +0400
-Message-ID: <467E9239.5080702@msgid.tls.msk.ru>
-References: <20070620224847.GA5488@alinoe.com> <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey>
+Date: Sun, 24 Jun 2007 19:52:54 +0400
+Message-ID: <467E9356.1030200@msgid.tls.msk.ru>
+References: <20070620224847.GA5488@alinoe.com> <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey> <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:23053 "EHLO hobbit.corpit.ru"
+Received: from hobbit.corpit.ru ([81.13.94.6]:21797 "EHLO hobbit.corpit.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753398AbXFXPsP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Jun 2007 11:48:15 -0400
-In-Reply-To: <20070624125957.GA28067@gallifrey>
+	id S1755695AbXFXPw6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Jun 2007 11:52:58 -0400
+In-Reply-To: <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Dr. David Alan Gilbert" <linux@treblig.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Carlo Wood <carlo@alinoe.com>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, Jeff Garzik <jeff@garzik.org>, Carlo Wood <carlo@alinoe.com>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Dr. David Alan Gilbert wrote:
-> * Michael Tokarev (mjt@tls.msk.ru) wrote:
+Justin Piszcz wrote:
+> Don't forget about max_sectors_kb either (for all drives in the SW RAID5
+> array)
 > 
-> <snip>
+> max_sectors_kb = 8
+> $ dd if=/dev/zero of=file.out6 bs=1M count=10240
+> 10737418240 bytes (11 GB) copied, 55.4848 seconds, 194 MB/s
 > 
->> By the way, I did some testing of various drives, and NCQ/TCQ indeed
->> shows some difference -- with multiple I/O processes (like "server"
->> workload), IF NCQ/TCQ is implemented properly, especially in the
->> drive.
->>
->> For example, this is a good one:
->>
->> Single Seagate 74Gb SCSI drive (10KRPM)
->>
->> BlkSz Trd linRd rndRd linWr  rndWr  linR/W     rndR/W
->> 1024k   1  83.1  36.0  55.8  34.6  28.2/27.6  20.3/19.4
->>         2        45.2        44.1             36.4/ 9.9
->>         4        48.1        47.6             40.7/ 7.1
-[]
->> The only thing I don't understand is why with larger I/O block
->> size we see write speed drop with multiple threads.
-> 
-> My guess is that something is chopping them up into smaller writes.
+> max_sectors_kb = 128
+> 10737418240 bytes (11 GB) copied, 22.6298 seconds, 474 MB/s
 
-At least it's not in the kernel.  According to /proc/diskstats,
-the requests goes in 1024kb into the drive.
+Well.  You're comparing something different.  Yes, this
+thread is about linux software raid5 in the first place,
+but I were commenting about [NT]CQ within a single drive.
 
->> And in contrast to the above, here's another test run, now
->> with Seagate SATA ST3250620AS ("desktop" class) 250GB
->> 7200RPM drive:
->>
->> BlkSz Trd linRd rndRd linWr rndWr   linR/W    rndR/W
->> 1024k   1  78.4  34.1  33.5  24.6  19.6/19.5  16.0/12.7
->>         2        33.3        24.6             15.4/13.8
->>         4        34.3        25.0             14.7/15.0
-> 
->> And second, so far I haven't seen a case where a drive
->> with NCQ/TCQ enabled works worse than without.  I don't
->> want to say there aren't such drives/controllers, but
->> it just happen that I haven't seen any.)
-> 
-> Yes you have - the random writes with large blocks and 2 or 4 threads
-> is significantly better for your non-NCQ drive; and getting more
-> significant as you add more threads - I'm curious what happens
-> on 8 threads or more.  
-
-Both drives shown above are with [NT]CQ enabled.  And the first drive
-above (74Gb SCSI, where the speed increases with the amount of threads)
-is the one which has "better" TCQ implementation.  When I turn off TCQ
-for that drive, there's almost no speed increase while increasing number
-of threads.
-
-(I can't test this drive now as it's in production.  The results where
-gathered before I installed the system on it).
+Overall, yes, the larger your reads/writes to the drive
+becomes, the faster its linear performance is.  Yet you
+have to consider real workload instead of very synthetic
+dd test.  It may be good approcsimation of a streaming
+video workload (when you feed a large video file over
+network or something like that), but even with this,
+you probably want to feed several files at once (different
+files to different clients), so single-threaded test
+here isn't very useful.  IMHO anyway, and good for a
+personal computer test.
 
 /mjt
