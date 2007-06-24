@@ -1,74 +1,78 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: sata_promise disk error 2.6.22-rc5 with hrt1 patch
-Date: Sun, 24 Jun 2007 23:30:42 +0200 (MEST)
-Message-ID: <200706242130.l5OLUgY8004346@harpo.it.uu.se>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754956AbXFXVbG@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: gf435@gmx.net, linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+From: Carlo Wood <carlo@alinoe.com>
+Subject: Re: SATA RAID5 speed drop of 100 MB/s
+Date: Mon, 25 Jun 2007 00:07:23 +0200
+Message-ID: <20070624220723.GA21724@alinoe.com>
+References: <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey> <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan> <467E9356.1030200@msgid.tls.msk.ru> <Pine.LNX.4.64.0706241257190.12207@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from viefep18-int.chello.at ([213.46.255.22]:7057 "EHLO
+	viefep14-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751081AbXFXWH0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 18:07:26 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0706241257190.12207@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, "Dr. David Alan Gilbert" <linux@treblig.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-(cc: linux-ide added)
+On Sun, Jun 24, 2007 at 12:59:10PM -0400, Justin Piszcz wrote:
+> Concerning NCQ/no NCQ, without NCQ I get an additional 15-50MB/s in speed 
+> per various bonnie++ tests.
 
-On Sun, 24 Jun 2007 20:49:05 +0200, otto Meier wrote:
-> I got the following in my logs:
-> 
-> Jun 24 19:06:40 gate2 kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr
-> 0x0 action 0x0
-> Jun 24 19:06:40 gate2 kernel: ata4.00: (port_status 0x00001000)
-> Jun 24 19:06:40 gate2 kernel: ata4.00: cmd
-> 35/00:00:c1:17:92/00:04:17:00:00/e0 tag 0 cdb 0x0 data 524288 out
-> Jun 24 19:06:40 gate2 kernel:          res
-> 50/00:00:c0:1b:92/00:00:17:00:00/e0 Emask 0x20 (host bus error)
-> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
-> 488397168, hpa_sectors = 488397168
-> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
-> 488397168, hpa_sectors = 488397168
-> Jun 24 19:06:40 gate2 kernel: ata4.00: configured for UDMA/133
-> Jun 24 19:06:40 gate2 kernel: ata4: EH complete
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] 488397168 512-byte
-> hardware sectors (250059 MB)
-> Jun 24 19:06:40 gate2 kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr
-> 0x0 action 0x0
-> Jun 24 19:06:40 gate2 kernel: ata4.00: (port_status 0x00001000)
-> Jun 24 19:06:40 gate2 kernel: ata4.00: cmd
-> 25/00:00:c1:15:92/00:02:17:00:00/e0 tag 0 cdb 0x0 data 262144 in
-> Jun 24 19:06:40 gate2 kernel:          res
-> 50/00:00:c0:17:92/00:00:17:00:00/e0 Emask 0x20 (host bus error)
-> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
-> 488397168, hpa_sectors = 488397168
-> Jun 24 19:06:40 gate2 kernel: ata4.00: ata_hpa_resize 1: sectors =
-> 488397168, hpa_sectors = 488397168
-> Jun 24 19:06:40 gate2 kernel: ata4.00: configured for UDMA/133
-> Jun 24 19:06:40 gate2 kernel: ata4: EH complete
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write Protect is off
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write cache: enabled,
-> read cache: enabled, doesn't support DPO or FUA
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] 488397168 512-byte
-> hardware sectors (250059 MB)
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write Protect is off
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-> Jun 24 19:06:40 gate2 kernel: sd 3:0:0:0: [sdd] Write cache: enabled,
-> read cache: enabled, doesn't support DPO or FUA
-> 
-> The system continued without seeing other effects.
-> 
-> It is runnuning a 2.6.22-rc5 kernel with hrt1 patch.
-> The drive ist part of a raid5 with 4 identical drives
-> 
-> lspci -vvv gives:
-> 
-> 02:06.0 Mass storage controller: Promise Technology, Inc. PDC40718 (SATA
-> 300 TX4) (rev 02)
+There is more going on than a bad NCQ implementation of the drive imho.
+I did a long test over night (and still only got two schedulers done,
+will do the other two tomorrow), and the difference between a queue depth
+of 1 and 2 is DRAMATIC.
 
-The 300 TX4 model is causing transient errors for several people,
-and we don't yet know why. In your case, port_status 0x00001000
-means that "host bus is busy more than 256 clock cycles for every
-ATA I/O transfer" (quoting the docs). Basically it's a timeout.
+See http://www.xs4all.nl/~carlo17/noop_queue_depth.png
+and http://www.xs4all.nl/~carlo17/anticipatory_queue_depth.png
 
-As long as it's transient, don't worry.
+The bonnie++ tests are done in a directory on the /dev/md7 and
+/dev/ssd2 partitions respectively. Each bonnie test is performed
+four times.
 
-You may want to try without hrt1 to see if hrt1 is causing the issue.
+The hdparm -t tests (that show no difference with a -tT test) are
+each done five times, for /dev/sdd, /dev/md7 and /dev/sda (that is
+one of the RAID5 drives used for /dev/md7).
 
-/Mikael
+Thus in total there are 2 * 4 + 3 * 5 = 23 data points per
+queue depth value in each graph.
+
+The following can be observed:
+
+1) There is hardly any difference between the two schedulers (noop
+   is a little faster for the bonny test).
+2) An NCQ depth of 1 is WAY faster on RAID5 (bonnie; around 125 MB/s),
+   the NCQ depth of 2 is by far the slowest for the RAID5 (bonnie;
+   around 40 MB/s). NCQ depths of 3 and higher show no difference,
+   but are also slow (bonnie; around 75 MB/s).
+3) There is no significant influence of the NCQ depth for non-RAID,
+   either the /dev/sda (hdparm -t) or /dev/sdd disk (hdparm -t and
+   bonnie).
+4) With a NCQ depth > 1, the hdparm -t measurement of /dev/md7 is
+   VERY unstable. Sometimes it gives the maximum (around 150 MB/s),
+   and sometimes as low as 30 MB/s, seemingly independent of the
+   NCQ depth. Note that those measurement were done on an otherwise
+   unloaded machine in single user mode; and the measurements were
+   all done one after an other. The strong fluctuation of the hdparm
+   results for the RAID device (while the underlaying devices do not
+   show this behaviour) are unexplainable.
+
+>From the above I conclude that something must be wrong with the
+software RAID implementation - and not just with the harddisks, imho.
+At least, that's what it looks like to me. I am not an expert though ;)
+
+-- 
+Carlo Wood <carlo@alinoe.com>
+
+PS RAID5 (md7 = sda7 + sdb7 + sdc7): Three times a Western Digital
+   Raptor 10k rpm (WDC WD740ADFD-00NLR1).
+   non-RAID (sdd2): Seagate barracuda 7200 rpm (ST3320620AS).
+
+   The reason that now I measure around 145 MB/s instead of 165 MB/s
+   as reported in previous post (with hdparm -t /dev/md7) is because
+   before I use hdparm -t /dev/md2, which is closer to the outside
+   of the disk and therefore faster. /dev/md2 still is around 165 MB/s.
+
