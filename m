@@ -1,106 +1,129 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: 2.6.22-rc5 libata/ata_piix failure with older CDROM
-Date: Mon, 25 Jun 2007 13:12:42 +0800
-Message-ID: <467F4ECA.8040008@tw.ibm.com>
-References: <200706231346.l5NDkYm5018432@harpo.it.uu.se>
+Subject: Re: ide/dma not working from 2.6.19 to 2.6.21
+Date: Mon, 25 Jun 2007 13:22:47 +0800
+Message-ID: <467F5127.4060006@tw.ibm.com>
+References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <467A9923.6010203@ru.mvista.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:45561 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbXFYFMv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 01:12:51 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:47419 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365AbXFYFWw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 01:22:52 -0400
 Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5P5CoQT027041
-	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 01:12:50 -0400
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5P5MqZu029207
+	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 01:22:52 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5P5CoPF262268
-	for <linux-ide@vger.kernel.org>; Sun, 24 Jun 2007 23:12:50 -0600
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5P5Mqar267904
+	for <linux-ide@vger.kernel.org>; Sun, 24 Jun 2007 23:22:52 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5P5Colc005912
-	for <linux-ide@vger.kernel.org>; Sun, 24 Jun 2007 23:12:50 -0600
-In-Reply-To: <200706231346.l5NDkYm5018432@harpo.it.uu.se>
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5P5MplX019280
+	for <linux-ide@vger.kernel.org>; Sun, 24 Jun 2007 23:22:52 -0600
+In-Reply-To: <467A9923.6010203@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
 
-Mikael Pettersson wrote:
-> I tried (again) to convert an Intel i815EP-chipset
-> machine from IDE to libata, but libata still fails
-> to initialise the CDROM on the machine.
+Sergei Shtylyov wrote:
+> Hello.
 > 
-> With 2.6.22-rc5, IDE says:
+> Bahadir Balban wrote:
 > 
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> ICH2: IDE controller at PCI slot 0000:00:1f.1
-> ICH2: chipset revision 5
-> ICH2: not 100% native mode: will probe irqs later
->     ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:DMA, hdb:pio
->     ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:DMA, hdd:DMA
-> Probing IDE interface ide0...
-> hda: IC35L080AVVA07-0, ATA DISK drive
-> hda: selected mode 0x45
-> ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-> Probing IDE interface ide1...
-> hdc: CRD-8320B, ATAPI CD/DVD-ROM drive
-> hdd: Hewlett-Packard CD-Writer Plus 9100, ATAPI CD/DVD-ROM drive
-> hdc: selected mode 0x22
-> hdd: selected mode 0x42
-> ide1 at 0x170-0x177,0x376 on irq 15
-> hda: max request size: 128KiB
-> hda: 160836480 sectors (82348 MB) w/1863KiB Cache, CHS=65535/16/63, UDMA(100)
-> hda: cache flushes supported
->  hda: hda1 hda2 hda3 hda4 < hda5 hda6 >
+>> I have a PCI Promise TX2 Ultra133 controller with a harddisk on an ARM
+>> platform (which is a barebone system with no BIOS). This setup used to
+>> work with the old linux-ide drivers on 2.6.19
 > 
-> Switching to libata (ata_piix) results in:
 > 
-> ata_piix 0000:00:1f.1: version 2.11
-> PCI: Setting latency timer of device 0000:00:1f.1 to 64
-> scsi0 : ata_piix
-> scsi1 : ata_piix
-> ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
-> ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
-> ata1.00: ata_hpa_resize 1: sectors = 160836480, hpa_sectors = 160836480
-> ata1.00: ATA-5: IC35L080AVVA07-0, VA4OA52A, max UDMA/100
-> ata1.00: 160836480 sectors, multi 16: LBA 
-> ata1.00: ata_hpa_resize 1: sectors = 160836480, hpa_sectors = 160836480
-> ata1.00: configured for UDMA/100
-> ata2.00: ATAPI: CRD-8320B, 1.12, max MWDMA2
-> ata2.01: ATAPI: Hewlett-Packard CD-Writer Plus 9100, 1.0c, max UDMA/33
-> ata2.00: configured for MWDMA2
-> ata2.01: configured for UDMA/33
-> scsi 0:0:0:0: Direct-Access     ATA      IC35L080AVVA07-0 VA4O PQ: 0 ANSI: 5
-> sd 0:0:0:0: [sda] 160836480 512-byte hardware sectors (82348 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> sd 0:0:0:0: [sda] 160836480 512-byte hardware sectors (82348 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 36 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: port is slow to respond, please be patient (Status 0xd0)
-> ata2: device not ready (errno=-16), forcing hardreset
-> ata2: BUG: prereset() requested invalid reset type
-> ata2: soft resetting port
-> ATA: abnormal status 0x80 on port 0x00010177
-> ATA: abnormal status 0x80 on port 0x00010177
-> ATA: abnormal status 0x80 on port 0x00010177
+>    You were very lucky then bacause actually it usually failed on
+> anything non-x86. ;-)
+> 
+>> but it does not work
+>> with 2.6.22-rc4, or 2.6.21. Here's the error output:
+> 
+> 
+>    I guess this might be related to the driver update in 2.6.20-rc1 then
+> -- I made the driver calibrate the chip's PLL, so that it might work for
+> non-x86 case too (where Promise BIOS isn't available to do this). The
+> code is basically the same as in the libata's pata_2027x driver...
+> 
+>> PDC20269: chipset revision 2
+>> <6>PDC20269: ROM enabled at 0xa0210000
+>> PDC20269: ROM enabled at 0xa0210000
+> 
+> 
+>    Hm, why all the messages are printed twice? :-O
+>    (I'll cut out the dupes to save bandwidth).
+> 
+>> PDC20269: PLL input clock is 37736 kHz
+> 
+> 
+>    37.736 MHz is a pretty strange PLL clock... Basically, it's the
+> halved PCI clock, and that value signifies your PCI is probably running
+> at 75 MHz -- which is serious overclocking... :-/
+>    That could explain why the driver managed to work before -- the
+> default DPLL settings fit for 66 MHz PCI but made the UltraDMA fail with
+> CRC errors on the plain 33 MHz PCI, IIRC...
+>    I may suggest replacing #undef DEBUG by #define DEBUG in this driver,
+> rebuilding the kernel and posting the driver's output...
+> 
 
-The INQUIRY timeout looks like the ATAPI DMA problem that Tejun is working on.
-Could you please check if Tejun's patch that limits ATAPI DMA to multiple of
-16-bytes works:
-https://bugzilla.novell.com/attachment.cgi?id=147389
-(The original bug is: https://bugzilla.novell.com/show_bug.cgi?id=229260#c35)
+I don't know whether this is related or not. Recently I noticed that
+the PLL clock being detected higher than expected as 20MHz on my box.
+(It used be 16.6 MHz since my PCI bus is running at 33MHz...)
+
+Reloading the pata_pdc2027x module then the problem goes away.
+I guess maybe somehow mdelay() is not as precise as before...
 
 --
 albert
+
+(dmesg attached for reference)
+The PLL clock is wrongly detected as 20MHz on my box, kernel 2.6.22-rc3.
+
+[ 5545.255266] pata_pdc2027x 0000:02:05.0: version 0.9
+[ 5545.255489] ACPI: PCI Interrupt 0000:02:05.0[A] -> Link [LNK1] -> GSI 10 (level, low) -> IRQ 10
+[ 5545.374703] pata_pdc2027x 0000:02:05.0: PLL input clock 20027 kHz
+[ 5545.404872] scsi2 : pata_pdc2027x
+[ 5545.430357] scsi3 : pata_pdc2027x
+[ 5545.433338] ata3: PATA max UDMA/133 cmd 0xe09897c0 ctl 0xe0989fda bmdma 0xe0989000 irq 0
+[ 5545.433671] ata4: PATA max UDMA/133 cmd 0xe09895c0 ctl 0xe0989dda bmdma 0xe0989008 irq 0
+[ 5545.916581] ata3.00: ATAPI, max UDMA/33
+[ 5545.916590] ata3.01: ATAPI, max UDMA/33
+[ 5546.080361] ata3.00: configured for UDMA/33
+[ 5546.244197] ata3.01: configured for UDMA/33
+[ 5546.410493] scsi 2:0:0:0: CD-ROM            LITE-ON  CD-RW SOHR-5238S 4S07 PQ: 0 ANSI: 5
+[ 5546.437658] scsi 2:0:1:0: CD-ROM            HL-DT-ST DVDRAM GSA-4163B A105 PQ: 0 ANSI: 5
+[ 5546.604481] sr0: scsi3-mmc drive: 52x/52x writer cd/rw xa/form2 cdda tray
+[ 5546.604808] Uniform CD-ROM driver Revision: 3.20
+[ 5546.607596] sr 2:0:0:0: Attached scsi CD-ROM sr0
+[ 5546.612168] sr1: scsi3-mmc drive: 40x/40x writer dvd-ram cd/rw xa/form2 cdda tray
+[ 5546.614075] sr 2:0:1:0: Attached scsi CD-ROM sr1
+[ 5640.334685] ata3.00: disabled
+[ 5640.334695] ata3.01: disabled
+[ 5640.403451] ACPI: PCI interrupt for device 0000:02:05.0 disabled
+==============================================================================================
+The PLL clock clock is correct after rmmod and reload the module:
+
+[ 5644.153643] pata_pdc2027x 0000:02:05.0: version 0.9
+[ 5644.153723] ACPI: PCI Interrupt 0000:02:05.0[A] -> Link [LNK1] -> GSI 10 (level, low) -> IRQ 10
+[ 5644.252954] pata_pdc2027x 0000:02:05.0: PLL input clock 16714 kHz
+[ 5644.303470] scsi4 : pata_pdc2027x
+[ 5644.319285] scsi5 : pata_pdc2027x
+[ 5644.321207] ata5: PATA max UDMA/133 cmd 0xe09897c0 ctl 0xe0989fda bmdma 0xe0989000 irq 0
+[ 5644.321215] ata6: PATA max UDMA/133 cmd 0xe09895c0 ctl 0xe0989dda bmdma 0xe0989008 irq 0
+[ 5644.803308] ata5.00: ATAPI, max UDMA/33
+[ 5644.803629] ata5.01: ATAPI, max UDMA/33
+[ 5644.967144] ata5.00: configured for UDMA/33
+[ 5645.130975] ata5.01: configured for UDMA/33
+[ 5645.287539] scsi 4:0:0:0: CD-ROM            LITE-ON  CD-RW SOHR-5238S 4S07 PQ: 0 ANSI: 5
+[ 5645.291669] sr0: scsi3-mmc drive: 52x/52x writer cd/rw xa/form2 cdda tray
+[ 5645.294295] sr 4:0:0:0: Attached scsi CD-ROM sr0
+[ 5645.300189] scsi 4:0:1:0: CD-ROM            HL-DT-ST DVDRAM GSA-4163B A105 PQ: 0 ANSI: 5
+[ 5645.305716] sr1: scsi3-mmc drive: 40x/40x writer dvd-ram cd/rw xa/form2 cdda tray
+[ 5645.306736] sr 4:0:1:0: Attached scsi CD-ROM sr1
+[albertcc@p4ht-s june_2007]$ 
+
 
