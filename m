@@ -1,52 +1,45 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH 2.6.22-rc5] libata: add HTS541616J9SA00 to NCQ blacklist
-Date: Sun, 24 Jun 2007 20:39:27 -0600
-Message-ID: <467F2ADF.1040600@shaw.ca>
-References: <fa.sspu6LOivd/touNtS2IsMKPqHa0@ifi.uio.no>
- <fa.19XJG1Asdp1zwcWLxolIH6F+5lY@ifi.uio.no> <467EC909.9040006@shaw.ca>
- <467F2495.3080509@gmail.com> <467F286B.40607@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: libata interface fatal error
+Date: Mon, 25 Jun 2007 11:49:04 +0900
+Message-ID: <467F2D20.1080700@gmail.com>
+References: <46580134.7010107@effenberger.org> <465BEF50.8050207@gmail.com> <466725E5.9030405@effenberger.org> <4667D4F5.1060302@gmail.com> <4673BA28.2020106@effenberger.org> <4675F84D.3060207@gmail.com> <46766208.1080305@effenberger.org> <467664F6.4060607@gmail.com> <467E5652.3060500@effenberger.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:56095 "EHLO
-	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285AbXFYCjf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 22:39:35 -0400
-In-reply-to: <467F286B.40607@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.181]:35062 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbXFYCtJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jun 2007 22:49:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1644360wah
+        for <linux-ide@vger.kernel.org>; Sun, 24 Jun 2007 19:49:09 -0700 (PDT)
+In-Reply-To: <467E5652.3060500@effenberger.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, enricoss@tiscali.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Florian Effenberger <florian@effenberger.org>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Tejun Heo wrote:
-> Another member of HTS5416* family doing spurious NCQ completion.
+Florian Effenberger wrote:
+> sorry, it seems it was all a false alert and our mainboard was
+> defective. At the end, it turned on only sometimes. To test it, we
+> wanted to install Windows, which didn't work as well.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Enrico Sardi <enricoss@tiscali.it>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
+> Now the dealer changed the motherboard, and we are just fine with 3.0
+> Gbps and Kernel 2.6.21.5.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index adfae9d..fbca8d8 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3803,6 +3803,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	/* Drives which do spurious command completion */
->  	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
->  	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
-> +	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
->  	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
->  
->  	/* Devices with NCQ limits */
-> 
+> Sorry for the big confusion and for your great help! I didn't know the
+> board was defective in the first place, there have been no indications
+> like that...
 
-Is that the right ID string? Strange that that one has Hitachi at the 
-front and the others don't..
+Yeah, things like these are tricky.  SATA is usually the first one to
+suffer from hardware defect including power fluctuation due to input
+power, PSU or on-board voltage regulator problems because the link is
+relatively long and runs at very high speed.  I also heard that SATA
+cables should have been made more resistant to interference but I'm no
+expert in that area.
+
+It's interesting to see how it got solved.  Thanks for another data
+point to blame hardware when I don't have a clue.  :-)
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
