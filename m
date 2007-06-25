@@ -1,58 +1,56 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Mon, 25 Jun 2007 18:15:52 +0800
-Message-ID: <467F95D8.6000805@tw.ibm.com>
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com> <467BB7DB.4090004@gmail.com> <467BCF86.8060508@rtr.ca> <467F3EDC.2060002@tw.ibm.com> <467F8B8B.1000006@gmail.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 2.6.22-rc5] libata: be less verbose about hpa
+Date: Mon, 25 Jun 2007 20:45:54 +0900
+Message-ID: <467FAAF2.9080104@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754390AbXFYKQW@vger.kernel.org>
-In-Reply-To: <467F8B8B.1000006@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert de Rooy <robert.de.rooy@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.177]:22032 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbXFYLp7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 07:45:59 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1773922wah
+        for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 04:45:59 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Robert de Rooy wrote:
-> Albert Lee wrote:
-> 
->> Mark Lord wrote:
->>  
->>
->>> ...
->>>
->>> Mmm.. I don't know about the first failure there,
->>> but after that it gets into the "stuck DRQ" state
->>> which libata makes no attempt to handle at present.
->>>
->>>     
->>
->>
->> It seems the pata_pcmcia driver is using IRQ driven PIO. Maybe Robert
->> could try the following pio_polling patch first.
->>   
-> 
-> 
-> I did not get the chance to try Marks patch, but the pio_polling patch
-> from Albert works!!
-> 
-> 
+There's no reason to print out hpa related messages when HPA is not
+active.  Kill the unconditional message and add a warning message
+which is printed if HPA size is smaller than the current size.
 
-The patch just workarounds the "lost irq" problem by polling; not real
-fix. We still need to find out why irq is lost per Mark's comment:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-"This proves that the device does work correctly in most respects
-except for interrupt delivery.  The status bits are working and
-it can be probed for, configured, and used."
-
-"So, next step might be to try and understand the interrupt mis-delivery
-problem some more.   I've lost the history of the original issue,
-but we now know that everything except the actual interrupt seems good."
-
-I am not familiar with the PCMCIA interrupt delivery. It seems the
-"Dazzle 4in1 Card Adapter" works under windows but somehow lost irq
-under both IDE and libata. Maybe Alan/Bart or the PCMCIA developers
-know better...
---
-albert
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index adfae9d..deda684 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -983,11 +983,6 @@ static u64 ata_hpa_resize(struct ata_device *dev)
+ 	else
+ 		hpa_sectors = ata_read_native_max_address(dev);
+ 
+-	/* if no hpa, both should be equal */
+-	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, "
+-				"hpa_sectors = %lld\n",
+-		__FUNCTION__, (long long)sectors, (long long)hpa_sectors);
+-
+ 	if (hpa_sectors > sectors) {
+ 		ata_dev_printk(dev, KERN_INFO,
+ 			"Host Protected Area detected:\n"
+@@ -1009,7 +1004,11 @@ static u64 ata_hpa_resize(struct ata_device *dev)
+ 				return hpa_sectors;
+ 			}
+ 		}
+-	}
++	} else if (hpa_sectors < sectors)
++		ata_dev_printk(dev, KERN_WARNING, "%s 1: hpa sectors (%lld) "
++			       "is smaller than sectors (%lld)\n", __FUNCTION__,
++			       (long long)hpa_sectors, (long long)sectors);
++
+ 	return sectors;
+ }
+ 
