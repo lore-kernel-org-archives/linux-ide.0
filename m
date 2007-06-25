@@ -1,41 +1,47 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] pata_it821x: fix section mismatch warning
-Date: Mon, 25 Jun 2007 10:42:22 -0700
-Message-ID: <20070625104222.6bc805e9.randy.dunlap@oracle.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Another SATA device with spurious NCQ completions
+Date: Mon, 25 Jun 2007 14:34:59 -0400
+Message-ID: <46800AD3.7050803@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:21071 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbXFYRmH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 13:42:07 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:39051 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708AbXFYSfQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jun 2007 14:35:16 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l5PIYxI0007642
+	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 14:34:59 -0400
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l5PIYxsP010891
+	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 14:34:59 -0400
+Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l5PIYxKS011695
+	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 14:34:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ide <linux-ide@vger.kernel.org>
-Cc: alan@redhat.com, jgarzik <jgarzik@pobox.com>, bzolnier@gmail.com
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=245512
 
-Fix section mismatch when CONFIG_HOTPLUG=n (but functions are used
-for resume):
 
-WARNING: drivers/ata/pata_it821x.o(.text+0x3f): Section mismatch: reference to .init.text: (between 'it821x_reinit_one' and 'it821x_program_udma')
-WARNING: drivers/ata/pata_it821x.o(.text+0x691): Section mismatch: reference to .init.text: (between 'it821x_init_one' and 'it821x_passthru_set_dmamode')
+The following error consistently appears at apparently random intervals in syslog:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/pata_it821x.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+kernel: ata1.00: exception Emask 0x2 SAct 0x1001 SErr 0x0 action 0x2 frozen
+kernel: ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x1001
+FIS=004040a1:00000800)
+kernel: ata1.00: cmd 61/08:00:39:2b:cc/00:00:08:00:00/40 tag 0 cdb 0x0 data 4096 out
+kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+kernel: ata1.00: cmd 61/08:60:e1:2b:cc/00:00:08:00:00/40 tag 12 cdb 0x0 data
+4096 out
+kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2 (HSM violation)
 
---- linux-2.6.22-rc6.orig/drivers/ata/pata_it821x.c
-+++ linux-2.6.22-rc6/drivers/ata/pata_it821x.c
-@@ -690,7 +690,7 @@ static struct ata_port_operations it821x
- 	.port_start	= it821x_port_start,
- };
- 
--static void __devinit it821x_disable_raid(struct pci_dev *pdev)
-+static void it821x_disable_raid(struct pci_dev *pdev)
- {
- 	/* Reset local CPU, and set BIOS not ready */
- 	pci_write_config_byte(pdev, 0x5E, 0x01);
+Controller is ATI SB600 using the AHCI driver.
+64-bit DMA is disabled.
+Disk is:
+ata1.00: ATA-7: ST3160812AS, 3.ADJ, max UDMA/133
+
+
+Can't we just turn off NCQ automatically when this happens?
