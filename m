@@ -1,65 +1,63 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [RFT] hpt366: reset DMA state machine on timeouts
-Date: Mon, 25 Jun 2007 16:44:34 -0500
-Message-ID: <20070625214434.GA4482@austin.ibm.com>
-References: <200706212154.47398.sshtylyov@ru.mvista.com> <20070622151359.GD8840@austin.ibm.com> <467BEB9C.1070407@ru.mvista.com> <20070622163646.GG8840@austin.ibm.com> <467D621A.80406@ru.mvista.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: pata_ali patch not merged?
+Date: Mon, 25 Jun 2007 19:13:32 -0400
+Message-ID: <46804C1C.9010900@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:44141 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbXFYVsG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 17:48:06 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5PLm2Im010196
-	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 17:48:02 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5PLkF01241370
-	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 15:48:02 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5PLiZDc006207
-	for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 15:44:36 -0600
-Content-Disposition: inline
-In-Reply-To: <467D621A.80406@ru.mvista.com>
+Received: from mx1.redhat.com ([66.187.233.31]:35100 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517AbXFYXNf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jun 2007 19:13:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>
 
-On Sat, Jun 23, 2007 at 10:10:34PM +0400, Sergei Shtylyov wrote:
-> 
->    Now I'm confused too -- did you get any DMA timeouts this time?
+This patch was found to fix some of the problems with the
+pata_ali driver. Is it going to be merged in 2.6.22?
 
-No. And yes, this is confusing, as the initial hang that I was seeing 
-was preceeded by DMA timeout messages on the screen (as posted in the
-initial email). Now, with the patched kernel, I'm not seeing any
-DMA timeouts; and, instead, I'm seeing lots of hdc: task_out_intr:
-status=0x50 { DriveReady SeekComplete } I don't know why.
+[https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=156482]
 
-However, I have now learned how to make all of my problems go
-away: lower the UDMA level.  So its seems that this has been
-a humbling experience in (re-)learning about bus glitches.
-
-I'm currently doing an /sbin/hdparm -X 67 /dev/hdc to drop
-the udma mode to mode3 == 44 MHz (-X udma_mode + 64) from
-the default of mode4 for this controller (the hard drive itself is
-supposedly udma100 capable, according to the box).  This has cured 
-all of the ide driver problems.
-
-The disk that caused all the problems was: 
-Device Model:     MAXTOR STM3320620A
-
-A quick look through ide-dma.c shows that there is no way to
-blacklist a drive to the "highest suported" level; the blacklist
-is UDMA on or UDMA off.
-
-===============
-I have not yet tried playing any udma mode games with libata yet,
-to see if I could get that working.
-===============
-
-I'd like to propose that, for a system is seeing a fair number of 
-drive errors, that, perhaps it should automatically lower the mode, 
-in the hope of clearing up the problem. 
-
---linas
+--- linux-2.6.22-rc4/drivers/ata/pata_ali.c	2007-06-04 23:05:17.000000000 -0700
++++ devel/drivers/ata/pata_ali.c	2007-06-06 20:49:03.000000000 -0700
+@@ -544,34 +628,34 @@ static int ali_init_one(struct pci_dev *
+ 	/* Revision 0xC2 adds UDMA66 */
+ 	static const struct ata_port_info info_c2 = {
+ 		.sht = &ali_sht,
+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x1f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+-	/* Revision 0xC3 is UDMA100 */
++	/* Revision 0xC3 is UDMA66 for now */
+ 	static const struct ata_port_info info_c3 = {
+ 		.sht = &ali_sht,
+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x3f,
++		.udma_mask = 0x1f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+-	/* Revision 0xC4 is UDMA133 */
++	/* Revision 0xC4 is UDMA100 */
+ 	static const struct ata_port_info info_c4 = {
+ 		.sht = &ali_sht,
+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x7f,
++		.udma_mask = 0x3f,
+ 		.port_ops = &ali_c2_port_ops
+ 	};
+ 	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
+ 	static const struct ata_port_info info_c5 = {
+ 		.sht = &ali_sht,
+		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+ 		.udma_mask = 0x7f,
