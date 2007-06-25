@@ -1,101 +1,68 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: libata and legacy ide pcmcia failure
-Date: Mon, 25 Jun 2007 12:04:44 +0800
-Message-ID: <467F3EDC.2060002@tw.ibm.com>
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com> <467BB7DB.4090004@gmail.com> <467BCF86.8060508@rtr.ca>
-Reply-To: albertl@mail.com
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH 2.6.22-rc5] libata: add HTS541616J9SA00 to NCQ blacklist
+Date: Sun, 24 Jun 2007 22:10:25 -0600
+Message-ID: <467F4031.8000406@shaw.ca>
+References: <fa.sspu6LOivd/touNtS2IsMKPqHa0@ifi.uio.no>
+ <fa.19XJG1Asdp1zwcWLxolIH6F+5lY@ifi.uio.no> <467EC909.9040006@shaw.ca>
+ <467F2495.3080509@gmail.com> <467F286B.40607@gmail.com>
+ <467F2ADF.1040600@shaw.ca> <467F2D53.2000202@gmail.com>
+ <467F3AE2.7010606@vc.cvut.cz> <467F3EF6.4000907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:50142 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750841AbXFYEE7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 00:04:59 -0400
-In-Reply-To: <467BCF86.8060508@rtr.ca>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:38997 "EHLO
+	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbXFYELL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 00:11:11 -0400
+In-reply-to: <467F3EF6.4000907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>, Robert de Rooy <robert.de.rooy@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, albertl@mail.com, Mark Lord <mlord@pobox.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Petr Vandrovec <vandrove@vc.cvut.cz>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, enricoss@tiscali.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Robert de Rooy wrote:
-> 
+Tejun Heo wrote:
+> Petr Vandrovec wrote:
+>>>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>>>>> index adfae9d..fbca8d8 100644
+>>>>> --- a/drivers/ata/libata-core.c
+>>>>> +++ b/drivers/ata/libata-core.c
+>>>>> @@ -3803,6 +3803,7 @@ static const struct ata_blacklist_entry
+>>>>> ata_device_blacklist [] = {
+>>>>>      /* Drives which do spurious command completion */
+>>>>>      { "HTS541680J9SA00",    "SB2IC7EP",    ATA_HORKAGE_NONCQ, },
+>>>>>      { "HTS541612J9SA00",    "SBDIC7JP",    ATA_HORKAGE_NONCQ, },
+>>>>> +    { "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+>>>>>      { "WDC WD740ADFD-00NLR1", NULL,        ATA_HORKAGE_NONCQ, },
+>>>>>  
+>>>>>      /* Devices with NCQ limits */
+>>>>>
+>>>> Is that the right ID string? Strange that that one has Hitachi at the
+>>>> front and the others don't..
+>>> Yeah, I realized that and asked Enrico about it.  :-)
+>> I think that "new" one is correct, while old ones are incorrect (unless
+>> it uses strstr()) - all my Hitachis claim to be Hitachis - like this one
+>> (which seems to work fine with NCQ):
 >>
->> I did another try with libata pcmcia support using 2.6.22-rc5 which
->> already includes the nodata polling fix, in combination with
->> disable-dev_init_param-and-setxfermode-for-CFA.patch and the
->> timing-debug.patch
+>> gwy:~# hdparm -i /dev/sda
+>>
+>> /dev/sda:
+>>
+>>  Model=Hitachi HDT725032VLA380                 , FwRev=V54OA52A,
+>> SerialNo=      VFA200R208LH5J
+>>  Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
 > 
-> ...
-> 
->> Jun 22 13:19:44 localhost kernel: ata3.00: issuing IDENTIFY
->> Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
->> Jun 22 13:19:45 localhost kernel: ata3.00: CFA: Memory Card Adapter,
->> 20011212, max PIO1
->> Jun 22 13:19:45 localhost kernel: ata3.00: 253696 sectors, multi 0: LBA
->> Jun 22 13:19:45 localhost kernel: ata3.00: issuing IDENTIFY
->> Jun 22 13:19:45 localhost kernel: ata3.00: IDENTIFY complete
->> Jun 22 13:19:45 localhost kernel: ata3.00: configured for PIO0
->> Jun 22 13:19:45 localhost kernel: ata3: EH complete
->> Jun 22 13:19:45 localhost kernel: scsi 2:0:0:0: Direct-Access    
->> ATA      Memory Card Adap 2001 PQ: 0 ANSI: 5
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte
->> hardware sectors (130 MB)
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache:
->> disabled, read cache: enabled, doesn't support DPO or FUA
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] 253696 512-byte
->> hardware sectors (130 MB)
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write Protect is off
->> Jun 22 13:19:45 localhost kernel: sd 2:0:0:0: [sdb] Write cache:
->> disabled, read cache: enabled, doesn't support DPO or FUA
->> Jun 22 13:20:15 localhost kernel:  sdb:<3>ata3.00: exception Emask 0x0
->> SAct 0x0 SErr 0x0 action 0x2 frozen
->> Jun 22 13:20:15 localhost kernel: ata3.00: cmd
->> 20/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
->> Jun 22 13:20:15 localhost kernel:          res
->> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->> Jun 22 13:20:15 localhost kernel: ata3: soft resetting port
->> Jun 22 13:20:15 localhost kernel: ata3: reset complete
->> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port
->> 0x00014107
->> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x80 on port
->> 0x00014107
->> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port
->> 0x00014107
->> Jun 22 13:20:15 localhost kernel: ata3.00: issuing IDENTIFY
->> Jun 22 13:20:15 localhost kernel: ATA: abnormal status 0x58 on port
->> 0x00014107
-> 
-> ...
-> 
-> Mmm.. I don't know about the first failure there,
-> but after that it gets into the "stuck DRQ" state
-> which libata makes no attempt to handle at present.
-> 
+> Hmmm... The last one (HTS541612J9SA00) is taken directly from hdparm
+> output, and I think I verified the patch with the reporter.  Hmm... Can
+> anyone verify these module strings?
 
-It seems the pata_pcmcia driver is using IRQ driven PIO. Maybe Robert
-could try the following pio_polling patch first.
+Could well be that they've started attaching Hitachi to the ID strings 
+now.. In the past it hasn't seemed to have been Hitachi's (and IBM's 
+before that) practice to have it there, but maybe they see the advantage 
+of being able to figure out who made the drive now :-)
 
---
-albert
-
----
-
---- libata-dev/drivers/ata/pata_pcmcia.c~	2007-06-12 16:44:43.000000000 +0800
-+++ libata-dev/drivers/ata/pata_pcmcia.c	2007-06-25 11:53:37.000000000 +0800
-@@ -299,7 +299,7 @@ next_entry:
- 
- 	ap->ops = &pcmcia_port_ops;
- 	ap->pio_mask = 1;		/* ISA so PIO 0 cycles */
--	ap->flags |= ATA_FLAG_SLAVE_POSS;
-+	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_POLLING;
- 	ap->ioaddr.cmd_addr = io_addr;
- 	ap->ioaddr.altstatus_addr = ctl_addr;
- 	ap->ioaddr.ctl_addr = ctl_addr;
-
-
-
-
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
