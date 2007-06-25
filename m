@@ -1,59 +1,54 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Patrick Mau <mau@oscar.ping.de>
 Subject: Re: SATA RAID5 speed drop of 100 MB/s
-Date: Sun, 24 Jun 2007 19:46:58 -0400
-Message-ID: <467F0272.9070903@rtr.ca>
-References: <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey> <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan> <467E9356.1030200@msgid.tls.msk.ru> <Pine.LNX.4.64.0706241257190.12207@p34.internal.lan> <20070624220723.GA21724@alinoe.com>
+Date: Mon, 25 Jun 2007 02:23:15 +0200
+Message-ID: <20070625002315.GA29405@oscar.prima.de>
+References: <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru> <20070624125957.GA28067@gallifrey> <Pine.LNX.4.64.0706241021030.12207@p34.internal.lan> <467E9356.1030200@msgid.tls.msk.ru> <Pine.LNX.4.64.0706241257190.12207@p34.internal.lan> <20070624220723.GA21724@alinoe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3247 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418AbXFXXrB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Jun 2007 19:47:01 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752696AbXFYAZX@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20070624220723.GA21724@alinoe.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Carlo Wood <carlo@alinoe.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, Michael Tokarev <mjt@tls.msk.ru>, "Dr. David Alan Gilbert" <linux@treblig.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Carlo Wood wrote:
->
-> The following can be observed:
+On Mon, Jun 25, 2007 at 12:07:23AM +0200, Carlo Wood wrote:
+> On Sun, Jun 24, 2007 at 12:59:10PM -0400, Justin Piszcz wrote:
+> > Concerning NCQ/no NCQ, without NCQ I get an additional 15-50MB/s in speed 
+> > per various bonnie++ tests.
 > 
-> 1) There is hardly any difference between the two schedulers (noop
->    is a little faster for the bonny test).
-> 2) An NCQ depth of 1 is WAY faster on RAID5 (bonnie; around 125 MB/s),
->    the NCQ depth of 2 is by far the slowest for the RAID5 (bonnie;
->    around 40 MB/s). NCQ depths of 3 and higher show no difference,
->    but are also slow (bonnie; around 75 MB/s).
-> 3) There is no significant influence of the NCQ depth for non-RAID,
->    either the /dev/sda (hdparm -t) or /dev/sdd disk (hdparm -t and
->    bonnie).
-> 4) With a NCQ depth > 1, the hdparm -t measurement of /dev/md7 is
->    VERY unstable. Sometimes it gives the maximum (around 150 MB/s),
->    and sometimes as low as 30 MB/s, seemingly independent of the
->    NCQ depth. Note that those measurement were done on an otherwise
->    unloaded machine in single user mode; and the measurements were
->    all done one after an other. The strong fluctuation of the hdparm
->    results for the RAID device (while the underlaying devices do not
->    show this behaviour) are unexplainable.
+> There is more going on than a bad NCQ implementation of the drive imho.
+> I did a long test over night (and still only got two schedulers done,
+> will do the other two tomorrow), and the difference between a queue depth
+> of 1 and 2 is DRAMATIC.
 > 
->>From the above I conclude that something must be wrong with the
-> software RAID implementation - and not just with the harddisks, imho.
-> At least, that's what it looks like to me. I am not an expert though ;)
+> See http://www.xs4all.nl/~carlo17/noop_queue_depth.png
+> and http://www.xs4all.nl/~carlo17/anticipatory_queue_depth.png
 
-I'm late tuning in here, but:
+Hi Carlo,
 
-(1) hdparm issues only a single read at a time, so NCQ won't help it.
+Have you considered using "blktrace" ?
 
-(2) WD Raptor drives automatically turn off "read-ahead" when using NCQ,
-which totally kills any throughput measurements.  They do this to speed
-up random access seeks; dunno if it pays off or not.  Under Windows,
-the disk drivers don't use NCQ when performing large I/O operations,
-which avoids the performance loss.
+It enables you to gather data of all seperate requests queues
+and will also show you the mapping of bio request from /dev/mdX
+to the individual physical disk.
 
-(3) Other drives from other brands may have similar issues,
-but I have not run into it on them yet.
+You can also identify SYNC and BARRIER flags for requests,
+that might show you why the md driver will sometimes wait
+for completion or even REQUEUE if the queue is full.
 
-Cheers
+Just compile your kernel with CONFIG_BLK_DEV_IO_TRACE
+and pull the "blktrace" (and "blockparse") utility with git.
 
+The git URL is in the Kconfig help text.
+
+You have to mount, debugfs (automatically selected by IO trace).
+I just want to mention, because I did not figure it at first ;)
+
+You should of course use a different location for the output
+files to avoid an endless flood of IO.
+
+Regards,
+Patrick
+
+PS: I know, I talked about blktrace twice already ;)
