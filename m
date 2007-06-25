@@ -1,44 +1,38 @@
-From: Vincent Bernat <Vincent.Bernat@wallix.com>
-Subject: Re: SATA update in 2.4, ICH8
-Date: Mon, 25 Jun 2007 10:06:47 +0200
-Message-ID: <87sl8ge9uw.fsf@naruto.ifr.lan>
-References: <87y7idiwjd.fsf@naruto.ifr.lan> <20070621182119.GB26637@1wt.eu>
-	<87myysfqo4.fsf@naruto.ifr.lan> <20070622191344.GB3629@1wt.eu>
+From: Robert de Rooy <robert.de.rooy@gmail.com>
+Subject: Re: libata and legacy ide pcmcia failure
+Date: Mon, 25 Jun 2007 11:31:55 +0200
+Message-ID: <467F8B8B.1000006@gmail.com>
+References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com> <46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com> <46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com> <4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com> <466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com> <20070610221322.GA18196@flint.arm.linux.org.uk> <466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com> <466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com> <466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com> <467BB7DB.4090004@gmail.com> <467BCF86.8060508@rtr.ca> <467F3EDC.2060002@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.wallix.com ([212.43.221.50]:36045 "EHLO postman.wallix.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751289AbXFYJM3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Jun 2007 05:12:29 -0400
-In-Reply-To: <20070622191344.GB3629@1wt.eu> (Willy Tarreau's message of "Fri,
-	22 Jun 2007 21:13:44 +0200")
+Received: from ik-out-1112.google.com ([66.249.90.176]:6437 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751403AbXFYJbv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 05:31:51 -0400
+Received: by ik-out-1112.google.com with SMTP id b32so989091ika
+        for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 02:31:49 -0700 (PDT)
+In-Reply-To: <467F3EDC.2060002@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Willy Tarreau <w@1wt.eu>
-Cc: linux-ide@vger.kernel.org, JF Taltavull <jean-francois.taltavull@wallix.com>, Jeff Garzik <jeff@garzik.org>
+To: albertl@mail.com
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-OoO En  ce d=E9but de soir=E9e du  vendredi 22 juin 2007,  vers 21:13, =
-Willy
-Tarreau <w@1wt.eu> disait:
+Albert Lee wrote:
+> Mark Lord wrote:
+>   
+>> ...
+>>
+>> Mmm.. I don't know about the first failure there,
+>> but after that it gets into the "stuck DRQ" state
+>> which libata makes no attempt to handle at present.
+>>
+>>     
+>
+> It seems the pata_pcmcia driver is using IRQ driven PIO. Maybe Robert
+> could try the following pio_polling patch first.
+>   
 
->> This is a SATA CDROM. There is no PATA controller on the motherboard=
-=2E
-
-> I've never tested any SATA CDROM yet. I don't even know if they work =
-with
-> 2.4 libata. So most likely you have more experience than me in this a=
-rea.
-> If you have any other SATA controller on another machine on which you=
- would
-> test the drive, it could help up determine whether it's the CDROM whi=
-ch is
-> causing the trouble or this specific controller+driver combination.
-
-With an ICH7 controller, CDROM is not working.
---=20
-Vincent Bernat
-118 rue de Tocqueville, 75017 Paris
-Tel: +33 1 53 42 12 86
-http://www.wallix.com
+I did not get the chance to try Marks patch, but the pio_polling patch 
+from Albert works!!
