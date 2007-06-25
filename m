@@ -1,37 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.22-rc5] libata: kill the infamous abnormal status
- message
-Date: Mon, 25 Jun 2007 13:42:45 +0100
-Message-ID: <20070625134245.4aa71c53@the-village.bc.nu>
-References: <467FB589.2060900@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 2.6.22-rc5] libata: remove unused variable from ata_eh_reset()
+Date: Mon, 25 Jun 2007 21:43:04 +0900
+Message-ID: <467FB858.1060907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49507 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752035AbXFYMg5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 08:36:57 -0400
-In-Reply-To: <467FB589.2060900@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.234]:38115 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbXFYMnK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jun 2007 08:43:10 -0400
+Received: by nz-out-0506.google.com with SMTP id n1so1338766nzf
+        for <linux-ide@vger.kernel.org>; Mon, 25 Jun 2007 05:43:09 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, 25 Jun 2007 21:31:05 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+Removed unused variable did_followup_srst from ata_eh_reset().
 
-> The infamous abnormal status message triggers on not so abnormal cases
-> including empty port and even when it's being triggered on actual
-> errors the info it provides is redundant and out of context - higher
-> level functions will print the info in better safe later anyway.
-> 
-> Also, by being triggered all the time, it leads people to think that
-> the abnormality is somehow related to all ATA and system problems
-> they're experiencing and gives owners of healthy systems unfounded
-> doubts about the integrity of the universe.  Make it a DPRINTK and
-> save the universe.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-eh.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Acked-by: Alan Cox <alan@redhat.com>
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index d807098..48d2d54 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1616,7 +1616,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 	unsigned long deadline;
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+-	int i, did_followup_srst, rc;
++	int i, rc;
+ 
+ 	/* about to reset */
+ 	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+@@ -1689,11 +1689,9 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 
+ 	rc = ata_do_reset(ap, reset, classes, deadline);
+ 
+-	did_followup_srst = 0;
+ 	if (reset == hardreset &&
+ 	    ata_eh_followup_srst_needed(rc, classify, classes)) {
+ 		/* okay, let's do follow-up softreset */
+-		did_followup_srst = 1;
+ 		reset = softreset;
+ 
+ 		if (!reset) {
