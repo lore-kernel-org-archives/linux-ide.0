@@ -1,96 +1,227 @@
-From: Robert de Rooy <robert.de.rooy@gmail.com>
-Subject: [Fwd: Re: libata and legacy ide pcmcia failure]
-Date: Mon, 25 Jun 2007 21:11:30 +0200
-Message-ID: <46801362.3040605@gmail.com>
+From: Uwe Koziolek <uwe.koziolek@gmx.net>
+Subject: [PATCH 2.6.22-rc4]: libata: PATA-mode fixes for sis_sata; resubmission
+Date: Mon, 25 Jun 2007 23:14:48 +0200
+Message-ID: <200706252314.48435.uwe.koziolek@gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="------------070703090404000903000409"
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: albertl@mail.com
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, bzolnier@gmail.com, linux-pcmcia@lists.infradead.org, Kernel development list <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan <alan@lxorguk.ukuu.org.uk>
-List-Id: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------070703090404000903000409
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-
-Oops had done a reply instead of a reply to all...
-
-
---------------070703090404000903000409
-Content-Type: message/rfc822;
-	name="Re: libata and legacy ide pcmcia failure.eml"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
-	filename="Re: libata and legacy ide pcmcia failure.eml"
-
-Message-ID: <467FA93B.6010403@gmail.com>
-Date: Mon, 25 Jun 2007 13:38:35 +0200
-From: Robert de Rooy <robert.de.rooy@gmail.com>
-User-Agent: Thunderbird 2.0.0.4 (Windows/20070604)
-MIME-Version: 1.0
-To: albertl@mail.com
-Subject: Re: libata and legacy ide pcmcia failure
-References: <466718B6.4080105@gmail.com> <4667B39D.209@gmail.com>
-	<46685AE5.4010908@gmail.com> <466900F3.7040801@gmail.com>
-	<46694FB2.6040007@pobox.com> <4669D2D8.3020806@gmail.com>
-	<4669D3F5.7040300@rtr.ca> <466B4D86.1020808@gmail.com>
-	<466C631D.2000001@rtr.ca> <466C723C.6000300@gmail.com>
-	<20070610221322.GA18196@flint.arm.linux.org.uk>
-	<466C7A9F.1080700@rtr.ca> <466DCE55.30507@gmail.com>
-	<466DCF43.5060304@pobox.com> <466E11DF.5020901@gmail.com>
-	<466F4A27.8070309@tw.ibm.com> <46710CD7.9070901@gmail.com>
-	<467BB7DB.4090004@gmail.com> <467BCF86.8060508@rtr.ca>
-	<467F3EDC.2060002@tw.ibm.com> <467F8B8B.1000006@gmail.com>
-	<467F95D8.6000805@tw.ibm.com>
-In-Reply-To: <467F95D8.6000805@tw.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Albert Lee wrote:
-> The patch just workarounds the "lost irq" problem by polling; not real
-> fix. We still need to find out why irq is lost per Mark's comment:
->
-> "This proves that the device does work correctly in most respects
-> except for interrupt delivery.  The status bits are working and
-> it can be probed for, configured, and used."
->
-> "So, next step might be to try and understand the interrupt mis-delivery
-> problem some more.   I've lost the history of the original issue,
-> but we now know that everything except the actual interrupt seems good."
->
-> I am not familiar with the PCMCIA interrupt delivery. It seems the
-> "Dazzle 4in1 Card Adapter" works under windows but somehow lost irq
-> under both IDE and libata. Maybe Alan/Bart or the PCMCIA developers
-> know better...
-> --
-> albert
-
-I see. So this is not the ideal fix for this problem. Anything else I 
-can do to debug the irq lost issue? perhaps add some debug to the pcmcia 
-code?
-
-For what its worth, I compiled a clean 2.6.22-rc5 with just the 
-pio_polling patch added, and that allows me to mount the device without 
-any errors in syslog. So the 
-disable-dev_init_param-and-setxfermode-for-CFA.patch is not needed.
-
-
-
---------------070703090404000903000409
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:46702 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751755AbXFYVPO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jun 2007 17:15:14 -0400
 Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
+
+Changed PATA handler for PATA-ports used by sata_sis.
+This patch was originally submitted by Jeff Garzik.
+
+Added PCI-ID 1180 for SiS966 Controller in pata_sis.
+The 1180 mode is fully compatible to other SiS PATA-controller.
+
+The PCI-ID 1183 is SATA in PATA-emulation, but not fully compatible
+to SiS5513/5518. sata_sis.c is forwarding this ID to pata_sis.
+1183 is not working if simply added to pata_sis.
+This handling fixes issues with SiS968.
+
+Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
+
+--- a/drivers/ata/pata_sis.c	2007-06-14 22:41:34.000000000 +0200
++++ b/drivers/ata/pata_sis.c	2007-06-12 22:15:04.000000000 +0200
+@@ -560,6 +560,40 @@
+ 	.port_start		= ata_port_start,
+ };
+ 
++static const struct ata_port_operations sis_133_for_sata_ops = {
++	.port_disable		= ata_port_disable,
++	.set_piomode		= sis_133_set_piomode,
++	.set_dmamode		= sis_133_set_dmamode,
++	.mode_filter		= ata_pci_default_filter,
++
++	.tf_load		= ata_tf_load,
++	.tf_read		= ata_tf_read,
++	.check_status		= ata_check_status,
++	.exec_command		= ata_exec_command,
++	.dev_select		= ata_std_dev_select,
++
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++	.error_handler		= ata_bmdma_error_handler,
++	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
++	.cable_detect		= sis_133_cable_detect,
++
++	.bmdma_setup		= ata_bmdma_setup,
++	.bmdma_start		= ata_bmdma_start,
++	.bmdma_stop		= ata_bmdma_stop,
++	.bmdma_status		= ata_bmdma_status,
++	.qc_prep		= ata_qc_prep,
++	.qc_issue		= ata_qc_issue_prot,
++	.data_xfer		= ata_data_xfer,
++
++	.irq_handler		= ata_interrupt,
++	.irq_clear		= ata_bmdma_irq_clear,
++	.irq_on			= ata_irq_on,
++	.irq_ack		= ata_irq_ack,
++
++	.port_start		= ata_port_start,
++};
++
+ static const struct ata_port_operations sis_133_early_ops = {
+ 	.port_disable		= ata_port_disable,
+ 	.set_piomode		= sis_100_set_piomode,
+@@ -733,13 +767,20 @@
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.port_ops	= &sis_66_ops,
+ };
+-const struct ata_port_info sis_info133 = {
++static const struct ata_port_info sis_info133 = {
+ 	.sht		= &sis_sht,
+ 	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+ 	.pio_mask	= 0x1f,	/* pio0-4 */
+ 	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &sis_133_ops,
+ };
++const struct ata_port_info sis_info133_for_sata = {
++	.sht		= &sis_sht,
++	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
++	.pio_mask	= 0x1f,	/* pio0-4 */
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &sis_133_for_sata_ops,
++};
+ static const struct ata_port_info sis_info133_early = {
+ 	.sht		= &sis_sht,
+ 	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
+@@ -749,7 +790,7 @@
+ };
+ 
+ /* Privately shared with the SiS180 SATA driver, not for use elsewhere */
+-EXPORT_SYMBOL_GPL(sis_info133);
++EXPORT_SYMBOL_GPL(sis_info133_for_sata);
+ 
+ static void sis_fixup(struct pci_dev *pdev, struct sis_chipset *sis)
+ {
+@@ -975,6 +1016,7 @@
+ static const struct pci_device_id sis_pci_tbl[] = {
+ 	{ PCI_VDEVICE(SI, 0x5513), },	/* SiS 5513 */
+ 	{ PCI_VDEVICE(SI, 0x5518), },	/* SiS 5518 */
++	{ PCI_VDEVICE(SI, 0x1180), },	/* SiS 1180 */
+ 
+ 	{ }
+ };
+--- a/drivers/ata/sata_sis.c	2007-06-14 22:41:34.000000000 +0200
++++ b/drivers/ata/sata_sis.c	2007-06-12 22:16:11.000000000 +0200
+@@ -72,8 +72,8 @@
+ 	{ PCI_VDEVICE(SI, 0x0181), sis_180 },		/* SiS 964/180 */
+ 	{ PCI_VDEVICE(SI, 0x0182), sis_180 },		/* SiS 965/965L */
+ 	{ PCI_VDEVICE(SI, 0x0183), sis_180 },		/* SiS 965/965L */
+-	{ PCI_VDEVICE(SI, 0x1182), sis_180 },		/* SiS 966/966L */
+-	{ PCI_VDEVICE(SI, 0x1183), sis_180 },		/* SiS 966/966L */
++	{ PCI_VDEVICE(SI, 0x1182), sis_180 },		/* SiS 966/680 */
++	{ PCI_VDEVICE(SI, 0x1183), sis_180 },		/* SiS 966/966L/968/680 */
+ 
+ 	{ }	/* terminate list */
+ };
+@@ -161,7 +161,6 @@
+ 			case 0x0182:
+ 			case 0x0183:
+ 			case 0x1182:
+-			case 0x1183:
+ 				addr += SIS182_SATA1_OFS;
+ 				break;
+ 		}
+@@ -183,8 +182,8 @@
+ 
+ 	pci_read_config_dword(pdev, cfg_addr, &val);
+ 
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) || (pdev->device == 0x1182) ||
+-	    (pdev->device == 0x1183) || (pmr & SIS_PMR_COMBINED))
++	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
++	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+ 		pci_read_config_dword(pdev, cfg_addr+0x10, &val2);
+ 
+ 	return (val|val2) &  0xfffffffb; /* avoid problems with powerdowned ports */
+@@ -203,8 +202,8 @@
+ 
+ 	pci_write_config_dword(pdev, cfg_addr, val);
+ 
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) || (pdev->device == 0x1182) ||
+-	    (pdev->device == 0x1183) || (pmr & SIS_PMR_COMBINED))
++	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
++	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+ 		pci_write_config_dword(pdev, cfg_addr+0x10, val);
+ }
+ 
+@@ -224,8 +223,8 @@
+ 
+ 	val = ioread32(ap->ioaddr.scr_addr + (sc_reg * 4));
+ 
+-	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) || (pdev->device == 0x1182) ||
+-	    (pdev->device == 0x1183) || (pmr & SIS_PMR_COMBINED))
++	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
++	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+ 		val2 = ioread32(ap->ioaddr.scr_addr + (sc_reg * 4) + 0x10);
+ 
+ 	return (val | val2) &  0xfffffffb;
+@@ -245,8 +244,8 @@
+ 		sis_scr_cfg_write(ap, sc_reg, val);
+ 	else {
+ 		iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4));
+-		if ((pdev->device == 0x0182) || (pdev->device == 0x0183) || (pdev->device == 0x1182) ||
+-		    (pdev->device == 0x1183) || (pmr & SIS_PMR_COMBINED))
++		if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
++		    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+ 			iowrite32(val, ap->ioaddr.scr_addr + (sc_reg * 4)+0x10);
+ 	}
+ }
+@@ -293,11 +292,11 @@
+ 		/* The PATA-handling is provided by pata_sis */
+ 		switch (pmr & 0x30) {
+ 		case 0x10:
+-			ppi[1] = &sis_info133;
++			ppi[1] = &sis_info133_for_sata;
+ 			break;
+ 
+ 		case 0x30:
+-			ppi[0] = &sis_info133;
++			ppi[0] = &sis_info133_for_sata;
+ 			break;
+ 		}
+ 		if ((pmr & SIS_PMR_COMBINED) == 0) {
+@@ -324,14 +323,14 @@
+ 		break;
+ 
+ 	case 0x1182:
++		dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 1182/966/680 SATA controller\n");
++		pi.flags |= ATA_FLAG_SLAVE_POSS;
++		break;
++
+ 	case 0x1183:
+-		pci_read_config_dword(pdev, 0x64, &val);
+-		if (val & 0x10000000) {
+-			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 1182/1183/966L SATA controller\n");
+-		} else {
+-			dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 1182/1183/966 SATA controller\n");
+-			pi.flags |= ATA_FLAG_SLAVE_POSS;
+-		}
++		dev_printk(KERN_INFO, &pdev->dev, "Detected SiS 1183/966/966L/968/680 controller in PATA mode\n");
++		ppi[0] = &sis_info133_for_sata;
++		ppi[1] = &sis_info133_for_sata;
+ 		break;
+ 	}
+ 
+--- a/drivers/ata/sis.h	2007-06-14 22:41:34.000000000 +0200
++++ b/drivers/ata/sis.h	2007-06-09 22:30:43.000000000 +0200
+@@ -2,4 +2,4 @@
+ struct ata_port_info;
+ 
+ /* pata_sis.c */
+-extern const struct ata_port_info sis_info133;
++extern const struct ata_port_info sis_info133_for_sata;
 
 
---------------070703090404000903000409--
+
+
