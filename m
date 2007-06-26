@@ -1,63 +1,55 @@
-From: Frederik Himpe <fhimpe@telenet.be>
-Subject: [2.6.22-rc6] NForce4 soft and hard resetting ports and exceptions
-Date: Tue, 26 Jun 2007 17:45:22 +0000 (UTC)
-Message-ID: <pan.2007.06.26.17.45.21@telenet.be>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Linux Software RAID is really RAID?
+Date: Tue, 26 Jun 2007 22:34:39 +0400
+Message-ID: <46815C3F.6090204@wasp.net.au>
+References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759294AbXFZSaa@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Johny Mail list <maillist.johny@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-I tried Linux 2.6.22-rc6 on my machine with an Asus A8N-SlI Deluxe 
-motherboard (NForce 4 chipset).
+Johny Mail list wrote:
+> Hello list,
+> I have a little question about software RAID on Linux.
+> I have installed Software Raid on all my SC1425 servers DELL by
+> believing that the md raid was a strong driver.
+> And recently i make some test on a server and try to view if the RAID
+> hard drive power failure work fine, so i power up my server and after
+> booting and the prompt appear I disconnected the power cable of my
+> SATA hard drive. Normaly the MD should eleminate the failure hard
+> drive of the logical drive it build, and the server continue to work
+> fine like nothing happen. Oddly the server stop to respond and i get
+> this messages :
+> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata4: port is slow to respond, please be patient (Status 0xd0)
+> ata4: port failed to respond (30sec, Status 0xd0)
+> ata4: soft resetting port
+> 
+> After that my system is frozen. Normaly in a basic RAID the device is
+> "disable" in the logical RAID device (md0) and it only use the last
+> disk.
 
-When booting, the system hangs for a long time, but it continues after a 
-long wait. I found these kind of errors in the logs afterwards:
+cc to linux-ide added.
 
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd b0/d2:f1:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 
-123392 in
-         res 50/00:00:01:4f:c2/00:00:00:00:00/00 Emask 0x202 (HSM 
-violation)
-ata2: soft resetting port
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ata2.00: revalidation failed (errno=-2)
-ata2: failed to recover some devices, retrying in 5 secs
-ata2: hard resetting port
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata2.00: ata_hpa_resize 1: sectors = 390721968, hpa_sectors = 390721968
-ata2.00: ata_hpa_resize 1: sectors = 390721968, hpa_sectors = 390721968
-ata2.00: configured for UDMA/133
-ata2: EH complete
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd b0/d2:f1:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 
-123392 in
-         res 50/00:00:af:f1:49/00:00:00:00:00/00 Emask 0x202 (HSM 
-violation)
-ata2: soft resetting port
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ATA: abnormal status 0xD0 on port 0xffffc2000001a59c
-ata2.00: revalidation failed (errno=-2)
-[...]
+Unfortunately this is not an artifact of the linux raid driver, rather it appears to be an issue 
+with the SATA driver and related error recovery. Some information about what kernel, configuration, 
+drives, controller cards and other relevant system information would be good.
 
-With Linux 2.6.21 this did not happen.
+See the information at this URL for the sort of extra information that would be handy.
 
-config, dmesg and lspci can be found here:
-http://artipc10.vub.ac.be/kernelbug/
+http://www.kernel.org/pub/linux/docs/lkml/reporting-bugs.html
 
+
+Regards,
+Brad
 -- 
-Frederik Himpe
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
