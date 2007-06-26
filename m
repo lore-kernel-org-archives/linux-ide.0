@@ -1,49 +1,39 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: SATA update in 2.4, ICH8
-Date: Tue, 26 Jun 2007 16:02:13 +0200
-Message-ID: <20070626140212.GA24269@1wt.eu>
-References: <87y7idiwjd.fsf@naruto.ifr.lan> <20070621182119.GB26637@1wt.eu> <87myysfqo4.fsf@naruto.ifr.lan> <20070622191344.GB3629@1wt.eu> <87sl8ge9uw.fsf@naruto.ifr.lan> <20070626120904.GD23524@1wt.eu> <46811686.6050408@garzik.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
+ controllers.
+Date: Tue, 26 Jun 2007 08:24:42 -0700
+Message-ID: <20070626082442.50ae810e.kristen.c.accardi@intel.com>
+References: <20070611184146.448266229@intel.com>
+	<20070620142342.404856fe.kristen.c.accardi@intel.com>
+	<20070621130831.GN18863@kernel.dk>
+	<20070622101509.16d0e93d.kristen.c.accardi@intel.com>
+	<20070622190000.GK30033@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:3175 "EHLO 1wt.eu"
+Received: from mga02.intel.com ([134.134.136.20]:59648 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466AbXFZOCS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Jun 2007 10:02:18 -0400
-Content-Disposition: inline
-In-Reply-To: <46811686.6050408@garzik.org>
+	id S1756254AbXFZP2J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Jun 2007 11:28:09 -0400
+In-Reply-To: <20070622190000.GK30033@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Vincent Bernat <Vincent.Bernat@wallix.com>, linux-ide@vger.kernel.org, JF Taltavull <jean-francois.taltavull@wallix.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
-On Tue, Jun 26, 2007 at 09:37:10AM -0400, Jeff Garzik wrote:
-> Any chance you could email me what is pending?
+On Fri, 22 Jun 2007 21:00:00 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-Of course! it was in first mail of this thread. Here it is.
+> Exactly, it needs to be handled by some power management daemon anyway
+> and be integrated with power savings in general. You could use io load
+> to determine when to enable/disable alpm, for instance.
+> 
+> > Acked-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> Will you integrate it into the next posting?
 
-Thanks,
-Willy
-
-
-------
-
-Hi !                                                                            
-
-I have patched 2.4.34 with the  following patch to allow the use of SATA        
-drive on an ICH8 motherboard (it is a Dell OptiPlex 745).
+yes, I will do that.
 
 
---- linux/drivers/scsi/ata_piix.c~	2006-12-22 17:06:45.000000000 -0500
-+++ linux/drivers/scsi/ata_piix.c	2007-06-14 05:27:02.000000000 -0400
-@@ -115,6 +115,8 @@
- 	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata_rm },
- 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
- 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
-+	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
-+	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich7_sata },
- 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, esb2_sata },
- 
- 	{ }	/* terminate list */
-
-
+Kristen
