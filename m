@@ -1,71 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/3] libata: kill ATA_HORKAGE_DMA_RW_ONLY
-Date: Wed, 27 Jun 2007 02:49:38 +0900
-Message-ID: <20070626174938.GT29122@htj.dyndns.org>
-References: <20070626174735.GR29122@htj.dyndns.org> <20070626174843.GS29122@htj.dyndns.org>
+From: Heinz Ulrich Stille <hus@design-d.de>
+Subject: Re: Frequent SATA resets with sata_nv (fwd)
+Date: Tue, 26 Jun 2007 19:29:34 +0200
+Message-ID: <200706261929.34303.hus@design-d.de>
+References: <fa.Z5bo5y2TvW4efa6slAJpcdPwqAA@ifi.uio.no> <467ECBB8.2030706@shaw.ca> <alpine.DEB.0.99.0706251207230.20899@cheetah.fastcat.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:21123 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbXFZRto (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jun 2007 13:49:44 -0400
-Received: by nz-out-0506.google.com with SMTP id n1so1790409nzf
-        for <linux-ide@vger.kernel.org>; Tue, 26 Jun 2007 10:49:44 -0700 (PDT)
+Received: from mail.tammen.de ([62.206.99.154]:57060 "EHLO mail.tammen.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756828AbXFZR7I convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jun 2007 13:59:08 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.tammen.de (Postfix) with ESMTP id 695D6E81EC
+	for <linux-ide@vger.kernel.org>; Tue, 26 Jun 2007 19:29:47 +0200 (CEST)
+In-Reply-To: <alpine.DEB.0.99.0706251207230.20899@cheetah.fastcat.org>
 Content-Disposition: inline
-In-Reply-To: <20070626174843.GS29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, albertcc@tw.ibm.com, alan@lxorguk.ukuu.org.uk, bzolnier@gmail.com
+To: linux-kernel@vger.kernel.org
+Cc: ide <linux-ide@vger.kernel.org>
 
-ATA_HORKAGE_DMA_RW_ONLY for TORiSAN is verified to be subset of using
-DMA for ATAPI commands which aren't aligned to 16 bytes.  As libata
-now doesn't use DMA for unaligned ATAPI commands, the horkage is
-redundant.  Kill it.
+On Tuesday 26 June 2007, Matthew "Cheetah" Gabeler-Lee wrote:
+> On Sun, 24 Jun 2007, Robert Hancock wrote:
+> I selected that model in part because it at least claimed to support
+> NCQ.  I'm not sure if it reflects NCQ or not, but I do have
+> /sys/block/sd[abc]/device/queue_{depth,type} which show simple and 31
+> respectively.  Samsung's page for the drive also says it supports NCQ=
+:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-In case it wasn't clear.  The one before this one was 2/3 and all
-three patches are against 2.6.22-rc5.  Thanks.
+I seem to have the same problem, just not as frequent: four drives of t=
+his
+type, connected to an SiI 3132 and an nVidia MCP55; resets occur on bot=
+h
+controllers, and only with this drive type, not with several Maxtor 6B2=
+00M0.
+I never thought to check, but all drives on the nv controller have NCQ
+disabled according to /sys/block. So maybe it's not (directly) NCQ rela=
+ted?
 
- drivers/ata/libata-core.c |    7 +------
- include/linux/libata.h    |    1 -
- 2 files changed, 1 insertion(+), 7 deletions(-)
+MfG, Ulrich
 
-Index: work/drivers/ata/libata-core.c
-===================================================================
---- work.orig/drivers/ata/libata-core.c
-+++ work/drivers/ata/libata-core.c
-@@ -2046,10 +2046,6 @@ int ata_dev_configure(struct ata_device 
- 		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
- 					 dev->max_sectors);
- 
--	/* limit ATAPI DMA to R/W commands only */
--	if (ata_device_blacklisted(dev) & ATA_HORKAGE_DMA_RW_ONLY)
--		dev->horkage |= ATA_HORKAGE_DMA_RW_ONLY;
--
- 	if (ap->ops->dev_config)
- 		ap->ops->dev_config(dev);
- 
-@@ -3780,8 +3776,7 @@ static const struct ata_blacklist_entry 
- 	{ "IOMEGA  ZIP 250       ATAPI", NULL,	ATA_HORKAGE_NODMA }, /* temporary fix */
- 
- 	/* Weird ATAPI devices */
--	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 |
--						ATA_HORKAGE_DMA_RW_ONLY },
-+	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
- 
- 	/* Devices we expect to fail diagnostics */
- 
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -298,7 +298,6 @@ enum {
- 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
- 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
--	ATA_HORKAGE_DMA_RW_ONLY	= (1 << 4),	/* ATAPI DMA for RW only */
- };
- 
- enum hsm_task_states {
+--=20
+Heinz Ulrich Stille / Tel.: +49-541-9400473 / Fax: +49-541-9400450
+design_d gmbh / Wilhelmstr. 16 / 49076 Osnabr=FCck / www.design-d.de
+Osnabr=FCck HRB 19116 / Gesch=E4ftsf=FChrer: G=FCnter Tammen, Rolf Tamm=
+en
+
