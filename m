@@ -1,63 +1,31 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: pata_ali patch not merged?
-Date: Mon, 25 Jun 2007 19:13:32 -0400
-Message-ID: <46804C1C.9010900@redhat.com>
+From: Alan Cox <alan@redhat.com>
+Subject: Re: [PATCH] pata_it821x: fix section mismatch warning
+Date: Mon, 25 Jun 2007 20:29:30 -0400
+Message-ID: <20070626002930.GA30419@devserv.devel.redhat.com>
+References: <20070625104222.6bc805e9.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35100 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:56003 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517AbXFYXNf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Jun 2007 19:13:35 -0400
+	id S1752051AbXFZA3i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Jun 2007 20:29:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20070625104222.6bc805e9.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: ide <linux-ide@vger.kernel.org>, alan@redhat.com, jgarzik <jgarzik@pobox.com>, bzolnier@gmail.com
 
-This patch was found to fix some of the problems with the
-pata_ali driver. Is it going to be merged in 2.6.22?
+On Mon, Jun 25, 2007 at 10:42:22AM -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix section mismatch when CONFIG_HOTPLUG=n (but functions are used
+> for resume):
+> 
+> WARNING: drivers/ata/pata_it821x.o(.text+0x3f): Section mismatch: reference to .init.text: (between 'it821x_reinit_one' and 'it821x_program_udma')
+> WARNING: drivers/ata/pata_it821x.o(.text+0x691): Section mismatch: reference to .init.text: (between 'it821x_init_one' and 'it821x_passthru_set_dmamode')
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-[https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=156482]
-
---- linux-2.6.22-rc4/drivers/ata/pata_ali.c	2007-06-04 23:05:17.000000000 -0700
-+++ devel/drivers/ata/pata_ali.c	2007-06-06 20:49:03.000000000 -0700
-@@ -544,34 +628,34 @@ static int ali_init_one(struct pci_dev *
- 	/* Revision 0xC2 adds UDMA66 */
- 	static const struct ata_port_info info_c2 = {
- 		.sht = &ali_sht,
-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x1f,
- 		.port_ops = &ali_c2_port_ops
- 	};
--	/* Revision 0xC3 is UDMA100 */
-+	/* Revision 0xC3 is UDMA66 for now */
- 	static const struct ata_port_info info_c3 = {
- 		.sht = &ali_sht,
-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
--		.udma_mask = 0x3f,
-+		.udma_mask = 0x1f,
- 		.port_ops = &ali_c2_port_ops
- 	};
--	/* Revision 0xC4 is UDMA133 */
-+	/* Revision 0xC4 is UDMA100 */
- 	static const struct ata_port_info info_c4 = {
- 		.sht = &ali_sht,
-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST | ATA_FLAG_PIO_LBA48,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
--		.udma_mask = 0x7f,
-+		.udma_mask = 0x3f,
- 		.port_ops = &ali_c2_port_ops
- 	};
- 	/* Revision 0xC5 is UDMA133 with LBA48 DMA */
- 	static const struct ata_port_info info_c5 = {
- 		.sht = &ali_sht,
-		.flags = ATA_FLAG_SLAVE_POSS | ATA_FLAG_SRST,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
- 		.udma_mask = 0x7f,
+Acked-by: Alan Cox <alan@redat.com> 
