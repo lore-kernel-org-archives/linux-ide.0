@@ -1,39 +1,38 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
- controllers.
-Date: Tue, 26 Jun 2007 08:24:42 -0700
-Message-ID: <20070626082442.50ae810e.kristen.c.accardi@intel.com>
-References: <20070611184146.448266229@intel.com>
-	<20070620142342.404856fe.kristen.c.accardi@intel.com>
-	<20070621130831.GN18863@kernel.dk>
-	<20070622101509.16d0e93d.kristen.c.accardi@intel.com>
-	<20070622190000.GK30033@kernel.dk>
+From: "Matthew \"Cheetah\" Gabeler-Lee" <cheetah-lkmlsata@fastcat.org>
+Subject: Re: Frequent SATA resets with sata_nv (fwd)
+Date: Tue, 26 Jun 2007 12:06:37 -0400 (EDT)
+Message-ID: <alpine.DEB.0.99.0706251207230.20899@cheetah.fastcat.org>
+References: <fa.Z5bo5y2TvW4efa6slAJpcdPwqAA@ifi.uio.no>
+ <467ECBB8.2030706@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59648 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756254AbXFZP2J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Jun 2007 11:28:09 -0400
-In-Reply-To: <20070622190000.GK30033@kernel.dk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758136AbXFZQGv@vger.kernel.org>
+In-Reply-To: <467ECBB8.2030706@shaw.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
-On Fri, 22 Jun 2007 21:00:00 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+On Sun, 24 Jun 2007, Robert Hancock wrote:
 
-> Exactly, it needs to be handled by some power management daemon anyway
-> and be integrated with power savings in general. You could use io load
-> to determine when to enable/disable alpm, for instance.
+> Matthew "Cheetah" Gabeler-Lee wrote:
+> > (Please cc me on replies)
+> > 
+> > I have three samsung hdds (/sys/block/sda/device/model says SAMSUNG SP2504C)
+> > in a raid configuration.  My system frequently (2-3x/day) experiences
+> > temporary lockups, which produce messages as below in my dmesg/syslog.  The
+> > system recovers, but the hang is annoying to say the least.
 > 
-> > Acked-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> 
-> Will you integrate it into the next posting?
+> Does this drive actually support NCQ? I can't tell from this part of the  log.
 
-yes, I will do that.
+I selected that model in part because it at least claimed to support 
+NCQ.  I'm not sure if it reflects NCQ or not, but I do have 
+/sys/block/sd[abc]/device/queue_{depth,type} which show simple and 31 
+respectively.  Samsung's page for the drive also says it supports NCQ: 
+http://www.samsung.com/Products/HardDiskDrive/SpinPointPSeries/HardDiskDrive_SpinPointPSeries_SP2504C.htm
 
-
-Kristen
+-- 
+	-Cheetah
+"Reality is that which, when you stop believing in it, doesn't go away".
+                -- Philip K. Dick
+GPG pubkey fingerprint: A57F B354 FD30 A502 795B 9637 3EF1 3F22 A85E 2AD1
