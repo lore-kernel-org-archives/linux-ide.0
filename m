@@ -1,31 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: CF flash PATA on libata failure to attach
-Date: Wed, 27 Jun 2007 10:08:02 -0400
-Message-ID: <46826F42.70405@rtr.ca>
-References: <11172839.post@talk.nabble.com>	<46766BD3.4040702@gmail.com> <20070618125742.28a0bc57@the-village.bc.nu> <46770edc.101d640a.4fdf.4eae@mx.google.com> <46776306.5030300@gmail.com> <4679cefc.06d7720a.0280.ffff9cce@mx.google.com> <4679EA43.4040002@gmail.com> <467a2692.17bb720a.5a14.ffffa80c@mx.google.com> <467A8F17.1080608@rtr.ca> <4680d387.24528c0a.3634.69bd@mx.google.com> <46815FF4.9040001@rtr.ca> <4681e04b.22b38c0a.78ec.6f76@mx.google.com>
+From: "Thomas Tsai" <bthomas.tsai@gmail.com>
+Subject: Failed to IDENTIFY SATA harddrive on sata_sil24
+Date: Wed, 27 Jun 2007 23:14:14 +0800
+Message-ID: <6a3d41200706270814o7675909dtbdafe4a4fa68943c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1622 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752072AbXF0OIH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Jun 2007 10:08:07 -0400
-In-Reply-To: <4681e04b.22b38c0a.78ec.6f76@mx.google.com>
+Received: from wr-out-0506.google.com ([64.233.184.228]:1812 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753295AbXF0POP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 11:14:15 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so154771wra
+        for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 08:14:15 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Hall <andrew.a.hall@gmail.com>
-Cc: linux-ide@vger.kernel.org, robert.de.rooy@gmail.com
+To: linux-ide@vger.kernel.org
 
-Andrew Hall wrote:
->> This looks a lot like the other CF-card problem that was being debugged
->> here over the past week -- the one where POLLING had to be turned on.
->> Robert de Rooy (copied) was the reporter for that one.
->> Perhaps you two could compare notes ?
+Hi,
 
-Do you have a spare device you can send me?
+Does anyone familiar with SiliconImage 3132 SATA controller?
+I'm running siliconimage 3132 as e-Sata controller on my ARM-based board.
+My kernel version is 2.6.18.6. I built libata and sata_sil24 as kernel module.
+After I insert libata and sata_sil24 module, and plug external
+harddrive via e-Sata.
+sata_sil24.c can detect phy changed, and found a ATA device.
+And then it will issue IDENTIFY(0xec) command but time out to get
+command completion.
+And Sil3132 seems dead or enter into an unknown state.Since it will
+not issue any interrupts even I remove and replug the e-Sata cable.
+Does anyone have experienced this situation, or any suggestion.
+Thanks.
 
-Or exactly what is this gizmo, anyway?
-(brand, model, form factor ...)
-
-Thanks
+bthomastsai
