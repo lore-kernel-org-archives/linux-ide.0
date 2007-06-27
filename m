@@ -1,35 +1,43 @@
-From: "Thomas Tsai" <bthomas.tsai@gmail.com>
-Subject: Failed to IDENTIFY SATA harddrive on sata_sil24
-Date: Wed, 27 Jun 2007 23:14:14 +0800
-Message-ID: <6a3d41200706270814o7675909dtbdafe4a4fa68943c@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 27 Jun 2007 08:48:48 -0700 (PDT)
+Message-ID: <alpine.LFD.0.98.0706270844370.8675@woody.linux-foundation.org>
+References: <20070627073526.GA18787@havoc.gtf.org>
+ <20070627003841.68fd0ea9.akpm@linux-foundation.org>
+ <46821613.9010305@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:1812 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753295AbXF0POP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 11:14:15 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so154771wra
-        for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 08:14:15 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52567 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752894AbXF0Ps7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 11:48:59 -0400
+In-Reply-To: <46821613.9010305@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hi,
 
-Does anyone familiar with SiliconImage 3132 SATA controller?
-I'm running siliconimage 3132 as e-Sata controller on my ARM-based board.
-My kernel version is 2.6.18.6. I built libata and sata_sil24 as kernel module.
-After I insert libata and sata_sil24 module, and plug external
-harddrive via e-Sata.
-sata_sil24.c can detect phy changed, and found a ATA device.
-And then it will issue IDENTIFY(0xec) command but time out to get
-command completion.
-And Sil3132 seems dead or enter into an unknown state.Since it will
-not issue any interrupts even I remove and replug the e-Sata cable.
-Does anyone have experienced this situation, or any suggestion.
-Thanks.
 
-bthomastsai
+On Wed, 27 Jun 2007, Jeff Garzik wrote:
+> 
+> Such would be a diagnostic that would trigger on valid SCSI commands, when the
+> user is doing nothing wrong and the system can indeed complete the command
+> just fine.  Additionally, this is moving us in the direction of what the IDE
+> driver has apparently been doing.
+
+Indeed. At least the IDE CD-ROM driver does
+
+	if ((rq->data_len & 15) || (addr & mask))
+		info->dma = 0;
+
+where the "mask" is the dma_alignment mask. So it requires the length to 
+be a multiple of 16, and also requires a certain alignment of the data 
+(which defaults to 32 bytes for some reason I cannot for the life of me 
+remember).
+
+The generic BIO layer does that DMA alignment check too when mapping user 
+pages.
+
+		Linus
