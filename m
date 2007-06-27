@@ -1,59 +1,74 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: ALPM on devices not supporting HIPM?
-Date: Tue, 26 Jun 2007 16:08:25 -0700
-Message-ID: <20070626160825.79f7b004.kristen.c.accardi@intel.com>
-References: <4354d3270706230423p1a1a87bcv34ce1312619f9b7a@mail.gmail.com>
+From: =?ISO-8859-1?Q?Jan_Kundr=E1t?= <jkt@gentoo.org>
+Subject: is Promise TX4302 supported?
+Date: Wed, 27 Jun 2007 03:46:47 +0200
+Message-ID: <4681C187.70306@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig612CE7CB51973AF5487E2D4D"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64890 "EHLO mga03.intel.com"
+Received: from pc175e.fzu.cz ([147.231.127.175]:58618 "EHLO postak-1.fzu.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760232AbXFZXLu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jun 2007 19:11:50 -0400
-In-Reply-To: <4354d3270706230423p1a1a87bcv34ce1312619f9b7a@mail.gmail.com>
+	id S1752933AbXF0CLB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Jun 2007 22:11:01 -0400
+Received: from postak-3.fzu.cz (postak3.fzu.cz [10.128.1.5])
+	by postak-1.fzu.cz (8.13.1/8.13.1) with ESMTP id l5R1kcdt009635
+	for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 03:46:38 +0200
+Received: from [10.18.6.23] (nat5.suchdol.net [82.208.33.254])
+	(authenticated bits=0)
+	by postak-3.fzu.cz (8.13.6/8.13.6) with ESMTP id l5R1krqA011577
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 03:46:53 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?B?IlT2cvZrIEVkdmluIg==?= <edwintorok@gmail.com>
-Cc: power@bughost.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: linux-ide@vger.kernel.org
 
-On Sat, 23 Jun 2007 14:23:12 +0300
-"T=F6r=F6k Edvin" <edwintorok@gmail.com> wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig612CE7CB51973AF5487E2D4D
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> Hi,
->=20
-> With the ALPM patches I get: Unable to set link PM policy.
-> [until now I've tested only the combination of your, and Tejun's
-> port-stopping patch, as I already reported in a past thread]
-> It looks like my device doesn't support hipm, however it supports dip=
-m.
-> If I make the change below, the ALPM patches work (i.e. no errors,
-> ~0.5W and power savings).
-> Do you see any problems with enabling alpm on devices supporting dipm
-> but not hipm?
->=20
-> Thanks,
-> Edwin
+Hi folks,
+I'm considering buying a four-channel SATA PCI controller marked as
+Promise TX-4302 (two internal SATA links, two eSATA, independent on each
+other). According to the product page at Promise [1], Linux is missing
+from the list of supported operating systems, although Google suggests
+that online stores include Linux in the list of supported OSes.
 
-Hi Edwin - thanks for your email.  I've gotten some clarification on th=
-e
-spec, and your patch appears to be perfectly legitimate.  Either HIPM
-or DIPM support will work for ALPM, and you don't neccessarily need bot=
-h.
-I will incorportate this into the next round of ALPM patches.
+I wasn't able to find this chip mentioned at the list of supported
+chipsets [2]. There's a similarly looking TX-4, but I don't like the
+idea of buying a nice room decoration instead of a working device.
 
-Kristen
+I wasn't able to find out any reference to AHCI in the specs, either.
 
->=20
-> diff -u 2.6-git/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> --- 2.6-git/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2021,7 +2021,7 @@
->         if (dev->flags & ATA_DFLAG_LBA48)
->                 dev->max_sectors =3D ATA_MAX_SECTORS_LBA48;
->=20
-> -       if (ata_id_has_hipm(dev->id))
-> +       if (ata_id_has_hipm(dev->id) || ata_id_has_dipm(dev->id))
->                 dev->flags |=3D ATA_DFLAG_IPM;
->         if (dev->horkage & ATA_HORKAGE_DIAGNOSTIC) {
->=20
+I would appreciate if you CC me on your replies as I'm not subscribed to
+this list, but if it's considered impolite here, I can surely subscribe :=
+).
+
+[1]
+http://www.promise.com/product/product_detail_eng.asp?segment=3Dundefined=
+&product_id=3D168
+[2] http://linux-ata.org/driver-status.html
+
+Thanks in advance,
+-jkt
+
+--=20
+cd /local/pub && more beer > /dev/mouth
+
+
+--------------enig612CE7CB51973AF5487E2D4D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFGgcGHamXfqERyJRcRAq04AJ0TFMjc+L4VgmgiOpBk0CKttQ4aQACgmv+U
+Z1w1BPWHPo1I6Zs6ykrUNBA=
+=3wEi
+-----END PGP SIGNATURE-----
+
+--------------enig612CE7CB51973AF5487E2D4D--
