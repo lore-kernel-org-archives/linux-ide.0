@@ -1,122 +1,148 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: PREEMPT bug? (was: Re: [PROBLEM]: hdparm strange behaviour for 2.6.21 and later)
-Date: Wed, 27 Jun 2007 21:46:26 +0200
-Message-ID: <200706272146.26886.bzolnier@gmail.com>
-References: <200706161958.05313.djart@linux.gr> <200706232028.58193.bzolnier@gmail.com> <200706242047.13466.djart@linux.gr>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 5/6] ide: add ata_dev_has_iordy() helper
+Date: Thu, 28 Jun 2007 00:28:42 +0400
+Message-ID: <4682C87A.2040709@ru.mvista.com>
+References: <200706232005.10968.bzolnier@gmail.com> <200706240009.49033.bzolnier@gmail.com> <467EA1CB.8000800@ru.mvista.com> <200706272102.33989.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-7"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:63534 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755406AbXF0TzP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 15:55:15 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so427337mue
-        for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 12:55:11 -0700 (PDT)
-In-Reply-To: <200706242047.13466.djart@linux.gr>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:55174 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756228AbXF0U06 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Jun 2007 16:26:58 -0400
+In-Reply-To: <200706272102.33989.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thanos Kyritsis <djart@linux.gr>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+Hello.
 
-Hi,
+Bartlomiej Zolnierkiewicz wrote:
 
-On Sunday 24 June 2007, Thanos Kyritsis wrote:
-> On Saturday 23 June 2007, Bartlomiej Zolnierkiewicz wrote:
-> > Hi,
-> 
-> Hello, thanks for answering :-D
-> 
-> 
-> > Also could you try running UP kernel without PREEMPT and see
-> > if it makes difference?
-> 
-> Yes, it did make a difference. I've just tried both UP and SMP kernels 
-> (22-rc5) *without* PREEMPT. Neither of these locked!
+>>>>>Index: b/drivers/ide/pci/sl82c105.c
+>>>>>===================================================================
+>>>>>--- a/drivers/ide/pci/sl82c105.c
+>>>>>+++ b/drivers/ide/pci/sl82c105.c
+>>>>>@@ -52,9 +52,10 @@
+>>>>> * Convert a PIO mode and cycle time to the required on/off times
+>>>>> * for the interface.  This has protection against runaway timings.
+>>>>> */
+>>>>>-static unsigned int get_pio_timings(ide_pio_data_t *p)
+>>>>>+static unsigned int get_pio_timings(ide_drive_t *drive, ide_pio_data_t *p)
+>>>>>{
+>>>>>	unsigned int cmd_on, cmd_off;
+>>>>>+	u8 iordy = 0;
 
-Thanks for testing.
+>>>>>	cmd_on  = (ide_pio_timings[p->pio_mode].active_time + 29) / 30;
+>>>>>	cmd_off = (p->cycle_time - 30 * cmd_on + 29) / 30;
+>>>>>@@ -65,7 +66,10 @@ static unsigned int get_pio_timings(ide_
+>>>>>	if (cmd_off == 0)
+>>>>>		cmd_off = 1;
 
-IIRC SMP kernel without PREEMPT should also fail (or not?),
-it could be that we are hitting some generic PREEMPT bug.
+>>>>>-	return (cmd_on - 1) << 8 | (cmd_off - 1) | (p->use_iordy ? 0x40 : 0x00);
+>>>>>+	if (p->pio_mode > 2 || ata_dev_has_iordy(drive->id))
+>>>>>+		iordy = 0x40;
 
-Cc:ed linux-kernel@ in hope that some PREEMPT guru lends us a hand.
+>>>>   This logic, although mimicking the old one from ide_get_best_pio_mode(), 
+>>>>is not quite correct. As have been noted before, when you set a PIO mode using 
 
-[ original thread is here:
- http://www.mail-archive.com/linux-ide@vger.kernel.org/msg07380.html ]
+>>    It was actully correct enough, just superfluous -- it was me who was 
+>>incorrect, mistaking || for &&. :-<
 
-> I also tried UP with PREEMPT and it locks.
-> 
-> > Adding a couple of printk-s to ide.c::set_using_dma() and
-> > ide.c::ide_spin_wait_hwgroup() will for sure help in debugging
-> > it further.
-> 
-> I just tried that as well. I placed printk-s when entering and exiting 
-> these 2 functions and when they use spin_lock_irq() and 
-> spin_unlock_irq(), and then watched the output:
-> 
-> I didn't see something odd. For every hdparm execution, set_using_dma() 
-> is called, it successfully calls ide_spin_wait_hwgroup(), then 
-> set_using_dma() finishes.
-> After set_using_dma() finishes, one more ide_spin_wait_hwgroup() 
-> is called and finishes.
-> 
-> This pattern happens always, no matter if the kernel will eventually 
-> lock (preempt) or not lock (no preempt), with absolutely no 
-> differences. 
-> 
-> entering ide.c::set_using_dma()
-> |
->   entering ide.c::ide_spin_wait_hwgroup()
->     ide.c::ide_spin_wait_hwgroup: LOCK
->   exiting ide.c::ide_spin_wait_hwgroup()
-> |
-> ide.c::set_using_dma: set ->busy flag, unlock and let it ride
-> ide.c::set_using_dma: UNLOCK
-> ide.c::set_using_dma: lock, clear ->busy flag and unlock before leaving
-> ide.c::set_using_dma: LOCK
-> ide.c::set_using_dma: UNLOCK
-> |
-> exiting ide.c::set_using_dma()
-> 
-> entering ide.c::ide_spin_wait_hwgroup()
-> ide.c::ide_spin_wait_hwgroup: LOCK
-> exiting ide.c::ide_spin_wait_hwgroup()
-> 
-> The above gets printed twice (one for the hda hdparm and one for hdb).
-> 
-> But I noticed something extra. 
-> 
-> Sometimes, the ide_spin_wait_hwgroup() that runs either before the 1st 
-> set_using_dma() or between the 1st and the 2nd (1st for hda, 2nd for 
-> hdb) (*but never the one called last*) is waiting A LOT inside the busy 
-> loop (while (hwgroup->busy)).
-> 
-> I think PREEMPT kernels always produce a lot of this while loop output, 
-> and then print the above pattern, then lock.
-> 
-> Non-PREEMPT kernels don't always produce the huge while loop output, 
-> only sometimes, but they never have locking problem.
-> I don't know if this is at all relevant to the problem. Perhaps it's 
-> normal that during some of the bootups the IDE device group is busy 
-> while during other bootups it's not busy, right ?
+> After checking with ATA-2 spec I would prefer to leave extra p->pio_mode > 2
+> check (if ata_dev_has_iordy() fails device still _may_ support IORDY).
 
-Yes, this is expected behavior (especially when you mix SMP in)
-unless of course ide_spin_wait_hwgroupt() fails (timeouts).
+    Indeed, it may... BUT it may not support PIO > 2 (since this also requires 
+the "IORDY supported"  bit set).
 
-> However, since all functions exit properly, should I try to place 
-> printk-s in other functions as well ? 
+> Fixed in "take 3" of the patch.
 
-ide_do_request() and hwgroup->busy flag but as this could produce *a*lot*
-of output (serial or net console would be required to capture the log for
-the lockup case).
+>>>>Set Transfer Mode subcode of the Set Features command, you're always selecting 
+>>>>the flow control mode, i.e. using IORDY. So, the last condition in this if 
 
-> (I kind of need and appreciate guideance in order to help you, because 
-> I've never been in the kernel hacking business before :) )
+>>    So, what actually would need fixing in *all* the drivers if one was aiming 
+>>at ATA-1 compatibility is *not* issuing that subcommand to such drives...
 
-No problem, happy hacking. :)
+> I was actually thinking about a different way of fixing this:
 
-Thanks,
-Bart
+> - remove 0x08 bit from XFER_PIO_[0,6] defines and add new XFER_PIO_IORDY
+>   define (<linux/ata.h>)
+
+    Nah, that wouldn't match to the ATA definition of these values.
+
+> - check for speed == XFER_PIO_[0,6] in ide-lib.c::ide_config_drive_speed()
+
+    It's in ide-iops.c. ;-)
+
+>   and pmac.c::pmac_ide_do_setfeature(), add XFER_PIO_IORDY if needed
+
+    And what, just pass the mode thru to the Set Features if there's no IORDY 
+support?  That would be bogus since there are just *no* subcodes to set the 
+specific mode below 0x08 -- the only defined subcodes are 0x00 (set default 
+mode), and 0x01 (set default mode w/o IORDY).
+    I was thinking of checking if the drive really supports IORDY before 
+issuing a command to set PIO mode (and just skipping the command if there's no 
+IORDY -- well, maybe adding an extra check that the passed mode is acceptable 
+to the drive, i.e. <= its default one).  Should be quite simple to do.
+
+> This should be done together with fixing these host drivers that don't
+> handle IORDY properly.
+
+    Erm, not necessarily...
+
+>>>Oh yes, I keep forgetting about it - some nice FIXME comment
+>>>in <linux/ata.h> would be of a great help. :-)
+
+>>    Well, some drivers (like pdc202xx_*) don't do the IORDY thing right for 
+>>PIO modes < 3 as well...
+
+> Added to the existing IDE TODO at
+
+> 	http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/TODO
+
+> Patches adding/removing items are welcomed.
+
+> Patches fixing actual issues are welcomed even more.
+
+    Sigh, I'm trying to get some time (more like time slices :-) off to deal 
+with my own issues...
+
+>>>>stmt should probably be the first, if not the sole one...
+
+>>>Fixed, new patch below.
+
+>>>[PATCH] ide: add ata_dev_has_iordy() helper (take 2)
+
+>>>* Add ata_dev_has_iordy() helper and use it sl82c105 host driver.
+
+>>>* Remove no longer needed ide_pio_data_t.use_iordy field.
+
+>>>v2:
+>>>* Fix issues noticed by Sergei:
+>>>  - correct patch description
+>>>  - remove stale comment from ide_get_best_pio_mode()
+
+>>    I meant something like changing use_iordy to IORDY but it's good as is now...
+
+> Corrected in "take 3".
+
+    Thanks.
+
+> [PATCH] ide: add ata_dev_has_iordy() helper (take 3)
+
+> * Add ata_dev_has_iordy() helper and use it sl82c105 host driver.
+
+> * Remove no longer needed ide_pio_data_t.use_iordy field.
+
+> v2/v3:
+> * Fix issues noticed by Sergei:
+>   - correct patch description
+>   - fix comment in ide_get_best_pio_mode()
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
