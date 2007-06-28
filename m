@@ -1,38 +1,78 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.22-rc6] sata_inic162x: add big fat warning about broken
- LBA48 support
-Date: Thu, 28 Jun 2007 13:55:50 -0400
-Message-ID: <4683F626.9040401@garzik.org>
-References: <4683DCD3.1040303@gmail.com> <4683F4CD.2090106@rtr.ca> <4683F51C.3060404@garzik.org> <4683F5B1.7090507@gmail.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: ATA: add a PCI ID for Intel Santa Rosa PATA controller
+Date: Thu, 28 Jun 2007 15:16:01 -0400
+Message-ID: <468408F1.3080307@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020207050608070508060401"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50841 "EHLO mail.dvmed.net"
+Received: from mx1.redhat.com ([66.187.233.31]:47252 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753035AbXF1Rzx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jun 2007 13:55:53 -0400
-In-Reply-To: <4683F5B1.7090507@gmail.com>
+	id S1763995AbXF1TQM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jun 2007 15:16:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jason Gaston <jason.d.gaston@intel.com>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Mark Lord wrote:
->>> Tejun Heo wrote:
->>>> sata_inic162x can't do LBA48 properly yet.  Whine loudly about it to
->>>> reduce confusion.
->>> Why not whine only when an affected device is actually present?
->> That's sorta that I think...
-> 
-> That was me being lazy.  I'll just ban > LBA28 disks on the controller.
+This is a multi-part message in MIME format.
+--------------020207050608070508060401
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Sounds better to me...  I certainly prefer that to clipping-to-1xxGB, 
-especially given the shaky state of the overall driver.
+From: Christian Lamparter <chunkeey@web.de>
 
-	Jeff
+ATA: add a PCI ID for Intel Santa Rosa PATA controller.
 
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
 
+[against 2.6.22-rc6; patch also attached, use the attachment]
 
+ drivers/ata/ata_piix.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 9c07b88..b210726 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -200,6 +200,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
+        /* ICH7/7-R (i945, i975) UDMA 100*/
+        { 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+        { 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++       /* ICH8 Mobile PATA Controller */
++       { 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+
+        /* NOTE: The following PCI ids must be kept in sync with the
+         * list in drivers/pci/quirks.c.
+
+--------------020207050608070508060401
+Content-Type: text/plain;
+ name="ich8m-add-pciid.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="ich8m-add-pciid.patch"
+
+From: Christian Lamparter <chunkeey@web.de>
+
+ATA: add a PCI ID for Intel Santa Rosa PATA controller.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+ drivers/ata/ata_piix.c |    2 ++
+ 1 file changed, 2 insertions(+) 
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 9c07b88..b210726 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -200,6 +200,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* ICH7/7-R (i945, i975) UDMA 100*/
+ 	{ 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++	/* ICH8 Mobile PATA Controller */
++	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 
+ 	/* NOTE: The following PCI ids must be kept in sync with the
+ 	 * list in drivers/pci/quirks.c.
+
+--------------020207050608070508060401--
