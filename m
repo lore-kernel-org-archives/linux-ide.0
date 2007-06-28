@@ -1,60 +1,45 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [git patches] libata fixes
-Date: Thu, 28 Jun 2007 16:29:16 +0200 (MEST)
-Message-ID: <200706281429.l5SETGND008605@harpo.it.uu.se>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 2.6.22-rc6] sata_inic162x: add big fat warning about broken
+ LBA48 support
+Date: Fri, 29 Jun 2007 01:07:47 +0900
+Message-ID: <4683DCD3.1040303@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:51540 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756169AbXF1O3c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jun 2007 10:29:32 -0400
+Received: from nz-out-0506.google.com ([64.233.162.235]:15297 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbXF1QHx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jun 2007 12:07:53 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so145868nze
+        for <linux-ide@vger.kernel.org>; Thu, 28 Jun 2007 09:07:52 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org, htejun@gmail.com, jeff@garzik.org, torvalds@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, 27 Jun 2007 03:35:26 -0400, Jeff Garzik wrote:
->Tejun Heo (9):
->      libata: kill the infamous abnormal status message
->      libata: kill non-sense warning message
->      libata: be less verbose about hpa
->      libata: remove unused variable from ata_eh_reset()
->      libata: fix ata_dev_disable()
->      libata: fix infinite EH waiting bug
->      libata: call ata_check_atapi_dma() with qc better prepared
->      libata: use PIO for non-16 byte aligned ATAPI commands
->      libata: kill ATA_HORKAGE_DMA_RW_ONLY
+sata_inic162x can't do LBA48 properly yet.  Whine loudly about it to
+reduce confusion.
 
-These changes fixed the CDROM IDENTIFY failures one of
-my older test machines used to get with libata. I now
-get much nicer results on that machine:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/sata_inic162x.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-ata_piix 0000:00:1f.1: version 2.11
-PCI: Setting latency timer of device 0000:00:1f.1 to 64
-scsi0 : ata_piix
-scsi1 : ata_piix
-ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001f000 irq 14
-ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001f008 irq 15
-ata1.00: ATA-5: IC35L080AVVA07-0, VA4OA52A, max UDMA/100
-ata1.00: 160836480 sectors, multi 16: LBA 
-ata1.00: configured for UDMA/100
-ata2.00: ATAPI: CRD-8320B, 1.12, max MWDMA2
-ata2.01: ATAPI: Hewlett-Packard CD-Writer Plus 9100, 1.0c, max UDMA/33
-ata2.00: configured for MWDMA2
-ata2.01: configured for UDMA/33
-scsi 0:0:0:0: Direct-Access     ATA      IC35L080AVVA07-0 VA4O PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 160836480 512-byte hardware sectors (82348 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 0:0:0:0: [sda] 160836480 512-byte hardware sectors (82348 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
-sd 0:0:0:0: [sda] Attached SCSI disk
-scsi 1:0:0:0: CD-ROM            GoldStar CD-ROM CRD-8320B 1.12 PQ: 0 ANSI: 5
-scsi 1:0:1:0: CD-ROM            HP       CD-Writer+ 9100  1.0c PQ: 0 ANSI: 5
-
-It's the CRD-8320B that used to time out and fail IDENTIFY.
-
-Tested-by: Mikael Pettersson <mikpe@it.uu.se>
+Index: work/drivers/ata/sata_inic162x.c
+===================================================================
+--- work.orig/drivers/ata/sata_inic162x.c
++++ work/drivers/ata/sata_inic162x.c
+@@ -664,8 +664,12 @@ static int inic_init_one(struct pci_dev 
+ 	void __iomem * const *iomap;
+ 	int i, rc;
+ 
+-	if (!printed_version++)
++	if (!printed_version++) {
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
++		printk(KERN_WARNING "WARNING: sata_inic162x doesn't support "
++		       "LBA48 yet. Devices larger than\n         "
++		       "2^28 - 1 sectors (~127GiB) won't work.\n");
++	}
+ 
+ 	/* alloc host */
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, NR_PORTS);
