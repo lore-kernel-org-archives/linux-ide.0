@@ -1,74 +1,52 @@
-From: "Andrew Hall" <andrew.a.hall@gmail.com>
-Subject: RE: CF flash PATA on libata failure to attach
-Date: Thu, 28 Jun 2007 09:49:38 +1000
-Message-ID: <4682f7a3.15538c0a.2e12.ffff8676@mx.google.com>
-References: <11172839.post@talk.nabble.com>	<46766BD3.4040702@gmail.com> <20070618125742.28a0bc57@the-village.bc.nu> <46770edc.101d640a.4fdf.4eae@mx.google.com> <46776306.5030300@gmail.com> <4679cefc.06d7720a.0280.ffff9cce@mx.google.com> <4679EA43.4040002@gmail.com> <467a2692.17bb720a.5a14.ffffa80c@mx.google.com> <467A8F17.1080608@rtr.ca> <4680d387.24528c0a.3634.69bd@mx.google.com> <46815FF4.9040001@rtr.ca> <4681e04b.22b38c0a.78ec.6f76@mx.google.com> <46826F42.70405@rtr.ca>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 2.6.22-rc6] libata: remove reading alt_status from ata_hsm_qc_complete()
+Date: Thu, 28 Jun 2007 10:05:31 +0800
+Message-ID: <4683176B.3060605@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:17040 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439AbXF0XuG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 19:50:06 -0400
-Received: by py-out-1112.google.com with SMTP id u77so694817pyb
-        for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 16:50:06 -0700 (PDT)
-In-Reply-To: <46826F42.70405@rtr.ca>
-Content-Language: en-au
+Received: from e31.co.us.ibm.com ([32.97.110.149]:53268 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170AbXF1CFn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jun 2007 22:05:43 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5S25gbp018448
+	for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 22:05:42 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5S25glb259250
+	for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 20:05:42 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5S25fRg017683
+	for <linux-ide@vger.kernel.org>; Wed, 27 Jun 2007 20:05:42 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Mark Lord' <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-Hi Mark,
+In ata_hsm_qc_complete():
+Calling ata_altstatus() after the qc is completed might race with next qc. Remove it.
 
-The device is a Nexcom NSA1083 appliance:
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+---
+Jeff,
 
-http://www.nexcom.com/product/productshow.jsp?iid=13&pid=878
+(Sorry for re-submitting this patch so late.)
+The unneeded reading of alt_status might cause trouble when another command doing activity like pio data xfer.
+After checking, the flush here is leftover/merge damage of ata_pio_block( ) in 2.6.17-rc5:
+http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=commitdiff;h=bb31a8faa270beafcc51a65880c5564c6b718bd6
+We can safely remove it.
 
-It's an OEM appliance that uses the Intel 965 chipset. We use it as one of
-three platforms for our access control and compliance products as it has 8
-built in Ethernet ports and a dual core processor - with built in compact
-flash. The older appliance that this new (1083) one is superseding also had
-built in CF although this one apparently had separate PATA and SATA
-controllers, whereas the 1083 has only one 4 channel ICH8 Intel SATA
-controller which interfaces to one CF connector and one IDE connector via a
-SATA to PATA bridge ( I don't know exactly what this bridge is or how it
-interfaces to the SATA bus - but I can probably find this out from the
-manufacturer). The CF is a standard 512MB Sandisk/Kingston chip that we boot
-from and write configuration data to.
-
-I appreciate your offer to look at this issue and depending on where you
-are, we can probably ship you an appliance directly from Taiwan. The other
-option possibly is to get you/someone remote access into one of these units
-via the net, if that would help. The ridiculous thing is that we can boot
-off the CF with no problems and the libata/piix driver goes some way to
-recognizing that it's compact flash, so I believe the issue can't be too
-difficult to resolve - I just need someone with a bit of knowledge on the
-driver that can guide me through things to try or areas to look.
-    
-Many thanks,
-
-> -----Original Message-----
-> From: Mark Lord [mailto:liml@rtr.ca]
-> Sent: Thursday, 28 June 2007 12:08 AM
-> To: Andrew Hall
-> Cc: linux-ide@vger.kernel.org; robert.de.rooy@gmail.com
-> Subject: Re: CF flash PATA on libata failure to attach
-> 
-> Andrew Hall wrote:
-> >> This looks a lot like the other CF-card problem that was being
-> debugged
-> >> here over the past week -- the one where POLLING had to be turned
-> on.
-> >> Robert de Rooy (copied) was the reporter for that one.
-> >> Perhaps you two could compare notes ?
-> 
-> Do you have a spare device you can send me?
-> 
-> Or exactly what is this gizmo, anyway?
-> (brand, model, form factor ...)
-> 
-> Thanks
+--- linux-2.6.22-rc6/drivers/ata/libata-core.c.ori	2007-06-28 09:47:31.000000000 +0800
++++ linux-2.6.22-rc6/drivers/ata/libata-core.c	2007-06-28 09:49:26.000000000 +0800
+@@ -4799,8 +4799,6 @@ static void ata_hsm_qc_complete(struct a
+ 		} else
+ 			ata_qc_complete(qc);
+ 	}
+-
+-	ata_altstatus(ap); /* flush */
+ }
+ 
+ /**
 
