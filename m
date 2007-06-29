@@ -1,42 +1,32 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [1/2] 2.6.22-rc6: known regressions v2
-Date: Fri, 29 Jun 2007 19:24:20 +0100
-Message-ID: <20070629192420.0d501a93@the-village.bc.nu>
-References: <46852187.3080504@googlemail.com>
-	<20070629175920.6af0c62b@the-village.bc.nu>
-	<468543CE.6080401@redhat.com>
-	<20070629190602.4ef6a0cb@the-village.bc.nu>
-	<46854B29.80906@garzik.org>
+Subject: Re: [PATCH] pata_hpt3x3: support this chip properly including
+ alternative BAR layout
+Date: Fri, 29 Jun 2007 19:50:48 +0100
+Message-ID: <20070629195048.02e7d18a@the-village.bc.nu>
+References: <20070629191703.5d9cf602@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
-In-Reply-To: <46854B29.80906@garzik.org>
-Sender: reiserfs-devel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Rodrigo Luiz <troops.of.doom@gmail.com>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jaroslav Kysela <perex@suse.cz>, Ben Collins <bcollins@ubuntu.com>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, Rodney Gordon II <meff@spherevision.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34822 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754755AbXF2Soz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jun 2007 14:44:55 -0400
+In-Reply-To: <20070629191703.5d9cf602@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org, linux-kernel@vger.kernel.org
 
-On Fri, 29 Jun 2007 14:10:49 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+On Fri, 29 Jun 2007 19:17:03 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-> Alan Cox wrote:
-> >>> I'm not even sure this report is IT8212 related rather than just an IRQ
-> >>> storm
-> >> Why does the driver report "irq 0"?
-> >>
-> >> ata7: PATA max UDMA/133 cmd <blah> ctl <blah> bmdma <blah> irq 0  <====
-> >>
-> >> Above that, the ACPI layer says it assigned IRQ 20
-> > 
-> > Because the libata core code in 2.6.22rc6 reports all the ports and IRQ
-> > values wrongly ?
+> In some cases we cannot use BAR0-BAR3 on this chip due to errata. The
+> relevant interfaces are available via BAR4 and we set the chip up to use
+> those instead.
 > 
-> AFAIK that was fixed, for IRQ.  Please point out examples where it 
-> remains broken...
+> This plus testing means it can move from experimental to production spec
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-2.6.22-rc6 it is broken, for all the systems I've looked at, as are the
-port numbers. Tejun posted fixes for the IRQ but they do not seem to have
-been applied, or if they were it was post -rc6 to a git tree.
-
-Alan
+Argh NAK that, just when I thought it was all stable its not
