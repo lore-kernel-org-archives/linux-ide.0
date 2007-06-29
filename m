@@ -1,35 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [1/2] 2.6.22-rc6: known regressions v2
-Date: Fri, 29 Jun 2007 17:59:20 +0100
-Message-ID: <20070629175920.6af0c62b@the-village.bc.nu>
+Date: Fri, 29 Jun 2007 21:09:55 +0400
+Message-ID: <46853CE3.3050907@ru.mvista.com>
 References: <46852187.3080504@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:55668 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758103AbXF2Qyk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Jun 2007 12:54:40 -0400
+Received: from gateway-1237.mvista.com ([63.81.120.155]:14821 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753185AbXF2RIN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jun 2007 13:08:13 -0400
 In-Reply-To: <46852187.3080504@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Rodrigo Luiz <troops.of.doom@gmail.com>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jaroslav Kysela <perex@suse.cz>, Ben Collins <bcollins@ubuntu.com>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Rodney Gordon II <meff@spherevision.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> SATA/PATA
-> 
-> Subject    : libata IT821X driver still fails! Hard-freezes system
-> References : http://lkml.org/lkml/2007/6/14/82
-> Submitter  : Rodney Gordon II <meff@spherevision.org>
+Hello.
+
+Michal Piotrowski wrote:
+
+> IDE
+
+> Subject    : 2.6.22-rcX: hda: lost interrupt
+> References : http://lkml.org/lkml/2007/6/29/121
+> Submitter  : David Chinner <dgc@sgi.com>
 > Status     : unknown
 
-Not a regression as it seems this user's box has always been broken. I've
-been running heavy testing with 2.6.22rc6 and IT8212 and its working
-reliably for the "dumb" mode in question.
+> Probing IDE interface ide0...
+> hda: probing with STATUS(0xa0) instead of ALTSTATUS(0x58)
 
-The hardware mode needs a fix Tejun has queued somewhere (probably in
-Jeff's vast backlog) and then works too.
+   Ugh, 0xa0 is the device/head register's value, not the status register's!
+I'd suppose that I/O space was borken in some funny way, however, it would be 
+hard top expect form x86 which should be prone to endiannes blues...
 
-I'm not even sure this report is IT8212 related rather than just an IRQ
-storm
+MBR, Sergei
