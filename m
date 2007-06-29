@@ -1,80 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/6] ide: add ata_dev_has_iordy() helper
-Date: Sat, 30 Jun 2007 00:24:23 +0400
-Message-ID: <46856A77.9050808@ru.mvista.com>
-References: <200706232005.10968.bzolnier@gmail.com> <200706272102.33989.bzolnier@gmail.com> <4682C87A.2040709@ru.mvista.com> <200706280010.34122.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [1/2] 2.6.22-rc6: known regressions v2
+Date: Fri, 29 Jun 2007 17:01:48 -0400
+Message-ID: <4685733C.1090102@garzik.org>
+References: <46852187.3080504@googlemail.com>	<20070629175920.6af0c62b@the-village.bc.nu>	<468543CE.6080401@redhat.com>	<20070629190602.4ef6a0cb@the-village.bc.nu>	<46854B29.80906@garzik.org> <20070629192420.0d501a93@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:1197 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753318AbXF2UWk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jun 2007 16:22:40 -0400
-In-Reply-To: <200706280010.34122.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60175 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754389AbXF2VBz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 29 Jun 2007 17:01:55 -0400
+In-Reply-To: <20070629192420.0d501a93@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Rodrigo Luiz <troops.of.doom@gmail.com>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jaroslav Kysela <perex@suse.cz>, Ben Collins <bcollins@ubuntu.com>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, Tejun Heo <htejun@gmail.com>, Rodney Gordon II <meff@spherevision.org>
 
-Hello.
+Alan Cox wrote:
+> On Fri, 29 Jun 2007 14:10:49 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
+> 
+>> Alan Cox wrote:
+>>>>> I'm not even sure this report is IT8212 related rather than just an IRQ
+>>>>> storm
+>>>> Why does the driver report "irq 0"?
+>>>>
+>>>> ata7: PATA max UDMA/133 cmd <blah> ctl <blah> bmdma <blah> irq 0  <====
+>>>>
+>>>> Above that, the ACPI layer says it assigned IRQ 20
+>>> Because the libata core code in 2.6.22rc6 reports all the ports and IRQ
+>>> values wrongly ?
+>> AFAIK that was fixed, for IRQ.  Please point out examples where it 
+>> remains broken...
+> 
+> 2.6.22-rc6 it is broken, for all the systems I've looked at, as are the
+> port numbers. Tejun posted fixes for the IRQ but they do not seem to have
+> been applied, or if they were it was post -rc6 to a git tree.
 
-Bartlomiej Zolnierkiewicz wrote:
 
-[...]
+I've seen the patch that eventually became 
+22888423b3b1b96573250671afb5b72ea4364902 from Olof Johansson but nothing 
+from Tejun on the subject.
 
-> Damn, I should have re-check ATA specs before writing this. :)
+	Jeff
 
-    Yeah, never hurts... but takes time. ;-)
 
->>    I was thinking of checking if the drive really supports IORDY before 
->>issuing a command to set PIO mode (and just skipping the command if there's no 
->>IORDY -- well, maybe adding an extra check that the passed mode is acceptable 
->>to the drive, i.e. <= its default one).  Should be quite simple to do.
-
-> Sounds fine.
-
-    I'll look into doing this some time... :-)
-
->>>This should be done together with fixing these host drivers that don't
->>>handle IORDY properly.
-
->>    Erm, not necessarily...
-
-> Hmm, yes.
-
-> I'll just count on you with fixing all this IORDY stuff (as you have
-> much more expertise in this field) and concentrate on other things.
-
-    I'm afraid this compliment is not well deserved. :-<
-
->>>>>Oh yes, I keep forgetting about it - some nice FIXME comment
->>>>>in <linux/ata.h> would be of a great help. :-)
-
->>>>   Well, some drivers (like pdc202xx_*) don't do the IORDY thing right for 
->>>>PIO modes < 3 as well...
-
->>>Added to the existing IDE TODO at
-
->>>	http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/TODO
-
-    I think this list already needs cleaning -- e.g. at least cmd64x.c and 
-hpt366.c have been deatl with.
-
->>>Patches adding/removing items are welcomed.
-
->>>Patches fixing actual issues are welcomed even more.
-
->>    Sigh, I'm trying to get some time (more like time slices :-) off to deal 
->>with my own issues...
-
-    By by "my own issues" I don't mean patches -- patches don't help me, it's 
-rather injections and pills... +:-)
-
-> Which reminds me about some HPT IDE patches... 8)
-
-    Done now -- at last. However, I've had troubles with SMPT sending them. :-/
-
-> Bart
-
-WBR, Sergei
