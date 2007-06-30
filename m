@@ -1,37 +1,44 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: PROBLEM: SATA AHCI driver significant throughput loss in
- 2.6.22-rc5-g75154f40-dirty
-Date: Sat, 30 Jun 2007 00:57:47 -0700
-Message-ID: <20070630005747.9bc9ba40.akpm@linux-foundation.org>
-References: <439fa30706262117u2d5553dfp8395c6ca41574a8c@mail.gmail.com>
+From: Florian Attenberger <valdyn@gmail.com>
+Subject: [PATCH 2.6.22-rc6] add PCI-ID for Adaptec 1430SA 4-Port SATA
+	Controller
+Date: Sat, 30 Jun 2007 16:44:36 +0200
+Message-ID: <20070630144436.GA13479@master.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:55559 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752253AbXF3H5z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jun 2007 03:57:55 -0400
-In-Reply-To: <439fa30706262117u2d5553dfp8395c6ca41574a8c@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:11937 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756226AbXF3Ool (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jun 2007 10:44:41 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so987263ugf
+        for <linux-ide@vger.kernel.org>; Sat, 30 Jun 2007 07:44:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan <metalifloyd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 27 Jun 2007 00:17:24 -0400 Dan <metalifloyd@gmail.com> wrote:
+Hi,
 
-> Something changed with the AHCI SATA driver in the latest git version.
-> With 2.6.21 I get ~49MB/sec according to hdparm. Using the latest git
-> version I only get ~8MB/sec. I've attached my .config and have
-> included some info about my system below. Please let me know if you
-> need more information or if I can help test anything.
-> 
-> Lenovo Thinkpad T60p
+added this pci id to support my:
+lspci:
+01:00.0 RAID bus controller: Adaptec Unknown device 0243 (rev 02)
+lspci -n:
+01:00.0 0104: 9005:0243 (rev 02)
 
-Until we know how widespread this damage is, we'd need to consider this
-a blocking bug.
+seems to work fine.
 
-Are you able (as a matter of some urgency) to run a git bisection 
-search to identify the offending commit?
+florian attenberger
 
-Thanks.
+
+--- 2.6.22-rc6/drivers/ata/sata_mv.c	2007-06-30 16:21:47.462020256 +0200
++++ 2.6.22-rc6.mine/drivers/ata/sata_mv.c	2007-06-30 16:25:25.999165444 +0200
+@@ -582,6 +582,9 @@ static const struct pci_device_id mv_pci
+ 
+ 	{ PCI_VDEVICE(ADAPTEC2, 0x0241), chip_604x },
+ 
++	/* Adaptec 1430SA */
++	{ PCI_VDEVICE(ADAPTEC2, 0x0243), chip_7042 },
++
+ 	{ PCI_VDEVICE(TTI, 0x2310), chip_7042 },
+ 
+ 	/* add Marvell 7042 support */
