@@ -1,66 +1,52 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 13/15] ide: add ata_set{_max}_pio()
-Date: Sat, 30 Jun 2007 22:31:09 +0200
-Message-ID: <200706302231.10032.bzolnier@gmail.com>
-References: <200706302111.29322.bzolnier@gmail.com> <4686B70F.9080606@garzik.org>
+Date: Sat, 30 Jun 2007 16:21:05 -0400
+Message-ID: <4686BB31.7040205@garzik.org>
+References: <200706302111.29322.bzolnier@gmail.com> <4686B70F.9080606@garzik.org> <200706302231.10032.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:8308 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751999AbXF3UOs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jun 2007 16:14:48 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1777304mue
-        for <linux-ide@vger.kernel.org>; Sat, 30 Jun 2007 13:14:46 -0700 (PDT)
-In-Reply-To: <4686B70F.9080606@garzik.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:38082 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911AbXF3UVH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 30 Jun 2007 16:21:07 -0400
+In-Reply-To: <200706302231.10032.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Saturday 30 June 2007, Jeff Garzik wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > * Add IDE_HFLAG_ABUSE_{PREFETCH,FAST_DEVSEL,DMA_MODES} flags
-> >   and set them in ht6560, cmd640, cmd64x and sc1200 host drivers.
-> > 
-> > * Add set_pio_mode_abuse() for checking if host driver has a non-standard
-> >   ->tuneproc() implementation and use it in do_special().
-> > 
-> > * Add ata_set_pio() for setting PIO mode (it uses hwif->pio_mask to find
-> >   the maximum PIO mode supported by the host), also add ata_set_max_pio()
-> >   wrapper for ata_set_pio() to use for auto-tuning.  Convert users of
-> >   ->tuneproc to use ata_set{_max}_pio() where possible.  This leaves only
-> >   do_special(), set_using_pio(), ide_hwif_restore() and ata_set_pio() as
-> >   a direct users of ->tuneproc.
-> > 
-> > * Remove no longer needed ide_get_best_pio_mode() calls and printk-s
-> >   reporting PIO mode selected from ->tuneproc implementations.
-> > 
-> > * Rename ->tuneproc hook to ->set_pio_mode and make 'pio' argument const.
-> > 
-> > * Remove stale comment from ide_config_drive_speed().
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Bartlomiej Zolnierkiewicz wrote:
+> This has been changing recently since "ide_" prefix seems to have
+> negative emotional connotations. :-)
 > 
-> It seems highly inconsistent for drivers/ide to use the "ide_" prefix 
-> the vast majority of the time, but then "ata_" prefix in this one case, 
+> New patches for drivers/ide should use exclusively the "ata_" prefix.
 
-This has been changing recently since "ide_" prefix seems to have
-negative emotional connotations. :-)
+So this choice to be inconsistent was made based entirely on fashion?
 
-New patches for drivers/ide should use exclusively the "ata_" prefix.
+This is the same as using a different coding style in one area of the 
+IDE driver, when the rest of the IDE driver uses another coding style.
 
-> particularly when libata uses the "ata_" prefix almost exclusively.
+It violates the Principle of Least Surprise.
 
-I don't see *any* problem with this since libata exists in the separate
-directory and the amount of code shared between libata and drivers/ide
-equals *zero* (not counting <linux/ata.h> containing defines etc).
+I cannot see any harm in continuing to use the prefix the IDE driver has 
+been using for over a decade, while I can see how inconsistency
 
-Thanks,
-Bart
+
+>> particularly when libata uses the "ata_" prefix almost exclusively.
+> 
+> I don't see *any* problem with this since libata exists in the separate
+> directory and the amount of code shared between libata and drivers/ide
+> equals *zero* (not counting <linux/ata.h> containing defines etc).
+
+There are many opportunities for confusion:  global grep.  oops traces. 
+  General reviewer expectations ("oooh, I grepped for ide_xxx because 
+thats what all the functions use, except for this ONE function that's 
+different")
+
+You are living in a global namespace.  Directories are irrelevant.
+
+	Jeff
+
+
