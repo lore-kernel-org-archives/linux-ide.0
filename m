@@ -1,36 +1,37 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: [PATCH 2.6.22-rc6+mboxjeff 2/3] pata_sis: new PCI ID
-Date: Sat, 30 Jun 2007 03:58:11 +0200
-Message-ID: <200706300358.12199.uwe.koziolek@gmx.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: PROBLEM: SATA AHCI driver significant throughput loss in
+ 2.6.22-rc5-g75154f40-dirty
+Date: Sat, 30 Jun 2007 00:57:47 -0700
+Message-ID: <20070630005747.9bc9ba40.akpm@linux-foundation.org>
+References: <439fa30706262117u2d5553dfp8395c6ca41574a8c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39607 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752216AbXF3CNI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Jun 2007 22:13:08 -0400
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55559 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752253AbXF3H5z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jun 2007 03:57:55 -0400
+In-Reply-To: <439fa30706262117u2d5553dfp8395c6ca41574a8c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Dan <metalifloyd@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The SiS966 has an alternate PCI-ID 1180 for an IDE compatible controller
-The primaty channel acts as PATA-controller, the secondary channel
-acts as SATA-controller in PATA-emulation.
+On Wed, 27 Jun 2007 00:17:24 -0400 Dan <metalifloyd@gmail.com> wrote:
 
-Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
+> Something changed with the AHCI SATA driver in the latest git version.
+> With 2.6.21 I get ~49MB/sec according to hdparm. Using the latest git
+> version I only get ~8MB/sec. I've attached my .config and have
+> included some info about my system below. Please let me know if you
+> need more information or if I can help test anything.
+> 
+> Lenovo Thinkpad T60p
 
---- a/drivers/ata/pata_sis.c	2007-06-30 02:52:06.000000000 +0200
-+++ b/drivers/ata/pata_sis.c	2007-06-30 02:58:30.000000000 +0200
-@@ -1016,6 +1016,7 @@
- static const struct pci_device_id sis_pci_tbl[] = {
- 	{ PCI_VDEVICE(SI, 0x5513), },	/* SiS 5513 */
- 	{ PCI_VDEVICE(SI, 0x5518), },	/* SiS 5518 */
-+	{ PCI_VDEVICE(SI, 0x1180), },	/* SiS 1180 */
- 
- 	{ }
- };
+Until we know how widespread this damage is, we'd need to consider this
+a blocking bug.
 
+Are you able (as a matter of some urgency) to run a git bisection 
+search to identify the offending commit?
+
+Thanks.
