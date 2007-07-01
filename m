@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/16] libata-link: linkify EH action helpers
+Subject: [PATCH 04/16] libata-link: implement and use link/device iterators
 Date: Sun, 1 Jul 2007 19:05:59 +0900
-Message-ID: <11832843591259-git-send-email-htejun@gmail.com>
+Message-ID: <1183284359612-git-send-email-htejun@gmail.com>
 References: <11832843581399-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:52817 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.181]:52809 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756142AbXGAKGH (ORCPT
+	with ESMTP id S1756118AbXGAKGH (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:06:07 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1879664wah
+Received: by wa-out-1112.google.com with SMTP id v27so1879662wah
         for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:06:07 -0700 (PDT)
 In-Reply-To: <11832843581399-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,136 +20,827 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Make ata_eh_about_to_do() and ata_eh_done() deal with ata_link instead
-of ata_port.
+Multiple links and different number of devices per link should be
+considered to iterate over links and devices.  This patch implements
+and uses link and device iterators - ata_port_for_each_link() and
+ata_link_for_each_dev() - and ata_link_max_devices().
 
-This patch introduces no behavior change.
+This change makes a lot of functions iterate over only possible
+devices instead of from dev 0 to dev ATA_MAX_DEVICES.  All such
+changes have been examined and nothing should be broken.
+
+While at it, add a separating comment before device helpers to
+distinguish them better from link helpers and others.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   35 ++++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/ata/ata_generic.c    |    7 +--
+ drivers/ata/libata-acpi.c    |    6 +-
+ drivers/ata/libata-core.c    |   58 +++++++++------------
+ drivers/ata/libata-eh.c      |  117 +++++++++++++++++++++---------------------
+ drivers/ata/libata-scsi.c    |   26 ++++------
+ drivers/ata/pata_it821x.c    |    5 +-
+ drivers/ata/pata_ixp4xx_cf.c |    5 +-
+ drivers/ata/pata_legacy.c    |    5 +-
+ drivers/ata/pata_pdc2027x.c  |   13 ++---
+ drivers/ata/pata_platform.c  |    6 +--
+ drivers/ata/pata_rz1000.c    |    5 +-
+ drivers/ata/sata_sil.c       |   12 ++---
+ include/linux/libata.h       |   17 +++++-
+ 13 files changed, 134 insertions(+), 148 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a887380..6113d97 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -882,23 +882,24 @@ static void ata_eh_detach_dev(struct ata_device *dev)
- 
- /**
-  *	ata_eh_about_to_do - about to perform eh_action
-- *	@ap: target ATA port
-+ *	@link: target ATA link
-  *	@dev: target ATA dev for per-dev action (can be NULL)
-  *	@action: action about to be performed
-  *
-  *	Called just before performing EH actions to clear related bits
-- *	in @ap->link.eh_info such that eh actions are not
-- *	unnecessarily repeated.
-+ *	in @link->eh_info such that eh actions are not unnecessarily
-+ *	repeated.
-  *
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
-+static void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 			       unsigned int action)
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 3009824..571c35f 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -46,21 +46,20 @@
+ static int generic_set_mode(struct ata_port *ap, struct ata_device **unused)
  {
-+	struct ata_port *ap = link->ap;
-+	struct ata_eh_info *ehi = &link->eh_info;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	unsigned long flags;
--	struct ata_eh_info *ehi = &ap->link.eh_info;
--	struct ata_eh_context *ehc = &ap->link.eh_context;
+ 	int dma_enabled = 0;
+-	int i;
++	struct ata_device *dev;
  
- 	spin_lock_irqsave(ap->lock, flags);
+ 	/* Bits 5 and 6 indicate if DMA is active on master/slave */
+ 	if (ap->ioaddr.bmdma_addr)
+ 		dma_enabled = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
  
-@@ -915,7 +916,7 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
- 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			/* We don't really care */
+ 			dev->pio_mode = XFER_PIO_0;
+ 			dev->dma_mode = XFER_MW_DMA_0;
+ 			/* We do need the right mode information for DMA or PIO
+ 			   and this comes from the current configuration flags */
+-			if (dma_enabled & (1 << (5 + i))) {
++			if (dma_enabled & (1 << (5 + dev->devno))) {
+ 				ata_id_to_dma_mode(dev, XFER_MW_DMA_0);
+ 				dev->flags &= ~ATA_DFLAG_PIO;
+ 			} else {
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 0023ac4..43af2e0 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -509,7 +509,7 @@ int ata_acpi_on_suspend(struct ata_port *ap)
+  */
+ void ata_acpi_on_resume(struct ata_port *ap)
+ {
+-	int i;
++	struct ata_device *dev;
+ 
+ 	if (ap->acpi_handle && (ap->pflags & ATA_PFLAG_GTM_VALID)) {
+ 		BUG_ON(ap->flags & ATA_FLAG_ACPI_SATA);
+@@ -519,8 +519,8 @@ void ata_acpi_on_resume(struct ata_port *ap)
  	}
  
--	ata_eh_clear_action(&ap->link, dev, ehi, action);
-+	ata_eh_clear_action(link, dev, ehi, action);
- 
- 	if (!(ehc->i.flags & ATA_EHI_QUIET))
- 		ap->pflags |= ATA_PFLAG_RECOVERED;
-@@ -925,20 +926,20 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
- 
- /**
-  *	ata_eh_done - EH action complete
-- *	@ap: target ATA port
-+*	@ap: target ATA port
-  *	@dev: target ATA dev for per-dev action (can be NULL)
-  *	@action: action just completed
-  *
-  *	Called right after performing EH actions to clear related bits
-- *	in @ap->link.eh_context.
-+ *	in @link->eh_context.
-  *
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
-+static void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- 			unsigned int action)
- {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 
- 	/* if reset is complete, clear all reset actions & reset modifier */
- 	if (action & ATA_EH_RESET_MASK) {
-@@ -946,7 +947,7 @@ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
- 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
- 	}
- 
--	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
-+	ata_eh_clear_action(link, dev, &ehc->i, action);
+ 	/* schedule _GTF */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->link.device[i].flags |= ATA_DFLAG_ACPI_PENDING;
++	ata_link_for_each_dev(dev, &ap->link)
++		dev->flags |= ATA_DFLAG_ACPI_PENDING;
  }
  
  /**
-@@ -1730,7 +1731,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 	int rc;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ccd0570..c2cdba6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2128,21 +2128,19 @@ int ata_bus_probe(struct ata_port *ap)
+ {
+ 	unsigned int classes[ATA_MAX_DEVICES];
+ 	int tries[ATA_MAX_DEVICES];
+-	int i, rc;
++	int rc;
+ 	struct ata_device *dev;
  
- 	/* about to reset */
--	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 	ata_port_probe(ap);
  
- 	/* Determine which reset to use and record in ehc->i.action.
- 	 * prereset() may examine and modify it.
-@@ -1812,7 +1813,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 			goto out;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		tries[i] = ATA_PROBE_MAX_TRIES;
++	ata_link_for_each_dev(dev, &ap->link)
++		tries[dev->devno] = ATA_PROBE_MAX_TRIES;
+ 
+  retry:
+ 	/* reset and determine device classes */
+ 	ap->ops->phy_reset(ap);
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
+-
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (!(ap->flags & ATA_FLAG_DISABLED) &&
+ 		    dev->class != ATA_DEV_UNKNOWN)
+ 			classes[dev->devno] = dev->class;
+@@ -2157,18 +2155,16 @@ int ata_bus_probe(struct ata_port *ap)
+ 	/* after the reset the device state is PIO 0 and the controller
+ 	   state is undefined. Record the mode */
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->link.device[i].pio_mode = XFER_PIO_0;
++	ata_link_for_each_dev(dev, &ap->link)
++		dev->pio_mode = XFER_PIO_0;
+ 
+ 	/* read IDENTIFY page and configure devices. We have to do the identify
+ 	   specific sequence bass-ackwards so that PDIAG- is released by
+ 	   the slave device */
+ 
+-	for (i = ATA_MAX_DEVICES - 1; i >=  0; i--) {
+-		dev = &ap->link.device[i];
+-
+-		if (tries[i])
+-			dev->class = classes[i];
++	ata_link_for_each_dev(dev, &ap->link) {
++		if (tries[dev->devno])
++			dev->class = classes[dev->devno];
+ 
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+@@ -2186,8 +2182,7 @@ int ata_bus_probe(struct ata_port *ap)
+ 	/* After the identify sequence we can now set up the devices. We do
+ 	   this in the normal order so that the user doesn't get confused */
+ 
+-	for(i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+@@ -2203,8 +2198,8 @@ int ata_bus_probe(struct ata_port *ap)
+ 	if (rc)
+ 		goto fail;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (ata_dev_enabled(&ap->link.device[i]))
++	ata_link_for_each_dev(dev, &ap->link)
++		if (ata_dev_enabled(dev))
+ 			return 0;
+ 
+ 	/* no device present, disable port */
+@@ -2826,16 +2821,14 @@ static int ata_dev_set_mode(struct ata_device *dev)
+ 
+ int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
+ {
++	struct ata_link *link = &ap->link;
+ 	struct ata_device *dev;
+-	int i, rc = 0, used_dma = 0, found = 0;
+-
++	int rc = 0, used_dma = 0, found = 0;
+ 
+ 	/* step 1: calculate xfer_mask */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++	ata_link_for_each_dev(dev, link) {
+ 		unsigned int pio_mask, dma_mask;
+ 
+-		dev = &ap->link.device[i];
+-
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+@@ -2854,8 +2847,7 @@ int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
+ 		goto out;
+ 
+ 	/* step 2: always set host PIO timings */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, link) {
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+ 
+@@ -2872,9 +2864,7 @@ int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
+ 	}
+ 
+ 	/* step 3: set host DMA timings */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
+-
++	ata_link_for_each_dev(dev, link) {
+ 		if (!ata_dev_enabled(dev) || !dev->dma_mode)
+ 			continue;
+ 
+@@ -2885,9 +2875,7 @@ int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev)
+ 	}
+ 
+ 	/* step 4: update devices' xfer mode */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
+-
++	ata_link_for_each_dev(dev, link) {
+ 		/* don't update suspended devices' xfer mode */
+ 		if (!ata_dev_enabled(dev))
+ 			continue;
+@@ -6038,6 +6026,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 
+ 	ap->link.ap = ap;
+ 
++	/* can't use iterator, ap isn't initialized yet */
+ 	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		struct ata_device *dev = &ap->link.device[i];
+ 		dev->link = &ap->link;
+@@ -6378,7 +6367,8 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			/* kick EH for boot probing */
+ 			spin_lock_irqsave(ap->lock, flags);
+ 
+-			ehi->probe_mask = (1 << ATA_MAX_DEVICES) - 1;
++			ehi->probe_mask =
++				(1 << ata_link_max_devices(&ap->link)) - 1;
+ 			ehi->action |= ATA_EH_SOFTRESET;
+ 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 
+@@ -6476,7 +6466,7 @@ int ata_host_activate(struct ata_host *host, int irq,
+ void ata_port_detach(struct ata_port *ap)
+ {
+ 	unsigned long flags;
+-	int i;
++	struct ata_device *dev;
+ 
+ 	if (!ap->ops->error_handler)
+ 		goto skip_eh;
+@@ -6493,8 +6483,8 @@ void ata_port_detach(struct ata_port *ap)
+ 	 */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ata_dev_disable(&ap->link.device[i]);
++	ata_link_for_each_dev(dev, &ap->link)
++		ata_dev_disable(dev);
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 1562bde..d2b17b5 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -135,23 +135,24 @@ static unsigned int ata_eh_dev_action(struct ata_device *dev)
+ 	return ehc->i.action | ehc->i.dev_action[dev->devno];
+ }
+ 
+-static void ata_eh_clear_action(struct ata_device *dev,
++static void ata_eh_clear_action(struct ata_link *link, struct ata_device *dev,
+ 				struct ata_eh_info *ehi, unsigned int action)
+ {
+-	int i;
++	struct ata_device *tdev;
+ 
+ 	if (!dev) {
+ 		ehi->action &= ~action;
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			ehi->dev_action[i] &= ~action;
++		ata_link_for_each_dev(tdev, link)
++			ehi->dev_action[tdev->devno] &= ~action;
+ 	} else {
+ 		/* doesn't make sense for port-wide EH actions */
+ 		WARN_ON(!(action & ATA_EH_PERDEV_MASK));
+ 
+ 		/* break ehi->action into ehi->dev_action */
+ 		if (ehi->action & action) {
+-			for (i = 0; i < ATA_MAX_DEVICES; i++)
+-				ehi->dev_action[i] |= ehi->action & action;
++			ata_link_for_each_dev(tdev, link)
++				ehi->dev_action[tdev->devno] |=
++					ehi->action & action;
+ 			ehi->action &= ~action;
  		}
  
--		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
-+		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
- 		rc = ata_do_reset(ap, reset, classes, deadline);
+@@ -857,7 +858,8 @@ void ata_eh_qc_retry(struct ata_queued_cmd *qc)
+  */
+ static void ata_eh_detach_dev(struct ata_device *dev)
+ {
+-	struct ata_port *ap = dev->link->ap;
++	struct ata_link *link = dev->link;
++	struct ata_port *ap = link->ap;
+ 	unsigned long flags;
  
- 		if (rc == 0 && classify &&
-@@ -1862,7 +1863,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 			postreset(ap, classes);
- 
- 		/* reset successful, schedule revalidation */
--		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+		ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
- 		ehc->i.action |= ATA_EH_REVALIDATE;
+ 	ata_dev_disable(dev);
+@@ -872,8 +874,8 @@ static void ata_eh_detach_dev(struct ata_device *dev)
  	}
+ 
+ 	/* clear per-dev EH actions */
+-	ata_eh_clear_action(dev, &dev->link->eh_info, ATA_EH_PERDEV_MASK);
+-	ata_eh_clear_action(dev, &dev->link->eh_context.i, ATA_EH_PERDEV_MASK);
++	ata_eh_clear_action(link, dev, &link->eh_info, ATA_EH_PERDEV_MASK);
++	ata_eh_clear_action(link, dev, &link->eh_context.i, ATA_EH_PERDEV_MASK);
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ }
+@@ -913,7 +915,7 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
+ 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(dev, ehi, action);
++	ata_eh_clear_action(&ap->link, dev, ehi, action);
+ 
+ 	if (!(ehc->i.flags & ATA_EHI_QUIET))
+ 		ap->pflags |= ATA_PFLAG_RECOVERED;
+@@ -944,7 +946,7 @@ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
+ 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(dev, &ehc->i, action);
++	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
+ }
+ 
+ /**
+@@ -1671,10 +1673,11 @@ static void ata_eh_report(struct ata_port *ap)
+ static int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
+ 			unsigned int *classes, unsigned long deadline)
+ {
+-	int i, rc;
++	struct ata_device *dev;
++	int rc;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		classes[i] = ATA_DEV_UNKNOWN;
++	ata_link_for_each_dev(dev, &ap->link)
++		classes[dev->devno] = ATA_DEV_UNKNOWN;
+ 
+ 	rc = reset(ap, classes, deadline);
+ 	if (rc)
+@@ -1684,14 +1687,16 @@ static int ata_do_reset(struct ata_port *ap, ata_reset_fn_t reset,
+ 	 * is complete and convert all ATA_DEV_UNKNOWN to
+ 	 * ATA_DEV_NONE.
+ 	 */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (classes[i] != ATA_DEV_UNKNOWN)
++	ata_link_for_each_dev(dev, &ap->link)
++		if (classes[dev->devno] != ATA_DEV_UNKNOWN)
+ 			break;
+ 
+-	if (i < ATA_MAX_DEVICES)
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			if (classes[i] == ATA_DEV_UNKNOWN)
+-				classes[i] = ATA_DEV_NONE;
++	if (dev) {
++		ata_link_for_each_dev(dev, &ap->link) {
++			if (classes[dev->devno] == ATA_DEV_UNKNOWN)
++				classes[dev->devno] = ATA_DEV_NONE;
++		}
++	}
+ 
+ 	return 0;
+ }
+@@ -1716,10 +1721,11 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 	unsigned int *classes = ehc->classes;
+ 	int verbose = !(ehc->i.flags & ATA_EHI_QUIET);
+ 	int try = 0;
++	struct ata_device *dev;
+ 	unsigned long deadline;
+ 	unsigned int action;
+ 	ata_reset_fn_t reset;
+-	int i, rc;
++	int rc;
+ 
+ 	/* about to reset */
+ 	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+@@ -1743,8 +1749,8 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 						"port disabled. ignoring.\n");
+ 				ehc->i.action &= ~ATA_EH_RESET_MASK;
+ 
+-				for (i = 0; i < ATA_MAX_DEVICES; i++)
+-					classes[i] = ATA_DEV_NONE;
++				ata_link_for_each_dev(dev, &ap->link)
++					classes[dev->devno] = ATA_DEV_NONE;
+ 
+ 				rc = 0;
+ 			} else
+@@ -1761,8 +1767,8 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 		reset = softreset;
+ 	else {
+ 		/* prereset told us not to reset, bang classes and return */
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			classes[i] = ATA_DEV_NONE;
++		ata_link_for_each_dev(dev, &ap->link)
++			classes[dev->devno] = ATA_DEV_NONE;
+ 		rc = 0;
+ 		goto out;
+ 	}
+@@ -1843,8 +1849,8 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 		/* After the reset, the device state is PIO 0 and the
+ 		 * controller state is undefined.  Record the mode.
+ 		 */
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			ap->link.device[i].pio_mode = XFER_PIO_0;
++		ata_link_for_each_dev(dev, &ap->link)
++			dev->pio_mode = XFER_PIO_0;
+ 
+ 		/* record current link speed */
+ 		if (sata_scr_read(ap, SCR_STATUS, &sstatus) == 0)
+@@ -1870,7 +1876,7 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 	struct ata_device *dev;
+ 	unsigned int new_mask = 0;
+ 	unsigned long flags;
+-	int i, rc = 0;
++	int rc = 0;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+@@ -1878,11 +1884,9 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 	 * be done backwards such that PDIAG- is released by the slave
+ 	 * device before the master device is identified.
+ 	 */
+-	for (i = ATA_MAX_DEVICES - 1; i >= 0; i--) {
+-		unsigned int action, readid_flags = 0;
+-
+-		dev = &ap->link.device[i];
+-		action = ata_eh_dev_action(dev);
++	ata_link_for_each_dev_reverse(dev, &ap->link) {
++		unsigned int action = ata_eh_dev_action(dev);
++		unsigned int readid_flags = 0;
+ 
+ 		if (ehc->i.flags & ATA_EHI_DID_RESET)
+ 			readid_flags |= ATA_READID_POSTRESET;
+@@ -1916,7 +1920,7 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 					     dev->id);
+ 			switch (rc) {
+ 			case 0:
+-				new_mask |= 1 << i;
++				new_mask |= 1 << dev->devno;
+ 				break;
+ 			case -ENOENT:
+ 				/* IDENTIFY was issued to non-existent
+@@ -1940,10 +1944,8 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 	/* Configure new devices forward such that user doesn't see
+ 	 * device detection messages backwards.
+ 	 */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
+-
+-		if (!(new_mask & (1 << i)))
++	ata_link_for_each_dev(dev, &ap->link) {
++		if (!(new_mask & (1 << dev->devno)))
+ 			continue;
+ 
+ 		ehc->i.flags |= ATA_EHI_PRINTINFO;
+@@ -1970,20 +1972,22 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 
+ static int ata_port_nr_enabled(struct ata_port *ap)
+ {
+-	int i, cnt = 0;
++	struct ata_device *dev;
++	int cnt = 0;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (ata_dev_enabled(&ap->link.device[i]))
++	ata_link_for_each_dev(dev, &ap->link)
++		if (ata_dev_enabled(dev))
+ 			cnt++;
+ 	return cnt;
+ }
+ 
+ static int ata_port_nr_vacant(struct ata_port *ap)
+ {
+-	int i, cnt = 0;
++	struct ata_device *dev;
++	int cnt = 0;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		if (ap->link.device[i].class == ATA_DEV_UNKNOWN)
++	ata_link_for_each_dev(dev, &ap->link)
++		if (dev->class == ATA_DEV_UNKNOWN)
+ 			cnt++;
+ 	return cnt;
+ }
+@@ -1991,7 +1995,7 @@ static int ata_port_nr_vacant(struct ata_port *ap)
+ static int ata_eh_skip_recovery(struct ata_port *ap)
+ {
+ 	struct ata_eh_context *ehc = &ap->link.eh_context;
+-	int i;
++	struct ata_device *dev;
+ 
+ 	/* thaw frozen port, resume link and recover failed devices */
+ 	if ((ap->pflags & ATA_PFLAG_FROZEN) ||
+@@ -1999,9 +2003,7 @@ static int ata_eh_skip_recovery(struct ata_port *ap)
+ 		return 0;
+ 
+ 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
+-
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (dev->class == ATA_DEV_UNKNOWN &&
+ 		    ehc->classes[dev->devno] != ATA_DEV_NONE)
+ 			return 0;
+@@ -2088,19 +2090,18 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ {
+ 	struct ata_eh_context *ehc = &ap->link.eh_context;
+ 	struct ata_device *dev;
+-	int i, rc;
++	int rc;
+ 
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* prep for recovery */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
+-
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
+ 
+ 		/* collect port action mask recorded in dev actions */
+-		ehc->i.action |= ehc->i.dev_action[i] & ~ATA_EH_PERDEV_MASK;
+-		ehc->i.dev_action[i] &= ATA_EH_PERDEV_MASK;
++		ehc->i.action |=
++			ehc->i.dev_action[dev->devno] & ~ATA_EH_PERDEV_MASK;
++		ehc->i.dev_action[dev->devno] &= ATA_EH_PERDEV_MASK;
+ 
+ 		/* process hotplug request */
+ 		if (dev->flags & ATA_DFLAG_DETACH)
+@@ -2127,8 +2128,8 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 	if (ata_eh_skip_recovery(ap))
+ 		ehc->i.action = 0;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ehc->classes[i] = ATA_DEV_UNKNOWN;
++	ata_link_for_each_dev(dev, &ap->link)
++		ehc->classes[dev->devno] = ATA_DEV_UNKNOWN;
+ 
+ 	/* reset */
+ 	if (ehc->i.action & ATA_EH_RESET_MASK) {
+@@ -2176,8 +2177,8 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 
   out:
-@@ -1899,12 +1900,12 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
- 				goto err;
- 			}
+ 	if (rc) {
+-		for (i = 0; i < ATA_MAX_DEVICES; i++)
+-			ata_dev_disable(&ap->link.device[i]);
++		ata_link_for_each_dev(dev, &ap->link);
++			ata_dev_disable(dev);
+ 	}
  
--			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
-+			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev, readid_flags);
- 			if (rc)
- 				goto err;
+ 	DPRINTK("EXIT, rc=%d\n", rc);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 43757b4..a5a62b9 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2425,7 +2425,7 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
  
--			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
-+			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
+ static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
+ {
+-	if (likely(id < ATA_MAX_DEVICES))
++	if (likely(id < ata_link_max_devices(&ap->link)))
+ 		return &ap->link.device[id];
+ 	return NULL;
+ }
+@@ -2952,21 +2952,18 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 	int tries = 5;
+ 	struct ata_device *last_failed_dev = NULL;
+ 	struct ata_device *dev;
+-	unsigned int i;
  
- 			/* Configuration may have changed, reconfigure
- 			 * transfer mode.
+ 	if (ap->flags & ATA_FLAG_DISABLED)
+ 		return;
+ 
+  repeat:
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		struct scsi_device *sdev;
+ 
+-		dev = &ap->link.device[i];
+-
+ 		if (!ata_dev_enabled(dev) || dev->sdev)
+ 			continue;
+ 
+-		sdev = __scsi_add_device(ap->scsi_host, 0, i, 0, NULL);
++		sdev = __scsi_add_device(ap->scsi_host, 0, dev->devno, 0, NULL);
+ 		if (!IS_ERR(sdev)) {
+ 			dev->sdev = sdev;
+ 			scsi_device_put(sdev);
+@@ -2977,12 +2974,11 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 	 * failure occurred, scan would have failed silently.  Check
+ 	 * whether all devices are attached.
+ 	 */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev) && !dev->sdev)
+ 			break;
+ 	}
+-	if (i == ATA_MAX_DEVICES)
++	if (!dev)
+ 		return;
+ 
+ 	/* we're missing some SCSI devices */
+@@ -3112,7 +3108,7 @@ void ata_scsi_hotplug(struct work_struct *work)
+ {
+ 	struct ata_port *ap =
+ 		container_of(work, struct ata_port, hotplug_task.work);
+-	int i;
++	struct ata_device *dev;
+ 
+ 	if (ap->pflags & ATA_PFLAG_UNLOADING) {
+ 		DPRINTK("ENTER/EXIT - unloading\n");
+@@ -3122,8 +3118,7 @@ void ata_scsi_hotplug(struct work_struct *work)
+ 	DPRINTK("ENTER\n");
+ 
+ 	/* unplug detached devices */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		unsigned long flags;
+ 
+ 		if (!(dev->flags & ATA_DFLAG_DETACHED))
+@@ -3176,7 +3171,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+ 	if (id == SCAN_WILD_CARD) {
+-		ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
++		ehi->probe_mask |= (1 << ata_link_max_devices(&ap->link)) - 1;
+ 		ehi->action |= ATA_EH_SOFTRESET;
+ 	} else {
+ 		struct ata_device *dev = ata_find_dev(ap, id);
+@@ -3215,13 +3210,12 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ {
+ 	struct ata_port *ap =
+ 		container_of(work, struct ata_port, scsi_rescan_task);
++	struct ata_device *dev;
+ 	unsigned long flags;
+-	unsigned int i;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		struct scsi_device *sdev = dev->sdev;
+ 
+ 		if (!ata_dev_enabled(dev) || !sdev)
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index 74aef88..95ffb50 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -461,10 +461,9 @@ static unsigned int it821x_passthru_qc_issue_prot(struct ata_queued_cmd *qc)
+ 
+ static int it821x_smart_set_mode(struct ata_port *ap, struct ata_device **unused)
+ {
+-	int i;
++	struct ata_device *dev;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			/* We don't really care */
+ 			dev->pio_mode = XFER_PIO_0;
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 7ccdd7f..667d293 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -28,10 +28,9 @@
+ 
+ static int ixp4xx_set_mode(struct ata_port *ap, struct ata_device **error)
+ {
+-	int i;
++	struct ata_device *dev;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			ata_dev_printk(dev, KERN_INFO, "configured for PIO0\n");
+ 			dev->pio_mode = XFER_PIO_0;
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 4bcc0ae..9d92843 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -109,10 +109,9 @@ static int iordy_mask = 0xFFFFFFFF;	/* Use iordy if available */
+ 
+ static int legacy_set_mode(struct ata_port *ap, struct ata_device **unused)
+ {
+-	int i;
++	struct ata_device *dev;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			ata_dev_printk(dev, KERN_INFO, "configured for PIO\n");
+ 			dev->pio_mode = XFER_PIO_0;
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index db95323..9bff859 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -479,15 +479,14 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+  */
+ static int pdc2027x_set_mode(struct ata_port *ap, struct ata_device **r_failed)
+ {
+-	int i;
+-
+-	i = ata_do_set_mode(ap, r_failed);
+-	if (i < 0)
+-		return i;
++	struct ata_device *dev;
++	int rc;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	rc = ata_do_set_mode(ap, r_failed);
++	if (rc < 0)
++		return rc;
+ 
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 
+ 			pdc2027x_set_piomode(ap, dev);
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index e0adc3f..248d5de 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -32,11 +32,9 @@ static int pio_mask = 1;
+  */
+ static int pata_platform_set_mode(struct ata_port *ap, struct ata_device **unused)
+ {
+-	int i;
+-
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	struct ata_device *dev;
+ 
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			/* We don't really care */
+ 			dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index 57363c0..300b3d5 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -36,10 +36,9 @@
+ 
+ static int rz1000_set_mode(struct ata_port *ap, struct ata_device **unused)
+ {
+-	int i;
++	struct ata_device *dev;
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (ata_dev_enabled(dev)) {
+ 			/* We don't really care */
+ 			dev->pio_mode = XFER_PIO_0;
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index b14468c..ad0d66c 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -303,22 +303,20 @@ static int sil_set_mode (struct ata_port *ap, struct ata_device **r_failed)
+ 	struct ata_device *dev;
+ 	void __iomem *mmio_base = host->iomap[SIL_MMIO_BAR];
+ 	void __iomem *addr = mmio_base + sil_port[ap->port_no].xfer_mode;
+-	u32 tmp, dev_mode[2];
+-	unsigned int i;
++	u32 tmp, dev_mode[2] = { };
+ 	int rc;
+ 
+ 	rc = ata_do_set_mode(ap, r_failed);
+ 	if (rc)
+ 		return rc;
+ 
+-	for (i = 0; i < 2; i++) {
+-		dev = &ap->link.device[i];
++	ata_link_for_each_dev(dev, &ap->link) {
+ 		if (!ata_dev_enabled(dev))
+-			dev_mode[i] = 0;	/* PIO0/1/2 */
++			dev_mode[dev->devno] = 0;	/* PIO0/1/2 */
+ 		else if (dev->flags & ATA_DFLAG_PIO)
+-			dev_mode[i] = 1;	/* PIO3/4 */
++			dev_mode[dev->devno] = 1;	/* PIO3/4 */
+ 		else
+-			dev_mode[i] = 3;	/* UDMA */
++			dev_mode[dev->devno] = 3;	/* UDMA */
+ 		/* value 2 indicates MDMA */
+ 	}
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ff482f8..0bb8580 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1032,15 +1032,26 @@ static inline unsigned int ata_dev_absent(const struct ata_device *dev)
+ }
+ 
+ /*
+- * port helpers
++ * link helpers
+  */
+-static inline int ata_port_max_devices(const struct ata_port *ap)
++static inline int ata_link_max_devices(const struct ata_link *link)
+ {
+-	if (ap->flags & ATA_FLAG_SLAVE_POSS)
++	if (link->ap->flags & ATA_FLAG_SLAVE_POSS)
+ 		return 2;
+ 	return 1;
+ }
+ 
++#define ata_port_for_each_link(lk, ap) \
++	for ((lk) = &(ap)->link; (lk); (lk) = NULL)
++
++#define ata_link_for_each_dev(dev, link) \
++	for ((dev) = (link)->device; \
++	     (dev) < (link)->device + ata_link_max_devices(link) || ((dev) = NULL); \
++	     (dev)++)
++
++#define ata_link_for_each_dev_reverse(dev, link) \
++	for ((dev) = (link)->device + ata_link_max_devices(link) - 1; \
++	     (dev) >= (link)->device || ((dev) = NULL); (dev)--)
+ 
+ static inline u8 ata_chk_status(struct ata_port *ap)
+ {
 -- 
 1.5.0.3
 
