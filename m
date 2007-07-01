@@ -1,172 +1,92 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/12] libata-pmp-prep: implement qc_defer helpers
-Date: Sun, 1 Jul 2007 19:26:08 +0900
-Message-ID: <11832855682815-git-send-email-htejun@gmail.com>
-References: <11832855672398-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 4/4] implement PMP support, take 4
+Date: Sun, 1 Jul 2007 19:54:13 +0900
+Message-ID: <1183287253677-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:25349 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:12292 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755797AbXGAK0T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:26:19 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1884678wah
-        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:26:19 -0700 (PDT)
-In-Reply-To: <11832855672398-git-send-email-htejun@gmail.com>
+	with ESMTP id S1756836AbXGAKyT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:54:19 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1891691wah
+        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:54:18 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>, htejun@gmail.com
 
-Implement ap->nr_active_links (the number of links with active qcs),
-ap->excl_link (pointer to link which can be used by ->qc_defer and is
-cleared when a qc with ATA_QCFLAG_CLEAR_EXCL completes), and
-ata_link_active().
+Hello, all.
 
-These can be used by ->qc_defer() to implement proper command
-exclusion.  This set of helpers seem enough for both sil24 (ATAPI
-exclusion needed) and cmd-switching PMP.
+his is the fourth take of libata-pmp patchset.  This patchset contains
+15 patches and implements PMP support.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |   22 ++++++++++++++++++++--
- drivers/ata/libata-eh.c   |    5 +++++
- include/linux/libata.h    |    8 ++++++++
- 3 files changed, 33 insertions(+), 2 deletions(-)
+#01-04: implement libata PMP support
+#05-09: implement sata_sil24 PMP support
+#10-15: implement ahci PMP support
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fb5d7e7..17b1734 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1381,6 +1381,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	struct ata_queued_cmd *qc;
- 	unsigned int tag, preempted_tag;
- 	u32 preempted_sactive, preempted_qc_active;
-+	int preempted_nr_active_links;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
-@@ -1419,9 +1420,11 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	preempted_tag = link->active_tag;
- 	preempted_sactive = link->sactive;
- 	preempted_qc_active = ap->qc_active;
-+	preempted_nr_active_links = ap->nr_active_links;
- 	link->active_tag = ATA_TAG_POISON;
- 	link->sactive = 0;
- 	ap->qc_active = 0;
-+	ap->nr_active_links = 0;
- 
- 	/* prepare & issue qc */
- 	qc->tf = *tf;
-@@ -1500,6 +1503,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	link->active_tag = preempted_tag;
- 	link->sactive = preempted_sactive;
- 	ap->qc_active = preempted_qc_active;
-+	ap->nr_active_links = preempted_nr_active_links;
- 
- 	/* XXX - Some LLDDs (sata_mv) disable port on command failure.
- 	 * Until those drivers are fixed, we detect the condition
-@@ -5208,10 +5212,19 @@ void __ata_qc_complete(struct ata_queued_cmd *qc)
- 		ata_sg_clean(qc);
- 
- 	/* command should be marked inactive atomically with qc completion */
--	if (qc->tf.protocol == ATA_PROT_NCQ)
-+	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		link->sactive &= ~(1 << qc->tag);
--	else
-+		if (!link->sactive)
-+			ap->nr_active_links--;
-+	} else {
- 		link->active_tag = ATA_TAG_POISON;
-+		ap->nr_active_links--;
-+	}
-+
-+	/* clear exclusive status */
-+	if (unlikely(qc->flags & ATA_QCFLAG_CLEAR_EXCL &&
-+		     ap->excl_link == link))
-+		ap->excl_link = NULL;
- 
- 	/* atapi: mark qc as inactive to prevent the interrupt handler
- 	 * from completing the command twice later, before the error handler
-@@ -5390,9 +5403,14 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 
- 	if (qc->tf.protocol == ATA_PROT_NCQ) {
- 		WARN_ON(link->sactive & (1 << qc->tag));
-+
-+		if (!link->sactive)
-+			ap->nr_active_links++;
- 		link->sactive |= 1 << qc->tag;
- 	} else {
- 		WARN_ON(link->sactive);
-+
-+		ap->nr_active_links++;
- 		link->active_tag = qc->tag;
- 	}
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ec0b90b..3779067 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -316,6 +316,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 
- 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
- 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
-+		ap->excl_link = NULL;	/* don't maintain exclusion over EH */
- 
- 		spin_unlock_irqrestore(ap->lock, flags);
- 
-@@ -2336,6 +2337,10 @@ void ata_eh_finish(struct ata_port *ap)
- 			}
- 		}
- 	}
-+
-+	/* make sure nr_active_links is zero after EH */
-+	WARN_ON(ap->nr_active_links);
-+	ap->nr_active_links = 0;
- }
- 
- /**
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index fa332e0..349180a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -215,6 +215,7 @@ enum {
- 	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
-+	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
- 
- 	ATA_QCFLAG_FAILED	= (1 << 16), /* cmd failed and is owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
-@@ -576,11 +577,13 @@ struct ata_port {
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
- 	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
-+	int			nr_active_links; /* #links with active qcs */
- 
- 	struct ata_link		link;	/* host default link */
- 
- 	int			nr_pmp_links;	/* nr of available PMP links */
- 	struct ata_link		*pmp_link;	/* array of PMP links */
-+	struct ata_link		*excl_link;	/* for PMP qc exclusion */
- 
- 	struct ata_port_stats	stats;
- 	struct ata_host		*host;
-@@ -1093,6 +1096,11 @@ static inline int ata_link_max_devices(const struct ata_link *link)
- 	return 1;
- }
- 
-+static inline int ata_link_active(struct ata_link *link)
-+{
-+	return ata_tag_valid(link->active_tag) || link->sactive;
-+}
-+
- static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
- {
- 	if (ap->nr_pmp_links)
--- 
-1.5.0.3
+Changes from the last take[L] are.
+
+* updated to fit new #upstream
+* ACPI support for PMP fan-out ports added
+* improved general PMP EH behavior
+* various PMP chip specific quirks for smooth handling of first gen
+  products which at times are pretty quirky
+* AHCI PMP support added
+
+Tested extensively with sil3214/32, ICH9R, JMB360/3 combined with
+sil3726, 4726 and 5744 port multipliers.  Disks from all major vendors
+and an SATAPI device is used as downstream devices.  sil5744 and 3726
+behave very nicely on all controllers.  Hotplugging and suspend/resume
+work well too.  There are some remaining issues.
+
+* When attached to AHCI controller (ICH9R, JMB360/3), NCQ doesn't
+  work.  Things look okay as long as only one command is in flight but
+  as soon as the second command is issued (to the same device), hell
+  breaks loose and all sorts of errors occur including device abort,
+  bad PMP number and interface fatal error.  This behavior is common
+  across all PMP chips.  I've disabled NCQ if PMP is attached to an
+  ahci controller for now.
+
+* Sil4726 is a bit too quirky.  Without the first fan-out port
+  occupied, the thing acts really weirdly.  As long as the first port
+  is occupied, it works okay.  This is reportedly fixed by new
+  firmware.  I tried to update the firmware but installing 3124 driver
+  on Windows was just too difficult for me and I gave up after thirty
+  painful minutes.  Anyone up for testing?
+
+* Again, Sil4726 doesn't like ahci driver initialization sequence.
+  During driver initialization, the whole controller is reset and the
+  PHY seems to go offline and back online.  Sil4726 doesn't like it
+  and goes out for lunch for several secs after that which makes
+  initial probing think that the port is empty.  After probing is
+  complete, Sil4726 comes back and gets detected but at that point
+  detection is asynchronous and if boot device is on one of fan-out
+  ports, it can be a problem.  Again, this might have been fixed by
+  new firmware.  Anyone up for testing?
+
+* The long boot delay on ASUS boards with on-board PMP chips should be
+  fixed by this patchset but I don't have such a board or Sil4723
+  which is used on those baords, so I'm not sure.  Anyone up for
+  testing?
+
+This patchset is against
+
+  libata-dev#upstream (4e1ae96828f6cee7b89ab8ca474c150fe211afd8)
+  + [1] misc-updates patchset
+  + [2] libata-link patchset, take 4
+  + [3] libata-pmp-prep patchset, take 4
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.ide/13503
+[1] http://thread.gmane.org/gmane.linux.ide/20081
+[2] http://thread.gmane.org/gmane.linux.ide/20099
+[3] http://thread.gmane.org/gmane.linux.ide/20115
 
 
