@@ -1,147 +1,155 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 01/16] libata-link: separate out ata_eh_handle_dev_fail()
-Date: Sun, 1 Jul 2007 19:05:58 +0900
-Message-ID: <11832843582930-git-send-email-htejun@gmail.com>
+Subject: [PATCH 06/16] libata-link: linkify EH action helpers
+Date: Sun, 1 Jul 2007 19:05:59 +0900
+Message-ID: <11832843591259-git-send-email-htejun@gmail.com>
 References: <11832843581399-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:51779 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.181]:52817 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756108AbXGAKGE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:06:04 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1879666wah
-        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:06:03 -0700 (PDT)
+	with ESMTP id S1756142AbXGAKGH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:06:07 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1879664wah
+        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:06:07 -0700 (PDT)
 In-Reply-To: <11832843581399-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out ata_eh_handle_dev_fail() from ata_eh_recover().  This is
-in preparation of ata_link and PMP support.
+Make ata_eh_about_to_do() and ata_eh_done() deal with ata_link instead
+of ata_port.
+
+This patch introduces no behavior change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   96 +++++++++++++++++++++++++---------------------
- 1 files changed, 52 insertions(+), 44 deletions(-)
+ drivers/ata/libata-eh.c |   35 ++++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 1c8f465..5e82231 100644
+index a887380..6113d97 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2008,6 +2008,57 @@ static int ata_eh_skip_recovery(struct ata_port *ap)
- 	return 1;
+@@ -882,23 +882,24 @@ static void ata_eh_detach_dev(struct ata_device *dev)
+ 
+ /**
+  *	ata_eh_about_to_do - about to perform eh_action
+- *	@ap: target ATA port
++ *	@link: target ATA link
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action about to be performed
+  *
+  *	Called just before performing EH actions to clear related bits
+- *	in @ap->link.eh_info such that eh actions are not
+- *	unnecessarily repeated.
++ *	in @link->eh_info such that eh actions are not unnecessarily
++ *	repeated.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 			       unsigned int action)
+ {
++	struct ata_port *ap = link->ap;
++	struct ata_eh_info *ehi = &link->eh_info;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 	unsigned long flags;
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+@@ -915,7 +916,7 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
+ 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, ehi, action);
++	ata_eh_clear_action(link, dev, ehi, action);
+ 
+ 	if (!(ehc->i.flags & ATA_EHI_QUIET))
+ 		ap->pflags |= ATA_PFLAG_RECOVERED;
+@@ -925,20 +926,20 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
+ 
+ /**
+  *	ata_eh_done - EH action complete
+- *	@ap: target ATA port
++*	@ap: target ATA port
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action just completed
+  *
+  *	Called right after performing EH actions to clear related bits
+- *	in @ap->link.eh_context.
++ *	in @link->eh_context.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 			unsigned int action)
+ {
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 
+ 	/* if reset is complete, clear all reset actions & reset modifier */
+ 	if (action & ATA_EH_RESET_MASK) {
+@@ -946,7 +947,7 @@ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
+ 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
++	ata_eh_clear_action(link, dev, &ehc->i, action);
  }
  
-+static void ata_eh_handle_dev_fail(struct ata_device *dev, int err)
-+{
-+	struct ata_port *ap = dev->ap;
-+	struct ata_eh_context *ehc = &ap->eh_context;
-+
-+	ehc->tries[dev->devno]--;
-+
-+	switch (err) {
-+	case -ENODEV:
-+		/* device missing or wrong IDENTIFY data, schedule probing */
-+		ehc->i.probe_mask |= (1 << dev->devno);
-+	case -EINVAL:
-+		/* give it just one more chance */
-+		ehc->tries[dev->devno] = min(ehc->tries[dev->devno], 1);
-+	case -EIO:
-+		if (ehc->tries[dev->devno] == 1) {
-+			/* This is the last chance, better to slow
-+			 * down than lose it.
-+			 */
-+			sata_down_spd_limit(ap);
-+			ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
-+		}
-+	}
-+
-+	if (ata_dev_enabled(dev) && !ehc->tries[dev->devno]) {
-+		/* disable device if it has used up all its chances */
-+		ata_dev_disable(dev);
-+
-+		/* detach if offline */
-+		if (ata_port_offline(ap))
-+			ata_eh_detach_dev(dev);
-+
-+		/* probe if requested */
-+		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
-+		    !(ehc->did_probe_mask & (1 << dev->devno))) {
-+			ata_eh_detach_dev(dev);
-+			ata_dev_init(dev);
-+
-+			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
-+			ehc->did_probe_mask |= (1 << dev->devno);
-+			ehc->i.action |= ATA_EH_SOFTRESET;
-+		}
-+	} else {
-+		/* soft didn't work?  be haaaaard */
-+		if (ehc->i.flags & ATA_EHI_DID_RESET)
-+			ehc->i.action |= ATA_EH_HARDRESET;
-+		else
-+			ehc->i.action |= ATA_EH_SOFTRESET;
-+	}
-+}
-+
  /**
-  *	ata_eh_recover - recover host port after error
-  *	@ap: host port to recover
-@@ -2108,50 +2159,7 @@ static int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	goto out;
+@@ -1730,7 +1731,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 	int rc;
  
-  dev_fail:
--	ehc->tries[dev->devno]--;
--
--	switch (rc) {
--	case -ENODEV:
--		/* device missing or wrong IDENTIFY data, schedule probing */
--		ehc->i.probe_mask |= (1 << dev->devno);
--	case -EINVAL:
--		/* give it just one more chance */
--		ehc->tries[dev->devno] = min(ehc->tries[dev->devno], 1);
--	case -EIO:
--		if (ehc->tries[dev->devno] == 1) {
--			/* This is the last chance, better to slow
--			 * down than lose it.
--			 */
--			sata_down_spd_limit(ap);
--			ata_down_xfermask_limit(dev, ATA_DNXFER_PIO);
--		}
--	}
--
--	if (ata_dev_enabled(dev) && !ehc->tries[dev->devno]) {
--		/* disable device if it has used up all its chances */
--		ata_dev_disable(dev);
--
--		/* detach if offline */
--		if (ata_port_offline(ap))
--			ata_eh_detach_dev(dev);
--
--		/* probe if requested */
--		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
--		    !(ehc->did_probe_mask & (1 << dev->devno))) {
--			ata_eh_detach_dev(dev);
--			ata_dev_init(dev);
--
--			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
--			ehc->did_probe_mask |= (1 << dev->devno);
--			ehc->i.action |= ATA_EH_SOFTRESET;
--		}
--	} else {
--		/* soft didn't work?  be haaaaard */
--		if (ehc->i.flags & ATA_EHI_DID_RESET)
--			ehc->i.action |= ATA_EH_HARDRESET;
--		else
--			ehc->i.action |= ATA_EH_SOFTRESET;
--	}
-+	ata_eh_handle_dev_fail(dev, rc);
+ 	/* about to reset */
+-	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
  
- 	if (ata_port_nr_enabled(ap)) {
- 		ata_port_printk(ap, KERN_WARNING, "failed to recover some "
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1812,7 +1813,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			goto out;
+ 		}
+ 
+-		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
++		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
+ 		rc = ata_do_reset(ap, reset, classes, deadline);
+ 
+ 		if (rc == 0 && classify &&
+@@ -1862,7 +1863,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			postreset(ap, classes);
+ 
+ 		/* reset successful, schedule revalidation */
+-		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++		ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 		ehc->i.action |= ATA_EH_REVALIDATE;
+ 	}
+  out:
+@@ -1899,12 +1900,12 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 				goto err;
+ 			}
+ 
+-			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
+ 			rc = ata_dev_revalidate(dev, readid_flags);
+ 			if (rc)
+ 				goto err;
+ 
+-			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
+ 
+ 			/* Configuration may have changed, reconfigure
+ 			 * transfer mode.
 -- 
 1.5.0.3
 
