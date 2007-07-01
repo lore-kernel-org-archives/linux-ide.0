@@ -1,58 +1,72 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHBOMB] libata: Port Multiplier support
-Date: Sun, 1 Jul 2007 18:30:15 +0900
-Message-ID: <20070701093015.GU29122@htj.dyndns.org>
+Subject: [PATCH 04/12] ahci: make NO_NCQ handling more consistent
+Date: Sun, 1 Jul 2007 18:53:37 +0900
+Message-ID: <11832836173613-git-send-email-htejun@gmail.com>
+References: <118328361627-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:49756 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.178]:29288 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755395AbXGAJaU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 05:30:20 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1870847wah
-        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 02:30:19 -0700 (PDT)
-Content-Disposition: inline
+	with ESMTP id S1755164AbXGAJxm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 05:53:42 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1876601wah
+        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 02:53:42 -0700 (PDT)
+In-Reply-To: <118328361627-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+ahci_save_initial_config() is responsible for reading, screening the
+host CAP register and storing the modified result into hpriv->cap for
+the rest of the driver.  Move ATA_FLAG_NO_NCQ handling into
+ahci_save_initial_config().  It's more consistent this way and the
+rest of the driver can always refer to hpriv->cap to determine
+configured capability.
 
-I'm about to post an updated version of PMP support.  Well, as always,
-it took longer than I expected but it's complete now and looking good.
-It's composed of the following four patchsets.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/ahci.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-1. misc-updates patchset : This patchset contains 12 patches which
-   updates various stuff.  A few are just improvements found during
-   PMP work.  Others are related to PMP support in indirect way.  All
-   patches in this patchset are independent.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 0e001ad..0555db5 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -527,13 +527,19 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
+ 	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
+ 	hpriv->saved_port_map = port_map = readl(mmio + HOST_PORTS_IMPL);
+ 
+-	/* some chips lie about 64bit support */
++	/* some chips lie about their capabilities, bust them */
+ 	if ((cap & HOST_CAP_64) && (pi->flags & AHCI_FLAG_32BIT_ONLY)) {
+ 		dev_printk(KERN_INFO, &pdev->dev,
+ 			   "controller can't do 64bit DMA, forcing 32bit\n");
+ 		cap &= ~HOST_CAP_64;
+ 	}
+ 
++	if ((cap & HOST_CAP_NCQ) && (pi->flags & AHCI_FLAG_NO_NCQ)) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "controller can't do NCQ, turning off CAP_NCQ\n");
++		cap &= ~HOST_CAP_NCQ;
++	}
++
+ 	/* fixup zero port_map */
+ 	if (!port_map) {
+ 		port_map = (1 << ahci_nr_ports(cap)) - 1;
+@@ -1752,7 +1758,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_save_initial_config(pdev, &pi, hpriv);
+ 
+ 	/* prepare host */
+-	if (!(pi.flags & AHCI_FLAG_NO_NCQ) && (hpriv->cap & HOST_CAP_NCQ))
++	if (hpriv->cap & HOST_CAP_NCQ)
+ 		pi.flags |= ATA_FLAG_NCQ;
+ 
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, fls(hpriv->port_map));
+-- 
+1.5.0.3
 
-2. pmp-link patchset : This patchset contains 16 patches which
-   implement a new abstraction layer - ata_link - to represent the ATA
-   link or PHY.  PMP bascially adds a bunch of PHYs to the host and it
-   is represented by multiple ata_links associated with a host.  After
-   this patchset, all parts are ready to deal with multiple links per
-   host.
 
-3. libata-pmp-prep patchset : This patchset contains 11 patches
-   implementing features to be used by PMP support including qc_defer
-   mechanism and link quirks.
-
-4. libata-pmp: This patchset contains 11 patches implementing core PMP
-   functionality and PMP support in sata_sil24 and ahci.
-
-One of the biggest changes from the last time is lack of
-hotplug-by-polling.  hp-poll needs more work and is pushed back
-accordingly.  AHCI PMP support is also added.
-
-Each patchset contains detailed description including list of changes
-from the last take.  All in all, this patchset behaves much better EH
-wise compared to the previous take.  SIMG 3726/4726 quirks are now
-properly handled and except for some corner cases for 4726 which I
-don't think there exists a solution, they always behave pretty good
-(oh well mines, at least).  New SIMG 5744 also works well.
-
-Thanks.
-
---
-tejun
