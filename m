@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/15] sata_sil24: implement PORT_RST
-Date: Sun, 1 Jul 2007 19:54:15 +0900
-Message-ID: <1183287255724-git-send-email-htejun@gmail.com>
+Subject: [PATCH 14/15] ahci: separate out ahci_do_softreset()
+Date: Sun, 1 Jul 2007 19:54:16 +0900
+Message-ID: <11832872562351-git-send-email-htejun@gmail.com>
 References: <1183287253677-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:54806 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756914AbXGAKyY (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:11952 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756915AbXGAKyY (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 06:54:24 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2090577pyb
+Received: by wa-out-1112.google.com with SMTP id v27so1891696wah
         for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 03:54:24 -0700 (PDT)
 In-Reply-To: <1183287253677-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,201 +20,65 @@ List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-As DEV_RST (hardreset) sometimes fail to recover the controller
-(especially after PMP DMA CS errata).  In such cases, perform PORT_RST
-prior to DEV_RST.
+Separate out ahci_do_softreset() which takes @pmp as its last
+argument.  This will be used to implement ahci_pmp_softreset().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/sata_sil24.c |   93 ++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 70 insertions(+), 23 deletions(-)
+ drivers/ata/ahci.c |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 5f07d7e..2574d87 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -323,6 +323,7 @@ struct sil24_port_priv {
- 	union sil24_cmd_block *cmd_block;	/* 32 cmd blocks */
- 	dma_addr_t cmd_block_dma;		/* DMA base addr for them */
- 	struct ata_taskfile tf;			/* Cached taskfile registers */
-+	int do_port_rst;
- };
- 
- static void sil24_dev_config(struct ata_device *dev);
-@@ -540,6 +541,31 @@ static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- 	*tf = pp->tf;
- }
- 
-+static void sil24_config_port(struct ata_port *ap)
-+{
-+	void __iomem *port = ap->ioaddr.cmd_addr;
-+
-+	/* configure IRQ WoC */
-+	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
-+	else
-+		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
-+
-+	/* zero error counters. */
-+	writel(0x8000, port + PORT_DECODE_ERR_THRESH);
-+	writel(0x8000, port + PORT_CRC_ERR_THRESH);
-+	writel(0x8000, port + PORT_HSHK_ERR_THRESH);
-+	writel(0x0000, port + PORT_DECODE_ERR_CNT);
-+	writel(0x0000, port + PORT_CRC_ERR_CNT);
-+	writel(0x0000, port + PORT_HSHK_ERR_CNT);
-+
-+	/* always use 64bit activation */
-+	writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
-+
-+	/* clear port multiplier enable and resume bits */
-+	writel(PORT_CS_PMP_EN | PORT_CS_PMP_RESUME, port + PORT_CTRL_CLR);
-+}
-+
- static void sil24_config_pmp(struct ata_port *ap, int attached)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-@@ -568,6 +594,7 @@ static void sil24_clear_pmp(struct ata_port *ap)
- static int sil24_init_port(struct ata_port *ap)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-+	struct sil24_port_priv *pp = ap->private_data;
- 	u32 tmp;
- 
- 	/* clear PMP error status */
-@@ -580,8 +607,12 @@ static int sil24_init_port(struct ata_port *ap)
- 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
- 				PORT_CS_RDY, 0, 10, 100);
- 
--	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY)
-+	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY) {
-+		pp->do_port_rst = 1;
-+		ap->link.eh_context.i.action |= ATA_EH_HARDRESET;
- 		return -EIO;
-+	}
-+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index d25cee8..94bb767 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -998,8 +998,8 @@ static int ahci_exec_polled_cmd(struct ata_port *ap, int pmp,
  	return 0;
  }
  
-@@ -696,10 +727,34 @@ static int sil24_hardreset(struct ata_link *link, unsigned int *class,
+-static int ahci_softreset(struct ata_link *link, unsigned int *class,
+-			  unsigned long deadline)
++static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
++			     int pmp, unsigned long deadline)
  {
  	struct ata_port *ap = link->ap;
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-+	struct sil24_port_priv *pp = ap->private_data;
-+	int did_port_rst = 0;
- 	const char *reason;
- 	int tout_msec, rc;
- 	u32 tmp;
+ 	const char *reason = NULL;
+@@ -1030,7 +1030,7 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
+ 		msecs = jiffies_to_msecs(deadline - now);
  
-+ retry:
-+	/* Sometimes, DEV_RST is not enough to recover the controller.
-+	 * This happens often after PM DMA CS errata.
-+	 */
-+	if (pp->do_port_rst) {
-+		ata_port_printk(ap, KERN_WARNING, "controller in dubious "
-+				"state, performing PORT_RST\n");
-+
-+		writel(PORT_CS_PORT_RST, port + PORT_CTRL_STAT);
-+		msleep(10);
-+		writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
-+		ata_wait_register(port + PORT_CTRL_STAT, PORT_CS_RDY, 0,
-+				  10, 5000);
-+
-+		/* restore port configuration */
-+		sil24_config_port(ap);
-+		sil24_config_pmp(ap, ap->nr_pmp_links);
-+
-+		pp->do_port_rst = 0;
-+		did_port_rst = 1;
-+	}
-+
- 	/* sil24 does the right thing(tm) without any protection */
- 	sata_set_spd(link);
+ 	tf.ctl |= ATA_SRST;
+-	if (ahci_exec_polled_cmd(ap, 0, &tf, 0,
++	if (ahci_exec_polled_cmd(ap, pmp, &tf, 0,
+ 				 AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY, msecs)) {
+ 		rc = -EIO;
+ 		reason = "1st FIS failed";
+@@ -1042,7 +1042,7 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
  
-@@ -736,6 +791,11 @@ static int sil24_hardreset(struct ata_link *link, unsigned int *class,
- 	return -EAGAIN;
+ 	/* issue the second D2H Register FIS */
+ 	tf.ctl &= ~ATA_SRST;
+-	ahci_exec_polled_cmd(ap, 0, &tf, 0, 0, 0);
++	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
  
-  err:
-+	if (!did_port_rst) {
-+		pp->do_port_rst = 1;
-+		goto retry;
-+	}
-+
- 	ata_link_printk(link, KERN_ERR, "hardreset failed (%s)\n", reason);
- 	return -EIO;
- }
-@@ -1001,6 +1061,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 			ehi->err_mask |= AC_ERR_OTHER;
- 			ehi->action |= ATA_EH_HARDRESET;
- 			ata_ehi_push_desc(ehi, "<PMP DMA CS errata> ");
-+			pp->do_port_rst = 1;
- 			freeze = 1;
- 		}
- 
-@@ -1148,6 +1209,8 @@ static irqreturn_t sil24_interrupt(int irq, void *dev_instance)
- 
- static void sil24_error_handler(struct ata_port *ap)
- {
-+	struct sil24_port_priv *pp = ap->private_data;
-+
- 	if (sil24_init_port(ap))
- 		ata_eh_freeze_port(ap);
- 
-@@ -1156,6 +1219,8 @@ static void sil24_error_handler(struct ata_port *ap)
- 		       ata_std_postreset, sata_pmp_std_prereset,
- 		       sil24_pmp_softreset, sil24_pmp_hardreset,
- 		       sata_pmp_std_postreset);
-+
-+	pp->do_port_rst = 0;
+ 	/* spec mandates ">= 2ms" before checking status.
+ 	 * We wait 150ms, because that was the magic delay used for
+@@ -1070,6 +1070,17 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
+ 	return rc;
  }
  
- static void sil24_post_internal_cmd(struct ata_queued_cmd *qc)
-@@ -1202,7 +1267,6 @@ static int sil24_port_start(struct ata_port *ap)
- static void sil24_init_controller(struct ata_host *host)
++static int ahci_softreset(struct ata_link *link, unsigned int *class,
++			  unsigned long deadline)
++{
++	int pmp = 0;
++
++	if (link->ap->flags & ATA_FLAG_PMP)
++		pmp = SATA_PMP_CTRL_PORT;
++
++	return ahci_do_softreset(link, class, pmp, deadline);
++}
++
+ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 			  unsigned long deadline)
  {
- 	void __iomem *host_base = host->iomap[SIL24_HOST_BAR];
--	void __iomem *port_base = host->iomap[SIL24_PORT_BAR];
- 	u32 tmp;
- 	int i;
- 
-@@ -1214,7 +1278,8 @@ static void sil24_init_controller(struct ata_host *host)
- 
- 	/* init ports */
- 	for (i = 0; i < host->n_ports; i++) {
--		void __iomem *port = port_base + i * PORT_REGS_SIZE;
-+		struct ata_port *ap = host->ports[i];
-+		void __iomem *port = ap->ioaddr.cmd_addr;
- 
- 		/* Initial PHY setting */
- 		writel(0x20c, port + PORT_PHY_CFG);
-@@ -1231,26 +1296,8 @@ static void sil24_init_controller(struct ata_host *host)
- 				           "failed to clear port RST\n");
- 		}
- 
--		/* Configure IRQ WoC */
--		if (host->ports[0]->flags & SIL24_FLAG_PCIX_IRQ_WOC)
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
--		else
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
--
--		/* Zero error counters. */
--		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
--		writel(0x8000, port + PORT_CRC_ERR_THRESH);
--		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
--		writel(0x0000, port + PORT_DECODE_ERR_CNT);
--		writel(0x0000, port + PORT_CRC_ERR_CNT);
--		writel(0x0000, port + PORT_HSHK_ERR_CNT);
--
--		/* Always use 64bit activation */
--		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
--
--		/* Clear port multiplier enable and resume bits */
--		writel(PORT_CS_PMP_EN | PORT_CS_PMP_RESUME,
--		       port + PORT_CTRL_CLR);
-+		/* configure port */
-+		sil24_config_port(ap);
- 	}
- 
- 	/* Turn on interrupts */
 -- 
 1.5.0.3
 
