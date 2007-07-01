@@ -1,40 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: add ide_set{_max}_pio() (take 2)
-Date: Sun, 1 Jul 2007 01:09:20 +0200
-Message-ID: <200707010109.20670.bzolnier@gmail.com>
-References: <200707010046.15532.bzolnier@gmail.com> <4686DBE4.2060702@garzik.org> <20070630234943.077f44e9@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHBOMB] libata: Port Multiplier support
+Date: Sun, 1 Jul 2007 18:30:15 +0900
+Message-ID: <20070701093015.GU29122@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:45029 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbXF3Wxv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jun 2007 18:53:51 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1035880ugf
-        for <linux-ide@vger.kernel.org>; Sat, 30 Jun 2007 15:53:50 -0700 (PDT)
-In-Reply-To: <20070630234943.077f44e9@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.177]:49756 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755395AbXGAJaU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 05:30:20 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1870847wah
+        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 02:30:19 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 
-On Sunday 01 July 2007, Alan Cox wrote:
-> > > * Fix "ata_" prefix (Noticed by Jeff).
-> > > 
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Cc: Jeff Garzik <jeff@garzik.org>
-> > 
-> > Thanks Bart!
-> 
-> Ditto - its really very helpful to tell people "ata_" in the trace mail
-> Jeff (or me), ide_ mail Bart 8)
+Hello, all.
 
-OTOH you've just lost a perfect excuse for redirecting all "ata_"
-bugreports in my direction...
+I'm about to post an updated version of PMP support.  Well, as always,
+it took longer than I expected but it's complete now and looking good.
+It's composed of the following four patchsets.
 
-lucky! :)
+1. misc-updates patchset : This patchset contains 12 patches which
+   updates various stuff.  A few are just improvements found during
+   PMP work.  Others are related to PMP support in indirect way.  All
+   patches in this patchset are independent.
 
-Bart
+2. pmp-link patchset : This patchset contains 16 patches which
+   implement a new abstraction layer - ata_link - to represent the ATA
+   link or PHY.  PMP bascially adds a bunch of PHYs to the host and it
+   is represented by multiple ata_links associated with a host.  After
+   this patchset, all parts are ready to deal with multiple links per
+   host.
+
+3. libata-pmp-prep patchset : This patchset contains 11 patches
+   implementing features to be used by PMP support including qc_defer
+   mechanism and link quirks.
+
+4. libata-pmp: This patchset contains 11 patches implementing core PMP
+   functionality and PMP support in sata_sil24 and ahci.
+
+One of the biggest changes from the last time is lack of
+hotplug-by-polling.  hp-poll needs more work and is pushed back
+accordingly.  AHCI PMP support is also added.
+
+Each patchset contains detailed description including list of changes
+from the last take.  All in all, this patchset behaves much better EH
+wise compared to the previous take.  SIMG 3726/4726 quirks are now
+properly handled and except for some corner cases for 4726 which I
+don't think there exists a solution, they always behave pretty good
+(oh well mines, at least).  New SIMG 5744 also works well.
+
+Thanks.
+
+--
+tejun
