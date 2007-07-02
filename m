@@ -1,43 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: State of Port Multiplier Support in libata?
-Date: Mon, 02 Jul 2007 16:20:43 +0900
-Message-ID: <4688A74B.7000604@gmail.com>
-References: <4684D54A.8030307@enhance-it.dk>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: [PATCHBOMB] libata: Port Multiplier support
+Date: Mon, 2 Jul 2007 00:45:30 -0700
+Message-ID: <20070702074530.GH18068@curie-int.orbis-terrarum.net>
+References: <20070701093015.GU29122@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2E/hm+v6kSLEYT3h"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.225]:30127 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbXGBHUv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 03:20:51 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so2215288qbe
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 00:20:50 -0700 (PDT)
-In-Reply-To: <4684D54A.8030307@enhance-it.dk>
+Received: from b01.ext.isohunt.com ([208.71.112.51]:36004 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752112AbXGBHpH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 03:45:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20070701093015.GU29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Skotte <stefan.skotte@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Stefan Skotte wrote:
-> Hi,
-> 
-> I was wondering what the odds are that my setup could be supported:
-> 
-> * Stardom/Raidon SOHOTANK ST-6600 (5 disk SATA array)
-> (http://www.stardom.com.tw/sohotank%20st6600.htm)
-> * STLab Silicon Image 3531 NCQ/FIS PMP PCIe adapter with one eSATA port
-> (uses sata_sil24).
-> (http://www.st-lab.com/assign.asp?keyid=bf9)
-> 
-> The classical example of it not working properly is that only one disk
-> in bay 2 is recognized; all other does not respond at all:
 
-Get 2.6.22-rc6 and apply patches from the following page.
+--2E/hm+v6kSLEYT3h
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  http://home-tj.org/wiki/index.php/Libata-tj-stable
+On Sun, Jul 01, 2007 at 06:30:15PM +0900, Tejun Heo wrote:
+> it took longer than I expected but it's complete now and looking good.
+> It's composed of the following four patchsets.
+These are looking great Tejun.
 
-It should work.
+My previous porting attempt got delayed partway through with other work
+stuff.
 
--- 
-tejun
+I can't change kernels on my PMP box right now, but I'll test a bit
+later this week.
+
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Council Member
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--2E/hm+v6kSLEYT3h
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFGiK0aPpIsIjIzwiwRAtriAKChAYmK1K8jTJSl5wIXsBtj2RBYpQCeJtqq
+ajwxdb1t5Q8cv8hSYpYxskI=
+=wrFc
+-----END PGP SIGNATURE-----
+
+--2E/hm+v6kSLEYT3h--
