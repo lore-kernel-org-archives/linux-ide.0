@@ -1,56 +1,52 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: [PATCHBOMB] libata: Port Multiplier support
-Date: Mon, 2 Jul 2007 00:45:30 -0700
-Message-ID: <20070702074530.GH18068@curie-int.orbis-terrarum.net>
-References: <20070701093015.GU29122@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: State of Port Multiplier Support in libata?
+Date: Mon, 02 Jul 2007 16:51:57 +0900
+Message-ID: <4688AE9D.7060008@gmail.com>
+References: <4684D54A.8030307@enhance-it.dk> <4688A74B.7000604@gmail.com> <4688AB51.8080801@enhance-it.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2E/hm+v6kSLEYT3h"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b01.ext.isohunt.com ([208.71.112.51]:36004 "EHLO
-	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752112AbXGBHpH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 03:45:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20070701093015.GU29122@htj.dyndns.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:39441 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbXGBHwD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 03:52:03 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2217650wah
+        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 00:52:01 -0700 (PDT)
+In-Reply-To: <4688AB51.8080801@enhance-it.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Stefan Skotte <sfs@enhance-it.dk>
+Cc: linux-ide@vger.kernel.org
 
+Stefan Skotte wrote:
+> drivers/scsi/ipr.c: In function __ipr_eh_dev_reset:
+> drivers/scsi/ipr.c:3955: warning: passing argument 4 of ata_do_eh from
+> incompatible pointer type
+> drivers/scsi/ipr.c: In function ipr_ata_phy_reset:
+> drivers/scsi/ipr.c:5049: error: struct ata_port has no member named
+> device
+> drivers/scsi/ipr.c:5053: error: struct ata_port has no member named
+> device
+> drivers/scsi/ipr.c:5056: error: struct ata_port has no member named
+> device
+> make[3]: *** [drivers/scsi/ipr.o] Error 1
+> make[2]: *** [drivers/scsi] Error 2
+> make[1]: *** [drivers] Error 2
+> make[1]: Leaving directory `/usr/src/linux-2.6.22-rc6'
+> make: *** [debian/stamp-build-kernel] Error 2
 
---2E/hm+v6kSLEYT3h
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Aiee, that's my bad.  I forgot to convert ipr.
 
-On Sun, Jul 01, 2007 at 06:30:15PM +0900, Tejun Heo wrote:
-> it took longer than I expected but it's complete now and looking good.
-> It's composed of the following four patchsets.
-These are looking great Tejun.
+> I just removed the ipr module since I'm not going to use it, but maybe
+> I'm doing something wrong since I'm usng the debian build process (?),
+> anyways I downloaded 2.6.22-rc6 from testing on kernel.org, so that
+> should atleast be right.
+> 
+> Thanks for getting back to me, I will report back how well my 3531-based
+> controller fares...
 
-My previous porting attempt got delayed partway through with other work
-stuff.
+Thanks.
 
-I can't change kernels on my PMP box right now, but I'll test a bit
-later this week.
-
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer & Council Member
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---2E/hm+v6kSLEYT3h
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
-
-iD8DBQFGiK0aPpIsIjIzwiwRAtriAKChAYmK1K8jTJSl5wIXsBtj2RBYpQCeJtqq
-ajwxdb1t5Q8cv8hSYpYxskI=
-=wrFc
------END PGP SIGNATURE-----
-
---2E/hm+v6kSLEYT3h--
+-- 
+tejun
