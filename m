@@ -1,43 +1,40 @@
-From: "Ray Lee" <ray-lk@madrabbit.org>
-Subject: Re: PROBLEM: SATA AHCI driver significant throughput loss in 2.6.22-rc5-g75154f40-dirty
-Date: Sun, 1 Jul 2007 10:33:12 -0700
-Message-ID: <2c0942db0707011033v21c91584h3924402f0ce30fa5@mail.gmail.com>
-References: <439fa30706262117u2d5553dfp8395c6ca41574a8c@mail.gmail.com>
-	 <20070630005747.9bc9ba40.akpm@linux-foundation.org>
-	 <439fa30707010956h1c467e28xc9eff37ebec523ad@mail.gmail.com>
+From: Thorsten Leemhuis <fedora@leemhuis.info>
+Subject: Re: [patch 2.6.22-rc6] ATA: add a PCI ID for Intel Santa Rosa PATA
+ controller
+Date: Mon, 02 Jul 2007 07:02:25 +0200
+Message-ID: <468886E1.7080302@leemhuis.info>
+References: <468408F1.3080307@redhat.com> <46841062.2080800@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:4332 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752926AbXGARdO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2007 13:33:14 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so1121385ugf
-        for <linux-ide@vger.kernel.org>; Sun, 01 Jul 2007 10:33:13 -0700 (PDT)
-In-Reply-To: <439fa30707010956h1c467e28xc9eff37ebec523ad@mail.gmail.com>
-Content-Disposition: inline
+Received: from tzmxr02.htp-tel.de ([81.14.243.18]:26252 "EHLO
+	TZMXR02.htp-tel.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbXGBFT1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 01:19:27 -0400
+In-Reply-To: <46841062.2080800@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan <metalifloyd@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jason Gaston <jason.d.gaston@intel.com>
 
-On 7/1/07, Dan <metalifloyd@gmail.com> wrote:
-> > Are you able (as a matter of some urgency) to run a git bisection
-> > search to identify the offending commit?
->
-> For some reason I am no longer able to reproduce the problem. I've
-> tried several versions including the one I reported and I just can't
-> reproduce the problem. I accidentally overwrote the original kernel
-> that had the problem. The weird thing is even when I reset the git
-> tree to 2.6.22-rc5-g75154f40 and build it, the error is gone.
+On 28.06.2007 21:47, Chuck Ebbert wrote:
+> On 06/28/2007 03:16 PM, Chuck Ebbert wrote:
+> 
+> [Forgot to mark subj: as a patch; attached]
+> 
+>> From: Christian Lamparter <chunkeey@web.de>
+>>
+>> ATA: add a PCI ID for Intel Santa Rosa PATA controller.
+>>
+>> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+>> ---
+> [...]
+>> +       /* ICH8 Mobile PATA Controller */
+>> +       { 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
 
-But that isn't the kernel you reported the error against. You reported
-that 2.6.22-rc5-g75154f40-*dirty* had the error, which means there was
-a diff between what you were building and what was in the repository.
-If you know what the diff was and it was something trivial, then you
-can disregard this bit of pedantry, but if not, try to recall if you
-had something else patched against that.
+FYI: Patch works fine for me on my brand new Dell D630 (Santa Rosa) --
+the DVD-Drive gets recognized with it applied.
 
-Regardless, as it's not reproducible it sounds like the report should
-be closed...
+CU
+thl
