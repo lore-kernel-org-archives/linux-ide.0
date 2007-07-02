@@ -1,51 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [info] What's in Jeff's libata-dev inbox?
-Date: Mon, 02 Jul 2007 12:42:23 -0400
-Message-ID: <46892AEF.8@garzik.org>
-References: <20070702151639.GA10948@havoc.gtf.org> <20070702165327.2646a761@the-village.bc.nu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/15] ide: drop "PIO data" argument from ide_get_best_pio_mode()
+Date: Mon, 02 Jul 2007 21:41:34 +0400
+Message-ID: <468938CE.8010202@ru.mvista.com>
+References: <200706302105.20596.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52968 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754828AbXGBQm2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Jul 2007 12:42:28 -0400
-In-Reply-To: <20070702165327.2646a761@the-village.bc.nu>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:16630 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752727AbXGBRjw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:39:52 -0400
+In-Reply-To: <200706302105.20596.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, LKML <linux-kernel@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Mikael Pettersson <mikpe@it.uu.se>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
->> I have patches from Alan (pata_sis FIFO whack, pata_dma option), Tejun,
->> Albert and Kristen still to be reviewed.  Will get to those on Friday,
->> after the July 4th US holiday.tions(-)
+Hello.
 
-Just to be more specific, my to-review inbox contains:
+Bartlomiej Zolnierkiewicz wrote:
 
-Alan: pata_sis FIFO whack, pata_dma option
+> * Drop no longer needed "PIO data" argument from ide_get_best_pio_mode()
+>   and convert all users accordingly.
 
-Tejun: PMP patchbomb
+> * Remove no longer needed ide_pio_data_t.
 
-Albert: irq_on/off restructure, irq-driven PIO to wq, minor PIO fixes
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Kristen: ALPM
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Mikael: sata_promise cleanup and hotplug
+> Index: b/drivers/ide/pci/tc86c001.c
+> ===================================================================
+> --- a/drivers/ide/pci/tc86c001.c
+> +++ b/drivers/ide/pci/tc86c001.c
+> @@ -47,7 +47,7 @@ static int tc86c001_tune_chipset(ide_dri
+>  
+>  static void tc86c001_tune_drive(ide_drive_t *drive, u8 pio)
+>  {
+> -	pio =  ide_get_best_pio_mode(drive, pio, 4, NULL);
+> +	pio = ide_get_best_pio_mode(drive, pio, 4);
 
-via akpm: HPA cleanup, cancel-rearming-wq cleanup
+    Oh, you've ruined my formatting... :'-[
 
-A few one-liner patches from Florian A, Boaz H, Christian L, Sonic Z, 
-Jose A R.
+>  	(void) tc86c001_tune_chipset(drive, XFER_PIO_0 + pio);
+>  }
+>  
 
-
-NOTE to Kristen:  I am OK with your SATA async notification patches, as 
-stated a while ago, but I think Andrew Morton had a better plan for 
-merging that, so it's not in my queue.
-
-
-Anything not on this list should be resent, I don't have it.
-
-	Jeff
-
-
+MBR, Sergei
