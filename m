@@ -1,30 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
-Date: Mon, 02 Jul 2007 22:00:40 +0400
-Message-ID: <46893D48.3060801@ru.mvista.com>
-References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com> <200707022013.04383.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 12/15] alim15x3: ->speedproc, filter out invalid modes
+ passed from user-space
+Date: Mon, 02 Jul 2007 14:00:34 -0400
+Message-ID: <46893D42.9070603@garzik.org>
+References: <200706302110.20766.bzolnier@gmail.com> <46891CD4.7020703@ru.mvista.com> <200707021956.32844.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:16767 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752880AbXGBR67 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:58:59 -0400
-In-Reply-To: <200707022013.04383.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:53363 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752910AbXGBSAj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Jul 2007 14:00:39 -0400
+In-Reply-To: <200707021956.32844.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, Doug Maxey <dwm@enoyolf.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
-> Hi,
+> This would brake setups which currently work OK, i.e. BIOS set things up
+> (reminds me about cmd64x vs broken MWDMA)...
+> 
+> The RightThing(tm) to do is to fix alim15x3 driver to program DMA timings
+> (especially given that pata_ali seems to already contain the needed code).
 
-> Could you also fix pdc202xx_new driver?
+I am not ready to trust that pata_ali works as well as alim15x3 in all 
+cases.  Someone should test e.g. Alpha AXP systems with IDE (use 
+alim15x3) to make sure all is well.
 
-> "buggy" code should be very similar if not identical...
+alim15x3 covers buggy, ugly, quirky chipsets.  I consider that coverage 
+in general highly fragile.
 
-    I was going to do that but since I'm only working part-time in the last 
-few days, this keeps being deferred. Also, I need to find the card...
+	Jeff
 
-MBR, Sergei
+
