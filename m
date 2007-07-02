@@ -1,107 +1,92 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 6/15] ide: ide_find_best_pio_mode() fixes
-Date: Mon, 2 Jul 2007 20:05:01 +0200
-Message-ID: <200707022005.01655.bzolnier@gmail.com>
-References: <200706302104.42299.bzolnier@gmail.com> <468917D2.6010907@ru.mvista.com>
+Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
+Date: Mon, 2 Jul 2007 20:13:04 +0200
+Message-ID: <200707022013.04383.bzolnier@gmail.com>
+References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:63829 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883AbXGBRuo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:50:44 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so61480nfb
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 10:50:43 -0700 (PDT)
-In-Reply-To: <468917D2.6010907@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.175]:32087 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbXGBR4c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:56:32 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1307864ugf
+        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 10:56:30 -0700 (PDT)
+In-Reply-To: <4680A773.2020009@tw.ibm.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, Doug Maxey <dwm@enoyolf.org>
 
-On Monday 02 July 2007, Sergei Shtylyov wrote:
-> Hello.
+
+Hi,
+
+Could you also fix pdc202xx_new driver?
+
+"buggy" code should be very similar if not identical...
+
+On Tuesday 26 June 2007, Albert Lee wrote:
+> Recently the PLL input clock of pata_pdc2027x is sometimes detected
+> higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
+> It seems sometimes the mdelay() function is not as precise as it
+> used to be. Per Alan's advice, HT or power management might affect
+> the precision of mdelay().
 > 
-> Bartlomiej Zolnierkiewicz wrote:
-> > * Check IORDY bit for PIO modes > 2.
+> This patch calls gettimeofday() to mesure the time elapsed and
+> calculate the PLL input clock accordingly.
 > 
-> > * Some devices claim maximum PIO mode > 2 in id->tPIO, they were punished too
-> >   severly for this by being limited to PIO_SLOW.  Limit them to PIO2 instead.
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> ---
 > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Did more test. For mdelay(100) the usec_elapsed is usually 99287.
+> However, sometimes the usec_elapsed is 118934, longer than expected.
 > 
->     NAK. :-)
+> Jun 26 12:12:29 p4ht-s kernel: [ 9156.490991] ACPI: PCI Interrupt 0000:02:05.0[A] -> Link [LNK1] -> GSI 10 (level, low) -> IRQ 10
+> Jun 26 12:12:29 p4ht-s kernel: [ 9156.610175] usec_elapsed[118934]
+> Jun 26 12:12:29 p4ht-s kernel: [ 9156.610511] pata_pdc2027x 0000:02:05.0: PLL input clock 16817 kHz
 > 
-> > Index: b/drivers/ide/ide-timing.h
-> > ===================================================================
-> > --- a/drivers/ide/ide-timing.h
-> > +++ b/drivers/ide/ide-timing.h
-> > @@ -111,16 +111,14 @@ static short ide_find_best_pio_mode(ide_
-> >  	struct hd_driveid *id = drive->id;
-> >  	short best = 0;
-> >  
-> > -	if (id->field_valid & 2) {	/* EIDE PIO modes */
-> > -
-> > +	/* EIDE PIO modes */
-> > +	if ((id->field_valid & 2) && (id->capability & 8)) {
-> >  		if ((best = (drive->id->eide_pio_modes & 4) ? XFER_PIO_5 :
-> >  			    (drive->id->eide_pio_modes & 2) ? XFER_PIO_4 :
-> >  			    (drive->id->eide_pio_modes & 1) ? XFER_PIO_3 : 0)) return best;
-> >  	}
-> > -	
-> > -	return  (drive->id->tPIO == 2) ? XFER_PIO_2 :
-> > -		(drive->id->tPIO == 1) ? XFER_PIO_1 :
-> > -		(drive->id->tPIO == 0) ? XFER_PIO_0 : XFER_PIO_SLOW;
-> > +
-> > +	return min_t(u8, id->tPIO, 2);
+> After the patch, the PLL input clock detected looks more accurate.
+> For your review, thanks.
 > 
->     XFER_PIO_[012] != [012], and otherwise you're returning XFER_PIO_* constants.
-
-Oh, crap, there should be "+ XFER_PIO_0" in the return line - fixed.
-
-Thanks for spotting this bug, revised patch included.
-
-[PATCH] ide: ide_find_best_pio_mode() fixes (take 2)
-
-* Check IORDY bit for PIO modes > 2.
-
-* Some devices claim maximum PIO mode > 2 in id->tPIO, they were punished too
-  severly for this by being limited to PIO_SLOW.  Limit them to PIO2 instead.
-
-v2:
-* Fix PIO number being returned incorrectly instead of PIO mode
-  (Noticed by Sergei).
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Reviewed-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
----
- drivers/ide/ide-timing.h |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-Index: b/drivers/ide/ide-timing.h
-===================================================================
---- a/drivers/ide/ide-timing.h
-+++ b/drivers/ide/ide-timing.h
-@@ -111,16 +111,14 @@ static short ide_find_best_pio_mode(ide_
- 	struct hd_driveid *id = drive->id;
- 	short best = 0;
- 
--	if (id->field_valid & 2) {	/* EIDE PIO modes */
--
-+	/* EIDE PIO modes */
-+	if ((id->field_valid & 2) && (id->capability & 8)) {
- 		if ((best = (drive->id->eide_pio_modes & 4) ? XFER_PIO_5 :
- 			    (drive->id->eide_pio_modes & 2) ? XFER_PIO_4 :
- 			    (drive->id->eide_pio_modes & 1) ? XFER_PIO_3 : 0)) return best;
- 	}
--	
--	return  (drive->id->tPIO == 2) ? XFER_PIO_2 :
--		(drive->id->tPIO == 1) ? XFER_PIO_1 :
--		(drive->id->tPIO == 0) ? XFER_PIO_0 : XFER_PIO_SLOW;
-+
-+	return XFER_PIO_0 + min_t(u8, id->tPIO, 2);
- }
- 
- static void ide_timing_quantize(struct ide_timing *t, struct ide_timing *q, int T, int UT)
+> diff -Nrup 00_libata-dev/drivers/ata/pata_pdc2027x.c 01_gettimeofday/drivers/ata/pata_pdc2027x.c
+> --- 00_libata-dev/drivers/ata/pata_pdc2027x.c	2007-06-01 12:08:21.000000000 +0800
+> +++ 01_gettimeofday/drivers/ata/pata_pdc2027x.c	2007-06-26 13:08:34.000000000 +0800
+> @@ -689,10 +689,12 @@ static long pdc_detect_pll_input_clock(s
+>  	void __iomem *mmio_base = host->iomap[PDC_MMIO_BAR];
+>  	u32 scr;
+>  	long start_count, end_count;
+> -	long pll_clock;
+> +	struct timeval start_time, end_time;
+> +	long pll_clock, usec_elapsed;
+>  
+>  	/* Read current counter value */
+>  	start_count = pdc_read_counter(host);
+> +	do_gettimeofday(&start_time);
+>  
+>  	/* Start the test mode */
+>  	scr = readl(mmio_base + PDC_SYS_CTL);
+> @@ -705,6 +707,7 @@ static long pdc_detect_pll_input_clock(s
+>  
+>  	/* Read the counter values again */
+>  	end_count = pdc_read_counter(host);
+> +	do_gettimeofday(&end_time);
+>  
+>  	/* Stop the test mode */
+>  	scr = readl(mmio_base + PDC_SYS_CTL);
+> @@ -713,7 +716,11 @@ static long pdc_detect_pll_input_clock(s
+>  	readl(mmio_base + PDC_SYS_CTL); /* flush */
+>  
+>  	/* calculate the input clock in Hz */
+> -	pll_clock = (start_count - end_count) * 10;
+> +	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+> +		(end_time.tv_usec - start_time.tv_usec);
+> +
+> +	pll_clock = (start_count - end_count) / 100 *
+> +		(100000000 / usec_elapsed);
+>  
+>  	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
+>  	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
