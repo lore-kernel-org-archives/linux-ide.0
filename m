@@ -1,37 +1,59 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: CF flash PATA on libata failure to attach
-Date: Mon, 02 Jul 2007 19:58:49 +0900
-Message-ID: <4688DA69.60700@gmail.com>
-References: <46815FF4.9040001@rtr.ca> <4681e04b.22b38c0a.78ec.6f76@mx.google.com> <46826F42.70405@rtr.ca> <4682f7a3.15538c0a.2e12.ffff8676@mx.google.com> <4683F1C9.2060505@rtr.ca> <468453f8.13578c0a.3c99.ffffa514@mx.google.com> <46845BEE.90801@rtr.ca> <46846b72.15588c0a.4c19.ffffeeb9@mx.google.com> <46846E3E.3010606@rtr.ca> <4684b61f.05358c0a.4c8f.30a5@mx.google.com> <20070629101733.GB25064@devserv.devel.redhat.com>
+From: Chr <chunkeey@web.de>
+Subject: Re: [patch 2.6.22-rc6] ATA: add a PCI ID for Intel Santa Rosa PATA controller
+Date: Mon, 2 Jul 2007 13:24:16 +0200
+Message-ID: <200707021324.17250.chunkeey@web.de>
+References: <468408F1.3080307@redhat.com> <468886E1.7080302@leemhuis.info> <4688C054.2030208@leemhuis.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:7710 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771AbXGBLAJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 07:00:09 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2545718pyb
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 04:00:08 -0700 (PDT)
-In-Reply-To: <20070629101733.GB25064@devserv.devel.redhat.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:43149 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753030AbXGBLYT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 07:24:19 -0400
+In-Reply-To: <4688C054.2030208@leemhuis.info>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: Andrew Hall <andrew.a.hall@gmail.com>, 'Mark Lord' <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: Thorsten Leemhuis <fedora@leemhuis.info>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jason Gaston <jason.d.gaston@intel.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, chunkeey@web.de
 
-Alan Cox wrote:
-> On Fri, Jun 29, 2007 at 05:34:36PM +1000, Andrew Hall wrote:
->> Further to this the PATA to SATA bridge being used in this case is:
->>
->> http://www.jmicron.com/JM20330.html
->>
->> ..as you will see only PIO and UDMA modes are supported.
+On Monday, 2. July 2007, you wrote:
+> On 02.07.2007 07:02, Thorsten Leemhuis wrote:
+> Hmmm. From looking at the ICH8-Datasheet (
+> http://www.intel.com/design/chipsets/datashts/313056.htm
+> or http://download.intel.com/design/chipsets/datashts/31305603.pdf )
+> page 189 and later it seems to me that the ICH8M (just as all the other
+> Intel-Chipsets I know) officially only supports Ultra ATA 100 (and not
+> 133!).
 > 
-> In which case their microcontroller in the middle should be masking ident
-> bits. Without a way to detect the presence of the device I don't see an
-> easy way for us to handle it automatically at all
+> So is the ich_pata_133 correct in the patch (see quoted line above)?
+> 
+> CU
+> thl
+> 
+(please keep the CC).
 
-I'll ask JMicron about it.
+For some strange reason, I can not get the pdf...  
 
--- 
-tejun
+Anyway, the original patch had "ich_pata_100".
+see: http://www.mail-archive.com/linux-ide%40vger.kernel.org/msg07416.html
+
+but Alan Cox wrote:
+http://www.mail-archive.com/linux-ide%40vger.kernel.org/msg07417.html
+> 
+> Its ich_pata_133 - all the newer chips are. They work even better if you
+> set them into AHCI mode in the BIOS and then they should "just work" with
+> recent kernels as the AHCI driver now matches by class.
+> 
+> Alan
+
+And "Gaston, Jason D" <jason.d.gaston@intel.com> didn't complain about it.
+it's a "bit" confusing with all "native" AHCI SATA chipset that have to emulate 
+PATA for compatibility reasons... 
+
+So, whom can we trust? I've seen wrong specs, but you know "To err is human".
+
+Thanks,
+	Chr.
