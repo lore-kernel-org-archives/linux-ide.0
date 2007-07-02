@@ -1,55 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 7/15] ide: drop "PIO data" argument from ide_get_best_pio_mode()
-Date: Mon, 2 Jul 2007 20:14:56 +0200
-Message-ID: <200707022014.57006.bzolnier@gmail.com>
-References: <200706302105.20596.bzolnier@gmail.com> <468938CE.8010202@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
+Date: Mon, 02 Jul 2007 22:00:40 +0400
+Message-ID: <46893D48.3060801@ru.mvista.com>
+References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com> <200707022013.04383.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:28461 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159AbXGBR7P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:59:15 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so1163700ika
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 10:59:14 -0700 (PDT)
-In-Reply-To: <468938CE.8010202@ru.mvista.com>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:16767 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752880AbXGBR67 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 13:58:59 -0400
+In-Reply-To: <200707022013.04383.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, Doug Maxey <dwm@enoyolf.org>
 
-On Monday 02 July 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > * Drop no longer needed "PIO data" argument from ide_get_best_pio_mode()
-> >   and convert all users accordingly.
-> 
-> > * Remove no longer needed ide_pio_data_t.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Bartlomiej Zolnierkiewicz wrote:
+> Hi,
 
-added
+> Could you also fix pdc202xx_new driver?
 
-> > Index: b/drivers/ide/pci/tc86c001.c
-> > ===================================================================
-> > --- a/drivers/ide/pci/tc86c001.c
-> > +++ b/drivers/ide/pci/tc86c001.c
-> > @@ -47,7 +47,7 @@ static int tc86c001_tune_chipset(ide_dri
-> >  
-> >  static void tc86c001_tune_drive(ide_drive_t *drive, u8 pio)
-> >  {
-> > -	pio =  ide_get_best_pio_mode(drive, pio, 4, NULL);
-> > +	pio = ide_get_best_pio_mode(drive, pio, 4);
-> 
->     Oh, you've ruined my formatting... :'-[
+> "buggy" code should be very similar if not identical...
 
-Hehe, not a big lost - this line goes away in patch #13/15...
+    I was going to do that but since I'm only working part-time in the last 
+few days, this keeps being deferred. Also, I need to find the card...
 
-Bart
+MBR, Sergei
