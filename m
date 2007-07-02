@@ -1,35 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 12/15] alim15x3: ->speedproc, filter out invalid modes
  passed from user-space
-Date: Mon, 2 Jul 2007 20:22:31 +0100
-Message-ID: <20070702202231.33ffe36e@the-village.bc.nu>
-References: <200706302110.20766.bzolnier@gmail.com>
-	<46891CD4.7020703@ru.mvista.com>
-	<200707021956.32844.bzolnier@gmail.com>
-	<46893D42.9070603@garzik.org>
+Date: Mon, 02 Jul 2007 15:17:15 -0400
+Message-ID: <46894F3B.7050600@garzik.org>
+References: <200706302110.20766.bzolnier@gmail.com> <200707022041.08350.bzolnier@gmail.com> <46894478.9070808@garzik.org> <200707022055.13683.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48104 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753102AbXGBTQs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 15:16:48 -0400
-In-Reply-To: <46893D42.9070603@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:53838 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753326AbXGBTRS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Jul 2007 15:17:18 -0400
+In-Reply-To: <200707022055.13683.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-> I am not ready to trust that pata_ali works as well as alim15x3 in all 
-> cases.  Someone should test e.g. Alpha AXP systems with IDE (use 
-> alim15x3) to make sure all is well.
+Bartlomiej Zolnierkiewicz wrote:
+> Add the new code inside #ifdef X86, marking alim15x3 X86-only would be
+> on over-kill...
 
-My pata_ali is reported to do so. I don't know if yours does because my
-libata tree has some changes to set the controller to PIO when doing the
-initial reset/probe which may be needed if you don't have BIOS init.
+Ugh.  That's not how we do Linux development.  It is better to convert 
+the new code and wait for alpha/sparc users to scream, than add platform 
+ifdefs.  To do so creates divergent code paths, that runs counter to 
+Linux's goal of a portable driver.
 
-If it doesn't it won't be hard to tweak. The timing rules are taken
-from the documentation.
+	Jeff
 
-Alan
+
