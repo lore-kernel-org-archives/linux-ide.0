@@ -1,163 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Libata PATA status
-Date: Tue, 3 Jul 2007 18:51:16 +0100
-Message-ID: <20070703185116.59c8f5f5@the-village.bc.nu>
+Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
+Date: Tue, 3 Jul 2007 18:56:52 +0100
+Message-ID: <20070703185652.0b807fcc@the-village.bc.nu>
+References: <20070703161002.1576c39d@the-village.bc.nu>
+	<200707031938.20956.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57094 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48907 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754913AbXGCRpH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 13:45:07 -0400
+	with ESMTP id S1755408AbXGCRuq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 13:50:46 -0400
+In-Reply-To: <200707031938.20956.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
-Libata General with respect to PATA
-====================================
+> The new improved driver is not really better than the old one because
+> the old one is broken. :)
+> 
+> Old driver does identical configuration when it comes to PIO modes.
 
-Wrong port and IRQ reporting - IRQ now fixed by Tejun, port reporting
-fixes sent to Andrew. All these are cosmetic and don't harm debug.
+No the old driver doesn't even do that. It starts up. It spuriously
+adjusts some non writable PCI BAR registers, prints a message about
+resources being in use already then exits.
 
-Still can't user set drive speed or user issue commands at a given speed.
-Needed to allow users to bump cable rules, fix strange stuff and for some
-emulated chips to issue RAID control ATA packets in PIO0 (no I've no idea
-why they only work in PIO0 ;)).
+I had a poke around the setup. As far as I can observe we break even if
+the ROM timing values are used as is. I suspect documentation or a good
+deal of luck is needed.
 
-No serialization of channel pairs.
-
-PATA General
-============
-
-Current kernels now support HPA (Host Protected Area) but default to
-honouring it. Probably a wrong default for PATA but we need to decide the
-right way to expose it nicely.
-
-Cable detection should now be sane. Still issues with SATA bridges. Some
-test hacks in my code base but nothing for upstream yet.
-
-My tree has global DMA control aka ide=nodma. Need to decide the best way
-to push a version of this.
-
-Ancient non IORDY capable devices need patches still in my devel tree
-
-Post SRST we need to decide what to do about mode setting - do we put the
-controller in PIO0 specifically ? My tree does and this seems to help on
-non PC systems.
-
-No PATA hotplug support yet. Need warmplug helpers for some chipsets (eg
-some intel ICH) to avoid risk of hangs.
-
-
-Chipsets
-========
-PIIX
-	Tejun should have the MWDMA bugs fixed otherwise so far so good.
-	Mostly maintained by other people.
-ACPI
-	Driver needs a rewrite based upon what has been learned about the
-	BIOS handling of the ACPI methods. On the TODO list
-ALI
-	2.6.22rc7 fixed the last known non-atapi bug. Stil some ATAPI
-	problem reports unresolved
-AMD
-	Solid. ACPI tweaks in my tree for Nvidia cable detect and pushed
-	to -mm. Target for 2.6.23
-ARTOP
-	No reports, but nobody appears to be using one
-ATIIXP
-	Rock solid. For SATA side use AHCI
-CMD640
-	Seems to work but still little testing
-CMD64X
-	Tested on x86, needs more Sparc/Alpha feedback
-CS5520
-	Solid for PIO. No virtual DMA support (and none likely unless its
-	contributed)
-CS5530
-	Obscure hang bug fix just sent to -mm tree but not observed in
-	real world use. Otherwise stable
-CS5535
-	No reports
-CYPRESS
-	Needs someone with an ancient Alpha. May drop entirely
-EFAR
-	Seems solid. Needs some PIIX updates cross checking for EFAR
-	relevance. Low priority
-GENERIC
-	Fix for "DMA set up but not used" bug in -git
-HPT366
-	Seems to be solid. Needs a backport of the chip detect changes
-	Sergei just finished for old IDE. Low priority no real impact from
-	their lack
-HPT37X
-	Working but some further work required to get it behaving on all
-	combinations
-HPT3X2N
-	Still has problems on some systems. Tracking the work being done
-	in old-ide which seems to behave similarly
-HPT3X3
-	Solid PIO support sent to -mm. DMA is problematic. Doesn't work
-	with old IDE at all so not too problematic. Doesn't work in
-	base kernel
-ISAPNP
-	Seems to work, no bug reports but not many users
-IT8212
-	Multiple fixes, should now be stable in RAID and Pass-through
-	modes thanks to driver fixes and core fixes from Tejun
-IT8213
-	No idea
-JMICRON
-	Works reliably. No recent changes
-LEGACY
-	Works ok. Complete rewrite in progress to clean up all the
-	pre-PCI support
-TRIFLEX
-	Solid, no recent changes.
-MARVELL
-	Solid, will be replaced by PATA AHCI-like support in time
-	(but not by me)
-MPIIX
-	Solid, no recent changes
-OLDPIIX
-	Solid, no recent changes
-NETCELL
-	Solid, no recent changes
-NS87410
-	Still experimental, almost no users
-OPTIPIO
-	Very much experimental but seems to work
-OPTIDMA
-	Very much experimental, but seems to work. Only one user known
-	however
-PCMCIA
-	Works reliably. Some problems with IRQ routing on some CF cards
-	that seem to be card related. Works on systems with no DMA API
-	support as of patches sent to -mm
-PDC_OLD
-	2.6.22-git has cable detection bug fixed
-QDI
-	Works, will be folded into LEGACY rewrite
-RADISYS
-	Very experimental, no changes, low priority
-RZ1000
-	Solid, works, no changes
-SC1200
-	Single channel only still. Needs work for dual channel
-	-mm has fix for a DMA hang bug
-SERVERWORKS
-	Solid, no changes of note
-SIL680
-	Solid, no recent changes
-SIS
-	Current tree fixes crash on boot some users reported, code
-	cleanups, no other major changes for pure PATA devices
-VIA
-	Solid. Sent acpi patch for -mm to try and fix the one remaining
-	mystery "how to spot VIA with onboard SATA bridges properly. If
-	you've got a VIA board with SATA ports that appear as PATA
-	channels please drop me an email as I'd like to get more info
-	on what is affected.
-WINBOND
-	No changes, still experimental
+Alan
