@@ -1,103 +1,89 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: State of Port Multiplier Support in libata?
-Date: Tue, 03 Jul 2007 12:06:00 +0900
-Message-ID: <4689BD18.6030202@gmail.com>
-References: <4684D54A.8030307@enhance-it.dk> <4688A74B.7000604@gmail.com> <4688AB51.8080801@enhance-it.dk> <4688AE9D.7060008@gmail.com> <4688C3AF.2060100@enhance-it.dk> <4688C700.6070901@gmail.com> <4688FC96.7040604@enhance-it.dk> <4689149E.5030704@gmail.com> <46896824.2030507@enhance-it.dk>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 1/1] ide: pdc202xx_new PLL input clock fix
+Date: Tue, 03 Jul 2007 13:21:57 +0800
+Message-ID: <4689DCF5.3040809@tw.ibm.com>
+References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com> <200707022013.04383.bzolnier@gmail.com> <46893D48.3060801@ru.mvista.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:64509 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbXGCDGH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Jul 2007 23:06:07 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1087848nze
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 20:06:06 -0700 (PDT)
-In-Reply-To: <46896824.2030507@enhance-it.dk>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:55055 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbXGCFWL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 01:22:11 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l635M8mJ010002
+	for <linux-ide@vger.kernel.org>; Tue, 3 Jul 2007 01:22:08 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l635M8MS268190
+	for <linux-ide@vger.kernel.org>; Mon, 2 Jul 2007 23:22:08 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l635M79E029438
+	for <linux-ide@vger.kernel.org>; Mon, 2 Jul 2007 23:22:08 -0600
+In-Reply-To: <46893D48.3060801@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Skotte <sfs@enhance-it.dk>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org
 
-Stefan Skotte wrote:
-> Here's the full log from trying to reproduce error in powering array on/off:
-> 
-> =====================
-> ********* power off array......
-> [27685.211956] ata4.15: failed to read PMP product ID
-> [27685.211962] ata4.15: retrying hardreset
-> [27685.211969] ata4.15: hard resetting link
-> [27690.299444] ata4.15: SATA link down (SStatus 1 SControl 0)
-> [27690.555072] ata4.15: failed to read PMP GSCR[0] (errno=-5)
-> [27690.555077] ata4.15: PMP revalidation failed (errno=-5)
-> [27690.555084] ata4.15: limiting SATA link speed to 1.5 Gbps
-> [27690.555089] ata4.15: retrying hardreset in 5 secs
-> [27695.550667] ata4.15: hard resetting link
-> [27700.638173] ata4.15: SATA link down (SStatus 1 SControl 10)
-> [27700.893759] ata4.15: failed to read PMP GSCR[0] (errno=-5)
-> [27700.893765] ata4.15: PMP revalidation failed (errno=-5)
-> [27700.893771] ata4.15: retrying hardreset in 5 secs
-> [27705.889391] ata4.15: hard resetting link
-> [27710.976901] ata4.15: SATA link down (SStatus 1 SControl 10)
-> [27711.232487] ata4.15: failed to read PMP GSCR[0] (errno=-5)
-> [27711.232493] ata4.15: PMP revalidation failed (errno=-5)
-> [27711.232499] ata4.15: retrying hardreset in 5 secs
-> [27716.228121] ata4.15: hard resetting link
-> [27721.315629] ata4.15: SATA link down (SStatus 1 SControl 10)
-> [27721.571215] ata4.15: failed to read PMP GSCR[0] (errno=-5)
-> [27721.571221] ata4.15: PMP revalidation failed (errno=-5)
-> [27721.571226] ata4.15: failed to recover PMP after 3 tries, giving up
-> [27721.571230] ata4.15: Port Multiplier detaching
-> [27721.571257] ata4.00: disabled
-> [27721.571264] ata4.04: disabled
-> [27721.571268] ata4.00: disabled
+Recently the PLL input clock of Promise 2027x is sometimes detected
+higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
+It seems sometimes the mdelay() function is not as precise as it
+used to be. Per Alan's advice, HT or power management might affect
+the precision of mdelay().
 
-This is okay.  PMP is detached after five tries.
+This patch calls gettimeofday() to mesure the time elapsed and
+calculate the PLL input clock accordingly.
 
-> ******' power on array....
-> [27778.077300] ata4: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa
-> frozen
-> [27778.077308] ata4: irq_stat 0x00b40090 <PHY RDY changed>
-> [27778.077318] ata4: hard resetting link
-> [27780.273144] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [27780.416888] ata4.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports,
-> feat 0x9/0x9
-> [27780.544683] ata4.00: hard resetting link
-> [27781.027888] ata4.00: softreset failed (SRST command error)
-> [27781.027895] ata4.00: reset failed (errno=-5), retrying in 10 secs
-> [27790.527995] ata4.00: hard resetting link
-> [27791.138984] ata4.00: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [27791.154959] ata4.01: hard resetting link
-> [27791.718016] ata4.01: SATA link down (SStatus 0 SControl 300)
-> [27791.733992] ata4.02: hard resetting link
-> [27792.297049] ata4.02: SATA link down (SStatus 0 SControl 300)
-> [27792.313025] ata4.03: hard resetting link
-> [27792.876081] ata4.03: SATA link down (SStatus 0 SControl 300)
-> [27792.892056] ata4.04: hard resetting link
-> [27793.487061] ata4.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [27793.487068] ata4.05: hard resetting link
-> [27794.050120] ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [27794.090537] ata4.00: ATA-7: ST3750640AS, 3.AAE, max UDMA/133
-> [27794.090543] ata4.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [27794.148733] ata4.00: configured for UDMA/100
-> [27794.160917] ata4.04: ATA-7: WDC WD5000YS-01MPB1, 09.02E09, max UDMA/133
-> [27794.160923] ata4.04: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [27794.161914] ata4.04: configured for UDMA/100
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+---
+(I have the Promise adapter at hand, so it's easier for me to verify.)
+Attached please find the patch and the test result on my box for your review:
+[   72.186805] PDC20275: chipset revision 1
+[   72.196768] start[1039788039] end[1039620652] pll[16804952]
+[   72.196819] PDC20275: PLL input clock is 16804 kHz
+[   72.226586] PDC20275: 100% native mode on irq 10
 
-And probed correctly when powered back on.  What I was worried about was
-when you power it off briefly and back on (or disconnect the cable
-briefly) while EH is still retrying.  libata is supposed to recover
-without detaching devices.
+Maybe Bahadir could also help to verify if it helps to his "hda lost interrupt" problem.
 
-> =======================
-> 
-> Unfortunately there isn't any firmware available for the PMP on my PCIe
-> board, if thats what you mean (?), it doesn't even have RAID capability.
+--- linux-2.6.22-rc7/drivers/ide/pci/pdc202xx_new.c.ori	2007-07-02 14:40:08.000000000 +0800
++++ linux-2.6.22-rc7/drivers/ide/pci/pdc202xx_new.c	2007-07-03 13:06:40.000000000 +0800
+@@ -306,11 +306,13 @@ static long __devinit read_counter(u32 d
+  */
+ static long __devinit detect_pll_input_clock(unsigned long dma_base)
+ {
++	struct timeval start_time, end_time;
+ 	long start_count, end_count;
+-	long pll_input;
++	long pll_input, usec_elapsed;
+ 	u8 scr1;
+ 
+ 	start_count = read_counter(dma_base);
++	do_gettimeofday(&start_time);
+ 
+ 	/* Start the test mode */
+ 	outb(0x01, dma_base + 0x01);
+@@ -322,6 +324,7 @@ static long __devinit detect_pll_input_c
+ 	mdelay(10);
+ 
+ 	end_count = read_counter(dma_base);
++	do_gettimeofday(&end_time);
+ 
+ 	/* Stop the test mode */
+ 	outb(0x01, dma_base + 0x01);
+@@ -333,7 +336,10 @@ static long __devinit detect_pll_input_c
+ 	 * Calculate the input clock in Hz
+ 	 * (the clock counter is 30 bit wide and counts down)
+ 	 */
+-	pll_input = ((start_count - end_count) & 0x3ffffff) * 100;
++	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
++		(end_time.tv_usec - start_time.tv_usec);
++	pll_input = ((start_count - end_count) & 0x3ffffff) / 10 *
++		(10000000 / usec_elapsed);
+ 
+ 	DBG("start[%ld] end[%ld]\n", start_count, end_count);
+ 
 
-http://www.siliconimage.com/support/supportsearchresults.aspx?pid=26&cid=23&ctid=2&osid=0&
 
-This is what I meant but the latest one is dated 3/30/2006, so yours
-might as well have the latest one already.
-
--- 
-tejun
