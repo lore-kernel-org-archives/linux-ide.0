@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/1] ide: pdc202xx_new PLL input clock fix
-Date: Tue, 3 Jul 2007 20:59:31 +0200
-Message-ID: <200707032059.31826.bzolnier@gmail.com>
-References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <4689DCF5.3040809@tw.ibm.com> <468A5C1A.9060501@ru.mvista.com>
+Subject: Re: [PATCH pata-2.6 fix] hpt366: use correct enablebits for HPT36x
+Date: Tue, 3 Jul 2007 21:06:59 +0200
+Message-ID: <200707032107.00131.bzolnier@gmail.com>
+References: <200706300004.22274.sshtylyov@ru.mvista.com> <20070703162641.GA4302@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -10,39 +10,35 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.171]:28914 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757629AbXGCU0r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 16:26:47 -0400
+	with ESMTP id S1757629AbXGCU0t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 16:26:49 -0400
 Received: by ug-out-1314.google.com with SMTP id j3so170452ugf
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 13:26:46 -0700 (PDT)
-In-Reply-To: <468A5C1A.9060501@ru.mvista.com>
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 13:26:48 -0700 (PDT)
+In-Reply-To: <20070703162641.GA4302@austin.ibm.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: albertl@mail.com, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, michal.kepien@poczta.onet.pl, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 03 July 2007, Sergei Shtylyov wrote:
-> Hello.
+On Tuesday 03 July 2007, Linas Vepstas wrote:
+> Hi,
 > 
-> Albert Lee wrote:
-> > Recently the PLL input clock of Promise 2027x is sometimes detected
-> > higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
->       ^ h
+> On Sat, Jun 30, 2007 at 12:04:22AM +0400, Sergei Shtylyov wrote:
+> > The HPT36x chips finally turned out to have the channel enable bits -- however,
+> > badly implemented.  Make use of them despite it's probably only going to burden
+> > the driver's code -- assuming both channels are always enabled by the HighPoint
+> > BIOS anyway...
+> > 
+> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> > 
+> > ---
+> > Michal, Linas, please verify the patch... :-)
 > 
-> > It seems sometimes the mdelay() function is not as precise as it
-> > used to be. Per Alan's advice, HT or power management might affect
-> > the precision of mdelay().
+> No negative impact for me.
 > 
-> > This patch calls gettimeofday() to mesure the time elapsed and
->                                         ^ a
-> > calculate the PLL input clock accordingly.
+> (Am I supposed to acked-by if I do this kind of review/test?)
 
-typos fixed manually
+added your ACK also for this patch
 
-> > Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> 
->     Except for types in description:
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-added
+Bart
