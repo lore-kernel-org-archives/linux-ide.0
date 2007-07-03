@@ -1,38 +1,35 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
-Date: Tue, 03 Jul 2007 10:07:15 -0400
-Message-ID: <468A5813.4040608@garzik.org>
-References: <20070702163847.GV29122@htj.dyndns.org>
+Subject: Re: [PATCH 2.6.22-rc6] sata_mv: PCI-ID for Adaptec 1430SA SATA	Controller
+Date: Tue, 03 Jul 2007 10:07:22 -0400
+Message-ID: <468A581A.3040509@garzik.org>
+References: <20070630144436.GA13479@master.home> <468906B6.1050700@garzik.org> <20070702150929.GA15731@master.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60186 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60197 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753742AbXGCOHR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 10:07:17 -0400
-In-Reply-To: <20070702163847.GV29122@htj.dyndns.org>
+	id S1753789AbXGCOHY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 10:07:24 -0400
+In-Reply-To: <20070702150929.GA15731@master.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Florian Attenberger <valdyn@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> host->irq and host->irq2 should be set before ata_host_register() for
-> IRQ reporting to work.  Move up host->irq assignment in
-> ata_host_activate() and add it to ata_pci_init_one() native path and
-> pata_cs5520.
+Florian Attenberger wrote:
+> Signed-off-by: Florian Attenberger  <valdyn@gmail.com>
 > 
-> The port info printing in ata_host_register() doesn't fit all the
-> different controllers.  It should probably be moved out to LLDs with
-> some helpers in the future.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |    6 +++---
->  drivers/ata/libata-sff.c  |    5 +++--
->  drivers/ata/pata_cs5520.c |    5 +++++
->  3 files changed, 11 insertions(+), 5 deletions(-)
+> --- 2.6.22-rc6/drivers/ata/sata_mv.c	2007-06-30 16:21:47.462020256 +0200
+> +++ 2.6.22-rc6.mine/drivers/ata/sata_mv.c	2007-06-30 16:25:25.999165444 +0200
+> @@ -582,6 +582,9 @@ static const struct pci_device_id mv_pci
+>  
+>  	{ PCI_VDEVICE(ADAPTEC2, 0x0241), chip_604x },
+>  
+> +	/* Adaptec 1430SA */
+> +	{ PCI_VDEVICE(ADAPTEC2, 0x0243), chip_7042 },
+> +
 
 applied
 
