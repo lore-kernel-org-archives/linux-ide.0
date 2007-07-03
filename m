@@ -1,43 +1,82 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 3 Jul 2007 09:42:56 -0700 (PDT)
-Message-ID: <alpine.LFD.0.98.0707030941280.9434@woody.linux-foundation.org>
-References: <20070703155238.GA7344@havoc.gtf.org> <20070703170734.5a25b9c5@the-village.bc.nu>
- <alpine.LFD.0.98.0707030919391.9434@woody.linux-foundation.org>
- <20070703173429.24b5dbdc@the-village.bc.nu>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [1/2] 2.6.22-rc7: known regressions
+Date: Tue, 03 Jul 2007 18:45:08 +0200
+Message-ID: <468A7D14.1050505@googlemail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52700 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755093AbXGCQnP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 12:43:15 -0400
-In-Reply-To: <20070703173429.24b5dbdc@the-village.bc.nu>
+Received: from ug-out-1314.google.com ([66.249.92.171]:62678 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754536AbXGCQpR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 12:45:17 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so132316ugf
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 09:45:16 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
+
+Hi all,
+
+Here is a list of some known regressions in 2.6.22-rc7.
+
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+List of Aces
+
+Name                    Regressions fixed since 21-Jun-2007
+Hugh Dickins                           2
+Andi Kleen                             1
+Andrew Morton                          1
+Benjamin Herrenschmidt                 1
+Bj=F6rn Steinbrink                       1
+Bjorn Helgaas                          1
+Jean Delvare                           1
+Olaf Hering                            1
+Siddha, Suresh B                       1
+Trent Piepho                           1
+Ville Syrj=E4l=E4                          1
 
 
 
-On Tue, 3 Jul 2007, Alan Cox wrote:
->
-> > attribution. Probably because of some insane system he uses (he has a 
-> > comment in that bugzilla about "patch from comment #14 is in CVS now.".
-> > 
-> > CVS? What kind if insane setup do you have there at Red Hat?
-> 
-> CVS is used for tracking patch sets for RPMS rather than source trees.
-> Its quite good at that job and its reliable and proven and has been done
-> that way for years. When you are keeping a stable distribution for large
-> business end users the "stable and proven" wins over new technology...
+=46S
 
-Yes, but it also explains why it lost all authorship. 
+Subject    : 2.6.22-rc4-git5 reiserfs: null ptr deref.
+References : http://lkml.org/lkml/2007/6/13/322
+Submitter  : Randy Dunlap <randy.dunlap@oracle.com>
+Handled-By : Vladimir V. Saveliev <vs@namesys.com>
+Status     : problem is being debugged
 
-So instead of complaining to Jeff about this, you should look at YOUR OWN 
-damn system. It was apparently your "enterprise ready" stuff, used by 
-another Red Hat engineer, that screwed up.
 
-THAT is my point.
 
-			Linus
+IDE
+
+Subject    : 2.6.22-rcX: hda: lost interrupt
+References : http://lkml.org/lkml/2007/6/29/121
+Submitter  : David Chinner <dgc@sgi.com>
+Status     : unknown
+
+
+
+Sparc64
+
+Subject    : random invalid instruction occourances on sparc32 (sun4c)
+References : http://lkml.org/lkml/2007/6/17/111
+Submitter  : Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Status     : problem is being debugged
+
+Subject    : 2.6.22-rc broke X on Ultra5
+References : http://lkml.org/lkml/2007/5/22/78
+Submitter  : Mikael Pettersson <mikpe@it.uu.se>
+Handled-By : David Miller <davem@davemloft.net>
+Status     : problem is being debugged
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
