@@ -1,45 +1,99 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_promise error handling
-Date: Tue, 03 Jul 2007 15:45:07 +0900
-Message-ID: <4689F073.4070405@gmail.com>
-References: <200706191859.07050.tbaumgartner@swissonline.ch> <loom.20070620T064715-435@post.gmane.org>
+From: 7091@blargh.com
+Subject: sata_sil, writing bug with multiple cards?
+Date: Mon, 02 Jul 2007 23:42:33 -0700
+Message-ID: <courier.4689EFD9.0000589A@blargh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:19221 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbXGCGpS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 02:45:18 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1127762nze
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 23:45:17 -0700 (PDT)
-In-Reply-To: <loom.20070620T064715-435@post.gmane.org>
+Received: from blargh.com ([24.234.115.147]:36273 "EHLO blargh.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753500AbXGCGrh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 02:47:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark <mark@runuo.com>
-Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-Mark wrote:
->> Can I ignore them (EH handled them) or do i have to worry that the dd images 
-> are corrupted
->> (don't wanna make an md5sum of a 250gb disk and image)?
+Greetings, 
 
-Yeah, data should be okay.  All failed commands are retried.
+I have been troubleshooting a problem for over a year now, and to make a
+long story short, I think the sata_sil driver has a bug during writing when
+there are multiple cards that are using different models of SiI chips in the
+system. 
 
-> I get the same errors with my Promise SATA300 TX4 with 3 Samsung SATA II 
-> drives. I've been playing with it for a few days and I couldn't get to work 
-> reliably in anything but 2.6.22-rc5.
-> 
-> Now that I use 2.6.22-rc5, I get those errors for a few minutes then the driver 
-> hard resets and locks at 1.5 Gb/s. It seems reliable after that but I do get 
-> those errors every now and then under heavy I/O.
+I will be watching the list, although cc'ing me over email will be useful
+for speeding up replies. 
 
-That part of code got improved during 2.6.22 devel phase, so that's the
-expected behavior.  It seems that the promise controller has some
-problems when connected to certain 3Gbps drives (IIRC newer Seagate
-ones).  It's most likely a hardware problem and we might need to default
-to 1.5 Gbps on such combinations, but even without such modifications,
-libata EH should do the right thing.
+Longer version:
+I've been having problems with my Linux server corrupting data.  Not just a
+little - it can't copy a 700 meg ISO file and end up with the same checksum
+(and usually corrupts the filesystem in the process). 
 
--- 
-tejun
+Hardware:
+Asus A7N8X-Deluxe motherboard.  This has 2 parallel IDE connectors, each
+with a 40 gig IDE HD hanging off it, and 2 SATA connectors (driven by a SiI
+3112 chip) with (right now) 1 300G SATA HD and 1 250G SATA HD.  All of these
+facts are important. 
+
+On my PCI bus, I have a SiI 3114A card with 3 more 300G SATA HDs.  It should
+be noted that only drives on the PCI card have corruption.  Neither the
+parallel IDE HDs, nor the SATA drives on the motherboard experience the
+problem. I have also tried replacing this card, which did not fix the
+problem.  Also, placing the same drive on the add-on card has corruption,
+the same drive, cable, power, etc. on the motherboard works fine. 
+
+I've already swapped motherboards, CPU, and RAM. 
+
+Booting to a Knoppix 5.1 CD shows the same problems. 
+
+Reading is fine (i.e. I can read the same file 50 times and get the same
+md5sum).  Writing causes the corruption. 
+
+The corruption happens no matter what filesystem I try (ext2, ext3, reiser,
+xfs).  (This does mean I've reformatted, etc. several times, so its not a
+metadata problem) 
+
+This happens with at least 3 different drives (the 300 and the 250,
+different manufacturers), with different SATA data cables, power supplies,
+power cables, etc. 
+
+Now, here's the kicker.  Booting to an OpenBSD kernel, and using one of the
+300G drives off the 3114A card (the one that show corruption under Linux)
+works fine. 
+
+This happens with the Knoppix 5.1 kernel (2.6.19), my own compiled 2.6.20.3,
+and Debian kernel 2.6.18-4-k7. 
+
+More spammy data:
+# lspci
+00:00.0 Host bridge: nVidia Corporation nForce2 AGP (different version?)
+(rev a2)
+00:00.1 RAM memory: nVidia Corporation nForce2 Memory Controller 1 (rev a2)
+00:00.2 RAM memory: nVidia Corporation nForce2 Memory Controller 4 (rev a2)
+00:00.3 RAM memory: nVidia Corporation nForce2 Memory Controller 3 (rev a2)
+00:00.4 RAM memory: nVidia Corporation nForce2 Memory Controller 2 (rev a2)
+00:00.5 RAM memory: nVidia Corporation nForce2 Memory Controller 5 (rev a2)
+00:01.0 ISA bridge: nVidia Corporation nForce2 ISA Bridge (rev a3)
+00:01.1 SMBus: nVidia Corporation nForce2 SMBus (MCP) (rev a2)
+00:02.0 USB Controller: nVidia Corporation nForce2 USB Controller (rev a3)
+00:02.1 USB Controller: nVidia Corporation nForce2 USB Controller (rev a3)
+00:02.2 USB Controller: nVidia Corporation nForce2 USB Controller (rev a3)
+00:04.0 Ethernet controller: nVidia Corporation nForce2 Ethernet Controller
+(rev a1)
+00:08.0 PCI bridge: nVidia Corporation nForce2 External PCI Bridge (rev a3)
+00:09.0 IDE interface: nVidia Corporation nForce2 IDE (rev a2)
+00:0c.0 PCI bridge: nVidia Corporation nForce2 PCI Bridge (rev a3)
+00:1e.0 PCI bridge: nVidia Corporation nForce2 AGP (rev a2)
+01:06.0 VGA compatible controller: Matrox Graphics, Inc. MGA 2164W
+[Millennium II]
+01:07.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8169
+Gigabit Ethernet (rev 10)
+01:09.0 Mass storage controller: Silicon Image, Inc. SiI 3114
+[SATALink/SATARaid] Serial ATA Controller (rev 02)
+01:0b.0 RAID bus controller: Silicon Image, Inc. SiI 3112
+[SATALink/SATARaid] Serial ATA Controller (rev 01)
+02:01.0 Ethernet controller: 3Com Corporation 3C920B-EMB Integrated Fast
+Ethernet Controller [Tornado] (rev 40) 
+
+Any assistance, input, etc. appreciated.  Thanks.
