@@ -1,61 +1,42 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Linux Software RAID is really RAID?
-Date: Tue, 03 Jul 2007 19:08:56 -0400
-Message-ID: <468AD708.2010806@rtr.ca>
-References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>	 <46815C3F.6090204@wasp.net.au> <468A05A4.60006@gmail.com> <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: [1/2] 2.6.22-rc7: known regressions
+Date: Wed, 4 Jul 2007 09:09:02 +1000
+Message-ID: <20070703230902.GH31489@sgi.com>
+References: <468A7D14.1050505@googlemail.com> <200707031950.27162.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4092 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759467AbXGCXI5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 19:08:57 -0400
-In-Reply-To: <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200707031950.27162.bzolnier@gmail.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
 List-Id: linux-ide@vger.kernel.org
-To: Johny Mail list <maillist.johny@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-Johny Mail list wrote:
-> 2007/7/3, Tejun Heo <htejun@gmail.com>:
->> Brad Campbell wrote:
->> > Johny Mail list wrote:
->> >> Hello list,
->> >> I have a little question about software RAID on Linux.
->> >> I have installed Software Raid on all my SC1425 servers DELL by
->> >> believing that the md raid was a strong driver.
->> >> And recently i make some test on a server and try to view if the RAID
->> >> hard drive power failure work fine, so i power up my server and after
->> >> booting and the prompt appear I disconnected the power cable of my
->> >> SATA hard drive. Normaly the MD should eleminate the failure hard
->> >> drive of the logical drive it build, and the server continue to work
->> >> fine like nothing happen. Oddly the server stop to respond and i get
->> >> this messages :
->> >> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->> >> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
->> >>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
->> (timeout)
->> >> ata4: port is slow to respond, please be patient (Status 0xd0)
->> >> ata4: port failed to respond (30sec, Status 0xd0)
->> >> ata4: soft resetting port
->> >>
->> >> After that my system is frozen.
->>
->> How hard is it frozen?  Can you blink the Numlock LED?
+On Tue, Jul 03, 2007 at 07:50:26PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> On Tuesday 03 July 2007, Michal Piotrowski wrote:
+> 
+> > IDE
+> > 
+> > Subject    : 2.6.22-rcX: hda: lost interrupt
+> > References : http://lkml.org/lkml/2007/6/29/121
+> > Submitter  : David Chinner <dgc@sgi.com>
+> > Status     : unknown
+> 
+> David, any news on this one?
+> 
+> Have you tried libata as suggested by Jeff?
 
-I believe he said it was ICH5 (different post/thread).
+Not yet - I've been flat out and haven't got back to it yet.
+I'll try to get to it today.
 
-My observation on ICH5 is that if one unplugs a drive,
-then the chipset/cpu locks up hard when toggling SRST
-in the EH code.
+Cheers,
 
-Specifically, it locks up at the instruction
-which restores SRST back to the non-asserted state,
-which likely corresponds to the chipset finally actually
-sending a FIS to the drive.
-
-A hard(ware) lockup, not software.
-That's why Intel says ICH5 doesn't do hotplug.
-
-Cheers
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
