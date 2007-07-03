@@ -1,85 +1,47 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: how to handle pata_via when controller not in fully-pci-native
- mode (two irqs?)
-Date: Tue, 03 Jul 2007 09:11:12 +0100
-Message-ID: <468A04A0.1020003@genesi-usa.com>
-References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com> <20070623105344.3ece6db1@the-village.bc.nu> <467CF1E6.8000905@genesi-usa.com> <4689FBCB.90608@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Linux Software RAID is really RAID?
+Date: Tue, 03 Jul 2007 17:15:32 +0900
+Message-ID: <468A05A4.60006@gmail.com>
+References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com> <46815C3F.6090204@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:4879 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862AbXGCIKn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 04:10:43 -0400
-In-Reply-To: <4689FBCB.90608@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.182]:20117 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755248AbXGCIQz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 04:16:55 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2666215wah
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 01:16:55 -0700 (PDT)
+In-Reply-To: <46815C3F.6090204@wasp.net.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Brad Campbell <brad@wasp.net.au>
+Cc: Johny Mail list <maillist.johny@gmail.com>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-
-Tejun Heo wrote:
-> Matt Sealey wrote:
->> I'm a litle confused here.
+Brad Campbell wrote:
+> Johny Mail list wrote:
+>> Hello list,
+>> I have a little question about software RAID on Linux.
+>> I have installed Software Raid on all my SC1425 servers DELL by
+>> believing that the md raid was a strong driver.
+>> And recently i make some test on a server and try to view if the RAID
+>> hard drive power failure work fine, so i power up my server and after
+>> booting and the prompt appear I disconnected the power cable of my
+>> SATA hard drive. Normaly the MD should eleminate the failure hard
+>> drive of the logical drive it build, and the server continue to work
+>> fine like nothing happen. Oddly the server stop to respond and i get
+>> this messages :
+>> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+>>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>> ata4: port is slow to respond, please be patient (Status 0xd0)
+>> ata4: port failed to respond (30sec, Status 0xd0)
+>> ata4: soft resetting port
 >>
->> Page 10 (4.2.1) so I just mask off bit 0 and bit 2 of the class prog-if byte and set
->> it to "compatible" mode which will basically mean PCI mapped registers and
->> two IRQs? This corresponds with the table on Page 7 (4.2.1.1)..
->>
->> Checked the Pegasos IDE class code and in the firmware it's set to 0x1018F so, I
->> would assume the correct value is 0x1018A (knocking out the "native mode").
->>
->> Okay! Great. This looks easy. Just gotta decode PCI addresses in Forth now..
-> 
-> I think I wrote this in the bugzilla entry but my memory is fuzzy as
-> always, so I'll repeat it here.  If you turn off the native bits,
-> libata-sff will use ATA_PRIMARY_CMD and its friends to determine IO
-> ports and ATA_PRIMARY_IRQ and friends to determine IRQs.  PCI BAR is
-> only used to determine IO ports for BMDMA register.
-> 
-> ie. The legacy mode means "there's no standard way to configure the damn
-> thing.  Just believe what the arch code says.  However, BMDMA is
-> introduced after PCI so let's use PCI BAR for it."  So, if you're gonna
-> make the controller legacy (which I think is the correct way), don't
-> forget to update those arch macros.
+>> After that my system is frozen.
 
-So we actually have to fix up some platform support for it? That's not very
-nice.
-
-We can't make the controller TRULY legacy since there is not any good way
-of mapping the IDE/BMDMA registers into the lower kilobyte or so of
-memory - obviously PPC has no "io address space", it's all memory mapped,
-so the lower kilobyte of "IO ports" is really the CPU zero page. It's not
-a good idea to be poking around just there and we never intended that to work.
-
-However the VT8231 (and probably all the Via chips) do happily operate in
-"native PCI mode" with the line register reporting 14 or 10, and IRQ steering
-still set to two IRQs (10/11 or 14/15 or some combination). You might
-consider this an ATA specification violation or a chipset bug, but it
-does in fact work.. my original patch handled it as a quirk (it is a
-quirk, a very strange way of operating..) - isn't there a way we can get
-the same kind of quirky fix in libata or are we being super-clean about
-it?
-
-The patch I made for the old IDE driver looks to be a clumsy version of
-what some of libata-sff does in ata_pci_init_one and ata_pci_probe_ent
-and maybe a little bit of ata_pci_init_native_mode.
-
-Is it possible to perhaps replace ata_pci_init_one with a custom
-function which handles this (in pata_via.c) quirky behaviour and
-#ifdef it out with a Kconfig variable? CONFIG_ATA_VIA_HALFNATIVE_QUIRK
-or something? I think that would be best. Everyone can ignore it
-and distributions building for Pegasos can enable it.. but I think
-"fixing" IDE chipset quirks by reconfiguring the chipset in some
-platform support code is the wrong place. It either needs to be
-set up properly in firmware (breaking ide/via82cxxx.c in the process
-and therefore any old kernels anyone is running. We don't want to
-impose a kernel upgrade with our firmware upgrades..) or fixed
-in the IDE driver (libata and it's drivers are eminently updatable
-by unloading modules, whereas platform support is a reboot job..)
+How hard is it frozen?  Can you blink the Numlock LED?
 
 -- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+tejun
