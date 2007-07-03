@@ -1,47 +1,37 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Linux Software RAID is really RAID?
-Date: Tue, 03 Jul 2007 17:15:32 +0900
-Message-ID: <468A05A4.60006@gmail.com>
-References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com> <46815C3F.6090204@wasp.net.au>
+Subject: Re: Some NCQ numbers...
+Date: Tue, 03 Jul 2007 17:19:44 +0900
+Message-ID: <468A06A0.1020802@gmail.com>
+References: <468392CE.6010206@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:20117 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755248AbXGCIQz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 04:16:55 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2666215wah
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 01:16:55 -0700 (PDT)
-In-Reply-To: <46815C3F.6090204@wasp.net.au>
+Received: from py-out-1112.google.com ([64.233.166.176]:57274 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128AbXGCIVE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 04:21:04 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3090937pyb
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 01:21:03 -0700 (PDT)
+In-Reply-To: <468392CE.6010206@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Johny Mail list <maillist.johny@gmail.com>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Brad Campbell wrote:
-> Johny Mail list wrote:
->> Hello list,
->> I have a little question about software RAID on Linux.
->> I have installed Software Raid on all my SC1425 servers DELL by
->> believing that the md raid was a strong driver.
->> And recently i make some test on a server and try to view if the RAID
->> hard drive power failure work fine, so i power up my server and after
->> booting and the prompt appear I disconnected the power cable of my
->> SATA hard drive. Normaly the MD should eleminate the failure hard
->> drive of the logical drive it build, and the server continue to work
->> fine like nothing happen. Oddly the server stop to respond and i get
->> this messages :
->> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
->>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->> ata4: port is slow to respond, please be patient (Status 0xd0)
->> ata4: port failed to respond (30sec, Status 0xd0)
->> ata4: soft resetting port
->>
->> After that my system is frozen.
+Michael Tokarev wrote:
+> [Offtopic notice: For the first time I demonstrated some
+> speed testing results on linux-ide mailinglist, as a
+> demonstration how [NT]CQ can help.  But later, someone
+> becomes curious and posted that email to lkml, asking
+> for more details.  Since that, I become more curious
+> as well, and decided to look at it more closely.
+> Here it goes...]
+> 
+> A test drive is Seagate Barracuda ST3250620AS "desktop" drive,
+> 250Gb, cache size is 16Mb, 7200RPM.
 
-How hard is it frozen?  Can you blink the Numlock LED?
+And which elevator?
 
 -- 
 tejun
