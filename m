@@ -1,32 +1,34 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/1] ide: pdc202xx_new PLL input clock fix
-Date: Wed, 04 Jul 2007 00:36:34 +0400
-Message-ID: <468AB352.4090505@ru.mvista.com>
-References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <4689DCF5.3040809@tw.ibm.com> <468A5C1A.9060501@ru.mvista.com> <200707032059.31826.bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
+Date: Wed, 04 Jul 2007 00:41:06 +0400
+Message-ID: <468AB462.4090203@ru.mvista.com>
+References: <20070703161002.1576c39d@the-village.bc.nu> <200707031938.20956.bzolnier@gmail.com> <20070703185652.0b807fcc@the-village.bc.nu> <200707032212.01619.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [63.81.120.155] ([63.81.120.155]:25983 "EHLO imap.sh.mvista.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756425AbXGCUex (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 16:34:53 -0400
-In-Reply-To: <200707032059.31826.bzolnier@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:26002 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757088AbXGCUjZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 16:39:25 -0400
+In-Reply-To: <200707032212.01619.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: albertl@mail.com, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+
+Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> typos fixed manually
+> http://www.linuxhq.com/kernel/v2.3/10/drivers/block/hpt343.c
 
->>>Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> Does anybody have DOS driver for HPT343?  Google doesn't have it...
 
->>    Except for types in description:
+    I have the drivers for HPT34[35] -- tried dissassembling them some years 
+ago...
 
-    Said he, while making his own typo. :-)
-
->>Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Thanks,
+> Bart
 
 MBR, Sergei
