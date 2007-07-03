@@ -1,42 +1,55 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [1/2] 2.6.22-rc7: known regressions
-Date: Wed, 4 Jul 2007 09:09:02 +1000
-Message-ID: <20070703230902.GH31489@sgi.com>
-References: <468A7D14.1050505@googlemail.com> <200707031950.27162.bzolnier@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: BIOS does not recognize 500GB-disk
+Date: Tue, 3 Jul 2007 19:21:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0707031920570.2577@p34.internal.lan>
+References: <20070703225517.GA22912@danisch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200707031950.27162.bzolnier@gmail.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lucidpixels.com ([75.144.35.66]:43781 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761076AbXGCXVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 19:21:18 -0400
+In-Reply-To: <20070703225517.GA22912@danisch.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hadmut Danisch <hadmut@danisch.de>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Jul 03, 2007 at 07:50:26PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
+
+
+On Wed, 4 Jul 2007, Hadmut Danisch wrote:
+
 > Hi,
-> 
-> On Tuesday 03 July 2007, Michal Piotrowski wrote:
-> 
-> > IDE
-> > 
-> > Subject    : 2.6.22-rcX: hda: lost interrupt
-> > References : http://lkml.org/lkml/2007/6/29/121
-> > Submitter  : David Chinner <dgc@sgi.com>
-> > Status     : unknown
-> 
-> David, any news on this one?
-> 
-> Have you tried libata as suggested by Jeff?
+>
+> just a question:
+>
+> I have an older computer with a ASRock K7VT4A Pro mainboard and a VIA sata
+> controller.
+>
+> A 320GB Seagate SATA disk worked pretty well with that board, but now I replaced
+> it with a 500GB Western Digital SATA, and the BIOS does not recognize that
+> new disk, allthough I've updated the BIOS to the latest available version.
+> The disk is not available under Linux (latest Ubuntu, 2.6.20).
+>
+> I guess it is a BIOS problem, since the disk works in a different, newer
+> machine with a newer mainboard.
+>
+> Is there any way to have Linux to ignore the BIOS and to access that disk
+> even if the BIOS didn't recognize it?
+>
+> regards
+> Hadmut
+>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Not yet - I've been flat out and haven't got back to it yet.
-I'll try to get to it today.
+Turn off NCQ on the drive, limit to 1.5GBps operation, try again, I have 
+the same issue with a new RAPTOR (NCQ) and old motherboard.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+Justin.
