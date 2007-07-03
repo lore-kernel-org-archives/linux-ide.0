@@ -1,237 +1,108 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
-Date: Tue, 3 Jul 2007 19:38:20 +0200
-Message-ID: <200707031938.20956.bzolnier@gmail.com>
-References: <20070703161002.1576c39d@the-village.bc.nu>
+From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Subject: Sparc32: random invalid instruction occourances on sparc32 (sun4c)
+Date: Tue, 3 Jul 2007 18:29:58 +0100 (BST)
+Message-ID: <Pine.LNX.4.61.0707031817050.29930@mtfhpc.demon.co.uk>
+References: <468A7D14.1050505@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756215AbXGCRW3@vger.kernel.org>
-In-Reply-To: <20070703161002.1576c39d@the-village.bc.nu>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="1750305931-300674694-1183483798=:29930"
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <468A7D14.1050505@googlemail.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, linux-mm@kvack.org, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, William Lee Irwin III <wli@holomorphy.com>
 List-Id: linux-ide@vger.kernel.org
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hi,
+--1750305931-300674694-1183483798=:29930
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-On Tuesday 03 July 2007, Alan Cox wrote:
-> The HPT343/345 (aka 363) is a bit of a warped device. For many setups you
-> need to access the other registers via BAR4 offsets. PIO is now rock
+Hi all,
 
-If you happen to have HPT363 you may want to check how BIOS does the DMA
-configuration.  I wouldn't be surprised if it turns out that _both_ drivers
-do it wrongly currently.
+I think I have found the cause of the problem.
 
-> solid, DMA isn't. Unfortunately the drivers/ide hpt34x driver is
-> completely broken so doesn't help further debug.
+Commit b46b8f19c9cd435ecac4d9d12b39d78c137ecd66 partially fixed alignment=
+=20
+issues but does not ensure that all 64bit alignment requirements of=20
+sparc32 are met. Tests have shown that the redzone2 word can become=20
+misallignd.
 
-Translation:
+I am currently working on a posible fix.
 
-The new improved driver is not really better than the old one because
-the old one is broken. :)
+Regards
+ =09Mark Fortescue.
 
-Old driver does identical configuration when it comes to PIO modes.
+On Tue, 3 Jul 2007, Michal Piotrowski wrote:
 
-For DMA modes it seem to have bug in setting DMA transfer type bits but DMA
-is _never_ enabled unless CONFIG_HPT34X_AUTODMA is set and this config option
-is marked EXPERIMENTAL with the help entry stating that enabling DMA is a
-dangerous thing to do.
-
-Old driver is a source of PCI quirk which is now propagated to the new driver.
-
-Thanks,
-Bart
-
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_hpt3x3.c linux-2.6.22-rc6-mm1/drivers/ata/pata_hpt3x3.c
-> --- linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_hpt3x3.c	2007-07-02 20:50:11.000000000 +0100
-> +++ linux-2.6.22-rc6-mm1/drivers/ata/pata_hpt3x3.c	2007-07-02 21:03:32.000000000 +0100
-> @@ -23,7 +23,7 @@
->  #include <linux/libata.h>
->  
->  #define DRV_NAME	"pata_hpt3x3"
-> -#define DRV_VERSION	"0.4.3"
-> +#define DRV_VERSION	"0.5.3"
->  
->  /**
->   *	hpt3x3_set_piomode		-	PIO setup
-> @@ -59,6 +59,9 @@
->   *
->   *	Set up the channel for MWDMA or UDMA modes. Much the same as with
->   *	PIO, load the mode number and then set MWDMA or UDMA flag.
-> + *
-> + *	0x44 : bit 0-2 master mode, 3-5 slave mode, etc 
-> + *	0x48 : bit 4/0 DMA/UDMA bit 5/1 for slave etc
->   */
->  
->  static void hpt3x3_set_dmamode(struct ata_port *ap, struct ata_device *adev)
-> @@ -76,14 +79,26 @@
->  	r2 &= ~(0x11 << dn);	/* Clear MWDMA and UDMA bits */
->  
->  	if (adev->dma_mode >= XFER_UDMA_0)
-> -		r2 |= 0x01 << dn;	/* Ultra mode */
-> +		r2 |= (0x10 << dn);	/* Ultra mode */
->  	else
-> -		r2 |= 0x10 << dn;	/* MWDMA */
-> +		r2 |= (0x01 << dn);	/* MWDMA */
->  
->  	pci_write_config_dword(pdev, 0x44, r1);
->  	pci_write_config_dword(pdev, 0x48, r2);
->  }
->  
-> +/**
-> + *	hpt3x3_atapi_dma	-	ATAPI DMA check
-> + *	@qc: Queued command
-> + *
-> + *	Just say no - we don't do ATAPI DMA
-> + */
-> +
-> +static int hpt3x3_atapi_dma(struct ata_queued_cmd *qc)
-> +{
-> +	return 1;
-> +}
-> +
->  static struct scsi_host_template hpt3x3_sht = {
->  	.module			= THIS_MODULE,
->  	.name			= DRV_NAME,
-> @@ -105,7 +120,6 @@
->  static struct ata_port_operations hpt3x3_port_ops = {
->  	.port_disable	= ata_port_disable,
->  	.set_piomode	= hpt3x3_set_piomode,
-> -	.set_dmamode	= hpt3x3_set_dmamode,
->  	.mode_filter	= ata_pci_default_filter,
->  
->  	.tf_load	= ata_tf_load,
-> @@ -124,8 +138,9 @@
->  	.bmdma_start 	= ata_bmdma_start,
->  	.bmdma_stop	= ata_bmdma_stop,
->  	.bmdma_status 	= ata_bmdma_status,
-> +	.check_atapi_dma= hpt3x3_atapi_dma,
->  
-> -	.qc_prep 	= ata_qc_prep,
-> +	.qc_prep 	= ata_qc_prep,
->  	.qc_issue	= ata_qc_issue_prot,
->  
->  	.data_xfer	= ata_data_xfer,
-> @@ -158,32 +173,79 @@
->  		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x20);
->  }
->  
+> Hi all,
+>
+> Here is a list of some known regressions in 2.6.22-rc7.
+>
+> Feel free to add new regressions/remove fixed etc.
+> http://kernelnewbies.org/known_regressions
+>
+> List of Aces
+>
+> Name                    Regressions fixed since 21-Jun-2007
+> Hugh Dickins                           2
+> Andi Kleen                             1
+> Andrew Morton                          1
+> Benjamin Herrenschmidt                 1
+> Bj=F6rn Steinbrink                       1
+> Bjorn Helgaas                          1
+> Jean Delvare                           1
+> Olaf Hering                            1
+> Siddha, Suresh B                       1
+> Trent Piepho                           1
+> Ville Syrj=E4l=E4                          1
+>
+>
+>
+> FS
+>
+> Subject    : 2.6.22-rc4-git5 reiserfs: null ptr deref.
+> References : http://lkml.org/lkml/2007/6/13/322
+> Submitter  : Randy Dunlap <randy.dunlap@oracle.com>
+> Handled-By : Vladimir V. Saveliev <vs@namesys.com>
+> Status     : problem is being debugged
+>
+>
+>
+> IDE
+>
+> Subject    : 2.6.22-rcX: hda: lost interrupt
+> References : http://lkml.org/lkml/2007/6/29/121
+> Submitter  : David Chinner <dgc@sgi.com>
+> Status     : unknown
+>
+>
+>
+> Sparc64
+>
+> Subject    : random invalid instruction occourances on sparc32 (sun4c)
+> References : http://lkml.org/lkml/2007/6/17/111
+> Submitter  : Mark Fortescue <mark@mtfhpc.demon.co.uk>
+> Status     : problem is being debugged
+>
+> Subject    : 2.6.22-rc broke X on Ultra5
+> References : http://lkml.org/lkml/2007/5/22/78
+> Submitter  : Mikael Pettersson <mikpe@it.uu.se>
+> Handled-By : David Miller <davem@davemloft.net>
+> Status     : problem is being debugged
+>
+>
+>
+> Regards,
+> Michal
+>
+> --
+> LOG
+> http://www.stardust.webpages.pl/log/
 > -
->  /**
->   *	hpt3x3_init_one		-	Initialise an HPT343/363
-> - *	@dev: PCI device
-> + *	@pdev: PCI device
->   *	@id: Entry in match table
->   *
-> - *	Perform basic initialisation. The chip has a quirk that it won't
-> - *	function unless it is at XX00. The old ATA driver touched this up
-> - *	but we leave it for pci quirks to do properly.
-> + *	Perform basic initialisation. We set the device up so we access all
-> + *	ports via BAR4. This is neccessary to work around errata.
->   */
->  
-> -static int hpt3x3_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-> +static int hpt3x3_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
->  {
-> +	static int printed_version;
->  	static const struct ata_port_info info = {
->  		.sht = &hpt3x3_sht,
->  		.flags = ATA_FLAG_SLAVE_POSS,
->  		.pio_mask = 0x1f,
-> +#if defined(CONFIG_PATA_HPT3X3_DMA)
-> +		/* Further debug needed */		
->  		.mwdma_mask = 0x07,
->  		.udma_mask = 0x07,
-> +#endif		
->  		.port_ops = &hpt3x3_port_ops
->  	};
-> +	/* Register offsets of taskfiles in BAR4 area */
-> +	static const u8 offset_cmd[2] = { 0x20, 0x28 };
-> +	static const u8 offset_ctl[2] = { 0x36, 0x3E };
->  	const struct ata_port_info *ppi[] = { &info, NULL };
-> -
-> -	hpt3x3_init_chipset(dev);
-> -	/* Now kick off ATA set up */
-> -	return ata_pci_init_one(dev, ppi);
-> +	struct ata_host *host;
-> +	int i, rc;
-> +	void __iomem *base;
-> +
-> +	hpt3x3_init_chipset(pdev);
-> +
-> +	if (!printed_version++)
-> +		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-> +
-> +	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
-> +	if (!host)
-> +		return -ENOMEM;
-> +	/* acquire resources and fill host */
-> +	rc = pcim_enable_device(pdev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	/* Everything is relative to BAR4 if we set up this way */
-> +	rc = pcim_iomap_regions(pdev, 1 << 4, DRV_NAME);
-> +	if (rc == -EBUSY)
-> +		pcim_pin_device(pdev);
-> +	if (rc)
-> +		return rc;
-> +	host->iomap = pcim_iomap_table(pdev);
-> +	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
-> +	if (rc)
-> +		return rc;
-> +	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
-> +	if (rc)
-> +		return rc;
-> +
-> +	base = host->iomap[4];	/* Bus mastering base */
-> +
-> +	for (i = 0; i < host->n_ports; i++) {
-> +		struct ata_ioports *ioaddr = &host->ports[i]->ioaddr;
-> +
-> +		ioaddr->cmd_addr = base + offset_cmd[i];
-> +		ioaddr->altstatus_addr =
-> +		ioaddr->ctl_addr = base + offset_ctl[i];
-> +		ioaddr->scr_addr = NULL;
-> +		ata_std_ports(ioaddr);
-> +		ioaddr->bmdma_addr = base + 8 * i;
-> +	}
-> +	pci_set_master(pdev);
-> +	return ata_host_activate(host, pdev->irq, ata_interrupt, IRQF_SHARED,
-> +				 &hpt3x3_sht);
->  }
->  
->  #ifdef CONFIG_PM
-> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.22-rc6-mm1/drivers/ata/Kconfig linux-2.6.22-rc6-mm1/drivers/ata/Kconfig
-> --- linux.vanilla-2.6.22-rc6-mm1/drivers/ata/Kconfig	2007-07-02 20:50:11.000000000 +0100
-> +++ linux-2.6.22-rc6-mm1/drivers/ata/Kconfig	2007-07-02 21:02:10.000000000 +0100
-> @@ -313,7 +313,7 @@
->  	  If unsure, say N.
->  
->  config PATA_HPT3X3
-> -	tristate "HPT 343/363 PATA support (Experimental)"
-> +	tristate "HPT 343/363 PATA support"
->  	depends on PCI
->  	help
->  	  This option enables support for the HPT 343/363
-> @@ -321,6 +321,14 @@
->  
->  	  If unsure, say N.
->  
-> +config PATA_HPT3X3_DMA
-> +	bool "HPT 343/363 DMA support (Experimental)"
-> +	depends on PATA_HPT3X3
-> +	help
-> +	  This option enables DMA support for the HPT343/363
-> +	  controllers. Enable with care as there are still some
-> +	  problems with DMA on this chipset.
-> +
->  config PATA_ISAPNP
->  	tristate "ISA Plug and Play PATA support (Experimental)"
->  	depends on EXPERIMENTAL && ISAPNP
+> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+--1750305931-300674694-1183483798=:29930--
