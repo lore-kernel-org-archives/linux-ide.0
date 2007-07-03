@@ -1,123 +1,163 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 9/15] ide: add PIO masks
-Date: Tue, 03 Jul 2007 21:40:14 +0400
-Message-ID: <468A89FE.1040806@ru.mvista.com>
-References: <200706302107.42458.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Libata PATA status
+Date: Tue, 3 Jul 2007 18:51:16 +0100
+Message-ID: <20070703185116.59c8f5f5@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:25167 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754457AbXGCRid (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 13:38:33 -0400
-In-Reply-To: <200706302107.42458.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57094 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754913AbXGCRpH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 13:45:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
 
-Hello.
+Libata General with respect to PATA
+====================================
 
-Bartlomiej Zolnierkiewicz wrote:
+Wrong port and IRQ reporting - IRQ now fixed by Tejun, port reporting
+fixes sent to Andrew. All these are cosmetic and don't harm debug.
 
-> * Add ATA_PIO[0-6] defines to <linux/ata.h>.
+Still can't user set drive speed or user issue commands at a given speed.
+Needed to allow users to bump cable rules, fix strange stuff and for some
+emulated chips to issue RAID control ATA packets in PIO0 (no I've no idea
+why they only work in PIO0 ;)).
 
-> * Add ->pio_mask field to ide_pci_device_t and ide_hwif_t.
+No serialization of channel pairs.
 
-> * Add PIO masks to host drivers.
+PATA General
+============
 
-    Hm, the next logical step would be to use the mask constants in
-<linux/ata.h> for the drivers' DMA caps too...
+Current kernels now support HPA (Host Protected Area) but default to
+honouring it. Probably a wrong default for PATA but we need to decide the
+right way to expose it nicely.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cable detection should now be sane. Still issues with SATA bridges. Some
+test hacks in my code base but nothing for upstream yet.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+My tree has global DMA control aka ide=nodma. Need to decide the best way
+to push a version of this.
 
-> Index: b/drivers/ide/pci/it8213.c
-> ===================================================================
-> --- a/drivers/ide/pci/it8213.c
-> +++ b/drivers/ide/pci/it8213.c
-> @@ -276,6 +276,7 @@ static void __devinit init_hwif_it8213(i
->  		.enablebits	= {{0x41,0x80,0x80}}, \
->  		.bootable	= ON_BOARD,		\
->  		.host_flags	= IDE_HFLAG_SINGLE,	\
-> +		.pio_mask	= ATA_PIO4,		\
->  	}
->  
->  static ide_pci_device_t it8213_chipsets[] __devinitdata = {
-[...]
-> Index: b/drivers/ide/pci/piix.c
-> ===================================================================
-> --- a/drivers/ide/pci/piix.c
-> +++ b/drivers/ide/pci/piix.c
-> @@ -498,6 +498,7 @@ static void __devinit init_hwif_piix(ide
->  		.autodma	= AUTODMA,		\
->  		.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}}, \
->  		.bootable	= ON_BOARD,		\
-> +		.pio_mask	= ATA_PIO4,		\
->  		.udma_mask	= udma,			\
->  	}
->  
-> @@ -517,6 +518,7 @@ static ide_pci_device_t piix_pci_info[] 
->  		.enablebits	= {{0x6d,0xc0,0x80}, {0x6d,0xc0,0xc0}},
->  		.bootable	= ON_BOARD,
->  		.host_flags	= IDE_HFLAG_ISA_PORTS,
-> +		.pio_mask	= ATA_PIO4,
->  	},
->  
->  	/*  3 */ DECLARE_PIIX_DEV("PIIX3", 0x00),	/* no udma */
-[...]
-> Index: b/drivers/ide/pci/slc90e66.c
-> ===================================================================
-> --- a/drivers/ide/pci/slc90e66.c
-> +++ b/drivers/ide/pci/slc90e66.c
-> @@ -217,6 +217,7 @@ static ide_pci_device_t slc90e66_chipset
->  	.autodma	= AUTODMA,
->  	.enablebits	= {{0x41,0x80,0x80}, {0x43,0x80,0x80}},
->  	.bootable	= ON_BOARD,
-> +	.pio_mask	= ATA_PIO4,
->  };
->
->  static int __devinit slc90e66_init_one(struct pci_dev *dev, const struct 
-pci_device_id *id)
+Ancient non IORDY capable devices need patches still in my devel tree
 
-    Strictly speaking, these Intel/SMsC/ITE chips don't support PIO mode 1,
-only modes 0 and 2 thru 4 but the drivers are just using PIO0 timings for PIO1...
+Post SRST we need to decide what to do about mode setting - do we put the
+controller in PIO0 specifically ? My tree does and this seems to help on
+non PC systems.
 
-> Index: b/drivers/ide/pci/scc_pata.c
-> ===================================================================
-> --- a/drivers/ide/pci/scc_pata.c
-> +++ b/drivers/ide/pci/scc_pata.c
-> @@ -734,6 +734,7 @@ static void __devinit init_hwif_scc(ide_
->        .autodma	= AUTODMA,				\
->        .bootable	= ON_BOARD,				\
->        .host_flags	= IDE_HFLAG_SINGLE,		\
-> +      .pio_mask		= ATA_PIO4,			\
+No PATA hotplug support yet. Need warmplug helpers for some chipsets (eg
+some intel ICH) to avoid risk of hangs.
 
-    Erm, formatting nit: leading spaces () and contrarywise, space ISO tab
-after field name wouldn't have caught an eye. B-)
-    Well, I see that the style is borken all over the macros, no forget about
-spaces...
 
->    }
->  
->  static ide_pci_device_t scc_chipsets[] __devinitdata = {
-> Index: b/drivers/ide/pci/sgiioc4.c
-> ===================================================================
-> --- a/drivers/ide/pci/sgiioc4.c
-> +++ b/drivers/ide/pci/sgiioc4.c
-> @@ -586,6 +586,7 @@ ide_init_sgiioc4(ide_hwif_t * hwif)
->  	hwif->ultra_mask = 0x0;	/* Disable Ultra DMA */
->  	hwif->mwdma_mask = 0x2;	/* Multimode-2 DMA  */
->  	hwif->swdma_mask = 0x2;
-> +	hwif->pio_mask = 0x00;
-
-    "I don't believe!" :-D Should be at least supporting PIO0. ;-)
-
->  	hwif->tuneproc = NULL;	/* Sets timing for PIO mode */
-
-    ... but it won't matter anyway due to missing tuneproc() method.
-
-MBR, Sergei
-
+Chipsets
+========
+PIIX
+	Tejun should have the MWDMA bugs fixed otherwise so far so good.
+	Mostly maintained by other people.
+ACPI
+	Driver needs a rewrite based upon what has been learned about the
+	BIOS handling of the ACPI methods. On the TODO list
+ALI
+	2.6.22rc7 fixed the last known non-atapi bug. Stil some ATAPI
+	problem reports unresolved
+AMD
+	Solid. ACPI tweaks in my tree for Nvidia cable detect and pushed
+	to -mm. Target for 2.6.23
+ARTOP
+	No reports, but nobody appears to be using one
+ATIIXP
+	Rock solid. For SATA side use AHCI
+CMD640
+	Seems to work but still little testing
+CMD64X
+	Tested on x86, needs more Sparc/Alpha feedback
+CS5520
+	Solid for PIO. No virtual DMA support (and none likely unless its
+	contributed)
+CS5530
+	Obscure hang bug fix just sent to -mm tree but not observed in
+	real world use. Otherwise stable
+CS5535
+	No reports
+CYPRESS
+	Needs someone with an ancient Alpha. May drop entirely
+EFAR
+	Seems solid. Needs some PIIX updates cross checking for EFAR
+	relevance. Low priority
+GENERIC
+	Fix for "DMA set up but not used" bug in -git
+HPT366
+	Seems to be solid. Needs a backport of the chip detect changes
+	Sergei just finished for old IDE. Low priority no real impact from
+	their lack
+HPT37X
+	Working but some further work required to get it behaving on all
+	combinations
+HPT3X2N
+	Still has problems on some systems. Tracking the work being done
+	in old-ide which seems to behave similarly
+HPT3X3
+	Solid PIO support sent to -mm. DMA is problematic. Doesn't work
+	with old IDE at all so not too problematic. Doesn't work in
+	base kernel
+ISAPNP
+	Seems to work, no bug reports but not many users
+IT8212
+	Multiple fixes, should now be stable in RAID and Pass-through
+	modes thanks to driver fixes and core fixes from Tejun
+IT8213
+	No idea
+JMICRON
+	Works reliably. No recent changes
+LEGACY
+	Works ok. Complete rewrite in progress to clean up all the
+	pre-PCI support
+TRIFLEX
+	Solid, no recent changes.
+MARVELL
+	Solid, will be replaced by PATA AHCI-like support in time
+	(but not by me)
+MPIIX
+	Solid, no recent changes
+OLDPIIX
+	Solid, no recent changes
+NETCELL
+	Solid, no recent changes
+NS87410
+	Still experimental, almost no users
+OPTIPIO
+	Very much experimental but seems to work
+OPTIDMA
+	Very much experimental, but seems to work. Only one user known
+	however
+PCMCIA
+	Works reliably. Some problems with IRQ routing on some CF cards
+	that seem to be card related. Works on systems with no DMA API
+	support as of patches sent to -mm
+PDC_OLD
+	2.6.22-git has cable detection bug fixed
+QDI
+	Works, will be folded into LEGACY rewrite
+RADISYS
+	Very experimental, no changes, low priority
+RZ1000
+	Solid, works, no changes
+SC1200
+	Single channel only still. Needs work for dual channel
+	-mm has fix for a DMA hang bug
+SERVERWORKS
+	Solid, no changes of note
+SIL680
+	Solid, no recent changes
+SIS
+	Current tree fixes crash on boot some users reported, code
+	cleanups, no other major changes for pure PATA devices
+VIA
+	Solid. Sent acpi patch for -mm to try and fix the one remaining
+	mystery "how to spot VIA with onboard SATA bridges properly. If
+	you've got a VIA board with SATA ports that appear as PATA
+	channels please drop me an email as I'd like to get more info
+	on what is affected.
+WINBOND
+	No changes, still experimental
