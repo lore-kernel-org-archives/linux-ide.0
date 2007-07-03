@@ -1,31 +1,42 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: pata_ali patch not merged?
-Date: Tue, 03 Jul 2007 16:47:33 +0900
-Message-ID: <4689FF15.2050003@gmail.com>
-References: <46804C1C.9010900@redhat.com>
+Subject: Re: Failed to IDENTIFY SATA harddrive on sata_sil24
+Date: Tue, 03 Jul 2007 16:52:17 +0900
+Message-ID: <468A0031.3040709@gmail.com>
+References: <6a3d41200706270814o7675909dtbdafe4a4fa68943c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:45983 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754658AbXGCHsy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 03:48:54 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1140255nze
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 00:48:54 -0700 (PDT)
-In-Reply-To: <46804C1C.9010900@redhat.com>
+Received: from wa-out-1112.google.com ([209.85.146.180]:41376 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016AbXGCHxg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 03:53:36 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2660356wah
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 00:53:35 -0700 (PDT)
+In-Reply-To: <6a3d41200706270814o7675909dtbdafe4a4fa68943c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>, Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>
+To: Thomas Tsai <bthomas.tsai@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Chuck Ebbert wrote:
-> This patch was found to fix some of the problems with the
-> pata_ali driver. Is it going to be merged in 2.6.22?
+Thomas Tsai wrote:
+> Hi,
 > 
-> [https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=156482]
+> Does anyone familiar with SiliconImage 3132 SATA controller?
+> I'm running siliconimage 3132 as e-Sata controller on my ARM-based board.
+> My kernel version is 2.6.18.6. I built libata and sata_sil24 as kernel
+> module.
+> After I insert libata and sata_sil24 module, and plug external
+> harddrive via e-Sata.
+> sata_sil24.c can detect phy changed, and found a ATA device.
+> And then it will issue IDENTIFY(0xec) command but time out to get
+> command completion.
+> And Sil3132 seems dead or enter into an unknown state.Since it will
+> not issue any interrupts even I remove and replug the e-Sata cable.
+> Does anyone have experienced this situation, or any suggestion.
+> Thanks.
 
-Jeff, this looks like a worthy fix for 2.6.22.
+You need to post the kernel log at least.
 
 -- 
 tejun
