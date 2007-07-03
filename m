@@ -1,58 +1,65 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: CF flash PATA on libata failure to attach
-Date: Tue, 03 Jul 2007 14:13:50 +0800
-Message-ID: <4689E91E.5090601@tw.ibm.com>
-References: <46815FF4.9040001@rtr.ca> <4681e04b.22b38c0a.78ec.6f76@mx.google.com> <46826F42.70405@rtr.ca> <4682f7a3.15538c0a.2e12.ffff8676@mx.google.com> <4683F1C9.2060505@rtr.ca> <468453f8.13578c0a.3c99.ffffa514@mx.google.com> <46845BEE.90801@rtr.ca> <46846b72.15588c0a.4c19.ffffeeb9@mx.google.com> <46846E3E.3010606@rtr.ca> <4684b61f.05358c0a.4c8f.30a5@mx.google.com> <20070629101733.GB25064@devserv.devel.redhat.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil24 not configuring drive right?
+Date: Tue, 03 Jul 2007 15:38:12 +0900
+Message-ID: <4689EED4.6070507@gmail.com>
+References: <200706190628.38377.tbaumgartner@swissonline.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:59816 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373AbXGCGN7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 02:13:59 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l636Dw3F013880
-	for <linux-ide@vger.kernel.org>; Tue, 3 Jul 2007 02:13:58 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l636DwGk256608
-	for <linux-ide@vger.kernel.org>; Tue, 3 Jul 2007 00:13:58 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l636DvVc016880
-	for <linux-ide@vger.kernel.org>; Tue, 3 Jul 2007 00:13:58 -0600
-In-Reply-To: <20070629101733.GB25064@devserv.devel.redhat.com>
+Received: from nz-out-0506.google.com ([64.233.162.234]:16509 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753146AbXGCGiS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 02:38:18 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1126432nze
+        for <linux-ide@vger.kernel.org>; Mon, 02 Jul 2007 23:38:17 -0700 (PDT)
+In-Reply-To: <200706190628.38377.tbaumgartner@swissonline.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Hall <andrew.a.hall@gmail.com>
-Cc: Alan Cox <alan@redhat.com>, 'Mark Lord' <liml@rtr.ca>, linux-ide@vger.kernel.org, 'Tejun Heo' <htejun@gmail.com>
+To: Theo Baumgartner <tbaumgartner@swissonline.ch>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Fri, Jun 29, 2007 at 05:34:36PM +1000, Andrew Hall wrote:
+Theo Baumgartner wrote:
+> Hello
 > 
->>Further to this the PATA to SATA bridge being used in this case is:
->>
->>http://www.jmicron.com/JM20330.html
->>
->>..as you will see only PIO and UDMA modes are supported.
+> I've got a sil3124 card which doesn't seem to use the full speed of my drives.
 > 
+> -------------------------------------------------------------------------------------------------------------------
+> ata1: SATA max UDMA/100 cmd 0xe0850000 ctl 0x00000000 bmdma 0x00000000 irq 17
+> ata2: SATA max UDMA/100 cmd 0xe0852000 ctl 0x00000000 bmdma 0x00000000 irq 17
+> ata3: SATA max UDMA/100 cmd 0xe0854000 ctl 0x00000000 bmdma 0x00000000 irq 17
+> ata4: SATA max UDMA/100 cmd 0xe0856000 ctl 0x00000000 bmdma 0x00000000 irq 17
+> scsi0 : sata_sil24
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ATA-7: WDC WD3200YS-01PGB0, 21.00M21, max UDMA/133
+> ata1.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
+> ata1.00: configured for UDMA/100
+> scsi1 : sata_sil24
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata2.00: ATA-7: WDC WD3200YS-01PGB0, 21.00M21, max UDMA/133
+> ata2.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
+> ata2.00: configured for UDMA/100
+> scsi2 : sata_sil24
+> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata3.00: ATA-7: WDC WD3200YS-01PGB0, 21.00M21, max UDMA/133
+> ata3.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
+> ata3.00: configured for UDMA/100
+> scsi3 : sata_sil24
+> ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata4.00: ATA-7: WDC WD3200YS-01PGB0, 21.00M21, max UDMA/133
+> ata4.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 1)
+> ata4.00: configured for UDMA/100
+> -------------------------------------------------------------------------------------------------------------------
 > 
-> In which case their microcontroller in the middle should be masking ident
-> bits. Without a way to detect the presence of the device I don't see an
-> easy way for us to handle it automatically at all
-> 
+> Why does it tell "max UDMA/133" but then just uses UDMA/100?
 
-I didn't test whether MWDMA2 is supported by the JMicron bridge or not.
-But I'm sure that the JMicron bridge doesn't mangle the IDENTIFY to
-indicat anything about MWDMA unsupported:
-(Previous test report:
-http://www.spinics.net/lists/linux-ide/msg01514.html)
+That's the controller mask being applied.  UDMA mode doesn't matter for
+native SATA devices at all, so just ignore it.
 
-The Acard ARC-770 bridge from another vendor does mangle the IDENTIFY
-data and indicates MWDMA unsupported as Alan advised.
+> and what about the NCQ depth 1?
 
-Andrew, maybe you could test if such bridge works with your CF device.
-(http://www.acard.com/english/fb0101.jsp?type1_idno=1&type2_idno=17)
---
-albert
+That's the harddrive reporting NCQ max depth of 1.  Interesting.  Care
+to post the result of "hdparm -I /dev/sda"?
 
+-- 
+tejun
