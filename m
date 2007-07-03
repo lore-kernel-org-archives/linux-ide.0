@@ -1,41 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/1] ide: pdc202xx_new PLL input clock fix
-Date: Tue, 03 Jul 2007 18:24:26 +0400
-Message-ID: <468A5C1A.9060501@ru.mvista.com>
-References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com> <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com> <200707022013.04383.bzolnier@gmail.com> <46893D48.3060801@ru.mvista.com> <4689DCF5.3040809@tw.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 02/12] libata: implement AC_ERR_NCQ
+Date: Tue, 03 Jul 2007 10:24:59 -0400
+Message-ID: <468A5C3B.7040508@garzik.org>
+References: <11832836172598-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:23983 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759356AbXGCOWp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 10:22:45 -0400
-In-Reply-To: <4689DCF5.3040809@tw.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60436 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753669AbXGCOZC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 10:25:02 -0400
+In-Reply-To: <11832836172598-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bahadir Balban <bahadir.balban@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 
-Hello.
+Tejun Heo wrote:
+> +++ b/include/linux/libata.h
+> @@ -322,7 +322,8 @@ enum ata_completion_errors {
+>  	AC_ERR_SYSTEM		= (1 << 6), /* system error */
+>  	AC_ERR_INVALID		= (1 << 7), /* invalid argument */
+>  	AC_ERR_OTHER		= (1 << 8), /* unknown */
+> -	AC_ERR_NODEV_HINT	= (1 << 9), /* polling device detection hint */
+> +	AC_ERR_NCQ		= (1 << 9), /* marker for offending NCQ qc */
+> +	AC_ERR_NODEV_HINT	= (1 << 10), /* polling device detection hint */
 
-Albert Lee wrote:
-> Recently the PLL input clock of Promise 2027x is sometimes detected
-> higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
-      ^ h
 
-> It seems sometimes the mdelay() function is not as precise as it
-> used to be. Per Alan's advice, HT or power management might affect
-> the precision of mdelay().
+patch is OK, except for the above very-minor flaw:  to remind, do not 
+re-arrange bit numbers in the same patch you are adding bits.  it makes 
+the patch more difficult to read.  Just add the new bit at the end.
 
-> This patch calls gettimeofday() to mesure the time elapsed and
-                                        ^ a
-> calculate the PLL input clock accordingly.
+If you wish to re-arrange the bits, do it in a separate patch (though I 
+see no need for re-arranging)
 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-
-    Except for types in description:
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei ;-)
