@@ -1,55 +1,41 @@
-From: "Johny Mail list" <maillist.johny@gmail.com>
-Subject: Re: Linux Software RAID is really RAID?
-Date: Tue, 3 Jul 2007 14:17:31 +0200
-Message-ID: <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com>
-References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
-	 <46815C3F.6090204@wasp.net.au> <468A05A4.60006@gmail.com>
+From: Matt Sealey <matt@genesi-usa.com>
+Subject: Re: how to handle pata_via when controller not in fully-pci-native
+ mode (two irqs?)
+Date: Tue, 03 Jul 2007 13:32:12 +0100
+Message-ID: <468A41CC.6030203@genesi-usa.com>
+References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com>	<20070623105344.3ece6db1@the-village.bc.nu>	<467CF1E6.8000905@genesi-usa.com>	<4689FBCB.90608@gmail.com>	<468A04A0.1020003@genesi-usa.com> <20070703131736.5ddc0b89@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:59944 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757727AbXGCMRc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 08:17:32 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1775225wxd
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 05:17:32 -0700 (PDT)
-In-Reply-To: <468A05A4.60006@gmail.com>
-Content-Disposition: inline
+Received: from mithrandir.softwarenexus.net ([66.98.186.96]:3256 "EHLO
+	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752321AbXGCMb1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 08:31:27 -0400
+In-Reply-To: <20070703131736.5ddc0b89@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-2007/7/3, Tejun Heo <htejun@gmail.com>:
-> Brad Campbell wrote:
-> > Johny Mail list wrote:
-> >> Hello list,
-> >> I have a little question about software RAID on Linux.
-> >> I have installed Software Raid on all my SC1425 servers DELL by
-> >> believing that the md raid was a strong driver.
-> >> And recently i make some test on a server and try to view if the RAID
-> >> hard drive power failure work fine, so i power up my server and after
-> >> booting and the prompt appear I disconnected the power cable of my
-> >> SATA hard drive. Normaly the MD should eleminate the failure hard
-> >> drive of the logical drive it build, and the server continue to work
-> >> fine like nothing happen. Oddly the server stop to respond and i get
-> >> this messages :
-> >> ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> >> ata4.00: cmd e7/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
-> >>              res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> >> ata4: port is slow to respond, please be patient (Status 0xd0)
-> >> ata4: port failed to respond (30sec, Status 0xd0)
-> >> ata4: soft resetting port
-> >>
-> >> After that my system is frozen.
->
-> How hard is it frozen?  Can you blink the Numlock LED?
->
-> --
-> tejun
->
-Hello tejun
-It froze just when the "ata4: port failed to respond (30sec, Status
-0xd0)" is printed and yes my Numblock LED not respond when i press the
-numlock key.
+
+Alan Cox wrote:
+>> We can't make the controller TRULY legacy since there is not any good way
+>> of mapping the IDE/BMDMA registers into the lower kilobyte or so of
+>> memory - obviously PPC has no "io address space", it's all memory mapped,
+>> so the lower kilobyte of "IO ports" is really the CPU zero page. It's not
+>> a good idea to be poking around just there and we never intended that to work.
+> 
+> The right way to do this IMHO is still to use the PCI quirk side logic.
+> Unfortunately to put your legacy ports at different I/O addresses you
+> need changes which are still pending to the libata-sff code so that it
+> stops using the hardcoded ATA_PRIMARY_FOO bits.
+
+We can't move the IO ports. They're stuck in the PCI BAR.
+
+All we can do is fix the IRQ steering in the "ISA bridge" to report a single
+IRQ instead of two.
+
+-- 
+Matt Sealey <matt@genesi-usa.com>
+Genesi, Manager, Developer Relations
