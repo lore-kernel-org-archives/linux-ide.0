@@ -1,34 +1,47 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
-Date: Tue, 3 Jul 2007 18:56:52 +0100
-Message-ID: <20070703185652.0b807fcc@the-village.bc.nu>
-References: <20070703161002.1576c39d@the-village.bc.nu>
-	<200707031938.20956.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 9/15] ide: add PIO masks
+Date: Tue, 03 Jul 2007 23:28:17 +0400
+Message-ID: <468AA351.4090509@ru.mvista.com>
+References: <200706302107.42458.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48907 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755408AbXGCRuq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 13:50:46 -0400
-In-Reply-To: <200707031938.20956.bzolnier@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:25648 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755966AbXGCT0g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 15:26:36 -0400
+In-Reply-To: <200706302107.42458.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-> The new improved driver is not really better than the old one because
-> the old one is broken. :)
-> 
-> Old driver does identical configuration when it comes to PIO modes.
+Bartlomiej Zolnierkiewicz wrote:
 
-No the old driver doesn't even do that. It starts up. It spuriously
-adjusts some non writable PCI BAR registers, prints a message about
-resources being in use already then exits.
+> * Add ATA_PIO[0-6] defines to <linux/ata.h>.
 
-I had a poke around the setup. As far as I can observe we break even if
-the ROM timing values are used as is. I suspect documentation or a good
-deal of luck is needed.
+> * Add ->pio_mask field to ide_pci_device_t and ide_hwif_t.
 
-Alan
+> * Add PIO masks to host drivers.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+   Not sure if my ACK applies now...
+
+> Index: b/drivers/ide/pci/jmicron.c
+> ===================================================================
+> --- a/drivers/ide/pci/jmicron.c
+> +++ b/drivers/ide/pci/jmicron.c
+> @@ -180,6 +180,7 @@ fallback:
+>  		.autodma	= AUTODMA,		\
+>  		.bootable	= ON_BOARD,		\
+>  		.enablebits	= { {0x40, 1, 1}, {0x40, 0x10, 0x10} }, \
+> +		.pio_mask	= ATA_PIO5,		\
+>  	}
+
+    Just noticed that this driver does nothing in its tuneproc() method. So, 
+this mask is unrealistic. The method needs to be dropped for now along with 
+config-jmicron_chipset_for_pio() -- ptobably, with FIXME added.
+
+MBR, Sergei
