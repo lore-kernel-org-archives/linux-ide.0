@@ -1,52 +1,63 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 04 Jul 2007 00:29:27 +0400
-Message-ID: <468AB1A7.9010201@msgid.tls.msk.ru>
-References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 9/15] ide: add PIO masks
+Date: Wed, 04 Jul 2007 00:35:07 +0400
+Message-ID: <468AB2FB.70600@ru.mvista.com>
+References: <200706302107.42458.bzolnier@gmail.com> <468AA351.4090509@ru.mvista.com> <200707032208.13580.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:20759 "EHLO hobbit.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757891AbXGCU3d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 16:29:33 -0400
-In-Reply-To: <468A06A0.1020802@gmail.com>
+Received: from [63.81.120.155] ([63.81.120.155]:25980 "EHLO imap.sh.mvista.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756603AbXGCUd0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 16:33:26 -0400
+In-Reply-To: <200707032208.13580.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Tejun Heo wrote:
-> Michael Tokarev wrote:
-[]
->> A test drive is Seagate Barracuda ST3250620AS "desktop" drive,
->> 250Gb, cache size is 16Mb, 7200RPM.
-[test shows that NCQ makes no difference whatsoever]
+Bartlomiej Zolnierkiewicz wrote:
 
-> And which elevator?
+>>>* Add ATA_PIO[0-6] defines to <linux/ata.h>.
 
-Well.  It looks like the results does not depend on the
-elevator.  Originally I tried with deadline, and just
-re-ran the test with noop (hence the long delay with
-the answer) - changing linux elevator changes almost
-nothing in the results - modulo some random "fluctuations".
+>>>* Add ->pio_mask field to ide_pci_device_t and ide_hwif_t.
 
-In any case, NCQ - at least in this drive - just does
-not work.  Linux with its I/O elevator may help to
-speed things up a bit, but the disk does nothing in
-this area.  NCQ doesn't slow things down either - it
-just does not work.
+>>>* Add PIO masks to host drivers.
 
-The same's for ST3250620NS "enterprise" drives.
+>>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-By the way, Seagate announced Barracuda ES 2 series
-(in range 500..1200Gb if memory serves) - maybe with
-those, NCQ will work better?
+>>   Not sure if my ACK applies now...
 
-Or maybe it's libata which does not implement NCQ
-"properly"?  (As I shown before, with almost all
-ol'good SCSI drives TCQ helps alot - up to 2x the
-difference and more - with multiple I/O threads)
+>>>Index: b/drivers/ide/pci/jmicron.c
+>>>===================================================================
+>>>--- a/drivers/ide/pci/jmicron.c
+>>>+++ b/drivers/ide/pci/jmicron.c
+>>>@@ -180,6 +180,7 @@ fallback:
+>>> 		.autodma	= AUTODMA,		\
+>>> 		.bootable	= ON_BOARD,		\
+>>> 		.enablebits	= { {0x40, 1, 1}, {0x40, 0x10, 0x10} }, \
+>>>+		.pio_mask	= ATA_PIO5,		\
+>>> 	}
 
-/mjt
+>>    Just noticed that this driver does nothing in its tuneproc() method. So, 
+>>this mask is unrealistic. The method needs to be dropped for now along with 
+
+> Adding ->pio_mask doesn't change the old behavior in _any_ way.
+
+    Of course not. That's why I didn't NAK. :-)
+
+>>config-jmicron_chipset_for_pio() -- ptobably, with FIXME added.
+
+> Please see comments for jmicron_tune_chipset(), ->tuneproc just misses
+
+    Ah, the case of overly smart chipset!
+
+> setting transfer mode on the device.  Care to send a patch fixing it?
+
+    I don't care about JMicron, so only when/if I'll find some time...
+
+> Thanks,
+> Bart
+
+WBR, Sergei
