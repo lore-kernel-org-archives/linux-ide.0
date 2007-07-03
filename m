@@ -1,34 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
-Date: Wed, 04 Jul 2007 00:41:06 +0400
-Message-ID: <468AB462.4090203@ru.mvista.com>
-References: <20070703161002.1576c39d@the-village.bc.nu> <200707031938.20956.bzolnier@gmail.com> <20070703185652.0b807fcc@the-village.bc.nu> <200707032212.01619.bzolnier@gmail.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: [PATCH] libata: ata_piix: add ID for Intel Santa Rosa (ICH8M) controller
+Date: Tue, 03 Jul 2007 16:59:32 -0400
+Message-ID: <468AB8B4.2010702@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:26002 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757088AbXGCUjZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 16:39:25 -0400
-In-Reply-To: <200707032212.01619.bzolnier@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:54147 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751486AbXGCU7i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 16:59:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Christian Lamparter <chunkeey@web.de>, IDE/ATA development list <linux-ide@vger.kernel.org>, jason.d.gaston@intel.com
 
-Hello.
+From: Christian Lamparter <chunkeey@web.de>
 
-Bartlomiej Zolnierkiewicz wrote:
+ATA: add a PCI ID for Intel Santa Rosa (ICH8M) PATA controller.
 
-> http://www.linuxhq.com/kernel/v2.3/10/drivers/block/hpt343.c
-
-> Does anybody have DOS driver for HPT343?  Google doesn't have it...
-
-    I have the drivers for HPT34[35] -- tried dissassembling them some years 
-ago...
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+ drivers/ata/ata_piix.c |    2 ++
+ 1 file changed, 2 insertions(+) 
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 9c07b88..b210726 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -200,6 +200,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* ICH7/7-R (i945, i975) UDMA 100*/
+ 	{ 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++	/* ICH8 Mobile PATA Controller */
++	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 
+ 	/* NOTE: The following PCI ids must be kept in sync with the
+ 	 * list in drivers/pci/quirks.c.
