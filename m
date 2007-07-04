@@ -1,41 +1,38 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Linux Software RAID is really RAID?
-Date: Wed, 04 Jul 2007 10:20:56 +0900
-Message-ID: <468AF5F8.9060703@gmail.com>
-References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>	 <46815C3F.6090204@wasp.net.au> <468A05A4.60006@gmail.com> <cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com> <468AD708.2010806@rtr.ca>
+Subject: Re: BIOS does not recognize 500GB-disk
+Date: Wed, 04 Jul 2007 10:38:45 +0900
+Message-ID: <468AFA25.8000400@gmail.com>
+References: <20070703225517.GA22912@danisch.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.228]:52036 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.232]:59428 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756095AbXGDBVB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 21:21:01 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1419177nze
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 18:21:01 -0700 (PDT)
-In-Reply-To: <468AD708.2010806@rtr.ca>
+	with ESMTP id S1753198AbXGDBiu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 21:38:50 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1422777nze
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 18:38:49 -0700 (PDT)
+In-Reply-To: <20070703225517.GA22912@danisch.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Johny Mail list <maillist.johny@gmail.com>, Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Hadmut Danisch <hadmut@danisch.de>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> I believe he said it was ICH5 (different post/thread).
+Hadmut Danisch wrote:
+> Hi,
 > 
-> My observation on ICH5 is that if one unplugs a drive,
-> then the chipset/cpu locks up hard when toggling SRST
-> in the EH code.
+> just a question:
 > 
-> Specifically, it locks up at the instruction
-> which restores SRST back to the non-asserted state,
-> which likely corresponds to the chipset finally actually
-> sending a FIS to the drive.
+> I have an older computer with a ASRock K7VT4A Pro mainboard and a VIA sata
+> controller. 
 > 
-> A hard(ware) lockup, not software.
-> That's why Intel says ICH5 doesn't do hotplug.
+> A 320GB Seagate SATA disk worked pretty well with that board, but now I replaced
+> it with a 500GB Western Digital SATA, and the BIOS does not recognize that
+> new disk, allthough I've updated the BIOS to the latest available version.
+> The disk is not available under Linux (latest Ubuntu, 2.6.20). 
 
-OIC.  I don't think there's much left to do from the driver side then.
-Or is there any workaround?
+Please post boot dmesg.
 
 -- 
 tejun
