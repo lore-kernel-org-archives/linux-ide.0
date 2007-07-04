@@ -1,41 +1,37 @@
-From: 7091@blargh.com
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: sata_sil, writing bug with multiple cards?
-Date: Tue, 03 Jul 2007 18:40:56 -0700
-Message-ID: <courier.468AFAA8.00000F2D@blargh.com>
-References: <courier.4689EFD9.0000589A@blargh.com>
-            <468A0E24.7020000@gmail.com>
+Date: Wed, 04 Jul 2007 10:48:40 +0900
+Message-ID: <468AFC78.6090604@gmail.com>
+References: <courier.4689EFD9.0000589A@blargh.com>            <468A0E24.7020000@gmail.com> <courier.468AFAA8.00000F2D@blargh.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from blargh.com ([24.234.115.147]:48194 "EHLO blargh.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754293AbXGDBk5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 21:40:57 -0400
-In-Reply-To: <468A0E24.7020000@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.180]:15766 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754018AbXGDBsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 21:48:46 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3073503wah
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 18:48:46 -0700 (PDT)
+In-Reply-To: <courier.468AFAA8.00000F2D@blargh.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: 7091@blargh.com
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Tejun Heo writes: 
+7091@blargh.com wrote:
+> That indeed seems to have fixed the problem - I've been pulling my hair
+> out forever about this!
+> Is this something I'll need to leave in forever, is it supposed to get
+> fixed, etc.?
+> I'm going to continue doing testing and really try to thrash it tonight
+> (I just did the 'copy an ISO 5 times' test that always failed before -
+> it succeeds now).
+> Thanks for the help.
 
-> Sounds awfully similar to the recent nvidia data corruption issue.  It
-> was involving the IOMMU and one of the workarounds was not using IOMMU,
-> IIRC.  Please turn off IOMMU and see what happens.  You can turn IOMMU
-> off by passing "iommu=off" as kernel parameter. 
-> 
-> -- 
-> tejun
+I think fix is included during 2.6.22 devel cycle which basically is
+turning off IOMMU by default on the affected chipset but I haven't
+really followed after that.
 
-That indeed seems to have fixed the problem - I've been pulling my hair out 
-forever about this! 
-
-Is this something I'll need to leave in forever, is it supposed to get 
-fixed, etc.? 
-
-I'm going to continue doing testing and really try to thrash it tonight (I 
-just did the 'copy an ISO 5 times' test that always failed before - it 
-succeeds now). 
-
-Thanks for the help.
+-- 
+tejun
