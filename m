@@ -1,51 +1,102 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata1: soft resetting port
-Date: Thu, 05 Jul 2007 03:01:17 +0900
-Message-ID: <468BE06D.4010507@gmail.com>
-References: <1182260902.14805.60.camel@localhost>	 <4689EF48.8090506@gmail.com> <1183545657.22999.15.camel@localhost>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 3/6] siimage: PIO mode setup fixes
+Date: Wed, 4 Jul 2007 20:59:31 +0200
+Message-ID: <200707042059.31567.bzolnier@gmail.com>
+References: <200706232004.08914.bzolnier@gmail.com> <200706300012.12394.bzolnier@gmail.com> <468BC7D2.2030901@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758588AbXGDSBe@vger.kernel.org>
-In-Reply-To: <1183545657.22999.15.camel@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Soeren Sonnenburg <kernel@nn7.de>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mu-out-0910.google.com ([209.85.134.190]:48752 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755488AbXGDSqG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 14:46:06 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so3324180mue
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 11:46:04 -0700 (PDT)
+In-Reply-To: <468BC7D2.2030901@ru.mvista.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Soeren Sonnenburg wrote:
-> On Tue, 2007-07-03 at 15:40 +0900, Tejun Heo wrote:
->> Soeren Sonnenburg wrote:
->>> Dear List,
->>>
->>> since the switch to 
->>>
->>> CONFIG_ATA=y
->>> CONFIG_ATA_ACPI=y
->>> CONFIG_ATA_PIIX=y,
->>>
->>> the ATA_PIIX driver manages both, internal sata disk aswell as cd/dvd
->>> rom. However I am being flooded with the error messages below (well they
->>> appear from time to time, dominating dmesg). 
->>>
->>> This happens on kernel 2.6.22-rc5, I am copying relevant parts from dmesg:
->> Does 2.6.22-rc7 fare better?
+On Wednesday 04 July 2007, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Yes indeed. The only thing I've seen in the last two days was the
-> following on resume:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> pci_express 0000:00:1c.2:pcie03: resuming
-> sr 0:0:0:0: resuming
-> sd 2:0:1:0: resuming
-> sd 2:0:1:0: [sda] Starting disk
-> ata1.00: configured for UDMA/33
-> ata3.01: revalidation failed (errno=-2)
-> ata3: failed to recover some devices, retrying in 5 secs
-> ata3.01: configured for UDMA/133
+> >>    A lot to argue about here...
+> 
+> >>>* Add sil_tuneproc() wrapper for siimage_tuneproc() which also sets
+> >>>  PIO mode on the device.
+> 
+> >>    Planning on the global prefix change? :-)
+> 
+> > Yep.
+> 
+>     Well, it didn't work out with 'ata_'... ;-)
 
-Hmmm... That's NODEV_HINT being triggered after resume.  Probably the
-device isn't ready to respond yet at that point.  How reproducible is
-the problem?
+Because of bad libata taking over our precioussssss namespace... ;-)
 
--- 
-tejun
+Fortunately pata_sil680 driver uses "sil680_" prefix.
+
+> >>>* Add code limiting maximum PIO mode according to the pair device capabilities
+> >>>  to sil_tuneproc().
+> 
+> >>    Ugh... that part is terrible. :-/
+> >>    Actually, we only need to limit the taskfile, not the data transfers --
+> >>unlike it was done before.
+> 
+> > Fixed.
+> 
+>     Let's see... :-)
+> 
+> >>    Note that PIO setup keeps being somewhat borken IODRY-wise even with this
+> >>patch as sil_tune_pio() only controls taskfile IORDY sampling -- the Right
+> >>Thing could only be done via speedproc() method...
+> 
+> > After rehashing the datasheet I see the source of the issue:
+> 
+> > IORDY is controlled in two registers and moreover it is always enabled
+> > if MDMA or UDMA transfer modes are selected.
+> 
+>     Yeah. I drafted some patch for pata_sil.c but Alan fixed it first and in a 
+> more simple way -- libata calls PIO/DMA setting methods in the strict 
+> sequence, and that allowed to bypass some checks...
+
+I fail to see how this helps in this case, care to explain?
+
+> > +	/* cheat for now and use the docs */
+> > +	speedp = data_speed[pio];
+> > +	speedt = tf_speed[tf_pio];
+> > +
+> >  	if (hwif->mmio) {
+> >  		hwif->OUTW(speedp, addr);
+> >  		hwif->OUTW(speedt, tfaddr);
+> >  		/* Now set up IORDY */
+> > -		if(mode_wanted == 3 || mode_wanted == 4)
+> > +		if (pio > 2)
+> 
+>     Not tf_pio? This IORDY bit is for taskfile accesses...
+
+Would this be really OK (tf_pio takes minimum PIO mode)?
+
+> >  			hwif->OUTW(hwif->INW(tfaddr-2)|0x200, tfaddr-2);
+> >  		else
+> >  			hwif->OUTW(hwif->INW(tfaddr-2)&~0x200, tfaddr-2);
+> > @@ -245,42 +213,17 @@ static void siimage_tuneproc (ide_drive_
+> >  		pci_read_config_word(hwif->pci_dev, tfaddr-2, &speedp);
+> >  		speedp &= ~0x200;
+> >  		/* Set IORDY for mode 3 or 4 */
+> > -		if(mode_wanted == 3 || mode_wanted == 4)
+> > +		if (pio > 2)
+> 
+>     Same question here.
+>     However... this logic should rely on both drives' PIO modes, so would be 
+> broken either way until this is fixed...
+
+Yep.
+
+Thanks,
+Bart
