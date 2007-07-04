@@ -1,49 +1,109 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: how to handle pata_via when controller not in fully-pci-native
- mode (two irqs?)
-Date: Wed, 04 Jul 2007 17:55:39 +0900
-Message-ID: <468B608B.50803@gmail.com>
-References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com>	<20070623105344.3ece6db1@the-village.bc.nu>	<467CF1E6.8000905@genesi-usa.com>	<4689FBCB.90608@gmail.com>	<468A04A0.1020003@genesi-usa.com>	<20070703131736.5ddc0b89@the-village.bc.nu>	<468A41CC.6030203@genesi-usa.com>	<20070703143809.5064fa35@the-village.bc.nu>	<468A5223.4050906@genesi-usa.com> <20070703145334.2bc9b773@the-village.bc.nu> <468A5532.9020600@genesi-usa.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 5/10] libata: use freeze/thaw for polling
+Date: Wed, 04 Jul 2007 16:57:19 +0800
+Message-ID: <468B60EF.8030009@tw.ibm.com>
+References: <468B5C97.1000803@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:40902 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760186AbXGDIzo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:55:44 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1503717nze
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 01:55:44 -0700 (PDT)
-In-Reply-To: <468A5532.9020600@genesi-usa.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:59073 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754980AbXGDI5Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:57:24 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l648vOO1020416
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 04:57:24 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l648vO9X168234
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:57:24 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l648vN3a015213
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:57:23 -0600
+In-Reply-To: <468B5C97.1000803@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matt Sealey <matt@genesi-usa.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
 
-Matt Sealey wrote:
-> Well, let's put the class code as "native" since the chip is made "native",
-> in a platform file somewhere. Then, we can have a configuration option in
-> the platform code which allows users to choose whether the IDE configuration
-> is reworked to steer to a single IRQ or two IRQs. That way they can choose
-> which driver they are using (they cannot use both, and compiling in both is
-> stupid, so..)
-> 
-> Then pata_via can just work. It does seem easier now to do this in the
-> platform support thing. As long as it only affects brand new kernels and
-> is only enabled when libata pata_via is enabled (we can make it depend on
-> it) then it should work fine, although having it in some other config
-> page seems pretty quirky. I don't know how you would suggest to do it..
-> have CONFIG_FIX_PEGASOS_IDE in drivers/ata/Kconfig and code in
-> arch/powerpc/platforms/chrp which recognises it? This patch idea has to
-> get past two teams now, though.. and modifying chip registers that early
-> in CHRP initialisation seems to be quirky in itself (I don't think PCI
-> is up yet) :D
+Patch 5/10:
 
-I forgot about the PCI resource fix up done for legacy hosts.  I think
-making the host legacy is the best way to take here considering that -
-no change for both ide and libata, just some fix up in platform code.
-ATA native/legacy thing doesn't mean much.  It's just how the resources
-are allocated.  Is there any specific reason to use native mode?
+  This patch changes polling codes to use freeze()/thaw() for irq off/on.
+The reason is: some ATAPI devices raises INTRQ even of nIEN = 1.
+Using the host adapter irq mask mechanism, if available, is more reliable than the device nIEN bit.
 
--- 
-tejun
+ata_qc_set_polling() is also removed since now unused.
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+---
+
+Considerations:
+   HSM, the new user of freeze()/thaw(), will call freeze()/thaw() in higher frequency than EH.
+Can current implemention of freeze()/thaw() handle it?
+
+diff -Nrup 04_convert_freeze/drivers/ata/libata-core.c 05_convert_hsm_to_freeze/drivers/ata/libata-core.c
+--- 04_convert_freeze/drivers/ata/libata-core.c	2007-07-04 11:57:33.000000000 +0800
++++ 05_convert_hsm_to_freeze/drivers/ata/libata-core.c	2007-07-04 13:13:56.000000000 +0800
+@@ -4753,7 +4753,7 @@ static void ata_hsm_qc_complete(struct a
+ 			qc = ata_qc_from_tag(ap, qc->tag);
+ 			if (qc) {
+ 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
+-					ap->ops->irq_on(ap);
++					ap->ops->thaw(ap);
+ 					ata_qc_complete(qc);
+ 				} else
+ 					ata_port_freeze(ap);
+@@ -4769,7 +4769,7 @@ static void ata_hsm_qc_complete(struct a
+ 	} else {
+ 		if (in_wq) {
+ 			spin_lock_irqsave(ap->lock, flags);
+-			ap->ops->irq_on(ap);
++			ap->ops->thaw(ap);
+ 			ata_qc_complete(qc);
+ 			spin_unlock_irqrestore(ap->lock, flags);
+ 		} else
+@@ -5411,7 +5411,7 @@ unsigned int ata_qc_issue_prot(struct at
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_NODATA:
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+-			ata_qc_set_polling(qc);
++			ap->ops->freeze(ap);
+ 
+ 		ata_tf_to_host(ap, &qc->tf);
+ 		ap->hsm_task_state = HSM_ST_LAST;
+@@ -5432,7 +5432,7 @@ unsigned int ata_qc_issue_prot(struct at
+ 
+ 	case ATA_PROT_PIO:
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+-			ata_qc_set_polling(qc);
++			ap->ops->freeze(ap);
+ 
+ 		ata_tf_to_host(ap, &qc->tf);
+ 
+@@ -5461,7 +5461,7 @@ unsigned int ata_qc_issue_prot(struct at
+ 	case ATA_PROT_ATAPI:
+ 	case ATA_PROT_ATAPI_NODATA:
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+-			ata_qc_set_polling(qc);
++			ap->ops->freeze(ap);
+ 
+ 		ata_tf_to_host(ap, &qc->tf);
+ 
+diff -Nrup 04_convert_freeze/include/linux/libata.h 05_convert_hsm_to_freeze/include/linux/libata.h
+--- 04_convert_freeze/include/linux/libata.h	2007-07-04 11:57:33.000000000 +0800
++++ 05_convert_hsm_to_freeze/include/linux/libata.h	2007-07-04 13:13:56.000000000 +0800
+@@ -1097,11 +1097,6 @@ static inline u8 ata_wait_idle(struct at
+ 	return status;
+ }
+ 
+-static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+-{
+-	qc->tf.ctl |= ATA_NIEN;
+-}
+-
+ static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
+ 						       unsigned int tag)
+ {
+
+
