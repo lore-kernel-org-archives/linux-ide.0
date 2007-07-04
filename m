@@ -1,46 +1,48 @@
-From: Kyle Moffett <mrmacman_g4@mac.com>
-Subject: Re: Libata PATA status
-Date: Tue, 3 Jul 2007 23:04:26 -0400
-Message-ID: <1D2B5126-1238-48F8-B841-E8F77C9A0F1B@mac.com>
-References: <20070703185116.59c8f5f5@the-village.bc.nu>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: 7091@blargh.com
+Subject: Re: sata_sil, writing bug with multiple cards?
+Date: Tue, 03 Jul 2007 20:22:00 -0700
+Message-ID: <courier.468B1258.000018F4@blargh.com>
+References: <courier.4689EFD9.0000589A@blargh.com>
+            <468A0E24.7020000@gmail.com>
+            <courier.468B005A.0000127A@blargh.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758117AbXGDDEt@vger.kernel.org>
-In-Reply-To: <20070703185116.59c8f5f5@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from blargh.com ([24.234.115.147]:51073 "EHLO blargh.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754670AbXGDDWB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2007 23:22:01 -0400
+In-Reply-To: <courier.468B005A.0000127A@blargh.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: 7091@blargh.com
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Jul 03, 2007, at 13:51:16, Alan Cox wrote:
-> Libata General with respect to PATA
-> ====================================
->
-> [...snip...]
->
-> Chipsets
-> ========
->
-> [...snip...]
+7091@blargh.com writes: 
 
-I'd love to try to poke holes in the libata PATA support, but sadly  
-it doesn't look like any of my systems built-in ATA chipsets are  
-supported yet.  Has anyone started a rewrite of the PPC/PowerMac IDE  
-driver?  The current one is in "drivers/ide/ppc/pmac.c", and supports  
-these chipsets:
-   OHare ATA
-   Heathrow ATA
-   KeyLargo ATA-3
-   KeyLargo ATA-4
-   UniNorth ATA-6 (IE: Kauai)
-   K2 ATA-6
-   Shasta ATA-6
+> Tejun Heo writes:  
+> 
+>> Sounds awfully similar to the recent nvidia data corruption issue.  It
+>> was involving the IOMMU and one of the workarounds was not using IOMMU,
+>> IIRC.  Please turn off IOMMU and see what happens.  You can turn IOMMU
+>> off by passing "iommu=off" as kernel parameter.  
+>> 
+>> -- 
+>> tejun
+> 
+> Blast.  I stand corrected - it didn't fix it.  
+> 
+> I now have 3 300G drives hanging off the add-in card, sda sdb sdc.  I did 
+> the following:  
+> 
+> # Make a RAID5 array of 3 out of the 4 drives I'll eventually be using
+> mdadm --create /dev/md6 --chunk=64 --level=raid5 --raid-devices=4 
+> /dev/sda1 /dev/sdb1 /dev/sdc1 missing
 
-I'd be willing to test drivers for the UniNorth ATA-6 and K2 ATA-6,  
-as well as possibly the KeyLargo ATA-3/4, depending on what the old  
-MDD G4 in my closet has.  Sadly my libata-foo is insufficient for me  
-to do anything useful (other than thoroughly testing my backup- 
-restoration procedure, maybe :-D).
+Here's an odd data point. 
 
-Cheers,
+I just broke that array, formatted all three of those partitions seperately, 
+mounted and did my ISO copy test. 
+
+All three drives, run one at a time, function fine.  No corruption.
