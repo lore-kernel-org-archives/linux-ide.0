@@ -1,34 +1,46 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Libata PATA status
-Date: Wed, 4 Jul 2007 11:17:51 +0200 (MEST)
-Message-ID: <200707040917.l649HpCg016960@harpo.it.uu.se>
+From: 7091@blargh.com
+Subject: Re: sata_sil, writing bug with multiple cards?
+Date: Wed, 04 Jul 2007 02:26:43 -0700
+Message-ID: <courier.468B67D3.000031C8@blargh.com>
+References: <courier.4689EFD9.0000589A@blargh.com>
+            <468A0E24.7020000@gmail.com>
+            <courier.468B005A.0000127A@blargh.com>
+            <20070704101835.064bae93@the-village.bc.nu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:32813 "EHLO aun.it.uu.se"
+Received: from blargh.com ([24.234.115.147]:55852 "EHLO blargh.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756871AbXGDJSI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 05:18:08 -0400
+	id S1754980AbXGDJ0o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 05:26:44 -0400
+In-Reply-To: <20070704101835.064bae93@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, mrmacman_g4@mac.com
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: 7091@blargh.com, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Tue, 3 Jul 2007 23:04:26 -0400, Kyle Moffett wrote:
-> Has anyone started a rewrite of the PPC/PowerMac IDE  
-> driver?  The current one is in "drivers/ide/ppc/pmac.c", and supports  
-> these chipsets:
->    OHare ATA
->    Heathrow ATA
->    KeyLargo ATA-3
->    KeyLargo ATA-4
->    UniNorth ATA-6 (IE: Kauai)
->    K2 ATA-6
->    Shasta ATA-6
+Alan Cox writes: 
+
+> Not suprised to be honest. We have a large number of reports that are all
+> of the following form 
 > 
-> I'd be willing to test drivers for the UniNorth ATA-6 and K2 ATA-6,  
-> as well as possibly the KeyLargo ATA-3/4, depending on what the old  
-> MDD G4 in my closet has.  Sadly my libata-foo is insufficient for me  
-> to do anything useful (other than thoroughly testing my backup- 
-> restoration procedure, maybe :-D).
+> 	"Nvidia chipset, Silicon Image SATA, corruption" 
+> 
+> and several reports that BIOS updates fixed it. Unfortunately we don't
+> know what the BIOS updates do (or indeed if what they do is board
+> specific) or how to work around it otherwise. 
+> 
+> Alan
 
-And I'd be happy to test a libata pmac driver on Heathrow (Beige G3)
-and KeyLargo ATA-3/UniNorth ATA-6 (eMac G4).
+Well, that's the thing, and one of the details that may have gotten a little 
+lost in the long reply chain. 
+
+The Silicon Image SATA ports on the motherboard work fine. 
+
+Silicon Image SATA ports on addon cards are showing corrutpion. 
+
+I have also flashed the Motherboard BIOS to the newest available version, 
+which got the onboard ports, and the addon card got flashed as well. 
+
+:(  A very frustrating problem.
