@@ -1,62 +1,47 @@
-From: Andi Kleen <ak@suse.de>
+From: 7091@blargh.com
 Subject: Re: sata_sil, writing bug with multiple cards?
-Date: Wed, 4 Jul 2007 09:08:21 +0200
-Message-ID: <200707040908.21512.ak@suse.de>
-References: <courier.4689EFD9.0000589A@blargh.com> <courier.468B17B1.00001A78@blargh.com> <468B19BA.6030202@gmail.com>
+Date: Wed, 04 Jul 2007 01:17:34 -0700
+Message-ID: <courier.468B579E.00002ECF@blargh.com>
+References: <courier.4689EFD9.0000589A@blargh.com>
+            <courier.468B17B1.00001A78@blargh.com>
+            <468B19BA.6030202@gmail.com>
+            <200707040908.21512.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50390 "EHLO mx2.suse.de"
+Received: from blargh.com ([24.234.115.147]:45420 "EHLO blargh.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753346AbXGDHIe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 03:08:34 -0400
-In-Reply-To: <468B19BA.6030202@gmail.com>
-Content-Disposition: inline
+	id S1754980AbXGDIRf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 04:17:35 -0400
+In-Reply-To: <200707040908.21512.ak@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Andi Kleen <ak@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Wednesday 04 July 2007 05:53:30 Tejun Heo wrote:
-> 7091@blargh.com wrote:
-> > Apologies for the chain-replying to myself, just replying as I think of
-> > things to try.
-> > 7091@blargh.com writes:
-> >> Here's an odd data point. 
-> >> I just broke that array, formatted all three of those partitions
-> >> seperately, mounted and did my ISO copy test. 
-> >> All three drives, run one at a time, function fine.  No corruption.
-> > 
-> > Here's another odd one.  I did the following:
-> > # Mount all 3 drives as individuals...
-> > mount /dev/sda1 /mnt/a
-> > mount /dev/sdb1 /mnt/b
-> > mount /dev/sdc1 /mnt/c
-> > # Copy the same file to all three drives at the same time
-> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso a/kn10.iso &
-> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso b/kn10.iso &
-> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso c/kn10.iso &
-> > Got massive corruption.
-> 
-> Hmmm... I don't think this is sata_sil driver bug.  cc'ing Andi Kleen
-> and lkml.  Andi, the original thread can be read from
-> 
-> http://thread.gmane.org/gmane.linux.ide/20213
+Andi Kleen writes:
 
-It seems to be a 32bit system. There is no IOMMU. 
+> If it has >2GB or so it might be worth trying booting it with mem=2G
 
-If it has >2GB or so it might be worth trying booting it with mem=2G
-and see if it goes away. However if it was the standard VIA DAC issue
-you should get problems even with a single interface, so probably
-that's not it either.
+Nope, only 1GB of RAM.
 
-Most likely it is some sort of hardware bug that we might
-not be able to do much about. Have you tried contacting SIL or VIA? 
-e.g. if you have some other system with a different chipset it might
-be useful to test the SIL controllers in those.
+> Most likely it is some sort of hardware bug that we might
+> not be able to do much about. Have you tried contacting SIL or VIA? 
 
-I would perhaps also try a newer kernel.
+No, I haven't.  Like I mentioned above, the OpenBSD drivers seemed to work, 
+or at least did with similar tests.  I would need to run the more extensive 
+checks to be positive, but those take a lot of time, obviously.  And 
+downtime for the box, a lot of which isn't really manageable, at the moment. 
 
--Andi
+> e.g. if you have some other system with a different chipset it might
+> be useful to test the SIL controllers in those.
+
+The previous motherboard was an AMD 760 chipset, and it had the same 
+problem. 
+
+> I would perhaps also try a newer kernel.
+
+I can certainly try that - I admit 2.6.20.3 is a little old now.  This will 
+probably take me a couple days - tomorrow is the 4th of July and a holiday 
+for me.
