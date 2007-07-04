@@ -1,54 +1,41 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: how to handle pata_via when controller not in fully-pci-native
- mode (two irqs?)
-Date: Wed, 04 Jul 2007 20:08:03 +0100
-Message-ID: <468BF013.7030601@genesi-usa.com>
-References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com>	<20070623105344.3ece6db1@the-village.bc.nu>	<467CF1E6.8000905@genesi-usa.com>	<4689FBCB.90608@gmail.com>	<468A04A0.1020003@genesi-usa.com>	<20070703131736.5ddc0b89@the-village.bc.nu>	<468A41CC.6030203@genesi-usa.com>	<20070703143809.5064fa35@the-village.bc.nu>	<468A5223.4050906@genesi-usa.com> <20070703145334.2bc9b773@the-village.bc.nu> <468A5532.9020600@genesi-usa.com> <468B608B.50803@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 8/10] libata: remove writing of tf->ctl from ata_tf_load()
+Date: Wed, 04 Jul 2007 15:09:11 -0400
+Message-ID: <468BF057.9060408@rtr.ca>
+References: <468B5C97.1000803@tw.ibm.com> <468B627A.6050605@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:2441 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756389AbXGDTHW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 15:07:22 -0400
-In-Reply-To: <468B608B.50803@gmail.com>
+Received: from rtr.ca ([64.26.128.89]:1934 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756804AbXGDTJN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 15:09:13 -0400
+In-Reply-To: <468B627A.6050605@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
 
-
-Tejun Heo wrote:
+Albert Lee wrote:
+> Patch 8/10:
+>  
+> The relevant bits in the ctl register are HOB, SRST and nIEN.
+>  - HOB is only used by ata_tf_read().
+>  - For SRST, soft reset is not the duty of tf_load.
+>  - For nIEN, explicit irq_on()/irq_off and freeze()/thaw() are provided.
 > 
-> I forgot about the PCI resource fix up done for legacy hosts.  I think
-> making the host legacy is the best way to take here considering that -
-> no change for both ide and libata, just some fix up in platform code.
-> ATA native/legacy thing doesn't mean much.  It's just how the resources
-> are allocated.  Is there any specific reason to use native mode?
+>   Since EH/HSM now call explicit freeze()/thaw() for irq off/on.
+> Remove the implicit nIEN handling from ata_tf_load().
 
-Yes, legacy mode means there are several "io ports" mapped into the
-0 thru 0x1000 addresses. This might work in Linux, granted, but I am
-not sure it is a good idea in the first place.
+At some point soon, I hope to piece together enough old hardware here
+to reconnect my PCI-X sata_qstor card, and then fix the driver.
 
-Mapping io ports to anywhere but the PCI io space is just an ugly
-solution. The ATA native/legacy thing means a lot, as there is no
-"legacy" on PowerPC. It's a PCI device, so we should try and fix up
-it's actions as a PCI device, however, making it truly conform will
-break any "not entirely compatible" drivers break (via8cxxx being
-the biggest culprit). Therefore no firmware fixes for thee.
+It needs to have control over the nIEN bit, and currently that bit
+is not behaving as it did way back in 2.6.11(?) when the driver was
+first added.
 
-I do think we can knock it into full PCI native mode from the platform
-fixups though, as a kernel option. Old drivers will work fine, old
-kernels will work fine, and optionally old behaviour can be left, but
-anyone building a new kernel with pata_via and no via8cxxx (i.e. all
-new distributions) can enable the new behaviour.
+The qstor chip *requires* that nIEN be "1" during R/W commands.
+Is there a nice way to accomplish that here?
 
-Does that sound okay? No libata-level resource fixups need to be done
-for a real PCI device, do they? I think we should just coerce the
-controller to use a single interrupt and disable ISA interrupt
-steering, fix the class code, and see if libata handles it.
-
--- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+Thanks
