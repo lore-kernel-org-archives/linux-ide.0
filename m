@@ -1,41 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: Libata PATA status
-Date: Wed, 4 Jul 2007 14:18:19 +0100
-Message-ID: <20070704141819.01a357fa@the-village.bc.nu>
-References: <20070703185116.59c8f5f5@the-village.bc.nu>
-	<p73k5tg2uj9.fsf@bingen.suse.de>
-	<20070704131746.4bbe4d0e@the-village.bc.nu>
-	<20070704130258.GA10904@one.firstfloor.org>
+Date: Wed, 4 Jul 2007 15:29:30 +0200
+Message-ID: <20070704132930.GB10904@one.firstfloor.org>
+References: <20070703185116.59c8f5f5@the-village.bc.nu> <p73k5tg2uj9.fsf@bingen.suse.de> <20070704131746.4bbe4d0e@the-village.bc.nu> <20070704130258.GA10904@one.firstfloor.org> <20070704141819.01a357fa@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46207 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758322AbXGDNMN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 09:12:13 -0400
-In-Reply-To: <20070704130258.GA10904@one.firstfloor.org>
+Received: from one.firstfloor.org ([213.235.205.2]:33160 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759239AbXGDN3c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 09:29:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20070704141819.01a357fa@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Andi Kleen <andi@firstfloor.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
 
-> > > disabled without risking breaking old root file systems.
-> > 
-> > That would be udevd for new systems or "ln -s" for old ones ? 
-> 
-> Then old kernels couldn't be booted anymore.
+> You could probably reliably map "hda/b/c/d" initially with some kind of
+> forwarder providing nobody hot plugged them.  Just not sure I see the
 
-Why not. I boot back and forth randomly between old and new IDE kernels
-without problems. The root fs loaded is set in kernel or grub (or on most
-distros nowdays by label scanning from initrd) so just works. Then mount
-label or uuid based mounting does the rest.
+PATA hotplug? 
 
-> Sure for SATA. But surely for PATA it would be possible to fake
-> the mapping of the old driver? Doing it simple minded (e.g. only
-> for the builtin devices) would be probably sufficient.
+SATA systems typically already use /dev/sda*, it just applies to PATA.
 
-You could probably reliably map "hda/b/c/d" initially with some kind of
-forwarder providing nobody hot plugged them.  Just not sure I see the
-point of doing it kernel side.
+> point of doing it kernel side.
 
-Alan
+The point would be that old user land just works without any changes.
+I know that is a virtue that has gone out of fashion recently
+with udev and sysfs, but older distributions that weren't
+that sysfs-layout-of-the-week dependent used to be fairly kernel version
+independent.  I always found that very useful.
+
+The hda->sda move would be the only "radical" change that prevents booting for
+a long time (the last one before that was the 2.5 modutils transition)
+
+-Andi
+
