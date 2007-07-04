@@ -1,53 +1,31 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
-Date: Wed, 04 Jul 2007 14:33:26 +0900
-Message-ID: <468B3126.3080706@gmail.com>
-References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com>
+Date: Wed, 04 Jul 2007 14:46:58 +0900
+Message-ID: <468B3452.6040509@gmail.com>
+References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:29747 "EHLO
+Received: from py-out-1112.google.com ([64.233.166.179]:45186 "EHLO
 	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbXGDFdd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 01:33:33 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3656347pyb
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 22:33:32 -0700 (PDT)
-In-Reply-To: <20070703222205.GA18532@electric-eye.fr.zoreil.com>
+	with ESMTP id S1751331AbXGDFwG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 01:52:06 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3663334pyb
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 22:52:05 -0700 (PDT)
+In-Reply-To: <468B3126.3080706@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Francois Romieu <romieu@fr.zoreil.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Francois Romieu <romieu@fr.zoreil.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Francois Romieu wrote:
-> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
-> still seems bizarre:
-> 
-> [    0.000000] Linux version 2.6.22-rc7 (root@localhost.localdomain) (gcc version 4.1.1 20070105 (Red Hat 4.1.1-51)) #13 Tue Jul 3 20:42:14 CEST 2007
-> [...]
-> [   30.140053] input: AT Translated Set 2 keyboard as /class/input/input0
-> [   30.405873] SCSI subsystem initialized
-> [   30.419216] libata version 2.21 loaded.
-> [   30.421854] ata_piix 0000:00:1f.2: version 2.11
-> [   30.421865] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
-> [   30.427343] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
-> [   30.435010] PCI: Setting latency timer of device 0000:00:1f.2 to 64
-> [   30.435123] scsi0 : ata_piix
-> [   30.438336] scsi1 : ata_piix
-> [   30.441502] ata1: SATA max UDMA/133 cmd 0x0001c080 ctl 0x0001c002 bmdma 0x0001b800 irq 0
->                                                                                           ^
-> [   30.449680] ata2: SATA max UDMA/133 cmd 0x0001bc00 ctl 0x0001b882 bmdma 0x0001b808 irq 0
->                                                                                           ^
-> [   30.658396] ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-> [   30.666137] ata1.00: ATA-7: MAXTOR STM3160211AS, 3.AAE, max UDMA/133
-> [   30.672537] ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> [   30.733289] ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
-> [   30.741026] ata1.00: configured for UDMA/133
-> 
-> As Alan said, it is not a serious problem though.
+Tejun Heo wrote:
+> Francois Romieu wrote:
+>> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
+>> still seems bizarre:
 
-Seriously stupid tho. :-) I've tested ata_piix.  What did I miss?  I'll
-look into it.
+Okay, 872aad45 doesn't have the patch yet.  Either apply the patch
+manually or you need to wait a bit more.
 
 -- 
 tejun
