@@ -1,55 +1,57 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH] libata_acpi: A different strategy for using ACPI
- information
-Date: Tue, 03 Jul 2007 17:53:58 -0600
-Message-ID: <468AE196.9070202@shaw.ca>
-References: <fa.rEwk8NvbygVfpOfb23QZ97ZMeXs@ifi.uio.no>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Some NCQ numbers...
+Date: Wed, 04 Jul 2007 10:19:55 +0900
+Message-ID: <468AF5BB.10005@gmail.com>
+References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:63223 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbXGCXyh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 19:54:37 -0400
-In-reply-to: <fa.rEwk8NvbygVfpOfb23QZ97ZMeXs@ifi.uio.no>
+Received: from nz-out-0506.google.com ([64.233.162.230]:51612 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755632AbXGDBUA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 21:20:00 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1418942nze
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 18:20:00 -0700 (PDT)
+In-Reply-To: <468AB1A7.9010201@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
-> Lots of BIOSen simply return the BIOS set modes via the ACPI methods and
-> pass back the values you give it across suspend/resume. Thus instead of
-> trying to do clever stuff with this data we instead use it as a way to
-> take a sneak peak at cable type information when viable. This should help
-> us catch more of the laptops that do weird stuff, the VIA SATA bridges
-> and the totally horked Nvidia cable handling.
-> 
-> For now its only used by the VIA and AMD/NV driver until we get a better
-> idea of whether this is a sensible idea or not.
-> 
-> Opinions ?
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+Hello,
 
-Looks fairly reasonable to me. However, I suspect any use of _GTM is 
-somewhat dangerous (at least after the resume) unless we use the _STM 
-and _GTF methods in the proper sequence when resuming. (Is that in the 
--mm tree now?)
+Michael Tokarev wrote:
+> Well.  It looks like the results does not depend on the
+> elevator.  Originally I tried with deadline, and just
+> re-ran the test with noop (hence the long delay with
+> the answer) - changing linux elevator changes almost
+> nothing in the results - modulo some random "fluctuations".
 
-Keep in mind that in the pata_acpi case where we don't do anything to 
-program the hardware directly, we can still use _STM to program a lower 
-speed than the BIOS chose if we decide to do this. Windows does indeed 
-do this (you can force PIO mode in the control panel, and it will also 
-reduce UDMA speeds or drop to PIO if there are too many CRC errors or 
-timeouts), so this should be safe. We just had better be sure that the 
-speed we give it is valid, since there is no sane way for the function 
-to indicate failure. (Thus the problem with the "cram in all possible 
-values to see what it supports" strategy for determining mode limits..)
+I see.  Thanks for testing.
+
+> In any case, NCQ - at least in this drive - just does
+> not work.  Linux with its I/O elevator may help to
+> speed things up a bit, but the disk does nothing in
+> this area.  NCQ doesn't slow things down either - it
+> just does not work.
+> 
+> The same's for ST3250620NS "enterprise" drives.
+> 
+> By the way, Seagate announced Barracuda ES 2 series
+> (in range 500..1200Gb if memory serves) - maybe with
+> those, NCQ will work better?
+
+No one would know without testing.
+
+> Or maybe it's libata which does not implement NCQ
+> "properly"?  (As I shown before, with almost all
+> ol'good SCSI drives TCQ helps alot - up to 2x the
+> difference and more - with multiple I/O threads)
+
+Well, what the driver does is minimal.  It just passes through all the
+commands to the harddrive.  After all, NCQ/TCQ gives the harddrive more
+responsibility regarding request scheduling.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
