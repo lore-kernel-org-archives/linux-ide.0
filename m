@@ -1,88 +1,49 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 4/10] libata: call irq_off from bmdma_freeze()
-Date: Wed, 04 Jul 2007 16:52:56 +0800
-Message-ID: <468B5FE8.9080609@tw.ibm.com>
-References: <468B5C97.1000803@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: how to handle pata_via when controller not in fully-pci-native
+ mode (two irqs?)
+Date: Wed, 04 Jul 2007 17:55:39 +0900
+Message-ID: <468B608B.50803@gmail.com>
+References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com>	<20070623105344.3ece6db1@the-village.bc.nu>	<467CF1E6.8000905@genesi-usa.com>	<4689FBCB.90608@gmail.com>	<468A04A0.1020003@genesi-usa.com>	<20070703131736.5ddc0b89@the-village.bc.nu>	<468A41CC.6030203@genesi-usa.com>	<20070703143809.5064fa35@the-village.bc.nu>	<468A5223.4050906@genesi-usa.com> <20070703145334.2bc9b773@the-village.bc.nu> <468A5532.9020600@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:60092 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756907AbXGDIxB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:53:01 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l648r1Qp013045
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 04:53:01 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l648r0S2243742
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:53:00 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l648r0DW010724
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:53:00 -0600
-In-Reply-To: <468B5C97.1000803@tw.ibm.com>
+Received: from nz-out-0506.google.com ([64.233.162.238]:40902 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760186AbXGDIzo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:55:44 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1503717nze
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 01:55:44 -0700 (PDT)
+In-Reply-To: <468A5532.9020600@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
+To: Matt Sealey <matt@genesi-usa.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Patch 4/10:
-  Call irq_off() from bmdma_freeze() and remove duplicated code.
+Matt Sealey wrote:
+> Well, let's put the class code as "native" since the chip is made "native",
+> in a platform file somewhere. Then, we can have a configuration option in
+> the platform code which allows users to choose whether the IDE configuration
+> is reworked to steer to a single IRQ or two IRQs. That way they can choose
+> which driver they are using (they cannot use both, and compiling in both is
+> stupid, so..)
+> 
+> Then pata_via can just work. It does seem easier now to do this in the
+> platform support thing. As long as it only affects brand new kernels and
+> is only enabled when libata pata_via is enabled (we can make it depend on
+> it) then it should work fine, although having it in some other config
+> page seems pretty quirky. I don't know how you would suggest to do it..
+> have CONFIG_FIX_PEGASOS_IDE in drivers/ata/Kconfig and code in
+> arch/powerpc/platforms/chrp which recognises it? This patch idea has to
+> get past two teams now, though.. and modifying chip registers that early
+> in CHRP initialisation seems to be quirky in itself (I don't think PCI
+> is up yet) :D
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
+I forgot about the PCI resource fix up done for legacy hosts.  I think
+making the host legacy is the best way to take here considering that -
+no change for both ide and libata, just some fix up in platform code.
+ATA native/legacy thing doesn't mean much.  It's just how the resources
+are allocated.  Is there any specific reason to use native mode?
 
-
-diff -Nrup 03_add_irq_off_lldd/drivers/ata/libata-sff.c 04_convert_freeze/drivers/ata/libata-sff.c
---- 03_add_irq_off_lldd/drivers/ata/libata-sff.c	2007-07-04 11:57:33.000000000 +0800
-+++ 04_convert_freeze/drivers/ata/libata-sff.c	2007-07-04 13:12:38.000000000 +0800
-@@ -413,20 +413,7 @@ void ata_bmdma_stop(struct ata_queued_cm
-  */
- void ata_bmdma_freeze(struct ata_port *ap)
- {
--	struct ata_ioports *ioaddr = &ap->ioaddr;
--
--	ap->ctl |= ATA_NIEN;
--	ap->last_ctl = ap->ctl;
--
--	iowrite8(ap->ctl, ioaddr->ctl_addr);
--
--	/* Under certain circumstances, some controllers raise IRQ on
--	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
--	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
--	 */
--	ata_chk_status(ap);
--
--	ap->ops->irq_clear(ap);
-+	ap->ops->irq_off(ap);
- }
- 
- /**
-diff -Nrup 03_add_irq_off_lldd/drivers/ata/pata_scc.c 04_convert_freeze/drivers/ata/pata_scc.c
---- 03_add_irq_off_lldd/drivers/ata/pata_scc.c	2007-07-04 12:09:29.000000000 +0800
-+++ 04_convert_freeze/drivers/ata/pata_scc.c	2007-07-04 13:12:38.000000000 +0800
-@@ -875,20 +875,7 @@ static u8 scc_irq_ack (struct ata_port *
- 
- static void scc_bmdma_freeze (struct ata_port *ap)
- {
--	struct ata_ioports *ioaddr = &ap->ioaddr;
--
--	ap->ctl |= ATA_NIEN;
--	ap->last_ctl = ap->ctl;
--
--	out_be32(ioaddr->ctl_addr, ap->ctl);
--
--	/* Under certain circumstances, some controllers raise IRQ on
--	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
--	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
--	 */
--	ata_chk_status(ap);
--
--	ap->ops->irq_clear(ap);
-+	scc_irq_off(ap);
- }
- 
- /**
-
-
+-- 
+tejun
