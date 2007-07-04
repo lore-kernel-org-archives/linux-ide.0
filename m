@@ -1,36 +1,47 @@
-From: Hadmut Danisch <hadmut@danisch.de>
-Subject: Re: BIOS does not recognize 500GB-disk
-Date: Wed, 04 Jul 2007 18:31:01 +0200
-Message-ID: <468BCB45.3010600@msgid.danisch.de>
-References: <20070703225517.GA22912@danisch.de> <Pine.LNX.4.64.0707031920570.2577@p34.internal.lan>
+From: Dan Aloni <da-x@monatomic.org>
+Subject: Re: Some NCQ numbers...
+Date: Wed, 4 Jul 2007 19:44:26 +0300
+Message-ID: <20070704164426.GA8061@localdomain>
+References: <468392CE.6010206@msgid.tls.msk.ru> <20070704154405.GA27166@localdomain> <468BC81F.7090102@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sklave3.rackland.de ([88.198.248.38]:52660 "EHLO
-	sklave3.rackland.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbXGDQfI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 12:35:08 -0400
-In-Reply-To: <Pine.LNX.4.64.0707031920570.2577@p34.internal.lan>
+Received: from noname.neutralserver.com ([70.84.186.210]:26473 "EHLO
+	noname.neutralserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757116AbXGDQoj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 12:44:39 -0400
+Content-Disposition: inline
+In-Reply-To: <468BC81F.7090102@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Justin Piszcz wrote:
-
+On Wed, Jul 04, 2007 at 08:17:35PM +0400, Michael Tokarev wrote:
+> Dan Aloni wrote:
+> > On Thu, Jun 28, 2007 at 02:51:58PM +0400, Michael Tokarev wrote:
+> >> [..]
+> >> Test machine was using MPTSAS driver for the following card:
+> >>   SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
+> >>
+> >> Pretty similar results were obtained on an AHCI controller:
+> >>   SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) Serial ATA Storage Controller AHCI (rev 01)
+> >> on another machines.
+> > 
+> > Are you sure that NCQ was enabled between the controller and drive? 
+> > Did you verify this? I know about some versions that disable NCQ 
+> > support internally in their firmware (something to do with bugs in
+> > error handling).
 > 
-> Turn off NCQ on the drive, limit to 1.5GBps operation, try again, I have
-> the same issue with a new RAPTOR (NCQ) and old motherboard.
+> The next obvious question is: how to check/verify this?
 
+On the lowest level, it's possible using a protocol analyzer. If you 
+don't have one, you need to be familiar with the controller's driver 
+or its firmware. If the driver is based on libata, I think it's 
+possible to get this information easier. Otherwise, such as in the 
+case of mptsas, it can be completely hidden by the firmware.
 
-
-Yup, that was the problem. The VIA chipset did not support SATA-II. I
-had to set a jumper on the disk to slow it down to SATA-I.
-Unfortunately, they didn't tell that jumper setting on the disk's
-sticker, and the disk didn't come with a jumper, so it was not obvious.
-
-
-Thanks and regards
-
-Hadmut
+-- 
+Dan Aloni
+XIV LTD, http://www.xivstorage.com
+da-x (at) monatomic.org, dan (at) xiv.co.il
