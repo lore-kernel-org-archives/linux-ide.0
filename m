@@ -1,31 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
-Date: Wed, 04 Jul 2007 14:46:58 +0900
-Message-ID: <468B3452.6040509@gmail.com>
-References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: sata_sil, writing bug with multiple cards?
+Date: Wed, 4 Jul 2007 09:08:21 +0200
+Message-ID: <200707040908.21512.ak@suse.de>
+References: <courier.4689EFD9.0000589A@blargh.com> <courier.468B17B1.00001A78@blargh.com> <468B19BA.6030202@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:45186 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331AbXGDFwG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 01:52:06 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3663334pyb
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 22:52:05 -0700 (PDT)
-In-Reply-To: <468B3126.3080706@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:50390 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753346AbXGDHIe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 03:08:34 -0400
+In-Reply-To: <468B19BA.6030202@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Francois Romieu <romieu@fr.zoreil.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> Francois Romieu wrote:
->> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
->> still seems bizarre:
+On Wednesday 04 July 2007 05:53:30 Tejun Heo wrote:
+> 7091@blargh.com wrote:
+> > Apologies for the chain-replying to myself, just replying as I think of
+> > things to try.
+> > 7091@blargh.com writes:
+> >> Here's an odd data point. 
+> >> I just broke that array, formatted all three of those partitions
+> >> seperately, mounted and did my ISO copy test. 
+> >> All three drives, run one at a time, function fine.  No corruption.
+> > 
+> > Here's another odd one.  I did the following:
+> > # Mount all 3 drives as individuals...
+> > mount /dev/sda1 /mnt/a
+> > mount /dev/sdb1 /mnt/b
+> > mount /dev/sdc1 /mnt/c
+> > # Copy the same file to all three drives at the same time
+> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso a/kn10.iso &
+> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso b/kn10.iso &
+> > cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso c/kn10.iso &
+> > Got massive corruption.
+> 
+> Hmmm... I don't think this is sata_sil driver bug.  cc'ing Andi Kleen
+> and lkml.  Andi, the original thread can be read from
+> 
+> http://thread.gmane.org/gmane.linux.ide/20213
 
-Okay, 872aad45 doesn't have the patch yet.  Either apply the patch
-manually or you need to wait a bit more.
+It seems to be a 32bit system. There is no IOMMU. 
 
--- 
-tejun
+If it has >2GB or so it might be worth trying booting it with mem=2G
+and see if it goes away. However if it was the standard VIA DAC issue
+you should get problems even with a single interface, so probably
+that's not it either.
+
+Most likely it is some sort of hardware bug that we might
+not be able to do much about. Have you tried contacting SIL or VIA? 
+e.g. if you have some other system with a different chipset it might
+be useful to test the SIL controllers in those.
+
+I would perhaps also try a newer kernel.
+
+-Andi
