@@ -1,29 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 9/15] ide: add PIO masks
-Date: Wed, 4 Jul 2007 15:31:25 +0100
-Message-ID: <20070704153125.771f9a79@the-village.bc.nu>
-References: <200706302107.42458.bzolnier@gmail.com>
-	<468AA351.4090509@ru.mvista.com>
-	<20070703230034.233d0d7e@the-village.bc.nu>
-	<468BAD97.2030904@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_hpt3x3: Major reworking and testing
+Date: Wed, 04 Jul 2007 18:28:59 +0400
+Message-ID: <468BAEAB.3070909@ru.mvista.com>
+References: <20070703161002.1576c39d@the-village.bc.nu> <200707032212.01619.bzolnier@gmail.com> <468AB462.4090203@ru.mvista.com> <200707040044.27185.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41052 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759379AbXGDOZr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 10:25:47 -0400
-In-Reply-To: <468BAD97.2030904@ru.mvista.com>
+Received: from h155.mvista.com ([63.81.120.155]:31815 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1759483AbXGDO1F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 10:27:05 -0400
+In-Reply-To: <200707040044.27185.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
-> > It doesn't need to do anything. 
-> 
->     Not true. It should call ide_config_drive_speed() at least, else PIO 
-> autotuning won't actually work.
+Hello.
 
-Indeed - I forgot that old-ide doesn't do this itself but leaves it up to
-the driver to forget 8)
+Bartlomiej Zolnierkiewicz wrote:
+
+>>>Does anybody have DOS driver for HPT343?  Google doesn't have it...
+
+>>    I have the drivers for HPT34[35] -- tried dissassembling them some years 
+>>ago...
+
+> /me wants
+
+    I tried sending binaries as is but GMail bounced them off. :-/
+    Will try to tar and feather them... ;-)
+
+> Bart
+
+MBR, Sergei
