@@ -1,80 +1,50 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 2/2] libata: change the last state of pio read to HSM_ST_IDLE
-Date: Wed, 04 Jul 2007 16:33:01 +0800
-Message-ID: <468B5B3D.6040805@tw.ibm.com>
-References: <468B5930.3070000@tw.ibm.com>
+Subject: [PATCH 0/10] libata: irq_on/off restructuring
+Date: Wed, 04 Jul 2007 16:38:47 +0800
+Message-ID: <468B5C97.1000803@tw.ibm.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:42628 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755301AbXGDIdG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:33:06 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l648X5Yd023739
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 04:33:05 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:41085 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756300AbXGDIix (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:38:53 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l648cplr030345
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 04:38:51 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l648X5FW269222
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:33:05 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l648cpTg089980
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:38:51 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l648X4nS019956
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:33:04 -0600
-In-Reply-To: <468B5930.3070000@tw.ibm.com>
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l648coEk027364
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:38:51 -0600
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Patch 2/2:
-  After reading the last pio data block, the HSM is waiting for device
-to be idle, not waiting for the last interrupt.
+For ATA, there are two levels of mechanism available to turn irq on/off.
+- device level: nIEN bit in the control register. This masks INTRQ from the device.
+- host adapter level: some controller can mask out per-port irq from the host adapter.
 
-This patch changes the state after "PIO data-in" to HSM_ST_IDLE instead
-of HSM_ST_LAST for accuracy.
+Currently various parts of libata deal with irq on/off.
+  ex. tf_load() can alter the nIEN bit.
+  ex. irq_on() also alters the device level nIEN bit.
+  ex. freeze()/thaw() deal with the host adapter irq mask.
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
+It seems these irq on/off codes could be better structured.
+Patches against libata-dev tree for your review/advice, thanks.
 
-diff -Nrup 01_move_altstatus/drivers/ata/libata-core.c 02_pio_read_state/drivers/ata/libata-core.c
---- 01_move_altstatus/drivers/ata/libata-core.c	2007-07-04 11:32:36.000000000 +0800
-+++ 02_pio_read_state/drivers/ata/libata-core.c	2007-07-04 11:33:53.000000000 +0800
-@@ -4462,7 +4462,7 @@ static void ata_pio_sector(struct ata_qu
- 	unsigned char *buf;
- 
- 	if (qc->curbytes == qc->nbytes - qc->sect_size)
--		ap->hsm_task_state = HSM_ST_LAST;
-+		ap->hsm_task_state = do_write ? HSM_ST_LAST : HSM_ST_IDLE;
- 
- 	page = sg[qc->cursg].page;
- 	offset = sg[qc->cursg].offset + qc->cursg_ofs;
-@@ -4811,6 +4811,8 @@ int ata_hsm_move(struct ata_port *ap, st
- 	 */
- 	WARN_ON(in_wq != ata_hsm_ok_in_wq(ap, qc));
- 
-+	WARN_ON(ap->hsm_task_state == HSM_ST_IDLE);
-+
- fsm_start:
- 	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
- 		ap->print_id, qc->tf.protocol, ap->hsm_task_state, status);
-@@ -4968,8 +4970,7 @@ fsm_start:
- 
- 			ata_pio_sectors(qc);
- 
--			if (ap->hsm_task_state == HSM_ST_LAST &&
--			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
-+			if (ap->hsm_task_state == HSM_ST_IDLE) {
- 				/* all data read */
- 				status = ata_wait_idle(ap);
- 				goto fsm_start;
-@@ -4980,6 +4981,7 @@ fsm_start:
- 		break;
- 
- 	case HSM_ST_LAST:
-+	case HSM_ST_IDLE:
- 		if (unlikely(!ata_ok(status))) {
- 			qc->err_mask |= __ac_err_mask(status);
- 			ap->hsm_task_state = HSM_ST_ERR;
-
+1/10: remove irq_on from ata_bus_reset() and ata_std_postreset()
+2/10: add ->irq_off() for symmetry
+3/10: implement ->irq_off() in LLDDs
+4/10: use irq_off from bmdma_freeze()
+5/10: use freeze()/thaw() for polling
+6/10: add freeze()/thaw() to old EH LLDDs
+7/10: pdc_freeze() semantic change
+8/10: remove writing of tf->ctl from ata_tf_load()
+9/10: integrate freeze()/thaw() with irq_on/off.
+10/10: integrate freeze/thaw with irq_on/off in LLDDs
 
