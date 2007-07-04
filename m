@@ -1,37 +1,39 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 04 Jul 2007 20:17:35 +0400
-Message-ID: <468BC81F.7090102@msgid.tls.msk.ru>
-References: <468392CE.6010206@msgid.tls.msk.ru> <20070704154405.GA27166@localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 6/15] ide: ide_find_best_pio_mode() fixes
+Date: Wed, 04 Jul 2007 20:19:44 +0400
+Message-ID: <468BC8A0.1080200@ru.mvista.com>
+References: <200706302104.42299.bzolnier@gmail.com> <468917D2.6010907@ru.mvista.com> <200707022005.01655.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:22316 "EHLO hobbit.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752370AbXGDQRh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 12:17:37 -0400
-In-Reply-To: <20070704154405.GA27166@localdomain>
+Received: from h155.mvista.com ([63.81.120.155]:32346 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756682AbXGDQRs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 12:17:48 -0400
+In-Reply-To: <200707022005.01655.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Dan Aloni wrote:
-> On Thu, Jun 28, 2007 at 02:51:58PM +0400, Michael Tokarev wrote:
->> [..]
->> Test machine was using MPTSAS driver for the following card:
->>   SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
->>
->> Pretty similar results were obtained on an AHCI controller:
->>   SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) Serial ATA Storage Controller AHCI (rev 01)
->> on another machines.
-> 
-> Are you sure that NCQ was enabled between the controller and drive? 
-> Did you verify this? I know about some versions that disable NCQ 
-> support internally in their firmware (something to do with bugs in
-> error handling).
+Hello.
 
-The next obvious question is: how to check/verify this?
+Bartlomiej Zolnierkiewicz wrote:
 
-/mjt
+> [PATCH] ide: ide_find_best_pio_mode() fixes (take 2)
+
+> * Check IORDY bit for PIO modes > 2.
+
+> * Some devices claim maximum PIO mode > 2 in id->tPIO, they were punished too
+>   severly for this by being limited to PIO_SLOW.  Limit them to PIO2 instead.
+
+> v2:
+> * Fix PIO number being returned incorrectly instead of PIO mode
+>   (Noticed by Sergei).
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
