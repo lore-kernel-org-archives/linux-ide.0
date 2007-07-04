@@ -1,50 +1,68 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil, writing bug with multiple cards?
-Date: Wed, 04 Jul 2007 12:53:30 +0900
-Message-ID: <468B19BA.6030202@gmail.com>
-References: <courier.4689EFD9.0000589A@blargh.com>            <468A0E24.7020000@gmail.com>            <courier.468B005A.0000127A@blargh.com>            <courier.468B1258.000018F4@blargh.com> <courier.468B17B1.00001A78@blargh.com>
+Subject: Re: Another SATA device with spurious NCQ completions
+Date: Wed, 04 Jul 2007 13:39:09 +0900
+Message-ID: <468B246D.30506@gmail.com>
+References: <46800AD3.7050803@redhat.com> <4689FDE6.2080806@gmail.com> <468A43E7.2030001@ans.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:46474 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707AbXGDDxf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 23:53:35 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3101241wah
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 20:53:35 -0700 (PDT)
-In-Reply-To: <courier.468B17B1.00001A78@blargh.com>
+Received: from nz-out-0506.google.com ([64.233.162.228]:63806 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954AbXGDEjP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 00:39:15 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1455203nze
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 21:39:14 -0700 (PDT)
+In-Reply-To: <468A43E7.2030001@ans.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 7091@blargh.com
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, ak@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-7091@blargh.com wrote:
-> Apologies for the chain-replying to myself, just replying as I think of
-> things to try.
-> 7091@blargh.com writes:
->> Here's an odd data point. 
->> I just broke that array, formatted all three of those partitions
->> seperately, mounted and did my ISO copy test. 
->> All three drives, run one at a time, function fine.  No corruption.
+Krzysztof Oledzki wrote:
+> On 2007-07-03 09:42, Tejun Heo wrote:
+>> Chuck Ebbert wrote:
+>>> From:
+>>> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=245512
+>>>
+>>>
+>>> The following error consistently appears at apparently random
+>>> intervals in syslog:
+>>>
+>>> kernel: ata1.00: exception Emask 0x2 SAct 0x1001 SErr 0x0 action 0x2
+>>> frozen
+>>> kernel: ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x1001
+>>> FIS=004040a1:00000800)
+>>> kernel: ata1.00: cmd 61/08:00:39:2b:cc/00:00:08:00:00/40 tag 0 cdb
+>>> 0x0 data 4096 out
+>>> kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2
+>>> (HSM violation)
+>>> kernel: ata1.00: cmd 61/08:60:e1:2b:cc/00:00:08:00:00/40 tag 12 cdb
+>>> 0x0 data
+>>> 4096 out
+>>> kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2
+>>> (HSM violation)
+>>>
+>>> Controller is ATI SB600 using the AHCI driver.
+>>> 64-bit DMA is disabled.
+>>> Disk is:
+>>> ata1.00: ATA-7: ST3160812AS, 3.ADJ, max UDMA/133
+>>>
+>>>
+>>> Can't we just turn off NCQ automatically when this happens?
+>>
+>> After sever such occasions, NCQ will be turned off automatically.
+>> Hmm... It's a bit surprising to see this on a Seagate drive tho.  Can
+>> someone crosscheck this by attaching the drive to an intel ahci?
+>>
 > 
-> Here's another odd one.  I did the following:
-> # Mount all 3 drives as individuals...
-> mount /dev/sda1 /mnt/a
-> mount /dev/sdb1 /mnt/b
-> mount /dev/sdc1 /mnt/c
-> # Copy the same file to all three drives at the same time
-> cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso a/kn10.iso &
-> cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso b/kn10.iso &
-> cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso c/kn10.iso &
-> Got massive corruption.
+> After upgradin kernel on one of my firewallas (2.6.14->2.6.20) I noticed
+> similar problem with another Seagate: ST380817AS connected to ICH6.
 
-Hmmm... I don't think this is sata_sil driver bug.  cc'ing Andi Kleen
-and lkml.  Andi, the original thread can be read from
+Can you please give a shot at 2.6.22-rc7?  The log you posted lacks
+information about why it's happening.
 
-http://thread.gmane.org/gmane.linux.ide/20213
-
-Any ideas?
+Thanks.
 
 -- 
 tejun
