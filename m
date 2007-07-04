@@ -1,138 +1,29 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 8/10] libata: remove writing of tf->ctl from ata_tf_load()
-Date: Wed, 04 Jul 2007 17:03:54 +0800
-Message-ID: <468B627A.6050605@tw.ibm.com>
-References: <468B5C97.1000803@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Linux Software RAID is really RAID?
+Date: Wed, 4 Jul 2007 10:14:24 +0100
+Message-ID: <20070704101424.5808543e@the-village.bc.nu>
+References: <cd98e0260706261043t32fe6609ye1e4e252c722358c@mail.gmail.com>
+	<46815C3F.6090204@wasp.net.au>
+	<468A05A4.60006@gmail.com>
+	<cd98e0260707030517y1fbb60ban29063439f2665834@mail.gmail.com>
+	<468AD708.2010806@rtr.ca>
+	<468AF5F8.9060703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:36672 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756052AbXGDJD7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 05:03:59 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6493xvN019601
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 05:03:59 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l6493xQG218142
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 03:03:59 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6493wIa003784
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 03:03:58 -0600
-In-Reply-To: <468B5C97.1000803@tw.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <468AF5F8.9060703@gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Johny Mail list <maillist.johny@gmail.com>, Brad Campbell <brad@wasp.net.au>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
 
-Patch 8/10:
- 
-The relevant bits in the ctl register are HOB, SRST and nIEN.
- - HOB is only used by ata_tf_read().
- - For SRST, soft reset is not the duty of tf_load.
- - For nIEN, explicit irq_on()/irq_off and freeze()/thaw() are provided.
+> > A hard(ware) lockup, not software.
+> > That's why Intel says ICH5 doesn't do hotplug.
+> 
+> OIC.  I don't think there's much left to do from the driver side then.
+> Or is there any workaround?
 
-  Since EH/HSM now call explicit freeze()/thaw() for irq off/on.
-Remove the implicit nIEN handling from ata_tf_load().
-
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
----
-
-diff -Nrup 07_sata_promise_freeze/drivers/ata/libata-sff.c 08_tfload_cleanup/drivers/ata/libata-sff.c
---- 07_sata_promise_freeze/drivers/ata/libata-sff.c	2007-07-04 13:12:38.000000000 +0800
-+++ 08_tfload_cleanup/drivers/ata/libata-sff.c	2007-07-04 13:20:30.000000000 +0800
-@@ -153,11 +153,13 @@ void ata_tf_load(struct ata_port *ap, co
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
- 
--	if (tf->ctl != ap->last_ctl) {
--		iowrite8(tf->ctl, ioaddr->ctl_addr);
--		ap->last_ctl = tf->ctl;
--		ata_wait_idle(ap);
--	}
-+	/*
-+	 * The relevant bits in the ctl register are HOB, SRST and nIEN.
-+	 * HOB is only used by ata_tf_read().
-+	 * For SRST, soft reset is not the duty of tf_load.
-+	 * For nIEN, explicit ->irq_on() and ->irq_off are provided.
-+	 * That's why tf->ctl is ignored here.
-+	 */
- 
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
- 		iowrite8(tf->hob_feature, ioaddr->feature_addr);
-diff -Nrup 07_sata_promise_freeze/drivers/ata/pata_scc.c 08_tfload_cleanup/drivers/ata/pata_scc.c
---- 07_sata_promise_freeze/drivers/ata/pata_scc.c	2007-07-04 13:17:13.000000000 +0800
-+++ 08_tfload_cleanup/drivers/ata/pata_scc.c	2007-07-04 13:20:30.000000000 +0800
-@@ -271,12 +271,6 @@ static void scc_tf_load (struct ata_port
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
- 
--	if (tf->ctl != ap->last_ctl) {
--		out_be32(ioaddr->ctl_addr, tf->ctl);
--		ap->last_ctl = tf->ctl;
--		ata_wait_idle(ap);
--	}
--
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
- 		out_be32(ioaddr->feature_addr, tf->hob_feature);
- 		out_be32(ioaddr->nsect_addr, tf->hob_nsect);
-diff -Nrup 07_sata_promise_freeze/drivers/ata/sata_svw.c 08_tfload_cleanup/drivers/ata/sata_svw.c
---- 07_sata_promise_freeze/drivers/ata/sata_svw.c	2007-07-04 12:09:29.000000000 +0800
-+++ 08_tfload_cleanup/drivers/ata/sata_svw.c	2007-07-04 13:20:30.000000000 +0800
-@@ -125,11 +125,6 @@ static void k2_sata_tf_load(struct ata_p
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
- 
--	if (tf->ctl != ap->last_ctl) {
--		writeb(tf->ctl, ioaddr->ctl_addr);
--		ap->last_ctl = tf->ctl;
--		ata_wait_idle(ap);
--	}
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
- 		writew(tf->feature | (((u16)tf->hob_feature) << 8),
- 		       ioaddr->feature_addr);
-diff -Nrup 07_sata_promise_freeze/drivers/ata/sata_vsc.c 08_tfload_cleanup/drivers/ata/sata_vsc.c
---- 07_sata_promise_freeze/drivers/ata/sata_vsc.c	2007-07-04 12:09:29.000000000 +0800
-+++ 08_tfload_cleanup/drivers/ata/sata_vsc.c	2007-07-04 13:20:30.000000000 +0800
-@@ -137,36 +137,11 @@ static void vsc_thaw(struct ata_port *ap
- }
- 
- 
--static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
--{
--	void __iomem *mask_addr;
--	u8 mask;
--
--	mask_addr = ap->host->iomap[VSC_MMIO_BAR] +
--		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
--	mask = readb(mask_addr);
--	if (ctl & ATA_NIEN)
--		mask |= 0x80;
--	else
--		mask &= 0x7F;
--	writeb(mask, mask_addr);
--}
--
--
- static void vsc_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
- 
--	/*
--	 * The only thing the ctl register is used for is SRST.
--	 * That is not enabled or disabled via tf_load.
--	 * However, if ATA_NIEN is changed, then we need to change the interrupt register.
--	 */
--	if ((tf->ctl & ATA_NIEN) != (ap->last_ctl & ATA_NIEN)) {
--		ap->last_ctl = tf->ctl;
--		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
--	}
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
- 		writew(tf->feature | (((u16)tf->hob_feature) << 8),
- 		       ioaddr->feature_addr);
-
-
+I'm not familiar with the ICH5 SATA side but on the PATA side we also
+need to run code to fix up chips on a hotplug (and *before* the plug in
+some cases) - eg the ICH2 requires we turn off IORDY.
