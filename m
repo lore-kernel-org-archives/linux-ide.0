@@ -1,45 +1,43 @@
-From: 7091@blargh.com
-Subject: Re: sata_sil, writing bug with multiple cards?
-Date: Tue, 03 Jul 2007 20:44:49 -0700
-Message-ID: <courier.468B17B1.00001A78@blargh.com>
-References: <courier.4689EFD9.0000589A@blargh.com>
-            <468A0E24.7020000@gmail.com>
-            <courier.468B005A.0000127A@blargh.com>
-            <courier.468B1258.000018F4@blargh.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata_acpi: A different strategy for using ACPI information
+Date: Wed, 04 Jul 2007 12:49:19 +0900
+Message-ID: <468B18BF.6040207@gmail.com>
+References: <20070703155417.11d81c75@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from blargh.com ([24.234.115.147]:41528 "EHLO blargh.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753327AbXGDDou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jul 2007 23:44:50 -0400
-In-Reply-To: <courier.468B1258.000018F4@blargh.com>
+Received: from py-out-1112.google.com ([64.233.166.178]:10271 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755302AbXGDDtZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2007 23:49:25 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3619585pyb
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 20:49:24 -0700 (PDT)
+In-Reply-To: <20070703155417.11d81c75@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 7091@blargh.com
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
 
-Apologies for the chain-replying to myself, just replying as I think of 
-things to try. 
-
-7091@blargh.com writes: 
-
-> Here's an odd data point.  
+Alan Cox wrote:
+> Lots of BIOSen simply return the BIOS set modes via the ACPI methods and
+> pass back the values you give it across suspend/resume. Thus instead of
+> trying to do clever stuff with this data we instead use it as a way to
+> take a sneak peak at cable type information when viable. This should help
+> us catch more of the laptops that do weird stuff, the VIA SATA bridges
+> and the totally horked Nvidia cable handling.
 > 
-> I just broke that array, formatted all three of those partitions 
-> seperately, mounted and did my ISO copy test.  
+> For now its only used by the VIA and AMD/NV driver until we get a better
+> idea of whether this is a sensible idea or not.
 > 
-> All three drives, run one at a time, function fine.  No corruption.
+> Opinions ?
 
-Here's another odd one.  I did the following:
-# Mount all 3 drives as individuals...
-mount /dev/sda1 /mnt/a
-mount /dev/sdb1 /mnt/b
-mount /dev/sdc1 /mnt/c
-# Copy the same file to all three drives at the same time
-cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso a/kn10.iso &
-cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso b/kn10.iso &
-cp KNOPPIX_V5.1.0CD-2006-12-30-EN.iso c/kn10.iso & 
+If you don't do _STM first, it basically boils down to reading BIOS
+setting during boot.  Over suspend/resume cycle, the values are
+preserved by libata-acpi.  At this point, I think honoring the BIOS
+setting is the right thing to do.  It just took us too long and I'm not
+too sure about using ACPI for this.  It's generic so it's certainly
+better in some aspect.  It's just a bit obfuscating, IMHO.
 
-Got massive corruption.
+-- 
+tejun
