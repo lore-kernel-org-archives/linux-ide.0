@@ -1,83 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/6] siimage: PIO mode setup fixes
-Date: Wed, 04 Jul 2007 22:59:13 +0400
-Message-ID: <468BEE01.1050102@ru.mvista.com>
-References: <200706232004.08914.bzolnier@gmail.com> <200706300012.12394.bzolnier@gmail.com> <468BC7D2.2030901@ru.mvista.com> <200707042059.31567.bzolnier@gmail.com>
+From: Francois Romieu <romieu@fr.zoreil.com>
+Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
+Date: Wed, 4 Jul 2007 20:59:36 +0200
+Message-ID: <20070704185936.GA13212@electric-eye.fr.zoreil.com>
+References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com> <468B3452.6040509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:33002 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756112AbXGDS5R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 14:57:17 -0400
-In-Reply-To: <200707042059.31567.bzolnier@gmail.com>
+Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:56407 "EHLO
+	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758631AbXGDTAd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 15:00:33 -0400
+Content-Disposition: inline
+In-Reply-To: <468B3452.6040509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo <htejun@gmail.com> :
+> Tejun Heo wrote:
+> > Francois Romieu wrote:
+> >> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
+> >> still seems bizarre:
+> 
+> Okay, 872aad45 doesn't have the patch yet.  Either apply the patch
+> manually or you need to wait a bit more.
 
->>>>>* Add sil_tuneproc() wrapper for siimage_tuneproc() which also sets
->>>>> PIO mode on the device.
+I am confused. 4031826b3ca40982880f6b9f2282c7d7fad60d77 appears in the log:
+Author: Tejun Heo <htejun@gmail.com>                                            
+Date:   Tue Jul 3 01:38:47 2007 +0900                                           
+                                                                                
+    libata: fix assigned IRQ reporting                                          
+                                                                                
+    host->irq and host->irq2 should be set before ata_host_register() for       
+    IRQ reporting to work.  Move up host->irq assignment in                     
+    ata_host_activate() and add it to ata_pci_init_one() native path and        
+    pata_cs5520.                                                                
+                                                                                
+    The port info printing in ata_host_register() doesn't fit all the           
+    different controllers.  It should probably be moved out to LLDs with        
+    some helpers in the future.                                                 
+                                                                                
+    Signed-off-by: Tejun Heo <htejun@gmail.com>                                 
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>                                
 
->>>>   Planning on the global prefix change? :-)
+-> it is exactly the patch that you sent on 03/07/2007.
 
->>>Yep.
-
->>    Well, it didn't work out with 'ata_'... ;-)
-
-> Because of bad libata taking over our precioussssss namespace... ;-)
-
-    Thievessss! 8-)
-
-> Fortunately pata_sil680 driver uses "sil680_" prefix.
-
-    We'll make Coxsss pay. 8-)
-
->>>>   Note that PIO setup keeps being somewhat borken IODRY-wise even with this
->>>>patch as sil_tune_pio() only controls taskfile IORDY sampling -- the Right
->>>>Thing could only be done via speedproc() method...
-
->>>After rehashing the datasheet I see the source of the issue:
-
->>>IORDY is controlled in two registers and moreover it is always enabled
->>>if MDMA or UDMA transfer modes are selected.
-
->>    Yeah. I drafted some patch for pata_sil.c but Alan fixed it first and in a 
->>more simple way -- libata calls PIO/DMA setting methods in the strict 
->>sequence, and that allowed to bypass some checks...
-
-> I fail to see how this helps in this case, care to explain?
-
-    The whole reason for that resetproc() ceases to exist, no? At least that's 
-what I was able to grasp from looing at the older versions... And it's mean to 
-reset both channels just to be able to downgrade from UDMA to MWDMA (not a 
-thing routinely done anyway), so this needs to go.
-    Well, I'm seeing that it's also called from the ide_dma_timeout() and even 
-ide_dma_lostirq() methods; not sure how much necessary it is -- at least for 
-the latter case this seems just wrong...
-
->>>+	/* cheat for now and use the docs */
->>>+	speedp = data_speed[pio];
->>>+	speedt = tf_speed[tf_pio];
->>>+
->>> 	if (hwif->mmio) {
->>> 		hwif->OUTW(speedp, addr);
->>> 		hwif->OUTW(speedt, tfaddr);
->>> 		/* Now set up IORDY */
->>>-		if(mode_wanted == 3 || mode_wanted == 4)
->>>+		if (pio > 2)
-
->>    Not tf_pio? This IORDY bit is for taskfile accesses...
-
-> Would this be really OK (tf_pio takes minimum PIO mode)?
-
-    Well, probably not -- a slow mate drive could force IORDY disabled this 
-way... So, just 'pio' seems more correct.
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+-- 
+Ueimor
