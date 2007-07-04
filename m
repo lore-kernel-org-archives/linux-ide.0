@@ -1,123 +1,151 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev#upstream] libata: kill duplicate functions
-Date: Wed, 04 Jul 2007 17:58:00 +0900
-Message-ID: <468B6118.5040500@gmail.com>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: [PATCH 6/10] libata: add freeze/thaw to old EH LLDDs
+Date: Wed, 04 Jul 2007 16:59:57 +0800
+Message-ID: <468B618D.6060003@tw.ibm.com>
+References: <468B5C97.1000803@tw.ibm.com>
+Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.225]:41853 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754980AbXGDI6G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:58:06 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1504214nze
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 01:58:05 -0700 (PDT)
+Received: from e36.co.us.ibm.com ([32.97.110.154]:57257 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757299AbXGDJAE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 05:00:04 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l649038T012391
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 05:00:03 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l64903OB203154
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 03:00:03 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l64901ZE017999
+	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 03:00:02 -0600
+In-Reply-To: <468B5C97.1000803@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
 
-I like these _dumb functions but I think we can live with just one
-copy.
+Patch 6/10:
+Now that HSM polling code path uses freeze()/thaw() regardless of old EH or new EH.
+Add freeze()/thaw() to old EH LLDDs for the HSM polling code.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ---
- drivers/ata/libata-core.c |   79 ----------------------------------------------
- 1 file changed, 79 deletions(-)
 
-Index: work/drivers/ata/libata-core.c
-===================================================================
---- work.orig/drivers/ata/libata-core.c
-+++ work/drivers/ata/libata-core.c
-@@ -4165,68 +4165,6 @@ static void ata_fill_sg_dumb(struct ata_
+
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pata_ixp4xx_cf.c 06_add_freeze_thaw_to_lldd/drivers/ata/pata_ixp4xx_cf.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pata_ixp4xx_cf.c	2007-07-04 12:09:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pata_ixp4xx_cf.c	2007-07-04 13:17:13.000000000 +0800
+@@ -131,6 +131,9 @@ static struct ata_port_operations ixp4xx
+ 	.data_xfer	= ixp4xx_mmio_data_xfer,
+ 	.cable_detect	= ata_cable_40wire,
+ 
++	.freeze		= ata_bmdma_freeze,
++	.thaw		= ata_bmdma_thaw,
++
+ 	.irq_clear	= ixp4xx_irq_clear,
+ 	.irq_on		= ata_irq_on,
+ 	.irq_off	= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pata_scc.c 06_add_freeze_thaw_to_lldd/drivers/ata/pata_scc.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pata_scc.c	2007-07-04 13:12:38.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pata_scc.c	2007-07-04 13:17:13.000000000 +0800
+@@ -879,6 +879,18 @@ static void scc_bmdma_freeze (struct ata
  }
  
  /**
-- *	ata_fill_sg_dumb - Fill PCI IDE PRD table
-- *	@qc: Metadata associated with taskfile to be transferred
-- *
-- *	Fill PCI IDE PRD (scatter-gather) table with segments
-- *	associated with the current disk command. Perform the fill
-- *	so that we avoid writing any length 64K records for
-- *	controllers that don't follow the spec.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- */
--static void ata_fill_sg_dumb(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	struct scatterlist *sg;
--	unsigned int idx;
--
--	WARN_ON(qc->__sg == NULL);
--	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
--
--	idx = 0;
--	ata_for_each_sg(sg, qc) {
--		u32 addr, offset;
--		u32 sg_len, len, blen;
--
-- 		/* determine if physical DMA addr spans 64K boundary.
--		 * Note h/w doesn't support 64-bit, so we unconditionally
--		 * truncate dma_addr_t to u32.
--		 */
--		addr = (u32) sg_dma_address(sg);
--		sg_len = sg_dma_len(sg);
--
--		while (sg_len) {
--			offset = addr & 0xffff;
--			len = sg_len;
--			if ((offset + sg_len) > 0x10000)
--				len = 0x10000 - offset;
--
--			blen = len & 0xffff;
--			ap->prd[idx].addr = cpu_to_le32(addr);
--			if (blen == 0) {
--				/* Some PATA chipsets like the CS5530 can't
--				   cope with 0x0000 meaning 64K as the spec says */
--				ap->prd[idx].flags_len = cpu_to_le32(0x8000);
--				blen = 0x8000;
--				ap->prd[++idx].addr = cpu_to_le32(addr + 0x8000);
--			}
--			ap->prd[idx].flags_len = cpu_to_le32(blen);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
--
--			idx++;
--			sg_len -= len;
--			addr += len;
--		}
--	}
--
--	if (idx)
--		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
--}
--
--/**
-  *	ata_check_atapi_dma - Check whether ATAPI DMA can be supported
-  *	@qc: Metadata associated with taskfile to check
-  *
-@@ -4290,23 +4228,6 @@ void ata_dumb_qc_prep(struct ata_queued_
- 	ata_fill_sg_dumb(qc);
- }
++ *	scc_bmdma_thaw - Thaw BMDMA controller port
++ *	@ap: port to thaw
++ *
++ *	Note: Original code is ata_bmdma_thaw().
++ */
++
++static void scc_bmdma_thaw (struct ata_port *ap)
++{
++	scc_irq_on(ap);
++}
++
++/**
+  *	scc_pata_prereset - prepare for reset
+  *	@ap: ATA port to be reset
+  *	@deadline: deadline jiffies for the operation
+@@ -1025,6 +1037,7 @@ static const struct ata_port_operations 
+ 	.qc_issue		= ata_qc_issue_prot,
  
--/**
-- *	ata_dumb_qc_prep - Prepare taskfile for submission
-- *	@qc: Metadata associated with taskfile to be prepared
-- *
-- *	Prepare ATA taskfile for submission.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--void ata_dumb_qc_prep(struct ata_queued_cmd *qc)
--{
--	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
--		return;
--
--	ata_fill_sg_dumb(qc);
--}
--
- void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
+ 	.freeze			= scc_bmdma_freeze,
++	.thaw			= scc_bmdma_thaw,
+ 	.error_handler		= scc_error_handler,
+ 	.post_internal_cmd	= scc_bmdma_stop,
  
- /**
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/pdc_adma.c 06_add_freeze_thaw_to_lldd/drivers/ata/pdc_adma.c
+--- 05_convert_hsm_to_freeze/drivers/ata/pdc_adma.c	2007-07-04 12:09:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/pdc_adma.c	2007-07-04 13:17:13.000000000 +0800
+@@ -171,6 +171,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= adma_qc_issue,
+ 	.eng_timeout		= adma_eng_timeout,
+ 	.data_xfer		= ata_data_xfer,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= adma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_mv.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_mv.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_mv.c	2007-07-04 12:09:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_mv.c	2007-07-04 13:17:13.000000000 +0800
+@@ -453,6 +453,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+@@ -483,6 +486,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+@@ -513,6 +519,9 @@ static const struct ata_port_operations 
+ 
+ 	.eng_timeout		= mv_eng_timeout,
+ 
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
++
+ 	.irq_clear		= mv_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_qstor.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_qstor.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_qstor.c	2007-07-04 12:09:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_qstor.c	2007-07-04 13:17:13.000000000 +0800
+@@ -157,6 +157,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= qs_qc_issue,
+ 	.data_xfer		= ata_data_xfer,
+ 	.eng_timeout		= qs_eng_timeout,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= qs_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+diff -Nrup 05_convert_hsm_to_freeze/drivers/ata/sata_sx4.c 06_add_freeze_thaw_to_lldd/drivers/ata/sata_sx4.c
+--- 05_convert_hsm_to_freeze/drivers/ata/sata_sx4.c	2007-07-04 12:09:29.000000000 +0800
++++ 06_add_freeze_thaw_to_lldd/drivers/ata/sata_sx4.c	2007-07-04 13:17:13.000000000 +0800
+@@ -203,6 +203,8 @@ static const struct ata_port_operations 
+ 	.qc_issue		= pdc20621_qc_issue_prot,
+ 	.data_xfer		= ata_data_xfer,
+ 	.eng_timeout		= pdc_eng_timeout,
++	.freeze			= ata_bmdma_freeze,
++	.thaw			= ata_bmdma_thaw,
+ 	.irq_clear		= pdc20621_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 	.irq_off		= ata_irq_off,
+
+
