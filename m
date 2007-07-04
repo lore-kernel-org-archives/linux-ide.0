@@ -1,61 +1,54 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 4 Jul 2007 06:33:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0707040631370.32656@p34.internal.lan>
-References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com>
- <468AB1A7.9010201@msgid.tls.msk.ru> <468AF5BB.10005@gmail.com>
- <468B6BD7.9010108@msgid.tls.msk.ru> <Pine.LNX.4.64.0707040621170.32656@p34.internal.lan>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: ata1: soft resetting port
+Date: Wed, 04 Jul 2007 12:40:57 +0200
+Message-ID: <1183545657.22999.15.camel@localhost>
+References: <1182260902.14805.60.camel@localhost>
+	 <4689EF48.8090506@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707040621170.32656@p34.internal.lan>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Tejun Heo <htejun@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nn7.de ([85.214.94.156]:54575 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758572AbXGDLyM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 07:54:12 -0400
+In-Reply-To: <4689EF48.8090506@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
 
-
-
-On Wed, 4 Jul 2007, Justin Piszcz wrote:
-
-> On Wed, 4 Jul 2007, Michael Tokarev wrote:
+On Tue, 2007-07-03 at 15:40 +0900, Tejun Heo wrote:
+> Soeren Sonnenburg wrote:
+> > Dear List,
+> > 
+> > since the switch to 
+> > 
+> > CONFIG_ATA=y
+> > CONFIG_ATA_ACPI=y
+> > CONFIG_ATA_PIIX=y,
+> > 
+> > the ATA_PIIX driver manages both, internal sata disk aswell as cd/dvd
+> > rom. However I am being flooded with the error messages below (well they
+> > appear from time to time, dominating dmesg). 
+> > 
+> > This happens on kernel 2.6.22-rc5, I am copying relevant parts from dmesg:
 > 
-> > Tejun Heo wrote:
-> >> Hello,
-> >>
-> >> Michael Tokarev wrote:
-> >>> Well.  It looks like the results does not depend on the
-> >>> elevator.  Originally I tried with deadline, and just
-> >>> re-ran the test with noop (hence the long delay with
-> >>> the answer) - changing linux elevator changes almost
-> >>> nothing in the results - modulo some random "fluctuations".
-> >>
-> >> I see.  Thanks for testing.
-> >
-> > Here are actual results - the tests were still running when
-> > I replied yesterday.
-> >
-> > Again, this is Seagate ST3250620AS "desktop" drive, 7200RPM,
-> > 16Mb cache, 250Gb capacity.  The tests were performed with
-> > queue depth = 64 (on mptsas), drive write cache is turned
-> > off.
-> 
-> I found AS scheduler to be the premium and best for single-user performance.
-> 
-> You want speed? Use AS.
-> 
-> http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline_vs_noop.html
-> 
->
+> Does 2.6.22-rc7 fare better?
 
-Does not include noop-- tested the main three though, renamed :)
+Yes indeed. The only thing I've seen in the last two days was the
+following on resume:
 
-http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline.html
+pci_express 0000:00:1c.2:pcie03: resuming
+sr 0:0:0:0: resuming
+sd 2:0:1:0: resuming
+sd 2:0:1:0: [sda] Starting disk
+ata1.00: configured for UDMA/33
+ata3.01: revalidation failed (errno=-2)
+ata3: failed to recover some devices, retrying in 5 secs
+ata3.01: configured for UDMA/133
 
-And for the archives:
-
-p34-cfq,15696M,77114.3,99,311683,55.3333,184947,38.6667,79842.7,99,524065,41.3333,634.033,0.333333,16:100000:16/64,1043.33,8.33333,4419.33,11.6667,2942,17.3333,1178,10.3333,4192.67,12.3333,2619.33,19
-p34-as,15696M,76202.3,99,443103,85,189716,34.6667,79552,99,507271,39.6667,607.067,0,16:100000:16/64,1153,10,13434,36,2769.67,16.3333,1201.67,10.6667,3951.33,12,2665.67,19
-p34-deadline,15696M,76933.3,98.6667,386852,72,183016,29.6667,79530.7,99,512082,39.6667,678.567,0,16:100000:16/64,1230.33,10.3333,12349,32.3333,2945,17.3333,1258,11,8183,22.3333,2867,20.3333
-
-Justin.
+Soeren
+-- 
+Sometimes, there's a moment as you're waking, when you become aware of
+the real world around you, but you're still dreaming.
