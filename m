@@ -1,109 +1,123 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 5/10] libata: use freeze/thaw for polling
-Date: Wed, 04 Jul 2007 16:57:19 +0800
-Message-ID: <468B60EF.8030009@tw.ibm.com>
-References: <468B5C97.1000803@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH libata-dev#upstream] libata: kill duplicate functions
+Date: Wed, 04 Jul 2007 17:58:00 +0900
+Message-ID: <468B6118.5040500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:59073 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754980AbXGDI5Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:57:24 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l648vOO1020416
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 04:57:24 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l648vO9X168234
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:57:24 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l648vN3a015213
-	for <linux-ide@vger.kernel.org>; Wed, 4 Jul 2007 02:57:23 -0600
-In-Reply-To: <468B5C97.1000803@tw.ibm.com>
+Received: from nz-out-0506.google.com ([64.233.162.225]:41853 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754980AbXGDI6G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 04:58:06 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1504214nze
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 01:58:05 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Patch 5/10:
+I like these _dumb functions but I think we can live with just one
+copy.
 
-  This patch changes polling codes to use freeze()/thaw() for irq off/on.
-The reason is: some ATAPI devices raises INTRQ even of nIEN = 1.
-Using the host adapter irq mask mechanism, if available, is more reliable than the device nIEN bit.
-
-ata_qc_set_polling() is also removed since now unused.
-
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+ drivers/ata/libata-core.c |   79 ----------------------------------------------
+ 1 file changed, 79 deletions(-)
 
-Considerations:
-   HSM, the new user of freeze()/thaw(), will call freeze()/thaw() in higher frequency than EH.
-Can current implemention of freeze()/thaw() handle it?
-
-diff -Nrup 04_convert_freeze/drivers/ata/libata-core.c 05_convert_hsm_to_freeze/drivers/ata/libata-core.c
---- 04_convert_freeze/drivers/ata/libata-core.c	2007-07-04 11:57:33.000000000 +0800
-+++ 05_convert_hsm_to_freeze/drivers/ata/libata-core.c	2007-07-04 13:13:56.000000000 +0800
-@@ -4753,7 +4753,7 @@ static void ata_hsm_qc_complete(struct a
- 			qc = ata_qc_from_tag(ap, qc->tag);
- 			if (qc) {
- 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
--					ap->ops->irq_on(ap);
-+					ap->ops->thaw(ap);
- 					ata_qc_complete(qc);
- 				} else
- 					ata_port_freeze(ap);
-@@ -4769,7 +4769,7 @@ static void ata_hsm_qc_complete(struct a
- 	} else {
- 		if (in_wq) {
- 			spin_lock_irqsave(ap->lock, flags);
--			ap->ops->irq_on(ap);
-+			ap->ops->thaw(ap);
- 			ata_qc_complete(qc);
- 			spin_unlock_irqrestore(ap->lock, flags);
- 		} else
-@@ -5411,7 +5411,7 @@ unsigned int ata_qc_issue_prot(struct at
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_NODATA:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
- 
- 		ata_tf_to_host(ap, &qc->tf);
- 		ap->hsm_task_state = HSM_ST_LAST;
-@@ -5432,7 +5432,7 @@ unsigned int ata_qc_issue_prot(struct at
- 
- 	case ATA_PROT_PIO:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
- 
- 		ata_tf_to_host(ap, &qc->tf);
- 
-@@ -5461,7 +5461,7 @@ unsigned int ata_qc_issue_prot(struct at
- 	case ATA_PROT_ATAPI:
- 	case ATA_PROT_ATAPI_NODATA:
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_qc_set_polling(qc);
-+			ap->ops->freeze(ap);
- 
- 		ata_tf_to_host(ap, &qc->tf);
- 
-diff -Nrup 04_convert_freeze/include/linux/libata.h 05_convert_hsm_to_freeze/include/linux/libata.h
---- 04_convert_freeze/include/linux/libata.h	2007-07-04 11:57:33.000000000 +0800
-+++ 05_convert_hsm_to_freeze/include/linux/libata.h	2007-07-04 13:13:56.000000000 +0800
-@@ -1097,11 +1097,6 @@ static inline u8 ata_wait_idle(struct at
- 	return status;
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -4165,68 +4165,6 @@ static void ata_fill_sg_dumb(struct ata_
  }
  
--static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
+ /**
+- *	ata_fill_sg_dumb - Fill PCI IDE PRD table
+- *	@qc: Metadata associated with taskfile to be transferred
+- *
+- *	Fill PCI IDE PRD (scatter-gather) table with segments
+- *	associated with the current disk command. Perform the fill
+- *	so that we avoid writing any length 64K records for
+- *	controllers that don't follow the spec.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- *
+- */
+-static void ata_fill_sg_dumb(struct ata_queued_cmd *qc)
 -{
--	qc->tf.ctl |= ATA_NIEN;
+-	struct ata_port *ap = qc->ap;
+-	struct scatterlist *sg;
+-	unsigned int idx;
+-
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+-
+-	idx = 0;
+-	ata_for_each_sg(sg, qc) {
+-		u32 addr, offset;
+-		u32 sg_len, len, blen;
+-
+- 		/* determine if physical DMA addr spans 64K boundary.
+-		 * Note h/w doesn't support 64-bit, so we unconditionally
+-		 * truncate dma_addr_t to u32.
+-		 */
+-		addr = (u32) sg_dma_address(sg);
+-		sg_len = sg_dma_len(sg);
+-
+-		while (sg_len) {
+-			offset = addr & 0xffff;
+-			len = sg_len;
+-			if ((offset + sg_len) > 0x10000)
+-				len = 0x10000 - offset;
+-
+-			blen = len & 0xffff;
+-			ap->prd[idx].addr = cpu_to_le32(addr);
+-			if (blen == 0) {
+-				/* Some PATA chipsets like the CS5530 can't
+-				   cope with 0x0000 meaning 64K as the spec says */
+-				ap->prd[idx].flags_len = cpu_to_le32(0x8000);
+-				blen = 0x8000;
+-				ap->prd[++idx].addr = cpu_to_le32(addr + 0x8000);
+-			}
+-			ap->prd[idx].flags_len = cpu_to_le32(blen);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
+-
+-			idx++;
+-			sg_len -= len;
+-			addr += len;
+-		}
+-	}
+-
+-	if (idx)
+-		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
 -}
 -
- static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
- 						       unsigned int tag)
- {
-
-
+-/**
+  *	ata_check_atapi_dma - Check whether ATAPI DMA can be supported
+  *	@qc: Metadata associated with taskfile to check
+  *
+@@ -4290,23 +4228,6 @@ void ata_dumb_qc_prep(struct ata_queued_
+ 	ata_fill_sg_dumb(qc);
+ }
+ 
+-/**
+- *	ata_dumb_qc_prep - Prepare taskfile for submission
+- *	@qc: Metadata associated with taskfile to be prepared
+- *
+- *	Prepare ATA taskfile for submission.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- */
+-void ata_dumb_qc_prep(struct ata_queued_cmd *qc)
+-{
+-	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+-		return;
+-
+-	ata_fill_sg_dumb(qc);
+-}
+-
+ void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
+ 
+ /**
