@@ -1,68 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Another SATA device with spurious NCQ completions
-Date: Wed, 04 Jul 2007 13:39:09 +0900
-Message-ID: <468B246D.30506@gmail.com>
-References: <46800AD3.7050803@redhat.com> <4689FDE6.2080806@gmail.com> <468A43E7.2030001@ans.pl>
+Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
+Date: Wed, 04 Jul 2007 14:33:26 +0900
+Message-ID: <468B3126.3080706@gmail.com>
+References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.228]:63806 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbXGDEjP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 00:39:15 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1455203nze
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 21:39:14 -0700 (PDT)
-In-Reply-To: <468A43E7.2030001@ans.pl>
+Received: from py-out-1112.google.com ([64.233.166.180]:29747 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbXGDFdd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 01:33:33 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3656347pyb
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jul 2007 22:33:32 -0700 (PDT)
+In-Reply-To: <20070703222205.GA18532@electric-eye.fr.zoreil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Oledzki <olel@ans.pl>
-Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Francois Romieu <romieu@fr.zoreil.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Krzysztof Oledzki wrote:
-> On 2007-07-03 09:42, Tejun Heo wrote:
->> Chuck Ebbert wrote:
->>> From:
->>> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=245512
->>>
->>>
->>> The following error consistently appears at apparently random
->>> intervals in syslog:
->>>
->>> kernel: ata1.00: exception Emask 0x2 SAct 0x1001 SErr 0x0 action 0x2
->>> frozen
->>> kernel: ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x1001
->>> FIS=004040a1:00000800)
->>> kernel: ata1.00: cmd 61/08:00:39:2b:cc/00:00:08:00:00/40 tag 0 cdb
->>> 0x0 data 4096 out
->>> kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2
->>> (HSM violation)
->>> kernel: ata1.00: cmd 61/08:60:e1:2b:cc/00:00:08:00:00/40 tag 12 cdb
->>> 0x0 data
->>> 4096 out
->>> kernel:          res 40/00:00:39:2b:cc/00:00:08:00:00/40 Emask 0x2
->>> (HSM violation)
->>>
->>> Controller is ATI SB600 using the AHCI driver.
->>> 64-bit DMA is disabled.
->>> Disk is:
->>> ata1.00: ATA-7: ST3160812AS, 3.ADJ, max UDMA/133
->>>
->>>
->>> Can't we just turn off NCQ automatically when this happens?
->>
->> After sever such occasions, NCQ will be turned off automatically.
->> Hmm... It's a bit surprising to see this on a Seagate drive tho.  Can
->> someone crosscheck this by attaching the drive to an intel ahci?
->>
+Francois Romieu wrote:
+> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
+> still seems bizarre:
 > 
-> After upgradin kernel on one of my firewallas (2.6.14->2.6.20) I noticed
-> similar problem with another Seagate: ST380817AS connected to ICH6.
+> [    0.000000] Linux version 2.6.22-rc7 (root@localhost.localdomain) (gcc version 4.1.1 20070105 (Red Hat 4.1.1-51)) #13 Tue Jul 3 20:42:14 CEST 2007
+> [...]
+> [   30.140053] input: AT Translated Set 2 keyboard as /class/input/input0
+> [   30.405873] SCSI subsystem initialized
+> [   30.419216] libata version 2.21 loaded.
+> [   30.421854] ata_piix 0000:00:1f.2: version 2.11
+> [   30.421865] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+> [   30.427343] ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+> [   30.435010] PCI: Setting latency timer of device 0000:00:1f.2 to 64
+> [   30.435123] scsi0 : ata_piix
+> [   30.438336] scsi1 : ata_piix
+> [   30.441502] ata1: SATA max UDMA/133 cmd 0x0001c080 ctl 0x0001c002 bmdma 0x0001b800 irq 0
+>                                                                                           ^
+> [   30.449680] ata2: SATA max UDMA/133 cmd 0x0001bc00 ctl 0x0001b882 bmdma 0x0001b808 irq 0
+>                                                                                           ^
+> [   30.658396] ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
+> [   30.666137] ata1.00: ATA-7: MAXTOR STM3160211AS, 3.AAE, max UDMA/133
+> [   30.672537] ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> [   30.733289] ata1.00: ata_hpa_resize 1: sectors = 312581808, hpa_sectors = 312581808
+> [   30.741026] ata1.00: configured for UDMA/133
+> 
+> As Alan said, it is not a serious problem though.
 
-Can you please give a shot at 2.6.22-rc7?  The log you posted lacks
-information about why it's happening.
-
-Thanks.
+Seriously stupid tho. :-) I've tested ata_piix.  What did I miss?  I'll
+look into it.
 
 -- 
 tejun
