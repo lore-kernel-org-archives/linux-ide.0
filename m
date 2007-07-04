@@ -1,54 +1,28 @@
-From: Soeren Sonnenburg <kernel@nn7.de>
-Subject: Re: ata1: soft resetting port
-Date: Wed, 04 Jul 2007 12:40:57 +0200
-Message-ID: <1183545657.22999.15.camel@localhost>
-References: <1182260902.14805.60.camel@localhost>
-	 <4689EF48.8090506@gmail.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Libata PATA status
+Date: 04 Jul 2007 15:00:26 +0200
+Message-ID: <p73k5tg2uj9.fsf@bingen.suse.de>
+References: <20070703185116.59c8f5f5@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nn7.de ([85.214.94.156]:54575 "EHLO nn7.de"
+Received: from ns1.suse.de ([195.135.220.2]:59313 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758572AbXGDLyM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 07:54:12 -0400
-In-Reply-To: <4689EF48.8090506@gmail.com>
+	id S1761496AbXGDMFI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jul 2007 08:05:08 -0400
+In-Reply-To: <20070703185116.59c8f5f5@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org
 
-On Tue, 2007-07-03 at 15:40 +0900, Tejun Heo wrote:
-> Soeren Sonnenburg wrote:
-> > Dear List,
-> > 
-> > since the switch to 
-> > 
-> > CONFIG_ATA=y
-> > CONFIG_ATA_ACPI=y
-> > CONFIG_ATA_PIIX=y,
-> > 
-> > the ATA_PIIX driver manages both, internal sata disk aswell as cd/dvd
-> > rom. However I am being flooded with the error messages below (well they
-> > appear from time to time, dominating dmesg). 
-> > 
-> > This happens on kernel 2.6.22-rc5, I am copying relevant parts from dmesg:
+Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 > 
-> Does 2.6.22-rc7 fare better?
+> Post SRST 
+What is SRST?
 
-Yes indeed. The only thing I've seen in the last two days was the
-following on resume:
+My personal wish list feature would be a little forwarder driver
+to forward /dev/hd* to /dev/sd* for this; then old IDE could be
+disabled without risking breaking old root file systems.
 
-pci_express 0000:00:1c.2:pcie03: resuming
-sr 0:0:0:0: resuming
-sd 2:0:1:0: resuming
-sd 2:0:1:0: [sda] Starting disk
-ata1.00: configured for UDMA/33
-ata3.01: revalidation failed (errno=-2)
-ata3: failed to recover some devices, retrying in 5 secs
-ata3.01: configured for UDMA/133
-
-Soeren
--- 
-Sometimes, there's a moment as you're waking, when you become aware of
-the real world around you, but you're still dreaming.
+-Andi
