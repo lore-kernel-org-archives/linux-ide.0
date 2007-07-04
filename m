@@ -1,50 +1,54 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
-Date: Wed, 4 Jul 2007 20:59:36 +0200
-Message-ID: <20070704185936.GA13212@electric-eye.fr.zoreil.com>
-References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com> <468B3452.6040509@gmail.com>
+From: Matt Sealey <matt@genesi-usa.com>
+Subject: Re: how to handle pata_via when controller not in fully-pci-native
+ mode (two irqs?)
+Date: Wed, 04 Jul 2007 20:08:03 +0100
+Message-ID: <468BF013.7030601@genesi-usa.com>
+References: <467C689E.3050800@genesi-usa.com>	<20070623103349.23cad9b7@the-village.bc.nu>	<467CE8FA.2040304@genesi-usa.com>	<20070623105344.3ece6db1@the-village.bc.nu>	<467CF1E6.8000905@genesi-usa.com>	<4689FBCB.90608@gmail.com>	<468A04A0.1020003@genesi-usa.com>	<20070703131736.5ddc0b89@the-village.bc.nu>	<468A41CC.6030203@genesi-usa.com>	<20070703143809.5064fa35@the-village.bc.nu>	<468A5223.4050906@genesi-usa.com> <20070703145334.2bc9b773@the-village.bc.nu> <468A5532.9020600@genesi-usa.com> <468B608B.50803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:56407 "EHLO
-	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758631AbXGDTAd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 15:00:33 -0400
-Content-Disposition: inline
-In-Reply-To: <468B3452.6040509@gmail.com>
+Received: from mithrandir.softwarenexus.net ([66.98.186.96]:2441 "EHLO
+	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756389AbXGDTHW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 15:07:22 -0400
+In-Reply-To: <468B608B.50803@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> :
-> Tejun Heo wrote:
-> > Francois Romieu wrote:
-> >> I have rebuilt on top of 872aad45d6174570dd2e1defc3efee50f2cfcc72 and it
-> >> still seems bizarre:
+
+Tejun Heo wrote:
 > 
-> Okay, 872aad45 doesn't have the patch yet.  Either apply the patch
-> manually or you need to wait a bit more.
+> I forgot about the PCI resource fix up done for legacy hosts.  I think
+> making the host legacy is the best way to take here considering that -
+> no change for both ide and libata, just some fix up in platform code.
+> ATA native/legacy thing doesn't mean much.  It's just how the resources
+> are allocated.  Is there any specific reason to use native mode?
 
-I am confused. 4031826b3ca40982880f6b9f2282c7d7fad60d77 appears in the log:
-Author: Tejun Heo <htejun@gmail.com>                                            
-Date:   Tue Jul 3 01:38:47 2007 +0900                                           
-                                                                                
-    libata: fix assigned IRQ reporting                                          
-                                                                                
-    host->irq and host->irq2 should be set before ata_host_register() for       
-    IRQ reporting to work.  Move up host->irq assignment in                     
-    ata_host_activate() and add it to ata_pci_init_one() native path and        
-    pata_cs5520.                                                                
-                                                                                
-    The port info printing in ata_host_register() doesn't fit all the           
-    different controllers.  It should probably be moved out to LLDs with        
-    some helpers in the future.                                                 
-                                                                                
-    Signed-off-by: Tejun Heo <htejun@gmail.com>                                 
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>                                
+Yes, legacy mode means there are several "io ports" mapped into the
+0 thru 0x1000 addresses. This might work in Linux, granted, but I am
+not sure it is a good idea in the first place.
 
--> it is exactly the patch that you sent on 03/07/2007.
+Mapping io ports to anywhere but the PCI io space is just an ugly
+solution. The ATA native/legacy thing means a lot, as there is no
+"legacy" on PowerPC. It's a PCI device, so we should try and fix up
+it's actions as a PCI device, however, making it truly conform will
+break any "not entirely compatible" drivers break (via8cxxx being
+the biggest culprit). Therefore no firmware fixes for thee.
+
+I do think we can knock it into full PCI native mode from the platform
+fixups though, as a kernel option. Old drivers will work fine, old
+kernels will work fine, and optionally old behaviour can be left, but
+anyone building a new kernel with pata_via and no via8cxxx (i.e. all
+new distributions) can enable the new behaviour.
+
+Does that sound okay? No libata-level resource fixups need to be done
+for a real PCI device, do they? I think we should just coerce the
+controller to use a single interrupt and disable ISA interrupt
+steering, fix the class code, and see if libata handles it.
 
 -- 
-Ueimor
+Matt Sealey <matt@genesi-usa.com>
+Genesi, Manager, Developer Relations
