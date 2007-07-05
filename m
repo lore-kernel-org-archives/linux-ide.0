@@ -1,133 +1,81 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2.6.22-rc7 1/3] libata: clean up horkage handling
-Date: Thu, 5 Jul 2007 13:31:27 +0900
-Message-ID: <20070705043127.GX29122@htj.dyndns.org>
+Subject: [PATCH 2.6.22-rc7 2/3] libata: implement HORKAGE_SETXFER
+Date: Thu, 5 Jul 2007 13:35:01 +0900
+Message-ID: <20070705043501.GY29122@htj.dyndns.org>
+References: <20070705043127.GX29122@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:11899 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751712AbXGEEbf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 00:31:35 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1744487nze
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 21:31:34 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.183]:15426 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbXGEEfG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 00:35:06 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3472567wah
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2007 21:35:05 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20070705043127.GX29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Horkage handling had the following problems.
-
-* dev->horkage was positioned after ATA_DEVICE_CLEAR_OFFSET, so it was
-  cleared before the device is configured.  This broke
-  HORKAGE_DIAGNOSTIC.
-
-* Some used dev->horkage while others called ata_device_blacklisted()
-  directly.  This was at best confusing.
-
-This patch moves dev->horkage right after dev->flags and set the field
-according to the blacklist during device configuration.  All users
-test against dev->horkage.  ata_device_blacklisted() now has only one
-user, make it static.  While at it, rename it to ata_dev_blacklisted()
-for consistency.
+Make CFA SETXFER failure handling into HORKAGE.  This will be used to
+allow other cases to ignore SETXFER failure.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   13 ++++++++-----
- include/linux/libata.h    |    3 +--
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/ata/libata-core.c |   15 ++++++++++-----
+ include/linux/libata.h    |    1 +
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
 Index: work/drivers/ata/libata-core.c
 ===================================================================
 --- work.orig/drivers/ata/libata-core.c
 +++ work/drivers/ata/libata-core.c
-@@ -71,6 +71,7 @@ static unsigned int ata_dev_init_params(
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
-+static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
+@@ -1898,7 +1898,7 @@ int ata_dev_configure(struct ata_device 
+ 	 * common ATA, ATAPI feature tests
+ 	 */
  
- unsigned int ata_print_id = 1;
- static struct workqueue_struct *ata_wq;
-@@ -1814,7 +1815,7 @@ static void ata_dev_config_ncq(struct at
- 		desc[0] = '\0';
- 		return;
- 	}
--	if (ata_device_blacklisted(dev) & ATA_HORKAGE_NONCQ) {
-+	if (dev->horkage & ATA_HORKAGE_NONCQ) {
- 		snprintf(desc, desc_sz, "NCQ (not used)");
- 		return;
- 	}
-@@ -1862,6 +1863,9 @@ int ata_dev_configure(struct ata_device 
+-	/* find max transfer mode; for printk only */
++	/* determine xfermask */
+ 	xfer_mask = ata_id_xfermask(id);
+ 
  	if (ata_msg_probe(ap))
- 		ata_dev_printk(dev, KERN_DEBUG, "%s: ENTER\n", __FUNCTION__);
- 
-+	/* set horkage */
-+	dev->horkage |= ata_dev_blacklisted(dev);
+@@ -1919,8 +1919,13 @@ int ata_dev_configure(struct ata_device 
+ 					       "supports DRM functions and may "
+ 					       "not be fully accessable.\n");
+ 			snprintf(revbuf, 7, "CFA");
+-		}
+-		else
 +
- 	/* set _SDD */
- 	rc = ata_acpi_push_id(dev);
- 	if (rc) {
-@@ -2042,7 +2046,7 @@ int ata_dev_configure(struct ata_device 
- 		dev->max_sectors = ATA_MAX_SECTORS;
- 	}
++			/* Old CFA may refuse SETFEATURES_XFER, which
++			 * is just fine
++			 */
++			if (!(xfer_mask & ~ATA_MASK_PIO))
++				dev->horkage |= ATA_HORKAGE_SETXFER;
++		} else
+ 			snprintf(revbuf, 7, "ATA-%d",  ata_id_major_version(id));
  
--	if (ata_device_blacklisted(dev) & ATA_HORKAGE_MAX_SEC_128)
-+	if (dev->horkage & ATA_HORKAGE_MAX_SEC_128)
- 		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
- 					 dev->max_sectors);
+ 		dev->n_sectors = ata_id_n_sectors(id);
+@@ -2775,8 +2780,8 @@ static int ata_dev_set_mode(struct ata_d
+ 		dev->flags |= ATA_DFLAG_PIO;
  
-@@ -3809,7 +3813,7 @@ static const struct ata_blacklist_entry 
- 	{ }
- };
+ 	err_mask = ata_dev_set_xfermode(dev);
+-	/* Old CFA may refuse this command, which is just fine */
+-	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
++
++	if (dev->horkage & ATA_HORKAGE_SETXFER)
+         	err_mask &= ~AC_ERR_DEV;
  
--unsigned long ata_device_blacklisted(const struct ata_device *dev)
-+static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- {
- 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
- 	unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
-@@ -3839,7 +3843,7 @@ static int ata_dma_blacklisted(const str
- 	if ((dev->ap->flags & ATA_FLAG_PIO_POLLING) &&
- 	    (dev->flags & ATA_DFLAG_CDB_INTR))
- 		return 1;
--	return (ata_device_blacklisted(dev) & ATA_HORKAGE_NODMA) ? 1 : 0;
-+	return (dev->horkage & ATA_HORKAGE_NODMA) ? 1 : 0;
- }
- 
- /**
-@@ -6875,7 +6879,6 @@ EXPORT_SYMBOL_GPL(ata_host_resume);
- EXPORT_SYMBOL_GPL(ata_id_string);
- EXPORT_SYMBOL_GPL(ata_id_c_string);
- EXPORT_SYMBOL_GPL(ata_id_to_dma_mode);
--EXPORT_SYMBOL_GPL(ata_device_blacklisted);
- EXPORT_SYMBOL_GPL(ata_scsi_simulate);
- 
- EXPORT_SYMBOL_GPL(ata_pio_need_iordy);
+ 	if (err_mask) {
 Index: work/include/linux/libata.h
 ===================================================================
 --- work.orig/include/linux/libata.h
 +++ work/include/linux/libata.h
-@@ -428,6 +428,7 @@ struct ata_device {
- 	struct ata_port		*ap;
- 	unsigned int		devno;		/* 0 or 1 */
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
-+	unsigned int		horkage;	/* List of broken features */
- 	struct scsi_device	*sdev;		/* attached SCSI device */
- 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
- 	u64			n_sectors;	/* size of device, if ATA */
-@@ -456,7 +457,6 @@ struct ata_device {
- 	/* error history */
- 	struct ata_ering	ering;
- 	int			spdn_cnt;
--	unsigned int		horkage;	/* List of broken features */
- #ifdef CONFIG_ATA_ACPI
- 	/* ACPI objects info */
- 	acpi_handle obj_handle;
-@@ -772,7 +772,6 @@ extern void ata_id_string(const u16 *id,
- extern void ata_id_c_string(const u16 *id, unsigned char *s,
- 			    unsigned int ofs, unsigned int len);
- extern void ata_id_to_dma_mode(struct ata_device *dev, u8 unknown);
--extern unsigned long ata_device_blacklisted(const struct ata_device *dev);
- extern void ata_bmdma_setup (struct ata_queued_cmd *qc);
- extern void ata_bmdma_start (struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
+@@ -298,6 +298,7 @@ enum {
+ 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
++	ATA_HORKAGE_SETXFER	= (1 << 4), /* SETFEATURES_XFER may fail */
+ };
+ 
+ enum hsm_task_states {
