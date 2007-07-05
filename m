@@ -1,67 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 0/10] libata: irq_on/off restructuring
-Date: Thu, 05 Jul 2007 19:48:34 +0900
-Message-ID: <468CCC82.6050008@gmail.com>
-References: <468B5C97.1000803@tw.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.22-rc7 2/3] libata: implement HORKAGE_SETXFER
+Date: Thu, 5 Jul 2007 13:27:06 +0100
+Message-ID: <20070705132706.743d18d8@the-village.bc.nu>
+References: <20070705043127.GX29122@htj.dyndns.org>
+	<20070705043501.GY29122@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:39132 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042AbXGEKsp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 06:48:45 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1813875nze
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2007 03:48:44 -0700 (PDT)
-In-Reply-To: <468B5C97.1000803@tw.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53174 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754304AbXGEMUz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 08:20:55 -0400
+In-Reply-To: <20070705043501.GY29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Albert Lee wrote:
-> For ATA, there are two levels of mechanism available to turn irq on/off.
-> - device level: nIEN bit in the control register. This masks INTRQ from the device.
-> - host adapter level: some controller can mask out per-port irq from the host adapter.
-> 
-> Currently various parts of libata deal with irq on/off.
->   ex. tf_load() can alter the nIEN bit.
->   ex. irq_on() also alters the device level nIEN bit.
->   ex. freeze()/thaw() deal with the host adapter irq mask.
-> 
-> It seems these irq on/off codes could be better structured.
-> Patches against libata-dev tree for your review/advice, thanks.
-> 
-> 1/10: remove irq_on from ata_bus_reset() and ata_std_postreset()
-> 2/10: add ->irq_off() for symmetry
-> 3/10: implement ->irq_off() in LLDDs
-> 4/10: use irq_off from bmdma_freeze()
-> 5/10: use freeze()/thaw() for polling
-> 6/10: add freeze()/thaw() to old EH LLDDs
-> 7/10: pdc_freeze() semantic change
-> 8/10: remove writing of tf->ctl from ata_tf_load()
-> 9/10: integrate freeze()/thaw() with irq_on/off.
-> 10/10: integrate freeze/thaw with irq_on/off in LLDDs
+On Thu, 5 Jul 2007 13:35:01 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-I like the whole series.  Just a few nits.
+> Make CFA SETXFER failure handling into HORKAGE.  This will be used to
+> allow other cases to ignore SETXFER failure.
 
-* 9 and 10 need to be oen patch.  As it currently stands, compile will
-fail after 9.
+NAK
 
-* Please don't include "Patch n/10" in message body.
+> +			/* Old CFA may refuse SETFEATURES_XFER, which
+> +			 * is just fine
+> +			 */
+> +			if (!(xfer_mask & ~ATA_MASK_PIO))
+> +				dev->horkage |= ATA_HORKAGE_SETXFER;
+> +		} else
 
-* Add freeze/thaw to all, merge, kill freeze/thaw from all sequence is a
-bit odd.  It would be better if we can do things more directly but I
-haven't thought about how that can be done too hard, so if it's too
-difficult, it's probably not worth it.
+This is specifically done for PIO. An XFER failure for non PIO modes is a
+serious failure and happens in the real world sometimes.
 
-Alan, Jeff, I think we'll need to do what IDE has been doing for IRQ
-masking to get acceptable PIO behavior after all and that will also make
-us more resistant against deadly IRQ storms on controllers which don't
-have pending IRQ bits (most SFF ones), and this change will ease our way
-toward that direction.  What do you guys think?
+> -	/* Old CFA may refuse this command, which is just fine */
+> -	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
+> +
+> +	if (dev->horkage & ATA_HORKAGE_SETXFER)
+>          	err_mask &= ~AC_ERR_DEV;
 
-Thanks.
-
--- 
-tejun
