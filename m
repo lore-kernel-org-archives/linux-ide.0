@@ -1,63 +1,67 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 8/10] libata: remove writing of tf->ctl from ata_tf_load()
-Date: Thu, 05 Jul 2007 19:40:03 +0900
-Message-ID: <468CCA83.5020606@gmail.com>
-References: <468B5C97.1000803@tw.ibm.com> <468B627A.6050605@tw.ibm.com> <468BF057.9060408@rtr.ca> <468C5ADD.9050700@tw.ibm.com>
+Subject: Re: [PATCH 0/10] libata: irq_on/off restructuring
+Date: Thu, 05 Jul 2007 19:48:34 +0900
+Message-ID: <468CCC82.6050008@gmail.com>
+References: <468B5C97.1000803@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:35612 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.237]:39132 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbXGEKkM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 06:40:12 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1812303nze
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2007 03:40:12 -0700 (PDT)
-In-Reply-To: <468C5ADD.9050700@tw.ibm.com>
+	with ESMTP id S1755042AbXGEKsp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 06:48:45 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1813875nze
+        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2007 03:48:44 -0700 (PDT)
+In-Reply-To: <468B5C97.1000803@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: albertl@mail.com
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Doug Maxey <dwm@enoyolf.org>
-
-Hello,
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux IDE <linux-ide@vger.kernel.org>, Mark Lord <mlord@pobox.com>
 
 Albert Lee wrote:
->> At some point soon, I hope to piece together enough old hardware here
->> to reconnect my PCI-X sata_qstor card, and then fix the driver.
->>
->> It needs to have control over the nIEN bit, and currently that bit
->> is not behaving as it did way back in 2.6.11(?) when the driver was
->> first added.
->>
->> The qstor chip *requires* that nIEN be "1" during R/W commands.
->> Is there a nice way to accomplish that here?
+> For ATA, there are two levels of mechanism available to turn irq on/off.
+> - device level: nIEN bit in the control register. This masks INTRQ from the device.
+> - host adapter level: some controller can mask out per-port irq from the host adapter.
 > 
-> Does it mean that during the execution of PIO R/W commands, no interrupt
-> will be generated? Currently the sata_qstor driver uses the
-> ATA_FLAG_PIO_POLLING flag, does such polling pio fulfill the need of
-> qstor? If not, maybe we could check what needs to be added and include
-> them into consideration.
+> Currently various parts of libata deal with irq on/off.
+>   ex. tf_load() can alter the nIEN bit.
+>   ex. irq_on() also alters the device level nIEN bit.
+>   ex. freeze()/thaw() deal with the host adapter irq mask.
+> 
+> It seems these irq on/off codes could be better structured.
+> Patches against libata-dev tree for your review/advice, thanks.
+> 
+> 1/10: remove irq_on from ata_bus_reset() and ata_std_postreset()
+> 2/10: add ->irq_off() for symmetry
+> 3/10: implement ->irq_off() in LLDDs
+> 4/10: use irq_off from bmdma_freeze()
+> 5/10: use freeze()/thaw() for polling
+> 6/10: add freeze()/thaw() to old EH LLDDs
+> 7/10: pdc_freeze() semantic change
+> 8/10: remove writing of tf->ctl from ata_tf_load()
+> 9/10: integrate freeze()/thaw() with irq_on/off.
+> 10/10: integrate freeze/thaw with irq_on/off in LLDDs
 
-I'm not too familiar with how the qstor works but that sounds like
-something which would fit very well into private ->qc_issue, no?
+I like the whole series.  Just a few nits.
 
-> Hmm, another consideration for qstor, irq_on/off do have their value for
-> nIEN manipulation. The patchset maybe too far in scope.  I will limit
-> the scope of the patchset and leave irq_on/off alone (rather than
-> integrate with thaw/freeze).
+* 9 and 10 need to be oen patch.  As it currently stands, compile will
+fail after 9.
 
-I like the idea of killing ->freeze/thaw.  As you've just shown, they
-provide almost the identical functionality as ->irq_off/on but just have
-more cryptic names and with wide spread use of SATA, the meaning of NIEN
-itself is diminishing, so I don't really see a point in keeping it for
-the sake of controlling NIEN.
+* Please don't include "Patch n/10" in message body.
 
-One way or the other, all we need is for the controller to not raise IRQ
-during polling or when things look odd.  If some controller and/or
-device need specific handling of NIEN, it'll be actually easier to deal
-with if we define ->irq_off as "whatever you do, just shut up".
+* Add freeze/thaw to all, merge, kill freeze/thaw from all sequence is a
+bit odd.  It would be better if we can do things more directly but I
+haven't thought about how that can be done too hard, so if it's too
+difficult, it's probably not worth it.
 
-So, I'm all for it.
+Alan, Jeff, I think we'll need to do what IDE has been doing for IRQ
+masking to get acceptable PIO behavior after all and that will also make
+us more resistant against deadly IRQ storms on controllers which don't
+have pending IRQ bits (most SFF ones), and this change will ease our way
+toward that direction.  What do you guys think?
+
+Thanks.
 
 -- 
 tejun
