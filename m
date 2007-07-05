@@ -1,120 +1,40 @@
 From: David Woodhouse <dwmw2@infradead.org>
-Subject: [PATCH 2.6.22 REGRESSION] Fix slab redzone alignment
-Date: Wed, 04 Jul 2007 21:26:44 -0400
-Message-ID: <1183598804.2740.17.camel@shinybook.infradead.org>
+Subject: Re: [1/2] 2.6.22-rc7: known regressions
+Date: Wed, 04 Jul 2007 21:42:51 -0400
+Message-ID: <1183599771.2740.19.camel@shinybook.infradead.org>
 References: <468A7D14.1050505@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([209.217.80.40]:38326 "EHLO
-	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbXGEB0M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 21:26:12 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757555AbXGEBmd@vger.kernel.org>
 In-Reply-To: <468A7D14.1050505@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, marcel@holtmann.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
+List-Id: linux-ide@vger.kernel.org
 
-Commit b46b8f19c9cd435ecac4d9d12b39d78c137ecd66 fixed a couple of bugs
-by switching the redzone to 64 bits. Unfortunately, it neglected to
-ensure that the _second_ redzone, after the slab object, is aligned
-correctly. This caused illegal instruction faults on sparc32, which for
-some reason not entirely clear to me are not trapped and fixed up.
+On Tue, 2007-07-03 at 18:45 +0200, Michal Piotrowski wrote:
+> Hi all,
+> 
+> Here is a list of some known regressions in 2.6.22-rc7.
 
-Two things need to be done to fix this:
-  - increase the object size, rounding up to alignof(long long) so
-    that the second redzone can be aligned correctly.
-  - If SLAB_STORE_USER is set but alignof(long long)==8, allow a
-    full 64 bits of space for the user word at the end of the buffer,
-    even though we may not _use_ the whole 64 bits.
+Oh, and here's another one for you. My Bluetooth mouse just stopped
+working and hidd is deadlocked...
 
-This patch should be a no-op on any 64-bit architecture or any 32-bit
-architecture where alignof(long long) == 4. Of the others, it's tested
-on ppc32 by myself and a very similar patch was tested on sparc32 by
-Mark Fortescue, who reported the new problem.
-
-Also, fix the conditions for FORCED_DEBUG, which hadn't been adjusted to
-the new sizes. Again noticed by Mark.
-
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
-
-diff --git a/mm/slab.c b/mm/slab.c
-index a9c4472..b344e67 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -137,6 +137,7 @@
- 
- /* Shouldn't this be in a header file somewhere? */
- #define	BYTES_PER_WORD		sizeof(void *)
-+#define	REDZONE_ALIGN		max(BYTES_PER_WORD, __alignof__(unsigned long long))
- 
- #ifndef cache_line_size
- #define cache_line_size()	L1_CACHE_BYTES
-@@ -547,7 +548,7 @@ static unsigned long long *dbg_redzone2(struct kmem_cache *cachep, void *objp)
- 	if (cachep->flags & SLAB_STORE_USER)
- 		return (unsigned long long *)(objp + cachep->buffer_size -
- 					      sizeof(unsigned long long) -
--					      BYTES_PER_WORD);
-+					      REDZONE_ALIGN);
- 	return (unsigned long long *) (objp + cachep->buffer_size -
- 				       sizeof(unsigned long long));
- }
-@@ -2178,7 +2179,8 @@ kmem_cache_create (const char *name, size_t size, size_t align,
- 	 * above the next power of two: caches with object sizes just above a
- 	 * power of two have a significant amount of internal fragmentation.
- 	 */
--	if (size < 4096 || fls(size - 1) == fls(size-1 + 3 * BYTES_PER_WORD))
-+	if (size < 4096 || fls(size - 1) == fls(size-1 + REDZONE_ALIGN +
-+						2 * sizeof(unsigned long long)))
- 		flags |= SLAB_RED_ZONE | SLAB_STORE_USER;
- 	if (!(flags & SLAB_DESTROY_BY_RCU))
- 		flags |= SLAB_POISON;
-@@ -2219,12 +2221,20 @@ kmem_cache_create (const char *name, size_t size, size_t align,
- 	}
- 
- 	/*
--	 * Redzoning and user store require word alignment. Note this will be
--	 * overridden by architecture or caller mandated alignment if either
--	 * is greater than BYTES_PER_WORD.
-+	 * Redzoning and user store require word alignment or possibly larger.
-+	 * Note this will be overridden by architecture or caller mandated
-+	 * alignment if either is greater than BYTES_PER_WORD.
- 	 */
--	if (flags & SLAB_RED_ZONE || flags & SLAB_STORE_USER)
--		ralign = __alignof__(unsigned long long);
-+	if (flags & SLAB_STORE_USER)
-+		ralign = BYTES_PER_WORD;
-+
-+	if (flags & SLAB_RED_ZONE) {
-+		ralign = REDZONE_ALIGN;
-+		/* If redzoning, ensure that the second redzone is suitably
-+		 * aligned, by adjusting the object size accordingly. */
-+		size += REDZONE_ALIGN - 1;
-+		size &= ~(REDZONE_ALIGN - 1);
-+	}
- 
- 	/* 2) arch mandated alignment */
- 	if (ralign < ARCH_SLAB_MINALIGN) {
-@@ -2261,9 +2271,13 @@ kmem_cache_create (const char *name, size_t size, size_t align,
- 	}
- 	if (flags & SLAB_STORE_USER) {
- 		/* user store requires one word storage behind the end of
--		 * the real object.
-+		 * the real object. But if the second red zone needs to be
-+		 * aligned to 64 bits, we must allow that much space.
- 		 */
--		size += BYTES_PER_WORD;
-+		if (flags & SLAB_RED_ZONE)
-+			size += REDZONE_ALIGN;
-+		else
-+			size += BYTES_PER_WORD;
- 	}
- #if FORCED_DEBUG && defined(CONFIG_DEBUG_PAGEALLOC)
- 	if (size >= malloc_sizes[INDEX_L3 + 1].cs_size
-
+hidd          D 1FE27798  5940  1695      1 (NOTLB)
+Call Trace:
+[ef3ddb70] [00000004] 0x4 (unreliable)
+[ef3ddc30] [c0008e7c] __switch_to+0x50/0x68
+[ef3ddc50] [c02d5998] schedule+0x3cc/0x480
+[ef3ddc80] [c0137a20] rwsem_down_failed_common+0x1c4/0x1f4
+[ef3ddcb0] [c02d7454] rwsem_down_write_failed+0x28/0x40
+[ef3ddce0] [c004ff60] down_write+0x50/0x64
+[ef3ddd00] [f27f2068] hidp_add_connection+0x168/0x75c [hidp]
+[ef3ddd40] [f27f2e44] hidp_sock_ioctl+0x140/0x414 [hidp]
+[ef3ddeb0] [c024da6c] sock_ioctl+0x248/0x284
+[ef3dded0] [c00ab02c] do_ioctl+0x38/0x84
+[ef3ddee0] [c00ab448] vfs_ioctl+0x3d0/0x404
+[ef3ddf10] [c00ab4e4] sys_ioctl+0x68/0x98
 
 -- 
 dwmw2
-
