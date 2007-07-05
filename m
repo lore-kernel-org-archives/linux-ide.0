@@ -1,50 +1,41 @@
-From: Uwe koziolek <uwe.koziolek@gmx.net>
-Subject: [PATCH 2.6.22-rc7-git1] sis5513: adding  PCI-ID
-Date: Wed, 4 Jul 2007 22:45:34 +0200
-Message-ID: <200707042245.35118.uwe.koziolek@gmx.net>
+From: yong Jung <yong_jk@yahoo.com>
+Subject: "libata ignore_hpa=1" doesn't wok on SATA ?
+Date: Thu, 5 Jul 2007 09:00:47 +0900 (KST)
+Message-ID: <932011.56083.qm@web54504.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=euc-kr
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35821 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754284AbXGDUss (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jul 2007 16:48:48 -0400
-Content-Disposition: inline
+Received: from web54504.mail.re2.yahoo.com ([206.190.49.154]:28947 "HELO
+	web54504.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757543AbXGEAAs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2007 20:00:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The SiS966 has one additional PCI-ID 1180.
-If the chipset is using this PCI-ID, the primary channel is connected to the first
-PATA-port. The secondary channel is connected to SATA-ports in IDE emulation mode.
-The legacy IO-ports are used.
+Hi,
+=2E
+I would like to see the whole disk area and erase the
+hpa area in my desktop.
+At first I tried "setmax.c" program but it didn't work
+on SATA at least.
+So I upgraeded it to FC7 and added "libata
+ignore_hpa=3D1" option on boot command and
+/etc/modprobe.conf.=20
+This option was accepted but still the kernel couldn't
+see the whole disk area even after reboot.
+I am using FC7, kernel-2.6.21 and 250 SATA disk.
+Could you please give me some more tips ?
+=2E
+Warm regards,
+Nobel
 
-the including of the PCI-ID into pata_sis is not sufficient, because the legacy driver
-in drivers/ide is initialized before pata_sis.
 
-Signed-off-by: Uwe Koziolek <uwe.koziolek@gmx.net>
 
---- a/include/linux/pci_ids.h	2007-07-03 19:17:44.000000000 +0200
-+++ b/include/linux/pci_ids.h	2007-07-04 21:42:16.000000000 +0200
-@@ -661,6 +661,7 @@
- #define PCI_DEVICE_ID_SI_965		0x0965
- #define PCI_DEVICE_ID_SI_966		0x0966
- #define PCI_DEVICE_ID_SI_968		0x0968
-+#define PCI_DEVICE_ID_SI_1180		0x1180
- #define PCI_DEVICE_ID_SI_5511		0x5511
- #define PCI_DEVICE_ID_SI_5513		0x5513
- #define PCI_DEVICE_ID_SI_5517		0x5517
---- a/drivers/ide/pci/sis5513.c	2007-07-03 19:17:02.000000000 +0200
-+++ b/drivers/ide/pci/sis5513.c	2007-07-04 21:34:56.000000000 +0200
-@@ -872,6 +872,7 @@
- static struct pci_device_id sis5513_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5513, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5518, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, sis5513_pci_tbl);
-
+      ________________________________________________________=20
+180=B5=B5 =B4=DE=B6=F3=C1=F8 =BE=DF=C8=C4! =B8=DE=C0=CF - =BF=A9=B7=AF =
+=B0=B3=C0=C7 =B8=DE=BD=C3=C1=F6=B8=A6 =B5=BF=BD=C3=BF=A1 =C8=AE=C0=CE? =
+=BB=F5=B7=CE=BF=EE =BE=DF=C8=C4! =B8=DE=C0=CF=C0=C7 =C5=C7=C0=B8=B7=CE =
+=B0=A1=B4=C9=C7=D8=C1=FD=B4=CF=B4=D9.
+http://kr.content.mail.yahoo.com/cgland
