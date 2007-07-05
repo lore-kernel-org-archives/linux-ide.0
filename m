@@ -1,66 +1,39 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [1/2] 2.6.22-rc7: known regressions
-Date: Thu, 5 Jul 2007 12:51:53 -0700 (PDT)
-Message-ID: <alpine.LFD.0.98.0707051236410.9434@woody.linux-foundation.org>
-References: <468A7D14.1050505@googlemail.com>  <1183599771.2740.19.camel@shinybook.infradead.org>
-  <alpine.LFD.0.98.0707050921000.9434@woody.linux-foundation.org>
- <1183661171.2756.13.camel@shinybook.infradead.org>
- <1183663888.2756.19.camel@shinybook.infradead.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/4] SATA power savings patches (ALPM)
+Date: Thu, 5 Jul 2007 13:03:57 -0700
+Message-ID: <20070705130357.1c172b80.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1183663888.2756.19.camel@shinybook.infradead.org>
-Sender: sparclinux-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>, Dmitry Torokhov <dtor@mail.ru>, Jiri Kosina <jkosina@suse.cz>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, marcel@holtmann.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>, Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:7449 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752006AbXGEUHP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Jul 2007 16:07:15 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
+Hi Jeff,
+Here's the most recent patches for ALPM.  These are also located at:
+http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm
 
-Looks input-related..
+These patches implement Aggressive Link Power management for AHCI 
+controllers.  This feature is described in detail in the AHCI 1.x spec.
+It provides power savings of anywhere from .5-1.5 Watts depending on
+the system when it is enabled.  (a graph demonstrating power savings
+of this patch along with other power patches is located at 
+http://www.linuxpowertop.org/results.php for your enjoyment).
 
-On Thu, 5 Jul 2007, David Woodhouse wrote:
-> 
-> Hm, it's not something new. It's an oops I saw occasionally in 2.6.21-rc
-> too, whenever we had CONFIG_SYSFS_DEPRECATED set.
-> 
->  Unable to handle kernel paging request for data at address 0x6b6b6b6b
+This patch is changed from the previous version in that it incorporates all
+the feedback I've gotten on the patches to date.  It changes the default
+of the ahci driver to be max_performance rather than min_power, so userspace
+will need to explicitly enable alpm via the sysfs interface when it deems
+it an appropriate time to do this.  In addition, the patch was changed to
+allow either HIPM or DIPM as a prerequisite for enabling ALPM, rather than 
+just using HIPM.
 
-Ok, that 0x6b is obviously the kfree() poisoning, ie it looks like a 
-use-after-free problem with a pointer being loaded from a structure that 
-had been free'd-
-
-And the trace seems to be (ignore the unreliable one):
-
->  NIP [c001870c] strlen+0x4/0x18
->  LR [c0134fec] kobject_get_path+0x34/0xc4
->  Call Trace:
->  [eed5be90] [c01d5124] class_uevent+0xac/0x1bc
->  [eed5bed0] [c01357e4] kobject_uevent_env+0x23c/0x460
->  [eed5bf20] [c01d485c] class_device_del+0x178/0x1a0
->  [eed5bf40] [c01d489c] class_device_unregister+0x18/0x30
->  [eed5bf60] [c021f820] input_unregister_device+0xf4/0x130
->  [eed5bf70] [c0242f4c] hidinput_disconnect+0x2c/0x60
->  [eed5bf90] [f27f2bac] hidp_session+0x550/0x584 [hidp]
->  [eed5bff0] [c0013e28] kernel_thread+0x44/0x60
-
-Where we have a few missing functions due to inlining, ie the real 
-sequence seems to be:
-
-class_device_del ->
-  kobject_uevent_env ->
-    class_uevent ->
-      kobject_get_path ->
-	get_kobj_path_length ->
-	  parent = kobj;
-	  do {
-	    strlen(parent->k_name /* kobject_name(parent) */);
-	    parent = parent->parent;
-	  } while (parent);
-
-so either the kobj or one of it's parents had already been freed when it 
-was unregistered due to the disconnect.
-
-I'm not seeing any reference counting or other protection for the device 
-("input") on "hid->inputs" list. But I don't know the code. Dmitry? Jiri?
-
-		Linus
+Thanks,
+Kristen
+-- 
