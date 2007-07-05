@@ -1,34 +1,33 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: "libata ignore_hpa=1" doesn't wok on SATA ?
-Date: Thu, 05 Jul 2007 13:46:01 -0400
-Message-ID: <468D2E59.9000902@redhat.com>
-References: <932011.56083.qm@web54504.mail.re2.yahoo.com>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [1/2] 2.6.22-rc7: known regressions
+Date: Thu, 05 Jul 2007 14:46:11 -0400
+Message-ID: <1183661171.2756.13.camel@shinybook.infradead.org>
+References: <468A7D14.1050505@googlemail.com>
+	 <1183599771.2740.19.camel@shinybook.infradead.org>
+	 <alpine.LFD.0.98.0707050921000.9434@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:48504 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758076AbXGERqD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jul 2007 13:46:03 -0400
-In-Reply-To: <932011.56083.qm@web54504.mail.re2.yahoo.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <reiserfs-devel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.0.98.0707050921000.9434@woody.linux-foundation.org>
+Sender: reiserfs-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, marcel@holtmann.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
 List-Id: linux-ide@vger.kernel.org
-To: yong Jung <yong_jk@yahoo.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/04/2007 08:00 PM, yong Jung wrote:
-> Hi,
-> .
-> I would like to see the whole disk area and erase the
-> hpa area in my desktop.
-> At first I tried "setmax.c" program but it didn't work
-> on SATA at least.
-> So I upgraeded it to FC7 and added "libata
-> ignore_hpa=1" option on boot command and
-> /etc/modprobe.conf. 
-> This option was accepted but still the kernel couldn't
-> see the whole disk area even after reboot.
+On Thu, 2007-07-05 at 09:28 -0700, Linus Torvalds wrote:
+> 
+> On Wed, 4 Jul 2007, David Woodhouse wrote:
+> > 
+> > Oh, and here's another one for you. My Bluetooth mouse just stopped
+> > working and hidd is deadlocked...
+> 
+> Looks like it is stuck on hidp_session_sem.
 
-That's "libata.ignore_hpa=1"
+Oh, I suck. I failed to noticed that it had oopsed earlier, in slab
+debugging. I shall look at my 'obviously correct' slab patch a little
+harder, now that I'm not distracted by the fireworks.
+
+-- 
+dwmw2
 
