@@ -1,84 +1,36 @@
-From: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-Subject: Re: [1/2] 2.6.22-rc7: known regressions
-Date: Thu, 5 Jul 2007 17:03:48 -0400
-Message-ID: <d120d5000707051403r1d946375nb119ff86b26580ef@mail.gmail.com>
-References: <468A7D14.1050505@googlemail.com>
-	 <1183599771.2740.19.camel@shinybook.infradead.org>
-	 <alpine.LFD.0.98.0707050921000.9434@woody.linux-foundation.org>
-	 <1183661171.2756.13.camel@shinybook.infradead.org>
-	 <1183663888.2756.19.camel@shinybook.infradead.org>
-	 <alpine.LFD.0.98.0707051236410.9434@woody.linux-foundation.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [patch 2.6.22-rc6] ATA: add a PCI ID for Intel Santa Rosa PATA
+ controller
+Date: Thu, 5 Jul 2007 22:17:02 +0100
+Message-ID: <20070705221702.54a52571@the-village.bc.nu>
+References: <468408F1.3080307@redhat.com>
+	<200707021324.17250.chunkeey@web.de>
+	<4688E519.7040308@leemhuis.info>
+	<200707021636.25192.chunkeey@web.de>
+	<468BA8B0.8030606@ct.heise.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.0.98.0707051236410.9434@woody.linux-foundation.org>
-Content-Disposition: inline
-Sender: reiserfs-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Woodhouse <dwmw2@infradead.org>, Jiri Kosina <jkosina@suse.cz>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, marcel@holtmann.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>, Greg KH <greg@kroah.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39295 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763167AbXGEVLI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 17:11:08 -0400
+In-Reply-To: <468BA8B0.8030606@ct.heise.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Thorsten Leemhuis <thl@ct.heise.de>
+Cc: Chr <chunkeey@web.de>, Thorsten Leemhuis <fedora@leemhuis.info>, Chuck Ebbert <cebbert@redhat.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jason Gaston <jason.d.gaston@intel.com>, linux-kernel@vger.kernel.org
 
-On 7/5/07, Linus Torvalds <torvalds@linux-foundation.org> wrote:
->
-> Looks input-related..
->
-> On Thu, 5 Jul 2007, David Woodhouse wrote:
-> >
-> > Hm, it's not something new. It's an oops I saw occasionally in 2.6.21-rc
-> > too, whenever we had CONFIG_SYSFS_DEPRECATED set.
-> >
-> >  Unable to handle kernel paging request for data at address 0x6b6b6b6b
->
-> Ok, that 0x6b is obviously the kfree() poisoning, ie it looks like a
-> use-after-free problem with a pointer being loaded from a structure that
-> had been free'd-
->
-> And the trace seems to be (ignore the unreliable one):
->
-> >  NIP [c001870c] strlen+0x4/0x18
-> >  LR [c0134fec] kobject_get_path+0x34/0xc4
-> >  Call Trace:
-> >  [eed5be90] [c01d5124] class_uevent+0xac/0x1bc
-> >  [eed5bed0] [c01357e4] kobject_uevent_env+0x23c/0x460
-> >  [eed5bf20] [c01d485c] class_device_del+0x178/0x1a0
-> >  [eed5bf40] [c01d489c] class_device_unregister+0x18/0x30
-> >  [eed5bf60] [c021f820] input_unregister_device+0xf4/0x130
-> >  [eed5bf70] [c0242f4c] hidinput_disconnect+0x2c/0x60
-> >  [eed5bf90] [f27f2bac] hidp_session+0x550/0x584 [hidp]
-> >  [eed5bff0] [c0013e28] kernel_thread+0x44/0x60
->
-> Where we have a few missing functions due to inlining, ie the real
-> sequence seems to be:
->
-> class_device_del ->
->  kobject_uevent_env ->
->    class_uevent ->
->      kobject_get_path ->
->        get_kobj_path_length ->
->          parent = kobj;
->          do {
->            strlen(parent->k_name /* kobject_name(parent) */);
->            parent = parent->parent;
->          } while (parent);
->
-> so either the kobj or one of it's parents had already been freed when it
-> was unregistered due to the disconnect.
->
-> I'm not seeing any reference counting or other protection for the device
-> ("input") on "hid->inputs" list. But I don't know the code. Dmitry? Jiri?
->
+> Maybe Alan or someone from Intel can answer that and thus tell us how to
+> move forward; it would be really nice to get the patch that started this
+> thread (it got posted by Chuck again today) could go into 2.6.22, but I
+> assume the time runs away...
 
-In hidinput_connect we do:
+Folks should be back Monday I suspect. Its the US indepenence day (or
+from UK perspective 'they day the terrorists won' 8) 
 
-          input_dev->dev.parent = hid->dev;
+I don't have suitable systems to hand to test this and investigate
+further.
 
-This should pin hid object untill all inputs are released. However
-bluetooth does not use driver model and does not have hid->dev set up
-and so it looks like we are simply trying to unregister an input
-device that is already gone... I still don't quite get how we
-unregister the same device twice - it is done from a per-hid-device
-thread in hidp...
-
--- 
-Dmitry
+Alan
