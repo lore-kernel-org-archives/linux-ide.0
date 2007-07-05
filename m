@@ -1,80 +1,60 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: SATA RAID5 speed drop of 100 MB/s
-Date: Thu, 05 Jul 2007 18:12:49 -0400
-Message-ID: <468D6CE1.8050808@cfl.rr.com>
-References: <20070620224847.GA5488@alinoe.com> <4679B2DE.9090903@garzik.org> <20070622214859.GC6970@alinoe.com> <467CC5C5.6040201@garzik.org> <20070623125316.GB26672@alinoe.com> <467DA1F5.2060306@garzik.org> <467E5C5E.6000706@msgid.tls.msk.ru>
+From: Rod Whitby <rod@whitby.id.au>
+Subject: Re: Libata PATA status
+Date: Fri, 06 Jul 2007 07:57:00 +0930
+Message-ID: <468D7034.7060107@whitby.id.au>
+References: <20070703185116.59c8f5f5@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762827AbXGEWMd@vger.kernel.org>
-In-Reply-To: <467E5C5E.6000706@msgid.tls.msk.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Jeff Garzik <jeff@garzik.org>, Carlo Wood <carlo@alinoe.com>, Tejun Heo <htejun@gmail.com>, Manoj Kasichainula <manoj@io.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42813 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757389AbXGEW3v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 18:29:51 -0400
+In-Reply-To: <20070703185116.59c8f5f5@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org, Rod Whitby <rod@whitby.id.au>
 
-Michael Tokarev wrote:
-> Single Seagate 74Gb SCSI drive (10KRPM)
-> 
-> BlkSz Trd linRd rndRd linWr  rndWr  linR/W     rndR/W
->    4k   1  66.4   0.5   0.6   0.5   0.6/ 0.6   0.4/ 0.2
->         2         0.6         0.6              0.5/ 0.1
->         4         0.7         0.6              0.6/ 0.2
->   16k   1  84.8   2.0   2.5   1.9   2.5/ 2.5   1.6/ 0.6
->         2         2.3         2.1              2.0/ 0.6
->         4         2.7         2.5              2.3/ 0.6
->   64k   1  84.8   7.4   9.3   7.2   9.4/ 9.3   5.8/ 2.2
->         2         8.6         7.9              7.3/ 2.1
->         4         9.9         9.1              8.1/ 2.2
->  128k   1  84.8  13.6  16.7  12.9  16.9/16.6  10.6/ 3.9
->         2        15.6        14.4             13.5/ 3.2
->         4        17.9        16.4             15.7/ 2.7
->  512k   1  84.9  34.0  41.9  33.3  29.0/27.1  22.4/13.2
->         2        36.9        34.5             30.7/ 8.1
->         4        40.5        38.1             33.2/ 8.3
-> 1024k   1  83.1  36.0  55.8  34.6  28.2/27.6  20.3/19.4
->         2        45.2        44.1             36.4/ 9.9
->         4        48.1        47.6             40.7/ 7.1
-> 
+Alan Cox wrote:
+> Chipsets
+> ========
+> ARTOP
+> 	No reports, but nobody appears to be using one
 
-<snip>
+The NSLU2-Linux project (http://www.nslu2-linux.org) relies on the
+pata-artop driver for the arm/ixp4xx-based Iomega NAS100d and D-Link
+DSM-G600 NAS devices (both of which are supported in recent mainline
+kernels).
 
-> The only thing I don't understand is why with larger I/O block
-> size we see write speed drop with multiple threads.
+Latest kernels (2.6.22-rc5 is the latest we've tested) have no reported
+problems with pata-artop.  We have a handful of people (including
+myself) who we know are using 2.6.22-rc5 on those devices and are
+booting from the internal drive using the pata-artop driver.
 
-Huh?  Your data table does not show larger block size dropping write 
-speed.  47.6 > 38.1 > 16.4.
+I'm happy for anyone to contact me in the future if new versions of the
+pata-artop driver need to be tested.  There are people using it :-)
 
-> And in contrast to the above, here's another test run, now
-> with Seagate SATA ST3250620AS ("desktop" class) 250GB
-> 7200RPM drive:
-> 
-> BlkSz Trd linRd rndRd linWr rndWr   linR/W    rndR/W
->    4k   1  47.5   0.3   0.5   0.3   0.3/ 0.3   0.1/ 0.1
->         2         0.3         0.3              0.2/ 0.1
->         4         0.3         0.3              0.2/ 0.2
->   16k   1  78.4   1.1   1.8   1.1   0.9/ 0.9   0.6/ 0.6
->         2         1.2         1.1              0.6/ 0.6
->         4         1.3         1.2              0.6/ 0.6
->   64k   1  78.4   4.3   6.7   4.0   3.5/ 3.5   2.1/ 2.2
->         2         4.5         4.1              2.2/ 2.3
->         4         4.7         4.2              2.3/ 2.4
->  128k   1  78.4   8.0  12.6   7.2   6.2/ 6.2   3.9/ 3.8
->         2         8.2         7.3              4.1/ 4.0
->         4         8.7         7.7              4.3/ 4.3
->  512k   1  78.5  23.1  34.0  20.3  17.1/17.1  11.3/10.7
->         2        23.5        20.6             11.3/11.4
->         4        24.7        21.3             11.6/11.8
-> 1024k   1  78.4  34.1  33.5  24.6  19.6/19.5  16.0/12.7
->         2        33.3        24.6             15.4/13.8
->         4        34.3        25.0             14.7/15.0
-> 
-> Here, the (total) I/O speed does not depend on the number
-> of threads.  From which I conclude that the drive does
-> not reorder/optimize commands internally, even if NCQ is
-> enabled (queue depth is 32).
+> VIA
+> 	Solid. Sent acpi patch for -mm to try and fix the one remaining
+> 	mystery "how to spot VIA with onboard SATA bridges properly. If
+> 	you've got a VIA board with SATA ports that appear as PATA
+> 	channels please drop me an email as I'd like to get more info
+> 	on what is affected.
 
-While the difference does not appear to be as pronounced as with the WD 
-drive, the data does show more threads give more total IO.  4.7 > 4.5 > 
-4.3 in the 64k rndRd test, and the other tests show an increase with 
-more threads as well.
+Our project is also working on adding support to the kernel for the
+Freecom FSG-3 NAS device.  It uses the sata-via driver for it's VIA_6421
+chipset, but the main drive is a PATA drive (the device also has an
+eSATA external port).
+
+We're currently stuck at 2.6.18 with vendor patches for scsi/sata-via,
+and would love to move to 2.6.22 and libata, but are having problems
+with the latest sata-via driver for this chipset booting from an IDE
+drive.  I'll contact you separately for this issue (as it's off-topic on
+this thread).
+
+Thanks,
+
+-- Rod Whitby
+-- NSLU2-Linux Project Lead
