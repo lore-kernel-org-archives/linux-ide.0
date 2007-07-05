@@ -1,27 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.22-rc7] libata: quirk IOMEGA ZIP 250 ATAPI FLOPPY
-Date: Thu, 5 Jul 2007 13:39:26 +0100
-Message-ID: <20070705133926.66050cce@the-village.bc.nu>
-References: <20070705033131.GW29122@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.22-rc7 3/3] libata: pata_via CX700 quirks
+Date: Thu, 05 Jul 2007 21:39:10 +0900
+Message-ID: <468CE66E.1070901@gmail.com>
+References: <20070705043127.GX29122@htj.dyndns.org>	<20070705043501.GY29122@htj.dyndns.org>	<20070705043949.GZ29122@htj.dyndns.org> <20070705133407.21977a92@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44486 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758400AbXGEMdK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 08:33:10 -0400
-In-Reply-To: <20070705033131.GW29122@htj.dyndns.org>
+Received: from nz-out-0506.google.com ([64.233.162.231]:25755 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758519AbXGEMjR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 08:39:17 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1836789nze
+        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2007 05:39:16 -0700 (PDT)
+In-Reply-To: <20070705133407.21977a92@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, bruinjm@xs4all.nl
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> but IDE simply ignores the error and continues to operate in MWDMA
-> mode, so I guess we can remove the 'temporary fix' comment or add
-> another quirk type - ATA_HORKAGE_SETXFER_MAY_FAIL - and use it.
+Alan Cox wrote:
+> This makes no sense. If the SETXFER failed how did the device get into
+> the mode it is in ? How will change down work ? Why does the old IDE
+> driver work ?
 
-Should we warn in these cases ? Or issue a new identify and check the
-mode activated ?
+IDE ignores SETXFER failure and for SATA devices SETXFER doesn't really
+mean anything (unless it's bridged).  In this case, IDE didn't seem to
+be seeing SETXFER failures but the chip being quite weird (SETXFER
+failure is associated with the specific device slot not the device
+itself.  it's probably a bridge problem.) and from the vendor it's from,
+I thought whatever works is okay.
 
-Alan
+> I think this needs a lot more explanation
+
+Feel free to re-open bug 8563.  I'd be happy to help. :-)
+
+Thanks.
+
+-- 
+tejun
