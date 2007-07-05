@@ -1,44 +1,53 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.22-rc7 3/3] libata: pata_via CX700 quirks
-Date: Thu, 5 Jul 2007 13:34:07 +0100
-Message-ID: <20070705133407.21977a92@the-village.bc.nu>
+Subject: Re: [PATCH 2.6.22-rc7 2/3] libata: implement HORKAGE_SETXFER
+Date: Thu, 5 Jul 2007 13:38:23 +0100
+Message-ID: <20070705133823.14c2e00c@the-village.bc.nu>
 References: <20070705043127.GX29122@htj.dyndns.org>
 	<20070705043501.GY29122@htj.dyndns.org>
-	<20070705043949.GZ29122@htj.dyndns.org>
+	<20070705132706.743d18d8@the-village.bc.nu>
+	<468CE294.2080705@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60821 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44482 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754304AbXGEM1v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 08:27:51 -0400
-In-Reply-To: <20070705043949.GZ29122@htj.dyndns.org>
+	with ESMTP id S1757080AbXGEMcF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 08:32:05 -0400
+In-Reply-To: <468CE294.2080705@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Thu, 5 Jul 2007 13:39:49 +0900
+On Thu, 05 Jul 2007 21:22:44 +0900
 Tejun Heo <htejun@gmail.com> wrote:
 
-> For some reason, via decided that combined SATA/PATA setup in sata_via
-> isn't good enough and added a SATA port without SCR access to CX700.
-
-(It seems to be an integrated PATA/SATA bridge of some sort)
-
-> For yet another unknown reason, slave slot of the SATA port dislikes
-> SETXFER.
+> Alan Cox wrote:
+> > On Thu, 5 Jul 2007 13:35:01 +0900
+> > Tejun Heo <htejun@gmail.com> wrote:
+> > 
+> >> Make CFA SETXFER failure handling into HORKAGE.  This will be used to
+> >> allow other cases to ignore SETXFER failure.
+> > 
+> > NAK
+> > 
+> >> +			/* Old CFA may refuse SETFEATURES_XFER, which
+> >> +			 * is just fine
+> >> +			 */
+> >> +			if (!(xfer_mask & ~ATA_MASK_PIO))
+> >> +				dev->horkage |= ATA_HORKAGE_SETXFER;
+> >> +		} else
+> > 
+> > This is specifically done for PIO. An XFER failure for non PIO modes is a
+> > serious failure and happens in the real world sometimes.
 > 
-> This patch implements two quirks for CX700 - VIA_SATA_PATA and
-> VIA_BAD_SLAVE_SETXFER.  SATA_PATA indicates that the first port is
-> SATA and BAD_SLAVE_SETXFER indicates slave port may fail SETXFER.
+> Hmmm... That's what "if (!(xfer_mask & ~ATA_MASK_PIO))" test was for.
+> Or is it not enough?
 
-This makes no sense. If the SETXFER failed how did the device get into
-the mode it is in ? How will change down work ? Why does the old IDE
-driver work ?
+Actually you are correct the test is sufficient because we can't end up
+adding modes later.
 
-I think this needs a lot more explanation
+Un-NAK ;)
 
-NAK
-
+Alan
