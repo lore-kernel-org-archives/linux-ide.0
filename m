@@ -1,60 +1,27 @@
-From: Rod Whitby <rod@whitby.id.au>
-Subject: Re: Libata PATA status
-Date: Fri, 06 Jul 2007 07:57:00 +0930
-Message-ID: <468D7034.7060107@whitby.id.au>
-References: <20070703185116.59c8f5f5@the-village.bc.nu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Thu, 5 Jul 2007 15:33:34 -0700
+Message-ID: <20070705153334.08402809.akpm@linux-foundation.org>
+References: <20070705194909.337398431@intel.com>
+	<20070705130530.5873afeb.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42813 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757389AbXGEW3v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 18:29:51 -0400
-In-Reply-To: <20070703185116.59c8f5f5@the-village.bc.nu>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38955 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758575AbXGEWeW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 18:34:22 -0400
+In-Reply-To: <20070705130530.5873afeb.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org, Rod Whitby <rod@whitby.id.au>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
-> Chipsets
-> ========
-> ARTOP
-> 	No reports, but nobody appears to be using one
+On Thu, 5 Jul 2007 13:05:30 -0700
+Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 
-The NSLU2-Linux project (http://www.nslu2-linux.org) relies on the
-pata-artop driver for the arm/ixp4xx-based Iomega NAS100d and D-Link
-DSM-G600 NAS devices (both of which are supported in recent mainline
-kernels).
+> +	ATA_DFLAG_IPM		= (1 << 6), /* device supports interface PM */
+>  	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
 
-Latest kernels (2.6.22-rc5 is the latest we've tested) have no reported
-problems with pata-artop.  We have a handful of people (including
-myself) who we know are using 2.6.22-rc5 on those devices and are
-booting from the internal drive using the pata-artop driver.
-
-I'm happy for anyone to contact me in the future if new versions of the
-pata-artop driver need to be tested.  There are people using it :-)
-
-> VIA
-> 	Solid. Sent acpi patch for -mm to try and fix the one remaining
-> 	mystery "how to spot VIA with onboard SATA bridges properly. If
-> 	you've got a VIA board with SATA ports that appear as PATA
-> 	channels please drop me an email as I'd like to get more info
-> 	on what is affected.
-
-Our project is also working on adding support to the kernel for the
-Freecom FSG-3 NAS device.  It uses the sata-via driver for it's VIA_6421
-chipset, but the main drive is a PATA drive (the device also has an
-eSATA external port).
-
-We're currently stuck at 2.6.18 with vendor patches for scsi/sata-via,
-and would love to move to 2.6.22 and libata, but are having problems
-with the latest sata-via driver for this chipset booting from an IDE
-drive.  I'll contact you separately for this issue (as it's off-topic on
-this thread).
-
-Thanks,
-
--- Rod Whitby
--- NSLU2-Linux Project Lead
+I had to bump this to (1<<7), so we've run out.
