@@ -1,40 +1,39 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [1/2] 2.6.22-rc7: known regressions
-Date: Wed, 04 Jul 2007 21:42:51 -0400
-Message-ID: <1183599771.2740.19.camel@shinybook.infradead.org>
-References: <468A7D14.1050505@googlemail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata1: soft resetting port
+Date: Thu, 05 Jul 2007 11:21:05 +0900
+Message-ID: <468C5591.1040202@gmail.com>
+References: <1182260902.14805.60.camel@localhost>	 <4689EF48.8090506@gmail.com> <1183545657.22999.15.camel@localhost>	 <468BE06D.4010507@gmail.com> <1183576924.4697.36.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757555AbXGEBmd@vger.kernel.org>
-In-Reply-To: <468A7D14.1050505@googlemail.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757516AbXGECVW@vger.kernel.org>
+In-Reply-To: <1183576924.4697.36.camel@localhost>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, marcel@holtmann.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, "Vladimir V. Saveliev" <vs@namesys.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-ide@vger.kernel.org, David Chinner <dgc@sgi.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, William Lee Irwin III <wli@holomorphy.com>
+To: Soeren Sonnenburg <kernel@nn7.de>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2007-07-03 at 18:45 +0200, Michal Piotrowski wrote:
-> Hi all,
+Soeren Sonnenburg wrote:
+>>> pci_express 0000:00:1c.2:pcie03: resuming
+>>> sr 0:0:0:0: resuming
+>>> sd 2:0:1:0: resuming
+>>> sd 2:0:1:0: [sda] Starting disk
+>>> ata1.00: configured for UDMA/33
+>>> ata3.01: revalidation failed (errno=-2)
+>>> ata3: failed to recover some devices, retrying in 5 secs
+>>> ata3.01: configured for UDMA/133
+>> Hmmm... That's NODEV_HINT being triggered after resume.  Probably the
+>> device isn't ready to respond yet at that point.  How reproducible is
+>> the problem?
 > 
-> Here is a list of some known regressions in 2.6.22-rc7.
+> quite reproducible:
+> 
+> $ dmesg | grep 'revalidation failed' | wc -l
+> 4
 
-Oh, and here's another one for you. My Bluetooth mouse just stopped
-working and hidd is deadlocked...
-
-hidd          D 1FE27798  5940  1695      1 (NOTLB)
-Call Trace:
-[ef3ddb70] [00000004] 0x4 (unreliable)
-[ef3ddc30] [c0008e7c] __switch_to+0x50/0x68
-[ef3ddc50] [c02d5998] schedule+0x3cc/0x480
-[ef3ddc80] [c0137a20] rwsem_down_failed_common+0x1c4/0x1f4
-[ef3ddcb0] [c02d7454] rwsem_down_write_failed+0x28/0x40
-[ef3ddce0] [c004ff60] down_write+0x50/0x64
-[ef3ddd00] [f27f2068] hidp_add_connection+0x168/0x75c [hidp]
-[ef3ddd40] [f27f2e44] hidp_sock_ioctl+0x140/0x414 [hidp]
-[ef3ddeb0] [c024da6c] sock_ioctl+0x248/0x284
-[ef3dded0] [c00ab02c] do_ioctl+0x38/0x84
-[ef3ddee0] [c00ab448] vfs_ioctl+0x3d0/0x404
-[ef3ddf10] [c00ab4e4] sys_ioctl+0x68/0x98
+Hmmm... Thanks.  I think the best we can do is 1. don't wait for disk
+revalidation during resume 2. retry faster.  Just in case, please post
+the result of "hdparm -I /dev/sdX" where sdX is the device at ata3.01.
 
 -- 
-dwmw2
+tejun
