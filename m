@@ -1,38 +1,57 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 9/15] ide: add PIO masks
-Date: Thu, 05 Jul 2007 20:40:18 -0400
-Message-ID: <468D8F72.3030505@garzik.org>
-References: <200706302107.42458.bzolnier@gmail.com> <468A89FE.1040806@ru.mvista.com>
+Subject: Re: + git-libata-all-fix.patch added to -mm tree
+Date: Thu, 05 Jul 2007 20:58:21 -0400
+Message-ID: <468D93AD.3030409@garzik.org>
+References: <200707060041.l660fX3C027811@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52344 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:52427 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760269AbXGFAkV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jul 2007 20:40:21 -0400
-In-Reply-To: <468A89FE.1040806@ru.mvista.com>
+	id S1759536AbXGFA6Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Jul 2007 20:58:24 -0400
+In-Reply-To: <200707060041.l660fX3C027811@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Sergei Shtylyov wrote:
-> Hello.
+akpm@linux-foundation.org wrote:
+> The patch titled
+>      git-libata-all-fix
+> has been added to the -mm tree.  Its filename is
+>      git-libata-all-fix.patch
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
 > 
->> * Add ATA_PIO[0-6] defines to <linux/ata.h>.
+> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+> out what to do about this
 > 
->> * Add ->pio_mask field to ide_pci_device_t and ide_hwif_t.
+> ------------------------------------------------------
+> Subject: git-libata-all-fix
+> From: Andrew Morton <akpm@linux-foundation.org>
 > 
->> * Add PIO masks to host drivers.
+> drivers/ata/libata-core.c:4253: error: redefinition of 'ata_fill_sg_dumb'
+> drivers/ata/libata-core.c:4191: error: previous definition of 'ata_fill_sg_dumb' was here
+> drivers/ata/libata-core.c:4375: error: redefinition of 'ata_dumb_qc_prep'
+> drivers/ata/libata-core.c:4358: error: previous definition of 'ata_dumb_qc_prep' was here
 > 
->    Hm, the next logical step would be to use the mask constants in
-> <linux/ata.h> for the drivers' DMA caps too...
+> Cc: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/ata/libata-core.c |   79 ------------------------------------
+>  1 file changed, 79 deletions(-)
 
-Certainly it is my hope to have share-able stuff in linux/ata.h that we 
-all can use.  With ata_* (or ATA_*) prefix of course :)
+I think Tejun did something similar.
+
+Alas, I only had time to concentrate on 2.6.22-rc before I left for July 
+4th.  That left libata-dev.git in a minorly broken state, for everything 
+other than #master and #upstream-fixes.  I should have that cleaned up 
+in the next day or so.  My apologies.
+
+Whee, bleeding edge...
 
 	Jeff
 
