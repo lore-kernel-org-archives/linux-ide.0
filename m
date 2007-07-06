@@ -1,59 +1,99 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: + git-libata-all-fix.patch added to -mm tree
-Date: Thu, 05 Jul 2007 20:58:21 -0400
-Message-ID: <468D93AD.3030409@garzik.org>
-References: <200707060041.l660fX3C027811@imap1.linux-foundation.org>
+From: David Shaw <dshaw@jabberwocky.com>
+Subject: Possible data corruption sata_sil24?
+Date: Thu, 5 Jul 2007 21:24:32 -0400
+Message-ID: <20070706012432.GB29789@jabberwocky.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52427 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759536AbXGFA6Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jul 2007 20:58:24 -0400
-In-Reply-To: <200707060041.l660fX3C027811@imap1.linux-foundation.org>
+Received: from foobar.cs.jhu.edu ([128.220.13.173]:4581 "EHLO
+	foobar.cs.jhu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761567AbXGFBkY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 21:40:24 -0400
+Received: from walrus.jabberwocky.com (c-75-67-134-120.hsd1.ma.comcast.net [75.67.134.120])
+	by foobar.cs.jhu.edu (8.11.6/8.11.6) with ESMTP id l661Ob805891
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:38 -0400
+Received: from grover.jabberwocky.com (grover.jabberwocky.com [172.24.84.28])
+	by walrus.jabberwocky.com (8.14.1/8.14.1) with ESMTP id l661OXTZ009444
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:33 -0400
+Received: from grover.jabberwocky.com (localhost.localdomain [127.0.0.1])
+	by grover.jabberwocky.com (8.13.8/8.13.8) with ESMTP id l661OXwC030103
+	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:33 -0400
+Received: (from dshaw@localhost)
+	by grover.jabberwocky.com (8.13.8/8.13.8/Submit) id l661OWcC030102
+	for linux-ide@vger.kernel.org; Thu, 5 Jul 2007 21:24:32 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> The patch titled
->      git-libata-all-fix
-> has been added to the -mm tree.  Its filename is
->      git-libata-all-fix.patch
-> 
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> 
-> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
-> out what to do about this
-> 
-> ------------------------------------------------------
-> Subject: git-libata-all-fix
-> From: Andrew Morton <akpm@linux-foundation.org>
-> 
-> drivers/ata/libata-core.c:4253: error: redefinition of 'ata_fill_sg_dumb'
-> drivers/ata/libata-core.c:4191: error: previous definition of 'ata_fill_sg_dumb' was here
-> drivers/ata/libata-core.c:4375: error: redefinition of 'ata_dumb_qc_prep'
-> drivers/ata/libata-core.c:4358: error: previous definition of 'ata_dumb_qc_prep' was here
-> 
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/ata/libata-core.c |   79 ------------------------------------
->  1 file changed, 79 deletions(-)
+Hi everyone,
 
-I think Tejun did something similar.
+I'm having a problem with data corruption using devmapper on a SATA
+disk using sata_sil24.  I've done some work tracking it down, and
+hopefully you folks can point me further in the right direction.
 
-Alas, I only had time to concentrate on 2.6.22-rc before I left for July 
-4th.  That left libata-dev.git in a minorly broken state, for everything 
-other than #master and #upstream-fixes.  I should have that cleaned up 
-in the next day or so.  My apologies.
+The kernel I'm using is 2.6.21-1.3228.fc7 (i.e. Fedora 7).  LVM2 is
+lvm2-2.02.24-1.fc7.  The dmsetup and libdevmapper is
+device-mapper-1.02.17-7.fc7.
 
-Whee, bleeding edge...
+The original setup that showed the problem is this:
 
-	Jeff
+Starting with two 500GB SATA drives (interface card uses a Silicon
+3124 chipset), /dev/sdd and /dev/sde.  I partitioned each into two
+250GB chunks (250*1000*1000*1000, not 250*1024*1024*1024), and set up
+two RAID 1 sets such that /dev/md0 is /dev/sdd1+/dev/sde1 and /dev/md2
+is /dev/sdd2+/dev/sde2.  I then created a volume group ("storage") on
+top of /dev/md0 and /dev/md1.  Finally, I allocated two logical
+volumes on top of that: "one" is -L300GB and "two" is -L100GB.
 
+mke2fs -j -m0 on /dev/storage/one and /dev/storage/two, and it would
+seem everything was fine, but after copying data to the two volumes,
+they would fail a fsck in pretty dramatic fashion (dozens of errors
+indicating pretty severe filesystem corruption).
 
+I'll skip all the steps I tried when reducing this down to a simple
+reproducible test case, but the end result is this:
 
+1) Take a 500GB disk (as before, it's SATA plugged into a card using
+   the sata_sil24 driver)
+
+2) echo "0 482344960 linear 8:32 0" | dmsetup create one
+   echo "0 209715200 linear 8:32 482345000" | dmsetup create two
+
+3) mke2fs -j -m0 /dev/mapper/one
+   mke2fs -j -m0 /dev/mapper/two
+   mount /dev/mapper/one /one
+   mount /dev/mapper/two /two
+
+4) cd /one ; \
+   for i in `seq 0 3`; do dd if=/dev/zero bs=4K count=1M of=$i; done ; \
+   cd ; \
+   umount /one
+
+   cd /two ; \
+   for i in `seq 0 3`; do dd if=/dev/zero bs=4K count=1M of=$i; done ; \
+   cd ; \
+   umount /two
+
+5) fsck -f /dev/mapper/one
+   fsck -f /dev/mapper/two
+
+Both filesystems return many errors on fsck.  This is very repeatable.
+
+Note that this simplified reproduction case uses only the device
+mapper: RAID is not involved, nor is LVM.  "dmsetup table" says:
+
+two: 0 209715200 linear 8:32 482345000
+one: 0 482344960 linear 8:32 0
+
+Just to be sure, I have run memtest86+ on the machine and badblocks on
+the disk.  Both came up clean.  Partitioning the disk and mke2fs-ing
+the partitions directly (i.e. no device-mapper), works fine.  It's
+only when using the device-mapper does the corruption happen.  There
+is nothing of interest logged in /var/log/messages or dmesg (I see the
+usual messages around 'mount', but that's it).
+
+Any suggestions?  Many thanks,
+
+David
