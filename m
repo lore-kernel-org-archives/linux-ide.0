@@ -1,33 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.22-rc7] libata: quirk IOMEGA ZIP 250 ATAPI FLOPPY
-Date: Thu, 05 Jul 2007 19:53:38 -0400
-Message-ID: <468D8482.9040203@garzik.org>
-References: <20070705033131.GW29122@htj.dyndns.org> <20070705133926.66050cce@the-village.bc.nu>
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Thu, 05 Jul 2007 20:00:47 -0400
+Message-ID: <468D862F.2030604@garzik.org>
+References: <20070705194909.337398431@intel.com>	<20070705130530.5873afeb.kristen.c.accardi@intel.com> <20070705153334.08402809.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52001 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760266AbXGEXxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Jul 2007 19:53:42 -0400
-In-Reply-To: <20070705133926.66050cce@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070705153334.08402809.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, bruinjm@xs4all.nl
 
-Alan Cox wrote:
->> but IDE simply ignores the error and continues to operate in MWDMA
->> mode, so I guess we can remove the 'temporary fix' comment or add
->> another quirk type - ATA_HORKAGE_SETXFER_MAY_FAIL - and use it.
+Andrew Morton wrote:
+> On Thu, 5 Jul 2007 13:05:30 -0700
+> Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 > 
-> Should we warn in these cases ? Or issue a new identify and check the
-> mode activated ?
+>> +	ATA_DFLAG_IPM		= (1 << 6), /* device supports interface PM */
+>>  	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+> 
+> I had to bump this to (1<<7), so we've run out.
 
-The latter, issuing a new identify, is really what you want to do. 
-AFAICT that's the canonical method of querying the device's knowledge of 
-its mode settings.
+You can shuffle the numbers a bit, as long as the masks (*_MASK) stay 
+correct for their purpose
 
 	Jeff
 
