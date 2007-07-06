@@ -1,99 +1,73 @@
-From: David Shaw <dshaw@jabberwocky.com>
-Subject: Possible data corruption sata_sil24?
-Date: Thu, 5 Jul 2007 21:24:32 -0400
-Message-ID: <20070706012432.GB29789@jabberwocky.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
+Date: Fri, 06 Jul 2007 15:40:45 +0900
+Message-ID: <468DE3ED.3040100@gmail.com>
+References: <20070702163847.GV29122@htj.dyndns.org> <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com> <468B3452.6040509@gmail.com> <20070704185936.GA13212@electric-eye.fr.zoreil.com> <468C59B6.1030502@gmail.com> <20070705224536.GA9148@electric-eye.fr.zoreil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080001010404060503080903"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foobar.cs.jhu.edu ([128.220.13.173]:4581 "EHLO
-	foobar.cs.jhu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761567AbXGFBkY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2007 21:40:24 -0400
-Received: from walrus.jabberwocky.com (c-75-67-134-120.hsd1.ma.comcast.net [75.67.134.120])
-	by foobar.cs.jhu.edu (8.11.6/8.11.6) with ESMTP id l661Ob805891
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:38 -0400
-Received: from grover.jabberwocky.com (grover.jabberwocky.com [172.24.84.28])
-	by walrus.jabberwocky.com (8.14.1/8.14.1) with ESMTP id l661OXTZ009444
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:33 -0400
-Received: from grover.jabberwocky.com (localhost.localdomain [127.0.0.1])
-	by grover.jabberwocky.com (8.13.8/8.13.8) with ESMTP id l661OXwC030103
-	for <linux-ide@vger.kernel.org>; Thu, 5 Jul 2007 21:24:33 -0400
-Received: (from dshaw@localhost)
-	by grover.jabberwocky.com (8.13.8/8.13.8/Submit) id l661OWcC030102
-	for linux-ide@vger.kernel.org; Thu, 5 Jul 2007 21:24:32 -0400
-Content-Disposition: inline
+Received: from nz-out-0506.google.com ([64.233.162.224]:49731 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758088AbXGFGkv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jul 2007 02:40:51 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so118209nze
+        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2007 23:40:51 -0700 (PDT)
+In-Reply-To: <20070705224536.GA9148@electric-eye.fr.zoreil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Francois Romieu <romieu@fr.zoreil.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hi everyone,
+This is a multi-part message in MIME format.
+--------------080001010404060503080903
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I'm having a problem with data corruption using devmapper on a SATA
-disk using sata_sil24.  I've done some work tracking it down, and
-hopefully you folks can point me further in the right direction.
+Francois Romieu wrote:
+> Tejun Heo <htejun@gmail.com> :
+> [...]
+>> Apparently, I'm more confused than you are.  My "master" was at 872aad45
+>> but my index was at rc7.  Can you please force checkout the head and
+>> re-test?  I've tested both native and legacy modes and it's fixed here.
+> 
+> I have done a forced checkout + mrproper before rebuild and there is no
+> difference.
+> 
+> Complete dmesg is attached.
 
-The kernel I'm using is 2.6.21-1.3228.fc7 (i.e. Fedora 7).  LVM2 is
-lvm2-2.02.24-1.fc7.  The dmsetup and libdevmapper is
-device-mapper-1.02.17-7.fc7.
+Hmmmm... Weird.  Can you please apply the attached patch and post boot
+dmesg?  Thanks.
 
-The original setup that showed the problem is this:
+-- 
+tejun
 
-Starting with two 500GB SATA drives (interface card uses a Silicon
-3124 chipset), /dev/sdd and /dev/sde.  I partitioned each into two
-250GB chunks (250*1000*1000*1000, not 250*1024*1024*1024), and set up
-two RAID 1 sets such that /dev/md0 is /dev/sdd1+/dev/sde1 and /dev/md2
-is /dev/sdd2+/dev/sde2.  I then created a volume group ("storage") on
-top of /dev/md0 and /dev/md1.  Finally, I allocated two logical
-volumes on top of that: "one" is -L300GB and "two" is -L100GB.
+--------------080001010404060503080903
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-mke2fs -j -m0 on /dev/storage/one and /dev/storage/two, and it would
-seem everything was fine, but after copying data to the two volumes,
-they would fail a fsck in pretty dramatic fashion (dozens of errors
-indicating pretty severe filesystem corruption).
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index fa1c22c..1a5bd75 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1069,6 +1069,7 @@ int ata_pci_init_one(struct pci_dev *pdev,
+ 		rc = devm_request_irq(dev, pdev->irq, pi->port_ops->irq_handler,
+ 				      IRQF_SHARED, DRV_NAME, host);
+ 		host->irq = pdev->irq;
++		printk("XXX native mode irq=%lu\n", host->irq);
+ 	} else {
+ 		irq_handler_t handler[2] = { host->ops->irq_handler,
+ 					     host->ops->irq_handler };
+@@ -1076,6 +1077,7 @@ int ata_pci_init_one(struct pci_dev *pdev,
+ 		void *dev_id[2] = { host, host };
+ 
+ 		rc = ata_request_legacy_irqs(host, handler, irq_flags, dev_id);
++		printk("XXX legacy mode irq=%lu irq2=%lu\n", host->irq, host->irq2);
+ 	}
+ 	if (rc)
+ 		goto err_out;
 
-I'll skip all the steps I tried when reducing this down to a simple
-reproducible test case, but the end result is this:
-
-1) Take a 500GB disk (as before, it's SATA plugged into a card using
-   the sata_sil24 driver)
-
-2) echo "0 482344960 linear 8:32 0" | dmsetup create one
-   echo "0 209715200 linear 8:32 482345000" | dmsetup create two
-
-3) mke2fs -j -m0 /dev/mapper/one
-   mke2fs -j -m0 /dev/mapper/two
-   mount /dev/mapper/one /one
-   mount /dev/mapper/two /two
-
-4) cd /one ; \
-   for i in `seq 0 3`; do dd if=/dev/zero bs=4K count=1M of=$i; done ; \
-   cd ; \
-   umount /one
-
-   cd /two ; \
-   for i in `seq 0 3`; do dd if=/dev/zero bs=4K count=1M of=$i; done ; \
-   cd ; \
-   umount /two
-
-5) fsck -f /dev/mapper/one
-   fsck -f /dev/mapper/two
-
-Both filesystems return many errors on fsck.  This is very repeatable.
-
-Note that this simplified reproduction case uses only the device
-mapper: RAID is not involved, nor is LVM.  "dmsetup table" says:
-
-two: 0 209715200 linear 8:32 482345000
-one: 0 482344960 linear 8:32 0
-
-Just to be sure, I have run memtest86+ on the machine and badblocks on
-the disk.  Both came up clean.  Partitioning the disk and mke2fs-ing
-the partitions directly (i.e. no device-mapper), works fine.  It's
-only when using the device-mapper does the corruption happen.  There
-is nothing of interest logged in /var/log/messages or dmesg (I see the
-usual messages around 'mount', but that's it).
-
-Any suggestions?  Many thanks,
-
-David
+--------------080001010404060503080903--
