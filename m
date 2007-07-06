@@ -1,76 +1,219 @@
-From: Ruairi Hickey <Ruairi.Hickey@collon.ie>
-Subject: Re: libata-tj-stable
-Date: Fri, 06 Jul 2007 12:20:07 +0100
-Message-ID: <468E2567.8090405@collon.ie>
-References: <468CE343.7050407@collon.ie> <468CE4C0.6020102@gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 2.6.20-stable] sata_vsc: fix 2.6.19 to .20 regression while
+	refactoring vsc_sata_interrupt
+Date: Fri, 06 Jul 2007 09:13:57 -0700
+Message-ID: <1183738437.10137.10.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.dkit.ie ([193.1.42.16]:43072 "EHLO mx2.dkit.ie"
+Received: from mga03.intel.com ([143.182.124.21]:38920 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758857AbXGFMGm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Jul 2007 08:06:42 -0400
-Received: from [172.16.22.18] (helo=mailserver01.dkit.ie)
-	by mx2.dkit.ie with esmtp (Exim 4.63)
-	(envelope-from <Ruairi.Hickey@collon.ie>)
-	id 1I6lrR-00089r-0C
-	for linux-ide@vger.kernel.org; Fri, 06 Jul 2007 12:20:29 +0100
-In-Reply-To: <468CE4C0.6020102@gmail.com>
+	id S1757974AbXGFQN7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Jul 2007 12:13:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: stable@kernel.org
+Cc: linux-ide@vger.kernel.org, Martin.Leisner@xerox.com
 
-Tejun Heo wrote:
-> Hello,
->
-> Ruairi Hickey wrote:
->   
->> Hi Tejun,
->>    I've being testing a storage box from Norco (DS-1220) which comes
->> with 12 SATA drives and is connected to a Linux server via a PCI-e
->> e-sata card based on the Sil3124.  To get this to be recognised I used
->> your latest patch libata-tj-2.6.22-rc6-20070702 and the vanilla
->> 2.6.22-rc6 kernel.  Under load testing I get exceptions in my logs, (see
->> below).  Can I be of any assistance to you to help debugging this... (I
->> can program / read reasonably well in most languages)
->>
->>
->> Ruairi
->>
->> Jul  5 14:20:09 samba01 kernel: ata2.03: cmd
->> 60/08:00:47:c7:f5/00:00:2c:00:00/40 tag 0 cdb 0x0 data 4096 in
->> Jul  5 14:20:09 samba01 kernel:          res
->> 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->>     
->
-> Hmm... it's timeout on FPDMA_READ command.  It could be a transient
-> hardware problem or fluctuating power, what not.  I need more info to
-> diagnose the problem.
->
-> 1. Please cc linux-ide@vger.kernel.org
->
-> 2. How reproducible is the problem?
->
-> 3. If the problem is reproducible, is the problem confined a specific
-> drive?  If so, what happens if you move the drive to different slot (ie.
-> exchange two drives)?  Does the error follow the drive or stay with the
-> slot?
->
-> 4. Your drive probably has a dip switch which forces 1.5Gbps link speed.
->  Does that help?
->
-> Thanks.
->
->   
-Hi Tejun,
-    Thanks for your pointers, I got sidetracked yesterday with other 
-work.... The problem is reproducible by doing a simple 'dd' to create a 
-multiple GB file.  The error occurs on different drives at the moment.  
-I am on vacation for the next week but I will remove the linux Raid 
-array and test the drives individually (hopefully today, but maybe when 
-I get back from vacation) and report back to you then...
+From: Dan Williams <dan.j.williams@intel.com>
 
-Ruairi
+Separate sata_vsc interrupt handling into a normal (per-port) path and an
+error path with the addition of vsc_port_intr and vsc_error_intr
+respectively.  The error path handles interrupt based
+hotplug events which requires the definition of vsc_freeze and vsc_thaw.
 
+Note: vsc_port_intr has a workaround for unexpected interrupts that occur
+during polled commands.  This fixes a regression between 2.6.19 and 2.6.20.
+Caused by 800b399669ad495ad4361d134df87401ae36f44f.
+
+Changes in take2:
+* removed definition of invalid fis bit
+* let standard ata-error-handling handle the serror register
+* clear all unhandled interrupts
+* revert changes to vsc_intr_mask_update (vsc_thaw enables all interrupts)
+* use unlikely() for the pci-abort and not-our-interrupt cases in vsc_sata_interrupt
+
+Changes in take3:
+* Unify the "add" + "hook-up" patches into this single patch
+
+[htejun@gmail.com: clean up comments and suggestions]
+Cc: Jeremy Higdon <jeremy@sgi.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+
+ drivers/ata/sata_vsc.c |  123 +++++++++++++++++++++++++++++-------------------
+ 1 files changed, 74 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index 0fa1b89..bcfca62 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -96,11 +96,6 @@ enum {
+ 			      VSC_SATA_INT_PHY_CHANGE),
+ };
+ 
+-
+-#define is_vsc_sata_int_err(port_idx, int_status) \
+-	 (int_status & (VSC_SATA_INT_ERROR << (8 * port_idx)))
+-
+-
+ static u32 vsc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg)
+ {
+ 	if (sc_reg > SCR_CONTROL)
+@@ -118,6 +113,28 @@ static void vsc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg,
+ }
+ 
+ 
++static void vsc_freeze(struct ata_port *ap)
++{
++	void __iomem *mask_addr;
++
++	mask_addr = ap->host->mmio_base +
++		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
++
++	writeb(0, mask_addr);
++}
++
++
++static void vsc_thaw(struct ata_port *ap)
++{
++	void __iomem *mask_addr;
++
++	mask_addr = ap->host->mmio_base +
++		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
++
++	writeb(0xff, mask_addr);
++}
++
++
+ static void vsc_intr_mask_update(struct ata_port *ap, u8 ctl)
+ {
+ 	void __iomem *mask_addr;
+@@ -202,6 +219,36 @@ static void vsc_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+         }
+ }
+ 
++static inline void vsc_error_intr(u8 port_status, struct ata_port *ap)
++{
++	if (port_status & (VSC_SATA_INT_PHY_CHANGE | VSC_SATA_INT_ERROR_M))
++		ata_port_freeze(ap);
++	else
++		ata_port_abort(ap);
++}
++
++static void vsc_port_intr(u8 port_status, struct ata_port *ap)
++{
++	struct ata_queued_cmd *qc;
++	int handled = 0;
++
++	if (unlikely(port_status & VSC_SATA_INT_ERROR)) {
++		vsc_error_intr(port_status, ap);
++		return;
++	}
++
++	qc = ata_qc_from_tag(ap, ap->active_tag);
++	if (qc && likely(!(qc->tf.flags & ATA_TFLAG_POLLING)))
++		handled = ata_host_intr(ap, qc);
++
++	/* We received an interrupt during a polled command,
++	 * or some other spurious condition.  Interrupt reporting
++	 * with this hardware is fairly reliable so it is safe to
++	 * simply clear the interrupt
++	 */
++	if (unlikely(!handled))
++		ata_chk_status(ap);
++}
+ 
+ /*
+  * vsc_sata_interrupt
+@@ -213,58 +260,36 @@ static irqreturn_t vsc_sata_interrupt (int irq, void *dev_instance)
+ 	struct ata_host *host = dev_instance;
+ 	unsigned int i;
+ 	unsigned int handled = 0;
+-	u32 int_status;
+-
+-	spin_lock(&host->lock);
++	u32 status;
+ 
+-	int_status = readl(host->mmio_base + VSC_SATA_INT_STAT_OFFSET);
++	status = readl(host->mmio_base + VSC_SATA_INT_STAT_OFFSET);
+ 
+-	for (i = 0; i < host->n_ports; i++) {
+-		if (int_status & ((u32) 0xFF << (8 * i))) {
+-			struct ata_port *ap;
++	if (unlikely(status == 0xffffffff || status == 0)) {
++		if (status)
++			dev_printk(KERN_ERR, host->dev,
++				": IRQ status == 0xffffffff, "
++				"PCI fault or device removal?\n");
++		goto out;
++	}
+ 
+-			ap = host->ports[i];
++	spin_lock(&host->lock);
+ 
+-			if (is_vsc_sata_int_err(i, int_status)) {
+-				u32 err_status;
+-				printk(KERN_DEBUG "%s: ignoring interrupt(s)\n", __FUNCTION__);
+-				err_status = ap ? vsc_sata_scr_read(ap, SCR_ERROR) : 0;
+-				vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+-				handled++;
+-			}
++	for (i = 0; i < host->n_ports; i++) {
++		u8 port_status = (status >> (8 * i)) & 0xff;
++		if (port_status) {
++			struct ata_port *ap = host->ports[i];
+ 
+ 			if (ap && !(ap->flags & ATA_FLAG_DISABLED)) {
+-				struct ata_queued_cmd *qc;
+-
+-				qc = ata_qc_from_tag(ap, ap->active_tag);
+-				if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING)))
+-					handled += ata_host_intr(ap, qc);
+-				else if (is_vsc_sata_int_err(i, int_status)) {
+-					/*
+-					 * On some chips (i.e. Intel 31244), an error
+-					 * interrupt will sneak in at initialization
+-					 * time (phy state changes).  Clearing the SCR
+-					 * error register is not required, but it prevents
+-					 * the phy state change interrupts from recurring
+-					 * later.
+-					 */
+-					u32 err_status;
+-					err_status = vsc_sata_scr_read(ap, SCR_ERROR);
+-					printk(KERN_DEBUG "%s: clearing interrupt, "
+-					       "status %x; sata err status %x\n",
+-					       __FUNCTION__,
+-					       int_status, err_status);
+-					vsc_sata_scr_write(ap, SCR_ERROR, err_status);
+-					/* Clear interrupt status */
+-					ata_chk_status(ap);
+-					handled++;
+-				}
+-			}
++				vsc_port_intr(port_status, ap);
++				handled++;
++			} else
++				dev_printk(KERN_ERR, host->dev,
++					": interrupt from disabled port %d\n", i);
+ 		}
+ 	}
+ 
+ 	spin_unlock(&host->lock);
+-
++out:
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+@@ -302,8 +327,8 @@ static const struct ata_port_operations vsc_sata_ops = {
+ 	.qc_prep		= ata_qc_prep,
+ 	.qc_issue		= ata_qc_issue_prot,
+ 	.data_xfer		= ata_mmio_data_xfer,
+-	.freeze			= ata_bmdma_freeze,
+-	.thaw			= ata_bmdma_thaw,
++	.freeze			= vsc_freeze,
++	.thaw			= vsc_thaw,
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.irq_handler		= vsc_sata_interrupt,
