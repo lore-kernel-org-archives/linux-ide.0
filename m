@@ -1,42 +1,54 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [PATCH 1/2] [ide] mmio ide support
-Date: Sat, 07 Jul 2007 22:15:29 +0400
-Message-ID: <468FD841.6070900@ru.mvista.com>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain>
+Date: Sat, 7 Jul 2007 20:07:10 +0200
+Message-ID: <200707072007.10448.arnd@arndb.de>
+References: <20070707094852.9473.21013.stgit@localhost.localdomain> <200707071419.52650.arnd@arndb.de> <468FC4AC.9030701@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:56052 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752547AbXGGSNc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Jul 2007 14:13:32 -0400
-In-Reply-To: <20070707094852.9473.21013.stgit@localhost.localdomain>
+Received: from moutng.kundenserver.de ([212.227.126.174]:52493 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699AbXGGSO4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 14:14:56 -0400
+In-Reply-To: <468FC4AC.9030701@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: linuxppc-dev@ozlabs.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+On Saturday 07 July 2007, Sergei Shtylyov wrote:
+> Arnd Bergmann wrote:
+> 
+> >>This adds support for MMIO IDE device like CompactFlash 
+> >>in TrueIDE mode.
+> 
+> >>Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com> 
+> >>Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+> 
+> > Hmm, are we still adding new IDE drivers? Do you also have a
+> 
+>     Yes, why not?
 
-Vitaly Bordug wrote:
+The last time someone (I think Akira Iguchi) wanted to add
+a new powerpc specific IDE driver, that was rejected based
+on the argument that drivers/ide/ is going away soon. Most
+current distros have already moved over to using libata
+exclusively.
 
-> This adds support for MMIO IDE device like CompactFlash 
-> in TrueIDE mode.
+> > about to add the electra_ide.c driver in 2.6.23, I guess there
+> > should really be _one_ driver that is able to handle all
+> > of_device based ATA hosts.
+> 
+>     One driver to rule them all. :-)
+>     That may be not so simple as it seems...
 
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com> 
-> Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+It's certainly not easy to support all ATA chips that
+have special capabilities and bugs, but the electra and the
+mpc8349-itx both seem to support only the most basic ATA
+PIO mode anyway, which does not require much special
+handling beyond finding the right mmio addresses.
 
-[...]
-
-> diff --git a/drivers/ide/legacy/mmio-ide.c b/drivers/ide/legacy/mmio-ide.c
-> new file mode 100644
-> index 0000000..77fb7dd
-> --- /dev/null
-> +++ b/drivers/ide/legacy/mmio-ide.c
-[...]
-> +	hwif->mmio = 2;
-
-     That hwif->mmio is single-bit field now, so can only be 0 or 1.
-
-MBR, Sergei
+	Arnd <><
