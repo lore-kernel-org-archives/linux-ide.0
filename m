@@ -1,54 +1,67 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 1/2] [ide] mmio ide support
-Date: Sat, 7 Jul 2007 20:07:10 +0200
-Message-ID: <200707072007.10448.arnd@arndb.de>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain> <200707071419.52650.arnd@arndb.de> <468FC4AC.9030701@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 2/7] sata_promise: pdc_freeze() semantic change
+Date: Sat, 7 Jul 2007 21:08:13 +0200 (MEST)
+Message-ID: <200707071908.l67J8D5W010862@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.174]:52493 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699AbXGGSO4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 14:14:56 -0400
-In-Reply-To: <468FC4AC.9030701@ru.mvista.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:62999 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752547AbXGGTIg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jul 2007 15:08:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: albertl@mail.com, jeff@garzik.org
+Cc: alan@lxorguk.ukuu.org.uk, dwm@enoyolf.org, htejun@gmail.com, linux-ide@vger.kernel.org, mikpe@it.uu.se, mlord@pobox.com
 
-On Saturday 07 July 2007, Sergei Shtylyov wrote:
-> Arnd Bergmann wrote:
+On Sat, 07 Jul 2007 15:02:49 +0800, Albert Lee wrote:
+> After checking the current implementations of freeze()/thaw(), it seems only pdc_freeze()
+>does more than simple irq masking. Remove the DMA stop code from pdc_freeze().
+>
+>Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+>---
+>
+>diff -Nrup 01_remove_leftover_irqon/drivers/ata/sata_promise.c 02_sata_pdc_freeze/drivers/ata/sata_promise.c
+>--- 01_remove_leftover_irqon/drivers/ata/sata_promise.c	2007-07-07 09:58:55.000000000 +0800
+>+++ 02_sata_pdc_freeze/drivers/ata/sata_promise.c	2007-07-07 10:39:22.000000000 +0800
+>@@ -578,7 +578,6 @@ static void pdc_freeze(struct ata_port *
 > 
-> >>This adds support for MMIO IDE device like CompactFlash 
-> >>in TrueIDE mode.
-> 
-> >>Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com> 
-> >>Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
-> 
-> > Hmm, are we still adding new IDE drivers? Do you also have a
-> 
->     Yes, why not?
+> 	tmp = readl(mmio + PDC_CTLSTAT);
+> 	tmp |= PDC_IRQ_DISABLE;
+>-	tmp &= ~PDC_DMA_ENABLE;
+> 	writel(tmp, mmio + PDC_CTLSTAT);
+> 	readl(mmio + PDC_CTLSTAT); /* flush */
+> }
 
-The last time someone (I think Akira Iguchi) wanted to add
-a new powerpc specific IDE driver, that was rejected based
-on the argument that drivers/ide/ is going away soon. Most
-current distros have already moved over to using libata
-exclusively.
+pdc_freeze() halts in-flight DMAs because that's what libata
+specifices. E.g., Documentation/DocBook/libata.tmpl writes:
 
-> > about to add the electra_ide.c driver in 2.6.23, I guess there
-> > should really be _one_ driver that is able to handle all
-> > of_device based ATA hosts.
-> 
->     One driver to rule them all. :-)
->     That may be not so simple as it seems...
+>void (*freeze) (struct ata_port *ap);
+>void (*thaw) (struct ata_port *ap);
+>	</programlisting>
+>
+>	<para>
+>ata_port_freeze() is called when HSM violations or some other
+>condition disrupts normal operation of the port.  A frozen port
+>is not allowed to perform any operation until the port is
+>thawed, which usually follows a successful reset.
+>	</para>
+>
+>	<para>
+>The optional ->freeze() callback can be used for freezing the port
+>hardware-wise (e.g. mask interrupt and stop DMA engine).  If a
+>port cannot be frozen hardware-wise, the interrupt handler
+>must ack and clear interrupts unconditionally while the port
+>is frozen.
+>	</para>
+>	<para>
+>The optional ->thaw() callback is called to perform the opposite of ->freeze():
+>prepare the port for normal operation once again.  Unmask interrupts,
+>start DMA engine, etc.
 
-It's certainly not easy to support all ATA chips that
-have special capabilities and bugs, but the electra and the
-mpc8349-itx both seem to support only the most basic ATA
-PIO mode anyway, which does not require much special
-handling beyond finding the right mmio addresses.
+Similar wording exists in libata-eh.c above __ata_port_freeze().
 
-	Arnd <><
+Albert's patch is OK as far as sata_promise is concerned, but
+I want to see an update of libata.tmpl and libata-eh.c to
+indicate the new, weakened, specification of freeze/thaw before
+I ACK this patch.
+
+/Mikael
