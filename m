@@ -1,101 +1,279 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: [PATCH 7/7] libata: remove ap->last_ctl
-Date: Sat, 07 Jul 2007 15:23:55 +0800
-Message-ID: <468F3F8B.5010200@tw.ibm.com>
-References: <468F3949.5050800@tw.ibm.com>
-Reply-To: albertl@mail.com
+From: Vitaly Bordug <vitb@kernel.crashing.org>
+Subject: [PATCH 1/2] [ide] mmio ide support
+Date: Sat, 07 Jul 2007 13:48:52 +0400
+Message-ID: <20070707094852.9473.21013.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:39640 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752747AbXGGHYG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 03:24:06 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l677O4eH011334
-	for <linux-ide@vger.kernel.org>; Sat, 7 Jul 2007 03:24:04 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l677O4j7225312
-	for <linux-ide@vger.kernel.org>; Sat, 7 Jul 2007 01:24:04 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l677O31g017335
-	for <linux-ide@vger.kernel.org>; Sat, 7 Jul 2007 01:24:04 -0600
-In-Reply-To: <468F3949.5050800@tw.ibm.com>
+Received: from gate.crashing.org ([63.228.1.57]:44049 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751295AbXGGJtA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jul 2007 05:49:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@enoyolf.org>, Mark Lord <mlord@pobox.com>, Tejun Heo <htejun@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.orglinuxppc-dev@ozlabs.org
 
-With the previous changes made to tf_load(), ap->last_ctl is now unused. Remove it.
 
-(The purpose of ap->last_ctl is to cache the last status of nIEN bit
-and hopefully avoid writing the Control register unnecessarily.
-However, the libata polling code always call irq_on() in ata_hsm_qc_complete()
-and such mechanism isn't much utilized.)
+This adds support for MMIO IDE device like CompactFlash 
+in TrueIDE mode.
+ 
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com> 
+Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
 
-Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
 ---
 
-diff -Nrup 06_tf_load_cleanup/drivers/ata/libata-core.c 07_last_ctl_cleanup/drivers/ata/libata-core.c
---- 06_tf_load_cleanup/drivers/ata/libata-core.c	2007-07-07 10:49:04.000000000 +0800
-+++ 07_last_ctl_cleanup/drivers/ata/libata-core.c	2007-07-07 10:50:36.000000000 +0800
-@@ -5987,7 +5987,6 @@ struct ata_port *ata_port_alloc(struct a
- 
- 	ap->hw_sata_spd_limit = UINT_MAX;
- 	ap->active_tag = ATA_TAG_POISON;
--	ap->last_ctl = 0xFF;
- 
- #if defined(ATA_VERBOSE_DEBUG)
- 	/* turn on all debugging levels */
-diff -Nrup 06_tf_load_cleanup/drivers/ata/libata-sff.c 07_last_ctl_cleanup/drivers/ata/libata-sff.c
---- 06_tf_load_cleanup/drivers/ata/libata-sff.c	2007-07-07 10:50:10.000000000 +0800
-+++ 07_last_ctl_cleanup/drivers/ata/libata-sff.c	2007-07-07 10:50:36.000000000 +0800
-@@ -53,7 +53,6 @@ void ata_irq_on(struct ata_port *ap)
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
- 	ap->ctl &= ~ATA_NIEN;
--	ap->last_ctl = ap->ctl;
- 
- 	iowrite8(ap->ctl, ioaddr->ctl_addr);
- 	ata_wait_idle(ap);
-@@ -76,7 +75,6 @@ void ata_irq_off(struct ata_port *ap)
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
- 	ap->ctl |= ATA_NIEN;
--	ap->last_ctl = ap->ctl;
- 
- 	iowrite8(ap->ctl, ioaddr->ctl_addr);
- 
-diff -Nrup 06_tf_load_cleanup/drivers/ata/pata_scc.c 07_last_ctl_cleanup/drivers/ata/pata_scc.c
---- 06_tf_load_cleanup/drivers/ata/pata_scc.c	2007-07-07 10:50:10.000000000 +0800
-+++ 07_last_ctl_cleanup/drivers/ata/pata_scc.c	2007-07-07 10:50:36.000000000 +0800
-@@ -794,7 +794,6 @@ static void scc_irq_on (struct ata_port 
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
- 	ap->ctl &= ~ATA_NIEN;
--	ap->last_ctl = ap->ctl;
- 
- 	out_be32(ioaddr->ctl_addr, ap->ctl);
- 	ata_wait_idle(ap);
-@@ -814,7 +813,6 @@ static void scc_irq_off (struct ata_port
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
- 	ap->ctl |= ATA_NIEN;
--	ap->last_ctl = ap->ctl;
- 
- 	out_be32(ioaddr->ctl_addr, ap->ctl);
- 
-diff -Nrup 06_tf_load_cleanup/include/linux/libata.h 07_last_ctl_cleanup/include/linux/libata.h
---- 06_tf_load_cleanup/include/linux/libata.h	2007-07-07 10:49:04.000000000 +0800
-+++ 07_last_ctl_cleanup/include/linux/libata.h	2007-07-07 10:50:36.000000000 +0800
-@@ -507,7 +507,6 @@ struct ata_port {
- 	struct ata_ioports	ioaddr;	/* ATA cmd/ctl/dma register blocks */
- 
- 	u8			ctl;	/* cache of ATA control register */
--	u8			last_ctl;	/* Cache last written value */
- 	unsigned int		pio_mask;
- 	unsigned int		mwdma_mask;
- 	unsigned int		udma_mask;
+ drivers/ide/Kconfig           |    6 +
+ drivers/ide/legacy/Makefile   |    2 
+ drivers/ide/legacy/mmio-ide.c |  211 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 219 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+index b1a9b81..0dab799 100644
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -946,6 +946,12 @@ config BLK_DEV_MPC8xx_IDE
+ 
+ 	  If unsure, say N.
+ 
++config BLK_DEV_MMIOIDE
++	tristate "Memory Mapped IDE support"
++	help
++	  This is the IDE driver for Memory Mapped IDE devices. Like
++	  Compact Flash running in True IDE mode.
++
+ choice
+ 	prompt "Type of MPC8xx IDE interface"
+ 	depends on BLK_DEV_MPC8xx_IDE
+diff --git a/drivers/ide/legacy/Makefile b/drivers/ide/legacy/Makefile
+index c797106..61bd21e 100644
+--- a/drivers/ide/legacy/Makefile
++++ b/drivers/ide/legacy/Makefile
+@@ -7,6 +7,8 @@ obj-$(CONFIG_BLK_DEV_UMC8672)		+= umc8672.o
+ 
+ obj-$(CONFIG_BLK_DEV_IDECS)		+= ide-cs.o
+ 
++obj-$(CONFIG_BLK_DEV_MMIOIDE)		+= mmio-ide.o
++
+ # Last of all
+ obj-$(CONFIG_BLK_DEV_HD)		+= hd.o
+ 
+diff --git a/drivers/ide/legacy/mmio-ide.c b/drivers/ide/legacy/mmio-ide.c
+new file mode 100644
+index 0000000..77fb7dd
+--- /dev/null
++++ b/drivers/ide/legacy/mmio-ide.c
+@@ -0,0 +1,211 @@
++/*
++ * Memory Mapped IDE driver
++ *
++ * Author: Kumar Gala <galak@kernel.crashing.org>
++ *
++ * 2007 (c) MontaVista Software, Inc.  
++ * Vitaly Bordug <vitb@kernel.crashing.org> 
++ * Anton Vorontsov <avorontsov@ru.mvista.com>
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ */
++
++#include <linux/types.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/ide.h>
++#include <linux/ioport.h>
++#include <linux/module.h>
++#include <linux/mmio-ide.h>
++#include <asm/io.h>
++
++static struct {
++	void __iomem *mmio_ide_mapbase;
++	void __iomem *mmio_ide_alt_mapbase;
++	ide_hwif_t *hwif;
++	int index;
++} hwif_prop;
++
++static ide_hwif_t * __devinit mmio_ide_locate_hwif(void __iomem * base,
++            void __iomem * ctrl, struct mmio_ide_platform_data *pdata, int irq)
++{
++	unsigned long port = (unsigned long)base;
++	ide_hwif_t *hwif;
++	int index, i;
++
++	for (index = 0; index < MAX_HWIFS; ++index) {
++		hwif = ide_hwifs + index;
++		if (hwif->io_ports[IDE_DATA_OFFSET] == port)
++			goto found;
++	}
++
++	for (index = 0; index < MAX_HWIFS; ++index) {
++		hwif = ide_hwifs + index;
++		if (hwif->io_ports[IDE_DATA_OFFSET] == 0)
++			goto found;
++	}
++
++	return NULL;
++
++found:
++
++	hwif->hw.io_ports[IDE_DATA_OFFSET] = port;
++
++	port += pdata->regaddr_step + pdata->byte_lanes_swapping;
++	for (i = IDE_ERROR_OFFSET; i <= IDE_STATUS_OFFSET;
++	     i++, port += pdata->regaddr_step)
++		hwif->hw.io_ports[i] = port;
++
++	hwif->hw.io_ports[IDE_CONTROL_OFFSET] = (unsigned long)ctrl +
++		6 * pdata->regaddr_step + pdata->byte_lanes_swapping;
++
++	memcpy(hwif->io_ports, hwif->hw.io_ports, sizeof(hwif->hw.io_ports));
++	hwif->hw.irq = hwif->irq = irq;
++	hwif->selectproc = pdata->selectproc;
++
++	hwif->hw.dma = NO_DMA;
++	hwif->hw.chipset = ide_generic;
++
++	hwif->mmio = 2;
++	pdata->mmiops(hwif);
++	hwif_prop.hwif = hwif;
++	hwif_prop.index = index;
++
++	return hwif;
++}
++
++static int __devinit mmio_ide_probe(struct platform_device *pdev)
++{
++	struct resource *res_base, *res_alt, *res_irq;
++	ide_hwif_t *hwif;
++	struct mmio_ide_platform_data *pdata;
++	int ret = 0;
++
++	pdata = (struct mmio_ide_platform_data*)pdev->dev.platform_data;
++
++	/* get a pointer to the register memory */
++	res_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	res_alt = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	res_irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++
++	if ((!res_base) || (!res_alt) || (!res_irq)) {
++		ret = -ENODEV;
++		goto out;
++	}
++
++	if (!request_mem_region(res_base->start, res_base->end -
++	                                   res_base->start + 1, pdev->name)) {
++		dev_dbg(&pdev->dev, "%s: request_mem_region of base failed\n",
++		        pdev->name);
++		ret = -EBUSY;
++		goto out;
++	}
++
++	if (!request_mem_region(res_alt->start, res_alt->end -
++	                                    res_alt->start + 1, pdev->name)) {
++		dev_dbg(&pdev->dev, "%s: request_mem_region of alt failed\n",
++		        pdev->name);
++		ret = -EBUSY;
++		goto release_base;
++	}
++
++	hwif_prop.mmio_ide_mapbase = ioremap(res_base->start, res_base->end -
++	                                     res_base->start + 1);
++	if (!hwif_prop.mmio_ide_mapbase) {
++		ret = -ENOMEM;
++		goto release_alt;
++	}
++
++	hwif_prop.mmio_ide_alt_mapbase = ioremap(res_alt->start, res_alt->end -
++	                                         res_alt->start + 1);
++	if (!hwif_prop.mmio_ide_alt_mapbase) {
++		ret = -ENOMEM;
++		goto unmap_base;
++	}
++
++	hwif = mmio_ide_locate_hwif(hwif_prop.mmio_ide_mapbase,
++	               hwif_prop.mmio_ide_alt_mapbase, pdata, res_irq->start);
++
++	if (!hwif) {
++		ret = -ENODEV;
++		goto unmap_alt;
++	}
++	hwif->gendev.parent = &pdev->dev;
++	hwif->noprobe = 0;
++
++	probe_hwif_init(hwif);
++
++	platform_set_drvdata(pdev, hwif);
++	create_proc_ide_interfaces();
++
++	return 0;
++
++unmap_alt:
++	iounmap(hwif_prop.mmio_ide_alt_mapbase);
++unmap_base:
++	iounmap(hwif_prop.mmio_ide_mapbase);
++release_alt:
++	release_mem_region(res_alt->start, res_alt->end - res_alt->start + 1);
++release_base:
++	release_mem_region(res_base->start,
++	                   res_base->end - res_base->start + 1);
++out:
++	return ret;
++}
++
++static int __devexit mmio_ide_remove(struct platform_device *pdev)
++{
++	ide_hwif_t *hwif = pdev->dev.driver_data;
++	struct resource *res_base, *res_alt;
++
++	/* get a pointer to the register memory */
++	res_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	res_alt = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++
++	release_mem_region(res_base->start,
++	                   res_base->end - res_base->start + 1);
++	release_mem_region(res_alt->start, res_alt->end - res_alt->start + 1);
++
++	platform_set_drvdata(pdev, NULL);
++
++	if (hwif != hwif_prop.hwif)
++		dev_printk(KERN_DEBUG, &pdev->dev, "%s: hwif value error",
++		           pdev->name);
++	else {
++		ide_unregister (hwif_prop.index);
++		hwif_prop.index = 0;
++		hwif_prop.hwif = NULL;
++	}
++
++	iounmap(hwif_prop.mmio_ide_mapbase);
++	iounmap(hwif_prop.mmio_ide_alt_mapbase);
++
++	return 0;
++}
++
++static struct platform_driver mmio_ide_driver = {
++	.driver {
++		.name = "mmio-ide",
++	},
++	.probe = mmio_ide_probe,
++	.remove = __devexit_p(mmio_ide_remove),
++};
++
++static int __init mmio_ide_init(void)
++{
++	return platform_driver_register(&mmio_ide_driver);
++}
++
++static void __exit mmio_ide_exit(void)
++{
++	platform_driver_unregister(&mmio_ide_driver);
++}
++
++MODULE_DESCRIPTION("Memory Mapped IDE driver");
++MODULE_LICENSE("GPL");
++
++module_init(mmio_ide_init);
++module_exit(mmio_ide_exit);
 
