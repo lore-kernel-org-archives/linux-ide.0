@@ -1,30 +1,38 @@
-From: olof@lixom.net (Olof Johansson)
-Subject: Re: [PATCH 1/2] [ide] mmio ide support
-Date: Sat, 7 Jul 2007 10:01:47 -0500
-Message-ID: <20070707150147.GA2202@lixom.net>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Another Maxtor drive with broken NCQ
+Date: Sat, 07 Jul 2007 10:51:14 -0400
+Message-ID: <468FA862.6030701@garzik.org>
+References: <468E8DE1.9010405@redhat.com> <468E9360.4070504@garzik.org> <468E9469.4090007@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:54108 "EHLO mail.lixom.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35220 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465AbXGGOun (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Jul 2007 10:50:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20070707094852.9473.21013.stgit@localhost.localdomain>
+	id S1752472AbXGGOvT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jul 2007 10:51:19 -0400
+In-Reply-To: <468E9469.4090007@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sat, Jul 07, 2007 at 01:48:52PM +0400, Vitaly Bordug wrote:
+Chuck Ebbert wrote:
+> On 07/06/2007 03:09 PM, Jeff Garzik wrote:
+>>> {"Maxtor 6B200M0",      "BANC1BM0",     ATA_HORKAGE_NONCQ }
+>>>
+>>> Or should *all* Maxtor 6B200M0 be blacklisted, since there's already
+>>> one of them in the list?
+>> Wanna send that as a patch, with attribution and sign-offs?  :)
+>>
 > 
-> This adds support for MMIO IDE device like CompactFlash 
-> in TrueIDE mode.
+> For all revisions, or just that one new one?
 
-Doesn't this duplicate most of pata_platform, but as the
-no-longer-preferred legacy IDE device? Did you try using
-pata_platform instead?
+I don't think all 6B200M0 should be blacklisted, but BANC* is probably 
+bad.  I don't think the code can do wildcard matching, so just the one 
+revision is probably the best we can do at the moment.
+
+	Jeff
 
 
--Olof
+
