@@ -1,43 +1,38 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/2] [POWERPC] mmio ide support for mpc8349-itx target
-Date: Sat, 7 Jul 2007 17:12:44 +0200
-Message-ID: <200707071712.45173.arnd@arndb.de>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain> <20070707094900.9473.48577.stgit@localhost.localdomain> <20070707150708.GA5387@lixom.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Add Marvell 6141 PATA support to AHCI driver
+Date: Sat, 07 Jul 2007 11:29:23 -0400
+Message-ID: <468FB153.5040404@garzik.org>
+References: <20070527030954.GA18974@havoc.gtf.org> <22E26940476D1E48AA6F292B5316C9C33827@bes1.peakin.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:60448 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699AbXGGPTE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 11:19:04 -0400
-In-Reply-To: <20070707150708.GA5387@lixom.net>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:35486 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752529AbXGGP3Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Jul 2007 11:29:25 -0400
+In-Reply-To: <22E26940476D1E48AA6F292B5316C9C33827@bes1.peakin.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org
-Cc: Olof Johansson <olof@lixom.net>, Vitaly Bordug <vitb@kernel.crashing.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "George T. Joseph (development)" <gtj.devel@peakin.com>
+Cc: linux-ide@vger.kernel.org
 
-On Saturday 07 July 2007, Olof Johansson wrote:
-> On Sat, Jul 07, 2007 at 01:49:00PM +0400, Vitaly Bordug wrote:
-> > 
-> > This updates relevant platform code
-> > (freescale mpc8349itx target) to make the CompactFlash
-> > work in TrueIDE mode.
+George T. Joseph (development) wrote:
+> Jeff,
 > 
-> Shouldn't you be writing a PCMCIA driver instead for the CF, so it
-> handles other devices as well? Then you get storage "for free", as
-> well as hotplug, etc.
+> Any news from Marvell on the msi and ncq issues?  
 
-CF memory cards can be in either TrueIDE mode or PCMCIA mode. If you
-only need to support memory cards, you should always use True-IDE
-mode, because that offers a _much_ higher throughput with PIO mode
-6 (25 MB/s) or UDMA mode 6 (133MB/s), compared to the PIO mode 0
-(3.3 MB/s) in PCMCIA mode.
+Only terse "NCQ works for us" and "we don't turn on PCI MSI ourselves" 
+answers... :)
 
-Of course, if the bus can only sustain PIO mode 0 anyway, you can
-just as well do a PCMCIA driver, and get the ability to plug in
-other cards, e.g. wlan or modem cards.
+So my current plan is to disable NCQ and guarantee PCI MSI is not 
+enabled for Marvell AHCI-like devices, and push SATA support upstream.
 
-	Arnd <><
+Marvell AHCI-like PATA support (branch mv-ahci-pata) will take a little 
+bit longer, since it definitely needs a fix to its "PATA controller 
+command" code.
+
+	Jeff
+
+
+
