@@ -1,67 +1,30 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 2/7] sata_promise: pdc_freeze() semantic change
-Date: Sat, 7 Jul 2007 21:08:13 +0200 (MEST)
-Message-ID: <200707071908.l67J8D5W010862@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] [ide] mmio ide support
+Date: Sat, 7 Jul 2007 21:02:34 +0100
+Message-ID: <20070707210234.6aed88bb@the-village.bc.nu>
+References: <20070707094852.9473.21013.stgit@localhost.localdomain>
+	<200707071419.52650.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:62999 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752547AbXGGTIg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Jul 2007 15:08:36 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57080 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753102AbXGGT4i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 15:56:38 -0400
+In-Reply-To: <200707071419.52650.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com, jeff@garzik.org
-Cc: alan@lxorguk.ukuu.org.uk, dwm@enoyolf.org, htejun@gmail.com, linux-ide@vger.kernel.org, mikpe@it.uu.se, mlord@pobox.com
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@ozlabs.org, Vitaly Bordug <vitb@kernel.crashing.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 07 Jul 2007 15:02:49 +0800, Albert Lee wrote:
-> After checking the current implementations of freeze()/thaw(), it seems only pdc_freeze()
->does more than simple irq masking. Remove the DMA stop code from pdc_freeze().
->
->Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
->---
->
->diff -Nrup 01_remove_leftover_irqon/drivers/ata/sata_promise.c 02_sata_pdc_freeze/drivers/ata/sata_promise.c
->--- 01_remove_leftover_irqon/drivers/ata/sata_promise.c	2007-07-07 09:58:55.000000000 +0800
->+++ 02_sata_pdc_freeze/drivers/ata/sata_promise.c	2007-07-07 10:39:22.000000000 +0800
->@@ -578,7 +578,6 @@ static void pdc_freeze(struct ata_port *
-> 
-> 	tmp = readl(mmio + PDC_CTLSTAT);
-> 	tmp |= PDC_IRQ_DISABLE;
->-	tmp &= ~PDC_DMA_ENABLE;
-> 	writel(tmp, mmio + PDC_CTLSTAT);
-> 	readl(mmio + PDC_CTLSTAT); /* flush */
-> }
+> You could also make it an of_platform_driver at the same time
+> instead of adding more cruft to fsl_soc.c. Since we're already
+> about to add the electra_ide.c driver in 2.6.23, I guess there
+> should really be _one_ driver that is able to handle all
+> of_device based ATA hosts.
 
-pdc_freeze() halts in-flight DMAs because that's what libata
-specifices. E.g., Documentation/DocBook/libata.tmpl writes:
+and do so using libata. Preferably ata_platform but it does look like
+ata_of would make sense as a companion.
 
->void (*freeze) (struct ata_port *ap);
->void (*thaw) (struct ata_port *ap);
->	</programlisting>
->
->	<para>
->ata_port_freeze() is called when HSM violations or some other
->condition disrupts normal operation of the port.  A frozen port
->is not allowed to perform any operation until the port is
->thawed, which usually follows a successful reset.
->	</para>
->
->	<para>
->The optional ->freeze() callback can be used for freezing the port
->hardware-wise (e.g. mask interrupt and stop DMA engine).  If a
->port cannot be frozen hardware-wise, the interrupt handler
->must ack and clear interrupts unconditionally while the port
->is frozen.
->	</para>
->	<para>
->The optional ->thaw() callback is called to perform the opposite of ->freeze():
->prepare the port for normal operation once again.  Unmask interrupts,
->start DMA engine, etc.
-
-Similar wording exists in libata-eh.c above __ata_port_freeze().
-
-Albert's patch is OK as far as sata_promise is concerned, but
-I want to see an update of libata.tmpl and libata-eh.c to
-indicate the new, weakened, specification of freeze/thaw before
-I ACK this patch.
-
-/Mikael
+Alan
