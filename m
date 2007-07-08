@@ -1,73 +1,87 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 6/12] jmicron: PIO fixes
-Date: Sun, 8 Jul 2007 15:36:04 +0200
-Message-ID: <200707081536.04816.bzolnier@gmail.com>
+Subject: [PATCH 9/12] sis5513: add ->udma_filter method for chipset_family >= ATA_133
+Date: Sun, 8 Jul 2007 15:38:32 +0200
+Message-ID: <200707081538.32621.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:5711 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756120AbXGHOAL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jul 2007 10:00:11 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so570183mue
-        for <linux-ide@vger.kernel.org>; Sun, 08 Jul 2007 07:00:09 -0700 (PDT)
+Received: from nf-out-0910.google.com ([64.233.182.185]:45141 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbXGHOAO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jul 2007 10:00:14 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so50892nfb
+        for <linux-ide@vger.kernel.org>; Sun, 08 Jul 2007 07:00:13 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-* Set transfer mode on the device in jmicron_tuneproc(),
-  also add pio == 255 == "auto-tune" handling.
+* Add sis5513_ata133_udma_filter() for chipset_family >= ATA_133,
+  use it to filter UDMA6 mode if ATA133 bit is disabled.
 
-* Use jmicron_tuneproc() in jmicron_config_drive_for_dma().
+* Remove no longer needed UDMA6 limiting logic from sis5513_tune_chipset().
 
-* Remove no longer needed config_jmicron_chipset_for_pio().
+* Bump driver version.
+
+There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/jmicron.c |   21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
+ drivers/ide/pci/sis5513.c |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-Index: b/drivers/ide/pci/jmicron.c
+Index: b/drivers/ide/pci/sis5513.c
 ===================================================================
---- a/drivers/ide/pci/jmicron.c
-+++ b/drivers/ide/pci/jmicron.c
-@@ -83,23 +83,10 @@ static u8 __devinit ata66_jmicron(ide_hw
- 	return ATA_CBL_PATA80;
- }
- 
--static void jmicron_tuneproc (ide_drive_t *drive, byte mode_wanted)
-+static void jmicron_tuneproc(ide_drive_t *drive, u8 pio)
- {
--	return;
--}
--
--/**
-- *	config_jmicron_chipset_for_pio	-	set drive timings
-- *	@drive: drive to tune
-- *	@speed we want
-- *
-- */
--
--static void config_jmicron_chipset_for_pio (ide_drive_t *drive, byte set_speed)
--{
--	u8 speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, 5);
--	if (set_speed)
--		(void) ide_config_drive_speed(drive, speed);
-+	pio = ide_get_best_pio_mode(drive, pio, 5);
-+	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
- }
- 
- /**
-@@ -132,7 +119,7 @@ static int jmicron_config_drive_for_dma 
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
--	config_jmicron_chipset_for_pio(drive, 1);
-+	jmicron_tuneproc(drive, 255);
- 
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/sis5513.c	Version 0.25	Jun 10, 2007
++ * linux/drivers/ide/pci/sis5513.c	Version 0.26	Jul 7, 2007
+  *
+  * Copyright (C) 1999-2000	Andre Hedrick <andre@linux-ide.org>
+  * Copyright (C) 2002		Lionel Bouton <Lionel.Bouton@inet6.fr>, Maintainer
+@@ -582,9 +582,6 @@ static int sis5513_tune_chipset (ide_dri
+ 					regdw |= (unsigned long)cycle_time_value[ATA_133][speed-XFER_UDMA_0] << 4;
+ 					regdw |= (unsigned long)cvs_time_value[ATA_133][speed-XFER_UDMA_0] << 8;
+ 				} else {
+-				/* if ATA133 disable, we should not set speed above UDMA5 */
+-					if (speed > XFER_UDMA_5)
+-						speed = XFER_UDMA_5;
+ 					regdw |= (unsigned long)cycle_time_value[ATA_100][speed-XFER_UDMA_0] << 4;
+ 					regdw |= (unsigned long)cvs_time_value[ATA_100][speed-XFER_UDMA_0] << 8;
+ 				}
+@@ -640,6 +637,20 @@ static int sis5513_config_xfer_rate(ide_
  	return -1;
  }
+ 
++static u8 sis5513_ata133_udma_filter(ide_drive_t *drive)
++{
++	struct pci_dev *dev = drive->hwif->pci_dev;
++	int drive_pci;
++	u32 reg54 = 0, regdw = 0;
++
++	pci_read_config_dword(dev, 0x54, &reg54);
++	drive_pci = ((reg54 & 0x40000000) ? 0x70 : 0x40) + drive->dn * 4;
++	pci_read_config_dword(dev, drive_pci, &regdw);
++
++	/* if ATA133 disable, we should not set speed above UDMA5 */
++	return (regdw & 0x08) ? ATA_UDMA6 : ATA_UDMA5;
++}
++
+ /* Chip detection and general config */
+ static unsigned int __devinit init_chipset_sis5513 (struct pci_dev *dev, const char *name)
+ {
+@@ -850,6 +861,9 @@ static void __devinit init_hwif_sis5513 
+ 	hwif->tuneproc = &sis5513_tuneproc;
+ 	hwif->speedproc = &sis5513_tune_chipset;
+ 
++	if (chipset_family >= ATA_133)
++		hwif->udma_filter = sis5513_ata133_udma_filter;
++
+ 	if (!(hwif->dma_base)) {
+ 		hwif->drives[0].autotune = 1;
+ 		hwif->drives[1].autotune = 1;
