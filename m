@@ -1,66 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Another Maxtor drive with broken NCQ
-Date: Sat, 7 Jul 2007 21:29:58 +0100
-Message-ID: <20070707212958.4bd39e20@the-village.bc.nu>
-References: <468E8DE1.9010405@redhat.com>
-	<468E9360.4070504@garzik.org>
-	<468E9469.4090007@redhat.com>
-	<468FA862.6030701@garzik.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 1/2] [ide] mmio ide support
+Date: Sun, 08 Jul 2007 10:54:08 +1000
+Message-ID: <1183856048.3388.246.camel@localhost.localdomain>
+References: <20070707094852.9473.21013.stgit@localhost.localdomain>
+	<200707071419.52650.arnd@arndb.de>
+	<20070707210234.6aed88bb@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41910 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753936AbXGGUXm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jul 2007 16:23:42 -0400
-In-Reply-To: <468FA862.6030701@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20070707210234.6aed88bb@the-village.bc.nu>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sat, 07 Jul 2007 10:51:14 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Chuck Ebbert wrote:
-> > On 07/06/2007 03:09 PM, Jeff Garzik wrote:
-> >>> {"Maxtor 6B200M0",      "BANC1BM0",     ATA_HORKAGE_NONCQ }
-> >>>
-> >>> Or should *all* Maxtor 6B200M0 be blacklisted, since there's already
-> >>> one of them in the list?
-> >> Wanna send that as a patch, with attribution and sign-offs?  :)
-> >>
-> > 
-> > For all revisions, or just that one new one?
+On Sat, 2007-07-07 at 21:02 +0100, Alan Cox wrote:
+> > You could also make it an of_platform_driver at the same time
+> > instead of adding more cruft to fsl_soc.c. Since we're already
+> > about to add the electra_ide.c driver in 2.6.23, I guess there
+> > should really be _one_ driver that is able to handle all
+> > of_device based ATA hosts.
 > 
-> I don't think all 6B200M0 should be blacklisted, but BANC* is probably 
-> bad.  I don't think the code can do wildcard matching, so just the one 
-> revision is probably the best we can do at the moment.
+> and do so using libata. Preferably ata_platform but it does look like
+> ata_of would make sense as a companion.
 
-Regexp is a bit extreme but a simple "anything starting.."  (untested)
-would be ok
+I wouldn't push for it too much tho. It's perfectly fine to have
+"helpers" generate xx_platform from the device-tree. Since I added the
+generic dev_archdata to struct device, it's easy for the arch to keep
+track of OF devices for anything, it doesn't have to be an of_platform
+device or anything like that anymore.
 
---- drivers/ata/libata-core.c~	2007-07-07 21:08:15.560015936 +0100
-+++ drivers/ata/libata-core.c	2007-07-07 21:08:15.562015632 +0100
-@@ -3869,10 +3869,18 @@
- 
- 	while (ad->model_num) {
- 		if (!strcmp(ad->model_num, model_num)) {
-+			unsigned char *tp;
- 			if (ad->model_rev == NULL)
- 				return ad->horkage;
--			if (!strcmp(ad->model_rev, model_rev))
--				return ad->horkage;
-+			t = strchr(ad->model_rev, '*');
-+			if (t == NULL) {
-+				if (!strcmp(ad->model_rev, model_rev))
-+					return ad->horkage;
-+			} else {
-+				if (!strncmp(ad->model_rev, model_rev,
-+					t-model_rev))
-+					return ad->horkage;
-+			}
- 		}
- 		ad++;
- 	}
+One of the things I have in mind is to provide a way to register
+"constructors" that are based on an OF match set. Those would then be
+called by the arch code for every OF node that matches, and would then
+"construct" the appropriate linux device. Could be some kind of platform
+device, could even be PCI devs.
+
+Ben.
