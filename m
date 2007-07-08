@@ -1,115 +1,73 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/12] cs5535: PIO fixes
-Date: Sun, 8 Jul 2007 15:34:31 +0200
-Message-ID: <200707081534.31610.bzolnier@gmail.com>
+Subject: [PATCH 6/12] jmicron: PIO fixes
+Date: Sun, 8 Jul 2007 15:36:04 +0200
+Message-ID: <200707081536.04816.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:5731 "EHLO
+Received: from mu-out-0910.google.com ([209.85.134.190]:5711 "EHLO
 	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756124AbXGHOAJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jul 2007 10:00:09 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so570149mue
-        for <linux-ide@vger.kernel.org>; Sun, 08 Jul 2007 07:00:08 -0700 (PDT)
+	with ESMTP id S1756120AbXGHOAL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jul 2007 10:00:11 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so570183mue
+        for <linux-ide@vger.kernel.org>; Sun, 08 Jul 2007 07:00:09 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-* Fix cs5535_tuneproc() to pass PIO transfer mode value instead of PIO mode
-  number to cs5535_set_speed() (fixes random PIO timings being programmed
-  and a possible OOPS).  Do a little cleanup while at it.
+* Set transfer mode on the device in jmicron_tuneproc(),
+  also add pio == 255 == "auto-tune" handling.
 
-* Fix cs5535_set_speed() to check if the mate device is present (fixes PIO0
-  taskfile timings being used if there is no other device on the cable).
+* Use jmicron_tuneproc() in jmicron_config_drive_for_dma().
 
-* Use cs5535_tuneproc() in cs5535_dma_check().  The old code had the same
-  issue as cs5535_tuneproc() and add additionally caused 0x00-0x04 transfer
-  mode values (== default PIO, default PIO w/ IORDY + two invalid values)
-  being set on the device instead of values 0x08-0x0c (XFER_PIO_[0,4]).
+* Remove no longer needed config_jmicron_chipset_for_pio().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/cs5535.c |   42 ++++++++++++++++++------------------------
- 1 file changed, 18 insertions(+), 24 deletions(-)
+ drivers/ide/pci/jmicron.c |   21 ++++-----------------
+ 1 file changed, 4 insertions(+), 17 deletions(-)
 
-Index: b/drivers/ide/pci/cs5535.c
+Index: b/drivers/ide/pci/jmicron.c
 ===================================================================
---- a/drivers/ide/pci/cs5535.c
-+++ b/drivers/ide/pci/cs5535.c
-@@ -2,6 +2,7 @@
-  * linux/drivers/ide/pci/cs5535.c
-  *
-  * Copyright (C) 2004-2005 Advanced Micro Devices, Inc.
-+ * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
-  *
-  * History:
-  * 09/20/2005 - Jaya Kumar <jayakumar.ide@gmail.com>
-@@ -83,14 +84,17 @@ static void cs5535_set_speed(ide_drive_t
- 
- 	/* Set the PIO timings */
- 	if ((speed & XFER_MODE) == XFER_PIO) {
--		u8 pioa;
--		u8 piob;
--		u8 cmd;
--
--		pioa = speed - XFER_PIO_0;
--		piob = ide_get_best_pio_mode(&(drive->hwif->drives[!unit]),
--						255, 4);
--		cmd = pioa < piob ? pioa : piob;
-+		ide_drive_t *pair = &drive->hwif->drives[drive->dn ^ 1];
-+		u8 cmd, pioa;
-+
-+		cmd = pioa = speed - XFER_PIO_0;
-+
-+		if (pair->present) {
-+			u8 piob = ide_get_best_pio_mode(pair, 255, 4);
-+
-+			if (piob < cmd)
-+				cmd = piob;
-+		}
- 
- 		/* Write the speed of the current drive */
- 		reg = (cs5535_pio_cmd_timings[cmd] << 16) |
-@@ -151,32 +155,22 @@ static int cs5535_set_drive(ide_drive_t 
-  *
-  *	A callback from the upper layers for PIO-only tuning.
-  */
--static void cs5535_tuneproc(ide_drive_t *drive, u8 xferspeed)
-+static void cs5535_tuneproc(ide_drive_t *drive, u8 pio)
- {
--	u8 modes[] = {	XFER_PIO_0, XFER_PIO_1, XFER_PIO_2, XFER_PIO_3,
--			XFER_PIO_4 };
--
--	/* cs5535 max pio is pio 4, best_pio will check the blacklist.
--	i think we don't need to rate_filter the incoming xferspeed
--	since we know we're only going to choose pio */
--	xferspeed = ide_get_best_pio_mode(drive, xferspeed, 4);
--	ide_config_drive_speed(drive, modes[xferspeed]);
--	cs5535_set_speed(drive, xferspeed);
-+	pio = ide_get_best_pio_mode(drive, pio, 4);
-+	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
-+	cs5535_set_speed(drive, XFER_PIO_0 + pio);
+--- a/drivers/ide/pci/jmicron.c
++++ b/drivers/ide/pci/jmicron.c
+@@ -83,23 +83,10 @@ static u8 __devinit ata66_jmicron(ide_hw
+ 	return ATA_CBL_PATA80;
  }
  
- static int cs5535_dma_check(ide_drive_t *drive)
+-static void jmicron_tuneproc (ide_drive_t *drive, byte mode_wanted)
++static void jmicron_tuneproc(ide_drive_t *drive, u8 pio)
  {
--	u8 speed;
+-	return;
+-}
 -
- 	drive->init_speed = 0;
+-/**
+- *	config_jmicron_chipset_for_pio	-	set drive timings
+- *	@drive: drive to tune
+- *	@speed we want
+- *
+- */
+-
+-static void config_jmicron_chipset_for_pio (ide_drive_t *drive, byte set_speed)
+-{
+-	u8 speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, 5);
+-	if (set_speed)
+-		(void) ide_config_drive_speed(drive, speed);
++	pio = ide_get_best_pio_mode(drive, pio, 5);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
+ }
  
+ /**
+@@ -132,7 +119,7 @@ static int jmicron_config_drive_for_dma 
  	if (ide_tune_dma(drive))
  		return 0;
  
--	if (ide_use_fast_pio(drive)) {
--		speed = ide_get_best_pio_mode(drive, 255, 4);
--		cs5535_set_drive(drive, speed);
--	}
-+	if (ide_use_fast_pio(drive))
-+		cs5535_tuneproc(drive, 255);
+-	config_jmicron_chipset_for_pio(drive, 1);
++	jmicron_tuneproc(drive, 255);
  
  	return -1;
  }
