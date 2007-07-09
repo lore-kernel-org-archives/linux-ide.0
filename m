@@ -1,47 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Question about PATA Sil680 Bus Reset Code
-Date: Mon, 09 Jul 2007 12:58:20 -0400
-Message-ID: <4692692C.2070908@garzik.org>
-References: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/12] piix/slc90e66: fix PIO1 handling in ->speedproc
+ method
+Date: Mon, 09 Jul 2007 21:03:05 +0400
+Message-ID: <46926A49.3020802@ru.mvista.com>
+References: <200707081536.54841.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49536 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753740AbXGIQ6Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Jul 2007 12:58:25 -0400
-In-Reply-To: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:4674 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757448AbXGIRBF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jul 2007 13:01:05 -0400
+In-Reply-To: <200707081536.54841.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Fajun Chen wrote:
-> Hi,
-> 
-> Could someone help me interpret the code snippet below:
-> static int sil680_bus_reset(struct ata_port *ap,unsigned int *classes)
-> {
->        struct pci_dev *pdev = to_pci_dev(ap->host->dev);
->        unsigned long addr = sil680_selreg(ap, 0);
->        u8 reset;
-> 
->        pci_read_config_byte(pdev, addr, &reset);
->        pci_write_config_byte(pdev, addr, reset | 0x03);   // ?
->        udelay(25);
->        pci_write_config_byte(pdev, addr, reset);
->        return ata_std_softreset(ap, classes);
-> }
-> 
-> Based on Sil680 data sheet, channel reset bit is bit 2,  why the reset
-> code above is not "pci_write_config_byte(pdev, addr, reset | 0x04);"?
+Bartlomiej Zolnierkiewicz wrote:
 
-Definitely looks like a bug to me.
+> * Don't call {piix,slc90e66}_dma_2_pio() for PIO modes in
+>   {piix,slc90e66}_tune_chipset().
 
-Channel reset is bit 2 in SiI 311x SATA family as well.
+    XFER_PIO_* switch cases might have been be deleted from 
+{piix,slc90e66}_dma_2_pio() then...
 
-	Jeff
+> * Add PIO1 handling to {piix,slc90e66}_tune_chipset().
 
+> * Bump driver version.  
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
