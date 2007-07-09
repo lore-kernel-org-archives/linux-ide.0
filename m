@@ -1,46 +1,52 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [patch 0/4] SATA power savings patches (ALPM)
-Date: Mon, 09 Jul 2007 14:00:51 -0400
-Message-ID: <469277D3.2020403@tmr.com>
-References: <20070705130357.1c172b80.kristen.c.accardi@intel.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Question about PATA Sil680 Bus Reset Code
+Date: Mon, 09 Jul 2007 22:37:05 +0400
+Message-ID: <46928051.5080907@ru.mvista.com>
+References: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:34966 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753727AbXGIR5E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Jul 2007 13:57:04 -0400
-In-Reply-To: <20070705130357.1c172b80.kristen.c.accardi@intel.com>
+Received: from h155.mvista.com ([63.81.120.155]:5267 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754082AbXGISfE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 9 Jul 2007 14:35:04 -0400
+In-Reply-To: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Kristen Carlson Accardi wrote:
-> Hi Jeff,
-> Here's the most recent patches for ALPM.  These are also located at:
-> http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm
-> 
-> These patches implement Aggressive Link Power management for AHCI 
-> controllers.  This feature is described in detail in the AHCI 1.x spec.
-> It provides power savings of anywhere from .5-1.5 Watts depending on
-> the system when it is enabled.  (a graph demonstrating power savings
-> of this patch along with other power patches is located at 
-> http://www.linuxpowertop.org/results.php for your enjoyment).
-> 
-> This patch is changed from the previous version in that it incorporates all
-> the feedback I've gotten on the patches to date.  It changes the default
-> of the ahci driver to be max_performance rather than min_power, so userspace
-> will need to explicitly enable alpm via the sysfs interface when it deems
-> it an appropriate time to do this.  In addition, the patch was changed to
-> allow either HIPM or DIPM as a prerequisite for enabling ALPM, rather than 
-> just using HIPM.
-> 
-I suspect these changes would be useful for servers as well, extending 
-run time when a failover to UPS is detected.
+Hello.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+Fajun Chen wrote:
+
+> Could someone help me interpret the code snippet below:
+> static int sil680_bus_reset(struct ata_port *ap,unsigned int *classes)
+> {
+>        struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+>        unsigned long addr = sil680_selreg(ap, 0);
+>        u8 reset;
+> 
+>        pci_read_config_byte(pdev, addr, &reset);
+>        pci_write_config_byte(pdev, addr, reset | 0x03);   // ?
+
+>        udelay(25);
+>        pci_write_config_byte(pdev, addr, reset);
+>        return ata_std_softreset(ap, classes);
+> }
+> 
+> Based on Sil680 data sheet, channel reset bit is bit 2,  why the reset
+> code above is not "pci_write_config_byte(pdev, addr, reset | 0x04);"?
+
+    I guess it's been blindly copied over form drivers/ide/pci/siimage.c...
+The code indeed does seem meaningless. For the libata it could make sense to 
+set bit 2 for the hardreset -- but then sil680_error_handler() needs to be 
+turn into ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, 
+sil680_bus_reset, ata_std_postreset)...
+    For the legacy driver, this function needs to be converted to something 
+sane too...
+
+> Thanks in advance!
+
+MBR, Sergei
