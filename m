@@ -1,34 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Question about PATA Sil680 Bus Reset Code
-Date: Mon, 09 Jul 2007 14:46:08 -0400
-Message-ID: <46928270.5030709@garzik.org>
-References: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com> <46928051.5080907@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 01/11] libata: CONFIG_PM=n compile fix
+Date: Mon, 09 Jul 2007 11:46:12 -0700
+Message-ID: <200707091846.l69IkCOH001364@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50442 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739AbXGISqM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Jul 2007 14:46:12 -0400
-In-Reply-To: <46928051.5080907@ru.mvista.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57336 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754102AbXGISqu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jul 2007 14:46:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Fajun Chen <fajunchen@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, olof@lixom.net
 
-Sergei Shtylyov wrote:
-> The code indeed does seem meaningless. For the libata it could make 
-> sense to set bit 2 for the hardreset -- but then sil680_error_handler() 
-> needs to be turn into ata_bmdma_drive_eh(ap, ata_std_prereset, 
-> ata_std_softreset, sil680_bus_reset, ata_std_postreset)...
+From: olof@lixom.net (Olof Johansson)
 
-Presuming bit 2 == hardreset... correct.
+CONFIG_PM=n compile fix.
 
-In some datasheets it is not clear whether this means resetting the 
-silicon's ATA state machine, or truly hard-resetting the port.  There is 
-occasionally a difference.  I do not remember if Sil680 is one of those.
+Signed-off-by: Olof Johansson <olof@lixom.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-	Jeff
+ drivers/ata/ahci.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-
+diff -puN drivers/ata/ahci.c~libata-config_pm=n-compile-fix drivers/ata/ahci.c
+--- a/drivers/ata/ahci.c~libata-config_pm=n-compile-fix
++++ a/drivers/ata/ahci.c
+@@ -1519,6 +1519,14 @@ static void ahci_post_internal_cmd(struc
+ 	}
+ }
+ 
++static int ahci_port_resume(struct ata_port *ap)
++{
++	ahci_power_up(ap);
++	ahci_start_port(ap);
++
++	return 0;
++}
++
+ #ifdef CONFIG_PM
+ static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg)
+ {
+@@ -1536,14 +1544,6 @@ static int ahci_port_suspend(struct ata_
+ 	return rc;
+ }
+ 
+-static int ahci_port_resume(struct ata_port *ap)
+-{
+-	ahci_power_up(ap);
+-	ahci_start_port(ap);
+-
+-	return 0;
+-}
+-
+ static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
+ {
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+_
