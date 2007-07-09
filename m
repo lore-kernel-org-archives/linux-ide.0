@@ -1,33 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/12] jmicron: PIO fixes
-Date: Mon, 09 Jul 2007 18:09:27 +0400
-Message-ID: <46924197.6000003@ru.mvista.com>
-References: <200707081536.04816.bzolnier@gmail.com>
+From: Matt Sealey <matt@genesi-usa.com>
+Subject: CHRP PCI fixup for Pegasos IDE (looking for testers)
+Date: Mon, 09 Jul 2007 15:54:31 +0100
+Message-ID: <46924C27.8020100@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:3023 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754341AbXGIOHZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jul 2007 10:07:25 -0400
-In-Reply-To: <200707081536.04816.bzolnier@gmail.com>
+Received: from mithrandir.softwarenexus.net ([66.98.186.96]:4458 "EHLO
+	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873AbXGIOxk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jul 2007 10:53:40 -0400
+Received: from 82-46-178-156.cable.ubr06.king.blueyonder.co.uk ([82.46.178.156] helo=[192.168.2.228])
+	by mail.genesi-usa.com with esmtpa (Exim 4.66 (FreeBSD))
+	(envelope-from <matt@genesi-usa.com>)
+	id 1I7uMX-000By4-Ci
+	for linux-ide@vger.kernel.org; Mon, 09 Jul 2007 14:37:17 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Hi guys,
 
-> * Set transfer mode on the device in jmicron_tuneproc(),
->   also add pio == 255 == "auto-tune" handling.
+Just a heads up here, I hammered out this little bit of code over the
+weekend which "solves" the Pegasos IDE problem by making PCI native
+mode work like PCI native mode should (it tweaks the ISA bridge to
+steer both IDE IRQs to 14)
 
-> * Use jmicron_tuneproc() in jmicron_config_drive_for_dma().
+http://www.powerdeveloper.org/files/Pegasos/ide_fixup.c
 
-> * Remove no longer needed config_jmicron_chipset_for_pio().
+I definitely need someone to test it though. I can't compile it and
+I can't run it on a Pegasos here, and I am not sure if the fix is
+being done early enough (Alan said "before pci_setup_device"..).
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+It would be nice to see if this interacts with Tejun's patches just
+recently sent.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+-- 
+Matt Sealey <matt@genesi-usa.com>
+Genesi, Manager, Developer Relations
