@@ -1,31 +1,43 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH 1/2] [ide] mmio ide support
-Date: Tue, 10 Jul 2007 13:49:36 -0500
-Message-ID: <20070710184936.GF24480@austin.ibm.com>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain> <468FC4AC.9030701@ru.mvista.com> <200707072007.10448.arnd@arndb.de> <200707081515.42105.bzolnier@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ata and netdev (was Re: -mm merge plans for 2.6.23)
+Date: Tue, 10 Jul 2007 14:55:02 -0400
+Message-ID: <1184093702.3401.83.camel@localhost.localdomain>
+References: <20070710013152.ef2cd200.akpm@linux-foundation.org>
+	 <4693C4F8.40903@garzik.org>
+	 <20070710112458.e9dbb55e.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:41432 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757486AbXGJSti (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2007 14:49:38 -0400
-Content-Disposition: inline
-In-Reply-To: <200707081515.42105.bzolnier@gmail.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:42351 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751475AbXGJSzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 14:55:05 -0400
+In-Reply-To: <20070710112458.e9dbb55e.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, netdev <netdev@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Deepak Saxena <dsaxena@plexity.net>, Dan Faerch <dan@hacker.dk>, Benjamin LaHaise <bcrl@kvack.org>
 
-On Sun, Jul 08, 2007 at 03:15:41PM +0200, Bartlomiej Zolnierkiewicz wrote:
+On Tue, 2007-07-10 at 11:24 -0700, Andrew Morton wrote:
+> > > ata-ahci-alpm-store-interrupt-value.patch
+> > > ata-ahci-alpm-expose-power-management-policy-option-to-users.patch
+> > > ata-ahci-alpm-enable-link-power-management-for-ata-drivers.patch
+> > > ata-ahci-alpm-enable-aggressive-link-power-management-for-ahci-controllers.patch
+> > > 
+> > >  These appear to need some work.
+> > 
+> > seemed mostly OK to me.  what comments did I miss?
 > 
-> > on the argument that drivers/ide/ is going away soon. Most
-> > current distros have already moved over to using libata
-> > exclusively.
-> 
-> The in-kernel default for PATA systems is still IDE subsystem.
+> Oh, I thought these were the patches which affected scsi and which James
+> had issues with.  I guess I got confused.
 
-In part because libata still does not yet work correctly 
-for at least some (older) ide chipsets (like mine).
+Well ... my concern was really how to make them more generic ... ahci
+isn't the only controller that can do phy power management, and it also
+seemed to me that the most generic entity for power management was the
+transport rather than the SCSI mid-layer, but that debate is still
+ongoing.
 
---linas
+James
+
+
