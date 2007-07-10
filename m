@@ -1,43 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2.6.22/-stable] libata: add FUJITSU MHV2080BH to NCQ blacklist
-Date: Tue, 10 Jul 2007 16:16:18 +0900
-Message-ID: <20070710071618.GB23568@htj.dyndns.org>
+Subject: [PATCH] ata_piix: kill incorrect invalid map value warning
+Date: Tue, 10 Jul 2007 17:58:21 +0900
+Message-ID: <20070710085821.GC23568@htj.dyndns.org>
+References: <113a52882e6.buthysia@virgilio.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:39501 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbXGJHQa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 03:16:30 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1732655wah
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 00:16:30 -0700 (PDT)
+Received: from nz-out-0506.google.com ([64.233.162.235]:58927 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758078AbXGJI60 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 04:58:26 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so943578nze
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 01:58:26 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <113a52882e6.buthysia@virgilio.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Serge van Thillo <nulleke@hotmail.com>, stable@kernel.org
+To: jeff@garzik.org, "buthysia@virgilio.it" <buthysia@virgilio.it>
+Cc: linux-ide@vger.kernel.org
 
-Please warmly welcome the first member from FUJITSU to the prestigious
-NCQ spurious completion club.
-
-This is reported by Serge Van Thillo in bugzilla bug 8730.
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=8730
+The last two slots of MAP 00b of ich6m was incorrectly marked as
+reserved.  This is left over from converting the entry to allow 00b.
+This causes no real problem.  It only makes the driver print annoying
+warning message.  Fix it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Serge van Thillo <nulleke@hotmail.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+--
+ drivers/ata/ata_piix.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 5b25311..aad783b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3796,6 +3796,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
-+	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
- 
- 	/* Devices with NCQ limits */
- 
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 6a3bfef..21a7ca4 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -414,7 +414,7 @@ static const struct piix_map_db ich6m_map_db = {
+ 	 */
+ 	.map = {
+ 		/* PM   PS   SM   SS       MAP */
+-		{  P0,  P2,  RV,  RV }, /* 00b */
++		{  P0,  P2,  NA,  NA }, /* 00b */
+ 		{ IDE, IDE,  P1,  P3 }, /* 01b */
+ 		{  P0,  P2, IDE, IDE }, /* 10b */
+ 		{  RV,  RV,  RV,  RV },
