@@ -1,43 +1,37 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Question about PATA Sil680 Bus Reset Code
-Date: Tue, 10 Jul 2007 16:58:16 +0400
-Message-ID: <46938268.4070209@ru.mvista.com>
-References: <8202f4270707090946q6ae5347ascd93a2bff6c2f281@mail.gmail.com>	<46928051.5080907@ru.mvista.com> <20070709230908.08f5c8d8@the-village.bc.nu>
+Subject: Re: [PATCH 10/12] ide: move ide_rate_filter() calls to the upper
+ layer
+Date: Tue, 10 Jul 2007 17:03:02 +0400
+Message-ID: <46938386.5010709@ru.mvista.com>
+References: <200707081539.14463.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:13249 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:13281 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751043AbXGJM4Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 08:56:16 -0400
-In-Reply-To: <20070709230908.08f5c8d8@the-village.bc.nu>
+	with ESMTP id S1751213AbXGJNBA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 09:01:00 -0400
+In-Reply-To: <200707081539.14463.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Fajun Chen <fajunchen@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+Hello.
 
->>    I guess it's been blindly copied over form drivers/ide/pci/siimage.c...
+Bartlomiej Zolnierkiewicz wrote:
 
-    Yet the order of events between IDE and libata drivers is different:
-the old driver's resetproc() method is called just after the twiddling the bit 
-on/off,  the new driver calls ata_std_softreset() after the PCI config. 
-register manipulation.  However, since all it does is set 2 read-only bits, it 
-should make no difference...
+> * Move ide_rate_filter() calls from host drivers to IDE core.
 
->>The code indeed does seem meaningless. For the libata it could make sense to 
->>set bit 2 for the hardreset -- but then sil680_error_handler() needs to be 
->>turn into ata_bmdma_drive_eh(ap, ata_std_prereset, ata_std_softreset, 
->>sil680_bus_reset, ata_std_postreset)...
->>    For the legacy driver, this function needs to be converted to something 
->>sane too...
+> * Make ide_rate_filter() static.
 
-> I think the evidence based upon years of highly reliable siimage usage is
-> that its simply not needed 8)
+> * Make 'speed' argument of ->speedproc const.
 
-    I would think so as well but was not sure about the SStatus reg. read at 
-the end of it...
+> There should be no functionality changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
