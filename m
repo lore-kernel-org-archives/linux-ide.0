@@ -1,105 +1,116 @@
-From: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Subject: [PATCH] pata_scc.c: Workaround
-	for errata A308
-Date: Tue, 10 Jul 2007 18:29:34 +0900
-Message-ID: <200707100929.l6A9TOR8025778@toshiba.co.jp>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: sata_sil, writing bug with multiple cards?
+Date: Tue, 10 Jul 2007 19:55:46 +0900
+Message-ID: <469365B2.9020809@suse.de>
+References: <courier.4689EFD9.0000589A@blargh.com> <200707040908.21512.ak@suse.de> <courier.468B579E.00002ECF@blargh.com> <200707041038.57677.ak@suse.de> <468B5FBD.3040104@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx9.toshiba.co.jp ([202.33.96.51]:41313 "EHLO
-	imx9.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756817AbXGJJ71 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 05:59:27 -0400
-Received: from inet-tsb5.toshiba.co.jp (inet-tsb5 [202.33.96.24])
-	by imx9.toshiba.co.jp  with ESMTP id l6A9xPQ1012736
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 18:59:26 +0900 (JST)
-Received: from tsb-wall.toshiba.co.jp ([133.199.160.134])
-	by inet-tsb5.toshiba.co.jp  with ESMTP id l6A9TPE1012317
-	for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 18:29:25 +0900 (JST)
-Received: (from root@localhost)
-	by tsb-wall.toshiba.co.jp  id l6A9TPBY018916
-	for linux-ide@vger.kernel.org; Tue, 10 Jul 2007 18:29:25 +0900 (JST)
-Received: from mx12.toshiba.co.jp (localhost [127.0.0.1])
-	by ovp1.toshiba.co.jp  with ESMTP id l6A9TO0F009513
-	for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 18:29:25 +0900 (JST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------040008050602020000020200"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763410AbXGJK4S@vger.kernel.org>
+In-Reply-To: <468B5FBD.3040104@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andi Kleen <ak@suse.de>, 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
 
-Workaround for errata A308: turn down the UDMA mode and retry
-the DMA command when the data lost condition is detected.
+This is a multi-part message in MIME format.
+--------------040008050602020000020200
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
----
+Tejun Heo wrote:
+> Andi Kleen wrote:
+>> On Wednesday 04 July 2007 10:17:34 7091@blargh.com wrote:
+>>
+>>>> Most likely it is some sort of hardware bug that we might
+>>>> not be able to do much about. Have you tried contacting SIL or VIA? 
+>>> No, I haven't.  Like I mentioned above, the OpenBSD drivers seemed to work, 
+>>> or at least did with similar tests.  I would need to run the more extensive 
+>>> checks to be positive, but those take a lot of time, obviously.  And 
+>>> downtime for the box, a lot of which isn't really manageable, at the moment. 
+>> Perhaps the OpenBSD drivers program the SIL chip in a different way
+>> that avoids this problem. 
+>>
+>>>> e.g. if you have some other system with a different chipset it might
+>>>> be useful to test the SIL controllers in those.
+>>> The previous motherboard was an AMD 760 chipset, and it had the same 
+>>> problem. 
+>> Ok this means it's likely a SIL issue, not a chipset issue.
+> 
+> Hmmmm... okay.  I'll take look at the openBSD driver.  I still have no
+> idea what it can be tho.  Maybe, FIFO setup?
 
-diff -purN -X linux-powerpc-git/Documentation/dontdiff linux-powerpc-git/drivers/ata/pata_scc.c linux-powerpc-git.mod/drivers/ata/pata_scc.c
---- linux-powerpc-git/drivers/ata/pata_scc.c	2007-06-11 12:03:24.000000000 +0900
-+++ linux-powerpc-git.mod/drivers/ata/pata_scc.c	2007-07-10 17:13:01.000000000 +0900
-@@ -238,6 +238,12 @@ static void scc_set_dmamode (struct ata_
- 	else
- 		offset = 0;	/* 100MHz */
+Please give a shot at the attached patch on top of 2.6.22.  Thanks.
+
+-- 
+tejun
+
+--------------040008050602020000020200
+Content-Type: text/x-patch;
+ name="sata_sil-update-cache-line-programming.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sata_sil-update-cache-line-programming.patch"
+
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 2a86dc4..6c0fe7e 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -280,14 +280,6 @@ static int slow_down = 0;
+ module_param(slow_down, int, 0444);
+ MODULE_PARM_DESC(slow_down, "Sledgehammer used to work around random problems, by limiting commands to 15 sectors (0=off, 1=on)");
  
-+	/* errata A308 workaround: limit ATAPI UDMA mode to UDMA4 */
-+	if (adev->class == ATA_DEV_ATAPI && speed > XFER_UDMA_4) {
-+		printk(KERN_INFO "%s: limit ATAPI UDMA to UDMA4\n", DRV_NAME);
-+		speed = XFER_UDMA_4;
-+	}
-+
- 	if (speed >= XFER_UDMA_0)
- 		idx = speed - XFER_UDMA_0;
- 	else
-@@ -724,22 +730,36 @@ static void scc_bmdma_stop (struct ata_q
- 
- static u8 scc_bmdma_status (struct ata_port *ap)
- {
--	u8 host_stat;
- 	void __iomem *mmio = ap->ioaddr.bmdma_addr;
 -
--	host_stat = in_be32(mmio + SCC_DMA_STATUS);
+-static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
+-{
+-	u8 cache_line = 0;
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cache_line);
+-	return cache_line;
+-}
 -
--	/* Workaround for PTERADD: emulate DMA_INTR when
--	 * - IDE_STATUS[ERR] = 1
--	 * - INT_STATUS[INTRQ] = 1
--	 * - DMA_STATUS[IORACTA] = 1
--	 */
--	if (!(host_stat & ATA_DMA_INTR)) {
--		u32 int_status = in_be32(mmio + SCC_DMA_INTST);
--		if (ata_altstatus(ap) & ATA_ERR &&
--		    int_status & INTSTS_INTRQ &&
--		    host_stat & ATA_DMA_ACTIVE)
--			host_stat |= ATA_DMA_INTR;
-+	u8 host_stat = in_be32(mmio + SCC_DMA_STATUS);
-+	u32 int_status = in_be32(mmio + SCC_DMA_INTST);
-+	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
-+	static int retry = 0;
-+
-+	/* return if IOS_SS is cleared */
-+	if (!(in_be32(mmio + SCC_DMA_CMD) & ATA_DMA_START))
-+		return host_stat;
-+
-+	/* errata A252,A308 workaround: Step4 */
-+	if (ata_altstatus(ap) & ATA_ERR && int_status & INTSTS_INTRQ)
-+		return (host_stat | ATA_DMA_INTR);
-+
-+	/* errata A308 workaround Step5 */
-+	if (int_status & INTSTS_IOIRQS) {
-+		host_stat |= ATA_DMA_INTR;
-+
-+		/* We don't check ATAPI DMA because it is limited to UDMA4 */
-+		if ((qc->tf.protocol == ATA_PROT_DMA &&
-+		     qc->dev->xfer_mode > XFER_UDMA_4)) {
-+			if (!(int_status & INTSTS_ACTEINT)) {
-+				printk(KERN_WARNING "ata%u: data lost occurred. (ACTEINT==0, retry:%d)\n",
-+				       ap->print_id, retry);
-+				host_stat |= ATA_DMA_ERR;
-+				if (retry++)
-+					ap->udma_mask >>= 1;
-+			} else
-+				retry = 0;
-+		}
- 	}
+ /**
+  *	sil_set_mode		-	wrap set_mode functions
+  *	@ap: port to set up
+@@ -597,17 +589,29 @@ static void sil_init_controller(struct ata_host *host)
+ 	u32 tmp;
+ 	int i;
  
- 	return host_stat;
+-	/* Initialize FIFO PCI bus arbitration */
+-	cls = sil_get_device_cache_line(pdev);
+-	if (cls) {
+-		cls >>= 3;
+-		cls++;  /* cls = (line_size/8)+1 */
+-		for (i = 0; i < host->n_ports; i++)
+-			writew(cls << 8 | cls,
+-			       mmio_base + sil_port[i].fifo_cfg);
+-	} else
+-		dev_printk(KERN_WARNING, &pdev->dev,
+-			   "cache line size not set.  Driver may not function\n");
++	/* When the Silicon Image 3112/4 retries a PCI memory read
++	 * command, it may retry it as a memory read multiple command
++	 * under some circumstances.  This can totally confuse some
++	 * PCI controllers, so ensure that it will never do this by
++	 * making sure that the Read Threshold (FIFO Read Request
++	 * Control) field of the FIFO Valid Byte Count and Control
++	 * registers for all the channels are set to be at least as
++	 * large as the cacheline size register.
++	 *
++	 * tj - code and comment shamelessly taken from NetBSD.
++	 */
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
++	cls *= 4;
++
++	if (cls > 224) {
++		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 224 / 4);
++		cls = 224;
++	} else if (cls < 32)
++		cls = 32;
++
++	cls = DIV_ROUND_UP(cls, 32);
++	for (i = 0; i < host->n_ports; i++)
++		writeb(cls, mmio_base + sil_port[i].fifo_cfg);
+ 
+ 	/* Apply R_ERR on DMA activate FIS errata workaround */
+ 	if (host->ports[0]->flags & SIL_FLAG_RERR_ON_DMA_ACT) {
 
+--------------040008050602020000020200--
