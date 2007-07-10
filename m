@@ -1,61 +1,54 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
-Date: Tue, 10 Jul 2007 23:10:46 +0400
-Message-ID: <4693D9B6.4090408@ru.mvista.com>
-References: <20070221011922.GA1777@freefall.freebsd.org> <200702210342.20775.bzolnier@gmail.com> <466EEFD6.9030001@ru.mvista.com> <200706160123.55636.bzolnier@gmail.com>
+From: Thomas Backlund <tmb@mandriva.org>
+Subject: Re: Problem with SiS Ide/Pata/Sata on 2.6.22-rc7-git4
+Date: Tue, 10 Jul 2007 23:51:54 +0300
+Message-ID: <4693F16A.4050709@mandriva.org>
+References: <4692A7C3.9030802@mandriva.org> <20070709232742.004def28@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:16039 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752852AbXGJTIp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 15:08:45 -0400
-In-Reply-To: <200706160123.55636.bzolnier@gmail.com>
+Received: from mbox1.netikka.net ([213.250.81.202]:34517 "EHLO
+	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755199AbXGJUv6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 16:51:58 -0400
+In-Reply-To: <20070709232742.004def28@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+Alan Cox skrev:
+>> If you modprobe only sis5513
+>>   OR
+>> If you modprobe only sis5513 and then sata_sis/pata_sis:
+>>   - you get this:
+>>     (the hdb drive does not get detected/usable)
+> 
+> Don't mix old and new IDE like that. We allow both so you can use old SIS
+> and new Jmicron etc for example but there are some cases where trying to
+> load both old and new IDE support for the same chip will do strange
+> things.
+> 
 
-Bartlomiej Zolnierkiewicz wrote:
+But there is still a regression here compared to 2.6.17...
 
->>>>On Feb 20, 2007, at 5:44 PM, Bartlomiej Zolnierkiewicz wrote:
+If you load only sis5513 on a 2.6.22 you still get:
+--- quote ---
+<6>SIS5513: chipset revision 1
+<6>SIS5513: not 100% native mode: will probe irqs later
+<6>SIS5513: SiS 962/963 MuTIOL IDE UDMA133 controller
+<6>    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:pio, hdb:pio
+<6>    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
+<7>Probing IDE interface ide0...
+<4>hdb: QUANTUM FIREBALLlct15 07, ATA DISK drive
+<4>hdb: host side 80-wire cable detection failed, limiting max speed to 
+UDMA33
+<7>hdb: selected mode 0x42
+--- quote ---
 
->>>>>On Wednesday 21 February 2007 02:19, Suleiman Souhlal wrote:
+wich does not happend on 2.6.17...
 
->>>>>>It can be changed via /proc/ide/hd?/settings.
+The disk in question is ATA66 capable
 
->>>>>Why do we need to change IDE DMA timeout dynamically?
-
->>>>I've used it to test error recovery (for example).
-
->>>Seems quite useable for developers but I would prefer not to
->>>expose it in production kernels for end users.
-
->>    It seems that I have counter example of a customer asking if this timeout 
->>can be done configurable. :-)
-
-> May I ask what was the rationale for this request?
-
-    Their system seems to become unschedulable for this period of time (DMA 
-timeouts happen from time to time) -- at least the keepalive daemon stopped 
-replying during this period...
-
-> I have no strong feelings about adding this /proc/ide/ setting but I worry
-> that it could be (mis)used just to (unreliably) work-around problems...
-
->>    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, and if DMA is 
->>not complete or interrupt pending, it may wait 10 more secs...
-
-> I really don't remember... :)
-
-> Maybe Mark or Alan could help with figuring this out.
-
-    They also have probably forgotten. :-)
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+--
+Thomas
