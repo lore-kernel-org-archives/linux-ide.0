@@ -1,32 +1,37 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: [PATCH 2.6.22-rc7] libata: fix assigned IRQ reporting
-Date: Tue, 10 Jul 2007 23:44:11 +0200
-Message-ID: <20070710214411.GA5141@electric-eye.fr.zoreil.com>
-References: <20070702214747.GA23182@electric-eye.fr.zoreil.com> <4689A432.6080104@gmail.com> <20070703222205.GA18532@electric-eye.fr.zoreil.com> <468B3126.3080706@gmail.com> <468B3452.6040509@gmail.com> <20070704185936.GA13212@electric-eye.fr.zoreil.com> <468C59B6.1030502@gmail.com> <20070705224536.GA9148@electric-eye.fr.zoreil.com> <468DE3ED.3040100@gmail.com> <20070710182431.GA31264@electric-eye.fr.zoreil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH]: Add Hitachi HDS7250SASUN500G 0621KTAWSD to NCQ blacklist
+Date: Tue, 10 Jul 2007 18:13:28 -0400
+Message-ID: <20070710221328.27617.10721.sendpatchset@prarit.boston.redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:41884 "EHLO
-	fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760012AbXGJWJB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2007 18:09:01 -0400
-Content-Disposition: inline
-In-Reply-To: <20070710182431.GA31264@electric-eye.fr.zoreil.com>
+Received: from mx1.redhat.com ([66.187.233.31]:54496 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760909AbXGJWNa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jul 2007 18:13:30 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l6AMDT0u005702
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 18:13:29 -0400
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l6AMDTm2032377
+	for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 18:13:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+Cc: Prarit Bhargava <prarit@redhat.com>
 
-Francois Romieu <romieu@fr.zoreil.com> :
-[...]
-> It works perfectly in 2.6.22 but the .config is not the same.
-> 
-> I'll report if it makes a difference.
+Add Hitachi HDS7250SASUN500G 0621KTAWSD to list of devices with broken NCQ.
 
-False alarm: I did not update my initrd correctly after 2.6.22-rc6.
-The patch worked correctly.
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-Sorry for the wasted time.
-
--- 
-Ueimor
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 981b397..4a38cd5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3788,6 +3788,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	/* NCQ is broken */
+ 	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
+ 	{ "Maxtor 6B200M0",	"BANC1B10",	ATA_HORKAGE_NONCQ },
++	{ "HITACHI HDS7250SASUN500G 0621KTAWSD", "K2AOAJ0AHITACHI",
++	 ATA_HORKAGE_NONCQ },
+ 	/* NCQ hard hangs device under heavier load, needs hard power cycle */
+ 	{ "Maxtor 6B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ },
+ 	/* Blacklist entries taken from Silicon Image 3124/3132
