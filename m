@@ -1,63 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ata and netdev (was Re: -mm merge plans for 2.6.23)
-Date: Tue, 10 Jul 2007 14:57:16 -0400
-Message-ID: <4693D68C.7000303@garzik.org>
-References: <20070710013152.ef2cd200.akpm@linux-foundation.org>	<4693C4F8.40903@garzik.org> <20070710112458.e9dbb55e.akpm@linux-foundation.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
+Date: Tue, 10 Jul 2007 23:10:46 +0400
+Message-ID: <4693D9B6.4090408@ru.mvista.com>
+References: <20070221011922.GA1777@freefall.freebsd.org> <200702210342.20775.bzolnier@gmail.com> <466EEFD6.9030001@ru.mvista.com> <200706160123.55636.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33404 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756266AbXGJS5U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2007 14:57:20 -0400
-In-Reply-To: <20070710112458.e9dbb55e.akpm@linux-foundation.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:16039 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752852AbXGJTIp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 15:08:45 -0400
+In-Reply-To: <200706160123.55636.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, netdev <netdev@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Deepak Saxena <dsaxena@plexity.net>, Dan Faerch <dan@hacker.dk>, Benjamin LaHaise <bcrl@kvack.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Andrew Morton wrote:
-> On Tue, 10 Jul 2007 13:42:16 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
->> (just to provide my indicator of status)
-> 
-> Thanks.
-> 
->>> libata-add-irq_flags-to-struct-pata_platform_info-fix.patch
->> are other pata_platform people happy with this?  I don't know embedded 
->> well enough to know if adding this struct member will break things.
-> 
-> This is just a silly remove-unneeded-cast-of-void* cleanup.  I wrote this
-> as a fixup against
-> libata-add-irq_flags-to-struct-pata_platform_info.patch with the intention
-> of folding it into that base patch, but you went and merged the submitter's
-> original patch so this trivial fixup got stranded in -mm.  Feel free to give
-> it the piss-off-too-trivial treatment.
+Hello.
 
-I'm sorry, I didn't look closely enough.  I was referring to the 
-add-irq-flags patch itself, not your small fix.
+Bartlomiej Zolnierkiewicz wrote:
 
+>>>>On Feb 20, 2007, at 5:44 PM, Bartlomiej Zolnierkiewicz wrote:
 
->>> ata-ahci-alpm-store-interrupt-value.patch
->>> ata-ahci-alpm-expose-power-management-policy-option-to-users.patch
->>> ata-ahci-alpm-enable-link-power-management-for-ata-drivers.patch
->>> ata-ahci-alpm-enable-aggressive-link-power-management-for-ahci-controllers.patch
->>>
->>>  These appear to need some work.
->> seemed mostly OK to me.  what comments did I miss?
-> 
-> Oh, I thought these were the patches which affected scsi and which James
-> had issues with.  I guess I got confused.
+>>>>>On Wednesday 21 February 2007 02:19, Suleiman Souhlal wrote:
 
-hrm.  ISTR James wanted some cleanups, Kristen did some cleanups, then 
-looking at the cleanups decided they were needed / appropriate at this time.
+>>>>>>It can be changed via /proc/ide/hd?/settings.
 
-Anyway, these are in my mbox queue and the libata portions (of which the 
-code is the majority) seem OK.  Need to give them a final review.
+>>>>>Why do we need to change IDE DMA timeout dynamically?
 
-	Jeff
+>>>>I've used it to test error recovery (for example).
 
+>>>Seems quite useable for developers but I would prefer not to
+>>>expose it in production kernels for end users.
 
+>>    It seems that I have counter example of a customer asking if this timeout 
+>>can be done configurable. :-)
 
+> May I ask what was the rationale for this request?
+
+    Their system seems to become unschedulable for this period of time (DMA 
+timeouts happen from time to time) -- at least the keepalive daemon stopped 
+replying during this period...
+
+> I have no strong feelings about adding this /proc/ide/ setting but I worry
+> that it could be (mis)used just to (unreliably) work-around problems...
+
+>>    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, and if DMA is 
+>>not complete or interrupt pending, it may wait 10 more secs...
+
+> I really don't remember... :)
+
+> Maybe Mark or Alan could help with figuring this out.
+
+    They also have probably forgotten. :-)
+
+> Thanks,
+> Bart
+
+MBR, Sergei
