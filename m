@@ -1,116 +1,101 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: sata_sil, writing bug with multiple cards?
-Date: Tue, 10 Jul 2007 19:55:46 +0900
-Message-ID: <469365B2.9020809@suse.de>
-References: <courier.4689EFD9.0000589A@blargh.com> <200707040908.21512.ak@suse.de> <courier.468B579E.00002ECF@blargh.com> <200707041038.57677.ak@suse.de> <468B5FBD.3040104@gmail.com>
+From: Rod Whitby <rod@whitby.id.au>
+Subject: sata-via failure on 2.6.22 for via 6421 chipset (Was: Libata PATA
+ status)
+Date: Tue, 10 Jul 2007 21:23:52 +0930
+Message-ID: <46937350.7070108@whitby.id.au>
+References: <20070703185116.59c8f5f5@the-village.bc.nu> <468D7034.7060107@whitby.id.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040008050602020000020200"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763410AbXGJK4S@vger.kernel.org>
-In-Reply-To: <468B5FBD.3040104@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andi Kleen <ak@suse.de>, 7091@blargh.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:50616 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752985AbXGJL4q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 07:56:46 -0400
+In-Reply-To: <468D7034.7060107@whitby.id.au>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Rod Whitby <rod@whitby.id.au>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-This is a multi-part message in MIME format.
---------------040008050602020000020200
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Tejun Heo wrote:
-> Andi Kleen wrote:
->> On Wednesday 04 July 2007 10:17:34 7091@blargh.com wrote:
->>
->>>> Most likely it is some sort of hardware bug that we might
->>>> not be able to do much about. Have you tried contacting SIL or VIA? 
->>> No, I haven't.  Like I mentioned above, the OpenBSD drivers seemed to work, 
->>> or at least did with similar tests.  I would need to run the more extensive 
->>> checks to be positive, but those take a lot of time, obviously.  And 
->>> downtime for the box, a lot of which isn't really manageable, at the moment. 
->> Perhaps the OpenBSD drivers program the SIL chip in a different way
->> that avoids this problem. 
->>
->>>> e.g. if you have some other system with a different chipset it might
->>>> be useful to test the SIL controllers in those.
->>> The previous motherboard was an AMD 760 chipset, and it had the same 
->>> problem. 
->> Ok this means it's likely a SIL issue, not a chipset issue.
+Rod Whitby wrote:
+> Our project is also working on adding support to the kernel for the
+> Freecom FSG-3 NAS device.  It uses the sata-via driver for it's VIA_6421
+> chipset, but the main drive is a PATA drive (the device also has an
+> eSATA external port).
 > 
-> Hmmmm... okay.  I'll take look at the openBSD driver.  I still have no
-> idea what it can be tho.  Maybe, FIFO setup?
+> We're currently stuck at 2.6.18 with vendor patches for scsi/sata-via,
+> and would love to move to 2.6.22 and libata, but are having problems
+> with the latest sata-via driver for this chipset booting from an IDE
+> drive.  I'll contact you separately for this issue (as it's off-topic on
+> this thread).
 
-Please give a shot at the attached patch on top of 2.6.22.  Thanks.
+Here is the dmesg output of the sata-via driver failing to access the
+internal PATA disk on the Freecom FSG-3 running mainline 2.6.22.  The
+other two SATA ports are unused on this device (one is not connected at
+all on the PCB, the other is an external eSATA port).
 
--- 
-tejun
+Any advice on how to debug this failure further would be greatly
+appreciated.
 
---------------040008050602020000020200
-Content-Type: text/x-patch;
- name="sata_sil-update-cache-line-programming.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sata_sil-update-cache-line-programming.patch"
+> PCI: enabling device 0000:00:0c.0 (0000 -> 0001)
+> sata_via 0000:00:0c.0: routed to hard irq line 6
+> scsi0 : sata_via
+> scsi1 : sata_via
+> scsi2 : sata_via
+> ata1: SATA max UDMA/133 cmd 0x00011420 ctl 0x0001142a bmdma 0x00011400 irq 22
+> ata2: SATA max UDMA/133 cmd 0x00011430 ctl 0x0001143a bmdma 0x00011408 irq 22
+> ata3: PATA max UDMA/133 cmd 0x00011440 ctl 0x0001144a bmdma 0x00011410 irq 22
+> ata1: SATA link down (SStatus 0 SControl 310)
+> ata2: SATA link down (SStatus 0 SControl 310)
+> ata3.00: ATA-7: HDT722516DLAT80, V43OA96A, max UDMA/133
+> ata3.00: 321672960 sectors, multi 0: LBA48
+> ata3.00: limited to UDMA/33 due to 40-wire cable
+> ata3.00: configured for UDMA/33
+> scsi 2:0:0:0: Direct-Access     ATA      HDT722516DLAT80  V43O PQ: 0 ANSI: 5
+> sd 2:0:0:0: [sda] 321672960 512-byte hardware sectors (164697 MB)
+> sd 2:0:0:0: [sda] Write Protect is off
+> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPA
+> sd 2:0:0:0: [sda] 321672960 512-byte hardware sectors (164697 MB)
+> sd 2:0:0:0: [sda] Write Protect is off
+> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPA
+>  sda: sda1 sda2 sda3 sda4
+> sd 2:0:0:0: [sda] Attached SCSI disk
+> ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata3.00: cmd c8/00:02:4f:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 1024 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata3: soft resetting port
+> ata3.00: qc timeout (cmd 0x27)
+> ata3.00: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors (321672960)
+> ata3.00: failed to set xfermode (err_mask=0x40)
+> ata3: failed to recover some devices, retrying in 5 secs
+> ata3: soft resetting port
+> ata3.00: qc timeout (cmd 0x27)
+> ata3.00: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors (321672960)
+> ata3.00: failed to set xfermode (err_mask=0x40)
+> ata3.00: limiting speed to UDMA/33:PIO3
+> ata3: failed to recover some devices, retrying in 5 secs
+> ata3: soft resetting port
+> ata3.00: qc timeout (cmd 0x27)
+> ata3.00: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors (321672960)
+> ata3.00: failed to set xfermode (err_mask=0x40)
+> ata3.00: disabled
+> ata3: EH complete
+> sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 79
+> ReiserFS: sda1: warning: sh-2006: read_super_block: bread failed (dev sda1, blo)
+> sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 191
+> ReiserFS: sda1: warning: sh-2006: read_super_block: bread failed (dev sda1, blo)
+> sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 65
+> sd 2:0:0:0: [sda] READ CAPACITY failed
+> sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+> sd 2:0:0:0: [sda] Sense not available.
+> EXT3-fs: unable to read superblock
+> sd 2:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 65
+> sd 2:0:0:0: [sda] Write Protect is off
+> EXT2-fs: unable to read superblock
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 2a86dc4..6c0fe7e 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -280,14 +280,6 @@ static int slow_down = 0;
- module_param(slow_down, int, 0444);
- MODULE_PARM_DESC(slow_down, "Sledgehammer used to work around random problems, by limiting commands to 15 sectors (0=off, 1=on)");
- 
--
--static unsigned char sil_get_device_cache_line(struct pci_dev *pdev)
--{
--	u8 cache_line = 0;
--	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cache_line);
--	return cache_line;
--}
--
- /**
-  *	sil_set_mode		-	wrap set_mode functions
-  *	@ap: port to set up
-@@ -597,17 +589,29 @@ static void sil_init_controller(struct ata_host *host)
- 	u32 tmp;
- 	int i;
- 
--	/* Initialize FIFO PCI bus arbitration */
--	cls = sil_get_device_cache_line(pdev);
--	if (cls) {
--		cls >>= 3;
--		cls++;  /* cls = (line_size/8)+1 */
--		for (i = 0; i < host->n_ports; i++)
--			writew(cls << 8 | cls,
--			       mmio_base + sil_port[i].fifo_cfg);
--	} else
--		dev_printk(KERN_WARNING, &pdev->dev,
--			   "cache line size not set.  Driver may not function\n");
-+	/* When the Silicon Image 3112/4 retries a PCI memory read
-+	 * command, it may retry it as a memory read multiple command
-+	 * under some circumstances.  This can totally confuse some
-+	 * PCI controllers, so ensure that it will never do this by
-+	 * making sure that the Read Threshold (FIFO Read Request
-+	 * Control) field of the FIFO Valid Byte Count and Control
-+	 * registers for all the channels are set to be at least as
-+	 * large as the cacheline size register.
-+	 *
-+	 * tj - code and comment shamelessly taken from NetBSD.
-+	 */
-+	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &cls);
-+	cls *= 4;
-+
-+	if (cls > 224) {
-+		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, 224 / 4);
-+		cls = 224;
-+	} else if (cls < 32)
-+		cls = 32;
-+
-+	cls = DIV_ROUND_UP(cls, 32);
-+	for (i = 0; i < host->n_ports; i++)
-+		writeb(cls, mmio_base + sil_port[i].fifo_cfg);
- 
- 	/* Apply R_ERR on DMA activate FIS errata workaround */
- 	if (host->ports[0]->flags & SIL_FLAG_RERR_ON_DMA_ACT) {
-
---------------040008050602020000020200--
+-- Rod
