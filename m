@@ -1,45 +1,43 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH libata-dev#upstream] libata: simplify PCI legacy SFF host
- handling
-Date: Tue, 10 Jul 2007 21:38:03 -0400
-Message-ID: <4694347B.2030700@garzik.org>
-References: <468B620F.3010603@gmail.com>
+Subject: Re: [PATCH 2.6.22-rc7 1/3] libata: clean up horkage handling
+Date: Tue, 10 Jul 2007 21:38:19 -0400
+Message-ID: <4694348B.5020408@garzik.org>
+References: <20070705043127.GX29122@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37639 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37650 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753506AbXGKBiH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2007 21:38:07 -0400
-In-Reply-To: <468B620F.3010603@gmail.com>
+	id S1753506AbXGKBiU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jul 2007 21:38:20 -0400
+In-Reply-To: <20070705043127.GX29122@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 Tejun Heo wrote:
-> With PCI resource fix up for legacy hosts.  We can use the same code
-> path to allocate IO resources and initialize host for both legacy and
-> native SFF hosts.  Only IRQ requesting needs to be different.
+> Horkage handling had the following problems.
 > 
-> Rename ata_pci_*_native_host() to ata_pci_*_sff_host(), kill all
-> legacy specific functions and use the renamed functions instead.  This
-> simplifies code a lot.
+> * dev->horkage was positioned after ATA_DEVICE_CLEAR_OFFSET, so it was
+>   cleared before the device is configured.  This broke
+>   HORKAGE_DIAGNOSTIC.
+> 
+> * Some used dev->horkage while others called ata_device_blacklisted()
+>   directly.  This was at best confusing.
+> 
+> This patch moves dev->horkage right after dev->flags and set the field
+> according to the blacklist during device configuration.  All users
+> test against dev->horkage.  ata_device_blacklisted() now has only one
+> user, make it static.  While at it, rename it to ata_dev_blacklisted()
+> for consistency.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > ---
-> Gee, I like it.  The BAR fixup thing was a really good idea.  :-)
-> 
->  drivers/ata/libata-core.c |    4 
->  drivers/ata/libata-sff.c  |  288 +++++-----------------------------------------
->  drivers/ata/sata_nv.c     |    2 
->  drivers/ata/sata_sis.c    |    2 
->  drivers/ata/sata_uli.c    |    2 
->  drivers/ata/sata_via.c    |    2 
->  include/linux/libata.h    |    8 -
->  7 files changed, 42 insertions(+), 266 deletions(-)
+>  drivers/ata/libata-core.c |   13 ++++++++-----
+>  include/linux/libata.h    |    3 +--
+>  2 files changed, 9 insertions(+), 7 deletions(-)
 
 applied
 
