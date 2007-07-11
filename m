@@ -1,35 +1,28 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.22/-stable] libata: add FUJITSU MHV2080BH to NCQ blacklist
-Date: Tue, 10 Jul 2007 21:38:38 -0400
-Message-ID: <4694349E.8000209@garzik.org>
-References: <20070710071618.GB23568@htj.dyndns.org>
+Subject: Re: [PATCH] pata_scc.c: Workaround	for errata A308
+Date: Tue, 10 Jul 2007 21:38:45 -0400
+Message-ID: <469434A5.40906@garzik.org>
+References: <200707100929.l6A9TOf3017780@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37678 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37688 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399AbXGKBik (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2007 21:38:40 -0400
-In-Reply-To: <20070710071618.GB23568@htj.dyndns.org>
+	id S1754816AbXGKBis (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jul 2007 21:38:48 -0400
+In-Reply-To: <200707100929.l6A9TOf3017780@toshiba.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Serge van Thillo <nulleke@hotmail.com>, stable@kernel.org
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Please warmly welcome the first member from FUJITSU to the prestigious
-> NCQ spurious completion club.
+Akira Iguchi wrote:
+> Workaround for errata A308: turn down the UDMA mode and retry
+> the DMA command when the data lost condition is detected.
 > 
-> This is reported by Serge Van Thillo in bugzilla bug 8730.
-> 
->   http://bugzilla.kernel.org/show_bug.cgi?id=8730
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Serge van Thillo <nulleke@hotmail.com>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
+> Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+> Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 
 applied
 
