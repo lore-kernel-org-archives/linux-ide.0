@@ -1,103 +1,207 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] PCI: rename and export __pci_reenable_device()
-Date: Wed, 11 Jul 2007 19:32:04 +0900
-Message-ID: <20070711103204.GE23568@htj.dyndns.org>
-References: <20070710063605.GA21994@htj.dyndns.org> <20070710161709.GB5421@kroah.com>
+Subject: [PATCH 2/2] ata_piix: fix suspend/resume for some TOSHIBA laptops
+Date: Wed, 11 Jul 2007 19:32:38 +0900
+Message-ID: <20070711103238.GF23568@htj.dyndns.org>
+References: <20070710063605.GA21994@htj.dyndns.org> <20070710161709.GB5421@kroah.com> <20070711103204.GE23568@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:53878 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759826AbXGKKcP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jul 2007 06:32:15 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1310196nze
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2007 03:32:15 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.177]:4460 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758386AbXGKKcs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jul 2007 06:32:48 -0400
+Received: by py-out-1112.google.com with SMTP id d32so2946209pye
+        for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2007 03:32:48 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20070710161709.GB5421@kroah.com>
+In-Reply-To: <20070711103204.GE23568@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Greg KH <greg@kroah.com>
 Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, owner-linux-pci@atrey.karlin.mff.cuni.cz
 
-Some odd ACPI implementations choke if certain controller is disabled
-when ACPI suspend is invoked but we still need to make sure the PCI
-device is enabled during resume.  Simply using pci_enable_device()
-unbalances device enable count.
+ACPI implementations in several TOSHIBA laptops are weird and burn cpu
+cycles for tens of seconds while trying to suspend if the PCI device
+for the ATA controller is disabled when the ACPI suspend is called.
 
-Drop leading underscores from __pci_reenable_device() and export it.
+This patch uses DMI to match those machines and bypass device disable
+on those machines during suspend.  As the device needs to be put into
+enabled state on resume without affecting PCI enable count, matching
+resume callback uses pci_reenable_device().
+
+This bug is reported in bugzilla bug 7780.
+
+  http://bugzilla.kernel.org/show_bug.cgi?id=7780
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-Sure, here it is.
+Updated to fit renamed pci_reenable_device().
 
- drivers/pci/pci-driver.c |    2 +-
- drivers/pci/pci.c        |    6 +++---
- drivers/pci/pci.h        |    1 -
- include/linux/pci.h      |    1 +
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/ata/ata_piix.c |  113 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/libata.h |    2 
+ 2 files changed, 113 insertions(+), 2 deletions(-)
 
-Index: work/drivers/pci/pci.c
+Index: work/drivers/ata/ata_piix.c
 ===================================================================
---- work.orig/drivers/pci/pci.c
-+++ work/drivers/pci/pci.c
-@@ -695,14 +695,13 @@ static int do_pci_enable_device(struct p
+--- work.orig/drivers/ata/ata_piix.c
++++ work/drivers/ata/ata_piix.c
+@@ -91,6 +91,7 @@
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
++#include <linux/dmi.h>
+ 
+ #define DRV_NAME	"ata_piix"
+ #define DRV_VERSION	"2.11"
+@@ -140,6 +141,9 @@ enum {
+ 	RV			= -3, /* reserved */
+ 
+ 	PIIX_AHCI_DEVICE	= 6,
++
++	/* host->flags bits */
++	PIIX_HOST_BROKEN_SUSPEND = (1 << 24),
+ };
+ 
+ struct piix_map_db {
+@@ -159,6 +163,10 @@ static void piix_set_piomode (struct ata
+ static void piix_set_dmamode (struct ata_port *ap, struct ata_device *adev);
+ static void ich_set_dmamode (struct ata_port *ap, struct ata_device *adev);
+ static int ich_pata_cable_detect(struct ata_port *ap);
++#ifdef CONFIG_PM
++static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
++static int piix_pci_device_resume(struct pci_dev *pdev);
++#endif
+ 
+ static unsigned int in_module_init = 1;
+ 
+@@ -253,8 +261,8 @@ static struct pci_driver piix_pci_driver
+ 	.probe			= piix_init_one,
+ 	.remove			= ata_pci_remove_one,
+ #ifdef CONFIG_PM
+-	.suspend		= ata_pci_device_suspend,
+-	.resume			= ata_pci_device_resume,
++	.suspend		= piix_pci_device_suspend,
++	.resume			= piix_pci_device_resume,
+ #endif
+ };
+ 
+@@ -868,6 +876,107 @@ static void ich_set_dmamode (struct ata_
+ 	do_pata_set_dmamode(ap, adev, 1);
  }
  
- /**
-- * __pci_reenable_device - Resume abandoned device
-+ * pci_reenable_device - Resume abandoned device
-  * @dev: PCI device to be resumed
-  *
-  *  Note this function is a backend of pci_default_resume and is not supposed
-  *  to be called by normal code, write proper resume handler and use it instead.
-  */
--int
--__pci_reenable_device(struct pci_dev *dev)
-+int pci_reenable_device(struct pci_dev *dev)
- {
- 	if (atomic_read(&dev->enable_cnt))
- 		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
-@@ -1427,6 +1426,7 @@ early_param("pci", pci_setup);
- device_initcall(pci_init);
- 
- EXPORT_SYMBOL_GPL(pci_restore_bars);
-+EXPORT_SYMBOL(pci_reenable_device);
- EXPORT_SYMBOL(pci_enable_device_bars);
- EXPORT_SYMBOL(pci_enable_device);
- EXPORT_SYMBOL(pcim_enable_device);
-Index: work/drivers/pci/pci.h
++#ifdef CONFIG_PM
++static struct dmi_system_id piix_broken_suspend_dmi_table[] = {
++	{
++		.ident = "TECRA M5",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M5"),
++		},
++	},
++	{
++		.ident = "Satellite U200",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U200"),
++		},
++	},
++	{
++		.ident = "Satellite U205",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U205"),
++		},
++	},
++	{
++		.ident = "Portege M500",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
++		},
++	},
++	{ }
++};
++
++static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	unsigned long flags;
++	int rc = 0;
++
++	rc = ata_host_suspend(host, mesg);
++	if (rc)
++		return rc;
++
++	/* Some braindamaged ACPI suspend implementations expect the
++	 * controller to be awake on entry; otherwise, it burns cpu
++	 * cycles and power trying to do something to the sleeping
++	 * beauty.
++	 */
++	if (dmi_check_system(piix_broken_suspend_dmi_table) &&
++	    mesg.event == PM_EVENT_SUSPEND) {
++		pci_save_state(pdev);
++
++		/* mark its power state as "unknown", since we don't
++		 * know if e.g. the BIOS will change its device state
++		 * when we suspend.
++		 */
++		if (pdev->current_state == PCI_D0)
++			pdev->current_state = PCI_UNKNOWN;
++
++		/* tell resume that it's waking up from broken suspend */
++		spin_lock_irqsave(&host->lock, flags);
++		host->flags |= PIIX_HOST_BROKEN_SUSPEND;
++		spin_unlock_irqrestore(&host->lock, flags);
++	} else
++		ata_pci_device_do_suspend(pdev, mesg);
++
++	return 0;
++}
++
++static int piix_pci_device_resume(struct pci_dev *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	unsigned long flags;
++	int rc;
++
++	if (host->flags & PIIX_HOST_BROKEN_SUSPEND) {
++		spin_lock_irqsave(&host->lock, flags);
++		host->flags &= ~PIIX_HOST_BROKEN_SUSPEND;
++		spin_unlock_irqrestore(&host->lock, flags);
++
++		pci_set_power_state(pdev, PCI_D0);
++		pci_restore_state(pdev);
++
++		/* PCI device wasn't disabled during suspend.  Use
++		 * pci_reenable_device() to avoid unbalancing pdev
++		 * enable count.
++		 */
++		rc = pci_reenable_device(pdev);
++		if (rc)
++			dev_printk(KERN_ERR, &pdev->dev, "failed to enable "
++				   "device after resume (%d)\n", rc);
++	} else
++		rc = ata_pci_device_do_resume(pdev);
++
++	if (rc == 0)
++		ata_host_resume(host);
++
++	return rc;
++}
++#endif
++
+ #define AHCI_PCI_BAR 5
+ #define AHCI_GLOBAL_CTL 0x04
+ #define AHCI_ENABLE (1 << 31)
+Index: work/include/linux/libata.h
 ===================================================================
---- work.orig/drivers/pci/pci.h
-+++ work/drivers/pci/pci.h
-@@ -1,6 +1,5 @@
- /* Functions internal to the PCI core code */
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -213,6 +213,8 @@ enum {
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+ 	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
  
--extern int __must_check __pci_reenable_device(struct pci_dev *);
- extern int pci_uevent(struct device *dev, char **envp, int num_envp,
- 		      char *buffer, int buffer_size);
- extern int pci_create_sysfs_dev_files(struct pci_dev *pdev);
-Index: work/include/linux/pci.h
-===================================================================
---- work.orig/include/linux/pci.h
-+++ work/include/linux/pci.h
-@@ -531,6 +531,7 @@ static inline int pci_write_config_dword
- 
- int __must_check pci_enable_device(struct pci_dev *dev);
- int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
-+int __must_check pci_reenable_device(struct pci_dev *);
- int __must_check pcim_enable_device(struct pci_dev *pdev);
- void pcim_pin_device(struct pci_dev *pdev);
- 
-Index: work/drivers/pci/pci-driver.c
-===================================================================
---- work.orig/drivers/pci/pci-driver.c
-+++ work/drivers/pci/pci-driver.c
-@@ -310,7 +310,7 @@ static int pci_default_resume(struct pci
- 	/* restore the PCI config space */
- 	pci_restore_state(pci_dev);
- 	/* if the device was enabled before suspend, reenable */
--	retval = __pci_reenable_device(pci_dev);
-+	retval = pci_reenable_device(pci_dev);
- 	/* if the device was busmaster before the suspend, make it busmaster again */
- 	if (pci_dev->is_busmaster)
- 		pci_set_master(pci_dev);
++	/* bits 24:31 of host->flags are reserved for LLD specific flags */
++
+ 	/* various lengths of time */
+ 	ATA_TMOUT_BOOT		= 30 * HZ,	/* heuristic */
+ 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* heuristic */
