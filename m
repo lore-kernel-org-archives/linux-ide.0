@@ -1,36 +1,35 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] [POWERPC] mmio ide support for mpc8349-itx target
-Date: Wed, 11 Jul 2007 23:02:27 +0400
-Message-ID: <46952943.2080007@ru.mvista.com>
-References: <20070707094852.9473.21013.stgit@localhost.localdomain>	<20070707094900.9473.48577.stgit@localhost.localdomain>	<468FC376.2040405@ru.mvista.com> <20070710145256.6ac64e11@localhost.localdomain>
+Subject: Re: [PATCH 1/6] icside: fix ->speedproc to return on unsupported
+ modes
+Date: Wed, 11 Jul 2007 23:07:51 +0400
+Message-ID: <46952A87.6010005@ru.mvista.com>
+References: <200707110200.37607.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:27255 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:27307 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750796AbXGKTA0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Jul 2007 15:00:26 -0400
-In-Reply-To: <20070710145256.6ac64e11@localhost.localdomain>
+	id S933008AbXGKTFu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jul 2007 15:05:50 -0400
+In-Reply-To: <200707110200.37607.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
 
 Hello.
 
-Vitaly Bordug wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->>>+
->>>+#ifdef CONFIG_MPC834x_ITX  
+> icside_set_speed() happily accepts unsupported transfer modes which
+> results in drive->drive_data being set to the maximum value (480)
+> and drive->current_speed being set to the unsupported transfer mode.
 
->>    Erm, isn't this stuff misplaced? Is this really SoC device? I
->>remember seeng this in the arch/ppc/ platform code before (in the
->>internal tree)...
+> Fix it.
 
-> The point is to declare methods bsp, as mmio access may effectively vary (having bugs or intentionally) from platform to platform. All-in-one driver approach is nice but might be an issue to handle/maintain.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-    You misunderstood. Why this was placed in fsl_soc.c and not in the proper 
-platform code (as it was in the internal tree even)?
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
