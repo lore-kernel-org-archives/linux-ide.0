@@ -1,86 +1,47 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
-Date: Wed, 11 Jul 2007 01:14:32 +0200 (MEST)
-Message-ID: <200707102314.l6ANEWq2029195@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/6] icside: fix ->speedproc to return on unsupported modes
+Date: Wed, 11 Jul 2007 02:00:37 +0200
+Message-ID: <200707110200.37607.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: albertl@mail.com, mikpe@it.uu.se
-Cc: dwm@enoyolf.org, jeff@garzik.org, linux-ide@vger.kernel.org, bahadir.balban@gmail.com, linuxppc-dev@ozlabs.org, alan@lxorguk.ukuu.org.uk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.239]:5174 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747AbXGJXw1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jul 2007 19:52:27 -0400
+Received: by wr-out-0506.google.com with SMTP id i30so694381wra
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jul 2007 16:52:25 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Russell King <rmk@arm.linux.org.uk>
 
-On Tue, 10 Jul 2007 11:52:59 +0800, Albert Lee wrote:
-> >>Recently the PLL input clock of pata_pdc2027x is sometimes detected
-> >>higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
-> >>It seems sometimes the mdelay() function is not as precise as it
-> >>used to be. Per Alan's advice, HT or power management might affect
-> >>the precision of mdelay().
-> >>
-> >>This patch calls gettimeofday() to mesure the time elapsed and
-> >>calculate the PLL input clock accordingly.
-> > 
-> > 
-> > Unfortunately this breaks pata_pdc2027x on my PowerMac G3:
-> > 
-> <snip>
-> > 
-> > In fairness, this is a slightly non-standard PowerMac G3, in that it
-> > has a G4 upgrade processor. The firmware doesn't recognise the CPU
-> > and gives some CPU core frequency-related properties too low values.
-> > However, the bus frequency property _is_ correct, which is what
-> > most or all timing stuff should be based on.
-> > 
-> > Looks like a platform bug.
-> > 
-> 
-> According to the document, do_gettimeofday() has microsecond
-> resolution. Since the driver calls mdelay(100) (100000 microseconds), 
-> it won't affect the PLL input clock calculation much if somehow
-> do_gettimeofday() drifts several (say 100) microseconds.
-> 
-> Could you please apply the attached debug patch and collect more info
-> on the PowerMac G3. Hopefully we can have more clue. Thanks.
-> --
-> albert
-> 
-> (BTW, maybe opening a bug in bugzilla.kernel.org would help the
-> debugging.)
-> 
-> --- 00_libata-dev/drivers/ata/pata_pdc2027x.c	2007-07-07 09:58:55.000000000 +0800
-> +++ 01_debug/drivers/ata/pata_pdc2027x.c	2007-07-10 11:18:38.000000000 +0800
-> @@ -722,6 +722,15 @@ static long pdc_detect_pll_input_clock(s
->  	pll_clock = (start_count - end_count) / 100 *
->  		(100000000 / usec_elapsed);
->  
-> +	do_gettimeofday(&start_time);
-> +	mdelay(37);
-> +	do_gettimeofday(&end_time);
-> +	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
-> +		(end_time.tv_usec - start_time.tv_usec);
-> +	printk(KERN_ERR "usec_elapsed for mdelay(37) [%ld]\n", usec_elapsed);
-> +	printk(KERN_ERR "start time: [%ld]s [%ld]us \n", start_time.tv_sec, start_time.tv_usec);
-> +	printk(KERN_ERR "end   time: [%ld]s [%ld]us \n", end_time.tv_sec, end_time.tv_usec);
-> +
->  	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
->  	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
 
-2.6.22 + this prints the following on my G3:
+icside_set_speed() happily accepts unsupported transfer modes which
+results in drive->drive_data being set to the maximum value (480)
+and drive->current_speed being set to the unsupported transfer mode.
 
-pata_pdc2027x 0000:00:0e.0: version 0.9
-usec_elapsed for mdelay(37) [35431]
-start time: [1184112028]s [775333]us 
-end   time: [1184112028]s [810764]us 
-pata_pdc2027x 0000:00:0e.0: PLL input clock 1691741 kHz
-pata_pdc2027x: Invalid PLL input clock 1691741kHz, give up!
+Fix it.
 
-/Mikael
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Russell King <rmk@arm.linux.org.uk>
+---
+ drivers/ide/arm/icside.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: b/drivers/ide/arm/icside.c
+===================================================================
+--- a/drivers/ide/arm/icside.c
++++ b/drivers/ide/arm/icside.c
+@@ -272,6 +272,8 @@ static int icside_set_speed(ide_drive_t 
+ 	case XFER_SW_DMA_0:
+ 		cycle_time = 480;
+ 		break;
++	default:
++		return 1;
+ 	}
+ 
+ 	/*
