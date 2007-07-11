@@ -1,40 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Freeze after disabling write cache with hdparm -W0 /dev/sda
-Date: Wed, 11 Jul 2007 17:57:59 +0900
-Message-ID: <46949B97.8090703@gmail.com>
-References: <46935C4D.40003@onelan.co.uk> <4694669E.7060600@gmail.com> <46949555.9060208@onelan.co.uk> <469496A4.7070902@gmail.com> <46949AB1.80705@onelan.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
+Date: Wed, 11 Jul 2007 12:26:05 +0200 (MEST)
+Message-ID: <200707111026.l6BAQ5kh003472@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.237]:11633 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbXGKI6J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jul 2007 04:58:09 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1291601nze
-        for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2007 01:58:08 -0700 (PDT)
-In-Reply-To: <46949AB1.80705@onelan.co.uk>
+Received: from aun.it.uu.se ([130.238.12.36]:56837 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757683AbXGKK0n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jul 2007 06:26:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com, mikpe@it.uu.se
+Cc: alan@lxorguk.ukuu.org.uk, bahadir.balban@gmail.com, dwm@enoyolf.org, jeff@garzik.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, sshtylyov@ru.mvista.com
 
-Simon Farnsworth wrote:
-> Tejun Heo wrote:
->> Simon Farnsworth wrote:
->>> Just a thought; is it possible to trigger libata EH from userspace? If
->>> so, we could write a small utility to disable write cache, then force EH
->>> to detect the change.
->> That's automatically done.  libata snoops cache on/off and triggers
->> revalidation but you can request manual rescan by echoing "- - -" to
->> /sys/class/scsi_host/hostX/scan.
->>
-> Would it be worth changing our code to do "hdparm -W1 /dev/sda && hdparm
-> -W0 /dev/sda", or would this not show anything. The lack of revalidation
-> on some drives is what's worrying me a little here.
+On Wed, 11 Jul 2007 10:45:35 +0800, Albert Lee wrote:
+> Mikael Pettersson wrote:
+> > 
+> > 
+> > 2.6.22 + this prints the following on my G3:
+> > 
+> > pata_pdc2027x 0000:00:0e.0: version 0.9
+> > usec_elapsed for mdelay(37) [35431]
+> > start time: [1184112028]s [775333]us 
+> > end   time: [1184112028]s [810764]us 
+> > pata_pdc2027x 0000:00:0e.0: PLL input clock 1691741 kHz
+> > pata_pdc2027x: Invalid PLL input clock 1691741kHz, give up!
+> > 
+> 
+> My x86 box got this:
+> Jul 11 10:02:17 p4ht-s kernel: [  260.746980] ACPI: PCI Interrupt 0000:02:05.0[A] -> Link [LNK1] -> GSI 10 (level, low) -> IRQ 10
+> Jul 11 10:02:17 p4ht-s kernel: [  260.882905] usec_elapsed for mdelay(37) [36734]
+> Jul 11 10:02:17 p4ht-s kernel: [  260.882911] start time: [1184119336]s [999802]us 
+> Jul 11 10:02:17 p4ht-s kernel: [  260.882914] end   time: [1184119337]s [36536]us 
+> Jul 11 10:02:17 p4ht-s kernel: [  260.882917] pata_pdc2027x 0000:02:05.0: PLL input clock 16829 kHz
+> 
+> So, it seems both mdelay(37) and do_gettimeofday() are working properly on PowerMac G3.
+> Maybe the calculated wrong PLL input is due to wrong reading of the counter register?
+> Could you please try the attached debug patch for more clue, thanks.
 
-Revalidation happens after cache property is changed successfully.  What
-happens if you request manual rescan while the drive is not repsponding?
+This, supposedly debug-only, patch gives me much better PLL calibration:
 
--- 
-tejun
+pata_pdc2027x 0000:00:0e.0: version 0.9
+bccrh [0] bccrl [0]
+bccrhv[0] bccrlv[0]
+bccrh [7FCF] bccrl [15ED]
+bccrhv[7FCF] bccrlv[15D4]
+start[0] end[1072141805] 
+usec_elapsed for mdelay(100) [105500]
+start time: [1184152411]s [689475]us 
+end   time: [1184152411]s [794975]us 
+PLL input clock[-1563248254]Hz
+usec_elapsed for mdelay(37) [35432]
+start time: [1184152411]s [818033]us 
+end   time: [1184152411]s [853465]us 
+bccrh [7FC9] bccrl [1A4B]
+bccrhv[7FC9] bccrlv[1A4B]
+bccrh [7F98] bccrl [3038]
+bccrhv[7F98] bccrlv[301F]
+start[1071946315] end[1070346296] 
+usec_elapsed for mdelay(100) [103571]
+start time: [1184152411]s [874717]us 
+end   time: [1184152411]s [978288]us 
+PLL input clock[15440000]Hz
+usec_elapsed for mdelay(37) [35431]
+start time: [1184152411]s [997039]us 
+end   time: [1184152412]s [32470]us 
+pata_pdc2027x 0000:00:0e.0: PLL input clock 15440 kHz
+
+and from then on things are fine.
+
+Weird. I'll try with an older gcc later (been using gcc-4.2.0 so far).
+
+/Mikael
