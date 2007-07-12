@@ -1,49 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: add another Maxtor drive with broken NCQ to the
- list
-Date: Thu, 12 Jul 2007 14:39:28 -0400
-Message-ID: <46967560.6020007@garzik.org>
-References: <469674DF.9000804@redhat.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
+Date: Thu, 12 Jul 2007 11:42:47 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org>
+References: <20070711200538.GA7374@havoc.gtf.org>
+ <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54794 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752250AbXGLSja (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jul 2007 14:39:30 -0400
-In-Reply-To: <469674DF.9000804@redhat.com>
+Received: from twinlark.arctic.org ([207.29.250.54]:35589 "EHLO
+	twinlark.arctic.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755670AbXGLSmt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 14:42:49 -0400
+In-Reply-To: <46960225.5000502@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dave@thedillows.org
 
-Chuck Ebbert wrote:
-> Add another Maxtor 6B200M0 drive with broken NCQ to the list.
+On Thu, 12 Jul 2007, Jeff Garzik wrote:
+
+> dean gaudet wrote:
+> > oh very nice... no warnings on boot, and no warnings while i "dd if=/dev/sdX
+> > of=/dev/null" and i'm seeing 74MB/s+ from each disk on this simple read
+> > test.
+> > 
+> > for lack of a better test i started an untar/diff stress test on the
+> > disks... we'll see how it goes.  (it's based on doug ledford's memtest.sh)
 > 
-> Signed-off-by: Chuck Ebbert <cebbert@redhat.com>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- linux-2.6.22.noarch.orig/drivers/ata/libata-core.c
-> +++ linux-2.6.22.noarch/drivers/ata/libata-core.c
-> @@ -3787,6 +3787,7 @@ static const struct ata_blacklist_entry 
->  	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
->  	/* NCQ is broken */
->  	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
-> +	{ "Maxtor 6B200M0",	"BANC1BM0",	ATA_HORKAGE_NONCQ },
->  	{ "Maxtor 6B200M0",	"BANC1B10",	ATA_HORKAGE_NONCQ },
->  	/* NCQ hard hangs device under heavier load, needs hard power cycle */
->  	{ "Maxtor 6B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ },
+> Thanks for the testing.  Looks like we might have hit on something good...
 
-Alan Cox posted some example code recently, which demonstrated how to 
-add support for wildcards to the ATA blacklist.
+yep this does look good.  no problems overnight in the untar/diff/rm 
+workload.  if you've got any other workload you'd like me to throw at it, 
+let me know.  i might be able to scare up a disk or two with errors to 
+check error handling.
 
-Would you be willing to grab or recreate that, and then simply blacklist 
-"BANC*"
+i tested hotplug just for kicks... no luck there :)  but then you didn't 
+say that would work yet.
 
-	Jeff
-
-
-
+thanks!
+-dean
