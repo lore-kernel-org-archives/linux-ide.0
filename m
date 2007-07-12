@@ -1,123 +1,124 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/6] ide-pmac: PIO fixes
-Date: Thu, 12 Jul 2007 21:33:08 +0200
-Message-ID: <200707122133.09054.bzolnier@gmail.com>
-References: <200707110204.07540.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/6] icside: fix ->speedproc to return on unsupported
+ modes
+Date: Thu, 12 Jul 2007 23:23:20 +0400
+Message-ID: <46967FA8.4090406@ru.mvista.com>
+References: <200707110200.37607.bzolnier@gmail.com> <46952A87.6010005@ru.mvista.com> <20070711195641.GA2301@flint.arm.linux.org.uk> <200707112321.41597.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:40492 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764220AbXGLTQR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 15:16:17 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so406826ugf
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 12:16:16 -0700 (PDT)
-In-Reply-To: <200707110204.07540.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:37105 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752248AbXGLTVU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 15:21:20 -0400
+In-Reply-To: <200707112321.41597.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Kyle McMartin <kyle@mcmartin.ca>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
 
-On Wednesday 11 July 2007, Bartlomiej Zolnierkiewicz wrote:
-> 
-> * Add { 0, 0 } entry to {kauai,shasta}_pio_timings[] so kauai_lookup_timing()
->   always returns a valid PIO timing (fixes PIO timing not being set for devices
->   with minimum PIO cycle <= 120ns).
-> 
-> * Add setting transfer mode on the device to pmac_ide_set_pio_mode().
-> 
-> * Fix pmac_ide_set_pio() to always program chipset for given PIO timing instead
->   of only when the device we want to program PIO timing for is the currently
->   selected one.
-> 
-> * Now that pmac_ide_set_pio() is fixed there is no need to set transfer mode
->   on the device and program chipset for PIO in pmac_ide_tune_chipset()
->   (returning 0 == success is not entirely correct but is OK for now since
->   the upper layers are only checking ->speedproc return value for DMA modes).
+Hello.
+
+Bartlomiej Zolnierkiewicz wrote:
+
+>>Moreover, I think the patch is quite broken.  If an invalid DMA mode
+>>is passed, currently the driver sets the cycle time to 480ns (stored
+>>in drive_data) since both cycle_time and use_dma_info will be zero.
+>>Moreover, 'on' will be zero, causing icside_set_speed() to return zero
+>>which means the DMA setting was not successful (iow, use PIO).
+
+> Thanks for spotting this.  The patch in the current form is indeed broken
+> as I haven't noticed that icside_set_speed() returns zero on failure.
+
+    You're not the only one.
+
+> However all other implementations of ->speedproc return zero on success
+> and non-zero on failure.  Currently it doesn't matter for icside host
+> driver and isn't a bug per se since:
+
+> - ide_set_xfer_rate() return value is ignored by all IDE core users
+
+    Indeed. So my accusation of breaking the usermode interface (and UltraDMA
+downgrade) was too rash. :-<
+
+> - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
+
+    Yeah, that was rash too. :-<
+
+> but sooner or later we will need to fix anyway - so lets do it now.
+
+> It also seems to cleanup icside_dma_check() a bit since return value
+> invertion is no longer needed.
 
 
-> This patch should have no effect on the default kernel behavior because
-> IDE pmac driver doesn't enable ->autotune (this would also explain why some
-> of the above bugs remained unfixed for so long).
+> [PATCH] icside: fix ->speedproc to return on unsupported modes (take 2)
 
-This part of the patch description is actually incorrect: ->tuneproc is used
-unconditionally during suspend so the patch has the real effect (hopefully
-positive :) on the default kernel behavior.
+> * All other implementations of ->speedproc return zero on success
+>   and non-zero on failure.  Currently it doesn't matter for icside host
+>   driver and isn't a bug per se since:
+
+>   - ide_set_xfer_rate() return value is ignored by all IDE core users
+
+>   - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
+
+>   but sooner or later we will need to fix anyway - so lets do it now.
+
+> * icside_set_speed() happily accepts unsupported transfer modes which
+>   results in drive->drive_data being set to the maximum value (480)
+>   and drive->current_speed being set to the unsupported transfer mode.
+
+    I don't understand why it needs to bother setting drive->current_speed at 
+all to begin with.
+
+>   Fix it.
+
+> v2:
+> - The initial version of the patch was broken because it didn't take into
+>   the account (the different from usual) return values of icside_set_speed().
+>   (Noticed by Russell).
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Kyle McMartin <kyle@mcmartin.ca>
-> ---
->  drivers/ide/ppc/pmac.c |   19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
-> 
-> Index: b/drivers/ide/ppc/pmac.c
+
+    Looks like the patch still needs more polishing:
+
+> Index: b/drivers/ide/arm/icside.c
 > ===================================================================
-> --- a/drivers/ide/ppc/pmac.c
-> +++ b/drivers/ide/ppc/pmac.c
-> @@ -311,7 +311,8 @@ static struct kauai_timing	kauai_pio_tim
->  	{ 240	, 0x0800038b },
->  	{ 239	, 0x0800030c },
->  	{ 180	, 0x05000249 },
-> -	{ 120	, 0x04000148 }
-> +	{ 120	, 0x04000148 },
-> +	{ 0	, 0 },
->  };
->  
->  static struct kauai_timing	kauai_mdma_timings[] =
-> @@ -351,7 +352,8 @@ static struct kauai_timing	shasta_pio_ti
->  	{ 240	, 0x040003cd },
->  	{ 239	, 0x040003cd },
->  	{ 180	, 0x0400028b },
-> -	{ 120	, 0x0400010a }
-> +	{ 120	, 0x0400010a },
-> +	{ 0	, 0 },
->  };
->  
->  static struct kauai_timing	shasta_mdma_timings[] =
-> @@ -631,8 +633,6 @@ pmac_ide_set_pio_mode(ide_drive_t *drive
->  	case controller_sh_ata6: {
->  		/* 133Mhz cell */
->  		u32 tr = kauai_lookup_timing(shasta_pio_timings, cycle_time);
-> -		if (tr == 0)
-> -			return;
->  		*timings = ((*timings) & ~TR_133_PIOREG_PIO_MASK) | tr;
+> --- a/drivers/ide/arm/icside.c
+> +++ b/drivers/ide/arm/icside.c
+> @@ -250,7 +250,7 @@ static void icside_build_sglist(ide_driv
+>   */
+>  static int icside_set_speed(ide_drive_t *drive, const u8 xfer_mode)
+>  {
+> -	int on = 0, cycle_time = 0, use_dma_info = 0;
+> +	int on = -1, cycle_time = 0, use_dma_info = 0;
+
+    We don't need to pre-initialize cycle_time anymore.
+
+>  	switch (xfer_mode) {
+>  	case XFER_MW_DMA_2:
+> @@ -272,6 +272,8 @@ static int icside_set_speed(ide_drive_t 
+>  	case XFER_SW_DMA_0:
+>  		cycle_time = 480;
 >  		break;
->  		}
-> @@ -640,8 +640,6 @@ pmac_ide_set_pio_mode(ide_drive_t *drive
->  	case controller_k2_ata6: {
->  		/* 100Mhz cell */
->  		u32 tr = kauai_lookup_timing(kauai_pio_timings, cycle_time);
-> -		if (tr == 0)
-> -			return;
->  		*timings = ((*timings) & ~TR_100_PIOREG_PIO_MASK) | tr;
->  		break;
->  		}
-> @@ -692,8 +690,11 @@ pmac_ide_set_pio_mode(ide_drive_t *drive
->  		drive->name, pio,  *timings);
->  #endif	
->  
-> -	if (drive->select.all == HWIF(drive)->INB(IDE_SELECT_REG))
-> -		pmac_ide_do_update_timings(drive);
-> +	if (pmac_ide_do_setfeature(drive, speed))
-> +		return;
-> +
-> +	pmac_ide_do_update_timings(drive);
-> +	drive->current_speed = speed;
->  }
->  
->  #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC
-> @@ -962,7 +963,7 @@ static int pmac_ide_tune_chipset(ide_dri
->  		case XFER_PIO_1:
->  		case XFER_PIO_0:
->  			pmac_ide_set_pio_mode(drive, speed & 0x07);
-> -			break;
-> +			return 0;
->  		default:
->  			ret = 1;
+> +	default:
+> +		return 1;
 >  	}
-> 
+>  
+>  	/*
+> @@ -284,7 +286,7 @@ static int icside_set_speed(ide_drive_t 
+>  	drive->drive_data = cycle_time;
+>  
+>  	if (cycle_time && ide_config_drive_speed(drive, xfer_mode) == 0)
+
+    Now cycle_time can't be 0 here, so the first condition may be dropped.
+
+> -		on = 1;
+> +		on = 0;
+>  	else
+>  		drive->drive_data = 480;
+
+    I'm not sure that this really makes sense now.
+
+MBR, Sergei
+
