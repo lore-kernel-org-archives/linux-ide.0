@@ -1,34 +1,47 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: [PATCH] libata: add another Maxtor drive with broken NCQ to the list
-Date: Thu, 12 Jul 2007 14:37:19 -0400
-Message-ID: <469674DF.9000804@redhat.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: fix drive side 80c
+ cable check, take 3
+Date: Thu, 12 Jul 2007 22:40:15 +0400
+Message-ID: <4696758F.7040403@ru.mvista.com>
+References: <20070205074535.GE1625@htj.dyndns.org> <20070205105744.6f22fc7d@localhost.localdomain> <20070205124106.GK1625@htj.dyndns.org> <20070205132706.1ff6d761@localhost.localdomain> <20070205142119.GM1625@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40376 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755455AbXGLShW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jul 2007 14:37:22 -0400
+Received: from gateway-1237.mvista.com ([63.81.120.155]:36743 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761833AbXGLSiP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 14:38:15 -0400
+In-Reply-To: <20070205142119.GM1625@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Add another Maxtor 6B200M0 drive with broken NCQ to the list.
+Tejun Heo wrote:
 
-Signed-off-by: Chuck Ebbert <cebbert@redhat.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+> The 80c wire bit is bit 13, not 14.  Bit 14 is always 1 if word93 is
+> implemented.  This increases the chance of incorrect wire detection
+> especially because host side cable detection is often unreliable and
+> we sometimes soley depend on drive side cable detection.  Fix the test
+> and add word93 validity check.
 
---- linux-2.6.22.noarch.orig/drivers/ata/libata-core.c
-+++ linux-2.6.22.noarch/drivers/ata/libata-core.c
-@@ -3787,6 +3787,7 @@ static const struct ata_blacklist_entry 
- 	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
- 	/* NCQ is broken */
- 	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
-+	{ "Maxtor 6B200M0",	"BANC1BM0",	ATA_HORKAGE_NONCQ },
- 	{ "Maxtor 6B200M0",	"BANC1B10",	ATA_HORKAGE_NONCQ },
- 	/* NCQ hard hangs device under heavier load, needs hard power cycle */
- 	{ "Maxtor 6B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ },
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 1df9416..939be94 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -347,7 +347,7 @@ static inline int ata_drive_40wire(const u16 *dev_id)
+>  {
+>  	if (ata_id_major_version(dev_id) >= 5 && ata_id_is_sata(dev_id))
+>  		return 0;	/* SATA */
+> -	if (dev_id[93] & 0x4000)
+> +	if ((dev_id[93] & 0xE000) == 0x6000)
+>  		return 0;	/* 80 wire */
+>  	return 1;
+>  }
+
+    Wrong, wrong as well! The correct value to compare with would be 0x4000.
+
+MBR, Sergei
