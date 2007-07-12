@@ -1,25 +1,34 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Sata_Sil24: how to disable hotplug
-Date: Thu, 12 Jul 2007 15:32:47 -0600
-Message-ID: <8202f4270707121432h1b1b7b85u7156c54748e3dc93@mail.gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: ipr using libata old-EH
+Date: Thu, 12 Jul 2007 17:17:17 -0500
+Message-ID: <4696A86D.1000300@linux.vnet.ibm.com>
+References: <46968793.8070803@garzik.org>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:32548 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935653AbXGLVcy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 17:32:54 -0400
-Received: by an-out-0708.google.com with SMTP id d31so59672and
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 14:32:53 -0700 (PDT)
-Content-Disposition: inline
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:36536 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211AbXGLWRT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Jul 2007 18:17:19 -0400
+In-Reply-To: <46968793.8070803@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+Jeff Garzik wrote:
+> I just noticed that ipr is still using the old reset and error handling 
+> methods.  Once libata-dev.git (#mv-eh, #new-eh) work is merged, ipr is 
+> the last driver that uses old error handling methods.  Please look into 
+> upgrading the driver to ->error_handler(), ->freeze(), ->thaw().
 
-I wonder if there's an official way to disable hotplug for SATA Sil24?
+I'll look into this.
 
-Thanks,
-Fajun
+-Brian
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
