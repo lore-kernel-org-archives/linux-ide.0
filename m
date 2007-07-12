@@ -1,50 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_mv: Test patch for Hightpoint RocketRaid 1740/1742
-Date: Thu, 12 Jul 2007 17:00:14 -0400
-Message-ID: <4696965E.70403@garzik.org>
-References: <20070709143841.133abb71@the-village.bc.nu>
+From: Craig Block <chblock3@yahoo.com>
+Subject: 40-wire/80-wire detection
+Date: Thu, 12 Jul 2007 14:09:20 -0700 (PDT)
+Message-ID: <527770.57572.qm@web58107.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56088 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760514AbXGLVAR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jul 2007 17:00:17 -0400
-In-Reply-To: <20070709143841.133abb71@the-village.bc.nu>
+Received: from web58107.mail.re3.yahoo.com ([68.142.236.130]:41321 "HELO
+	web58107.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S964901AbXGLVQB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 17:16:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Underneath all the HPT packaging, PCI identifiers, binary driver modules
-> and stuff you find that ...
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> --- drivers/ata/sata_mv.c~	2007-07-09 13:19:57.003052904 +0100
-> +++ drivers/ata/sata_mv.c	2007-07-09 13:19:57.004052752 +0100
-> @@ -573,6 +573,9 @@
->  	{ PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
->  	{ PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
->  	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
-> +	/* RocketRAID 1740/174x have different identifiers */
-> +	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
-> +	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
+Linux kernel: version 2.6.22.1
+Chipset: VIA VT8363 + VT82C686A
+Hard drives: Quantum Fireball LCT10 (UDMA66)
 
-If your testers could re-test on top of what I just submitted to Linus, 
-that would be most helpful.  My non-RocketRAID 5081 works just fine, but 
-sata_mv received some major changes and bug fixes, which could 
-potentially change behavior here.
+I'm having a problem with the 80-wire/40-wire cable detection in the
+ata driver.  Even when I configure the kernel with IDEDMA_IVB set, I
+still get the 40-wire speed downgrade on hda.
 
-Since we're guessing (I assume?), I definitely want to make sure we have 
-the correct MV variant for use with RocketRAID.
+Why did you guys put that 80-wire/40-wire cable detection in the ata
+driver anyway?  Since when is it your job to police me in making sure
+I'm using the correct cable on my drives.  
 
-Any idea if RocketRAID is marketed as SATA-II or with NCQ support? 
-("queueing" in marketing lit doesn't help, alas).
+This is a pefect example of why I feel Linux isn't worth the trouble. 
+If it weren't free of cost, I wouldn't go near it.  But then again, I
+guess you get what you pay for so I shouldn't complain.
 
-	Jeff
+Regards,
+
+  - Craig
 
 
-
+       
+____________________________________________________________________________________
+Looking for a deal? Find great prices on flights and hotels with Yahoo! FareChase.
+http://farechase.yahoo.com/
