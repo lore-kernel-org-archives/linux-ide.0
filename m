@@ -1,41 +1,54 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
-Date: Thu, 12 Jul 2007 11:42:47 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org>
-References: <20070711200538.GA7374@havoc.gtf.org>
- <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: fix drive side 80c cable check, take 2
+Date: Thu, 12 Jul 2007 22:45:52 +0400
+Message-ID: <469676E0.70009@ru.mvista.com>
+References: <20070205074713.GF1625@htj.dyndns.org> <20070205111837.1981bda2@localhost.localdomain> <20070205124713.GL1625@htj.dyndns.org> <46967428.5090402@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from twinlark.arctic.org ([207.29.250.54]:35589 "EHLO
-	twinlark.arctic.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755670AbXGLSmt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 14:42:49 -0400
-In-Reply-To: <46960225.5000502@garzik.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:36794 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755021AbXGLSnw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 14:43:52 -0400
+In-Reply-To: <46967428.5090402@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dave@thedillows.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, bzolnier@gmail.com, stable@kernel.org, linux-ide@vger.kernel.org
 
-On Thu, 12 Jul 2007, Jeff Garzik wrote:
+Hello, I wrote:
 
-> dean gaudet wrote:
-> > oh very nice... no warnings on boot, and no warnings while i "dd if=/dev/sdX
-> > of=/dev/null" and i'm seeing 74MB/s+ from each disk on this simple read
-> > test.
-> > 
-> > for lack of a better test i started an untar/diff stress test on the
-> > disks... we'll see how it goes.  (it's based on doug ledford's memtest.sh)
-> 
-> Thanks for the testing.  Looks like we might have hit on something good...
+>> eighty_ninty_three() had word 93 validitity check but not the 80c bit
+>> test itself (bit 12).  This increases the chance of incorrect wire
+>> detection especially because host side cable detection is often
+>> unreliable and we sometimes soley depend on drive side cable
+>> detection.  Fix it.
 
-yep this does look good.  no problems overnight in the untar/diff/rm 
-workload.  if you've got any other workload you'd like me to throw at it, 
-let me know.  i might be able to scare up a disk or two with errors to 
-check error handling.
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-i tested hotplug just for kicks... no luck there :)  but then you didn't 
-say that would work yet.
+>> diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
+>> index badde63..6558055 100644
+>> --- a/drivers/ide/ide-iops.c
+>> +++ b/drivers/ide/ide-iops.c
+>> @@ -607,6 +607,8 @@ u8 eighty_ninty_three (ide_drive_t *drive)
+>>      if(!(drive->id->hw_config & 0x4000))
+>>          return 0;
+>>  #endif /* CONFIG_IDEDMA_IVB */
+>> +    if (!(drive->id->hw_config & 0x2000))
+>> +        return 0;
 
-thanks!
--dean
+>    Haha, you know just *why* this was wrong? Bit 13 of the word 93 when 
+> *set* means 40c cable, not 80c!  Look at the table 9 in ATA/PI-6, for 
+> example, and then into the bit description in the table 27.
+
+    Oops, that's a host side detection, the device side CBLID- seems to have 
+the opposite levels. Should have really be looking at the table 8. :-<
+
+>>      return 1;
+>>  }
+
+    Actually, trying to find out why 'hdparm -i' clips the modes to udma2 
+sometimes...
+
+MBR, Sergei
