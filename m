@@ -1,22 +1,23 @@
-From: perazim@portugalmail.pt
-Subject: trouble with silicon image 680
-Date: Thu, 12 Jul 2007 20:07:24 +0100
-Message-ID: <1184267244.46967becb38c2@gold3.portugalmail.pt>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: ipr using libata old-EH
+Date: Thu, 12 Jul 2007 15:57:07 -0400
+Message-ID: <46968793.8070803@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from galadriel.portugalmail.pt ([195.245.179.73]:47541 "EHLO
-	galadriel.portugalmail.pt" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbXGLTdd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 15:33:33 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Trying to upgrade from FC4 to F7. Linux version 2.6.14-1.1656_FC4. Sorry but don't know the F7 kernel specifics. If this is a propblem, I will get them for you. Have Kouwell 571-B PCI ATA-133 card with the Silicon Image 0680 chipset connected to two dvd drives. Bios on card is most recent from SI website. When kernel boots, message is "pata_sil680: probe of 0000:00:0b.0 failed with error -16". This configuration worked fine in FC4. Have several systems with same hardware config and they all do this so it is not a failed card.
+I just noticed that ipr is still using the old reset and error handling 
+methods.  Once libata-dev.git (#mv-eh, #new-eh) work is merged, ipr is 
+the last driver that uses old error handling methods.  Please look into 
+upgrading the driver to ->error_handler(), ->freeze(), ->thaw().
 
-Is there a problem with the kernel?
+Thanks.
 
-Thanks
+	Jeff
+
+
