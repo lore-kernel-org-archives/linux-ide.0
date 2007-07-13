@@ -1,73 +1,46 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Problem with SiS Ide/Pata/Sata on 2.6.22-rc7-git4
-Date: Fri, 13 Jul 2007 23:32:59 +0200
-Message-ID: <200707132332.59245.bzolnier@gmail.com>
-References: <4692A7C3.9030802@mandriva.org> <20070709232742.004def28@the-village.bc.nu> <4693F16A.4050709@mandriva.org>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH 1/6] icside: fix ->speedproc to return on unsupported modes
+Date: Fri, 13 Jul 2007 22:39:48 +0100
+Message-ID: <20070713213948.GA18000@flint.arm.linux.org.uk>
+References: <200707110200.37607.bzolnier@gmail.com> <200707112321.41597.bzolnier@gmail.com> <46967FA8.4090406@ru.mvista.com> <200707132302.04065.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:9157 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756775AbXGMVbN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 17:31:13 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so42357nfb
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 14:31:10 -0700 (PDT)
-In-Reply-To: <4693F16A.4050709@mandriva.org>
+Received: from caramon.arm.linux.org.uk ([217.147.92.249]:32992 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753837AbXGMVkI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 17:40:08 -0400
 Content-Disposition: inline
+In-Reply-To: <200707132302.04065.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
+On Fri, Jul 13, 2007 at 11:02:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> weeeeee, take 3
 
-Hi,
+I'm probably going to drop this driver as soon as the PATA people get
+their finger(s) out and respond to the issues I raised when merging
+the pata_icside driver.
 
-On Tuesday 10 July 2007, Thomas Backlund wrote:
-> Alan Cox skrev:
-> >> If you modprobe only sis5513
-> >>   OR
-> >> If you modprobe only sis5513 and then sata_sis/pata_sis:
-> >>   - you get this:
-> >>     (the hdb drive does not get detected/usable)
-> > 
-> > Don't mix old and new IDE like that. We allow both so you can use old SIS
-> > and new Jmicron etc for example but there are some cases where trying to
-> > load both old and new IDE support for the same chip will do strange
-> > things.
-> > 
+> v3:
+> * Remove no longer needed initialization/checking of cycle_time
+>   (Noticed by Sergei).
 > 
-> But there is still a regression here compared to 2.6.17...
+> * No need to set drive->drive_data if DMA is not going to be used
+>   (Noticed by Sergei).
 > 
-> If you load only sis5513 on a 2.6.22 you still get:
-> --- quote ---
-> <6>SIS5513: chipset revision 1
-> <6>SIS5513: not 100% native mode: will probe irqs later
-> <6>SIS5513: SiS 962/963 MuTIOL IDE UDMA133 controller
-> <6>    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:pio, hdb:pio
-> <6>    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
-> <7>Probing IDE interface ide0...
-> <4>hdb: QUANTUM FIREBALLlct15 07, ATA DISK drive
-> <4>hdb: host side 80-wire cable detection failed, limiting max speed to 
-> UDMA33
-> <7>hdb: selected mode 0x42
-> --- quote ---
+> * Remove incorrect setting of drive->current_speed
+>   (Noticed by Sergei).
 > 
-> wich does not happend on 2.6.17...
+> * Move ide_config_drive_speed() at the end of icside_set_speed().
 
-I'm a bit confused here.  Do you mean that the warning message
-is not printed or that disk is not limited to UDMA33?
+What happens if we set a DMA mode but ide_config_drive_speed()
+fails?  Wouldn't we set drive_data to the timing for that mode
+and start to use it for future DMA accesses?
 
-Could you send "hdb" part of 2.6.17 dmesg?
-
-> The disk in question is ATA66 capable
-
-Please send output of "hdparm --Istdout /dev/hdb" command.
-
-This is probably one of the early ATA66 disks with the buggy device side
-cable detection.  CONFIG_IDEDMA_IVB=y should help but I'm currently working
-on adding automatic detection of such disks.
-
-Thanks,
-Bart
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
