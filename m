@@ -1,39 +1,38 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/7] sata_promise: pdc_freeze() semantic change
-Date: Fri, 13 Jul 2007 18:07:28 +0900
-Message-ID: <469740D0.4000104@gmail.com>
-References: <200707071908.l67J8D5W010862@harpo.it.uu.se> <4693AE87.6070304@gmail.com>
+Subject: Re: trouble with silicon image 680
+Date: Fri, 13 Jul 2007 18:14:02 +0900
+Message-ID: <4697425A.5020209@gmail.com>
+References: <1184267244.46967becb38c2@gold3.portugalmail.pt>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:8054 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933826AbXGMJHf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 05:07:35 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so506494wah
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 02:07:35 -0700 (PDT)
-In-Reply-To: <4693AE87.6070304@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.229]:2207 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761026AbXGMJOK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 05:14:10 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so393396nze
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 02:14:07 -0700 (PDT)
+In-Reply-To: <1184267244.46967becb38c2@gold3.portugalmail.pt>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>, albertl@mail.com
-Cc: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, dwm@enoyolf.org, linux-ide@vger.kernel.org, mlord@pobox.com
+To: perazim@portugalmail.pt
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mikael Pettersson wrote:
->> Albert's patch is OK as far as sata_promise is concerned, but
->> I want to see an update of libata.tmpl and libata-eh.c to
->> indicate the new, weakened, specification of freeze/thaw before
->> I ACK this patch.
+perazim@portugalmail.pt wrote:
+> Trying to upgrade from FC4 to F7. Linux version 2.6.14-1.1656_FC4.
+> Sorry but don't know the F7 kernel specifics. If this is a propblem,
+> I will get them for you. Have Kouwell 571-B PCI ATA-133 card with the
+> Silicon Image 0680 chipset connected to two dvd drives. Bios on card
+> is most recent from SI website. When kernel boots, message is
+> "pata_sil680: probe of 0000:00:0b.0 failed with error -16". This
+> configuration worked fine in FC4. Have several systems with same
+> hardware config and they all do this so it is not a failed card.
+> 
+> Is there a problem with the kernel?
 
-Hmmm.... The docbook document is too stale at this point.  It needs
-major rewrite.  Also, I don't really think docbook is a good format for
-this type of documentation.  Can we switch to formatted plain text which
-can be converted to other formats?  Or use some form of inlined comment
-for callback documentation which can be gathered and formatted
-automatically?
-
-Albert, do you mind updating the comment in libata-eh.c?
+-ENEEDMOREINFO.  Please try vanilla 2.6.22 and post full dmesg and the
+result of 'lspci -nnvvv'.
 
 -- 
 tejun
