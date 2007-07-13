@@ -1,33 +1,34 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 06/15] sata_sil24: separate out sil24_exec_polled_cmd()
-Date: Fri, 13 Jul 2007 12:06:46 +0900
-Message-ID: <4696EC46.7060308@gmail.com>
-References: <11832872551258-git-send-email-htejun@gmail.com> <46968E50.9040505@garzik.org>
+Subject: Re: [PATCH libata-dev#upstream-fixes] libata: fix drive side 80c
+ cable check, take 3
+Date: Fri, 13 Jul 2007 13:12:39 +0900
+Message-ID: <4696FBB7.2030806@gmail.com>
+References: <20070205074535.GE1625@htj.dyndns.org> <20070205105744.6f22fc7d@localhost.localdomain> <20070205124106.GK1625@htj.dyndns.org> <20070205132706.1ff6d761@localhost.localdomain> <20070205142119.GM1625@htj.dyndns.org> <4696758F.7040403@ru.mvista.com> <469677EC.703@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:40765 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759396AbXGMDKZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jul 2007 23:10:25 -0400
-Received: by py-out-1112.google.com with SMTP id d32so539933pye
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 20:10:24 -0700 (PDT)
-In-Reply-To: <46968E50.9040505@garzik.org>
+Received: from wa-out-1112.google.com ([209.85.146.177]:4219 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbXGMEMo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 00:12:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so438344wah
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 21:12:43 -0700 (PDT)
+In-Reply-To: <469677EC.703@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Separate out sil24_exec_polled_cmd() from sil24_softreset().  This
->> will be used to implement sil24_pmp_read/write().
+Sergei Shtylyov wrote:
+>>    Wrong, wrong as well! The correct value to compare with would be
+>> 0x4000.
 > 
-> you should order patches like these near the top of the first patchset,
-> since they are so easy and quick to review and merge.
+>    Sorry for the false alarm -- those opposite senses on CBLID- have
+> really confused me. :-<
 
-Alright, will move.
+Yeah, all those cable detection mess plays tricks on minds.  PATA is
+really screwed up in that area.
 
 -- 
 tejun
