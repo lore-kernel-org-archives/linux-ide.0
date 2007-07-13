@@ -1,34 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev#upstream-fixes] libata: fix drive side 80c
- cable check, take 3
-Date: Fri, 13 Jul 2007 13:12:39 +0900
-Message-ID: <4696FBB7.2030806@gmail.com>
-References: <20070205074535.GE1625@htj.dyndns.org> <20070205105744.6f22fc7d@localhost.localdomain> <20070205124106.GK1625@htj.dyndns.org> <20070205132706.1ff6d761@localhost.localdomain> <20070205142119.GM1625@htj.dyndns.org> <4696758F.7040403@ru.mvista.com> <469677EC.703@ru.mvista.com>
+From: greg <greg-dated-1184731565.7e0579@lucidsolutions.co.nz>
+Subject: Re: [RFT][PATCH v7] =?utf-8?b?c2F0YV9tdjo=?= convert to new EH
+Date: Fri, 13 Jul 2007 04:09:05 +0000 (UTC)
+Message-ID: <loom.20070713T053938-434@post.gmane.org>
+References: <20070711200538.GA7374@havoc.gtf.org> <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org> <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:4219 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713AbXGMEMo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 00:12:44 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so438344wah
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 21:12:43 -0700 (PDT)
-In-Reply-To: <469677EC.703@ru.mvista.com>
+Received: from main.gmane.org ([80.91.229.2]:37809 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750755AbXGMEPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jul 2007 00:15:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1I9CYY-0003YK-EI
+	for linux-ide@vger.kernel.org; Fri, 13 Jul 2007 06:15:02 +0200
+Received: from mta.lucidsolutions.co.nz ([202.154.159.217])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 06:15:02 +0200
+Received: from greg-dated-1184731565.7e0579 by mta.lucidsolutions.co.nz with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 06:15:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
+To: linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
->>    Wrong, wrong as well! The correct value to compare with would be
->> 0x4000.
-> 
->    Sorry for the false alarm -- those opposite senses on CBLID- have
-> really confused me. :-<
+dean gaudet <dean <at> arctic.org> writes:
+> if you've got any other workload you'd like me to throw at it, 
+> let me know.  
 
-Yeah, all those cable detection mess plays tricks on minds.  PATA is
-really screwed up in that area.
+I've had a few problems with the driver in 2.6.20 (fc6xen x86_64). The machine 
+tended to lock up after a random period of time (from a few minutes upwards), 
+without any messages. Performing a smartctl on all the disks, or leaving smartd 
+running, seemed to speed up the rate at which the crash occurred. What I found 
+was that by moving the sata_mv device onto it's own bus (or a bus with two 
+sata_mv devices), the crashes went away. Are you doing tests with the 
+controller sharing a bus with other devices?
 
--- 
-tejun
+Is there an merit to my observation that it might be an issue with devices 
+sharing a PCI-X bus?
+
+Cards: Supermicro 5081 (SAT-MV8), Supermicro 6081 (SAT2-MV8), Highpoint 5081 
+(RocketRaid 1820A v1.1). Motherboards: Tyan S2882, AMD 8131 chipset; IBM x206, 
+Intel 6300ESB.
+
