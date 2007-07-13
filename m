@@ -1,51 +1,51 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
-Date: Fri, 13 Jul 2007 19:21:34 +0400
-Message-ID: <4697987E.3040406@ru.mvista.com>
-References: <20070221011922.GA1777@freefall.freebsd.org>	<200702210342.20775.bzolnier@gmail.com>	<466EEFD6.9030001@ru.mvista.com>	<200706160123.55636.bzolnier@gmail.com>	<4693D9B6.4090408@ru.mvista.com> <20070713161612.2f2ebb0b@the-village.bc.nu> <46979652.6040201@rtr.ca>
+Subject: Re: [PATCH 5/6] sgiioc4: use ide_tune_dma()
+Date: Fri, 13 Jul 2007 19:25:19 +0400
+Message-ID: <4697995F.6070004@ru.mvista.com>
+References: <200707110206.07157.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:44334 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:44366 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755575AbXGMPTd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jul 2007 11:19:33 -0400
-In-Reply-To: <46979652.6040201@rtr.ca>
+	id S1755522AbXGMPXQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jul 2007 11:23:16 -0400
+In-Reply-To: <200707110206.07157.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>
 
 Hello.
 
-Mark Lord wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->> O> >>    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, 
->> and if DMA is
+> * Add DRV_NAME define and use it instead of sgiioc4_chipset.name.
 
->>>>> not complete or interrupt pending, it may wait 10 more secs...
->>>>
->>>> I really don't remember... :)
->>>> Maybe Mark or Alan could help with figuring this out.
+> * Remove no longer needed sgiioc4_chipset.
 
->>>     They also have probably forgotten. :-)
+> * Remove needless clearing of ->atapi_dma from ide_dma_sgiioc4().
 
->> Because that value seemed to work ok. Mark set the timeouts way back in
->> history and I never touched most of them.
-> 
-> 
-> I've lost the original question from this thread, but the idea of the 
+> * Fix ide_dma_sgiioc4() to return success/failure.  Check return value in
+>   sgiioc4_ide_setup_pci_device() and set hwif->autodma accordingly.  Also add
+>   missing setting of drive->autodma.
 
-    The original question concerned specifically the DMA command timeout which 
-is twice more than the usual one, WAIT_CMD (10 seconds).
+> * Add sgiioc4_speedproc() (implementation of ->speedproc method).
 
-> longish
-> timeouts was that drive *may* be spun down ("standby"), and thus have to 
-> spin
-> up again to complete media commands.  Back then, drives were much slower at
-> spinning up than nowadays, and the ATA spec says to allow up to 30 seconds.
+> * Fix ->mwdma_mask (MWDMA2 mask is 0x04 not 0x02) and remove incorrect
+>   ->swdma_mask.  Also remove needless initialization of ->ultra_mask.
 
-    Well, that doesn't explain the DMA case.
+> * Use ide_tune_dma() in sgiioc4_ide_dma_check(), this fixes following bugs:
+>   - DMA capability bit not being checked on the device
+>   - DMA blacklist not being checked
+>   - MWDMA2 mode support by device not being checked
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+    Nice cleanups...
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
+
