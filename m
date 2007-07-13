@@ -1,230 +1,143 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/6] icside: fix ->speedproc to return on unsupported modes
-Date: Fri, 13 Jul 2007 23:02:03 +0200
-Message-ID: <200707132302.04065.bzolnier@gmail.com>
-References: <200707110200.37607.bzolnier@gmail.com> <200707112321.41597.bzolnier@gmail.com> <46967FA8.4090406@ru.mvista.com>
+Subject: [PATCH] it8213: PIO fixes (take 2)
+Date: Fri, 13 Jul 2007 23:03:09 +0200
+Message-ID: <200707132303.09330.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:44346 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.169]:44974 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837AbXGMVbE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 17:31:04 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so647444ugf
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 14:31:03 -0700 (PDT)
-In-Reply-To: <46967FA8.4090406@ru.mvista.com>
+	with ESMTP id S1755070AbXGMVbG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 17:31:06 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so647448ugf
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 14:31:05 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Thursday 12 July 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>Moreover, I think the patch is quite broken.  If an invalid DMA mode
-> >>is passed, currently the driver sets the cycle time to 480ns (stored
-> >>in drive_data) since both cycle_time and use_dma_info will be zero.
-> >>Moreover, 'on' will be zero, causing icside_set_speed() to return zero
-> >>which means the DMA setting was not successful (iow, use PIO).
-> 
-> > Thanks for spotting this.  The patch in the current form is indeed broken
-> > as I haven't noticed that icside_set_speed() returns zero on failure.
-> 
->     You're not the only one.
-> 
-> > However all other implementations of ->speedproc return zero on success
-> > and non-zero on failure.  Currently it doesn't matter for icside host
-> > driver and isn't a bug per se since:
-> 
-> > - ide_set_xfer_rate() return value is ignored by all IDE core users
-> 
->     Indeed. So my accusation of breaking the usermode interface (and UltraDMA
-> downgrade) was too rash. :-<
-> 
-> > - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
-> 
->     Yeah, that was rash too. :-<
-> 
-> > but sooner or later we will need to fix anyway - so lets do it now.
-> 
-> > It also seems to cleanup icside_dma_check() a bit since return value
-> > invertion is no longer needed.
-> 
-> 
-> > [PATCH] icside: fix ->speedproc to return on unsupported modes (take 2)
-> 
-> > * All other implementations of ->speedproc return zero on success
-> >   and non-zero on failure.  Currently it doesn't matter for icside host
-> >   driver and isn't a bug per se since:
-> 
-> >   - ide_set_xfer_rate() return value is ignored by all IDE core users
-> 
-> >   - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
-> 
-> >   but sooner or later we will need to fix anyway - so lets do it now.
-> 
-> > * icside_set_speed() happily accepts unsupported transfer modes which
-> >   results in drive->drive_data being set to the maximum value (480)
-> >   and drive->current_speed being set to the unsupported transfer mode.
-> 
->     I don't understand why it needs to bother setting drive->current_speed at 
-> all to begin with.
-> 
-> >   Fix it.
-> 
-> > v2:
-> > - The initial version of the patch was broken because it didn't take into
-> >   the account (the different from usual) return values of icside_set_speed().
-> >   (Noticed by Russell).
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
->     Looks like the patch still needs more polishing:
-> 
-> > Index: b/drivers/ide/arm/icside.c
-> > ===================================================================
-> > --- a/drivers/ide/arm/icside.c
-> > +++ b/drivers/ide/arm/icside.c
-> > @@ -250,7 +250,7 @@ static void icside_build_sglist(ide_driv
-> >   */
-> >  static int icside_set_speed(ide_drive_t *drive, const u8 xfer_mode)
-> >  {
-> > -	int on = 0, cycle_time = 0, use_dma_info = 0;
-> > +	int on = -1, cycle_time = 0, use_dma_info = 0;
-> 
->     We don't need to pre-initialize cycle_time anymore.
-> 
-> >  	switch (xfer_mode) {
-> >  	case XFER_MW_DMA_2:
-> > @@ -272,6 +272,8 @@ static int icside_set_speed(ide_drive_t 
-> >  	case XFER_SW_DMA_0:
-> >  		cycle_time = 480;
-> >  		break;
-> > +	default:
-> > +		return 1;
-> >  	}
-> >  
-> >  	/*
-> > @@ -284,7 +286,7 @@ static int icside_set_speed(ide_drive_t 
-> >  	drive->drive_data = cycle_time;
-> >  
-> >  	if (cycle_time && ide_config_drive_speed(drive, xfer_mode) == 0)
-> 
->     Now cycle_time can't be 0 here, so the first condition may be dropped.
-> 
-> > -		on = 1;
-> > +		on = 0;
-> >  	else
-> >  		drive->drive_data = 480;
-> 
->     I'm not sure that this really makes sense now.
 
-weeeeee, take 3
+* Rename it8213_tuneproc() to it8213_tune_pio() and add it8213_tuneproc()
+  wrapper.  Move finding of the best PIO mode to the new wrapper.
 
-[PATCH] icside: fix ->speedproc to return on unsupported modes (take 3)
+* Add setting of transfer mode on the device to it8213_tuneproc().
 
-* All other implementations of ->speedproc return zero on success
-  and non-zero on failure.  Currently it doesn't matter for icside host
-  driver and isn't a bug per se since:
+* Don't call it8213_dma_2_pio() for PIO modes in it8213_tune_chipset().
 
-  - ide_set_xfer_rate() return value is ignored by all IDE core users
-
-  - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
-
-  but sooner or later we will need to fix anyway - so lets do it now.
-
-* icside_set_speed() happily accepts unsupported transfer modes which
-  results in drive->drive_data being set to the maximum value (480)
-  and drive->current_speed being set to the unsupported transfer mode.
-
-  Fix it.
+* Use it8213_tuneproc() in it8213_config_drive_for_dma().
 
 v2:
-* The initial version of the patch was broken because it didn't take into
-  the account (the different from usual) return values of icside_set_speed()
-  (Noticed by Russell).
-
-v3:
-* Remove no longer needed initialization/checking of cycle_time
-  (Noticed by Sergei).
-
-* No need to set drive->drive_data if DMA is not going to be used
-  (Noticed by Sergei).
-
-* Remove incorrect setting of drive->current_speed
-  (Noticed by Sergei).
-
-* Move ide_config_drive_speed() at the end of icside_set_speed().
+* Remove PIO modes from it8213_dma_2_pio(), they are no longer needed there
+  (Noticed by Sergei)
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Russell King <rmk@arm.linux.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
- drivers/ide/arm/icside.c |   18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+ drivers/ide/pci/it8213.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-Index: b/drivers/ide/arm/icside.c
+Index: b/drivers/ide/pci/it8213.c
 ===================================================================
---- a/drivers/ide/arm/icside.c
-+++ b/drivers/ide/arm/icside.c
-@@ -250,7 +250,7 @@ static void icside_build_sglist(ide_driv
+--- a/drivers/ide/pci/it8213.c
++++ b/drivers/ide/pci/it8213.c
+@@ -21,7 +21,7 @@
+  *	it8213_dma_2_pio		-	return the PIO mode matching DMA
+  *	@xfer_rate: transfer speed
+  *
+- *	Returns the nearest equivalent PIO timing for the PIO or DMA
++ *	Returns the nearest equivalent PIO timing for the DMA
+  *	mode requested by the controller.
   */
- static int icside_set_speed(ide_drive_t *drive, const u8 xfer_mode)
+ 
+@@ -35,34 +35,28 @@ static u8 it8213_dma_2_pio (u8 xfer_rate
+ 		case XFER_UDMA_1:
+ 		case XFER_UDMA_0:
+ 		case XFER_MW_DMA_2:
+-		case XFER_PIO_4:
+ 			return 4;
+ 		case XFER_MW_DMA_1:
+-		case XFER_PIO_3:
+ 			return 3;
+ 		case XFER_SW_DMA_2:
+-		case XFER_PIO_2:
+ 			return 2;
+ 		case XFER_MW_DMA_0:
+ 		case XFER_SW_DMA_1:
+ 		case XFER_SW_DMA_0:
+-		case XFER_PIO_1:
+-		case XFER_PIO_0:
+-		case XFER_PIO_SLOW:
+ 		default:
+ 			return 0;
+ 	}
+ }
+ 
+ /*
+- *	it8213_tuneproc	-	tune a drive
++ *	it8213_tune_pio	-	tune a drive
+  *	@drive: drive to tune
+  *	@pio: desired PIO mode
+  *
+  *	Set the interface PIO mode.
+  */
+ 
+-static void it8213_tuneproc (ide_drive_t *drive, u8 pio)
++static void it8213_tune_pio(ide_drive_t *drive, const u8 pio)
  {
--	int on = 0, cycle_time = 0, use_dma_info = 0;
-+	int cycle_time, use_dma_info = 0;
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	struct pci_dev *dev	= hwif->pci_dev;
+@@ -82,8 +76,6 @@ static void it8213_tuneproc (ide_drive_t
+ 					{ 2, 1 },
+ 					{ 2, 3 }, };
  
- 	switch (xfer_mode) {
- 	case XFER_MW_DMA_2:
-@@ -272,6 +272,8 @@ static int icside_set_speed(ide_drive_t 
- 	case XFER_SW_DMA_0:
- 		cycle_time = 480;
- 		break;
-+	default:
-+		return 1;
- 	}
- 
- 	/*
-@@ -283,17 +285,10 @@ static int icside_set_speed(ide_drive_t 
- 
- 	drive->drive_data = cycle_time;
- 
--	if (cycle_time && ide_config_drive_speed(drive, xfer_mode) == 0)
--		on = 1;
--	else
--		drive->drive_data = 480;
+-	pio = ide_get_best_pio_mode(drive, pio, 4);
 -
- 	printk("%s: %s selected (peak %dMB/s)\n", drive->name,
- 		ide_xfer_verbose(xfer_mode), 2000 / drive->drive_data);
+ 	spin_lock_irqsave(&tune_lock, flags);
+ 	pci_read_config_word(dev, master_port, &master_data);
  
--	drive->current_speed = xfer_mode;
--
--	return on;
-+	return ide_config_drive_speed(drive, xfer_mode);
+@@ -113,6 +105,13 @@ static void it8213_tuneproc (ide_drive_t
+ 	spin_unlock_irqrestore(&tune_lock, flags);
  }
  
- static void icside_dma_host_off(ide_drive_t *drive)
-@@ -321,7 +316,6 @@ static int icside_dma_check(ide_drive_t 
- 	struct hd_driveid *id = drive->id;
- 	ide_hwif_t *hwif = HWIF(drive);
- 	int xfer_mode = XFER_PIO_2;
--	int on;
- 
- 	if (!(id->capability & 1) || !hwif->autodma)
- 		goto out;
-@@ -350,9 +344,7 @@ static int icside_dma_check(ide_drive_t 
++static void it8213_tuneproc(ide_drive_t *drive, u8 pio)
++{
++	pio = ide_get_best_pio_mode(drive, pio, 4);
++	it8213_tune_pio(drive, pio);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
++}
++
+ /**
+  *	it8213_tune_chipset	-	set controller timings
+  *	@drive: Drive to set up
+@@ -193,7 +192,12 @@ static int it8213_tune_chipset (ide_driv
+ 		if (reg55 & w_flag)
+ 			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
  	}
- 
- out:
--	on = icside_set_speed(drive, xfer_mode);
--
--	return on ? 0 : -1;
-+	return icside_set_speed(drive, xfer_mode);
+-	it8213_tuneproc(drive, it8213_dma_2_pio(speed));
++
++	if (speed > XFER_PIO_4)
++		it8213_tune_pio(drive, it8213_dma_2_pio(speed));
++	else
++		it8213_tune_pio(drive, speed - XFER_PIO_0);
++
+ 	return ide_config_drive_speed(drive, speed);
  }
  
- static int icside_dma_end(ide_drive_t *drive)
+@@ -209,13 +213,10 @@ static int it8213_tune_chipset (ide_driv
+ 
+ static int it8213_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	u8 pio;
+-
+ 	if (ide_tune_dma(drive))
+ 		return 0;
+ 
+-	pio = ide_get_best_pio_mode(drive, 255, 4);
+-	it8213_tune_chipset(drive, XFER_PIO_0 + pio);
++	it8213_tuneproc(drive, 255);
+ 
+ 	return -1;
+ }
