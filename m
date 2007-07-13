@@ -1,77 +1,45 @@
-From: Ryan Power <rpower@sysreset.com>
-Subject: Spinup command fails on WD3200JS
-Date: Fri, 13 Jul 2007 00:14:18 -0600
-Message-ID: <6.2.0.14.2.20070713000748.031a2660@linux.sysreset.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 5/7] libata: integrate freeze/thaw with irq_on/off
+Date: Fri, 13 Jul 2007 15:51:29 +0900
+Message-ID: <469720F1.3000907@gmail.com>
+References: <468F3949.5050800@tw.ibm.com> <468F3CE2.9080709@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.sysreset.com ([209.97.229.250]:30833 "EHLO sysreset"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756939AbXGMGaY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jul 2007 02:30:24 -0400
+Received: from rv-out-0910.google.com ([209.85.198.187]:48406 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934719AbXGMGvf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 02:51:35 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so3256rvb
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 23:51:35 -0700 (PDT)
+In-Reply-To: <468F3CE2.9080709@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@enoyolf.org>, Mark Lord <mlord@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
 
-Hi.
-I've run into a problem with the lastest kernel (2.6.22.1) and a drive set 
-to spinup on set_features.
+Hello,
 
-hdparm reports:
-/dev/sdf:
+> +void ata_irq_on(struct ata_port *ap)
+>  {
+>  	struct ata_ioports *ioaddr = &ap->ioaddr;
+> -	u8 tmp;
+>  
+>  	ap->ctl &= ~ATA_NIEN;
+>  	ap->last_ctl = ap->ctl;
+>  
+>  	iowrite8(ap->ctl, ioaddr->ctl_addr);
+> -	tmp = ata_wait_idle(ap);
+> +	ata_wait_idle(ap);
+>  
+>  	ap->ops->irq_clear(ap);
+> -
+> -	return tmp;
+>  }
 
-ATA device, with non-removable media
-powers-up in standby; SET FEATURES subcmd spins-up.
-         Model Number:       WDC WD3200JS-57PDB0
-         Serial Number:      X
-         Firmware Revision:  21.00M21
-...
-Commands/features:
-         Enabled Supported:
-            *    Power-Up In Standby feature set
-            *    SET_FEATURES required to spinup after power up
-...
+Missing ata_chk_status() before clearing ATA_NIEN seems a bit dangerous
+to me.
 
-I get the following messages when booting:
-Jul 12 23:47:22 sysreset kernel: ata6: SATA link up 1.5 Gbps (SStatus 113 
-SControl 300)
-Jul 12 23:47:22 sysreset kernel: ata6.00: ATA-7: WDC WD3200JS-57PDB0, 
-21.00M21, max UDMA/133
-Jul 12 23:47:22 sysreset kernel: ata6.00: 625142448 sectors, multi 0: LBA48 
-NCQ (depth 1)
-Jul 12 23:47:22 sysreset kernel: ata6.00: failed to IDENTIFY (SPINUP 
-failed, err_mask=0x1)
-Jul 12 23:47:22 sysreset kernel: ata6.00: revalidation failed (errno=-5)
-Jul 12 23:47:22 sysreset kernel: ata6: failed to recover some devices, 
-retrying in 5 secs
-Jul 12 23:47:22 sysreset kernel: ata6: SATA link up 1.5 Gbps (SStatus 113 
-SControl 300)
-Jul 12 23:47:22 sysreset kernel: ata6.00: failed to IDENTIFY (SPINUP 
-failed, err_mask=0x1)
-Jul 12 23:47:22 sysreset kernel: ata6.00: revalidation failed (errno=-5)
-Jul 12 23:47:22 sysreset kernel: ata6.00: limiting speed to UDMA/133:PIO3
-Jul 12 23:47:22 sysreset kernel: ata6: failed to recover some devices, 
-retrying in 5 secs
-Jul 12 23:47:22 sysreset kernel: ata6: SATA link up 1.5 Gbps (SStatus 113 
-SControl 300)
-Jul 12 23:47:22 sysreset kernel: ata6.00: failed to IDENTIFY (SPINUP 
-failed, err_mask=0x1)
-Jul 12 23:47:22 sysreset kernel: ata6.00: revalidation failed (errno=-5)
-Jul 12 23:47:22 sysreset kernel: ata6.00: disabled
-
-The interesting thing is that after displaying that, the drive has in fact 
-spun up.  I'm not sure why it's getting an error returned, but chaning the 
-err_mask line to read "if (err_mask && err_mask != 0x01)" corrects the 
-problem and the drive spins up and ID's normally:
-ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata6.00: ATA-7: WDC WD3200JS-57PDB0, 21.00M21, max UDMA/133
-ata6.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 1)
-ata6.00: configured for UDMA/133
-
-If you'd like me to do any more testing or need more information from me 
-please let me know.
-Thank you.
-
--Ryan Power
-
+-- 
+tejun
