@@ -1,46 +1,50 @@
-From: greg <greg-dated-1184731565.7e0579@lucidsolutions.co.nz>
-Subject: Re: [RFT][PATCH v7] =?utf-8?b?c2F0YV9tdjo=?= convert to new EH
-Date: Fri, 13 Jul 2007 04:09:05 +0000 (UTC)
-Message-ID: <loom.20070713T053938-434@post.gmane.org>
-References: <20070711200538.GA7374@havoc.gtf.org> <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org> <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [2.6.20.15] CK804 / sata_nv: Reported link speed not as expected.
+Date: Thu, 12 Jul 2007 23:18:35 -0600
+Message-ID: <46970B2B.1040907@shaw.ca>
+References: <fa.TEHWvKEhf5s38aD0n11fk9CU28k@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:37809 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750755AbXGMEPE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jul 2007 00:15:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1I9CYY-0003YK-EI
-	for linux-ide@vger.kernel.org; Fri, 13 Jul 2007 06:15:02 +0200
-Received: from mta.lucidsolutions.co.nz ([202.154.159.217])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 06:15:02 +0200
-Received: from greg-dated-1184731565.7e0579 by mta.lucidsolutions.co.nz with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 06:15:02 +0200
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:44204 "EHLO
+	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbXGMFUh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 01:20:37 -0400
+In-reply-to: <fa.TEHWvKEhf5s38aD0n11fk9CU28k@ifi.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: koan <koan00@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-dean gaudet <dean <at> arctic.org> writes:
-> if you've got any other workload you'd like me to throw at it, 
-> let me know.  
+koan wrote:
+> Hello, I am not on list so please CC me with any responses.
+> 
+> I recently switched to an nforce4 board and have been looking over my
+> dmesg output for any oddities. This is a Slackware 12.0 machine with a
+> custom 2.6.20.15 kernel.
+> 
+> As far as I know, the motherboard is an Nforce4 based (non-ultra/sli,
+> etc) board. The exact model is Foxconn (Winfast) NF4K8AB-RS (
+> http://www.foxconnchannel.com/EN-US/Product/motherboard_detail.aspx?ID=en-gb0000027 
+> 
+> ). It has the latest BIOS available applied.
+> 
+> The product documentation states the board only supports 4x SATA150
+> connectors and that seems to match the information on this page (
+> http://www.nvidia.com/page/nforce4_family.html ). Three of the disks
+> are Seagate drives and have the SATA150 clip jumper set. However when
+> I boot, the kernel output seems to show 2 of the 4 ports operating at
+> 3 Gbps. Is this a known issue and/or something I can safely ignore?
 
-I've had a few problems with the driver in 2.6.20 (fc6xen x86_64). The machine 
-tended to lock up after a random period of time (from a few minutes upwards), 
-without any messages. Performing a smartctl on all the disks, or leaving smartd 
-running, seemed to speed up the rate at which the crash occurred. What I found 
-was that by moving the sata_mv device onto it's own bus (or a bus with two 
-sata_mv devices), the crashes went away. Are you doing tests with the 
-controller sharing a bus with other devices?
+I don't think the NVIDIA page is correct. AFAIK all nForce4 chipsets 
+support SATA 3Gbps transfer speeds.
 
-Is there an merit to my observation that it might be an issue with devices 
-sharing a PCI-X bus?
+The kernel doesn't have any control over the default speed chosen by the 
+controller in any case (though it can force it down to a lower speed).
 
-Cards: Supermicro 5081 (SAT-MV8), Supermicro 6081 (SAT2-MV8), Highpoint 5081 
-(RocketRaid 1820A v1.1). Motherboards: Tyan S2882, AMD 8131 chipset; IBM x206, 
-Intel 6300ESB.
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
