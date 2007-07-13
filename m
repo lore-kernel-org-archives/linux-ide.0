@@ -1,25 +1,35 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] sata_mv: Test patch for Hightpoint RocketRaid 1740/1742
-Date: Fri, 13 Jul 2007 15:07:39 +0100
-Message-ID: <20070713150739.6035c2dd@the-village.bc.nu>
-References: <20070709143841.133abb71@the-village.bc.nu>
-	<4696965E.70403@garzik.org>
+Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
+Date: Fri, 13 Jul 2007 16:16:12 +0100
+Message-ID: <20070713161612.2f2ebb0b@the-village.bc.nu>
+References: <20070221011922.GA1777@freefall.freebsd.org>
+	<200702210342.20775.bzolnier@gmail.com>
+	<466EEFD6.9030001@ru.mvista.com>
+	<200706160123.55636.bzolnier@gmail.com>
+	<4693D9B6.4090408@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43724 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759210AbXGMOBU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 10:01:20 -0400
-In-Reply-To: <4696965E.70403@garzik.org>
+Received: from [81.2.110.250] ([81.2.110.250]:34384 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S936283AbXGMPK1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jul 2007 11:10:27 -0400
+In-Reply-To: <4693D9B6.4090408@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Since we're guessing (I assume?), I definitely want to make sure we have 
-> the correct MV variant for use with RocketRAID.
+O> >>    BTW, why the timeout is so damn long? 2*WAIT_CMD is 20 secs, and if DMA is 
+> >>not complete or interrupt pending, it may wait 10 more secs...
+> 
+> > I really don't remember... :)
+> 
+> > Maybe Mark or Alan could help with figuring this out.
+> 
+>     They also have probably forgotten. :-)
 
-We are not guessing. There is sufficient information in the driver to
-identify the specific chip variant
+Because that value seemed to work ok. Mark set the timeouts way back in
+history and I never touched most of them.
+
