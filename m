@@ -1,34 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/6] amd74xx/via82cxxx: use ide_tune_dma()
-Date: Fri, 13 Jul 2007 20:57:08 +0400
-Message-ID: <4697AEE4.9060001@ru.mvista.com>
-References: <200707110204.42227.bzolnier@gmail.com>
+From: Craig Block <chblock3@yahoo.com>
+Subject: Re: 40-wire/80-wire detection
+Date: Fri, 13 Jul 2007 10:58:24 -0700 (PDT)
+Message-ID: <166657.81677.qm@web58101.mail.re3.yahoo.com>
+References: <46976A53.7060503@seclark.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:45082 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752262AbXGMQzG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jul 2007 12:55:06 -0400
-In-Reply-To: <200707110204.42227.bzolnier@gmail.com>
+Received: from web58101.mail.re3.yahoo.com ([68.142.236.124]:43114 "HELO
+	web58101.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754818AbXGMR62 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 13:58:28 -0400
+In-Reply-To: <46976A53.7060503@seclark.us>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Stephen.Clark@seclark.us, Jeff Garzik <jeff@garzik.org>, Matt Sealey <matt@genesi-usa.com>
 Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+> >>Craig Block wrote:
+> >>
+> >>I'm having a problem with the 80-wire/40-wire cable detection
 
-> * Use ide_tune_dma() in amd74xx/via82cxxx driver, this fixes following bugs:
->   - DMA capability bit not being checked on the device
->   - DMA blacklist not being checked
->   - DMA mode being programmed even if drive->autodma == 0
->     (thus possibly destroying PIO timings)
+> Jeff Garzik wrote:
+> >
+> >If you signal a 40-wire cable too fast, you get trouble with a
+> >capital T.
 
-> * Bump driver version.
+Thanks everyone for graciously replying to my negative email.  I was
+pretty irritated when I found I could not disable the downgrade.  
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+That's fine if the driver nags about the cable, but it should up to the
+user to deal with it.  And, like any nag, it should be possible to shut
+if off.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+As it stands, I will have to run these drives at ATA33.  My only
+recourse is to hack the driver and disable the check.  With *me*
+hacking on the code, I really run the risk of damaging my data.
 
-MBR, Sergei
+Patches anyone?
+
+
+
+
+       
+____________________________________________________________________________________Ready for the edge of your seat? 
+Check out tonight's top picks on Yahoo! TV. 
+http://tv.yahoo.com/
