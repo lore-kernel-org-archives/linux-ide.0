@@ -1,62 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_scc.c: Workaround for errata A308
-Date: Fri, 13 Jul 2007 16:45:58 +0100
-Message-ID: <20070713164558.6df8f03a@the-village.bc.nu>
-References: <200707100929.l6A9TOR8025778@toshiba.co.jp>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/6] ide-pmac: PIO fixes
+Date: Fri, 13 Jul 2007 20:12:47 +0400
+Message-ID: <4697A47F.8060704@ru.mvista.com>
+References: <200707110204.07540.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44960 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759193AbXGMPjk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 11:39:40 -0400
-In-Reply-To: <200707100929.l6A9TOR8025778@toshiba.co.jp>
+Received: from h155.mvista.com ([63.81.120.155]:44724 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754061AbXGMQKp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jul 2007 12:10:45 -0400
+In-Reply-To: <200707110204.07540.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Cc: jeff@garzik.org, kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Kyle McMartin <kyle@mcmartin.ca>
 
-> +++ linux-powerpc-git.mod/drivers/ata/pata_scc.c	2007-07-10 17:13:01.000000000 +0900
-> @@ -238,6 +238,12 @@ static void scc_set_dmamode (struct ata_
->  	else
->  		offset = 0;	/* 100MHz */
->  
-> +	/* errata A308 workaround: limit ATAPI UDMA mode to UDMA4 */
-> +	if (adev->class == ATA_DEV_ATAPI && speed > XFER_UDMA_4) {
-> +		printk(KERN_INFO "%s: limit ATAPI UDMA to UDMA4\n", DRV_NAME);
-> +		speed = XFER_UDMA_4;
-> +	}
-> +
+Hello.
 
-NAK
+Bartlomiej Zolnierkiewicz wrote:
 
-You should not be modifying the speed you set in set_dmamode. Use the
-mode_filter hook to mask the higher modes for ATAPI instead.
+> * Add { 0, 0 } entry to {kauai,shasta}_pio_timings[] so kauai_lookup_timing()
+>   always returns a valid PIO timing (fixes PIO timing not being set for devices
+>   with minimum PIO cycle <= 120ns).
 
+    Ugh... the way those tables are following each other, the driver should be 
+programming MWDMA2 timings instead. :-/
 
-> +	/* errata A252,A308 workaround: Step4 */
-> +	if (ata_altstatus(ap) & ATA_ERR && int_status & INTSTS_INTRQ)
+> * Add setting transfer mode on the device to pmac_ide_set_pio_mode().
 
-Can we have more brackets here for clarity ?
+> * Fix pmac_ide_set_pio() to always program chipset for given PIO timing instead
+>   of only when the device we want to program PIO timing for is the currently
+>   selected one.
 
-> +		/* We don't check ATAPI DMA because it is limited to UDMA4 */
-> +		if ((qc->tf.protocol == ATA_PROT_DMA &&
-> +		     qc->dev->xfer_mode > XFER_UDMA_4)) {
-> +			if (!(int_status & INTSTS_ACTEINT)) {
-> +				printk(KERN_WARNING "ata%u: data lost occurred. (ACTEINT==0, retry:%d)\n",
-> +				       ap->print_id, retry);
+    Hm, why this was necessary?
+    AFAIU, pmac_ide_do_setfeature() will cause selectproc() to be called 
+anyway, via SELECT_DRIVE()...
 
-"data loss occurred", and even that sounds veyr scary so we should
-probably try a more friendly message indicating that the user data has
-not been lost but that the operation failed
+> * Now that pmac_ide_set_pio() is fixed there is no need to set transfer mode
+>   on the device and program chipset for PIO in pmac_ide_tune_chipset()
 
-> +				host_stat |= ATA_DMA_ERR;
-> +				if (retry++)
-> +					ap->udma_mask >>= 1;
+    BTW, I'm also not seeing much sense in calling 
+pmac_ide_do_update_timings() from there as well since pmac_ide_do_setfeature() 
+is called before that anyway.
 
-NAK - you don't know that you can safely mess with modes this way.
-udma_mask might contain holes. You need to do ap->udma_mask &= ~(1 <<
-current UDMA mode);
+>   (returning 0 == success is not entirely correct but is OK for now since
+>   the upper layers are only checking ->speedproc return value for DMA modes).
 
-Alan
+> This patch should have no effect on the default kernel behavior because
+> IDE pmac driver doesn't enable ->autotune (this would also explain why some
+> of the above bugs remained unfixed for so long).
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
