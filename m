@@ -1,39 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 7/7] libata: remove ap->last_ctl
-Date: Fri, 13 Jul 2007 15:58:32 +0900
-Message-ID: <46972298.7020504@gmail.com>
-References: <468F3949.5050800@tw.ibm.com> <468F3F8B.5010200@tw.ibm.com>
+Subject: Re: [PATCH] Unbreak build of PMP with ACPI disabled
+Date: Fri, 13 Jul 2007 16:09:13 +0900
+Message-ID: <46972519.80703@gmail.com>
+References: <20070713065600.GB8320@vana.vc.cvut.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:46678 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:6464 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935841AbXGMG6j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 02:58:39 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so476453wah
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jul 2007 23:58:38 -0700 (PDT)
-In-Reply-To: <468F3F8B.5010200@tw.ibm.com>
+	with ESMTP id S1758850AbXGMHJ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 03:09:26 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so478770wah
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 00:09:26 -0700 (PDT)
+In-Reply-To: <20070713065600.GB8320@vana.vc.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@enoyolf.org>, Mark Lord <mlord@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
+To: Petr Vandrovec <petr@vandrovec.name>
+Cc: linux-ide@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
 
-Albert Lee wrote:
-> With the previous changes made to tf_load(), ap->last_ctl is now unused. Remove it.
-> 
-> (The purpose of ap->last_ctl is to cache the last status of nIEN bit
-> and hopefully avoid writing the Control register unnecessarily.
-> However, the libata polling code always call irq_on() in ata_hsm_qc_complete()
-> and such mechanism isn't much utilized.)
-> 
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Petr Vandrovec wrote:
+> Hello,
+>   first let me thank you for your PMP code.  Works great.  Though I could not
+> built it with ACPI disable - it is possible that I did merge wrong (I'm using
+> your tree with current Linus's TOT), though I do not think.  Patch is at
+> the end.
 
-Ack 6-7.  Thanks for cleaning irq on/off up.  Things should have been
-done this way from the beginning.  Also, I think removing last_ctl
-caching (or whatever is left of it) should be okay.  Only polling PIO
-path is affected and one or two more ioport accesses won't make any
-meaningful difference anyway.
+It's my screw up.  I will integrate the patch in the next round
+(scheduled for later today).
+
+> If you are interested in success report, then my dmesg is attached.  SiI3132,
+> with Sans Digital MS4UM, with SiI3726 multiplier.  Multipliers ports 0-3 are
+> connected to hotpluggable slots, port 4 is not connected anywhere, and port
+> 5 is connected to some well hidden 1.5Gbps device.
+> 
+> Only problem I've noticed is that smartctl on drives connected to sata_nv
+> needs '-T permissive', while if same drive is connected to sata_sil24's PMP,
+> it works without problem.  
+> 
+> Error SMART Status command failed
+> Please get assistance from http://smartmontools.sourceforge.net/
+> Values from ATA status return descriptor are:
+>  00     09 0c 00 00 00 00 00 00  00 00 00 00 00 50
+> A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
+
+Yeah, we seem to have some problem with passing result TF to userland in
+sata_nv (cc'ed Robert).
+
+Thanks.
 
 -- 
 tejun
