@@ -1,62 +1,73 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 40-wire/80-wire detection
-Date: Fri, 13 Jul 2007 23:39:42 +0200
-Message-ID: <200707132339.42299.bzolnier@gmail.com>
-References: <166657.81677.qm@web58101.mail.re3.yahoo.com>
+Subject: Re: Problem with SiS Ide/Pata/Sata on 2.6.22-rc7-git4
+Date: Fri, 13 Jul 2007 23:32:59 +0200
+Message-ID: <200707132332.59245.bzolnier@gmail.com>
+References: <4692A7C3.9030802@mandriva.org> <20070709232742.004def28@the-village.bc.nu> <4693F16A.4050709@mandriva.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:44974 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458AbXGMVbN (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:9157 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756775AbXGMVbN (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 17:31:13 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so647448ugf
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 14:31:12 -0700 (PDT)
-In-Reply-To: <166657.81677.qm@web58101.mail.re3.yahoo.com>
+Received: by nf-out-0910.google.com with SMTP id g13so42357nfb
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 14:31:10 -0700 (PDT)
+In-Reply-To: <4693F16A.4050709@mandriva.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Craig Block <chblock3@yahoo.com>
-Cc: Stephen.Clark@seclark.us, Jeff Garzik <jeff@garzik.org>, Matt Sealey <matt@genesi-usa.com>, linux-ide@vger.kernel.org
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
 Hi,
 
-On Friday 13 July 2007, Craig Block wrote:
-> > >>Craig Block wrote:
-> > >>
-> > >>I'm having a problem with the 80-wire/40-wire cable detection
+On Tuesday 10 July 2007, Thomas Backlund wrote:
+> Alan Cox skrev:
+> >> If you modprobe only sis5513
+> >>   OR
+> >> If you modprobe only sis5513 and then sata_sis/pata_sis:
+> >>   - you get this:
+> >>     (the hdb drive does not get detected/usable)
+> > 
+> > Don't mix old and new IDE like that. We allow both so you can use old SIS
+> > and new Jmicron etc for example but there are some cases where trying to
+> > load both old and new IDE support for the same chip will do strange
+> > things.
+> > 
 > 
-> > Jeff Garzik wrote:
-> > >
-> > >If you signal a 40-wire cable too fast, you get trouble with a
-> > >capital T.
+> But there is still a regression here compared to 2.6.17...
 > 
-> Thanks everyone for graciously replying to my negative email.  I was
-> pretty irritated when I found I could not disable the downgrade.  
+> If you load only sis5513 on a 2.6.22 you still get:
+> --- quote ---
+> <6>SIS5513: chipset revision 1
+> <6>SIS5513: not 100% native mode: will probe irqs later
+> <6>SIS5513: SiS 962/963 MuTIOL IDE UDMA133 controller
+> <6>    ide0: BM-DMA at 0xf000-0xf007, BIOS settings: hda:pio, hdb:pio
+> <6>    ide1: BM-DMA at 0xf008-0xf00f, BIOS settings: hdc:pio, hdd:pio
+> <7>Probing IDE interface ide0...
+> <4>hdb: QUANTUM FIREBALLlct15 07, ATA DISK drive
+> <4>hdb: host side 80-wire cable detection failed, limiting max speed to 
+> UDMA33
+> <7>hdb: selected mode 0x42
+> --- quote ---
 > 
-> That's fine if the driver nags about the cable, but it should up to the
-> user to deal with it.  And, like any nag, it should be possible to shut
-> if off.
+> wich does not happend on 2.6.17...
 
-"idex=ata66" parameter used to only override host side cable detection
-but to be able to deal with short 40-wire cables it now also overrides
-device side cable detection (patches were merged in Linus' tree,
-2.6.23-rc1 will have them).
+I'm a bit confused here.  Do you mean that the warning message
+is not printed or that disk is not limited to UDMA33?
 
-> As it stands, I will have to run these drives at ATA33.  My only
-> recourse is to hack the driver and disable the check.  With *me*
-> hacking on the code, I really run the risk of damaging my data.
-> 
-> Patches anyone?
+Could you send "hdb" part of 2.6.17 dmesg?
 
-Please send the output of hdparm --Istdout for this drive.
+> The disk in question is ATA66 capable
 
-"idex=ata66" or CONFIG_IDEDMA_IVB=y should also help but we really would
-like to detect and workaround such issues automatically, without the need
-for user headaches. ;)
+Please send output of "hdparm --Istdout /dev/hdb" command.
+
+This is probably one of the early ATA66 disks with the buggy device side
+cable detection.  CONFIG_IDEDMA_IVB=y should help but I'm currently working
+on adding automatic detection of such disks.
 
 Thanks,
 Bart
