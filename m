@@ -1,36 +1,71 @@
-From: "Daniel Filipiuk" <danielfilipiuk@gmail.com>
-Subject: shutdown problem with 2.6.22 and debian 4.0
-Date: Fri, 13 Jul 2007 09:07:48 -0300
-Message-ID: <366cc2df0707130507r6dcdf970nbaa2aed1a640d3f@mail.gmail.com>
+From: Stephen Clark <Stephen.Clark@seclark.us>
+Subject: Re: 40-wire/80-wire detection
+Date: Fri, 13 Jul 2007 08:04:35 -0400
+Message-ID: <46976A53.7060503@seclark.us>
+References: <527770.57572.qm@web58107.mail.re3.yahoo.com> <46969D09.4010607@garzik.org>
+Reply-To: Stephen.Clark@seclark.us
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:15346 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754876AbXGMMHu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 08:07:50 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so426268nze
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 05:07:49 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtpauth03.prod.mesa1.secureserver.net ([64.202.165.183]:48290
+	"HELO smtpauth03.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755293AbXGMMLQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 08:11:16 -0400
+In-Reply-To: <46969D09.4010607@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Craig Block <chblock3@yahoo.com>, linux-ide@vger.kernel.org
 
-Hello, I have a doubt... I have Debian 4.0 and the kernel 2.6.22
-compiled by me, and now when I shutdown my machine, appears a message
-telling that the devices (/dev/sda5 , 6 and so on..) are busy and
-cannot be unmounted, and tells me that I must update my shutdown
-utility... Then the system go halt ... It doesn=B4t seem to be any data
-loss , but I don=B4t want to leave this error message forever hoping
-that I don=B4t loose anything... With the kernel 2.6.21.5 this doesn=B4=
-t
-happened, and the mounts were succesfully unmounted. What should I do?
-Where I found this "shutdown utility" source code?
+Jeff Garzik wrote:
 
-Thank you very much, greetings,
+>Craig Block wrote:
+>  
+>
+>>Linux kernel: version 2.6.22.1
+>>Chipset: VIA VT8363 + VT82C686A
+>>Hard drives: Quantum Fireball LCT10 (UDMA66)
+>>
+>>I'm having a problem with the 80-wire/40-wire cable detection in the
+>>ata driver.  Even when I configure the kernel with IDEDMA_IVB set, I
+>>still get the 40-wire speed downgrade on hda.
+>>
+>>Why did you guys put that 80-wire/40-wire cable detection in the ata
+>>driver anyway?  Since when is it your job to police me in making sure
+>>I'm using the correct cable on my drives.  
+>>    
+>>
+>
+>If you signal a 40-wire cable too fast, you get trouble with a capital T.
+>
+>	Jeff
+>
+>
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  
+>
+This would be fine if the software could correctly figure it out. 
+Problem is it can't always
+get it right so the user should be allowed to "override" it at their own 
+risk.  Linux is turning
+into winblows  - in that  choice is be taken away from the user.
 
-Pd: sorry for my basic english! ;-)
+My $.02
+Steve Clark
 
-Daniel Filipiuk
+-- 
+
+"They that give up essential liberty to obtain temporary safety, 
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty 
+decreases."  (Thomas Jefferson)
+
+
+
