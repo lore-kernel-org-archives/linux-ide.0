@@ -1,38 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: trouble with silicon image 680
-Date: Fri, 13 Jul 2007 18:14:02 +0900
-Message-ID: <4697425A.5020209@gmail.com>
-References: <1184267244.46967becb38c2@gold3.portugalmail.pt>
+Subject: Re: +AFs-patch+AF0- Add more device IDs for supporting ATI SB700
+ SATA controller completely
+Date: Fri, 13 Jul 2007 18:19:44 +0900
+Message-ID: <469743B0.4040005@gmail.com>
+References: <FFECF24D2A7F6D418B9511AF6F35860202098043@shacnexch2.atitech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:2207 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761026AbXGMJOK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 05:14:10 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so393396nze
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 02:14:07 -0700 (PDT)
-In-Reply-To: <1184267244.46967becb38c2@gold3.portugalmail.pt>
+Received: from wa-out-1112.google.com ([209.85.146.183]:36337 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762047AbXGMJTs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jul 2007 05:19:48 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so509360wah
+        for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2007 02:19:48 -0700 (PDT)
+In-Reply-To: <FFECF24D2A7F6D418B9511AF6F35860202098043@shacnexch2.atitech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: perazim@portugalmail.pt
+To: Henry Su <henry.su@amd.com>
 Cc: linux-ide@vger.kernel.org
 
-perazim@portugalmail.pt wrote:
-> Trying to upgrade from FC4 to F7. Linux version 2.6.14-1.1656_FC4.
-> Sorry but don't know the F7 kernel specifics. If this is a propblem,
-> I will get them for you. Have Kouwell 571-B PCI ATA-133 card with the
-> Silicon Image 0680 chipset connected to two dvd drives. Bios on card
-> is most recent from SI website. When kernel boots, message is
-> "pata_sil680: probe of 0000:00:0b.0 failed with error -16". This
-> configuration worked fine in FC4. Have several systems with same
-> hardware config and they all do this so it is not a failed card.
+Henry Su wrote:
+> From: henry.su+AEA-amd.com
 > 
-> Is there a problem with the kernel?
+> The sata controller device ID will be different according to the onchip
+>  sata type setting in system BIOS:
+> Device                                                                 Device ID
+> SATA in IDE mode                                             0x4390
+> SATA in AHCI mode                                           0x4391
+> SATA in RAID mode with non-Raid 5 driver  0x4392
+> SATA in RAID mode with Raid 5 driver          0x4393
+> 
+> Signed-off-by: henry.su+AEA-amd.com
+> ----------------------------------------------
+> diff -Nur linux-2.6.22.1.orig/drivers/ata/ahci.c linux-2.6.22.1/drivers/ata/ahci.c
+> --- linux-2.6.22.1.orig/drivers/ata/ahci.c      2007-07-13 10:39:27.854093200 +-0800
+> +-+-+- linux-2.6.22.1/drivers/ata/ahci.c   2007-07-13 10:52:58.625022700 +-0800
+> +AEAAQA- -399,7 +-399,10 +AEAAQA-
+> 
+>         /+ACo- ATI +ACo-/
+>         +AHs- PCI+AF8-VDEVICE(ATI, 0x4380), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB600 +ACo-/
+> -       +AHs- PCI+AF8-VDEVICE(ATI, 0x4390), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 +ACo-/
+> +-       +AHs- PCI+AF8-VDEVICE(ATI, 0x4390), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 IDE +ACo-/
+> +-       +AHs- PCI+AF8-VDEVICE(ATI, 0x4391), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 AHCI +ACo-/
+> +-       +AHs- PCI+AF8-VDEVICE(ATI, 0x4392), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 nor-raid5 +ACo-/
+> +-       +AHs- PCI+AF8-VDEVICE(ATI, 0x4393), board+AF8-ahci+AF8-sb600 +AH0-, /+ACo- ATI SB700 raid5 +ACo-/
+> 
+>         /+ACo- VIA +ACo-/
+>         +AHs- PCI+AF8-VDEVICE(VIA, 0x3349), board+AF8-ahci+AF8-vt8251 +AH0-, /+ACo- VIA VT8251 +ACo-/
 
--ENEEDMOREINFO.  Please try vanilla 2.6.22 and post full dmesg and the
-result of 'lspci -nnvvv'.
+What did you do to your mailer?  Or, what is your mailer doing to you?
+Please get yourself a thunderbird.
 
 -- 
 tejun
