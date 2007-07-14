@@ -1,44 +1,59 @@
-From: jm_928 <jm_928@jmtechnology.com>
-Subject: sata_inic162x issue - PCMCIA card
-Date: Sat, 14 Jul 2007 06:41:14 -0700 (PDT)
-Message-ID: <11593734.post@talk.nabble.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/6] ide-pmac: PIO fixes
+Date: Sat, 14 Jul 2007 20:29:10 +0400
+Message-ID: <4698F9D6.6020205@ru.mvista.com>
+References: <200707110204.07540.bzolnier@gmail.com> <4697A47F.8060704@ru.mvista.com> <200707132203.16470.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:57841 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753076AbXGNNlP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jul 2007 09:41:15 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1I9hs2-00026P-En
-	for linux-ide@vger.kernel.org; Sat, 14 Jul 2007 06:41:14 -0700
+Received: from h155.mvista.com ([63.81.120.155]:50437 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755046AbXGNQ1H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Jul 2007 12:27:07 -0400
+In-Reply-To: <200707132203.16470.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Kyle McMartin <kyle@mcmartin.ca>
 
+Hello.
 
-Hi,
+Bartlomiej Zolnierkiewicz wrote:
 
-I have an esata PCMCIA card based on the Initio 1620 chipset. When inserting
-this into my Dell D600 laptop (running Ubuntu 7.04 with the 2.6.20-16
-kernel) I get the following error messages:
+>>>* Add setting transfer mode on the device to pmac_ide_set_pio_mode().
 
-[   27.660000] sata_inic162x 0000:03:00.0: version 0.1
-[   27.660000] PCI: Enabling device 0000:03:00.0 (0000 -> 0003)
-[   27.660000] ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKD] -> GSI 11
-(level, low) -> IRQ 11
-[   27.660000] ACPI: PCI interrupt for device 0000:03:00.0 disabled
-[   27.660000] sata_inic162x: probe of 0000:03:00.0 failed with error -22
+>>>* Fix pmac_ide_set_pio() to always program chipset for given PIO timing instead
+>>>  of only when the device we want to program PIO timing for is the currently
+>>>  selected one.
 
-Does anyone have any hints on what this message (particularly error -22)
-means?
+>>    Hm, why this was necessary?
 
-Thanks.
-JM
--- 
-View this message in context: http://www.nabble.com/sata_inic162x-issue---PCMCIA-card-tf4079060.html#a11593734
-Sent from the linux-ide mailing list archive at Nabble.com.
+> No idea...
 
+    I may understand why this was needed beore the patch but why keep it?
+
+> ...(mis)optimization? :)
+
+>>    AFAIU, pmac_ide_do_setfeature() will cause selectproc() to be called 
+>>anyway, via SELECT_DRIVE()...
+
+> Yes, but pmac_ide_do_setfeature() wasn't called et all in the old version
+> of pmac_ide_set_pio().
+
+    But now it is.
+
+>>>* Now that pmac_ide_set_pio() is fixed there is no need to set transfer mode
+>>>  on the device and program chipset for PIO in pmac_ide_tune_chipset()
+
+>>    BTW, I'm also not seeing much sense in calling 
+>>pmac_ide_do_update_timings() from there as well since pmac_ide_do_setfeature() 
+>>is called before that anyway.
+
+> The patch only intended to make pmac_ide_set_pio() match the code in
+> pmac_ide_tune_chipset().  Thanks to your analysis I see now that more
+> fixups/cleanups are possible in this driver but I'm not up to it...
+
+    :-)
+
+MBR, Sergei
