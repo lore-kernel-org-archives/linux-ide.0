@@ -1,41 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/3] libata: use ->proto_mask in drivers
-Date: Sat, 14 Jul 2007 09:56:38 +0100
-Message-ID: <20070714095638.6e34794e@the-village.bc.nu>
-References: <20070714081526.GA26878@havoc.gtf.org>
-	<20070714081728.GB27006@havoc.gtf.org>
+From: "Tuomas Leikola" <tuomas.leikola@gmail.com>
+Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
+Date: Sat, 14 Jul 2007 13:00:56 +0300
+Message-ID: <5b170a7d0707140300n45460db8rdc488cb9a1e77a4f@mail.gmail.com>
+References: <20070711200538.GA7374@havoc.gtf.org>
+	 <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org>
+	 <46960225.5000502@garzik.org>
+	 <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org>
+	 <46967B3C.708@garzik.org>
+	 <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48333 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751708AbXGNIuJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jul 2007 04:50:09 -0400
-In-Reply-To: <20070714081728.GB27006@havoc.gtf.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:5726 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755611AbXGNKA7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jul 2007 06:00:59 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so893404wah
+        for <linux-ide@vger.kernel.org>; Sat, 14 Jul 2007 03:00:59 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: dean gaudet <dean@arctic.org>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 14 Jul 2007 04:17:28 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+On 7/13/07, dean gaudet <dean@arctic.org> wrote:
+> > I presume from your past messages your tests include multiple disks at the
+> > same time?
+>
+> yep, 4 disks... i was getting 4x74MB/s with dd read.  unfortunately i
+> don't have more disks in the system at this point so i can't test all 8
+> ports at full tilt.
+>
+> each disk had its own XFS filesystem.
+>
 
-> 
-> Review definitely helps here...
+Just a sidenote, at some point (think 2.6.15) I had problems with
+sata_mv that *only* occurred with md raid levels 1,5,6 - everything
+was ok when multiple disks were separate filesystems. That was like 4
+disks and 10 threads or so.
 
-Without knowing what the precise semantics are that is hard. Every
-SFF_DMA case may not be supporting DMA depending upon the configuration
-so it should probably be set by ata_pci_init_one for all the normal SFF
-devices.
-
-Thus I would say
-- Drop every user of ata_pci_init_one from the patch
-
-in ata_pci_init_one set it to SFF
-in ata_pci_init_bmdma set it to SFF + DMA on success
-
-and while we are at it this would nicely fix your TODO in
-ata_pci_init_bmdma by testing the class when copying the modes over.
-
-Alan
+So I'd recommend always testing also with raid. I'll leave the
+guessing about what might be reasons for that behaviour for others.
