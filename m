@@ -1,62 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/6] icside: fix ->speedproc to return on unsupported
- modes
-Date: Sat, 14 Jul 2007 21:42:05 +0400
-Message-ID: <46990AED.50204@ru.mvista.com>
-References: <200707110200.37607.bzolnier@gmail.com> <200707112321.41597.bzolnier@gmail.com> <46967FA8.4090406@ru.mvista.com> <200707132302.04065.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata_inic162x issue - PCMCIA card
+Date: Sat, 14 Jul 2007 14:55:01 -0400
+Message-ID: <46991C05.3000408@garzik.org>
+References: <11593734.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:50669 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757878AbXGNRkA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Jul 2007 13:40:00 -0400
-In-Reply-To: <200707132302.04065.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:46187 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760921AbXGNSzE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 Jul 2007 14:55:04 -0400
+In-Reply-To: <11593734.post@talk.nabble.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org
+To: jm_928 <jm_928@jmtechnology.com>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+jm_928 wrote:
+> Hi,
+> 
+> I have an esata PCMCIA card based on the Initio 1620 chipset. When inserting
+> this into my Dell D600 laptop (running Ubuntu 7.04 with the 2.6.20-16
+> kernel) I get the following error messages:
+> 
+> [   27.660000] sata_inic162x 0000:03:00.0: version 0.1
+> [   27.660000] PCI: Enabling device 0000:03:00.0 (0000 -> 0003)
+> [   27.660000] ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKD] -> GSI 11
+> (level, low) -> IRQ 11
+> [   27.660000] ACPI: PCI interrupt for device 0000:03:00.0 disabled
+> [   27.660000] sata_inic162x: probe of 0000:03:00.0 failed with error -22
+> 
+> Does anyone have any hints on what this message (particularly error -22)
+> means?
 
-> [PATCH] icside: fix ->speedproc to return on unsupported modes (take 3)
+-EINVAL
 
-> * All other implementations of ->speedproc return zero on success
->   and non-zero on failure.  Currently it doesn't matter for icside host
->   driver and isn't a bug per se since:
+Maybe it's an interrupt problem, like the previous message indicates.
 
->   - ide_set_xfer_rate() return value is ignored by all IDE core users
+	Jeff
 
->   - icside doesn't (yet!) use ide_tune_dma() in icside_dma_check()
 
->   but sooner or later we will need to fix anyway - so lets do it now.
 
-> * icside_set_speed() happily accepts unsupported transfer modes which
->   results in drive->drive_data being set to the maximum value (480)
->   and drive->current_speed being set to the unsupported transfer mode.
-
->   Fix it.
-
-> v2:
-> * The initial version of the patch was broken because it didn't take into
->   the account (the different from usual) return values of icside_set_speed()
->   (Noticed by Russell).
-
-> v3:
-> * Remove no longer needed initialization/checking of cycle_time
->   (Noticed by Sergei).
-
-> * No need to set drive->drive_data if DMA is not going to be used
->   (Noticed by Sergei).
-
-> * Remove incorrect setting of drive->current_speed
->   (Noticed by Sergei).
-
-> * Move ide_config_drive_speed() at the end of icside_set_speed().
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
