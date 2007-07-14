@@ -1,75 +1,41 @@
-From: Craig Block <chblock3@yahoo.com>
-Subject: Re: 40-wire/80-wire detection
-Date: Sat, 14 Jul 2007 01:37:41 -0700 (PDT)
-Message-ID: <305029.41682.qm@web58107.mail.re3.yahoo.com>
-References: <200707132339.42299.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/3] libata: use ->proto_mask in drivers
+Date: Sat, 14 Jul 2007 09:56:38 +0100
+Message-ID: <20070714095638.6e34794e@the-village.bc.nu>
+References: <20070714081526.GA26878@havoc.gtf.org>
+	<20070714081728.GB27006@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web58107.mail.re3.yahoo.com ([68.142.236.130]:31989 "HELO
-	web58107.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751928AbXGNIhm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jul 2007 04:37:42 -0400
-In-Reply-To: <200707132339.42299.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48333 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751708AbXGNIuJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Jul 2007 04:50:09 -0400
+In-Reply-To: <20070714081728.GB27006@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Stephen.Clark@seclark.us, Jeff Garzik <jeff@garzik.org>, Matt Sealey <matt@genesi-usa.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-
---- Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+On Sat, 14 Jul 2007 04:17:28 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
 > 
-> Please send the output of hdparm --Istdout for this drive.
-> 
-> "idex=ata66" or CONFIG_IDEDMA_IVB=y should also help but we really would
-> like to detect and workaround such issues automatically, without the need
-> for user headaches. ;)
-> 
-> Thanks,
-> Bart
-> 
-Here ya go, hope that helps :)
+> Review definitely helps here...
 
-/dev/hda:
-045a 2959 0000 000f 7e00 5332 003f 0000
-0000 5154 3837 3130 3038 3434 3731 3535
-2020 2020 2020 2020 0003 0344 0004 4130
-332e 3039 3030 5155 414e 5455 4d20 4649
-5245 4241 4c4c 6c63 7431 3020 3035 2020
-2020 2020 2020 2020 2020 2020 2020 8010
-0000 0f00 4000 0200 0200 0007 2959 000f
-003f a189 0098 0100 a189 0098 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-001e 0011 346b 4001 4000 3469 0001 4000
-101f 0003 0000 0000 fffe 2040 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0001 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
+Without knowing what the precise semantics are that is hard. Every
+SFF_DMA case may not be supporting DMA depending upon the configuration
+so it should probably be set by ata_pci_init_one for all the normal SFF
+devices.
 
+Thus I would say
+- Drop every user of ata_pci_init_one from the patch
 
+in ata_pci_init_one set it to SFF
+in ata_pci_init_bmdma set it to SFF + DMA on success
 
-       
-____________________________________________________________________________________
-Sick sense of humor? Visit Yahoo! TV's 
-Comedy with an Edge to see what's on, when. 
-http://tv.yahoo.com/collections/222
+and while we are at it this would nicely fix your TODO in
+ata_pci_init_bmdma by testing the class when copying the modes over.
+
+Alan
