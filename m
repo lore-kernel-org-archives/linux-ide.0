@@ -1,51 +1,72 @@
-From: Ryan Power <rpower@sysreset.com>
-Subject: Re: [PATCH] Unbreak build of PMP with ACPI disabled
-Date: Sun, 15 Jul 2007 21:38:00 -0600
-Message-ID: <6.2.0.14.2.20070715213648.02fcaeb0@linux.sysreset.com>
-References: <20070713065600.GB8320@vana.vc.cvut.cz>
- <46972519.80703@gmail.com>
- <46980AFD.3000503@shaw.ca>
- <6.2.0.14.2.20070713175627.031aada0@linux.sysreset.com>
- <4698356D.60605@gmail.com>
- <4698BE05.2080003@vandrovec.name>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 09/21] sata_sil24: separate out sil24_do_softreset()
+Date: Mon, 16 Jul 2007 14:29:39 +0900
+Message-ID: <11845637791907-git-send-email-htejun@gmail.com>
+References: <11845637782629-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.sysreset.com ([209.97.229.250]:10587 "EHLO sysreset"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759350AbXGPDiB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Jul 2007 23:38:01 -0400
-In-Reply-To: <4698BE05.2080003@vandrovec.name>
-References: <20070713065600.GB8320@vana.vc.cvut.cz>
- <46972519.80703@gmail.com>
- <46980AFD.3000503@shaw.ca>
- <6.2.0.14.2.20070713175627.031aada0@linux.sysreset.com>
- <4698356D.60605@gmail.com>
- <4698BE05.2080003@vandrovec.name>
+Received: from nz-out-0506.google.com ([64.233.162.234]:11862 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759344AbXGPF3t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:49 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so736630nze
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:48 -0700 (PDT)
+In-Reply-To: <11845637782629-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Petr Vandrovec <petr@vandrovec.name>, Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>
 
-At 06:13 AM 7/14/2007, Petr Vandrovec wrote:
->Tejun Heo wrote:
->>Ryan Power wrote:
->>>I'm also experiencing this problem on a with the sata_nv module.  I
->>>suspect that it may at least not be controller dependant, as it's also
->>>occurring on my silicon image controller (sata_sil, SiI3512).  It looks
->>>like something is zeroing out part of the return registers for the
->>>overall smart status.
->>Hmmm... Incidentally, Jeff told me yesterday he was seeing the same
->>problem on sil.  Maybe it's something in the core.  I'll investigate.
->
->What about attached patch?  Seems to make my mcp61 happy... (it is sent 
->from Mozilla, so patch below is most probably whitespace challenged... 
->attachment should be fine)
->                                                         Petr
+Separate out sil24_do_softreset() which takes @pmp as its last
+argument.  This will be used to implement sil24_pmp_softreset().
 
-That patch fixes the problems I was seeing on both interfaces.  Everything 
-looks be to working correctly again.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/sata_sil24.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
-Thanks.
--Ryan 
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index e6fe4c4..e538edc 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -578,8 +578,8 @@ static int sil24_exec_polled_cmd(struct ata_port *ap, int pmp,
+ 	return rc;
+ }
+ 
+-static int sil24_softreset(struct ata_port *ap, unsigned int *class,
+-			   unsigned long deadline)
++static int sil24_do_softreset(struct ata_port *ap, unsigned int *class,
++			      int pmp, unsigned long deadline)
+ {
+ 	unsigned long timeout_msec = 0;
+ 	struct ata_taskfile tf;
+@@ -605,7 +605,8 @@ static int sil24_softreset(struct ata_port *ap, unsigned int *class,
+ 		timeout_msec = jiffies_to_msecs(deadline - jiffies);
+ 
+ 	ata_tf_init(ap->device, &tf);	/* doesn't really matter */
+-	rc = sil24_exec_polled_cmd(ap, 0, &tf, 0, PRB_CTRL_SRST, timeout_msec);
++	rc = sil24_exec_polled_cmd(ap, pmp, &tf, 0, PRB_CTRL_SRST,
++				   timeout_msec);
+ 	if (rc == -EBUSY) {
+ 		reason = "timeout";
+ 		goto err;
+@@ -629,6 +630,12 @@ static int sil24_softreset(struct ata_port *ap, unsigned int *class,
+ 	return -EIO;
+ }
+ 
++static int sil24_softreset(struct ata_port *ap, unsigned int *class,
++			   unsigned long deadline)
++{
++	return sil24_do_softreset(ap, class, 0, deadline);
++}
++
+ static int sil24_hardreset(struct ata_port *ap, unsigned int *class,
+ 			   unsigned long deadline)
+ {
+-- 
+1.5.0.3
+
 
