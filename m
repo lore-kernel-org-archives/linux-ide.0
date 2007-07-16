@@ -1,47 +1,31 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2.6.22.1] libata: Adjust libata to ignore errors after
-  spinup
-Date: Mon, 16 Jul 2007 19:07:36 -0400
-Message-ID: <469BFA38.1090309@rtr.ca>
-References: <6.2.0.14.2.20070713000748.031a2660@linux.sysreset.com> <469775E0.2000609@rtr.ca> <6.2.0.14.2.20070713184231.02db2d20@linux.sysreset.com> <46982875.60503@rtr.ca> <6.2.0.14.2.20070715210841.02fcab90@linux.sysreset.com>
+Subject: Re: [patch] libata: fix last_ctl caching in ata_tf_read()
+Date: Mon, 16 Jul 2007 19:13:16 -0400
+Message-ID: <469BFB8C.6040709@rtr.ca>
+References: <469BBA76.5000901@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1688 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([64.26.128.89]:1379 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757662AbXGPXHj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jul 2007 19:07:39 -0400
-In-Reply-To: <6.2.0.14.2.20070715210841.02fcab90@linux.sysreset.com>
+	id S1752838AbXGPXNR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jul 2007 19:13:17 -0400
+In-Reply-To: <469BBA76.5000901@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ryan Power <rpower@sysreset.com>, jgarzik@pobox.com, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Ryan Power wrote:
-> From: Ryan Power <rpower@sysreset.com>
-> 
-> Adjust libata to ignore errors after spinup
-> 
-> This patch is to ignore errors from the spinup attempt if the drive is
-> in the "standby id" state.
+Chuck Ebbert wrote:
+> libata: fix last_ctl caching in ata_tf_read()
+...
+> +		ap->last_ctl = tf_ctl | ATA_HOB;
 
-Jeff / Tejun:  here is Ryan's patch for his WD drive spinup problems.
-This copy has the pathnames and whitespace repaired.
- 
-Signed-off-by: Ryan Power <rpower@sysreset.com>
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-Index: linux/drivers/ata/libata-core.c
---- old/drivers/ata/libata-core.c   2007-07-10 12:56:30.000000000 -0600
-+++ linux/drivers/ata/libata-core.c       2007-07-15 01:58:49.000000000 -0600
-@@ -1750,7 +1750,7 @@ int ata_dev_read_id(struct ata_device *d
-		tf.protocol = ATA_PROT_NODATA;
-		tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--		if (err_mask) {
-+		if (err_mask && id[2] != 0x738c) {
-			rc = -EIO;
-			reason = "SPINUP failed";
-			goto err_out;
+That line should be:
+  +		ap->last_ctl = tf->ctl | ATA_HOB;
 
+Chuck: please fix that line, *test-compile* it,
+and submit again.
+
+Thanks.
