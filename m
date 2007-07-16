@@ -1,60 +1,46 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: [patch] libata: fix last_ctl caching in ata_tf_read()
-Date: Mon, 16 Jul 2007 14:35:34 -0400
-Message-ID: <469BBA76.5000901@redhat.com>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
+Date: Mon, 16 Jul 2007 21:29:26 +0200
+Message-ID: <20070716192925.GA10124@bitwizard.nl>
+References: <200706160123.55636.bzolnier@gmail.com> <4693D9B6.4090408@ru.mvista.com> <20070713161612.2f2ebb0b@the-village.bc.nu> <46979652.6040201@rtr.ca> <4697987E.3040406@ru.mvista.com> <4697D425.7000300@rtr.ca> <4697D518.7010108@ru.mvista.com> <4697D686.6090104@rtr.ca> <4697DAAE.5090704@ru.mvista.com> <4697E7E2.70303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51390 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbXGPSfg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jul 2007 14:35:36 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZY73014333
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZY1F009223
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
-Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZYIg025603
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757410AbXGPT3i@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4697E7E2.70303@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-libata: fix last_ctl caching in ata_tf_read()
+On Fri, Jul 13, 2007 at 05:00:18PM -0400, Mark Lord wrote:
+> >   Ah, that makes sense -- during PIO interrupts happen a lot more often.
+> >20 secs still seem to be too much.
+> 
+> I don't think so, even for modern drives.
+> Figure 8-10 seconds max for spin-up,
+> plus 6-9 seconds to do a sector re-assignment
+> or retries on a bad block (a measured *real-life* value).
+> 
+> That adds up to 14-19 seconds, so 20 seconds is probably good.
+> 
+> Still, this does need to be adjustable for faster (CF) devices,
+> and slower (optical/tape) devices, rather than just a single
+> set of fixed timeout values.
 
-last_ctl was not cached properly. (Pointed out
-by Tejun Heo.)
+In real life, with real bad blocks on real harddrives, some harddrives
+take more than the DMA TIMEOUT time to read a single block, even without
+having to spin up. 
 
-Signed-off-by: Chuck Ebbert <cebbert@redhat.com>
+The current code then resets the drive, on which the drive reports
+"busy, not ready for command", and things go downhill from there. 
 
----
-(Apply after Petr's patch to fix the sense data.)
+	Roger. 
 
- drivers/ata/libata-sff.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
---- linux-2.6.22.noarch.orig/drivers/ata/libata-sff.c
-+++ linux-2.6.22.noarch/drivers/ata/libata-sff.c
-@@ -196,7 +196,9 @@ void ata_tf_read(struct ata_port *ap, st
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
-+	ap->last_ctl = tf->ctl;
- 	iowrite8(tf->ctl, ioaddr->ctl_addr);
-+
- 	tf->command = ata_check_status(ap);
- 	tf->feature = ioread8(ioaddr->error_addr);
- 	tf->nsect = ioread8(ioaddr->nsect_addr);
-@@ -205,7 +208,9 @@ void ata_tf_read(struct ata_port *ap, st
- 	tf->device = ioread8(ioaddr->device_addr);
- 
- 	if (tf->flags & ATA_TFLAG_LBA48) {
-+		ap->last_ctl = tf_ctl | ATA_HOB;
- 		iowrite8(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
-+
- 		tf->hob_feature = ioread8(ioaddr->error_addr);
- 		tf->hob_nsect = ioread8(ioaddr->nsect_addr);
- 		tf->hob_lbal = ioread8(ioaddr->lbal_addr);
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
