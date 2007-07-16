@@ -1,86 +1,299 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET 4/4] implement PMP support, take 5
-Date: Mon, 16 Jul 2007 18:46:03 +0900
-Message-ID: <1184579163885-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/8] libata-pmp: hook PMP support and enable it
+Date: Mon, 16 Jul 2007 18:46:04 +0900
+Message-ID: <11845791643375-git-send-email-htejun@gmail.com>
+References: <1184579163885-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.234]:53686 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755046AbXGPJqI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:08 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so784842nze
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:08 -0700 (PDT)
-In-Reply-To: 
+Received: from wa-out-1112.google.com ([209.85.146.178]:41126 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756014AbXGPJqN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:13 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1519054wah
+        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:12 -0700 (PDT)
+In-Reply-To: <1184579163885-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>, htejun@gmail.com
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Hook PMP support into libata and enable it.  Connect SCR and probing
+functions, and update ata_dev_classify() to detect PMP.
 
-his is the fourth take of libata-pmp patchset.  This patchset contains
-8 patches and implements PMP support.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |  113 ++++++++++++++++++++++++++++++++-------------
+ drivers/ata/libata-eh.c   |   18 ++++++-
+ 2 files changed, 96 insertions(+), 35 deletions(-)
 
-Changes from the last take[L] are.
-
-* PMP error message fixed.
-* build fix when PM and/or ACPI is disabled
-* ahci/sata_sil24 prep patches moved to misc-updates patchset as
-  requested by Jeff.
-
-Tested extensively with sil3214/32, ICH9R, JMB360/3 combined with
-sil3726, 4726 and 5744 port multipliers.  Disks from all major vendors
-and an SATAPI device is used as downstream devices.  sil5744 and 3726
-behave very nicely on all controllers.  Hotplugging and suspend/resume
-work well too.  There are some remaining issues.
-
-* When attached to AHCI controller (ICH9R, JMB360/3), NCQ doesn't
-  work.  Things look okay as long as only one command is in flight but
-  as soon as the second command is issued (to the same device), hell
-  breaks loose and all sorts of errors occur including device abort,
-  bad PMP number and interface fatal error.  This behavior is common
-  across all PMP chips.  I've disabled NCQ if PMP is attached to an
-  ahci controller for now.
-
-* Sil4726 is a bit too quirky.  Without the first fan-out port
-  occupied, the thing acts really weirdly.  As long as the first port
-  is occupied, it works okay.  This is reportedly fixed by new
-  firmware.  I tried to update the firmware but installing 3124 driver
-  on Windows was just too difficult for me and I gave up after thirty
-  painful minutes.  Anyone up for testing?
-
-* Again, Sil4726 doesn't like ahci driver initialization sequence.
-  During driver initialization, the whole controller is reset and the
-  PHY seems to go offline and back online.  Sil4726 doesn't like it
-  and goes out for lunch for several secs after that which makes
-  initial probing think that the port is empty.  After probing is
-  complete, Sil4726 comes back and gets detected but at that point
-  detection is asynchronous and if boot device is on one of fan-out
-  ports, it can be a problem.  Again, this might have been fixed by
-  new firmware.  Anyone up for testing?
-
-* The long boot delay on ASUS boards with on-board PMP chips should be
-  fixed by this patchset but I don't have such a board or Sil4723
-  which is used on those baords, so I'm not sure.  Anyone up for
-  testing?
-
-This patchset is against
-
-  libata-dev#upstream (d79eb6de54f180dc83b488b20747f0097fde3dea)
-  + [1] misc-updates patchset
-  + [2] libata-link patchset
-  + [3] libata-pmp-prep patchset
-
-Thanks.
-
---
-tejun
-
-[L] http://thread.gmane.org/gmane.linux.ide/20128
-[1] http://thread.gmane.org/gmane.linux.ide/20824
-[2] http://thread.gmane.org/gmane.linux.ide/20842
-[3] http://thread.gmane.org/gmane.linux.ide/20857
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3f80130..997315c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -59,7 +59,7 @@
+ 
+ #include "libata.h"
+ 
+-#define DRV_VERSION	"2.21"	/* must be exactly four chars */
++#define DRV_VERSION	"3.00"	/* must be exactly four chars */
+ 
+ 
+ /* debounce timing parameters in msecs { interval, duration, timeout } */
+@@ -667,29 +667,49 @@ static unsigned int ata_devchk(struct ata_port *ap, unsigned int device)
+  *	None.
+  *
+  *	RETURNS:
+- *	Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, or %ATA_DEV_UNKNOWN
+- *	the event of failure.
++ *	Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, %ATA_DEV_PMP or
++ *	%ATA_DEV_UNKNOWN the event of failure.
+  */
+-
+ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
+ {
+ 	/* Apple's open source Darwin code hints that some devices only
+ 	 * put a proper signature into the LBA mid/high registers,
+ 	 * So, we only check those.  It's sufficient for uniqueness.
++	 *
++	 * ATA/ATAPI-7 (d1532v1r1: Feb. 19, 2003) specified separate
++	 * signatures for ATA and ATAPI devices attached on SerialATA,
++	 * 0x3c/0xc3 and 0x69/0x96 respectively.  However, SerialATA
++	 * spec has never mentioned about using different signatures
++	 * for ATA/ATAPI devices.  Then, Serial ATA II: Port
++	 * Multiplier specification began to use 0x69/0x96 to identify
++	 * port multpliers and 0x3c/0xc3 to identify SEMB device.
++	 * ATA/ATAPI-7 dropped descriptions about 0x3c/0xc3 and
++	 * 0x69/0x96 shortly and described them as reserved for
++	 * SerialATA.
++	 *
++	 * We follow the current spec and consider that 0x69/0x96
++	 * identifies a port multiplier and 0x3c/0xc3 a SEMB device.
+ 	 */
+-
+-	if (((tf->lbam == 0) && (tf->lbah == 0)) ||
+-	    ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))) {
++	if ((tf->lbam == 0) && (tf->lbah == 0)) {
+ 		DPRINTK("found ATA device by sig\n");
+ 		return ATA_DEV_ATA;
+ 	}
+ 
+-	if (((tf->lbam == 0x14) && (tf->lbah == 0xeb)) ||
+-	    ((tf->lbam == 0x69) && (tf->lbah == 0x96))) {
++	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb)) {
+ 		DPRINTK("found ATAPI device by sig\n");
+ 		return ATA_DEV_ATAPI;
+ 	}
+ 
++	if ((tf->lbam == 0x69) && (tf->lbah == 0x96)) {
++		DPRINTK("found PMP device by sig\n");
++		return ATA_DEV_PMP;
++	}
++
++	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
++		printk("ata: SEMB device ignored\n");
++		return ATA_DEV_SEMB_UNSUP; /* not yet */
++	}
++
+ 	DPRINTK("unknown device\n");
+ 	return ATA_DEV_UNKNOWN;
+ }
+@@ -3338,6 +3358,12 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
+ 	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
+ 		ehc->i.action |= ATA_EH_HARDRESET;
+ 
++	/* Some PMPs don't work with only SRST, force hardreset if PMP
++	 * is supported.
++	 */
++	if (ap->flags & ATA_FLAG_PMP)
++		ehc->i.action |= ATA_EH_HARDRESET;
++
+ 	/* if we're about to do hardreset, nothing more to do */
+ 	if (ehc->i.action & ATA_EH_HARDRESET)
+ 		return 0;
+@@ -3526,6 +3552,16 @@ int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+ 	/* wait a while before checking status, see SRST for more info */
+ 	msleep(150);
+ 
++	/* If PMP is supported, we have to do follow-up SRST.  Note
++	 * that some PMPs don't send D2H Reg FIS after hardreset at
++	 * all if the first port is empty.  Wait for it just for a
++	 * second and request follow-up SRST.
++	 */
++	if (ap->flags & ATA_FLAG_PMP) {
++		ata_wait_ready(ap, jiffies + HZ);
++		return -EAGAIN;
++	}
++
+ 	rc = ata_wait_ready(ap, deadline);
+ 	/* link occupied, -ENODEV too is an error */
+ 	if (rc) {
+@@ -5801,22 +5837,26 @@ int sata_scr_valid(struct ata_link *link)
+  *	@val: Place to store read value
+  *
+  *	Read SCR register @reg of @link into *@val.  This function is
+- *	guaranteed to succeed if the cable type of the port is SATA
+- *	and the port implements ->scr_read.
++ *	guaranteed to succeed if @link is ap->link, the cable type of
++ *	the port is SATA and the port implements ->scr_read.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+ {
+-	struct ata_port *ap = link->ap;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
+ 
+-	if (sata_scr_valid(link))
+-		return ap->ops->scr_read(ap, reg, val);
+-	return -EOPNOTSUPP;
++		if (sata_scr_valid(link))
++			return ap->ops->scr_read(ap, reg, val);
++		return -EOPNOTSUPP;
++	}
++
++	return sata_pmp_scr_read(link, reg, val);
+ }
+ 
+ /**
+@@ -5826,22 +5866,26 @@ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+  *	@val: value to write
+  *
+  *	Write @val to SCR register @reg of @link.  This function is
+- *	guaranteed to succeed if the cable type of the port is SATA
+- *	and the port implements ->scr_read.
++ *	guaranteed to succeed if @link is ap->link, the cable type of
++ *	the port is SATA and the port implements ->scr_read.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+ {
+-	struct ata_port *ap = link->ap;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
+ 
+-	if (sata_scr_valid(link))
+-		return ap->ops->scr_write(ap, reg, val);
+-	return -EOPNOTSUPP;
++		if (sata_scr_valid(link))
++			return ap->ops->scr_write(ap, reg, val);
++		return -EOPNOTSUPP;
++	}
++
++	return sata_pmp_scr_write(link, reg, val);
+ }
+ 
+ /**
+@@ -5854,23 +5898,27 @@ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+  *	function performs flush after writing to the register.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
+ {
+-	struct ata_port *ap = link->ap;
+-	int rc;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
++		int rc;
+ 
+-	if (sata_scr_valid(link)) {
+-		rc = ap->ops->scr_write(ap, reg, val);
+-		if (rc == 0)
+-			rc = ap->ops->scr_read(ap, reg, &val);
+-		return rc;
++		if (sata_scr_valid(link)) {
++			rc = ap->ops->scr_write(ap, reg, val);
++			if (rc == 0)
++				rc = ap->ops->scr_read(ap, reg, &val);
++			return rc;
++		}
++		return -EOPNOTSUPP;
+ 	}
+-	return -EOPNOTSUPP;
++
++	return sata_pmp_scr_write(link, reg, val);
+ }
+ 
+ /**
+@@ -6254,6 +6302,7 @@ static void ata_host_release(struct device *gendev, void *res)
+ 		if (ap->scsi_host)
+ 			scsi_host_put(ap->scsi_host);
+ 
++		kfree(ap->pmp_link);
+ 		kfree(ap);
+ 		host->ports[i] = NULL;
+ 	}
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index bc3e690..42558df 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2112,6 +2112,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			readid_flags |= ATA_READID_POSTRESET;
+ 
+ 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
++			WARN_ON(dev->class == ATA_DEV_PMP);
++
+ 			if (ata_link_offline(link)) {
+ 				rc = -EIO;
+ 				goto err;
+@@ -2137,8 +2139,11 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			   ata_class_enabled(ehc->classes[dev->devno])) {
+ 			dev->class = ehc->classes[dev->devno];
+ 
+-			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
+-					     dev->id);
++			if (dev->class == ATA_DEV_PMP)
++				rc = sata_pmp_attach(dev);
++			else
++				rc = ata_dev_read_id(dev, &dev->class,
++						     readid_flags, dev->id);
+ 			switch (rc) {
+ 			case 0:
+ 				new_mask |= 1 << dev->devno;
+@@ -2167,7 +2172,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	 * device detection messages backwards.
+ 	 */
+ 	ata_link_for_each_dev(dev, link) {
+-		if (!(new_mask & (1 << dev->devno)))
++		if (!(new_mask & (1 << dev->devno)) ||
++		    dev->class == ATA_DEV_PMP)
+ 			continue;
+ 
+ 		ehc->i.flags |= ATA_EHI_PRINTINFO;
+@@ -2424,6 +2430,12 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		if (rc)
+ 			goto dev_fail;
+ 
++		/* if PMP got attached, return, pmp EH will take care of it */
++		if (link->device->class == ATA_DEV_PMP) {
++			ehc->i.action = 0;
++			return 0;
++		}
++
+ 		/* configure transfer mode if necessary */
+ 		if (ehc->i.flags & ATA_EHI_SETMODE) {
+ 			rc = ata_set_mode(link, &dev);
+-- 
+1.5.0.3
 
 
