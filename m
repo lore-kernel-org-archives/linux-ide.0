@@ -1,59 +1,55 @@
 From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 5/7] libata: integrate freeze/thaw with irq_on/off
-Date: Mon, 16 Jul 2007 17:17:38 +0800
-Message-ID: <469B37B2.5080500@tw.ibm.com>
-References: <468F3949.5050800@tw.ibm.com> <468F3CE2.9080709@tw.ibm.com> <469720F1.3000907@gmail.com>
+Subject: Re: [PATCH 2/7] sata_promise: pdc_freeze() semantic change
+Date: Mon, 16 Jul 2007 17:19:34 +0800
+Message-ID: <469B3826.7040209@tw.ibm.com>
+References: <200707071908.l67J8D5W010862@harpo.it.uu.se> <4693AE87.6070304@gmail.com> <469740D0.4000104@gmail.com>
 Reply-To: albertl@mail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:60590 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755160AbXGPJRo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:17:44 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6G9HhA8011281
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 05:17:43 -0400
+Received: from e31.co.us.ibm.com ([32.97.110.149]:57369 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784AbXGPJTk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:19:40 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l6G9Jdci010478
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 05:19:39 -0400
 Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6G9HhDC254012
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 03:17:43 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6G9JdnP216638
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 03:19:39 -0600
 Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6G9HgqW014912
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 03:17:43 -0600
-In-Reply-To: <469720F1.3000907@gmail.com>
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6G9Jcs2018200
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 03:19:39 -0600
+In-Reply-To: <469740D0.4000104@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Doug Maxey <dwm@enoyolf.org>, Mark Lord <mlord@pobox.com>, Linux IDE <linux-ide@vger.kernel.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, albertl@mail.com, jeff@garzik.org, alan@lxorguk.ukuu.org.uk, dwm@enoyolf.org, linux-ide@vger.kernel.org, mlord@pobox.com
 
 Tejun Heo wrote:
-> Hello,
+> Tejun Heo wrote:
+> 
+>>Mikael Pettersson wrote:
+>>
+>>>Albert's patch is OK as far as sata_promise is concerned, but
+>>>I want to see an update of libata.tmpl and libata-eh.c to
+>>>indicate the new, weakened, specification of freeze/thaw before
+>>>I ACK this patch.
 > 
 > 
->>+void ata_irq_on(struct ata_port *ap)
->> {
->> 	struct ata_ioports *ioaddr = &ap->ioaddr;
->>-	u8 tmp;
->> 
->> 	ap->ctl &= ~ATA_NIEN;
->> 	ap->last_ctl = ap->ctl;
->> 
->> 	iowrite8(ap->ctl, ioaddr->ctl_addr);
->>-	tmp = ata_wait_idle(ap);
->>+	ata_wait_idle(ap);
->> 
->> 	ap->ops->irq_clear(ap);
->>-
->>-	return tmp;
->> }
+> Hmmm.... The docbook document is too stale at this point.  It needs
+> major rewrite.  Also, I don't really think docbook is a good format for
+> this type of documentation.  Can we switch to formatted plain text which
+> can be converted to other formats?  Or use some form of inlined comment
+> for callback documentation which can be gathered and formatted
+> automatically?
 > 
-> 
-> Missing ata_chk_status() before clearing ATA_NIEN seems a bit dangerous
-> to me.
+> Albert, do you mind updating the comment in libata-eh.c?
 > 
 
-Will fix it in next revision. Thanks for the advice.
+No problem. Will fix the comments in the next revision.
 --
 albert
+
 
