@@ -1,159 +1,135 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 14/21] ahci: implement SCR_NOTIFICATION r/w
-Date: Mon, 16 Jul 2007 14:29:40 +0900
-Message-ID: <11845637802579-git-send-email-htejun@gmail.com>
+Subject: [PATCH 08/21] sata_sil24: separate out sil24_exec_polled_cmd()
+Date: Mon, 16 Jul 2007 14:29:39 +0900
+Message-ID: <11845637792724-git-send-email-htejun@gmail.com>
 References: <11845637782629-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:2693 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757479AbXGPF3w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:52 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1464069wah
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:51 -0700 (PDT)
+Received: from nz-out-0506.google.com ([64.233.162.236]:11877 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972AbXGPF3u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:50 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so736627nze
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:50 -0700 (PDT)
 In-Reply-To: <11845637782629-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Make ahci_scr_read/write() handle SCR_NOTIFICATION if the controller
-supports it.  Also, print "sntf" in the cap line if supported.
-
-While at it, convert eight space into a tab in ahci_print_info().
+Separate out sil24_exec_polled_cmd() from sil24_softreset().  This
+will be used to implement sil24_pmp_read/write().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c |   68 ++++++++++++++++++++++++++++-----------------------
- 1 files changed, 37 insertions(+), 31 deletions(-)
+ drivers/ata/sata_sil24.c |   76 ++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 56 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9faf008..417343e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -99,6 +99,7 @@ enum {
- 	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
- 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
- 	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
-+	HOST_CAP_SNTF		= (1 << 29), /* SNotification register */
- 	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
- 	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
- 
-@@ -113,11 +114,11 @@ enum {
- 	PORT_TFDATA		= 0x20,	/* taskfile data */
- 	PORT_SIG		= 0x24,	/* device TF signature */
- 	PORT_CMD_ISSUE		= 0x38, /* command issue */
--	PORT_SCR		= 0x28, /* SATA phy register block */
- 	PORT_SCR_STAT		= 0x28, /* SATA phy register: SStatus */
- 	PORT_SCR_CTL		= 0x2c, /* SATA phy register: SControl */
- 	PORT_SCR_ERR		= 0x30, /* SATA phy register: SError */
- 	PORT_SCR_ACT		= 0x34, /* SATA phy register: SActive */
-+	PORT_SCR_NTF		= 0x3c, /* SATA phy register: SNotification */
- 
- 	/* PORT_IRQ_{STAT,MASK} bits */
- 	PORT_IRQ_COLD_PRES	= (1 << 31), /* cold presence detect */
-@@ -631,39 +632,45 @@ static void ahci_restore_initial_config(struct ata_host *host)
- 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
- }
- 
--static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32 *val)
-+static unsigned ahci_scr_offset(struct ata_port *ap, unsigned int sc_reg)
- {
--	unsigned int sc_reg;
--
--	switch (sc_reg_in) {
--	case SCR_STATUS:	sc_reg = 0; break;
--	case SCR_CONTROL:	sc_reg = 1; break;
--	case SCR_ERROR:		sc_reg = 2; break;
--	case SCR_ACTIVE:	sc_reg = 3; break;
--	default:
--		return -EINVAL;
--	}
-+	static const int offset[] = {
-+		[SCR_STATUS]		= PORT_SCR_STAT,
-+		[SCR_CONTROL]		= PORT_SCR_CTL,
-+		[SCR_ERROR]		= PORT_SCR_ERR,
-+		[SCR_ACTIVE]		= PORT_SCR_ACT,
-+		[SCR_NOTIFICATION]	= PORT_SCR_NTF,
-+	};
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
- 
--	*val = readl(ap->ioaddr.scr_addr + (sc_reg * 4));
-+	if (sc_reg < ARRAY_SIZE(offset) &&
-+	    (sc_reg != SCR_NOTIFICATION || (hpriv->cap & HOST_CAP_SNTF)))
-+		return offset[sc_reg];
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 5f8afa9..e6fe4c4 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -531,16 +531,60 @@ static int sil24_init_port(struct ata_port *ap)
  	return 0;
  }
  
--
--static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg_in, u32 val)
-+static int ahci_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+-static int sil24_softreset(struct ata_port *ap, unsigned int *class,
+-			   unsigned long deadline)
++static int sil24_exec_polled_cmd(struct ata_port *ap, int pmp,
++				 const struct ata_taskfile *tf,
++				 int is_cmd, u32 ctrl,
++				 unsigned long timeout_msec)
  {
--	unsigned int sc_reg;
--
--	switch (sc_reg_in) {
--	case SCR_STATUS:	sc_reg = 0; break;
--	case SCR_CONTROL:	sc_reg = 1; break;
--	case SCR_ERROR:		sc_reg = 2; break;
--	case SCR_ACTIVE:	sc_reg = 3; break;
--	default:
--		return -EINVAL;
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	int offset = ahci_scr_offset(ap, sc_reg);
+ 	void __iomem *port = ap->ioaddr.cmd_addr;
+ 	struct sil24_port_priv *pp = ap->private_data;
+ 	struct sil24_prb *prb = &pp->cmd_block[0].ata.prb;
+ 	dma_addr_t paddr = pp->cmd_block_dma;
++	u32 irq_enabled, irq_mask, irq_stat;
++	int rc;
 +
-+	if (offset) {
-+		*val = readl(port_mmio + offset);
-+		return 0;
- 	}
-+	return -EINVAL;
-+}
- 
--	writel(val, ap->ioaddr.scr_addr + (sc_reg * 4));
--	return 0;
-+static int ahci_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	int offset = ahci_scr_offset(ap, sc_reg);
++	prb->ctrl = cpu_to_le16(ctrl);
++	ata_tf_to_fis(tf, pmp, is_cmd, prb->fis);
 +
-+	if (offset) {
-+		writel(val, port_mmio + offset);
-+		return 0;
++	/* temporarily plug completion and error interrupts */
++	irq_enabled = readl(port + PORT_IRQ_ENABLE_SET);
++	writel(PORT_IRQ_COMPLETE | PORT_IRQ_ERROR, port + PORT_IRQ_ENABLE_CLR);
++
++	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
++	writel((u64)paddr >> 32, port + PORT_CMD_ACTIVATE + 4);
++
++	irq_mask = (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR) << PORT_IRQ_RAW_SHIFT;
++	irq_stat = ata_wait_register(port + PORT_IRQ_STAT, irq_mask, 0x0,
++				     10, timeout_msec);
++
++	writel(irq_mask, port + PORT_IRQ_STAT); /* clear IRQs */
++	irq_stat >>= PORT_IRQ_RAW_SHIFT;
++
++	if (irq_stat & PORT_IRQ_COMPLETE)
++		rc = 0;
++	else {
++		/* force port into known state */
++		sil24_init_port(ap);
++
++		if (irq_stat & PORT_IRQ_ERROR)
++			rc = -EIO;
++		else
++			rc = -EBUSY;
 +	}
-+	return -EINVAL;
- }
++
++	/* restore IRQ enabled */
++	writel(irq_enabled, port + PORT_IRQ_ENABLE_SET);
++
++	return rc;
++}
++
++static int sil24_softreset(struct ata_port *ap, unsigned int *class,
++			   unsigned long deadline)
++{
++	unsigned long timeout_msec = 0;
+ 	struct ata_taskfile tf;
+-	u32 mask, irq_stat;
+ 	const char *reason;
++	int rc;
  
- static void ahci_start_engine(struct ata_port *ap)
-@@ -1768,12 +1775,13 @@ static void ahci_print_info(struct ata_host *host)
+ 	DPRINTK("ENTER\n");
  
- 	dev_printk(KERN_INFO, &pdev->dev,
- 		"flags: "
--	       	"%s%s%s%s%s%s"
--	       	"%s%s%s%s%s%s%s\n"
-+		"%s%s%s%s%s%s%s"
-+		"%s%s%s%s%s%s%s\n"
- 	       	,
+@@ -557,24 +601,16 @@ static int sil24_softreset(struct ata_port *ap, unsigned int *class,
+ 	}
  
- 		cap & (1 << 31) ? "64bit " : "",
- 		cap & (1 << 30) ? "ncq " : "",
-+		cap & (1 << 29) ? "sntf " : "",
- 		cap & (1 << 28) ? "ilck " : "",
- 		cap & (1 << 27) ? "stag " : "",
- 		cap & (1 << 26) ? "pm " : "",
-@@ -1842,10 +1850,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		void __iomem *port_mmio = ahci_port_base(ap);
+ 	/* do SRST */
+-	prb->ctrl = cpu_to_le16(PRB_CTRL_SRST);
+-	prb->fis[1] = 0; /* no PMP yet */
++	if (time_after(deadline, jiffies))
++		timeout_msec = jiffies_to_msecs(deadline - jiffies);
  
- 		/* standard SATA port setup */
--		if (hpriv->port_map & (1 << i)) {
-+		if (hpriv->port_map & (1 << i))
- 			ap->ioaddr.cmd_addr = port_mmio;
--			ap->ioaddr.scr_addr = port_mmio + PORT_SCR;
--		}
+-	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
+-	writel((u64)paddr >> 32, port + PORT_CMD_ACTIVATE + 4);
+-
+-	mask = (PORT_IRQ_COMPLETE | PORT_IRQ_ERROR) << PORT_IRQ_RAW_SHIFT;
+-	irq_stat = ata_wait_register(port + PORT_IRQ_STAT, mask, 0x0,
+-				     100, jiffies_to_msecs(deadline - jiffies));
+-
+-	writel(irq_stat, port + PORT_IRQ_STAT); /* clear IRQs */
+-	irq_stat >>= PORT_IRQ_RAW_SHIFT;
+-
+-	if (!(irq_stat & PORT_IRQ_COMPLETE)) {
+-		if (irq_stat & PORT_IRQ_ERROR)
+-			reason = "SRST command error";
+-		else
+-			reason = "timeout";
++	ata_tf_init(ap->device, &tf);	/* doesn't really matter */
++	rc = sil24_exec_polled_cmd(ap, 0, &tf, 0, PRB_CTRL_SRST, timeout_msec);
++	if (rc == -EBUSY) {
++		reason = "timeout";
++		goto err;
++	} else if (rc) {
++		reason = "SRST command error";
+ 		goto err;
+ 	}
  
- 		/* disabled/not-implemented port */
- 		else
 -- 
 1.5.0.3
 
