@@ -1,149 +1,65 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 06/11] libata-pmp-prep: implement ATA_LFLAG_NO_SRST, ASSUME_ATA and ASSUME_SEMB
-Date: Mon, 16 Jul 2007 18:39:46 +0900
-Message-ID: <1184578786573-git-send-email-htejun@gmail.com>
+Subject: [PATCH 10/11] libata-pmp-prep: implement ATA_HORKAGE_SKIP_PM
+Date: Mon, 16 Jul 2007 18:39:47 +0900
+Message-ID: <11845787871886-git-send-email-htejun@gmail.com>
 References: <1184578783463-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.239]:50947 "EHLO
+Received: from nz-out-0506.google.com ([64.233.162.229]:51458 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756630AbXGPJjy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:39:54 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so783483nze
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:39:54 -0700 (PDT)
+	with ESMTP id S1755382AbXGPJj4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:39:56 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so783516nze
+        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:39:56 -0700 (PDT)
 In-Reply-To: <1184578783463-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Some links on some PMPs locks up on SRST and/or report incorrect
-device signature.  Implement ATA_LFLAG_NO_SRST, ASSUME_ATA and
-ASSUME_SEMB to handle these quirky links.  NO_SRST makes EH avoid
-SRST.  ASSUME_ATA and SEMB forces class code to ATA and SEMB_UNSUP
-respectively.  Note that SEMB isn't currently supported yet so the
-_UNSUP variant is used.
+Some pseudo devices fail PM commands unnecessarily aborting system
+suspend.  Implement ATA_HORKAGE_SKIP_PM which makes libata skip PM
+commands for these devices.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   42 ++++++++++++++++++++++++++++++++----------
- include/linux/libata.h  |    4 ++++
- 2 files changed, 36 insertions(+), 10 deletions(-)
+ drivers/ata/libata-scsi.c |    7 +++++++
+ include/linux/libata.h    |    1 +
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 93f023c..e5f644e 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1833,14 +1833,18 @@ static int ata_do_reset(struct ata_link *link, ata_reset_fn_t reset,
- 	return 0;
- }
- 
--static int ata_eh_followup_srst_needed(int rc, int classify,
-+static int ata_eh_followup_srst_needed(struct ata_link *link,
-+				       int rc, int classify,
- 				       const unsigned int *classes)
- {
-+	if (link->flags & ATA_LFLAG_NO_SRST)
-+		return 0;
- 	if (rc == -EAGAIN)
- 		return 1;
- 	if (rc != 0)
- 		return 0;
--	if (classify && classes[0] == ATA_DEV_UNKNOWN)
-+	if (classify && !(link->flags & ATA_LFLAG_ASSUME_CLASS) &&
-+	    classes[0] == ATA_DEV_UNKNOWN)
- 		return 1;
- 	return 0;
- }
-@@ -1867,7 +1871,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	 */
- 	action = ehc->i.action;
- 	ehc->i.action &= ~ATA_EH_RESET_MASK;
--	if (softreset && (!hardreset || (!sata_set_spd_needed(link) &&
-+	if (softreset && (!hardreset || (!(link->flags & ATA_LFLAG_NO_SRST) &&
-+					 !sata_set_spd_needed(link) &&
- 					 !(action & ATA_EH_HARDRESET))))
- 		ehc->i.action |= ATA_EH_SOFTRESET;
- 	else
-@@ -1930,7 +1935,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	rc = ata_do_reset(link, reset, classes, deadline);
- 
- 	if (reset == hardreset &&
--	    ata_eh_followup_srst_needed(rc, classify, classes)) {
-+	    ata_eh_followup_srst_needed(link, rc, classify, classes)) {
- 		/* okay, let's do follow-up softreset */
- 		reset = softreset;
- 
-@@ -1945,8 +1950,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
- 		rc = ata_do_reset(link, reset, classes, deadline);
- 
--		if (rc == 0 && classify &&
--		    classes[0] == ATA_DEV_UNKNOWN) {
-+		if (rc == 0 && classify && classes[0] == ATA_DEV_UNKNOWN &&
-+		    !(link->flags & ATA_LFLAG_ASSUME_CLASS)) {
- 			ata_link_printk(link, KERN_ERR,
- 					"classification failed\n");
- 			rc = -EINVAL;
-@@ -1954,6 +1959,10 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		}
- 	}
- 
-+	/* if we skipped follow-up srst, clear rc */
-+	if (rc == -EAGAIN)
-+		rc = 0;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1a1c018..3b8693f 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -950,6 +950,13 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;       /* LOEJ bit set not supported */
+ 	if (((cdb[4] >> 4) & 0xf) != 0)
+ 		goto invalid_fld;       /* power conditions not supported */
 +
- 	if (rc && try < ARRAY_SIZE(ata_eh_reset_timeouts)) {
- 		unsigned long now = jiffies;
- 
-@@ -1978,12 +1987,25 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	if (rc == 0) {
- 		u32 sstatus;
- 
--		/* After the reset, the device state is PIO 0 and the
--		 * controller state is undefined.  Record the mode.
--		 */
--		ata_link_for_each_dev(dev, link)
-+		ata_link_for_each_dev(dev, link) {
-+			/* After the reset, the device state is PIO 0
-+			 * and the controller state is undefined.
-+			 * Record the mode.
-+			 */
- 			dev->pio_mode = XFER_PIO_0;
- 
-+			if (ata_link_offline(link))
-+				continue;
++	if (qc->dev->horkage & ATA_HORKAGE_SKIP_PM) {
++		/* the device lacks PM support, finish without doing anything */
++		scmd->result = SAM_STAT_GOOD;
++		return 1;
++	}
 +
-+			/* apply class override and convert UNKNOWN to NONE */
-+			if (link->flags & ATA_LFLAG_ASSUME_ATA)
-+				classes[dev->devno] = ATA_DEV_ATA;
-+			else if (link->flags & ATA_LFLAG_ASSUME_SEMB)
-+				classes[dev->devno] = ATA_DEV_SEMB_UNSUP; /* not yet */
-+			else if (classes[dev->devno] == ATA_DEV_UNKNOWN)
-+				classes[dev->devno] = ATA_DEV_NONE;
-+		}
-+
- 		/* record current link speed */
- 		if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0)
- 			link->sata_spd = (sstatus >> 4) & 0xf;
+ 	if (cdb[4] & 0x1) {
+ 		tf->nsect = 1;	/* 1 sector, lba=0 */
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3b8ce64..3d84c2b 100644
+index 717fdb5..4e37180 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -164,6 +164,10 @@ enum {
- 	ATA_LFLAG_HRST_TO_RESUME = (1 << 0), /* hardreset to resume link */
- 	ATA_LFLAG_SKIP_D2H_BSY	= (1 << 1), /* can't wait for the first D2H
- 					     * Register FIS clearing BSY */
-+	ATA_LFLAG_NO_SRST	= (1 << 2), /* avoid softreset */
-+	ATA_LFLAG_ASSUME_ATA	= (1 << 3), /* assume ATA class */
-+	ATA_LFLAG_ASSUME_SEMB	= (1 << 4), /* assume SEMB class */
-+	ATA_LFLAG_ASSUME_CLASS	= ATA_LFLAG_ASSUME_ATA | ATA_LFLAG_ASSUME_SEMB,
+@@ -325,6 +325,7 @@ enum {
+ 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
++	ATA_HORKAGE_SKIP_PM	= (1 << 4),	/* Skip PM operations */
+ };
  
- 	/* struct ata_port flags */
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+ enum hsm_task_states {
 -- 
 1.5.0.3
 
