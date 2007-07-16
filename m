@@ -1,100 +1,448 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/8] libata-pmp: implement qc_defer for command switching PMP support
-Date: Mon, 16 Jul 2007 18:46:04 +0900
-Message-ID: <1184579164253-git-send-email-htejun@gmail.com>
+Subject: [PATCH 8/8] ahci: implement PMP support
+Date: Mon, 16 Jul 2007 18:46:05 +0900
+Message-ID: <11845791651062-git-send-email-htejun@gmail.com>
 References: <1184579163885-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:53749 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757506AbXGPJqS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:18 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so784877nze
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:17 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.178]:41126 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756743AbXGPJqU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:20 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1519054wah
+        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:20 -0700 (PDT)
 In-Reply-To: <1184579163885-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement sata_pmp_qc_defer_cmd_switch() - standard qc_defer for
-command switching PMP support.
+Implement AHCI PMP support.  ahci only supports command based
+switching.  Also, for some reason, NCQ over PMP doesn't work now.
+Other than that, everything works.
+
+Tested on ICH9R, JMB360/363 + SIMG3726, 4726 and 5744.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Forrest Zhao <forrest.zhao@gmail.com>
 ---
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-pmp.c  |   30 ++++++++++++++++++++++++++++++
- include/linux/libata.h    |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/ata/ahci.c |  236 ++++++++++++++++++++++++++++++++++++++++++----------
+ 1 files changed, 191 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 997315c..38d7492 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7143,6 +7143,7 @@ EXPORT_SYMBOL_GPL(ata_pci_default_filter);
- EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
- #endif /* CONFIG_PCI */
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 805887e..2c13933 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -46,7 +46,7 @@
+ #include <linux/libata.h>
  
-+EXPORT_SYMBOL_GPL(sata_pmp_qc_defer_cmd_switch);
- EXPORT_SYMBOL_GPL(sata_pmp_read_init_tf);
- EXPORT_SYMBOL_GPL(sata_pmp_read_val);
- EXPORT_SYMBOL_GPL(sata_pmp_write_init_tf);
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 26ff24e..add2445 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -70,6 +70,36 @@ static int sata_pmp_write(struct ata_link *link, int reg, u32 val)
+ #define DRV_NAME	"ahci"
+-#define DRV_VERSION	"2.3"
++#define DRV_VERSION	"3.0"
+ 
+ 
+ enum {
+@@ -97,6 +97,7 @@ enum {
+ 
+ 	/* HOST_CAP bits */
+ 	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
++	HOST_CAP_PMP		= (1 << 17), /* Port Multiplier support */
+ 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
+ 	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
+ 	HOST_CAP_SNTF		= (1 << 29), /* SNotification register */
+@@ -144,7 +145,8 @@ enum {
+ 				  PORT_IRQ_IF_ERR |
+ 				  PORT_IRQ_CONNECT |
+ 				  PORT_IRQ_PHYRDY |
+-				  PORT_IRQ_UNK_FIS,
++				  PORT_IRQ_UNK_FIS |
++				  PORT_IRQ_BAD_PMP,
+ 	PORT_IRQ_ERROR		= PORT_IRQ_FREEZE |
+ 				  PORT_IRQ_TF_ERR |
+ 				  PORT_IRQ_HBUS_DATA_ERR,
+@@ -154,6 +156,7 @@ enum {
+ 
+ 	/* PORT_CMD bits */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
++	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+ 	PORT_CMD_FIS_RX		= (1 << 4), /* Enable FIS receive DMA engine */
+@@ -229,6 +232,10 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc);
+ static u8 ahci_check_status(struct ata_port *ap);
+ static void ahci_freeze(struct ata_port *ap);
+ static void ahci_thaw(struct ata_port *ap);
++static void ahci_pmp_attach(struct ata_port *ap);
++static void ahci_pmp_detach(struct ata_port *ap);
++static int ahci_pmp_read(struct ata_device *dev, int pmp, int reg, u32 *r_val);
++static int ahci_pmp_write(struct ata_device *dev, int pmp, int reg, u32 val);
+ static void ahci_error_handler(struct ata_port *ap);
+ static void ahci_vt8251_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+@@ -270,7 +277,7 @@ static const struct ata_port_operations ahci_ops = {
+ 
+ 	.tf_read		= ahci_tf_read,
+ 
+-	.qc_defer		= ata_std_qc_defer,
++	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
+ 
+@@ -287,6 +294,11 @@ static const struct ata_port_operations ahci_ops = {
+ 	.error_handler		= ahci_error_handler,
+ 	.post_internal_cmd	= ahci_post_internal_cmd,
+ 
++	.pmp_attach		= ahci_pmp_attach,
++	.pmp_detach		= ahci_pmp_detach,
++	.pmp_read		= ahci_pmp_read,
++	.pmp_write		= ahci_pmp_write,
++
+ #ifdef CONFIG_PM
+ 	.port_suspend		= ahci_port_suspend,
+ 	.port_resume		= ahci_port_resume,
+@@ -305,7 +317,7 @@ static const struct ata_port_operations ahci_vt8251_ops = {
+ 
+ 	.tf_read		= ahci_tf_read,
+ 
+-	.qc_defer		= ata_std_qc_defer,
++	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
+ 	.qc_prep		= ahci_qc_prep,
+ 	.qc_issue		= ahci_qc_issue,
+ 
+@@ -322,6 +334,11 @@ static const struct ata_port_operations ahci_vt8251_ops = {
+ 	.error_handler		= ahci_vt8251_error_handler,
+ 	.post_internal_cmd	= ahci_post_internal_cmd,
+ 
++	.pmp_attach		= ahci_pmp_attach,
++	.pmp_detach		= ahci_pmp_detach,
++	.pmp_read		= ahci_pmp_read,
++	.pmp_write		= ahci_pmp_write,
++
+ #ifdef CONFIG_PM
+ 	.port_suspend		= ahci_port_suspend,
+ 	.port_resume		= ahci_port_resume,
+@@ -1118,7 +1135,12 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ static int ahci_softreset(struct ata_link *link, unsigned int *class,
+ 			  unsigned long deadline)
+ {
+-	return ahci_do_softreset(link, class, 0, deadline);
++	int pmp = 0;
++
++	if (link->ap->flags & ATA_FLAG_PMP)
++		pmp = SATA_PMP_CTRL_PORT;
++
++	return ahci_do_softreset(link, class, pmp, deadline);
  }
  
- /**
-+ *	sata_pmp_qc_defer_cmd_switch - qc_defer for command switching PMP
-+ *	@qc: ATA command in question
-+ *
-+ *	A host which has command switching PMP support cannot issue
-+ *	commands to multiple links simultaneously.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	ATA_DEFER_* if deferring is needed, 0 otherwise.
-+ */
-+int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc)
+ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+@@ -1145,7 +1167,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 
+ 	if (rc == 0 && ata_link_online(link))
+ 		*class = ahci_dev_classify(ap);
+-	if (*class == ATA_DEV_UNKNOWN)
++	if (rc != -EAGAIN && *class == ATA_DEV_UNKNOWN)
+ 		*class = ATA_DEV_NONE;
+ 
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+@@ -1200,6 +1222,12 @@ static void ahci_postreset(struct ata_link *link, unsigned int *class)
+ 	}
+ }
+ 
++static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
++			      unsigned long deadline)
 +{
-+	struct ata_link *link = qc->dev->link;
-+	struct ata_port *ap = link->ap;
-+
-+	if (ap->excl_link == NULL || ap->excl_link == link) {
-+		if (ap->nr_active_links == 0 || ata_link_active(link)) {
-+			qc->flags |= ATA_QCFLAG_CLEAR_EXCL;
-+			return ata_std_qc_defer(qc);
-+		}
-+
-+		ap->excl_link = link;
-+	}
-+
-+	return ATA_DEFER_PORT;
++	return ahci_do_softreset(link, class, link->pmp, deadline);
 +}
 +
-+/**
-  *	sata_pmp_read_init_tf - initialize TF for PMP read
-  *	@tf: taskfile to initialize
-  *	@dev: PMP dev
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f563301..478c3e8 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -941,6 +941,7 @@ extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
- /*
-  * PMP
-  */
-+extern int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc);
- extern void sata_pmp_read_init_tf(struct ata_taskfile *tf,
- 				  struct ata_device *dev, int pmp, int reg);
- extern u32 sata_pmp_read_val(const struct ata_taskfile *tf);
+ static u8 ahci_check_status(struct ata_port *ap)
+ {
+ 	void __iomem *mmio = ap->ioaddr.cmd_addr;
+@@ -1258,7 +1286,7 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
+ 	 */
+ 	cmd_tbl = pp->cmd_tbl + qc->tag * AHCI_CMD_TBL_SZ;
+ 
+-	ata_tf_to_fis(&qc->tf, 0, 1, cmd_tbl);
++	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, cmd_tbl);
+ 	if (is_atapi) {
+ 		memset(cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
+ 		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
+@@ -1271,7 +1299,7 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
+ 	/*
+ 	 * Fill in command slot information.
+ 	 */
+-	opts = cmd_fis_len | n_elem << 16;
++	opts = cmd_fis_len | n_elem << 16 | (qc->dev->link->pmp << 12);
+ 	if (qc->tf.flags & ATA_TFLAG_WRITE)
+ 		opts |= AHCI_CMD_WRITE;
+ 	if (is_atapi)
+@@ -1283,65 +1311,85 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
+ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ {
+ 	struct ahci_port_priv *pp = ap->private_data;
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	unsigned int err_mask = 0, action = 0;
+-	struct ata_queued_cmd *qc;
++	struct ata_eh_info *host_ehi = &ap->link.eh_info;
++	struct ata_link *link = NULL;
++	struct ata_queued_cmd *active_qc;
++	struct ata_eh_info *active_ehi;
+ 	u32 serror;
+ 
+-	ata_ehi_clear_desc(ehi);
++	/* determine active link */
++	ata_port_for_each_link(link, ap)
++		if (ata_link_active(link))
++			break;
++	if (!link)
++		link = &ap->link;
++
++	active_qc = ata_qc_from_tag(ap, link->active_tag);
++	active_ehi = &link->eh_info;
++
++	/* record irq stat */
++	ata_ehi_clear_desc(host_ehi);
++	ata_ehi_push_desc(host_ehi, "irq_stat 0x%08x ", irq_stat);
+ 
+ 	/* AHCI needs SError cleared; otherwise, it might lock up */
+ 	ahci_scr_read(ap, SCR_ERROR, &serror);
+ 	ahci_scr_write(ap, SCR_ERROR, serror);
+-
+-	/* analyze @irq_stat */
+-	ata_ehi_push_desc(ehi, "irq_stat 0x%08x", irq_stat);
++	host_ehi->serror |= serror;
+ 
+ 	/* some controllers set IRQ_IF_ERR on device errors, ignore it */
+ 	if (ap->flags & AHCI_FLAG_IGN_IRQ_IF_ERR)
+ 		irq_stat &= ~PORT_IRQ_IF_ERR;
+ 
+ 	if (irq_stat & PORT_IRQ_TF_ERR) {
+-		err_mask |= AC_ERR_DEV;
++		/* If qc is active, charge it; otherwise, the active
++		 * link.  There's no active qc on NCQ errors.  It will
++		 * be determined by EH by reading log page 10h.
++		 */
++		if (active_qc)
++			active_qc->err_mask |= AC_ERR_DEV;
++		else
++			active_ehi->err_mask |= AC_ERR_DEV;
++
+ 		if (ap->flags & AHCI_FLAG_IGN_SERR_INTERNAL)
+-			serror &= ~SERR_INTERNAL;
++			host_ehi->serror &= ~SERR_INTERNAL;
++	}
++
++	if (irq_stat & PORT_IRQ_UNK_FIS) {
++		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
++
++		active_ehi->err_mask |= AC_ERR_HSM;
++		active_ehi->action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(active_ehi,
++				  "<unknown FIS %08x %08x %08x %08x> " ,
++				  unk[0], unk[1], unk[2], unk[3]);
++	}
++
++	if (ap->nr_pmp_links && (irq_stat & PORT_IRQ_BAD_PMP)) {
++		active_ehi->err_mask |= AC_ERR_HSM;
++		active_ehi->action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(active_ehi, "<incorrect PMP> ");
+ 	}
+ 
+ 	if (irq_stat & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR)) {
+-		err_mask |= AC_ERR_HOST_BUS;
+-		action |= ATA_EH_SOFTRESET;
++		host_ehi->err_mask |= AC_ERR_HOST_BUS;
++		host_ehi->action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(host_ehi, "<host bus error> ");
+ 	}
+ 
+ 	if (irq_stat & PORT_IRQ_IF_ERR) {
+-		err_mask |= AC_ERR_ATA_BUS;
+-		action |= ATA_EH_SOFTRESET;
+-		ata_ehi_push_desc(ehi, "interface fatal error");
++		host_ehi->err_mask |= AC_ERR_ATA_BUS;
++		host_ehi->action |= ATA_EH_SOFTRESET;
++		ata_ehi_push_desc(host_ehi, "<interface fatal error> ");
+ 	}
+ 
+ 	if (irq_stat & (PORT_IRQ_CONNECT | PORT_IRQ_PHYRDY)) {
+-		ata_ehi_hotplugged(ehi);
+-		ata_ehi_push_desc(ehi, "%s", irq_stat & PORT_IRQ_CONNECT ?
++		ata_ehi_hotplugged(host_ehi);
++		ata_ehi_push_desc(host_ehi, "<%s> ",
++			irq_stat & PORT_IRQ_CONNECT ?
+ 			"connection status changed" : "PHY RDY changed");
+ 	}
+ 
+-	if (irq_stat & PORT_IRQ_UNK_FIS) {
+-		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
+-
+-		err_mask |= AC_ERR_HSM;
+-		action |= ATA_EH_SOFTRESET;
+-		ata_ehi_push_desc(ehi, "unknown FIS %08x %08x %08x %08x",
+-				  unk[0], unk[1], unk[2], unk[3]);
+-	}
+-
+ 	/* okay, let's hand over to EH */
+-	ehi->serror |= serror;
+-	ehi->action |= action;
+-
+-	qc = ata_qc_from_tag(ap, ap->link.active_tag);
+-	if (qc)
+-		qc->err_mask |= err_mask;
+-	else
+-		ehi->err_mask |= err_mask;
+ 
+ 	if (irq_stat & PORT_IRQ_FREEZE)
+ 		ata_port_freeze(ap);
+@@ -1360,6 +1408,9 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 
++	if (status & PORT_IRQ_SDB_FIS)
++		sata_async_notification(ap);
++
+ 	if (unlikely(status & PORT_IRQ_ERROR)) {
+ 		ahci_error_intr(ap, status);
+ 		return;
+@@ -1531,8 +1582,11 @@ static void ahci_thaw(struct ata_port *ap)
+ 	writel(tmp, port_mmio + PORT_IRQ_STAT);
+ 	writel(1 << ap->port_no, mmio + HOST_IRQ_STAT);
+ 
+-	/* turn IRQ back on */
+-	writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
++	/* turn IRQ back on, ignore BAD_PMP if PMP isn't attached */
++	tmp = DEF_PORT_IRQ;
++	if (!ap->nr_pmp_links)
++		tmp &= ~PORT_IRQ_BAD_PMP;
++	writel(tmp, port_mmio + PORT_IRQ_MASK);
+ }
+ 
+ static void ahci_error_handler(struct ata_port *ap)
+@@ -1544,8 +1598,10 @@ static void ahci_error_handler(struct ata_port *ap)
+ 	}
+ 
+ 	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_hardreset,
+-		  ahci_postreset);
++	sata_pmp_do_eh(ap, ata_std_prereset, ahci_softreset,
++		       ahci_hardreset, ahci_postreset,
++		       sata_pmp_std_prereset, ahci_pmp_softreset,
++		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
+ }
+ 
+ static void ahci_vt8251_error_handler(struct ata_port *ap)
+@@ -1570,11 +1626,95 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+ 		ahci_kick_engine(ap, 1);
+ }
+ 
++static void ahci_pmp_attach(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	unsigned long flags;
++	u32 cmd;
++
++	cmd = readl(port_mmio + PORT_CMD);
++	cmd |= PORT_CMD_PMP;
++	writel(cmd, port_mmio + PORT_CMD);
++
++	/* FIXME: For some reason, NCQ on PMP doesn't work well on
++	 * ahci.  It works as long as only one command is in flight.
++	 * BAD_PMP, IF_ERR and device errors are reported the moment
++	 * another command grows the queue depth.
++	 *
++	 * It's not certain who's to blame yet.  The behavior is
++	 * consistent on any combination of ich9r, jmb36x + sil3726,
++	 * 4726 and 5744 + several different NCQ capable drives from
++	 * different vendors.  It could be a common flaw in those Port
++	 * Multipliers or a bug in this driver.
++	 */
++	if (hpriv->cap & HOST_CAP_NCQ) {
++		spin_lock_irqsave(ap->lock, flags);
++		ata_port_printk(ap, KERN_INFO,
++			"ahci: NCQ is currently not supported with PMP\n");
++		ap->flags &= ~ATA_FLAG_NCQ;
++		spin_unlock_irqrestore(ap->lock, flags);
++	}
++}
++
++static void ahci_pmp_detach(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	unsigned long flags;
++	u32 cmd;
++
++	cmd = readl(port_mmio + PORT_CMD);
++	cmd &= ~PORT_CMD_PMP;
++	writel(cmd, port_mmio + PORT_CMD);
++
++	if (hpriv->cap & HOST_CAP_NCQ) {
++		spin_lock_irqsave(ap->lock, flags);
++		ap->flags |= ATA_FLAG_NCQ;
++		spin_unlock_irqrestore(ap->lock, flags);
++	}
++}
++
++static int ahci_pmp_read(struct ata_device *dev, int pmp, int reg, u32 *r_val)
++{
++	struct ata_port *ap = dev->link->ap;
++	struct ata_taskfile tf;
++	int rc;
++
++	ahci_kick_engine(ap, 0);
++
++	sata_pmp_read_init_tf(&tf, dev, pmp, reg);
++	rc = ahci_exec_polled_cmd(ap, SATA_PMP_CTRL_PORT, &tf, 1, 0,
++				  SATA_PMP_SCR_TIMEOUT);
++	if (rc == 0) {
++		ahci_tf_read(ap, &tf);
++		*r_val = sata_pmp_read_val(&tf);
++	}
++	return rc;
++}
++
++static int ahci_pmp_write(struct ata_device *dev, int pmp, int reg, u32 val)
++{
++	struct ata_port *ap = dev->link->ap;
++	struct ata_taskfile tf;
++
++	ahci_kick_engine(ap, 0);
++
++	sata_pmp_write_init_tf(&tf, dev, pmp, reg, val);
++	return ahci_exec_polled_cmd(ap, SATA_PMP_CTRL_PORT, &tf, 1, 0,
++				    SATA_PMP_SCR_TIMEOUT);
++}
++
+ static int ahci_port_resume(struct ata_port *ap)
+ {
+ 	ahci_power_up(ap);
+ 	ahci_start_port(ap);
+ 
++	if (ap->nr_pmp_links)
++		ahci_pmp_attach(ap);
++	else
++		ahci_pmp_detach(ap);
++
+ 	return 0;
+ }
+ 
+@@ -1849,6 +1989,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (hpriv->cap & HOST_CAP_NCQ)
+ 		pi.flags |= ATA_FLAG_NCQ;
+ 
++	if (hpriv->cap & HOST_CAP_PMP)
++		pi.flags |= ATA_FLAG_PMP;
++
++	if (hpriv->cap & HOST_CAP_SNTF)
++		pi.flags |= ATA_FLAG_SDB_NOTIFY;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, fls(hpriv->port_map));
+ 	if (!host)
+ 		return -ENOMEM;
 -- 
 1.5.0.3
 
