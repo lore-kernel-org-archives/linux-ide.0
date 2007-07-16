@@ -1,75 +1,60 @@
-From: "su henry" <henry.su.ati@gmail.com>
-Subject: [patch] add more device IDs for supporting SB700 (resend)
-Date: Mon, 16 Jul 2007 22:59:43 +0800
-Message-ID: <c660f0910707160759m384f46b3s310cf833db305cb6@mail.gmail.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: [patch] libata: fix last_ctl caching in ata_tf_read()
+Date: Mon, 16 Jul 2007 14:35:34 -0400
+Message-ID: <469BBA76.5000901@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_37311_29284429.1184597983326"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:52685 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758231AbXGPO7o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 10:59:44 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so993553ugf
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 07:59:43 -0700 (PDT)
+Received: from mx1.redhat.com ([66.187.233.31]:51390 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832AbXGPSfg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jul 2007 14:35:36 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZY73014333
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZY1F009223
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
+Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l6GIZYIg025603
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 14:35:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff <jeff@garzik.org>, jgarzik <jgarzik@pobox.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, bzolnier <bzolnier@gmail.com>, htejun <htejun@gmail.com>, greg <greg@kroah.com>, henry.su@amd.com
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-------=_Part_37311_29284429.1184597983326
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+libata: fix last_ctl caching in ata_tf_read()
 
-From: henry.su.ati@gmail.com
-The SATA controller device ID is different according to
-the onchip SATA type set in the system BIOS:
-Device                              Device ID
-SATA in IDE mode             0x4390
-SATA in AHCI mode           0x4391
-SATA in non-raid5 driver     0x4392
-SATA in raid5 driver           0x4393
+last_ctl was not cached properly. (Pointed out
+by Tejun Heo.)
 
-Although the device ID is different, they use the same AHCI driver
-.The attached file is the patch for adding these device
-IDs for ATI SB700.
+Signed-off-by: Chuck Ebbert <cebbert@redhat.com>
 
-Signed-off-by: henry.su.ati@gmail.com
------------------------------------
-diff -Nur a/drivers/ata/ahci.c b/drivers/ata/ahci.c
---- a/drivers/ata/ahci.c	2007-07-13 10:39:27.854093200 +0800
-+++ b/drivers/ata/ahci.c	2007-07-13 10:52:58.625022700 +0800
-@@ -399,7 +399,10 @@
+---
+(Apply after Petr's patch to fix the sense data.)
 
- 	/* ATI */
- 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
--	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700 */
-+	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700 IDE */
-+	{ PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700 AHCI */
-+	{ PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700 nraid5 */
-+	{ PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700 raid5 */
+ drivers/ata/libata-sff.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
- 	/* VIA */
- 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
-
-------=_Part_37311_29284429.1184597983326
-Content-Type: text/plain; name=sb700sataids.patch; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_f472s2bl
-Content-Disposition: attachment; filename="sb700sataids.patch"
-
-ZGlmZiAtTnVyIGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEvYWhjaS5jCi0tLSBh
-L2RyaXZlcnMvYXRhL2FoY2kuYwkyMDA3LTA3LTEzIDEwOjM5OjI3Ljg1NDA5MzIwMCArMDgwMAor
-KysgYi9kcml2ZXJzL2F0YS9haGNpLmMJMjAwNy0wNy0xMyAxMDo1Mjo1OC42MjUwMjI3MDAgKzA4
-MDAKQEAgLTM5OSw3ICszOTksMTAgQEAKIAogCS8qIEFUSSAqLwogCXsgUENJX1ZERVZJQ0UoQVRJ
-LCAweDQzODApLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjYwMCAqLwotCXsgUENJX1ZE
-RVZJQ0UoQVRJLCAweDQzOTApLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjcwMCAqLwor
-CXsgUENJX1ZERVZJQ0UoQVRJLCAweDQzOTApLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBT
-QjcwMCBJREUgKi8KKwl7IFBDSV9WREVWSUNFKEFUSSwgMHg0MzkxKSwgYm9hcmRfYWhjaV9zYjYw
-MCB9LCAvKiBBVEkgU0I3MDAgQUhDSSAqLworCXsgUENJX1ZERVZJQ0UoQVRJLCAweDQzOTIpLCBi
-b2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjcwMCBucmFpZDUgKi8KKwl7IFBDSV9WREVWSUNF
-KEFUSSwgMHg0MzkzKSwgYm9hcmRfYWhjaV9zYjYwMCB9LCAvKiBBVEkgU0I3MDAgcmFpZDUgKi8K
-IAogCS8qIFZJQSAqLwogCXsgUENJX1ZERVZJQ0UoVklBLCAweDMzNDkpLCBib2FyZF9haGNpX3Z0
-ODI1MSB9LCAvKiBWSUEgVlQ4MjUxICovCgo=
-------=_Part_37311_29284429.1184597983326--
+--- linux-2.6.22.noarch.orig/drivers/ata/libata-sff.c
++++ linux-2.6.22.noarch/drivers/ata/libata-sff.c
+@@ -196,7 +196,9 @@ void ata_tf_read(struct ata_port *ap, st
+ {
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
+ 
++	ap->last_ctl = tf->ctl;
+ 	iowrite8(tf->ctl, ioaddr->ctl_addr);
++
+ 	tf->command = ata_check_status(ap);
+ 	tf->feature = ioread8(ioaddr->error_addr);
+ 	tf->nsect = ioread8(ioaddr->nsect_addr);
+@@ -205,7 +208,9 @@ void ata_tf_read(struct ata_port *ap, st
+ 	tf->device = ioread8(ioaddr->device_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
++		ap->last_ctl = tf_ctl | ATA_HOB;
+ 		iowrite8(tf->ctl | ATA_HOB, ioaddr->ctl_addr);
++
+ 		tf->hob_feature = ioread8(ioaddr->error_addr);
+ 		tf->hob_nsect = ioread8(ioaddr->nsect_addr);
+ 		tf->hob_lbal = ioread8(ioaddr->lbal_addr);
