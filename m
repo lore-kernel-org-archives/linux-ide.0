@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 16/21] libata: quickly trigger SATA SPD down after debouncing failed
-Date: Mon, 16 Jul 2007 14:29:40 +0900
-Message-ID: <11845637801929-git-send-email-htejun@gmail.com>
+Subject: [PATCH 03/21] ahci: use deadline instead of fixed timeout for 1st FIS for SRST
+Date: Mon, 16 Jul 2007 14:29:38 +0900
+Message-ID: <11845637781995-git-send-email-htejun@gmail.com>
 References: <11845637782629-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,57 +10,57 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from nz-out-0506.google.com ([64.233.162.234]:11862 "EHLO
 	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762489AbXGPF3v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:51 -0400
+	with ESMTP id S1763539AbXGPF3o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:44 -0400
 Received: by nz-out-0506.google.com with SMTP id s18so736630nze
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:51 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:44 -0700 (PDT)
 In-Reply-To: <11845637782629-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Debouncing failure is a good indicator of basic link problem.  Use
--EPIPE to indicate debouncing failure and make ata_eh_reset() invoke
-sata_down_spd_limit() if the error occurs during reset.
+Use deadline instead of fixed timeout for 1st FIS for SRST to improve
+robustness of SRST.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    6 ++++--
- drivers/ata/libata-eh.c   |    2 +-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/ata/ahci.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c60155e..58bc40e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3267,9 +3267,11 @@ int sata_phy_debounce(struct ata_port *ap, const unsigned long *params,
- 		last = cur;
- 		last_jiffies = jiffies;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 61c5b6e..0451600 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -976,6 +976,7 @@ static int ahci_softreset(struct ata_port *ap, unsigned int *class,
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	const u32 cmd_fis_len = 5; /* five dwords */
+ 	const char *reason = NULL;
++	unsigned long now, msecs;
+ 	struct ata_taskfile tf;
+ 	u32 tmp;
+ 	u8 *fis;
+@@ -1016,6 +1017,11 @@ static int ahci_softreset(struct ata_port *ap, unsigned int *class,
+ 	fis = pp->cmd_tbl;
  
--		/* check deadline */
-+		/* Check deadline.  If debouncing failed, return
-+		 * -EPIPE to tell upper layer to lower link speed.
-+		 */
- 		if (time_after(jiffies, deadline))
--			return -EBUSY;
-+			return -EPIPE;
- 	}
- }
+ 	/* issue the first D2H Register FIS */
++	msecs = 0;
++	now = jiffies;
++	if (time_after(now, deadline))
++		msecs = jiffies_to_msecs(deadline - now);
++
+ 	ahci_fill_cmd_slot(pp, 0,
+ 			   cmd_fis_len | AHCI_CMD_RESET | AHCI_CMD_CLR_BUSY);
  
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 183eaf4..1a4397a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1790,7 +1790,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 			schedule_timeout_uninterruptible(delta);
- 		}
+@@ -1024,7 +1030,7 @@ static int ahci_softreset(struct ata_port *ap, unsigned int *class,
  
--		if (reset == hardreset &&
-+		if (rc == -EPIPE ||
- 		    try == ARRAY_SIZE(ata_eh_reset_timeouts) - 1)
- 			sata_down_spd_limit(ap);
- 		if (hardreset)
+ 	writel(1, port_mmio + PORT_CMD_ISSUE);
+ 
+-	tmp = ata_wait_register(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, 500);
++	tmp = ata_wait_register(port_mmio + PORT_CMD_ISSUE, 0x1, 0x1, 1, msecs);
+ 	if (tmp & 0x1) {
+ 		rc = -EIO;
+ 		reason = "1st FIS failed";
 -- 
 1.5.0.3
 
