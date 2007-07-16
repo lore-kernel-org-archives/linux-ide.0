@@ -1,448 +1,1301 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 8/8] ahci: implement PMP support
-Date: Mon, 16 Jul 2007 18:46:05 +0900
-Message-ID: <11845791651062-git-send-email-htejun@gmail.com>
+Subject: [PATCH 2/8] libata-pmp: implement Port Multiplier support
+Date: Mon, 16 Jul 2007 18:46:04 +0900
+Message-ID: <11845791642762-git-send-email-htejun@gmail.com>
 References: <1184579163885-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:41126 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756743AbXGPJqU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:20 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1519054wah
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:20 -0700 (PDT)
+Received: from nz-out-0506.google.com ([64.233.162.234]:53686 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757506AbXGPJqY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 05:46:24 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so784842nze
+        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2007 02:46:24 -0700 (PDT)
 In-Reply-To: <1184579163885-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement AHCI PMP support.  ahci only supports command based
-switching.  Also, for some reason, NCQ over PMP doesn't work now.
-Other than that, everything works.
+Implement Port Multiplier support.  To support PMP, a LLDD has to
+supply ops->pmp_read() and pmp_write().  If non-null, ->pmp_attach and
+->pmp_detach are called on PMP attach and detach, respectively.
 
-Tested on ICH9R, JMB360/363 + SIMG3726, 4726 and 5744.
+->pmp_read/write() can be called while the port is frozen, so they
+must be implemented by polling.  This patch supplies several helpers
+to ease ->pmp_read/write() implementation.
+
+Also, irq_handler and error_handler must be PMP aware.  Most of PMP
+aware EH can be done by calling ata_pmp_do_eh() with appropriate
+methods.  PMP EH uses separate set of reset methods and this patch
+implements standard prereset, hardreset and postreset methods.
+
+This patch only implements PMP support.  The next patch will integrate
+PMP into the reset of libata and thus enable PMP support.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Forrest Zhao <forrest.zhao@gmail.com>
 ---
- drivers/ata/ahci.c |  236 ++++++++++++++++++++++++++++++++++++++++++----------
- 1 files changed, 191 insertions(+), 45 deletions(-)
+ drivers/ata/Makefile      |    3 +-
+ drivers/ata/libata-core.c |   11 +
+ drivers/ata/libata-pmp.c  | 1157 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h      |    5 +
+ include/linux/libata.h    |   19 +
+ 5 files changed, 1194 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/ata/libata-pmp.c
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 805887e..2c13933 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -46,7 +46,7 @@
- #include <linux/libata.h>
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 8149c68..19512c3 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -68,5 +68,6 @@ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
+ # Should be last libata driver
+ obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
  
- #define DRV_NAME	"ahci"
--#define DRV_VERSION	"2.3"
-+#define DRV_VERSION	"3.0"
+-libata-objs	:= libata-core.o libata-scsi.o libata-sff.o libata-eh.o
++libata-objs	:= libata-core.o libata-scsi.o libata-sff.o libata-eh.o \
++		   libata-pmp.o
+ libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 438e524..3f80130 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3770,6 +3770,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "IOMEGA  ZIP 250       ATAPI", NULL,	ATA_HORKAGE_NODMA }, /* temporary fix */
+ 	{ "IOMEGA  ZIP 250       ATAPI       Floppy",
+ 				NULL,		ATA_HORKAGE_NODMA },
++	/* Odd clown on sil3726/4726 PMPs */
++	{ "Config  Disk",	NULL,		ATA_HORKAGE_NODMA |
++						ATA_HORKAGE_SKIP_PM },
  
+ 	/* Weird ATAPI devices */
+ 	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
+@@ -7091,6 +7094,14 @@ EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
+ #endif /* CONFIG_PCI */
  
- enum {
-@@ -97,6 +97,7 @@ enum {
- 
- 	/* HOST_CAP bits */
- 	HOST_CAP_SSC		= (1 << 14), /* Slumber capable */
-+	HOST_CAP_PMP		= (1 << 17), /* Port Multiplier support */
- 	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
- 	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
- 	HOST_CAP_SNTF		= (1 << 29), /* SNotification register */
-@@ -144,7 +145,8 @@ enum {
- 				  PORT_IRQ_IF_ERR |
- 				  PORT_IRQ_CONNECT |
- 				  PORT_IRQ_PHYRDY |
--				  PORT_IRQ_UNK_FIS,
-+				  PORT_IRQ_UNK_FIS |
-+				  PORT_IRQ_BAD_PMP,
- 	PORT_IRQ_ERROR		= PORT_IRQ_FREEZE |
- 				  PORT_IRQ_TF_ERR |
- 				  PORT_IRQ_HBUS_DATA_ERR,
-@@ -154,6 +156,7 @@ enum {
- 
- 	/* PORT_CMD bits */
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-+	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
- 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
- 	PORT_CMD_FIS_RX		= (1 << 4), /* Enable FIS receive DMA engine */
-@@ -229,6 +232,10 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc);
- static u8 ahci_check_status(struct ata_port *ap);
- static void ahci_freeze(struct ata_port *ap);
- static void ahci_thaw(struct ata_port *ap);
-+static void ahci_pmp_attach(struct ata_port *ap);
-+static void ahci_pmp_detach(struct ata_port *ap);
-+static int ahci_pmp_read(struct ata_device *dev, int pmp, int reg, u32 *r_val);
-+static int ahci_pmp_write(struct ata_device *dev, int pmp, int reg, u32 val);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_vt8251_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
-@@ -270,7 +277,7 @@ static const struct ata_port_operations ahci_ops = {
- 
- 	.tf_read		= ahci_tf_read,
- 
--	.qc_defer		= ata_std_qc_defer,
-+	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
-@@ -287,6 +294,11 @@ static const struct ata_port_operations ahci_ops = {
- 	.error_handler		= ahci_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.pmp_attach		= ahci_pmp_attach,
-+	.pmp_detach		= ahci_pmp_detach,
-+	.pmp_read		= ahci_pmp_read,
-+	.pmp_write		= ahci_pmp_write,
++EXPORT_SYMBOL_GPL(sata_pmp_read_init_tf);
++EXPORT_SYMBOL_GPL(sata_pmp_read_val);
++EXPORT_SYMBOL_GPL(sata_pmp_write_init_tf);
++EXPORT_SYMBOL_GPL(sata_pmp_std_prereset);
++EXPORT_SYMBOL_GPL(sata_pmp_std_hardreset);
++EXPORT_SYMBOL_GPL(sata_pmp_std_postreset);
++EXPORT_SYMBOL_GPL(sata_pmp_do_eh);
 +
- #ifdef CONFIG_PM
- 	.port_suspend		= ahci_port_suspend,
- 	.port_resume		= ahci_port_resume,
-@@ -305,7 +317,7 @@ static const struct ata_port_operations ahci_vt8251_ops = {
- 
- 	.tf_read		= ahci_tf_read,
- 
--	.qc_defer		= ata_std_qc_defer,
-+	.qc_defer		= sata_pmp_qc_defer_cmd_switch,
- 	.qc_prep		= ahci_qc_prep,
- 	.qc_issue		= ahci_qc_issue,
- 
-@@ -322,6 +334,11 @@ static const struct ata_port_operations ahci_vt8251_ops = {
- 	.error_handler		= ahci_vt8251_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
- 
-+	.pmp_attach		= ahci_pmp_attach,
-+	.pmp_detach		= ahci_pmp_detach,
-+	.pmp_read		= ahci_pmp_read,
-+	.pmp_write		= ahci_pmp_write,
+ EXPORT_SYMBOL_GPL(__ata_ehi_push_desc);
+ EXPORT_SYMBOL_GPL(ata_ehi_push_desc);
+ EXPORT_SYMBOL_GPL(ata_ehi_clear_desc);
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+new file mode 100644
+index 0000000..14d8de8
+--- /dev/null
++++ b/drivers/ata/libata-pmp.c
+@@ -0,0 +1,1157 @@
++/*
++ * libata-pmp.c - libata port multiplier support
++ *
++ * Copyright (c) 2007  SUSE Linux Products GmbH
++ * Copyright (c) 2007  Tejun Heo <teheo@suse.de>
++ *
++ * This file is released under the GPLv2.
++ */
 +
- #ifdef CONFIG_PM
- 	.port_suspend		= ahci_port_suspend,
- 	.port_resume		= ahci_port_resume,
-@@ -1118,7 +1135,12 @@ static int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- static int ahci_softreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline)
- {
--	return ahci_do_softreset(link, class, 0, deadline);
-+	int pmp = 0;
++#include <linux/kernel.h>
++#include <linux/libata.h>
++#include "libata.h"
 +
-+	if (link->ap->flags & ATA_FLAG_PMP)
-+		pmp = SATA_PMP_CTRL_PORT;
-+
-+	return ahci_do_softreset(link, class, pmp, deadline);
- }
- 
- static int ahci_hardreset(struct ata_link *link, unsigned int *class,
-@@ -1145,7 +1167,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 
- 	if (rc == 0 && ata_link_online(link))
- 		*class = ahci_dev_classify(ap);
--	if (*class == ATA_DEV_UNKNOWN)
-+	if (rc != -EAGAIN && *class == ATA_DEV_UNKNOWN)
- 		*class = ATA_DEV_NONE;
- 
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
-@@ -1200,6 +1222,12 @@ static void ahci_postreset(struct ata_link *link, unsigned int *class)
- 	}
- }
- 
-+static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
++/**
++ *	sata_pmp_read - read PMP register
++ *	@link: link to read PMP register for
++ *	@reg: register to read
++ *	@r_val: resulting value
++ *
++ *	Wrapper around ap->ops->pmp_read to make it easier to call and
++ *	nomarlize error return value.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_pmp_read(struct ata_link *link, int reg, u32 *r_val)
 +{
-+	return ahci_do_softreset(link, class, link->pmp, deadline);
-+}
-+
- static u8 ahci_check_status(struct ata_port *ap)
- {
- 	void __iomem *mmio = ap->ioaddr.cmd_addr;
-@@ -1258,7 +1286,7 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
- 	 */
- 	cmd_tbl = pp->cmd_tbl + qc->tag * AHCI_CMD_TBL_SZ;
- 
--	ata_tf_to_fis(&qc->tf, 0, 1, cmd_tbl);
-+	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, cmd_tbl);
- 	if (is_atapi) {
- 		memset(cmd_tbl + AHCI_CMD_TBL_CDB, 0, 32);
- 		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
-@@ -1271,7 +1299,7 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
- 	/*
- 	 * Fill in command slot information.
- 	 */
--	opts = cmd_fis_len | n_elem << 16;
-+	opts = cmd_fis_len | n_elem << 16 | (qc->dev->link->pmp << 12);
- 	if (qc->tf.flags & ATA_TFLAG_WRITE)
- 		opts |= AHCI_CMD_WRITE;
- 	if (is_atapi)
-@@ -1283,65 +1311,85 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
- static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- {
- 	struct ahci_port_priv *pp = ap->private_data;
--	struct ata_eh_info *ehi = &ap->link.eh_info;
--	unsigned int err_mask = 0, action = 0;
--	struct ata_queued_cmd *qc;
-+	struct ata_eh_info *host_ehi = &ap->link.eh_info;
-+	struct ata_link *link = NULL;
-+	struct ata_queued_cmd *active_qc;
-+	struct ata_eh_info *active_ehi;
- 	u32 serror;
- 
--	ata_ehi_clear_desc(ehi);
-+	/* determine active link */
-+	ata_port_for_each_link(link, ap)
-+		if (ata_link_active(link))
-+			break;
-+	if (!link)
-+		link = &ap->link;
-+
-+	active_qc = ata_qc_from_tag(ap, link->active_tag);
-+	active_ehi = &link->eh_info;
-+
-+	/* record irq stat */
-+	ata_ehi_clear_desc(host_ehi);
-+	ata_ehi_push_desc(host_ehi, "irq_stat 0x%08x ", irq_stat);
- 
- 	/* AHCI needs SError cleared; otherwise, it might lock up */
- 	ahci_scr_read(ap, SCR_ERROR, &serror);
- 	ahci_scr_write(ap, SCR_ERROR, serror);
--
--	/* analyze @irq_stat */
--	ata_ehi_push_desc(ehi, "irq_stat 0x%08x", irq_stat);
-+	host_ehi->serror |= serror;
- 
- 	/* some controllers set IRQ_IF_ERR on device errors, ignore it */
- 	if (ap->flags & AHCI_FLAG_IGN_IRQ_IF_ERR)
- 		irq_stat &= ~PORT_IRQ_IF_ERR;
- 
- 	if (irq_stat & PORT_IRQ_TF_ERR) {
--		err_mask |= AC_ERR_DEV;
-+		/* If qc is active, charge it; otherwise, the active
-+		 * link.  There's no active qc on NCQ errors.  It will
-+		 * be determined by EH by reading log page 10h.
-+		 */
-+		if (active_qc)
-+			active_qc->err_mask |= AC_ERR_DEV;
-+		else
-+			active_ehi->err_mask |= AC_ERR_DEV;
-+
- 		if (ap->flags & AHCI_FLAG_IGN_SERR_INTERNAL)
--			serror &= ~SERR_INTERNAL;
-+			host_ehi->serror &= ~SERR_INTERNAL;
-+	}
-+
-+	if (irq_stat & PORT_IRQ_UNK_FIS) {
-+		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
-+
-+		active_ehi->err_mask |= AC_ERR_HSM;
-+		active_ehi->action |= ATA_EH_SOFTRESET;
-+		ata_ehi_push_desc(active_ehi,
-+				  "<unknown FIS %08x %08x %08x %08x> " ,
-+				  unk[0], unk[1], unk[2], unk[3]);
-+	}
-+
-+	if (ap->nr_pmp_links && (irq_stat & PORT_IRQ_BAD_PMP)) {
-+		active_ehi->err_mask |= AC_ERR_HSM;
-+		active_ehi->action |= ATA_EH_SOFTRESET;
-+		ata_ehi_push_desc(active_ehi, "<incorrect PMP> ");
- 	}
- 
- 	if (irq_stat & (PORT_IRQ_HBUS_ERR | PORT_IRQ_HBUS_DATA_ERR)) {
--		err_mask |= AC_ERR_HOST_BUS;
--		action |= ATA_EH_SOFTRESET;
-+		host_ehi->err_mask |= AC_ERR_HOST_BUS;
-+		host_ehi->action |= ATA_EH_SOFTRESET;
-+		ata_ehi_push_desc(host_ehi, "<host bus error> ");
- 	}
- 
- 	if (irq_stat & PORT_IRQ_IF_ERR) {
--		err_mask |= AC_ERR_ATA_BUS;
--		action |= ATA_EH_SOFTRESET;
--		ata_ehi_push_desc(ehi, "interface fatal error");
-+		host_ehi->err_mask |= AC_ERR_ATA_BUS;
-+		host_ehi->action |= ATA_EH_SOFTRESET;
-+		ata_ehi_push_desc(host_ehi, "<interface fatal error> ");
- 	}
- 
- 	if (irq_stat & (PORT_IRQ_CONNECT | PORT_IRQ_PHYRDY)) {
--		ata_ehi_hotplugged(ehi);
--		ata_ehi_push_desc(ehi, "%s", irq_stat & PORT_IRQ_CONNECT ?
-+		ata_ehi_hotplugged(host_ehi);
-+		ata_ehi_push_desc(host_ehi, "<%s> ",
-+			irq_stat & PORT_IRQ_CONNECT ?
- 			"connection status changed" : "PHY RDY changed");
- 	}
- 
--	if (irq_stat & PORT_IRQ_UNK_FIS) {
--		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
--
--		err_mask |= AC_ERR_HSM;
--		action |= ATA_EH_SOFTRESET;
--		ata_ehi_push_desc(ehi, "unknown FIS %08x %08x %08x %08x",
--				  unk[0], unk[1], unk[2], unk[3]);
--	}
--
- 	/* okay, let's hand over to EH */
--	ehi->serror |= serror;
--	ehi->action |= action;
--
--	qc = ata_qc_from_tag(ap, ap->link.active_tag);
--	if (qc)
--		qc->err_mask |= err_mask;
--	else
--		ehi->err_mask |= err_mask;
- 
- 	if (irq_stat & PORT_IRQ_FREEZE)
- 		ata_port_freeze(ap);
-@@ -1360,6 +1408,9 @@ static void ahci_port_intr(struct ata_port *ap)
- 	status = readl(port_mmio + PORT_IRQ_STAT);
- 	writel(status, port_mmio + PORT_IRQ_STAT);
- 
-+	if (status & PORT_IRQ_SDB_FIS)
-+		sata_async_notification(ap);
-+
- 	if (unlikely(status & PORT_IRQ_ERROR)) {
- 		ahci_error_intr(ap, status);
- 		return;
-@@ -1531,8 +1582,11 @@ static void ahci_thaw(struct ata_port *ap)
- 	writel(tmp, port_mmio + PORT_IRQ_STAT);
- 	writel(1 << ap->port_no, mmio + HOST_IRQ_STAT);
- 
--	/* turn IRQ back on */
--	writel(DEF_PORT_IRQ, port_mmio + PORT_IRQ_MASK);
-+	/* turn IRQ back on, ignore BAD_PMP if PMP isn't attached */
-+	tmp = DEF_PORT_IRQ;
-+	if (!ap->nr_pmp_links)
-+		tmp &= ~PORT_IRQ_BAD_PMP;
-+	writel(tmp, port_mmio + PORT_IRQ_MASK);
- }
- 
- static void ahci_error_handler(struct ata_port *ap)
-@@ -1544,8 +1598,10 @@ static void ahci_error_handler(struct ata_port *ap)
- 	}
- 
- 	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_hardreset,
--		  ahci_postreset);
-+	sata_pmp_do_eh(ap, ata_std_prereset, ahci_softreset,
-+		       ahci_hardreset, ahci_postreset,
-+		       sata_pmp_std_prereset, ahci_pmp_softreset,
-+		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
- }
- 
- static void ahci_vt8251_error_handler(struct ata_port *ap)
-@@ -1570,11 +1626,95 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
- 		ahci_kick_engine(ap, 1);
- }
- 
-+static void ahci_pmp_attach(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	unsigned long flags;
-+	u32 cmd;
-+
-+	cmd = readl(port_mmio + PORT_CMD);
-+	cmd |= PORT_CMD_PMP;
-+	writel(cmd, port_mmio + PORT_CMD);
-+
-+	/* FIXME: For some reason, NCQ on PMP doesn't work well on
-+	 * ahci.  It works as long as only one command is in flight.
-+	 * BAD_PMP, IF_ERR and device errors are reported the moment
-+	 * another command grows the queue depth.
-+	 *
-+	 * It's not certain who's to blame yet.  The behavior is
-+	 * consistent on any combination of ich9r, jmb36x + sil3726,
-+	 * 4726 and 5744 + several different NCQ capable drives from
-+	 * different vendors.  It could be a common flaw in those Port
-+	 * Multipliers or a bug in this driver.
-+	 */
-+	if (hpriv->cap & HOST_CAP_NCQ) {
-+		spin_lock_irqsave(ap->lock, flags);
-+		ata_port_printk(ap, KERN_INFO,
-+			"ahci: NCQ is currently not supported with PMP\n");
-+		ap->flags &= ~ATA_FLAG_NCQ;
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+}
-+
-+static void ahci_pmp_detach(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	unsigned long flags;
-+	u32 cmd;
-+
-+	cmd = readl(port_mmio + PORT_CMD);
-+	cmd &= ~PORT_CMD_PMP;
-+	writel(cmd, port_mmio + PORT_CMD);
-+
-+	if (hpriv->cap & HOST_CAP_NCQ) {
-+		spin_lock_irqsave(ap->lock, flags);
-+		ap->flags |= ATA_FLAG_NCQ;
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+}
-+
-+static int ahci_pmp_read(struct ata_device *dev, int pmp, int reg, u32 *r_val)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	struct ata_taskfile tf;
++	struct ata_port *ap = link->ap;
++	struct ata_device *pmp_dev = ap->link.device;
 +	int rc;
 +
-+	ahci_kick_engine(ap, 0);
++	might_sleep();
 +
-+	sata_pmp_read_init_tf(&tf, dev, pmp, reg);
-+	rc = ahci_exec_polled_cmd(ap, SATA_PMP_CTRL_PORT, &tf, 1, 0,
-+				  SATA_PMP_SCR_TIMEOUT);
-+	if (rc == 0) {
-+		ahci_tf_read(ap, &tf);
-+		*r_val = sata_pmp_read_val(&tf);
-+	}
++	rc = ap->ops->pmp_read(pmp_dev, link->pmp, reg, r_val);
++	if (rc)
++		rc = -EIO;
 +	return rc;
 +}
 +
-+static int ahci_pmp_write(struct ata_device *dev, int pmp, int reg, u32 val)
++/**
++ *	sata_pmp_write - write PMP register
++ *	@link: link to write PMP register for
++ *	@reg: register to write
++ *	@r_val: value to write
++ *
++ *	Wrapper around ap->ops->pmp_write to make it easier to call
++ *	and nomarlize error return value.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_pmp_write(struct ata_link *link, int reg, u32 val)
 +{
-+	struct ata_port *ap = dev->link->ap;
-+	struct ata_taskfile tf;
++	struct ata_port *ap = link->ap;
++	struct ata_device *pmp_dev = ap->link.device;
++	int rc;
 +
-+	ahci_kick_engine(ap, 0);
++	might_sleep();
 +
-+	sata_pmp_write_init_tf(&tf, dev, pmp, reg, val);
-+	return ahci_exec_polled_cmd(ap, SATA_PMP_CTRL_PORT, &tf, 1, 0,
-+				    SATA_PMP_SCR_TIMEOUT);
++	rc = ap->ops->pmp_write(pmp_dev, link->pmp, reg, val);
++	if (rc)
++		rc = -EIO;
++	return rc;
 +}
 +
- static int ahci_port_resume(struct ata_port *ap)
- {
- 	ahci_power_up(ap);
- 	ahci_start_port(ap);
- 
-+	if (ap->nr_pmp_links)
-+		ahci_pmp_attach(ap);
++/**
++ *	sata_pmp_read_init_tf - initialize TF for PMP read
++ *	@tf: taskfile to initialize
++ *	@dev: PMP dev
++ *	@pmp: port multiplier port number
++ *	@reg: register to read
++ *
++ *	Initialize @tf for PMP read command.
++ *
++ *	LOCKING:
++ *	None.
++ */
++void sata_pmp_read_init_tf(struct ata_taskfile *tf,
++			   struct ata_device *dev, int pmp, int reg)
++{
++	ata_tf_init(dev, tf);
++	tf->command = ATA_CMD_PMP_READ;
++	tf->protocol = ATA_PROT_NODATA;
++	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf->feature = reg;
++	tf->device = pmp;
++}
++
++/**
++ *	sata_pmp_read_val - extract PMP read result from TF
++ *	@tf: target TF
++ *
++ *	Determine PMP read result from @tf.
++ *
++ *	LOCKING:
++ *	None.
++ */
++u32 sata_pmp_read_val(const struct ata_taskfile *tf)
++{
++	return tf->nsect | tf->lbal << 8 | tf->lbam << 16 | tf->lbah << 24;
++}
++
++/**
++ *	sata_pmp_read_init_tf - initialize TF for PMP write
++ *	@tf: taskfile to initialize
++ *	@dev: PMP dev
++ *	@pmp: port multiplier port number
++ *	@reg: register to read
++ *	@val: value to write
++ *
++ *	Initialize @tf for PMP write command.
++ *
++ *	LOCKING:
++ *	None.
++ */
++void sata_pmp_write_init_tf(struct ata_taskfile *tf,
++			    struct ata_device *dev, int pmp, int reg, u32 val)
++{
++	ata_tf_init(dev, tf);
++	tf->command = ATA_CMD_PMP_WRITE;
++	tf->protocol = ATA_PROT_NODATA;
++	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf->feature = reg;
++	tf->device = pmp;
++	tf->nsect = val & 0xff;
++	tf->lbal = (val >> 8) & 0xff;
++	tf->lbam = (val >> 16) & 0xff;
++	tf->lbah = (val >> 24) & 0xff;
++}
++
++/**
++ *	sata_pmp_scr_read - read PSCR
++ *	@link: ATA link to read PSCR for
++ *	@reg: PSCR to read
++ *	@r_val: resulting value
++ *
++ *	Read PSCR @reg into @r_val for @link, to be called from
++ *	ata_scr_read().
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *r_val)
++{
++	if (reg > SATA_PMP_PSCR_CONTROL)
++		return -EINVAL;
++
++	return sata_pmp_read(link, reg, r_val);
++}
++
++/**
++ *	sata_pmp_scr_write - write PSCR
++ *	@link: ATA link to write PSCR for
++ *	@reg: PSCR to write
++ *	@val: value to be written
++ *
++ *	Write @val to PSCR @reg for @link, to be called from
++ *	ata_scr_write() and ata_scr_write_flush().
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++int sata_pmp_scr_write(struct ata_link *link, int reg, u32 val)
++{
++	if (reg > SATA_PMP_PSCR_CONTROL)
++		return -EINVAL;
++
++	return sata_pmp_write(link, reg, val);
++}
++
++/**
++ *	sata_pmp_std_prereset - prepare PMP link for reset
++ *	@link: link to be reset
++ *	@deadline: deadline jiffies for the operation
++ *
++ *	@link is about to be reset.  Initialize it.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int sata_pmp_std_prereset(struct ata_link *link, unsigned long deadline)
++{
++	struct ata_eh_context *ehc = &link->eh_context;
++	const unsigned long *timing = sata_ehc_deb_timing(ehc);
++	int rc;
++
++	/* force HRST? */
++	if (link->flags & ATA_LFLAG_NO_SRST)
++		ehc->i.action |= ATA_EH_HARDRESET;
++
++	/* handle link resume */
++	if ((ehc->i.flags & ATA_EHI_RESUME_LINK) &&
++	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
++		ehc->i.action |= ATA_EH_HARDRESET;
++
++	/* if we're about to do hardreset, nothing more to do */
++	if (ehc->i.action & ATA_EH_HARDRESET)
++		return 0;
++
++	/* resume link */
++	rc = sata_link_resume(link, timing, deadline);
++	if (rc) {
++		/* phy resume failed */
++		ata_link_printk(link, KERN_WARNING, "failed to resume link "
++				"for reset (errno=%d)\n", rc);
++		return rc;
++	}
++
++	/* clear SError bits including .X which blocks the port when set */
++	rc = sata_scr_write(link, SCR_ERROR, 0xffffffff);
++	if (rc) {
++		ata_link_printk(link, KERN_ERR,
++				"failed to clear SError (errno=%d)\n", rc);
++		return rc;
++	}
++
++	return 0;
++}
++
++/**
++ *	sata_pmp_std_hardreset - standard hardreset method for PMP link
++ *	@link: link to be reset
++ *	@class: resulting class of attached device
++ *	@deadline: deadline jiffies for the operation
++ *
++ *	Hardreset PMP port @link.  Note that this function doesn't
++ *	wait for BSY clearance.  There simply isn't a generic way to
++ *	wait the event.  Instead, this function return -EAGAIN thus
++ *	telling libata-EH to followup with softreset.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
++			   unsigned long deadline)
++{
++	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	u32 tmp;
++	int rc;
++
++	DPRINTK("ENTER\n");
++
++	/* do hardreset */
++	rc = sata_link_hardreset(link, timing, deadline);
++	if (rc) {
++		ata_link_printk(link, KERN_ERR,
++				"COMRESET failed (errno=%d)\n", rc);
++		goto out;
++	}
++
++	/* clear SError bits including .X which blocks the port when set */
++	rc = sata_scr_write(link, SCR_ERROR, 0xffffffff);
++	if (rc) {
++		ata_link_printk(link, KERN_ERR, "failed to clear SError "
++				"during hardreset (errno=%d)\n", rc);
++		goto out;
++	}
++
++	/* if device is present, follow up with srst to wait for !BSY */
++	if (ata_link_online(link))
++		rc = -EAGAIN;
++ out:
++	/* if SCR isn't accessible, we need to reset the PMP */
++	if (rc && rc != -EAGAIN && sata_scr_read(link, SCR_STATUS, &tmp))
++		rc = -ERESTART;
++
++	DPRINTK("EXIT, rc=%d\n", rc);
++	return rc;
++}
++
++/**
++ *	ata_std_postreset - standard postreset method for PMP link
++ *	@link: the target ata_link
++ *	@classes: classes of attached devices
++ *
++ *	This function is invoked after a successful reset.  Note that
++ *	the device might have been reset more than once using
++ *	different reset methods before postreset is invoked.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ */
++void sata_pmp_std_postreset(struct ata_link *link, unsigned int *class)
++{
++	u32 serror;
++
++	DPRINTK("ENTER\n");
++
++	/* clear SError */
++	if (sata_scr_read(link, SCR_ERROR, &serror) == 0)
++		sata_scr_write(link, SCR_ERROR, serror);
++
++	/* print link status */
++	sata_print_link_status(link);
++
++	DPRINTK("EXIT\n");
++}
++
++/**
++ *	sata_pmp_read_gscr - read GSCR block of SATA PMP
++ *	@dev: PMP device
++ *	@gscr: buffer to read GSCR block into
++ *
++ *	Read selected PMP GSCRs from the PMP at @dev.  This will serve
++ *	as configuration and identification info for the PMP.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_pmp_read_gscr(struct ata_device *dev, u32 *gscr)
++{
++	static const int gscr_to_read[] = { 0, 1, 2, 32, 33, 64, 96 };
++	int i, rc;
++
++	for (i = 0; i < ARRAY_SIZE(gscr_to_read); i++) {
++		int reg = gscr_to_read[i];
++
++		rc = sata_pmp_read(dev->link, reg, &gscr[reg]);
++		if (rc) {
++			ata_dev_printk(dev, KERN_ERR, "failed to read "
++				       "PMP GSCR[%d] (errno=%d)\n", reg, rc);
++			return rc;
++		}
++	}
++
++	return 0;
++}
++
++static const char *sata_pmp_spec_rev_str(const u32 *gscr)
++{
++	u32 rev = gscr[SATA_PMP_GSCR_REV];
++
++	if (rev & (1 << 2))
++		return "1.1";
++	if (rev & (1 << 1))
++		return "1.0";
++	return "<unknown>";
++}
++
++static int sata_pmp_configure(struct ata_device *dev, int print_info)
++{
++	struct ata_port *ap = dev->link->ap;
++	u32 *gscr = dev->gscr;
++	const char *reason;
++	int nr_ports, rc;
++
++	nr_ports = sata_pmp_gscr_ports(gscr);
++
++	if (nr_ports <= 0 || nr_ports > SATA_PMP_MAX_PORTS) {
++		rc = -EINVAL;
++		reason = "invalid nr_ports";
++		goto fail;
++	}
++
++	rc = sata_pmp_write(dev->link, SATA_PMP_GSCR_ERROR_EN, SERR_PHYRDY_CHG);
++	if (rc) {
++		reason = "failed to write GSCR_ERROR_EN";
++		goto fail;
++	}
++
++	if (ap->flags & ATA_FLAG_SDB_NOTIFY &&
++	    gscr[SATA_PMP_GSCR_FEAT] & SATA_PMP_FEAT_NOTIFY) {
++		gscr[SATA_PMP_GSCR_FEAT_EN] |= SATA_PMP_FEAT_NOTIFY;
++
++		rc = sata_pmp_write(dev->link, SATA_PMP_GSCR_FEAT_EN,
++				    gscr[SATA_PMP_GSCR_FEAT_EN]);
++		if (rc) {
++			reason = "failed to write GSCR_FEAT_EN";
++			goto fail;
++		}
++	}
++
++	if (print_info) {
++		ata_dev_printk(dev, KERN_INFO, "Port Multiplier %s, "
++			       "0x%04x:0x%04x r%d, %d ports, feat 0x%x/0x%x\n",
++			       sata_pmp_spec_rev_str(gscr),
++			       sata_pmp_gscr_vendor(gscr),
++			       sata_pmp_gscr_devid(gscr),
++			       sata_pmp_gscr_rev(gscr),
++			       nr_ports, gscr[SATA_PMP_GSCR_FEAT_EN],
++			       gscr[SATA_PMP_GSCR_FEAT]);
++
++		if (!(ap->flags & ATA_FLAG_SDB_NOTIFY))
++			ata_dev_printk(dev, KERN_INFO,
++				"SDB_NOTIFY not supported on host port, "
++				"hotplug won't work on\n         fan-out "
++				"ports. Use warm-plug instead.\n");
++	}
++
++	return 0;
++
++ fail:
++	ata_dev_printk(dev, KERN_ERR,
++		       "failed to configure Port Multiplier (%s)\n", reason);
++	return rc;
++}
++
++static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
++{
++	struct ata_link *pmp_link = ap->pmp_link;
++	int i;
++
++	if (!pmp_link) {
++		pmp_link = kzalloc(sizeof(pmp_link[0]) * SATA_PMP_MAX_PORTS,
++				   GFP_NOIO);
++		if (!pmp_link)
++			return -ENOMEM;
++
++		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
++			ata_link_init(ap, &pmp_link[i], i);
++
++		ap->pmp_link = pmp_link;
++	}
++
++	for (i = 0; i < nr_ports; i++) {
++		struct ata_link *link = &pmp_link[i];
++		struct ata_eh_context *ehc = &link->eh_context;
++
++		link->flags = 0;
++		ehc->i.probe_mask |= 1;
++		ehc->i.action |= ATA_EH_SOFTRESET;
++		ehc->i.flags |= ATA_EHI_RESUME_LINK;
++	}
++
++	return 0;
++}
++
++static void sata_pmp_quirks(struct ata_port *ap)
++{
++	u32 *gscr = ap->link.device->gscr;
++	u16 vendor = sata_pmp_gscr_vendor(gscr);
++	u16 devid = sata_pmp_gscr_devid(gscr);
++	struct ata_link *link;
++
++	if (vendor == 0x1095 && devid == 0x3726) {
++		/* sil3726 quirks */
++		ata_port_for_each_link(link, ap) {
++			/* SError.N need a kick in the ass to get working */
++			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
++
++			/* class code report is unreliable */
++			if (link->pmp < 5)
++				link->flags |= ATA_LFLAG_ASSUME_ATA;
++
++			/* port 5 is for SEMB device and it doesn't like SRST */
++			if (link->pmp == 5)
++				link->flags |= ATA_LFLAG_NO_SRST |
++					       ATA_LFLAG_ASSUME_SEMB;
++		}
++	} else if (vendor == 0x1095 && devid == 0x4723) {
++		/* sil4723 quirks */
++		ata_port_for_each_link(link, ap) {
++			/* SError.N need a kick in the ass to get working */
++			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
++
++			/* class code report is unreliable */
++			if (link->pmp < 2)
++				link->flags |= ATA_LFLAG_ASSUME_ATA;
++
++			/* the config device at port 2 locks up on SRST */
++			if (link->pmp == 2)
++				link->flags |= ATA_LFLAG_NO_SRST |
++					       ATA_LFLAG_ASSUME_ATA;
++		}
++	} else if (vendor == 0x1095 && devid == 0x4726) {
++		/* sil4726 quirks */
++		ata_port_for_each_link(link, ap) {
++			/* SError.N need a kick in the ass to get working */
++			link->flags |= ATA_LFLAG_HRST_TO_RESUME;
++
++			/* class code report is unreliable */
++			if (link->pmp < 5)
++				link->flags |= ATA_LFLAG_ASSUME_ATA;
++
++			/* The config device, which can be either at
++			 * port 0 or 5, locks up on SRST.
++			 */
++			if (link->pmp == 0 || link->pmp == 5)
++				link->flags |= ATA_LFLAG_NO_SRST |
++					       ATA_LFLAG_ASSUME_ATA;
++
++			/* Port 6 is for SEMB device which doesn't
++			 * like SRST either.
++			 */
++			if (link->pmp == 6)
++				link->flags |= ATA_LFLAG_NO_SRST |
++					       ATA_LFLAG_ASSUME_SEMB;
++		}
++	} else if (vendor == 0x1095 && (devid == 0x5723 || devid == 0x5733 ||
++					devid == 0x5734 || devid == 0x5744)) {
++		/* sil5723/5744 quirks */
++
++		/* sil5723/5744 has either two or three downstream
++		 * ports depending on operation mode.  The last port
++		 * is empty if any actual IO device is available or
++		 * occupied by a pseudo configuration device
++		 * otherwise.  Don't try hard to recover it.
++		 */
++		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
++	}
++}
++
++/**
++ *	sata_pmp_attach - attach a SATA PMP device
++ *	@dev: SATA PMP device to attach
++ *
++ *	Configure and attach SATA PMP device @dev.  This function is
++ *	also responsible for allocating and initializing PMP links.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++int sata_pmp_attach(struct ata_device *dev)
++{
++	struct ata_link *link = dev->link;
++	struct ata_port *ap = link->ap;
++	unsigned long flags;
++	struct ata_link *tlink;
++	int rc;
++
++	/* is it hanging off the right place? */
++	if (!(ap->flags & ATA_FLAG_PMP)) {
++		ata_dev_printk(dev, KERN_ERR,
++			       "host does not support Port Multiplier\n");
++		return -EINVAL;
++	}
++
++	if (!ata_is_host_link(link)) {
++		ata_dev_printk(dev, KERN_ERR,
++			       "Port Multipliers cannot be nested\n");
++		return -EINVAL;
++	}
++
++	if (dev->devno) {
++		ata_dev_printk(dev, KERN_ERR,
++			       "Port Multiplier must be the first device\n");
++		return -EINVAL;
++	}
++
++	WARN_ON(link->pmp != 0);
++	link->pmp = SATA_PMP_CTRL_PORT;
++
++	/* read GSCR block */
++	rc = sata_pmp_read_gscr(dev, dev->gscr);
++	if (rc)
++		goto fail;
++
++	/* config PMP */
++	rc = sata_pmp_configure(dev, 1);
++	if (rc)
++		goto fail;
++
++	rc = sata_pmp_init_links(ap, sata_pmp_gscr_ports(dev->gscr));
++	if (rc) {
++		ata_dev_printk(dev, KERN_INFO,
++			       "failed to initialize PMP links\n");
++		goto fail;
++	}
++
++	/* attach it */
++	spin_lock_irqsave(ap->lock, flags);
++	WARN_ON(ap->nr_pmp_links);
++	ap->nr_pmp_links = sata_pmp_gscr_ports(dev->gscr);
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	sata_pmp_quirks(ap);
++
++	if (ap->ops->pmp_attach)
++		ap->ops->pmp_attach(ap);
++
++	ata_port_for_each_link(tlink, ap)
++		sata_link_init_spd(tlink);
++
++	return 0;
++
++ fail:
++	link->pmp = 0;
++	return rc;
++}
++
++/**
++ *	sata_pmp_detach - detach a SATA PMP device
++ *	@dev: SATA PMP device to detach
++ *
++ *	Detach SATA PMP device @dev.  This function is also
++ *	responsible for deconfiguring PMP links.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++static void sata_pmp_detach(struct ata_device *dev)
++{
++	struct ata_link *link = dev->link;
++	struct ata_port *ap = link->ap;
++	struct ata_link *tlink;
++	unsigned long flags;
++
++	ata_dev_printk(dev, KERN_INFO, "Port Multiplier detaching\n");
++
++	WARN_ON(!ata_is_host_link(link) || dev->devno ||
++		link->pmp != SATA_PMP_CTRL_PORT);
++
++	if (ap->ops->pmp_detach)
++		ap->ops->pmp_detach(ap);
++
++	ata_port_for_each_link(tlink, ap)
++		ata_eh_detach_dev(tlink->device);
++
++	spin_lock_irqsave(ap->lock, flags);
++	ap->nr_pmp_links = 0;
++	link->pmp = 0;
++	spin_unlock_irqrestore(ap->lock, flags);
++}
++
++/**
++ *	sata_pmp_same_pmp - does new GSCR matches the configured PMP?
++ *	@dev: PMP device to compare against
++ *	@new_gscr: GSCR block of the new device
++ *
++ *	Compare @new_gscr against @dev and determine whether @dev is
++ *	the PMP described by @new_gscr.
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	1 if @dev matches @new_gscr, 0 otherwise.
++ */
++static int sata_pmp_same_pmp(struct ata_device *dev, const u32 *new_gscr)
++{
++	const u32 *old_gscr = dev->gscr;
++	u16 old_vendor, new_vendor, old_devid, new_devid;
++	int old_nr_ports, new_nr_ports;
++
++	old_vendor = sata_pmp_gscr_vendor(old_gscr);
++	new_vendor = sata_pmp_gscr_vendor(new_gscr);
++	old_devid = sata_pmp_gscr_devid(old_gscr);
++	new_devid = sata_pmp_gscr_devid(new_gscr);
++	old_nr_ports = sata_pmp_gscr_ports(old_gscr);
++	new_nr_ports = sata_pmp_gscr_ports(new_gscr);
++
++	if (old_vendor != new_vendor) {
++		ata_dev_printk(dev, KERN_INFO, "Port Multiplier "
++			       "vendor mismatch '0x%x' != '0x%x'\n",
++			       old_vendor, new_vendor);
++		return 0;
++	}
++
++	if (old_devid != new_devid) {
++		ata_dev_printk(dev, KERN_INFO, "Port Multiplier "
++			       "device ID mismatch '0x%x' != '0x%x'\n",
++			       old_devid, new_devid);
++		return 0;
++	}
++
++	if (old_nr_ports != new_nr_ports) {
++		ata_dev_printk(dev, KERN_INFO, "Port Multiplier "
++			       "nr_ports mismatch '0x%x' != '0x%x'\n",
++			       old_nr_ports, new_nr_ports);
++		return 0;
++	}
++
++	return 1;
++}
++
++/**
++ *	sata_pmp_revalidate - revalidate SATA PMP
++ *	@dev: PMP device to revalidate
++ *	@new_class: new class code
++ *
++ *	Re-read GSCR block and make sure @dev is still attached to the
++ *	port and properly configured.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
++{
++	struct ata_link *link = dev->link;
++	struct ata_port *ap = link->ap;
++	u32 *gscr = (void *)ap->sector_buf;
++	int rc;
++
++	DPRINTK("ENTER\n");
++
++	ata_eh_about_to_do(link, NULL, ATA_EH_REVALIDATE);
++
++	if (!ata_dev_enabled(dev)) {
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	/* wrong class? */
++	if (ata_class_enabled(new_class) && new_class != ATA_DEV_PMP) {
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	/* read GSCR */
++	rc = sata_pmp_read_gscr(dev, gscr);
++	if (rc)
++		goto fail;
++
++	/* is the pmp still there? */
++	if (!sata_pmp_same_pmp(dev, gscr)) {
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	memcpy(dev->gscr, gscr, sizeof(gscr[0]) * SATA_PMP_GSCR_DWORDS);
++
++	rc = sata_pmp_configure(dev, 0);
++	if (rc)
++		goto fail;
++
++	ata_eh_done(link, NULL, ATA_EH_REVALIDATE);
++
++	DPRINTK("EXIT, rc=0\n");
++	return 0;
++
++ fail:
++	ata_dev_printk(dev, KERN_ERR,
++		       "PMP revalidation failed (errno=%d)\n", rc);
++	DPRINTK("EXIT, rc=%d\n", rc);
++	return rc;
++}
++
++/**
++ *	sata_pmp_revalidate_quick - revalidate SATA PMP quickly
++ *	@dev: PMP device to revalidate
++ *
++ *	Make sure the attached PMP is accessible.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++static int sata_pmp_revalidate_quick(struct ata_device *dev)
++{
++	u32 prod_id;
++	int rc;
++
++	rc = sata_pmp_read(dev->link, SATA_PMP_GSCR_PROD_ID, &prod_id);
++	if (rc) {
++		ata_dev_printk(dev, KERN_ERR, "failed to read PMP product ID\n");
++		return rc;
++	}
++
++	if (prod_id != dev->gscr[SATA_PMP_GSCR_PROD_ID]) {
++		ata_dev_printk(dev, KERN_ERR, "PMP product ID mismatch\n");
++		/* something weird is going on, request full PMP recovery */
++		return -EIO;
++	}
++
++	return 0;
++}
++
++/**
++ *	sata_pmp_eh_recover_pmp - recover PMP
++ *	@ap: ATA port PMP is attached to
++ *	@prereset: prereset method (can be NULL)
++ *	@softreset: softreset method
++ *	@hardreset: hardreset method
++ *	@postreset: postreset method (can be NULL)
++ *
++ *	Recover PMP attached to @ap.  Recovery procedure is somewhat
++ *	similar to that of ata_eh_recover() except that reset should
++ *	always be performed in hard->soft sequence and recovery
++ *	failure results in PMP detachment.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
++		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
++		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
++{
++	struct ata_link *link = &ap->link;
++	struct ata_eh_context *ehc = &link->eh_context;
++	struct ata_device *dev = link->device;
++	int tries = ATA_EH_PMP_TRIES;
++	int detach = 0, rc = 0;
++	int reval_failed = 0;
++
++	DPRINTK("ENTER\n");
++
++	if (dev->flags & ATA_DFLAG_DETACH) {
++		detach = 1;
++		goto fail;
++	}
++
++ retry:
++	ehc->classes[0] = ATA_DEV_UNKNOWN;
++
++	if (ehc->i.action & ATA_EH_RESET_MASK) {
++		struct ata_link *tlink;
++
++		ata_eh_freeze_port(ap);
++
++		/* reset */
++		ehc->i.action = ATA_EH_HARDRESET;
++		rc = ata_eh_reset(link, 0, prereset, softreset, hardreset,
++				  postreset);
++		if (rc) {
++			ata_link_printk(link, KERN_ERR,
++					"failed to reset PMP, giving up\n");
++			goto fail;
++		}
++
++		ata_eh_thaw_port(ap);
++
++		/* PMP is reset, SErrors cannot be trusted, scan all */
++		ata_port_for_each_link(tlink, ap)
++			ata_ehi_schedule_probe(&tlink->eh_context.i);
++	}
++
++	/* If revalidation is requested, revalidate and reconfigure;
++	 * otherwise, do quick revalidation.
++	 */
++	if (ehc->i.action & ATA_EH_REVALIDATE)
++		rc = sata_pmp_revalidate(dev, ehc->classes[0]);
 +	else
-+		ahci_pmp_detach(ap);
++		rc = sata_pmp_revalidate_quick(dev);
 +
- 	return 0;
- }
++	if (rc) {
++		tries--;
++
++		if (rc == -ENODEV) {
++			ehc->i.probe_mask |= 1;
++			detach = 1;
++			/* give it just two more chances */
++			tries = min(tries, 2);
++		}
++
++		if (tries) {
++			int sleep = ehc->i.flags & ATA_EHI_DID_RESET;
++
++			/* consecutive revalidation failures? speed down */
++			if (reval_failed)
++				sata_down_spd_limit(link);
++			else
++				reval_failed = 1;
++
++			ata_dev_printk(dev, KERN_WARNING,
++				       "retrying hardreset%s\n",
++				       sleep ? " in 5 secs" : "");
++			if (sleep)
++				ssleep(5);
++			ehc->i.action |= ATA_EH_HARDRESET;
++			goto retry;
++		} else {
++			ata_dev_printk(dev, KERN_ERR, "failed to recover PMP "
++				       "after %d tries, giving up\n",
++				       ATA_EH_PMP_TRIES);
++			goto fail;
++		}
++	}
++
++	/* okay, PMP resurrected */
++	ehc->i.flags = 0;
++
++	DPRINTK("EXIT, rc=0\n");
++	return 0;
++
++ fail:
++	sata_pmp_detach(dev);
++	if (detach)
++		ata_eh_detach_dev(dev);
++	else
++		ata_dev_disable(dev);
++
++	DPRINTK("EXIT, rc=%d\n", rc);
++	return rc;
++}
++
++static int sata_pmp_eh_handle_disabled_links(struct ata_port *ap)
++{
++	struct ata_link *link;
++	unsigned long flags;
++	int rc;
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	ata_port_for_each_link(link, ap) {
++		if (!(link->flags & ATA_LFLAG_DISABLED))
++			continue;
++
++		spin_unlock_irqrestore(ap->lock, flags);
++
++		/* Some PMPs require hardreset sequence to get
++		 * SError.N working.
++		 */
++		if ((link->flags & ATA_LFLAG_HRST_TO_RESUME) &&
++		    (link->eh_context.i.flags & ATA_EHI_RESUME_LINK))
++			sata_link_hardreset(link, sata_deb_timing_normal,
++					    jiffies + ATA_TMOUT_INTERNAL_QUICK);
++
++		/* unconditionally clear SError.N */
++		rc = sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
++		if (rc) {
++			ata_link_printk(link, KERN_ERR, "failed to clear "
++					"SError.N (errno=%d)\n", rc);
++			return rc;
++		}
++
++		spin_lock_irqsave(ap->lock, flags);
++	}
++
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	return 0;
++}
++
++static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
++{
++	struct ata_port *ap = link->ap;
++	unsigned long flags;
++
++	if (link_tries[link->pmp] && --link_tries[link->pmp])
++		return 1;
++
++	/* disable this link */
++	if (!(link->flags & ATA_LFLAG_DISABLED)) {
++		ata_link_printk(link, KERN_WARNING,
++			"failed to recover link after %d tries, disabling\n",
++			ATA_EH_PMP_LINK_TRIES);
++
++		spin_lock_irqsave(ap->lock, flags);
++		link->flags |= ATA_LFLAG_DISABLED;
++		spin_unlock_irqrestore(ap->lock, flags);
++	}
++
++	ata_dev_disable(link->device);
++	link->eh_context.i.action = 0;
++
++	return 0;
++}
++
++/**
++ *	sata_pmp_eh_recover - recover PMP-enabled port
++ *	@ap: ATA port to recover
++ *	@prereset: prereset method (can be NULL)
++ *	@softreset: softreset method
++ *	@hardreset: hardreset method
++ *	@postreset: postreset method (can be NULL)
++ *	@pmp_prereset: PMP prereset method (can be NULL)
++ *	@pmp_softreset: PMP softreset method (can be NULL)
++ *	@pmp_hardreset: PMP hardreset method (can be NULL)
++ *	@pmp_postreset: PMP postreset method (can be NULL)
++ *
++ *	Drive EH recovery operation for PMP enabled port @ap.  This
++ *	function recovers host and PMP ports with proper retrials and
++ *	fallbacks.  Actual recovery operations are performed using
++ *	ata_eh_recover() and sata_pmp_eh_recover_pmp().
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_pmp_eh_recover(struct ata_port *ap,
++		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
++		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
++		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
++		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
++{
++	int pmp_tries, link_tries[SATA_PMP_MAX_PORTS];
++	struct ata_link *pmp_link = &ap->link;
++	struct ata_device *pmp_dev = pmp_link->device;
++	struct ata_eh_context *pmp_ehc = &pmp_link->eh_context;
++	struct ata_link *link;
++	struct ata_device *dev;
++	u32 gscr_error, sntf;
++	int cnt, rc;
++
++	pmp_tries = ATA_EH_PMP_TRIES;
++	ata_port_for_each_link(link, ap)
++		link_tries[link->pmp] = ATA_EH_PMP_LINK_TRIES;
++
++ retry:
++	/* PMP attached? */
++	if (!ap->nr_pmp_links) {
++		rc = ata_eh_recover(ap, prereset, softreset, hardreset,
++				    postreset, NULL);
++		if (rc) {
++			ata_link_for_each_dev(dev, &ap->link)
++				ata_dev_disable(dev);
++			return rc;
++		}
++
++		if (pmp_dev->class != ATA_DEV_PMP)
++			return 0;
++
++		/* new PMP online */
++		ata_port_for_each_link(link, ap)
++			link_tries[link->pmp] = ATA_EH_PMP_LINK_TRIES;
++
++		/* fall through */
++	}
++
++	/* recover pmp */
++	rc = sata_pmp_eh_recover_pmp(ap, prereset, softreset, hardreset,
++				     postreset);
++	if (rc)
++		goto pmp_fail;
++
++	/* handle disabled links */
++	rc = sata_pmp_eh_handle_disabled_links(ap);
++	if (rc)
++		goto pmp_fail;
++
++	/* recover links */
++	rc = ata_eh_recover(ap, pmp_prereset, pmp_softreset, pmp_hardreset,
++			    pmp_postreset, &link);
++	if (rc)
++		goto link_fail;
++
++	/* Connection status might have changed while resetting other
++	 * links, check SATA_PMP_GSCR_ERROR before returning.
++	 */
++
++	/* clear SNotification */
++	rc = sata_scr_read(&ap->link, SCR_NOTIFICATION, &sntf);
++	if (rc == 0)
++		sata_scr_write(&ap->link, SCR_NOTIFICATION, sntf);
++
++	/* check GSCR_ERROR */
++	rc = sata_pmp_read(pmp_link, SATA_PMP_GSCR_ERROR, &gscr_error);
++	if (rc) {
++		ata_dev_printk(pmp_dev, KERN_ERR,
++			       "failed to read PMP_GSCR_ERROR\n");
++		goto pmp_fail;
++	}
++
++	cnt = 0;
++	ata_port_for_each_link(link, ap) {
++		if (!(gscr_error & (1 << link->pmp)))
++			continue;
++
++		if (sata_pmp_handle_link_fail(link, link_tries)) {
++			ata_ehi_hotplugged(&link->eh_context.i);
++			cnt++;
++		} else {
++			ata_link_printk(link, KERN_WARNING,
++				"PHY status changed but maxed out on retries, "
++				"giving up\n");
++			ata_link_printk(link, KERN_WARNING,
++				"Manully issue scan to resume this link\n");
++		}
++	}
++
++	if (cnt) {
++		ata_port_printk(ap, KERN_INFO, "PMP SError.N set for some "
++				"ports, repeating recovery\n");
++		goto retry;
++	}
++
++	return 0;
++
++ link_fail:
++	if (sata_pmp_handle_link_fail(link, link_tries)) {
++		pmp_ehc->i.action |= ATA_EH_HARDRESET;
++		goto retry;
++	}
++
++	/* fall through */
++ pmp_fail:
++	/* Control always ends up here after detaching PMP.  Shut up
++	 * and return if we're unloading.
++	 */
++	if (ap->pflags & ATA_PFLAG_UNLOADING)
++		return rc;
++
++	if (!ap->nr_pmp_links)
++		goto retry;
++
++	if (--pmp_tries) {
++		ata_port_printk(ap, KERN_WARNING,
++				"failed to recover PMP, retrying in 5 secs\n");
++		pmp_ehc->i.action |= ATA_EH_HARDRESET;
++		ssleep(5);
++		goto retry;
++	}
++
++	ata_port_printk(ap, KERN_ERR,
++			"failed to recover PMP after %d tries, giving up\n",
++			ATA_EH_PMP_TRIES);
++	sata_pmp_detach(pmp_dev);
++	ata_dev_disable(pmp_dev);
++
++	return rc;
++}
++
++/**
++ *	sata_pmp_do_eh - do standard error handling for PMP-enabled host
++ *	@ap: host port to handle error for
++ *	@prereset: prereset method (can be NULL)
++ *	@softreset: softreset method
++ *	@hardreset: hardreset method
++ *	@postreset: postreset method (can be NULL)
++ *	@pmp_prereset: PMP prereset method (can be NULL)
++ *	@pmp_softreset: PMP softreset method (can be NULL)
++ *	@pmp_hardreset: PMP hardreset method (can be NULL)
++ *	@pmp_postreset: PMP postreset method (can be NULL)
++ *
++ *	Perform standard error handling sequence for PMP-enabled host
++ *	@ap.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++void sata_pmp_do_eh(struct ata_port *ap,
++		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
++		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
++		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
++		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset)
++{
++	ata_eh_autopsy(ap);
++	ata_eh_report(ap);
++	sata_pmp_eh_recover(ap, prereset, softreset, hardreset, postreset,
++			    pmp_prereset, pmp_softreset, pmp_hardreset,
++			    pmp_postreset);
++	ata_eh_finish(ap);
++}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index fe09aa8..006c8be 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -150,6 +150,11 @@ extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
+ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
  
-@@ -1849,6 +1989,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (hpriv->cap & HOST_CAP_NCQ)
- 		pi.flags |= ATA_FLAG_NCQ;
++/* libata-pmp.c */
++extern int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *val);
++extern int sata_pmp_scr_write(struct ata_link *link, int reg, u32 val);
++extern int sata_pmp_attach(struct ata_device *dev);
++
+ /* libata-eh.c */
+ extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
+ extern void ata_scsi_error(struct Scsi_Host *host);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 989744a..f563301 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -939,6 +939,25 @@ extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
+ #endif /* CONFIG_PCI */
  
-+	if (hpriv->cap & HOST_CAP_PMP)
-+		pi.flags |= ATA_FLAG_PMP;
+ /*
++ * PMP
++ */
++extern void sata_pmp_read_init_tf(struct ata_taskfile *tf,
++				  struct ata_device *dev, int pmp, int reg);
++extern u32 sata_pmp_read_val(const struct ata_taskfile *tf);
++extern void sata_pmp_write_init_tf(struct ata_taskfile *tf,
++				   struct ata_device *dev,
++				   int pmp, int reg, u32 val);
++extern int sata_pmp_std_prereset(struct ata_link *link, unsigned long deadline);
++extern int sata_pmp_std_hardreset(struct ata_link *link, unsigned int *class,
++				  unsigned long deadline);
++extern void sata_pmp_std_postreset(struct ata_link *link, unsigned int *class);
++extern void sata_pmp_do_eh(struct ata_port *ap,
++		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
++		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset,
++		ata_prereset_fn_t pmp_prereset, ata_reset_fn_t pmp_softreset,
++		ata_reset_fn_t pmp_hardreset, ata_postreset_fn_t pmp_postreset);
 +
-+	if (hpriv->cap & HOST_CAP_SNTF)
-+		pi.flags |= ATA_FLAG_SDB_NOTIFY;
-+
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, fls(hpriv->port_map));
- 	if (!host)
- 		return -ENOMEM;
++/*
+  * EH
+  */
+ extern void ata_eng_timeout(struct ata_port *ap);
 -- 
 1.5.0.3
 
