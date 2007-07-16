@@ -1,52 +1,51 @@
 From: Ryan Power <rpower@sysreset.com>
-Subject: [PATCH 2.6.22.1] libata: Adjust libata to ignore errors after
-  spinup
-Date: Sun, 15 Jul 2007 21:28:39 -0600
-Message-ID: <6.2.0.14.2.20070715210841.02fcab90@linux.sysreset.com>
-References: <6.2.0.14.2.20070713000748.031a2660@linux.sysreset.com>
- <469775E0.2000609@rtr.ca>
- <6.2.0.14.2.20070713184231.02db2d20@linux.sysreset.com>
- <46982875.60503@rtr.ca>
+Subject: Re: [PATCH] Unbreak build of PMP with ACPI disabled
+Date: Sun, 15 Jul 2007 21:38:00 -0600
+Message-ID: <6.2.0.14.2.20070715213648.02fcaeb0@linux.sysreset.com>
+References: <20070713065600.GB8320@vana.vc.cvut.cz>
+ <46972519.80703@gmail.com>
+ <46980AFD.3000503@shaw.ca>
+ <6.2.0.14.2.20070713175627.031aada0@linux.sysreset.com>
+ <4698356D.60605@gmail.com>
+ <4698BE05.2080003@vandrovec.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.sysreset.com ([209.97.229.250]:10577 "EHLO sysreset"
+Received: from www.sysreset.com ([209.97.229.250]:10587 "EHLO sysreset"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759629AbXGPD2s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Jul 2007 23:28:48 -0400
-In-Reply-To: <46982875.60503@rtr.ca>
-References: <6.2.0.14.2.20070713000748.031a2660@linux.sysreset.com>
- <469775E0.2000609@rtr.ca>
- <6.2.0.14.2.20070713184231.02db2d20@linux.sysreset.com>
- <46982875.60503@rtr.ca>
+	id S1759350AbXGPDiB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 Jul 2007 23:38:01 -0400
+In-Reply-To: <4698BE05.2080003@vandrovec.name>
+References: <20070713065600.GB8320@vana.vc.cvut.cz>
+ <46972519.80703@gmail.com>
+ <46980AFD.3000503@shaw.ca>
+ <6.2.0.14.2.20070713175627.031aada0@linux.sysreset.com>
+ <4698356D.60605@gmail.com>
+ <4698BE05.2080003@vandrovec.name>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org
+To: Petr Vandrovec <petr@vandrovec.name>, Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-From: Ryan Power <rpower@sysreset.com>
+At 06:13 AM 7/14/2007, Petr Vandrovec wrote:
+>Tejun Heo wrote:
+>>Ryan Power wrote:
+>>>I'm also experiencing this problem on a with the sata_nv module.  I
+>>>suspect that it may at least not be controller dependant, as it's also
+>>>occurring on my silicon image controller (sata_sil, SiI3512).  It looks
+>>>like something is zeroing out part of the return registers for the
+>>>overall smart status.
+>>Hmmm... Incidentally, Jeff told me yesterday he was seeing the same
+>>problem on sil.  Maybe it's something in the core.  I'll investigate.
+>
+>What about attached patch?  Seems to make my mcp61 happy... (it is sent 
+>from Mozilla, so patch below is most probably whitespace challenged... 
+>attachment should be fine)
+>                                                         Petr
 
-Adjust libata to ignore errors after spinup
+That patch fixes the problems I was seeing on both interfaces.  Everything 
+looks be to working correctly again.
 
-This patch is to ignore errors from the spinup attempt if the drive is
-in the "standby id" state.
-
-Signed-off-by: Ryan Power <rpower@sysreset.com>
-
----
-
-Index: drivers.new/ata/libata-core.c
---- drivers/ata/libata-core.c   2007-07-10 12:56:30.000000000 -0600
-+++ drivers.new/ata/libata-core.c       2007-07-15 01:58:49.000000000 -0600
-@@ -1750,7 +1750,7 @@ int ata_dev_read_id(struct ata_device *d
-                 tf.protocol = ATA_PROT_NODATA;
-                 tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-                 err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, 
-NULL, 0);
--               if (err_mask) {
-+               if (err_mask && id[2] != 0x738c) {
-                         rc = -EIO;
-                         reason = "SPINUP failed";
-                         goto err_out;
-
+Thanks.
+-Ryan 
 
