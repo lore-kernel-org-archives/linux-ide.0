@@ -1,109 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/21] sata_sil24: replace sil24_update_tf() with sil24_read_tf()
-Date: Mon, 16 Jul 2007 14:29:39 +0900
-Message-ID: <11845637791316-git-send-email-htejun@gmail.com>
-References: <11845637782629-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET 1/4] libata: misc updates in preparation of PMP support, take #2
+Date: Mon, 16 Jul 2007 14:29:38 +0900
+Message-ID: <11845637782629-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:3052 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760152AbXGPF3w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:52 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1464072wah
-        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:52 -0700 (PDT)
-In-Reply-To: <11845637782629-git-send-email-htejun@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.236]:11877 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763113AbXGPF3o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2007 01:29:44 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so736627nze
+        for <linux-ide@vger.kernel.org>; Sun, 15 Jul 2007 22:29:43 -0700 (PDT)
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>, htejun@gmail.com
 
-Replace sil24_update_tf() to sil24_read_tf() which reads TF into
-passed int result TF argument and can read TFs of PMP links.  This
-will be used by PMP support.
+Hello,
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/sata_sil24.c |   23 ++++++++++++++---------
- 1 files changed, 14 insertions(+), 9 deletions(-)
+This is the second take of misc-updates patchset which updates various
+aspects of libata in preparation of PMP support.
 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index a11007b..5f8afa9 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -464,15 +464,15 @@ static void sil24_dev_config(struct ata_device *dev)
- 		writel(PORT_CS_CDB16, port + PORT_CTRL_CLR);
- }
- 
--static inline void sil24_update_tf(struct ata_port *ap)
-+static void sil24_read_tf(struct ata_port *ap, int tag, struct ata_taskfile *tf)
- {
--	struct sil24_port_priv *pp = ap->private_data;
- 	void __iomem *port = ap->ioaddr.cmd_addr;
--	struct sil24_prb __iomem *prb = port;
-+	struct sil24_prb __iomem *prb;
- 	u8 fis[6 * 4];
- 
--	memcpy_fromio(fis, prb->fis, 6 * 4);
--	ata_tf_from_fis(fis, &pp->tf);
-+	prb = port + PORT_LRAM + sil24_tag(tag) * PORT_LRAM_SLOT_SZ;
-+	memcpy_fromio(fis, prb->fis, sizeof(fis));
-+	ata_tf_from_fis(fis, tf);
- }
- 
- static u8 sil24_check_status(struct ata_port *ap)
-@@ -538,6 +538,7 @@ static int sil24_softreset(struct ata_port *ap, unsigned int *class,
- 	struct sil24_port_priv *pp = ap->private_data;
- 	struct sil24_prb *prb = &pp->cmd_block[0].ata.prb;
- 	dma_addr_t paddr = pp->cmd_block_dma;
-+	struct ata_taskfile tf;
- 	u32 mask, irq_stat;
- 	const char *reason;
- 
-@@ -577,8 +578,8 @@ static int sil24_softreset(struct ata_port *ap, unsigned int *class,
- 		goto err;
- 	}
- 
--	sil24_update_tf(ap);
--	*class = ata_dev_classify(&pp->tf);
-+	sil24_read_tf(ap, 0, &tf);
-+	*class = ata_dev_classify(&tf);
- 
- 	if (*class == ATA_DEV_UNKNOWN)
- 		*class = ATA_DEV_NONE;
-@@ -754,6 +755,7 @@ static void sil24_thaw(struct ata_port *ap)
- static void sil24_error_intr(struct ata_port *ap)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-+	struct sil24_port_priv *pp = ap->private_data;
- 	struct ata_eh_info *ehi = &ap->eh_info;
- 	int freeze = 0;
- 	u32 irq_stat;
-@@ -808,7 +810,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 		/* record error info */
- 		qc = ata_qc_from_tag(ap, ap->active_tag);
- 		if (qc) {
--			sil24_update_tf(ap);
-+			sil24_read_tf(ap, qc->tag, &pp->tf);
- 			qc->err_mask |= err_mask;
- 		} else
- 			ehi->err_mask |= err_mask;
-@@ -825,8 +827,11 @@ static void sil24_error_intr(struct ata_port *ap)
- 
- static void sil24_finish_qc(struct ata_queued_cmd *qc)
- {
-+	struct ata_port *ap = qc->ap;
-+	struct sil24_port_priv *pp = ap->private_data;
-+
- 	if (qc->flags & ATA_QCFLAG_RESULT_TF)
--		sil24_update_tf(qc->ap);
-+		sil24_read_tf(ap, qc->tag, &pp->tf);
- }
- 
- static inline void sil24_host_intr(struct ata_port *ap)
--- 
-1.5.0.3
+#01 ahci: build fix for !CONFIG_PM
+#02 libata: add @is_cmd to ata_tf_to_fis()
+#03 ahci: use deadline instead of fixed timeout for 1st FIS for SRST
+#04 ahci: separate out ahci_kick_engine()
+#05 ahci: separate out ahci_exec_polled_cmd()
+#06 ahci: separate out ahci_do_softreset()
+#07 sata_sil24: replace sil24_update_tf() with sil24_read_tf()
+#08 sata_sil24: separate out sil24_exec_polled_cmd()
+#09 sata_sil24: separate out sil24_do_softreset()
+#10 libata: improve EH report formatting
+#11 libata: implement AC_ERR_NCQ
+#12 libata: make ->scr_read/write callbacks return error code
+#13 ahci: make NO_NCQ handling more consistent
+#14 ahci: implement SCR_NOTIFICATION r/w
+#15 libata: improve SATA PHY speed down logic
+#16 libata: quickly trigger SATA SPD down after debouncing failed
+#17 libata: improve SCSI scan failure handling
+#18 libata: reorganize ata_ehi_hotplugged()
+#19 libata: clear HOTPLUG flag after a reset
+#20 libata: schedule probing after SError access failure during autopsy
+#21 libata: implement EH fast drain
 
+#01 fixes build breakge.  #02-09 separate out polled command execution
+from softreset routines of ahci and sata_sil24.  These will be later
+used to implement PMP r/w callbacks.  #10-14 are mostly trivial.
+#15-21 improve EH behavior to prepare for PMP support.
+
+Changes from the last take are...
+
+* #01 added
+* #02-#09 moved here from pmp patchset as Jeff requested
+* #10 updated as Jeff requested
+
+This patchset is on top of
+
+  libata-dev#upstream (d79eb6de54f180dc83b488b20747f0097fde3dea)
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.ide/20081
 
