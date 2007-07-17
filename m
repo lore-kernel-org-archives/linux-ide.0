@@ -1,72 +1,41 @@
-From: =?iso-8859-1?Q?R=FAben?= Fonseca <krani1@0x82.com>
-Subject: libata [ata_piix] still no resume from S3 ?
-Date: Tue, 17 Jul 2007 17:49:27 +0100
-Message-ID: <20070717164927.GA13137@0x82.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 1/2] PCI: rename and export __pci_reenable_device()
+Date: Tue, 17 Jul 2007 10:05:38 -0700
+Message-ID: <20070717170538.GA2281@kroah.com>
+References: <20070710063605.GA21994@htj.dyndns.org> <20070710161709.GB5421@kroah.com> <20070711103204.GE23568@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay4.ptmail.sapo.pt ([212.55.154.24]:49840 "HELO sapo.pt"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756323AbXGQQzi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jul 2007 12:55:38 -0400
-Received: from unknown (HELO server) (krani1@sapo.pt@[82.155.123.4])
-          (envelope-sender <krani1@0x82.com>)
-          by mta13 (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 17 Jul 2007 16:48:54 -0000
+Received: from pentafluge.infradead.org ([213.146.154.40]:52894 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755528AbXGQRJy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 13:09:54 -0400
 Content-Disposition: inline
+In-Reply-To: <20070711103204.GE23568@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE Kernel Mailling List <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, owner-linux-pci@atrey.karlin.mff.cuni.cz
 
-Hi to all!
+On Wed, Jul 11, 2007 at 07:32:04PM +0900, Tejun Heo wrote:
+> Some odd ACPI implementations choke if certain controller is disabled
+> when ACPI suspend is invoked but we still need to make sure the PCI
+> device is enabled during resume.  Simply using pci_enable_device()
+> unbalances device enable count.
+> 
+> Drop leading underscores from __pci_reenable_device() and export it.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-I'm on Debian Sid with kernel 2.6.21 and I still can't resume my laptop
-(Sony Vaio SZ2) from S3. Searched on the archive and it seems that SATA 
-drives are getting problems when used via the "new" libata. When the
-laptop tries to resume, it can't access the hard drive anymore (the LED
-never blinks), the filesystem is mounted read-only and of course, the
-system hangs. 
+Jeff, I'm guessing this will go through your tree as the ata patch after
+this needs this change.
 
-Is this still a know problem? Does 2.6.22 solve this already? If you
-need more information about my environment, please ask :)
+If so, feel free to add my:
 
-Here's more info about the problem.
-I had to manually copy the trace, so I remove the hexadecimal parts
-(if you need them, please ask i Will try to copy them too). For now
-I just want to know if you can diagnose this problem, or need more info.
-So here's the interesting (I think) part of the log after resume:
+	Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-irq 23: nobody cared (try booting with the "irqpool" option)
- __report_bad_irq
- note_interrupt
- handle_IRQ_event
- handle_fasteoi_irq
- do_IRQ
- do_IRQ
- irq_exit
- smp_acpi_timer
- common_interrupt
- acpi_pm_read
- getnstimeofday
- ktime_get_ts
- ktime_egt
- tick_nohz_restart_sched_tick
- cpu_idle
- start_kernel
- unkown_bootoption
- =====
-handlers:
- (ata_interrupt [libata])
- (tifm_7xx1_isr [tifm_7xx1])
-Disabling IRQ #23
-(...)
-ATA: abnormal status 0x7F on port 0x000118cf
+to the patch, I have no objection to it.
 
-And hard drive never cames up.. have to hard reboot the machine..
+thanks,
 
-Any help? TIA
-
-Ruben
-
--- 
-Will work for bandwidth
+greg k-h
