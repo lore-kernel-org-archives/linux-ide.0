@@ -1,107 +1,50 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 07:26:49 +0900
-Message-ID: <20070718072644F.tomof@acm.org>
-References: <20070717190705T.fujita.tomonori@lab.ntt.co.jp>
-	<20070717101928.GK5195@kernel.dk>
-	<200707172252.25729.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200707172252.25729.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
-List-Id: linux-ide@vger.kernel.org
-
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: block/bsg.c
-Date: Tue, 17 Jul 2007 22:52:25 +0200
+Date: Wed, 18 Jul 2007 01:19:34 +0200
+Message-ID: <200707180119.34984.bzolnier@gmail.com>
+References: <20070717065940.GZ5195@kernel.dk> <200707172252.25729.bzolnier@gmail.com> <20070717143434.48836fb8.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ik-out-1112.google.com ([66.249.90.180]:46691 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936324AbXGQXB4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 19:01:56 -0400
+Received: by ik-out-1112.google.com with SMTP id b32so1044484ika
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 16:01:55 -0700 (PDT)
+In-Reply-To: <20070717143434.48836fb8.akpm@linux-foundation.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-> /*
->  * TODO
->  *      - Should this get merged, block/scsi_ioctl.c will be migrated into
->  *        this file. To keep maintenance down, it's easier to have them
->  *        seperated right now.
->  *
->  */
+On Tuesday 17 July 2007, Andrew Morton wrote:
+> On Tue, 17 Jul 2007 22:52:25 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
-> This TODO should be fixed/removed.
-
-Yeah, this should be removed now. I'll do.
-
-
-> Firstly bsg got merged. ;)  Moreover bsg depends on SCSI and scsi_ioctl doesn't.
-> Even if SCSI dependency is fixed bsg requires block driver to have struct
-> class devices which is not a case for scsi_ioctl.
+> > ide-{disk,scsi,tape} don't support REQ_TYPE_BLOCK_PC requests et all
+> > (so attempts to use SG_IO, CDROM_SEND_PACKET and SCSI_IOCTL_SEND_COMMAND
+> > will result in requests being failed and error messages in the kernel logs).
 > 
-> ...
+> In my case it results in a completely tits-up machine.  CPU stuck somewhere
+> spinning with local interrutps disabled.
 > 
-> static struct bsg_device *__bsg_get_device(int minor)
-> {
->         struct hlist_head *list = &bsg_device_list[bsg_list_idx(minor)];
-> 
-> bsg_device_list[] access should be done under bsg_mutex lock.
-> 
-> May not be a problem currently because of lock_kernel but worth fixing anyway.
-> 
->         struct bsg_device *bd = NULL;
->         struct hlist_node *entry;
-> 
->         mutex_lock(&bsg_mutex);
-> 
+> If you see the log output I sent, I'm suspecting this might be because
 
-They were fixed. Please check the latest code:
+I don't. :(
 
-git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git bsg
+> this BSG brainfart has exposed underlying bugs in IDE or SCSI.
 
-We wait for Linus to pull from it.
+Possible but ATM I have an (overdue) IDE update to push, people waiting for
+(overdue) patches to try and some (overdue) patches to finish and post...
 
+Would be great if somebody beats me to investigate this issue.
 
-> static int
-> bsg_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
->           unsigned long arg)
-> {
-> ...
->         case SCSI_IOCTL_SEND_COMMAND: {
-> 
-> Do we really want to add support for this *deprecated* ioctl to
-> the *new* and shiny bsg driver?
-> 
->                 void __user *uarg = (void __user *) arg;
->                 return scsi_cmd_ioctl(file, bd->queue, NULL, cmd, uarg);
->         }
-
-We might remove it.
-
-
-> int bsg_register_queue(struct request_queue *q, const char *name)
-> {
-> ...
->         memset(bcd, 0, sizeof(*bcd));
-> ...
->         dev = MKDEV(BSG_MAJOR, bcd->minor);
->         class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", name);
-> 
-> bcd->dev is always 0 (NULL).
-> 
-> Is it OK to pass NULL struct device *dev argument to class_device_create()?
-
-It's ok, I guess.
-
-
-> It should be fixed by either removing bcd->dev or by setting it to something
-> other than zero.
-> 
-> ...
-> 
-> MODULE_AUTHOR("Jens Axboe");
-> MODULE_DESCRIPTION("Block layer SGSI generic (sg) driver");
-> 
-> SGSI? :)
-
-It was fixed in the latest code.
-
+Hint: this would be a great way to redempt pushing buggy commit behind
+my back. ;-)
 
 Thanks,
+Bart
