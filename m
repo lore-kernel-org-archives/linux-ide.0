@@ -1,75 +1,54 @@
-From: Florian Echtler <echtler@in.tum.de>
-Subject: Switching controller mode in software?
-Date: Tue, 17 Jul 2007 10:10:06 +0200
-Message-ID: <1184659806.15435.4.camel@pancake>
+From: Magnus Damm <magnus.damm@gmail.com>
+Subject: [PATCH] pata_platform: Fix NULL pointer dereference
+Date: Tue, 17 Jul 2007 17:42:52 +0900
+Message-ID: <20070717084252.29884.24167.sendpatchset@clockwork.opensource.se>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ir6mrKofmcAvcqqczHCm"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.informatik.tu-muenchen.de ([131.159.0.18]:43262 "EHLO
-	mailout1.informatik.tu-muenchen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751707AbXGQIhx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 04:37:53 -0400
-Received: from [131.159.10.70] (lapnavab35.informatik.tu-muenchen.de [131.159.10.70])
-	by mail.in.tum.de (Postfix) with ESMTP id 5283E27D9
-	for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 10:10:10 +0200 (MEST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
+	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
+List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
+List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
+	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
+Sender: linuxsh-dev-bounces@lists.sourceforge.net
+Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
+To: linuxsh-dev@lists.sourceforge.net
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+pata_platform: Fix NULL pointer dereference
 
---=-ir6mrKofmcAvcqqczHCm
-Content-Type: multipart/mixed; boundary="=-369BM+bBPrJ9HG2REOFx"
+The platform-specific structures may leave pdev->dev.platform_data as NULL.
 
+Signed-off-by: Magnus Damm <damm@igel.co.jp>
+---
 
---=-369BM+bBPrJ9HG2REOFx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ Tested on a Solution Engline 7722
+ Applies to git linux-2.6 a5fcaa210626a79465321e344c91a6a7dc3881fa
 
-Hello everybody,
+ drivers/ata/pata_platform.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I have a notebook with the Intel ICH7 chipset (see attached lspci
-output). Unfortunately, the SATA controller is stuck in non-AHCI mode
-and the braindead bios doesn't allow me to change that. Is it possible
-to change the controller to AHCI mode in software, e.g. through ACPI?
+--- 0001/drivers/ata/pata_platform.c
++++ work/drivers/ata/pata_platform.c	2007-07-17 15:01:09.000000000 +0900
+@@ -213,8 +213,9 @@ static int __devinit pata_platform_probe
+ 	pata_platform_setup_port(&ap->ioaddr, pp_info);
+ 
+ 	/* activate */
+-	return ata_host_activate(host, platform_get_irq(pdev, 0), ata_interrupt,
+-				 pp_info->irq_flags, &pata_platform_sht);
++	return ata_host_activate(host, platform_get_irq(pdev, 0), 
++				 ata_interrupt, pp_info ? pp_info->irq_flags
++				 : 0, &pata_platform_sht);
+ }
+ 
+ /**
 
-Thanks, Yours, Florian
-
-
-
---=-369BM+bBPrJ9HG2REOFx
-Content-Disposition: attachment; filename=lspci
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; name=lspci; charset=utf8
-
-MDA6MDAuMCAwNjAwOiA4MDg2OjI3YTAgKHJldiAwMykNCjAwOjAxLjAgMDYwNDogODA4NjoyN2Ex
-IChyZXYgMDMpDQowMDoxYi4wIDA0MDM6IDgwODY6MjdkOCAocmV2IDAyKQ0KMDA6MWMuMCAwNjA0
-OiA4MDg2OjI3ZDAgKHJldiAwMikNCjAwOjFjLjEgMDYwNDogODA4NjoyN2QyIChyZXYgMDIpDQow
-MDoxYy4yIDA2MDQ6IDgwODY6MjdkNCAocmV2IDAyKQ0KMDA6MWQuMCAwYzAzOiA4MDg2OjI3Yzgg
-KHJldiAwMikNCjAwOjFkLjEgMGMwMzogODA4NjoyN2M5IChyZXYgMDIpDQowMDoxZC4yIDBjMDM6
-IDgwODY6MjdjYSAocmV2IDAyKQ0KMDA6MWQuMyAwYzAzOiA4MDg2OjI3Y2IgKHJldiAwMikNCjAw
-OjFkLjcgMGMwMzogODA4NjoyN2NjIChyZXYgMDIpDQowMDoxZS4wIDA2MDQ6IDgwODY6MjQ0OCAo
-cmV2IGUyKQ0KMDA6MWYuMCAwNjAxOiA4MDg2OjI3YjkgKHJldiAwMikNCjAwOjFmLjIgMDEwMTog
-ODA4NjoyN2M0IChyZXYgMDIpDQowMDoxZi4zIDBjMDU6IDgwODY6MjdkYSAocmV2IDAyKQ0KMDE6
-MDAuMCAwMzAwOiAxMDAyOjcxNDkNCjAzOjAwLjAgMDI4MDogODA4Njo0MjIyIChyZXYgMDIpDQow
-YTowMS4wIDA4MDU6IDExODA6MDgyMiAocmV2IDE5KQ0KMGE6MDEuMSAwODgwOiAxMTgwOjA4NDMg
-KHJldiAwMSkNCjBhOjAxLjIgMDg4MDogMTE4MDowNTkyIChyZXYgMGEpDQowYTowMS4zIDA4ODA6
-IDExODA6MDg1MiAocmV2IDA1KQ0KMGE6MDcuMCAwMjAwOiAxMGVjOjgxMzkgKHJldiAxMCkNCjBh
-OjA5LjAgMDYwNzogMTUyNDoxNDEwIChyZXYgMDEpDQo=
-
-
---=-369BM+bBPrJ9HG2REOFx--
-
---=-ir6mrKofmcAvcqqczHCm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: Dies ist ein digital signierter Nachrichtenteil
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQBGnHlc7CzyshGvatgRAoAlAKDdzqhsy5MT6s7M+XP/IMyuWSOghgCfY0Ha
-JMNbrzuRwB6wpnpcn8MZh8U=
-=tHn0
------END PGP SIGNATURE-----
-
---=-ir6mrKofmcAvcqqczHCm--
-
+-------------------------------------------------------------------------
+This SF.net email is sponsored by DB2 Express
+Download DB2 Express C - the FREE version of DB2 express and take
+control of your XML. No limits. Just data. Click to get it now.
+http://sourceforge.net/powerbar/db2/
