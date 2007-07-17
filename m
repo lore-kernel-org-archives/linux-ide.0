@@ -1,75 +1,162 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_platform: Fix NULL pointer dereference
-Date: Tue, 17 Jul 2007 06:24:53 -0400
-Message-ID: <469C98F5.50101@garzik.org>
-References: <20070717084252.29884.24167.sendpatchset@clockwork.opensource.se>
-	<20070717090219.GA24991@linux-sh.org> <469C8CCC.80009@garzik.org>
-	<20070717094728.GA25527@linux-sh.org>
+From: Petr Vandrovec <petr@vandrovec.name>
+Subject: [PATCH] Fix SMART reporting on 2.6.22
+Date: Tue, 17 Jul 2007 12:54:59 +0200
+Message-ID: <20070717105459.GA15382@vana.vc.cvut.cz>
+References: <20070713065600.GB8320@vana.vc.cvut.cz> <46972519.80703@gmail.com> <46980AFD.3000503@shaw.ca> <6.2.0.14.2.20070713175627.031aada0@linux.sysreset.com> <4698356D.60605@gmail.com> <4698BE05.2080003@vandrovec.name> <469B4959.8010109@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
-In-Reply-To: <20070717094728.GA25527@linux-sh.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
-List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
-List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
-Sender: linuxsh-dev-bounces@lists.sourceforge.net
-Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: linux-ide@vger.kernel.org, Sonic Zhang <sonic.adi@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linuxsh-dev@lists.sourceforge.net
+Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vana.vc.cvut.cz ([147.32.240.58]:51433 "EHLO vana.vc.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751311AbXGQKzD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jul 2007 06:55:03 -0400
+Content-Disposition: inline
+In-Reply-To: <469B4959.8010109@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Ryan Power <rpower@sysreset.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Albert Lee <albertcc@tw.ibm.com>, Andrew Morton <akpm@linux-foundation.org>
 
-Paul Mundt wrote:
-> On Tue, Jul 17, 2007 at 05:33:00AM -0400, Jeff Garzik wrote:
->> Paul Mundt wrote:
->>> It would be great if libata people could actually be bothered to CC
->>> driver authors on driver changes so that way these things don't get
->>> completely broken in mainline when simple testing on the platforms
->>> that actually _rely_ on this driver would have shown that this was
->>> broken.
->> The patch lived for weeks in -mm along with tons of other git trees 
->> Andrew pulls.  If you want a single point to watch for upcoming stuff, 
->> test the -mm trees.  It's a key part of the development process:  I 
->> merge a patch, -mm tree pulls my tree and others, people test and 
->> complain and give feedback, ...
->>
-> A key part of the development process is making sure that driver authors
-> are aware of the changes being made to their drivers, so they're able to
-> ACK/NACK or at least point out something that's obviously wrong. I test
-> -mm when time permits, and this happened to slip through. If I had
-> actually been CC'ed on it, it would not have.
+
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Mon, Jul 16, 2007 at 07:32:57PM +0900, Tejun Heo wrote:
+> [cc'ing Jeff and Albert]
 > 
-> Your entire process is fundamentally flawed if you're merging the patch
-> first and expecting people to only find out if it's broken after the
-> fact. In the best case it leaves -mm broken for a single release, and in
-> the other case, it happens to make its way to mainline before anyone
-> notices.
+> Petr Vandrovec wrote:
+> > Fix reported task file values in sense data
+> > 
+> > ata_tf_read was setting HOB bit when lba48 command was submitted, but
+> > was not clearing it before reading "normal" data.  Maybe it would be
+> > better to just clear HOB bit immediately after reading upper halves
+> > for lba48 command, but I just decided to clear HOB bit in each
+> > ata_tf_read...
+> > 
+> > Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
+> 
+> Acked-by: Tejun Heo <htejun@gmail.com>
+> 
+> Gee, thanks a lot for spotting this.  This is definitely for -stable.
+> Hmm... it's a separate issue and not your fault but ap->last_ctl caching
+> is broken in the function.  Albert is about to remove ap->last_ctl
+> caching but we still need to fix it for -stable.  Petr, are you
+> interested in submitting a separate patch for fixing ap->last_ctl
+> handling in the function?
 
-It's just reality that there are never enough people to verify every 
-patch before it goes in.  We just support way too much hardware for that 
-to be remotely feasible.  Sure we -try- to keep the driver maintainer 
-CC'd, but alas we are human.
-
-Your thinking is flawed if you think I'm going to hold up every patch 
-until it's verified on each of 63 ATA controller drivers, when I make a 
-core change, for example.  Not scalable.  We scale in another way:
-
-We have the biggest test lab in the world -- the Internet -- and a 
-development process staged so that testing and development occur in 
-parallel.  This here is actually an example of the process working: 
-despite my forgetting to CC you, the problem was caught long before it 
-made it into any release kernel.
-
-	Jeff
+OK, that pushed me over edge so this replaces my previous patch.  Now
+there is no ctl access when 24bit commands are issued back to back, and
+ctl is touched (twice...) only for 48bit commands.  smartctl still works...
+Any other email address I should CC?
+					Thanks,
+						Petr Vandrovec
 
 
+Fix reported task file values in sense data
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+ata_tf_read was setting HOB bit when lba48 command was submitted, but
+was not clearing it before reading "normal" data.  As it is only place
+which sets HOB bit in control register, and register reads should not
+be affected by other bits, let's just clear it when we are done with
+reading upper bytes so non-48bit commands do not have to touch ctl
+at all.
+
+pata_scc suffered from same problem...
+
+Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
+
+---
+commit d09591edad8e75c9bc850d47b68a9a6f6f107998
+tree 1bd5a79c9cade9b7ebf68b13bf24a879b969e4c8
+parent a5fcaa210626a79465321e344c91a6a7dc3881fa
+author Petr Vandrovec <petr@vandrovec.name> Tue, 17 Jul 2007 03:45:43 -0700
+committer Petr Vandrovec <petr@vandrovec.name> Tue, 17 Jul 2007 03:45:43 -0700
+
+ drivers/ata/libata-sff.c |    2 ++
+ drivers/ata/pata_scc.c   |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index ca7d224..6a579a9 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -211,6 +211,8 @@ void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ 		tf->hob_lbal = ioread8(ioaddr->lbal_addr);
+ 		tf->hob_lbam = ioread8(ioaddr->lbam_addr);
+ 		tf->hob_lbah = ioread8(ioaddr->lbah_addr);
++		iowrite8(tf->ctl, ioaddr->ctl_addr);
++		ap->last_ctl = tf->ctl;
+ 	}
+ }
+ 
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index c55667e..60cce07 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -358,6 +358,8 @@ static void scc_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
+ 		tf->hob_lbal = in_be32(ioaddr->lbal_addr);
+ 		tf->hob_lbam = in_be32(ioaddr->lbam_addr);
+ 		tf->hob_lbah = in_be32(ioaddr->lbah_addr);
++		out_be32(ioaddr->ctl_addr, tf->ctl);
++		ap->last_ctl = tf->ctl;
+ 	}
+ }
+ 
+
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=q1
+
+Fix reported task file values in sense data
+
+ata_tf_read was setting HOB bit when lba48 command was submitted, but
+was not clearing it before reading "normal" data.  As it is only place
+which sets HOB bit in control register, and register reads should not
+be affected by other bits, let's just clear it when we are done with
+reading upper bytes so non-48bit commands do not have to touch ctl
+at all.
+
+pata_scc suffered from same problem...
+
+Signed-off-by: Petr Vandrovec <petr@vandrovec.name>
+
+---
+commit d09591edad8e75c9bc850d47b68a9a6f6f107998
+tree 1bd5a79c9cade9b7ebf68b13bf24a879b969e4c8
+parent a5fcaa210626a79465321e344c91a6a7dc3881fa
+author Petr Vandrovec <petr@vandrovec.name> Tue, 17 Jul 2007 03:45:43 -0700
+committer Petr Vandrovec <petr@vandrovec.name> Tue, 17 Jul 2007 03:45:43 -0700
+
+ drivers/ata/libata-sff.c |    2 ++
+ drivers/ata/pata_scc.c   |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index ca7d224..6a579a9 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -211,6 +211,8 @@ void ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ 		tf->hob_lbal = ioread8(ioaddr->lbal_addr);
+ 		tf->hob_lbam = ioread8(ioaddr->lbam_addr);
+ 		tf->hob_lbah = ioread8(ioaddr->lbah_addr);
++		iowrite8(tf->ctl, ioaddr->ctl_addr);
++		ap->last_ctl = tf->ctl;
+ 	}
+ }
+ 
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index c55667e..60cce07 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -358,6 +358,8 @@ static void scc_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
+ 		tf->hob_lbal = in_be32(ioaddr->lbal_addr);
+ 		tf->hob_lbam = in_be32(ioaddr->lbam_addr);
+ 		tf->hob_lbah = in_be32(ioaddr->lbah_addr);
++		out_be32(ioaddr->ctl_addr, tf->ctl);
++		ap->last_ctl = tf->ctl;
+ 	}
+ }
+ 
+
+--8t9RHnE3ZwKMSgU+--
