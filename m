@@ -1,54 +1,72 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/3] Make the IDE DMA timeout modifiable
-Date: Tue, 17 Jul 2007 18:18:37 +0400
-Message-ID: <469CCFBD.4030708@ru.mvista.com>
-References: <200706160123.55636.bzolnier@gmail.com> <4693D9B6.4090408@ru.mvista.com> <20070713161612.2f2ebb0b@the-village.bc.nu> <46979652.6040201@rtr.ca> <4697987E.3040406@ru.mvista.com> <4697D425.7000300@rtr.ca> <4697D518.7010108@ru.mvista.com> <4697D686.6090104@rtr.ca> <4697DAAE.5090704@ru.mvista.com> <4697E7E2.70303@rtr.ca> <20070716192925.GA10124@bitwizard.nl>
+From: =?iso-8859-1?Q?R=FAben?= Fonseca <krani1@0x82.com>
+Subject: libata [ata_piix] still no resume from S3 ?
+Date: Tue, 17 Jul 2007 17:49:27 +0100
+Message-ID: <20070717164927.GA13137@0x82.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:13498 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933853AbXGQOQf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 10:16:35 -0400
-In-Reply-To: <20070716192925.GA10124@bitwizard.nl>
+Received: from relay4.ptmail.sapo.pt ([212.55.154.24]:49840 "HELO sapo.pt"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1756323AbXGQQzi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jul 2007 12:55:38 -0400
+Received: from unknown (HELO server) (krani1@sapo.pt@[82.155.123.4])
+          (envelope-sender <krani1@0x82.com>)
+          by mta13 (qmail-ldap-1.03) with SMTP
+          for <linux-ide@vger.kernel.org>; 17 Jul 2007 16:48:54 -0000
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Suleiman Souhlal <ssouhlal@freebsd.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux IDE Kernel Mailling List <linux-ide@vger.kernel.org>
 
-Hello.
+Hi to all!
 
-Rogier Wolff wrote:
+I'm on Debian Sid with kernel 2.6.21 and I still can't resume my laptop
+(Sony Vaio SZ2) from S3. Searched on the archive and it seems that SATA 
+drives are getting problems when used via the "new" libata. When the
+laptop tries to resume, it can't access the hard drive anymore (the LED
+never blinks), the filesystem is mounted read-only and of course, the
+system hangs. 
 
->>>  Ah, that makes sense -- during PIO interrupts happen a lot more often.
->>>20 secs still seem to be too much.
+Is this still a know problem? Does 2.6.22 solve this already? If you
+need more information about my environment, please ask :)
 
->>I don't think so, even for modern drives.
->>Figure 8-10 seconds max for spin-up,
->>plus 6-9 seconds to do a sector re-assignment
->>or retries on a bad block (a measured *real-life* value).
+Here's more info about the problem.
+I had to manually copy the trace, so I remove the hexadecimal parts
+(if you need them, please ask i Will try to copy them too). For now
+I just want to know if you can diagnose this problem, or need more info.
+So here's the interesting (I think) part of the log after resume:
 
->>That adds up to 14-19 seconds, so 20 seconds is probably good.
+irq 23: nobody cared (try booting with the "irqpool" option)
+ __report_bad_irq
+ note_interrupt
+ handle_IRQ_event
+ handle_fasteoi_irq
+ do_IRQ
+ do_IRQ
+ irq_exit
+ smp_acpi_timer
+ common_interrupt
+ acpi_pm_read
+ getnstimeofday
+ ktime_get_ts
+ ktime_egt
+ tick_nohz_restart_sched_tick
+ cpu_idle
+ start_kernel
+ unkown_bootoption
+ =====
+handlers:
+ (ata_interrupt [libata])
+ (tifm_7xx1_isr [tifm_7xx1])
+Disabling IRQ #23
+(...)
+ATA: abnormal status 0x7F on port 0x000118cf
 
->>Still, this does need to be adjustable for faster (CF) devices,
->>and slower (optical/tape) devices, rather than just a single
->>set of fixed timeout values.
+And hard drive never cames up.. have to hard reboot the machine..
 
-> In real life, with real bad blocks on real harddrives, some harddrives
-> take more than the DMA TIMEOUT time to read a single block, even without
-> having to spin up. 
+Any help? TIA
 
-   Yeah, "shit happens".
+Ruben
 
-> The current code then resets the drive, on which the drive reports
-> "busy, not ready for command", and things go downhill from there. 
-
-    You are clearly mixing things: this message is a result of retrying 
-command in PIO mode (that fails because the drive is still busy), and then the 
-drives are actually reset. If they keep being busy *after* that, all I'd say 
-is dump them ASAP. ;-)
-
-> 	Roger. 
-
-MBR, Sergei
+-- 
+Will work for bandwidth
