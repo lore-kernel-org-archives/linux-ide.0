@@ -1,29 +1,48 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by warnings
-Date: Tue, 17 Jul 2007 18:17:20 -0400
-Message-ID: <469D3FF0.2010109@garzik.org>
-References: <20070717214239.GF28448@devserv.devel.redhat.com> <ada8x9epuip.fsf@cisco.com> <469D3E66.3010502@garzik.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by
+ warnings
+Date: Tue, 17 Jul 2007 15:19:06 -0700
+Message-ID: <20070717151906.27208ebf.akpm@linux-foundation.org>
+References: <20070717214239.GF28448@devserv.devel.redhat.com>
+	<ada8x9epuip.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50197 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751707AbXGQWRY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Jul 2007 18:17:24 -0400
-In-Reply-To: <469D3E66.3010502@garzik.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60572 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759390AbXGQWU0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 18:20:26 -0400
+In-Reply-To: <ada8x9epuip.fsf@cisco.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Roland Dreier <rdreier@cisco.com>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
+Cc: Jeff Garzik <jgarzik@redhat.com>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
 
-Jeff Garzik wrote:
-> I don't buy that performance argument, in this case.  You are already 
-> dirtying the same cacheline with other variable initializations.
+On Tue, 17 Jul 2007 14:53:02 -0700
+Roland Dreier <rdreier@cisco.com> wrote:
 
-Or simply sitting in a CPU register for large stretches of function 
-runtime...
+> >     drivers/infiniband/hw/mthca/mthca_qp: kill uninit'd var warning
+> >     
+> >     drivers/infiniband/hw/mthca/mthca_qp.c: In function
+> >       ______mthca_tavor_post_send______:
+> >     drivers/infiniband/hw/mthca/mthca_qp.c:1594: warning: ______f0______ may be used
+> >       uninitialized in this function
 
-	Jeff
+(rofl, look at that mess: it was utterly impractical, unrealistic and
+stupid for gcc to go and UTFify the compiler output.  Sigh.  LANG=C, guys).
 
+> And I don't like using uninitialized_var() here for a similar
+> reason... the functions are complex and I would prefer to avoid hiding
+> future bugs that may creep in. 
+
+umm, the code *already* produces a warning.  So if you later add a
+real used-uninitialised bug, you won't know about it, because everyone
+was trained to ignore the warning anyway.
+
+Best would be to find some way to restructure the code to make the warning
+go away.
+
+Meanwhile I'd say switch this to uninitialized_var() if it's that much of a
+worry.
 
