@@ -1,43 +1,33 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: compile error if CONFIG_BLOCK not enabled related to linux/ide.h
- include
-Date: Wed, 18 Jul 2007 00:02:46 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0707172353050.29097@blarg.am.freescale.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Recommendations on user-space soft/hardreset
+Date: Wed, 18 Jul 2007 14:08:21 +0900
+Message-ID: <469DA045.90706@gmail.com>
+References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>	 <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>	 <469D8A99.8050102@gmail.com>	 <6b01c6170707172104s62408da6yc11f239cc2a37860@mail.gmail.com>	 <469D93F3.8030707@gmail.com> <6b01c6170707172201gde9e437q714dea601916087d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41111 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750762AbXGRFDK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 01:03:10 -0400
+Received: from rv-out-0910.google.com ([209.85.198.190]:7844 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbXGRFI1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 01:08:27 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1888rvb
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 22:08:26 -0700 (PDT)
+In-Reply-To: <6b01c6170707172201gde9e437q714dea601916087d@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: flyashi@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-M:      bzolnier@gmail.com
-L:      linux-ide@vger.kernel.org
+Yasha Okshtein wrote:
+>> It defaults to softreset.
+> 
+> That still leaves the original problem of hardresets :)
 
-We get the following compile error if CONFIG_BLOCK isn't enabled:
+Yeah, I know, but with all other things served well by SCSI scan
+request, I don't really think another reset request mechanism is too
+compelling.  After all, why do you care whether SRST or HRST is used?
+It's a reset anyway.
 
-  CC      arch/powerpc/kernel/setup_32.o
-In file included from arch/powerpc/kernel/setup_32.c:14:
-include/linux/ide.h:558: error: expected specifier-qualifier-list before 'request_queue_t'
-include/linux/ide.h:696: warning: 'struct request' declared inside parameter list
-include/linux/ide.h:696: warning: its scope is only this definition or declaration, which is probably not what you want
-include/linux/ide.h:820: warning: 'struct request' declared inside parameter list
-include/linux/ide.h:853: error: field 'wrq' has incomplete type
-include/linux/ide.h:1205: error: expected ')' before '*' token
-make[1]: *** [arch/powerpc/kernel/setup_32.o] Error 1
-make: *** [arch/powerpc/kernel] Error 2
-
-What I'm trying to figure out is if include/linux/ide.h should be wrapped
-in a #if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE) or if there is
-some other desired way to handle this.
-
-This seems to stem from the fact that include/linux/blkdev.h is wrapped in
-a CONFIG_BLOCK and thus request_queue_t isn't always defined.
-
-- k
-
-
+-- 
+tejun
