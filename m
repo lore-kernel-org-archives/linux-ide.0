@@ -1,50 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 01:19:34 +0200
-Message-ID: <200707180119.34984.bzolnier@gmail.com>
-References: <20070717065940.GZ5195@kernel.dk> <200707172252.25729.bzolnier@gmail.com> <20070717143434.48836fb8.akpm@linux-foundation.org>
+From: "Yasha Okshtein" <flyashi@gmail.com>
+Subject: Re: Recommendations on user-space soft/hardreset
+Date: Tue, 17 Jul 2007 17:34:05 -0700
+Message-ID: <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
+References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>
+Reply-To: flyashi@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.180]:46691 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936324AbXGQXB4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 19:01:56 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so1044484ika
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 16:01:55 -0700 (PDT)
-In-Reply-To: <20070717143434.48836fb8.akpm@linux-foundation.org>
+Received: from mu-out-0910.google.com ([209.85.134.188]:2443 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617AbXGRAeJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 20:34:09 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so31686mue
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 17:34:05 -0700 (PDT)
+In-Reply-To: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tuesday 17 July 2007, Andrew Morton wrote:
-> On Tue, 17 Jul 2007 22:52:25 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > ide-{disk,scsi,tape} don't support REQ_TYPE_BLOCK_PC requests et all
-> > (so attempts to use SG_IO, CDROM_SEND_PACKET and SCSI_IOCTL_SEND_COMMAND
-> > will result in requests being failed and error messages in the kernel logs).
-> 
-> In my case it results in a completely tits-up machine.  CPU stuck somewhere
-> spinning with local interrutps disabled.
-> 
-> If you see the log output I sent, I'm suspecting this might be because
+Hello all,
 
-I don't. :(
+I need to send soft and/or hard resets from userspace. As no such
+method exists, I decided to write one. I wrote a hackish sysfs
+interface; now I'm cleaning it up for official submission. My current
+plan is:
 
-> this BSG brainfart has exposed underlying bugs in IDE or SCSI.
+- each driver, in ata_port_operations, specifies a soft_reset and
+hard_reset functions, which take ata_port* as a parameter
+- in ata_scsi_pass_through, check for HARDRESET and SRST, and call
+respective driver's soft/hard reset function
 
-Possible but ATM I have an (overdue) IDE update to push, people waiting for
-(overdue) patches to try and some (overdue) patches to finish and post...
+Now here's where I'm not quite certain on how to proceed. Another
+developer has recommended that the reset be performed from an error
+context, so that pre/post reset get called automatically. However,
+there's a few issues, one of which is, as I was told, that the user
+process will resume before the reset is complete. Thus the user sends
+SG_IO and gets an immediate response, before the reset is finished,
+whereas running the reset command directly blocks the user process
+until the drive returns.
 
-Would be great if somebody beats me to investigate this issue.
-
-Hint: this would be a great way to redempt pushing buggy commit behind
-my back. ;-)
+So the question is: should the driver simply call prereset, optionally
+hardreset, softreset, and postreset, or set up the error handler
+context to do it?
 
 Thanks,
-Bart
+
+ - Yasha
