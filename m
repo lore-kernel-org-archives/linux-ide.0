@@ -1,49 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Possible data corruption sata_sil24?
-Date: Wed, 18 Jul 2007 17:53:39 +0900
-Message-ID: <469DD513.7070202@gmail.com>
-References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
+Date: Wed, 18 Jul 2007 12:23:51 +0300
+Message-ID: <20070718092351.GY4106@edu.joroinen.fi>
+References: <20070711200538.GA7374@havoc.gtf.org> <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org> <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org> <46967B3C.708@garzik.org> <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070713115919.GC17811@jabberwocky.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: dshaw@jabberwocky.com
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762886AbXGRJYG@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dean gaudet <dean@arctic.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dave@thedillows.org
 List-Id: linux-ide@vger.kernel.org
 
-David Shaw wrote:
->>> It fails whether I use a raw /dev/sdd or partition it into one large
->>> /dev/sdd1, or partition into multiple partitions.  sata_sil24 seems to
->>> work by itself, as does dm, but as soon as I mix sata_sil24+dm, I get
->>> corruption.
->> Hmmmm.... Can you reproduce the corruption by accessing both devices
->> simultaneously without using dm?  Considering ich5 does fine, it looks
->> like hardware and/or driver problem and I really wanna rule out dm.
+On Thu, Jul 12, 2007 at 07:15:26PM -0700, dean gaudet wrote:
+> On Thu, 12 Jul 2007, Jeff Garzik wrote:
 > 
-> I think I wasn't clear enough before.  The corruption happens when I
-> use dm to create two dm mappings that both reside on the same real
-> device.  Using two different devices, or two different partitions on
-> the same physical device works properly.  ich5 does fine with these 3
-> tests, but sata_sil24 fails:
+> > dean gaudet wrote:
+> > > On Thu, 12 Jul 2007, Jeff Garzik wrote:
+> > > 
+> > > > dean gaudet wrote:
+> > > > > oh very nice... no warnings on boot, and no warnings while i "dd
+> > > > > if=/dev/sdX
+> > > > > of=/dev/null" and i'm seeing 74MB/s+ from each disk on this simple read
+> > > > > test.
+> > > > > 
+> > > > > for lack of a better test i started an untar/diff stress test on the
+> > > > > disks... we'll see how it goes.  (it's based on doug ledford's
+> > > > > memtest.sh)
+> > > > Thanks for the testing.  Looks like we might have hit on something good...
+> > > 
+> > > yep this does look good.  no problems overnight in the untar/diff/rm
+> > > workload.  if you've got any other workload you'd like me to throw at it,
+> > > let me know.  i might be able to scare up a disk or two with errors to check
+> > > error handling.
+> > 
+> > Nothing specific.  I usually just throw various workloads at it, both
+> > throughput-intensive, seek-intensive, multiple threads at the same time,
+> > stressing multiple disks at the same time, etc.
 > 
->  * /dev/sdd, create 2 dm linear mappings on it, mke2fs and use those
->    dm "devices" == corruption
+> yeah the untar/diff/rm workload is seek/thread intensive.
 > 
->  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, mke2fs and use
->    those partitions == no corruption
 > 
->  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, create 2 dm linear
->    mappings on /dev/sdd1, mke2fs and use those dm "devices" ==
->    corruption
+> > I presume from your past messages your tests include multiple disks at the
+> > same time?
+> 
+> yep, 4 disks... i was getting 4x74MB/s with dd read.  unfortunately i 
+> don't have more disks in the system at this point so i can't test all 8 
+> ports at full tilt.
+> 
+> each disk had its own XFS filesystem.
+> 
 
-I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
-linux-raid for help.  How much memory do you have?  One big difference
-between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
-Maybe dma mapping or something interacts weirdly with dm there?
+Hi!
 
-Thanks.
+What brand/model your sata_mv controller is? Would be nice to know to be
+able to get a "known-to-work" one.. 
 
--- 
-tejun
+-- Pasi
