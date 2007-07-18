@@ -1,53 +1,73 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [git patches 2/2] warnings: use uninitialized_var()
-Date: Wed, 18 Jul 2007 13:30:11 +0200
-Message-ID: <20070718113011.GI3801@stusta.de>
-References: <20070717214239.GF28448@devserv.devel.redhat.com> <20070717214952.GG28448@devserv.devel.redhat.com>
+From: Pavel Mateja <pavel@netsafe.cz>
+Subject: Re: ALi SATA problem
+Date: Wed, 18 Jul 2007 14:23:08 +0200
+Message-ID: <200707181423.08921.pavel@netsafe.cz>
+References: <200707181117.41129.pavel@netsafe.cz> <200707181138.01161.pavel@netsafe.cz> <469DE14A.60101@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:36935 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932075AbXGRLat (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 07:30:49 -0400
+Received: from gate.netsafe.cz ([213.29.17.218]:51489 "HELO netsafe.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1758515AbXGRMXL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jul 2007 08:23:11 -0400
+In-Reply-To: <469DE14A.60101@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20070717214952.GG28448@devserv.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@redhat.com>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
+To: linux-ide@vger.kernel.org
 
-On Tue, Jul 17, 2007 at 05:49:52PM -0400, Jeff Garzik wrote:
-> 
-> For many months, I have maintained a hand-verified list of bogus "may be
-> used uninitialized" warning fixes, in misc-2.6.git#gccbug.  Andrew urged
-> me to head these upstream.
-> 
-> I have gone through and re-analyzed each warning, and verified that
-> these variables are indeed initialized properly, and gcc is making
-> needless noise.
->...
+Dne Wednesday 18 of July 2007 11:45:46 jste napsal(a):
+> Pavel Mateja wrote:
+> > Dne Wednesday 18 of July 2007 11:35:00 jste napsal(a):
+> >> Pavel Mateja wrote:
+> >>> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+> >>> ata2: (irq_stat 0x00000040, connection status changed)
+> >>> ata4: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+> >>> ata4: (irq_stat 0x00000040, connection status changed)
+> >>> ata2: soft resetting port
+> >>
+> >> Please check power supply and re-cable things.
+> >
+> > Funny thing is there are no cables to be checked. Nothing is connected to
+> > those ports. Just ata1 is occupied by disk.
+>
+> Sigh... The controller is telling the driver that "there's something
+> going on this port (hotplug event), please take look".  Can you try
+> hotplug some device at those ports and report the resulting kernel log?
 
-Some notes:
-- if gcc can prove a variable gets used uninitialized it gives
-  a different warning
-- gcc says it may be used uninitialized - there can always be false
-  positives when the correctness of the code is due to some higher
-  level logic
-- I've seen cases in the kernel where it was technically impossible
-  for the compiler to verify a variable always gets initialized
+Hotplug was working in cca 1 of 8 attemps.
 
-So if we want these warnings we'll always need to silence the ones that 
-are verified as being correct code like your patches do - and that's not 
-gcc's fault.
-
-cu
-Adrian
-
+ata4: soft resetting port
+ata4: SATA link down (SStatus 1 SControl 300)
+ata4: EH complete
+ata4: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+ata4: (irq_stat 0x00000040, connection status changed)
+ata2: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+ata2: (irq_stat 0x00000040, connection status changed)
+ata4: soft resetting port
+ata2: soft resetting port
+ata2: SATA link down (SStatus 1 SControl 300)
+ata2: EH complete
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATA-6: ST3120026AS, 8.05, max UDMA/133
+ata4.00: 234375000 sectors, multi 0: LBA48
+ata4.00: configured for UDMA/133
+ata4: EH complete
+Device driver target3:0:0 lacks bus and class support for being resumed.
+scsi 3:0:0:0: Direct-Access     ATA      ST3120026AS      8.05 PQ: 0 ANSI: 5
+sd 3:0:0:0: [sdb] 234375000 512-byte hardware sectors (120000 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
+DPO or FUA
+sd 3:0:0:0: [sdb] 234375000 512-byte hardware sectors (120000 MB)
+sd 3:0:0:0: [sdb] Write Protect is off
+sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
+DPO or FUA
+ sdb: sdb1
+sd 3:0:0:0: [sdb] Attached SCSI disk
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Pavel Mateja
