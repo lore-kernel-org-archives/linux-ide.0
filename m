@@ -1,38 +1,43 @@
-From: dean gaudet <dean@arctic.org>
-Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
-Date: Wed, 18 Jul 2007 09:40:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0707180938420.16002@twinlark.arctic.org>
-References: <20070711200538.GA7374@havoc.gtf.org>
- <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org>
- <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org> <46967B3C.708@garzik.org>
- <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
- <20070718092351.GY4106@edu.joroinen.fi>
+From: "Yasha Okshtein" <flyashi@gmail.com>
+Subject: Re: Recommendations on user-space soft/hardreset
+Date: Wed, 18 Jul 2007 09:49:46 -0700
+Message-ID: <6b01c6170707180949v297dda23nefb8fc9fb74b22f5@mail.gmail.com>
+References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>
+	 <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
+	 <20070718014534.6a0adffe@the-village.bc.nu>
+	 <6b01c6170707171800t39f2aac5x80a6d33b892fbda8@mail.gmail.com>
+	 <20070718135435.42e4b3f8@the-village.bc.nu>
+Reply-To: flyashi@gmail.com
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="500119290-1713319310-1184776833=:16002"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from twinlark.arctic.org ([207.29.250.54]:58548 "EHLO
-	twinlark.arctic.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933454AbXGRQkg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 12:40:36 -0400
-In-Reply-To: <20070718092351.GY4106@edu.joroinen.fi>
+Received: from ug-out-1314.google.com ([66.249.92.171]:19843 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760601AbXGRQts (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 12:49:48 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so287564ugf
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 09:49:47 -0700 (PDT)
+In-Reply-To: <20070718135435.42e4b3f8@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dave@thedillows.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 7/18/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> The neccessary parts get called from libata-eh based upon the flags set
+> by the error code to indicate how to recover.
 
---500119290-1713319310-1184776833=:16002
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+I see... now let me see if I have this straight:
+- ata_scsi_pass_thru checks and sees that it's a (soft,hard)reset
+- sets up eh_info.action with either ATA_EH_HARDRESET or ATA_EH_SOFTRESET
+- calls ata_port_schedule_eh(ap);
 
-On Wed, 18 Jul 2007, Pasi Kärkkäinen wrote:
+>From there, I think the error handler gets queued, but the user
+process returns. The other option for the last step would be to call
+the driver's error_handler directly.
 
-> What brand/model your sata_mv controller is? Would be nice to know to be
-> able to get a "known-to-work" one.. 
+This method seems to me like a better solution.
 
-http://supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
-
--dean
---500119290-1713319310-1184776833=:16002--
+ - Yasha
