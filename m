@@ -1,69 +1,60 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: compile error if CONFIG_BLOCK not enabled related to linux/ide.h include
-Date: Wed, 18 Jul 2007 09:12:02 -0500
-Message-ID: <162F0B67-44AB-4955-873A-150224C128CB@kernel.crashing.org>
-References: <Pine.LNX.4.64.0707172353050.29097@blarg.am.freescale.net> <200707181247.26262.bzolnier@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Farkas Levente <lfarkas@bppiac.hu>
+Subject: sata kernel problems, hang for 40 sec
+Date: Wed, 18 Jul 2007 17:09:17 +0200
+Message-ID: <469E2D1D.6060303@bppiac.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:38329 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758936AbXGROLf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 10:11:35 -0400
-In-Reply-To: <200707181247.26262.bzolnier@gmail.com>
+Received: from portal.bppiac.hu ([213.253.216.130]:39710 "EHLO
+	portal.bppiac.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753800AbXGRP3T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 11:29:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+hi,
+we regularly (about once a day) got such messages in the log file.
+during this period (about 40 sec) the whole system hangs and it seems
+nothing is working on the server. we already try replace the sate cables
+update the firmware but nothing helps. there are 6 sata disk in the
+server and the strange thing that different disk fail (so it's not the
+problem with the disk itself, we already run test on disk too).
+the same system runs without problem with rhel 4, this only happened
+after upgrading to rhel 5, kernel-2.6.18-8.1.8.el5,
+anybody has any tip?
 
-On Jul 18, 2007, at 5:47 AM, Bartlomiej Zolnierkiewicz wrote:
+SCSI subsystem initialized
+libata version 2.00 loaded.
+sata_sil24 0000:05:00.0: version 0.3
 
->
-> Hi,
->
-> On Wednesday 18 July 2007, Kumar Gala wrote:
->> M:      bzolnier@gmail.com
->> L:      linux-ide@vger.kernel.org
->>
->> We get the following compile error if CONFIG_BLOCK isn't enabled:
->>
->>   CC      arch/powerpc/kernel/setup_32.o
->> In file included from arch/powerpc/kernel/setup_32.c:14:
->> include/linux/ide.h:558: error: expected specifier-qualifier-list  
->> before 'request_queue_t'
->> include/linux/ide.h:696: warning: 'struct request' declared inside  
->> parameter list
->> include/linux/ide.h:696: warning: its scope is only this  
->> definition or declaration, which is probably not what you want
->> include/linux/ide.h:820: warning: 'struct request' declared inside  
->> parameter list
->> include/linux/ide.h:853: error: field 'wrq' has incomplete type
->> include/linux/ide.h:1205: error: expected ')' before '*' token
->> make[1]: *** [arch/powerpc/kernel/setup_32.o] Error 1
->> make: *** [arch/powerpc/kernel] Error 2
->
-> include/linux/ide.h is exclusively for IDE subsystem
->
->> What I'm trying to figure out is if include/linux/ide.h should be  
->> wrapped
->> in a #if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE) or if  
->> there is
->> some other desired way to handle this.
->
-> Plese remove <linux/ide.h> include, there doesn't seem to be any  
-> piece of
-> code in arch/powerpc/kernel/setup_32.c which needs it anyway.
+and the error:
+-------------------------------------------------
+Jul 17 13:31:58 piros kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr
+0x0 action 0x2 frozen
+Jul 17 13:31:58 piros kernel: ata4.00: tag 0 cmd 0xea Emask 0x4 stat
+0x40 err 0x0 (timeout)
+Jul 17 13:31:59 piros kernel: ata4: soft resetting port
+Jul 17 13:32:01 piros kernel: ata4: softreset failed (1st FIS failed)
+Jul 17 13:32:01 piros kernel: ata4: softreset failed, retrying in 5 secs
+Jul 17 13:32:06 piros kernel: ata4: hard resetting port
+Jul 17 13:32:14 piros kernel: ata4: port is slow to respond, this delay
+is known to occur on vacant SATA ports
+Jul 17 13:32:37 piros kernel: ata4: port failed to respond (30 secs)
+Jul 17 13:32:37 piros kernel: ata4: COMRESET failed (device not ready)
+Jul 17 13:32:37 piros kernel: ata4: hardreset failed, retrying in 5 secs
+Jul 17 13:32:42 piros kernel: ata4: hard resetting port
+Jul 17 13:32:42 piros kernel: ata4: SATA link up 3.0 Gbps (SStatus 123
+SControl 300)
+Jul 17 13:32:42 piros kernel: ata4.00: configured for UDMA/133
+Jul 17 13:32:42 piros kernel: ata4: EH complete
+Jul 17 13:32:42 piros kernel: SCSI device sdd: 488397168 512-byte hdwr
+sectors (250059 MB)
+Jul 17 13:32:42 piros kernel: sdd: Write Protect is off
+Jul 17 13:32:42 piros kernel: SCSI device sdd: drive cache: write back
+-------------------------------------------------
 
-Its needed for:
-
-struct ide_machdep_calls ppc_ide_md;
-
-which gets defined in asm/ide.h which needs linux/ide.h for the defn  
-of ide_init_hwif.
-
-- k
-
-
+-- 
+  Levente                               "Si vis pacem para bellum!"
 
