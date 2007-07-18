@@ -1,54 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: compile error if CONFIG_BLOCK not enabled related to linux/ide.h include
-Date: Wed, 18 Jul 2007 12:47:26 +0200
-Message-ID: <200707181247.26262.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0707172353050.29097@blarg.am.freescale.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [git patches 2/2] warnings: use uninitialized_var()
+Date: Wed, 18 Jul 2007 13:30:11 +0200
+Message-ID: <20070718113011.GI3801@stusta.de>
+References: <20070717214239.GF28448@devserv.devel.redhat.com> <20070717214952.GG28448@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.180]:63092 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753287AbXGRKaB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 06:30:01 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so136867ika
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 03:29:59 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0707172353050.29097@blarg.am.freescale.net>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:36935 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932075AbXGRLat (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 07:30:49 -0400
 Content-Disposition: inline
+In-Reply-To: <20070717214952.GG28448@devserv.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@redhat.com>
+Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
 
-
-Hi,
-
-On Wednesday 18 July 2007, Kumar Gala wrote:
-> M:      bzolnier@gmail.com
-> L:      linux-ide@vger.kernel.org
+On Tue, Jul 17, 2007 at 05:49:52PM -0400, Jeff Garzik wrote:
 > 
-> We get the following compile error if CONFIG_BLOCK isn't enabled:
+> For many months, I have maintained a hand-verified list of bogus "may be
+> used uninitialized" warning fixes, in misc-2.6.git#gccbug.  Andrew urged
+> me to head these upstream.
 > 
->   CC      arch/powerpc/kernel/setup_32.o
-> In file included from arch/powerpc/kernel/setup_32.c:14:
-> include/linux/ide.h:558: error: expected specifier-qualifier-list before 'request_queue_t'
-> include/linux/ide.h:696: warning: 'struct request' declared inside parameter list
-> include/linux/ide.h:696: warning: its scope is only this definition or declaration, which is probably not what you want
-> include/linux/ide.h:820: warning: 'struct request' declared inside parameter list
-> include/linux/ide.h:853: error: field 'wrq' has incomplete type
-> include/linux/ide.h:1205: error: expected ')' before '*' token
-> make[1]: *** [arch/powerpc/kernel/setup_32.o] Error 1
-> make: *** [arch/powerpc/kernel] Error 2
+> I have gone through and re-analyzed each warning, and verified that
+> these variables are indeed initialized properly, and gcc is making
+> needless noise.
+>...
 
-include/linux/ide.h is exclusively for IDE subsystem
+Some notes:
+- if gcc can prove a variable gets used uninitialized it gives
+  a different warning
+- gcc says it may be used uninitialized - there can always be false
+  positives when the correctness of the code is due to some higher
+  level logic
+- I've seen cases in the kernel where it was technically impossible
+  for the compiler to verify a variable always gets initialized
 
-> What I'm trying to figure out is if include/linux/ide.h should be wrapped
-> in a #if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE) or if there is
-> some other desired way to handle this.
+So if we want these warnings we'll always need to silence the ones that 
+are verified as being correct code like your patches do - and that's not 
+gcc's fault.
 
-Plese remove <linux/ide.h> include, there doesn't seem to be any piece of
-code in arch/powerpc/kernel/setup_32.c which needs it anyway.
+cu
+Adrian
 
-Thanks,
-Bart
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
