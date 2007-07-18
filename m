@@ -1,51 +1,170 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by	warnings
-Date: Wed, 18 Jul 2007 16:03:05 -0400
-Message-ID: <469E71F9.5000005@garzik.org>
-References: <20070717214239.GF28448@devserv.devel.redhat.com> <20070718024637.GC6146@suse.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: block/bsg.c
+Date: Wed, 18 Jul 2007 22:32:58 +0200
+Message-ID: <200707182232.58961.bzolnier@gmail.com>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org> <200707180243.13368.bzolnier@gmail.com> <1184767917.3464.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60217 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933598AbXGRUDL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 16:03:11 -0400
-In-Reply-To: <20070718024637.GC6146@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1184767917.3464.13.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org
 
-Greg KH wrote:
-> On Tue, Jul 17, 2007 at 05:42:39PM -0400, Jeff Garzik wrote:
->> commit ae97fec3701a559929c3529e35417fab133a4d39
->> Author: Jeff Garzik <jeff@garzik.org>
->> Date:   Tue Jul 17 01:08:29 2007 -0400
->>
->>     drivers/usb/misc/auerswald: fix status check, remove redundant check
->>     
->>     1) We should only set 'actual_length' output variable if usb length is
->>     known to be good.
->>     
->>     2) No need to check actual_length for NULL.  The only caller always
->>     passes non-NULL value.
->>     
->>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+Hi,
+
+On Wednesday 18 July 2007, James Bottomley wrote:
+> On Wed, 2007-07-18 at 02:43 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > [ James, please remeber to cc: linux-ide on IDE patches, thanks. ]
 > 
-> I have no objection to this patch at all, however it does not remove the
-> compiler warning :(
+> Blame Andrew ... I assumed he'd be reporting the problem to the relevant
+> lists, so I just did a reply all ...
 
-The description doesn't say it removes a warning, so it doesn't :)
+No need to blame anybody, especially since it seems that one more person
+forgot about adding linux-ide ML.  ;)
 
-You want to look at
+> > On Wednesday 18 July 2007, Jeff Garzik wrote:
+> > > James Bottomley wrote:
+> > > > @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+> > > >  	int err, (*setfunc)(ide_drive_t *, int);
+> > > >  	u8 *val;
+> > > >  
+> > > > -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > > -	if (err != -ENOTTY)
+> > > > -		return err;
+> > > > +	switch (cmd) {
+> > > > +	case SG_IO:
+> > > > +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > > +	}
+> > > >  
+> > > >  	switch (cmd) {
+> > > >  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
+> > > 
+> > > 
+> > > At that point you might as well use an 'if'.
+> > > 
+> > > But overall -- agreed.  ACK.
+> > 
+> > James/Jeff thanks for following the issue but NAK. ;)
+> > 
+> > Causes regression wrt ide-floppy CDROMEJECT/CDROMCLOSETRAY support when
+> > compared to 2.6.22 and SG_IO is not supported by ide-{disk,scsi,tape}.
+> 
+> Well ... that was why I put the case statement in ... I was sure there
+> would be other ioctls I missed.
 
-	drivers/*: mark variables with uninitialized_var()
+The thing is that ide-{disk,scsi,tape} really don't support
+REQ_TYPE_BLOCK_PC type requests so ide.c::generic_ide_ioctl()
+is not the best place to add handling of SG_IO.
 
-which was in posting "[git patches 2/2] warnings: use 
-uninitialized_var()" and is now upstream commit 
-a6343afb6e16b65b9f0b264f94f8207212e7e3ae
+Patch attached.
 
-	Jeff
+> > Luckily Linus has already fixed the issue properly.
+> 
+> Actually, no, that's just a reversion.  I think we need the attached to
+> complete all of this.
+> 
+> > BTW cmd == 1 IOCTL is not defined/used by IDE driver.
+> 
+> Andrew's trace clearly shows that something is sending cmd == 1 down, so
+
+I still haven't got the trace.  Andrew, please (re)send it in PM, thanks.
+
+> I'm nearly positive at one time this was a legitimate ioctl for IDE.
+
+Could be...
+
+> Anyway it's probably time to kill this deprecated ioctl in SCSI.
+
+Fully agreed.
+
+Thanks,
+Bart
 
 
+[PATCH] ide: add support for SCSI ioctls to ide-floppy
+
+Now that ide-floppy supports SG_IO we can add support for SCSI ioctls
+(except deprecated SCSI_IOCTL_SEND_COMMAND and legacy CDROM_SEND_PACKET
+ones - we can add them later iff really needed).
+
+While at it remove handling of CDROMEJECT and CDROMCLOSETRAY ioctls from
+generic_ide_ioctl():
+
+- This prevents ide-{disk,tape,scsi} device drivers from obtaining
+  REQ_TYPE_BLOCK_PC type requests which are currently unsupported by
+  these drivers and which are potentially harmful (as reported by Andrew).
+
+- There is no functionality loss since aforementioned ioctls will now be
+  handled by idefloppy_ioctl()->scsi_cmd_ioctl() (for devices using
+  ide-floppy driver) and by idecd_ioctl->cdrom_ioctl()->scsi_cmd_ioctl()
+  (for devices using ide-cd driver).
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ide/ide-floppy.c |   18 +++++++++++++++++-
+ drivers/ide/ide.c        |    4 ----
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -99,6 +99,8 @@
+ #include <linux/bitops.h>
+ #include <linux/mutex.h>
+ 
++#include <scsi/scsi_ioctl.h>
++
+ #include <asm/byteorder.h>
+ #include <asm/irq.h>
+ #include <asm/uaccess.h>
+@@ -2099,7 +2101,21 @@ static int idefloppy_ioctl(struct inode 
+ 	case IDEFLOPPY_IOCTL_FORMAT_GET_PROGRESS:
+ 		return idefloppy_get_format_progress(drive, argp);
+ 	}
+-	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
++
++	/*
++	 * skip SCSI_IOCTL_SEND_COMMAND (deprecated)
++	 * and CDROM_SEND_PACKET (legacy) ioctls
++	 */
++	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
++		err = scsi_cmd_ioctl(file, bdev->bd_disk->queue,
++					bdev->bd_disk, cmd, argp);
++	else
++		err = -ENOTTY;
++
++	if (err == -ENOTTY)
++		err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
++
++	return err;
+ }
+ 
+ static int idefloppy_media_changed(struct gendisk *disk)
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1171,10 +1171,6 @@ int generic_ide_ioctl(ide_drive_t *drive
+ 			return 0;
+ 		}
+ 
+-		case CDROMEJECT:
+-		case CDROMCLOSETRAY:
+-			return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+-
+ 		case HDIO_GET_BUSSTATE:
+ 			if (!capable(CAP_SYS_ADMIN))
+ 				return -EACCES;
