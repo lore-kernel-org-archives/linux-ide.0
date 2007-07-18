@@ -1,97 +1,139 @@
 From: Roland Dreier <rdreier@cisco.com>
 Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by warnings
-Date: Tue, 17 Jul 2007 19:35:05 -0700
-Message-ID: <adamyxuo2w6.fsf@cisco.com>
+Date: Tue, 17 Jul 2007 19:46:21 -0700
+Message-ID: <adair8io2de.fsf@cisco.com>
 References: <20070717214239.GF28448@devserv.devel.redhat.com>
 	<ada8x9epuip.fsf@cisco.com> <469D3E66.3010502@garzik.org>
+	<adamyxuo2w6.fsf@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761231AbXGRCkc@vger.kernel.org>
-In-Reply-To: <469D3E66.3010502@garzik.org> (Jeff Garzik's message of "Tue, 17 Jul 2007 18:10:46 -0400")
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:14028 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbXGRCqX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 22:46:23 -0400
+In-Reply-To: <adamyxuo2w6.fsf@cisco.com> (Roland Dreier's message of "Tue, 17 Jul 2007 19:35:05 -0700")
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
-List-Id: linux-ide@vger.kernel.org
 
- > I don't buy that performance argument, in this case.  You are already
- > dirtying the same cacheline with other variable initializations.
- > 
- > Like I noted in the changeset description (hey, this is precisely why
- > I included it, so that we could have this discussion), IMO the flow of
- > control makes it not only impossible for the compiler to understand
- > the full value range of 'f0', but also difficult for humans as well.
- > 
- > I could perhaps understand initializing the variable to some poison
- > value rather than zero, but IMO the code is stronger with f0 set to a
- > sane value.
+I think this patch (on top of the previous one) actually makes the
+code clearer, and also makes it smaller:
 
-The more I think about it, the less sense initializing f0 to 0 makes.
-The whole problem with an uninitialized variable is that a random
-value from the stack might be used.  So setting a variable to
-something meaningless (guaranteeing that a garbage value is used in
-case of a bug) just to shut up a warning makes no sense -- it's no
-safer than leaving the code as is.  uninitialized_var() gets rid of
-the warning, saves a little text and instruction cache, and documents
-things better.
+add/remove: 0/0 grow/shrink: 0/3 up/down: 0/-41 (-41)
+function                                     old     new   delta
+mthca_tavor_post_send                       1344    1335      -9
+mthca_tavor_post_receive                     792     776     -16
+mthca_arbel_post_send                       1481    1465     -16
 
-(BTW, I agree the code is a little confusing as written.  I think
-things could be cleaned up and made more efficient by getting rid of
-the initialization of size0 too -- I'll look at doing that)
-
-Anyway, I queued this up for my next merge with Linus:
-
-commit 6d7d080e9f7cd535a8821efd3835c5cfa5223ab6
-Author: Roland Dreier <rolandd@cisco.com>
-Date:   Tue Jul 17 19:30:51 2007 -0700
-
-    IB/mthca: Use uninitialized_var() for f0
-    
-    Commit 9db48926 ("drivers/infiniband/hw/mthca/mthca_qp: kill uninit'd
-    var warning") added "= 0" to the declarations of f0 to shut up gcc
-    warnings.  However, there's no point in making the code bigger by
-    initializing f0 to a random value just to get rid of a warning;
-    setting f0 to 0 is no safer than just using uninitialized_var(), which
-    documents the situation better and gives smaller code too.  For example,
-    on x86_64:
-    
-    add/remove: 0/0 grow/shrink: 0/2 up/down: 0/-16 (-16)
-    function                                     old     new   delta
-    mthca_tavor_post_send                       1352    1344      -8
-    mthca_arbel_post_send                       1489    1481      -8
-    
-    Signed-off-by: Roland Dreier <rolandd@cisco.com>
-
+So I'll test this a bit and probably merge it.
+---
 diff --git a/drivers/infiniband/hw/mthca/mthca_qp.c b/drivers/infiniband/hw/mthca/mthca_qp.c
-index 11f1d99..0e9ef24 100644
+index 0e9ef24..186bade 100644
 --- a/drivers/infiniband/hw/mthca/mthca_qp.c
 +++ b/drivers/infiniband/hw/mthca/mthca_qp.c
-@@ -1591,7 +1591,13 @@ int mthca_tavor_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+@@ -1590,13 +1590,14 @@ int mthca_tavor_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+ 	int nreq;
  	int i;
  	int size;
- 	int size0 = 0;
--	u32 f0 = 0;
-+	/*
-+	 * f0 is only used if nreq != 0, and f0 will be initialized
-+	 * the first time through the main loop, since size0 == 0 the
-+	 * first time through.  So nreq cannot become non-zero without
-+	 * initializing f0, and f0 is in fact never used uninitialized.
-+	 */
-+	u32 uninitialized_var(f0);
+-	int size0 = 0;
+ 	/*
+-	 * f0 is only used if nreq != 0, and f0 will be initialized
+-	 * the first time through the main loop, since size0 == 0 the
+-	 * first time through.  So nreq cannot become non-zero without
+-	 * initializing f0, and f0 is in fact never used uninitialized.
++	 * f0 and size0 are only used if nreq != 0, and they will
++	 * always be initialized the first time through the main loop
++	 * before nreq is incremented.  So nreq cannot become non-zero
++	 * without initializing f0 and size0, and they are in fact
++	 * never used uninitialized.
+ 	 */
++	int uninitialized_var(size0);
+ 	u32 uninitialized_var(f0);
  	int ind;
  	u8 op0 = 0;
+@@ -1774,11 +1775,11 @@ int mthca_tavor_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+ 				    mthca_opcode[wr->opcode]);
+ 		wmb();
+ 		((struct mthca_next_seg *) prev_wqe)->ee_nds =
+-			cpu_to_be32((size0 ? 0 : MTHCA_NEXT_DBD) | size |
++			cpu_to_be32((nreq ? 0 : MTHCA_NEXT_DBD) | size |
+ 				    ((wr->send_flags & IB_SEND_FENCE) ?
+ 				    MTHCA_NEXT_FENCE : 0));
  
-@@ -1946,7 +1952,13 @@ int mthca_arbel_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+-		if (!size0) {
++		if (!nreq) {
+ 			size0 = size;
+ 			op0   = mthca_opcode[wr->opcode];
+ 			f0    = wr->send_flags & IB_SEND_FENCE ?
+@@ -1828,7 +1829,14 @@ int mthca_tavor_post_receive(struct ib_qp *ibqp, struct ib_recv_wr *wr,
+ 	int nreq;
  	int i;
  	int size;
- 	int size0 = 0;
--	u32 f0 = 0;
+-	int size0 = 0;
 +	/*
-+	 * f0 is only used if nreq != 0, and f0 will be initialized
-+	 * the first time through the main loop, since size0 == 0 the
-+	 * first time through.  So nreq cannot become non-zero without
-+	 * initializing f0, and f0 is in fact never used uninitialized.
++	 * size0 is only used if nreq != 0, and it will always be
++	 * initialized the first time through the main loop before
++	 * nreq is incremented.  So nreq cannot become non-zero
++	 * without initializing size0, and it is in fact never used
++	 * uninitialized.
 +	 */
-+	u32 uninitialized_var(f0);
++	int uninitialized_var(size0);
+ 	int ind;
+ 	void *wqe;
+ 	void *prev_wqe;
+@@ -1887,7 +1895,7 @@ int mthca_tavor_post_receive(struct ib_qp *ibqp, struct ib_recv_wr *wr,
+ 		((struct mthca_next_seg *) prev_wqe)->ee_nds =
+ 			cpu_to_be32(MTHCA_NEXT_DBD | size);
+ 
+-		if (!size0)
++		if (!nreq)
+ 			size0 = size;
+ 
+ 		++ind;
+@@ -1909,7 +1917,6 @@ int mthca_tavor_post_receive(struct ib_qp *ibqp, struct ib_recv_wr *wr,
+ 
+ 			qp->rq.next_ind = ind;
+ 			qp->rq.head += MTHCA_TAVOR_MAX_WQES_PER_RECV_DB;
+-			size0 = 0;
+ 		}
+ 	}
+ 
+@@ -1951,13 +1958,14 @@ int mthca_arbel_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+ 	int nreq;
+ 	int i;
+ 	int size;
+-	int size0 = 0;
+ 	/*
+-	 * f0 is only used if nreq != 0, and f0 will be initialized
+-	 * the first time through the main loop, since size0 == 0 the
+-	 * first time through.  So nreq cannot become non-zero without
+-	 * initializing f0, and f0 is in fact never used uninitialized.
++	 * f0 and size0 are only used if nreq != 0, and they will
++	 * always be initialized the first time through the main loop
++	 * before nreq is incremented.  So nreq cannot become non-zero
++	 * without initializing f0 and size0, and they are in fact
++	 * never used uninitialized.
+ 	 */
++	int uninitialized_var(size0);
+ 	u32 uninitialized_var(f0);
  	int ind;
  	u8 op0 = 0;
+@@ -1978,7 +1986,6 @@ int mthca_arbel_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+ 			doorbell[1] = cpu_to_be32((qp->qpn << 8) | size0);
  
+ 			qp->sq.head += MTHCA_ARBEL_MAX_WQES_PER_SEND_DB;
+-			size0 = 0;
+ 
+ 			/*
+ 			 * Make sure that descriptors are written before
+@@ -2163,7 +2170,7 @@ int mthca_arbel_post_send(struct ib_qp *ibqp, struct ib_send_wr *wr,
+ 				    ((wr->send_flags & IB_SEND_FENCE) ?
+ 				     MTHCA_NEXT_FENCE : 0));
+ 
+-		if (!size0) {
++		if (!nreq) {
+ 			size0 = size;
+ 			op0   = mthca_opcode[wr->opcode];
+ 			f0    = wr->send_flags & IB_SEND_FENCE ?
