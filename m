@@ -1,41 +1,38 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by
-	warnings
-Date: Tue, 17 Jul 2007 19:46:37 -0700
-Message-ID: <20070718024637.GC6146@suse.de>
-References: <20070717214239.GF28448@devserv.devel.redhat.com>
+From: dean gaudet <dean@arctic.org>
+Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
+Date: Wed, 18 Jul 2007 09:40:33 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0707180938420.16002@twinlark.arctic.org>
+References: <20070711200538.GA7374@havoc.gtf.org>
+ <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org>
+ <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org> <46967B3C.708@garzik.org>
+ <Pine.LNX.4.64.0707121323570.29365@twinlark.arctic.org>
+ <20070718092351.GY4106@edu.joroinen.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="500119290-1713319310-1184776833=:16002"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:32948 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759923AbXGRPqr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 11:46:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20070717214239.GF28448@devserv.devel.redhat.com>
+Received: from twinlark.arctic.org ([207.29.250.54]:58548 "EHLO
+	twinlark.arctic.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933454AbXGRQkg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 12:40:36 -0400
+In-Reply-To: <20070718092351.GY4106@edu.joroinen.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@redhat.com>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org
+To: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dave@thedillows.org
 
-On Tue, Jul 17, 2007 at 05:42:39PM -0400, Jeff Garzik wrote:
-> commit ae97fec3701a559929c3529e35417fab133a4d39
-> Author: Jeff Garzik <jeff@garzik.org>
-> Date:   Tue Jul 17 01:08:29 2007 -0400
-> 
->     drivers/usb/misc/auerswald: fix status check, remove redundant check
->     
->     1) We should only set 'actual_length' output variable if usb length is
->     known to be good.
->     
->     2) No need to check actual_length for NULL.  The only caller always
->     passes non-NULL value.
->     
->     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-I have no objection to this patch at all, however it does not remove the
-compiler warning :(
+--500119290-1713319310-1184776833=:16002
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 
-thanks,
+On Wed, 18 Jul 2007, Pasi Kärkkäinen wrote:
 
-greg k-h
+> What brand/model your sata_mv controller is? Would be nice to know to be
+> able to get a "known-to-work" one.. 
+
+http://supermicro.com/products/accessories/addon/AoC-SAT2-MV8.cfm
+
+-dean
+--500119290-1713319310-1184776833=:16002--
