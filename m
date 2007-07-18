@@ -1,33 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Recommendations on user-space soft/hardreset
-Date: Wed, 18 Jul 2007 14:08:21 +0900
-Message-ID: <469DA045.90706@gmail.com>
-References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>	 <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>	 <469D8A99.8050102@gmail.com>	 <6b01c6170707172104s62408da6yc11f239cc2a37860@mail.gmail.com>	 <469D93F3.8030707@gmail.com> <6b01c6170707172201gde9e437q714dea601916087d@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by
+ warnings
+Date: Tue, 17 Jul 2007 22:12:09 -0700 (PDT)
+Message-ID: <alpine.LFD.0.999.0707172205270.27353@woody.linux-foundation.org>
+References: <20070717214239.GF28448@devserv.devel.redhat.com>
+ <ada8x9epuip.fsf@cisco.com> <469D3E66.3010502@garzik.org> <adamyxuo2w6.fsf@cisco.com>
+ <adair8io2de.fsf@cisco.com> <alpine.LFD.0.999.0707171957300.27353@woody.linux-foundation.org>
+ <adabqeamjjs.fsf@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:7844 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbXGRFI1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 01:08:27 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1888rvb
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 22:08:26 -0700 (PDT)
-In-Reply-To: <6b01c6170707172201gde9e437q714dea601916087d@mail.gmail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36340 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751746AbXGRFMm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 01:12:42 -0400
+In-Reply-To: <adabqeamjjs.fsf@cisco.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: flyashi@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Roland Dreier <rdreier@cisco.com>
+Cc: Jeff Garzik <jeff@garzik.org>, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
 
-Yasha Okshtein wrote:
->> It defaults to softreset.
+
+
+On Tue, 17 Jul 2007, Roland Dreier wrote:
 > 
-> That still leaves the original problem of hardresets :)
+>  > Anyway, here's a totally untested cleanup that compiles but probably 
+>  > doesn't work, because I didn't check that I did the right thing with all 
+>  > the pointer arithmetic (ie when I change "wqe" to a real structure pointer 
+>  > instead of just a "void *", maybe I left some pointer arithmetic around 
+>  > that expected it to work as a byte pointer, but now really works on the 
+>  > whole structure size instead).
+> 
+> Given that you took the time to do this, I'll get the patch into a
+> working state and apply it.  And maybe split it into reviewable chunks
+> while I'm at it ;)
 
-Yeah, I know, but with all other things served well by SCSI scan
-request, I don't really think another reset request mechanism is too
-compelling.  After all, why do you care whether SRST or HRST is used?
-It's a reset anyway.
+Hey, I appreciate it, but I really do have to warn you that I did this all 
+blind, and just meant for it to be a "I think this kind of direction is 
+more productive" thing. I'm not going to guarantee that it works at all.
 
--- 
-tejun
+I spent more time than I really wanted to on actually making sure the end 
+result even compiles (quite often, I'm perfectly happy to just send out 
+pseudo-code to indicate what I think should be done), but maybe I 
+shouldn't have done that, just so that nobody thinks that the patch is 
+necessarily going to *work*.
+
+In other words, it's a totally mindless cleanup and re-factorization. It 
+*may* work, but quite frankly, I did it just for that one email, and spent 
+the absolutly minimum possible time thinking about it. As a result, I 
+really think it needs some serious looking over.
+
+I also think that my new "handle_raddr_seg()" function could itself be 
+split up into subfunctions along the "switch()" subcases.
+
+So not only wasn't it meant to be guaranteed correct, but it wasn't even 
+meant to be seen as the best possible final situation: it could be - and 
+should be - factored out even more (and the same goes for a lot of the 
+other functions in that file that I didn't really look at, just glance and 
+notice that they have some of the same problem patterns).
+
+		Linus
