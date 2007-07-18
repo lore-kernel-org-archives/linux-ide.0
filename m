@@ -1,48 +1,32 @@
-From: "Magnus Damm" <magnus.damm@gmail.com>
-Subject: Re: [PATCH] pata_platform: Fix NULL pointer dereference
-Date: Wed, 18 Jul 2007 18:32:02 +0900
-Message-ID: <aec7e5c30707180232ke9c06baue37d33969257c2e8@mail.gmail.com>
-References: <20070717084252.29884.24167.sendpatchset@clockwork.opensource.se>
-	<20070717090219.GA24991@linux-sh.org> <469C8CCC.80009@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ALi SATA problem
+Date: Wed, 18 Jul 2007 18:35:00 +0900
+Message-ID: <469DDEC4.6080908@gmail.com>
+References: <200707181117.41129.pavel@netsafe.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
-In-Reply-To: <469C8CCC.80009@garzik.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
-List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
-List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
-Sender: linuxsh-dev-bounces@lists.sourceforge.net
-Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Sonic Zhang <sonic.adi@gmail.com>, Paul Mundt <lethal@linux-sh.org>, Linus Torvalds <torvalds@linux-foundation.org>, linuxsh-dev@lists.sourceforge.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.236]:21184 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535AbXGRJfG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 05:35:06 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so113911nze
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 02:35:05 -0700 (PDT)
+In-Reply-To: <200707181117.41129.pavel@netsafe.cz>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Pavel Mateja <pavel@netsafe.cz>
+Cc: linux-ide@vger.kernel.org
 
-On 7/17/07, Jeff Garzik <jeff@garzik.org> wrote:
-> Paul Mundt wrote:
-> > On Tue, Jul 17, 2007 at 05:42:52PM +0900, Magnus Damm wrote:
-> >> pata_platform: Fix NULL pointer dereference
-> >>
-> >> The platform-specific structures may leave pdev->dev.platform_data as NULL.
-> >>
-> >> Signed-off-by: Magnus Damm <damm@igel.co.jp>
->
-> What is your suggestion for moving linux-2.6.git forward?
+Pavel Mateja wrote:
+> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+> ata2: (irq_stat 0x00000040, connection status changed)
+> ata4: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
+> ata4: (irq_stat 0x00000040, connection status changed)
+> ata2: soft resetting port
 
-This fix solves the problem for me and Paul seems to be happy with it as well.
-Jeff, can you please pick up this patch so we can unbreak things for rc1?
+Please check power supply and re-cable things.
 
-Thanks!
-
-/ magnus
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+-- 
+tejun
