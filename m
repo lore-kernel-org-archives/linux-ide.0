@@ -1,29 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Recommendations on user-space soft/hardreset
-Date: Wed, 18 Jul 2007 12:35:53 +0900
-Message-ID: <469D8A99.8050102@gmail.com>
-References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com> <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: CONFIG_IDE_PROC_FS: /sys is not full replacement of /proc
+Date: Wed, 18 Jul 2007 07:42:42 +0400
+Message-ID: <200707180742.42651.arvidjaar@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart2005426.dapETvmZ8g";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:32997 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753000AbXGRDgB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jul 2007 23:36:01 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so47979nze
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 20:36:00 -0700 (PDT)
-In-Reply-To: <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760023AbXGRDm4@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: flyashi@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Yasha Okshtein wrote:
-> I need to send soft and/or hard resets from userspace.
+--nextPart2005426.dapETvmZ8g
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Actually, you can do it by requesting manual rescan of the SCSI host.
-"echo - - - > /sys/class/scsi_host/hostX/scan".
+May be I miss something obvious but most information that was available=20
+in /proc/ide is missing under /sys. At the very least, Mandriva hardware=20
+detection expects /proc/ide/hdX/model; nothing close is under /sys.
 
--- 
-tejun
+Are there any plans to extend IDE /sys interface to provide full range of=20
+information from /proc? Alternatively I appreciate description (or pointer =
+to=20
+thereof) how to get information that was available under /proc/ide=20
+without /proc/ide :)
+
+Thank you
+
+=2Dandrey
+
+--nextPart2005426.dapETvmZ8g
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQBGnYwyR6LMutpd94wRAtYtAKCJRXb8rYaCKfBHEmrXwFJEHZsW8gCgk4Ml
+srdU7JrSM6B5UzMG2AJqL0I=
+=sog+
+-----END PGP SIGNATURE-----
+
+--nextPart2005426.dapETvmZ8g--
