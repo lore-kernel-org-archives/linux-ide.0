@@ -1,47 +1,46 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: [git patches 1/2] warnings: attack valid cases spotted by warnings
-Date: Tue, 17 Jul 2007 21:18:15 -0700
-Message-ID: <adabqeamjjs.fsf@cisco.com>
-References: <20070717214239.GF28448@devserv.devel.redhat.com>
-	<ada8x9epuip.fsf@cisco.com> <469D3E66.3010502@garzik.org>
-	<adamyxuo2w6.fsf@cisco.com> <adair8io2de.fsf@cisco.com>
-	<alpine.LFD.0.999.0707171957300.27353@woody.linux-foundation.org>
+From: "Yasha Okshtein" <flyashi@gmail.com>
+Subject: Re: Recommendations on user-space soft/hardreset
+Date: Tue, 17 Jul 2007 22:01:16 -0700
+Message-ID: <6b01c6170707172201gde9e437q714dea601916087d@mail.gmail.com>
+References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>
+	 <6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
+	 <469D8A99.8050102@gmail.com>
+	 <6b01c6170707172104s62408da6yc11f239cc2a37860@mail.gmail.com>
+	 <469D93F3.8030707@gmail.com>
+Reply-To: flyashi@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sj-iport-3-in.cisco.com ([171.71.176.72]:3712 "EHLO
-	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082AbXGREST (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 00:18:19 -0400
-In-Reply-To: <alpine.LFD.0.999.0707171957300.27353@woody.linux-foundation.org> (Linus Torvalds's message of "Tue, 17 Jul 2007 21:00:10 -0700 (PDT)")
+Received: from fk-out-0910.google.com ([209.85.128.189]:33537 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbXGRFBS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 01:01:18 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so7443fkz
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jul 2007 22:01:17 -0700 (PDT)
+In-Reply-To: <469D93F3.8030707@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, chas@cmf.nrl.navy.mil, rolandd@cisco.com, dwmw2@infradead.org, gregkh@suse.de
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
- > Quite frankly, I don't quite understand where you get those enormous balls 
- > you have, that you can then talk about how ugly it is to just add a "= 0" 
- > that shuts up a compiler warning. That's the _least_ ugly part of the 
- > whole damn function!
+On 7/17/07, Tejun Heo <htejun@gmail.com> wrote:
+> Yasha Okshtein wrote:
+> > Well ideally this should work with a port multiplier to soft/hardreset
+> > only one disk behind the multiplier.
+>
+> You can do that too.  Just do 'echo x - -' where x corresponds to the
+> PMP port number.  On older versions it's 'echo - x -'.
+Nice, thanks!
 
-The clanking when I walk annoys people in the office too...
+> > Also, this again doesn't allow
+> > the user to specify soft or hard reset - I believe rescanning forces
+> > hardresets. Fully implementing the SATA spec, which should eventually
+> > be done anyway, seems like a cleaner solution.
+>
+> It defaults to softreset.
 
-But you're right.  It is stupid of me to make such a big deal about
-this.  My excuse is that I've seen those warnings so many times and
-actually given them more thought than they deserve, and I really felt
-that Jeff's change makes the admittedly already ugly code a tiny
-little bit worse.
+That still leaves the original problem of hardresets :)
 
- > Anyway, here's a totally untested cleanup that compiles but probably 
- > doesn't work, because I didn't check that I did the right thing with all 
- > the pointer arithmetic (ie when I change "wqe" to a real structure pointer 
- > instead of just a "void *", maybe I left some pointer arithmetic around 
- > that expected it to work as a byte pointer, but now really works on the 
- > whole structure size instead).
-
-Given that you took the time to do this, I'll get the patch into a
-working state and apply it.  And maybe split it into reviewable chunks
-while I'm at it ;)
-
-Thanks,
-  Roland
+ - yasha
