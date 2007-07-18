@@ -1,73 +1,55 @@
-From: Pavel Mateja <pavel@netsafe.cz>
-Subject: Re: ALi SATA problem
-Date: Wed, 18 Jul 2007 14:23:08 +0200
-Message-ID: <200707181423.08921.pavel@netsafe.cz>
-References: <200707181117.41129.pavel@netsafe.cz> <200707181138.01161.pavel@netsafe.cz> <469DE14A.60101@gmail.com>
+From: David Shaw <dshaw@jabberwocky.com>
+Subject: Re: Possible data corruption sata_sil24?
+Date: Wed, 18 Jul 2007 08:31:00 -0400
+Message-ID: <20070718123100.GB3932@jabberwocky.com>
+References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com> <469DD513.7070202@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.netsafe.cz ([213.29.17.218]:51489 "HELO netsafe.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1758515AbXGRMXL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 08:23:11 -0400
-In-Reply-To: <469DE14A.60101@gmail.com>
+Received: from foobar.cs.jhu.edu ([128.220.13.173]:4073 "EHLO
+	foobar.cs.jhu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754434AbXGRMbJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 08:31:09 -0400
 Content-Disposition: inline
+In-Reply-To: <469DD513.7070202@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 
-Dne Wednesday 18 of July 2007 11:45:46 jste napsal(a):
-> Pavel Mateja wrote:
-> > Dne Wednesday 18 of July 2007 11:35:00 jste napsal(a):
-> >> Pavel Mateja wrote:
-> >>> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
-> >>> ata2: (irq_stat 0x00000040, connection status changed)
-> >>> ata4: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
-> >>> ata4: (irq_stat 0x00000040, connection status changed)
-> >>> ata2: soft resetting port
-> >>
-> >> Please check power supply and re-cable things.
-> >
-> > Funny thing is there are no cables to be checked. Nothing is connected to
-> > those ports. Just ata1 is occupied by disk.
->
-> Sigh... The controller is telling the driver that "there's something
-> going on this port (hotplug event), please take look".  Can you try
-> hotplug some device at those ports and report the resulting kernel log?
+On Wed, Jul 18, 2007 at 05:53:39PM +0900, Tejun Heo wrote:
+> David Shaw wrote:
+> >>> It fails whether I use a raw /dev/sdd or partition it into one large
+> >>> /dev/sdd1, or partition into multiple partitions.  sata_sil24 seems to
+> >>> work by itself, as does dm, but as soon as I mix sata_sil24+dm, I get
+> >>> corruption.
+> >> Hmmmm.... Can you reproduce the corruption by accessing both devices
+> >> simultaneously without using dm?  Considering ich5 does fine, it looks
+> >> like hardware and/or driver problem and I really wanna rule out dm.
+> > 
+> > I think I wasn't clear enough before.  The corruption happens when I
+> > use dm to create two dm mappings that both reside on the same real
+> > device.  Using two different devices, or two different partitions on
+> > the same physical device works properly.  ich5 does fine with these 3
+> > tests, but sata_sil24 fails:
+> > 
+> >  * /dev/sdd, create 2 dm linear mappings on it, mke2fs and use those
+> >    dm "devices" == corruption
+> > 
+> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, mke2fs and use
+> >    those partitions == no corruption
+> > 
+> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, create 2 dm linear
+> >    mappings on /dev/sdd1, mke2fs and use those dm "devices" ==
+> >    corruption
+> 
+> I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
+> linux-raid for help.  How much memory do you have?  One big difference
+> between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
+> Maybe dma mapping or something interacts weirdly with dm there?
 
-Hotplug was working in cca 1 of 8 attemps.
+The machine has 640 megs of RAM.  FWIW, I tried this with 512 megs of
+RAM with the same results.  Running Memtest86+ shows the memory is
+good.
 
-ata4: soft resetting port
-ata4: SATA link down (SStatus 1 SControl 300)
-ata4: EH complete
-ata4: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
-ata4: (irq_stat 0x00000040, connection status changed)
-ata2: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0x2 frozen
-ata2: (irq_stat 0x00000040, connection status changed)
-ata4: soft resetting port
-ata2: soft resetting port
-ata2: SATA link down (SStatus 1 SControl 300)
-ata2: EH complete
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata4.00: ATA-6: ST3120026AS, 8.05, max UDMA/133
-ata4.00: 234375000 sectors, multi 0: LBA48
-ata4.00: configured for UDMA/133
-ata4: EH complete
-Device driver target3:0:0 lacks bus and class support for being resumed.
-scsi 3:0:0:0: Direct-Access     ATA      ST3120026AS      8.05 PQ: 0 ANSI: 5
-sd 3:0:0:0: [sdb] 234375000 512-byte hardware sectors (120000 MB)
-sd 3:0:0:0: [sdb] Write Protect is off
-sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
-sd 3:0:0:0: [sdb] 234375000 512-byte hardware sectors (120000 MB)
-sd 3:0:0:0: [sdb] Write Protect is off
-sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support 
-DPO or FUA
- sdb: sdb1
-sd 3:0:0:0: [sdb] Attached SCSI disk
--- 
-Pavel Mateja
+David
