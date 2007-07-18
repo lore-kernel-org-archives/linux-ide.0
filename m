@@ -1,91 +1,193 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 16:32:46 -0500
-Message-ID: <1184794366.3464.67.camel@localhost.localdomain>
-References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
-	 <200707180243.13368.bzolnier@gmail.com>
-	 <1184767917.3464.13.camel@localhost.localdomain>
-	 <200707182232.58961.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: 40-wire/80-wire detection
+Date: Thu, 19 Jul 2007 00:32:34 +0200
+Message-ID: <200707190032.35039.bzolnier@gmail.com>
+References: <305029.41682.qm@web58107.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:35315 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755498AbXGRVcu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 17:32:50 -0400
-In-Reply-To: <200707182232.58961.bzolnier@gmail.com>
+Received: from ik-out-1112.google.com ([66.249.90.177]:53396 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763257AbXGRWPi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 18:15:38 -0400
+Received: by ik-out-1112.google.com with SMTP id b32so335066ika
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 15:15:36 -0700 (PDT)
+In-Reply-To: <305029.41682.qm@web58107.mail.re3.yahoo.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Craig Block <chblock3@yahoo.com>
+Cc: Stephen.Clark@seclark.us, Jeff Garzik <jeff@garzik.org>, Matt Sealey <matt@genesi-usa.com>, linux-ide@vger.kernel.org
 
-On Wed, 2007-07-18 at 22:32 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
+
+Hi,
+
+On Saturday 14 July 2007, Craig Block wrote:
 > 
-> On Wednesday 18 July 2007, James Bottomley wrote:
-> > On Wed, 2007-07-18 at 02:43 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > [ James, please remeber to cc: linux-ide on IDE patches, thanks. ]
+> --- Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
 > > 
-> > Blame Andrew ... I assumed he'd be reporting the problem to the relevant
-> > lists, so I just did a reply all ...
-> 
-> No need to blame anybody, especially since it seems that one more person
-> forgot about adding linux-ide ML.  ;)
-> 
-> > > On Wednesday 18 July 2007, Jeff Garzik wrote:
-> > > > James Bottomley wrote:
-> > > > > @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
-> > > > >  	int err, (*setfunc)(ide_drive_t *, int);
-> > > > >  	u8 *val;
-> > > > >  
-> > > > > -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
-> > > > > -	if (err != -ENOTTY)
-> > > > > -		return err;
-> > > > > +	switch (cmd) {
-> > > > > +	case SG_IO:
-> > > > > +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
-> > > > > +	}
-> > > > >  
-> > > > >  	switch (cmd) {
-> > > > >  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
-> > > > 
-> > > > 
-> > > > At that point you might as well use an 'if'.
-> > > > 
-> > > > But overall -- agreed.  ACK.
-> > > 
-> > > James/Jeff thanks for following the issue but NAK. ;)
-> > > 
-> > > Causes regression wrt ide-floppy CDROMEJECT/CDROMCLOSETRAY support when
-> > > compared to 2.6.22 and SG_IO is not supported by ide-{disk,scsi,tape}.
+> > Please send the output of hdparm --Istdout for this drive.
 > > 
-> > Well ... that was why I put the case statement in ... I was sure there
-> > would be other ioctls I missed.
-> 
-> The thing is that ide-{disk,scsi,tape} really don't support
-> REQ_TYPE_BLOCK_PC type requests so ide.c::generic_ide_ioctl()
-> is not the best place to add handling of SG_IO.
+> > "idex=ata66" or CONFIG_IDEDMA_IVB=y should also help but we really would
 
-SG_IO has become a general packet request ioctl, so I think the idea is
-to allow it to send taskfiles down ... I'll let Jens speak to where the
-actual pieces to do this currently stand.
+I initially missed the fact that you've already tried CONFIG_IDEDMA_IVB and
+that it didn't help (probably because of failed host side cable detection).
 
-> Patch attached.
-> 
-> > > Luckily Linus has already fixed the issue properly.
+> > like to detect and workaround such issues automatically, without the need
+> > for user headaches. ;)
 > > 
-> > Actually, no, that's just a reversion.  I think we need the attached to
-> > complete all of this.
+> > Thanks,
+> > Bart
 > > 
-> > > BTW cmd == 1 IOCTL is not defined/used by IDE driver.
-> > 
-> > Andrew's trace clearly shows that something is sending cmd == 1 down, so
+> Here ya go, hope that helps :)
 > 
-> I still haven't got the trace.  Andrew, please (re)send it in PM, thanks.
+> /dev/hda:
 
-http://marc.info/?l=linux-scsi&m=118470384305607
+[...]
 
-James
+Thanks, could you try the patch below (it is against Linus tree)?
 
+[PATCH] ide: add cable detection for early UDMA66 devices
 
+* Move ide_in_drive_list() from ide-dma.c to ide-iops.c.
+
+* Add ivb_list[] table for listening early UDMA66 devices which don't conform
+  to ATA4 standard wrt cable detection (bit14 is zero, only bit13 is valid)
+  and use only device side cable detection for them since host side cable
+  detection may be unreliable.
+
+* Add model "QUANTUM FIREBALLlct10 05" with firwmare "A03.0900" to the list
+  (from Craig's bugreport).
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Craig Block <chblock3@yahoo.com>
+---
+ drivers/ide/ide-dma.c  |   19 -------------------
+ drivers/ide/ide-iops.c |   39 ++++++++++++++++++++++++++++++++++++---
+ include/linux/ide.h    |    3 ++-
+ 3 files changed, 38 insertions(+), 23 deletions(-)
+
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -135,25 +135,6 @@ static const struct drive_list_entry dri
+ };
+ 
+ /**
+- *	ide_in_drive_list	-	look for drive in black/white list
+- *	@id: drive identifier
+- *	@drive_table: list to inspect
+- *
+- *	Look for a drive in the blacklist and the whitelist tables
+- *	Returns 1 if the drive is found in the table.
+- */
+-
+-int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *drive_table)
+-{
+-	for ( ; drive_table->id_model ; drive_table++)
+-		if ((!strcmp(drive_table->id_model, id->model)) &&
+-		    (!drive_table->id_firmware ||
+-		     strstr(id->fw_rev, drive_table->id_firmware)))
+-			return 1;
+-	return 0;
+-}
+-
+-/**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
+  *
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -565,6 +565,34 @@ int ide_wait_stat (ide_startstop_t *star
+ 
+ EXPORT_SYMBOL(ide_wait_stat);
+ 
++/**
++ *	ide_in_drive_list	-	look for drive in black/white list
++ *	@id: drive identifier
++ *	@drive_table: list to inspect
++ *
++ *	Look for a drive in the blacklist and the whitelist tables
++ *	Returns 1 if the drive is found in the table.
++ */
++
++int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *drive_table)
++{
++	for ( ; drive_table->id_model ; drive_table++)
++		if ((!strcmp(drive_table->id_model, id->model)) &&
++		    (!drive_table->id_firmware ||
++		     strstr(id->fw_rev, drive_table->id_firmware)))
++			return 1;
++	return 0;
++}
++
++/*
++ * Early UDMA66 devices don't set bit14 to 1, only bit13 is valid.
++ * We list them here and depend on the device side cable detection for them.
++ */
++static const struct drive_list_entry ivb_list[] = {
++	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
++	{ NULL				, NULL		}
++};
++
+ /*
+  *  All hosts that use the 80c ribbon must use!
+  *  The name is derived from upper byte of word 93 and the 80c ribbon.
+@@ -573,11 +601,16 @@ u8 eighty_ninty_three (ide_drive_t *driv
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct hd_driveid *id = drive->id;
++	int ivb = ide_in_drive_list(id, ivb_list);
++
++	if (ivb)
++		printk(KERN_DEBUG "%s: enabling IVB cable detection quirk\n",
++				  drive->name);
+ 
+ 	if (hwif->cbl == ATA_CBL_PATA40_SHORT)
+ 		return 1;
+ 
+-	if (hwif->cbl != ATA_CBL_PATA80)
++	if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
+ 		goto no_80w;
+ 
+ 	/* Check for SATA but only if we are ATA5 or higher */
+@@ -587,11 +620,11 @@ u8 eighty_ninty_three (ide_drive_t *driv
+ 	/*
+ 	 * FIXME:
+ 	 * - change master/slave IDENTIFY order
+-	 * - force bit13 (80c cable present) check
++	 * - force bit13 (80c cable present) check also for !ivb devices
+ 	 *   (unless the slave device is pre-ATA3)
+ 	 */
+ #ifndef CONFIG_IDEDMA_IVB
+-	if (id->hw_config & 0x4000)
++	if ((id->hw_config & 0x4000) || (ivb && (id->hw_config & 0x2000)))
+ #else
+ 	if (id->hw_config & 0x6000)
+ #endif
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1275,13 +1275,14 @@ void ide_init_sg_cmd(ide_drive_t *, stru
+ #define BAD_DMA_DRIVE		0
+ #define GOOD_DMA_DRIVE		1
+ 
+-#ifdef CONFIG_BLK_DEV_IDEDMA
+ struct drive_list_entry {
+ 	const char *id_model;
+ 	const char *id_firmware;
+ };
+ 
+ int ide_in_drive_list(struct hd_driveid *, const struct drive_list_entry *);
++
++#ifdef CONFIG_BLK_DEV_IDEDMA
+ int __ide_dma_bad_drive(ide_drive_t *);
+ int __ide_dma_good_drive(ide_drive_t *);
+ u8 ide_max_dma_mode(ide_drive_t *);
