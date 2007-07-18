@@ -1,193 +1,48 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 40-wire/80-wire detection
-Date: Thu, 19 Jul 2007 00:32:34 +0200
-Message-ID: <200707190032.35039.bzolnier@gmail.com>
-References: <305029.41682.qm@web58107.mail.re3.yahoo.com>
+Subject: Re: [PATCH] scc_pata.c: Workaround for errata A308 (take 2)
+Date: Thu, 19 Jul 2007 01:15:11 +0200
+Message-ID: <200707190115.12050.bzolnier@gmail.com>
+References: <200707170307.l6H37e8u003922@toshiba.co.jp> <200707182247.02664.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:53396 "EHLO
+Received: from ik-out-1112.google.com ([66.249.90.182]:3290 "EHLO
 	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763257AbXGRWPi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 18:15:38 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so335066ika
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 15:15:36 -0700 (PDT)
-In-Reply-To: <305029.41682.qm@web58107.mail.re3.yahoo.com>
+	with ESMTP id S1752660AbXGRW5M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 18:57:12 -0400
+Received: by ik-out-1112.google.com with SMTP id b32so345526ika
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 15:57:09 -0700 (PDT)
+In-Reply-To: <200707182247.02664.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Craig Block <chblock3@yahoo.com>
-Cc: Stephen.Clark@seclark.us, Jeff Garzik <jeff@garzik.org>, Matt Sealey <matt@genesi-usa.com>, linux-ide@vger.kernel.org
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: sshtylyov@ru.mvista.com, kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Saturday 14 July 2007, Craig Block wrote:
-> 
-> --- Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
+On Wednesday 18 July 2007, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 17 July 2007, Akira Iguchi wrote:
+> > Workaround for errata A308: turn down the UDMA mode and retry
+> > the DMA command when the data lost condition is detected.
 > > 
-> > Please send the output of hdparm --Istdout for this drive.
+> > take2:
+> > udma_filter() hook is used to limit ATAPI UDMA mode.
 > > 
-> > "idex=ata66" or CONFIG_IDEDMA_IVB=y should also help but we really would
+> > Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+> > Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+> > ---
 
-I initially missed the fact that you've already tried CONFIG_IDEDMA_IVB and
-that it didn't help (probably because of failed host side cable detection).
+applied
 
-> > like to detect and workaround such issues automatically, without the need
-> > for user headaches. ;)
-> > 
-> > Thanks,
-> > Bart
-> > 
-> Here ya go, hope that helps :)
-> 
-> /dev/hda:
+> The previous patch has already been merged so please rediff this one
+> to contain only the new changes.
 
-[...]
+Ergh, thinko on my side -- no need for new patch.
 
-Thanks, could you try the patch below (it is against Linus tree)?
+I applied the previous version to my tree but due some circustances
+IDE update for Linus got delayed so I haven't pushed it yet.
 
-[PATCH] ide: add cable detection for early UDMA66 devices
+Sorry for the confusion.
 
-* Move ide_in_drive_list() from ide-dma.c to ide-iops.c.
-
-* Add ivb_list[] table for listening early UDMA66 devices which don't conform
-  to ATA4 standard wrt cable detection (bit14 is zero, only bit13 is valid)
-  and use only device side cable detection for them since host side cable
-  detection may be unreliable.
-
-* Add model "QUANTUM FIREBALLlct10 05" with firwmare "A03.0900" to the list
-  (from Craig's bugreport).
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Craig Block <chblock3@yahoo.com>
----
- drivers/ide/ide-dma.c  |   19 -------------------
- drivers/ide/ide-iops.c |   39 ++++++++++++++++++++++++++++++++++++---
- include/linux/ide.h    |    3 ++-
- 3 files changed, 38 insertions(+), 23 deletions(-)
-
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -135,25 +135,6 @@ static const struct drive_list_entry dri
- };
- 
- /**
-- *	ide_in_drive_list	-	look for drive in black/white list
-- *	@id: drive identifier
-- *	@drive_table: list to inspect
-- *
-- *	Look for a drive in the blacklist and the whitelist tables
-- *	Returns 1 if the drive is found in the table.
-- */
--
--int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *drive_table)
--{
--	for ( ; drive_table->id_model ; drive_table++)
--		if ((!strcmp(drive_table->id_model, id->model)) &&
--		    (!drive_table->id_firmware ||
--		     strstr(id->fw_rev, drive_table->id_firmware)))
--			return 1;
--	return 0;
--}
--
--/**
-  *	ide_dma_intr	-	IDE DMA interrupt handler
-  *	@drive: the drive the interrupt is for
-  *
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -565,6 +565,34 @@ int ide_wait_stat (ide_startstop_t *star
- 
- EXPORT_SYMBOL(ide_wait_stat);
- 
-+/**
-+ *	ide_in_drive_list	-	look for drive in black/white list
-+ *	@id: drive identifier
-+ *	@drive_table: list to inspect
-+ *
-+ *	Look for a drive in the blacklist and the whitelist tables
-+ *	Returns 1 if the drive is found in the table.
-+ */
-+
-+int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *drive_table)
-+{
-+	for ( ; drive_table->id_model ; drive_table++)
-+		if ((!strcmp(drive_table->id_model, id->model)) &&
-+		    (!drive_table->id_firmware ||
-+		     strstr(id->fw_rev, drive_table->id_firmware)))
-+			return 1;
-+	return 0;
-+}
-+
-+/*
-+ * Early UDMA66 devices don't set bit14 to 1, only bit13 is valid.
-+ * We list them here and depend on the device side cable detection for them.
-+ */
-+static const struct drive_list_entry ivb_list[] = {
-+	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
-+	{ NULL				, NULL		}
-+};
-+
- /*
-  *  All hosts that use the 80c ribbon must use!
-  *  The name is derived from upper byte of word 93 and the 80c ribbon.
-@@ -573,11 +601,16 @@ u8 eighty_ninty_three (ide_drive_t *driv
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct hd_driveid *id = drive->id;
-+	int ivb = ide_in_drive_list(id, ivb_list);
-+
-+	if (ivb)
-+		printk(KERN_DEBUG "%s: enabling IVB cable detection quirk\n",
-+				  drive->name);
- 
- 	if (hwif->cbl == ATA_CBL_PATA40_SHORT)
- 		return 1;
- 
--	if (hwif->cbl != ATA_CBL_PATA80)
-+	if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
- 		goto no_80w;
- 
- 	/* Check for SATA but only if we are ATA5 or higher */
-@@ -587,11 +620,11 @@ u8 eighty_ninty_three (ide_drive_t *driv
- 	/*
- 	 * FIXME:
- 	 * - change master/slave IDENTIFY order
--	 * - force bit13 (80c cable present) check
-+	 * - force bit13 (80c cable present) check also for !ivb devices
- 	 *   (unless the slave device is pre-ATA3)
- 	 */
- #ifndef CONFIG_IDEDMA_IVB
--	if (id->hw_config & 0x4000)
-+	if ((id->hw_config & 0x4000) || (ivb && (id->hw_config & 0x2000)))
- #else
- 	if (id->hw_config & 0x6000)
- #endif
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1275,13 +1275,14 @@ void ide_init_sg_cmd(ide_drive_t *, stru
- #define BAD_DMA_DRIVE		0
- #define GOOD_DMA_DRIVE		1
- 
--#ifdef CONFIG_BLK_DEV_IDEDMA
- struct drive_list_entry {
- 	const char *id_model;
- 	const char *id_firmware;
- };
- 
- int ide_in_drive_list(struct hd_driveid *, const struct drive_list_entry *);
-+
-+#ifdef CONFIG_BLK_DEV_IDEDMA
- int __ide_dma_bad_drive(ide_drive_t *);
- int __ide_dma_good_drive(ide_drive_t *);
- u8 ide_max_dma_mode(ide_drive_t *);
+Bart
