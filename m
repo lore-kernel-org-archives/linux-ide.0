@@ -1,55 +1,46 @@
-From: David Shaw <dshaw@jabberwocky.com>
-Subject: Re: Possible data corruption sata_sil24?
-Date: Wed, 18 Jul 2007 08:31:00 -0400
-Message-ID: <20070718123100.GB3932@jabberwocky.com>
-References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com> <469DD513.7070202@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Recommendations on user-space soft/hardreset
+Date: Wed, 18 Jul 2007 13:54:35 +0100
+Message-ID: <20070718135435.42e4b3f8@the-village.bc.nu>
+References: <6b01c6170707171723p4fdae403hf5b605fce4595b7@mail.gmail.com>
+	<6b01c6170707171734l12af7fbdt43c28edd32776858@mail.gmail.com>
+	<20070718014534.6a0adffe@the-village.bc.nu>
+	<6b01c6170707171800t39f2aac5x80a6d33b892fbda8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foobar.cs.jhu.edu ([128.220.13.173]:4073 "EHLO
-	foobar.cs.jhu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754434AbXGRMbJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 08:31:09 -0400
-Content-Disposition: inline
-In-Reply-To: <469DD513.7070202@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39564 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753594AbXGRMr6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 08:47:58 -0400
+In-Reply-To: <6b01c6170707171800t39f2aac5x80a6d33b892fbda8@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: flyashi@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Jul 18, 2007 at 05:53:39PM +0900, Tejun Heo wrote:
-> David Shaw wrote:
-> >>> It fails whether I use a raw /dev/sdd or partition it into one large
-> >>> /dev/sdd1, or partition into multiple partitions.  sata_sil24 seems to
-> >>> work by itself, as does dm, but as soon as I mix sata_sil24+dm, I get
-> >>> corruption.
-> >> Hmmmm.... Can you reproduce the corruption by accessing both devices
-> >> simultaneously without using dm?  Considering ich5 does fine, it looks
-> >> like hardware and/or driver problem and I really wanna rule out dm.
-> > 
-> > I think I wasn't clear enough before.  The corruption happens when I
-> > use dm to create two dm mappings that both reside on the same real
-> > device.  Using two different devices, or two different partitions on
-> > the same physical device works properly.  ich5 does fine with these 3
-> > tests, but sata_sil24 fails:
-> > 
-> >  * /dev/sdd, create 2 dm linear mappings on it, mke2fs and use those
-> >    dm "devices" == corruption
-> > 
-> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, mke2fs and use
-> >    those partitions == no corruption
-> > 
-> >  * Partition /dev/sdd into /dev/sdd1 and /dev/sdd2, create 2 dm linear
-> >    mappings on /dev/sdd1, mke2fs and use those dm "devices" ==
-> >    corruption
+> You mean:
 > 
-> I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
-> linux-raid for help.  How much memory do you have?  One big difference
-> between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
-> Maybe dma mapping or something interacts weirdly with dm there?
+> static const struct ata_port_operations sil24_ops = {
+> ...
+> 	.error_handler		= sil24_error_handler,
+> ...
+> which then calls
+> 	ata_do_eh(ap, ata_std_prereset, sil24_softreset, sil24_hardreset,
+> 		  ata_std_postreset);
+> 
+> How to then specify if you just need a softreset? My understanding is
+> all those functions get called.
 
-The machine has 640 megs of RAM.  FWIW, I tried this with 512 megs of
-RAM with the same results.  Running Memtest86+ shows the memory is
-good.
+The neccessary parts get called from libata-eh based upon the flags set
+by the error code to indicate how to recover.
 
-David
+> Ugh.. I figured, I was just hoping I wouldn't have to deal with that.
+> Any idea on what happens to the user process (blocking, etc.) during
+> error handling? Surely if a disk needs to be hardreset during a normal
+> error, the user process doesn't hang for up to 30 seconds?
+
+It stalls.
+
+Alan
