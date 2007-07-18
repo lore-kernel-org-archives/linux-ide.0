@@ -1,78 +1,39 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: compile error if CONFIG_BLOCK not enabled related to linux/ide.h include
-Date: Wed, 18 Jul 2007 22:44:40 +0200
-Message-ID: <200707182244.40282.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0707172353050.29097@blarg.am.freescale.net> <200707181247.26262.bzolnier@gmail.com> <162F0B67-44AB-4955-873A-150224C128CB@kernel.crashing.org>
+Subject: Re: [PATCH] scc_pata.c: Workaround for errata A308 (take 2)
+Date: Wed, 18 Jul 2007 22:47:02 +0200
+Message-ID: <200707182247.02664.bzolnier@gmail.com>
+References: <200707170307.l6H37e8u003922@toshiba.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:48097 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:47679 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754947AbXGRVHL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 17:07:11 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so325095ugf
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 14:07:10 -0700 (PDT)
-In-Reply-To: <162F0B67-44AB-4955-873A-150224C128CB@kernel.crashing.org>
+	with ESMTP id S1755610AbXGRVHM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 17:07:12 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so325102ugf
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jul 2007 14:07:11 -0700 (PDT)
+In-Reply-To: <200707170307.l6H37e8u003922@toshiba.co.jp>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@kernel.crashing.org>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+Cc: sshtylyov@ru.mvista.com, kou.ishizaki@toshiba.co.jp, linux-ide@vger.kernel.org
 
-On Wednesday 18 July 2007, Kumar Gala wrote:
+On Tuesday 17 July 2007, Akira Iguchi wrote:
+> Workaround for errata A308: turn down the UDMA mode and retry
+> the DMA command when the data lost condition is detected.
 > 
-> On Jul 18, 2007, at 5:47 AM, Bartlomiej Zolnierkiewicz wrote:
+> take2:
+> udma_filter() hook is used to limit ATAPI UDMA mode.
 > 
-> >
-> > Hi,
-> >
-> > On Wednesday 18 July 2007, Kumar Gala wrote:
-> >> M:      bzolnier@gmail.com
-> >> L:      linux-ide@vger.kernel.org
-> >>
-> >> We get the following compile error if CONFIG_BLOCK isn't enabled:
-> >>
-> >>   CC      arch/powerpc/kernel/setup_32.o
-> >> In file included from arch/powerpc/kernel/setup_32.c:14:
-> >> include/linux/ide.h:558: error: expected specifier-qualifier-list  
-> >> before 'request_queue_t'
-> >> include/linux/ide.h:696: warning: 'struct request' declared inside  
-> >> parameter list
-> >> include/linux/ide.h:696: warning: its scope is only this  
-> >> definition or declaration, which is probably not what you want
-> >> include/linux/ide.h:820: warning: 'struct request' declared inside  
-> >> parameter list
-> >> include/linux/ide.h:853: error: field 'wrq' has incomplete type
-> >> include/linux/ide.h:1205: error: expected ')' before '*' token
-> >> make[1]: *** [arch/powerpc/kernel/setup_32.o] Error 1
-> >> make: *** [arch/powerpc/kernel] Error 2
-> >
-> > include/linux/ide.h is exclusively for IDE subsystem
-> >
-> >> What I'm trying to figure out is if include/linux/ide.h should be  
-> >> wrapped
-> >> in a #if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE) or if  
-> >> there is
-> >> some other desired way to handle this.
-> >
-> > Plese remove <linux/ide.h> include, there doesn't seem to be any  
-> > piece of
-> > code in arch/powerpc/kernel/setup_32.c which needs it anyway.
-> 
-> Its needed for:
-> 
-> struct ide_machdep_calls ppc_ide_md;
-> 
-> which gets defined in asm/ide.h which needs linux/ide.h for the defn  
-> of ide_init_hwif.
+> Signed-off-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+> Signed-off-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+> ---
 
-Ah, this is a PPC special case.
-
-In this case I think the best solution for now is to just add #ifdefs
-(the proper/clean solution would be adding IDE host drivers for PPC
-platforms needing special handling).
+The previous patch has already been merged so please rediff this one
+to contain only the new changes.
 
 Thanks,
 Bart
