@@ -1,52 +1,74 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [2/2] 2.6.22-git: known regressions
-Date: Thu, 19 Jul 2007 21:18:43 +0200
-Message-ID: <6bffcb0e0707191218j7ecc0fa4re2a2ae7c82c95668@mail.gmail.com>
-References: <469F9125.8040502@googlemail.com> <469F92AF.10405@googlemail.com>
-	 <200707192127.07238.bzolnier@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 8784] New: ata_piix cannot see ICHx IDE
+ devices
+Date: Thu, 19 Jul 2007 13:20:46 -0700
+Message-ID: <20070719132046.fa9fb592.akpm@linux-foundation.org>
+References: <bug-8784-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:5760 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763360AbXGSTSo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 15:18:44 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so739190wah
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 12:18:43 -0700 (PDT)
-In-Reply-To: <200707192127.07238.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:39167 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757497AbXGSUVX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 16:21:23 -0400
+In-Reply-To: <bug-8784-10286@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Kumar Gala <galak@kernel.crashing.org>, linuxppc-dev@ozlabs.org
+To: linux-ide@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, amsden_linux@earthlink.net
 
-On 19/07/07, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> On Thursday 19 July 2007, Michal Piotrowski wrote:
->
-> > IDE
-> >
-> > Subject         : compile error if CONFIG_BLOCK not enabled related to linux/ide.h include
-> > References      : http://lkml.org/lkml/2007/7/18/11
-> > Last known good : ?
-> > Submitter       : Kumar Gala <galak@kernel.crashing.org>
-> > Caused-By       : ?
-> > Handled-By      : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Status          : unknown
->
-> Not a 2.6.22-git regression (CONFIG_BLOCK was added on September 2006) and
-> Kumar should have a fix really soon - could be removed from the list IMO.
+On Thu, 19 Jul 2007 13:16:27 -0700 (PDT)
+bugme-daemon@bugzilla.kernel.org wrote:
 
-Ok, I removed it.
+> http://bugzilla.kernel.org/show_bug.cgi?id=8784
+> 
+>            Summary: ata_piix cannot see ICHx IDE devices
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.22
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: IDE
+>         AssignedTo: bzolnier@gmail.com
+>         ReportedBy: amsden_linux@earthlink.net
+> 
+> 
+> Most recent kernel where this bug did not occur:2.6.19 (Knoppix)
+> Distribution:ubuntu
+> Hardware Environment: intel ich4 chipset
+> Software Environment: ubuntu gutsy gibbon testing
+> Problem Description: ata_piix does not detect ide drives with intel ICHx
+> chipsets. This problem has been the subject of numerous bug reports and forum
+> posts in the ubuntu community. The most obvious manifestation is when a user
+> succesfully begins to boot the ubuntu desktop cd, only to have it fail as it
+> attempts to mount the file system. another manifestation occurs when a user
+> with an ide or sata hard drive on an ICHx chipset machine attempts to boot
+> after upgrading the kernel from 2.6.17 (in ubuntu 6.10) to 2.6.20 (in ubuntu
+> 7.04)
+> 
+> Steps to reproduce: attempt to boot ubuntu with kernel 2.6.20 - 2.6.22 on a
+> machine with an intel ide chipset. Any drives attached to the ide bus will not
+> be recognized. I am writing this on an ubuntu machine which uses the ich4 ide
+> bus to connect to the cd drive, but a scsi bus for the hard drive. This
+> necessitated a netboot installation, and the installed system is still unable
+> to utilize the hard disk.
+> 
+> Here is the dmesg|grep ata output (with two irrelevant lines containing the
+> word "data" removed)
+> [ 45.780805] libata version 2.21 loaded.
+> [ 45.782248] ata_piix 0000:00:1f.1: version 2.11
+> [ 45.782435] scsi0 : ata_piix
+> [ 45.782496] scsi1 : ata_piix
+> [ 45.782527] ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma
+> 0x000124a0 irq 14
+> [ 45.782530] ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma
+> 0x000124a8 irq 15
+> [ 45.782555] ata1: port disabled. ignoring.
+> 
 
->
-> Thanks,
-> Bart
->
-
-Regards,
-Michal
-
--- 
-LOG
-http://www.stardust.webpages.pl/log/
+That sounds rather serious?
