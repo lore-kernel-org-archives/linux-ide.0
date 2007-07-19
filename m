@@ -1,86 +1,104 @@
-From: =?iso-8859-1?Q?R=FAben?= Fonseca <krani1@0x82.com>
-Subject: Re: libata [ata_piix] still no resume from S3 ?
-Date: Thu, 19 Jul 2007 16:04:36 +0100
-Message-ID: <20070719150436.GA9006@0x82.com>
-References: <20070712162450.GA7132@0x82.com> <469744DB.5070600@gmail.com> <20070714210117.GA20723@0x82.com> <469DD216.5040305@gmail.com> <20070719092053.GA21254@0x82.com> <469F2E4A.1020502@gmail.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/2] 2.6.22-git: known regressions
+Date: Thu, 19 Jul 2007 18:34:55 +0200
+Message-ID: <469F92AF.10405__48430.373814381$1184863007$gmane$org@googlemail.com>
+References: <469F9125.8040502@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay5.ptmail.sapo.pt ([212.55.154.25]:47500 "HELO sapo.pt"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751625AbXGSPD7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 11:03:59 -0400
-Content-Disposition: inline
-In-Reply-To: <469F2E4A.1020502@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.170]:54576 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S939887AbXGSQgV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 12:36:21 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so445077ugf
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 09:36:20 -0700 (PDT)
+In-Reply-To: <469F9125.8040502@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Linux Kernel Mailling List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Mingming Cao <cmm@us.ibm.com>, Doug Chapman <doug.chapman@hp.com>, Vasily Tarasov <vtaras@openvz.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kumar Gala <galak@kernel.crashing.org>, linuxppc-dev@ozlabs.org, Christoph Lameter <clameter@sgi.com>, Andi Kleen <ak@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, Jean Delvare <khali@linux-fr.org>, Tejun Heo <htejun@gmail.com>
 
-On Thu, 19 Jul 2007, Tejun Heo wrote:
+Hi all,
 
-> R=FAben Fonseca wrote:
-> > On Wed, 18 Jul 2007, Tejun Heo wrote:
-> >=20
-> >>> irq 23: nobody cared (try booting with the "irqpool" option)
-> >>>  __report_bad_irq
-> >>>  note_interrupt
-> >>>  handle_IRQ_event
-> >>>  handle_fasteoi_irq
-> >>>  do_IRQ
-> >>>  do_IRQ
-> >>>  irq_exit
-> >>>  smp_acpi_timer
-> >>>  common_interrupt
-> >>>  acpi_pm_read
-> >>>  getnstimeofday
-> >>>  ktime_get_ts
-> >>>  ktime_egt
-> >>>  tick_nohz_restart_sched_tick
-> >>>  cpu_idle
-> >>>  start_kernel
-> >>>  unkown_bootoption
-> >>>  =3D=3D=3D=3D=3D
-> >>> handlers:
-> >>>  (ata_interrupt [libata])
-> >>>  (tifm_7xx1_isr [tifm_7xx1])
-> >>> Disabling IRQ #23
-> >>> (...)
-> >>> ATA: abnormal status 0x7F on port 0x000118cf
-> >>>
-> >>> And hard drive never cames up.. have to hard reboot the machine..
-> >>> Does it help?
-> >> Hmmm... That's 'nobody cared' during resume.  Please post the resu=
-lt of
-> >> 'lspci -nnvvv'.
-> >=20
-> > 09:04.2 Mass storage controller [0180]: Texas Instruments 5-in-1 Mu=
-ltimedia Card Reader (SD/MMC/MS/MS PRO/xD) [104c:803b]
-> > 	Subsystem: Sony Corporation Unknown device [104d:81e6]
-> > 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr=
-- Stepping- SERR- FastB2B-
-> > 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dmedium >TAbort-=
- <TAbort- <MAbort- >SERR- <PERR-
-> > 	Latency: 57 (1750ns min, 1000ns max), Cache Line Size: 64 bytes
-> > 	Interrupt: pin C routed to IRQ 23
-> > 	Region 0: Memory at dc004000 (32-bit, non-prefetchable) [size=3D4K=
-]
-> > 	Capabilities: [44] Power Management version 2
-> > 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0+,D1+,D2+,D3ho=
-t+,D3cold-)
-> > 		Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
->=20
-> Does the problem still occur if you disable the card reader?
+Here is a list of some known regressions in 2.6.22-git.
 
-I wish I could disable this card reader. It is built in on the hardware=
-,
-and there are no drivers for Linux. There is no option on the BIOS to
-disable the device. Is there any way (kernel parameters, magic program,
-etc) to disable this device without opening my laptop to cut the wires?
-:D
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-Ruben
+List of Aces
 
---=20
-Will work for bandwidth
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            3
+Andi Kleen                             2
+Andrew Morton                          2
+David Woodhouse                        2
+Hugh Dickins                           2
+Jens Axboe                             2
+
+
+
+FS
+
+Subject         : ia64 build failure from recent diskquota patch
+References      : http://lkml.org/lkml/2007/7/18/407
+Last known good : ?
+Submitter       : Doug Chapman <doug.chapman@hp.com>
+Caused-By       : Vasily Tarasov <vtaras@openvz.org>
+                  commit b716395e2b8e450e294537de0c91476ded2f0395
+Handled-By      : ?
+Status          : unknown
+
+Subject         : ext4 build warnings
+References      : http://lkml.org/lkml/2007/7/18/420
+Last known good : ?
+Submitter       : Jeff Garzik <jeff@garzik.org>
+Caused-By       : ?
+Handled-By      : Mingming Cao <cmm@us.ibm.com>
+Status          : unknown
+
+
+
+IDE
+
+Subject         : compile error if CONFIG_BLOCK not enabled related to linux/ide.h include
+References      : http://lkml.org/lkml/2007/7/18/11
+Last known good : ?
+Submitter       : Kumar Gala <galak@kernel.crashing.org>
+Caused-By       : ?
+Handled-By      : Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Status          : unknown
+
+
+
+Memory management
+
+Subject         : kmalloc zero size changes break i386
+References      : http://lkml.org/lkml/2007/7/19/172
+Last known good : ?
+Submitter       : Andi Kleen <ak@suse.de>
+Caused-By       : Christoph Lameter <clameter@sgi.com>
+                  commit 6cb8f91320d3e720351c21741da795fed580b21b
+Handled-By      : ?
+Status          : unknown
+
+
+
+SYSFS
+
+Subject         : sysfs root link count broken in 2.6.22-git5
+References      : http://lkml.org/lkml/2007/7/15/62
+Last known good : ?
+Submitter       : Jean Delvare <khali@linux-fr.org>
+Caused-By       : ?
+Handled-By      : Tejun Heo <htejun@gmail.com>
+Status          : unknown
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
