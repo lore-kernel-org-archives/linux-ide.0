@@ -1,45 +1,147 @@
-From: Mingming Caoc <cmm@us.ibm.com>
-Subject: Re: [2/2] 2.6.22-git: known regressions
-Date: Thu, 19 Jul 2007 10:21:22 -0700
-Message-ID: <469F9D92.9000708@us.ibm.com>
-References: <469F9125.8040502@googlemail.com> <469F92AF.10405@googlemail.com> <a781481a0707191007q241f5f5bh6c029da56090d8b3@mail.gmail.com>
+From: Jindrich Makovicka <makovick@gmail.com>
+Subject: Re: shutdown problem with 2.6.22 and debian 4.0
+Date: Thu, 19 Jul 2007 19:20:57 +0200
+Message-ID: <20070719192057.4e4e8691@holly>
+References: <366cc2df0707130507r6dcdf970nbaa2aed1a640d3f@mail.gmail.com>
+	<46984CBB.1060006@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="MP_WXWKOhAq_Ko8+GjSlJZtE/V"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:42261 "EHLO e6.ny.us.ibm.com"
+Received: from main.gmane.org ([80.91.229.2]:50567 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S940526AbXGSRVl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Jul 2007 13:21:41 -0400
-In-Reply-To: <a781481a0707191007q241f5f5bh6c029da56090d8b3@mail.gmail.com>
+	id S933331AbXGSRaF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jul 2007 13:30:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1IBZpC-0003nq-SR
+	for linux-ide@vger.kernel.org; Thu, 19 Jul 2007 19:30:02 +0200
+Received: from kmlinux.fjfi.cvut.cz ([147.32.8.9])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 19:30:02 +0200
+Received: from makovick by kmlinux.fjfi.cvut.cz with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 19:30:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Satyam Sharma <satyam.sharma@gmail.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Doug Chapman <doug.chapman@hp.com>, Vasily Tarasov <vtaras@openvz.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kumar Gala <galak@kernel.crashing.org>, linuxppc-dev@ozlabs.org, Christoph Lameter <clameter@sgi.com>, Andi Kleen <ak@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, Jean Delvare <khali@linux-fr.org>, Tejun Heo <htejun@gmail.com>
+To: linux-ide@vger.kernel.org
 
-Satyam Sharma wrote:
->> Subject         : ext4 build warnings
->> References      : http://lkml.org/lkml/2007/7/18/420
->> Last known good : ?
->> Submitter       : Jeff Garzik <jeff@garzik.org>
->> Caused-By       : ?
->> Handled-By      : Mingming Cao <cmm@us.ibm.com>
->> Status          : unknown
-> 
-> Mingming Cao fixed this:
-> 
-> http://lkml.org/lkml/2007/7/18/564
-> 
-> Dunno if it's in latest git
+--MP_WXWKOhAq_Ko8+GjSlJZtE/V
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Andrew pushed the patch to Linus last night.
+On Sat, 14 Jul 2007 13:10:35 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Thanks,
+> Daniel Filipiuk wrote:
+> > Hello, I have a doubt... I have Debian 4.0 and the kernel 2.6.22
+> > compiled by me, and now when I shutdown my machine, appears a
+> > message telling that the devices (/dev/sda5 , 6 and so on..) are
+> > busy and cannot be unmounted, and tells me that I must update my
+> > shutdown utility... Then the system go halt ... It doesn=C2=B4t seem to
+> > be any data loss , but I don=C2=B4t want to leave this error message
+> > forever hoping that I don=C2=B4t loose anything... With the kernel
+> > 2.6.21.5 this doesn=C2=B4t happened, and the mounts were succesfully
+> > unmounted. What should I do? Where I found this "shutdown utility"
+> > source code?
+> >=20
+> > Thank you very much, greetings,
+>=20
+> Dunno about the busy part but you need to update the shutdown utility.
+> Cc'ing Henrique.
+>=20
 
-Mingming
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I replaced the Debian shutdown patch with the attached one and it seems
+to do the job.
 
+Regards,
+--=20
+Jindrich Makovicka
+
+--MP_WXWKOhAq_Ko8+GjSlJZtE/V
+Content-Type: application/octet-stream; name=67_init_hddown.dpatch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=67_init_hddown.dpatch
+
+IyEgL2Jpbi9zaCAvdXNyL3NoYXJlL2RwYXRjaC9kcGF0Y2gtcnVuCiMgNjdfaW5pdF9oZGRvd24u
+ZHBhdGNoIGJ5IFNlYmFzdGlhbiBSZWljaGVsdAojCiMgTWFrZSBzdXJlIFNBVEEgZGlza3MgYXJl
+IHBvd2VyZWQgZG93biBhcyB3ZWxsIGFzIElERSBkaXNrcy4gIFRoaXMKIyBwYXRjaCBjb3VsZCB1
+c2Ugc29tZSBtb3JlIHdvcmsgdG8gbWFrZSBpdCBtb3JlIGR5bmFtaWMgd2hlbgojIGRldGVjdGlu
+ZyBTQVRBL1NDU0kgZGlza3MuICBDbG9zZXM6ICMzNDgxNzIKIwojIEFsc28gZXhjbHVkZSBkaXNr
+cyB3LyBtYW5hZ2Vfc3RhcnRfc3RvcCBmcm9tIHRoZSBzaHV0ZG93biBoYW5kbGluZwojIChtYWtv
+dmljayBhdCBnbWFpbCBkb3QgY29tKQoKQERQQVRDSEAKLS0tIHN5c3Zpbml0LTIuODYuZHMxL3Ny
+Yy9oZGRvd24uYwkyMDA0LTA2LTA5IDE0OjQ3OjQ1LjAwMDAwMDAwMCArMDIwMAorKysgc3lzdmlu
+aXQtMi44Ni5kczEtbmV3L3NyYy9oZGRvd24uYwkyMDA2LTAxLTE2IDE4OjA1OjQ4LjAwMDAwMDAw
+MCArMDEwMApAQCAtMjUsMTggKzI1LDE3IEBACiAvKgogICoJRmluZCBhbGwgSURFIGRpc2tzIHRo
+cm91Z2ggL3Byb2MuCiAgKi8KLXN0YXRpYyBpbnQgZmluZF9pZGVkaXNrcyhjaGFyICoqZGV2LCBp
+bnQgbWF4ZGV2KQorc3RhdGljIGludCBmaW5kX2lkZWRpc2tzKGNvbnN0IGNoYXIgKipkZXYsIGlu
+dCBtYXhkZXYsIGludCAqY291bnQpCiB7CiAJRElSICpkZDsKIAlGSUxFICpmcDsKIAlzdHJ1Y3Qg
+ZGlyZW50ICpkOwogCWNoYXIgYnVmWzI1Nl07Ci0JaW50IGkgPSAwOwogCiAJaWYgKChkZCA9IG9w
+ZW5kaXIoUFJPQ19JREUpKSA9PSBOVUxMKQogCQlyZXR1cm4gLTE7CiAKLQl3aGlsZSAoKGQgPSBy
+ZWFkZGlyKGRkKSkgIT0gTlVMTCkgeworCXdoaWxlICgqY291bnQgPCBtYXhkZXYgJiYgKGQgPSBy
+ZWFkZGlyKGRkKSkgIT0gTlVMTCkgewogCQlpZiAoc3RybmNtcChkLT5kX25hbWUsICJoZCIsIDIp
+ICE9IDApCiAJCQljb250aW51ZTsKIAkJYnVmWzBdID0gMDsKQEAgLTUwLDIxICs0OSwxMDIgQEAK
+IAkJfQogCQlmY2xvc2UoZnApOwogCQlzbnByaW50ZihidWYsIHNpemVvZihidWYpLCBERVZfQkFT
+RSAiLyVzIiwgZC0+ZF9uYW1lKTsKLQkJZGV2W2krK10gPSBzdHJkdXAoYnVmKTsKLQkJaWYgKGkg
+Pj0gbWF4ZGV2KQotCQkJYnJlYWs7CisJCWRldlsoKmNvdW50KSsrXSA9IHN0cmR1cChidWYpOwog
+CX0KIAljbG9zZWRpcihkZCk7Ci0JaWYgKGkgPCBtYXhkZXYpIGRldltpXSA9IE5VTEw7CiAKIAly
+ZXR1cm4gMDsKIH0KIAogLyoKLSAqCVB1dCBhbiBJREUgZGlzayBpbiBzdGFuZGJ5IG1vZGUuCisg
+KglCYXNlbmFtZSB3LyBjb25zdCBjaGFyKi4KKyAqLworc3RhdGljIGNvbnN0IGNoYXIqIGNiYXNl
+bmFtZShjb25zdCBjaGFyICpmbikKK3sKKwljb25zdCBjaGFyICpyZXMgPSBzdHJyY2hyKGZuLCAn
+LycpOworCWlmICghcmVzKQorCQlyZXMgPSBmbjsKKwlyZXR1cm4gcmVzOworfQorCisvKgorICoJ
+VGVzdCB3aGV0aGVyIHRoZSBrZXJuZWwgbWFuYWdlcyB0aGUgZGlzayBzdGFydC9zdG9wLgorICov
+CitzdGF0aWMgaW50IG1hbmFnZXNfc3RhcnRfc3RvcChjb25zdCBjaGFyICpkZXYpCit7CisJY29u
+c3QgY2hhciAqZGV2YmFzZSA9IGNiYXNlbmFtZShkZXYpOworCWNvbnN0IGNoYXIgKmlkOworCWNo
+YXIgdG1wWzI1Nl0sIHRtcDJbMjU2XTsKKwlzdHJ1Y3Qgc3RhdCBzdDsKKwlzc2l6ZV90IHNpemU7
+CisKKwl0bXBbMjU1XSA9IDA7CisJc25wcmludGYodG1wLCAyNTUsICIvc3lzL2Jsb2NrLyVzL2Rl
+dmljZSIsIGRldmJhc2UpOworCW1lbXNldCh0bXAyLCAwLCAyNTYpOworCXNpemUgPSByZWFkbGlu
+ayh0bXAsIHRtcDIsIDI1NSk7CisJaWYgKHNpemUgPCAwKQorCSAgICByZXR1cm4gMDsKKwlpZCA9
+IGNiYXNlbmFtZSh0bXAyKTsKKwlzbnByaW50Zih0bXAsIDI1NSwgIi9zeXMvY2xhc3Mvc2NzaV9k
+aXNrLyVzL21hbmFnZV9zdGFydF9zdG9wIiwgaWQpOworCXJldHVybiBzdGF0KHRtcCwgJnN0KSA9
+PSAwOworfQorCitzdGF0aWMgY29uc3QgY2hhciAqc2NzaV9uYW1lc1s5XSA9IHsKKwlERVZfQkFT
+RSAiL3NkYSIsCisJREVWX0JBU0UgIi9zZGIiLAorCURFVl9CQVNFICIvc2RjIiwKKwlERVZfQkFT
+RSAiL3NkZCIsCisJREVWX0JBU0UgIi9zZGUiLAorCURFVl9CQVNFICIvc2RmIiwKKwlERVZfQkFT
+RSAiL3NkZyIsCisJREVWX0JBU0UgIi9zZGgiLAorCU5VTEwKK307CisKKy8qCisgKglGaW5kIGFs
+bCBTQ1NJL1NBVEEgZGlza3MuCisgKi8KK3N0YXRpYyBpbnQgZmluZF9zY3NpZGlza3MoY29uc3Qg
+Y2hhciAqKmRldiwgaW50IG1heGRldiwgaW50ICpjb3VudCkKK3sKKwljb25zdCBjaGFyICoqc24g
+PSBzY3NpX25hbWVzOworCQorCXdoaWxlICgqY291bnQgPCBtYXhkZXYgJiYgKnNuKSB7CisJCWlm
+ICghbWFuYWdlc19zdGFydF9zdG9wKCpzbikpCisJCQlkZXZbKCpjb3VudCkrK10gPSAqc247CisJ
+CXNuKys7CisJfQorCQorCXJldHVybiAwOworfQorCisvKgorICoJT3BlbiB0aGUgZGV2aWNlIG5v
+ZGUgb2YgYSBkaXNrLgorICovCitzdGF0aWMgaW50IG9wZW5fZGlzayhjb25zdCBjaGFyICpkZXZp
+Y2UpCit7CisJcmV0dXJuIG9wZW4oZGV2aWNlLCBPX1JEV1IpOworfQorCisvKgorICoJT3BlbiBk
+ZXZpY2Ugbm9kZXMgb2YgYWxsIGRpc2tzLCBhbmQgc3RvcmUgdGhlIGZpbGUgZGVzY3JpcHRvcnMg
+aW4gZmRzLgorICoJVGhpcyBoYXMgdG8gYmUgZG9uZSBpbiBhZHZhbmNlIGJlY2F1c2UgYWNjZXNz
+aW5nIHRoZSBkZXZpY2Ugbm9kZXMKKyAqCW1pZ2h0IGNhdXNlIGEgZGlzayB0byBzcGluIGJhY2sg
+dXAuCisgKi8KK3N0YXRpYyBpbnQgb3Blbl9kaXNrcyhjb25zdCBjaGFyICoqZGlza3MsIGludCAq
+ZmRzLCBpbnQgY291bnQpCit7CisJaW50IGk7CisKKwlmb3IgKGkgPSAwOyBpIDwgY291bnQ7IGkr
+KykKKwkJZmRzW2ldID0gb3Blbl9kaXNrKGRpc2tzW2ldKTsKKworCXJldHVybiAwOworfQorCisv
+KgorICoJUHV0IGFuIElERS9TQ1NJL1NBVEEgZGlzayBpbiBzdGFuZGJ5IG1vZGUuCiAgKglDb2Rl
+IHN0b2xlbiBmcm9tIGhkcGFybS5jCiAgKi8KLXN0YXRpYyBpbnQgZG9fc3RhbmRieV9pZGVkaXNr
+KGNoYXIgKmRldmljZSkKK3N0YXRpYyBpbnQgZG9fc3RhbmRieV9kaXNrKGludCBmZCkKIHsKICNp
+Zm5kZWYgV0lOX1NUQU5EQllOT1cxCiAjZGVmaW5lIFdJTl9TVEFOREJZTk9XMSAweEUwCkBAIC03
+NCw5ICsxNTQsOCBAQAogI2VuZGlmCiAJdW5zaWduZWQgY2hhciBhcmdzMVs0XSA9IHtXSU5fU1RB
+TkRCWU5PVzEsMCwwLDB9OwogCXVuc2lnbmVkIGNoYXIgYXJnczJbNF0gPSB7V0lOX1NUQU5EQllO
+T1cyLDAsMCwwfTsKLQlpbnQgZmQ7CiAKLQlpZiAoKGZkID0gb3BlbihkZXZpY2UsIE9fUkRXUikp
+IDwgMCkKKwlpZiAoZmQgPCAwKQogCQlyZXR1cm4gLTE7CiAKIAlpZiAoaW9jdGwoZmQsIEhESU9f
+RFJJVkVfQ01ELCAmYXJnczEpICYmCkBAIC04NywyMiArMTY2LDM3IEBACiB9CiAKIC8qCi0gKglG
+aXJzdCBmaW5kIGFsbCBJREUgZGlza3MsIHRoZW4gcHV0IHRoZW0gaW4gc3RhbmRieSBtb2RlLgor
+ICoJUHV0IGFsbCBzcGVjaWZpZWQgZGlza3MgaW4gc3RhbmRieSBtb2RlLgorICovCitzdGF0aWMg
+aW50IGRvX3N0YW5kYnlfZGlza3MoY29uc3QgaW50ICpmZHMsIGludCBjb3VudCkKK3sKKwlpbnQg
+aTsKKworCWZvciAoaSA9IDA7IGkgPCBjb3VudDsgaSsrKQorCQlkb19zdGFuZGJ5X2Rpc2soZmRz
+W2ldKTsKKworCXJldHVybiAwOworfQorCisvKgorICoJRmlyc3QgZmluZCBhbGwgSURFL1NDU0kv
+U0FUQSBkaXNrcywgdGhlbiBwdXQgdGhlbSBpbiBzdGFuZGJ5IG1vZGUuCiAgKglUaGlzIGhhcyB0
+aGUgc2lkZS1lZmZlY3Qgb2YgZmx1c2hpbmcgdGhlIHdyaXRlY2FjaGUsCiAgKgl3aGljaCBpcyBl
+eGFjdGx5IHdoYXQgd2Ugd2FudCBvbiBwb3dlcm9mZi4KICAqLwogaW50IGhkZG93bih2b2lkKQog
+ewotCWNoYXIgKmRpc2tzW01BWF9ESVNLUysxXTsKLQlpbnQgaTsKKwljb25zdCBjaGFyICpkaXNr
+c1tNQVhfRElTS1NdOworCWludCBmZHNbTUFYX0RJU0tTXTsKKwlpbnQgY291bnQgPSAwOworCWlu
+dCByZXN1bHQxLCByZXN1bHQyOwogCi0JaWYgKGZpbmRfaWRlZGlza3MoZGlza3MsIE1BWF9ESVNL
+UykgPCAwKQotCQlyZXR1cm4gLTE7CisJcmVzdWx0MSA9IGZpbmRfaWRlZGlza3MoZGlza3MsIE1B
+WF9ESVNLUywgJmNvdW50KTsKKwlyZXN1bHQyID0gZmluZF9zY3NpZGlza3MoZGlza3MsIE1BWF9E
+SVNLUywgJmNvdW50KTsKIAotCWZvciAoaSA9IDA7IGRpc2tzW2ldICYmIGkgPCBNQVhfRElTS1M7
+IGkrKykKLQkJZG9fc3RhbmRieV9pZGVkaXNrKGRpc2tzW2ldKTsKKwlvcGVuX2Rpc2tzKGRpc2tz
+LCBmZHMsIGNvdW50KTsKKwlkb19zdGFuZGJ5X2Rpc2tzKGZkcywgY291bnQpOwogCi0JcmV0dXJu
+IDA7CisJcmV0dXJuIChyZXN1bHQxID8gcmVzdWx0MSA6IHJlc3VsdDIpOwogfQogCiAjZWxzZSAv
+KiBfX2xpbnV4X18gKi8K
+
+--MP_WXWKOhAq_Ko8+GjSlJZtE/V--
 
