@@ -1,23 +1,25 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: Re: [2/2] 2.6.22-git: known regressions
 Date: Thu, 19 Jul 2007 18:34:55 +0200
-Message-ID: <469F92AF.10405__48430.373814381$1184863007$gmane$org@googlemail.com>
+Message-ID: <469F92AF.10405__1886.90014551884$1184863019$gmane$org@googlemail.com>
 References: <469F9125.8040502@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:54576 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S939887AbXGSQgV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 12:36:21 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so445077ugf
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 09:36:20 -0700 (PDT)
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 In-Reply-To: <469F9125.8040502@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Theodore Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, Mingming Cao <cmm@us.ibm.com>, Doug Chapman <doug.chapman@hp.com>, Vasily Tarasov <vtaras@openvz.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Kumar Gala <galak@kernel.crashing.org>, linuxppc-dev@ozlabs.org, Christoph Lameter <clameter@sgi.com>, Andi Kleen <ak@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, Jean Delvare <khali@linux-fr.org>, Tejun Heo <htejun@gmail.com>
+Cc: Andi Kleen <ak@suse.de>, Theodore Tso <tytso@mit.edu>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org, Greg Kroah-Hartman <gregkh@suse.de>, LKML <linux-kernel@vger.kernel.org>, Doug Chapman <doug.chapman@hp.com>, Vasily Tarasov <vtaras@openvz.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mingming Cao <cmm@us.ibm.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jean Delvare <khali@linux-fr.org>, Christoph Lameter <clameter@sgi.com>
+List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
