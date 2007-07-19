@@ -1,33 +1,29 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ALi SATA problem
-Date: Thu, 19 Jul 2007 17:01:13 +0900
-Message-ID: <469F1A49.80801@gmail.com>
-References: <200707181117.41129.pavel@netsafe.cz> <200707181138.01161.pavel@netsafe.cz> <469DE14A.60101@gmail.com> <200707181423.08921.pavel@netsafe.cz>
+Subject: Re: Possible data corruption sata_sil24?
+Date: Thu, 19 Jul 2007 17:03:02 +0900
+Message-ID: <469F1AB6.3000105@gmail.com>
+References: <20070706012432.GB29789@jabberwocky.com> <4693A5A0.5070306@gmail.com> <20070713014252.GA17811@jabberwocky.com> <46972AEE.2040805@gmail.com> <20070713115919.GC17811@jabberwocky.com> <469DD513.7070202@gmail.com> <20070718123100.GB3932@jabberwocky.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:39582 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760979AbXGSIBU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jul 2007 04:01:20 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so533189wah
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 01:01:19 -0700 (PDT)
-In-Reply-To: <200707181423.08921.pavel@netsafe.cz>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20070718123100.GB3932@jabberwocky.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Mateja <pavel@netsafe.cz>
-Cc: linux-ide@vger.kernel.org
 
-Pavel Mateja wrote:
->> Sigh... The controller is telling the driver that "there's something
->> going on this port (hotplug event), please take look".  Can you try
->> hotplug some device at those ports and report the resulting kernel log?
+David Shaw wrote:
+>> I'm not sure whether this is problem of sata_sil24 or dm layer.  Cc'ing
+>> linux-raid for help.  How much memory do you have?  One big difference
+>> between ata_piix and sata_sil24 is that sil24 can handle 64bit DMA.
+>> Maybe dma mapping or something interacts weirdly with dm there?
 > 
-> Hotplug was working in cca 1 of 8 attemps.
+> The machine has 640 megs of RAM.  FWIW, I tried this with 512 megs of
+> RAM with the same results.  Running Memtest86+ shows the memory is
+> good.
 
-Can you attach full kernel log and annotate it with when you hotplugged
-a device?
+Hmmm... I see, so no DMA to the wrong address problem then.  Let's see
+whether dm people can help us out.
 
 Thanks.
 
