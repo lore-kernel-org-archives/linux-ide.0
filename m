@@ -1,49 +1,72 @@
-From: Stephen Clark <Stephen.Clark@seclark.us>
-Subject: linux 2.6.22 ide regression
-Date: Wed, 18 Jul 2007 20:18:07 -0400
-Message-ID: <469EADBF.6090102@seclark.us>
-Reply-To: Stephen.Clark@seclark.us
+From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
+Subject: pata_via with software raid1: "attempt to access beyond end of
+ device"
+Date: Wed, 18 Jul 2007 23:23:19 -0300
+Message-ID: <ohu2n4-lcf.ln1@tux.abusar.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpauth12.prod.mesa1.secureserver.net ([64.202.165.35]:53279
-	"HELO smtpauth12.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1761379AbXGSASI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jul 2007 20:18:08 -0400
+Received: from main.gmane.org ([80.91.229.2]:41922 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758248AbXGSCZs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Jul 2007 22:25:48 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1IBLi5-0008J7-M3
+	for linux-ide@vger.kernel.org; Thu, 19 Jul 2007 04:25:45 +0200
+Received: from 200-207-206-233.dsl.telesp.net.br ([200.207.206.233])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 04:25:45 +0200
+Received: from fragabr by 200-207-206-233.dsl.telesp.net.br with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 04:25:45 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello List
+Linux 2.6.22
+Intel(R) Celeron(R) CPU 2.26GHz
+00:0f.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE (rev 06)
+Reiserfs3
 
-My HP N5430 Laptop used to be udma/66 under the old ide driver. Is there 
-a way
-to get it back to that under the new drivers. The drive is plugged via a 
-right angle
-connector directly to the mother board - in otherwords there is no cable.
+	I have 2 PATA HDs and they always worked perfectly with
+software (kernel) raid1 using the old IDE kernel drivers. Now I use
+the new libata drivers (VIA), and it keep giving those erros messages:
 
-scsi0 : pata_ali
-scsi1 : pata_ali
-ata1: PATA max UDMA/66 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x00011000 irq 14
-ata2: PATA max UDMA/66 cmd 0x00010170 ctl 0x00010376 bmdma 0x00011008 irq 15
-ata1.00: ATA-5: HITACHI_DK23CA-20, 00H1A0A3, max UDMA/100
-ata1.00: 39070080 sectors, multi 16: LBA
-ata1.00: limited to UDMA/33 due to 40-wire cable
-ata1.00: configured for UDMA/33
+attempt to access beyond end of device
+md1: rw=0, want=155284112, limit=155284096
 
-Any help would be appreciated.
+	Is it raid's fault? Or libata's fault? The raid1 is ok:
 
-Regards,
-Steve
+/dev/md1:
+        Version : 00.90.03
+  Creation Time : Wed Jul 11 03:38:05 2007
+     Raid Level : raid1
+     Array Size : 77642048 (74.05 GiB 79.51 GB)
+  Used Dev Size : 77642048 (74.05 GiB 79.51 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jul 18 23:22:24 2007
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 6aed7615:3574770f:268e26d7:19872c99
+         Events : 0.29260
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
 
 -- 
-
-"They that give up essential liberty to obtain temporary safety, 
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty 
-decreases."  (Thomas Jefferson)
-
-
+Linux 2.6.22: Holy Dancing Manatees, Batman!
+http://www.lastfm.pt/user/danielfraga
+http://u-br.net
+The Pointer Sisters - "Automatic" (Platinum & Gold Collection Series)
 
