@@ -1,72 +1,38 @@
-From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
-Subject: pata_via with software raid1: "attempt to access beyond end of
- device"
-Date: Wed, 18 Jul 2007 23:23:19 -0300
-Message-ID: <ohu2n4-lcf.ln1@tux.abusar.org>
+From: "Mike " <irinazvorygina@mail.ru>
+Subject: The surprise and a lot of pleasures are waiting for you!                                                RoRCNk
+Date: Thu, 19 Jul 2007 07:30:37 +0200
+Message-ID: <005901c7ca2a$cfa068d0$a8a9b8fa@lejh>
+Reply-To: "Mike " <ilina@primorsky.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	format=flowed;
+	charset="utf-8";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41922 "EHLO ciao.gmane.org"
+Received: from smtp19.orange.fr ([80.12.242.17]:62690 "EHLO smtp19.orange.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758248AbXGSCZs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Jul 2007 22:25:48 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1IBLi5-0008J7-M3
-	for linux-ide@vger.kernel.org; Thu, 19 Jul 2007 04:25:45 +0200
-Received: from 200-207-206-233.dsl.telesp.net.br ([200.207.206.233])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 04:25:45 +0200
-Received: from fragabr by 200-207-206-233.dsl.telesp.net.br with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 04:25:45 +0200
+	id S1751733AbXGSFan (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Jul 2007 01:30:43 -0400
+Received: from me-wanadoo.net (localhost [127.0.0.1])
+	by mwinf1911.orange.fr (SMTP Server) with ESMTP id B96BC1C0013F
+	for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 07:30:42 +0200 (CEST)
+Received: from poste01 (LAubervilliers-151-13-108-64.w217-128.abo.wanadoo.fr [217.128.179.64])
+	by mwinf1911.orange.fr (SMTP Server) with SMTP id 800251C00141
+	for <linux-ide@vger.kernel.org>; Thu, 19 Jul 2007 07:30:42 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Linux 2.6.22
-Intel(R) Celeron(R) CPU 2.26GHz
-00:0f.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT8233/A/C/VT8235 PIPC Bus Master IDE (rev 06)
-Reiserfs3
+The virtual card has come to you!
 
-	I have 2 PATA HDs and they always worked perfectly with
-software (kernel) raid1 using the old IDE kernel drivers. Now I use
-the new libata drivers (VIA), and it keep giving those erros messages:
+You can look through the card within 90 days passing on the the link:
+http://www.nicefreedating.info/card/556853.htm
+Click on the link or copy it in the address line of the internet browser.
 
-attempt to access beyond end of device
-md1: rw=0, want=155284112, limit=155284096
+------------
+http://nicefreedating.info/ - Free Virtual Cards!
 
-	Is it raid's fault? Or libata's fault? The raid1 is ok:
 
-/dev/md1:
-        Version : 00.90.03
-  Creation Time : Wed Jul 11 03:38:05 2007
-     Raid Level : raid1
-     Array Size : 77642048 (74.05 GiB 79.51 GB)
-  Used Dev Size : 77642048 (74.05 GiB 79.51 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Jul 18 23:22:24 2007
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 6aed7615:3574770f:268e26d7:19872c99
-         Events : 0.29260
-
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-
--- 
-Linux 2.6.22: Holy Dancing Manatees, Batman!
-http://www.lastfm.pt/user/danielfraga
-http://u-br.net
-The Pointer Sisters - "Automatic" (Platinum & Gold Collection Series)
+ymoovehvp
 
