@@ -1,33 +1,37 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Recommendations on user-space soft/hardreset
-Date: Fri, 20 Jul 2007 09:14:01 -0600
-Message-ID: <8202f4270707200814ja0ba571oa38e25fc2f731a8d@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_via with software raid1: "attempt to access beyond end of
+ device"
+Date: Fri, 20 Jul 2007 16:37:09 +0100
+Message-ID: <20070720163709.04e5999c@the-village.bc.nu>
+References: <ohu2n4-lcf.ln1@tux.abusar.org>
+	<20070720001714.7b6aaf95@the-village.bc.nu>
+	<k0c5n4-dl4.ln1@tux.abusar.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:49764 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934142AbXGTPOD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 11:14:03 -0400
-Received: by an-out-0708.google.com with SMTP id d31so188362and
-        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 08:14:02 -0700 (PDT)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35019 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1765531AbXGTPax convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 11:30:53 -0400
+In-Reply-To: <k0c5n4-dl4.ln1@tux.abusar.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: =?UTF-8?B?RMOibmllbA==?= Fraga <fragabr@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Yasha Okshtein wrote:
-> I need to send soft and/or hard resets from userspace.
+On Thu, 19 Jul 2007 21:25:24 -0300
+D=C3=A2niel Fraga <fragabr@gmail.com> wrote:
 
->>Actually, you can do it by requesting manual rescan of the SCSI host.
->>"echo - - - > /sys/class/scsi_host/hostX/scan"
+> On Fri, 20 Jul 2007 00:17:14 +0100
+> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+>=20
+> > Are their host protected areas on the two disks ?
+>=20
+> 	I don't know, but hdparm returns this:
 
-I've been using this approach to spin up a PATA drive. However,  I
-have not figured out a way to return user scan result from kernel.
-For instance, how can I tell if the scan failed at reset or Identify
-Device from user space?
+Ok try booting with
 
-Thanks,
-Fajun
+	libata.ignore_hpa=3D1
+
+Alan
