@@ -1,33 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [patch 10/11] iomap: sort out the broken address reporting
- caused by the iomap layer
-Date: Fri, 20 Jul 2007 13:22:04 +0100
-Message-ID: <20070720132204.7bcc244b@the-village.bc.nu>
-References: <200707091846.l69IkNop001393@imap1.linux-foundation.org>
-	<46A0A689.9020800@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 02/21] libata: add @is_cmd to ata_tf_to_fis()
+Date: Fri, 20 Jul 2007 21:18:45 +0900
+Message-ID: <46A0A825.9010201@gmail.com>
+References: <1184563778203-git-send-email-htejun@gmail.com> <46A0A450.8070003@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:46787 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754995AbXGTMQc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Jul 2007 08:16:32 -0400
-In-Reply-To: <46A0A689.9020800@garzik.org>
+Received: from wa-out-1112.google.com ([209.85.146.176]:30015 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756374AbXGTMUB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 08:20:01 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so969119wah
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 05:20:01 -0700 (PDT)
+In-Reply-To: <46A0A450.8070003@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com, htejun@gmail.com
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
 
-> > +/* Convert an iomap to text for this platform */
-> > +extern char *iomap_name(void __iomem *addr, char *buf, size_t len);
-> > +#define IOMAP_NAMELEN	12
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Add @is_cmd to ata_tf_to_fis().  This controls bit 7 of the second
+>> byte which tells the device whether this H2D FIS is for a command or
+>> not.  This cleans up ahci a bit and will be used by PMP.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>>  drivers/ata/ahci.c        |   10 ++++------
+>>  drivers/ata/libata-core.c |   14 ++++++++------
+>>  drivers/ata/sata_qstor.c  |    2 +-
+>>  drivers/ata/sata_sil24.c  |    2 +-
+>>  include/linux/libata.h    |    3 ++-
+>>  5 files changed, 16 insertions(+), 15 deletions(-)
 > 
-> this will truncate on 64-bit addresses
+> applied 2-14
 
-Yes I suppose we could have 64bit MMIO mappings. So make it 20 8)
+Hmmm... Where did patch 1 go?  Did you receive it?
 
-Shall I send Andrew/you another diff to do this in the next batch of
-updates I'll send out ?
-
-Alan
+-- 
+tejun
