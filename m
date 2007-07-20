@@ -1,53 +1,31 @@
-From: "Bahadir Balban" <bahadir.balban@gmail.com>
-Subject: Re: [PATCH 1/1] ide: pdc202xx_new PLL input clock fix
-Date: Fri, 20 Jul 2007 15:38:19 +0100
-Message-ID: <7ac1e90c0707200738t4c29c7edq58e889198e8761ca@mail.gmail.com>
-References: <7ac1e90c0706210447k7c1bdb26y43d62e930ce7728e@mail.gmail.com>
-	 <46809EA7.5090005@tw.ibm.com> <4680A773.2020009@tw.ibm.com>
-	 <200707022013.04383.bzolnier@gmail.com>
-	 <46893D48.3060801@ru.mvista.com> <4689DCF5.3040809@tw.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] iomap: Allow space for 64bit I/O ports
+Date: Fri, 20 Jul 2007 15:38:37 +0100
+Message-ID: <20070720153837.6635387e@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:9618 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759733AbXGTOiU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 10:38:20 -0400
-Received: by py-out-1112.google.com with SMTP id d32so1735160pye
-        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 07:38:19 -0700 (PDT)
-In-Reply-To: <4689DCF5.3040809@tw.ibm.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38267 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750714AbXGTOke (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 10:40:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
-On 7/3/07, Albert Lee <albertcc@tw.ibm.com> wrote:
-> Recently the PLL input clock of Promise 2027x is sometimes detected
-> higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
-> It seems sometimes the mdelay() function is not as precise as it
-> used to be. Per Alan's advice, HT or power management might affect
-> the precision of mdelay().
->
-> This patch calls gettimeofday() to mesure the time elapsed and
-> calculate the PLL input clock accordingly.
->
-> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> ---
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-> Maybe Bahadir could also help to verify if it helps to his "hda lost interrupt" problem.
-
-
-Hi,
-
-As per the "hda lost interrupt" problem, I tried 2.6.22 and it didn't
-make any difference. Then I tried 2.6.21 with pdc202xx_new.c file from
-2.6.19 (the working one). I had to only retain
-pdcnew_config_drive_xfer_rate() from 2.6.21 to make it compile, and I
-still had the same result. I guess this means its a change outside the
-driver that breaks it on my platform? I will git-bisect and see.
-
-Thanks,
-Bahadir
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc6-mm1/include/asm-generic/iomap.h linux-2.6.22-rc6-mm1/include/asm-generic/iomap.h
+--- linux.vanilla-2.6.22-rc6-mm1/include/asm-generic/iomap.h	2007-07-02 20:47:33.000000000 +0100
++++ linux-2.6.22-rc6-mm1/include/asm-generic/iomap.h	2007-07-20 14:08:07.310897944 +0100
+@@ -65,4 +65,9 @@
+ extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+ extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+ 
++/* Convert an iomap to text for this platform */
++extern char *iomap_name(void __iomem *addr, char *buf, size_t len);
++#define IOMAP_NAMELEN	20
++
++
+ #endif
