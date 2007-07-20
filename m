@@ -1,41 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 02/21] libata: add @is_cmd to ata_tf_to_fis()
-Date: Fri, 20 Jul 2007 08:20:58 -0400
-Message-ID: <46A0A8AA.8020008@garzik.org>
-References: <1184563778203-git-send-email-htejun@gmail.com> <46A0A450.8070003@garzik.org> <46A0A825.9010201@gmail.com>
+Subject: Re: [patch 10/11] iomap: sort out the broken address reporting caused
+ by the iomap layer
+Date: Fri, 20 Jul 2007 08:24:12 -0400
+Message-ID: <46A0A96C.90702@garzik.org>
+References: <200707091846.l69IkNop001393@imap1.linux-foundation.org>	<46A0A689.9020800@garzik.org> <20070720132204.7bcc244b@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50108 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50159 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755198AbXGTMVB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Jul 2007 08:21:01 -0400
-In-Reply-To: <46A0A825.9010201@gmail.com>
+	id S1756325AbXGTMYP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Jul 2007 08:24:15 -0400
+In-Reply-To: <20070720132204.7bcc244b@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Forrest Zhao <forrest.zhao@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, alan@redhat.com, htejun@gmail.com
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Add @is_cmd to ata_tf_to_fis().  This controls bit 7 of the second
->>> byte which tells the device whether this H2D FIS is for a command or
->>> not.  This cleans up ahci a bit and will be used by PMP.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->>> ---
->>>  drivers/ata/ahci.c        |   10 ++++------
->>>  drivers/ata/libata-core.c |   14 ++++++++------
->>>  drivers/ata/sata_qstor.c  |    2 +-
->>>  drivers/ata/sata_sil24.c  |    2 +-
->>>  include/linux/libata.h    |    3 ++-
->>>  5 files changed, 16 insertions(+), 15 deletions(-)
->> applied 2-14
+Alan Cox wrote:
+>>> +/* Convert an iomap to text for this platform */
+>>> +extern char *iomap_name(void __iomem *addr, char *buf, size_t len);
+>>> +#define IOMAP_NAMELEN	12
+>> this will truncate on 64-bit addresses
 > 
-> Hmmm... Where did patch 1 go?  Did you receive it?
+> Yes I suppose we could have 64bit MMIO mappings. So make it 20 8)
+> 
+> Shall I send Andrew/you another diff to do this in the next batch of
+> updates I'll send out ?
 
-It was one of several copies I received :)
+Please.  In general, I was running through patches from you sent by 
+Andrew (his periodic libata patchbomb).  IIRC, a few of those were for 
+testing and did want immediate upstreaming anyway?
 
 
