@@ -1,103 +1,126 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix remaining scr_read/write users and the documentation
-Date: Fri, 20 Jul 2007 13:11:44 -0500
-Message-ID: <1184955104.3455.57.camel@localhost.localdomain>
+From: =?ISO-8859-1?Q?D=E2niel?= Fraga <fragabr@gmail.com>
+Subject: Re: pata_via with software raid1: "attempt to access beyond end of
+ device"
+Date: Fri, 20 Jul 2007 18:11:39 -0300
+Message-ID: <b1l7n4-7p4.ln1@tux.abusar.org>
+References: <ohu2n4-lcf.ln1@tux.abusar.org>
+	<20070720001714.7b6aaf95@the-village.bc.nu>
+	<k0c5n4-dl4.ln1@tux.abusar.org>
+	<20070720163709.04e5999c@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52782 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762152AbXGTSLu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 14:11:50 -0400
+Received: from main.gmane.org ([80.91.229.2]:51965 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751401AbXGTVO6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Jul 2007 17:14:58 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1IBzoG-0005tJ-Dj
+	for linux-ide@vger.kernel.org; Fri, 20 Jul 2007 23:14:48 +0200
+Received: from 200-207-206-233.dsl.telesp.net.br ([200.207.206.233])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 23:14:48 +0200
+Received: from fragabr by 200-207-206-233.dsl.telesp.net.br with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 23:14:48 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This fixes up the usage in libsas (which are easy to miss, since they're
-only in the scsi-misc tree) ... and also corrects the documentation on
-the point of what these two function pointers actually return.
+On Fri, 20 Jul 2007 16:37:09 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-James
+> Ok try booting with
+> 
+> 	libata.ignore_hpa=1
 
-diff --git a/Documentation/DocBook/libata.tmpl b/Documentation/DocBook/libata.tmpl
-index e2e24b4..ba99757 100644
---- a/Documentation/DocBook/libata.tmpl
-+++ b/Documentation/DocBook/libata.tmpl
-@@ -456,8 +456,9 @@ void (*irq_clear) (struct ata_port *);
- 
- 	<sect2><title>SATA phy read/write</title>
- 	<programlisting>
--u32 (*scr_read) (struct ata_port *ap, unsigned int sc_reg);
--void (*scr_write) (struct ata_port *ap, unsigned int sc_reg,
-+int (*scr_read) (struct ata_port *ap, unsigned int sc_reg,
-+		 u32 *val);
-+int (*scr_write) (struct ata_port *ap, unsigned int sc_reg,
-                    u32 val);
- 	</programlisting>
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 2db2589..359391f 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -172,7 +172,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 		qc->tf.nsect = 0;
- 	}
- 
--	ata_tf_to_fis(&qc->tf, (u8*)&task->ata_task.fis, 0);
-+	ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
- 	task->uldd_task = qc;
- 	if (is_atapi_taskfile(&qc->tf)) {
- 		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-@@ -298,7 +298,7 @@ static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- 	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
- }
- 
--static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
-+static int sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
- 			      u32 val)
- {
- 	struct domain_device *dev = ap->private_data;
-@@ -317,25 +317,33 @@ static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
- 		case SCR_ACTIVE:
- 			dev->sata_dev.ap->sactive = val;
- 			break;
-+		default:
-+			return -EINVAL;
- 	}
-+	return 0;
- }
- 
--static u32 sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
-+static int sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
-+			    u32 *val)
- {
- 	struct domain_device *dev = ap->private_data;
- 
- 	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
- 	switch (sc_reg_in) {
- 		case SCR_STATUS:
--			return dev->sata_dev.sstatus;
-+			*val = dev->sata_dev.sstatus;
-+			return 0;
- 		case SCR_CONTROL:
--			return dev->sata_dev.scontrol;
-+			*val = dev->sata_dev.scontrol;
-+			return 0;
- 		case SCR_ERROR:
--			return dev->sata_dev.serror;
-+			*val = dev->sata_dev.serror;
-+			return 0;
- 		case SCR_ACTIVE:
--			return dev->sata_dev.ap->sactive;
-+			*val = dev->sata_dev.ap->sactive;
-+			return 0;
- 		default:
--			return 0xffffffffU;
-+			return -EINVAL;
- 	}
- }
- 
+	I used that option:
 
+fraga@abusar ~$ dmesg|grep hpa
+Kernel command line: auto BOOT_IMAGE=linux rw root=902 panic=5 libata.ignore_hpa=1
+
+	and tried to makereiserfs again, but got the same results:
+
+Guessing about desired format.. Kernel 2.6.22 is running.
+Format 3.6 with standard journal
+Count of blocks on the device: 19410528
+Number of blocks consumed by mkreiserfs formatting process: 8804
+Blocksize: 4096
+Hash function used to sort names: "r5"
+Journal Size 8193 blocks (first block 18)
+Journal Max transaction length 1024
+inode generation number: 0
+
+	19410528 x 4 = 77642112
+
+	which is higher than 
+
+Used Dev Size : 77642048 (74.05 GiB 79.51 GB)
+
+	The "solution" was to reduce 64K from the reiser partition, as
+suggested by Neil Brown. This way the raid stopped to complain.
+
+	But I really don't know why mkreiserfs is creating a filesystem
+with 64k more than allowed by the device... maybe a bug in mkreiserfs?
+
+	The strange is that it didn't happen with the OLD IDE
+drivers... could it be a pata_via bug?
+
+	To determine if it is mkreiserfs' fault I used mke2fs just
+to see if it will create the same number of blocks as reiserfs:
+
+fraga@abusar ~$ sudo mke2fs /dev/sda2
+mke2fs 1.19, 13-Jul-2000 for EXT2 FS 0.5b, 95/08/09
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+9715712 inodes, 19410536 blocks
+970526 blocks (5.00%) reserved for the super user
+First data block=0
+593 block groups
+32768 blocks per group, 32768 fragments per group
+16384 inodes per group
+Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+        4096000, 7962624, 11239424
+
+Writing inode tables: done                            
+Writing superblocks and filesystem accounting information: done
+
+	***
+	
+	As you can see it created 19410536 blocks (19410536 x 4 =
+77642144, exactly as mkreiserfs did).
+
+	So I suppose it's a bug in some other place.
+
+	Or mdadm is determining the incorrect size of the device,
+64K less than the real size? Just for your convenience, mdadm returns:
+
+     Array Size : 77642048 (74.05 GiB 79.51 GB)
+  Used Dev Size : 77642048 (74.05 GiB 79.51 GB)
+
+	and mkreiserfs, mke2fs etc return 77642144. In other words, 64K
+more. Which one is correct? mkreiserfs/mke2fs or mdadm?
+
+	According Neil Brown, mdadm is correct and we don't know why
+mkreiserfs is creating a filesystem 64k larger than the device... so it
+could be a pata_via bug... is there any other test I can do to
+get rid of the possibility of a pata_via bug? If you need i can apply
+patches in the kernel or activate some other option.
+
+	And it seems that mdadm's method to determine the size of the
+partition is different from mkreiserfs/mke2fs etc, right?
+
+	Thank you!
+
+-- 
+Linux 2.6.22: Holy Dancing Manatees, Batman!
+http://www.lastfm.pt/user/danielfraga
+http://u-br.net
+Marilyn Manson - "Cruci-Fiction in Space" (Holy Wood (In the Shadow of
+the Valley of Death) - 2000)
 
