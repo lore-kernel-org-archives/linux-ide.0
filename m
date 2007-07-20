@@ -1,37 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_via with software raid1: "attempt to access beyond end of
- device"
-Date: Fri, 20 Jul 2007 16:37:09 +0100
-Message-ID: <20070720163709.04e5999c@the-village.bc.nu>
-References: <ohu2n4-lcf.ln1@tux.abusar.org>
-	<20070720001714.7b6aaf95@the-village.bc.nu>
-	<k0c5n4-dl4.ln1@tux.abusar.org>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [PATCH broken-out-2007-07-20-00-22] drivers/ata/libata-core.c build
+ fix
+Date: Fri, 20 Jul 2007 17:32:57 +0200
+Message-ID: <46A0D5A9.4080207@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35019 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1765531AbXGTPax convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 11:30:53 -0400
-In-Reply-To: <k0c5n4-dl4.ln1@tux.abusar.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:33667 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936548AbXGTPed (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 11:34:33 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so637739ugf
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jul 2007 08:34:31 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?RMOibmllbA==?= Fraga <fragabr@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Thu, 19 Jul 2007 21:25:24 -0300
-D=C3=A2niel Fraga <fragabr@gmail.com> wrote:
+Hi Kristen,
 
-> On Fri, 20 Jul 2007 00:17:14 +0100
-> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->=20
-> > Are their host protected areas on the two disks ?
->=20
-> 	I don't know, but hdparm returns this:
+Hmmm...
+ata-ahci-alpm-enable-link-power-management-for-ata-drivers.patch
 
-Ok try booting with
+drivers/ata/libata-core.c: In function 'ata_dev_configure':
+drivers/ata/libata-core.c:2039: error: implicit declaration of function 'ata_device_blacklisted'
+make[2]: *** [drivers/ata/libata-core.o] Error 1
+make[1]: *** [drivers/ata] Error 2
+make: *** [drivers] Error 2
 
-	libata.ignore_hpa=3D1
+Regards,
+Michal
 
-Alan
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
+
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+
+--- linux-work3-clean/drivers/ata/libata-core.c	2007-07-20 16:53:26.000000000 +0200
++++ linux-work3/drivers/ata/libata-core.c	2007-07-20 17:26:30.000000000 +0200
+@@ -2036,7 +2036,7 @@ int ata_dev_configure(struct ata_device 
+ 		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
+ 					 dev->max_sectors);
+ 
+-	if (ata_device_blacklisted(dev) & ATA_HORKAGE_ALPM) {
++	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_ALPM) {
+ 		dev->horkage |= ATA_HORKAGE_ALPM;
+ 
+ 		/* reset link pm_policy for this port to no pm */
