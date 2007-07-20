@@ -1,129 +1,30 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH]  pata_acpi: Rework the ACPI drivers based upon experience
- of what the BIOS can do
-Date: Fri, 20 Jul 2007 15:33:28 +0100
-Message-ID: <20070720153328.6512f973@the-village.bc.nu>
+Subject: [PATCH] pata_ali: Correct HP detect
+Date: Fri, 20 Jul 2007 15:34:49 +0100
+Message-ID: <20070720153449.5002bf8b@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54763 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54767 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764873AbXGTO1B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 10:27:01 -0400
+	with ESMTP id S1760336AbXGTO2K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jul 2007 10:28:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-Don't assume the BIOS can validate modes or has any sense at all.
-Instead use the BIOS timings to deduce the modes.
-
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_acpi.c linux-2.6.22-rc6-mm1/drivers/ata/pata_acpi.c
---- linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_acpi.c	2007-07-02 20:50:11.000000000 +0100
-+++ linux-2.6.22-rc6-mm1/drivers/ata/pata_acpi.c	2007-07-18 14:06:47.000000000 +0100
-@@ -2,8 +2,6 @@
-  *	ACPI PATA driver
-  *
-  *	(c) 2007 Red Hat  <alan@redhat.com>
-- *
-- *	TODO - restore modes after mode_filter chews them up
-  */
- 
- #include <linux/kernel.h>
-@@ -28,7 +26,7 @@
- #include "libata-acpi.h"
- 
- #define DRV_NAME	"pata_acpi"
--#define DRV_VERSION	"0.1.1"
-+#define DRV_VERSION	"0.2.1"
- 
- struct pata_acpi {
- 	void *handle;
-@@ -122,59 +120,41 @@
- 	if (!(probe.flags & 0x10))
- 		unit = 0;
- 
--
--	/* In order to generate a valid mode mask as we need cycle through
--	   trying each proposed speed in turn */
-+	ata_acpi_gtm(ap. acpi->handle, &probe);
- 
- 	/* Start by scanning for PIO modes */
- 	for (i = 0; i < 7; i++) {
--		probe.drive[unit].pio = pio_cycle[i];
--		ata_acpi_stm(ap, acpi->handle, &probe);
--		ata_acpi_gtm(ap, acpi->handle, &probe);
- 		t = probe.drive[unit].pio;
--		if (t == 0xFFFFFFFF || (i &&  t >= pio_cycle[i-1]))
--			mask &= ~(1 << (i + ATA_SHIFT_PIO));
--	}
--
--	/* Select MWDMA */
--	probe.flags &= ~(1 << (2 * unit));
--
--	/* Scan for MWDMA modes */
--	for (i = 0; i < 5; i++) {
--		u32 t;
--		probe.drive[unit].dma = mwdma_cycle[i];
--		ata_acpi_stm(ap, acpi->handle, &probe);
--		ata_acpi_gtm(ap, acpi->handle, &probe);
--
--		t = probe.drive[unit].dma;
--
--		if (t == 0xFFFFFFFF || (i && t >= mwdma_cycle[i-1]))
--			mask &= ~ (1 << (i + ATA_SHIFT_MWDMA));
-+		if (t <= pio_cycle[i]) {
-+			mask |= (2 << (ATA_SHIFT_PIO + i)) - 1;
-+			break;
-+		}
- 	}
- 
--	/* Select UDMA */
--	probe.flags |= (1 << (2 * unit));
--
--	/* Scan for UDMA modes */
--	for (i = 0; i < 7; i++) {
--		u32 t;
--		probe.drive[unit].dma = udma_cycle[i];
--		ata_acpi_stm(ap, acpi->handle, &probe);
--		ata_acpi_gtm(ap, acpi->handle, &probe);
--
--		t = probe.drive[unit].dma;
--
--		if (t == 0xFFFFFFFF || (i && t >= udma_cycle[i-1]))
--			mask &= ~ (1 << (i + ATA_SHIFT_UDMA));
-+	/* See if we have MWDMA or UDMA data. We don't bother with MWDMA
-+	   if UDMA is availabe as this means the BIOS set UDMA and our
-+	   error changedown if it works is UDMA to PIO anyway */
-+	if (probe.flags & (1 << (2 * unit))) {
-+		/* MWDMA */
-+		for (i = 0; i < 5; i++) {
-+			t = probe.drive[unit].dma;
-+			if (t <= mwdma_cycle[i]) {
-+				mask |= (2 << (ATA_SHIFT_MWDMA + i)) - 1;
-+				break;
-+			}
-+		}
-+	} else {
-+		/* UDMA */
-+		for (i = 0; i < 7; i++) {
-+			t = probe.drive[unit].dma;
-+			if (t <= udma_cycle[i]) {
-+				mask |= (2 << (ATA_SHIFT_UDMA + i)) - 1;
-+				break;
-+			}
-+		}
- 	}
--
- 	if (mask & (0xF8 << ATA_SHIFT_UDMA))
- 		ap->cbl = ATA_CBL_PATA80;
--
--	/* Restore the programmed timings */
--	ata_acpi_stm(ap, acpi->handle, &acpi->gtm);
--	/* And finally we can hand back the list of speeds that actually are
--	   supported by the BIOS */
- 	return mask;
- }
- 
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_ali.c linux-2.6.22-rc6-mm1/drivers/ata/pata_ali.c
+--- linux.vanilla-2.6.22-rc6-mm1/drivers/ata/pata_ali.c	2007-07-02 20:50:11.000000000 +0100
++++ linux-2.6.22-rc6-mm1/drivers/ata/pata_ali.c	2007-07-19 10:11:43.000000000 +0100
+@@ -45,7 +45,7 @@
+ 		.ident = "HP Pavilion N5430",
+ 		.matches = {
+ 			DMI_MATCH(DMI_BOARD_VENDOR, "Hewlett-Packard"),
+-			DMI_MATCH(DMI_BOARD_NAME, "OmniBook N32N-736"),
++			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
+ 		},
+ 	},
+ 	{ }
