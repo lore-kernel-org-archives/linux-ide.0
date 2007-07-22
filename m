@@ -1,151 +1,55 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 3/11] ide-pmac: fix set_timings_mdma()
-Date: Mon, 23 Jul 2007 07:57:17 +1000
-Message-ID: <1185141437.5439.62.camel@localhost.localdomain>
-References: <200707222022.41386.bzolnier@gmail.com>
+Subject: Re: [PATCH 4/11] ide-pmac: remove control register messing from
+	pmac_ide_dma_check()
+Date: Mon, 23 Jul 2007 07:58:33 +1000
+Message-ID: <1185141513.5439.65.camel@localhost.localdomain>
+References: <200707222023.29972.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48143 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:48318 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757974AbXGVV5X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jul 2007 17:57:23 -0400
-In-Reply-To: <200707222022.41386.bzolnier@gmail.com>
+	id S1764700AbXGVV6i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Jul 2007 17:58:38 -0400
+In-Reply-To: <200707222023.29972.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Sun, 2007-07-22 at 20:22 +0200, Bartlomiej Zolnierkiewicz wrote:
-> * Move adjusting of cycle time for devices providing explicit DMA cycle time
->   from pmac_ide_mdma_enable() to set_timings_mdma().
+On Sun, 2007-07-22 at 20:23 +0200, Bartlomiej Zolnierkiewicz wrote:
+> pmac_ide_do_setfeature() contains matching nIEN setting/clearing so this
+> Device Control register messing in pmac_ide_dma_check() is totally unnecessary.
 > 
-> * Remove no longer needed drive_cycle_time argument.
-> 
-> * BUG() if unsupported speed argument value is passed (shouldn't happen).
-> 
-> * Matching access/recovery timings always exist so remove redundant check.
-> 
-> * Make set_timings_mdma() void.
-> 
-> * Update pmac_ide_tune_chipset()'s comment.
-> 
-
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ppc/pmac.c |   40 ++++++++++++----------------------------
->  1 file changed, 12 insertions(+), 28 deletions(-)
+
+NAK for now. There was a reason for that, I need to remember, but I
+think I have a weirdo case with the media-bay removable CD drive on
+wallstreet that locks up the bus if you don't do something along the
+sequence in there.
+
+I have one of those machines in the office, so I should be able to give
+it a go today to check, in the meantime, keep that patch on hold.
+
+Ben.
+
+
+>  drivers/ide/ppc/pmac.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > Index: b/drivers/ide/ppc/pmac.c
 > ===================================================================
 > --- a/drivers/ide/ppc/pmac.c
 > +++ b/drivers/ide/ppc/pmac.c
-> @@ -769,12 +769,13 @@ set_timings_udma_shasta(u32 *pio_timings
->  /*
->   * Calculate MDMA timings for all cells
->   */
-> -static int
-> +static void
->  set_timings_mdma(ide_drive_t *drive, int intf_type, u32 *timings, u32 *timings2,
-> -			u8 speed, int drive_cycle_time)
-> +		 	u8 speed)
->  {
->  	int cycleTime, accessTime = 0, recTime = 0;
->  	unsigned accessTicks, recTicks;
-> +	struct hd_driveid *id = drive->id;
->  	struct mdma_timings_t* tm = NULL;
->  	int i;
->  
-> @@ -784,11 +785,14 @@ set_timings_mdma(ide_drive_t *drive, int
->  		case 1: cycleTime = 150; break;
->  		case 2: cycleTime = 120; break;
->  		default:
-> -			return 1;
-> +			BUG();
-> +			break;
+> @@ -1784,7 +1784,7 @@ pmac_ide_dma_check(ide_drive_t *drive)
+>  			drive->using_dma = pmac_ide_udma_enable(drive, mode);
+>  		else if (mode >= XFER_MW_DMA_0)
+>  			drive->using_dma = pmac_ide_mdma_enable(drive, mode);
+> -		hwif->OUTB(0, IDE_CONTROL_REG);
+> +
+>  		/* Apply settings to controller */
+>  		pmac_ide_do_update_timings(drive);
 >  	}
-> -	/* Adjust for drive */
-> -	if (drive_cycle_time && drive_cycle_time > cycleTime)
-> -		cycleTime = drive_cycle_time;
-> +
-> +	/* Check if drive provides explicit DMA cycle time */
-> +	if ((id->field_valid & 2) && id->eide_dma_time)
-> +		cycleTime = max_t(int, id->eide_dma_time, cycleTime);
-> +
->  	/* OHare limits according to some old Apple sources */	
->  	if ((intf_type == controller_ohare) && (cycleTime < 150))
->  		cycleTime = 150;
-> @@ -816,8 +820,6 @@ set_timings_mdma(ide_drive_t *drive, int
->  				break;
->  			i++;
->  		}
-> -		if (i < 0)
-> -			return 1;
->  		cycleTime = tm[i].cycleTime;
->  		accessTime = tm[i].accessTime;
->  		recTime = tm[i].recoveryTime;
-> @@ -899,16 +901,12 @@ set_timings_mdma(ide_drive_t *drive, int
->  	printk(KERN_ERR "%s: Set MDMA timing for mode %d, reg: 0x%08x\n",
->  		drive->name, speed & 0xf,  *timings);
->  #endif	
-> -	return 0;
->  }
->  #endif /* #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC */
->  
->  /* 
->   * Speedproc. This function is called by the core to set any of the standard
->   * timing (PIO, MDMA or UDMA) to both the drive and the controller.
-> - * You may notice we don't use this function on normal "dma check" operation,
-> - * our dedicated function is more precise as it uses the drive provided
-> - * cycle time value. We should probably fix this one to deal with that too...
->   */
->  static int pmac_ide_tune_chipset(ide_drive_t *drive, const u8 speed)
->  {
-> @@ -946,7 +944,7 @@ static int pmac_ide_tune_chipset(ide_dri
->  		case XFER_MW_DMA_2:
->  		case XFER_MW_DMA_1:
->  		case XFER_MW_DMA_0:
-> -			ret = set_timings_mdma(drive, pmif->kind, &tl[0], &tl[1], speed, 0);
-> +			set_timings_mdma(drive, pmif->kind, &tl[0], &tl[1], speed);
->  			break;
->  		case XFER_SW_DMA_2:
->  		case XFER_SW_DMA_1:
-> @@ -1678,8 +1676,6 @@ pmac_ide_mdma_enable(ide_drive_t *drive,
->  {
->  	ide_hwif_t *hwif = HWIF(drive);
->  	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
-> -	int drive_cycle_time;
-> -	struct hd_driveid *id = drive->id;
->  	u32 *timings, *timings2;
->  	u32 timing_local[2];
->  	int ret;
-> @@ -1688,24 +1684,12 @@ pmac_ide_mdma_enable(ide_drive_t *drive,
->  	timings = &pmif->timings[drive->select.b.unit & 0x01];
->  	timings2 = &pmif->timings[(drive->select.b.unit & 0x01) + 2];
->  
-> -	/* Check if drive provide explicit cycle time */
-> -	if ((id->field_valid & 2) && (id->eide_dma_time))
-> -		drive_cycle_time = id->eide_dma_time;
-> -	else
-> -		drive_cycle_time = 0;
-> -
->  	/* Copy timings to local image */
->  	timing_local[0] = *timings;
->  	timing_local[1] = *timings2;
->  
->  	/* Calculate controller timings */
-> -	ret = set_timings_mdma(	drive, pmif->kind,
-> -				&timing_local[0],
-> -				&timing_local[1],
-> -				mode,
-> -				drive_cycle_time);
-> -	if (ret)
-> -		return 0;
-> +	set_timings_mdma(drive, pmif->kind, &timing_local[0], &timing_local[1], mode);
->  
->  	/* Set feature on drive */
->      	printk(KERN_INFO "%s: Enabling MultiWord DMA %d\n", drive->name, mode & 0xf);
 
