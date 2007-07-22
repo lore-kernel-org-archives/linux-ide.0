@@ -1,69 +1,131 @@
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 8/11] ide-pmac: remove extra good status wait from
-	pmac_ide_do_setfeature()
-Date: Mon, 23 Jul 2007 08:02:08 +1000
-Message-ID: <1185141728.5439.69.camel@localhost.localdomain>
-References: <200707222032.28467.bzolnier@gmail.com>
+Subject: Re: [PATCH 9/11] ide-pmac: use __ide_wait_stat()
+Date: Mon, 23 Jul 2007 08:03:13 +1000
+Message-ID: <1185141793.5439.71.camel@localhost.localdomain>
+References: <200707222033.08794.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:60409 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:60423 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765469AbXGVWCP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 22 Jul 2007 18:02:15 -0400
-In-Reply-To: <200707222032.28467.bzolnier@gmail.com>
+	id S1765580AbXGVWDS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Jul 2007 18:03:18 -0400
+In-Reply-To: <200707222033.08794.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Sun, 2007-07-22 at 20:32 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Don't check for good device status before executing the command in
-> pmac_ide_do_setfeature() (ide_config_drive_speed() doesn't do this).
+On Sun, 2007-07-22 at 20:33 +0200, Bartlomiej Zolnierkiewicz wrote:
+> * Use __ide_wait_stat() instead of wait_for_ready() in pmac_ide_do_setfeature().
 > 
-> It is a job of upper layers to guarantee that the device is ready to
-> accept new command before we get here.
+> While at it do following changes to match __ide_wait_stat() call in
+> ide_config_drive_speed():
+> 
+> * Wait WAIT_CMD time (20 sec) instead of 2 sec for device to clear BUSY_STAT.
+> 
+> * Check DRQ_STAT bit (shouldn't be set for good device status).
+> 
+> Also remove no longer needed wait_for_ready() from ide-iops.c.
+> 
 
-I had issues in those areas ... I'd like to keep a warning at least or
-something in there for now.
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Ben.
-
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
->  drivers/ide/ppc/pmac.c |   12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
+>  drivers/ide/ide-iops.c |   31 +------------------------------
+>  drivers/ide/ppc/pmac.c |    9 +++++----
+>  include/linux/ide.h    |    2 +-
+>  3 files changed, 7 insertions(+), 35 deletions(-)
 > 
+> Index: b/drivers/ide/ide-iops.c
+> ===================================================================
+> --- a/drivers/ide/ide-iops.c
+> +++ b/drivers/ide/ide-iops.c
+> @@ -473,35 +473,6 @@ int drive_is_ready (ide_drive_t *drive)
+>  EXPORT_SYMBOL(drive_is_ready);
+>  
+>  /*
+> - * Global for All, and taken from ide-pmac.c. Can be called
+> - * with spinlock held & IRQs disabled, so don't schedule !
+> - */
+> -int wait_for_ready (ide_drive_t *drive, int timeout)
+> -{
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> -	u8 stat			= 0;
+> -
+> -	while(--timeout) {
+> -		stat = hwif->INB(IDE_STATUS_REG);
+> -		if (!(stat & BUSY_STAT)) {
+> -			if (drive->ready_stat == 0)
+> -				break;
+> -			else if ((stat & drive->ready_stat)||(stat & ERR_STAT))
+> -				break;
+> -		}
+> -		mdelay(1);
+> -	}
+> -	if ((stat & ERR_STAT) || timeout <= 0) {
+> -		if (stat & ERR_STAT) {
+> -			printk(KERN_ERR "%s: wait_for_ready, "
+> -				"error status: %x\n", drive->name, stat);
+> -		}
+> -		return 1;
+> -	}
+> -	return 0;
+> -}
+> -
+> -/*
+>   * This routine busy-waits for the drive status to be not "busy".
+>   * It then checks the status for all of the "good" bits and none
+>   * of the "bad" bits, and if all is okay it returns 0.  All other
+> @@ -512,7 +483,7 @@ int wait_for_ready (ide_drive_t *drive, 
+>   * setting a timer to wake up at half second intervals thereafter,
+>   * until timeout is achieved, before timing out.
+>   */
+> -static int __ide_wait_stat(ide_drive_t *drive, u8 good, u8 bad, unsigned long timeout, u8 *rstat)
+> +int __ide_wait_stat(ide_drive_t *drive, u8 good, u8 bad, unsigned long timeout, u8 *rstat)
+>  {
+>  	ide_hwif_t *hwif = drive->hwif;
+>  	unsigned long flags;
 > Index: b/drivers/ide/ppc/pmac.c
 > ===================================================================
 > --- a/drivers/ide/ppc/pmac.c
 > +++ b/drivers/ide/ppc/pmac.c
-> @@ -547,16 +547,6 @@ pmac_ide_do_setfeature(ide_drive_t *driv
->  	SELECT_DRIVE(drive);
->  	SELECT_MASK(drive, 0);
+> @@ -540,7 +540,8 @@ static int
+>  pmac_ide_do_setfeature(ide_drive_t *drive, u8 command)
+>  {
+>  	ide_hwif_t *hwif = HWIF(drive);
+> -	int result = 1;
+> +	int result;
+> +	u8 stat;
+>  	
+>  	disable_irq_nosync(hwif->irq);
 >  	udelay(1);
-> -	/* Get rid of pending error state */
-> -	(void) hwif->INB(IDE_STATUS_REG);
-> -	/* Timeout bumped for some powerbooks */
-> -	if (wait_for_ready(drive, 2000)) {
-> -		/* Timeout bumped for some powerbooks */
-> -		printk(KERN_ERR "%s: pmac_ide_do_setfeature disk not ready "
-> -			"before SET_FEATURE!\n", drive->name);
-> -		goto out;
-> -	}
-> -	udelay(10);
->  	hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
+> @@ -551,9 +552,9 @@ pmac_ide_do_setfeature(ide_drive_t *driv
 >  	hwif->OUTB(command, IDE_NSECTOR_REG);
 >  	hwif->OUTB(SETFEATURES_XFER, IDE_FEATURE_REG);
-> @@ -568,7 +558,7 @@ pmac_ide_do_setfeature(ide_drive_t *driv
+>  	hwif->OUTBSYNC(drive, WIN_SETFEATURES, IDE_COMMAND_REG);
+> -	udelay(1);
+> -	/* Timeout bumped for some powerbooks */
+> -	result = wait_for_ready(drive, 2000);
+> +	result = __ide_wait_stat(drive, drive->ready_stat,
+> +				 BUSY_STAT|DRQ_STAT|ERR_STAT,
+> +				 WAIT_CMD, &stat);
+>  	hwif->OUTB(drive->ctl, IDE_CONTROL_REG);
 >  	if (result)
 >  		printk(KERN_ERR "%s: pmac_ide_do_setfeature disk not ready "
->  			"after SET_FEATURE !\n", drive->name);
-> -out:
-> +
->  	SELECT_MASK(drive, 0);
->  	if (result == 0) {
->  		drive->id->dma_ultra &= ~0xFF00;
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1152,7 +1152,7 @@ extern void SELECT_MASK(ide_drive_t *, i
+>  extern void QUIRK_LIST(ide_drive_t *);
+>  
+>  extern int drive_is_ready(ide_drive_t *);
+> -extern int wait_for_ready(ide_drive_t *, int /* timeout */);
+> +int __ide_wait_stat(ide_drive_t *, u8, u8, unsigned long);
+>  
+>  /*
+>   * taskfile io for disks for now...and builds request from ide_ioctl
 
