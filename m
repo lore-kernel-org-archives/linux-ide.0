@@ -1,115 +1,61 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: ide patches
-Date: Tue, 24 Jul 2007 08:00:25 +1000
-Message-ID: <1185228025.5439.139.camel@localhost.localdomain>
-References: <200707222019.03684.bzolnier@gmail.com>
-	 <1185155835.5439.91.camel@localhost.localdomain>
-	 <1185156084.5439.93.camel@localhost.localdomain>
-	 <200707232322.22129.bzolnier@gmail.com>
+Date: Tue, 24 Jul 2007 02:06:10 +0400
+Message-ID: <46A52652.2040509@ru.mvista.com>
+References: <200707222019.03684.bzolnier@gmail.com>	 <1185148506.5439.80.camel@localhost.localdomain>	 <1185153674.5439.83.camel@localhost.localdomain>	 <1185155835.5439.91.camel@localhost.localdomain>	 <46A4AA39.3030401@ru.mvista.com> <1185227295.5439.131.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48274 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751548AbXGWWAc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jul 2007 18:00:32 -0400
-In-Reply-To: <200707232322.22129.bzolnier@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:5314 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750715AbXGWWEI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 18:04:08 -0400
+In-Reply-To: <1185227295.5439.131.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Mon, 2007-07-23 at 23:22 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> Thanks for reviewing and testing this patch series.
-> 
-> On Monday 23 July 2007, Benjamin Herrenschmidt wrote:
-> > 
-> > > Ok, there's a combination of things here:
-> > > 
-> > >  - First, doing a set_pio from userland (hdparm -p XX) causes the kernel
-> > > to disable DMA, which I think is incorrect. It's not the case with
-> > > 2.6.22 from my quick tests. The problem is that ide_config_drive_speed
-> > > disables DMA, but only re-enables it when setting a DMA speed. I think
-> 
-> The problem is that _many_ chipsets don't support separate PIO and DMA
-> timings so disabling DMA while programming chipset for PIO timings is a
-> necessity for them.
+Hello.
 
-Disabling while programming is fine with me. The problem is that we
-don't restore DMA after programming the PIO timings.
+Benjamin Herrenschmidt wrote:
 
-Yes, but we still need to address it as it's a regression for ide-pmac
-when moving to the generic ide_config_drive_speed.
+>>>Ok, there's a combination of things here:
 
-> > >  - For some reason, nowadays, hdparm -p /dev/hda will not autotune, but
-> > > will set PIO 0 (hdparm -p 255 /dev/hda will autotune). Might be a bug in
-> > > whatever hdparm version I have here.
-> 
-> Since -p 255 works fine it would indicate a hdparm issue.
+>>> - First, doing a set_pio from userland (hdparm -p XX) causes the kernel
+>>>to disable DMA, which I think is incorrect.
 
-Yup. All hdparm's around do that, I need to find out when it actually
-broke (if it did, but I -think- that early versions used to autotune
-with just -p).
+>>    That's the way ide_config_drive_speed() works.
 
-> > >  - Some userland scripts installed on debian as part of the pbbuttonsd
-> > > package are doing hdaprm -p /dev/device on all IDE devices at boot.
-> > 
-> > In the meantime, that patch applied on top of your latest series fixes
-> > the PIO setting in the driver to send the correct mode value in
-> 
-> Looks fine.
-> 
-> Could you please rebase it on top of the fixed "ide-pmac: PIO mode setup
-> fixes" patch, remove debugging printks and add description/Signed-off-by?
+> And I still think that's bad.
 
-Sure.
+    Bart has just named one reason for that -- many chips have shared PIO/DMA 
+timing regs -- not all driver actually care about that issue and that's *not* 
+the safest way to do this via ide_dma_{on|off}() calls anyway...
 
-> Also since the patch series has been tested please verify that your concerns
-> wrt patches #4, #8 and #10 are still valid.
+>>>It's not the case with 2.6.22 from my quick tests.
 
-I've been using that weird machine without problems at boot, but I still
-need to test actual hotplug of the media bay, this is usually when the
-shit hits the fan. It's quite possible that some of the fixes you did to
-ide_config_drive_speed() (or other changes around) are also fixing that
-problem, it used to look a lot like a heisenbug back then. However, I'm
-still annoyed that with all current debian or ubuntu distro, you'll end
-up with DMA disabled at boot because of those pbbuttons scripts.
+>>   Which means that PIO autotuning is broken there, i.e. that 
+>>ide_config_drive_speed() not called from the driver's tuneproc() method.
 
-> > pmac_ide_set_pio_mode(). I still object to your patch serie at this
-> > point because hdparm -p N should not, imho, cause DMA to be disabled.
-> 
-> If this change indeed causes some serious problem which breaks userland on
-> ppc (that can't be workarounded otherwise) we may add a new ->host_flags
-> flag and special hack to ide-io.c::do_special(), something like:
-> 
-> ...
-> 		int keep_dma = drive->using_dma;
-> ...
-> 			ide_set_pio(drive, req_pio);
-> ...
-> 		if (hwif->host_flags & IDE_HFLAG_SET_PIO_MODE_KEEP_DMA) {
-> 			if (keep_dma)
-> 				hwif->ide_dma_on(drive);
-> 		}
-> ...
-> 
-> which should preserve the old behavior.
+> Yes, the driver uses it's own function which doesn't disable DMA
+> permanently, which is, IMHO, the way to go. I consider the current
+> behaviour a regression.
 
-Yea, please.
+    Hm... "it's the way the cookie crumbles" for all the other drivers. :-)
 
-> I will respin patch #11 with necessary changes if needed.
-> 
-> > I really believe that the kernel should keep track separately of PIO and
-> > DMA speeds.
-> 
-> Agreed.
+>>>The problem is that ide_config_drive_speed
+>>>disables DMA, but only re-enables it when setting a DMA speed.
 
-Excellent, we all agree :-)
+>>    It never "re-enables" DMA. ide_dma_host_on() method is not the same as 
+>>ide_dma_on() which actually enables DMA.
 
-Cheers,
-Ben.
+> Ugh ? It re-enables DMA in the sense that if called to configure a DMA
+> speed, it re-enables dma on the host, thus effectively leaving with DMA
+> enabled.
 
+    No. DMA is still diabled for the IDE core at this point. You need a real 
+ide_dma_on() method call to do it.
 
+MBR, Sergei
