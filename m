@@ -1,28 +1,33 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: No equivalent for ide-scsi available with the new PATA drivers?
-Date: Mon, 23 Jul 2007 12:36:44 -0400
-Message-ID: <46A4D91C.3090509@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: No equivalent for ide-scsi available with the new PATA drivers?
+Date: Mon, 23 Jul 2007 17:52:39 +0100
+Message-ID: <20070723175239.54b721f1@the-village.bc.nu>
+References: <46A4D91C.3090509@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54601 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762062AbXGWQgq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Jul 2007 12:36:46 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l6NGajTN007511
-	for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 12:36:45 -0400
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l6NGaiIH019102
-	for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 12:36:45 -0400
-Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l6NGaiUp008680
-	for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 12:36:44 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47522 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760834AbXGWQp4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 12:45:56 -0400
+In-Reply-To: <46A4D91C.3090509@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-People with IDE tape drives are complaining there's no ide-scsi
-driver available anymore with the new PATA layer. Is anyone
-working on one?
+On Mon, 23 Jul 2007 12:36:44 -0400
+Chuck Ebbert <cebbert@redhat.com> wrote:
+
+> People with IDE tape drives are complaining there's no ide-scsi
+> driver available anymore with the new PATA layer. Is anyone
+> working on one?
+
+It would make no sense. The libata layer is already using the SCSI
+midlayer so compliant devices should already appear with the st driver.
+
+We might need some tape detect logic, but I don't have any tape devices
+so its up to someone with a tape drive handy to help out...
+
+Alan
