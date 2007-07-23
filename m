@@ -1,66 +1,40 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/4] ide: use only ->set_pio_mode method for programming
- PIO modes
-Date: Mon, 23 Jul 2007 22:58:03 +0400
-Message-ID: <46A4FA3B.2050300@ru.mvista.com>
-References: <200707201226.13405.bzolnier@gmail.com>
+Subject: Re: PATA driver for Atmel AVR32
+Date: Mon, 23 Jul 2007 23:00:54 +0400
+Message-ID: <46A4FAE6.5060901@ru.mvista.com>
+References: <200707201108.19174.kngregertsen@norway.atmel.com>	<200707201112.12444.kngregertsen@norway.atmel.com> <20070720121443.4c1d6fa5@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:4351 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:4375 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756603AbXGWS4E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 14:56:04 -0400
-In-Reply-To: <200707201226.13405.bzolnier@gmail.com>
+	with ESMTP id S1755909AbXGWS6x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 14:58:53 -0400
+In-Reply-To: <20070720121443.4c1d6fa5@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>, linux-ide@vger.kernel.org, kernel@avr32linux.org, gregerts@stud.ntnu.no
 
 Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+Alan Cox wrote:
 
-> Use ->set_pio_mode method to program PIO modes in ide_set_xfer_rate()
-> (the only place which used ->speedproc to program PIO modes) and remove
-> handling of PIO modes from all ->speedproc implementations.
+>>	/* Only use IORDY/NWAIT for PIO mode 3 and 4 */
+>>	if (pio_mode < 3)
+>>		info->smc.nwait_mode = 0;
+>>	else
+>>		info->smc.nwait_mode = 3;
 
-> There should be no functionality changes caused by this patch.
+> That is wrong.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+    Yeah.
 
-> Index: b/drivers/ide/cris/ide-cris.c
-> ===================================================================
-> --- a/drivers/ide/cris/ide-cris.c
-> +++ b/drivers/ide/cris/ide-cris.c
-> @@ -724,11 +724,6 @@ static int speed_cris_ide(ide_drive_t *d
->  {
->  	int cyc = 0, dvs = 0, strobe = 0, hold = 0;
->  
-> -	if (speed >= XFER_PIO_0 && speed <= XFER_PIO_4) {
-> -		cris_set_pio_mode(drive, speed - XFER_PIO_0);
-> -		return ide_config_drive_speed(drive, speed);
-> -	}
-> -
->  	switch(speed)
->  	{
->  		case XFER_UDMA_0:
-> Index: b/drivers/ide/ide-lib.c
-> ===================================================================
-> --- a/drivers/ide/ide-lib.c
-> +++ b/drivers/ide/ide-lib.c
-> @@ -398,6 +398,18 @@ int ide_set_xfer_rate(ide_drive_t *drive
->  
->  	rate = ide_rate_filter(drive, rate);
->  
-> +	if (rate >= XFER_PIO_0 && rate <= XFER_PIO_5) {
-> +		if (hwif->set_pio_mode)
-> +			hwif->set_pio_mode(drive, rate - XFER_PIO_0);
+> Any mode for PIO2+ will use IORDY. Modes below may require
+> it sometimes (and its a good signal check). See ata_pio_need_iordy(atadev)
 
-    BTW, why doesn it pass CF-specific PIO6? Not an issue now, but what the 
-hell?  I'd suggest instead:
-
-	if (rate & XFER_PIO_0) {
+    For PIO3+ you wanted to say? PIO2 doesn't require IORDY (and the majority 
+of drives report 240 ns lowest cycle time w/o IORDY which is PIO2).
 
 MBR, Sergei
