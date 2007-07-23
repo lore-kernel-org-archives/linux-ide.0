@@ -1,87 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/11] ide-pmac: use ide_tune_dma()
-Date: Tue, 24 Jul 2007 00:30:42 +0200
-Message-ID: <200707240030.42867.bzolnier@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 11/11] ide-pmac: remove pmac_ide_do_setfeature() (take
+	2)
+Date: Tue, 24 Jul 2007 08:45:14 +1000
+Message-ID: <1185230714.5439.150.camel@localhost.localdomain>
+References: <200707240029.02584.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:58805 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757728AbXGWWdI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 18:33:08 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so50083ugf
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 15:33:07 -0700 (PDT)
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:55109 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761863AbXGWWpU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jul 2007 18:45:20 -0400
+In-Reply-To: <200707240029.02584.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
+
+On Tue, 2007-07-24 at 00:29 +0200, Bartlomiej Zolnierkiewicz wrote:
+> Use ide_config_drive_speed() instead of pmac_ide_do_setfeature() and remove
+> the latter, also  ide-iops.c::__ide_wait_stat() could be static again.
+> 
+> Since for IDE PMAC host driver IDE_CONTROL_REG is always true, device's
+> ->quirk_list is always zero and ->ide_dma_host_{on,off} are nops than
+> the only changes in behavior are:
+> 
+> * if PIO mode is set then ->dma_off_queitly is called to disable DMA
+> 
+> * if setting transfer mode fails ide_dump_status() is called to dump status
+
+I'll test that today.
+
+Cheers,
+Ben.
 
 
-* Add missing initialization of hwif->autodma and drive->autodma to
-  pmac_ide_setup_dma().
-
-* Use ide_tune_dma() in pmac_ide_dma_check().
-
-While at it:
-
-* Fix pmac_ide_dma_check() return value if DMA mode is not programmed
-  (should be "-1" otherwise ide_set_dma() will try to enable DMA).
-
-* Remove unnecessary drive->using_dma fiddling (->dma_off_quietly is always
-  called before ide_set_dma() call and ide_set_dma() calls ->ide_dma_on if
-  ->ide_dma_check returns "0").
-
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-bonus patch ;)
-
- drivers/ide/ppc/pmac.c |   24 +++++++-----------------
- 1 file changed, 7 insertions(+), 17 deletions(-)
-
-Index: b/drivers/ide/ppc/pmac.c
-===================================================================
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1592,23 +1592,10 @@ pmac_ide_destroy_dmatable (ide_drive_t *
- static int
- pmac_ide_dma_check(ide_drive_t *drive)
- {
--	int enable = 1;
--	drive->using_dma = 0;
--	
--	if (drive->media == ide_floppy)
--		enable = 0;
--	if ((drive->id->capability & 1) == 0 && !__ide_dma_good_drive(drive))
--		enable = 0;
--	if (__ide_dma_bad_drive(drive))
--		enable = 0;
--
--	if (enable) {
--		u8 mode = ide_max_dma_mode(drive);
-+	if (drive->media != ide_floppy && ide_tune_dma(drive))
-+		return 0;
- 
--		if (mode && pmac_ide_tune_chipset(drive, mode) == 0)
--			drive->using_dma = 1;
--	}
--	return 0;
-+	return -1;
- }
- 
- /*
-@@ -1842,7 +1829,10 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
- 			hwif->mwdma_mask = 0x07;
- 			hwif->swdma_mask = 0x00;
- 			break;
--	}	
-+	}
-+
-+	hwif->autodma = 1;
-+	hwif->drives[1].autodma = hwif->drives[0].autodma = hwif->autodma;
- }
- 
- #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
