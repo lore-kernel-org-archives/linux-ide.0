@@ -1,47 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 7/11] ide: add __ide_wait_stat() helper
-Date: Mon, 23 Jul 2007 23:22:31 +0200
-Message-ID: <200707232322.31495.bzolnier@gmail.com>
-References: <200707222031.30499.bzolnier@gmail.com> <46A4AA97.9060702@ru.mvista.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide patches
+Date: Tue, 24 Jul 2007 07:48:15 +1000
+Message-ID: <1185227295.5439.131.camel@localhost.localdomain>
+References: <200707222019.03684.bzolnier@gmail.com>
+	 <1185148506.5439.80.camel@localhost.localdomain>
+	 <1185153674.5439.83.camel@localhost.localdomain>
+	 <1185155835.5439.91.camel@localhost.localdomain>
+	 <46A4AA39.3030401@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:53048 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757475AbXGWVZj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 17:25:39 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so40025ugf
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 14:25:38 -0700 (PDT)
-In-Reply-To: <46A4AA97.9060702@ru.mvista.com>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:34038 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755256AbXGWVsc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jul 2007 17:48:32 -0400
+In-Reply-To: <46A4AA39.3030401@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Monday 23 July 2007, Sergei Shtylyov wrote:
-> Hello.
+> > Ok, there's a combination of things here:
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> >  - First, doing a set_pio from userland (hdparm -p XX) causes the kernel
+> > to disable DMA, which I think is incorrect.
 > 
-> > * Split off checking of the status register from ide_wait_stat() to
-> >   __ide_wait_stat() helper.
-> 
-> > * Use the new helper in ide_config_drive_speed().  The only change in the
-> >   functionality is that the function now fails if after 20 sec (WAIT_CMD)
-> >   device is still busy (BUSY_STAT bit is set) while previously instead of
-> >   failing the function continued with checking for the correct device status
-> >   (which would give the device additional 10 usec to clear BUSY_STAT bit).
-> 
-> > * Remove stale comment for ide_config_drive_speed().
-> 
-> > * Remove duplicate comment for ide_wait_stat() from <linux/ide.h>.
-> 
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>     That's the way ide_config_drive_speed() works.
 
-added
+And I still think that's bad.
+
+> > It's not the case with 2.6.22 from my quick tests.
+> 
+>    Which means that PIO autotuning is broken there, i.e. that 
+> ide_config_drive_speed() not called from the driver's tuneproc() method.
+
+Yes, the driver uses it's own function which doesn't disable DMA
+permanently, which is, IMHO, the way to go. I consider the current
+behaviour a regression.
+
+> > The problem is that ide_config_drive_speed
+> > disables DMA, but only re-enables it when setting a DMA speed.
+> 
+>     It never "re-enables" DMA. ide_dma_host_on() method is not the same as 
+> ide_dma_on() which actually enables DMA.
+
+Ugh ? It re-enables DMA in the sense that if called to configure a DMA
+speed, it re-enables dma on the host, thus effectively leaving with DMA
+enabled.
+
+> > I think
+> > the whole idea of having a "current speed" is bogus here, we should have
+> > a separate current DMA speed and current PIO speed. We should be able to
+> > set the PIO timings without stopping DMA, toggling DMA is a separate
+> > affair.
+> 
+>     Agreed completely.
+
+Ah good :-)
+
+Cheers,
+Ben.
+
+
