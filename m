@@ -1,74 +1,115 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/4] ide: use only ->set_pio_mode method for programming PIO modes
-Date: Mon, 23 Jul 2007 23:52:30 +0200
-Message-ID: <200707232352.30381.bzolnier@gmail.com>
-References: <200707201226.13405.bzolnier@gmail.com> <46A4FA3B.2050300@ru.mvista.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: ide patches
+Date: Tue, 24 Jul 2007 08:00:25 +1000
+Message-ID: <1185228025.5439.139.camel@localhost.localdomain>
+References: <200707222019.03684.bzolnier@gmail.com>
+	 <1185155835.5439.91.camel@localhost.localdomain>
+	 <1185156084.5439.93.camel@localhost.localdomain>
+	 <200707232322.22129.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:19644 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382AbXGWVyz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2007 17:54:55 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so44277ugf
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2007 14:54:54 -0700 (PDT)
-In-Reply-To: <46A4FA3B.2050300@ru.mvista.com>
-Content-Disposition: inline
+Received: from gate.crashing.org ([63.228.1.57]:48274 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751548AbXGWWAc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Jul 2007 18:00:32 -0400
+In-Reply-To: <200707232322.22129.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Monday 23 July 2007, Sergei Shtylyov wrote:
-> Hello.
+On Mon, 2007-07-23 at 23:22 +0200, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
 > 
-> Bartlomiej Zolnierkiewicz wrote:
+> Thanks for reviewing and testing this patch series.
 > 
-> > Use ->set_pio_mode method to program PIO modes in ide_set_xfer_rate()
-> > (the only place which used ->speedproc to program PIO modes) and remove
-> > handling of PIO modes from all ->speedproc implementations.
+> On Monday 23 July 2007, Benjamin Herrenschmidt wrote:
+> > 
+> > > Ok, there's a combination of things here:
+> > > 
+> > >  - First, doing a set_pio from userland (hdparm -p XX) causes the kernel
+> > > to disable DMA, which I think is incorrect. It's not the case with
+> > > 2.6.22 from my quick tests. The problem is that ide_config_drive_speed
+> > > disables DMA, but only re-enables it when setting a DMA speed. I think
 > 
-> > There should be no functionality changes caused by this patch.
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > Index: b/drivers/ide/cris/ide-cris.c
-> > ===================================================================
-> > --- a/drivers/ide/cris/ide-cris.c
-> > +++ b/drivers/ide/cris/ide-cris.c
-> > @@ -724,11 +724,6 @@ static int speed_cris_ide(ide_drive_t *d
-> >  {
-> >  	int cyc = 0, dvs = 0, strobe = 0, hold = 0;
-> >  
-> > -	if (speed >= XFER_PIO_0 && speed <= XFER_PIO_4) {
-> > -		cris_set_pio_mode(drive, speed - XFER_PIO_0);
-> > -		return ide_config_drive_speed(drive, speed);
-> > -	}
-> > -
-> >  	switch(speed)
-> >  	{
-> >  		case XFER_UDMA_0:
-> > Index: b/drivers/ide/ide-lib.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-lib.c
-> > +++ b/drivers/ide/ide-lib.c
-> > @@ -398,6 +398,18 @@ int ide_set_xfer_rate(ide_drive_t *drive
-> >  
-> >  	rate = ide_rate_filter(drive, rate);
-> >  
-> > +	if (rate >= XFER_PIO_0 && rate <= XFER_PIO_5) {
-> > +		if (hwif->set_pio_mode)
-> > +			hwif->set_pio_mode(drive, rate - XFER_PIO_0);
-> 
->     BTW, why doesn it pass CF-specific PIO6? Not an issue now, but what the 
-> hell?  I'd suggest instead:
-> 
-> 	if (rate & XFER_PIO_0) {
+> The problem is that _many_ chipsets don't support separate PIO and DMA
+> timings so disabling DMA while programming chipset for PIO timings is a
+> necessity for them.
 
-Like you've said not an issue now and moreover the current code serves
-as a documentation that PIO6 is not supported. ;)
+Disabling while programming is fine with me. The problem is that we
+don't restore DMA after programming the PIO timings.
 
-Thanks,
-Bart
+Yes, but we still need to address it as it's a regression for ide-pmac
+when moving to the generic ide_config_drive_speed.
+
+> > >  - For some reason, nowadays, hdparm -p /dev/hda will not autotune, but
+> > > will set PIO 0 (hdparm -p 255 /dev/hda will autotune). Might be a bug in
+> > > whatever hdparm version I have here.
+> 
+> Since -p 255 works fine it would indicate a hdparm issue.
+
+Yup. All hdparm's around do that, I need to find out when it actually
+broke (if it did, but I -think- that early versions used to autotune
+with just -p).
+
+> > >  - Some userland scripts installed on debian as part of the pbbuttonsd
+> > > package are doing hdaprm -p /dev/device on all IDE devices at boot.
+> > 
+> > In the meantime, that patch applied on top of your latest series fixes
+> > the PIO setting in the driver to send the correct mode value in
+> 
+> Looks fine.
+> 
+> Could you please rebase it on top of the fixed "ide-pmac: PIO mode setup
+> fixes" patch, remove debugging printks and add description/Signed-off-by?
+
+Sure.
+
+> Also since the patch series has been tested please verify that your concerns
+> wrt patches #4, #8 and #10 are still valid.
+
+I've been using that weird machine without problems at boot, but I still
+need to test actual hotplug of the media bay, this is usually when the
+shit hits the fan. It's quite possible that some of the fixes you did to
+ide_config_drive_speed() (or other changes around) are also fixing that
+problem, it used to look a lot like a heisenbug back then. However, I'm
+still annoyed that with all current debian or ubuntu distro, you'll end
+up with DMA disabled at boot because of those pbbuttons scripts.
+
+> > pmac_ide_set_pio_mode(). I still object to your patch serie at this
+> > point because hdparm -p N should not, imho, cause DMA to be disabled.
+> 
+> If this change indeed causes some serious problem which breaks userland on
+> ppc (that can't be workarounded otherwise) we may add a new ->host_flags
+> flag and special hack to ide-io.c::do_special(), something like:
+> 
+> ...
+> 		int keep_dma = drive->using_dma;
+> ...
+> 			ide_set_pio(drive, req_pio);
+> ...
+> 		if (hwif->host_flags & IDE_HFLAG_SET_PIO_MODE_KEEP_DMA) {
+> 			if (keep_dma)
+> 				hwif->ide_dma_on(drive);
+> 		}
+> ...
+> 
+> which should preserve the old behavior.
+
+Yea, please.
+
+> I will respin patch #11 with necessary changes if needed.
+> 
+> > I really believe that the kernel should keep track separately of PIO and
+> > DMA speeds.
+> 
+> Agreed.
+
+Excellent, we all agree :-)
+
+Cheers,
+Ben.
+
+
