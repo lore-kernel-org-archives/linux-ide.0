@@ -1,80 +1,82 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_hpt37x: Fix 2.6.22 clock PLL regression
-Date: Tue, 24 Jul 2007 19:04:43 +0400
-Message-ID: <46A6150B.2030809@ru.mvista.com>
-References: <20070724151748.7e99f4f0@the-village.bc.nu>
+From: "Jordan Crouse" <jordan.crouse@amd.com>
+Subject: Re: drivers/ide/pci/cs5535.c: array overrun
+Date: Tue, 24 Jul 2007 09:59:52 -0600
+Message-ID: <20070724155952.GA13874@cosmic.amd.com>
+References: <06FDA0246543E443ABBB36B1FCD5CC0603CF3360@SAUSEXMB2.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="PEIAKu/WMn1b1Hv9"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:13184 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750903AbXGXPCn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Jul 2007 11:02:43 -0400
-In-Reply-To: <20070724151748.7e99f4f0@the-village.bc.nu>
+Received: from outbound-sin.frontbridge.com ([207.46.51.80]:17120 "EHLO
+	outbound3-sin-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754270AbXGXQAF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jul 2007 12:00:05 -0400
+In-Reply-To: <20070724124524.GA6019@stusta.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: bunk@stusta.de
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
 
-Alan Cox wrote:
+--PEIAKu/WMn1b1Hv9
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
-> 	Just one version of Linux ago
-> 	The PLL code broke - oh no!
-> 	But set the right mode
-> 	And fix up the code
-> 	Makes the PLL timing sync go
+> The Coverity checker spotted the following array overrun in 
+> drivers/ide/pci/cs5535.c:
 
-/me applauds :-)
+<-- snip -->
 
-> Closes-bug: #8791
-> Signed-off-by: Alan Cox <alan@redhat.com>
+>	if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7)
+>		reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Fix is attached.  Somebody got overzealous - the 5535 only supports
+up to UDMA4, which matches the array.
 
-    However, I found it strange that HPT374 against which was that bug report 
-works with 66 MHz DPLL clock -- while I've recently forbidden that clock in 
-the IDE driver because it was causing DMA timeouts.
+Jordan
+-- 
+Jordan Crouse
+Systems Software Development Engineer 
+Advanced Micro Devices, Inc.
 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1/drivers/ata/pata_hpt37x.c linux-2.6.23rc1/drivers/ata/pata_hpt37x.c
-> --- linux.vanilla-2.6.23rc1/drivers/ata/pata_hpt37x.c	2007-07-23 12:56:11.000000000 +0100
-> +++ linux-2.6.23rc1/drivers/ata/pata_hpt37x.c	2007-07-23 14:44:39.000000000 +0100
-> @@ -26,7 +26,7 @@
->  #include <linux/libata.h>
->  
->  #define DRV_NAME	"pata_hpt37x"
-> -#define DRV_VERSION	"0.6.6"
-> +#define DRV_VERSION	"0.6.7"
->  
->  struct hpt_clock {
->  	u8	xfer_speed;
-> @@ -1103,17 +1103,17 @@
->  
->  		/* Select the DPLL clock. */
->  		pci_write_config_byte(dev, 0x5b, 0x21);
-> -		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
-> +		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
+--PEIAKu/WMn1b1Hv9
+Content-Type: text/x-diff;
+ charset=us-ascii
+Content-Disposition: inline;
+ filename=5535-fix-overrun.patch
+Content-Transfer-Encoding: 7bit
 
-    Heh, was quite a silly mistake. :-)
+[PATCH] Fix an ovverun found in the 5535 IDE driver
 
- >  		for(adjust = 0; adjust < 8; adjust++) {
- >  			if (hpt37x_calibrate_dpll(dev))
- >  				break;
- >  			/* See if it'll settle at a fractionally different clock */
- > -			if ((adjust & 3) == 3) {
- > -				f_low --;
- > -				f_high ++;
- > -			}
- > -			pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
- > +			if (adjust & 1)
- > +				f_low -= adjust >> 1;
- > +			else
- > +				f_high += adjust >> 1;
- > +			pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
+From: Jordan Crouse <jordan.crouse@amd.com>
 
-    OK, I'm seeing that the "oldie but goodie" calibration algrithm has 
-finally found its way to the libata driver too. :-)
+As found by the Coverity checker, and reported by Adrian Bunk, this
+fixes a overrun error in the 5535 IDE driver.  Somebody got a little
+excited with the if() statement - the 5535 only supports UDMA 0-4.
 
-MBR, Sergei
+Signed-off-by: Jordan Crouse <jordan.crouse@amd.com>
+---
+
+ drivers/ide/pci/cs5535.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ide/pci/cs5535.c b/drivers/ide/pci/cs5535.c
+index ce44e38..9bd526d 100644
+--- a/drivers/ide/pci/cs5535.c
++++ b/drivers/ide/pci/cs5535.c
+@@ -116,7 +116,7 @@ static void cs5535_set_speed(ide_drive_t *drive, u8 speed)
+ 
+ 		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
+ 
+-		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7)
++		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_4)
+ 			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
+ 		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2)
+ 			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
+
+--PEIAKu/WMn1b1Hv9--
+
+
