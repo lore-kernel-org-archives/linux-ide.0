@@ -1,82 +1,229 @@
-From: "Jordan Crouse" <jordan.crouse@amd.com>
-Subject: Re: drivers/ide/pci/cs5535.c: array overrun
-Date: Tue, 24 Jul 2007 09:59:52 -0600
-Message-ID: <20070724155952.GA13874@cosmic.amd.com>
-References: <06FDA0246543E443ABBB36B1FCD5CC0603CF3360@SAUSEXMB2.amd.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="PEIAKu/WMn1b1Hv9"
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [2.6.23-rc1] ata_piix: EH pending after completion, repeating EH (cnt=4)
+Date: Tue, 24 Jul 2007 20:36:38 +0200 (MEST)
+Message-ID: <200707241836.l6OIacth016478@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-sin.frontbridge.com ([207.46.51.80]:17120 "EHLO
-	outbound3-sin-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754270AbXGXQAF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jul 2007 12:00:05 -0400
-In-Reply-To: <20070724124524.GA6019@stusta.de>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:44183 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752178AbXGXSgn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Jul 2007 14:36:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bunk@stusta.de
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
+On Tue, 24 Jul 2007 17:32:29 +0900, Tejun Heo wrote:
+>Mikael Pettersson wrote:
+>> This machine has a known good Samsung SATA DVD on ICH8 [8086:2820].
+>> With kernel 2.6.23-rc1 I now get the following:
+>> 
+>>> ata_piix 0000:00:1f.2: version 2.11
+>>> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+>>> ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+>>> PCI: Setting latency timer of device 0000:00:1f.2 to 64
+>>> scsi2 : ata_piix
+>>> scsi3 : ata_piix
+>>> ata3: SATA max UDMA/133 cmd 0x0001ec00 ctl 0x0001e882 bmdma 0x0001e400 irq 19
+>>> ata4: SATA max UDMA/133 cmd 0x0001e800 ctl 0x0001e482 bmdma 0x0001e408 irq 19
+>>> ata4.00: ATAPI: TSSTcorpCD/DVDW SH-S183A, SB00, max UDMA/33
+>>> ata4.00: applying bridge limits
+>>> ata4.00: configured for UDMA/33
+>>> ata4: EH pending after completion, repeating EH (cnt=4)
+>>> scsi 3:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S183A SB00 PQ: 0 ANSI: 5
+>> 
+>> The "EH pending after completion" is new and did not occur with 2.6.22.
+>> Apart from that message, things seem fine.
+>
+>Hmmm... That means someone requested EH while EH was in progress.
+>Weird.  Can you apply the attached patch and report what the kernel
+>says?  Thanks.
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain;
- charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
+Here it is. As you can see from the traces, the machine also has a
+pdc20269 controller driven by pata_pdc2027x.
 
-> The Coverity checker spotted the following array overrun in 
-> drivers/ide/pci/cs5535.c:
-
-<-- snip -->
-
->	if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7)
->		reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
-
-Fix is attached.  Somebody got overzealous - the 5535 only supports
-up to UDMA4, which matches the array.
-
-Jordan
--- 
-Jordan Crouse
-Systems Software Development Engineer 
-Advanced Micro Devices, Inc.
-
---PEIAKu/WMn1b1Hv9
-Content-Type: text/x-diff;
- charset=us-ascii
-Content-Disposition: inline;
- filename=5535-fix-overrun.patch
-Content-Transfer-Encoding: 7bit
-
-[PATCH] Fix an ovverun found in the 5535 IDE driver
-
-From: Jordan Crouse <jordan.crouse@amd.com>
-
-As found by the Coverity checker, and reported by Adrian Bunk, this
-fixes a overrun error in the 5535 IDE driver.  Somebody got a little
-excited with the if() statement - the 5535 only supports UDMA 0-4.
-
-Signed-off-by: Jordan Crouse <jordan.crouse@amd.com>
----
-
- drivers/ide/pci/cs5535.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ide/pci/cs5535.c b/drivers/ide/pci/cs5535.c
-index ce44e38..9bd526d 100644
---- a/drivers/ide/pci/cs5535.c
-+++ b/drivers/ide/pci/cs5535.c
-@@ -116,7 +116,7 @@ static void cs5535_set_speed(ide_drive_t *drive, u8 speed)
- 
- 		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
- 
--		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7)
-+		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_4)
- 			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
- 		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2)
- 			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
-
---PEIAKu/WMn1b1Hv9--
-
-
+pata_pdc2027x 0000:04:02.0: version 0.9
+ACPI: PCI Interrupt 0000:04:02.0[A] -> GSI 23 (level, low) -> IRQ 18
+pata_pdc2027x 0000:04:02.0: PLL input clock 16651 kHz
+scsi0 : pata_pdc2027x
+scsi1 : pata_pdc2027x
+ata1: PATA max UDMA/133 cmd 0xf88297c0 ctl 0xf8829fda bmdma 0xf8829000 irq 18
+ata2: PATA max UDMA/133 cmd 0xf88295c0 ctl 0xf8829dda bmdma 0xf8829008 irq 18
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c022c780>] ata_interrupt+0x0/0x200
+ [<c022be59>] ata_host_activate+0x79/0x90
+ [<c02342ba>] pdc2027x_init_one+0x23a/0x2d0
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<c032b830>] kernel_init+0x140/0x310
+ [<c0102a12>] ret_from_fork+0x6/0x1c
+ [<c032b6f0>] kernel_init+0x0/0x310
+ [<c032b6f0>] kernel_init+0x0/0x310
+ [<c0103717>] kernel_thread_helper+0x7/0x10
+ =======================
+ata1: soft resetting port
+ata1.00: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+ata1.00: 625142448 sectors, multi 16: LBA48 
+ata1.00: configured for UDMA/100
+ata1: EH complete
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c022c780>] ata_interrupt+0x0/0x200
+ [<c022be59>] ata_host_activate+0x79/0x90
+ [<c02342ba>] pdc2027x_init_one+0x23a/0x2d0
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<c032b830>] kernel_init+0x140/0x310
+ [<c0102a12>] ret_from_fork+0x6/0x1c
+ [<c032b6f0>] kernel_init+0x0/0x310
+ [<c032b6f0>] kernel_init+0x0/0x310
+ [<c0103717>] kernel_thread_helper+0x7/0x10
+ =======================
+ata2: soft resetting port
+ata2: EH complete
+scsi 0:0:0:0: Direct-Access     ATA      ST3320620A       3.AA PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 >
+sd 0:0:0:0: [sda] Attached SCSI disk
+PNP: PS/2 Controller [PNP0303:PS2K,PNP0f03:PS2M] at 0x60,0x64 irq 1,12
+serio: i8042 KBD port at 0x60,0x64 irq 1
+serio: i8042 AUX port at 0x60,0x64 irq 12
+mice: PS/2 mouse device common for all mice
+input: AT Translated Set 2 keyboard as /class/input/input0
+input: PC Speaker as /class/input/input1
+input: ImExPS/2 Generic Explorer Mouse as /class/input/input2
+TCP cubic registered
+NET: Registered protocol family 1
+Testing NMI watchdog ... OK.
+Starting balanced_irq
+Using IPI Shortcut mode
+Freeing unused kernel memory: 212k freed
+ata_piix 0000:00:1f.2: version 2.11
+ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+scsi2 : ata_piix
+scsi3 : ata_piix
+ata3: SATA max UDMA/133 cmd 0x0001ec00 ctl 0x0001e882 bmdma 0x0001e400 irq 19
+ata4: SATA max UDMA/133 cmd 0x0001e800 ctl 0x0001e482 bmdma 0x0001e408 irq 19
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c02308dd>] ata_pci_init_one+0x12d/0x250
+ [<f8822580>] piix_init_one+0x1d0/0x540 [ata_piix]
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<f8834014>] piix_init+0x14/0x26 [ata_piix]
+ [<c0139fc6>] sys_init_module+0x126/0x1860
+ [<c0113f54>] do_page_fault+0x484/0x670
+ [<c0227370>] ata_port_start+0x0/0x70
+ [<c0102b2e>] syscall_call+0x7/0xb
+ [<c0290000>] rtmsg_fib+0xb0/0x180
+ =======================
+ata3: soft resetting port
+ata3: EH complete
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c02308dd>] ata_pci_init_one+0x12d/0x250
+ [<f8822580>] piix_init_one+0x1d0/0x540 [ata_piix]
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<f8834014>] piix_init+0x14/0x26 [ata_piix]
+ [<c0139fc6>] sys_init_module+0x126/0x1860
+ [<c0113f54>] do_page_fault+0x484/0x670
+ [<c0227370>] ata_port_start+0x0/0x70
+ [<c0102b2e>] syscall_call+0x7/0xb
+ [<c0290000>] rtmsg_fib+0xb0/0x180
+ =======================
+ata4: soft resetting port
+ata4.00: ATAPI: TSSTcorpCD/DVDW SH-S183A, SB00, max UDMA/33
+ata4.00: applying bridge limits
+ata4.00: configured for UDMA/33
+ata4: EH pending after completion, repeating EH (cnt=4)
+ata4: EH complete
+scsi 3:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S183A SB00 PQ: 0 ANSI: 5
+ata_piix 0000:00:1f.5: MAP [ P0 P2 P1 P3 ]
+ACPI: PCI Interrupt 0000:00:1f.5[B] -> GSI 19 (level, low) -> IRQ 19
+PCI: Setting latency timer of device 0000:00:1f.5 to 64
+scsi4 : ata_piix
+scsi5 : ata_piix
+ata5: SATA max UDMA/133 cmd 0x0001d400 ctl 0x0001d082 bmdma 0x0001c880 irq 19
+ata6: SATA max UDMA/133 cmd 0x0001d000 ctl 0x0001cc02 bmdma 0x0001c888 irq 19
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c02308dd>] ata_pci_init_one+0x12d/0x250
+ [<f8822580>] piix_init_one+0x1d0/0x540 [ata_piix]
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<f8834014>] piix_init+0x14/0x26 [ata_piix]
+ [<c0139fc6>] sys_init_module+0x126/0x1860
+ [<c0113f54>] do_page_fault+0x484/0x670
+ [<c0227370>] ata_port_start+0x0/0x70
+ [<c0102b2e>] syscall_call+0x7/0xb
+ [<c0290000>] rtmsg_fib+0xb0/0x180
+ =======================
+ata5: soft resetting port
+ata5: EH complete
+EH scheduled with LOADING set
+ [<c022bd0e>] ata_host_register+0x1ee/0x2c0
+ [<c02308dd>] ata_pci_init_one+0x12d/0x250
+ [<f8822580>] piix_init_one+0x1d0/0x540 [ata_piix]
+ [<c01cda96>] pci_device_probe+0x56/0x80
+ [<c020e4a8>] driver_probe_device+0x88/0x190
+ [<c0296355>] klist_next+0x55/0xb0
+ [<c020e6fa>] __driver_attach+0x7a/0x80
+ [<c020d8ba>] bus_for_each_dev+0x3a/0x60
+ [<c020e326>] driver_attach+0x16/0x20
+ [<c020e680>] __driver_attach+0x0/0x80
+ [<c020dc7a>] bus_add_driver+0x8a/0x1b0
+ [<c01cdc46>] __pci_register_driver+0x56/0x90
+ [<f8834014>] piix_init+0x14/0x26 [ata_piix]
+ [<c0139fc6>] sys_init_module+0x126/0x1860
+ [<c0113f54>] do_page_fault+0x484/0x670
+ [<c0227370>] ata_port_start+0x0/0x70
+ [<c0102b2e>] syscall_call+0x7/0xb
+ [<c0290000>] rtmsg_fib+0xb0/0x180
+ =======================
+ata6: soft resetting port
+ata6: EH complete
