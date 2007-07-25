@@ -1,39 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata problem or hard drive failure?
-Date: Wed, 25 Jul 2007 20:22:03 +0100
-Message-ID: <20070725202203.41d2092c@the-village.bc.nu>
-References: <11718197.1185389096527.JavaMail.root@eastrmwml27.mgt.cox.net>
+From: Scott Wood <scottwood@freescale.com>
+Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver
+Date: Wed, 25 Jul 2007 14:17:41 -0500
+Message-ID: <46A7A1D5.7020003@freescale.com>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain> <46A79DE0.8060405@ru.mvista.com> <46A79F14.9040409@freescale.com> <46A7A17C.8090505@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49404 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935476AbXGYTPI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 15:15:08 -0400
-In-Reply-To: <11718197.1185389096527.JavaMail.root@eastrmwml27.mgt.cox.net>
+Received: from az33egw01.freescale.net ([192.88.158.102]:52664 "EHLO
+	az33egw01.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759490AbXGYTRx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 15:17:53 -0400
+In-Reply-To: <46A7A17C.8090505@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: cyrix12@cox.net
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Vitaly Bordug <vitb@kernel.crashing.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-> ata2: port is slow to respond, please be patient (Status 0xff)
-> ata2: device not ready (errno=-16), forcing hardreset
-> ata2: SRST failed (errno=-19)
-> ata2: reset failed (errno=-19), retrying in 10 secs
-
-Basically "hello ?" "hello ?" , and no response
-
-> According to smart the last time I had the drive available to the system, there is nothing wrong with the drive.  I ran bad block scans on the drive a couple days ago and come up with nothing.  It only stopped being detected today.  Prior to this, it would die at random with something like the following in my logs:
+Sergei Shtylyov wrote:
+>> It doesn't buy us anything in here, but it's conceivable that someone 
+>> may want to write a driver that uses a shift in the I/O accessor 
+>> rather than an array of port offsets,
 > 
-> Jul 23 06:34:15 [kernel] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> Jul 23 06:34:15 [kernel] ata4.00: (BMDMA stat 0x24)
-> Jul 23 06:34:15 [kernel] ata4.00: cmd 25/00:08:9f:9a:6b/00:00:32:00:00/e0 tag 0 cdb 0x0 data 4096 in
-> Jul 23 06:34:15 [kernel]          res 51/40:08:9f:9a:6b/40:00:32:00:00/e0 Emask 0x9 (media error)
+> 
+>    It wouldn't be IDE driver then, and neither it would be libata which 
+> also does this another way this (despite pata_platform uses shifts too 
+> -- not in the accessors, so no speed loss).
 
-Bad blocks and then fell off the bus by the look of the rest of the trace.
+The device tree is not just for Linux.
 
-It was the drive which said media error not us so I would be very
-suspicious of the drive as a starting point.
+>> equivalent of the cntlzw innstruction, and shift makes it clear that 
+>> the stride must be power-of-two).  Plus, using shift is consistent 
+>> with what we do on ns16550.
+> 
+> 
+>    Why the heck should we care about the UART code taling about IDE?!
 
-Alan
+Consistency?
+
+>    So, let me consider your argument purely speculative and invalid. ;-)
+
+Consider it whatever you want. :-)
+
+-Scott
