@@ -1,54 +1,40 @@
-From: Albert Lee <albertcc@tw.ibm.com>
+From: Vasily Averin <vvs@sw.ru>
 Subject: Re: unexpected scsi timeout
-Date: Wed, 25 Jul 2007 13:50:28 +0800
-Message-ID: <46A6E4A4.6080608@tw.ibm.com>
-References: <46A0A462.2090407@sw.ru> <46A5B632.8040201@gmail.com> <46A5CF7B.40102@sw.ru>
-Reply-To: albertl@mail.com
+Date: Wed, 25 Jul 2007 14:36:46 +0700
+Message-ID: <46A6FD8E.7090803@sw.ru>
+References: <46A0A462.2090407@sw.ru> <46A5B632.8040201@gmail.com> <46A5CF7B.40102@sw.ru> <46A6E4A4.6080608@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:60415 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbXGYFup (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 01:50:45 -0400
-In-Reply-To: <46A5CF7B.40102@sw.ru>
+Received: from mailhub.sw.ru ([195.214.233.200]:35803 "EHLO relay.sw.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753914AbXGYHhO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jul 2007 03:37:14 -0400
+In-Reply-To: <46A6E4A4.6080608@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vasily Averin <vvs@sw.ru>
+To: albertl@mail.com
 Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devel@openvz.org
 
-Vasily Averin wrote:
-> Tejun Heo wrote:
+Albert Lee wrote:
+>>> Vasily Averin wrote:
+>>>> I've noticed that some scsi commands for DVD-drive attached to pata_via
+>>>> successfully finishes without any delays but reports about TIMEOUT condition. It
+>>>> happens because of ATA_ERR bit is set in status register. As result for each
+>>>> command  Error Handler thread awakened, requests sense buffer and go to sleep again.
+>>> Need more info.  Please post boot dmesg and the result of 'lspci -nn'
+>>> and 'hdparm -I /dev/srX' and when such errors occur.
 > 
->>[cc'ing Albert]
->>
->>Vasily Averin wrote:
->>
->>>Tejun, Jeff
->>>
->>>I've noticed that some scsi commands for DVD-drive attached to pata_via
->>>successfully finishes without any delays but reports about TIMEOUT condition. It
->>>happens because of ATA_ERR bit is set in status register. As result for each
->>>command  Error Handler thread awakened, requests sense buffer and go to sleep again.
->>
->>Need more info.  Please post boot dmesg and the result of 'lspci -nn'
->>and 'hdparm -I /dev/srX' and when such errors occur.
-> 
-> 
-> It was 2.6.22 kernel with pata_via and sata_via drivers, scsi and cdrom debug
-> was temporally enabled via sysctl (please see logs near Jul 24 13:42:46 timestamp)
-> 
-> Btw. I'm not sure that it was an error, I've looked on the sources and IMHO it's
-> normal command processing cdrom without disk inserted into drive. I've checked
-> 2.6.19, 2.6.20 and 2.6.22 kernels and got the same behavior.
-> 
+> Your log looks ok. It's normal for TEST_UNIT_READY to return ATA_ERR when no disc
+> inside and libata EH triggered to request sense.
 
-Hi Vasily,
+It's a bit strange for me, IMHO other scsi drivers requests sense buffer without
+EH thread assistance.
+Currently we know that ATA_ERR can be returned; it is not error, but one of
+expected responses. Why we cannot request sense without EH? I would like to
+understand is it implementation drawback or I missed something probably?
 
-Your log looks ok. It's normal for TEST_UNIT_READY to return ATA_ERR when no disc
-inside and libata EH triggered to request sense.
-
---
-albert
+Thank you,
+	Vasily Averin
 
