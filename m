@@ -1,47 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver
-Date: Wed, 25 Jul 2007 23:35:00 +0400
-Message-ID: <46A7A5E4.4090105@ru.mvista.com>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain> <46A79DE0.8060405@ru.mvista.com> <46A79F14.9040409@freescale.com> <46A7A17C.8090505@ru.mvista.com> <46A7A1D5.7020003@freescale.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver (was: MMIO IDE driver)
+Date: Wed, 25 Jul 2007 21:37:26 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0707252130090.6234@poirot.grange>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S936030AbXGYTd1@vger.kernel.org>
-In-Reply-To: <46A7A1D5.7020003@freescale.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Scott Wood <scottwood@freescale.com>
-Cc: Vitaly Bordug <vitb@kernel.crashing.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:45912 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1763206AbXGYTha (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jul 2007 15:37:30 -0400
+In-Reply-To: <20070725165318.5331.23795.stgit@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Vitaly Bordug <vitb@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-Scott Wood wrote:
+On Wed, 25 Jul 2007, Vitaly Bordug wrote:
 
->>> It doesn't buy us anything in here, but it's conceivable that someone 
->>> may want to write a driver that uses a shift in the I/O accessor 
->>> rather than an array of port offsets,
+> 
+> This is now very similar to pata_platform.c, they both use
+> same platform data structure and same resources.
+> 
+> To achieve that, byte_lanes_swapping platform data variable
+> and platform specified iops removed from that driver. It's fine,
+> since those were never used anyway.
+> 
+> pata_platform and ide_platform are carrying same driver names,
+> to easily switch between these drivers, without need to touch
+> platform code.
 
->>    It wouldn't be IDE driver then, and neither it would be libata 
->> which also does this another way this (despite pata_platform uses 
->> shifts too -- not in the accessors, so no speed loss).
+Why? There's a drivers/ide/arm/ide_arm.c IDe driver that some platforms 
+(not in the mainline) hack to access, e.g., CF cards in true-IDE mode. 
+About a month ago I submitted a patch to arm-linux-kernel switching that 
+driver to using platform-device. I got a reply, that it's not worth it now 
+that IDE is slowly becoming obsolete, and the pata_platform serves the 
+perpose perfectly well. I found this argument reasonable, I had the same 
+doubt, just wanted to double-check. So, why do we now need a new legacy 
+(a/drivers/ide/legacy/ide_platform.c) driver when a "modern" driver 
+exists?
 
-> The device tree is not just for Linux.
-
-    Yeah, and I can't wait to see some other its users. ;-)
-    This doesn't mean that shift is better anyway. If everyone considers it 
-better, I give up. But be warned that shift (stride) is not the only property 
-characterizing register accesses -- the regs might be only accessible as 
-16/32-bit quantities, for example (16-bit is a real world example -- from 
-Amiga or smth of that sort, IIRC).
-
->>> equivalent of the cntlzw innstruction, and shift makes it clear that 
->>> the stride must be power-of-two).  Plus, using shift is consistent 
->>> with what we do on ns16550.
-
->>    Why the heck should we care about the UART code taling about IDE?!
-
-> Consistency?
-
-    We're not obliged to be consistent with every piece of the kernel code.
-
-> -Scott
-
-MBR, Sergei
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
