@@ -1,58 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver (was: MMIO IDE driver)
-Date: Wed, 25 Jul 2007 23:16:12 +0400
-Message-ID: <46A7A17C.8090505@ru.mvista.com>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain>
-	<46A79DE0.8060405@ru.mvista.com> <46A79F14.9040409@freescale.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata problem or hard drive failure?
+Date: Wed, 25 Jul 2007 20:22:03 +0100
+Message-ID: <20070725202203.41d2092c@the-village.bc.nu>
+References: <11718197.1185389096527.JavaMail.root@eastrmwml27.mgt.cox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <46A79F14.9040409@freescale.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Scott Wood <scottwood@freescale.com>
-Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49404 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S935476AbXGYTPI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 15:15:08 -0400
+In-Reply-To: <11718197.1185389096527.JavaMail.root@eastrmwml27.mgt.cox.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: cyrix12@cox.net
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+> ata2: port is slow to respond, please be patient (Status 0xff)
+> ata2: device not ready (errno=-16), forcing hardreset
+> ata2: SRST failed (errno=-19)
+> ata2: reset failed (errno=-19), retrying in 10 secs
 
-Scott Wood wrote:
+Basically "hello ?" "hello ?" , and no response
 
->>> +    hwif->hw.io_ports[IDE_DATA_OFFSET] = port;
->>> +
->>> +    port += (1 << pdata->ioport_shift);
->>> +    for (i = IDE_ERROR_OFFSET; i <= IDE_STATUS_OFFSET;
->>> +         i++, port += (1 << pdata->ioport_shift))
->>
->>
->>
->>     Looks like shift doesn't buy as anything, why not just use stride?
+> According to smart the last time I had the drive available to the system, there is nothing wrong with the drive.  I ran bad block scans on the drive a couple days ago and come up with nothing.  It only stopped being detected today.  Prior to this, it would die at random with something like the following in my logs:
+> 
+> Jul 23 06:34:15 [kernel] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+> Jul 23 06:34:15 [kernel] ata4.00: (BMDMA stat 0x24)
+> Jul 23 06:34:15 [kernel] ata4.00: cmd 25/00:08:9f:9a:6b/00:00:32:00:00/e0 tag 0 cdb 0x0 data 4096 in
+> Jul 23 06:34:15 [kernel]          res 51/40:08:9f:9a:6b/40:00:32:00:00/e0 Emask 0x9 (media error)
 
-> It doesn't buy us anything in here, but it's conceivable that someone 
-> may want to write a driver that uses a shift in the I/O accessor rather 
-> than an array of port offsets,
+Bad blocks and then fell off the bus by the look of the rest of the trace.
 
-    It wouldn't be IDE driver then, and neither it would be libata which also 
-does this another way this (despite pata_platform uses shifts too -- not in 
-the accessors, so no speed loss).
+It was the drive which said media error not us so I would be very
+suspicious of the drive as a starting point.
 
-> and it's easier to convert a shift to a stride than the other way around
- > (not all architectures have an
-> equivalent of the cntlzw innstruction, and shift makes it clear that the 
-> stride must be power-of-two).  Plus, using shift is consistent with what 
-> we do on ns16550.
-
-    Why the heck should we care about the UART code taling about IDE?!
-    So, let me consider your argument purely speculative and invalid. ;-)
-
-> -Scott
-
-WBR, Sergei
+Alan
