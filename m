@@ -1,60 +1,81 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: unexpected scsi timeout
-Date: Wed, 25 Jul 2007 09:06:41 -0400
-Message-ID: <1185368801.3501.5.camel@localhost.localdomain>
-References: <46A0A462.2090407@sw.ru> <46A5B632.8040201@gmail.com>
-	 <46A5CF7B.40102@sw.ru> <46A6E4A4.6080608@tw.ibm.com>
-	 <46A6FD8E.7090803@sw.ru>  <46A6FEED.2050403@gmail.com>
+From: Len Brown <lenb@kernel.org>
+Subject: Re: Time Problems with 2.6.23-rc1-gf695baf2
+Date: Wed, 25 Jul 2007 12:50:22 -0400
+Message-ID: <200707251250.22469.lenb@kernel.org>
+References: <20070723221630.GA28951@alice> <6bffcb0e0707241614s7b563b5bu114d2ecb227b1557@mail.gmail.com> <20070725113349.GB5469@alice>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:33707 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756706AbXGYNGp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 09:06:45 -0400
-In-Reply-To: <46A6FEED.2050403@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:41578 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763981AbXGYQvO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jul 2007 12:51:14 -0400
+In-Reply-To: <20070725113349.GB5469@alice>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Vasily Averin <vvs@sw.ru>, albertl@mail.com, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devel@openvz.org
+To: Eric Sesterhenn / Snakebyte <snakebyte@gmx.de>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-acpi@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>
 
-On Wed, 2007-07-25 at 16:42 +0900, Tejun Heo wrote:
-> Vasily Averin wrote:
-> > Albert Lee wrote:
-> >>>> Vasily Averin wrote:
-> >>>>> I've noticed that some scsi commands for DVD-drive attached to pata_via
-> >>>>> successfully finishes without any delays but reports about TIMEOUT condition. It
-> >>>>> happens because of ATA_ERR bit is set in status register. As result for each
-> >>>>> command  Error Handler thread awakened, requests sense buffer and go to sleep again.
-> >>>> Need more info.  Please post boot dmesg and the result of 'lspci -nn'
-> >>>> and 'hdparm -I /dev/srX' and when such errors occur.
-> >> Your log looks ok. It's normal for TEST_UNIT_READY to return ATA_ERR when no disc
-> >> inside and libata EH triggered to request sense.
+On Wednesday 25 July 2007 07:33, Eric Sesterhenn / Snakebyte wrote:
+> * Michal Piotrowski (michal.k.k.piotrowski@gmail.com) wrote:
+> >  On 24/07/07, Eric Sesterhenn / Snakebyte <snakebyte@gmx.de> wrote:
+> > > see second 13 to 510, after pressing it about ten
+> > > times, it continues booting.
 > > 
-> > It's a bit strange for me, IMHO other scsi drivers requests sense buffer without
-> > EH thread assistance.
-> > Currently we know that ATA_ERR can be returned; it is not error, but one of
-> > expected responses. Why we cannot request sense without EH? I would like to
-> > understand is it implementation drawback or I missed something probably?
+> >  Probing IDE interface...
+> > 
+> >  [   13.867939] VP_IDE: VIA vt82c686a (rev 22) IDE UDMA66 controller on
+> >  pci0000:00:04.1
+> >  [   13.868062]     ide0: BM-DMA at 0xd800-0xd807, BIOS settings:
+> >  hda:DMA, hdb:pio
+> >  [   13.868268]     ide1: BM-DMA at 0xd808-0xd80f, BIOS settings:
+> >  hdc:DMA, hdd:DMA
+> >  [   13.868574] Probing IDE interface ide0...
+> >  [  387.279576] Clocksource tsc unstable (delta = 370195339890 ns)
+> >  [  496.200082] hda: ST340823A, ATA DISK drive
+> >  [  510.264511] hda: selected mode 0x44
+> >  [  510.264826] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> > 
+> >  Could you please try to revert these commits
+> > 
+> >  commit 4099d14322149c7a467e4997b87be4ba8eb78697
+> >  commit 6a824c92db4d606c324272c4eed366fb71672440
+> >  commit a5d8c5c834d3cabf4b7b477c3f6ee923c25026fc
 > 
-> That was a design choice.  It's easier to implement that way.
+> reverting these commits didnt change anything at all,
+> booting with acpi=off resolved the issue, so i guess it is
+> an acpi problem after all.
 
-And just so we're clear what SCSI allows:
+Maybe yes, maybe no.
 
-On ordinary SCSI devices, when the device goes into a check condition
-state, it won't accept any more commands until it sees a request sense.
-For SCSI devices this can be a problem (because there are several
-thousand sense conditions, some of which correspond to everything's
-alright), so a large number of SCSI drivers implement auto request sense
-emulation, which means that in the driver, as soon as they see the check
-condition, they immediately send a REQUEST SENSE command to pick up the
-sense code (minimising the time the device is blocked).
+> > > > [   13.506890] ACPI Exception (processor_throttling-0084): AE_NOT_FOUND, Evaluating _PTC [20070126]
+> > > > [   13.507101] ACPI Exception (processor_throttling-0147): AE_NOT_FOUND, Evaluating _TSS [20070126]
 
-For drivers that don't want to implement this (and we have a few in
-SCSI) the alternative mechanism is to have the eh thread collect the
-sense data.  This is the route libata has chosen.
+Note that these are just noise -- new code being verbose when looking for an optional feature.
 
-James
+The fact that hitting the power button a bunch of times
+to make the system move along suggests some sort of missing interrupt problem --
+most likely the timer itself.
 
+[   13.868574] Probing IDE interface ide0...
+[  387.279576] Clocksource tsc unstable (delta = 370195339890 ns)
 
+5-minutes -- a long probe:-)
+
+> CONFIG_NO_HZ=y
+
+does CONFIG_NO_HZ=n make a difference?
+
+> CONFIG_HIGH_RES_TIMERS=y
+
+does CONFIG_HIGH_RES_TIMERS=n make a difference?
+
+does "irqpoll" make any difference?
+does "notsc" make any difference?
+does "idle=poll" make any difference?
+
+cheers,
+-Len
