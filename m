@@ -1,28 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver (was: MMIO IDE driver)
-Date: Wed, 25 Jul 2007 18:43:12 +0100
-Message-ID: <20070725184312.44ca7a8c@the-village.bc.nu>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] [POWERPC] MPC8349E-mITX: use platform IDE driver
+ for CF	interface
+Date: Wed, 25 Jul 2007 21:54:07 +0400
+Message-ID: <46A78E3F.1030904@ru.mvista.com>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain>	<20070725165326.5331.19920.stgit@localhost.localdomain> <46A78322.3080607@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40842 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932214AbXGYRg0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2007 13:36:26 -0400
-In-Reply-To: <20070725165318.5331.23795.stgit@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933822AbXGYRwU@vger.kernel.org>
+In-Reply-To: <46A78322.3080607@ru.mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+List-Id: linux-ide@vger.kernel.org
 
-> pata_platform and ide_platform are carrying same driver names,
-> to easily switch between these drivers, without need to touch
-> platform code.
-> 
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
-> Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+Hello, I wrote:
 
-Acked-by: Alan Cox <alan@redhat.com>
+>>diff --git a/arch/powerpc/boot/dts/mpc8349emitx.dts b/arch/powerpc/boot/dts/mpc8349emitx.dts
+>>index db0d003..f8f0e8a 100644
+>>--- a/arch/powerpc/boot/dts/mpc8349emitx.dts
+>>+++ b/arch/powerpc/boot/dts/mpc8349emitx.dts
+>>@@ -37,6 +37,15 @@
+>> 		reg = <00000000 10000000>;
+>> 	};
+>> 
+>>+	ide@f0000000 {
+>>+		compatible = "mmio-ide";
+>>+		device_type = "ide";
 
+>     Why not "ata"?
+
+    Also, what mmio-ide in the compat properly means in the context of 
+ide_platform which is able to handle both port and memory mapped IDE. I think 
+we must get rid with this crap, and since this IDE register mapping is pretty 
+much board specific, call it something like "mpc8349emitx-ide" instead.
+
+MBR, Sergei
