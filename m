@@ -1,58 +1,38 @@
-From: Vitaly Bordug <vitb@kernel.crashing.org>
-Subject: Re: [PATCH 2/2] [POWERPC] MPC8349E-mITX: use platform IDE driver
- for CF	interface
-Date: Thu, 26 Jul 2007 21:21:18 +0400
-Message-ID: <20070726212118.7fe7abd3@localhost.localdomain>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain>
-	<20070725165326.5331.19920.stgit@localhost.localdomain>
-	<46A78322.3080607@ru.mvista.com>
-	<46A78E3F.1030904@ru.mvista.com>
-	<20070725180145.GA29689@ld0162-tx32.am.freescale.net>
-	<46A7968D.3070707@ru.mvista.com>
-	<46A79AA1.3030608@freescale.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] libata-sff; Unbreak non DMA capable controllers again
+Date: Thu, 26 Jul 2007 18:41:30 +0100
+Message-ID: <20070726184130.68f6c8ac@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57331 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932976AbXGZRbg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jul 2007 13:31:36 -0400
-In-Reply-To: <46A79AA1.3030608@freescale.com>
+Received: from [81.2.110.250] ([81.2.110.250]:48773 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761056AbXGZRem (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jul 2007 13:34:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Scott Wood <scottwood@freescale.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: akpm@osdl.org, linux-ide@vger.kernel.org
 
-On Wed, 25 Jul 2007 13:46:57 -0500
-Scott Wood wrote:
+Seems nobody else is checking/testing this case as it keeps getting
+horked.
 
-> Sergei Shtylyov wrote:
-> >    I acn undertand your complaint in the context of an OF driver
-> > (which we don't have yet) but "mmio-ide" just means nothing to the
-> > current driver, and it doesn't convery enough info on the
-> > programming interface for the conceivable OF driver, it also does
-> > need to know at least "reg-stride" (and maybe "reg-size" in case
-> > only 16/32-bit accesses can be used).  Well, if such driver will be
-> > written, I/O mapping support will probably be dropped from it, so
-> > indeed, calling it mmio-ide.c would make sense.  But that can be
-> > added when this driver is done, and for now 
-> 
-> I don't think the details of what Linux code currently exists should 
-> drive the device tree binding.  That the current patches use 
-> platform_device glue code is an implementation detail (and one I'd 
-> rather see go away, in favor of a driver that supports both 
-> platform_device and of_device).
-> 
-> > I'd really prefer the board name to appear in the "compatible" prop
-> > (to which "mmio-ide" can be appended)...
-> 
-> Sure, that's always good...  it was the "instead" that I objected to.
-> 
+If we have no BAR4 mapping on an SFF controller this is *NOT* an error,
+it just means it isn't doing BMDMA.
 
-Hmmm. So what is finally suggested devicetree node for this beast - can somebody refine?
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-I am a little bit confused about decided device_type and compatible fields...
-
--- 
-Sincerely, Vitaly
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/libata-sff.c linux-2.6.23rc1-mm1/drivers/ata/libata-sff.c
+--- linux.vanilla-2.6.23rc1-mm1/drivers/ata/libata-sff.c	2007-07-26 15:01:52.899754968 +0100
++++ linux-2.6.23rc1-mm1/drivers/ata/libata-sff.c	2007-07-26 15:17:55.178466368 +0100
+@@ -573,6 +573,10 @@
+ 	struct pci_dev *pdev = to_pci_dev(gdev);
+ 	int i, rc;
+ 
++	/* No BAR4 allocation: No DMA */
++	if (pci_resource_start(pdev, 4) == 0)
++		return 0;
++
+ 	/* TODO: If we get no DMA mask we should fall back to PIO */
+ 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+ 	if (rc)
