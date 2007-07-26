@@ -1,52 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver (was: MMIO IDE driver)
-Date: Thu, 26 Jul 2007 23:52:38 +0400
-Message-ID: <46A8FB86.2010907@ru.mvista.com>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain>	<Pine.LNX.4.60.0707252130090.6234@poirot.grange>	<20070725213925.2f25906c@the-village.bc.nu> <Pine.LNX.4.60.0707262136530.6614@poirot.grange>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 11/11] ide-pmac: remove pmac_ide_do_setfeature() (take 2)
+Date: Thu, 26 Jul 2007 20:04:15 +0200
+Message-ID: <200707262004.15566.bzolnier@gmail.com>
+References: <200707240029.02584.bzolnier@gmail.com> <1185230714.5439.150.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37056 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1765651AbXGZTui (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jul 2007 15:50:38 -0400
-In-Reply-To: <Pine.LNX.4.60.0707262136530.6614@poirot.grange>
+Received: from ug-out-1314.google.com ([66.249.92.172]:62760 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933010AbXGZT7i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2007 15:59:38 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so591339ugf
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jul 2007 12:59:35 -0700 (PDT)
+In-Reply-To: <1185230714.5439.150.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+On Tuesday 24 July 2007, Benjamin Herrenschmidt wrote:
+> On Tue, 2007-07-24 at 00:29 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > Use ide_config_drive_speed() instead of pmac_ide_do_setfeature() and remove
+> > the latter, also  ide-iops.c::__ide_wait_stat() could be static again.
+> > 
+> > Since for IDE PMAC host driver IDE_CONTROL_REG is always true, device's
+> > ->quirk_list is always zero and ->ide_dma_host_{on,off} are nops than
+> > the only changes in behavior are:
+> > 
+> > * if PIO mode is set then ->dma_off_queitly is called to disable DMA
+> > 
+> > * if setting transfer mode fails ide_dump_status() is called to dump status
+> 
+> I'll test that today.
 
-Guennadi Liakhovetski wrote:
-
->>>driver to using platform-device. I got a reply, that it's not worth it now 
->>>that IDE is slowly becoming obsolete, and the pata_platform serves the 
->>>perpose perfectly well. I found this argument reasonable, I had the same 
->>>doubt, just wanted to double-check. So, why do we now need a new legacy 
->>>(a/drivers/ide/legacy/ide_platform.c) driver when a "modern" driver 
->>>exists?
-
->>We don't *need* it but some people still want to use old IDE and the
->>author was willing to make it neatly compatible so that anything that
->>works with the pata_platform should be able to use the ide_platform
->>driver and vice versa. For the shorter term that can only be a good thing
->>- arch code doesn't need to care about which driver is used, end users
->>can pick and it doesn't end up adding new ties between code and old IDE.
-
-> Ok, thanks for the explanation Alan. So, there's no technical argument, 
-> just "being nice to the users", and add a new driver, which we know we'll 
-> have to remove soon, thus having to persuade its users, who by that time 
-
-    Define "soon". :-)
-
-> will get used to it and will not want to invest money into switching to 
-> another one...
-
-    Invest into what if the drivers are functionally identical?
-
-> Thanks
-> Guennadi
-
-MBR, Sergei
+ping?
