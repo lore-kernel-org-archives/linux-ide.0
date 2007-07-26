@@ -1,48 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_cmd64x: Correct the speed ranges
-Date: Thu, 26 Jul 2007 21:52:20 +0400
-Message-ID: <46A8DF54.9040201@ru.mvista.com>
-References: <20070726184301.4677ee46@the-village.bc.nu>
+From: Zivago Lee <z@ziff.net>
+Subject: Re: sata_nv or port issue?
+Date: Thu, 26 Jul 2007 11:09:21 -0700
+Message-ID: <1185473361.12224.1.camel@miyagip>
+References: <27003.209.104.55.7.1185392360.squirrel@mail.ziff.net>
+	 <46A85A1C.2040506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TYa+ikiqL0eF4svFZ7e8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:36139 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761238AbXGZRuT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2007 13:50:19 -0400
-In-Reply-To: <20070726184301.4677ee46@the-village.bc.nu>
+Received: from ziff.net ([66.240.186.42]:35243 "EHLO mail.ziff.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752006AbXGZSJ2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jul 2007 14:09:28 -0400
+In-Reply-To: <46A85A1C.2040506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
 
-Alan Cox wrote:
+--=-TYa+ikiqL0eF4svFZ7e8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I must have been half asleep when doing the original code
+On Thu, 2007-07-26 at 17:23 +0900, Tejun Heo wrote:
+> Zivago Lee wrote:
+> > I'm running Ubuntu Feisty on the 2.6.20 kernel (Linux miyagip
+> > 2.6.20-16-generic #2 SMP Thu Jun 7 20:19:32 UTC 2007 i686 GNU/Linux).
+>=20
+> Please give a shot at 2.6.22.  It will report more detail about what's
+> going on.
+>=20
 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+I've just upgraded to 2.6.22 and hopefully I'll know what's going on if
+it happens again.
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Thanks,
+Zivago
 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c
-> --- linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-07-26 15:01:52.915752536 +0100
-> +++ linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-07-26 15:18:38.486882488 +0100
-[...]
-> @@ -397,7 +397,7 @@
->  			.flags = ATA_FLAG_SLAVE_POSS,
->  			.pio_mask = 0x1f,
->  			.mwdma_mask = 0x07,
+--=20
+Zivago Lee <z@ziff.net>
 
-    Note that MWDMA programming is still borken in the libata driver (fixed 
-now in the IDE driver).
+--=-TYa+ikiqL0eF4svFZ7e8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> -			.udma_mask = ATA_UDMA1,
-> +			.udma_mask = ATA_UDMA2,
->  			.port_ops = &cmd64x_port_ops
->  		},
->  		{	/* CMD 646 rev 1  */
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-MBR, Sergei
+iD8DBQBGqONRH0I0u5ZffZkRAmKTAKCwVLoFf08U2bys3kHSHus7UBE3qwCgnm1q
+FKFcyGmEOLRAvCMvVbTTNyQ=
+=xYWx
+-----END PGP SIGNATURE-----
+
+--=-TYa+ikiqL0eF4svFZ7e8--
+
