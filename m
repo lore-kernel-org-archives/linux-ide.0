@@ -1,48 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_cmd64x: Correct the speed ranges
-Date: Fri, 27 Jul 2007 01:16:19 +0400
-Message-ID: <46A90F23.8010907@ru.mvista.com>
-References: <200707262101.l6QL1Iqk029149@harpo.it.uu.se>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 11/11] ide-pmac: remove pmac_ide_do_setfeature() (take
+	2)
+Date: Fri, 27 Jul 2007 07:33:42 +1000
+Message-ID: <1185485622.5495.125.camel@localhost.localdomain>
+References: <200707240029.02584.bzolnier@gmail.com>
+	 <1185230714.5439.150.camel@localhost.localdomain>
+	 <200707262004.15566.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37544 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756385AbXGZVOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jul 2007 17:14:18 -0400
-In-Reply-To: <200707262101.l6QL1Iqk029149@harpo.it.uu.se>
+Received: from gate.crashing.org ([63.228.1.57]:38079 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761595AbXGZVdk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jul 2007 17:33:40 -0400
+In-Reply-To: <200707262004.15566.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Mikael Pettersson wrote:
-
-> This fix inspired me to finally try to convert my Sun Ultra5
-> (sparc64) with a CMD646 [1095:0646 rev 03] to libata.
-
-> With pata_cmd64x the machine has so far survived a usual
-> boot/mrproper/reconfig/make/install/reboot kernel update
-> cycle without any issues, and performance seems to be the
-> same as with the old IDE driver.
-
-> /Mikael
+On Thu, 2007-07-26 at 20:04 +0200, Bartlomiej Zolnierkiewicz wrote:
+> On Tuesday 24 July 2007, Benjamin Herrenschmidt wrote:
+> > On Tue, 2007-07-24 at 00:29 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > Use ide_config_drive_speed() instead of pmac_ide_do_setfeature() and remove
+> > > the latter, also  ide-iops.c::__ide_wait_stat() could be static again.
+> > > 
+> > > Since for IDE PMAC host driver IDE_CONTROL_REG is always true, device's
+> > > ->quirk_list is always zero and ->ide_dma_host_{on,off} are nops than
+> > > the only changes in behavior are:
+> > > 
+> > > * if PIO mode is set then ->dma_off_queitly is called to disable DMA
+> > > 
+> > > * if setting transfer mode fails ide_dump_status() is called to dump status
+> > 
+> > I'll test that today.
 > 
-> scsi0 : pata_cmd64x
-> scsi1 : pata_cmd64x
-> ata1: PATA max MWDMA2 cmd 0x000001fe02c00000 ctl 0x000001fe02c0000a bmdma 0x000001fe02c00020 irq 14
-> ata2: PATA max MWDMA2 cmd 0x000001fe02c00010 ctl 0x000001fe02c0001a bmdma 0x000001fe02c00028 irq 14
-> ata1.00: ATA-4: ST320420A, 3.21, max UDMA/66
-> ata1.00: 39851760 sectors, multi 0: LBA 
-> pata_cmd64x: active 3 recovery 1 setup 1.
-> ata1.00: configured for MWDMA2
-> ata2.00: ATAPI: CRD-8483B, 1.00, max UDMA/33
-> pata_cmd64x: active 3 recovery 1 setup 1.
-> ata2.00: configured for MWDMA2
-[...]
+> ping?
 
-    Note that the olde driver has MWDMA fixed, and the new one has it still 
-borken, yet MWDMA2 is the mode you're using.
+Oops, sorry, got delayed by urgent work things among others. I'll get
+back to that today or next week, not sure yet.
 
-MBR, Sergei
+BTW. It might make my life easier if you could email me a tarball of
+your full current quilt serie :-)
+
+Cheers,
+Ben.
+
