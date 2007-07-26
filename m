@@ -1,62 +1,48 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] [POWERPC] MPC8349E-mITX: use platform IDE driver
- for CF	interface
-Date: Thu, 26 Jul 2007 21:45:24 +0400
-Message-ID: <46A8DDB4.30306@ru.mvista.com>
-References: <20070725165318.5331.23795.stgit@localhost.localdomain>	<20070725165326.5331.19920.stgit@localhost.localdomain>	<46A78322.3080607@ru.mvista.com>	<46A78E3F.1030904@ru.mvista.com>	<20070725180145.GA29689@ld0162-tx32.am.freescale.net>	<46A7968D.3070707@ru.mvista.com>	<46A79AA1.3030608@freescale.com> <20070726212118.7fe7abd3@localhost.localdomain>
+Subject: Re: [PATCH] pata_cmd64x: Correct the speed ranges
+Date: Thu, 26 Jul 2007 21:52:20 +0400
+Message-ID: <46A8DF54.9040201@ru.mvista.com>
+References: <20070726184301.4677ee46@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:36005 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:36139 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933689AbXGZRnY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2007 13:43:24 -0400
-In-Reply-To: <20070726212118.7fe7abd3@localhost.localdomain>
+	with ESMTP id S1761238AbXGZRuT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2007 13:50:19 -0400
+In-Reply-To: <20070726184301.4677ee46@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: Scott Wood <scottwood@freescale.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
 
 Hello.
 
-Vitaly Bordug wrote:
+Alan Cox wrote:
 
->>>   I acn undertand your complaint in the context of an OF driver
->>>(which we don't have yet) but "mmio-ide" just means nothing to the
->>>current driver, and it doesn't convery enough info on the
->>>programming interface for the conceivable OF driver, it also does
->>>need to know at least "reg-stride" (and maybe "reg-size" in case
->>>only 16/32-bit accesses can be used).  Well, if such driver will be
->>>written, I/O mapping support will probably be dropped from it, so
->>>indeed, calling it mmio-ide.c would make sense.  But that can be
->>>added when this driver is done, and for now 
+> I must have been half asleep when doing the original code
 
->>I don't think the details of what Linux code currently exists should 
->>drive the device tree binding.  That the current patches use 
->>platform_device glue code is an implementation detail (and one I'd 
->>rather see go away, in favor of a driver that supports both 
->>platform_device and of_device).
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
->>>I'd really prefer the board name to appear in the "compatible" prop
->>>(to which "mmio-ide" can be appended)...
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
->>Sure, that's always good...  it was the "instead" that I objected to.
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c
+> --- linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-07-26 15:01:52.915752536 +0100
+> +++ linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-07-26 15:18:38.486882488 +0100
+[...]
+> @@ -397,7 +397,7 @@
+>  			.flags = ATA_FLAG_SLAVE_POSS,
+>  			.pio_mask = 0x1f,
+>  			.mwdma_mask = 0x07,
 
-> Hmmm. So what is finally suggested devicetree node for this beast - can somebody refine?
+    Note that MWDMA programming is still borken in the libata driver (fixed 
+now in the IDE driver).
 
-> I am a little bit confused about decided device_type
-
-    My understanding is that "ata" has been already used, so there's no sense 
-in introducing "ide". Anyway, Segher will just say that "device_type" shoudn't 
-matter and even be present. ;-)
-
- > and compatible fields...
-
-    In my understanding, as "mmio-ide" currectly makes no sense, it shouldn't 
-even appear there.  And since "mpc8349emitx-cf" (or whatever would be most 
-generic name for those boards with the same type of CF IDE mapping) should be 
-imply the shift value, this property should also be optional, i.e. passing 
-hard coded value with platform_device would do.
+> -			.udma_mask = ATA_UDMA1,
+> +			.udma_mask = ATA_UDMA2,
+>  			.port_ops = &cmd64x_port_ops
+>  		},
+>  		{	/* CMD 646 rev 1  */
 
 MBR, Sergei
