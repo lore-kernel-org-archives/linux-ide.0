@@ -1,34 +1,185 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH 4/4] libata: ACPI checks for 80wire cable
-Date: Thu, 26 Jul 2007 18:38:06 +0100
-Message-ID: <20070726183806.3c28d981@the-village.bc.nu>
+From: Vitaly Bordug <vitb@kernel.crashing.org>
+Subject: Re: [PATCH 2/2] [POWERPC] MPC8349E-mITX: use platform IDE driver
+ for CF	interface
+Date: Thu, 26 Jul 2007 21:12:18 +0400
+Message-ID: <20070726211218.38b85db1@localhost.localdomain>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain>
+	<20070725165326.5331.19920.stgit@localhost.localdomain>
+	<46A78322.3080607@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:46900 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759774AbXGZRbN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jul 2007 13:31:13 -0400
+Received: from gate.crashing.org ([63.228.1.57]:57327 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761481AbXGZRb3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jul 2007 13:31:29 -0400
+In-Reply-To: <46A78322.3080607@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-Testing this on the VIA boards fixes several problems with otherwise
-undetectable SATA bridge chips
+On Wed, 25 Jul 2007 21:06:42 +0400
+Sergei Shtylyov wrote:
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> Hello.
+> 
+> Vitaly Bordug wrote:
+> 
+> > This updates relevant platform code (freescale mpc8349itx target) 
+> > to make the CompactFlash work in TrueIDE mode. 
+> 
+>    Erm, I'm not sure it's worth submitting the platform device driver
+> for PowerPC at this point, but well...
+> 
+As Ben already confirmed, it is OK to have "constructor" insert platform device if such is
+required by design.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_via.c linux-2.6.23rc1-mm1/drivers/ata/pata_via.c
---- linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_via.c	2007-07-26 15:01:52.974743568 +0100
-+++ linux-2.6.23rc1-mm1/drivers/ata/pata_via.c	2007-07-26 15:22:30.211654968 +0100
-@@ -180,6 +180,9 @@
- 	   two drives */
- 	if (ata66 & (0x10100000 >> (16 * ap->port_no)))
- 		return ATA_CBL_PATA80;
-+	/* Check with ACPI so we can spot BIOS reported SATA bridges */
-+	if (ata_acpi_cbl_80wire(ap))
-+		return ATA_CBL_PATA80;
- 	return ATA_CBL_PATA40;
- }
- 
+> > Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> > Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+> 
+> >  arch/powerpc/boot/dts/mpc8349emitx.dts    |    9 ++++
+> >  arch/powerpc/platforms/83xx/mpc834x_itx.c |   70
+> > +++++++++++++++++++++++++++++ 2 files changed, 79 insertions(+), 0
+> > deletions(-)
+> 
+> > diff --git a/arch/powerpc/boot/dts/mpc8349emitx.dts
+> > b/arch/powerpc/boot/dts/mpc8349emitx.dts index db0d003..f8f0e8a
+> > 100644 --- a/arch/powerpc/boot/dts/mpc8349emitx.dts
+> > +++ b/arch/powerpc/boot/dts/mpc8349emitx.dts
+> > @@ -37,6 +37,15 @@
+> >  		reg = <00000000 10000000>;
+> >  	};
+> >  
+> > +	ide@f0000000 {
+> > +		compatible = "mmio-ide";
+> > +		device_type = "ide";
+> 
+>     Why not "ata"?
+> 
+
+we already argued around this iirc. I have no preferences and will put whatever agreed appropriate finally in here.
+
+> > +		reg = <f0000000 10 f000020c 4>;
+> > +		ioport_shift = <1>;
+> 
+>     Please use hyphen, not underscore in the property names
+> ("device_type" seems an only exception from this rule).
+>     And since using shift instead of size buys you nothing is this
+> case, I'd prefer this property to be called reg-size or reg-stride.
+> 
+> [...]
+> > diff --git a/arch/powerpc/platforms/83xx/mpc834x_itx.c
+> > b/arch/powerpc/platforms/83xx/mpc834x_itx.c index 40a0194..d63a104
+> > 100644 --- a/arch/powerpc/platforms/83xx/mpc834x_itx.c
+> > +++ b/arch/powerpc/platforms/83xx/mpc834x_itx.c
+> [...]
+> > @@ -43,6 +44,75 @@ unsigned long isa_io_base = 0;
+> >  unsigned long isa_mem_base = 0;
+> >  #endif
+> >  
+> > +static int __init mmio_ide_of_init(void)
+> > +{
+> > +	struct device_node *np;
+> > +	unsigned int i;
+> > +
+> > +	for (np = NULL, i = 0;
+> > +	     (np = of_find_compatible_node(np, "ide",
+> > "mmio-ide")) != NULL;
+> > +	     i++) {
+> > +		int ret = 0;
+> 
+>     Unneeded initialization.
+> 
+> > +		struct resource res[3];
+> > +		struct platform_device *pdev = NULL;
+> 
+>     Another one.
+> 
+
+ok
+> > +		static struct pata_platform_info pdata;
+> > +
+> > +		memset(res, 0, sizeof(res));
+> > +
+> > +		ret = of_address_to_resource(np, 0, &res[0]);
+> > +		if (ret) {
+> > +			printk(KERN_ERR "mmio-ide.%d: unable to
+> > get "
+> > +			       "resource from OF\n", i);
+> > +			goto err0;
+> > +		}
+> > +
+> > +		ret = of_address_to_resource(np, 1, &res[1]);
+> > +		if (ret) {
+> > +			printk(KERN_ERR "mmio-ide.%d: unable to
+> > get "
+> > +			       "resource from OF\n", i);
+> > +			goto err0;
+> 
+>     Erm, these printk's are repetitive, isn't it better to put them
+> under err0 label?
+> 
+> > +		}
+> > +
+> > +		res[2].start = res[2].end =
+> > irq_of_parse_and_map(np, 0);
+> > +		if (res[2].start == NO_IRQ) {
+> > +			printk(KERN_ERR "mmio-ide.%d: no IRQ\n",
+> > i);
+> > +			goto err0;
+> > +		}
+> > +		res[2].name = "pata_platform";
+> > +		res[2].flags = IORESOURCE_IRQ;
+> > +
+> > +		pdata.ioport_shift = *((u32 *)of_get_property(np,
+> > +					"ioport_shift", NULL));
+> > +
+> > +		pdev = platform_device_alloc("pata_platform", i);
+> > +		if (!pdev)
+> > +			goto err1;
+> 
+>     Hm, not err0?
+> 
+agreed.
+
+> > +
+> > +		ret = platform_device_add_data(pdev, &pdata,
+> > sizeof(pdata));
+> > +		if (ret)
+> > +			goto err1;
+> > +
+> > +		ret = platform_device_add_resources(pdev, res,
+> > ARRAY_SIZE(res));
+> > +		if (ret)
+> > +			goto err1;
+> > +
+> > +		ret = platform_device_register(pdev);
+> > +		if (ret)
+> > +			goto err1;
+> > +
+> > +		continue;
+> > +err1:
+> > +		printk(KERN_ERR "mmio-ide.%d: registration
+> > failed\n", i);
+> > +		platform_device_del(pdev); /* it will free
+> > everything */ +err0:
+> > +		/* Even if some device failed, try others */
+> > +		continue;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +device_initcall(mmio_ide_of_init);
+> > +
+> >  /*
+> > ************************************************************************
+> > *
+> >   * Setup the architecture
+> 
+> MBR, Sergei
+
+
+-- 
+Sincerely, Vitaly
