@@ -1,34 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_cmd64x: Correct the speed ranges
-Date: Fri, 27 Jul 2007 16:29:07 +0400
-Message-ID: <46A9E513.70801@ru.mvista.com>
-References: <200707262101.l6QL1Iqk029149@harpo.it.uu.se> <46A90F23.8010907@ru.mvista.com> <46A91AD8.40908@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ide: make CONFIG_IDE_GENERIC default to N
+Date: Fri, 27 Jul 2007 08:39:51 -0400
+Message-ID: <46A9E797.5010708@garzik.org>
+References: <469E2F81.8080002@alcatel-lucent.com> <46A661C9.4010900@alcatel-lucent.com> <46A8393E.4040603@gmail.com> <200707262111.35691.bzolnier@gmail.com> <46A97014.9030608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:45360 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932689AbXG0M1I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2007 08:27:08 -0400
-In-Reply-To: <46A91AD8.40908@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:57137 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756285AbXG0Mj6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jul 2007 08:39:58 -0400
+In-Reply-To: <46A97014.9030608@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "P.C.Chan" <pc.chan@alcatel-lucent.com>, linux-ide@vger.kernel.org
 
-Hello.
+Tejun Heo wrote:
+> These days, CONFIG_IDE_GENERIC causes more confusion and
+> misconfiguration than it helps.  Especially so because libata is
+> linked after the generic driver.  Default to N.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ide/Kconfig |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+> index b1a9b81..8113909 100644
+> --- a/drivers/ide/Kconfig
+> +++ b/drivers/ide/Kconfig
+> @@ -304,9 +304,9 @@ comment "IDE chipset support/bugfixes"
+>  
+>  config IDE_GENERIC
+>  	tristate "generic/default IDE chipset support"
+> -	default y
+> +	default n
+>  	help
+> -	  If unsure, say Y.
+> +	  If unsure, say N.
 
-Jeff Garzik wrote:
+I don't know if we want to get this nit-picky, but you could probably 
+just delete the "default y" line for the same effect.
 
->>    Note that the olde driver has MWDMA fixed, and the new one has it 
->> still borken, yet MWDMA2 is the mode you're using.
+	Jeff
 
-> What about MWDMA is broken?
 
-    The code that "sets" MWDMA timings is completely bogus -- I've already 
-reported that before. And now I've fixed this in the old IDE driver at last.
 
->     Jeff
-
-MBR, Sergei
