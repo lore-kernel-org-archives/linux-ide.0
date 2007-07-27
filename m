@@ -1,41 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: move ide_config_drive_speed() calls to upper
- layers
-Date: Fri, 27 Jul 2007 12:27:23 +0100
-Message-ID: <20070727122723.35b379d9@the-village.bc.nu>
-References: <200707270222.28230.bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_cmd64x: Correct the speed ranges
+Date: Fri, 27 Jul 2007 16:29:07 +0400
+Message-ID: <46A9E513.70801@ru.mvista.com>
+References: <200707262101.l6QL1Iqk029149@harpo.it.uu.se> <46A90F23.8010907@ru.mvista.com> <46A91AD8.40908@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52164 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755404AbXG0LUV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2007 07:20:21 -0400
-In-Reply-To: <200707270222.28230.bzolnier@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:45360 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932689AbXG0M1I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2007 08:27:08 -0400
+In-Reply-To: <46A91AD8.40908@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-On Fri, 27 Jul 2007 02:22:27 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+Hello.
 
-> 
-> * Convert {ide_hwif_t,ide_pci_device_t}->host_flag to be u16.
-> 
-> * Add IDE_HFLAG_POST_SET_MODE host to indicate the need to program the
->   host for the transfer mode after programming the device.  Set it in
->   au1xxx-ide/cs5530/cs5535/pdc202xx_new/sc1200/via82cxxx host drivers.
+Jeff Garzik wrote:
 
-The CS5530 at least shouldn't care what order changes are done. I don't
-think the SC1200 does either but I don't have the docs to hand.
+>>    Note that the olde driver has MWDMA fixed, and the new one has it 
+>> still borken, yet MWDMA2 is the mode you're using.
 
-For libata we went the post_set_mode way and then junked it. Instead
-there is a ->set_mode method which defaults to the usual order and
-actions. IT821x and similar override it to do very little, post_set_mode
-people call the default method and then do their stuff, and some of the
-crazier cases do stuff both before and after the default.
+> What about MWDMA is broken?
 
-Much more flexible and it can do anything unlike flags for the cases you
-have.
+    The code that "sets" MWDMA timings is completely bogus -- I've already 
+reported that before. And now I've fixed this in the old IDE driver at last.
+
+>     Jeff
+
+MBR, Sergei
