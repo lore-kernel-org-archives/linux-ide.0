@@ -1,44 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] fix IDE legacy mode resource
-Date: Sat, 28 Jul 2007 14:13:06 -0400
-Message-ID: <46AB8732.6080109@garzik.org>
-References: <20070728220420.352c316b.yoichi_yuasa@tripeaks.co.jp>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] ide: move ide_config_drive_speed() calls to upper layers
+Date: Sat, 28 Jul 2007 22:57:38 +0400
+Message-ID: <46AB91A2.6060303@ru.mvista.com>
+References: <200707270222.28230.bzolnier@gmail.com> <20070727122723.35b379d9@the-village.bc.nu> <200707272119.19438.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36731 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754785AbXG1SNK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 28 Jul 2007 14:13:10 -0400
-In-Reply-To: <20070728220420.352c316b.yoichi_yuasa@tripeaks.co.jp>
+Received: from homer.mvista.com ([63.81.120.155]:52553 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751374AbXG1Szj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 14:55:39 -0400
+In-Reply-To: <200707272119.19438.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-Cc: Greg KH <greg@kroah.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Alan <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Yoichi Yuasa wrote:
-> Hi,
-> 
-> I got the following error on MIPS Cobalt.
-> MIPS Cobalt has the 0x10000000 offset between resource and bus region. 
-> 
-> PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
-> PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
-> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
-> pata_via 0000:00:09.1: no available native port
-> 
-> At this point, these resources should be the bus regions.
-> 
-> Signed-off-by: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
+Hello.
 
-I'm not sure I understand what's going on here... could you or someone 
-provide additional explanation as to why this is a fix?
+Bartlomiej Zolnierkiewicz wrote:
 
-Thanks,
+>>On Fri, 27 Jul 2007 02:22:27 +0200
+>>Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-	Jeff
+>>>* Convert {ide_hwif_t,ide_pci_device_t}->host_flag to be u16.
 
+>>>* Add IDE_HFLAG_POST_SET_MODE host to indicate the need to program the
+>>>  host for the transfer mode after programming the device.  Set it in
+>>>  au1xxx-ide/cs5530/cs5535/pdc202xx_new/sc1200/via82cxxx host drivers.
 
+>>The CS5530 at least shouldn't care what order changes are done. I don't
 
+    And neither CS5535. And Au1200 static bus controller shouldn't care about 
+the order too, so au1xxx-ide hardly needs that.
+Here's the datasheet, BTW:
+
+http://www.razamicroelectronics.com/documents/32798e_Au1200_db.pdf
+
+>>think the SC1200 does either but I don't have the docs to hand.
+
+    It seems pretty much alike CS553x except it's accessed via PCI config. 
+space, not MSRs... Here's the datasheet:
+
+http://www.amd.com/files/connectivitysolutions/geode/32579B_sc1200_ds.pdf
+
+    I have a feeling that only pdc202xx_new and jmicron drivers actually need 
+this flag (and the latter one actually doesn't care as its methods are empty 
+anyway).  Well, AMD/VIA chips enable UltraDMA mode by snooping Set Features 
+command (as the drivers tell them to do so), so the order seems important 
+unless that is changed.
+
+> Thanks,
+> Bart
+
+MBR, Sergei
