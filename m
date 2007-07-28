@@ -1,36 +1,43 @@
-From: Craig Block <chblock3@yahoo.com>
-Subject: IRQ Delivery Problem for MCP65
-Date: Fri, 27 Jul 2007 21:53:46 -0700 (PDT)
-Message-ID: <151241.60877.qm@web58114.mail.re3.yahoo.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: blacklist SAMSUNG HD401LJ / ZZ100-15 for NCQ
+Date: Sat, 28 Jul 2007 16:25:25 +0900
+Message-ID: <20070728072525.GE22374@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web58114.mail.re3.yahoo.com ([68.142.236.137]:43317 "HELO
-	web58114.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751275AbXG1Exr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 00:53:47 -0400
+Received: from wa-out-1112.google.com ([209.85.146.178]:49228 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbXG1HZi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 03:25:38 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1161429wah
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2007 00:25:33 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: stellplatz-nr.13a@datenparkplatz.de
 
-Hello,
+SAMSUNG HD401LJ / ZZ100-15 does spurious completion of NCQ commands.
+Disable NCQ.  Reported by Ulrich in bugzilla #8805.
 
-I'm having trouble getting Linux to see any hard drives on an ASUS M2N-X
-motherboard with an MCP65 (nForce 520) chipset.  When the kernel probes the
-AHCI controllers, it hangs for a minute or so on each one and returns the
-following;
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Ulrich <stellplatz-nr.13a@datenparkplatz.de>
+---
+And, finally one from samsung.  How come vendors got this right
+previously but screw up on new ones?
 
-ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+ drivers/ata/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks in advance for any help you can lend,
-
-  - Craig
-
-
-       
-____________________________________________________________________________________
-Got a little couch potato? 
-Check out fun summer activities for kids.
-http://search.yahoo.com/search?fr=oni_on_mail&p=summer+activities+for+kids&cs=bz 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 6001aae..60e78be 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3788,6 +3788,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+ 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
++	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
+ 
+ 	/* Devices with NCQ limits */
+ 
