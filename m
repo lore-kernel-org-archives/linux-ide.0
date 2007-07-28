@@ -1,57 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: move ide_config_drive_speed() calls to upper layers
-Date: Sat, 28 Jul 2007 22:57:38 +0400
-Message-ID: <46AB91A2.6060303@ru.mvista.com>
-References: <200707270222.28230.bzolnier@gmail.com> <20070727122723.35b379d9@the-village.bc.nu> <200707272119.19438.bzolnier@gmail.com>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: [PATCH -mm] Fix libata warnings with CONFIG_PM=n
+Date: Sat, 28 Jul 2007 21:32:42 +0200
+Message-ID: <46AB99DA.6050402@googlemail.com>
+References: <20070725040304.111550f4.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:52553 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751374AbXG1Szj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 14:55:39 -0400
-In-Reply-To: <200707272119.19438.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.171]:46514 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbXG1Tgv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 15:36:51 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so862142ugf
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2007 12:36:49 -0700 (PDT)
+In-Reply-To: <20070725040304.111550f4.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello.
+Hi Jeff,
 
-Bartlomiej Zolnierkiewicz wrote:
+I noticed this warnings when CONFIG_PM=n 
 
->>On Fri, 27 Jul 2007 02:22:27 +0200
->>Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+...
 
->>>* Convert {ide_hwif_t,ide_pci_device_t}->host_flag to be u16.
+drivers/ata/libata-core.c:5993: warning: 'ata_host_disable_link_pm' defined but not used
+drivers/ata/libata-core.c:6004: warning: 'ata_host_enable_link_pm' defined but not used
 
->>>* Add IDE_HFLAG_POST_SET_MODE host to indicate the need to program the
->>>  host for the transfer mode after programming the device.  Set it in
->>>  au1xxx-ide/cs5530/cs5535/pdc202xx_new/sc1200/via82cxxx host drivers.
+...
 
->>The CS5530 at least shouldn't care what order changes are done. I don't
+Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
 
-    And neither CS5535. And Au1200 static bus controller shouldn't care about 
-the order too, so au1xxx-ide hardly needs that.
-Here's the datasheet, BTW:
+---
 
-http://www.razamicroelectronics.com/documents/32798e_Au1200_db.pdf
+--- linux-2.6.23-rc1/drivers/ata/libata-core.c.orig	2007-07-28 21:17:31.000000000 +0200
++++ linux-2.6.23-rc1/drivers/ata/libata-core.c	2007-07-28 21:17:48.000000000 +0200
+@@ -5989,6 +5989,7 @@ int ata_flush_cache(struct ata_device *d
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
+ static void ata_host_disable_link_pm(struct ata_host *host)
+ {
+ 	int i;
+@@ -6011,7 +6012,7 @@ static void ata_host_enable_link_pm(stru
+ 	}
+ }
+ 
+-#ifdef CONFIG_PM
++
+ static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+ 			       int wait)
 
->>think the SC1200 does either but I don't have the docs to hand.
-
-    It seems pretty much alike CS553x except it's accessed via PCI config. 
-space, not MSRs... Here's the datasheet:
-
-http://www.amd.com/files/connectivitysolutions/geode/32579B_sc1200_ds.pdf
-
-    I have a feeling that only pdc202xx_new and jmicron drivers actually need 
-this flag (and the latter one actually doesn't care as its methods are empty 
-anyway).  Well, AMD/VIA chips enable UltraDMA mode by snooping Set Features 
-command (as the drivers tell them to do so), so the order seems important 
-unless that is changed.
-
-> Thanks,
-> Bart
-
-MBR, Sergei
