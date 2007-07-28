@@ -1,51 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Store bus addresses (versus -mm for testing)
-Date: Sat, 28 Jul 2007 17:11:42 +0900
-Message-ID: <46AAFA3E.50407@gmail.com>
-References: <20070726192315.61ffe93d@the-village.bc.nu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] use ARRAY_SIZE in ide-cd.c
+Date: Sat, 28 Jul 2007 13:51:20 +0200
+Message-ID: <200707281351.20491.bzolnier@gmail.com>
+References: <20070727181039.GC24098@hindley.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:39849 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbXG1ILt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 04:11:49 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so170266rvb
-        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2007 01:11:48 -0700 (PDT)
-In-Reply-To: <20070726192315.61ffe93d@the-village.bc.nu>
+Received: from nf-out-0910.google.com ([64.233.182.188]:33777 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755232AbXG1Lwy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2007 07:52:54 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so80871nfb
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2007 04:52:53 -0700 (PDT)
+In-Reply-To: <20070727181039.GC24098@hindley.org.uk>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Mark Hindley <mark@hindley.org.uk>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Alan Cox wrote:
-> As we cannot reverse iomap results portably as we tried before the libata
-> layer needs to keep bus addresses around for reporting. This first big
-> patch adds a structure for it and teaches the drivers to keep the
-> information. Thankfully most drivers go via libata-sff and it can do the
-> work for them.
-> 
-> For the others we replace ata_std_ports with ata_std_io_ports /
-> std_mmio_ports and pass both the mapped and some bus address info.
-> 
-> We don't keep all the mappings in both forms. We only need cmd, ctrl and
-> status (for wait_status() reporting). We also keep a "base" for devices
-> where the taskfile (cmd/ctl) mapping makes no sense.
-> 
-> This patch stores all the data but doesn't yet change the display side.
-> I've got a couple of variants I'm playing with on the display side and
-> want to get that right. In the mean time this should store all the data
-> and have no side effects for anyone, so is a good first chunk for testing
-> alone.
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
 
-Eeeek... I don't think this is a good idea.  I liked the getting
-original address from mapped address thing.  Is it impossible to get
-that working on some archs?  Or is it just not there yet?
+Hi,
 
-Thanks.
+On Friday 27 July 2007, Mark Hindley wrote:
+> Hi,
+> 
+> ARY_LEN in ide-cd.{c,h} is an unnecessary duplication. Replace with generic ARRAY_SIZE from
+> kernel.h.
 
--- 
-tejun
+Seems to be already fixed by:
+
+commit 74c8f97a6c2d12fb144ad34076e969e8a01dc4b3
+Author: Robert P. J. Day <rpjday@mindspring.com>
+Date:   Mon Jul 9 23:17:57 2007 +0200
+
+    ide-cd: replace C code with call to ARRAY_SIZE() macro
+
+    Delete the unnecessary macro ARY_LEN and use ARRAY_SIZE directly.
+
+    Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Please always make sure that you are working on the current git tree
+or such unfortunate situation is likely to happen... ;)
+
+Thanks,
+Bart
