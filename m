@@ -1,41 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH libata-dev#upstream] libata: implement and use
- ata_port_desc() to report port configuration
-Date: Sun, 29 Jul 2007 18:55:32 +0100
-Message-ID: <20070729185532.180daea3@the-village.bc.nu>
-References: <20070729103421.GG22374@htj.dyndns.org>
-	<20070729143106.446924ba@the-village.bc.nu>
-	<46ACAC2D.8050307@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] amd74xx/via82cxxx: check ide_config_drive_speed() return value
+Date: Sun, 29 Jul 2007 16:31:58 +0200
+Message-ID: <200707291631.58875.bzolnier@gmail.com>
+References: <200707262156.00679.bzolnier@gmail.com> <46AC6CED.4090601@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59841 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761287AbXG2Rs2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 13:48:28 -0400
-In-Reply-To: <46ACAC2D.8050307@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:59697 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764995AbXG2SFJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 14:05:09 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so945455ugf
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 11:05:07 -0700 (PDT)
+In-Reply-To: <46AC6CED.4090601@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-> > Looks as sane an approach. Some obvious errors in the conversion but
-> > simply wrong types I/O v MMIO etc not flaws in the proposal
+
+Hi,
+
+On Sunday 29 July 2007, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> Care to point out?
-
-I didn't save it but it was things like HPT3x3 seemed to be claiming to
-be MMIO - trivial stuff we can clean up in a merge.
-
+> > * Check ide_config_drive_speed() return value.
 > 
-> > Unfortunately there is one big horror you've left unconverted - the status
-> > address printing in ata_wait_... That is why I ended up going the way I
-> > did.
+> > * While at also call ide_config_drive_speed() if the transfer mode is
+> >   XFER_PIO_SLOW (this case happens iff the transfer mode has already been
+> >   set on the device by ide-proc.c::set_xfer_rate()) and remove redundant
+> >   setting of ->{init,current}_speed.
 > 
-> The only thing I can find is DPRINTK in ata_wait_idle() which can and
-> should simply be converted to ata_port_printk("abnormal Status 0x%x\n",
-> status).  After all some controller don't even have Status register (FIS
-> based ones, ahci, sil24).
+> > * Bump driver version.
+> 
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> MBR, Sergei
+> 
+> PS: There's no need to notify about Acked-by: addition I think -- would save 
+> everyone a keystroke or two... ;-)
 
-That is probably very sensible yes.
+OK, just assume that they are added and complain in PM if they are not. :)
+
+Bart
