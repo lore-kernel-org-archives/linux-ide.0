@@ -1,30 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/12] cs5535: add missing ->dma_base check
-Date: Sun, 29 Jul 2007 23:09:57 +0400
-Message-ID: <46ACE605.3060408@ru.mvista.com>
-References: <200707291951.21443.bzolnier@gmail.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: [PATCH] fix runtogether printk's in cmd64x IDE driver
+Date: Sun, 29 Jul 2007 23:01:26 +0300 (EEST)
+Message-ID: <Pine.SOC.4.64.0707292257150.10801@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57327 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934687AbXG2TH5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jul 2007 15:07:57 -0400
-In-Reply-To: <200707291951.21443.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935472AbXG2UC1@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Fix a couple of runtogether printks in cmd64x.c IDE driver by adding 
+proper newlines.
 
-> If ->dma_base is not set (== PCI BAR4 cannot be reserved) then DMA hooks
-> shouldn't be initialized or bad things will happen.
+Signed-off-by: Meelis Roos <mroos@linux.ee>
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+diff --git a/drivers/ide/pci/cmd64x.c b/drivers/ide/pci/cmd64x.c
+index 19633c5..0e3b5de 100644
+--- a/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -475,11 +475,11 @@ static unsigned int __devinit init_chipset_cmd64x(struct pci_dev *dev, const cha
+ 		switch (rev) {
+ 		case 0x07:
+ 		case 0x05:
+-			printk("%s: UltraDMA capable", name);
++			printk("%s: UltraDMA capable\n", name);
+ 			break;
+ 		case 0x03:
+ 		default:
+-			printk("%s: MultiWord DMA force limited", name);
++			printk("%s: MultiWord DMA force limited\n", name);
+ 			break;
+ 		case 0x01:
+ 			printk("%s: MultiWord DMA limited, "
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
+-- 
+Meelis Roos (mroos@linux.ee)
