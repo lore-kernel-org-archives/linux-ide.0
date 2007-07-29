@@ -1,64 +1,43 @@
-From: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-Subject: Re: [PATCH] fix IDE legacy mode resource
-Date: Sun, 29 Jul 2007 17:15:44 +0900
-Message-ID: <20070729171544.2b352801.yoichi_yuasa@tripeaks.co.jp>
-References: <20070728220420.352c316b.yoichi_yuasa@tripeaks.co.jp>
-	<46AB8732.6080109@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH libata-dev#upstream] libata: add printf format attribute to ehi desc functions
+Date: Sun, 29 Jul 2007 19:02:49 +0900
+Message-ID: <20070729100249.GF22374@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo30.po.2iij.net ([210.128.50.53]:4572 "EHLO mo30.po.2iij.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760078AbXG2IQN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jul 2007 04:16:13 -0400
-In-Reply-To: <46AB8732.6080109@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.191]:64967 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759255AbXG2KCz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 06:02:55 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so261848rvb
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 03:02:54 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: yoichi_yuasa@tripeaks.co.jp, greg@kroah.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-On Sat, 28 Jul 2007 14:13:06 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+Tell the compiler that [__]ata_ehi_push_desc() functions take printf
+style format string and arguments.
 
-> Yoichi Yuasa wrote:
-> > Hi,
-> > 
-> > I got the following error on MIPS Cobalt.
-> > MIPS Cobalt has the 0x10000000 offset between resource and bus region. 
-> > 
-> > PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-> > pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
-> > PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
-> > pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
-> > pata_via 0000:00:09.1: no available native port
-> > 
-> > At this point, these resources should be the bus regions.
-> > 
-> > Signed-off-by: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-> 
-> I'm not sure I understand what's going on here... could you or someone 
-> provide additional explanation as to why this is a fix?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ include/linux/libata.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-The legacy mode IDE resources set the following order. 
-
-pci_setup_device()
-    Legacy mode ATA controllers have fixed addresses.
-    IDE resources: 0x1F0-0x1F7, 0x3F6, 0x170-0x177, 0x376
-    |
-    V
-pcibios_fixup_bus()
-    MIPS Cobalt PCI bus have the -0x10000000 offset from PCI resources.
-    pcibios_fixup_bus() fix PCI bus regions.
-    0x1F0 - 0x10000000 = 0xF00001F0
-    |
-    V
-ata_pci_init_one()
-    PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-
-In some architectures, PCI bus have the offset from PCI resource.
-They are adjusted by pcibios_fixup_bus().
-
-For this reason, pci_setup_device() should set PCI bus regions. 
-
-Yoichi
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -914,8 +914,10 @@ extern void ata_do_eh(struct ata_port *a
+ /*
+  * ata_eh_info helpers
+  */
+-extern void __ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...);
+-extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...);
++extern void __ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
++	__attribute__ ((format (printf, 2, 3)));
++extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
++	__attribute__ ((format (printf, 2, 3)));
+ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
+ 
+ static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
