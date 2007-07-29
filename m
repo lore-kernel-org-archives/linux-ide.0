@@ -1,51 +1,78 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ide patches
-Date: Sun, 29 Jul 2007 16:39:08 +0200
-Message-ID: <200707291639.08317.bzolnier@gmail.com>
-References: <200707222019.03684.bzolnier@gmail.com> <200707232322.22129.bzolnier@gmail.com> <46AC709A.6060002@ru.mvista.com>
+Subject: [PATCH 1/12] ide: change master/slave IDENTIFY order
+Date: Sun, 29 Jul 2007 19:49:59 +0200
+Message-ID: <200707291949.59611.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:44316 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765027AbXG2SFL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 14:05:11 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so123524nfb
-        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 11:05:09 -0700 (PDT)
-In-Reply-To: <46AC709A.6060002@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.172]:59697 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765027AbXG2SFO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 14:05:14 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so945455ugf
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 11:05:13 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Craig Block <chblock3@yahoo.com>
 
-On Sunday 29 July 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>>Ok, there's a combination of things here:
-> 
-> >>> - First, doing a set_pio from userland (hdparm -p XX) causes the kernel
-> >>>to disable DMA, which I think is incorrect. It's not the case with
-> >>>2.6.22 from my quick tests. The problem is that ide_config_drive_speed
-> >>>disables DMA, but only re-enables it when setting a DMA speed. I think
-> 
-> > The problem is that _many_ chipsets don't support separate PIO and DMA
-> > timings so disabling DMA while programming chipset for PIO timings is a
-> > necessity for them.
-> 
->     Actually, I didn't quite follow (as I'm afraid Ben also :-). Do you mean 
-> the fact that the DMA timings may get overwritten (which happens due to the 
-> failure of the drivers to handle the shared PIO/DMA timing registers, and in 
-> some cases by "coupling" PIO to UltraDMA timings for no apparent reasons which 
-> leads to disabling UltraDMA when PIO is being programmed)?
 
-Yes, in particular I meant cases like cmd64x (shared MWDMA/PIO timing
-registers) so doing "hdparm -p" on a drive currently using DMA without
-ide_config_drive_speed() disabling DMA would result in DMA operations
-using PIO timings and possible data corruptions.
+Need to probe slave device first to make it release PDIAG-
+(this is required for correct device side cable detection).
 
-BTW all PIO to (U)DMA "couplings" should be fixed now
+Based on libata commit f31f0cc2f0b7527072d94d02da332d9bb8d7d94c.
 
-Bart
+Thanks to Craig for testing this patch.
+
+Cc: Craig Block <chblock3@yahoo.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+I just noticed that previously I sent it only in PM to Craig.
+
+ drivers/ide/ide-iops.c  |    1 -
+ drivers/ide/ide-probe.c |    7 +++----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+Index: b/drivers/ide/ide-iops.c
+===================================================================
+--- a/drivers/ide/ide-iops.c
++++ b/drivers/ide/ide-iops.c
+@@ -612,7 +612,6 @@ u8 eighty_ninty_three (ide_drive_t *driv
+ 
+ 	/*
+ 	 * FIXME:
+-	 * - change master/slave IDENTIFY order
+ 	 * - force bit13 (80c cable present) check also for !ivb devices
+ 	 *   (unless the slave device is pre-ATA3)
+ 	 */
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -719,9 +719,9 @@ EXPORT_SYMBOL_GPL(ide_undecoded_slave);
+  */
+ static void probe_hwif(ide_hwif_t *hwif, void (*fixup)(ide_hwif_t *hwif))
+ {
+-	unsigned int unit;
+ 	unsigned long flags;
+ 	unsigned int irqd;
++	int unit;
+ 
+ 	if (hwif->noprobe)
+ 		return;
+@@ -777,10 +777,9 @@ static void probe_hwif(ide_hwif_t *hwif,
+ 		printk(KERN_DEBUG "%s: Wait for ready failed before probe !\n", hwif->name);
+ 
+ 	/*
+-	 * Second drive should only exist if first drive was found,
+-	 * but a lot of cdrom drives are configured as single slaves.
++	 * Need to probe slave device first to make it release PDIAG-.
+ 	 */
+-	for (unit = 0; unit < MAX_DRIVES; ++unit) {
++	for (unit = MAX_DRIVES - 1; unit >= 0; unit--) {
+ 		ide_drive_t *drive = &hwif->drives[unit];
+ 		drive->dn = (hwif->channel ? 2 : 0) + unit;
+ 		(void) probe_for_drive(drive);
