@@ -1,74 +1,63 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/12] ide: remove CONFIG_IDEDMA_IVB config option
-Date: Sun, 29 Jul 2007 19:50:13 +0200
-Message-ID: <200707291950.14039.bzolnier@gmail.com>
+Subject: [PATCH 3/12] cs5530: add missing ->dma_base check
+Date: Sun, 29 Jul 2007 19:50:49 +0200
+Message-ID: <200707291950.49858.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:59697 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:59072 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765058AbXG2SFP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 14:05:15 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so945455ugf
-        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 11:05:15 -0700 (PDT)
+	with ESMTP id S1765347AbXG2SFR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 14:05:17 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so945472ugf
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 11:05:16 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-Devices which don't set word 93 validation bit should be now handled by
-ide-iops.c::ivb_list[] and for debugging purposes cable detection can be
-completely overriden with "idex=ata66" parameter.
+If ->dma_base is not set (== PCI BAR4 cannot be reserved) then DMA hooks
+shouldn't be initialized or bad things will happen.
+
+Also this host driver requires valid PCI BAR4 for normal operation so
+check it in ->init_chipset and fail initialization if not set.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/Kconfig    |   16 ----------------
- drivers/ide/ide-iops.c |    4 ----
- 2 files changed, 20 deletions(-)
+ drivers/ide/pci/cs5530.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Index: b/drivers/ide/Kconfig
+Index: b/drivers/ide/pci/cs5530.c
 ===================================================================
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -1065,22 +1065,6 @@ endif
- config BLK_DEV_IDEDMA
- 	def_bool BLK_DEV_IDEDMA_PCI || BLK_DEV_IDEDMA_PMAC || BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+--- a/drivers/ide/pci/cs5530.c
++++ b/drivers/ide/pci/cs5530.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/cs5530.c		Version 0.73	Mar 10 2007
++ * linux/drivers/ide/pci/cs5530.c		Version 0.74	Jul 28 2007
+  *
+  * Copyright (C) 2000			Andre Hedrick <andre@linux-ide.org>
+  * Copyright (C) 2000			Mark Lord <mlord@pobox.com>
+@@ -164,6 +164,9 @@ static unsigned int __devinit init_chips
+ 	struct pci_dev *master_0 = NULL, *cs5530_0 = NULL;
+ 	unsigned long flags;
  
--config IDEDMA_IVB
--	bool "IGNORE word93 Validation BITS"
--	depends on BLK_DEV_IDEDMA_PCI || BLK_DEV_IDEDMA_PMAC || BLK_DEV_IDEDMA_ICS
--	---help---
--	  There are unclear terms in ATA-4 and ATA-5 standards how certain
--	  hardware (an 80c ribbon) should be detected. Different interpretations
--	  of the standards have been released in hardware. This causes problems:
--	  for example, a host with Ultra Mode 4 (or higher) will not run
--	  in that mode with an 80c ribbon.
--
--	  If you are experiencing compatibility or performance problems, you
--	  MAY try to answer Y here. However, it does not necessarily solve
--	  any of your problems, it could even cause more of them.
--
--	  It is normally safe to answer Y; however, the default is N.
--
- endif
++	if (pci_resource_start(dev, 4) == 0)
++		return -EFAULT;
++
+ 	dev = NULL;
+ 	while ((dev = pci_get_device(PCI_VENDOR_ID_CYRIX, PCI_ANY_ID, dev)) != NULL) {
+ 		switch (dev->device) {
+@@ -282,6 +285,9 @@ static void __devinit init_hwif_cs5530 (
+ 			/* needs autotuning later */
+ 	}
  
- config BLK_DEV_HD_ONLY
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -615,11 +615,7 @@ u8 eighty_ninty_three (ide_drive_t *driv
- 	 * - force bit13 (80c cable present) check also for !ivb devices
- 	 *   (unless the slave device is pre-ATA3)
- 	 */
--#ifndef CONFIG_IDEDMA_IVB
- 	if ((id->hw_config & 0x4000) || (ivb && (id->hw_config & 0x2000)))
--#else
--	if (id->hw_config & 0x6000)
--#endif
- 		return 1;
- 
- no_80w:
++	if (hwif->dma_base == 0)
++		return;
++
+ 	hwif->atapi_dma = 1;
+ 	hwif->ultra_mask = 0x07;
+ 	hwif->mwdma_mask = 0x07;
