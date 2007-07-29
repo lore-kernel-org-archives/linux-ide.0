@@ -1,43 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev#upstream] libata: add printf format attribute to ehi desc functions
-Date: Sun, 29 Jul 2007 19:02:49 +0900
-Message-ID: <20070729100249.GF22374@htj.dyndns.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] amd74xx/via82cxxx: check ide_config_drive_speed() return
+ value
+Date: Sun, 29 Jul 2007 14:33:17 +0400
+Message-ID: <46AC6CED.4090601@ru.mvista.com>
+References: <200707262156.00679.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:64967 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759255AbXG2KCz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2007 06:02:55 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so261848rvb
-        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 03:02:54 -0700 (PDT)
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:55563 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761284AbXG2KbR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 29 Jul 2007 06:31:17 -0400
+In-Reply-To: <200707262156.00679.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tell the compiler that [__]ata_ehi_push_desc() functions take printf
-style format string and arguments.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- include/linux/libata.h |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> * Check ide_config_drive_speed() return value.
 
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -914,8 +914,10 @@ extern void ata_do_eh(struct ata_port *a
- /*
-  * ata_eh_info helpers
-  */
--extern void __ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...);
--extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...);
-+extern void __ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
-+	__attribute__ ((format (printf, 2, 3)));
-+extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
-+	__attribute__ ((format (printf, 2, 3)));
- extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
- 
- static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+> * While at also call ide_config_drive_speed() if the transfer mode is
+>   XFER_PIO_SLOW (this case happens iff the transfer mode has already been
+>   set on the device by ide-proc.c::set_xfer_rate()) and remove redundant
+>   setting of ->{init,current}_speed.
+
+> * Bump driver version.
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
+
+PS: There's no need to notify about Acked-by: addition I think -- would save 
+everyone a keystroke or two... ;-)
