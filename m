@@ -1,122 +1,83 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: add cable detection for early UDMA66 devices (take
- 2)
-Date: Mon, 30 Jul 2007 18:26:29 +0400
-Message-ID: <46ADF515.10302@ru.mvista.com>
-References: <200707291949.46232.bzolnier@gmail.com>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: Time Problems with 2.6.23-rc1-gf695baf2
+Date: Mon, 30 Jul 2007 16:32:20 +0200
+Message-ID: <6bffcb0e0707300732s6a63e63g4622ebfbbe26e479@mail.gmail.com>
+References: <20070723221630.GA28951@alice>
+	 <6bffcb0e0707241614s7b563b5bu114d2ecb227b1557@mail.gmail.com>
+	 <20070725113349.GB5469@alice> <200707251250.22469.lenb@kernel.org>
+	 <20070725231714.GA24867@alice>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:65421 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755715AbXG3OYa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Jul 2007 10:24:30 -0400
-In-Reply-To: <200707291949.46232.bzolnier@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:38037 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003AbXG3OcV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 10:32:21 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1780035wah
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jul 2007 07:32:20 -0700 (PDT)
+In-Reply-To: <20070725231714.GA24867@alice>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Craig Block <chblock3@yahoo.com>
+To: Eric Sesterhenn / Snakebyte <snakebyte@gmx.de>
+Cc: Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-acpi@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>
 
-Hello.
+Hi Eric,
 
-Bartlomiej Zolnierkiewicz wrote:
+On 26/07/07, Eric Sesterhenn / Snakebyte <snakebyte@gmx.de> wrote:
+> * Len Brown (lenb@kernel.org) wrote:
+> > > > > > [   13.506890] ACPI Exception (processor_throttling-0084): AE_NOT_FOUND, Evaluating _PTC [20070126]
+> > > > > > [   13.507101] ACPI Exception (processor_throttling-0147): AE_NOT_FOUND, Evaluating _TSS [20070126]
+> >
+> > Note that these are just noise -- new code being verbose when looking for an optional feature.
+> >
+> > The fact that hitting the power button a bunch of times
+> > to make the system move along suggests some sort of missing interrupt problem --
+> > most likely the timer itself.
+> >
+> > [   13.868574] Probing IDE interface ide0...
+> > [  387.279576] Clocksource tsc unstable (delta = 370195339890 ns)
+> >
+> > 5-minutes -- a long probe:-)
+> >
+> > > CONFIG_NO_HZ=y
+> >
+> > does CONFIG_NO_HZ=n make a difference?
+>
+> [   41.007654] EXT3 FS on hda1, internal journal
+> [  322.133656] Clocksource tsc unstable (delta = 276476174785 ns)
+> Boot went fine but the system got pretty unresponsive later, 2-3 seconds
+> delay after keypresses on an idle system and a hang during shutdown which i had to resolve by
+> pressing the power button (not to switch it of the hard way, but to keep it rebooting)
+>
+> > > CONFIG_HIGH_RES_TIMERS=y
+> >
+> > does CONFIG_HIGH_RES_TIMERS=n make a difference?
+>
+> doesnt change anything
+>
+> > does "irqpoll" make any difference?
+> > does "notsc" make any difference?
+> > does "idle=poll" make any difference?
+>
+> I tried these with the HIGH_RES_TIMERS=n, irqpoll and notsc dont change
+> a thing, idle=poll makes it boot normally
 
-> * Move ide_in_drive_list() from ide-dma.c to ide-iops.c.
+Please use git-bisect
 
-> * Add ivb_list[] table for listening early UDMA66 devices which don't conform
->   to ATA4 standard wrt cable detection (bit14 is zero, only bit13 is valid)
->   and use only device side cable detection for them since host side cable
->   detection may be unreliable.
+git-bisect start
+git-bisect bad
+git-bisect good 7dcca30a32aadb0520417521b0c44f42d09fe05c
 
-> * Add model "QUANTUM FIREBALLlct10 05" with firwmare "A03.0900" to the list
->   (from Craig's bugreport).
+>
+>
+> Greetings, Eric
+>
 
-> v2:
-> * Improve kernel message basing on suggestion from Sergei.
+Regards,
+Michal
 
-> Thanks to Craig for testing this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-> Index: b/drivers/ide/ide-iops.c
-> ===================================================================
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -565,6 +565,34 @@ int ide_wait_stat (ide_startstop_t *star
->  
->  EXPORT_SYMBOL(ide_wait_stat);
->  
-> +/**
-> + *	ide_in_drive_list	-	look for drive in black/white list
-> + *	@id: drive identifier
-> + *	@drive_table: list to inspect
-> + *
-> + *	Look for a drive in the blacklist and the whitelist tables
-> + *	Returns 1 if the drive is found in the table.
-> + */
-> +
-> +int ide_in_drive_list(struct hd_driveid *id, const struct drive_list_entry *drive_table)
-> +{
-> +	for ( ; drive_table->id_model ; drive_table++)
-
-    Good time to kill an extra space before the 2nd semicolon.
-
-> +		if ((!strcmp(drive_table->id_model, id->model)) &&
-> +		    (!drive_table->id_firmware ||
-> +		     strstr(id->fw_rev, drive_table->id_firmware)))
-> +			return 1;
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Early UDMA66 devices don't set bit14 to 1, only bit13 is valid.
-> + * We list them here and depend on the device side cable detection for them.
-> + */
-> +static const struct drive_list_entry ivb_list[] = {
-> +	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
-> +	{ NULL				, NULL		}
-> +};
-> +
->  /*
->   *  All hosts that use the 80c ribbon must use!
->   *  The name is derived from upper byte of word 93 and the 80c ribbon.
-> @@ -573,11 +601,16 @@ u8 eighty_ninty_three (ide_drive_t *driv
->  {
->  	ide_hwif_t *hwif = drive->hwif;
->  	struct hd_driveid *id = drive->id;
-> +	int ivb = ide_in_drive_list(id, ivb_list);
-> +
-> +	if (ivb)
-> +		printk(KERN_DEBUG "%s: ignoring word 93 validity check\n",
-> +				  drive->name);
-
-    I think "skipping" woud sound better.
->  
->  	if (hwif->cbl == ATA_CBL_PATA40_SHORT)
->  		return 1;
-
-    Wait, shouldn't this check come ahead of all the other code since we're 
-basically overriding every other check with it?
-
-> -	if (hwif->cbl != ATA_CBL_PATA80)
-> +	if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
->  		goto no_80w;
->  
->  	/* Check for SATA but only if we are ATA5 or higher */
-> @@ -587,11 +620,11 @@ u8 eighty_ninty_three (ide_drive_t *driv
->  	/*
->  	 * FIXME:
->  	 * - change master/slave IDENTIFY order
-> -	 * - force bit13 (80c cable present) check
-> +	 * - force bit13 (80c cable present) check also for !ivb devices
->  	 *   (unless the slave device is pre-ATA3)
->  	 */
->  #ifndef CONFIG_IDEDMA_IVB
-> -	if (id->hw_config & 0x4000)
-> +	if ((id->hw_config & 0x4000) || (ivb && (id->hw_config & 0x2000)))
->  #else
->  	if (id->hw_config & 0x6000)
->  #endif
-
-WBR, Sergei
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
