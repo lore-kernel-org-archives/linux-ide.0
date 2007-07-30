@@ -1,83 +1,66 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: Time Problems with 2.6.23-rc1-gf695baf2
-Date: Mon, 30 Jul 2007 16:32:20 +0200
-Message-ID: <6bffcb0e0707300732s6a63e63g4622ebfbbe26e479@mail.gmail.com>
-References: <20070723221630.GA28951@alice>
-	 <6bffcb0e0707241614s7b563b5bu114d2ecb227b1557@mail.gmail.com>
-	 <20070725113349.GB5469@alice> <200707251250.22469.lenb@kernel.org>
-	 <20070725231714.GA24867@alice>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Mon, 30 Jul 2007 12:32:54 -0400
+Message-ID: <46AE12B6.6090408@garzik.org>
+References: <20070705194909.337398431@intel.com> <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:38037 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbXG3OcV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 10:32:21 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1780035wah
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jul 2007 07:32:20 -0700 (PDT)
-In-Reply-To: <20070725231714.GA24867@alice>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:43720 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760353AbXG3Qc7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Jul 2007 12:32:59 -0400
+In-Reply-To: <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Sesterhenn / Snakebyte <snakebyte@gmx.de>
-Cc: Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-acpi@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 
-Hi Eric,
+Kristen Carlson Accardi wrote:
+> @@ -42,6 +42,16 @@ enum scsi_eh_timer_return {
+>  	EH_RESET_TIMER,
+>  };
+>  
+> +/*
+> + * shost pm policy: If you alter this, you also need to alter scsi_sysfs.c
+> + * (for the ascii descriptions)
+> + */
+> +enum scsi_host_link_pm {
+> +	SHOST_NOT_AVAILABLE,
+> +	SHOST_MIN_POWER,
+> +	SHOST_MAX_PERFORMANCE,
+> +	SHOST_MEDIUM_POWER,
+> +};
+>  
+>  struct scsi_host_template {
+>  	struct module *module;
+> @@ -345,6 +355,12 @@ struct scsi_host_template {
+>  	int (*suspend)(struct scsi_device *, pm_message_t state);
+>  
+>  	/*
+> + 	 * link power management support
+> + 	 */
+> +	int (*set_link_pm_policy)(struct Scsi_Host *, enum scsi_host_link_pm);
+> +	enum scsi_host_link_pm default_link_pm_policy;
+> +
+> +	/*
+>  	 * Name of proc directory
+>  	 */
+>  	char *proc_name;
+> @@ -642,6 +658,7 @@ struct Scsi_Host {
+>  	
+>  
+>  	enum scsi_host_state shost_state;
+> +	enum scsi_host_link_pm shost_link_pm_policy;
+>  
+>  	/* ldm bits */
+>  	struct device		shost_gendev;
 
-On 26/07/07, Eric Sesterhenn / Snakebyte <snakebyte@gmx.de> wrote:
-> * Len Brown (lenb@kernel.org) wrote:
-> > > > > > [   13.506890] ACPI Exception (processor_throttling-0084): AE_NOT_FOUND, Evaluating _PTC [20070126]
-> > > > > > [   13.507101] ACPI Exception (processor_throttling-0147): AE_NOT_FOUND, Evaluating _TSS [20070126]
-> >
-> > Note that these are just noise -- new code being verbose when looking for an optional feature.
-> >
-> > The fact that hitting the power button a bunch of times
-> > to make the system move along suggests some sort of missing interrupt problem --
-> > most likely the timer itself.
-> >
-> > [   13.868574] Probing IDE interface ide0...
-> > [  387.279576] Clocksource tsc unstable (delta = 370195339890 ns)
-> >
-> > 5-minutes -- a long probe:-)
-> >
-> > > CONFIG_NO_HZ=y
-> >
-> > does CONFIG_NO_HZ=n make a difference?
->
-> [   41.007654] EXT3 FS on hda1, internal journal
-> [  322.133656] Clocksource tsc unstable (delta = 276476174785 ns)
-> Boot went fine but the system got pretty unresponsive later, 2-3 seconds
-> delay after keypresses on an idle system and a hang during shutdown which i had to resolve by
-> pressing the power button (not to switch it of the hard way, but to keep it rebooting)
->
-> > > CONFIG_HIGH_RES_TIMERS=y
-> >
-> > does CONFIG_HIGH_RES_TIMERS=n make a difference?
->
-> doesnt change anything
->
-> > does "irqpoll" make any difference?
-> > does "notsc" make any difference?
-> > does "idle=poll" make any difference?
->
-> I tried these with the HIGH_RES_TIMERS=n, irqpoll and notsc dont change
-> a thing, idle=poll makes it boot normally
 
-Please use git-bisect
+Any chance the SCSI peeps could ACK this, and then let me include it in 
+the ALPM patchset in the libata tree?
 
-git-bisect start
-git-bisect bad
-git-bisect good 7dcca30a32aadb0520417521b0c44f42d09fe05c
+	Jeff
 
->
->
-> Greetings, Eric
->
 
-Regards,
-Michal
-
--- 
-LOG
-http://www.stardust.webpages.pl/log/
