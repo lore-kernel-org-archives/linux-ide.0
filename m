@@ -1,99 +1,176 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [2.6.23-rc1] ata_piix: EH pending after completion, repeating
- EH (cnt=4)
-Date: Mon, 30 Jul 2007 16:52:01 +0900
-Message-ID: <46AD98A1.2090709@gmail.com>
-References: <200707261545.l6QFjPDZ027738@harpo.it.uu.se>
+Subject: Re: ATA scsi driver misbehavior under kdump capture kernel
+Date: Mon, 30 Jul 2007 19:36:28 +0900
+Message-ID: <46ADBF2C.6060902@gmail.com>
+References: <46AA82D6.mailxB9W1BQ61V@eag09.americas.sgi.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------080105080607020204050100"
+ boundary="------------060608020202000601080804"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:19442 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754747AbXG3HwI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 03:52:08 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so349212rvb
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jul 2007 00:52:07 -0700 (PDT)
-In-Reply-To: <200707261545.l6QFjPDZ027738@harpo.it.uu.se>
+Received: from wa-out-1112.google.com ([209.85.146.181]:18864 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272AbXG3Kgi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 06:36:38 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1727720wah
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jul 2007 03:36:33 -0700 (PDT)
+In-Reply-To: <46AA82D6.mailxB9W1BQ61V@eag09.americas.sgi.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Cliff Wickman <cpw@sgi.com>
+Cc: linux-kernel@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------080105080607020204050100
+--------------060608020202000601080804
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Mikael Pettersson wrote:
-> Sure, here are the boot messages with the newer debug patch:
+Hello, Cliff.
 
-Of course I missed again.  Here's yet another debug patch.  Sorry about
-the trouble.
+Cliff Wickman wrote:
+> I've run into a problem with the ATA SCSI disk driver when running in a
+> kdump dump-capture kernel.
+> 
+> I'm running on 2-processor x86_64 box.  It has 2 scsi disks, /dev/sda and
+> /dev/sdb
+> 
+> My kernel is 2.6.22, and built to be a dump capturing kernel loaded by kexec.
+> When I boot this kernel by itself, it finds both sda and sdb.
+> 
+> But when it is loaded by kexec and booted on a panic it only finds sda.
+> 
+> Any ideas from those familiar with the ATA driver?
+> 
+> 
+> -Cliff Wickman
+>  SGI
+> 
+> 
+> I put some printk's into it and get this:
+> 
+> Standalone:
+> 
+>                                                    [nv_adma_error_handler]
+> cpw: ata_host_register probe port 1 (error_handler:ffffffff81348625)
+> cpw: ata_host_register call ata_port_probe
+> cpw: ata_host_register call ata_port_schedule
+> cpw: ata_host_register call ata_port_wait_eh
+> cpw: ata_port_wait_eh entered
+> cpw: ata_port_wait_eh, preparing to wait
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> cpw: ata_dev_configure entered
+> cpw: ata_dev_configure testing class
+> cpw: ata_dev_configure class is ATA_DEV_ATA
+> ata2.00: ATA-6: ST3200822AS, 3.01, max UDMA/133
+> ata2.00: 390721968 sectors, multi 16: LBA48
+> cpw: ata_dev_configure exiting
+> cpw: ata_dev_configure entered
+> cpw: ata_dev_configure testing class
+> cpw: ata_dev_configure class is ATA_DEV_ATA
+> cpw: ata_dev_configure exiting
+> cpw: ata_dev_set_mode printing:
+> ata2.00: configured for UDMA/133
+> cpw: ata_port_wait_eh, finished wait
+> cpw: ata_port_wait_eh exiting
+> cpw: ata_host_register done with probe port 1
+> 
+> 
+> When loaded with kexec and booted on a panic:
+> 
+> cpw: ata_host_register probe port 1 (error_handler:ffffffff81348625)
+> cpw: ata_host_register call ata_port_probe
+> cpw: ata_host_register call ata_port_schedule
+> cpw: ata_host_register call ata_port_wait_eh
+> cpw: ata_port_wait_eh entered
+> cpw: ata_port_wait_eh, preparing to wait
+> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> cpw: ata_port_wait_eh, finished wait
+> cpw: ata_port_wait_eh exiting
+> cpw: ata_host_register done with probe port 1
+
+Hmmm.. PHY is up but for some reason libata thought there was no device
+there.  Can you try the attached patch and report the result?
 
 -- 
 tejun
 
---------------080105080607020204050100
+--------------060608020202000601080804
 Content-Type: text/x-patch;
- name="debug-2.patch"
+ name="detect-debug.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="debug-2.patch"
+ filename="detect-debug.patch"
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6001aae..0b03a6f 100644
+index 6001aae..4bc042d 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6425,7 +6425,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+@@ -732,6 +732,9 @@ ata_dev_try_classify(struct ata_port *ap, unsigned int device, u8 *r_err)
+ 	if (r_err)
+ 		*r_err = err;
  
- 			ehi->probe_mask = (1 << ATA_MAX_DEVICES) - 1;
- 			ehi->action |= ATA_EH_SOFTRESET;
--			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
-+			ehi->flags |= ATA_EHI_NO_AUTOPSY/* | ATA_EHI_QUIET*/;
++	ata_port_printk(ap, KERN_ERR, "XXX: try_classif dev%d e=%02x %02x:%02x:%02x\n",
++			device, err, tf.lbal, tf.lbam, tf.lbah);
++
+ 	/* see if device passed diags: if master then continue and warn later */
+ 	if (err == 0 && device == 0)
+ 		/* diagnostic fail : do nothing _YET_ */
+@@ -3006,8 +3009,10 @@ int ata_wait_ready(struct ata_port *ap, unsigned long deadline)
  
- 			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
- 			ap->pflags |= ATA_PFLAG_LOADING;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ac6ceed..188cb95 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -693,6 +693,12 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
- 	 * this function completes.
+ 		if (!(status & ATA_BUSY))
+ 			return 0;
+-		if (!ata_port_online(ap) && status == 0xff)
++		if (!ata_port_online(ap) && status == 0xff) {
++			ata_port_printk(ap, KERN_ERR, "XXX: wait_ready status=0xff\n");
+ 			return -ENODEV;
++		}
+ 		if (time_after(now, deadline))
+ 			return -EBUSY;
+ 
+@@ -3037,8 +3042,10 @@ static int ata_bus_post_reset(struct ata_port *ap, unsigned int devmask,
+ 	if (dev0) {
+ 		rc = ata_wait_ready(ap, deadline);
+ 		if (rc) {
+-			if (rc != -ENODEV)
++			if (rc != -ENODEV) {
++				ata_port_printk(ap, KERN_ERR, "XXX: post_reset dev0 rc=%d\n", rc);
+ 				return rc;
++			}
+ 			ret = rc;
+ 		}
+ 	}
+@@ -3067,8 +3074,10 @@ static int ata_bus_post_reset(struct ata_port *ap, unsigned int devmask,
+ 
+ 		rc = ata_wait_ready(ap, deadline);
+ 		if (rc) {
+-			if (rc != -ENODEV)
++			if (rc != -ENODEV) {
++				printk("XXX: post_reset dev1 rc=%d\n", rc);
+ 				return rc;
++			}
+ 			ret = rc;
+ 		}
+ 	}
+@@ -3113,8 +3122,11 @@ static int ata_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+ 	 * pulldown resistor.
  	 */
- 	scsi_req_abort_cmd(qc->scsicmd);
-+
-+	if (ap->pflags & ATA_PFLAG_LOADING) {
-+		printk("EH scheduled with LOADING set cmd=%02x cdb=%02x emask=%02x\n",
-+		       qc->tf.command, qc->cdb[0], qc->err_mask);
-+		dump_stack();
+-	if (ata_check_status(ap) == 0xFF)
++	if (ata_check_status(ap) == 0xFF) {
++		ata_port_printk(ap, KERN_ERR, "XXX: status=0xFF altstatus=0x%x\n",
++				ata_altstatus(ap));
+ 		return -ENODEV;
 +	}
+ 
+ 	return ata_bus_post_reset(ap, devmask, deadline);
  }
+@@ -3402,6 +3414,8 @@ int ata_std_softreset(struct ata_port *ap, unsigned int *classes,
+ 	if (slave_possible && ata_devchk(ap, 1))
+ 		devmask |= (1 << 1);
  
- /**
-@@ -715,6 +721,11 @@ void ata_port_schedule_eh(struct ata_port *ap)
- 	ata_eh_set_pending(ap, 1);
- 	scsi_schedule_eh(ap->scsi_host);
- 
-+	if (ap->pflags & ATA_PFLAG_LOADING) {
-+		printk("EH scheduled with LOADING set\n");
-+		dump_stack();
-+	}
++	ata_port_printk(ap, KERN_ERR, "XXX: devmask=0x%x\n", devmask);
 +
- 	DPRINTK("port EH scheduled\n");
- }
- 
-@@ -739,6 +750,11 @@ int ata_port_abort(struct ata_port *ap)
- 	/* we're gonna abort all commands, no need for fast drain */
- 	ata_eh_set_pending(ap, 0);
- 
-+	if (ap->pflags & ATA_PFLAG_LOADING) {
-+		printk("EH port aborted while LOADING set\n");
-+		dump_stack();
-+	}
-+
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
+ 	/* select device 0 again */
+ 	ap->ops->dev_select(ap, 0);
  
 
---------------080105080607020204050100--
+--------------060608020202000601080804--
