@@ -1,48 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH libata-dev#upstream] libata: implement and use ata_port_desc()
- to report port configuration
-Date: Mon, 30 Jul 2007 13:56:07 +0900
-Message-ID: <46AD6F67.5080206@gmail.com>
-References: <20070729103421.GG22374@htj.dyndns.org>	<20070729143106.446924ba@the-village.bc.nu>	<46ACAC2D.8050307@gmail.com> <20070729185532.180daea3@the-village.bc.nu>
+Subject: [PATCH libata-dev#upstream 1/3] libata: use ata_port_printk() in ata_wait_idle()
+Date: Mon, 30 Jul 2007 14:23:03 +0900
+Message-ID: <20070730052303.GH22374@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:3571 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953AbXG3E4M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 00:56:12 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1661330wah
-        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 21:56:12 -0700 (PDT)
-In-Reply-To: <20070729185532.180daea3@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.190]:6300 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933442AbXG3FXL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jul 2007 01:23:11 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so337109rvb
+        for <linux-ide@vger.kernel.org>; Sun, 29 Jul 2007 22:23:10 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>> Looks as sane an approach. Some obvious errors in the conversion but
->>> simply wrong types I/O v MMIO etc not flaws in the proposal
->> Care to point out?
-> 
-> I didn't save it but it was things like HPT3x3 seemed to be claiming to
-> be MMIO - trivial stuff we can clean up in a merge.
+ata_wait_idle() identified controller by printing out the address of
+the Status register.  This is bogus because 1. it's iomapped address
+2. some controllers don't have Status register and don't initialize
+the field.  Use ata_port_printk() instead.
 
-Ah.. I see.  iomap() interface hides ioport/mmio very well and I just
-assumed it was mmio as most controllers which map single BAR and use
-parts of it for different ports use mmio.  Fixed.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Currently there's no equivalent ata_msg_* level for ATA_DEBUG, so the
+printk is conditionalized with #ifdef ATA_DEBUG.  We need to kill
+ATA_DEBUG, ATA_VERBOSE_DEBUG and integrate them into ata_msg_* in the
+future.
 
->>> Unfortunately there is one big horror you've left unconverted - the status
->>> address printing in ata_wait_... That is why I ended up going the way I
->>> did.
->> The only thing I can find is DPRINTK in ata_wait_idle() which can and
->> should simply be converted to ata_port_printk("abnormal Status 0x%x\n",
->> status).  After all some controller don't even have Status register (FIS
->> based ones, ahci, sil24).
-> 
-> That is probably very sensible yes.
+ include/linux/libata.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Will add this to the series and repost, thanks.
-
--- 
-tejun
+Index: work/include/linux/libata.h
+===================================================================
+--- work.orig/include/linux/libata.h
++++ work/include/linux/libata.h
+@@ -1106,9 +1106,11 @@ static inline u8 ata_wait_idle(struct at
+ {
+ 	u8 status = ata_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+ 
++#ifdef ATA_DEBUG
+ 	if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ)))
+-		DPRINTK("ATA: abnormal status 0x%X on port 0x%p\n",
+-			status, ap->ioaddr.status_addr);
++		ata_port_printk(ap, KERN_DEBUG, "abnormal Status 0x%X\n",
++				status);
++#endif
+ 
+ 	return status;
+ }
