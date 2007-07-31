@@ -1,81 +1,143 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Tue, 31 Jul 2007 12:58:49 -0700
-Message-ID: <20070731125849.501443c1.kristen.c.accardi@intel.com>
-References: <20070705194909.337398431@intel.com>
-	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
-	<46AE12B6.6090408@garzik.org>
-	<46AED656.8070407@gmail.com>
-	<20070731093014.db9e0734.kristen.c.accardi@intel.com>
-	<46AF794F.1020107@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_sis: fix MWDMA for <= UDMA66 chipsets and UDMA for UDMA33 chipsets
+Date: Tue, 31 Jul 2007 22:02:41 +0200
+Message-ID: <200707312202.41856.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <46AF794F.1020107@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:6349 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756688AbXGaUEx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 16:04:53 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so248094nfb
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jul 2007 13:04:50 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 01 Aug 2007 03:02:55 +0900
-Tejun Heo <htejun@gmail.com> wrote:
 
-> Kristen Carlson Accardi wrote:
-> > I think what you are saying is that you'd like a way to use your HIPM
-> > and DIPM without ALPM on the AHCI driver.  Fine - it's really easy
-> > to add these levels later - if they don't make sense at the sysfs interface
-> > we can add module params to specify the definition of "min_power" as 
-> > being performed via HIPM and DIPM instead of ALPM - although as of yet we
-> > have no evidence what so ever that this method actually adds value over
-> > ALPM.
-> 
-> I don't really care whose PS implementation goes in.  Believe me.  I try
-> to stay away from that.  I don't even like my previous implementation.
-> 
-> ALPM has unnecessary performance penalty && is not applicable to
-> non-ahci controller.  Have you tested ALPM on non-intel ahcis?  There
-> are a lot out there these days.
+* Fix MWDMA timings setup in sis_old_set_dmamode() and sis_66_set_dmamode().
 
-I have not personally, however there has been a lot of testing of this
-hardware feature both on other OS and for this particular implementation
-by the powertop community, which is composed of community members running
-all sorts of hardware.  So far I've not received any bug reports
-wrt non-intel AHCI.  As I mentioned several times, the default for ALPM
-is to be off anyway.
+  The old timings were overclocked (even worse behavior than sis5513 IDE driver
+  which depends on BIOS to program correct timings), the new timings are taken
+  from the datasheet (they match timings from ATA spec).
 
-> 
-> I don't think the interface you're suggesting is a good one.  Do you?
+* Fix UDMA timings setup in sis_old_set_dmamode().
 
-I think if it's applicable to SCSI at all it is fine.  If it is not, then
-I think we need to make do with the interface we are given.  I do not think
-we should hold up a feature for libata sysfs integration.
+  Misplaced pci_write_config_word() call resulted in UDMA timings never
+  being set.
 
-> 
-> >> Also, I generally don't think AHCI ALPM is a good idea.  It doesn't have
-> >> 'cool down' period before entering PS state which unnecessarily hampers
-> >> performance and might increase chance of device malfunction.
-> > 
-> > "might increase"?  How about some actual examples of where you've shown
-> > this to be a problem?
-> 
-> I wouldn't have used "might" if I had actual examples.  Well, feel free
-> to disregard anything following the "might".  I just feel uneasy about
-> jumping back and forth between PS and active states between consecutive
-> commands.
+* Fix comments for sis_133_early_set_dmamode() and sis_133_set_dmamode():
+  - only the former function handles early SiS 961 bridges
+  - both functions lack MWDMA timings setup
 
-I want us to be careful about spreading a lot of unease without data to
-back it up.
+* Fix typos in sis_100_set_piomode() and sis_133_set_piomode() comments.
 
-> 
-> > I can assert that I think ALPM is a good idea,
-> > because I've never had a report of it causing problems.  Windows has 
-> > been using this feature for a very long time - and you have to admit that
-> > they have a pretty large market share.  Nobody is complaining about ALPM
-> > increasing device malfunction, so unless you have proof it seems insane
-> > to nak due to this. 
-> 
-> Is ALPM enabled by default?  How do they deal with the performance
-> degradation?
+* Bump driver version.
 
-I believe so, but I'm obviously not privvy to their implementation details.
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+Sergei: Yes, I'm working on sis5513 IDE driver. :)
+
+ drivers/ata/pata_sis.c |   20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
+
+Index: b/drivers/ata/pata_sis.c
+===================================================================
+--- a/drivers/ata/pata_sis.c
++++ b/drivers/ata/pata_sis.c
+@@ -2,6 +2,7 @@
+  *    pata_sis.c - SiS ATA driver
+  *
+  *	(C) 2005 Red Hat <alan@redhat.com>
++ *	(C) 2007 Bartlomiej Zolnierkiewicz
+  *
+  *    Based upon linux/drivers/ide/pci/sis5513.c
+  * Copyright (C) 1999-2000	Andre Hedrick <andre@linux-ide.org>
+@@ -35,7 +36,7 @@
+ #include "sis.h"
+ 
+ #define DRV_NAME	"pata_sis"
+-#define DRV_VERSION	"0.5.1"
++#define DRV_VERSION	"0.5.2"
+ 
+ struct sis_chipset {
+ 	u16 device;				/* PCI host ID */
+@@ -237,7 +238,7 @@ static void sis_old_set_piomode (struct 
+ }
+ 
+ /**
+- *	sis_100_set_pioode - Initialize host controller PATA PIO timings
++ *	sis_100_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring for.
+  *
+@@ -262,7 +263,7 @@ static void sis_100_set_piomode (struct 
+ }
+ 
+ /**
+- *	sis_133_set_pioode - Initialize host controller PATA PIO timings
++ *	sis_133_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+  *	@adev: Device we are configuring for.
+  *
+@@ -334,7 +335,7 @@ static void sis_old_set_dmamode (struct 
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u16 timing;
+ 
+-	const u16 mwdma_bits[] = { 0x707, 0x202, 0x202 };
++	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
+ 	const u16 udma_bits[]  = { 0xE000, 0xC000, 0xA000 };
+ 
+ 	pci_read_config_word(pdev, drive_pci, &timing);
+@@ -342,15 +343,15 @@ static void sis_old_set_dmamode (struct 
+ 	if (adev->dma_mode < XFER_UDMA_0) {
+ 		/* bits 3-0 hold recovery timing bits 8-10 active timing and
+ 		   the higer bits are dependant on the device */
+-		timing &= ~ 0x870F;
++		timing &= ~0x870F;
+ 		timing |= mwdma_bits[speed];
+-		pci_write_config_word(pdev, drive_pci, timing);
+ 	} else {
+ 		/* Bit 15 is UDMA on/off, bit 13-14 are cycle time */
+ 		speed = adev->dma_mode - XFER_UDMA_0;
+ 		timing &= ~0x6000;
+ 		timing |= udma_bits[speed];
+ 	}
++	pci_write_config_word(pdev, drive_pci, timing);
+ }
+ 
+ /**
+@@ -373,7 +374,7 @@ static void sis_66_set_dmamode (struct a
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u16 timing;
+ 
+-	const u16 mwdma_bits[] = { 0x707, 0x202, 0x202 };
++	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
+ 	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000};
+ 
+ 	pci_read_config_word(pdev, drive_pci, &timing);
+@@ -432,8 +433,7 @@ static void sis_100_set_dmamode (struct 
+  *	@adev: Device to program
+  *
+  *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
+- *	Handles early SiS 961 bridges. Supports MWDMA as well unlike
+- *	the old ide/pci driver.
++ *	Handles early SiS 961 bridges.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
+@@ -467,8 +467,6 @@ static void sis_133_early_set_dmamode (s
+  *	@adev: Device to program
+  *
+  *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
+- *	Handles early SiS 961 bridges. Supports MWDMA as well unlike
+- *	the old ide/pci driver.
+  *
+  *	LOCKING:
+  *	None (inherited from caller).
