@@ -1,157 +1,108 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Tue, 31 Jul 2007 13:24:05 -0700
-Message-ID: <20070731132405.05b9cf06.kristen.c.accardi@intel.com>
-References: <20070705194909.337398431@intel.com>
-	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
-	<46AE12B6.6090408@garzik.org>
-	<46AED656.8070407@gmail.com>
-	<1185891382.2750.8.camel@laptopd505.fenrus.org>
-	<46AF4B05.4010700@gmail.com>
-	<20070731091841.857d22bb.kristen.c.accardi@intel.com>
-	<46AF75FA.5080502@gmail.com>
+From: Bob Ham <rah@bash.sh>
+Subject: Re: hpt374 sata (Highpoint Rocket 1540)
+Date: Tue, 31 Jul 2007 22:22:05 +0100
+Message-ID: <1185916925.8484.23.camel@orchid.arb.net>
+References: <1185880124.3483.25.camel@localhost>
+	 <46AF3939.8020805@ru.mvista.com>  <46AF76D7.8050800@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <46AF75FA.5080502@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E4dGmD9Q+NDLuM+nzoT6"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from waffl.ing.me.uk ([217.147.94.6]:53702 "EHLO waffl.ing.me.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755859AbXGaVWv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Jul 2007 17:22:51 -0400
+In-Reply-To: <46AF76D7.8050800@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Wed, 01 Aug 2007 02:48:42 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> Hello, Kristen.
-> 
-> Kristen Carlson Accardi wrote:
-> > On Tue, 31 Jul 2007 23:45:25 +0900
-> > Tejun Heo <htejun@gmail.com> wrote:
-> > 
-> >> Anyways, I don't really think this attribute belongs to SCSI sysfs
-> >> hierarchy.  There currently isn't any alternative but sysfs is part of
-> >> userland visible interface and putting something into SCSI sysfs
-> >> hierarchy just because libata doesn't have one doesn't look like a good
-> >> idea.
-> >>
-> >> sysfs isn't far from being detached from kobject and driver model.  I
-> >> think it would be best to wait a bit and build proper libata sysfs
-> >> hierarchy which won't have to be changed later when libata departs from
-> >> SCSI.  Well, it isn't really a good way but IMHO it's better than
-> >> sticking ATA power saving node into SCSI sysfs hierarchy.
-> > 
-> > "Wait a bit" could be a very long time.  Who is working on building this
-> > new libata sysfs support now?
-> 
-> I happen to be working on sysfs these days and guess why I started
-> working on sysfs. :-)
-> 
-> Disassociating sysfs from driver model is probably one or two patchsets
-> away.  It could have happened earlier but I wanted to pace things a bit
-> so that the changes receive some testing through release cycles.  Check
-> how many sysfs related changes went through .23-rc1 merge window and
-> expect about the same influx during the next cycle; with some luck, it
-> can be complete before .24-rc1 window.
-
-So at current rate of development and kernel release schedule, the best
-possible scenario is still 6 months away - whereas this patchset is already 
-tested and ready for merging now.
-
-> 
-> > If the answer is "no one", which I think it 
-> > may be, do you want to hold up a feature that actually helps many people
-> > for possibly 6 months or more just because we have to go through scsi
-> > right now for our sysfs interface?
-> 
-> I don't necessarily want to but delaying it might be the right thing to
-> do.  Anyways, if we're going to do an interim solution, I don't think
-> mainline SCSI sysfs hierarchy is the right place.  Do it with module
-> parameter which carries large "to be deprecated sign" or maintain out of
-> tree patches.
-
-Out of tree patches don't work.  Nobody tests them.  A module parameter
-will not work - we need to be able to expose the sysfs interface so that
-users may chose to turn the feature off and on at will - mainly according
-to their usage.  For example, at boot time - you want ALPM off to maximize
-performance.  Lets say when you are plugged into the wall socket, you leave
-it off, but then when you go on battery power you would want to enable it.
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
 
-> 
-> > on top of that, the last mail I 
-> > got from James on this subject indicated that if we kept our granularity
-> > large with the power savings levels, SCSI can actually take advantage of
-> > this as well.  Sure, we may have to tweak things around later, but isn't
-> > this what we do routinely?  Holding up valuable features from the kernel 
-> > because things aren't perfect yet seems really broken.
-> >
-> > As far as your complaints about broken hardware go, keep in mind that
-> > the patch set does provide a method of adding these disks to a blacklist,
-> > so I don't see that as a problem.  And, the default for this feature is
-> > "off", and user space would have to explicitly enable it.
-> 
-> This is gonna be a bit long.  Please be patient.
-> 
-> Due to the generosity of the ATA committee, we have, by default, at
-> least two ways to achieve link PS - HIPS and DIPS.  I dunno why but
-> someone thought we needed two.  And then, ahci people thought automatic
+--=-E4dGmD9Q+NDLuM+nzoT6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-They thought we needed two because sometimes the device knows when it
-will be idle faster than the host can. this is why ALPM can determine
-idleness faster than any software algorithm on the host cpu can.  You
-can use ALPM without having HIPM.  You can also use it without having 
-DIPM.
+On Tue, 2007-07-31 at 21:52 +0400, Sergei Shtylyov wrote:
+> Hello, I wrote:
+>=20
+> >> I've had a Highpoint Rocket 1540 (not "RocketRAID") SATA controller fo=
+r
+> >> a while now, using a proprietary binary driver from Highpoint in a lin=
+ux
+> >> 2.4 kernel.  The chipset is an hpt374.  The hpt366 driver freezes on
+> >> boot, as reported by others.
+>=20
+> >    Can we see a bootlog please?
+>=20
+>     ... and the output of 'lspci -v' too.
 
-> HIPS would be nice, which I fully agree, and added ALPM.  Unfortunately,
-> they mandated ALPM to kick in the moment command engine becomes idle, so
-> most current implementations suffer unnecessary performance hit when
-> ALPM is active.
+The machine locks hard when the driver is loaded so I can't give a full
+transcription, but here is the driver's output:
 
-"unnecessary" is subjective and at the moment, untrue.  You 
-have to make performance/power tradeoffs with anything, whether it's 
-CPU or your AHCI controller.  It's the current cost of getting out of these 
-sleep states even if you aren't using ALPM but just doing HIPM or DIPM 
-manually.  But, this is why it's so critical to allow the user to 
-control when ALPM is enabled dynamically - which this patchset does.
-The medium power setting is provided for users who wish to not go to
-SLUMBER and get the higher latency cost but still have some power savings.
+HPT374: IDE controller at PCI slot 0000:00:0d.0
+ACPI: PCI Interrupt 0000:00:0d.0[A] -> GSI 16 (level, low) -> IRQ 16
+HPT374: chipset revision 7
+HPT374: DPLL base: 48 MHz, f_CNT: 141, assuming 33 MHz PCI
+HPT374: using 50 MHz DPLL clock
+HPT374: 100% native mode on irq 16
+    ide2: BM-DMA at 0xec00-0xec07, BIOS settings: hde:DMA, hdf:pio
+    ide3: BM-DMA at 0xec08-0xec0f, BIOS settings: hdg:DMA, hdh:pio
+ACPI: PCI Interrupt 0000:00:0d.1[A] -> GSI 16 (level, low) -> IRQ 16
+HPT374: no clock data saved by BIOS
+HPT374: DPLL base: 48 MHz, f_CNT: 93, assuming 33 MHz PCI
+HPT374: using 50 MHz DPLL clock
+    ide4: BM-DMA at 0xed00-0xed07, BIOS settings: hdi:DMA, hdj:pio
+    ide5: BM-DMA at 0xed08-0xed0f, BIOS settings: hdk:DMA, hdl:pio
 
-> 
-> We have this crazy number of combinations.  HIPS, DIPS,
-> not-so-hot-looking ALPM and probably some number of broken devices which
-> may be happy with some method but not with others.  Some might be happy
-> with PARTIAL but vomit on SLUMBER.  I might be being too pessimistic but
-> my last two years in IDE/ATA land taught me to be pessimistic about
-> hardware quality.  Heck, I bet you some of non-intel ahci
-> implementations which claim to support ALPM will crap themselves when
-> actually told to do so.
-> 
-> If we're gonna do this like NCQ and gonna put knowledge about all the
-> combinations into the driver.  The suggested interface is good enough.
-> Heck, we probably don't even need three levels.  On and off should be
-> enough if things are done right as link PS doesn't have to incur
-> noticeable performance degradation.  But to do that, we'll need to test
-> a lot of combinations and it's gonna be much harder than NCQ (some ahci
-> implementations don't seem to actually enter PS mode when instructed to
-> do so via SControl but turning off the controller saves a lot of power.
->  Maybe ALPM works better on such cases) and the blacklist will probably
-> be longer.
 
-I understand you are being cautious based on your prior experience, but
-again we still have no data to show that we are going to have a lot of
-problems.  Perhaps we should proceed optimistically and deal with problems
-when they actually occur rather than block something on a bet.
+The pata_hpt37x driver is refusing to work as well but it doesn't crash
+the machine.  Here is the relevant error message:
 
-> 
-> The alternate way is to export flexible interface to userland and let
-> userland decide and if we're gonna do that.  SCSI sysfs just isn't the
-> place.
+hpt37x: DPLL did not stabilize.
+pata_hpt37x: BIOS has not set timing clocks.
+hpt37x: DPLL did not stabilize.
 
-How about a patch? I'd love to have a flexible interface to userland,
-it was my goal to provide this with the sysfs files.  The requirement
-is that the users be able to turn ALPM off and on dynamically, and to
-be able to chose the power savings level you want - i.e. SLUMBER vs.
-PARTIAL - perferrably not using those terms since users really shouldn't
-need to know AHCI terminology just to chose a power management level.
- 
+
+lspci gives:
+
+00:0d.0 RAID bus controller: Triones Technologies, Inc. HPT374 (rev 07)
+        Subsystem: Triones Technologies, Inc. Unknown device 0001
+        Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 16
+        I/O ports at efa0 [size=3D8]
+        I/O ports at ef9c [size=3D4]
+        I/O ports at ef90 [size=3D8]
+        I/O ports at ef98 [size=3D4]
+        I/O ports at ec00 [size=3D256]
+        Expansion ROM at fe700000 [disabled] [size=3D128K]
+        Capabilities: [60] Power Management version 2
+
+00:0d.1 RAID bus controller: Triones Technologies, Inc. HPT374 (rev 07)
+        Subsystem: Triones Technologies, Inc. Unknown device 0001
+        Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 16
+        I/O ports at eff0 [size=3D8]
+        I/O ports at efe4 [size=3D4]
+        I/O ports at efa8 [size=3D8]
+        I/O ports at efe0 [size=3D4]
+        I/O ports at ed00 [size=3D256]
+        Capabilities: [60] Power Management version 2
+
+
+Bob
+
+--=20
+Bob Ham <rah@bash.sh>
+
+--=-E4dGmD9Q+NDLuM+nzoT6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQBGr6f47whsMRnFexQRArhYAJ9UfylZbN2vSVOU7NnIEQsExKBx1ACgwom6
+JizdN4LBV7wwqZca5LePyvY=
+=Nw0D
+-----END PGP SIGNATURE-----
+
+--=-E4dGmD9Q+NDLuM+nzoT6--
+
