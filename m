@@ -1,82 +1,100 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH libata-dev#upstream 2/2] libata: move EH repeat reporting into ata_eh_report()
-Date: Tue, 31 Jul 2007 23:27:41 +0200 (MEST)
-Message-ID: <200707312127.l6VLRfGR029509@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: hpt374 sata (Highpoint Rocket 1540)
+Date: Tue, 31 Jul 2007 23:32:10 +0200
+Message-ID: <200707312332.10820.bzolnier@gmail.com>
+References: <1185880124.3483.25.camel@localhost> <46AF76D7.8050800@ru.mvista.com> <1185916925.8484.23.camel@orchid.arb.net>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:63257 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934001AbXGaV17 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Jul 2007 17:27:59 -0400
+Received: from nf-out-0910.google.com ([64.233.182.191]:16474 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764381AbXGaVlP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 17:41:15 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so2567nfb
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jul 2007 14:41:13 -0700 (PDT)
+In-Reply-To: <1185916925.8484.23.camel@orchid.arb.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, jeff@garzik.org, linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: Bob Ham <rah@bash.sh>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-On Tue, 31 Jul 2007 16:51:00 +0900, Tejun Heo wrote:
-> EH is sometimes repeated without any error or action.  For example,
-> this happens when probing IDENTIFY fails because of a phantom device.
-> In these cases, all the repeated EH does is making sure there is no
-> unhandled error or pending action and return.  This repeation is
-> necessary to avoid losing any event which occurred while EH was in
-> progress.
+
+Hi,
+
+On Tuesday 31 July 2007, Bob Ham wrote:
+> On Tue, 2007-07-31 at 21:52 +0400, Sergei Shtylyov wrote:
+> > Hello, I wrote:
+> > 
+> > >> I've had a Highpoint Rocket 1540 (not "RocketRAID") SATA controller for
+> > >> a while now, using a proprietary binary driver from Highpoint in a linux
+> > >> 2.4 kernel.  The chipset is an hpt374.  The hpt366 driver freezes on
+> > >> boot, as reported by others.
+> > 
+> > >    Can we see a bootlog please?
+> > 
+> >     ... and the output of 'lspci -v' too.
 > 
-> Unfortunately, this dry run causes annonying "EH pending after
-> completion" message.  This patch moves the repeat reporting into
-> ata_eh_report() such that it's more compact and skipped on dry runs.
+> The machine locks hard when the driver is loaded so I can't give a full
+> transcription, but here is the driver's output:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mikael Pettersson <mikep@it.uu.se>
-> ---
-> Mikael, please verify this removes the annonying message you're
-> seeing.
+> HPT374: IDE controller at PCI slot 0000:00:0d.0
+> ACPI: PCI Interrupt 0000:00:0d.0[A] -> GSI 16 (level, low) -> IRQ 16
+> HPT374: chipset revision 7
+> HPT374: DPLL base: 48 MHz, f_CNT: 141, assuming 33 MHz PCI
+> HPT374: using 50 MHz DPLL clock
+> HPT374: 100% native mode on irq 16
+>     ide2: BM-DMA at 0xec00-0xec07, BIOS settings: hde:DMA, hdf:pio
+>     ide3: BM-DMA at 0xec08-0xec0f, BIOS settings: hdg:DMA, hdh:pio
+> ACPI: PCI Interrupt 0000:00:0d.1[A] -> GSI 16 (level, low) -> IRQ 16
+> HPT374: no clock data saved by BIOS
+> HPT374: DPLL base: 48 MHz, f_CNT: 93, assuming 33 MHz PCI
+> HPT374: using 50 MHz DPLL clock
+>     ide4: BM-DMA at 0xed00-0xed07, BIOS settings: hdi:DMA, hdj:pio
+>     ide5: BM-DMA at 0xed08-0xed0f, BIOS settings: hdk:DMA, hdl:pio
+> 
+> 
+> The pata_hpt37x driver is refusing to work as well but it doesn't crash
+> the machine.  Here is the relevant error message:
+> 
+> hpt37x: DPLL did not stabilize.
+> pata_hpt37x: BIOS has not set timing clocks.
+> hpt37x: DPLL did not stabilize.
 
-Yes, this patch eliminates the "EH pending after completion" message
-I've been getting.
+Does this patch change anything?
 
-However, patch 1/2 in this set, "don't skip EH report if action is 
-pending", causes a bunch of new "exception ... frozen" messages:
+[PATCH] hpt366: always tune PIO
 
---- dmesg-2.6.23-rc1	2007-07-23 12:30:12.000000000 +0200
-+++ -	2007-07-31 23:19:21.162137100 +0200
-@@ -1,44 +1,44 @@
-...
--pata_pdc2027x 0000:04:02.0: PLL input clock 16660 kHz
-+pata_pdc2027x 0000:04:02.0: PLL input clock 16651 kHz
- scsi0 : pata_pdc2027x
- scsi1 : pata_pdc2027x
- ata1: PATA max UDMA/133 cmd 0xf88297c0 ctl 0xf8829fda bmdma 0xf8829000 irq 18
- ata2: PATA max UDMA/133 cmd 0xf88295c0 ctl 0xf8829dda bmdma 0xf8829008 irq 18
-+ata1: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
- ata1.00: ATA-7: ST3320620A, 3.AAD, max UDMA/100
- ata1.00: 625142448 sectors, multi 16: LBA48 
- ata1.00: configured for UDMA/100
-+ata2: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
- scsi 0:0:0:0: Direct-Access     ATA      ST3320620A       3.AA PQ: 0 ANSI: 5
- sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
- sd 0:0:0:0: [sda] Write Protect is off
-@@ -255,10 +256,11 @@
- scsi3 : ata_piix
- ata3: SATA max UDMA/133 cmd 0x0001ec00 ctl 0x0001e882 bmdma 0x0001e400 irq 19
- ata4: SATA max UDMA/133 cmd 0x0001e800 ctl 0x0001e482 bmdma 0x0001e408 irq 19
-+ata3: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-+ata4: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
- ata4.00: ATAPI: TSSTcorpCD/DVDW SH-S183A, SB00, max UDMA/33
- ata4.00: applying bridge limits
- ata4.00: configured for UDMA/33
--ata4: EH pending after completion, repeating EH (cnt=4)
- scsi 3:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S183A SB00 PQ: 0 ANSI: 5
- ata_piix 0000:00:1f.5: MAP [ P0 P2 P1 P3 ]
- ACPI: PCI Interrupt 0000:00:1f.5[B] -> GSI 19 (level, low) -> IRQ 19
-@@ -267,6 +269,8 @@
- scsi5 : ata_piix
- ata5: SATA max UDMA/133 cmd 0x0001d400 ctl 0x0001d082 bmdma 0x0001c880 irq 19
- ata6: SATA max UDMA/133 cmd 0x0001d000 ctl 0x0001cc02 bmdma 0x0001c888 irq 19
-+ata5: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-+ata6: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
- kjournald starting.  Commit interval 5 seconds
- EXT3-fs: mounted filesystem with ordered data mode.
- usbcore: registered new interface driver usbfs
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/hpt366.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-This is with both 1/2 and 2/2 applied, with only 2/2 applied the
-"EH pending ..." is gone and the new "exception ... frozen" don't appear.
-
-/Mikael
+Index: b/drivers/ide/pci/hpt366.c
+===================================================================
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.10	Jun 29, 2007
++ * linux/drivers/ide/pci/hpt366.c		Version 1.11	Jul 29, 2007
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -1265,10 +1265,10 @@ static void __devinit init_hwif_hpt366(i
+ 	if (new_mcr != old_mcr)
+ 		pci_write_config_byte(dev, hwif->select_data + 1, new_mcr);
+ 
+-	if (!hwif->dma_base) {
+-		hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
++	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
++
++	if (hwif->dma_base == 0)
+ 		return;
+-	}
+ 
+ 	hwif->ultra_mask = hwif->cds->udma_mask;
+ 	hwif->mwdma_mask = 0x07;
