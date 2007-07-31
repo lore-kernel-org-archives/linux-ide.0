@@ -1,70 +1,49 @@
-From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
-Subject: Boot fails on Intel SATA controller
-Date: Tue, 31 Jul 2007 11:00:59 -0300
-Message-ID: <20070731110059.4bae43d4@localhost>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Tue, 31 Jul 2007 07:16:22 -0700
+Message-ID: <1185891382.2750.8.camel@laptopd505.fenrus.org>
+References: <20070705194909.337398431@intel.com>
+	 <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
+	 <46AE12B6.6090408@garzik.org>  <46AED656.8070407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:38674 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755580AbXGaODK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 10:03:10 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761473AbXGaOQy@vger.kernel.org>
+In-Reply-To: <46AED656.8070407@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: kelk1@comcast.net
 
+On Tue, 2007-07-31 at 15:27 +0900, Tejun Heo wrote:
+> Jeff Garzik wrote:
+> > Any chance the SCSI peeps could ACK this, and then let me include it in
+> > the ALPM patchset in the libata tree?
+> 
+> ATA link PS is pretty complex with HIPM, DIPM and AHCI ALPM.  I'm not
+> sure whether this three level knob would be sufficient. 
 
- Hi there,
+adding more levels later is easy.
 
- A Mandriva user is reporting that his machine hangs while booting
-kernels 2.6.22.1 and 2.6.23-rc1.
+>  It might be
+> good enough if we're gonna develop extensive in-kernel black/white list
+> specifying which method works on which combination but my gut tells me
+> that it's best left to userland (probably in the form of per-notebook PS
+> profile).
 
- But boots fine with 2.6.21.
+either sucks. AHCI ALPM ought to work if it's supported; it's what other
+operating systems also use... 
+> 
+> Adding to the fun, there are quite a few broken devices out there which
+> act weirdly when link PS actions are taken.
 
-Here is the 2.6.22 boot log:
+do you have any specific examples that act funny with the patch in
+question here? (the patch tries to be careful, previous patches weren't
+always so please test this patch before claiming the concept as a whole
+is broken)
+> 
+> Also, I generally don't think AHCI ALPM is a good idea.  It doesn't have
+> 'cool down' period before entering PS state
 
-"""
-SCSI subsystem initialized
-Loading scsi_mod.ko module
-Loading libata.ko module
-ACPI: PCI Interrupt 0000:00:1f.2[C] -> Loading ahci.ko GSI 20 (level, low) ->
-IRQ 18
-module
-input: ImPS/2 Logitech Wheel Mouse as /class/input/input1
-ahci 0000:00:1f.2: AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl IDE mode
-ahci 0000:00:1f.2: flags: 64bit ncq pm led slum part
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-scsi3 : ahci
-ata1: SATA max UDMA/133 cmd 0xf881ad00 ctl 0x00000000 bmdma 0x00000000 irq 18
-ata2: SATA max UDMA/133 cmd 0xf881ad80 ctl 0x00000000 bmdma 0x00000000 irq 18
-ata3: SATA max UDMA/133 cmd 0xf881ae00 ctl 0x00000000 bmdma 0x00000000 irq 18
-ata4: SATA max UDMA/133 cmd 0xf881ae80 ctl 0x00000000 bmdma 0x00000000 irq 18
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: qc timeout (cmd 0x27)
-ata1.00: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors (781422768)
-ata1.00: ATA-7: HDS724040KLSA80, KFAOA20N, max UDMA/133
-ata1.00: 781422768 sectors, multi 8: LBA48
-ata1.00: failed to set xfermode (err_mask=0x40)
-ata1: failed to recover some devices, retrying in 5 secs
-"""
-
- System is a Dell Dimension 8400 with SATA controller
-
-"""
-$ lspcidrake | grep IDE
-piix            : Intel Corporation|82801FB/FBM/FR/FW/FRW (ICH6 Family) IDE
-Controller [STORAGE_IDE]
-ahci            : Intel Corporation|82801FR/FRW (ICH6R/ICH6RW) SATA Controller
-[STORAGE_IDE]
-"""
-
- There's more info in the ticket:
-
-http://qa.mandriva.com/show_bug.cgi?id=32076
-
--- 
-Luiz Fernando N. Capitulino
+that's a chipset implementation decision.... not part of the
+spec/technology per se.
