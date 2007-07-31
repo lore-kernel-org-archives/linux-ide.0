@@ -1,196 +1,168 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PATCHSET/RFC] Refactor block layer to improve support for stacked devices.
-Date: Tue, 31 Jul 2007 12:27:12 +1000
-Message-ID: <18094.40448.257550.417390__13327.6874119931$1185848884$gmane$org@notabene.brown>
+From: Marc Bejarano <beej@alum.mit.edu>
+Subject: Re: errors on shutdown with PMP
+Date: Mon, 30 Jul 2007 23:13:41 -0400
+Message-ID: <200707310341.l6V3ex5r011162@outgoing-alum.mit.edu>
+References: <200707272153.l6RLrE5r007622@outgoing-alum.mit.edu>
+ <46AAF12F.9020301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:36750 "EHLO mx2.suse.de"
+Received: from ALUM-2.MIT.EDU ([18.7.21.145]:44241 "EHLO alum-2.mit.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S941055AbXGaC1a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Jul 2007 22:27:30 -0400
+	id S1753737AbXGaDlQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Jul 2007 23:41:16 -0400
+In-Reply-To: <46AAF12F.9020301@gmail.com>
+References: <200707272153.l6RLrE5r007622@outgoing-alum.mit.edu>
+ <46AAF12F.9020301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>, device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vg
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+At 03:33 7/28/2007, Tejun Heo wrote:
+ >Device times out write.
 
-Hi,
- I have just sent a patch-set to linux-kernel that touches quite a
- number of block device drives, with particular relevance to md and
- dm.
+odd that it would be able to be part of an lv's filesystem that had 
+hundreds of gigabytes recently written to it and then choke on 
+flushing during shutdown.
 
- Rather than fill lots of peoples mailboxes multiple times (35 patches
- in the set), I only sent the full set to linux-kernel, and am just
- sending this single notification to other relevant lists.
+ >And then never comes back.
 
- If you want to look at the patch set (and please do) and are not
- subscribe to linux-kernel, you can view it here:
+asleep at the wheel ;)
 
-   http://lkml.org/lkml/2007/7/30/468
- 
- or ask and I'll send you all 35 patches.
+ >Please post the result of 'smartctl -a /dev/sdX' where sdX is the device
+ >which went offline.
 
-Below is the introductory email
+i suppose i should have seen that coming.  here you go:
+===
+[root@dell ~]# /usr/local/sbin/smartctl -a /dev/sdc
+smartctl version 5.37 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6 
+Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
-Thanks,
-NeilBrown
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda 7200.10 family
+Device Model:     ST3750640AS
+Serial Number:    5QD05YFC
+Firmware Version: 3.AAE
+User Capacity:    750,156,374,016 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Jul 30 23:00:27 2007 EDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
 
+General SMART Values:
+Offline data collection status:  (0x82) Offline data collection activity
+                                         was completed without error.
+                                         Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0) The previous self-test 
+routine completed
+                                         without error or no 
+self-test has ever
+                                         been run.
+Total time to complete Offline
+data collection:                 ( 430) seconds.
+Offline data collection
+capabilities:                    (0x5b) SMART execute Offline immediate.
+                                         Auto Offline data collection 
+on/off support.
+                                         Suspend Offline collection upon new
+                                         command.
+                                         Offline surface scan supported.
+                                         Self-test supported.
+                                         No Conveyance Self-test supported.
+                                         Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                         power-saving mode.
+                                         Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                         General Purpose Logging supported.
+Short self-test routine
+recommended polling time:        (   1) minutes.
+Extended self-test routine
+recommended polling time:        ( 202) minutes.
 
-From: NeilBrown <neilb@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Date:	Tue, 31 Jul 2007 12:15:45 +1000
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH 
+TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+   1 
+Raw_Read_Error_Rate     0x000f   090   079   006    Pre-fail  Always 
+      -       66902364
+   3 
+Spin_Up_Time            0x0003   093   093   000    Pre-fail  Always 
+      -       0
+   4 
+Start_Stop_Count        0x0032   100   100   020    Old_age   Always 
+      -       13
+   5 
+Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always 
+      -       31
+   7 
+Seek_Error_Rate         0x000f   081   060   030    Pre-fail  Always 
+      -       146651228
+   9 
+Power_On_Hours          0x0032   098   098   000    Old_age   Always 
+      -       2190
+  10 
+Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always 
+      -       0
+  12 
+Power_Cycle_Count       0x0032   100   100   020    Old_age   Always 
+      -       25
+187 
+Unknown_Attribute       0x0032   001   001   000    Old_age   Always 
+      -       810
+189 
+Unknown_Attribute       0x003a   100   100   000    Old_age   Always 
+      -       0
+190 
+Temperature_Celsius     0x0022   063   057   045    Old_age   Always 
+      -       68647119028261
+194 
+Temperature_Celsius     0x0022   037   043   000    Old_age   Always 
+      -       37 (Lifetime Min/Max 0/32)
+195 
+Hardware_ECC_Recovered  0x001a   056   049   000    Old_age   Always 
+      -       102514302
+197 
+Current_Pending_Sector  0x0012   099   099   000    Old_age   Always 
+      -       40
+198 
+Offline_Uncorrectable   0x0010   099   099   000    Old_age   Offline 
+      -       40
+199 
+UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always 
+      -       0
+200 
+Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offline 
+      -       0
+202 
+TA_Increase_Count       0x0032   100   253   000    Old_age   Always 
+      -       0
 
+SMART Error Log Version: 1
+No Errors Logged
 
-The following 35(!) patches achieve a refactoring of some parts of the
-block layer to provide better support for stacked devices.
+SMART Self-test log structure revision number 1
 
-The core issue is that of letting bio_add_page know the limitation
-that the device imposes so that it doesn't create a bio that is too large.
+SMART Selective self-test log data structure revision number 1
+  SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+     1        0        0  Not_testing
+     2        0        0  Not_testing
+     3        0        0  Not_testing
+     4        0        0  Not_testing
+     5        0        0  Not_testing
+Selective self-test flags (0x0):
+   After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+===
 
-For a unstacked disk device (e.g. scsi), bio_add_page can access
-max_nr_sectors and max_nr_segments and some other details to know how
-segments should be counted, and does the appropriate checks (this is a
-simplification, get is close enough for this discussion).
+thanks!
+marc
 
-For stacked devices (dm, md etc) bio_add_page can also call into the
-driver via merge_bvec_fn to find out if a page can be added to a bio.
-
-This mostly works for a simple stack (e.g. md on scsi) but breaks down
-with more complicated stacks (dm on md on scsi) as the recusive calls
-to merge_bvec_fn that are required are difficult to get right, and
-don't provide any guarantees in the face of array reconfiguration anyway.
-dm and md both take the approach of "if the never level down defines
-merge_bvec_fn, then set max_sectors to PAGE_SIZE/512 and live with small
-requests".
-
-So this patchset introduces a new approach.  bio_add_page is allowed
-to create bios as big as it likes, and each layer is responsible for
-splitting that bio up as required.
-
-For intermediate levels like raid0, a number of new bios might be
-created which refer to parts of the original, including parts of the
-bi_io_vec.
-
-For the bottom level driver (__make_request), each "struct request"
-can refer to just part of a bio, so a bio can be effectively split
-among several requests (a request can still reference multiple small
-bios, and can concievable list parts of large bios and some small bios
-as well, though the merging required to achieve this isn't implemented
-yet - that patch set is big enough as it is).
-
-This requires that the bi_io_vec become immutable, and that certain
-parts of the bio become immutable.
-
-To achieve this, we introduce fields into the bio so that it can point
-to just part of the bi_io_vec (an offset and a size) and introduce
-similar fields into 'struct request' to refer to only part of a bio list.
-
-I am keen to receive both review and testing.  I have tested it on
-SATA drives with a range of md configurations, but haven't tested dm,
-or ide-floppy, or various other bits that needed to be changed.
-
-Probably the changes that are mostly likely to raise eyebrows involve
-the code to iterate over the segments in a bio or in a 'struct
-request', so I'll give a bit more detail about them here.
-
-Previously these (bio_for_each_segment, rq_for_each_bio) were simple
-macros that provided pointers into bi_io_vec.  
-
-As the actual segments that a request might need to handle may no
-longer be explicitly in bi_io_vec (e.g. an offset might need to be
-added, or a size restriction might need to be imposed) this is no
-longer possible.  Instead, these functions (now rq_for_each_segment
-and bio_for_each_segment) fill in a 'struct bio_vec' with appropriate
-values.  e.g.
-  struct bio_vec bvec;
-  struct bio_iterator i;
-  bio_for_each_segment(bvec, bio, i)
-	use bvec.bv_page, bvec.bi_offset, bvec.bv_len
-
-This might seem like data is being copied around a bit more, but it
-should all be in L1 cache and could conceivable be optimised into
-registers by the compiler, so I don't believe this is a big problem
-(no, I haven't figured a good way to test it).
-
-To achieve this, the "for_each" macros are now somewhat more complex.
-For example, rq_for_each_segment is:
-
-#define bio_for_each_segment_offset(bv, bio, _i, offs, _size)		\
-	for (_i.i = 0, _i.offset = (bio)->bi_offset + offs,		\
-		 _i.size = min_t(int, _size, (bio)->bi_size - offs);   	\
-	     _i.i < (bio)->bi_vcnt && _i.size > 0;			\
-	     _i.i++)							\
-		if (bv = *bio_iovec_idx((bio), _i.i),			\
-		    bv.bv_offset += _i.offset,				\
-		    bv.bv_len <= _i.offset				\
-		    ? (_i.offset -= bv.bv_len, 0)			\
-		    : (bv.bv_len -= _i.offset,				\
-		       _i.offset = 0,					\
-		       bv.bv_len < _i.size				\
-		       ? (_i.size -= bv.bv_len, 1)			\
-		       : (bv.bv_len = _i.size,				\
-			  _i.size = 0,					\
-			  bv.bv_len > 0)))
-
-#define bio_for_each_segment(bv, bio, __i)				\
-		bio_for_each_segment_offset(bv, bio, __i, 0, (bio)->bi_size)
-
-It does some with some explanatory text in a comment, but it is still
-a bit daunting.  Any suggestions on making this more approachable
-would be very welcome.
-
-Rather than 'cc' this to various lists or individuals who might be
-stake-holders in the relevant code, I am posting this full patchset
-just to linux-kernel and will separate email some stakeholders with
-pointers and an offer of the full patch set.
-
-The patches are against 2.6.23-rc1-mm1.
-
-Thanks for any feedback.
-
-NeilBrown
-
-
- [PATCH 001 of 35] Replace bio_data with blk_rq_data
- [PATCH 002 of 35] Replace bio_cur_sectors with blk_rq_cur_sectors.
- [PATCH 003 of 35] Introduce rq_for_each_segment replacing rq_for_each_bio
- [PATCH 004 of 35] Merge blk_recount_segments into blk_recalc_rq_segments
- [PATCH 005 of 35] Stop updating bi_idx, bv_len, bv_offset when a request completes
- [PATCH 006 of 35] Only call bi_end_io once for any bio.
- [PATCH 007 of 35] Drop 'size' argument from bio_endio and bi_end_io.
- [PATCH 008 of 35] Introduce bi_iocnt to count requests sharing the one bio.
- [PATCH 009 of 35] Remove overloading of bi_hw_segments in raid5.
- [PATCH 010 of 35] New function blk_req_append_bio
- [PATCH 011 of 35] Stop exporting blk_rq_bio_prep
- [PATCH 012 of 35] Share code between init_request_from_bio and blk_rq_bio_prep
- [PATCH 013 of 35] Don't update bi_hw_*_size if we aren't going to merge.
- [PATCH 014 of 35] Change blk_phys/hw_contig_segment to take requests, not bios.
- [PATCH 015 of 35] Move hw_front_size and hw_back_size from bio to request.
- [PATCH 016 of 35] Centralise setting for REQ_NOMERGE.
- [PATCH 017 of 35] Fix various abuse of bio fields in umem.c
- [PATCH 018 of 35] Remove bi_idx
- [PATCH 019 of 35] Convert bio_for_each_segment to fill in a fresh bio_vec
- [PATCH 020 of 35] Add bi_offset and allow a bio to reference only part of a bi_io_vec
- [PATCH 021 of 35] Teach umem.c about bi_offset and to limit to bi_size.
- [PATCH 022 of 35] Teach dm-crypt to honour bi_offset and bi_size
- [PATCH 023 of 35] Teach pktcdvd.c to honour bi_offset and bi_size
- [PATCH 024 of 35] Allow request bio list not to end with NULL
- [PATCH 025 of 35] Treat rq->hard_nr_sectors as setting an overriding limit in the size of the request
- [PATCH 026 of 35] Split any large bios that arrive at __make_request.
- [PATCH 027 of 35] Remove bi_XXX_segments and related code.
- [PATCH 028 of 35] Split arbitrarily large requests to md/raid0 and md/linear
- [PATCH 029 of 35] Teach md/raid10 to split arbitrarily large bios.
- [PATCH 030 of 35] Teach raid5 to split incoming bios.
- [PATCH 031 of 35] Use bio_multi_split to fully split bios for pktcdvd.
- [PATCH 032 of 35] Remove blk_queue_merge_bvec and bio_split and related code.
- [PATCH 033 of 35] Simplify stacking of IO restrictions
- [PATCH 034 of 35] Simplify bio_add_page and raid1/raid10 resync which use it.
- [PATCH 035 of 35] Simplify bio splitting in dm.
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
