@@ -1,52 +1,55 @@
-From: Bob Ham <rah@bash.sh>
-Subject: Re: hpt374 sata (Highpoint Rocket 1540)
-Date: Tue, 31 Jul 2007 23:06:00 +0100
-Message-ID: <1185919560.8484.27.camel@orchid.arb.net>
-References: <1185880124.3483.25.camel@localhost>
-	 <46AF76D7.8050800@ru.mvista.com> <1185916925.8484.23.camel@orchid.arb.net>
-	 <200707312332.10820.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ztRGdi2CBxKgkCccbTcx"
+From: Segher Boessenkool <segher@kernel.crashing.org>
+Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver
+Date: Wed, 1 Aug 2007 00:31:04 +0200
+Message-ID: <d04530fcd6e879e0bc059049b7951aef@kernel.crashing.org>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain> <46A79DE0.8060405@ru.mvista.com> <46A79F14.9040409@freescale.com> <46A7A17C.8090505@ru.mvista.com> <46A7A1D5.7020003@freescale.com> <46A7A5E4.4090105@ru.mvista.com>
+Mime-Version: 1.0 (Apple Message framework v623)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waffl.ing.me.uk ([217.147.94.6]:55561 "EHLO waffl.ing.me.uk"
+Received: from gate.crashing.org ([63.228.1.57]:52720 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761468AbXGaWGA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Jul 2007 18:06:00 -0400
-In-Reply-To: <200707312332.10820.bzolnier@gmail.com>
+	id S1752886AbXGaWbX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Jul 2007 18:31:23 -0400
+In-Reply-To: <46A7A5E4.4090105@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Scott Wood <scottwood@freescale.com>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+>     This doesn't mean that shift is better anyway. If everyone 
+> considers it
+> better, I give up. But be warned that shift (stride) is not the only 
+> property
+> characterizing register accesses -- the regs might be only accessible 
+> as
+> 16/32-bit quantities, for example (16-bit is a real world example -- 
+> from
+> Amiga or smth of that sort, IIRC).
 
---=-ztRGdi2CBxKgkCccbTcx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+More importantly, "reg-shift" doesn't say what part of
+the bigger words to access.  A common example is byte-wide
+registers on a 32-bit-only bus; it's about 50%-50% between
+connecting the registers to the low byte vs. connecting it
+to the byte with the lowest address.
 
-On Tue, 2007-07-31 at 23:32 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
->=20
-> > > >> The hpt366 driver freezes on
-> > > >> boot, as reported by others.
+The only realistic way to handle all this is to put some
+knowledge into the device driver.  This does of course
+also mean that no "reg-shift" property is needed; the
+device driver can look at your "compatible" property,
+instead.
+
+>>>    Why the heck should we care about the UART code taling about IDE?!
 >
-> Does this patch change anything?
+>> Consistency?
+>
+>     We're not obliged to be consistent with every piece of the kernel 
+> code.
 
-Unfortunately not.
+It would be nice to not name similar properties in the
+device tree dissimilarly.  Kernel code doesn't come into
+the picture here.
 
---=20
-Bob Ham <rah@bash.sh>
 
---=-ztRGdi2CBxKgkCccbTcx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQBGr7JF7whsMRnFexQRAtufAKC0XzNPFZewK2SqWclSE+8ENLjzEACeNln+
-nR7O/gZqu4a6AVsIh/W/Yr4=
-=mBjv
------END PGP SIGNATURE-----
-
---=-ztRGdi2CBxKgkCccbTcx--
+Segher
 
