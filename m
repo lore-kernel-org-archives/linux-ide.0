@@ -1,88 +1,31 @@
-From: Eric Sesterhenn / Snakebyte <snakebyte@gmx.de>
-Subject: Re: Time Problems with 2.6.23-rc1-gf695baf2
-Date: Tue, 31 Jul 2007 16:54:57 +0200
-Message-ID: <20070731145456.GB25175@alice>
-References: <20070723221630.GA28951@alice> <6bffcb0e0707241614s7b563b5bu114d2ecb227b1557@mail.gmail.com> <20070725113349.GB5469@alice> <200707251250.22469.lenb@kernel.org> <20070725231714.GA24867@alice> <6bffcb0e0707300732s6a63e63g4622ebfbbe26e479@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Tue, 31 Jul 2007 23:58:26 +0900
+Message-ID: <46AF4E12.8060204@gmail.com>
+References: <20070705194909.337398431@intel.com>	 <20070705130518.135e4e3c.kristen.c.accardi@intel.com>	 <46AE12B6.6090408@garzik.org>  <46AED656.8070407@gmail.com> <1185891382.2750.8.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6bffcb0e0707300732s6a63e63g4622ebfbbe26e479@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Eric Sesterhenn / Snakebyte <snakebyte@gmx.de>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-acpi@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, venkatesh.pallipadi@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:51329 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761775AbXGaO6d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 10:58:33 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2120862wah
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jul 2007 07:58:33 -0700 (PDT)
+In-Reply-To: <1185891382.2750.8.camel@laptopd505.fenrus.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 
-* Michal Piotrowski (michal.k.k.piotrowski@gmail.com) wrote:
-> Hi Eric,
-> 
-> On 26/07/07, Eric Sesterhenn / Snakebyte <snakebyte@gmx.de> wrote:
-> > * Len Brown (lenb@kernel.org) wrote:
-> > > > > > > [   13.506890] ACPI Exception (processor_throttling-0084): AE_NOT_FOUND, Evaluating _PTC [20070126]
-> > > > > > > [   13.507101] ACPI Exception (processor_throttling-0147): AE_NOT_FOUND, Evaluating _TSS [20070126]
-> > >
-> > > Note that these are just noise -- new code being verbose when looking for an optional feature.
-> > >
-> > > The fact that hitting the power button a bunch of times
-> > > to make the system move along suggests some sort of missing interrupt problem --
-> > > most likely the timer itself.
-> > >
-> > > [   13.868574] Probing IDE interface ide0...
-> > > [  387.279576] Clocksource tsc unstable (delta = 370195339890 ns)
-> > >
-> > > 5-minutes -- a long probe:-)
-> > >
-> > > > CONFIG_NO_HZ=y
-> > >
-> > > does CONFIG_NO_HZ=n make a difference?
-> >
-> > [   41.007654] EXT3 FS on hda1, internal journal
-> > [  322.133656] Clocksource tsc unstable (delta = 276476174785 ns)
-> > Boot went fine but the system got pretty unresponsive later, 2-3 seconds
-> > delay after keypresses on an idle system and a hang during shutdown which i had to resolve by
-> > pressing the power button (not to switch it of the hard way, but to keep it rebooting)
-> >
-> > > > CONFIG_HIGH_RES_TIMERS=y
-> > >
-> > > does CONFIG_HIGH_RES_TIMERS=n make a difference?
-> >
-> > doesnt change anything
-> >
-> > > does "irqpoll" make any difference?
-> > > does "notsc" make any difference?
-> > > does "idle=poll" make any difference?
-> >
-> > I tried these with the HIGH_RES_TIMERS=n, irqpoll and notsc dont change
-> > a thing, idle=poll makes it boot normally
-> 
-> Please use git-bisect
-> 
-> git-bisect start
-> git-bisect bad
-> git-bisect good 7dcca30a32aadb0520417521b0c44f42d09fe05c
+Arjan van de Ven wrote:
+> either sucks. AHCI ALPM ought to work if it's supported; it's what other
+> operating systems also use... 
 
+A question.  Does the other OS enable ALPM without checking against
+white/black list?  Or is it enabled only on certain configurations -
+e.g. specific notebooks, etc?
 
-took some time, but i got a scape goat, added venkatesh to the CC list,
-
-greetings, Eric
-
-b8550397f1f3d4b8b2c5257c88dae25d58ed is first bad commit
-commit 18eab8550397f1f3d4b8b2c5257c88dae25d58ed
-Author: Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>
-Date:   Fri Jun 15 19:37:00 2007 -0400
-
-    ACPI: Enable C3 even when PM2_control is zero
-    
-    On systems that do not have pm2_control_block, we cannot really use
-    ARB_DISABLE before C3. We used to disable C3 totally on such systems.
-    
-    To be compatible with Windows, we need to enable C3 on such systems now.
-    We just skip ARB_DISABLE step before entering the C3-state and assume
-    hardware is handling things correctly. Also, ACPI spec is not clear
-    about pm2_control is _needed_ for C3 or not.
-    
-    We have atleast one system that need this to enable C3.
-    
-    Signed-off-by: Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>
-    Signed-off-by: Len Brown <len.brown@intel.com>
-
+-- 
+tejun
