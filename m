@@ -1,143 +1,140 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev#upstream 2/2] libata: move EH repeat reporting into ata_eh_report()
-Date: Tue, 31 Jul 2007 16:51:00 +0900
-Message-ID: <20070731075100.GB13674@htj.dyndns.org>
-References: <20070731074203.GA13674@htj.dyndns.org>
+From: Petr Vandrovec <vandrove@vc.cvut.cz>
+Subject: Re: errors on shutdown with PMP
+Date: Tue, 31 Jul 2007 02:16:40 -0700
+Message-ID: <46AEFDF8.9010904@vc.cvut.cz>
+References: <200707272153.l6RLrE5r007622@outgoing-alum.mit.edu> <46AAF12F.9020301@gmail.com> <200707310341.l6V3ex5r011162@outgoing-alum.mit.edu> <46AEBB71.9040003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:10390 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770AbXGaHvG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 03:51:06 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2016693wah
-        for <linux-ide@vger.kernel.org>; Tue, 31 Jul 2007 00:51:05 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20070731074203.GA13674@htj.dyndns.org>
+Received: from mailgw.cvut.cz ([147.32.3.235]:50471 "EHLO mailgw.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754420AbXGaJ4G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Jul 2007 05:56:06 -0400
+In-Reply-To: <46AEBB71.9040003@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: Tejun Heo <htejun@gmail.com>
+Cc: Marc Bejarano <beej@alum.mit.edu>, linux-ide@vger.kernel.org
 
-EH is sometimes repeated without any error or action.  For example,
-this happens when probing IDENTIFY fails because of a phantom device.
-In these cases, all the repeated EH does is making sure there is no
-unhandled error or pending action and return.  This repeation is
-necessary to avoid losing any event which occurred while EH was in
-progress.
+Tejun Heo wrote:
+> Marc Bejarano wrote:
+>> At 03:33 7/28/2007, Tejun Heo wrote:
+>>> Device times out write.
+>> odd that it would be able to be part of an lv's filesystem that had
+>> hundreds of gigabytes recently written to it and then choke on flushing
+>> during shutdown.
+>>
+>>> And then never comes back.
+>> asleep at the wheel ;)
+>>
+>>> Please post the result of 'smartctl -a /dev/sdX' where sdX is the device
+>>> which went offline.
+>> i suppose i should have seen that coming.  here you go:
+>> ===
+>> [root@dell ~]# /usr/local/sbin/smartctl -a /dev/sdc
+>> smartctl version 5.37 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6
+>> Bruce Allen
+>> Home page is http://smartmontools.sourceforge.net/
+>>
+>> === START OF INFORMATION SECTION ===
+>> Model Family:     Seagate Barracuda 7200.10 family
+>> Device Model:     ST3750640AS
+> [--snip--]
+>> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE     
+>> UPDATED  WHEN_FAILED RAW_VALUE
+>>   1 Raw_Read_Error_Rate     0x000f   090   079   006    Pre-fail  Always
+>>      -       66902364
+>>   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always
+>>      -       31
+>>   7 Seek_Error_Rate         0x000f   081   060   030    Pre-fail  Always
+>>      -       146651228
+>> 195 Hardware_ECC_Recovered  0x001a   056   049   000    Old_age   Always
+>>      -       102514302
+>> 198 Offline_Uncorrectable   0x0010   099   099   000    Old_age  
+>> Offline      -       40
+> 
+> Counters don't look too friendly.  Do you happen to have another drive
+> of the same model?  If so, can you post smartctl -a of the drive?
 
-Unfortunately, this dry run causes annonying "EH pending after
-completion" message.  This patch moves the repeat reporting into
-ata_eh_report() such that it's more compact and skipped on dry runs.
+Offline_Uncorrectable looks bad, as well as Reallocated_Sector_Ct... 
+For Raw_Read_Error_Rate/Seek_Error_Rate/Hardware_ECC_Recovered it is how 
+Seagates work:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikep@it.uu.se>
----
-Mikael, please verify this removes the annonying message you're
-seeing.
+gwy:~# for a in /dev/sd[a-f]; do smartctl -a $a; done | grep 
+'\(Raw_Read\|Seek_Error\|Hardware_ECC\|Offline_Uncorr\|Reallocated\|^Device 
+M\|^Firmware\)'
+Device Model:     Hitachi HDT725032VLA380
+Firmware Version: V54OA52A
+   1 Raw_Read_Error_Rate     0x000b   100   100   016    Pre-fail 
+Always       -       0
+   5 Reallocated_Sector_Ct   0x0033   100   100   005    Pre-fail 
+Always       -       0
+   7 Seek_Error_Rate         0x000b   100   100   067    Pre-fail 
+Always       -       0
+196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always 
+       -       0
+198 Offline_Uncorrectable   0x0008   100   100   000    Old_age 
+Offline      -       0
+Device Model:     Hitachi HDS721010KLA330
+Firmware Version: GKAOA70F
+   1 Raw_Read_Error_Rate     0x000b   100   100   016    Pre-fail 
+Always       -       0
+   5 Reallocated_Sector_Ct   0x0033   100   100   005    Pre-fail 
+Always       -       0
+   7 Seek_Error_Rate         0x000b   100   100   067    Pre-fail 
+Always       -       0
+196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always 
+       -       0
+198 Offline_Uncorrectable   0x0008   100   100   000    Old_age 
+Offline      -       0
+Device Model:     ST3750640AS
+Firmware Version: 3.AAE
+   1 Raw_Read_Error_Rate     0x000f   110   087   006    Pre-fail 
+Always       -       201790283
+   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail 
+Always       -       0
+   7 Seek_Error_Rate         0x000f   076   060   030    Pre-fail 
+Always       -       43520234
+195 Hardware_ECC_Recovered  0x001a   059   050   000    Old_age   Always 
+       -       40212951
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age 
+Offline      -       0
+Device Model:     Hitachi HDS721010KLA330
+Firmware Version: GKAOA70F
+   1 Raw_Read_Error_Rate     0x000b   100   100   016    Pre-fail 
+Always       -       0
+   5 Reallocated_Sector_Ct   0x0033   100   100   005    Pre-fail 
+Always       -       0
+   7 Seek_Error_Rate         0x000b   100   100   067    Pre-fail 
+Always       -       0
+196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always 
+       -       0
+198 Offline_Uncorrectable   0x0008   100   100   000    Old_age 
+Offline      -       0
+Device Model:     ST3750640AS
+Firmware Version: 3.AAD
+   1 Raw_Read_Error_Rate     0x000f   114   083   006    Pre-fail 
+Always       -       121388046
+   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail 
+Always       -       0
+   7 Seek_Error_Rate         0x000f   078   065   030    Pre-fail 
+Always       -       78605591
+195 Hardware_ECC_Recovered  0x001a   066   050   000    Old_age   Always 
+       -       194670617
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age 
+Offline      -       0
+Device Model:     Sans Digital V.36.B0D
+Firmware Version: V.36.B0D
 
-Thanks.
 
- drivers/ata/libata-eh.c |   26 ++++++++++++++++----------
- include/linux/libata.h  |    5 +++--
- 2 files changed, 19 insertions(+), 12 deletions(-)
+BTW, sdb-sde are behind PMP, no problems on shutdown.  Funniest is that 
+all these counters are 32bit, so during day you see like your disk is 
+estimated to die in 5 days, then suddenly that 32bit counter overflows, 
+and your disk is again healthy as possible.  I did not measure what 
+these counters actually count on these 750GB drives, but on 100GB 
+notebook Seagate drive every sector read counts as 3-5 ECC errors, and 
+every Smart data interrogation as 1...
+								Petr
 
-Index: work/drivers/ata/libata-eh.c
-===================================================================
---- work.orig/drivers/ata/libata-eh.c
-+++ work/drivers/ata/libata-eh.c
-@@ -290,7 +290,7 @@ enum scsi_eh_timer_return ata_scsi_timed
- void ata_scsi_error(struct Scsi_Host *host)
- {
- 	struct ata_port *ap = ata_shost_to_port(host);
--	int i, repeat_cnt = ATA_EH_MAX_REPEAT;
-+	int i;
- 	unsigned long flags;
- 
- 	DPRINTK("ENTER\n");
-@@ -356,6 +356,9 @@ void ata_scsi_error(struct Scsi_Host *ho
- 			__ata_port_freeze(ap);
- 
- 		spin_unlock_irqrestore(ap->lock, flags);
-+
-+		/* initialize eh_tries */
-+		ap->eh_tries = ATA_EH_MAX_TRIES;
- 	} else
- 		spin_unlock_wait(ap->lock);
- 
-@@ -396,15 +399,12 @@ void ata_scsi_error(struct Scsi_Host *ho
- 		spin_lock_irqsave(ap->lock, flags);
- 
- 		if (ap->pflags & ATA_PFLAG_EH_PENDING) {
--			if (--repeat_cnt) {
--				ata_port_printk(ap, KERN_INFO,
--					"EH pending after completion, "
--					"repeating EH (cnt=%d)\n", repeat_cnt);
-+			if (--ap->eh_tries) {
- 				spin_unlock_irqrestore(ap->lock, flags);
- 				goto repeat;
- 			}
- 			ata_port_printk(ap, KERN_ERR, "EH pending after %d "
--					"tries, giving up\n", ATA_EH_MAX_REPEAT);
-+					"tries, giving up\n", ATA_EH_MAX_TRIES);
- 			ap->pflags &= ~ATA_PFLAG_EH_PENDING;
- 		}
- 
-@@ -1658,6 +1658,7 @@ static void ata_eh_report(struct ata_por
- {
- 	struct ata_eh_context *ehc = &ap->eh_context;
- 	const char *frozen, *desc;
-+	char tries_buf[6];
- 	int tag, nr_failed = 0;
- 
- 	desc = NULL;
-@@ -1682,18 +1683,23 @@ static void ata_eh_report(struct ata_por
- 	if (ap->pflags & ATA_PFLAG_FROZEN)
- 		frozen = " frozen";
- 
-+	memset(tries_buf, 0, sizeof(tries_buf));
-+	if (ap->eh_tries < ATA_EH_MAX_TRIES)
-+		snprintf(tries_buf, sizeof(tries_buf) - 1, " t%d",
-+			 ap->eh_tries);
-+
- 	if (ehc->i.dev) {
- 		ata_dev_printk(ehc->i.dev, KERN_ERR, "exception Emask 0x%x "
--			       "SAct 0x%x SErr 0x%x action 0x%x%s\n",
-+			       "SAct 0x%x SErr 0x%x action 0x%x%s%s\n",
- 			       ehc->i.err_mask, ap->sactive, ehc->i.serror,
--			       ehc->i.action, frozen);
-+			       ehc->i.action, frozen, tries_buf);
- 		if (desc)
- 			ata_dev_printk(ehc->i.dev, KERN_ERR, "%s\n", desc);
- 	} else {
- 		ata_port_printk(ap, KERN_ERR, "exception Emask 0x%x "
--				"SAct 0x%x SErr 0x%x action 0x%x%s\n",
-+				"SAct 0x%x SErr 0x%x action 0x%x%s%s\n",
- 				ehc->i.err_mask, ap->sactive, ehc->i.serror,
--				ehc->i.action, frozen);
-+				ehc->i.action, frozen, tries_buf);
- 		if (desc)
- 			ata_port_printk(ap, KERN_ERR, "%s\n", desc);
- 	}
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -287,8 +287,8 @@ enum {
- 	ATA_EHI_DID_RESET	= ATA_EHI_DID_SOFTRESET | ATA_EHI_DID_HARDRESET,
- 	ATA_EHI_RESET_MODIFIER_MASK = ATA_EHI_RESUME_LINK,
- 
--	/* max repeat if error condition is still set after ->error_handler */
--	ATA_EH_MAX_REPEAT	= 5,
-+	/* max tries if error condition is still set after ->error_handler */
-+	ATA_EH_MAX_TRIES	= 5,
- 
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
-@@ -537,6 +537,7 @@ struct ata_port {
- 	struct ata_eh_info	eh_info;
- 	/* EH context owned by EH */
- 	struct ata_eh_context	eh_context;
-+	int			eh_tries;
- 
- 	struct ata_device	device[ATA_MAX_DEVICES];
- 
+
