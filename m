@@ -1,74 +1,123 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: Marvell 7042 (sata_mv) fails to initialize drive
-Date: Wed, 1 Aug 2007 21:13:26 +0200
-Message-ID: <6bffcb0e0708011213q1c8908e2p1c87967745b977b5@mail.gmail.com>
-References: <46AEAAB1.801@gutschke.com>
+From: Laurent Riffard <laurent.riffard@free.fr>
+Subject: Re: 2.6.23-rc1-mm2 (checks-for-80wire-cable-use-in-pata_via)
+Date: Wed, 01 Aug 2007 22:13:41 +0200
+Message-ID: <46B0E975.30404@free.fr>
+References: <20070731230932.a9459617.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:1772 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758427AbXHATN3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 15:13:29 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so277642wah
-        for <linux-ide@vger.kernel.org>; Wed, 01 Aug 2007 12:13:26 -0700 (PDT)
-In-Reply-To: <46AEAAB1.801@gutschke.com>
-Content-Disposition: inline
+Received: from smtp1-g19.free.fr ([212.27.42.27]:53484 "EHLO smtp1-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755609AbXHAUNo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Aug 2007 16:13:44 -0400
+In-Reply-To: <20070731230932.a9459617.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Markus Gutschke <markus@gutschke.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Markus,
+Le 01.08.2007 08:09, Andrew Morton a =E9crit :
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-=
+rc1/2.6.23-rc1-mm2/
+=2E..
+> +libata-acpi-checks-for-80wire-cable-use-in-pata_via.patch
+=2E..
+>  sata/pata things
 
-On 31/07/07, Markus Gutschke <markus@gutschke.com> wrote:
-> I just tried hooking up a Hitachi 1TB SATA-II drive to a Marvell 7042
-> based controller, and the most recent Linux kernel (2.6.23-rc1) fails to
-> properly initialize the interface.
+Alan,
 
-Does 2.6.22.1 work?
+this does not work after a suspend-resume cycle, I get a " ACPI get
+timing mode failed (AE 0x1001)" error.
 
-> Here are the relevant kernel messages:
->
-> > kernel: [43.312417] sata_mv 0000:06:00.0: version 0.81
-> > kernel: [43.312752] ACPI: PCI Interrupt Link [APC5] enabled at IRQ 16
-> > kernel: [43.312757] ACPI: PCI Interrupt 0000:06:00.0[A] -> Link [APC5] -> GSI 16 (level, low) -> IRQ 16
-> > kernel: [43.312788] sata_mv 0000:06:00.0: Applying 60X1C0 workarounds to unknown rev
-> > kernel: [43.314443] sata_mv 0000:06:00.0: Gen-IIE 32 slots 4 ports SCSI mode IRQ via INTx
-> > kernel: [43.314535] scsi0 : sata_mv
-> > kernel: [43.314581] scsi1 : sata_mv
-> > kernel: [43.314614] scsi2 : sata_mv
-> > kernel: [43.314640] scsi3 : sata_mv
-> > kernel: [43.314660] ata1: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20003522120 bmdma 0x0000000000000000 irq 16
-> > kernel: [43.314663] ata2: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20003524120 bmdma 0x0000000000000000 irq 16
-> > kernel: [43.314666] ata3: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20003526120 bmdma 0x0000000000000000 irq 16
-> > kernel: [43.314669] ata4: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20003528120 bmdma 0x0000000000000000 irq 16
-> > kernel: [53.409086] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > kernel: [59.741602] ata1: EH pending after completion, repeating EH (cnt=4)
-> > kernel: [59.777642] ata2: SATA link down (SStatus 0 SControl 300)
-> > kernel: [59.809752] ata3: SATA link down (SStatus 0 SControl 300)
-> > kernel: [59.841740] ata4: SATA link down (SStatus 0 SControl 300)
->
-> The kernel never even registers the drive as an available disk device,
-> whereas everything appears to work fine, if I connect the disk to one of
-> the other controllers (JMicron AHCI, or NVidia sata_nv) on this motherboard.
->
-> As I have two of those disks (in a RAID-1 array) and multiple
-> independent controllers, it is relatively easy for me to do some testing
-> here. The worst case scenario is that I need to wait a couple of hours
-> for the array to rebuild itself after I am done experimenting.
->
-> Let me know, if there is anything I can do to help you diagnose the root
-> cause, or whether this is a known bug and you don't need any help
-> testing at this point.
->
->
-> Markus
+$ dmesg | grep ata
+=2E..
+scsi0 : pata_via
+scsi1 : pata_via
+ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma
+0x0001b800 irq 14
+ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma
+0x0001b808 irq 15
+ata1.00: ATA-5: ST340016A, 3.75, max UDMA/100
+ata1.00: 78165360 sectors, multi 16: LBA
+ata1.01: ATA-7: Maxtor 6Y080L0, YAR41BW0, max UDMA/133
+ata1.01: 160086528 sectors, multi 16: LBA
+ata1.00: configured for UDMA/100
+ata1.01: configured for UDMA/100
+ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-4165B, DL03, max UDMA/33
+ata2.01: ATAPI: CD-950E/AKU, A4Q, max MWDMA2, CDB intr
+ata2.00: configured for UDMA/33
+ata2.01: configured for MWDMA2
+ata1.00: Unable to set Link PM policy
+ata1.01: Unable to set Link PM policy
+ata2.00: Unable to set Link PM policy
+ata2.01: Unable to set Link PM policy
+=2E..
+[ suspend-to-disk/resume cycle happens here ]
+=2E..
+ata1.00: Unable to set Link PM policy
+ata1.01: Unable to set Link PM policy
+ata2.00: Unable to set Link PM policy
+ata2.01: Unable to set Link PM policy
+ata1: ACPI get timing mode failed (AE 0x1001)   <=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+ata1.00: limited to UDMA/33 due to 40-wire cable
+ata1.01: limited to UDMA/33 due to 40-wire cable
+ata1.00: configured for UDMA/33
+ata1.01: configured for UDMA/33
+ata2: ACPI get timing mode failed (AE 0x1001)
+ata2.00: configured for UDMA/33
+ata2.01: configured for MWDMA2
 
-Regards,
-Michal
 
--- 
-LOG
-http://www.stardust.webpages.pl/log/
+Anyway, long before 2.6.23-rc1-mm2, 80-wire cable detection was
+already wrong after a suspend-resume cycle. So I cooked the
+following patch 2 days ago.
+
+It may be the wrong approach but it works for me.
+
+--=20
+pata_via: preserve cable detection bits in via_do_set_mode
+
+via_cable_detect performs cable detection by checking bits in PCI
+layer. But via_do_set_mode overwrites these bits. This behaviour
+breaks cable detection after suspend/resume cycle.
+
+So let's teach via_do_set_mode to preserve cable detection bits.
+
+Signed-off-by: Laurent Riffard <laurent.riffard@free.fr>
+---
+
+ drivers/ata/pata_via.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+Index: linux-2.6-mm/drivers/ata/pata_via.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6-mm.orig/drivers/ata/pata_via.c
++++ linux-2.6-mm/drivers/ata/pata_via.c
+@@ -238,6 +238,7 @@ static void via_do_set_mode(struct ata_p
+ 	unsigned long T =3D  1000000000 / via_clock;
+ 	unsigned long UT =3D T/tdiv;
+ 	int ut;
++	u8 cable80_status;
+ 	int offset =3D 3 - (2*ap->port_no) - adev->devno;
+
+
+@@ -287,6 +288,12 @@ static void via_do_set_mode(struct ata_p
+ 			ut =3D t.udma ? (0xe0 | (FIT(t.udma, 2, 9) - 2)) : 0x07;
+ 			break;
+ 	}
++
++	/* Preserve cable detection bit */
++	pci_read_config_byte(pdev, 0x50 + offset, &cable80_status);
++	cable80_status &=3D 0x10;
++	ut |=3D cable80_status;
++
+ 	/* Set UDMA unless device is not UDMA capable */
+ 	if (udma_type)
+ 		pci_write_config_byte(pdev, 0x50 + offset, ut);
+
+
+
