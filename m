@@ -1,98 +1,651 @@
-From: Mikko Rapeli <mikko.rapeli@iki.fi>
-Subject: Re: ST340823A disk size issue
-Date: Thu, 2 Aug 2007 00:50:03 +0300
-Message-ID: <20070801215003.GA1864@nalle>
-References: <20070801092903.GA1199@nalle> <200708012234.03375.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git patches] IDE fixes
+Date: Wed, 1 Aug 2007 23:52:14 +0200
+Message-ID: <200708012352.15150.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw02.mail.saunalahti.fi ([195.197.172.116]:60191 "EHLO
-	gw02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbXHAVuJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 17:50:09 -0400
+Received: from nf-out-0910.google.com ([64.233.182.186]:31989 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbXHAVyC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 17:54:02 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so87098nfb
+        for <linux-ide@vger.kernel.org>; Wed, 01 Aug 2007 14:54:00 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <200708012234.03375.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Aug 01, 2007 at 10:34:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> Could you try attached patch?
-> 
-> [PATCH] ide-disk: workaround for buggy HPA support on ST340823A
 
-Umh, it's getting late but some makefile magic maybe missing, or I
-should do a clean build?
+Please pull from:
 
-$ make drivers/ide/ide-disk.ko V=1 
-rm -f include/config/kernel.release
-echo 2.6.22.1 > include/config/kernel.release
-set -e; echo '  CHK     include/linux/version.h'; mkdir -p
-include/linux/;     (echo \#define LINUX_VERSION_CODE 132630; echo
-'#define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))';) <
-/home/mcfrisk/src/linux/linux-2.6.22.1.new/Makefile >
-include/linux/version.h.tmp; if [ -r include/linux/version.h ] && cmp -s
-include/linux/version.h include/linux/version.h.tmp; then rm -f
-include/linux/version.h.tmp; else echo '  UPD
-include/linux/version.h'; mv -f include/linux/version.h.tmp
-include/linux/version.h; fi
-  CHK     include/linux/version.h
-set -e; echo '  CHK     include/linux/utsrelease.h'; mkdir -p
-include/linux/;  if [ `echo -n "2.6.22.1" | wc -c ` -gt 64 ]; then echo
-'"2.6.22.1" exceeds 64 characters' >&2; exit 1; fi; (echo \#define
-UTS_RELEASE \"2.6.22.1\";) < include/config/kernel.release >
-include/linux/utsrelease.h.tmp; if [ -r include/linux/utsrelease.h ] &&
-cmp -s include/linux/utsrelease.h include/linux/utsrelease.h.tmp; then
-rm -f include/linux/utsrelease.h.tmp; else echo '  UPD
-include/linux/utsrelease.h'; mv -f include/linux/utsrelease.h.tmp
-include/linux/utsrelease.h; fi
-  CHK     include/linux/utsrelease.h
-make -f scripts/Makefile.build obj=scripts/basic
-make -f scripts/Makefile.build obj=.
-mkdir -p arch/i386/kernel/
-make -f scripts/Makefile.build obj=. missing-syscalls
-  /bin/sh scripts/checksyscalls.sh gcc -m32
--Wp,-MD,./.missing-syscalls.d  -nostdinc -isystem
-/usr/lib/gcc/i486-linux-gnu/4.1.3/include -D__KERNEL__ -Iinclude
--include include/linux/autoconf.h -Wall -Wundef -Wstrict-prototypes
--Wno-trigraphs -fno-strict-aliasing -fno-common -Os -pipe -msoft-float
--mregparm=3 -freg-struct-return -mpreferred-stack-boundary=2
--march=i486 -mtune=generic -ffreestanding -maccumulate-outgoing-args
--DCONFIG_AS_CFI=1 -DCONFIG_AS_CFI_SIGNAL_FRAME=1
--Iinclude/asm-i386/mach-default -fomit-frame-pointer -g
--fno-stack-protector -Wdeclaration-after-statement -Wno-pointer-sign
--D"KBUILD_STR(s)=#s" -D"KBUILD_BASENAME=KBUILD_STR(missing_syscalls)"
--D"KBUILD_MODNAME=KBUILD_STR(missing_syscalls)"
-make -f scripts/Makefile.build obj=scripts
-make -f scripts/Makefile.build obj=scripts/genksyms
-make -f scripts/Makefile.build obj=scripts/mod
-make KBUILD_MODULES=1   \
-        -f scripts/Makefile.build obj=drivers/ide drivers/ide/ide-disk.o
-make -f
-/home/mcfrisk/src/linux/linux-2.6.22.1.new/scripts/Makefile.modpost
-  scripts/mod/modpost -m  -o
-/home/mcfrisk/src/linux/linux-2.6.22.1.new/Module.symvers
-ERROR: "ide_in_drive_list" [drivers/ide/ide-disk.ko] undefined!
-make[1]: *** [__modpost] Error 1
-make: *** [drivers/ide/ide-disk.ko] Error 2
+master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
 
-Based on Alan's comments I'm already running 2.6.22.1 with this:
+to receive the following updates:
 
-diff -ru linux-2.6.22.1/drivers/ide/ide-disk.c linux-2.6.22.1.new/drivers/ide/ide-disk.c
---- linux-2.6.22.1/drivers/ide/ide-disk.c	2007-07-10 21:56:30.000000000 +0300
-+++ linux-2.6.22.1.new/drivers/ide/ide-disk.c	2007-08-01 22:59:47.000000000 +0300
-@@ -502,6 +502,17 @@
- 			 capacity, sectors_to_MB(capacity),
- 			 set_max, sectors_to_MB(set_max));
+ drivers/ide/arm/icside.c   |    3 +-
+ drivers/ide/ide-tape.c     |    2 +-
+ drivers/ide/pci/alim15x3.c |    2 +-
+ drivers/ide/pci/cmd64x.c   |    4 +-
+ drivers/ide/pci/cs5520.c   |    2 +-
+ drivers/ide/pci/cs5535.c   |   42 +++++++++++++-----------------
+ drivers/ide/pci/it8213.c   |   33 ++++++++++++-----------
+ drivers/ide/pci/jmicron.c  |   21 +++------------
+ drivers/ide/pci/piix.c     |   17 ++++++------
+ drivers/ide/pci/scc_pata.c |   61 ++++++++++++++-----------------------------
+ drivers/ide/pci/sis5513.c  |    1 +
+ drivers/ide/pci/slc90e66.c |   15 +++++------
+ drivers/scsi/ide-scsi.c    |   10 +++----
+ 13 files changed, 85 insertions(+), 128 deletions(-)
+
+
+Bartlomiej Zolnierkiewicz (7):
+      alim15x3: Correct HP detect
+      cs5520: fix PIO auto-tuning in ->ide_dma_check method
+      cs5535: PIO fixes
+      it8213: PIO fixes (take 2)
+      jmicron: PIO fixes
+      piix/slc90e66: fix PIO1 handling in ->speedproc method (take 2)
+      scc_pata: PIO fixes
+
+David Lamparter (1):
+      sis5513: Add FSC Amilo A1630 PCI subvendor/dev to laptops
+
+Jordan Crouse (1):
+      ide: Fix an overrun found in the CS5535 IDE driver
+
+Mariusz Kozlowski (2):
+      drivers/ide/arm/icside.c: kmalloc + memset conversion to kzalloc
+      drivers/scsi/ide-scsi.c: kmalloc + memset conversion to kzalloc
+
+Meelis Roos (1):
+      ide: fix runtogether printk's in cmd64x IDE driver
+
+Stephen Rothwell (1):
+      ide: eliminate warnings in ide-tape.c
+
+
+diff --git a/drivers/ide/arm/icside.c b/drivers/ide/arm/icside.c
+index c89b5f4..8a9b98f 100644
+--- a/drivers/ide/arm/icside.c
++++ b/drivers/ide/arm/icside.c
+@@ -693,13 +693,12 @@ icside_probe(struct expansion_card *ec, const struct ecard_id *id)
+ 	if (ret)
+ 		goto out;
  
-+	if ((set_max % 2) && (set_max == capacity + 1)) {
-+		printk(KERN_INFO "Old drive detected, keeping current capacity.\n");
-+		return;
-+	}
+-	state = kmalloc(sizeof(struct icside_state), GFP_KERNEL);
++	state = kzalloc(sizeof(struct icside_state), GFP_KERNEL);
+ 	if (!state) {
+ 		ret = -ENOMEM;
+ 		goto release;
+ 	}
+ 
+-	memset(state, 0, sizeof(state));
+ 	state->type	= ICS_TYPE_NOTYPE;
+ 	state->dev	= &ec->dev;
+ 
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index e82bfa5..1fa5794 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -640,7 +640,7 @@ typedef enum {
+ } idetape_chrdev_direction_t;
+ 
+ struct idetape_bh {
+-	unsigned short b_size;
++	u32 b_size;
+ 	atomic_t b_count;
+ 	struct idetape_bh *b_reqnext;
+ 	char *b_data;
+diff --git a/drivers/ide/pci/alim15x3.c b/drivers/ide/pci/alim15x3.c
+index 5511c86..025689d 100644
+--- a/drivers/ide/pci/alim15x3.c
++++ b/drivers/ide/pci/alim15x3.c
+@@ -593,7 +593,7 @@ static struct dmi_system_id cable_dmi_table[] = {
+ 		.ident = "HP Pavilion N5430",
+ 		.matches = {
+ 			DMI_MATCH(DMI_BOARD_VENDOR, "Hewlett-Packard"),
+-			DMI_MATCH(DMI_BOARD_NAME, "OmniBook N32N-736"),
++			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
+ 		},
+ 	},
+ 	{ }
+diff --git a/drivers/ide/pci/cmd64x.c b/drivers/ide/pci/cmd64x.c
+index 19633c5..0e3b5de 100644
+--- a/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -475,11 +475,11 @@ static unsigned int __devinit init_chipset_cmd64x(struct pci_dev *dev, const cha
+ 		switch (rev) {
+ 		case 0x07:
+ 		case 0x05:
+-			printk("%s: UltraDMA capable", name);
++			printk("%s: UltraDMA capable\n", name);
+ 			break;
+ 		case 0x03:
+ 		default:
+-			printk("%s: MultiWord DMA force limited", name);
++			printk("%s: MultiWord DMA force limited\n", name);
+ 			break;
+ 		case 0x01:
+ 			printk("%s: MultiWord DMA limited, "
+diff --git a/drivers/ide/pci/cs5520.c b/drivers/ide/pci/cs5520.c
+index bccedf9..b89e816 100644
+--- a/drivers/ide/pci/cs5520.c
++++ b/drivers/ide/pci/cs5520.c
+@@ -133,7 +133,7 @@ static void cs5520_tune_drive(ide_drive_t *drive, u8 pio)
+ static int cs5520_config_drive_xfer_rate(ide_drive_t *drive)
+ {
+ 	/* Tune the drive for PIO modes up to PIO 4 */	
+-	cs5520_tune_drive(drive, 4);
++	cs5520_tune_drive(drive, 255);
+ 
+ 	/* Then tell the core to use DMA operations */
+ 	return 0;
+diff --git a/drivers/ide/pci/cs5535.c b/drivers/ide/pci/cs5535.c
+index ce44e38..082ca7d 100644
+--- a/drivers/ide/pci/cs5535.c
++++ b/drivers/ide/pci/cs5535.c
+@@ -2,6 +2,7 @@
+  * linux/drivers/ide/pci/cs5535.c
+  *
+  * Copyright (C) 2004-2005 Advanced Micro Devices, Inc.
++ * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
+  *
+  * History:
+  * 09/20/2005 - Jaya Kumar <jayakumar.ide@gmail.com>
+@@ -83,14 +84,17 @@ static void cs5535_set_speed(ide_drive_t *drive, u8 speed)
+ 
+ 	/* Set the PIO timings */
+ 	if ((speed & XFER_MODE) == XFER_PIO) {
+-		u8 pioa;
+-		u8 piob;
+-		u8 cmd;
++		ide_drive_t *pair = &drive->hwif->drives[drive->dn ^ 1];
++		u8 cmd, pioa;
+ 
+-		pioa = speed - XFER_PIO_0;
+-		piob = ide_get_best_pio_mode(&(drive->hwif->drives[!unit]),
+-						255, 4);
+-		cmd = pioa < piob ? pioa : piob;
++		cmd = pioa = speed - XFER_PIO_0;
 +
- 	if (lba48)
- 		set_max = idedisk_set_max_address_ext(drive, set_max);
- 	else
-
-
++		if (pair->present) {
++			u8 piob = ide_get_best_pio_mode(pair, 255, 4);
++
++			if (piob < cmd)
++				cmd = piob;
++		}
+ 
+ 		/* Write the speed of the current drive */
+ 		reg = (cs5535_pio_cmd_timings[cmd] << 16) |
+@@ -116,7 +120,7 @@ static void cs5535_set_speed(ide_drive_t *drive, u8 speed)
+ 
+ 		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
+ 
+-		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_7)
++		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_4)
+ 			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
+ 		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2)
+ 			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
+@@ -151,32 +155,22 @@ static int cs5535_set_drive(ide_drive_t *drive, u8 speed)
+  *
+  *	A callback from the upper layers for PIO-only tuning.
+  */
+-static void cs5535_tuneproc(ide_drive_t *drive, u8 xferspeed)
++static void cs5535_tuneproc(ide_drive_t *drive, u8 pio)
+ {
+-	u8 modes[] = {	XFER_PIO_0, XFER_PIO_1, XFER_PIO_2, XFER_PIO_3,
+-			XFER_PIO_4 };
+-
+-	/* cs5535 max pio is pio 4, best_pio will check the blacklist.
+-	i think we don't need to rate_filter the incoming xferspeed
+-	since we know we're only going to choose pio */
+-	xferspeed = ide_get_best_pio_mode(drive, xferspeed, 4);
+-	ide_config_drive_speed(drive, modes[xferspeed]);
+-	cs5535_set_speed(drive, xferspeed);
++	pio = ide_get_best_pio_mode(drive, pio, 4);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
++	cs5535_set_speed(drive, XFER_PIO_0 + pio);
+ }
+ 
+ static int cs5535_dma_check(ide_drive_t *drive)
+ {
+-	u8 speed;
+-
+ 	drive->init_speed = 0;
+ 
+ 	if (ide_tune_dma(drive))
+ 		return 0;
+ 
+-	if (ide_use_fast_pio(drive)) {
+-		speed = ide_get_best_pio_mode(drive, 255, 4);
+-		cs5535_set_drive(drive, speed);
+-	}
++	if (ide_use_fast_pio(drive))
++		cs5535_tuneproc(drive, 255);
+ 
+ 	return -1;
+ }
+diff --git a/drivers/ide/pci/it8213.c b/drivers/ide/pci/it8213.c
+index 95dbed7..70b3245 100644
+--- a/drivers/ide/pci/it8213.c
++++ b/drivers/ide/pci/it8213.c
+@@ -21,7 +21,7 @@
+  *	it8213_dma_2_pio		-	return the PIO mode matching DMA
+  *	@xfer_rate: transfer speed
+  *
+- *	Returns the nearest equivalent PIO timing for the PIO or DMA
++ *	Returns the nearest equivalent PIO timing for the DMA
+  *	mode requested by the controller.
+  */
+ 
+@@ -35,34 +35,28 @@ static u8 it8213_dma_2_pio (u8 xfer_rate) {
+ 		case XFER_UDMA_1:
+ 		case XFER_UDMA_0:
+ 		case XFER_MW_DMA_2:
+-		case XFER_PIO_4:
+ 			return 4;
+ 		case XFER_MW_DMA_1:
+-		case XFER_PIO_3:
+ 			return 3;
+ 		case XFER_SW_DMA_2:
+-		case XFER_PIO_2:
+ 			return 2;
+ 		case XFER_MW_DMA_0:
+ 		case XFER_SW_DMA_1:
+ 		case XFER_SW_DMA_0:
+-		case XFER_PIO_1:
+-		case XFER_PIO_0:
+-		case XFER_PIO_SLOW:
+ 		default:
+ 			return 0;
+ 	}
+ }
+ 
+ /*
+- *	it8213_tuneproc	-	tune a drive
++ *	it8213_tune_pio	-	tune a drive
+  *	@drive: drive to tune
+  *	@pio: desired PIO mode
+  *
+  *	Set the interface PIO mode.
+  */
+ 
+-static void it8213_tuneproc (ide_drive_t *drive, u8 pio)
++static void it8213_tune_pio(ide_drive_t *drive, const u8 pio)
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	struct pci_dev *dev	= hwif->pci_dev;
+@@ -82,8 +76,6 @@ static void it8213_tuneproc (ide_drive_t *drive, u8 pio)
+ 					{ 2, 1 },
+ 					{ 2, 3 }, };
+ 
+-	pio = ide_get_best_pio_mode(drive, pio, 4);
+-
+ 	spin_lock_irqsave(&tune_lock, flags);
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 
+@@ -113,6 +105,13 @@ static void it8213_tuneproc (ide_drive_t *drive, u8 pio)
+ 	spin_unlock_irqrestore(&tune_lock, flags);
+ }
+ 
++static void it8213_tuneproc(ide_drive_t *drive, u8 pio)
++{
++	pio = ide_get_best_pio_mode(drive, pio, 4);
++	it8213_tune_pio(drive, pio);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
++}
++
+ /**
+  *	it8213_tune_chipset	-	set controller timings
+  *	@drive: Drive to set up
+@@ -193,7 +192,12 @@ static int it8213_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 		if (reg55 & w_flag)
+ 			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+ 	}
+-	it8213_tuneproc(drive, it8213_dma_2_pio(speed));
++
++	if (speed > XFER_PIO_4)
++		it8213_tune_pio(drive, it8213_dma_2_pio(speed));
++	else
++		it8213_tune_pio(drive, speed - XFER_PIO_0);
++
+ 	return ide_config_drive_speed(drive, speed);
+ }
+ 
+@@ -209,13 +213,10 @@ static int it8213_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 
+ static int it8213_config_drive_for_dma (ide_drive_t *drive)
+ {
+-	u8 pio;
+-
+ 	if (ide_tune_dma(drive))
+ 		return 0;
+ 
+-	pio = ide_get_best_pio_mode(drive, 255, 4);
+-	it8213_tune_chipset(drive, XFER_PIO_0 + pio);
++	it8213_tuneproc(drive, 255);
+ 
+ 	return -1;
+ }
+diff --git a/drivers/ide/pci/jmicron.c b/drivers/ide/pci/jmicron.c
+index d7ce9dd..65a0ff3 100644
+--- a/drivers/ide/pci/jmicron.c
++++ b/drivers/ide/pci/jmicron.c
+@@ -83,23 +83,10 @@ static u8 __devinit ata66_jmicron(ide_hwif_t *hwif)
+ 	return ATA_CBL_PATA80;
+ }
+ 
+-static void jmicron_tuneproc (ide_drive_t *drive, byte mode_wanted)
++static void jmicron_tuneproc(ide_drive_t *drive, u8 pio)
+ {
+-	return;
+-}
+-
+-/**
+- *	config_jmicron_chipset_for_pio	-	set drive timings
+- *	@drive: drive to tune
+- *	@speed we want
+- *
+- */
+-
+-static void config_jmicron_chipset_for_pio (ide_drive_t *drive, byte set_speed)
+-{
+-	u8 speed = XFER_PIO_0 + ide_get_best_pio_mode(drive, 255, 5);
+-	if (set_speed)
+-		(void) ide_config_drive_speed(drive, speed);
++	pio = ide_get_best_pio_mode(drive, pio, 5);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
+ }
+ 
+ /**
+@@ -132,7 +119,7 @@ static int jmicron_config_drive_for_dma (ide_drive_t *drive)
+ 	if (ide_tune_dma(drive))
+ 		return 0;
+ 
+-	config_jmicron_chipset_for_pio(drive, 1);
++	jmicron_tuneproc(drive, 255);
+ 
+ 	return -1;
+ }
+diff --git a/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
+index 4f69cd0..5cfa937 100644
+--- a/drivers/ide/pci/piix.c
++++ b/drivers/ide/pci/piix.c
+@@ -1,5 +1,5 @@
+ /*
+- *  linux/drivers/ide/pci/piix.c	Version 0.50	Jun 10, 2007
++ *  linux/drivers/ide/pci/piix.c	Version 0.51	Jul 6, 2007
+  *
+  *  Copyright (C) 1998-1999 Andrzej Krzysztofowicz, Author and Maintainer
+  *  Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
+@@ -109,7 +109,7 @@ static int no_piix_dma;
+  *	piix_dma_2_pio		-	return the PIO mode matching DMA
+  *	@xfer_rate: transfer speed
+  *
+- *	Returns the nearest equivalent PIO timing for the PIO or DMA
++ *	Returns the nearest equivalent PIO timing for the DMA
+  *	mode requested by the controller.
+  */
+  
+@@ -123,20 +123,14 @@ static u8 piix_dma_2_pio (u8 xfer_rate) {
+ 		case XFER_UDMA_1:
+ 		case XFER_UDMA_0:
+ 		case XFER_MW_DMA_2:
+-		case XFER_PIO_4:
+ 			return 4;
+ 		case XFER_MW_DMA_1:
+-		case XFER_PIO_3:
+ 			return 3;
+ 		case XFER_SW_DMA_2:
+-		case XFER_PIO_2:
+ 			return 2;
+ 		case XFER_MW_DMA_0:
+ 		case XFER_SW_DMA_1:
+ 		case XFER_SW_DMA_0:
+-		case XFER_PIO_1:
+-		case XFER_PIO_0:
+-		case XFER_PIO_SLOW:
+ 		default:
+ 			return 0;
+ 	}
+@@ -269,6 +263,7 @@ static int piix_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 		case XFER_PIO_4:
+ 		case XFER_PIO_3:
+ 		case XFER_PIO_2:
++		case XFER_PIO_1:
+ 		case XFER_PIO_0:	break;
+ 		default:		return -1;
+ 	}
+@@ -299,7 +294,11 @@ static int piix_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+ 	}
+ 
+-	piix_tune_pio(drive, piix_dma_2_pio(speed));
++	if (speed > XFER_PIO_4)
++		piix_tune_pio(drive, piix_dma_2_pio(speed));
++	else
++		piix_tune_pio(drive, speed - XFER_PIO_0);
++
+ 	return ide_config_drive_speed(drive, speed);
+ }
+ 
+diff --git a/drivers/ide/pci/scc_pata.c b/drivers/ide/pci/scc_pata.c
+index bf19ddf..eeb0a6d 100644
+--- a/drivers/ide/pci/scc_pata.c
++++ b/drivers/ide/pci/scc_pata.c
+@@ -190,7 +190,7 @@ scc_ide_outsl(unsigned long port, void *addr, u32 count)
+ }
+ 
+ /**
+- *	scc_tuneproc	-	tune a drive PIO mode
++ *	scc_tune_pio	-	tune a drive PIO mode
+  *	@drive: drive to tune
+  *	@mode_wanted: the target operating mode
+  *
+@@ -198,7 +198,7 @@ scc_ide_outsl(unsigned long port, void *addr, u32 count)
+  *	controller.
+  */
+ 
+-static void scc_tuneproc(ide_drive_t *drive, byte mode_wanted)
++static void scc_tune_pio(ide_drive_t *drive, const u8 pio)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
+ 	struct scc_ports *ports = ide_get_hwifdata(hwif);
+@@ -207,41 +207,25 @@ static void scc_tuneproc(ide_drive_t *drive, byte mode_wanted)
+ 	unsigned long piosht_port = ctl_base + 0x000;
+ 	unsigned long pioct_port = ctl_base + 0x004;
+ 	unsigned long reg;
+-	unsigned char speed = XFER_PIO_0;
+ 	int offset;
+ 
+-	mode_wanted = ide_get_best_pio_mode(drive, mode_wanted, 4);
+-	switch (mode_wanted) {
+-	case 4:
+-		speed = XFER_PIO_4;
+-		break;
+-	case 3:
+-		speed = XFER_PIO_3;
+-		break;
+-	case 2:
+-		speed = XFER_PIO_2;
+-		break;
+-	case 1:
+-		speed = XFER_PIO_1;
+-		break;
+-	case 0:
+-	default:
+-		speed = XFER_PIO_0;
+-		break;
+-	}
+-
+ 	reg = in_be32((void __iomem *)cckctrl_port);
+ 	if (reg & CCKCTRL_ATACLKOEN) {
+ 		offset = 1; /* 133MHz */
+ 	} else {
+ 		offset = 0; /* 100MHz */
+ 	}
+-	reg = JCHSTtbl[offset][mode_wanted] << 16 | JCHHTtbl[offset][mode_wanted];
++	reg = JCHSTtbl[offset][pio] << 16 | JCHHTtbl[offset][pio];
+ 	out_be32((void __iomem *)piosht_port, reg);
+-	reg = JCHCTtbl[offset][mode_wanted];
++	reg = JCHCTtbl[offset][pio];
+ 	out_be32((void __iomem *)pioct_port, reg);
++}
+ 
+-	ide_config_drive_speed(drive, speed);
++static void scc_tuneproc(ide_drive_t *drive, u8 pio)
++{
++	pio = ide_get_best_pio_mode(drive, pio, 4);
++	scc_tune_pio(drive, pio);
++	ide_config_drive_speed(drive, XFER_PIO_0 + pio);
+ }
+ 
+ /**
+@@ -280,26 +264,21 @@ static int scc_tune_chipset(ide_drive_t *drive, byte xferspeed)
+ 
+ 	switch (speed) {
+ 	case XFER_UDMA_6:
+-		idx = 6;
+-		break;
+ 	case XFER_UDMA_5:
+-		idx = 5;
+-		break;
+ 	case XFER_UDMA_4:
+-		idx = 4;
+-		break;
+ 	case XFER_UDMA_3:
+-		idx = 3;
+-		break;
+ 	case XFER_UDMA_2:
+-		idx = 2;
+-		break;
+ 	case XFER_UDMA_1:
+-		idx = 1;
+-		break;
+ 	case XFER_UDMA_0:
+-		idx = 0;
++		idx = speed - XFER_UDMA_0;
+ 		break;
++	case XFER_PIO_4:
++	case XFER_PIO_3:
++	case XFER_PIO_2:
++	case XFER_PIO_1:
++	case XFER_PIO_0:
++		scc_tune_pio(drive, speed - XFER_PIO_0);
++		return ide_config_drive_speed(drive, speed);
+ 	default:
+ 		return 1;
+ 	}
+@@ -329,7 +308,7 @@ static int scc_tune_chipset(ide_drive_t *drive, byte xferspeed)
+  *	required.
+  *      If the drive isn't suitable for DMA or we hit other problems
+  *      then we will drop down to PIO and set up PIO appropriately.
+- *      (return 1)
++ *      (return -1)
+  */
+ 
+ static int scc_config_drive_for_dma(ide_drive_t *drive)
+@@ -338,7 +317,7 @@ static int scc_config_drive_for_dma(ide_drive_t *drive)
+ 		return 0;
+ 
+ 	if (ide_use_fast_pio(drive))
+-		scc_tuneproc(drive, 4);
++		scc_tuneproc(drive, 255);
+ 
+ 	return -1;
+ }
+diff --git a/drivers/ide/pci/sis5513.c b/drivers/ide/pci/sis5513.c
+index 63fbb79..26f2480 100644
+--- a/drivers/ide/pci/sis5513.c
++++ b/drivers/ide/pci/sis5513.c
+@@ -801,6 +801,7 @@ struct sis_laptop {
+ static const struct sis_laptop sis_laptop[] = {
+ 	/* devid, subvendor, subdev */
+ 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
++	{ 0x5513, 0x1734, 0x105f },	/* FSC Amilo A1630 */
+ 	/* end marker */
+ 	{ 0, }
+ };
+diff --git a/drivers/ide/pci/slc90e66.c b/drivers/ide/pci/slc90e66.c
+index 8e655f2..628b066 100644
+--- a/drivers/ide/pci/slc90e66.c
++++ b/drivers/ide/pci/slc90e66.c
+@@ -1,5 +1,5 @@
+ /*
+- *  linux/drivers/ide/pci/slc90e66.c	Version 0.14	February 8, 2007
++ *  linux/drivers/ide/pci/slc90e66.c	Version 0.15	Jul 6, 2007
+  *
+  *  Copyright (C) 2000-2002 Andre Hedrick <andre@linux-ide.org>
+  *  Copyright (C) 2006-2007 MontaVista Software, Inc. <source@mvista.com>
+@@ -29,20 +29,14 @@ static u8 slc90e66_dma_2_pio (u8 xfer_rate) {
+ 		case XFER_UDMA_1:
+ 		case XFER_UDMA_0:
+ 		case XFER_MW_DMA_2:
+-		case XFER_PIO_4:
+ 			return 4;
+ 		case XFER_MW_DMA_1:
+-		case XFER_PIO_3:
+ 			return 3;
+ 		case XFER_SW_DMA_2:
+-		case XFER_PIO_2:
+ 			return 2;
+ 		case XFER_MW_DMA_0:
+ 		case XFER_SW_DMA_1:
+ 		case XFER_SW_DMA_0:
+-		case XFER_PIO_1:
+-		case XFER_PIO_0:
+-		case XFER_PIO_SLOW:
+ 		default:
+ 			return 0;
+ 	}
+@@ -136,6 +130,7 @@ static int slc90e66_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 		case XFER_PIO_4:
+ 		case XFER_PIO_3:
+ 		case XFER_PIO_2:
++		case XFER_PIO_1:
+ 		case XFER_PIO_0:        break;
+ 		default:		return -1;
+ 	}
+@@ -156,7 +151,11 @@ static int slc90e66_tune_chipset (ide_drive_t *drive, u8 xferspeed)
+ 			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
+ 	}
+ 
+-	slc90e66_tune_pio(drive, slc90e66_dma_2_pio(speed));
++	if (speed > XFER_PIO_4)
++		slc90e66_tune_pio(drive, slc90e66_dma_2_pio(speed));
++	else
++		slc90e66_tune_pio(drive, speed - XFER_PIO_0);
++
+ 	return ide_config_drive_speed(drive, speed);
+ }
+ 
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index bb90df8..1cc01ac 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -328,17 +328,15 @@ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_co
+ 	u8             *buf;
+ 
+ 	/* stuff a sense request in front of our current request */
+-	pc = kmalloc (sizeof (idescsi_pc_t), GFP_ATOMIC);
+-	rq = kmalloc (sizeof (struct request), GFP_ATOMIC);
+-	buf = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_ATOMIC);
+-	if (pc == NULL || rq == NULL || buf == NULL) {
++	pc = kzalloc(sizeof(idescsi_pc_t), GFP_ATOMIC);
++	rq = kmalloc(sizeof(struct request), GFP_ATOMIC);
++	buf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_ATOMIC);
++	if (!pc || !rq || !buf) {
+ 		kfree(buf);
+ 		kfree(rq);
+ 		kfree(pc);
+ 		return -ENOMEM;
+ 	}
+-	memset (pc, 0, sizeof (idescsi_pc_t));
+-	memset (buf, 0, SCSI_SENSE_BUFFERSIZE);
+ 	ide_init_drive_cmd(rq);
+ 	rq->special = (char *) pc;
+ 	pc->rq = rq;
