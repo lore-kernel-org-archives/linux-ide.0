@@ -1,50 +1,26 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 3/4] Enable link power management for ata drivers
-Date: Wed, 1 Aug 2007 14:11:54 -0700
-Message-ID: <20070801141154.3246a20d.kristen.c.accardi@intel.com>
-References: <20070705194909.337398431@intel.com>
-	<20070705130530.5873afeb.kristen.c.accardi@intel.com>
-	<46B043FB.5090005@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 12/12] hpt366: always tune PIO
+Date: Thu, 02 Aug 2007 01:18:14 +0400
+Message-ID: <46B0F896.2070503@ru.mvista.com>
+References: <200707292003.32093.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <46B043FB.5090005@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:27669 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752917AbXHAVQP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Aug 2007 17:16:15 -0400
+In-Reply-To: <200707292003.32093.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 01 Aug 2007 17:27:39 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
-> Kristen Carlson Accardi wrote:
-<snippy>
-> Is it safe to use ALPM on a device which only claims to support DIPM?
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Yes - I doubled checked this with the AHCI people - and of course you
-have Edvin's testing to prove it does fine.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-> I think this should be ATA_HORKAGE_IPM.
-
-OK - I changed it.
-
-> > @@ -321,6 +321,8 @@ struct ata_taskfile {
-> >  	  ((u64) (id)[(n) + 0]) )
-> >  
-> >  #define ata_id_cdb_intr(id)	(((id)[0] & 0x60) == 0x20)
-> > +#define ata_id_has_hipm(id)	((id)[76] & (1 << 9))
-> > +#define ata_id_has_dipm(id)	((id)[78] & (1 << 3))
-> 
-> We probably need !0xffff test here.
-
-Thanks, I fixed that too.
-
-As far as moving the enable/disable_pm calls to EH - can you take
-a look at the other patch I sent which implements the shost_attrs
-to see if I still need to do this?  I really don't know much about
-the EH stuff - can you explain why we need to use it to set the
-link pm?
-
-thanks for your review, 
-Kristen
+MBR, Sergei
