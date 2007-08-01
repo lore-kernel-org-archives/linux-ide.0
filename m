@@ -1,56 +1,66 @@
-From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
-Subject: Re: Boot fails on Intel SATA controller
-Date: Wed, 1 Aug 2007 11:39:49 -0300
-Message-ID: <20070801113949.474443e5@localhost>
-References: <080120071418.11784.46B09645000B42BF00002E082200735834CE05040A05@comcast.net>
-	<46B09A57.50806@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Early ATA devices
+Date: Wed, 1 Aug 2007 16:31:16 +0100
+Message-ID: <20070801163116.57dbac1d@the-village.bc.nu>
+References: <20070801014137.4ab39e94@the-village.bc.nu>
+	<46B08F05.9080306@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:57260 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754832AbXHAOj4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 10:39:56 -0400
-In-Reply-To: <46B09A57.50806@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32902 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758774AbXHAPYJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 11:24:09 -0400
+In-Reply-To: <46B08F05.9080306@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Quel Qun <kelk1@comcast.net>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Em Wed, 01 Aug 2007 23:36:07 +0900
-Tejun Heo <htejun@gmail.com> escreveu:
+On Wed, 01 Aug 2007 09:47:49 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-| Quel Qun wrote:
-| >  -------------- Original message ----------------------
-| > From: Tejun Heo <htejun@gmail.com>
-| >> Hello,
-| >>
-| >> Luiz Fernando N. Capitulino wrote:
-| >>>  Hi there,
-| >>>
-| >>>  A Mandriva user is reporting that his machine hangs while booting
-| >>> kernels 2.6.22.1 and 2.6.23-rc1.
-| >>>
-| >>>  But boots fine with 2.6.21.
-| >>>
-| >>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-| >>> ata1.00: qc timeout (cmd 0x27)
-| >>> ata1.00: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors (781422768)
-| >>> ata1.00: ATA-7: HDS724040KLSA80, KFAOA20N, max UDMA/133
-| >>> ata1.00: 781422768 sectors, multi 8: LBA48
-| >>> ata1.00: failed to set xfermode (err_mask=0x40)
-| >>> ata1: failed to recover some devices, retrying in 5 secs
-| >> What happens after this?
-| >>
-| > It basically retries a few times, then fails to boot. Here is a more complete log with 2.6.23-rc1:
-| 
-| Does the attached patch change anything?
+> Alan Cox wrote:
+> > #1	We assume identify works. Early ATA actually lists this command
+> > as optional
+> 
+> ITYM we assume identify command exists on the device?
+> 
+> We certainly do not assume IDENTIFY command, if exists, succeeds.
 
- Quel Qun, if you can't patch the kernel for some reason I can
-generate a Mandriva kernel package with the patch for you.
+We assume that it exists and that it will succeed. In any other situation
+we skip the device.
+ 
+> What is the proper probing method -- notice if command-aborted is 
+> returned and do something from there?
 
- Just ask.
+Yes. A good question is what as we then don't know geometry. I know
+understand how PC BIOS geometry reporting works in detail so one option
+is to write a drivers/firmware/pc_geometry.c library which knows how to
+handle this crap for us. Thankfully any even prehistoric might still boot
+Linux PC should have EDD2.0 and anything older we care about FDPT tables.
 
--- 
-Luiz Fernando N. Capitulino
+We'd end up with an API something like
+
+	int pcgeo_get_geometry_isa(ioport, devno, struct ...)
+	int pcgeo_get_geometry_pci(pci_dev, devno, ....)
+
+which means we can also push user configuration of geometry into that
+module and share it between hd, oldide, old scsi, whatever.
+
+[and this stuff is more screwed up than IDE ...]
+
+> > #2	We don't allow for INIT_DEV_PARAMS failing which it may do on
+> > some early IDE pre ATA devices
+> 
+> Suggested handling?  Ignore device, since we don't know what state its 
+> in, if this fails?
+
+I stuck a test patch in my tree and emulating this sequence it works to
+just skip the aborted command. A drive which lacks this is fixed geometry
+so the geometry we want to set is already set and a failure is
+meaningless (which is different to an early ATA drive which may have
+multiple emulated geometries).
+
+Alan
