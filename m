@@ -1,77 +1,32 @@
-From: Mikko Rapeli <mikko.rapeli@iki.fi>
-Subject: ST340823A disk size issue
-Date: Wed, 1 Aug 2007 12:29:04 +0300
-Message-ID: <20070801092903.GA1199@nalle>
+From: edwintorok@gmail.com
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Wed, 1 Aug 2007 12:45:33 +0300
+Message-ID: <4354d3270708010245v5831610fw10ab2ff74d90ccae@mail.gmail.com>
+References: <20070705194909.337398431@intel.com>
+	 <20070705130530.5873afeb.kristen.c.accardi@intel.com>
+	 <46B043FB.5090005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:45720 "EHLO
-	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760220AbXHAJkD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 05:40:03 -0400
-Received: from nalle.dyndns.tv (GYKMMMDXX.dsl.saunalahti.fi [85.77.39.121])
-	by gw01.mail.saunalahti.fi (Postfix) with ESMTP id 60168151A8B
-	for <linux-ide@vger.kernel.org>; Wed,  1 Aug 2007 12:29:05 +0300 (EEST)
-Received: from mcfrisk by nalle.dyndns.tv with local (Exim 4.63)
-	(envelope-from <mikko.rapeli@iki.fi>)
-	id 1IGAVs-0001PW-9K
-	for linux-ide@vger.kernel.org; Wed, 01 Aug 2007 12:29:04 +0300
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <46B043FB.5090005@gmail.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hello, 
+On 8/1/07, Tejun Heo <htejun@gmail.com> wrote:
+> >
+> > +	if (ata_id_has_hipm(dev->id) || ata_id_has_dipm(dev->id))
+> > +		dev->flags |= ATA_DFLAG_IPM;
+>
+> Is it safe to use ALPM on a device which only claims to support DIPM?
 
-(More details at http://bugzilla.kernel.org/show_bug.cgi?id=8816 )
+I have tested on a Dell Inspiron 6400, it has ICH7-M (82801GBM) chipset.
+The harddisk claims to support only DIPM, and the ALPM patches work with it.
+Kristen said either DIPM or HIPM will work with ALPM accord to the
+spec, see this email:
+http://www.bughost.org/pipermail/power/2007-June/000691.html
 
-My home server disk doesn't work with latest kernels since its size is
-reported or probed correctly. With 2.6.22.1 I get:
-
-Probing IDE interface ide1...
-hdd: ST340823A, ATA DISK drive
-hdd: selected mode 0x42
-...
-hdd: max request size: 128KiB
-hdd: Host Protected Area detected.
-        current capacity is 78165360 sectors (40020 MB)
-        native  capacity is 78165361 sectors (40020 MB)
-hdd: Host Protected Area disabled.
-hdd: 78165361 sectors (40020 MB) w/1024KiB Cache, CHS=65535/16/63,
-UDMA(33)
-hdd: cache flushes not supported
- hdd: hdd1 hdd2 hdd3
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x10 { SectorIdNotFound }, LBAsect=78165360, 
-sector=78165360
-ide: failed opcode was: unknown
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x10 { SectorIdNotFound }, LBAsect=78165360,
-sector=78165360
-ide: failed opcode was: unknown
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x10 { SectorIdNotFound }, LBAsect=78165360,
-sector=78165360
-...
-
-And as said shows in bugzilla, badblocks, fsck and smartctl think the
-drive is not broken or going to die too soon.
-
-What's the difference between the size formats of
-WIN_READ_NATIVE_MAX_EXT read by
-ide-disk.c/idedisk_read_native_max_address_ext() and (hdreg.h) 
-hd_driveid->lba_capacity_2 read by, if I read drivers/ide/* code
-correctly, ide-probe.c/do_identify()?
-
-If this disk is reporting one of these wrong, which fix could be
-applied? 
-
-Both disabling 'stroke' and removing addr++ in
-ide-disk.c/idedisk_read_native_max_address*() fix the problem, but if
-kernel code is correct and standard compliant, these fixes are out of
-the question.
-
-Perhaps a boot parameter to kernel could force the disk sector count to
-some value for buggy drives?
-
--Mikko
+--Edwin
