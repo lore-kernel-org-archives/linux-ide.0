@@ -1,41 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_mv: Test patch for Hightpoint RocketRaid 1740/1742
-Date: Wed, 01 Aug 2007 09:49:19 -0400
-Message-ID: <46B08F5F.9040500@garzik.org>
-References: <20070709143841.133abb71@the-village.bc.nu>
+Subject: Re: [PATCH UPDATED] libata: add support for ATA_16 on ATAPI
+Date: Wed, 01 Aug 2007 10:00:20 -0400
+Message-ID: <46B091F4.5070704@garzik.org>
+References: <20070801075624.GD13674@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46392 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53994 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762935AbXHANtV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Aug 2007 09:49:21 -0400
-In-Reply-To: <20070709143841.133abb71@the-village.bc.nu>
+	id S932214AbXHAOAX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Aug 2007 10:00:23 -0400
+In-Reply-To: <20070801075624.GD13674@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, liml@rtr.ca
 
-Alan Cox wrote:
-> Underneath all the HPT packaging, PCI identifiers, binary driver modules
-> and stuff you find that ...
+Tejun Heo wrote:
+> From: Mark Lord <liml@rtr.ca>
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> Add support for issuing ATA_16 passthru commands to ATAPI devices
+> managed by libata.  It requires the previous CDB length fix patch.
 > 
-> --- drivers/ata/sata_mv.c~	2007-07-09 13:19:57.003052904 +0100
-> +++ drivers/ata/sata_mv.c	2007-07-09 13:19:57.004052752 +0100
-> @@ -573,6 +573,9 @@
->  	{ PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
->  	{ PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
->  	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
-> +	/* RocketRAID 1740/174x have different identifiers */
-> +	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
-> +	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
+> A boot/module parameter, "atapi_scmd85=1" can be used to globally
+> disable this feature, if ever desired.
+> 
+> tj: renamed ata16_passthru module param to atapi_scmd85 to reduce
+>     confusion
+> 
+> tj: restructured __ata_scsi_queuecmd() according to Jeff's suggestion.
+> 
+> Signed-off-by: Mark Lord <liml@rtr.ca>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> Jeff, Mark, are you guys okay with the modified version?
 
-Is this still a test patch, or can it go upstream?
+Close!  Thanks for revising!
+
+My only comment now is that I dislike atapi_scmd85.  That means nothing 
+to me.
+
+I liked the old name better.  Or maybe use atapi_passthru16.
 
 	Jeff
+
+
 
 
 
