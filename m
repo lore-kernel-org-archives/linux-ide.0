@@ -1,65 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH UPDATED] libata: add support for ATA_16 on ATAPI
-Date: Wed, 01 Aug 2007 23:11:32 +0900
-Message-ID: <46B09494.4080206@gmail.com>
-References: <20070801075624.GD13674@htj.dyndns.org> <46B091F4.5070704@garzik.org>
+From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+Subject: Re: Access beyond end of device
+Date: Wed, 1 Aug 2007 11:17:34 -0300
+Message-ID: <20070801111734.2621fb46@localhost>
+References: <20070731150414.0d73c22c@localhost>
+	<20070731151546.77ef23d9@localhost>
+	<20070801011226.2b2a7952@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.228]:3861 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932606AbXHAOLj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 10:11:39 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so211427qbe
-        for <linux-ide@vger.kernel.org>; Wed, 01 Aug 2007 07:11:38 -0700 (PDT)
-In-Reply-To: <46B091F4.5070704@garzik.org>
+Received: from perninha.conectiva.com.br ([200.140.247.100]:45619 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473AbXHAORo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 10:17:44 -0400
+In-Reply-To: <20070801011226.2b2a7952@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, liml@rtr.ca
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> From: Mark Lord <liml@rtr.ca>
->>
->> Add support for issuing ATA_16 passthru commands to ATAPI devices
->> managed by libata.  It requires the previous CDB length fix patch.
->>
->> A boot/module parameter, "atapi_scmd85=1" can be used to globally
->> disable this feature, if ever desired.
->>
->> tj: renamed ata16_passthru module param to atapi_scmd85 to reduce
->>     confusion
->>
->> tj: restructured __ata_scsi_queuecmd() according to Jeff's suggestion.
->>
->> Signed-off-by: Mark Lord <liml@rtr.ca>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> ---
->> Jeff, Mark, are you guys okay with the modified version?
-> 
-> Close!  Thanks for revising!
-> 
-> My only comment now is that I dislike atapi_scmd85.  That means nothing
-> to me.
-> 
-> I liked the old name better.  Or maybe use atapi_passthru16.
+Em Wed, 1 Aug 2007 01:12:26 +0100
+Alan Cox <alan@lxorguk.ukuu.org.uk> escreveu:
 
-The problem with ata16_passthru is that it suggests the opposite of what
-it does.  The default value 0 allows ATA_16 passthrough command while
-setting it to 1 disallows ATA_16 passthrough and passes through SCSI
-Command 0x85 which shares command byte with ATA_16.  Maybe it's because
-I'm not a native speaker but the last sentence is pretty difficult to
-digest.  So, IMHO, atapi_scmd85 is slightly better in that it means
-nothing rather than suggesting the opposite.
+| On Tue, 31 Jul 2007 15:15:46 -0300
+| "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br> wrote:
+| 
+| > Em Tue, 31 Jul 2007 15:04:14 -0300
+| > "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br> escreveu:
+| > 
+| > |  Since I've started using the pata_via driver in 2.6.22, I'm getting
+| > | zillions of these messages:
+| > | 
+| > | """
+| > | attempt to access beyond end of device
+| > | sda: rw=0, want=156367809, limit=156365903
+| > | printk: 22 messages suppressed
+| > | Buffer I/O error on device sda1, logical block 78183872
+| 
+| Does your disk have a host protected area set and if so are you telling
+| libata to disable it ?
 
-How about keeping the old name (or use atapi_passthru16) but flipping
-the meaning so that it defaults to 1.  It just makes hell lot of sense
-that "ata16_passthru=1" means allowing ATA_16 passthrough not the other
-way around.
+ Ok, the disk has a host protected area and now I'm telling libata to
+disable it.
 
-Thanks.
+ The error messages has disappeared.
+
+ But... Is it safe to do it? I've read somewhere that the BIOS and
+other softwares may use that area.
+
+ Also, I remember that with the IDE driver I wasn't seeing that
+messages, which means either: it was disabling it by default or
+was just ignoring it.
 
 -- 
-tejun
+Luiz Fernando N. Capitulino
