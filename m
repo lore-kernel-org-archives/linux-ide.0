@@ -1,38 +1,71 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ST340823A disk size issue
-Date: Wed, 1 Aug 2007 14:05:56 +0100
-Message-ID: <20070801140556.136ed130@the-village.bc.nu>
-References: <20070801092903.GA1199@nalle>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] [POWERPC] MPC8349E-mITX: use platform IDE driver
+ for CF	interface
+Date: Wed, 01 Aug 2007 17:11:49 +0400
+Message-ID: <46B08695.6030102@ru.mvista.com>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain>	<20070725165326.5331.19920.stgit@localhost.localdomain> <46A78322.3080607@ru.mvista.com> <46A78E3F.1030904@ru.mvista.com> <a414f3b506b7802a717e6e2c08befd1e@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44021 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761920AbXHAM6q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 08:58:46 -0400
-In-Reply-To: <20070801092903.GA1199@nalle>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:23699 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762530AbXHANJu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 09:09:50 -0400
+In-Reply-To: <a414f3b506b7802a717e6e2c08befd1e@kernel.crashing.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikko Rapeli <mikko.rapeli@iki.fi>
-Cc: linux-ide@vger.kernel.org
+To: Segher Boessenkool <segher@kernel.crashing.org>
+Cc: linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, Vitaly Bordug <vitb@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-On Wed, 1 Aug 2007 12:29:04 +0300
-Mikko Rapeli <mikko.rapeli@iki.fi> wrote:
+Hello.
 
-> Hello, 
-> 
-> (More details at http://bugzilla.kernel.org/show_bug.cgi?id=8816 )
-> 
-> My home server disk doesn't work with latest kernels since its size is
-> reported or probed correctly. With 2.6.22.1 I get:
+Segher Boessenkool wrote:
 
-You've got an odd sized disk. If you have that, old IDE, and you also have
-anything which tries to read the last sector (eg GPT partitioning) it'll
-break as it tries to read 1K block sizes.
+>>>> +    ide@f0000000 {
+>>>> +        compatible = "mmio-ide";
+>>>> +        device_type = "ide";
 
-Vendors normally clip the drive to an even size which seems to be the
-case on your box with the HPA left alone.
+>>>     Why not "ata"?
 
-It *should* all "just work" with the libata drivers but needs more
-testing of odd sizes to be 100% sure
+> The hardware is called (E)IDE, the protocol is called ATA.
+
+    Sorry for not denouncing this earlier. :-)
+    ATA is the name of ANSI standard describing IDE.
+
+> Or that's what I was told --
+
+    Re-check your sources. ;-)
+
+ > I think there's some historic revisionism involved, too.
+
+    IDE was probably an initial name of the infamous disk hardware/protocol 
+later standardized as ATA, EIDE (being more of a trademark) more or less 
+equals to ATA-2.
+
+>>     Also, what mmio-ide in the compat properly means in the context of
+>> ide_platform which is able to handle both port and memory mapped IDE. 
+>> I think
+>> we must get rid with this crap, and since this IDE register mapping is 
+>> pretty
+>> much board specific, call it something like "mpc8349emitx-ide" instead.
+
+> "mmio-ide" simply is not specific enough.  The device_type
+
+    Yes.
+
+> should go, too.
+
+> If this IDE interface is board-specific, thee "compatible"
+
+    It's "thy", not "thee". ;-)
+
+> property should include the board vendor name and board
+> name.  Oh, that's what "emitx" tries to do -- it could be
+> a bit clearer perhaps ;-)
+
+    Yeah, I forgot about the vondor's "fsl," prefix.
+
+> Segher
+
+MBR, Sergei
