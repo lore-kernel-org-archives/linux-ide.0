@@ -1,89 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: hpt374 sata (Highpoint Rocket 1540)
-Date: Thu, 02 Aug 2007 01:16:16 +0400
-Message-ID: <46B0F820.3070608@ru.mvista.com>
-References: <1185880124.3483.25.camel@localhost> <200707312332.10820.bzolnier@gmail.com> <46B08D63.4040205@ru.mvista.com> <200708012308.00057.bzolnier@gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Wed, 1 Aug 2007 14:11:54 -0700
+Message-ID: <20070801141154.3246a20d.kristen.c.accardi@intel.com>
+References: <20070705194909.337398431@intel.com>
+	<20070705130530.5873afeb.kristen.c.accardi@intel.com>
+	<46B043FB.5090005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:27642 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751773AbXHAVOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Aug 2007 17:14:18 -0400
-In-Reply-To: <200708012308.00057.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <46B043FB.5090005@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Bob Ham <rah@bash.sh>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 01 August 2007, Sergei Shtylyov wrote:
+On Wed, 01 Aug 2007 17:27:39 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
->>>Does this patch change anything?
+> Kristen Carlson Accardi wrote:
+<snippy>
+> Is it safe to use ALPM on a device which only claims to support DIPM?
 
->>    Heh, did you *really* hope it will? :-D
+Yes - I doubled checked this with the AHCI people - and of course you
+have Edvin's testing to prove it does fine.
 
-> Well, ugh, yes? :)
+> I think this should be ATA_HORKAGE_IPM.
 
-    Here we have some really nasty screw-up I'm afraid...
+OK - I changed it.
 
->>>[PATCH] hpt366: always tune PIO
+> > @@ -321,6 +321,8 @@ struct ata_taskfile {
+> >  	  ((u64) (id)[(n) + 0]) )
+> >  
+> >  #define ata_id_cdb_intr(id)	(((id)[0] & 0x60) == 0x20)
+> > +#define ata_id_has_hipm(id)	((id)[76] & (1 << 9))
+> > +#define ata_id_has_dipm(id)	((id)[78] & (1 << 3))
+> 
+> We probably need !0xffff test here.
 
->>>Index: b/drivers/ide/pci/hpt366.c
->>>===================================================================
->>>--- a/drivers/ide/pci/hpt366.c
->>>+++ b/drivers/ide/pci/hpt366.c
->>>@@ -1,5 +1,5 @@
->>> /*
->>>- * linux/drivers/ide/pci/hpt366.c		Version 1.10	Jun 29, 2007
->>>+ * linux/drivers/ide/pci/hpt366.c		Version 1.11	Jul 29, 2007
->>>  *
->>>  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
->>>  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
->>>@@ -1265,10 +1265,10 @@ static void __devinit init_hwif_hpt366(i
->>> 	if (new_mcr != old_mcr)
->>> 		pci_write_config_byte(dev, hwif->select_data + 1, new_mcr);
->>> 
->>>-	if (!hwif->dma_base) {
->>>-		hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
->>>+	hwif->drives[0].autotune = hwif->drives[1].autotune = 1;
->>>+
->>>+	if (hwif->dma_base == 0)
->>> 		return;
->>>-	}
->>> 
->>> 	hwif->ultra_mask = hwif->cds->udma_mask;
->>> 	hwif->mwdma_mask = 0x07;
->>
->>    Concerning the patch (I lacked time to look at the driver to refresh my 
->>memory before -- was looking at the new Disk-on-chip H3 driver to be submitted 
->>for comments soon, BTW): it makes little sense in its current form since 
->>setting any DMA mode also sets 8-bit PIO timings now (and if DMA can't be set, 
->>the driver will fallback to PIO anyway)
+Thanks, I fixed that too.
 
-> Without ->autotune timings for PIO data transfers are never set and we need
+As far as moving the enable/disable_pm calls to EH - can you take
+a look at the other patch I sent which implements the shost_attrs
+to see if I still need to do this?  I really don't know much about
+the EH stuff - can you explain why we need to use it to set the
+link pm?
 
-    The will get overwritten by DMA timings anyway.  Although... you're right, 
-with UltraDMA 16-bit PIO timings aren't going to be changed from the defaults.
-
-> to have a valid settings for some commands (IDENTIFY, SMART data) even if
-> DMA is not going to be used.  Thus why I was hoping that this patch might be
-> of some help.
-
-    There's always default settings. ;-)
-
->>    I have a patch that changes this behavior and switches to always 
->>auto-tuning PIO but I've changed my mind on how the DMA/PIO timing register 
->>sharing should be handled now -- however, since I was unable to come up with 
->>anything better all that time, I'll consider pushing out this version when I 
->>have a spare time...
-
-> Please do.
-
-    In my copious free time. :-)
-
-> Thanks,
-> Bart
-
-MBR, Sergei
+thanks for your review, 
+Kristen
