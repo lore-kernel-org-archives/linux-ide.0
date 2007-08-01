@@ -1,36 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: hpt374 sata (Highpoint Rocket 1540)
-Date: Wed, 1 Aug 2007 23:43:32 +0100
-Message-ID: <20070801234332.3d28f7b2@the-village.bc.nu>
-References: <1185880124.3483.25.camel@localhost>
-	<46AF76D7.8050800@ru.mvista.com>
-	<1185916925.8484.23.camel@orchid.arb.net>
-	<200707312332.10820.bzolnier@gmail.com>
-	<46B08D63.4040205@ru.mvista.com>
-	<1185983536.16340.3.camel@orchid.arb.net>
-	<46B0ADB6.60207@ru.mvista.com>
-	<1185988529.16340.5.camel@orchid.arb.net>
-	<46B0CEC0.60504@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ST340823A disk size issue
+Date: Thu, 2 Aug 2007 01:17:58 +0200
+Message-ID: <200708020117.58916.bzolnier@gmail.com>
+References: <20070801092903.GA1199@nalle> <200708020019.25742.bzolnier@gmail.com> <20070801233221.34e2ff0c@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57732 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754077AbXHAWg0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 18:36:26 -0400
-In-Reply-To: <46B0CEC0.60504@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.186]:32723 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbXHAXT3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Aug 2007 19:19:29 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so438350mue
+        for <linux-ide@vger.kernel.org>; Wed, 01 Aug 2007 16:19:27 -0700 (PDT)
+In-Reply-To: <20070801233221.34e2ff0c@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bob Ham <rah@bash.sh>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mikko Rapeli <mikko.rapeli@iki.fi>, linux-ide@vger.kernel.org
 
->     Too bad, this is the standard HPT subsystem ID of 0x0001... So, nothing 
-> comes to my mind other than add a module parameter to hpt366.c to specify that 
-> we're using the crippled SATA bridge... well, maybe it would also make sense 
-> to scan the BIOS for the signatures...
+On Thursday 02 August 2007, Alan Cox wrote:
+> > If you fix the printk, add patch description (can use the one from my patch)
+> > and add "Signed-off-by:" I would happily apply it and dump mine version.
+> 
+> Sorry but the patch is wrong - plain and simple. It works over the bug
+> but its not the real problem. ide-disk needs to spot a 1K request for the
+> last 512 bytes, issue a 512 byte request and complete the 512 bytes only.
 
-Since you don't do a reset is it not sufficient to check word93 on the
-initial identify scan in PIO. Or if you do a reset the signature.
+block/ll_rw_blk.c:
 
+static inline void __generic_make_request(struct bio *bio)
+{
+...
+        int ret, nr_sectors = bio_sectors(bio);
+...
+        /* Test device or partition size, when known. */
+        maxsector = bio->bi_bdev->bd_inode->i_size >> 9;
+        if (maxsector) {
+                sector_t sector = bio->bi_sector;
 
+                if (maxsector < nr_sectors || maxsector - nr_sectors < sector) {
+                        /*
+                         * This may well happen - the kernel calls bread()
+                         * without checking the size of the device, e.g., when
+                         * mounting a device.
+                         */
+                        handle_bad_sector(bio);
+                        goto end_io;
+
+so low-level-driver should never see such requests.
+
+Additionally fs/partitions/check.c:rescan_partitions() should warn if the
+partition exceeds device size and we are not seeing any such warning.
+
+Mikko, could you please revert any patches that you have applied, uncomment
+#define DEBUG in ide-disk.c, recompile and note the sectors count in the
+
+"hdd: reading: block=78165360 sectors=..."
+
+debug message?
+
+Thanks,
+Bart
