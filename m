@@ -1,42 +1,30 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Wed, 01 Aug 2007 12:24:44 +0900
-Message-ID: <46AFFCFC.7020902@gmail.com>
-References: <20070705194909.337398431@intel.com>	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>	<46AE12B6.6090408@garzik.org>	<46AED656.8070407@gmail.com>	<20070731093014.db9e0734.kristen.c.accardi@intel.com>	<46AF794F.1020107@gmail.com> <20070731125849.501443c1.kristen.c.accardi@intel.com>
+Subject: Re: [PATCH libata-dev#upstream 2/2] libata: move EH repeat reporting
+ into ata_eh_report()
+Date: Wed, 01 Aug 2007 12:38:53 +0900
+Message-ID: <46B0004D.3010808@gmail.com>
+References: <200707312127.l6VLRfGR029509@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070731125849.501443c1.kristen.c.accardi@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.184]:63808 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbXHADkD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jul 2007 23:40:03 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so62531rvb
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jul 2007 20:40:02 -0700 (PDT)
+In-Reply-To: <200707312127.l6VLRfGR029509@harpo.it.uu.se>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
->> I don't think the interface you're suggesting is a good one.  Do you?
-> 
-> I think if it's applicable to SCSI at all it is fine.  If it is not, then
-> I think we need to make do with the interface we are given.  I do not think
-> we should hold up a feature for libata sysfs integration.
+Mikael Pettersson wrote:
+> This is with both 1/2 and 2/2 applied, with only 2/2 applied the
+> "EH pending ..." is gone and the new "exception ... frozen" don't appear.
 
-Well, I guess we'll have to agree to disagree here and leave the
-decision to James and Jeff.
-
->>> I can assert that I think ALPM is a good idea,
->>> because I've never had a report of it causing problems.  Windows has 
->>> been using this feature for a very long time - and you have to admit that
->>> they have a pretty large market share.  Nobody is complaining about ALPM
->>> increasing device malfunction, so unless you have proof it seems insane
->>> to nak due to this. 
->> Is ALPM enabled by default?  How do they deal with the performance
->> degradation?
-> 
-> I believe so, but I'm obviously not privvy to their implementation details.
-
-It would be *really* great if we can find more about how they do it.
-How and when it's enabled and on which systems.  Is it possible to find
-this out?
+Thanks.  Right, I'll drop the first patch.
 
 -- 
 tejun
