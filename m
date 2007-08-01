@@ -1,370 +1,216 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 1 Aug 2007 12:19:32 -0400
-Message-ID: <20070801161932.GA15959@havoc.gtf.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Wed, 1 Aug 2007 09:31:36 -0700
+Message-ID: <20070801093136.e927e0d6.kristen.c.accardi@intel.com>
+References: <20070705194909.337398431@intel.com>
+	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
+	<46AE12B6.6090408@garzik.org>
+	<46AED656.8070407@gmail.com>
+	<1185891382.2750.8.camel@laptopd505.fenrus.org>
+	<46AF4B05.4010700@gmail.com>
+	<1185898532.2766.2.camel@laptopd505.fenrus.org>
+	<46AF7F7E.6060300@gmail.com>
+	<46B05109.4080007@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:47911 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755544AbXHAQTf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Aug 2007 12:19:35 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <46B05109.4080007@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+On Wed, 01 Aug 2007 18:23:21 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-The only notable: GregKH wanted the pci_reenable_device() change
-associated with ata_piix to go in before the release, to avoiding
-release with an imperfect API.
+> Tejun Heo wrote:
+> > Arjan van de Ven wrote:
+> >>> They were hardware problems.  I don't think any amount of proper
+> >>> implementation can fix them.  I have one DVD RAM somewhere in my pile of
+> >>> hardware which locks up solidly if any link PS mode is used and had a
+> >> and the AHCI ALPM code decides to use power savings on this device? if
+> >> so, please give us the idents so that we can add it to the blacklist as
+> >> the first entry... (or can buy it to check it in detail first)
+> > 
+> > Yeap, lemme check.
+> > 
+> > It's "TSSTcorpCD/DVDW SH-S183A" with firmware revision "SB01".  Wanna
+> > check ID capability bits but 'hdparm -I /dev/sr0' is still broken and
+> > it's already past 3 am here.  I'll report back tomorrow.
+> 
+> Oops, that was the wrong one.  Locking up one was HL-DT-STDVD-RAM
+> GSA-H30N and it correctly reports that it doesn't support IPM.  Here
+> are some test results.
+> 
+> Controller is ICH9.
+> 
+> 00:1f.2 SATA controller [Class 0106]: Intel Corporation Unknown device [8086:2922] (rev 02)
+> 
+> ====
+> 
+> 1. HL-DT-STDVD-RAM GSA-H30N
+> 
+>   ATAPI CD-ROM, with removable media
+> 	  Model Number:       HL-DT-STDVD-RAM GSA-H30N
+> 	  Serial Number:
+> 	  Firmware Revision:  1.00
+>   Standards:
+> 	  Likely used CD-ROM ATAPI-1
+>   Configuration:
+> 	  DRQ response: 50us.
+> 	  Packet size: 12 bytes
+>   Capabilities:
+> 	  LBA, IORDY(can be disabled)
+> 	  DMA: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+> 	       Cycle time: min=120ns recommended=120ns
+> 	  PIO: pio0 pio1 pio2 pio3 pio4
+> 	       Cycle time: no flow control=120ns  IORDY flow control=120
+> 
+> This device doesn't claim to support HIPM nor DIPM.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ata_piix.c    |   74 +++++++++++++++++++++++++--------------------
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-sff.c  |    4 ++
- drivers/ata/pata_cmd64x.c |    8 ++--
- drivers/ata/pata_sis.c    |   20 +++++-------
- drivers/pci/pci-driver.c  |    2 +-
- drivers/pci/pci.c         |    7 ++--
- include/linux/pci.h       |    2 +-
- 8 files changed, 64 insertions(+), 54 deletions(-)
-
-Alan Cox (2):
-      pata_cmd64x: Correct the speed ranges
-      libata-sff; Unbreak non DMA capable controllers again
-
-Bartlomiej Zolnierkiewicz (1):
-      pata_sis: fix MWDMA for <= UDMA66 chipsets and UDMA for UDMA33 chipsets
-
-Tejun Heo (4):
-      pci: rename __pci_reenable_device() to pci_reenable_device()
-      ata_piix: implement piix_borken_suspend()
-      ata_piix: add Tecra M3 to broken suspend blacklist
-      libata: blacklist SAMSUNG HD401LJ / ZZ100-15 for NCQ
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ad07086..a78832e 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -890,37 +890,46 @@ static void ich_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- }
+Are you sure you are using the latest version of the patch?  This seems
+like a bug, if the device doesn't support HIPM or DIPM it shouldn't attempt
+to use ALPM.  There was a check for this put into the patch on about the 
+second or third version - maybe I'm not doing it right.
  
- #ifdef CONFIG_PM
--static struct dmi_system_id piix_broken_suspend_dmi_table[] = {
--	{
--		.ident = "TECRA M5",
--		.matches = {
--			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
--			DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M5"),
--		},
--	},
--	{
--		.ident = "Satellite U200",
--		.matches = {
--			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
--			DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U200"),
-+static int piix_broken_suspend(void)
-+{
-+	static struct dmi_system_id sysids[] = {
-+		{
-+			.ident = "TECRA M5",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M5"),
-+			},
- 		},
--	},
--	{
--		.ident = "Satellite U205",
--		.matches = {
--			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
--			DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U205"),
-+		{
-+			.ident = "Satellite U205",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U205"),
-+			},
- 		},
--	},
--	{
--		.ident = "Portege M500",
--		.matches = {
--			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
--			DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
-+		{
-+			.ident = "Portege M500",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
-+			},
- 		},
--	},
--	{ }
--};
-+		{ }
-+	};
-+	static const char *oemstrs[] = {
-+		"Tecra M3,",
-+	};
-+	int i;
+(from the patch located here:
+http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm/libata-enable-pm
+
+if (ata_id_has_hipm(dev->id) || ata_id_has_dipm(dev->id))
++		dev->flags |= ATA_DFLAG_IPM;
 +
-+	if (dmi_check_system(sysids))
-+		return 1;
-+
-+	for (i = 0; i < ARRAY_SIZE(oemstrs); i++)
-+		if (dmi_find_device(DMI_DEV_TYPE_OEM_STRING, oemstrs[i], NULL))
-+			return 1;
-+
-+	return 0;
-+}
- 
- static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
-@@ -937,8 +946,7 @@ static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- 	 * cycles and power trying to do something to the sleeping
- 	 * beauty.
- 	 */
--	if (dmi_check_system(piix_broken_suspend_dmi_table) &&
--	    mesg.event == PM_EVENT_SUSPEND) {
-+	if (piix_broken_suspend() && mesg.event == PM_EVENT_SUSPEND) {
- 		pci_save_state(pdev);
- 
- 		/* mark its power state as "unknown", since we don't
-@@ -973,10 +981,10 @@ static int piix_pci_device_resume(struct pci_dev *pdev)
- 		pci_restore_state(pdev);
- 
- 		/* PCI device wasn't disabled during suspend.  Use
--		 * __pci_reenable_device() to avoid affecting the
--		 * enable count.
-+		 * pci_reenable_device() to avoid affecting the enable
-+		 * count.
- 		 */
--		rc = __pci_reenable_device(pdev);
-+		rc = pci_reenable_device(pdev);
- 		if (rc)
- 			dev_printk(KERN_ERR, &pdev->dev, "failed to enable "
- 				   "device after resume (%d)\n", rc);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6001aae..60e78be 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3788,6 +3788,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
- 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
-+	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
- 
- 	/* Devices with NCQ limits */
- 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 6c289c7..1cce219 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -573,6 +573,10 @@ int ata_pci_init_bmdma(struct ata_host *host)
- 	struct pci_dev *pdev = to_pci_dev(gdev);
- 	int i, rc;
- 
-+	/* No BAR4 allocation: No DMA */
-+	if (pci_resource_start(pdev, 4) == 0)
-+		return 0;
-+
- 	/* TODO: If we get no DMA mask we should fall back to PIO */
- 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
- 	if (rc)
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index dc443e7..e34b632 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -31,7 +31,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_cmd64x"
--#define DRV_VERSION "0.2.3"
-+#define DRV_VERSION "0.2.4"
- 
- /*
-  * CMD64x specific registers definition.
-@@ -397,7 +397,7 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.flags = ATA_FLAG_SLAVE_POSS,
- 			.pio_mask = 0x1f,
- 			.mwdma_mask = 0x07,
--			.udma_mask = ATA_UDMA1,
-+			.udma_mask = ATA_UDMA2,
- 			.port_ops = &cmd64x_port_ops
- 		},
- 		{	/* CMD 646 rev 1  */
-@@ -412,7 +412,7 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.flags = ATA_FLAG_SLAVE_POSS,
- 			.pio_mask = 0x1f,
- 			.mwdma_mask = 0x07,
--			.udma_mask = ATA_UDMA2,
-+			.udma_mask = ATA_UDMA4,
- 			.port_ops = &cmd648_port_ops
- 		},
- 		{	/* CMD 649 */
-@@ -420,7 +420,7 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.flags = ATA_FLAG_SLAVE_POSS,
- 			.pio_mask = 0x1f,
- 			.mwdma_mask = 0x07,
--			.udma_mask = ATA_UDMA3,
-+			.udma_mask = ATA_UDMA5,
- 			.port_ops = &cmd648_port_ops
- 		}
- 	};
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 9a829a7..66bd0e8 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -2,6 +2,7 @@
-  *    pata_sis.c - SiS ATA driver
-  *
-  *	(C) 2005 Red Hat <alan@redhat.com>
-+ *	(C) 2007 Bartlomiej Zolnierkiewicz
-  *
-  *    Based upon linux/drivers/ide/pci/sis5513.c
-  * Copyright (C) 1999-2000	Andre Hedrick <andre@linux-ide.org>
-@@ -35,7 +36,7 @@
- #include "sis.h"
- 
- #define DRV_NAME	"pata_sis"
--#define DRV_VERSION	"0.5.1"
-+#define DRV_VERSION	"0.5.2"
- 
- struct sis_chipset {
- 	u16 device;				/* PCI host ID */
-@@ -237,7 +238,7 @@ static void sis_old_set_piomode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- /**
-- *	sis_100_set_pioode - Initialize host controller PATA PIO timings
-+ *	sis_100_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Device we are configuring for.
-  *
-@@ -262,7 +263,7 @@ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
- }
- 
- /**
-- *	sis_133_set_pioode - Initialize host controller PATA PIO timings
-+ *	sis_133_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-  *	@adev: Device we are configuring for.
-  *
-@@ -334,7 +335,7 @@ static void sis_old_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u16 timing;
- 
--	const u16 mwdma_bits[] = { 0x707, 0x202, 0x202 };
-+	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
- 	const u16 udma_bits[]  = { 0xE000, 0xC000, 0xA000 };
- 
- 	pci_read_config_word(pdev, drive_pci, &timing);
-@@ -342,15 +343,15 @@ static void sis_old_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	if (adev->dma_mode < XFER_UDMA_0) {
- 		/* bits 3-0 hold recovery timing bits 8-10 active timing and
- 		   the higer bits are dependant on the device */
--		timing &= ~ 0x870F;
-+		timing &= ~0x870F;
- 		timing |= mwdma_bits[speed];
--		pci_write_config_word(pdev, drive_pci, timing);
- 	} else {
- 		/* Bit 15 is UDMA on/off, bit 13-14 are cycle time */
- 		speed = adev->dma_mode - XFER_UDMA_0;
- 		timing &= ~0x6000;
- 		timing |= udma_bits[speed];
- 	}
-+	pci_write_config_word(pdev, drive_pci, timing);
- }
- 
- /**
-@@ -373,7 +374,7 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u16 timing;
- 
--	const u16 mwdma_bits[] = { 0x707, 0x202, 0x202 };
-+	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
- 	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000};
- 
- 	pci_read_config_word(pdev, drive_pci, &timing);
-@@ -432,8 +433,7 @@ static void sis_100_set_dmamode (struct ata_port *ap, struct ata_device *adev)
-  *	@adev: Device to program
-  *
-  *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
-- *	Handles early SiS 961 bridges. Supports MWDMA as well unlike
-- *	the old ide/pci driver.
-+ *	Handles early SiS 961 bridges.
-  *
-  *	LOCKING:
-  *	None (inherited from caller).
-@@ -467,8 +467,6 @@ static void sis_133_early_set_dmamode (struct ata_port *ap, struct ata_device *a
-  *	@adev: Device to program
-  *
-  *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
-- *	Handles early SiS 961 bridges. Supports MWDMA as well unlike
-- *	the old ide/pci driver.
-  *
-  *	LOCKING:
-  *	None (inherited from caller).
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 8e58ea3..004bc24 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -310,7 +310,7 @@ static int pci_default_resume(struct pci_dev *pci_dev)
- 	/* restore the PCI config space */
- 	pci_restore_state(pci_dev);
- 	/* if the device was enabled before suspend, reenable */
--	retval = __pci_reenable_device(pci_dev);
-+	retval = pci_reenable_device(pci_dev);
- 	/* if the device was busmaster before the suspend, make it busmaster again */
- 	if (pci_dev->is_busmaster)
- 		pci_set_master(pci_dev);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1ee9cd9..37c00f6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -695,14 +695,13 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
- }
- 
- /**
-- * __pci_reenable_device - Resume abandoned device
-+ * pci_reenable_device - Resume abandoned device
-  * @dev: PCI device to be resumed
-  *
-  *  Note this function is a backend of pci_default_resume and is not supposed
-  *  to be called by normal code, write proper resume handler and use it instead.
-  */
--int
--__pci_reenable_device(struct pci_dev *dev)
-+int pci_reenable_device(struct pci_dev *dev)
- {
- 	if (atomic_read(&dev->enable_cnt))
- 		return do_pci_enable_device(dev, (1 << PCI_NUM_RESOURCES) - 1);
-@@ -1604,7 +1603,7 @@ early_param("pci", pci_setup);
- device_initcall(pci_init);
- 
- EXPORT_SYMBOL_GPL(pci_restore_bars);
--EXPORT_SYMBOL(__pci_reenable_device);
-+EXPORT_SYMBOL(pci_reenable_device);
- EXPORT_SYMBOL(pci_enable_device_bars);
- EXPORT_SYMBOL(pci_enable_device);
- EXPORT_SYMBOL(pcim_enable_device);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8f8a3a..e7d8d4e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -534,7 +534,7 @@ static inline int pci_write_config_dword(struct pci_dev *dev, int where, u32 val
- 
- int __must_check pci_enable_device(struct pci_dev *dev);
- int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
--int __must_check __pci_reenable_device(struct pci_dev *);
-+int __must_check pci_reenable_device(struct pci_dev *);
- int __must_check pcim_enable_device(struct pci_dev *pdev);
- void pcim_pin_device(struct pci_dev *pdev);
- 
+<snip>
+> 
+> 2. TSSTcorpCD/DVDW SH-S183A
+> 
+>   ATAPI CD-ROM, with removable media
+> 	  Model Number:       TSSTcorpCD/DVDW SH-S183A                
+> 	  Serial Number:      
+> 	  Firmware Revision:  SB01    
+>   Standards:
+> 	  Likely used CD-ROM ATAPI-1
+>   Configuration:
+> 	  DRQ response: 50us.
+> 	  Packet size: 12 bytes
+>   Capabilities:
+> 	  LBA, IORDY(can be disabled)
+> 	  DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 
+> 	       Cycle time: min=120ns recommended=120ns
+> 	  PIO: pio0 pio1 pio2 pio3 pio4 
+> 	       Cycle time: no flow control=120ns  IORDY flow control=120ns
+>   Commands/features:
+> 	  Enabled Supported:
+> 	     *    SATA-I signaling speed (1.5Gb/s)
+> 	     *    Host-initiated interface power management
+> 	     *    Phy event counters
+> 		  Device-initiated interface power management
+> 		  unknown 78[5]
+> 	     *    Software settings preservation
+> 
+> This one claims to support HIPS.
+> 
+>   # echo min_power > link_power_management_policy
+>   [ 1301.917248] ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2
+>   [ 1301.938338] ata1.00: irq_stat 0x40000001
+>   [ 1301.956955] ata1.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+>   [ 1301.956959]          res 51/20:03:00:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
+>   [ 1304.189565] ata1: soft resetting port
+>   [ 1304.207745] ata1: SATA link down (SStatus 611 SControl 300)
+>   [ 1304.228076] ata1: failed to recover some devices, retrying in 5 secs
+>   [ 1309.245599] ata1: hard resetting port
+>   [ 1314.773227] ata1: port is slow to respond, please be patient (Status 0x80)
+>   [ 1319.269677] ata1: COMRESET failed (errno=-16)
+>   [ 1319.289639] ata1: hard resetting port
+>   [ 1319.781285] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>   [ 1320.115569] ata1.00: configured for UDMA/33
+>   [ 1320.134780] ata1: EH complete
+> 
+> And hotplug works fine after EH is done with itself.  Dunno why.
+
+It works because after EH you've reset the port, and when you reset the
+port you turn off ipm (note the value of SControl).  I left this the way
+it was without attempting to renable link pm after a reset because I figured
+if there was something bad happening and we needed to reset we should leave
+ipm off.
+
+As far as the failure you are seeing goes - this may not actually be a
+hardware problem but just a case of us not understanding which bits we
+need to clear out of the Interrupt status register once we enable
+ALPM. The value of SErr indicates that this device has gotten PhyRdy - 
+which is normal for power state changes, and the interrupt status indicates 
+that a d2h FIS was received which is also normal - the TFES bit seems to be 
+set - it may be that we need to modify the interrupt code to not only ignore 
+PhyRdy when ALPM is enabled, but also clear out bit 0 - this is definitely 
+something we can try.  But, meanwhile, please make sure you are testing 
+with the latest version of the patches.
+
+> 
+> 3. PLEXTOR DVDR   PX-716A
+> 
+>   ATAPI CD-ROM, with removable media
+> 	  Model Number:       PLEXTOR DVDR   PX-716A                  
+> 	  Serial Number:      127377
+> 	  Firmware Revision:  1.09    
+>   Standards:
+> 	  Likely used CD-ROM ATAPI-1
+>   Configuration:
+> 	  DRQ response: 50us.
+> 	  Packet size: 12 bytes
+>   Capabilities:
+> 	  LBA, IORDY(can be disabled)
+> 	  DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 *udma4 
+> 	       Cycle time: min=120ns recommended=120ns
+> 	  PIO: pio0 pio1 pio2 pio3 pio4 
+> 	       Cycle time: no flow control=120ns  IORDY flow control=120ns
+>   HW reset results:
+> 	  CBLID- below Vih
+> 	  Device num = 0
+> 
+>   # echo min_power > link_power_management_policy
+>   [ 2102.655765] ata1.00: Unable to set Link PM policy
+>   [ 2104.505926] ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0x2
+>   [ 2104.527256] ata1.00: irq_stat 0x40000001
+>   [ 2104.545868] ata1.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
+>   [ 2104.545870]          res 51/24:03:00:00:20/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
+>   [ 2106.810252] ata1: soft resetting port
+>   [ 2106.828106] ata1: SATA link down (SStatus 611 SControl 300)
+>   [ 2106.847957] ata1: failed to recover some devices, retrying in 5 secs
+>   [ 2111.870285] ata1: hard resetting port
+>   [ 2117.401917] ata1: port is slow to respond, please be patient (Status 0x80)
+>   [ 2121.902365] ata1: COMRESET failed (errno=-16)
+>   [ 2121.920313] ata1: hard resetting port
+>   [ 2122.413973] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>   [ 2122.795507] ata1.00: configured for UDMA/66
+>   [ 2122.813234] ata1: EH complete
+
+this looks like the same issue as above.
+
+
+> 
+> 4. Harddisks
+> 
+> All the harddisks I have behave themselves.  Impressive.
+> 
+> ====
+> 
+> In all cases, hotplug works well even after ALPM is configured.  Have
+> no idea why.  It might be that PARTIAL/SLUMBER mode didn't kick in or
+> ICH9 has some magic feature to detect PHY status changes even in PS
+> mode (wishful thinking).
+
+Make sure you are using the latest version of the patches - and that
+the devices are not resetting themselves for some reason.  I don't see
+how hotplug can work if we are indeed ignoring PhyRdy.
+
+> With some massging to ahci_disable_alpm(), I think it can be fairly
+> safe on this chipset at least.
+
+Not sure what part of disable_alpm you think is broken here - I see
+the issue to be more likely in the interrupt handler.  I'll 
+regenerate the patches today against the latest kernel and you
+should rerun your tests just to make sure we aren't trying to fix
+something that's already been fixed.
+
+Thanks,
+Kristen
