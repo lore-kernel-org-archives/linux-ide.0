@@ -1,30 +1,44 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Libata Sil3124 hybrid drive failure
-Date: Thu, 2 Aug 2007 11:52:01 -0600
-Message-ID: <8202f4270708021052y166eddb9mbb8c46e63308b8dc@mail.gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] block: add protocol discriminators to requests and queues
+Date: Thu, 2 Aug 2007 12:51:28 -0600
+Message-ID: <20070802185128.GL21219@parisc-linux.org>
+References: <1186076845.3449.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:45979 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758896AbXHBRwD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 13:52:03 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so156525nfb
-        for <linux-ide@vger.kernel.org>; Thu, 02 Aug 2007 10:52:01 -0700 (PDT)
+Received: from palinux.external.hp.com ([192.25.206.14]:35480 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757278AbXHBSv3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 14:51:29 -0400
 Content-Disposition: inline
+In-Reply-To: <1186076845.3449.22.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
-Hi,
+On Thu, Aug 02, 2007 at 12:47:25PM -0500, James Bottomley wrote:
+> This looks small and innocuous, but it's actually the beginning of
+> moving the upper layer drivers into block and adding a filtering layer.
+> The idea is that the queue contains a queue_protocol parameter which
+> details what the device actually speaks.  The requests are likewise
+> filled in with a cmd_protocol parameter by the ULDs (or bsg if it's a
+> user initiated command, using the existing sgv4 protocol fields).
+> 
+> Now we have the capability of adding say native ATA pass through to BSG,
+> but also we can add things like an ATAPI filter:  sr creates SCSI
+> requests, but these could be sent through a PACKET_COMMAND wrapper and
+> emerge as BLK_PROTOCOL_ATAPI before being sent to the device.  Likewise,
+> sd requests going to BLK_PROTOCOL_ATA devices would have to go through
+> SATL filters.  
 
-Does anyone know if libata supports hybrid drive on Sil3124? I tried
-to play with Seagate hybrid drive and got protocol mismatch error when
-adding LBAs to pinned set or querying pinned set?  Sil24 driver code
-does not set Protocol Override field in PRB, just wonder if we need to
-set protocol explicitly to get this work because the controller may
-not decode the protocol correctly for nv cache commands.
+Will it also add the ability to add device-specific filters?  For
+example, the CD burners that have manufacturer specific opcodes to turn
+on various features that are safe for users to use ... but have to be
+limited to root-only currently as we can't know what kind of device the
+command is going to.
 
-Thanks,
-Fajun
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
