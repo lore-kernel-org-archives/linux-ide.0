@@ -1,50 +1,35 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: ST340823A disk size issue
-Date: Thu, 02 Aug 2007 16:38:11 +0400
-Message-ID: <46B1D033.1080907@ru.mvista.com>
-References: <20070801092903.GA1199@nalle> <200708012234.03375.bzolnier@gmail.com> <20070801215003.GA1864@nalle> <46B1CB72.1010501@ru.mvista.com>
+Subject: Re: hpt374 sata (Highpoint Rocket 1540)
+Date: Thu, 02 Aug 2007 16:41:04 +0400
+Message-ID: <46B1D0E0.20503@ru.mvista.com>
+References: <1185880124.3483.25.camel@localhost>	<46AF76D7.8050800@ru.mvista.com>	<1185916925.8484.23.camel@orchid.arb.net>	<200707312332.10820.bzolnier@gmail.com>	<46B08D63.4040205@ru.mvista.com>	<1185983536.16340.3.camel@orchid.arb.net>	<46B0ADB6.60207@ru.mvista.com>	<1185988529.16340.5.camel@orchid.arb.net>	<46B0CEC0.60504@ru.mvista.com> <20070801234332.3d28f7b2@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37246 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:37253 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754869AbXHBMgN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 08:36:13 -0400
-In-Reply-To: <46B1CB72.1010501@ru.mvista.com>
+	id S1755008AbXHBMjG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Aug 2007 08:39:06 -0400
+In-Reply-To: <20070801234332.3d28f7b2@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Mikko Rapeli <mikko.rapeli@iki.fi>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bob Ham <rah@bash.sh>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Alan Cox wrote:
+>>    Too bad, this is the standard HPT subsystem ID of 0x0001... So, nothing 
+>>comes to my mind other than add a module parameter to hpt366.c to specify that 
+>>we're using the crippled SATA bridge... well, maybe it would also make sense 
+>>to scan the BIOS for the signatures...
 
->> diff -ru linux-2.6.22.1/drivers/ide/ide-disk.c 
->> linux-2.6.22.1.new/drivers/ide/ide-disk.c
->> --- linux-2.6.22.1/drivers/ide/ide-disk.c    2007-07-10 
->> 21:56:30.000000000 +0300
->> +++ linux-2.6.22.1.new/drivers/ide/ide-disk.c    2007-08-01 
->> 22:59:47.000000000 +0300
->> @@ -502,6 +502,17 @@
->>               capacity, sectors_to_MB(capacity),
->>               set_max, sectors_to_MB(set_max));
->>  
->> +    if ((set_max % 2)
+> Since you don't do a reset is it not sufficient to check word93 on the
 
->    I hope gcc will convert this to (set_max & 1) but it wouldn't hurt to 
-> code this explicitly.
+    Ah, you mean to identify a SATA drive?  Need to try this...
 
->>  && (set_max == capacity + 1)) {
+> initial identify scan in PIO. Or if you do a reset the signature.
 
->    Wait, isn't set_max an address of a last sector,
+    Hm, the taskfile signature, you mean?..
 
-    Well, I was wrong: idedisk_read_native_max_address*() increments this 
-value bofore returning.
-
-> and isn't capacity a 
-> sector count? Shouldn't it be (set_max == capacity)?
-
-    No, it was OK.
-
-  MBR, Sergei
+MBR, Sergei
 
