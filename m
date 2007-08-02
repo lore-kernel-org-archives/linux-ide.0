@@ -1,35 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: hpt374 sata (Highpoint Rocket 1540)
-Date: Thu, 02 Aug 2007 16:41:04 +0400
-Message-ID: <46B1D0E0.20503@ru.mvista.com>
-References: <1185880124.3483.25.camel@localhost>	<46AF76D7.8050800@ru.mvista.com>	<1185916925.8484.23.camel@orchid.arb.net>	<200707312332.10820.bzolnier@gmail.com>	<46B08D63.4040205@ru.mvista.com>	<1185983536.16340.3.camel@orchid.arb.net>	<46B0ADB6.60207@ru.mvista.com>	<1185988529.16340.5.camel@orchid.arb.net>	<46B0CEC0.60504@ru.mvista.com> <20070801234332.3d28f7b2@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] sata_qstor, pdc_adma, sata_sx4: convert to new EH
+Date: Thu, 02 Aug 2007 21:40:51 +0900
+Message-ID: <46B1D0D3.5050703@gmail.com>
+References: <20070724011404.GA14064@havoc.gtf.org> <46B1CDCD.3010907@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:37253 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755008AbXHBMjG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 08:39:06 -0400
-In-Reply-To: <20070801234332.3d28f7b2@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.189]:21377 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754841AbXHBMk7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 08:40:59 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so404539rvb
+        for <linux-ide@vger.kernel.org>; Thu, 02 Aug 2007 05:40:59 -0700 (PDT)
+In-Reply-To: <46B1CDCD.3010907@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bob Ham <rah@bash.sh>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Alan Cox wrote:
->>    Too bad, this is the standard HPT subsystem ID of 0x0001... So, nothing 
->>comes to my mind other than add a module parameter to hpt366.c to specify that 
->>we're using the crippled SATA bridge... well, maybe it would also make sense 
->>to scan the BIOS for the signatures...
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> This is just a refresh of the existing libata-dev.git#new-eh patches
+>> that convert all remaining old-EH drivers to new EH, against 2.6.23-rc1.
+>>
+>> All three conversions are completely untested.  pdc_adma and sata_qstor
+>> need reviewing by someone with docs, in addition to testing.
+>>
+>> Even "it still works" or "this patch breaks stuff" feedback from users
+>> is useful.
+> 
+> Tejun has some pdc_adma hardware..  ;)
 
-> Since you don't do a reset is it not sufficient to check word93 on the
+Yeah, I actually have two thanks to Mark. :-)  Will test soon.
 
-    Ah, you mean to identify a SATA drive?  Need to try this...
-
-> initial identify scan in PIO. Or if you do a reset the signature.
-
-    Hm, the taskfile signature, you mean?..
-
-MBR, Sergei
-
+-- 
+tejun
