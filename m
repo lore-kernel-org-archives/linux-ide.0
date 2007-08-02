@@ -1,56 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH UPDATED] libata: add support for ATA_16 on ATAPI
-Date: Thu, 02 Aug 2007 08:01:12 -0400
-Message-ID: <46B1C788.3060201@rtr.ca>
-References: <20070801075624.GD13674@htj.dyndns.org> <46B091F4.5070704@garzik.org> <46B09494.4080206@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: ST340823A disk size issue
+Date: Thu, 02 Aug 2007 16:17:54 +0400
+Message-ID: <46B1CB72.1010501@ru.mvista.com>
+References: <20070801092903.GA1199@nalle> <200708012234.03375.bzolnier@gmail.com> <20070801215003.GA1864@nalle>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3868 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752642AbXHBMBO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 08:01:14 -0400
-In-Reply-To: <46B09494.4080206@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:37094 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754345AbXHBMPz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Aug 2007 08:15:55 -0400
+In-Reply-To: <20070801215003.GA1864@nalle>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Mikko Rapeli <mikko.rapeli@iki.fi>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Jeff, Mark, are you guys okay with the modified version?
->> Close!  Thanks for revising!
->>
->> My only comment now is that I dislike atapi_scmd85.  That means nothing
->> to me.
->>
->> I liked the old name better.  Or maybe use atapi_passthru16.
-> 
-> The problem with ata16_passthru is that it suggests the opposite of what
-> it does.  The default value 0 allows ATA_16 passthrough command while
-> setting it to 1 disallows ATA_16 passthrough and passes through SCSI
-> Command 0x85 which shares command byte with ATA_16.  Maybe it's because
-> I'm not a native speaker but the last sentence is pretty difficult to
-> digest.  So, IMHO, atapi_scmd85 is slightly better in that it means
-> nothing rather than suggesting the opposite.
+Mikko Rapeli wrote:
 
-Thanks for plugging away at this one, Tejun.
+> diff -ru linux-2.6.22.1/drivers/ide/ide-disk.c linux-2.6.22.1.new/drivers/ide/ide-disk.c
+> --- linux-2.6.22.1/drivers/ide/ide-disk.c	2007-07-10 21:56:30.000000000 +0300
+> +++ linux-2.6.22.1.new/drivers/ide/ide-disk.c	2007-08-01 22:59:47.000000000 +0300
+> @@ -502,6 +502,17 @@
+>  			 capacity, sectors_to_MB(capacity),
+>  			 set_max, sectors_to_MB(set_max));
+>  
+> +	if ((set_max % 2)
 
-And I do agree that ata16_passthru sounds backwards of what it really does.
-There's got to be a nicer name for this thing.
+    I hope gcc will convert this to (set_max & 1) but it wouldn't hurt to code 
+this explicitly.
 
-In practice, I doubt that anyone will ever use the parameter,
-so it really doesn't matter a whole lot what we call it.
+>  && (set_max == capacity + 1)) {
 
-But something sensible would be nice.
-There's got to be a shorter version of "atapi_pass_opcode_0x85_to_device=1".
+    Wait, isn't set_max an address of a last sector, and isn't capacity a 
+sector count? Shouldn't it be (set_max == capacity)?
 
-Perhaps "atapi_op_85_passthru=1" or "atapi_passthru_op_85=1" ??
+> +		printk(KERN_INFO "Old drive detected, keeping current capacity.\n");
+> +		return;
+> +	}
+> +
+>  	if (lba48)
+>  		set_max = idedisk_set_max_address_ext(drive, set_max);
+>  	else
 
-Also, this is an example of something that is really a "per device"
-parameter, rather than a global.  But we haven't yet cracked a good way
-to do that yet in libata.
-
-Cheers
+MBR, Sergei
