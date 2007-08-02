@@ -1,58 +1,50 @@
-From: Mikko Rapeli <mikko.rapeli@iki.fi>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: ST340823A disk size issue
-Date: Thu, 2 Aug 2007 15:35:11 +0300
-Message-ID: <20070802123510.GA1374@nalle>
-References: <20070801092903.GA1199@nalle> <20070801140556.136ed130@the-village.bc.nu>
+Date: Thu, 02 Aug 2007 16:38:11 +0400
+Message-ID: <46B1D033.1080907@ru.mvista.com>
+References: <20070801092903.GA1199@nalle> <200708012234.03375.bzolnier@gmail.com> <20070801215003.GA1864@nalle> <46B1CB72.1010501@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw03.mail.saunalahti.fi ([195.197.172.111]:39715 "EHLO
-	gw03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647AbXHBMfQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 08:35:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20070801140556.136ed130@the-village.bc.nu>
+Received: from h155.mvista.com ([63.81.120.155]:37246 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754869AbXHBMgN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Aug 2007 08:36:13 -0400
+In-Reply-To: <46B1CB72.1010501@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Mikko Rapeli <mikko.rapeli@iki.fi>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-On Wed, Aug 01, 2007 at 02:05:56PM +0100, Alan Cox wrote:
-> You've got an odd sized disk. If you have that, old IDE, and you also have
-> anything which tries to read the last sector (eg GPT partitioning) it'll
-> break as it tries to read 1K block sizes.
->
-> Vendors normally clip the drive to an even size which seems to be the
-> case on your box with the HPA left alone.
+Hello, I wrote:
 
-Sorry, but I don't quite get the odd size and 1k block thing.
+>> diff -ru linux-2.6.22.1/drivers/ide/ide-disk.c 
+>> linux-2.6.22.1.new/drivers/ide/ide-disk.c
+>> --- linux-2.6.22.1/drivers/ide/ide-disk.c    2007-07-10 
+>> 21:56:30.000000000 +0300
+>> +++ linux-2.6.22.1.new/drivers/ide/ide-disk.c    2007-08-01 
+>> 22:59:47.000000000 +0300
+>> @@ -502,6 +502,17 @@
+>>               capacity, sectors_to_MB(capacity),
+>>               set_max, sectors_to_MB(set_max));
+>>  
+>> +    if ((set_max % 2)
 
-Drive manual (
-http://www.seagate.com/support/disc/manuals/ata/u5pmb01.pdf ) says on
-page 12 that the drive has 78165360 sectors of size 512 bytes of which 
-0 to 78165359 are addressable in LBA mode.
+>    I hope gcc will convert this to (set_max & 1) but it wouldn't hurt to 
+> code this explicitly.
 
-The drive reports its size as 78165360 and falsely, according to kernels
-addr++, with HPA as 78165361. So instead of reporting the maximum
-addressable sector 78165359, the drive reports its size 78165360.
+>>  && (set_max == capacity + 1)) {
 
-Kernel now picks the larger value 78165361 as the drive size and thinks 
-sector 78165360 should exist, but it doesn't. Partition code tries to
-read the last sector 78165360 and fails:
+>    Wait, isn't set_max an address of a last sector,
 
-hdd: dma_intr: status=0x51 { DriveReady SeekComplete Error }
-hdd: dma_intr: error=0x10 { SectorIdNotFound }, LBAsect=78165360,
-sector=78165360
-ide: failed opcode was: unknown
+    Well, I was wrong: idedisk_read_native_max_address*() increments this 
+value bofore returning.
 
-Shouldn't the partition code also try to read 78165361 if there was a 1k
-read issued?
+> and isn't capacity a 
+> sector count? Shouldn't it be (set_max == capacity)?
 
-> It *should* all "just work" with the libata drivers but needs more
-> testing of odd sizes to be 100% sure
+    No, it was OK.
 
-The drive just worked with libata and 2.6.22.1, but I'd like to get a
-back protable fix to ide-disk.c, so distro kernels like 2.6.18 could be
-made to work too.
+  MBR, Sergei
 
--Mikko
