@@ -1,98 +1,45 @@
-From: Tony Vroon <chainsaw@gentoo.org>
-Subject: [PATCH] Optional libata LED trigger for PowerMac G5
-Date: Thu,  2 Aug 2007 19:45:41 +0100 (BST)
-Message-ID: <20070802184541.6F2335B80A8@ganymede.vroon.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganymede.vroon.org ([195.66.242.11]:55920 "EHLO
-	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759513AbXHBSwx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 14:52:53 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] block: add protocol discriminators to requests and
+	queues
+Date: Thu, 02 Aug 2007 13:59:40 -0500
+Message-ID: <1186081180.3449.24.camel@localhost.localdomain>
+References: <1186076845.3449.22.camel@localhost.localdomain>
+	 <20070802185128.GL21219@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070802185128.GL21219@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This adds an optional wrapper around ata_ac_issue_prot that triggers the LED layer.
-Powermac G5 machines with an Apple K2 controller will now blink the PMU LED to 
-harddisk activity if CONFIG_ADB_PMU_LED_IDE is defined (like on a PowerBook/iBook).
-This avoids any pollution of the hot path on non-PowerMacs and makes the functionality 
-fully optional.
+On Thu, 2007-08-02 at 12:51 -0600, Matthew Wilcox wrote:
+> On Thu, Aug 02, 2007 at 12:47:25PM -0500, James Bottomley wrote:
+> > This looks small and innocuous, but it's actually the beginning of
+> > moving the upper layer drivers into block and adding a filtering layer.
+> > The idea is that the queue contains a queue_protocol parameter which
+> > details what the device actually speaks.  The requests are likewise
+> > filled in with a cmd_protocol parameter by the ULDs (or bsg if it's a
+> > user initiated command, using the existing sgv4 protocol fields).
+> > 
+> > Now we have the capability of adding say native ATA pass through to BSG,
+> > but also we can add things like an ATAPI filter:  sr creates SCSI
+> > requests, but these could be sent through a PACKET_COMMAND wrapper and
+> > emerge as BLK_PROTOCOL_ATAPI before being sent to the device.  Likewise,
+> > sd requests going to BLK_PROTOCOL_ATA devices would have to go through
+> > SATL filters.  
+> 
+> Will it also add the ability to add device-specific filters?  For
+> example, the CD burners that have manufacturer specific opcodes to turn
+> on various features that are safe for users to use ... but have to be
+> limited to root-only currently as we can't know what kind of device the
+> command is going to.
 
-Jeff, hopefully this version addresses your earlier concerns voiced on May 25 this year.
+I wasn't planning on doing this ... the idea is basically a protocol
+conversion filter.  Device quirks don't quite fit into this model.
 
-Signed-off-by: Tony Vroon <chainsaw@gentoo.org>
+James
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 60e78be..9c687db 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -49,6 +49,7 @@
- #include <linux/workqueue.h>
- #include <linux/jiffies.h>
- #include <linux/scatterlist.h>
-+#include <linux/leds.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -5569,6 +5570,25 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
- }
- 
- /**
-+ *	ata_qc_issue_prot_ledtrigger - trigger LED core
-+ *	@qc: command to issue to device
-+ *
-+ *	This triggers the LED core and then calls the
-+ *	regular ata_qc_issue_prot function.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success, AC_ERR_* mask on failure
-+ */
-+unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc)
-+{
-+	ledtrig_ide_activity();	
-+	return ata_qc_issue_prot(qc);
-+}
-+
-+/**
-  *	ata_host_intr - Handle host interrupt for given (port, task)
-  *	@ap: Port on which interrupt arrived (possibly...)
-  *	@qc: Taskfile currently active in engine
-@@ -6873,6 +6893,7 @@ EXPORT_SYMBOL_GPL(ata_hsm_move);
- EXPORT_SYMBOL_GPL(ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
- EXPORT_SYMBOL_GPL(ata_qc_issue_prot);
-+EXPORT_SYMBOL_GPL(ata_qc_issue_prot_ledtrigger);
- EXPORT_SYMBOL_GPL(ata_tf_load);
- EXPORT_SYMBOL_GPL(ata_tf_read);
- EXPORT_SYMBOL_GPL(ata_noop_dev_select);
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 92e8770..af3e57b 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -341,7 +341,11 @@ static const struct ata_port_operations k2_sata_ops = {
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
- 	.qc_prep		= ata_qc_prep,
-+#ifdef CONFIG_ADB_PMU_LED_IDE
-+	.qc_issue		= ata_qc_issue_prot_ledtrigger,
-+#else
- 	.qc_issue		= ata_qc_issue_prot,
-+#endif
- 	.data_xfer		= ata_data_xfer,
- 	.freeze			= ata_bmdma_freeze,
- 	.thaw			= ata_bmdma_thaw,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 41978a5..ebda8ee 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -790,6 +790,7 @@ extern void ata_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
-+extern unsigned int ata_qc_issue_prot_ledtrigger(struct ata_queued_cmd *qc);
- extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
- 		unsigned int buflen);
- extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+
