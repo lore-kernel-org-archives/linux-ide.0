@@ -1,32 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Libata Sil3124 hybrid drive failure
-Date: Thu, 02 Aug 2007 15:27:42 -0400
-Message-ID: <46B2302E.3090704@garzik.org>
-References: <8202f4270708021052y166eddb9mbb8c46e63308b8dc@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/3] sis5513: always tune PIO
+Date: Thu, 02 Aug 2007 23:36:37 +0400
+Message-ID: <46B23245.9040301@ru.mvista.com>
+References: <200708012239.18820.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59955 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756581AbXHBT1p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 15:27:45 -0400
-In-Reply-To: <8202f4270708021052y166eddb9mbb8c46e63308b8dc@mail.gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:39846 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753728AbXHBTej (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Aug 2007 15:34:39 -0400
+In-Reply-To: <200708012239.18820.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Fajun Chen wrote:
-> Does anyone know if libata supports hybrid drive on Sil3124? I tried
-> to play with Seagate hybrid drive and got protocol mismatch error when
-> adding LBAs to pinned set or querying pinned set?  Sil24 driver code
-> does not set Protocol Override field in PRB, just wonder if we need to
-> set protocol explicitly to get this work because the controller may
-> not decode the protocol correctly for nv cache commands.
+Bartlomiej Zolnierkiewicz wrote:
 
-Yes, that's entirely possible for new commands...
+> * Always set ->autotune in init_hwif_sis5513(), this means practically
+>   no change in behavior since PIO was always tuned in ->ide_dma_check
+>   and >autotune was always set for ->dma_base == 0 case.
 
-	Jeff
+> * Bump driver version.
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
