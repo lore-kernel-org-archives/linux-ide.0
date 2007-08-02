@@ -1,83 +1,166 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 3/4] Enable link power management for ata drivers
-Date: Thu, 02 Aug 2007 14:27:34 +0900
-Message-ID: <46B16B46.4020108@gmail.com>
-References: <20070705194909.337398431@intel.com>	<20070705130530.5873afeb.kristen.c.accardi@intel.com>	<46B043FB.5090005@gmail.com> <20070801141154.3246a20d.kristen.c.accardi@intel.com>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: [PATCH] hook ACPI _PSx method to IDE power on/off
+Date: Thu, 02 Aug 2007 14:14:08 +0800
+Message-ID: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:61209 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbXHBF1m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 01:27:42 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so328981rvb
-        for <linux-ide@vger.kernel.org>; Wed, 01 Aug 2007 22:27:42 -0700 (PDT)
-In-Reply-To: <20070801141154.3246a20d.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: Len Brown <lenb@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
-> On Wed, 01 Aug 2007 17:27:39 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> Kristen Carlson Accardi wrote:
-> <snippy>
->> Is it safe to use ALPM on a device which only claims to support DIPM?
-> 
-> Yes - I doubled checked this with the AHCI people - and of course you
-> have Edvin's testing to prove it does fine.
+ACPI spec defines the sequence of IDE power on/off:
+Powering down:
+	Call _GTM.
+	Power down drive (calls _PS3 method and turns off power planes).
+Powering up:
+	Power up drive (calls _PS0 method if present and turns on power planes).
+	Call _STM passing info from _GTM (possibly modified), with ID data from
+	each drive.
+	Initialize the channel.
+	May modify the results of _GTF.
+	For each drive:
+		Call _GTF.
+		Execute task file (possibly modified).
+This patch adds the missed _PS0/_PS3 methods call.
 
-Alright.
+Signed-off-by: Shaohua Li <shaohua.li@intel.com>
 
-> As far as moving the enable/disable_pm calls to EH - can you take
-> a look at the other patch I sent which implements the shost_attrs
-> to see if I still need to do this?  I really don't know much about
-> the EH stuff - can you explain why we need to use it to set the
-> link pm?
-
-Unfortunately, yes, you still need to.  Only two threads of execution
-(one is not a real thread tho) are allowed to access a libata port -
-command execution and EH, and the two are mutually exclusive.  Invoking
-something from the outside is done by doing the following.
-
-1. recording what to do in ehi->[dev_]action, ap->pflags or dev->flags
-
-2. schedule EH by calling either ata_port_schedule_eh(),
-ata_port_abort() or ata_port_freeze().  The first one waits for the
-currently in-flight commands to finish before entering EH.  The second
-one aborts all in-flight commands and enters EH.  The third one aborts
-all commands and freezes the port and enters EH.
-
-3. wait for EH to finish by calling ata_port_wait_eh().
-
-This achieves correct synchronization and other EH functionalities can
-be easily used.  e.g. Resuming requires resetting the bus and
-revalidating the attached devices, so the resume handler can just
-request such actions together.  For link PS, I think it would probably
-be a good idea to revalidate after mode change to make sure the device
-works in the new mode.  If revalidation fails, it can reset and back off.
-
-EH is done in three large steps - autopsy, report and recover.  To
-implement an action, the 'recover' stage needs to be extended.  It
-basically comes down to hooking the enable/disable functions into the
-right places in ata_eh_recover().  Unconditionally disabling link PS
-prior to reset and enabling it back again before revalidation would be a
-pretty good choice, but haven't thought about it too hard so take it
-with a grain of salt.
-
-I'm not sure whether it would be necessary now but it would be nice to
-have a proper recovery logic later.  e.g. If more than certain number of
-ATA bus occurs in certain mount of time, disable link PS.  This kind of
-logic is used during autopsy to determine whether stepping down
-link/transfer speed is needed.  Please take a look at
-ata_eh_speed_down().  It might be enough to piggy back on
-ata_eh_speed_down() tho such that the first step of speeding down is
-turning off link PS.
-
-Hope the brief introduction to libata-EH-hacking helps.
-
--- 
-tejun
+Index: linux/drivers/ide/ide-acpi.c
+===================================================================
+--- linux.orig/drivers/ide/ide-acpi.c	2007-08-02 13:34:43.000000000 +0800
++++ linux/drivers/ide/ide-acpi.c	2007-08-02 13:51:21.000000000 +0800
+@@ -612,6 +612,46 @@ void ide_acpi_push_timing(ide_hwif_t *hw
+ EXPORT_SYMBOL_GPL(ide_acpi_push_timing);
+ 
+ /**
++ * ide_acpi_set_state - set the channel power state
++ * @hwif: target IDE interface
++ * @on: state, on/off
++ *
++ * This function executes the _PS0/_PS3 ACPI method to set the power state.
++ * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
++ */
++void ide_acpi_set_state(ide_hwif_t *hwif, int on)
++{
++	int unit;
++
++	if (ide_noacpi)
++		return;
++
++	DEBPRINT("ENTER:\n");
++
++	if (!hwif->acpidata) {
++		DEBPRINT("no ACPI data for %s\n", hwif->name);
++		return;
++	}
++	/* channel first and then drives for power on and verse versa for power off */
++	if (on)
++		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D0);
++	for (unit = 0; unit < MAX_DRIVES; ++unit) {
++		ide_drive_t *drive = &hwif->drives[unit];
++
++		if (!drive->acpidata->obj_handle)
++			drive->acpidata->obj_handle = ide_acpi_drive_get_handle(drive);
++
++		if (drive->acpidata->obj_handle && drive->present) {
++			acpi_bus_set_power(drive->acpidata->obj_handle,
++				on? ACPI_STATE_D0: ACPI_STATE_D3);
++		}
++	}
++	if (!on)
++		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D3);
++}
++EXPORT_SYMBOL_GPL(ide_acpi_set_state);
++
++/**
+  * ide_acpi_init - initialize the ACPI link for an IDE interface
+  * @hwif: target IDE interface (channel)
+  *
+@@ -679,6 +719,8 @@ void ide_acpi_init(ide_hwif_t *hwif)
+ 		return;
+ 	}
+ 
++	/* ACPI _PS0 before _STM */
++	ide_acpi_set_state(hwif, 1);
+ 	/*
+ 	 * ACPI requires us to call _STM on startup
+ 	 */
+Index: linux/drivers/ide/ide.c
+===================================================================
+--- linux.orig/drivers/ide/ide.c	2007-08-02 13:34:43.000000000 +0800
++++ linux/drivers/ide/ide.c	2007-08-02 13:35:28.000000000 +0800
+@@ -914,6 +914,7 @@ static int generic_ide_suspend(struct de
+ 	struct request rq;
+ 	struct request_pm_state rqpm;
+ 	ide_task_t args;
++	int ret;
+ 
+ 	/* Call ACPI _GTM only once */
+ 	if (!(drive->dn % 2))
+@@ -930,7 +931,14 @@ static int generic_ide_suspend(struct de
+ 		mesg.event = PM_EVENT_FREEZE;
+ 	rqpm.pm_state = mesg.event;
+ 
+-	return ide_do_drive_cmd(drive, &rq, ide_wait);
++	ret = ide_do_drive_cmd(drive, &rq, ide_wait);
++	/* only call ACPI _PS3 after both drivers are suspended */
++	if (!ret && (((drive->dn % 2) && hwif->drives[0].present
++		 && hwif->drives[1].present)
++		 || !hwif->drives[0].present
++		 || !hwif->drives[1].present))
++		ide_acpi_set_state(hwif, 0);
++	return ret;
+ }
+ 
+ static int generic_ide_resume(struct device *dev)
+@@ -943,8 +951,10 @@ static int generic_ide_resume(struct dev
+ 	int err;
+ 
+ 	/* Call ACPI _STM only once */
+-	if (!(drive->dn % 2))
++	if (!(drive->dn % 2)) {
++		ide_acpi_set_state(hwif, 1);
+ 		ide_acpi_push_timing(hwif);
++	}
+ 
+ 	ide_acpi_exec_tfs(drive);
+ 
+Index: linux/include/linux/ide.h
+===================================================================
+--- linux.orig/include/linux/ide.h	2007-08-02 13:34:43.000000000 +0800
++++ linux/include/linux/ide.h	2007-08-02 13:35:28.000000000 +0800
+@@ -1337,11 +1337,13 @@ extern int ide_acpi_exec_tfs(ide_drive_t
+ extern void ide_acpi_get_timing(ide_hwif_t *hwif);
+ extern void ide_acpi_push_timing(ide_hwif_t *hwif);
+ extern void ide_acpi_init(ide_hwif_t *hwif);
++extern void ide_acpi_set_state(ide_hwif_t *hwif, int on);
+ #else
+ static inline int ide_acpi_exec_tfs(ide_drive_t *drive) { return 0; }
+ static inline void ide_acpi_get_timing(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_push_timing(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_init(ide_hwif_t *hwif) { ; }
++static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
+ #endif
+ 
+ extern int ide_hwif_request_regions(ide_hwif_t *hwif);
+Index: linux/drivers/acpi/bus.c
+===================================================================
+--- linux.orig/drivers/acpi/bus.c	2007-08-02 13:35:06.000000000 +0800
++++ linux/drivers/acpi/bus.c	2007-08-02 13:56:56.000000000 +0800
+@@ -262,10 +262,12 @@ int acpi_bus_set_power(acpi_handle handl
+ 		printk(KERN_WARNING PREFIX
+ 			      "Transitioning device [%s] to D%d\n",
+ 			      device->pnp.bus_id, state);
+-	else
++	else {
++		device->power.state = state;
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+ 				  "Device [%s] transitioned to D%d\n",
+ 				  device->pnp.bus_id, state));
++	}
+ 
+ 	return result;
+ }
