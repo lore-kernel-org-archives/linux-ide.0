@@ -1,61 +1,140 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: ICH8 CF timeout (regression)...
-Date: Thu, 02 Aug 2007 18:42:41 -0400
-Message-ID: <46B25DE1.4050105@rtr.ca>
-References: <6278d2220708020348k26ac2293v648442f2281eca70@mail.gmail.com>	 <46B20D6B.1060506@gmail.com> <6278d2220708021411q17cdc151p79922e5dab74add4@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: ST340823A disk size issue
+Date: Fri, 3 Aug 2007 00:34:13 +0200
+Message-ID: <200708030034.13193.bzolnier@gmail.com>
+References: <20070801092903.GA1199@nalle> <20070802200357.GA1178@nalle> <20070802214246.63a54fe6@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:1148 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342AbXHBWmo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:42:44 -0400
-In-Reply-To: <6278d2220708021411q17cdc151p79922e5dab74add4@mail.gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:16177 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756473AbXHBWsn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Aug 2007 18:48:43 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so172603nfb
+        for <linux-ide@vger.kernel.org>; Thu, 02 Aug 2007 15:48:42 -0700 (PDT)
+In-Reply-To: <20070802214246.63a54fe6@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel J Blueman <daniel.blueman@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mikko Rapeli <mikko.rapeli@iki.fi>, linux-ide@vger.kernel.org
 
-Daniel J Blueman wrote:
-> On 02/08/07, Tejun Heo <htejun@gmail.com> wrote:
->> Daniel J Blueman wrote:
->>> I'll grab kernel logs from the legacy ATA boot; what else can help
->>> debug this issue? No problem testing patches too.
->> Yeap, please post the old log.
-> 
-> Not much actually - perhaps I need to enable some debugging:
-> 
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> hdc: SanDisk SDCFX-4096, CFA DISK drive
-> ide1 at 0x170-0x177,0x376 on irq 15
-> hdc: max request size: 128KiB
-> hdc: 8027712 sectors (4110 MB) w/1KiB Cache, CHS=7964/16/63
->  hdc: hdc1 hdc2 hdc3
-> 
->>> --- [2]
->>> ata2.00: limiting speed to UDMA/33:PIO4
->>> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->>> ata2.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
->>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->>> ata2: soft resetting port
->>> ata2.00: configured for UDMA/33
->>> ata2: EH complete
->> What happens after this?
-> 
-> More EH occurs - I've left it for ~5 mins, but let me know if longer
-> would give more information, eg if it converges on a lower speed.
-> 
-> Would it be useful to compare some of the port setup registers in the
-> working and non-working cases? Or any other debug I can grab?
 
-I'm betting that this is the exact same problem we recently debugged
-for someone else here:  there's a Marvell PATA->SATA bridge chip between
-that CF card and the SATA controller, and it only works with PIO modes.
+On Thursday 02 August 2007, Alan Cox wrote:
+> > hdd: reading: block=3D78165360, sectors=3D1, buffer=3D0xc1e63000
+> > hdd: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> > hdd: dma_intr: error=3D0x10 { SectorIdNotFound }, LBAsect=3D7816536=
+0,
+>=20
+> Ok this one does look like its actually a specific drive firmware err=
+or
+>=20
+> > ide1: reset: master: error (0x00?)
+> > ide1: start_request: current=3D0xc1e0b408
+>=20
+> and the drive then shits itself in style. Bart's right - this drive d=
+oes
+> need a blacklisting. Presumably thats why it shipped with a default H=
+PA
+> to clip the non-sector=20
 
-Tejun.. perhaps (for debugging) a simple patch to disallow DMA completely,
-just to see if PIO works?
+Mikko, please verify that the following patch fixes the issue.
 
-Cheers
+[PATCH] ide-disk: workaround for buggy HPA support on ST340823A (take 2=
+)
 
+This disk reports total number of sectors instead of maximum sector add=
+ress
+in response to READ_NATIVE_MAX_ADDRESS command and also happily accepts
+SET_MAX_ADDRESS command with the bogus value.  This results in +1 secto=
+r
+capacity being used and errors on attempts to use the last sector.
+
+=2E..
+hdd: Host Protected Area detected.
+=A0 =A0 =A0 =A0 current capacity is 78165360 sectors (40020 MB)
+=A0 =A0 =A0 =A0 native =A0capacity is 78165361 sectors (40020 MB)
+hdd: Host Protected Area disabled.
+=2E..
+hdd: reading: block=3D78165360, sectors=3D1, buffer=3D0xc1e63000
+hdd: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+hdd: dma_intr: error=3D0x10 { SectorIdNotFound }, LBAsect=3D78165360, s=
+ector=3D78165360
+=2E..
+
+Add hpa_list[] table and workaround the issue in idedisk_check_hpa().
+
+=46ixes kernel bugzilla bug #8816.
+
+Thanks to Mikko for investigating the issue and testing this patch.
+
+v2:
+* Add missing export and improve patch description a bit.
+
+Cc: Mikko Rapeli <mikko.rapeli@iki.fi>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+This patch depends on CONFIG_BLK_DEV_IDEDMA=3Dy but for testing purpose=
+s
+it is OK.  Final version wouldn't depend on CONFIG_BLK_DEV_IDEDMA,
+"[PATCH] ide: add cable detection for early UDMA66 devices (take 3)"
+which is in IDE quilt tree moves ide_in_drive_list() out of ide-dma.c.
+
+ drivers/ide/ide-disk.c |   17 +++++++++++++++++
+ drivers/ide/ide-dma.c  |    2 ++
+ 2 files changed, 19 insertions(+)
+
+Index: b/drivers/ide/ide-disk.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -481,6 +481,14 @@ static inline int idedisk_supports_lba48
+ 	       && id->lba_capacity_2;
+ }
+=20
++/*
++ * Some disks report total number of sectors instead of
++ * maximum sector address.  We list them here.
++ */
++static const struct drive_list_entry hpa_list[] =3D {
++	{ "ST340823A",	NULL },
++};
++
+ static void idedisk_check_hpa(ide_drive_t *drive)
+ {
+ 	unsigned long long capacity, set_max;
+@@ -492,6 +500,15 @@ static void idedisk_check_hpa(ide_drive_
+ 	else
+ 		set_max =3D idedisk_read_native_max_address(drive);
+=20
++	if (ide_in_drive_list(drive->id, hpa_list)) {
++		/*
++		 * Since we are inclusive wrt to firmware revisions do this
++		 * extra check and apply the workaround only when needed.
++		 */
++		if (set_max =3D=3D capacity + 1)
++			set_max--;
++	}
++
+ 	if (set_max <=3D capacity)
+ 		return;
+=20
+Index: b/drivers/ide/ide-dma.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -153,6 +153,8 @@ int ide_in_drive_list(struct hd_driveid=20
+ 	return 0;
+ }
+=20
++EXPORT_SYMBOL_GPL(ide_in_drive_list);
++
+ /**
+  *	ide_dma_intr	-	IDE DMA interrupt handler
+  *	@drive: the drive the interrupt is for
