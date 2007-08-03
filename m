@@ -1,37 +1,36 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH -mm] libata: add human-readable error value decoding v3
-Date: Fri, 3 Aug 2007 22:54:08 +0100
-Message-ID: <20070803225408.658de171@the-village.bc.nu>
-References: <46B36D59.7060803@shaw.ca>
+Subject: Re: 2.6.23-rc1: pata_via cable detection differs from via82cxxx
+Date: Fri, 3 Aug 2007 23:32:17 +0100
+Message-ID: <20070803233217.54c82022@the-village.bc.nu>
+References: <200708031828.l73ISdY9022725@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56853 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35584 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759505AbXHCVrF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Aug 2007 17:47:05 -0400
-In-Reply-To: <46B36D59.7060803@shaw.ca>
+	with ESMTP id S1758100AbXHCWZC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Aug 2007 18:25:02 -0400
+In-Reply-To: <200708031828.l73ISdY9022725@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 03 Aug 2007 12:00:57 -0600
-Robert Hancock <hancockr@shaw.ca> wrote:
+On Fri, 3 Aug 2007 20:28:39 +0200 (MEST)
+Mikael Pettersson <mikpe@it.uu.se> wrote:
 
-> This adds human-readable decoding of the ATA status and error registers
-> (similar to what drivers/ide does) as well as the SATA Serror register to
-> libata error handling output.  This prevents the need to pore through
-> standards documents to figure out the meaning of the bits in these
-> registers when looking at error reports.  Some bits that drivers/ide
-> decoded are not decoded here, since the bits are either command-dependent
-> or obsolete, and properly parsing them would add too much complexity.
+> The machine is an Athlon64 laptop with a K8T800 chipset. With the IDE
+> VIA driver the disk is detected as udma/100:
 
-Not sure its really worth it. Does "ABRT IDNF" actually tell you any more
-than the hex code ? In fact I find the hex code clearer because its
-usually the combination of state (0x51) etc that tells the story.
+Currently old IDE via driver has a hack in it which goes 'did the BIOS
+set UDMA3+' then I guess the cable is 80 wire regardless. libata doesn't
+do that as it breaks with hotplug, breaks with suspend/resume before the
+driver is loaded and other bits.
 
-No objection to it going in and on a correctness basis
-
-Acked-by: Alan Cox <alan@redhat.com>
+Instead we have two things - an ACPI snoop and a table of wonky laptops
+(eg those that use 40 wire ultrashort cables which are valid for UDMA133
+but not detected as 80 wire). If your laptop is done that way then it
+just needs adding to the magic list and/or 2.6.23-rc1-mm should spot it
+by ACPI. I'd prefer the table entry anyway as I don't like relying on ACPI
+so an lspci -vvxx would be appreciated
