@@ -1,109 +1,70 @@
-From: "Daniel J Blueman" <daniel.blueman@gmail.com>
-Subject: Re: ICH8 CF timeout (regression)...
-Date: Fri, 3 Aug 2007 23:38:47 +0100
-Message-ID: <6278d2220708031538s4a57f126ybfa0486816de4401@mail.gmail.com>
-References: <6278d2220708020348k26ac2293v648442f2281eca70@mail.gmail.com>
-	 <46B20D6B.1060506@gmail.com>
-	 <6278d2220708021411q17cdc151p79922e5dab74add4@mail.gmail.com>
-	 <46B25DE1.4050105@rtr.ca>
-	 <6278d2220708030322h2c779fa3o1e2e2d9c83ff62e8@mail.gmail.com>
-	 <46B30651.9030505@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: move ide_config_drive_speed() calls to upper layers
+Date: Sat, 4 Aug 2007 01:01:34 +0200
+Message-ID: <200708040101.34574.bzolnier@gmail.com>
+References: <200707270222.28230.bzolnier@gmail.com> <200707272119.19438.bzolnier@gmail.com> <46AB91A2.6060303@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_76825_27130099.1186180727922"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:18675 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764138AbXHCWiu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Aug 2007 18:38:50 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so251463nfb
-        for <linux-ide@vger.kernel.org>; Fri, 03 Aug 2007 15:38:48 -0700 (PDT)
-In-Reply-To: <46B30651.9030505@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.185]:6096 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762595AbXHCXER (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Aug 2007 19:04:17 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1186455mue
+        for <linux-ide@vger.kernel.org>; Fri, 03 Aug 2007 16:04:15 -0700 (PDT)
+In-Reply-To: <46AB91A2.6060303@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <lkml@rtr.ca>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-------=_Part_76825_27130099.1186180727922
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-Tejun,
+Hi,
 
-On 03/08/07, Tejun Heo <htejun@gmail.com> wrote:
-> Daniel J Blueman wrote:
-> > The ICH8 south-bridge I have is the mobile variant and does come
-> > equipped with native parallel IDE - see page 447:
-> > http://download.intel.com/design/chipsets/datashts/31305603.pdf . I do
-> > see 35MB/s with DMA enabled from my CF on the 1 in 15 times the
-> > libata-kernel does work.
-> >
-> > I can dump off and decode the configuration registers for the timing
-> > and bus master registers in the working and non-working libata cases,
-> > and the legacy ATA working case and see what's different.
->
-> Does the attached patch change anything?
+On Saturday 28 July 2007, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> >>On Fri, 27 Jul 2007 02:22:27 +0200
+> >>Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> 
+> >>>* Convert {ide_hwif_t,ide_pci_device_t}->host_flag to be u16.
+> 
+> >>>* Add IDE_HFLAG_POST_SET_MODE host to indicate the need to program the
+> >>>  host for the transfer mode after programming the device.  Set it in
+> >>>  au1xxx-ide/cs5530/cs5535/pdc202xx_new/sc1200/via82cxxx host drivers.
+> 
+> >>The CS5530 at least shouldn't care what order changes are done. I don't
+> 
+>     And neither CS5535. And Au1200 static bus controller shouldn't care about 
+> the order too, so au1xxx-ide hardly needs that.
+> 
+> Here's the datasheet, BTW:
+> 
+> http://www.razamicroelectronics.com/documents/32798e_Au1200_db.pdf
+> 
+> >>think the SC1200 does either but I don't have the docs to hand.
+> 
+>     It seems pretty much alike CS553x except it's accessed via PCI config. 
+> space, not MSRs... Here's the datasheet:
+> 
+> http://www.amd.com/files/connectivitysolutions/geode/32579B_sc1200_ds.pdf
 
-This addresses the issue 100%!
+Thanks for links to specs.
 
-Due to the differences between the ICH8 non-mobile and mobile
-variants, I've cooked the change into a new initialisation structure
-for the ICH8M in the attached patch, if that helps at all.
+>     I have a feeling that only pdc202xx_new and jmicron drivers actually need 
+> this flag (and the latter one actually doesn't care as its methods are empty 
+> anyway).  Well, AMD/VIA chips enable UltraDMA mode by snooping Set Features 
+> command (as the drivers tell them to do so), so the order seems important 
+> unless that is changed.
 
-The changes thus affect (correct) behaviour on the ICH8M in IDE mode
-only...so should be safe for inclusion. There may be a similar
-situation with ICH9Ms also.
+Since changing of order affects the way in which hardware is accessed
+I prefer to keep such changes out of this patch (which is just a cleanup).
 
-Thanks once again to all who helped!
-  Daniel
--- 
-Daniel J Blueman
+Could you please handle them in pre or post patch(es)?
 
-------=_Part_76825_27130099.1186180727922
-Content-Type: text/x-patch; name=ich8m-support.patch; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_f4x988vd
-Content-Disposition: attachment; filename="ich8m-support.patch"
-
-ZGlmZiAtdXJOIGxpbnV4LTIuNi4yMy1yYzEub3JpZy9kcml2ZXJzL2F0YS9hdGFfcGlpeC5jIGxp
-bnV4LTIuNi4yMy1yYzEvZHJpdmVycy9hdGEvYXRhX3BpaXguYwotLS0gbGludXgtMi42LjIzLXJj
-MS5vcmlnL2RyaXZlcnMvYXRhL2F0YV9waWl4LmMJMjAwNy0wOC0wMyAyMToyOTowMi4wMDAwMDAw
-MDAgKzAxMDAKKysrIGxpbnV4LTIuNi4yMy1yYzEvZHJpdmVycy9hdGEvYXRhX3BpaXguYwkyMDA3
-LTA4LTAzIDIxOjI0OjUzLjAwMDAwMDAwMCArMDEwMApAQCAtMTI4LDcgKzEyOCw4IEBACiAJaWNo
-Nl9zYXRhX2FoY2kJCT0gNywKIAlpY2g2bV9zYXRhX2FoY2kJCT0gOCwKIAlpY2g4X3NhdGFfYWhj
-aQkJPSA5LAotCXBpaXhfcGF0YV9td2RtYQkJPSAxMCwJLyogUElJWDMgTVdETUEgb25seSAqLwor
-CWljaDhtX3NhdGFfYWhjaQkJPSAxMCwKKwlwaWl4X3BhdGFfbXdkbWEJCT0gMTEsCS8qIFBJSVgz
-IE1XRE1BIG9ubHkgKi8KIAogCS8qIGNvbnN0YW50cyBmb3IgbWFwcGluZyB0YWJsZSAqLwogCVAw
-CQkJPSAwLCAgLyogcG9ydCAwICovCkBAIC0yMzIsNyArMjMzLDcgQEAKIAkvKiBTQVRBIENvbnRy
-b2xsZXIgMiBJREUgKElDSDgpICovCiAJeyAweDgwODYsIDB4MjgyNSwgUENJX0FOWV9JRCwgUENJ
-X0FOWV9JRCwgMCwgMCwgaWNoOF9zYXRhX2FoY2kgfSwKIAkvKiBNb2JpbGUgU0FUQSBDb250cm9s
-bGVyIElERSAoSUNIOE0pICovCi0JeyAweDgwODYsIDB4MjgyOCwgUENJX0FOWV9JRCwgUENJX0FO
-WV9JRCwgMCwgMCwgaWNoOF9zYXRhX2FoY2kgfSwKKwl7IDB4ODA4NiwgMHgyODI4LCBQQ0lfQU5Z
-X0lELCBQQ0lfQU5ZX0lELCAwLCAwLCBpY2g4bV9zYXRhX2FoY2kgfSwKIAkvKiBTQVRBIENvbnRy
-b2xsZXIgSURFIChJQ0g5KSAqLwogCXsgMHg4MDg2LCAweDI5MjAsIFBDSV9BTllfSUQsIFBDSV9B
-TllfSUQsIDAsIDAsIGljaDhfc2F0YV9haGNpIH0sCiAJLyogU0FUQSBDb250cm9sbGVyIElERSAo
-SUNIOSkgKi8KQEAgLTQyOCw3ICs0MjksMTkgQEAKIAkJLyogUE0gICBQUyAgIFNNICAgU1MgICAg
-ICAgTUFQICovCiAJCXsgIFAwLCAgUDIsICBQMSwgIFAzIH0sIC8qIDAwYiAoaGFyZHdpcmVkIHdo
-ZW4gaW4gQUhDSSkgKi8KIAkJeyAgUlYsICBSViwgIFJWLCAgUlYgfSwKLQkJeyAgSURFLCAgSURF
-LCAgTkEsICBOQSB9LCAvKiAxMGIgKElERSBtb2RlKSAqLworCQl7IElERSwgSURFLCAgTkEsICBO
-QSB9LCAvKiAxMGIgKElERSBtb2RlKSAqLworCQl7ICBSViwgIFJWLCAgUlYsICBSViB9LAorCX0s
-Cit9OworCitzdGF0aWMgY29uc3Qgc3RydWN0IHBpaXhfbWFwX2RiIGljaDhtX21hcF9kYiA9IHsK
-KwkubWFzayA9IDB4MywKKwkucG9ydF9lbmFibGUgPSAweDMsCisJLm1hcCA9IHsKKwkJLyogUE0g
-ICBQUyAgIFNNICAgU1MgICAgICAgTUFQICovCisJCXsgIFAwLCAgUDIsICBQMSwgIFAzIH0sIC8q
-IDAwYiAoaGFyZHdpcmVkIHdoZW4gaW4gQUhDSSkgKi8KKwkJeyAgUlYsICBSViwgIFJWLCAgUlYg
-fSwKKwkJeyAgUDAsICBQMiwgSURFLCBJREUgfSwgLyogMTBiIChJREUgbW9kZSkgKi8KIAkJeyAg
-UlYsICBSViwgIFJWLCAgUlYgfSwKIAl9LAogfTsKQEAgLTQzOSw2ICs0NTIsNyBAQAogCVtpY2g2
-X3NhdGFfYWhjaV0JPSAmaWNoNl9tYXBfZGIsCiAJW2ljaDZtX3NhdGFfYWhjaV0JPSAmaWNoNm1f
-bWFwX2RiLAogCVtpY2g4X3NhdGFfYWhjaV0JPSAmaWNoOF9tYXBfZGIsCisJW2ljaDhtX3NhdGFf
-YWhjaV0JPSAmaWNoOG1fbWFwX2RiLAogfTsKIAogc3RhdGljIHN0cnVjdCBhdGFfcG9ydF9pbmZv
-IHBpaXhfcG9ydF9pbmZvW10gPSB7CkBAIC01NDQsNyArNTU4LDE4IEBACiAJCS5wb3J0X29wcwk9
-ICZwaWl4X3NhdGFfb3BzLAogCX0sCiAKLQkvKiBwaWl4X3BhdGFfbXdkbWE6IDEwOiAgUElJWDMg
-TVdETUEgb25seSAqLworCS8qIGljaDhtX3NhdGFfYWhjaTogMTAgKi8KKwl7CisJCS5zaHQJCT0g
-JnBpaXhfc2h0LAorCQkuZmxhZ3MJCT0gUElJWF9TQVRBX0ZMQUdTIHwgUElJWF9GTEFHX1NDUiB8
-CisJCQkJICBQSUlYX0ZMQUdfQUhDSSwKKwkJLnBpb19tYXNrCT0gMHgxZiwJLyogcGlvMC00ICov
-CisJCS5td2RtYV9tYXNrCT0gMHgwNywgLyogbXdkbWEwLTIgKi8KKwkJLnVkbWFfbWFzawk9IEFU
-QV9VRE1BNiwKKwkJLnBvcnRfb3BzCT0gJnBpaXhfc2F0YV9vcHMsCisJfSwKKworCS8qIHBpaXhf
-cGF0YV9td2RtYTogMTE6ICBQSUlYMyBNV0RNQSBvbmx5ICovCiAJewogCQkuc2h0CQk9ICZwaWl4
-X3NodCwKIAkJLmZsYWdzCQk9IFBJSVhfUEFUQV9GTEFHUywK
-------=_Part_76825_27130099.1186180727922--
+Bart
