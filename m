@@ -1,30 +1,53 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [PATCH] hook ACPI _PSx method to IDE power on/off
-Date: Fri, 03 Aug 2007 08:44:56 +0800
-Message-ID: <1186101896.25162.0.camel@sli10-conroe.sh.intel.com>
-References: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com>
-	 <20070802123145.GA30304@srcf.ucam.org>
+From: "Mikael Starvik" <mikael.starvik@axis.com>
+Subject: RE: [PATCH] ide-cris: always tune PIO
+Date: Fri, 3 Aug 2007 09:43:46 +0200
+Message-ID: <BFECAF9E178F144FAEF2BF4CE739C66804C3FE3C@exmail1.se.axis.com>
+References: <BFECAF9E178F144FAEF2BF4CE739C66804C43F82@exmail1.se.axis.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18169 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753068AbXHCAuU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Aug 2007 20:50:20 -0400
-In-Reply-To: <20070802123145.GA30304@srcf.ucam.org>
+Received: from miranda.se.axis.com ([193.13.178.8]:41673 "EHLO
+	miranda.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbXHCIOu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Aug 2007 04:14:50 -0400
+In-Reply-To: <BFECAF9E178F144FAEF2BF4CE739C66804C43F82@exmail1.se.axis.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Len Brown <lenb@kernel.org>
+To: 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+Cc: Mikael Starvik <mikael.starvik@axis.com>
 
-On Thu, 2007-08-02 at 13:31 +0100, Matthew Garrett wrote:
-> On Thu, Aug 02, 2007 at 02:14:08PM +0800, Shaohua Li wrote:
-> > ACPI spec defines the sequence of IDE power on/off:
-> 
-> Most distributions seem to be using the libata PATA code now - any plans 
-> to implement it there as well?
-Ok, I'll look at it too.
+Yes, thanks!
 
-Thanks,
-Shaohua
+Acked-by: Mikael Starvik <starvik@axis.com>
+
+-----Original Message-----
+From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com] 
+Sent: Friday, August 03, 2007 12:46 AM
+To: linux-ide@vger.kernel.org
+Cc: Mikael Starvik
+Subject: [PATCH] ide-cris: always tune PIO
+
+
+
+Cc: Mikael Starvik <starvik@axis.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/cris/ide-cris.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: b/drivers/ide/cris/ide-cris.c
+===================================================================
+--- a/drivers/ide/cris/ide-cris.c
++++ b/drivers/ide/cris/ide-cris.c
+@@ -808,6 +808,8 @@ init_e100_ide (void)
+ 		hwif->dma_off_quietly = &cris_dma_off;
+ 		hwif->cbl = ATA_CBL_PATA40;
+ 		hwif->pio_mask = ATA_PIO4,
++		hwif->drives[0].autotune = 1;
++		hwif->drives[1].autotune = 1;
+ 		hwif->ultra_mask = cris_ultra_mask;
+ 		hwif->mwdma_mask = 0x07; /* Multiword DMA 0-2 */
+ 		hwif->autodma = 1;
+
