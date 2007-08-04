@@ -1,28 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] hook ACPI _PSx method to IDE power on/off
-Date: Sat, 04 Aug 2007 17:03:09 +0900
-Message-ID: <46B432BD.5040109@gmail.com>
-References: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com>	 <20070802123145.GA30304@srcf.ucam.org> <1186101896.25162.0.camel@sli10-conroe.sh.intel.com>
+Subject: Re: libata git tree, mbox queue status and contents
+Date: Sat, 04 Aug 2007 17:14:50 +0900
+Message-ID: <46B4357A.2080502@gmail.com>
+References: <46B35344.3090208@garzik.org> <20070803172040.52853316@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1186101896.25162.0.camel@sli10-conroe.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Len Brown <lenb@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.182]:42690 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753078AbXHDIPv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:15:51 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1100745wah
+        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:15:51 -0700 (PDT)
+In-Reply-To: <20070803172040.52853316@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Shaohua Li wrote:
-> On Thu, 2007-08-02 at 13:31 +0100, Matthew Garrett wrote:
->> On Thu, Aug 02, 2007 at 02:14:08PM +0800, Shaohua Li wrote:
->>> ACPI spec defines the sequence of IDE power on/off:
->> Most distributions seem to be using the libata PATA code now - any plans 
->> to implement it there as well?
-> Ok, I'll look at it too.
+Alan Cox wrote:
+>> * Albert: irq_on/off.  Really need to give this some thought.  Not sure 
+>> I like where this model is going.  Polling and twiddling irq on/off 
+>> should be kept to a minimum, because it's sorta an admission that the 
+>> host state machine has broken down, and we need to bandaid.  Its a 
+>> bandaid not a root-cause solution.
+> 
+> I think of it more as an admission that the IDE design is lacking in a
+> few areas. No suprise as its an emulation of a 15 year old interface that
+> was normally used polled.
 
-libata already has acpi support.  Please take a look at
-drivers/ata/libata-acpi.c
+I second Alan's opinion.  The root cause of the problem is that the
+controller lacks reliable IRQ masking and pending register.  If you add
+a slightly malfunctioning controller and/or device into the mix, it's
+guaranteed to break.
+
+And there's another addition to the mess from SATA land which I
+discovered a few days ago.  Some SATA controllers with SFF interface
+don't send non-command H2D Reg FIS when ATA_NIEN is toggled, so the
+updated ATA_NIEN is sent together with the next command && some SATA
+devices don't honor ATA_NIEN on command H2D Reg FIS.  Fun!
+
+I think we should go combined IRQ + polling mode Jeff once mentioned so
+that we automatically fallback to polling if IRQ doesn't work for some
+reason.  To do that, we need reliable IRQ masking && the only way to
+achieve proper IRQ masking on SFF controllers seems plugging it from the
+host side.
+
+Thanks.
 
 -- 
 tejun
