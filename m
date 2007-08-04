@@ -1,183 +1,147 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 5/11] ide: remove drive->init_speed zeroing
-Date: Sat, 4 Aug 2007 22:08:31 +0200
-Message-ID: <200708042208.32014.bzolnier@gmail.com>
+Subject: [PATCH 3/11] au1xxx-ide: use ide_tune_dma()
+Date: Sat, 4 Aug 2007 22:06:57 +0200
+Message-ID: <200708042206.57529.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:12431 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760381AbXHDUQJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 16:16:09 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1508336mue
-        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 13:16:07 -0700 (PDT)
+Received: from fk-out-0910.google.com ([209.85.128.188]:51458 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760939AbXHDUQG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 16:16:06 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1014325fkz
+        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 13:16:05 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-Several host drivers used to reset drive->init_speed in their ->ide_dma_check
-implementations which resulted in incorrect init speed being reported to the
-user, fix it.
+* Add ->mdma_filter to ide_hwif_t and use it in ide_get_mode_mask().
+
+* Remove needless setting of drive->using_dma from auide_dma_check().
+
+* Split off auide_mdma_filter() from auide_dma_check().
+
+* Use ide_tune_dma() in auide_dma_check(), this fixes following issues:
+  - device's DMA capability bit not being checked
+  - device not being checked against generic DMA blacklist
+  - transfer mode not being set on device/host
+
+* Add PIO autotune fallback to auide_dma_check().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/alim15x3.c     |    2 --
- drivers/ide/pci/atiixp.c       |    2 --
- drivers/ide/pci/cs5535.c       |    2 --
- drivers/ide/pci/hpt34x.c       |    2 --
- drivers/ide/pci/hpt366.c       |    2 --
- drivers/ide/pci/pdc202xx_new.c |    2 --
- drivers/ide/pci/pdc202xx_old.c |    2 --
- drivers/ide/pci/piix.c         |    2 --
- drivers/ide/pci/serverworks.c  |    2 --
- drivers/ide/pci/sis5513.c      |    2 --
- drivers/ide/pci/slc90e66.c     |    2 --
- 11 files changed, 22 deletions(-)
+ drivers/ide/ide-dma.c         |    3 +++
+ drivers/ide/ide.c             |    1 +
+ drivers/ide/mips/au1xxx-ide.c |   36 ++++++++++++++++++++++--------------
+ include/linux/ide.h           |    1 +
+ 4 files changed, 27 insertions(+), 14 deletions(-)
 
-Index: b/drivers/ide/pci/alim15x3.c
+Index: b/drivers/ide/ide-dma.c
 ===================================================================
---- a/drivers/ide/pci/alim15x3.c
-+++ b/drivers/ide/pci/alim15x3.c
-@@ -446,8 +446,6 @@ static void ali_set_dma_mode(ide_drive_t
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -677,6 +677,9 @@ static unsigned int ide_get_mode_mask(id
+ 	case XFER_MW_DMA_0:
+ 		if (id->field_valid & 2)
+ 			mask = id->dma_mword & hwif->mwdma_mask;
++
++		if (hwif->mdma_filter)
++			mask &= hwif->mdma_filter(drive);
+ 		break;
+ 	case XFER_SW_DMA_0:
+ 		if (id->field_valid & 2) {
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -398,6 +398,7 @@ static void ide_hwif_restore(ide_hwif_t 
  
- static int ali15x3_config_drive_for_dma(ide_drive_t *drive)
+ 	hwif->set_pio_mode		= tmp_hwif->set_pio_mode;
+ 	hwif->set_dma_mode		= tmp_hwif->set_dma_mode;
++	hwif->mdma_filter		= tmp_hwif->mdma_filter;
+ 	hwif->udma_filter		= tmp_hwif->udma_filter;
+ 	hwif->selectproc		= tmp_hwif->selectproc;
+ 	hwif->reset_poll		= tmp_hwif->reset_poll;
+Index: b/drivers/ide/mips/au1xxx-ide.c
+===================================================================
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -351,11 +351,18 @@ static int auide_dma_setup(ide_drive_t *
+ 	return 0;
+ }
+ 
+-static int auide_dma_check(ide_drive_t *drive)
++static u8 auide_mdma_filter(ide_drive_t *drive)
  {
--	drive->init_speed = 0;
+-	u8 speed = ide_max_dma_mode(drive);
++	/*
++	 * FIXME: ->white_list and ->black_list are based on completely bogus
++	 * ->ide_dma_check implementation which didn't set neither the host
++	 * controller timings nor the device for the desired transfer mode.
++	 *
++	 * They should be either removed or 0x00 MWDMA mask should be
++	 * returned for devices on the ->black_list.
++	 */
+ 
+-	if( dbdma_init_done == 0 ){
++	if (dbdma_init_done == 0) {
+ 		auide_hwif.white_list = ide_in_drive_list(drive->id,
+ 							  dma_white_list);
+ 		auide_hwif.black_list = ide_in_drive_list(drive->id,
+@@ -366,21 +373,20 @@ static int auide_dma_check(ide_drive_t *
+ 	}
+ 
+ 	/* Is the drive in our DMA black list? */
 -
- 	if (ide_tune_dma(drive))
+-	if ( auide_hwif.black_list ) {
+-		drive->using_dma = 0;
+-
+-		/* Borrowed the warning message from ide-dma.c */
+-
++	if (auide_hwif.black_list)
+ 		printk(KERN_WARNING "%s: Disabling DMA for %s (blacklisted)\n",
+-		       drive->name, drive->id->model);	       
+-	}
+-	else
+-		drive->using_dma = 1;
++				    drive->name, drive->id->model);
+ 
+-	if (drive->autodma && (speed & XFER_MODE) != XFER_PIO)
++	return drive->hwif->mwdma_mask;
++}
++
++static int auide_dma_check(ide_drive_t *drive)
++{
++	if (ide_tune_dma(drive))
  		return 0;
  
-Index: b/drivers/ide/pci/atiixp.c
++	ide_set_max_pio(drive);
++
+ 	return -1;
+ }
+ 
+@@ -692,6 +698,8 @@ static int au_ide_probe(struct device *d
+ 	hwif->dma_off_quietly		= &auide_dma_off_quietly;
+ 	hwif->dma_timeout		= &auide_dma_timeout;
+ 
++	hwif->mdma_filter		= &auide_mdma_filter;
++
+ 	hwif->ide_dma_check             = &auide_dma_check;
+ 	hwif->dma_exec_cmd              = &auide_dma_exec_cmd;
+ 	hwif->dma_start                 = &auide_dma_start;
+Index: b/include/linux/ide.h
 ===================================================================
---- a/drivers/ide/pci/atiixp.c
-+++ b/drivers/ide/pci/atiixp.c
-@@ -168,8 +168,6 @@ static void atiixp_set_dma_mode(ide_driv
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -723,6 +723,7 @@ typedef struct hwif_s {
+ 	/* driver soft-power interface */
+ 	int	(*busproc)(ide_drive_t *, int);
+ #endif
++	u8 (*mdma_filter)(ide_drive_t *);
+ 	u8 (*udma_filter)(ide_drive_t *);
  
- static int atiixp_dma_check(ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/cs5535.c
-===================================================================
---- a/drivers/ide/pci/cs5535.c
-+++ b/drivers/ide/pci/cs5535.c
-@@ -159,8 +159,6 @@ static void cs5535_set_pio_mode(ide_driv
- 
- static int cs5535_dma_check(ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/hpt34x.c
-===================================================================
---- a/drivers/ide/pci/hpt34x.c
-+++ b/drivers/ide/pci/hpt34x.c
-@@ -82,8 +82,6 @@ static void hpt34x_set_pio_mode(ide_driv
- 
- static int hpt34x_config_drive_xfer_rate (ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return -1;
- 
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -693,8 +693,6 @@ static void hpt3xx_maskproc(ide_drive_t 
- 
- static int hpt366_config_drive_xfer_rate(ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/pdc202xx_new.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_new.c
-+++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -225,8 +225,6 @@ static u8 pdcnew_cable_detect(ide_hwif_t
- 
- static int pdcnew_config_drive_xfer_rate(ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -181,8 +181,6 @@ static void pdc_old_disable_66MHz_clock(
- 
- static int pdc202xx_config_drive_xfer_rate (ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/piix.c
-===================================================================
---- a/drivers/ide/pci/piix.c
-+++ b/drivers/ide/pci/piix.c
-@@ -264,8 +264,6 @@ static void piix_set_dma_mode(ide_drive_
-  
- static int piix_config_drive_xfer_rate (ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/serverworks.c
-===================================================================
---- a/drivers/ide/pci/serverworks.c
-+++ b/drivers/ide/pci/serverworks.c
-@@ -197,8 +197,6 @@ static void svwks_set_dma_mode(ide_drive
- 
- static int svwks_config_drive_xfer_rate (ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/sis5513.c
-===================================================================
---- a/drivers/ide/pci/sis5513.c
-+++ b/drivers/ide/pci/sis5513.c
-@@ -603,8 +603,6 @@ static void sis_set_dma_mode(ide_drive_t
- 
- static int sis5513_config_xfer_rate(ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
-Index: b/drivers/ide/pci/slc90e66.c
-===================================================================
---- a/drivers/ide/pci/slc90e66.c
-+++ b/drivers/ide/pci/slc90e66.c
-@@ -132,8 +132,6 @@ static void slc90e66_set_dma_mode(ide_dr
- 
- static int slc90e66_config_drive_xfer_rate (ide_drive_t *drive)
- {
--	drive->init_speed = 0;
--
- 	if (ide_tune_dma(drive))
- 		return 0;
- 
+ 	void (*ata_input_data)(ide_drive_t *, void *, u32);
