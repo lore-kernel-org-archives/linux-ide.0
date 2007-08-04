@@ -1,57 +1,55 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: 2.6.23-rc1: pata_via cable detection differs from via82cxxx
-Date: Sat, 4 Aug 2007 12:59:35 +0200 (MEST)
-Message-ID: <200708041059.l74AxZ1u027405@harpo.it.uu.se>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCHSET] libata: implement ata_link, take 6
+Date: Sat, 04 Aug 2007 08:04:10 -0500
+Message-ID: <1186232650.3439.1.camel@localhost.localdomain>
+References: <11862169601938-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:34485 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754842AbXHDK7l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 4 Aug 2007 06:59:41 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:53969 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761329AbXHDNEM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 09:04:12 -0400
+In-Reply-To: <11862169601938-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Fri, 3 Aug 2007 23:32:17 +0100, Alan Cox wrote:
-> Mikael Pettersson <mikpe@it.uu.se> wrote:
+On Sat, 2007-08-04 at 17:42 +0900, Tejun Heo wrote:
+> This is the sixth take of implement ata_link patchset.  This patchset
+> contains 14 patches which can be categorized as follows.
 > 
-> > The machine is an Athlon64 laptop with a K8T800 chipset. With the IDE
-> > VIA driver the disk is detected as udma/100:
+> #01-02: implement ata_link
+> #03-06: make libata deal with link instead of port
+> #07-09: misc link stuff (link init, reset_tries, ata_link_abort())
+> #10-14: add ap->pmp_link[] and update libata to deal with multiple
+> 	links
 > 
-> Currently old IDE via driver has a hack in it which goes 'did the BIOS
-> set UDMA3+' then I guess the cable is 80 wire regardless. libata doesn't
-> do that as it breaks with hotplug, breaks with suspend/resume before the
-> driver is loaded and other bits.
+> ata_link abstracts PHY and sits between ata_port and ata_device.  The
+> following attributes are moved to ata_link from ata_port.
 > 
-> Instead we have two things - an ACPI snoop and a table of wonky laptops
-> (eg those that use 40 wire ultrashort cables which are valid for UDMA133
-> but not detected as 80 wire). If your laptop is done that way then it
-> just needs adding to the magic list and/or 2.6.23-rc1-mm should spot it
-> by ACPI. I'd prefer the table entry anyway as I don't like relying on ACPI
-> so an lspci -vvxx would be appreciated
+> - active command state (active_tag, sactive)
+> - [hw_]sata_spd_limit
+> - eh_info and eh_context
+> - device array
+> 
+> With above and a few extra fields, a link can handle attached devices
+> including qc management and EH/hotplug.  This patchset makes libata
+> ready to handle PMP links.
+> 
+> Changes from the last take[L] are.
+> 
+> * adapted to the current upstream
+> 
+> This patchset is against
+> 
+>   libata-dev#upstream (80c51b13d8a73b9346ebe849cdeac6f539066fc2)
 
-Sure:
+Sorry; there's another piece now: libsas:  drivers/scsi/libsas/sas_ata.c
+will need similar treatment to ipr.
 
-00:11.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06) (prog-if 8a [Master SecP PriP])
-	Subsystem: Rioworks: Unknown device 2032
-	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-	Latency: 64
-	Interrupt: pin A routed to IRQ 17
-	Region 0: [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [disabled] [size=8]
-	Region 1: [virtual] Memory at 000003f0 (type 3, non-prefetchable) [disabled] [size=1]
-	Region 2: [virtual] Memory at 00000170 (32-bit, non-prefetchable) [disabled] [size=8]
-	Region 3: [virtual] Memory at 00000370 (type 3, non-prefetchable) [disabled] [size=1]
-	Region 4: I/O ports at 1ce0 [size=16]
-	Capabilities: [c0] Power Management version 2
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-00: 06 11 71 05 05 00 90 02 06 8a 01 01 00 40 00 00
-10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-20: e1 1c 00 00 00 00 00 00 00 00 00 00 1f 16 32 20
-30: 00 00 00 00 c0 00 00 00 00 00 00 00 00 01 00 00
+James
 
-The machine is an Arima W730-K8, rebadged and sold as the
-Targa Visionary 811. eMachines and others also had this model.
 
-/Mikael
