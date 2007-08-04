@@ -1,318 +1,99 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 13/14] libata-link: update hotplug to handle PMP links
-Date: Sat, 4 Aug 2007 17:42:42 +0900
-Message-ID: <11862169624147-git-send-email-htejun@gmail.com>
-References: <11862169601938-git-send-email-htejun@gmail.com>
-Reply-To: Tejun Heo <htejun@gmail.com>
+Subject: Re: ASUS P5W motherboard PMP
+Date: Sat, 04 Aug 2007 17:48:03 +0900
+Message-ID: <46B43D43.7000107@gmail.com>
+References: <ec7e30370708031753m668f68a2kd67ad8278eb78675@mail.gmail.com>	 <46B414C0.2060606@gmail.com> <ec7e30370708032338x250c4689j49aabfcac373837f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------020502020706020701010906"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:33711 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.187]:39173 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757524AbXHDImz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:42:55 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so848297rvb
-        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:42:55 -0700 (PDT)
-In-Reply-To: <11862169601938-git-send-email-htejun@gmail.com>
+	with ESMTP id S1750763AbXHDItE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:49:04 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so848649rvb
+        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:49:04 -0700 (PDT)
+In-Reply-To: <ec7e30370708032338x250c4689j49aabfcac373837f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: David Madsen <david.madsen@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Update hotplug to handle PMP links.  When PMP is attached, the PMP
-number corresponds to C of SCSI H:C:I:L.  While at it, change argument
-to ata_find_dev() to @devno from @id to avoid confusion with SCSI
-device ID.
+This is a multi-part message in MIME format.
+--------------020502020706020701010906
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    7 ++-
- drivers/ata/libata-scsi.c |  159 +++++++++++++++++++++++++++++++--------------
- 2 files changed, 114 insertions(+), 52 deletions(-)
+David Madsen wrote:
+> Yes, I patched the 2.6.22.1 vanilla kernel with the libata patch from here.
+> 
+> http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.22.1-20070803.tar.bz2
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 601dcb1..50721bc 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6584,6 +6584,7 @@ int ata_host_activate(struct ata_host *host, int irq,
- void ata_port_detach(struct ata_port *ap)
- {
- 	unsigned long flags;
-+	struct ata_link *link;
- 	struct ata_device *dev;
- 
- 	if (!ap->ops->error_handler)
-@@ -6601,8 +6602,10 @@ void ata_port_detach(struct ata_port *ap)
- 	 */
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	ata_link_for_each_dev(dev, &ap->link)
--		ata_dev_disable(dev);
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link)
-+			ata_dev_disable(dev);
-+	}
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3d6d5f7..58051ee 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2423,21 +2423,36 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
- 	return 0;
- }
- 
--static struct ata_device * ata_find_dev(struct ata_port *ap, int id)
-+static struct ata_device * ata_find_dev(struct ata_port *ap, int devno)
- {
--	if (likely(id < ata_link_max_devices(&ap->link)))
--		return &ap->link.device[id];
-+	if (ap->nr_pmp_links == 0) {
-+		if (likely(devno < ata_link_max_devices(&ap->link)))
-+			return &ap->link.device[devno];
-+	} else {
-+		if (likely(devno < ap->nr_pmp_links))
-+			return &ap->pmp_link[devno].device[0];
-+	}
-+
- 	return NULL;
- }
- 
- static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
- 					const struct scsi_device *scsidev)
- {
-+	int devno;
-+
- 	/* skip commands not addressed to targets we simulate */
--	if (unlikely(scsidev->channel || scsidev->lun))
--		return NULL;
-+	if (ap->nr_pmp_links == 0) {
-+		if (unlikely(scsidev->channel || scsidev->lun))
-+			return NULL;
-+		devno = scsidev->id;
-+	} else {
-+		if (unlikely(scsidev->id || scsidev->lun))
-+			return NULL;
-+		devno = scsidev->channel;
-+	}
- 
--	return ata_find_dev(ap, scsidev->id);
-+	return ata_find_dev(ap, devno);
- }
- 
- /**
-@@ -2951,22 +2966,32 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- {
- 	int tries = 5;
- 	struct ata_device *last_failed_dev = NULL;
-+	struct ata_link *link;
- 	struct ata_device *dev;
- 
- 	if (ap->flags & ATA_FLAG_DISABLED)
- 		return;
- 
-  repeat:
--	ata_link_for_each_dev(dev, &ap->link) {
--		struct scsi_device *sdev;
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			struct scsi_device *sdev;
-+			int channel = 0, id = 0;
- 
--		if (!ata_dev_enabled(dev) || dev->sdev)
--			continue;
-+			if (!ata_dev_enabled(dev) || dev->sdev)
-+				continue;
- 
--		sdev = __scsi_add_device(ap->scsi_host, 0, dev->devno, 0, NULL);
--		if (!IS_ERR(sdev)) {
--			dev->sdev = sdev;
--			scsi_device_put(sdev);
-+			if (ata_is_host_link(link))
-+				id = dev->devno;
-+			else
-+				channel = link->pmp;
-+
-+			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
-+						 NULL);
-+			if (!IS_ERR(sdev)) {
-+				dev->sdev = sdev;
-+				scsi_device_put(sdev);
-+			}
- 		}
- 	}
- 
-@@ -2974,11 +2999,14 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 	 * failure occurred, scan would have failed silently.  Check
- 	 * whether all devices are attached.
- 	 */
--	ata_link_for_each_dev(dev, &ap->link) {
--		if (ata_dev_enabled(dev) && !dev->sdev)
--			break;
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			if (ata_dev_enabled(dev) && !dev->sdev)
-+				goto exit_loop;
-+		}
- 	}
--	if (!dev)
-+ exit_loop:
-+	if (!link)
- 		return;
- 
- 	/* we're missing some SCSI devices */
-@@ -3092,6 +3120,25 @@ static void ata_scsi_remove_dev(struct ata_device *dev)
- 	}
- }
- 
-+static void ata_scsi_handle_link_detach(struct ata_link *link)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct ata_device *dev;
-+
-+	ata_link_for_each_dev(dev, link) {
-+		unsigned long flags;
-+
-+		if (!(dev->flags & ATA_DFLAG_DETACHED))
-+			continue;
-+
-+		spin_lock_irqsave(ap->lock, flags);
-+		dev->flags &= ~ATA_DFLAG_DETACHED;
-+		spin_unlock_irqrestore(ap->lock, flags);
-+
-+		ata_scsi_remove_dev(dev);
-+	}
-+}
-+
- /**
-  *	ata_scsi_hotplug - SCSI part of hotplug
-  *	@work: Pointer to ATA port to perform SCSI hotplug on
-@@ -3108,7 +3155,7 @@ void ata_scsi_hotplug(struct work_struct *work)
- {
- 	struct ata_port *ap =
- 		container_of(work, struct ata_port, hotplug_task.work);
--	struct ata_device *dev;
-+	int i;
- 
- 	if (ap->pflags & ATA_PFLAG_UNLOADING) {
- 		DPRINTK("ENTER/EXIT - unloading\n");
-@@ -3117,19 +3164,14 @@ void ata_scsi_hotplug(struct work_struct *work)
- 
- 	DPRINTK("ENTER\n");
- 
--	/* unplug detached devices */
--	ata_link_for_each_dev(dev, &ap->link) {
--		unsigned long flags;
--
--		if (!(dev->flags & ATA_DFLAG_DETACHED))
--			continue;
--
--		spin_lock_irqsave(ap->lock, flags);
--		dev->flags &= ~ATA_DFLAG_DETACHED;
--		spin_unlock_irqrestore(ap->lock, flags);
--
--		ata_scsi_remove_dev(dev);
--	}
-+	/* Unplug detached devices.  We cannot use link iterator here
-+	 * because PMP links have to be scanned even if PMP is
-+	 * currently not attached.  Iterate manually.
-+	 */
-+	ata_scsi_handle_link_detach(&ap->link);
-+	if (ap->pmp_link)
-+		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
-+			ata_scsi_handle_link_detach(&ap->pmp_link[i]);
- 
- 	/* scan for new ones */
- 	ata_scsi_scan_host(ap, 0);
-@@ -3157,26 +3199,40 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 			      unsigned int id, unsigned int lun)
- {
- 	struct ata_port *ap = ata_shost_to_port(shost);
--	struct ata_eh_info *ehi = &ap->link.eh_info;
- 	unsigned long flags;
--	int rc = 0;
-+	int devno, rc = 0;
- 
- 	if (!ap->ops->error_handler)
- 		return -EOPNOTSUPP;
- 
--	if ((channel != SCAN_WILD_CARD && channel != 0) ||
--	    (lun != SCAN_WILD_CARD && lun != 0))
-+	if (lun != SCAN_WILD_CARD && lun)
- 		return -EINVAL;
- 
-+	if (ap->nr_pmp_links == 0) {
-+		if (channel != SCAN_WILD_CARD && channel)
-+			return -EINVAL;
-+		devno = id;
-+	} else {
-+		if (id != SCAN_WILD_CARD && id)
-+			return -EINVAL;
-+		devno = channel;
-+	}
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	if (id == SCAN_WILD_CARD) {
--		ehi->probe_mask |= (1 << ata_link_max_devices(&ap->link)) - 1;
--		ehi->action |= ATA_EH_SOFTRESET;
-+	if (devno == SCAN_WILD_CARD) {
-+		struct ata_link *link;
-+
-+		ata_port_for_each_link(link, ap) {
-+			struct ata_eh_info *ehi = &link->eh_info;
-+			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
-+			ehi->action |= ATA_EH_SOFTRESET;
-+		}
- 	} else {
--		struct ata_device *dev = ata_find_dev(ap, id);
-+		struct ata_device *dev = ata_find_dev(ap, devno);
- 
- 		if (dev) {
-+			struct ata_eh_info *ehi = &dev->link->eh_info;
- 			ehi->probe_mask |= 1 << dev->devno;
- 			ehi->action |= ATA_EH_SOFTRESET;
- 			ehi->flags |= ATA_EHI_RESUME_LINK;
-@@ -3210,23 +3266,26 @@ void ata_scsi_dev_rescan(struct work_struct *work)
- {
- 	struct ata_port *ap =
- 		container_of(work, struct ata_port, scsi_rescan_task);
-+	struct ata_link *link;
- 	struct ata_device *dev;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	ata_link_for_each_dev(dev, &ap->link) {
--		struct scsi_device *sdev = dev->sdev;
-+	ata_port_for_each_link(link, ap) {
-+		ata_link_for_each_dev(dev, link) {
-+			struct scsi_device *sdev = dev->sdev;
- 
--		if (!ata_dev_enabled(dev) || !sdev)
--			continue;
--		if (scsi_device_get(sdev))
--			continue;
-+			if (!ata_dev_enabled(dev) || !sdev)
-+				continue;
-+			if (scsi_device_get(sdev))
-+				continue;
- 
--		spin_unlock_irqrestore(ap->lock, flags);
--		scsi_rescan_device(&(sdev->sdev_gendev));
--		scsi_device_put(sdev);
--		spin_lock_irqsave(ap->lock, flags);
-+			spin_unlock_irqrestore(ap->lock, flags);
-+			scsi_rescan_device(&(sdev->sdev_gendev));
-+			scsi_device_put(sdev);
-+			spin_lock_irqsave(ap->lock, flags);
-+		}
- 	}
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
+Hmmm... Can you please apply the attached patch on top of libata-tj and
+report the kernel boot log?
+
 -- 
-1.5.0.3
+tejun
 
+--------------020502020706020701010906
+Content-Type: text/x-patch;
+ name="debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="debug.patch"
 
+---
+ drivers/ata/ahci.c        |    5 ++++-
+ drivers/ata/libata-core.c |    6 +++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -691,17 +691,17 @@ unsigned int ata_dev_classify(const stru
+ 	 * identifies a port multiplier and 0x3c/0xc3 a SEMB device.
+ 	 */
+ 	if ((tf->lbam == 0) && (tf->lbah == 0)) {
+-		DPRINTK("found ATA device by sig\n");
++		printk("found ATA device by sig\n");
+ 		return ATA_DEV_ATA;
+ 	}
+ 
+ 	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb)) {
+-		DPRINTK("found ATAPI device by sig\n");
++		printk("found ATAPI device by sig\n");
+ 		return ATA_DEV_ATAPI;
+ 	}
+ 
+ 	if ((tf->lbam == 0x69) && (tf->lbah == 0x96)) {
+-		DPRINTK("found PMP device by sig\n");
++		printk("found PMP device by sig\n");
+ 		return ATA_DEV_PMP;
+ 	}
+ 
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -972,6 +972,9 @@ static unsigned int ahci_dev_classify(st
+ 	tf.lbal		= (tmp >> 8)	& 0xff;
+ 	tf.nsect	= (tmp)		& 0xff;
+ 
++	ata_port_printk(ap, KERN_INFO, "XXX sig %02x:%02x:%02x %02x\n",
++			tf.lbal, tf.lbam, tf.lbah, tf.nsect);
++
+ 	return ata_dev_classify(&tf);
+ }
+ 
+@@ -1072,7 +1075,7 @@ static int ahci_do_softreset(struct ata_
+ 	struct ata_taskfile tf;
+ 	int rc;
+ 
+-	DPRINTK("ENTER\n");
++	ata_link_printk(link, KERN_INFO, "XXX softresetting pmp=%d\n", pmp);
+ 
+ 	if (ata_link_offline(link)) {
+ 		DPRINTK("PHY reports no device\n");
+
+--------------020502020706020701010906--
