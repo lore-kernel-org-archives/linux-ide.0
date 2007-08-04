@@ -1,53 +1,156 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: libata git tree, mbox queue status and contents
-Date: Sat, 04 Aug 2007 17:14:50 +0900
-Message-ID: <46B4357A.2080502@gmail.com>
-References: <46B35344.3090208@garzik.org> <20070803172040.52853316@the-village.bc.nu>
+Subject: [PATCH 04/14] libata-link: linkify EH action helpers
+Date: Sat, 4 Aug 2007 17:42:40 +0900
+Message-ID: <11862169602764-git-send-email-htejun@gmail.com>
+References: <11862169601938-git-send-email-htejun@gmail.com>
+Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:42690 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078AbXHDIPv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:15:51 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1100745wah
-        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:15:51 -0700 (PDT)
-In-Reply-To: <20070803172040.52853316@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.187]:33798 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756594AbXHDImq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:42:46 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so848290rvb
+        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:42:46 -0700 (PDT)
+In-Reply-To: <11862169601938-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Alan Cox wrote:
->> * Albert: irq_on/off.  Really need to give this some thought.  Not sure 
->> I like where this model is going.  Polling and twiddling irq on/off 
->> should be kept to a minimum, because it's sorta an admission that the 
->> host state machine has broken down, and we need to bandaid.  Its a 
->> bandaid not a root-cause solution.
-> 
-> I think of it more as an admission that the IDE design is lacking in a
-> few areas. No suprise as its an emulation of a 15 year old interface that
-> was normally used polled.
+Make ata_eh_about_to_do() and ata_eh_done() deal with ata_link instead
+of ata_port.
 
-I second Alan's opinion.  The root cause of the problem is that the
-controller lacks reliable IRQ masking and pending register.  If you add
-a slightly malfunctioning controller and/or device into the mix, it's
-guaranteed to break.
+This patch introduces no behavior change.
 
-And there's another addition to the mess from SATA land which I
-discovered a few days ago.  Some SATA controllers with SFF interface
-don't send non-command H2D Reg FIS when ATA_NIEN is toggled, so the
-updated ATA_NIEN is sent together with the next command && some SATA
-devices don't honor ATA_NIEN on command H2D Reg FIS.  Fun!
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-eh.c |   35 ++++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 17 deletions(-)
 
-I think we should go combined IRQ + polling mode Jeff once mentioned so
-that we automatically fallback to polling if IRQ doesn't work for some
-reason.  To do that, we need reliable IRQ masking && the only way to
-achieve proper IRQ masking on SFF controllers seems plugging it from the
-host side.
-
-Thanks.
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 48ca68b..fc4b641 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -947,23 +947,24 @@ static void ata_eh_detach_dev(struct ata_device *dev)
+ 
+ /**
+  *	ata_eh_about_to_do - about to perform eh_action
+- *	@ap: target ATA port
++ *	@link: target ATA link
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action about to be performed
+  *
+  *	Called just before performing EH actions to clear related bits
+- *	in @ap->link.eh_info such that eh actions are not
+- *	unnecessarily repeated.
++ *	in @link->eh_info such that eh actions are not unnecessarily
++ *	repeated.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 			       unsigned int action)
+ {
++	struct ata_port *ap = link->ap;
++	struct ata_eh_info *ehi = &link->eh_info;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 	unsigned long flags;
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+@@ -980,7 +981,7 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
+ 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, ehi, action);
++	ata_eh_clear_action(link, dev, ehi, action);
+ 
+ 	if (!(ehc->i.flags & ATA_EHI_QUIET))
+ 		ap->pflags |= ATA_PFLAG_RECOVERED;
+@@ -990,20 +991,20 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
+ 
+ /**
+  *	ata_eh_done - EH action complete
+- *	@ap: target ATA port
++*	@ap: target ATA port
+  *	@dev: target ATA dev for per-dev action (can be NULL)
+  *	@action: action just completed
+  *
+  *	Called right after performing EH actions to clear related bits
+- *	in @ap->link.eh_context.
++ *	in @link->eh_context.
+  *
+  *	LOCKING:
+  *	None.
+  */
+-static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
++static void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 			unsigned int action)
+ {
+-	struct ata_eh_context *ehc = &ap->link.eh_context;
++	struct ata_eh_context *ehc = &link->eh_context;
+ 
+ 	/* if reset is complete, clear all reset actions & reset modifier */
+ 	if (action & ATA_EH_RESET_MASK) {
+@@ -1011,7 +1012,7 @@ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
+ 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
+ 	}
+ 
+-	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
++	ata_eh_clear_action(link, dev, &ehc->i, action);
+ }
+ 
+ /**
+@@ -1795,7 +1796,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 	int rc;
+ 
+ 	/* about to reset */
+-	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+@@ -1877,7 +1878,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			goto out;
+ 		}
+ 
+-		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
++		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
+ 		rc = ata_do_reset(ap, reset, classes, deadline);
+ 
+ 		if (rc == 0 && classify &&
+@@ -1927,7 +1928,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
+ 			postreset(ap, classes);
+ 
+ 		/* reset successful, schedule revalidation */
+-		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
++		ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 		ehc->i.action |= ATA_EH_REVALIDATE;
+ 	}
+  out:
+@@ -1964,12 +1965,12 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
+ 				goto err;
+ 			}
+ 
+-			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
+ 			rc = ata_dev_revalidate(dev, readid_flags);
+ 			if (rc)
+ 				goto err;
+ 
+-			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
++			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
+ 
+ 			/* Configuration may have changed, reconfigure
+ 			 * transfer mode.
 -- 
-tejun
+1.5.0.3
+
+
