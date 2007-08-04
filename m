@@ -1,130 +1,97 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/11] atiixp: DMA setup fixes
-Date: Sat, 4 Aug 2007 22:05:37 +0200
-Message-ID: <200708042205.37590.bzolnier@gmail.com>
+Subject: [PATCH] ide-pmac: use ide_tune_dma() (take 2)
+Date: Sat, 4 Aug 2007 22:04:01 +0200
+Message-ID: <200708042204.01165.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:51446 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.184]:51646 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757260AbXHDUQF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 16:16:05 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1014326fkz
-        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 13:16:04 -0700 (PDT)
+	with ESMTP id S1759225AbXHDUQD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 16:16:03 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1014338fkz
+        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 13:16:02 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
 
-* Fix handling of unsupported/invalid modes in atiixp_set_dma_mode().
+* Add missing initialization of hwif->autodma and drive->autodma to
+  pmac_ide_setup_dma().
 
-* ATI controllers allow separate PIO and DMA timings so remove programming
-  of PIO modes from atiixp_set_dma_mode().  Also remove no longer needed
-  atiixp_dma_2_pio() helper.
+* Use ide_tune_dma() in pmac_ide_dma_check().
 
-* SWDMA timings are not programmed by atiixp_set_dma_mode() and if SWDMA
-  mode is chosen atiixp_dma_host_on() erroneously enables UDMA, just disable
-  support for SWDMA modes for now.
+While at it:
 
-* Enable support for MWDMA0 mode.
+* Fix pmac_ide_dma_check() return value if DMA mode is not programmed
+  (should be "-1" otherwise ide_set_dma() will try to enable DMA).
 
-* Bump driver version.
+* Remove unnecessary drive->using_dma fiddling (->dma_off_quietly is always
+  called before ide_set_dma() call and ide_set_dma() calls ->ide_dma_on if
+  ->ide_dma_check returns "0").
 
+v2:
+* No reason to blacklist all ide_floppy devices and the old code was always
+  enabling DMA anyway (without even programming controller/device if the
+  device was ide_floppy).
+
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/atiixp.c |   53 ++++-------------------------------------------
- 1 file changed, 5 insertions(+), 48 deletions(-)
+Ben, any update on the testing status of ide-pmac series?
 
-Index: b/drivers/ide/pci/atiixp.c
+I also merged your patch to my tree but it is lacking description:
+http://kernel.org/pub/linux/kernel/people/bart/pata-2.6/patches/ide-pmac-fix-pio-setup-and-enable-autotune.patch
+
+Thanks, Bart.
+
+ drivers/ide/ppc/pmac.c |   24 +++++++-----------------
+ 1 file changed, 7 insertions(+), 17 deletions(-)
+
+Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
---- a/drivers/ide/pci/atiixp.c
-+++ b/drivers/ide/pci/atiixp.c
-@@ -1,5 +1,5 @@
- /*
-- *  linux/drivers/ide/pci/atiixp.c	Version 0.02	Jun 16 2007
-+ *  linux/drivers/ide/pci/atiixp.c	Version 0.03	Aug 3 2007
-  *
-  *  Copyright (C) 2003 ATI Inc. <hyu@ati.com>
-  *  Copyright (C) 2004,2007 Bartlomiej Zolnierkiewicz
-@@ -47,43 +47,6 @@ static int save_mdma_mode[4];
- 
- static DEFINE_SPINLOCK(atiixp_lock);
- 
--/**
-- *	atiixp_dma_2_pio		-	return the PIO mode matching DMA
-- *	@xfer_rate: transfer speed
-- *
-- *	Returns the nearest equivalent PIO timing for the PIO or DMA
-- *	mode requested by the controller.
-- */
--
--static u8 atiixp_dma_2_pio(u8 xfer_rate) {
--	switch(xfer_rate) {
--		case XFER_UDMA_6:
--		case XFER_UDMA_5:
--		case XFER_UDMA_4:
--		case XFER_UDMA_3:
--		case XFER_UDMA_2:
--		case XFER_UDMA_1:
--		case XFER_UDMA_0:
--		case XFER_MW_DMA_2:
--		case XFER_PIO_4:
--			return 4;
--		case XFER_MW_DMA_1:
--		case XFER_PIO_3:
--			return 3;
--		case XFER_SW_DMA_2:
--		case XFER_PIO_2:
--			return 2;
--		case XFER_MW_DMA_0:
--		case XFER_SW_DMA_1:
--		case XFER_SW_DMA_0:
--		case XFER_PIO_1:
--		case XFER_PIO_0:
--		case XFER_PIO_SLOW:
--		default:
--			return 0;
--	}
--}
--
- static void atiixp_dma_host_on(ide_drive_t *drive)
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1592,23 +1592,10 @@ pmac_ide_destroy_dmatable (ide_drive_t *
+ static int
+ pmac_ide_dma_check(ide_drive_t *drive)
  {
- 	struct pci_dev *dev = drive->hwif->pci_dev;
-@@ -169,7 +132,9 @@ static void atiixp_set_dma_mode(ide_driv
- 	int timing_shift = (drive->dn & 2) ? 16 : 0 + (drive->dn & 1) ? 0 : 8;
- 	u32 tmp32;
- 	u16 tmp16;
--	u8 pio;
-+
-+	if (speed < XFER_MW_DMA_0)
-+		return;
- 
- 	spin_lock_irqsave(&atiixp_lock, flags);
- 
-@@ -191,13 +156,6 @@ static void atiixp_set_dma_mode(ide_driv
- 	}
- 
- 	spin_unlock_irqrestore(&atiixp_lock, flags);
+-	int enable = 1;
+-	drive->using_dma = 0;
+-	
+-	if (drive->media == ide_floppy)
+-		enable = 0;
+-	if ((drive->id->capability & 1) == 0 && !__ide_dma_good_drive(drive))
+-		enable = 0;
+-	if (__ide_dma_bad_drive(drive))
+-		enable = 0;
 -
--	if (speed >= XFER_SW_DMA_0)
--		pio = atiixp_dma_2_pio(speed);
--	else
--		pio = speed - XFER_PIO_0;
--
--	atiixp_set_pio_mode(drive, pio);
+-	if (enable) {
+-		u8 mode = ide_max_dma_mode(drive);
++	if (ide_tune_dma(drive))
++		return 0;
+ 
+-		if (mode && pmac_ide_tune_chipset(drive, mode) == 0)
+-			drive->using_dma = 1;
+-	}
+-	return 0;
++	return -1;
  }
  
- /**
-@@ -249,8 +207,7 @@ static void __devinit init_hwif_atiixp(i
+ /*
+@@ -1842,7 +1829,10 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
+ 			hwif->mwdma_mask = 0x07;
+ 			hwif->swdma_mask = 0x00;
+ 			break;
+-	}	
++	}
++
++	hwif->autodma = 1;
++	hwif->drives[1].autodma = hwif->drives[0].autodma = hwif->autodma;
+ }
  
- 	hwif->atapi_dma = 1;
- 	hwif->ultra_mask = 0x3f;
--	hwif->mwdma_mask = 0x06;
--	hwif->swdma_mask = 0x04;
-+	hwif->mwdma_mask = 0x07;
- 
- 	pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ch, &udma_mode);
- 
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
