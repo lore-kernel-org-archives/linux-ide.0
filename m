@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/14] libata-link: separate out link initialization functions
+Subject: [PATCH 07/14] libata-link: make two port flags HRST_TO_RESUME and SKIP_D2H_BSY link flags
 Date: Sat, 4 Aug 2007 17:42:41 +0900
-Message-ID: <1186216961804-git-send-email-htejun@gmail.com>
+Message-ID: <11862169611569-git-send-email-htejun@gmail.com>
 References: <11862169601938-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:33711 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756906AbXHDImv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:42:51 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so848297rvb
+Received: from wa-out-1112.google.com ([209.85.146.183]:28082 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756861AbXHDImw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 04:42:52 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1106617wah
         for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 01:42:51 -0700 (PDT)
 In-Reply-To: <11862169601938-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,144 +20,295 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Separate out link initialization into ata_link_init() and
-ata_link_init_sata_spd().
+HRST_TO_RESUME and SKIP_D2H_BSY are link attributes.  Move them to
+ata_link->flags.  This will allow host and PMP links to have different
+attributes.  ata_port_info->link_flags is added and used by LLDs to
+specify these flags during initialization.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   84 ++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 64 insertions(+), 20 deletions(-)
+ drivers/ata/ahci.c        |   16 ++++++++++------
+ drivers/ata/libata-core.c |    5 +++--
+ drivers/ata/sata_nv.c     |   14 +++++++-------
+ drivers/ata/sata_sil.c    |    7 ++++++-
+ drivers/ata/sata_sil24.c  |    7 +++++--
+ include/linux/libata.h    |   11 ++++++++---
+ 6 files changed, 39 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index da749af..757369e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -178,8 +178,8 @@ enum {
+ 
+ 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-					  ATA_FLAG_SKIP_D2H_BSY |
+ 					  ATA_FLAG_ACPI_SATA,
++	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
+ };
+ 
+ struct ahci_cmd_hdr {
+@@ -333,6 +333,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci */
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON,
++		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -340,14 +341,15 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci_pi */
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
++		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+ 	/* board_ahci_vt8251 */
+ 	{
+-		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_HRST_TO_RESUME |
+-				  AHCI_FLAG_NO_NCQ,
++		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_NO_NCQ,
++		.link_flags	= AHCI_LFLAG_COMMON | ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_vt8251_ops,
+@@ -355,6 +357,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci_ign_iferr */
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_IGN_IRQ_IF_ERR,
++		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -364,6 +367,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.flags		= AHCI_FLAG_COMMON |
+ 				  AHCI_FLAG_IGN_SERR_INTERNAL |
+ 				  AHCI_FLAG_32BIT_ONLY,
++		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+@@ -373,9 +377,9 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.sht		= &ahci_sht,
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				  ATA_FLAG_SKIP_D2H_BSY | AHCI_FLAG_HONOR_PI |
+-				  AHCI_FLAG_NO_NCQ | AHCI_FLAG_NO_MSI |
+-				  AHCI_FLAG_MV_PATA,
++				  AHCI_FLAG_HONOR_PI | AHCI_FLAG_NO_NCQ |
++				  AHCI_FLAG_NO_MSI | AHCI_FLAG_MV_PATA,
++		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d2600e0..0cbcddd 100644
+index d7be9fb..d2600e0 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6041,6 +6041,68 @@ void ata_dev_init(struct ata_device *dev)
- }
+@@ -3331,7 +3331,7 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
  
- /**
-+ *	ata_link_init - Initialize an ata_link structure
-+ *	@ap: ATA port link is attached to
-+ *	@link: Link structure to initialize
-+ *
-+ *	Initialize @link.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ */
-+static void ata_link_init(struct ata_port *ap, struct ata_link *link)
-+{
-+	int i;
-+
-+	/* clear everything except for devices */
-+	memset(link, 0, offsetof(struct ata_link, device[0]));
-+
-+	link->ap = ap;
-+	link->active_tag = ATA_TAG_POISON;
-+	link->hw_sata_spd_limit = UINT_MAX;
-+
-+	/* can't use iterator, ap isn't initialized yet */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &link->device[i];
-+
-+		dev->link = link;
-+		dev->devno = dev - link->device;
-+		ata_dev_init(dev);
-+	}
-+}
-+
-+/**
-+ *	sata_link_init_spd - Initialize link->sata_spd_limit
-+ *	@link: Link to configure sata_spd_limit for
-+ *
-+ *	Initialize @link->[hw_]sata_spd_limit to the currently
-+ *	configured value.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+static int sata_link_init_spd(struct ata_link *link)
-+{
-+	u32 scontrol, spd;
-+	int rc;
-+
-+	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
-+	if (rc)
-+		return rc;
-+
-+	spd = (scontrol >> 4) & 0xf;
-+	if (spd)
-+		link->hw_sata_spd_limit &= (1 << spd) - 1;
-+
-+	link->sata_spd_limit = link->hw_sata_spd_limit;
-+
-+	return 0;
-+}
-+
-+/**
-  *	ata_port_alloc - allocate and initialize basic ATA port resources
-  *	@host: ATA host this allocated port belongs to
-  *
-@@ -6055,7 +6117,6 @@ void ata_dev_init(struct ata_device *dev)
- struct ata_port *ata_port_alloc(struct ata_host *host)
- {
- 	struct ata_port *ap;
--	unsigned int i;
+ 	/* handle link resume */
+ 	if ((ehc->i.flags & ATA_EHI_RESUME_LINK) &&
+-	    (ap->flags & ATA_FLAG_HRST_TO_RESUME))
++	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
+ 		ehc->i.action |= ATA_EH_HARDRESET;
  
- 	DPRINTK("ENTER\n");
+ 	/* if we're about to do hardreset, nothing more to do */
+@@ -3350,7 +3350,7 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
+ 	/* Wait for !BSY if the controller can wait for the first D2H
+ 	 * Reg FIS and we don't know that no device is attached.
+ 	 */
+-	if (!(ap->flags & ATA_FLAG_SKIP_D2H_BSY) && !ata_link_offline(link)) {
++	if (!(link->flags & ATA_LFLAG_SKIP_D2H_BSY) && !ata_link_offline(link)) {
+ 		rc = ata_wait_ready(ap, deadline);
+ 		if (rc && rc != -ENODEV) {
+ 			ata_link_printk(link, KERN_WARNING, "device not ready "
+@@ -6249,6 +6249,7 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+ 		ap->mwdma_mask = pi->mwdma_mask;
+ 		ap->udma_mask = pi->udma_mask;
+ 		ap->flags |= pi->flags;
++		ap->link.flags |= pi->link_flags;
+ 		ap->ops = pi->port_ops;
  
-@@ -6070,9 +6131,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	ap->ctl = ATA_DEVCTL_OBS;
- 	ap->host = host;
- 	ap->dev = host->dev;
--
--	ap->link.hw_sata_spd_limit = UINT_MAX;
--	ap->link.active_tag = ATA_TAG_POISON;
- 	ap->last_ctl = 0xFF;
+ 		if (!host->ops && (pi->port_ops != &ata_dummy_port_ops))
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 7b7d14c..1f71946 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -455,8 +455,8 @@ static const struct ata_port_info nv_port_info[] = {
+ 	/* generic */
+ 	{
+ 		.sht		= &nv_sht,
+-		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_HRST_TO_RESUME,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+@@ -466,8 +466,8 @@ static const struct ata_port_info nv_port_info[] = {
+ 	/* nforce2/3 */
+ 	{
+ 		.sht		= &nv_sht,
+-		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_HRST_TO_RESUME,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+@@ -477,8 +477,8 @@ static const struct ata_port_info nv_port_info[] = {
+ 	/* ck804 */
+ 	{
+ 		.sht		= &nv_sht,
+-		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_HRST_TO_RESUME,
++		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
++		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+@@ -489,8 +489,8 @@ static const struct ata_port_info nv_port_info[] = {
+ 	{
+ 		.sht		= &nv_adma_sht,
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_HRST_TO_RESUME |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_NCQ,
++		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index 4b2ebc5..78f01aa 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -59,7 +59,8 @@ enum {
+ 	SIL_FLAG_MOD15WRITE	= (1 << 30),
  
- #if defined(ATA_VERBOSE_DEBUG)
-@@ -6095,15 +6153,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	SIL_DFL_PORT_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_MMIO | ATA_FLAG_HRST_TO_RESUME,
++				  ATA_FLAG_MMIO,
++	SIL_DFL_LINK_FLAGS	= ATA_LFLAG_HRST_TO_RESUME,
  
- 	ap->cbl = ATA_CBL_NONE;
+ 	/*
+ 	 * Controller IDs
+@@ -216,6 +217,7 @@ static const struct ata_port_info sil_port_info[] = {
+ 	/* sil_3112 */
+ 	{
+ 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_MOD15WRITE,
++		.link_flags	= SIL_DFL_LINK_FLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,
+@@ -225,6 +227,7 @@ static const struct ata_port_info sil_port_info[] = {
+ 	{
+ 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_MOD15WRITE |
+ 				  SIL_FLAG_NO_SATA_IRQ,
++		.link_flags	= SIL_DFL_LINK_FLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,
+@@ -233,6 +236,7 @@ static const struct ata_port_info sil_port_info[] = {
+ 	/* sil_3512 */
+ 	{
+ 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_RERR_ON_DMA_ACT,
++		.link_flags	= SIL_DFL_LINK_FLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,
+@@ -241,6 +245,7 @@ static const struct ata_port_info sil_port_info[] = {
+ 	/* sil_3114 */
+ 	{
+ 		.flags		= SIL_DFL_PORT_FLAGS | SIL_FLAG_RERR_ON_DMA_ACT,
++		.link_flags	= SIL_DFL_LINK_FLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index a1f3b31..8d89053 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -237,8 +237,8 @@ enum {
+ 	/* host flags */
+ 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				  ATA_FLAG_NCQ | ATA_FLAG_SKIP_D2H_BSY |
+-				  ATA_FLAG_ACPI_SATA,
++				  ATA_FLAG_NCQ | ATA_FLAG_ACPI_SATA,
++	SIL24_COMMON_LFLAGS	= ATA_LFLAG_SKIP_D2H_BSY,
+ 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
  
--	ap->link.ap = ap;
--
--	/* can't use iterator, ap isn't initialized yet */
--	for (i = 0; i < ATA_MAX_DEVICES; i++) {
--		struct ata_device *dev = &ap->link.device[i];
--		dev->link = &ap->link;
--		dev->devno = i;
--		ata_dev_init(dev);
--	}
-+	ata_link_init(ap, &ap->link);
+ 	IRQ_STAT_4PORTS		= 0xf,
+@@ -424,6 +424,7 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(4) |
+ 				  SIL24_FLAG_PCIX_IRQ_WOC,
++		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
+@@ -432,6 +433,7 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	/* sil_3132 */
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(2),
++		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
+@@ -440,6 +442,7 @@ static const struct ata_port_info sil24_port_info[] = {
+ 	/* sil_3131/sil_3531 */
+ 	{
+ 		.flags		= SIL24_COMMON_FLAGS | SIL24_NPORTS2FLAG(1),
++		.link_flags	= SIL24_COMMON_LFLAGS,
+ 		.pio_mask	= 0x1f,			/* pio0-4 */
+ 		.mwdma_mask	= 0x07,			/* mwdma0-2 */
+ 		.udma_mask	= ATA_UDMA5,		/* udma0-5 */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 936cfaa..27840f1 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -156,6 +156,11 @@ enum {
+ 	ATA_DEV_ATAPI_UNSUP	= 4,	/* ATAPI device (unsupported) */
+ 	ATA_DEV_NONE		= 5,	/* no device */
  
- #ifdef ATA_IRQ_TRAP
- 	ap->stats.unhandled_irq = 1;
-@@ -6386,7 +6436,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 		int irq_line;
--		u32 scontrol;
- 		unsigned long xfer_mask;
++	/* struct ata_link flags */
++	ATA_LFLAG_HRST_TO_RESUME = (1 << 0), /* hardreset to resume link */
++	ATA_LFLAG_SKIP_D2H_BSY	= (1 << 1), /* can't wait for the first D2H
++					     * Register FIS clearing BSY */
++
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+ 					    /* (doesn't imply presence) */
+@@ -170,9 +175,6 @@ enum {
+ 	ATA_FLAG_PIO_POLLING	= (1 << 9), /* use polling PIO if LLD
+ 					     * doesn't handle PIO interrupts */
+ 	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+-	ATA_FLAG_HRST_TO_RESUME	= (1 << 11), /* hardreset to resume phy */
+-	ATA_FLAG_SKIP_D2H_BSY	= (1 << 12), /* can't wait for the first D2H
+-					      * Register FIS clearing BSY */
+ 	ATA_FLAG_DEBUGMSG	= (1 << 13),
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+@@ -516,6 +518,8 @@ struct ata_link {
+ 	unsigned int		active_tag;	/* active tag on this link */
+ 	u32			sactive;	/* active NCQ commands */
  
- 		/* set SATA cable type if still unset */
-@@ -6394,12 +6443,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 			ap->cbl = ATA_CBL_SATA;
- 
- 		/* init sata_spd_limit to the current value */
--		if (sata_scr_read(&ap->link, SCR_CONTROL, &scontrol) == 0) {
--			int spd = (scontrol >> 4) & 0xf;
--			if (spd)
--				ap->link.hw_sata_spd_limit &= (1 << spd) - 1;
--		}
--		ap->link.sata_spd_limit = ap->link.hw_sata_spd_limit;
-+		sata_link_init_spd(&ap->link);
- 
- 		/* report the secondary IRQ for second channel legacy */
- 		irq_line = host->irq;
++	unsigned int		flags;		/* ATA_LFLAG_xxx */
++
+ 	unsigned int		hw_sata_spd_limit;
+ 	unsigned int		sata_spd_limit;
+ 	unsigned int		sata_spd;	/* current SATA PHY speed */
+@@ -653,6 +657,7 @@ struct ata_port_operations {
+ struct ata_port_info {
+ 	struct scsi_host_template	*sht;
+ 	unsigned long		flags;
++	unsigned long		link_flags;
+ 	unsigned long		pio_mask;
+ 	unsigned long		mwdma_mask;
+ 	unsigned long		udma_mask;
 -- 
 1.5.0.3
 
