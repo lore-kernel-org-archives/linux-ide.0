@@ -1,189 +1,57 @@
-From: "David Madsen" <david.madsen@gmail.com>
-Subject: Re: ASUS P5W motherboard PMP
-Date: Sat, 4 Aug 2007 12:13:59 -0700
-Message-ID: <ec7e30370708041213p2ad8ebdfrf71a0cf1d7ffac6d@mail.gmail.com>
-References: <ec7e30370708031753m668f68a2kd67ad8278eb78675@mail.gmail.com>
-	 <46B414C0.2060606@gmail.com>
-	 <ec7e30370708032338x250c4689j49aabfcac373837f@mail.gmail.com>
-	 <46B43D43.7000107@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] hook ACPI _PSx method to IDE power on/off
+Date: Sat, 4 Aug 2007 21:55:24 +0200
+Message-ID: <200708042155.24843.bzolnier@gmail.com>
+References: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_63265_13515424.1186254839500"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:32882 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758213AbXHDTOA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Aug 2007 15:14:00 -0400
-Received: by py-out-1112.google.com with SMTP id d32so1868928pye
-        for <linux-ide@vger.kernel.org>; Sat, 04 Aug 2007 12:13:59 -0700 (PDT)
-In-Reply-To: <46B43D43.7000107@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
-
-------=_Part_63265_13515424.1186254839500
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com>
 Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org, Len Brown <lenb@kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-The updated kernel log with the debug patch is attached.
+On Thursday 02 August 2007, Shaohua Li wrote:
+> ACPI spec defines the sequence of IDE power on/off:
+> Powering down:
+> 	Call _GTM.
+> 	Power down drive (calls _PS3 method and turns off power planes).
+> Powering up:
+> 	Power up drive (calls _PS0 method if present and turns on power planes).
+> 	Call _STM passing info from _GTM (possibly modified), with ID data from
+> 	each drive.
+> 	Initialize the channel.
+> 	May modify the results of _GTF.
+> 	For each drive:
+> 		Call _GTF.
+> 		Execute task file (possibly modified).
+> This patch adds the missed _PS0/_PS3 methods call.
+> 
+> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
 
---David Madsen
+applied, thanks
 
-On 8/4/07, Tejun Heo <htejun@gmail.com> wrote:
-> David Madsen wrote:
-> > Yes, I patched the 2.6.22.1 vanilla kernel with the libata patch from here.
-> >
-> > http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.22.1-20070803.tar.bz2
->
-> Hmmm... Can you please apply the attached patch on top of libata-tj and
-> report the kernel boot log?
->
-> --
-> tejun
->
->
+Len, are you OK with the ACPI part of the patch (below)?
 
-------=_Part_63265_13515424.1186254839500
-Content-Type: application/x-bzip2; name=ASUS_P5W_debug.dmesg.bz2
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_f4yhh6sq
-Content-Disposition: attachment; filename="ASUS_P5W_debug.dmesg.bz2"
-
-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
-ZQA=
-------=_Part_63265_13515424.1186254839500--
+> Index: linux/drivers/acpi/bus.c
+> ===================================================================
+> --- linux.orig/drivers/acpi/bus.c	2007-08-02 13:35:06.000000000 +0800
+> +++ linux/drivers/acpi/bus.c	2007-08-02 13:56:56.000000000 +0800
+> @@ -262,10 +262,12 @@ int acpi_bus_set_power(acpi_handle handl
+>  		printk(KERN_WARNING PREFIX
+>  			      "Transitioning device [%s] to D%d\n",
+>  			      device->pnp.bus_id, state);
+> -	else
+> +	else {
+> +		device->power.state = state;
+>  		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+>  				  "Device [%s] transitioned to D%d\n",
+>  				  device->pnp.bus_id, state));
+> +	}
+>  
+>  	return result;
+>  }
