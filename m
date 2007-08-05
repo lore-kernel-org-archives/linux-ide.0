@@ -1,120 +1,326 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] pata_hpt{37x|3x2n}: fix clock reporting
-Date: Sun, 5 Aug 2007 23:07:43 +0400
-Message-ID: <200708052307.43781.sshtylyov@ru.mvista.com>
+From: Mikko Rapeli <mikko.rapeli@iki.fi>
+Subject: [PATCH] ST340823A, HPA and libata
+Date: Sun, 5 Aug 2007 22:06:16 +0300
+Message-ID: <20070805190616.GA1932@nalle>
+References: <20070801092903.GA1199@nalle> <200708030034.13193.bzolnier@gmail.com> <20070802231100.GA1861@nalle> <200708030135.16910.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:35441 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753135AbXHETFk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Aug 2007 15:05:40 -0400
+Received: from gw03.mail.saunalahti.fi ([195.197.172.111]:55724 "EHLO
+	gw03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760366AbXHETGX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Aug 2007 15:06:23 -0400
 Content-Disposition: inline
+In-Reply-To: <200708030135.16910.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk, rah@bash.sh
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Fix several inconsistencies in these drivers WRT reporting the clocks:
+Hello again,
 
-- when using DPLL mode, pata_hpt37x driver reported the DPLL frequency as the
-  PCI clock -- make properly report both clocks,  add the same ability to the
-  pata_hpt3x2n driver;
+Had some time to play with libata and this ST340823A drive. I had some
+problems with 2.6.23-rc2 setup failing at early boot so I kept on
+going with 2.6.22.1.
 
-- both drivers sometimes used "pata_hpt3*:" and sometime "pata3*:" message
-  prefixes -- make them use only the former one;
+First, vanilla 2.6.22.1 which works as HPA is not disabled by default:
 
-- the message about failed DPLL stablization deserved KERN_ERR.
+http://bugzilla.kernel.org/attachment.cgi?id=12251&action=view
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+$ egrep "Host Prote|current size|native size|sdb" dmesg_ide_bug_26221_pata.txt
+ata2.01: Host Protected Area detected:
+        current size: 78165360 sectors
+        native size: 78165361 sectors
+ata2.01: Host Protected Area detected:
+        current size: 78165360 sectors
+        native size: 78165361 sectors
+sd 1:0:1:0: [sdb] 78165360 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:0:1:0: [sdb] 78165360 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sdb: sdb1 sdb2 sdb3
+sd 1:0:1:0: [sdb] Attached SCSI disk
 
----
-This is against the current Linus tree and has only been compile tested
-(as well as the first patch :-).
-Bob, please test it and report what you'll find out...
+Then I went to disabled HPA by default. Actually the
+drive and filesystem work altough boot looks nasty:
 
- drivers/ata/pata_hpt37x.c  |   10 ++++++----
- drivers/ata/pata_hpt3x2n.c |    8 +++++---
- 2 files changed, 11 insertions(+), 7 deletions(-)
+http://bugzilla.kernel.org/attachment.cgi?id=12252&action=view 
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
+$ egrep "Host Prote|current size|native size|sdb" 
+dmesg_ide_bug_26221_pata_hpa.txt
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1 sdb2 sdb3
+sd 1:0:1:0: [sdb] Attached SCSI disk
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+Buffer I/O error on device sdb, logical block 78165360
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+ata2.01: Host Protected Area detected:
+	current size: 78165360 sectors
+	native size: 78165361 sectors
+ata2.01: native size increased to 78165361 sectors
+sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 1:0:1:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+sd 1:0:1:0: [sdb] Add. Sense: Recorded entity not found
+end_request: I/O error, dev sdb, sector 78165360
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 1:0:1:0: [sdb] 78165361 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+Tried to hack a blacklist, which gives the log:
+
+http://bugzilla.kernel.org/attachment.cgi?id=12254&action=view 
+
+$ egrep "Host Prote|current size|native size|sdb"
+dmesg_ide_bug_26221_pata_hpa_fix.txt
+ata2.01: Host Protected Area detected:
+        current size: 78165360 sectors
+        native size: 78165361 sectors
+ata2.01: Host Protected Area detected:
+        current size: 78165360 sectors
+        native size: 78165361 sectors
+sd 1:0:1:0: [sdb] 78165360 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:0:1:0: [sdb] 78165360 512-byte hardware sectors (40021 MB)
+sd 1:0:1:0: [sdb] Write Protect is off
+sd 1:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sdb: sdb1 sdb2 sdb3
+sd 1:0:1:0: [sdb] Attached SCSI disk
+
+The patch is simply:
+
+diff -X linux-2.6.22.1/Documentation/exception.txt -rup linux-2.6.22.1.orig/drivers/ata/libata-core.c linux-2.6.22.1/drivers/ata/libata-core.c
+--- linux-2.6.22.1.orig/drivers/ata/libata-core.c	2007-07-10 21:56:30.000000000 +0300
++++ linux-2.6.22.1/drivers/ata/libata-core.c	2007-08-05 11:38:29.000000000 +0300
+@@ -991,7 +991,10 @@ static u64 ata_hpa_resize(struct ata_dev
+ 			"\tnative size: %lld sectors\n",
+ 			(long long)sectors, (long long)hpa_sectors);
  
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.8"
-+#define DRV_VERSION	"0.6.9"
+-		if (ata_ignore_hpa) {
++		if (ata_device_blacklisted(dev) & ATA_HORKAGE_HPA) {
++			ata_dev_printk(dev, KERN_INFO,
++				"Device blacklisted, ignoring HPA.\n");
++		} else if (ata_ignore_hpa) {
+ 			if (ata_id_has_lba48(dev->id))
+ 				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
+ 			else
+@@ -3803,6 +3806,10 @@ static const struct ata_blacklist_entry 
  
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -1112,7 +1112,7 @@ static int hpt37x_init_one(struct pci_de
- 			pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
- 		}
- 		if (adjust == 8) {
--			printk(KERN_WARNING "hpt37x: DPLL did not stabilize.\n");
-+			printk(KERN_ERR "pata_hpt37x: DPLL did not stabilize!\n");
- 			return -ENODEV;
- 		}
- 		if (dpll == 3)
-@@ -1120,7 +1120,8 @@ static int hpt37x_init_one(struct pci_de
- 		else
- 			private_data = (void *)hpt37x_timings_50;
+ 	/* Devices with NCQ limits */
  
--		printk(KERN_INFO "hpt37x: Bus clock %dMHz, using DPLL.\n", MHz[dpll]);
-+		printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using %dMHz DPLL.\n",
-+		       MHz[clock_slot], MHz[dpll]);
- 	} else {
- 		private_data = (void *)chip_table->clocks[clock_slot];
- 		/*
-@@ -1133,7 +1134,8 @@ static int hpt37x_init_one(struct pci_de
- 			port = &info_hpt370_33;
- 		if (clock_slot < 2 && port == &info_hpt370a)
- 			port = &info_hpt370a_33;
--		printk(KERN_INFO "hpt37x: %s: Bus clock %dMHz.\n", chip_table->name, MHz[clock_slot]);
-+		printk(KERN_INFO "pata_hpt37x: %s using %dMHz bus clock.\n",
-+		       chip_table->name, MHz[clock_slot]);
- 	}
++	/* Devices which fail when HPA is disable, e.g. READ_NATIVE_MAX_ADDRESS
++	   returns maximum size instead of maximum addressable sector. */
++	{ "ST340823A",	NULL,	ATA_HORKAGE_HPA },
++
+ 	/* End Marker */
+ 	{ }
+ };
+diff -X linux-2.6.22.1/Documentation/exception.txt -rup linux-2.6.22.1.orig/include/linux/libata.h linux-2.6.22.1/include/linux/libata.h
+--- linux-2.6.22.1.orig/include/linux/libata.h	2007-07-10 21:56:30.000000000 +0300
++++ linux-2.6.22.1/include/linux/libata.h	2007-08-05 00:43:59.000000000 +0300
+@@ -298,6 +298,7 @@ enum {
+ 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
++	ATA_HORKAGE_HPA         = (1 << 4),     /* Don't disable HPA */
+ };
  
- 	/* Now kick off ATA set up */
-Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
-+++ linux-2.6/drivers/ata/pata_hpt3x2n.c
-@@ -8,7 +8,7 @@
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-  * Portions Copyright (C) 2003		Red Hat Inc
-- * Portions Copyright (C) 2005-2006	MontaVista Software, Inc.
-+ * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
-  *
-  *
-  * TODO
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt3x2n"
--#define DRV_VERSION	"0.3.3"
-+#define DRV_VERSION	"0.3.4"
- 
- enum {
- 	HPT_PCI_FAST	=	(1 << 31),
-@@ -579,10 +579,12 @@ static int hpt3x2n_init_one(struct pci_d
- 		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
- 	}
- 	if (adjust == 8) {
--		printk(KERN_WARNING "hpt3x2n: DPLL did not stabilize.\n");
-+		printk(KERN_ERR "pata_hpt3x2n: DPLL did not stabilize!\n");
- 		return -ENODEV;
- 	}
- 
-+	printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using 66MHz DPLL.\n",
-+	       pci_mhz);
- 	/* Set our private data up. We only need a few flags so we use
- 	   it directly */
- 	port.private_data = NULL;
-
+ enum hsm_task_states {
