@@ -1,46 +1,50 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: move ide_config_drive_speed() calls to upper layers
-Date: Sun, 05 Aug 2007 16:58:37 +0400
-Message-ID: <46B5C97D.20004@ru.mvista.com>
-References: <200707270222.28230.bzolnier@gmail.com> <200707272119.19438.bzolnier@gmail.com> <46AB91A2.6060303@ru.mvista.com> <200708040101.34574.bzolnier@gmail.com>
+Subject: Re: libata git tree, mbox queue status and contents
+Date: Sun, 05 Aug 2007 18:34:08 +0400
+Message-ID: <46B5DFE0.4060008@ru.mvista.com>
+References: <46B35344.3090208@garzik.org> <20070803172040.52853316@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:62304 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:62723 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756586AbXHEM4f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Aug 2007 08:56:35 -0400
-In-Reply-To: <200708040101.34574.bzolnier@gmail.com>
+	with ESMTP id S1756646AbXHEOcI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Aug 2007 10:32:08 -0400
+In-Reply-To: <20070803172040.52853316@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Hello.
+Alan Cox wrote:
 
-Bartlomiej Zolnierkiewicz wrote:
+>>* Alan: IORDY handling -- upstream whenever Alan is happy
 
->>    I have a feeling that only pdc202xx_new and jmicron drivers actually need 
->>this flag (and the latter one actually doesn't care as its methods are empty 
->>anyway).  Well, AMD/VIA chips enable UltraDMA mode by snooping Set Features 
->>command (as the drivers tell them to do so), so the order seems important 
->>unless that is changed.
+> I'm happy with it from testing. Just a little worried about it going
+> upstream mid -rc as it could have a weird side effect somewhere. I've
+> verified an original pre ATA IDE drive with it too now 8)
 
-    I've mixed it up (again :-): setting the MSB of the UltraDMA registers 
-should be disabling Set Features snooping, so still the flag doesn't seem 
-needed...
+>>* Alan: ACPI checks for 80wire cable -- upstream whenever Alan is happy
 
-> Since changing of order affects the way in which hardware is accessed
-> I prefer to keep such changes out of this patch (which is just a cleanup).
+> Happy
 
-    I understand.
+>>* Albert: irq_on/off.  Really need to give this some thought.  Not sure 
+>>I like where this model is going.  Polling and twiddling irq on/off 
+>>should be kept to a minimum, because it's sorta an admission that the 
+>>host state machine has broken down, and we need to bandaid.  Its a 
+>>bandaid not a root-cause solution.
 
-> Could you please handle them in pre or post patch(es)?
+> I think of it more as an admission that the IDE design is lacking in a
+> few areas. No suprise as its an emulation of a 15 year old interface that
+> was normally used polled.
 
-    More likely in post-patches -- I'll probably be out-of-office for the next 
-several weeks (only appearing at weekends).
+    Hehe, note that even host polling has always been racy the way ATA spec. 
+described it: there was noting said about the period whithin which the device 
+should assert INTRQ after clearing BSY (and the interrupt-pending state wasn't 
+clearly specified also), so there's a possibility for the fast host to *not* 
+clear interrupt pending by reading the status reg. with BSY=0 but before the 
+devie enters interrupt-pending state, and thus possibly stalling the further 
+transfer.
 
-> Bart
-
-WBR, Sergei
+MBR, Sergei
