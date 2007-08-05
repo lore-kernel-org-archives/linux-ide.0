@@ -1,50 +1,73 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: libata git tree, mbox queue status and contents
-Date: Sun, 05 Aug 2007 18:34:08 +0400
-Message-ID: <46B5DFE0.4060008@ru.mvista.com>
-References: <46B35344.3090208@garzik.org> <20070803172040.52853316@the-village.bc.nu>
+Subject: Re: [PATCH 2/11] it8213/piix/slc90e66: remove {it8213,piix,slc90e66}_dma_2_pio()
+Date: Sun, 05 Aug 2007 19:55:49 +0400
+Message-ID: <46B5F305.5040206@ru.mvista.com>
+References: <200708042206.22546.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:62723 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756646AbXHEOcI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Aug 2007 10:32:08 -0400
-In-Reply-To: <20070803172040.52853316@the-village.bc.nu>
+Received: from h155.mvista.com ([63.81.120.155]:63008 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755343AbXHEPxq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Aug 2007 11:53:46 -0400
+In-Reply-To: <200708042206.22546.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+Hello.
 
->>* Alan: IORDY handling -- upstream whenever Alan is happy
+Bartlomiej Zolnierkiewicz wrote:
 
-> I'm happy with it from testing. Just a little worried about it going
-> upstream mid -rc as it could have a weird side effect somewhere. I've
-> verified an original pre ATA IDE drive with it too now 8)
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
->>* Alan: ACPI checks for 80wire cable -- upstream whenever Alan is happy
+    Sigh... when I was talking about getting rid of that function, I meant 
+that we need to also decouple UltraDMA from PIO -- which is what this patch 
+misses...
+    Actually, I intended to decouple DMA form PIO in this drivers completely 
+but that would be a next step...
 
-> Happy
+> Index: b/drivers/ide/pci/it8213.c
+> ===================================================================
+> --- a/drivers/ide/pci/it8213.c
+> +++ b/drivers/ide/pci/it8213.c
+> @@ -124,7 +93,7 @@ static void it8213_set_dma_mode(ide_driv
+>  	int w_flag		= 0x10 << drive->dn;
+>  	int u_speed		= 0;
+>  	u16			reg4042, reg4a;
+> -	u8			reg48, reg54, reg55;
+> +	u8			reg48, reg54, reg55, pio;
+>  
+>  	pci_read_config_word(dev, maslave, &reg4042);
+>  	pci_read_config_byte(dev, 0x48, &reg48);
+> @@ -165,7 +134,11 @@ static void it8213_set_dma_mode(ide_driv
+>  				pci_write_config_byte(dev, 0x54, reg54 | v_flag);
+>  		} else
+>  			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+> +
+> +		pio = 4;
 
->>* Albert: irq_on/off.  Really need to give this some thought.  Not sure 
->>I like where this model is going.  Polling and twiddling irq on/off 
->>should be kept to a minimum, because it's sorta an admission that the 
->>host state machine has broken down, and we need to bandaid.  Its a 
->>bandaid not a root-cause solution.
+    Why let this stupidity live?
 
-> I think of it more as an admission that the IDE design is lacking in a
-> few areas. No suprise as its an emulation of a 15 year old interface that
-> was normally used polled.
+>  	} else {
+> +		const u8 mwdma_to_pio[] = { 0, 3, 4 };
+> +
+>  		if (reg48 & u_flag)
+>  			pci_write_config_byte(dev, 0x48, reg48 & ~u_flag);
+>  		if (reg4a & a_speed)
+> @@ -174,9 +147,14 @@ static void it8213_set_dma_mode(ide_driv
+>  			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+>  		if (reg55 & w_flag)
+>  			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+> +
+> +		if (speed >= XFER_MW_DMA_0)
+> +			pio = mwdma_to_pio[speed - XFER_MW_DMA_0];
+> +		else
+> +			pio = 2; /* only SWDMA2 is allowed */
 
-    Hehe, note that even host polling has always been racy the way ATA spec. 
-described it: there was noting said about the period whithin which the device 
-should assert INTRQ after clearing BSY (and the interrupt-pending state wasn't 
-clearly specified also), so there's a possibility for the fast host to *not* 
-clear interrupt pending by reading the status reg. with BSY=0 but before the 
-devie enters interrupt-pending state, and thus possibly stalling the further 
-transfer.
+    Well, MWDMA0 is also not allowed, so you could have cut on mwdma_to_pio 
+array size.
 
 MBR, Sergei
