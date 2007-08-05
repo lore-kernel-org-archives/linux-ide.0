@@ -1,73 +1,49 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/11] it8213/piix/slc90e66: remove {it8213,piix,slc90e66}_dma_2_pio()
-Date: Sun, 05 Aug 2007 19:55:49 +0400
-Message-ID: <46B5F305.5040206@ru.mvista.com>
-References: <200708042206.22546.bzolnier@gmail.com>
+Subject: Re: hpt374 sata (Highpoint Rocket 1540)
+Date: Sun, 05 Aug 2007 22:10:21 +0400
+Message-ID: <46B6128D.8050101@ru.mvista.com>
+References: <1185880124.3483.25.camel@localhost>	<46AF76D7.8050800@ru.mvista.com>	<1185916925.8484.23.camel@orchid.arb.net>	<200707312332.10820.bzolnier@gmail.com>	<46B08D63.4040205@ru.mvista.com>	<1185983536.16340.3.camel@orchid.arb.net>	<46B0ADB6.60207@ru.mvista.com>	<1186002225.16340.11.camel@orchid.arb.net>	<46B0F64C.7050706@ru.mvista.com> <20070801234229.1e330ad0@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:63008 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:63680 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755343AbXHEPxq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 5 Aug 2007 11:53:46 -0400
-In-Reply-To: <200708042206.22546.bzolnier@gmail.com>
+	id S1751112AbXHESIT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Aug 2007 14:08:19 -0400
+In-Reply-To: <20070801234229.1e330ad0@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bob Ham <rah@bash.sh>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
 Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+Alan Cox wrote:
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>>>hpt37x: Bus clock 66 MHz, using DPLL.
 
-    Sigh... when I was talking about getting rid of that function, I meant 
-that we need to also decouple UltraDMA from PIO -- which is what this patch 
-misses...
-    Actually, I intended to decouple DMA form PIO in this drivers completely 
-but that would be a next step...
+>>    Oh?! hpt366.c detected 33 MHz... :-O
 
-> Index: b/drivers/ide/pci/it8213.c
-> ===================================================================
-> --- a/drivers/ide/pci/it8213.c
-> +++ b/drivers/ide/pci/it8213.c
-> @@ -124,7 +93,7 @@ static void it8213_set_dma_mode(ide_driv
->  	int w_flag		= 0x10 << drive->dn;
->  	int u_speed		= 0;
->  	u16			reg4042, reg4a;
-> -	u8			reg48, reg54, reg55;
-> +	u8			reg48, reg54, reg55, pio;
->  
->  	pci_read_config_word(dev, maslave, &reg4042);
->  	pci_read_config_byte(dev, 0x48, &reg48);
-> @@ -165,7 +134,11 @@ static void it8213_set_dma_mode(ide_driv
->  				pci_write_config_byte(dev, 0x54, reg54 | v_flag);
->  		} else
->  			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
-> +
-> +		pio = 4;
+> Interesting as it should be using the same algorithm as hpt366 now.
 
-    Why let this stupidity live?
+    Actually not: when pata_hpt37x decides to use DPLL, it reports the chosen 
+*DPLL* clock instead of the PCI clock.  The question is why it chose 66 MHz on 
+HPT374... Looks like it's because of this wrong mask which should be 0xc0:
 
->  	} else {
-> +		const u8 mwdma_to_pio[] = { 0, 3, 4 };
-> +
->  		if (reg48 & u_flag)
->  			pci_write_config_byte(dev, 0x48, reg48 & ~u_flag);
->  		if (reg4a & a_speed)
-> @@ -174,9 +147,14 @@ static void it8213_set_dma_mode(ide_driv
->  			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
->  		if (reg55 & w_flag)
->  			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
-> +
-> +		if (speed >= XFER_MW_DMA_0)
-> +			pio = mwdma_to_pio[speed - XFER_MW_DMA_0];
-> +		else
-> +			pio = 2; /* only SWDMA2 is allowed */
+		dpll = 2;
+                 if (port->udma_mask & 0xE0)
+                         dpll = 3;
 
-    Well, MWDMA0 is also not allowed, so you could have cut on mwdma_to_pio 
-array size.
+>>>ACPI: PCI Interrupt 0000:00:0d.0[A] -> GSI 16 (level, low) -> IRQ 17
+>>>scsi2: pata_hpt37x
+>>>scsi3: pata_hpt37x
+>>>ata3: PATA max UDMA/100 cmd 0x0001efa0 ctl 0x0001ef9e bmdma 0x0001ec00 irq 17
+>>>ata4: PATA max UDMA/100 cmd 0x0001ef90 ctl 0x0001ef9a bmdma 0x0001ec00 irq 17
+
+> and it also knows about the bridge knobbling stuff. Most curious
+
+    Not curious at all now. ;-) The former HPT374 clocking fix just remained 
+ineffective.
 
 MBR, Sergei
