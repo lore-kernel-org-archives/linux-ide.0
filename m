@@ -1,48 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Mon, 06 Aug 2007 21:18:06 +0400
-Message-ID: <46B757CE.2070700@ru.mvista.com>
-References: <200708060006.35511.sshtylyov@ru.mvista.com> <1186420206.23890.7.camel@orchid.arb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+From: Segher Boessenkool <segher@kernel.crashing.org>
+Subject: Re: [PATCH 1/2] [IDE] Platform IDE driver
+Date: Mon, 6 Aug 2007 19:16:27 +0200
+Message-ID: <ef909c9835ecc57be4f4fa7fdc405889@kernel.crashing.org>
+References: <20070725165318.5331.23795.stgit@localhost.localdomain> <46A79DE0.8060405@ru.mvista.com> <46A79F14.9040409@freescale.com> <46A7A17C.8090505@ru.mvista.com> <46A7A1D5.7020003@freescale.com> <46A7A5E4.4090105@ru.mvista.com> <d04530fcd6e879e0bc059049b7951aef@kernel.crashing.org> <46B07F04.8040806@ru.mvista.com>
+Mime-Version: 1.0 (Apple Message framework v623)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:10849 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757902AbXHFRQE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 13:16:04 -0400
-In-Reply-To: <1186420206.23890.7.camel@orchid.arb.net>
+Received: from gate.crashing.org ([63.228.1.57]:57017 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757585AbXHFRQs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Aug 2007 13:16:48 -0400
+In-Reply-To: <46B07F04.8040806@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bob Ham <rah@bash.sh>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Scott Wood <scottwood@freescale.com>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bob Ham wrote:
+>> More importantly, "reg-shift" doesn't say what part of
+>> the bigger words to access.  A common example is byte-wide
+>> registers on a 32-bit-only bus; it's about 50%-50% between
+>> connecting the registers to the low byte vs. connecting it
+>> to the byte with the lowest address.
+>
+>    We already have "big-endian" prop used in MPIC nodes, IIRC. Could 
+> try to "reuse" it here as well...
 
->>HPT374 BIOS seems to only save f_CNT register value for the function #0 before
->>re-tuning DPLL causing the driver to report obviously distorted f_CNT for the
->>function #1 -- fix this by always reading the saved f_CNT register value from
->>in the init_chipset() method the function #0 of HPT374 chip.
->>While at it, introduce 'chip_type' for the copy of the 'struct hpt_info' member
->>and replace the structure assignment by memcpy()...
+Sure.  This would be an okay way to handle legacy devices that
+are connected in inventive ways: add "reg-shift" and/or "big-endian"
+properties.  We should make sure this is documented in the
+appropriate bindings though, don't just assume it will work.
 
-> HPT374: IDE controller at PCI slot 0000:00:0d.0
-> ACPI: PCI Interrupt 0000:00:0d.0[A] -> GSI 16 (level, low) -> IRQ 16
-> HPT374: chipset revision 7
-> HPT374: DPLL base: 48 MHz, f_CNT: 142, assuming 33 MHz PCI
-> HPT374: using 50 MHz DPLL clock
-> HPT374: 100% native mode on irq 16
->     ide2: BM-DMA at 0xec00-0xec07, BIOS settings: hde:DMA, hdf:pio
->     ide3: BM-DMA at 0xec08-0xec0f, BIOS settings: hdg:DMA, hdh:pio
-> ACPI: PCI Interrupt 0000:00:0d.1[A] -> GSI 16 (level, low) -> IRQ 16
-> HPT374: DPLL base: 48 MHz, f_CNT: 142, assuming 33 MHz PCI
-> HPT374: using 50 MHz DPLL clock
->     ide4: BM-DMA at 0xed00-0xed07, BIOS settings: hdi:DMA, hdj:pio
->     ide5: BM-DMA at 0xed08-0xed0f, BIOS settings: hdk:DMA, hdl:pio
+For non-legacy devices, please just use the "compatible"
+property to figure out the endianness etc.; it is a bad idea
+to make a "blablabla-big-endian" compatible value, but you can
+almost often just use a more specific model name instead; and
+typically the device has some other quirks anyway ;-)
 
-> again, followed by a hard lock
+>> It would be nice to not name similar properties in the
+>> device tree dissimilarly.  Kernel code doesn't come into
+>> the picture here.
+>
+>    The "reg-shift" prop is yet unaccepted ad-hockery at this point. ;-)
+>    So, I don't see why we have to be consistent with it.
 
-    Hm, well, this is indeed tough case but at least it prodded me to fix some 
-issues.  Maybe it's worth for you to file a bug at bugzilla.kernel.org...
+Don't treat your ad-hockery ad hoc, that way leads to insanity :-)
 
-MBR, Sergei
+It's quite important to use good names for all new properties
+you define, so you naturally end up with similar names for
+similar purposes.  Of course it isn't a *requirement*, you're
+right about that.
+
+
+Segher
+
