@@ -1,64 +1,91 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Mon, 6 Aug 2007 21:25:25 +0200
-Message-ID: <200708062125.26387.rjw@sisk.pl>
-References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com> <46B75459.9020204@gmail.com> <1186424492.4355.1.camel@nx6310>
+From: kelk1@comcast.net (Quel Qun)
+Subject: Re: Boot fails on Intel SATA controller
+Date: Mon, 06 Aug 2007 19:17:32 +0000
+Message-ID: <080620071917.2738.46B773CC000E495500000AB22207300793CE05040A05@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1186424492.4355.1.camel@nx6310>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michael Sedkowski <sedmich@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: multipart/mixed; boundary="NextPart_Webmail_9m3u9jl4l_2738_1186427852_0"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rwcrmhc14.comcast.net ([216.148.227.154]:35818 "EHLO
+	rwcrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933871AbXHFTRg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 15:17:36 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-On Monday, 6 August 2007 20:21, Michael Sedkowski wrote:
-> Dnia 07-08-2007, Wt o godzinie 02:03 +0900, Tejun Heo napisa=C5=82(a)=
-:
-> > Rafael J. Wysocki wrote:
-> > >>> Sidux is a Debian Unstable based distro with it's own set of pa=
-tches
-> > >>> including the shut down patch provided here:
-> > >>> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D426224
-> > >> You'll probably have to ask Sidux what changes they made that co=
-uld cause
-> > >> the double spin down, even if halt(8) is never passed the -h fla=
-g.
-> > >=20
-> > > Well, I've been observing the same behavior on nx6325 for some ti=
-me and I
-> > > use openSUSE 10.2.  I think this is kernel-related.
-> >=20
-> > Hmmm... If the problem only shows up on nx6325, it might be that AC=
-PI is
-> > pulling unnecessary stunt.  Please apply the attached patch and rep=
-ort
-> > when the disk spins down and up.
-> >=20
-> > Thanks.
-> >=20
->=20
-> Disk spins down on "Pre-shutdown prepare" and then goes up and down o=
-n
-> "Power down".
-
-Same thing on my box.
-
-In kernel_shutdown_prepare(SYSTEM_POWER_OFF) we call device_shutdown(),=
- so it
-looks like the drive is powered off by one driver's .shutdown() routine=
-=2E
-
-Greetings,
-Rafael
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Luiz Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>"linux-ide@vger.kernel.orgFernando N. Capitulino" <lcapitulino@mandriva.com.br>linux-ide@vger.kernel.org
 
 
---=20
-"Premature optimization is the root of all evil." - Donald Knuth
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--NextPart_Webmail_9m3u9jl4l_2738_1186427852_0
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+
+The kernel compiles and boots after applying this patch to 2.6.23-rc1.
+--
+Eric
+
+ -------------- Original message ----------------------
+From: Tejun Heo <htejun@gmail.com>
+> Please test the attached patch.
+> 
+> -- 
+> tejun
+
+
+
+--NextPart_Webmail_9m3u9jl4l_2738_1186427852_0
+Content-Type: message/rfc822
+
+From: Tejun Heo <htejun@gmail.com>
+To: Quel Qun <kelk1@comcast.net>
+Cc: "Luiz Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>,  "linux-ide@vger.kernel.orgFernando N. Capitulino" <lcapitulino@mandriva.com.br>, linux-ide@vger.kernel.org
+Subject: Re: Boot fails on Intel SATA controller
+Date: Sat, 4 Aug 2007 07:41:12 +0000
+Content-Type: Multipart/mixed;
+ boundary="NextPart_Webmail_9m3u9jl4l_2738_1186427852_1"
+
+--NextPart_Webmail_9m3u9jl4l_2738_1186427852_1
+Content-Type: text/x-patch;
+ name="horkage-hpa.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="horkage-hpa.patch"
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 60e78be..7158a06 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1911,7 +1911,8 @@ int ata_dev_configure(struct ata_device *dev)
+ 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
+ 
+-			if (ata_id_hpa_enabled(dev->id))
++			if (!(dev->horkage & ATA_HORKAGE_BROKEN_HPA) &&
++			    ata_id_has_hpa(id) && ata_id_hpa_enabled(dev->id))
+ 				dev->n_sectors = ata_hpa_resize(dev);
+ 
+ 			/* config NCQ */
+@@ -3789,6 +3790,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+ 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
++	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+ 
+ 	/* Devices with NCQ limits */
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 41978a5..a67bb90 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -303,6 +303,7 @@ enum {
+ 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
++	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+ };
+ 
+ enum hsm_task_states {
+
+--NextPart_Webmail_9m3u9jl4l_2738_1186427852_1--
+
+--NextPart_Webmail_9m3u9jl4l_2738_1186427852_0--
