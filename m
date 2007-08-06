@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.23-rc2: check_irq_resend on resume (ali15x3)
-Date: Mon, 6 Aug 2007 11:11:43 +0200
-Message-ID: <200708061111.43340.bzolnier@gmail.com>
-References: <200708042238.00368.arvidjaar@mail.ru>
+Subject: Re: 2.6.23-rc2 regression: check_irq_resend() warning from cmd64x
+Date: Mon, 6 Aug 2007 11:15:43 +0200
+Message-ID: <200708061115.43704.bzolnier@gmail.com>
+References: <200708052128.l75LSlN6009111@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
@@ -10,66 +10,56 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mu-out-0910.google.com ([209.85.134.191]:8398 "EHLO
 	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760157AbXHFJRa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:17:30 -0400
+	with ESMTP id S1760221AbXHFJRd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:17:33 -0400
 Received: by mu-out-0910.google.com with SMTP id i10so1993076mue
-        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:17:29 -0700 (PDT)
-In-Reply-To: <200708042238.00368.arvidjaar@mail.ru>
+        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:17:33 -0700 (PDT)
+In-Reply-To: <200708052128.l75LSlN6009111@harpo.it.uu.se>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>
 
 
 commit 0fc4969b866671dfe39b1a9119d0fdc7ea0f63e5
 
-I doubt that this particular report helps in debugging ne2k-pci problem...
+Linus, please revert it.
 
-;)
-
-On Saturday 04 August 2007, Andrey Borzenkov wrote:
-> Just noticed this; I do not remember having seen it before, but I also do not 
-> check dmesg every time after resume.
+On Sunday 05 August 2007, Mikael Pettersson wrote:
+> This is on a sparc64 ultra5 with a rev 3 CMD646. Starting with kernel
+> 2.6.23-rc2, each boot triggers a WARNING from kernel/irq/resend.c:
 > 
-> [   54.154078] pnp: Failed to activate device 00:05.
-> [   54.154120] pnp: Failed to activate device 00:06.
-> [   54.159608] pnp: Device 00:09 activated.
-> [   54.205284] WARNING: at /home/bor/src/linux-git/kernel/irq/resend.c:70 
-> check_irq_resend()
-> [   54.205299]  [<c01047fa>] show_trace_log_lvl+0x1a/0x30
-> [   54.205332]  [<c0105292>] show_trace+0x12/0x20
-> [   54.205343]  [<c01052f5>] dump_stack+0x15/0x20
-> [   54.205353]  [<c014ce7e>] check_irq_resend+0x9e/0xb0
-> [   54.205388]  [<c014c991>] enable_irq+0xb1/0xc0
-> [   54.205397]  [<df82f6fa>] ide_config_drive_speed+0x18a/0x3e0 [ide_core]
-> [   54.205570]  [<df80f3cc>] ali15x3_tune_drive+0x1c/0x20 [alim15x3]
-> [   54.205592]  [<df82da33>] ide_do_request+0x8a3/0xa10 [ide_core]
-> [   54.205623]  [<df82dc60>] ide_do_drive_cmd+0xc0/0x110 [ide_core]
-> [   54.205652]  [<df82c868>] generic_ide_resume+0x98/0xe0 [ide_core]
-> [   54.205681]  [<c023793c>] resume_device+0x4c/0xa0
-> [   54.205717]  [<c02379ee>] dpm_resume+0x5e/0x90
-> [   54.205727]  [<c0237a46>] device_resume+0x26/0x40
-> [   54.205736]  [<c0141849>] hibernation_snapshot+0x69/0xd0
-> [   54.205747]  [<c0141a1c>] hibernate+0xac/0x170
-> [   54.205755]  [<c01407ae>] state_store+0xbe/0xd0
-> [   54.205764]  [<c01ab2d2>] subsys_attr_store+0x32/0x50
-> [   54.205784]  [<c01ab5ab>] sysfs_write_file+0xdb/0x120
-> [   54.205795]  [<c016f8b9>] vfs_write+0x99/0x130
-> [   54.205819]  [<c016fe2d>] sys_write+0x3d/0x70
-> [   54.205829]  [<c0104112>] sysenter_past_esp+0x5f/0x99
-> [   54.205839]  =======================
-> [   54.206084] hda: selected mode 0x42
-> [   54.225580] hdc: selected mode 0x42
-> [   54.228619] usb usb1: root hub lost power or was reset
-> [   54.714012] eth1: PRI 31 variant 2 version 9.48
-> [   54.714075] eth1: NIC 5 variant 2 version 1.02
-> [   54.810451] Restarting tasks ... <5>toshiba_acpi: Re-enabled hotkeys
-> [   54.925054] done.
-> [   54.925134] swsusp: Basic memory bitmaps freed
-> [   59.560144] eth1: PRI 31 variant 2 version 9.48
-> [   59.560231] eth1: NIC 5 variant 2 version 1.02
-> [   59.835398] eth1: PRI 31 variant 2 version 9.48
-> [   59.835487] eth1: NIC 5 variant 2 version 1.02
-> [   60.079468] eth1: PRI 31 variant 2 version 9.48
-> [   60.079553] eth1: NIC 5 variant 2 version 1.02
+> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+> CMD646: IDE controller at PCI slot 0000:01:03.0
+> CMD646: chipset revision 3
+> CMD646: MultiWord DMA force limited
+> CMD646: 100% native mode on irq 14
+>     ide0: BM-DMA at 0x1fe02c00020-0x1fe02c00027, BIOS settings: hda:pio, hdb:pio
+>     ide1: BM-DMA at 0x1fe02c00028-0x1fe02c0002f, BIOS settings: hdc:pio, hdd:pio
+> Probing IDE interface ide0...
+> hda: ST320420A, ATA DISK drive
+> hda: selected mode 0x22
+> ide0 at 0x1fe02c00000-0x1fe02c00007,0x1fe02c0000a on irq 14
+> Probing IDE interface ide1...
+> hdc: CRD-8483B, ATAPI CD/DVD-ROM drive
+> WARNING: at kernel/irq/resend.c:70 check_irq_resend()
+> Call Trace:
+>  [0000000000475a84] enable_irq+0x9c/0xc8
+>  [0000000000560438] probe_hwif+0x7bc/0x934
+>  [0000000000560dbc] probe_hwif_init_with_fixup+0x10/0xc4
+>  [0000000000563454] ide_setup_pci_device+0x94/0x9c
+>  [00000000005581f4] cmd64x_init_one+0x40/0x4c
+>  [0000000000680670] ide_scan_pcidev+0x48/0x84
+>  [00000000006806e0] ide_scan_pcibus+0x34/0x100
+>  [000000000068061c] ide_init+0x60/0x6c
+>  [0000000000670200] kernel_init+0xf0/0x270
+>  [0000000000427344] kernel_thread+0x38/0x48
+>  [00000000005c5fd8] rest_init+0x18/0x5c
+> hdc: selected mode 0x22
+> ide1 at 0x1fe02c00010-0x1fe02c00017,0x1fe02c0001a on irq 14 (shared with ide0)
+> hda: max request size: 128KiB
+> hda: 39851760 sectors (20404 MB) w/2048KiB Cache, CHS=39535/16/63, (U)DMA
+> hda: cache flushes not supported
+>  hda: hda1 hda2 hda3 hda4 hda5
