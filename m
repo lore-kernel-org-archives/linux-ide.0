@@ -1,67 +1,61 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 11/11] ide: remove ->ide_dma_check
-Date: Mon, 06 Aug 2007 19:06:54 +0400
-Message-ID: <46B7390E.5070408@ru.mvista.com>
-References: <200708042213.15674.bzolnier@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Mon, 6 Aug 2007 17:32:02 +0200
+Message-ID: <200708061732.03425.rjw@sisk.pl>
+References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com> <1186411815.4355.7.camel@nx6310> <20070806150159.GC31615@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:9581 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932849AbXHFPEw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Aug 2007 11:04:52 -0400
-In-Reply-To: <200708042213.15674.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20070806150159.GC31615@khazad-dum.debian.net>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Michael Sedkowski <sedmich@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> * Add IDE_HFLAG_TRUST_BIOS_FOR_DMA host flag for host drivers that depend
->   on BIOS for programming device/controller for DMA.  Set it in cy82c693,
->   generic, ns87415, opti621 and trm290 host drivers.
+On Monday, 6 August 2007 17:01, Henrique de Moraes Holschuh wrote:
+> On Mon, 06 Aug 2007, Michael Sedkowski wrote:
+> > Dnia 06-08-2007, Pn o godzinie 11:23 -0300, Henrique de Moraes Holschuh
+> > napisa??(a):
+> > > On Mon, 06 Aug 2007, Tejun Heo wrote:
+> > > > Cc'ing Henrique.  Any ideas?
+> > > 
+> > > Check if /etc/init.d/halt is calling halt(8) with the -h flag.  If it is,
+> > > remove that -h flag.  Usually, there is a hddown variable that holds it, you
+> > > just need to get rid of it.
+> > > 
+> > > I don't know anything about a Sidux, though.
+> > 
+> > Well there is an -h variable:
+> > # Don't shut down drives if we're using RAID.
+> > 	hddown="-h"
+> > 	if grep -qs '^md.*active' /proc/mdstat
+> > 	then
+> > 		hddown=""
+> > 	fi
+> > ....
+> > log_action_msg "Will now halt"
+> > 	halt -d -f $netdown $poweroff $hddown
+> > However removing it has no effect, the drive still spins down two times.
+> 
+> Nothing in Debian userspace will spin down the drive if you kill that -h, at
+> least as far as I know.
+> 
+> > Sidux is a Debian Unstable based distro with it's own set of patches
+> > including the shut down patch provided here:
+> > http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=426224
+> 
+> You'll probably have to ask Sidux what changes they made that could cause
+> the double spin down, even if halt(8) is never passed the -h flag.
 
-> * Add IDE_HFLAG_VDMA host flag for host drivers using VDMA.  Set it in cs5520
->   host driver.
+Well, I've been observing the same behavior on nx6325 for some time and I
+use openSUSE 10.2.  I think this is kernel-related.
 
-> * Teach ide_tune_dma() about IDE_HFLAG_TRUST_BIOS_FOR_DMA flag.
+Greetings,
+Rafael
 
-> * Add generic ide_dma_check() helper and remove all open coded ->ide_dma_check
->   implementations.  Fix all places checking for presence of ->ide_dma_check
->   hook to check for ->ide_dma_on instead.
 
-> * Remove no longer needed code from config_drive_for_dma().
-
-> * Make ide_tune_dma() static.
-
-> There should be no functionality changes caused by this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> Index: b/drivers/ide/arm/icside.c
-> ===================================================================
-> --- a/drivers/ide/arm/icside.c
-> +++ b/drivers/ide/arm/icside.c
-> @@ -309,14 +309,6 @@ static int icside_dma_on(ide_drive_t *dr
->  	return 0;
->  }
->  
-> -static int icside_dma_check(ide_drive_t *drive)
-> -{
-> -	if (ide_tune_dma(drive))
-> -		return 0;
-> -
-> -	return -1;
-> -}
-> -
->  static int icside_dma_end(ide_drive_t *drive)
->  {
->  	ide_hwif_t *hwif = HWIF(drive);
-
-    Hm, looks like there's going to be some functionality change for this 
-driver -- it didn't fallback to PIO before this patch... ;-)
-
-MBR, Sergei
+-- 
+"Premature optimization is the root of all evil." - Donald Knuth
