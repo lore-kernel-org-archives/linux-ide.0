@@ -1,70 +1,54 @@
-From: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-Subject: Re: [PATCH] fix IDE legacy mode resource
-Date: Mon, 6 Aug 2007 23:56:55 +0900
-Message-ID: <20070806235655.0a9a09af.yoichi_yuasa@tripeaks.co.jp>
-References: <20070728220420.352c316b.yoichi_yuasa@tripeaks.co.jp>
-	<46AB8732.6080109@garzik.org>
-	<20070729171544.2b352801.yoichi_yuasa@tripeaks.co.jp>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Mon, 6 Aug 2007 12:01:59 -0300
+Message-ID: <20070806150159.GC31615@khazad-dum.debian.net>
+References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com> <46B6B006.6000100@gmail.com> <20070806142339.GA31615@khazad-dum.debian.net> <1186411815.4355.7.camel@nx6310>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo30.po.2iij.NET ([210.128.50.53]:16233 "EHLO mo30.po.2iij.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756142AbXHFO5S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Aug 2007 10:57:18 -0400
-In-Reply-To: <20070729171544.2b352801.yoichi_yuasa@tripeaks.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933810AbXHFPC2@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1186411815.4355.7.camel@nx6310>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Sedkowski <sedmich@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: yoichi_yuasa@tripeaks.co.jp, greg@kroah.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Hello Jeff,
-
-Do you have any comments?
-
-On Sun, 29 Jul 2007 17:15:44 +0900
-Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp> wrote:
-
-> On Sat, 28 Jul 2007 14:13:06 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
-> > Yoichi Yuasa wrote:
-> > > Hi,
-> > > 
-> > > I got the following error on MIPS Cobalt.
-> > > MIPS Cobalt has the 0x10000000 offset between resource and bus region. 
-> > > 
-> > > PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-> > > pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
-> > > PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
-> > > pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
-> > > pata_via 0000:00:09.1: no available native port
-> > > 
-> > > At this point, these resources should be the bus regions.
-> > > 
-> > > Signed-off-by: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
+On Mon, 06 Aug 2007, Michael Sedkowski wrote:
+> Dnia 06-08-2007, Pn o godzinie 11:23 -0300, Henrique de Moraes Holschuh
+> napisa??(a):
+> > On Mon, 06 Aug 2007, Tejun Heo wrote:
+> > > Cc'ing Henrique.  Any ideas?
 > > 
-> > I'm not sure I understand what's going on here... could you or someone 
-> > provide additional explanation as to why this is a fix?
+> > Check if /etc/init.d/halt is calling halt(8) with the -h flag.  If it is,
+> > remove that -h flag.  Usually, there is a hddown variable that holds it, you
+> > just need to get rid of it.
+> > 
+> > I don't know anything about a Sidux, though.
 > 
-> The legacy mode IDE resources set the following order. 
-> 
-> pci_setup_device()
->     Legacy mode ATA controllers have fixed addresses.
->     IDE resources: 0x1F0-0x1F7, 0x3F6, 0x170-0x177, 0x376
->     |
->     V
-> pcibios_fixup_bus()
->     MIPS Cobalt PCI bus have the -0x10000000 offset from PCI resources.
->     pcibios_fixup_bus() fix PCI bus regions.
->     0x1F0 - 0x10000000 = 0xF00001F0
->     |
->     V
-> ata_pci_init_one()
->     PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-> 
-> In some architectures, PCI bus have the offset from PCI resource.
-> They are adjusted by pcibios_fixup_bus().
-> 
-> For this reason, pci_setup_device() should set PCI bus regions. 
+> Well there is an -h variable:
+> # Don't shut down drives if we're using RAID.
+> 	hddown="-h"
+> 	if grep -qs '^md.*active' /proc/mdstat
+> 	then
+> 		hddown=""
+> 	fi
+> ....
+> log_action_msg "Will now halt"
+> 	halt -d -f $netdown $poweroff $hddown
+> However removing it has no effect, the drive still spins down two times.
+
+Nothing in Debian userspace will spin down the drive if you kill that -h, at
+least as far as I know.
+
+> Sidux is a Debian Unstable based distro with it's own set of patches
+> including the shut down patch provided here:
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=426224
+
+You'll probably have to ask Sidux what changes they made that could cause
+the double spin down, even if halt(8) is never passed the -h flag.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
