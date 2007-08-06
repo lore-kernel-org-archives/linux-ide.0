@@ -1,71 +1,174 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 11/14] libata-link: update ata_scsi_error() to handle PMP links
+Subject: [PATCH 10/14] libata-link: add PMP links
 Date: Mon, 6 Aug 2007 18:36:23 +0900
-Message-ID: <11863929833537-git-send-email-htejun@gmail.com>
+Message-ID: <11863929832364-git-send-email-htejun@gmail.com>
 References: <11863929823677-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:47225 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761265AbXHFJgf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:36:35 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1076031rvb
-        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:36:34 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.176]:39684 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761252AbXHFJgh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:36:37 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1724864wah
+        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:36:35 -0700 (PDT)
 In-Reply-To: <11863929823677-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Update ata_scsi_error() to handle PMP links.  As error conditions can
-occur on both host and PMP links, __ata_port_for_each_link() is used.
+Add link->pmp, ap->nr_pmp_links, ap->pmp_link[], and implement/update
+link helpers.
+
+printk helpers are updated such that port and link are identifed as
+'ataP:' if no PMP is attached, while device is identified as
+'ataP.DD:'.  If PMP is attached, they become 'ataP:', 'ataP.LL:' and
+'ataP.LL' - ie. link and device are identified their PMP number.
+
+If PPM is attached (ap->nr_pmp_links != 0), ata_for_each_link()
+iterates over PMP links, while __ata_for_each_link() iterates over the
+host link + PMP links.  If PMP is not attached (ap->nr_pmp_links ==
+0), both iterate over only the host link.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c |    6 +++-
+ include/linux/libata.h    |   53 +++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 51 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index eb4c059..45eb932 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -363,6 +363,8 @@ void ata_scsi_error(struct Scsi_Host *host)
-  repeat:
- 	/* invoke error handler */
- 	if (ap->ops->error_handler) {
-+		struct ata_link *link;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d1a5df7..601dcb1 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6044,13 +6044,14 @@ void ata_dev_init(struct ata_device *dev)
+  *	ata_link_init - Initialize an ata_link structure
+  *	@ap: ATA port link is attached to
+  *	@link: Link structure to initialize
++ *	@pmp: Port multiplier port number
+  *
+  *	Initialize @link.
+  *
+  *	LOCKING:
+  *	Kernel thread context (may sleep)
+  */
+-static void ata_link_init(struct ata_port *ap, struct ata_link *link)
++static void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
+ {
+ 	int i;
+ 
+@@ -6058,6 +6059,7 @@ static void ata_link_init(struct ata_port *ap, struct ata_link *link)
+ 	memset(link, 0, offsetof(struct ata_link, device[0]));
+ 
+ 	link->ap = ap;
++	link->pmp = pmp;
+ 	link->active_tag = ATA_TAG_POISON;
+ 	link->hw_sata_spd_limit = UINT_MAX;
+ 
+@@ -6153,7 +6155,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 
+ 	ap->cbl = ATA_CBL_NONE;
+ 
+-	ata_link_init(ap, &ap->link);
++	ata_link_init(ap, &ap->link, 0);
+ 
+ #ifdef ATA_IRQ_TRAP
+ 	ap->stats.unhandled_irq = 1;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 884325b..26184ae 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -514,6 +514,7 @@ struct ata_acpi_gtm {
+ 
+ struct ata_link {
+ 	struct ata_port		*ap;
++	int			pmp;		/* port multiplier port # */
+ 
+ 	unsigned int		active_tag;	/* active tag on this link */
+ 	u32			sactive;	/* active NCQ commands */
+@@ -562,6 +563,9 @@ struct ata_port {
+ 
+ 	struct ata_link		link;	/* host default link */
+ 
++	int			nr_pmp_links;	/* nr of available PMP links */
++	struct ata_link		*pmp_link;	/* array of PMP links */
 +
- 		/* kill fast drain timer */
- 		del_timer_sync(&ap->fastdrain_timer);
+ 	struct ata_port_stats	stats;
+ 	struct ata_host		*host;
+ 	struct device 		*dev;
+@@ -925,11 +929,17 @@ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ #define ata_port_printk(ap, lv, fmt, args...) \
+ 	printk(lv"ata%u: "fmt, (ap)->print_id , ##args)
  
-@@ -372,9 +374,11 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		/* fetch & clear EH info */
- 		spin_lock_irqsave(ap->lock, flags);
+-#define ata_link_printk(link, lv, fmt, args...) \
+-	printk(lv"ata%u: "fmt, (link)->ap->print_id , ##args)
++#define ata_link_printk(link, lv, fmt, args...) do { \
++	if ((link)->ap->nr_pmp_links) \
++		printk(lv"ata%u.%02u: "fmt, (link)->ap->print_id, \
++		       (link)->pmp , ##args); \
++	else \
++		printk(lv"ata%u: "fmt, (link)->ap->print_id , ##args); \
++	} while(0)
  
--		memset(&ap->link.eh_context, 0, sizeof(ap->link.eh_context));
--		ap->link.eh_context.i = ap->link.eh_info;
--		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
-+		__ata_port_for_each_link(link, ap) {
-+			memset(&link->eh_context, 0, sizeof(link->eh_context));
-+			link->eh_context.i = link->eh_info;
-+			memset(&link->eh_info, 0, sizeof(link->eh_info));
-+		}
+ #define ata_dev_printk(dev, lv, fmt, args...) \
+-	printk(lv"ata%u.%02u: "fmt, (dev)->link->ap->print_id, (dev)->devno , ##args)
++	printk(lv"ata%u.%02u: "fmt, (dev)->link->ap->print_id, \
++	       (dev)->link->pmp + (dev)->devno , ##args)
  
- 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
- 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
-@@ -410,7 +414,8 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		}
+ /*
+  * ata_eh_info helpers
+@@ -1038,15 +1048,46 @@ static inline unsigned int ata_dev_absent(const struct ata_device *dev)
+ /*
+  * link helpers
+  */
++static inline int ata_is_host_link(const struct ata_link *link)
++{
++	return link == &link->ap->link;
++}
++
+ static inline int ata_link_max_devices(const struct ata_link *link)
+ {
+-	if (link->ap->flags & ATA_FLAG_SLAVE_POSS)
++	if (ata_is_host_link(link) && link->ap->flags & ATA_FLAG_SLAVE_POSS)
+ 		return 2;
+ 	return 1;
+ }
  
- 		/* this run is complete, make sure EH info is clear */
--		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
-+		__ata_port_for_each_link(link, ap)
-+			memset(&link->eh_info, 0, sizeof(link->eh_info));
+-#define ata_port_for_each_link(lk, ap) \
+-	for ((lk) = &(ap)->link; (lk); (lk) = NULL)
++static inline struct ata_link *ata_port_first_link(struct ata_port *ap)
++{
++	if (ap->nr_pmp_links)
++		return ap->pmp_link;
++	return &ap->link;
++}
++
++static inline struct ata_link *ata_port_next_link(struct ata_link *link)
++{
++	struct ata_port *ap = link->ap;
++
++	if (link == &ap->link) {
++		if (!ap->nr_pmp_links)
++			return NULL;
++		return ap->pmp_link;
++	}
++
++	if (++link - ap->pmp_link < ap->nr_pmp_links)
++		return link;
++	return NULL;
++}
++
++#define __ata_port_for_each_link(lk, ap) \
++	for ((lk) = &(ap)->link; (lk); (lk) = ata_port_next_link(lk))
++
++#define ata_port_for_each_link(link, ap) \
++	for ((link) = ata_port_first_link(ap); (link); \
++	     (link) = ata_port_next_link(link))
  
- 		/* Clear host_eh_scheduled while holding ap->lock such
- 		 * that if exception occurs after this point but
+ #define ata_link_for_each_dev(dev, link) \
+ 	for ((dev) = (link)->device; \
 -- 
 1.5.0.3
 
