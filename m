@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/14] libata-link: implement ata_link_abort()
+Subject: [PATCH 11/14] libata-link: update ata_scsi_error() to handle PMP links
 Date: Mon, 6 Aug 2007 18:36:23 +0900
-Message-ID: <11863929832774-git-send-email-htejun@gmail.com>
+Message-ID: <11863929833537-git-send-email-htejun@gmail.com>
 References: <11863929823677-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:39637 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761198AbXHFJgf (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.184]:47225 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761265AbXHFJgf (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:36:35 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1724859wah
+Received: by rv-out-0910.google.com with SMTP id k20so1076031rvb
         for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:36:34 -0700 (PDT)
 In-Reply-To: <11863929823677-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,114 +20,52 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement ata_link_abort().
+Update ata_scsi_error() to handle PMP links.  As error conditions can
+occur on both host and PMP links, __ata_port_for_each_link() is used.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-eh.c   |   50 ++++++++++++++++++++++++++++++++------------
- include/linux/libata.h    |    1 +
- 3 files changed, 38 insertions(+), 14 deletions(-)
+ drivers/ata/libata-eh.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0cbcddd..d1a5df7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7030,6 +7030,7 @@ EXPORT_SYMBOL_GPL(ata_ehi_push_desc);
- EXPORT_SYMBOL_GPL(ata_ehi_clear_desc);
- EXPORT_SYMBOL_GPL(ata_eng_timeout);
- EXPORT_SYMBOL_GPL(ata_port_schedule_eh);
-+EXPORT_SYMBOL_GPL(ata_link_abort);
- EXPORT_SYMBOL_GPL(ata_port_abort);
- EXPORT_SYMBOL_GPL(ata_port_freeze);
- EXPORT_SYMBOL_GPL(ata_eh_freeze_port);
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 733aa76..eb4c059 100644
+index eb4c059..45eb932 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -719,19 +719,7 @@ void ata_port_schedule_eh(struct ata_port *ap)
- 	DPRINTK("port EH scheduled\n");
- }
- 
--/**
-- *	ata_port_abort - abort all qc's on the port
-- *	@ap: ATA port to abort qc's for
-- *
-- *	Abort all active qc's of @ap and schedule EH.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- *	RETURNS:
-- *	Number of aborted qc's.
-- */
--int ata_port_abort(struct ata_port *ap)
-+static int ata_do_link_abort(struct ata_port *ap, struct ata_link *link)
- {
- 	int tag, nr_aborted = 0;
- 
-@@ -743,7 +731,7 @@ int ata_port_abort(struct ata_port *ap)
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
- 
--		if (qc) {
-+		if (qc && (!link || qc->dev->link == link)) {
- 			qc->flags |= ATA_QCFLAG_FAILED;
- 			ata_qc_complete(qc);
- 			nr_aborted++;
-@@ -757,6 +745,40 @@ int ata_port_abort(struct ata_port *ap)
- }
- 
- /**
-+ *	ata_link_abort - abort all qc's on the link
-+ *	@link: ATA link to abort qc's for
-+ *
-+ *	Abort all active qc's active on @link and schedule EH.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	Number of aborted qc's.
-+ */
-+int ata_link_abort(struct ata_link *link)
-+{
-+	return ata_do_link_abort(link->ap, link);
-+}
+@@ -363,6 +363,8 @@ void ata_scsi_error(struct Scsi_Host *host)
+  repeat:
+ 	/* invoke error handler */
+ 	if (ap->ops->error_handler) {
++		struct ata_link *link;
 +
-+/**
-+ *	ata_port_abort - abort all qc's on the port
-+ *	@ap: ATA port to abort qc's for
-+ *
-+ *	Abort all active qc's of @ap and schedule EH.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Number of aborted qc's.
-+ */
-+int ata_port_abort(struct ata_port *ap)
-+{
-+	return ata_do_link_abort(ap, NULL);
-+}
-+
-+/**
-  *	__ata_port_freeze - freeze port
-  *	@ap: ATA port to freeze
-  *
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 27840f1..884325b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -905,6 +905,7 @@ extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
- extern void ata_eng_timeout(struct ata_port *ap);
+ 		/* kill fast drain timer */
+ 		del_timer_sync(&ap->fastdrain_timer);
  
- extern void ata_port_schedule_eh(struct ata_port *ap);
-+extern int ata_link_abort(struct ata_link *link);
- extern int ata_port_abort(struct ata_port *ap);
- extern int ata_port_freeze(struct ata_port *ap);
+@@ -372,9 +374,11 @@ void ata_scsi_error(struct Scsi_Host *host)
+ 		/* fetch & clear EH info */
+ 		spin_lock_irqsave(ap->lock, flags);
  
+-		memset(&ap->link.eh_context, 0, sizeof(ap->link.eh_context));
+-		ap->link.eh_context.i = ap->link.eh_info;
+-		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
++		__ata_port_for_each_link(link, ap) {
++			memset(&link->eh_context, 0, sizeof(link->eh_context));
++			link->eh_context.i = link->eh_info;
++			memset(&link->eh_info, 0, sizeof(link->eh_info));
++		}
+ 
+ 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
+ 		ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+@@ -410,7 +414,8 @@ void ata_scsi_error(struct Scsi_Host *host)
+ 		}
+ 
+ 		/* this run is complete, make sure EH info is clear */
+-		memset(&ap->link.eh_info, 0, sizeof(ap->link.eh_info));
++		__ata_port_for_each_link(link, ap)
++			memset(&link->eh_info, 0, sizeof(link->eh_info));
+ 
+ 		/* Clear host_eh_scheduled while holding ap->lock such
+ 		 * that if exception occurs after this point but
 -- 
 1.5.0.3
 
