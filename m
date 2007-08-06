@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/14] libata-link: linkify EH action helpers
+Subject: [PATCH 08/14] libata-link: separate out link initialization functions
 Date: Mon, 6 Aug 2007 18:36:23 +0900
-Message-ID: <11863929833192-git-send-email-htejun@gmail.com>
+Message-ID: <11863929833535-git-send-email-htejun@gmail.com>
 References: <11863929823677-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
@@ -10,146 +10,154 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from wa-out-1112.google.com ([209.85.146.178]:39413 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761018AbXHFJgb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:36:31 -0400
+	with ESMTP id S1760975AbXHFJgd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Aug 2007 05:36:33 -0400
 Received: by wa-out-1112.google.com with SMTP id v27so1724839wah
-        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:36:31 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Mon, 06 Aug 2007 02:36:32 -0700 (PDT)
 In-Reply-To: <11863929823677-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Make ata_eh_about_to_do() and ata_eh_done() deal with ata_link instead
-of ata_port.
-
-This patch introduces no behavior change.
+Separate out link initialization into ata_link_init() and
+ata_link_init_sata_spd().
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   35 ++++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/ata/libata-core.c |   84 ++++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 64 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 48ca68b..fc4b641 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -947,23 +947,24 @@ static void ata_eh_detach_dev(struct ata_device *dev)
- 
- /**
-  *	ata_eh_about_to_do - about to perform eh_action
-- *	@ap: target ATA port
-+ *	@link: target ATA link
-  *	@dev: target ATA dev for per-dev action (can be NULL)
-  *	@action: action about to be performed
-  *
-  *	Called just before performing EH actions to clear related bits
-- *	in @ap->link.eh_info such that eh actions are not
-- *	unnecessarily repeated.
-+ *	in @link->eh_info such that eh actions are not unnecessarily
-+ *	repeated.
-  *
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
-+static void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 			       unsigned int action)
- {
-+	struct ata_port *ap = link->ap;
-+	struct ata_eh_info *ehi = &link->eh_info;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 	unsigned long flags;
--	struct ata_eh_info *ehi = &ap->link.eh_info;
--	struct ata_eh_context *ehc = &ap->link.eh_context;
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
-@@ -980,7 +981,7 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
- 		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
- 	}
- 
--	ata_eh_clear_action(&ap->link, dev, ehi, action);
-+	ata_eh_clear_action(link, dev, ehi, action);
- 
- 	if (!(ehc->i.flags & ATA_EHI_QUIET))
- 		ap->pflags |= ATA_PFLAG_RECOVERED;
-@@ -990,20 +991,20 @@ static void ata_eh_about_to_do(struct ata_port *ap, struct ata_device *dev,
- 
- /**
-  *	ata_eh_done - EH action complete
-- *	@ap: target ATA port
-+*	@ap: target ATA port
-  *	@dev: target ATA dev for per-dev action (can be NULL)
-  *	@action: action just completed
-  *
-  *	Called right after performing EH actions to clear related bits
-- *	in @ap->link.eh_context.
-+ *	in @link->eh_context.
-  *
-  *	LOCKING:
-  *	None.
-  */
--static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
-+static void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- 			unsigned int action)
- {
--	struct ata_eh_context *ehc = &ap->link.eh_context;
-+	struct ata_eh_context *ehc = &link->eh_context;
- 
- 	/* if reset is complete, clear all reset actions & reset modifier */
- 	if (action & ATA_EH_RESET_MASK) {
-@@ -1011,7 +1012,7 @@ static void ata_eh_done(struct ata_port *ap, struct ata_device *dev,
- 		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
- 	}
- 
--	ata_eh_clear_action(&ap->link, dev, &ehc->i, action);
-+	ata_eh_clear_action(link, dev, &ehc->i, action);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d2600e0..0cbcddd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6041,6 +6041,68 @@ void ata_dev_init(struct ata_device *dev)
  }
  
  /**
-@@ -1795,7 +1796,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 	int rc;
++ *	ata_link_init - Initialize an ata_link structure
++ *	@ap: ATA port link is attached to
++ *	@link: Link structure to initialize
++ *
++ *	Initialize @link.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep)
++ */
++static void ata_link_init(struct ata_port *ap, struct ata_link *link)
++{
++	int i;
++
++	/* clear everything except for devices */
++	memset(link, 0, offsetof(struct ata_link, device[0]));
++
++	link->ap = ap;
++	link->active_tag = ATA_TAG_POISON;
++	link->hw_sata_spd_limit = UINT_MAX;
++
++	/* can't use iterator, ap isn't initialized yet */
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
++		struct ata_device *dev = &link->device[i];
++
++		dev->link = link;
++		dev->devno = dev - link->device;
++		ata_dev_init(dev);
++	}
++}
++
++/**
++ *	sata_link_init_spd - Initialize link->sata_spd_limit
++ *	@link: Link to configure sata_spd_limit for
++ *
++ *	Initialize @link->[hw_]sata_spd_limit to the currently
++ *	configured value.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++static int sata_link_init_spd(struct ata_link *link)
++{
++	u32 scontrol, spd;
++	int rc;
++
++	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return rc;
++
++	spd = (scontrol >> 4) & 0xf;
++	if (spd)
++		link->hw_sata_spd_limit &= (1 << spd) - 1;
++
++	link->sata_spd_limit = link->hw_sata_spd_limit;
++
++	return 0;
++}
++
++/**
+  *	ata_port_alloc - allocate and initialize basic ATA port resources
+  *	@host: ATA host this allocated port belongs to
+  *
+@@ -6055,7 +6117,6 @@ void ata_dev_init(struct ata_device *dev)
+ struct ata_port *ata_port_alloc(struct ata_host *host)
+ {
+ 	struct ata_port *ap;
+-	unsigned int i;
  
- 	/* about to reset */
--	ata_eh_about_to_do(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+	ata_eh_about_to_do(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
+ 	DPRINTK("ENTER\n");
  
- 	/* Determine which reset to use and record in ehc->i.action.
- 	 * prereset() may examine and modify it.
-@@ -1877,7 +1878,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 			goto out;
- 		}
+@@ -6070,9 +6131,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	ap->ctl = ATA_DEVCTL_OBS;
+ 	ap->host = host;
+ 	ap->dev = host->dev;
+-
+-	ap->link.hw_sata_spd_limit = UINT_MAX;
+-	ap->link.active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
  
--		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
-+		ata_eh_about_to_do(link, NULL, ATA_EH_RESET_MASK);
- 		rc = ata_do_reset(ap, reset, classes, deadline);
+ #if defined(ATA_VERBOSE_DEBUG)
+@@ -6095,15 +6153,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
  
- 		if (rc == 0 && classify &&
-@@ -1927,7 +1928,7 @@ static int ata_eh_reset(struct ata_port *ap, int classify,
- 			postreset(ap, classes);
+ 	ap->cbl = ATA_CBL_NONE;
  
- 		/* reset successful, schedule revalidation */
--		ata_eh_done(ap, NULL, ehc->i.action & ATA_EH_RESET_MASK);
-+		ata_eh_done(link, NULL, ehc->i.action & ATA_EH_RESET_MASK);
- 		ehc->i.action |= ATA_EH_REVALIDATE;
- 	}
-  out:
-@@ -1964,12 +1965,12 @@ static int ata_eh_revalidate_and_attach(struct ata_port *ap,
- 				goto err;
- 			}
+-	ap->link.ap = ap;
+-
+-	/* can't use iterator, ap isn't initialized yet */
+-	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+-		struct ata_device *dev = &ap->link.device[i];
+-		dev->link = &ap->link;
+-		dev->devno = i;
+-		ata_dev_init(dev);
+-	}
++	ata_link_init(ap, &ap->link);
  
--			ata_eh_about_to_do(ap, dev, ATA_EH_REVALIDATE);
-+			ata_eh_about_to_do(&ap->link, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev, readid_flags);
- 			if (rc)
- 				goto err;
+ #ifdef ATA_IRQ_TRAP
+ 	ap->stats.unhandled_irq = 1;
+@@ -6386,7 +6436,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 		int irq_line;
+-		u32 scontrol;
+ 		unsigned long xfer_mask;
  
--			ata_eh_done(ap, dev, ATA_EH_REVALIDATE);
-+			ata_eh_done(&ap->link, dev, ATA_EH_REVALIDATE);
+ 		/* set SATA cable type if still unset */
+@@ -6394,12 +6443,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			ap->cbl = ATA_CBL_SATA;
  
- 			/* Configuration may have changed, reconfigure
- 			 * transfer mode.
+ 		/* init sata_spd_limit to the current value */
+-		if (sata_scr_read(&ap->link, SCR_CONTROL, &scontrol) == 0) {
+-			int spd = (scontrol >> 4) & 0xf;
+-			if (spd)
+-				ap->link.hw_sata_spd_limit &= (1 << spd) - 1;
+-		}
+-		ap->link.sata_spd_limit = ap->link.hw_sata_spd_limit;
++		sata_link_init_spd(&ap->link);
+ 
+ 		/* report the secondary IRQ for second channel legacy */
+ 		irq_line = host->irq;
 -- 
 1.5.0.3
 
