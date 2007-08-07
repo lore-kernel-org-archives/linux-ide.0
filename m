@@ -1,30 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: No equivalent for ide-scsi available with the new PATA drivers?
-Date: Tue, 7 Aug 2007 19:53:40 +0100
-Message-ID: <20070807195340.2794417a@the-village.bc.nu>
-References: <46A4D91C.3090509@redhat.com>
-	<20070723175239.54b721f1@the-village.bc.nu>
-	<46B1CD12.3020800@rtr.ca>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Tue, 07 Aug 2007 14:46:31 -0400
+Message-ID: <46B8BE07.5020005@redhat.com>
+References: <20070807054250.GQ13674@htj.dyndns.org> <20070807162529.1781b21c@the-village.bc.nu> <46B89177.2040209@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35061 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751220AbXHGSqX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 14:46:23 -0400
-In-Reply-To: <46B1CD12.3020800@rtr.ca>
+Received: from mx1.redhat.com ([66.187.233.31]:53478 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761592AbXHGSrT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2007 14:47:19 -0400
+In-Reply-To: <46B89177.2040209@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
 
-> I have a PATA tape drive here somewhere.
+On 08/07/2007 11:36 AM, Tejun Heo wrote:
+> Alan Cox wrote:
+>> On Tue, 7 Aug 2007 14:42:50 +0900
+>> Tejun Heo <htejun@gmail.com> wrote:
+>>
+>>> HDS724040KLSA80 reports that it supports HPA && LBA48 but craps itself
+>>> on READ_NATIVE_MAX_EXT.  Implement BROKEN_HPA horkage and apply it to
+>>> the drive.  If the horkage is set, all HPA operations are skipped.
+>> I'd rather know what is going on here. A drive can legitimately
+>> support LBA48 and HPA and refuse READ_NATIVE_MAX_EXT.
+> 
+> READ_NATIVE_MAX_EXT is mandatory if HPA && LBA48, no?
+> 
+>> In addition just
+>> about every OS I know queries the HPA which means that something other
+>> than HPA support being broken is probably at the root. We thus want to
+>> find the real fix.
+>>
+>> What do the actual traces look like ?
+>>
+>> Does it crap out of it gets READ_NATIVE_MAX ?
+> 
+> Haven't tried that but the problem is that the drive times out
+> READ_NATIVE_MAX_EXT so it doesn't really matter whether the drive
+> succeeds READ_NATIVE_MAX or not.  For more detail, please read the
+> following thread.
+> 
+>   http://thread.gmane.org/gmane.linux.ide/21322
+> 
 
--EBUSY
+There's also this Fedora bug:
 
-> Does anyone out there want it, with the understanding that it be
-> used to test/improve libata tape support?
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=251047#c2
 
-I'm happy to help someone else doing the work who needs info on libata
-etc but I've no time to work on whats a very obscure corner case.
+...where after an error on the slave device the master starts throwing
+HPA errors after the port is reset. Don't know if it's related or
+not...
