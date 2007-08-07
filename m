@@ -1,36 +1,55 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: Thomas Renninger <trenn@suse.de>
 Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Tue, 7 Aug 2007 09:56:29 -0300
-Message-ID: <20070807125629.GD30661@khazad-dum.debian.net>
-References: <1186411815.4355.7.camel@nx6310> <20070806150159.GC31615@khazad-dum.debian.net> <200708061732.03425.rjw@sisk.pl> <46B75459.9020204@gmail.com> <1186424492.4355.1.camel@nx6310> <46B76BBC.9010107@gmail.com> <1186438698.4402.6.camel@nx6310> <46B817AB.30105@gmail.com> <1186478319.3705.3.camel@nx6310> <46B83C0B.8050902@gmail.com>
+Date: Tue, 07 Aug 2007 15:04:39 +0200
+Message-ID: <1186491879.8780.51.camel@queen.suse.de>
+References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com>
+	 <1186411815.4355.7.camel@nx6310>
+	 <20070806150159.GC31615@khazad-dum.debian.net>
+	 <200708061732.03425.rjw@sisk.pl> <46B75459.9020204@gmail.com>
+	 <1186424492.4355.1.camel@nx6310> <46B76BBC.9010107@gmail.com>
+	 <20070806234509.GC27640@khazad-dum.debian.net> <46B816FF.7060303@gmail.com>
+	 <20070807125104.GC30661@khazad-dum.debian.net>
+Reply-To: trenn@suse.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35196 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934241AbXHGM4c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 08:56:32 -0400
-Content-Disposition: inline
-In-Reply-To: <46B83C0B.8050902@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20070807125104.GC30661@khazad-dum.debian.net>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Tejun Heo <htejun@gmail.com>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Tue, 07 Aug 2007, Tejun Heo wrote:
-> emergency unload.  Emergency unload does shorten the lifespan of the
-> disk but you don't have to worry too much about it.  Disks are designed
-> to withstand certain number of emergency unloads.
+On Tue, 2007-08-07 at 09:51 -0300, Henrique de Moraes Holschuh wrote:
+> On Tue, 07 Aug 2007, Tejun Heo wrote:
+> > Henrique de Moraes Holschuh wrote:
+> > > On Tue, 07 Aug 2007, Tejun Heo wrote:
+> > >> Michael Sedkowski wrote:
+---snip---
+> > > Any chances of changing things
+> > > so that we inspect/snoop all tasks sent to the device, and filter them
+> > > out, or react to them accordingly?
+> > 
+> > No, we can't unless we snoop ACPI method execution and detect accesses
+> > to IO ports or iomem regions.  It's not going through any driver.  This
+> > is a gross mess.
+> 
+> I don't mean fixing the stuff clowns like Toshiba did.  The correct fix for
+> that is to blacklist the hell out of that crap and patch their DSDT into
+> something remotely sane.
+> 
+> I do mean snooping the ACPI methods that *return* a taskset to send to the
+> driver, and we send that taskset ourselves in libata and libpata(?).
 
-You *do* have to worry about it in any box you turn off daily.  Desktop HDs
-will croak fast in that scenario, laptop HDs less so, but still too fast.
+I haven't read the whole thread in every detail, but this sounds like a
+very intrusive, overdosed workaround.
 
-A very good laptop HD can last about 20k emergency unloads (this is a unit
-that can do about 600k normal unloads in its lifetime).  Desktop and server
-HDs don't even come close to those numbers, last time I checked.
+Are the DSDT/SSDTs already lying around somewhere (collecting them in a
+bug assigned to ACPI component should be a good idea)?
+Could someone give me a pointer where this happens (best in code and
+DSDT).
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Thanks,
+
+   Thomas
+
