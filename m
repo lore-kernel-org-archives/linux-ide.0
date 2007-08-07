@@ -1,35 +1,30 @@
-From: Kristoffer Nyborg Gregertsen <gregerts@stud.ntnu.no>
-Subject: Re: [PATCH 1/1] AVR32 PATA driver
-Date: Tue, 7 Aug 2007 20:26:35 +0200
-Message-ID: <200708072026.35366.gregerts@stud.ntnu.no>
-References: <200708071126.08735.kngregertsen@norway.atmel.com> <200708071939.34266.gregerts@stud.ntnu.no> <46B8B683.6060000@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: No equivalent for ide-scsi available with the new PATA drivers?
+Date: Tue, 7 Aug 2007 19:53:40 +0100
+Message-ID: <20070807195340.2794417a@the-village.bc.nu>
+References: <46A4D91C.3090509@redhat.com>
+	<20070723175239.54b721f1@the-village.bc.nu>
+	<46B1CD12.3020800@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from merke.itea.ntnu.no ([129.241.7.61]:40503 "EHLO
-	merke.itea.ntnu.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044AbXHGS0g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 14:26:36 -0400
-In-Reply-To: <46B8B683.6060000@garzik.org>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35061 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751220AbXHGSqX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 14:46:23 -0400
+In-Reply-To: <46B1CD12.3020800@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>, linux-ide@vger.kernel.org, gregerts@stud.ntnu.no
+To: Mark Lord <liml@rtr.ca>
+Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tuesday 07 August 2007 20:14:27 Jeff Garzik wrote:
-> Well, a higher level issue, you should not have a max_pio module
-> parameter at all.  Other drivers do not have such a thing.
+> I have a PATA tape drive here somewhere.
 
-OK, I'll remove it then. It was very convenient during automated testing of 
-all PIO modes, but I guess that's not needed by the end users.
--- 
-With kind regards
+-EBUSY
 
-Kristoffer Nyborg Gregertsen
+> Does anyone out there want it, with the understanding that it be
+> used to test/improve libata tape support?
 
-Student, Department of Engineering Cybernetics
-Norwegian University of Science and Technology
-Trondheim, Norway
+I'm happy to help someone else doing the work who needs info on libata
+etc but I've no time to work on whats a very obscure corner case.
