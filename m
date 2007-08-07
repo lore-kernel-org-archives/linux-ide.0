@@ -1,68 +1,66 @@
-From: Thomas Renninger <trenn@suse.de>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Tue, 07 Aug 2007 16:45:25 +0200
-Message-ID: <1186497925.8780.78.camel@queen.suse.de>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>
-	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>
-	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>
-	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>
-	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>
-	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>
-	 <46B8140E.3000509@gmail.com>
-Reply-To: trenn@suse.de
+From: "Luiz Fernando N. Capitulino" <lcapitulino@mandriva.com.br>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Tue, 7 Aug 2007 11:51:05 -0300
+Message-ID: <20070807115105.4f5cbc66@localhost>
+References: <20070807054250.GQ13674@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:43461 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751781AbXHGOp2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Aug 2007 10:45:28 -0400
-In-Reply-To: <46B8140E.3000509@gmail.com>
+Received: from perninha.conectiva.com.br ([200.140.247.100]:43574 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbXHGOvQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 10:51:16 -0400
+In-Reply-To: <20070807054250.GQ13674@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net
 
-On Tue, 2007-08-07 at 15:41 +0900, Tejun Heo wrote:
-> Robert Hancock wrote:
-> > Tejun Heo wrote:
-> >> Michael Sedkowski wrote:
-> >>>> Hmmm... If the problem only shows up on nx6325, it might be that
-> >>>> ACPI is
-> >>>> pulling unnecessary stunt.  Please apply the attached patch and report
-> >>>> when the disk spins down and up.
-> >>> Disk spins down on "Pre-shutdown prepare" and then goes up and down on
-> >>> "Power down".
-> >>
-> >> Oh... crap, so acpi wants to sync cache on shutdown.  I wonder whether
-> >> it spins down the disk correctly.  Does emergency unload count increase
-> >> after each power down?  Also, please post the result of 'dmidecode'.
-> > 
-> > I know that my Compaq X1000-series laptop does do some kind of ACPI
-> > games with the disk on ACPI power off (I assume it is putting the disk
-> > in standby before power-off at least). It also does this if you boot
-> > into DOS, GRUB, etc. and then hit the power button. Could be if the disk
-> > is dumb enough to spin up for sync cache and standby when there is
-> > nothing to flush, and the kernel does its own standby, this could cause
-> > an extra spinup/down..
-> 
-> Yeah, that seems to be what's going on.  I don't think we have any other
-> choice than blacklisting those notebooks.  This is a mess.  How does the
-> other OS cope with this?
-> 
-> I'm thinking about using DMI vendor/product match to detect the affected
-> systems but I think it would be better to match the ACPI implementation
-> directly.  Is there a way to match specific ACPI implementation?
+Em Tue, 7 Aug 2007 14:42:50 +0900
+Tejun Heo <htejun@gmail.com> escreveu:
 
-I opened a new bug to collect dmi and acpidump outputs:
-http://bugzilla.kernel.org/show_bug.cgi?id=8855
-Thought this is the easiest way to get this all a bit together.
+| HDS724040KLSA80 reports that it supports HPA && LBA48 but craps itself
+| on READ_NATIVE_MAX_EXT.  Implement BROKEN_HPA horkage and apply it to
+| the drive.  If the horkage is set, all HPA operations are skipped.
+| 
+| While at it, make HPA test a bit more reliable by also checking
+| ata_id_has_hpa().
 
-Would be great if you tell all affected people and let them attach
-dmidecode and acpidump output there...
+ Tejun, is the following patch ok for 2.6.22.1?
 
-Thanks,
+--- linux-2.6.22.orig/drivers/ata/libata-core.c
++++ linux-2.6.22/drivers/ata/libata-core.c
+@@ -1939,7 +1939,8 @@ int ata_dev_configure(struct ata_device 
+ 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
+ 
+-			if (ata_id_hpa_enabled(dev->id))
++			if (!(dev->horkage & ATA_HORKAGE_BROKEN_HPA) &&
++			    ata_id_has_hpa(id) && ata_id_hpa_enabled(dev->id))
+ 				dev->n_sectors = ata_hpa_resize(dev);
+ 
+ 			/* config NCQ */
+@@ -3800,6 +3801,7 @@ static const struct ata_blacklist_entry 
+ 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+ 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+ 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
++	{ "HDS724040KLSA80",    "KFAOA20N",     ATA_HORKAGE_BROKEN_HPA, },
+ 
+ 	/* Devices with NCQ limits */
+ 
+--- linux-2.6.22.orig/include/linux/libata.h
++++ linux-2.6.22/include/linux/libata.h
+@@ -298,6 +298,7 @@ enum {
+ 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
++	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+ };
+ 
+ enum hsm_task_states {
 
-    Thomas
 
+-- 
+Luiz Fernando N. Capitulino
