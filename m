@@ -1,29 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
  HDS724040KLSA80
-Date: Tue, 7 Aug 2007 17:58:44 +0100
-Message-ID: <20070807175844.6818ffc9@the-village.bc.nu>
-References: <20070807054250.GQ13674@htj.dyndns.org>
-	<20070807162529.1781b21c@the-village.bc.nu>
-	<46B89177.2040209@gmail.com>
+Date: Tue, 07 Aug 2007 12:52:32 -0400
+Message-ID: <46B8A350.20409@garzik.org>
+References: <20070807054250.GQ13674@htj.dyndns.org>	<20070807162529.1781b21c@the-village.bc.nu>	<46B89177.2040209@gmail.com>	<46B8941A.8080206@garzik.org> <20070807175759.149bdf9f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35594 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755160AbXHGQv6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 12:51:58 -0400
-In-Reply-To: <46B89177.2040209@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:35801 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755714AbXHGQwh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2007 12:52:37 -0400
+In-Reply-To: <20070807175759.149bdf9f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kelk1@comcast.net, lcapitulino@mandriva.com.br, Ben Collins <bcollins@ubuntu.com>
 
-> > I'd rather know what is going on here. A drive can legitimately
-> > support LBA48 and HPA and refuse READ_NATIVE_MAX_EXT.
+Alan Cox wrote:
+> On Tue, 07 Aug 2007 11:47:38 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
 > 
-> READ_NATIVE_MAX_EXT is mandatory if HPA && LBA48, no
+>> People should check out Ben C's HPA fixes and cleanups, too. (attached)
+>>
+>> I was hoping one of the original libata HPA authors would review that in 
+>> depth and integrate.  (it no longer applies cleanly)
+> 
+> Looks basically sound but we should still probably move over this bit of
+> the old IDE paranoia as well:
 
-Ok the report in that thread is different. The offending Maxtor simply
-aborts the read_native_max_ext
+Oh quite agreed...
+
+	Jeff
+
+
+
+
