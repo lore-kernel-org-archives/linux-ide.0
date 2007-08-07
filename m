@@ -1,48 +1,63 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
 Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Tue, 07 Aug 2007 23:01:46 +0900
-Message-ID: <46B87B4A.1020305@gmail.com>
-References: <1186411815.4355.7.camel@nx6310>	 <20070806150159.GC31615@khazad-dum.debian.net>	 <200708061732.03425.rjw@sisk.pl> <46B75459.9020204@gmail.com>	 <1186424492.4355.1.camel@nx6310> <46B76BBC.9010107@gmail.com>	 <20070806234509.GC27640@khazad-dum.debian.net> <46B816FF.7060303@gmail.com>	 <20070807125104.GC30661@khazad-dum.debian.net> <46B86F21.4030805@gmail.com>	 <20070807131651.GE30661@khazad-dum.debian.net> <46B87457.4020704@gmail.com> <1186494328.8780.66.camel@queen.suse.de>
+Date: Tue, 07 Aug 2007 08:28:03 -0600
+Message-ID: <46B88173.3020302@shaw.ca>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>
+ <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>
+ <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>
+ <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>
+ <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>
+ <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>
+ <46B8140E.3000509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1186494328.8780.66.camel@queen.suse.de>
+In-reply-to: <46B8140E.3000509@gmail.com>
 Sender: linux-acpi-owner@vger.kernel.org
-To: trenn@suse.de
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>, firmwarekit-discuss <firmwarekit-discuss@bughost.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Thomas Renninger <trenn@suse.de>
 List-Id: linux-ide@vger.kernel.org
 
-Thomas Renninger wrote:
->>> I'd also suggest adding a FAIL to the Linux firmware toolkit to any DSDT
->>> doing this.  Who should we prod to add that check?
->> Dunno how the firmware toolkit works but this one can be pretty
->> difficult to test (if it were easy, we could test it in libata) as it
->> involves entering S5.  If it's possible, I'm all for it.  Also, it would
->> be nice if we can test the same thing for S3 and S4.
->>
->> Thomas, who should we ask things about the Linux firmware toolkit?  Thanks.
+Tejun Heo wrote:
+> Robert Hancock wrote:
+>> Tejun Heo wrote:
+>>> Michael Sedkowski wrote:
+>>>>> Hmmm... If the problem only shows up on nx6325, it might be that
+>>>>> ACPI is
+>>>>> pulling unnecessary stunt.  Please apply the attached patch and report
+>>>>> when the disk spins down and up.
+>>>> Disk spins down on "Pre-shutdown prepare" and then goes up and down on
+>>>> "Power down".
+>>> Oh... crap, so acpi wants to sync cache on shutdown.  I wonder whether
+>>> it spins down the disk correctly.  Does emergency unload count increase
+>>> after each power down?  Also, please post the result of 'dmidecode'.
+>> I know that my Compaq X1000-series laptop does do some kind of ACPI
+>> games with the disk on ACPI power off (I assume it is putting the disk
+>> in standby before power-off at least). It also does this if you boot
+>> into DOS, GRUB, etc. and then hit the power button. Could be if the disk
+>> is dumb enough to spin up for sync cache and standby when there is
+>> nothing to flush, and the kernel does its own standby, this could cause
+>> an extra spinup/down..
 > 
-> firmwarekit-discuss <firmwarekit-discuss@bughost.org> (added to CC list)
-> see: http://linuxfirmwarekit.org/
-> 
-> But if I understand this problem right, this won't be easy.
-> The ACPI tables are just parsed with system ("iasl ...") and syntactical
-> errors/warnings are printed out.
-> I also thought about a test, interpreting the DSDT and read out values
-> of cpufreq tables and sanity check them. AFAIK the linuxfirmwarekit is
-> not designed for that atm. You need to compile in most parts of the
-> acpica code and parse and interpret DSDT/SSDT code yourself in the
-> firmwarekit core or inside a plugin, then do a walk_namespace call or
-> whatever to find the functions/parts you like to examine. This is a lot
-> work and needs a proper design (providing an interface to plugins to let
-> them easily check specific AML/ASL code).
+> Yeah, that seems to be what's going on.  I don't think we have any other
+> choice than blacklisting those notebooks.  This is a mess.  How does the
+> other OS cope with this?
 
-Furthermore, we don't really know what we're looking for.  How can you
-tell a given write to an ioport is issuing STANDBYNOW to an ATA disk or
-trying to power the machine off?  Adding to the fun, many modern ATA
-controller have more than one way to issue a command.  Maybe we can
-match accesses inside regions specified by PCI BARs....  :-(
+Quite possible that it gets a double spindown with these laptop/drive 
+combinations as well. I don't think it's particularly harmful as long as 
+there's no emergency unload..
+
+> I'm thinking about using DMI vendor/product match to detect the affected
+> systems but I think it would be better to match the ACPI implementation
+> directly.  Is there a way to match specific ACPI implementation?
+
+Don't think it would be very easy, it's presumably being done off some 
+SMI code triggered from the ACPI power off register or something, so I'm 
+assuming it's nothing the kernel sees in its ACPI tables..
 
 -- 
-tejun
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
+
