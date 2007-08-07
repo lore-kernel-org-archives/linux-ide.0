@@ -1,40 +1,48 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Tue, 7 Aug 2007 22:41:23 +0200
-Message-ID: <200708072241.24091.rjw@sisk.pl>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <8db1092f0708071309h5cf6f68bo80b44d9a2fbeabeb@mail.gmail.com> <200708072233.52500.rjw@sisk.pl>
+From: Greg KH <gregkh@suse.de>
+Subject: [2.6.22.2 review 06/84] Add a PCI ID for santa rosas PATA
+	controller.
+Date: Tue, 7 Aug 2007 13:42:57 -0700
+Message-ID: <20070807204257.GG23028@kroah.com>
+References: <20070807204034.882009319@mini.kroah.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <200708072233.52500.rjw@sisk.pl>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:51320 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964816AbXHGUqt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 16:46:49 -0400
+Content-Disposition: inline; filename="add-a-pci-id-for-santa-rosa-s-pata-controller.patch"
+In-Reply-To: <20070807204157.GA23028@kroah.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Christian Lamparter <chunkeey@web.de>
 
-On Tuesday, 7 August 2007 22:33, Rafael J. Wysocki wrote:
-> On Tuesday, 7 August 2007 22:09, Maciej Rutecki wrote:
-> > 2007/8/7, Michael Sedkowski <sedmich@gmail.com>:
-> > > I did some additional checking today...
-> > > On kernels prior to 2.6.22 line, the bug exists and manifests itself
-> > > exactly the same way. However, when I removed the "-h" flag
-> > > from /etc/init.d/halt, the drive spins down only once on "Power down"
-> > > message and there is no sign of the bug and the emergency unload count
-> > > remains constant. I've verified this on kernels 2.6.21.6; 2.6.20.4;
-> > > 2.6.18-4-686-Etch.
-> > > The obvious conclusion is that something must have changed it the 2.6.22
-> > > kernels, so that removing the "-h" has no effect.
-> > > I dunno if my observations are of any value, but I thought You should
-> > > know...
-> > 
-> > I confirm this. First 2.6.21-rcx works OK (if I remember).  In
-> > 2.6.22(.1) remove -h option doesn't help - only warning message
-> > dissapear, and double spin down also exists in suspend to disk.
-> 
-> Well, on my box (nx6325) with the appended (experimental) patch applied
-> on top of 2.6.23-rc1 with the patchset from
 
-s/2.6.23-rc1/2.6.23-rc2/
+From: Christian Lamparter <chunkeey@web.de>
+
+This is commit c1e6f28cc5de37dcd113b9668a185c0b9334ba8a which is
+merged during 23-rc1 window.  Considering the popularity of these
+chips, I think including it in -stable release would be good idea.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/ata/ata_piix.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -200,6 +200,8 @@ static const struct pci_device_id piix_p
+ 	/* ICH7/7-R (i945, i975) UDMA 100*/
+ 	{ 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_133 },
+ 	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++	/* ICH8 Mobile PATA Controller */
++	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 
+ 	/* NOTE: The following PCI ids must be kept in sync with the
+ 	 * list in drivers/pci/quirks.c.
+
+-- 
