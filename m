@@ -1,60 +1,140 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/1] AVR32 PATA driver
-Date: Tue, 7 Aug 2007 16:58:12 +0100
-Message-ID: <20070807165812.4e939531@the-village.bc.nu>
-References: <200708071126.08735.kngregertsen@norway.atmel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH RE-UPDATED] libata: add support for ATA_16 on ATAPI
+Date: Wed, 8 Aug 2007 01:08:45 +0900
+Message-ID: <20070807160845.GR13674@htj.dyndns.org>
+References: <20070801075624.GD13674@htj.dyndns.org> <46B091F4.5070704@garzik.org> <46B09494.4080206@gmail.com> <46B1C788.3060201@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49163 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751430AbXHGPyW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 11:54:22 -0400
-In-Reply-To: <200708071126.08735.kngregertsen@norway.atmel.com>
+Received: from rv-out-0910.google.com ([209.85.198.184]:24001 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075AbXHGQIw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 12:08:52 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1431017rvb
+        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 09:08:51 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <46B1C788.3060201@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, kngregertsen@norway.atmel.com, gregerts@stud.ntnu.no
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> 1) In PIO1 and PIO2 there are rare freezes:
-> 
-> ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata3.00: cmd 20/00:00:d3:7e:5d/00:00:00:00:00/e1 tag 0 cdb 0x0 data 131072 in
->          res 58/00:01:d2:7f:5d/00:00:01:00:00/e1 Emask 0x2 (HSM violation)
-> 
-> The freezes happen close to each other in time. The freezes does not make file
-> operations fail.
+From: Mark Lord <liml@rtr.ca>
 
-Are you 100% sure all your timings are right and there are no I/O posting
-prolems that might lead the various required delays to come out wrong ?
+Add support for issuing ATA_16 passthru commands to ATAPI devices
+managed by libata.  It requires the previous CDB length fix patch.
 
-> 2) After being in operation for a long time (+24 hours) the disk reports wrong
-> identity:
-> 
-> ata4.00: model number mismatch 'IC35L060AVV207-0' != ''
-> ata4.00: revalidation failed (errno=-19)
-> ata4.00: limiting speed to PIO2
-> ata4: failed to recover some devices, retrying in 5 secs
-> ata4.00: model number mismatch 'IC35L060AVV207-0' != 'AV07-0 *GARBEL*
-> 
-> This has happend with both the devices I am testing, the 'Quantum Fireball'
-> reported it self to be 'Quanpum Fiveball' after 24 hours of testing.
+A boot/module parameter, "atapi_scmd85=1" can be used to globally
+disable this feature, if ever desired.
 
-That sounds to me like your hardware - heat, clock drift ?
+tj: renamed ata16_passthru module param to atapi_passthru16 and invert
+    its meaning to reduce confusion.
 
-> I also have a question regrding INTRQ / IRQ handeling. Since I am not using
-> DMA, there seems to be no reason to handle interrupts, so I set the polling
-> flag. Not using the polling flag gives a lot of interrupts that does not seem
-> to do anything except eating my CPU cycles. Is this correct?
-> 
-> If so, what shall I do when activating the host to not get "irq 65: nobody
-> cared" ... "Disabling IRQ #65". Should I give an negative irq number?
+tj: restructured __ata_scsi_queuecmd() according to Jeff's suggestion.
 
-When you get an IRQ you need to clear the IRQ status. Good question why
-you are getting them but you may well do in the resetting phases even
-with nIEN in use.
+Signed-off-by: Mark Lord <liml@rtr.ca>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Alright, the winner is atapi_passthru16.
 
-OTOH if you get one or two per command then someone must have nIEN wrong
-on command issue. Either way you need to clear down IRQs that occur -
-some hardware doesn't get nIEN right and interrupts anyway in some cases.
+ drivers/ata/libata-core.c |    4 +++
+ drivers/ata/libata-scsi.c |   52 +++++++++++++++++++++++++++++++---------------
+ drivers/ata/libata.h      |    1 
+ 3 files changed, 41 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 60e78be..0ccac23 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -86,6 +86,10 @@ int atapi_dmadir = 0;
+ module_param(atapi_dmadir, int, 0444);
+ MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off, 1=on)");
+ 
++int atapi_passthru16 = 1;
++module_param(atapi_passthru16, int, 0444);
++MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices, on by default (0=off, 1=on)");
++
+ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on)");
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e836476..b9a67c1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2746,28 +2746,48 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 				      void (*done)(struct scsi_cmnd *),
+ 				      struct ata_device *dev)
+ {
++	u8 scsi_op = scmd->cmnd[0];
++	ata_xlat_func_t xlat_func;
+ 	int rc = 0;
+ 
+-	if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len)) {
+-		DPRINTK("bad CDB len=%u, max=%u\n",
+-			scmd->cmd_len, dev->cdb_len);
+-		scmd->result = DID_ERROR << 16;
+-		done(scmd);
+-		return 0;
+-	}
+-
+ 	if (dev->class == ATA_DEV_ATA) {
+-		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+-							      scmd->cmnd[0]);
++		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
++			goto bad_cdb_len;
+ 
+-		if (xlat_func)
+-			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
+-		else
+-			ata_scsi_simulate(dev, scmd, done);
+-	} else
+-		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
++		xlat_func = ata_get_xlat_func(dev, scsi_op);
++	} else {
++		if (unlikely(!scmd->cmd_len))
++			goto bad_cdb_len;
++
++		xlat_func = NULL;
++		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
++			/* relay SCSI command to ATAPI device */
++			if (unlikely(scmd->cmd_len > dev->cdb_len))
++				goto bad_cdb_len;
++
++			xlat_func = atapi_xlat;
++		} else {
++			/* ATA_16 passthru, treat as an ATA command */
++			if (unlikely(scmd->cmd_len > 16))
++				goto bad_cdb_len;
++
++			xlat_func = ata_get_xlat_func(dev, scsi_op);
++		}
++	}
++
++	if (xlat_func)
++		rc = ata_scsi_translate(dev, scmd, done, xlat_func);
++	else
++		ata_scsi_simulate(dev, scmd, done);
+ 
+ 	return rc;
++
++ bad_cdb_len:
++	DPRINTK("bad CDB len=%u, scsi_op=0x%02x, max=%u\n",
++		scmd->cmd_len, scsi_op, dev->cdb_len);
++	scmd->result = DID_ERROR << 16;
++	done(scmd);
++	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 564cd23..bdee8c2 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -56,6 +56,7 @@ extern unsigned int ata_print_id;
+ extern struct workqueue_struct *ata_aux_wq;
+ extern int atapi_enabled;
+ extern int atapi_dmadir;
++extern int atapi_passthru16;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
