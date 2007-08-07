@@ -1,31 +1,40 @@
-From: Bob Ham <rah@bash.sh>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Tue, 07 Aug 2007 10:01:10 +0100
-Message-ID: <1186477270.4410.1.camel@localhost>
-References: <200708060006.35511.sshtylyov@ru.mvista.com>
-	 <1186420206.23890.7.camel@orchid.arb.net>  <46B757CE.2070700@ru.mvista.com>
+From: Michael Sedkowski <sedmich@gmail.com>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Tue, 07 Aug 2007 11:18:39 +0200
+Message-ID: <1186478319.3705.3.camel@nx6310>
+References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com>
+	 <1186411815.4355.7.camel@nx6310>
+	 <20070806150159.GC31615@khazad-dum.debian.net>
+	 <200708061732.03425.rjw@sisk.pl>  <46B75459.9020204@gmail.com>
+	 <1186424492.4355.1.camel@nx6310>  <46B76BBC.9010107@gmail.com>
+	 <1186438698.4402.6.camel@nx6310>  <46B817AB.30105@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waffl.ing.me.uk ([217.147.94.6]:55703 "EHLO waffl.ing.me.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755694AbXHGJBR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Aug 2007 05:01:17 -0400
-In-Reply-To: <46B757CE.2070700@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <46B817AB.30105@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Mon, 2007-08-06 at 21:18 +0400, Sergei Shtylyov wrote:
->     Hm, well, this is indeed tough case but at least it prodded me to fix some 
-> issues.  Maybe it's worth for you to file a bug at bugzilla.kernel.org...
+Dnia 07-08-2007, Wt o godzinie 15:56 +0900, Tejun Heo napisa=C5=82(a):
+> 192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
+> Always       -       388
+>=20
+> I think this is the one.  You can test it by forcefully powering off
+> the
+> machine (press power button for several secs or disconnect AC and
+> battery) and see whether the count increases.
+>=20
+When I forcefully power off using the power button the raw value [last
+one] rise by 1 point from 389 to 390. When I power off normally with
+linux it remains constant.
+Now could some one please explain to me what does that mean and am I in
+danger of data loss?
 
-I've raised bug 8851:
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=8851
-
-Bob
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
