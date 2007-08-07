@@ -1,36 +1,43 @@
-From: Michael Sedkowski <sedmich@gmail.com>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Tue, 07 Aug 2007 21:23:38 +0200
-Message-ID: <1186514618.5622.9.camel@nx6310>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>
-	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>
-	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>
-	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>
-	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>
-	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>
-	 <46B8140E.3000509@gmail.com>  <1186497925.8780.78.camel@queen.suse.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Tue, 7 Aug 2007 20:41:01 +0100
+Message-ID: <20070807204102.17ba6f91@the-village.bc.nu>
+References: <20070807054250.GQ13674@htj.dyndns.org>
+	<20070807162529.1781b21c@the-village.bc.nu>
+	<46B89177.2040209@gmail.com>
+	<46B8BE07.5020005@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1186497925.8780.78.camel@queen.suse.de>
-Sender: linux-acpi-owner@vger.kernel.org
-To: trenn@suse.de
-Cc: Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48117 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755988AbXHGTeh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 15:34:37 -0400
+In-Reply-To: <46B8BE07.5020005@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
 
-I did some additional checking today...
-On kernels prior to 2.6.22 line, the bug exists and manifests itself
-exactly the same way. However, when I removed the "-h" flag
-from /etc/init.d/halt, the drive spins down only once on "Power down"
-message and there is no sign of the bug and the emergency unload count
-remains constant. I've verified this on kernels 2.6.21.6; 2.6.20.4;
-2.6.18-4-686-Etch.
-The obvious conclusion is that something must have changed it the 2.6.22
-kernels, so that removing the "-h" has no effect.
-I dunno if my observations are of any value, but I thought You should
-know...
+> There's also this Fedora bug:
+> 
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=251047#c2
+> 
+> ...where after an error on the slave device the master starts throwing
+> HPA errors after the port is reset. Don't know if it's related or
+> not...
 
-Regards,
-Michael
+Looks unrelated. You get a timeout
 
+ata2.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.01: cmd a0/00:00:00:00:20/00:00:00:00:00/b0 tag 0 cdb 0x43 data 12 in
+         res 40/00:03:00:00:20/00:00:00:00:00/b0 Emask 0x4 (timeout)
+
+and then the entire system shits itself
+
+ata2.00: qc timeout (cmd 0xf8)
+ata2.00: failed to set xfermode (err_mask=0x40)
+
+Looks like the bus didn't come back from whatever broke it.
