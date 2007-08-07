@@ -1,46 +1,265 @@
-From: MikeW <mw_phil@yahoo.co.uk>
-Subject: libata-core.c: =?utf-8?b?YXRhX2ZpbGxfc2coKQ==?= ... sanity check on arithmentic ?
-Date: Tue, 7 Aug 2007 15:35:38 +0000 (UTC)
-Message-ID: <loom.20070807T172323-813@post.gmane.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Tue, 07 Aug 2007 11:47:38 -0400
+Message-ID: <46B8941A.8080206@garzik.org>
+References: <20070807054250.GQ13674@htj.dyndns.org> <20070807162529.1781b21c@the-village.bc.nu> <46B89177.2040209@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050501010104060403010006"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50039 "EHLO ciao.gmane.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:41612 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756626AbXHGPpH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Aug 2007 11:45:07 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1IIRF0-0002hs-77
-	for linux-ide@vger.kernel.org; Tue, 07 Aug 2007 17:45:02 +0200
-Received: from 57.66.65.38 ([57.66.65.38])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 17:45:02 +0200
-Received: from mw_phil by 57.66.65.38 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 17:45:02 +0200
+	id S1757288AbXHGPsY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2007 11:48:24 -0400
+In-Reply-To: <46B89177.2040209@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kelk1@comcast.net, lcapitulino@mandriva.com.br, Ben Collins <bcollins@ubuntu.com>
 
-Could someone more knowledgeable than me please reassure me ...
+This is a multi-part message in MIME format.
+--------------050501010104060403010006
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Referring to code in linux-2.6.22.1: libata-core.c (kernel.org),
-in ata_fill_sg():
+People should check out Ben C's HPA fixes and cleanups, too. (attached)
 
-if sg_dma_address(sg) is 64k-aligned and sg_dma_len(sg) is 64k (0x10000),
-then in the while loop, the "if ((offset..." test is false, since
-it tests for *greater than* 64k
+I was hoping one of the original libata HPA authors would review that in 
+depth and integrate.  (it no longer applies cleanly)
 
-So then ap->prd[idx].flags_len gets set to (0x10000 & 0xFFFF) = 0 !
+	Jeff
 
-So this sg element ends up with a zero length, even though the
-transfer size should be 64k.
 
-Is this correct behaviour, if not, should it be corrected ?
-Sorry if I'm just being paranoid !
 
-Thanks,
-MikeW
 
+--------------050501010104060403010006
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+
+From: Ben Collins <ben.collins@ubuntu.com>
+
+The original HPA patch that Kyle worked on has gone into current git
+without some fixes that we worked through late in the Ubuntu feisty
+release.  Here's the main copy of the notes I sent to Alan a few weeks ago
+in regards to the original patch, and a repatch against current git to fix
+things up.  Note we have released feisty with the patch attached (albeit we
+have HPA enabled by default), and we have not had any reports directly
+attributed to it.  However, in gutsy (devel for next release, based on
+current stock linux-2.6.git), we are already seeing reports of the same
+issues we already fixed.
+
+The issues we saw were mainly that some controllers didn't return the
+correct size from the SET_MAX command (sata_nv is a good example).  So I
+added a re IDENTIFY after the SET_MAX, and compared all the numbers.  If
+re-id was correct, but return value from SET_MAX wasn't we print a warning
+and use the IDENTIFY value regardless (since that's what the device is
+going to use).
+
+ata_hpa_resize() was changed to handle everything in a single call (checks
+for HPA support of the device, and whether ignore_hpa is set or not), and
+it also sets dev->n_sectors before returning.
+
+So far with this patch, we were able to fix all the problems we were seeing
+with it (except the sata_nv issue where we had to revert to not using adma
+for NO_DATA transactions, already reported to libata-dev).  We've not had
+any reports of further problems.
+
+Cc: Kyle McMartin <kyle@ubuntu.com>
+Signed-off-by: Ben Collins <bcollins@ubuntu.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ata/libata-core.c |  140 +++++++++++++++++++++++++-----------
+ 1 files changed, 100 insertions(+), 40 deletions(-)
+
+diff -puN drivers/ata/libata-core.c~cleanup-libata-hpa-support drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~cleanup-libata-hpa-support
++++ a/drivers/ata/libata-core.c
+@@ -819,16 +819,19 @@ void ata_id_c_string(const u16 *id, unsi
+ 
+ static u64 ata_tf_to_lba48(struct ata_taskfile *tf)
+ {
+-	u64 sectors = 0;
++	u64 sectors;
++	u32 high, low;
+ 
+-	sectors |= ((u64)(tf->hob_lbah & 0xff)) << 40;
+-	sectors |= ((u64)(tf->hob_lbam & 0xff)) << 32;
+-	sectors |= (tf->hob_lbal & 0xff) << 24;
+-	sectors |= (tf->lbah & 0xff) << 16;
+-	sectors |= (tf->lbam & 0xff) << 8;
+-	sectors |= (tf->lbal & 0xff);
++	high = (tf->hob_lbah << 16) |
++	       (tf->hob_lbam <<  8) |
++		tf->hob_lbal;
++	low  = (tf->lbah << 16) |
++	       (tf->lbam <<  8) |
++		tf->lbal;
+ 
+-	return ++sectors;
++	sectors = ((u64)high << 24) | low;
++
++	return sectors + 1;
+ }
+ 
+ static u64 ata_tf_to_lba(struct ata_taskfile *tf)
+@@ -970,52 +973,107 @@ static u64 ata_set_native_max_address(st
+ }
+ 
+ /**
++ *	ata_hpa_get_native_size	-	Get the native size of a disk
++ *	@dev: Device to get the size for
++ *
++ *	Read the size of an LBA28 or LBA48 disk with HPA features and
++ *	return the native size. Caller must check that the drive has HPA
++ *	feature set enabled.
++ */
++static u64 ata_hpa_get_native_size(struct ata_device *dev)
++{
++	if (ata_id_has_lba48(dev->id))
++		return ata_read_native_max_address_ext(dev);
++	else
++		return ata_read_native_max_address(dev);
++}
++
++
++static u64 ata_hpa_set_native_size(struct ata_device *dev, u64 new_sectors)
++{
++	if (ata_id_has_lba48(dev->id))
++		return ata_set_native_max_address_ext(dev, new_sectors);
++	else
++		return ata_set_native_max_address(dev, new_sectors);
++}
++
++static unsigned long long sectors_to_MB(unsigned long long n)
++{
++	n <<= 9;		/* make it bytes */
++	do_div(n, 1000000);	/* make it MB */
++	return n;
++}
++
++static u64 ata_id_n_sectors(const u16 *id);
++
++/**
+  *	ata_hpa_resize		-	Resize a device with an HPA set
+  *	@dev: Device to resize
+  *
+  *	Read the size of an LBA28 or LBA48 disk with HPA features and resize
+- *	it if required to the full size of the media. The caller must check
+- *	the drive has the HPA feature set enabled.
++ *	it if required to the full size of the media.
+  */
+ 
+-static u64 ata_hpa_resize(struct ata_device *dev)
++static int ata_hpa_resize(struct ata_device *dev)
+ {
+-	u64 sectors = dev->n_sectors;
+ 	u64 hpa_sectors;
+ 
+-	if (ata_id_has_lba48(dev->id))
+-		hpa_sectors = ata_read_native_max_address_ext(dev);
+-	else
+-		hpa_sectors = ata_read_native_max_address(dev);
++	if (!ata_id_hpa_enabled(dev->id))
++		return 0;
++
++	hpa_sectors = ata_hpa_get_native_size(dev);
+ 
+-	/* if no hpa, both should be equal */
+-	ata_dev_printk(dev, KERN_INFO, "%s 1: sectors = %lld, "
+-				"hpa_sectors = %lld\n",
+-		__FUNCTION__, (long long)sectors, (long long)hpa_sectors);
++	ata_dev_printk(dev, KERN_INFO, "%s: sectors = %lld, hpa_sectors = %lld\n",
++		__FUNCTION__, dev->n_sectors, hpa_sectors);
++
++	if (ata_ignore_hpa && hpa_sectors > dev->n_sectors) {
++		u64 ret_sectors;
+ 
+-	if (hpa_sectors > sectors) {
+ 		ata_dev_printk(dev, KERN_INFO,
+-			"Host Protected Area detected:\n"
+-			"\tcurrent size: %lld sectors\n"
+-			"\tnative size: %lld sectors\n",
+-			(long long)sectors, (long long)hpa_sectors);
+-
+-		if (ata_ignore_hpa) {
+-			if (ata_id_has_lba48(dev->id))
+-				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
+-			else
+-				hpa_sectors = ata_set_native_max_address(dev,
+-								hpa_sectors);
++			"Host Protected Area detected.\n"
++			"     current size : %llu sectors (%llu MB)\n"
++			"     native  size : %llu sectors (%llu MB)\n",
++			dev->n_sectors, sectors_to_MB(dev->n_sectors),
++			hpa_sectors, sectors_to_MB(hpa_sectors));
++
++		ret_sectors = ata_hpa_set_native_size(dev, hpa_sectors);
++		if (ret_sectors != hpa_sectors) {
++			ata_dev_printk(dev, KERN_ERR,
++				"SET of native returned %llu, expected %llu\n",
++				ret_sectors, hpa_sectors);
++		}
++
++		if (ret_sectors) {
++			u16 *id = (void *)dev->ap->sector_buf;
++			int rc;
++
++			/* Re read the IDENTITY to see if the set took */
++			rc = ata_dev_read_id(dev, &dev->class,
++					     ATA_READID_POSTRESET, id);
+ 
+-			if (hpa_sectors) {
+-				ata_dev_printk(dev, KERN_INFO, "native size "
+-					"increased to %lld sectors\n",
+-					(long long)hpa_sectors);
+-				return hpa_sectors;
++			if (rc) {
++				ata_dev_printk(dev, KERN_ERR,
++					"Failed to reread ID after SET_MAX (%d)\n",
++					rc);
++				return -EIO;
++			}
++
++			memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
++			dev->n_sectors = ata_id_n_sectors(dev->id);
++
++			if (dev->n_sectors == hpa_sectors) {
++				ata_dev_printk(dev, KERN_INFO,
++					"Native size increased to %llu sectors\n",
++					hpa_sectors);
++			} else {
++				ata_dev_printk(dev, KERN_ERR,
++					"Failed to set native size, "
++					"drive reports %llu sectors\n",
++					dev->n_sectors);
+ 			}
+ 		}
+ 	}
+-	return sectors;
++	return 0;
+ }
+ 
+ static u64 ata_id_n_sectors(const u16 *id)
+@@ -1914,8 +1972,10 @@ int ata_dev_configure(struct ata_device 
+ 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+ 			}
+ 
+-			if (ata_id_hpa_enabled(dev->id))
+-				dev->n_sectors = ata_hpa_resize(dev);
++			/* Check for HPA, and resize if requested */
++			rc = ata_hpa_resize(dev);
++			if (rc)
++				goto err_out_nosup;
+ 
+ 			/* config NCQ */
+ 			ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
+_
+
+
+--------------050501010104060403010006--
