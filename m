@@ -1,50 +1,56 @@
-From: Greg KH <gregkh@suse.de>
-Subject: [2.6.22.2 review 67/84] libata: add FUJITSU MHV2080BH to NCQ
-	blacklist
-Date: Tue, 7 Aug 2007 13:48:29 -0700
-Message-ID: <20070807204829.GQ23028@kroah.com>
-References: <20070807204034.882009319@mini.kroah.org>
+From: "Maciej Rutecki" <maciej.rutecki@gmail.com>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Tue, 7 Aug 2007 23:28:00 +0200
+Message-ID: <8db1092f0708071428lde63dc7o2b422ed81797a16e@mail.gmail.com>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>
+	 <8db1092f0708071309h5cf6f68bo80b44d9a2fbeabeb@mail.gmail.com>
+	 <200708072233.52500.rjw@sisk.pl> <200708072241.24091.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:59835 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965044AbXHGU4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 16:56:07 -0400
-Content-Disposition: inline; filename="libata-add-fujitsu-mhv2080bh-to-ncq-blacklist.patch"
-In-Reply-To: <20070807204157.GA23028@kroah.com>
+Received: from wa-out-1112.google.com ([209.85.146.177]:28573 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966170AbXHGV2B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 17:28:01 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2253328wah
+        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 14:28:01 -0700 (PDT)
+In-Reply-To: <200708072241.24091.rjw@sisk.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Serge van Thillo <nulleke@hotmail.com>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-From: Tejun Heo <htejun@gmail.com>
+> > Well, on my box (nx6325) with the appended (experimental) patch applied
+> > on top of 2.6.23-rc1 with the patchset from
+>
+> s/2.6.23-rc1/2.6.23-rc2/
+>
 
-Please warmly welcome the first member from FUJITSU to the prestigious
-NCQ spurious completion club.
+HP nx 6310, _old_ shutdown 2.6.23-rc2+above patches:
 
-This is reported by Serge Van Thillo in bugzilla bug 8730.
+1. Before:
+rutek:/home/maciek# /usr/sbin/smartctl --all -d ata /dev/sda | grep
+Power-Off_Retract_Count
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
+Always       -       61
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=8730
+2. Try suspend to disk, double spin down doesn't exist
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Serge van Thillo <nulleke@hotmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+3. Normal shutdown, double spin down exists, BUT NOTE: I have still
+old shutdown utility from Debian package.
 
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+4. After:
+rutek:/home/maciek# /usr/sbin/smartctl --all -d ata /dev/sda | grep
+Power-Off_Retract_Count
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
+Always       -       61
 
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3800,6 +3800,7 @@ static const struct ata_blacklist_entry 
- 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
-+	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
- 
- 	/* Devices with NCQ limits */
- 
+(it doesn't change=61).
+
+I wait for Michael, He has new shutdown from Sidux, and the same notebook.
 
 -- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
