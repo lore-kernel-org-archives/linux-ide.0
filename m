@@ -1,37 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
- HDS724040KLSA80
-Date: Tue, 7 Aug 2007 23:12:24 +0100
-Message-ID: <20070807231224.56390a53@the-village.bc.nu>
-References: <20070807054250.GQ13674@htj.dyndns.org>
-	<20070807162529.1781b21c@the-village.bc.nu>
-	<46B89177.2040209@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Wed, 8 Aug 2007 00:30:51 +0200
+Message-ID: <200708080030.52481.rjw@sisk.pl>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <200708072241.24091.rjw@sisk.pl> <8db1092f0708071428lde63dc7o2b422ed81797a16e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56496 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S938105AbXHGWFr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 18:05:47 -0400
-In-Reply-To: <46B89177.2040209@gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:35166 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756791AbXHGWVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2007 18:21:18 -0400
+In-Reply-To: <8db1092f0708071428lde63dc7o2b422ed81797a16e@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+Cc: Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-> Well, it's what the ide driver does.  BTW, according to the spec, we
-> need to test bit 14 and 15 of word 87 before trusting any value the
-> device reports in words 85-87 and 120, which libata currently doesn't
-> do.  Are we leaving this out intentionally (for broken devices) or just
-> did we just miss it?
+On Tuesday, 7 August 2007 23:28, Maciej Rutecki wrote:
+> > > Well, on my box (nx6325) with the appended (experimental) patch applied
+> > > on top of 2.6.23-rc1 with the patchset from
+> >
+> > s/2.6.23-rc1/2.6.23-rc2/
+> >
+> 
+> HP nx 6310, _old_ shutdown 2.6.23-rc2+above patches:
+> 
+> 1. Before:
+> rutek:/home/maciek# /usr/sbin/smartctl --all -d ata /dev/sda | grep
+> Power-Off_Retract_Count
+> 192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
+> Always       -       61
+> 
+> 2. Try suspend to disk, double spin down doesn't exist
+> 
+> 3. Normal shutdown, double spin down exists, BUT NOTE: I have still
+> old shutdown utility from Debian package.
 
-Much of our testing was short checks on validity bits [although thats
-really all paranoia]. Fixed in my tree and also made the hpa check match
-drivers/ide and check both.
+I should have said explicitly that my patch only affects hibernation (it
+doesn't touch the normal shutdown code path).
 
-Verified the rest, fixed the dword_io check.
-
-
-Think our flush_cache handling is still buggy in both old and new IDE btw.
-
+Greetings,
+Rafael
