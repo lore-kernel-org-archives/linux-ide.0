@@ -1,57 +1,40 @@
-From: MikeW <mw_phil@yahoo.co.uk>
-Subject: Re: libata-core.c: =?utf-8?b?YXRhX2ZpbGxfc2coKQ==?= ... sanity check on arithmentic ?
-Date: Wed, 8 Aug 2007 09:15:40 +0000 (UTC)
-Message-ID: <loom.20070808T110804-590@post.gmane.org>
-References: <loom.20070807T172323-813@post.gmane.org> <20070807180714.25b1a8c1@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Wed, 8 Aug 2007 10:35:03 +0100
+Message-ID: <20070808103503.2eb6303a@the-village.bc.nu>
+References: <20070807054250.GQ13674@htj.dyndns.org>
+	<20070807162529.1781b21c@the-village.bc.nu>
+	<46B89177.2040209@gmail.com>
+	<20070807175844.6818ffc9@the-village.bc.nu>
+	<46B92894.8060502@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:55138 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754119AbXHHJQA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Aug 2007 05:16:00 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1IIhe0-0005wF-1Z
-	for linux-ide@vger.kernel.org; Wed, 08 Aug 2007 11:15:56 +0200
-Received: from 57.66.65.38 ([57.66.65.38])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 08 Aug 2007 11:15:56 +0200
-Received: from mw_phil by 57.66.65.38 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 08 Aug 2007 11:15:56 +0200
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45172 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750775AbXHHJ21 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Aug 2007 05:28:27 -0400
+In-Reply-To: <46B92894.8060502@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
 
-Alan Cox <alan <at> lxorguk.ukuu.org.uk> writes:
+On Wed, 08 Aug 2007 11:21:08 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-> 
-> > So then ap->prd[idx].flags_len gets set to (0x10000 & 0xFFFF) = 0 !
-> > So this sg element ends up with a zero length, even though the
-> > transfer size should be 64k.
+> Alan Cox wrote:
+> >>> I'd rather know what is going on here. A drive can legitimately
+> >>> support LBA48 and HPA and refuse READ_NATIVE_MAX_EXT.
+> >> READ_NATIVE_MAX_EXT is mandatory if HPA && LBA48, no
 > > 
-> > Is this correct behaviour, if not, should it be corrected ?
+> > Ok the report in that thread is different. The offending Maxtor simply
+> > aborts the read_native_max_ext
 > 
-> The specification says that 0x0000 means 64K. A couple of controllers do
-> get this wrong and we did recently add a second sg list builder for those.
-> 
-> Perhaps a comment or two is in order ?
-> -
+> I'll resend sans ata_id_has_hpa() change.  Does that sound okay?  I
+> don't really think we can do anything other than blacklisting it.
 
-Thanks - but which specification is this ?
-
-As far as I am aware there is no spec for DMA controllers running ATA.
-
-Since DMA controller details may vary according to hardware, I
-would have expected that ata_fill_sg() would be one of the overloadable
-function entries with a driver-specific function that knew about
-the DMA controller niceties, and how to stuff a sg entry.
-
-Cheers,
-MikeW
-
-
-
-
+Other than finding someone who can test it with a different controller
+(especially SI3112 and old-ide) I agree
