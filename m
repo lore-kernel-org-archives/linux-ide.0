@@ -1,35 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata-core.c: ata_fill_sg() ... sanity check on arithmentic ?
-Date: Wed, 8 Aug 2007 12:23:26 +0100
-Message-ID: <20070808122326.171dbf65@the-village.bc.nu>
-References: <loom.20070807T172323-813@post.gmane.org>
-	<20070807180714.25b1a8c1@the-village.bc.nu>
-	<loom.20070808T110804-590@post.gmane.org>
-	<20070808110218.601fbda3@the-village.bc.nu>
-	<loom.20070808T121526-382@post.gmane.org>
+From: MikeW <mw_phil@yahoo.co.uk>
+Subject: Re: libata-core.c: =?utf-8?b?YXRhX2ZpbGxfc2coKQ==?= ... SATA AHCI
+Date: Wed, 8 Aug 2007 11:17:43 +0000 (UTC)
+Message-ID: <loom.20070808T131038-725@post.gmane.org>
+References: <loom.20070807T172323-813@post.gmane.org> <20070807180714.25b1a8c1@the-village.bc.nu> <loom.20070808T110804-590@post.gmane.org> <20070808110218.601fbda3@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53881 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751404AbXHHLPw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Aug 2007 07:15:52 -0400
-In-Reply-To: <loom.20070808T121526-382@post.gmane.org>
+Received: from main.gmane.org ([80.91.229.2]:55792 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342AbXHHLSE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Aug 2007 07:18:04 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1IIjY6-0000j0-EC
+	for linux-ide@vger.kernel.org; Wed, 08 Aug 2007 13:17:58 +0200
+Received: from 57.66.65.38 ([57.66.65.38])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 08 Aug 2007 13:17:58 +0200
+Received: from mw_phil by 57.66.65.38 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Wed, 08 Aug 2007 13:17:58 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: MikeW <mw_phil@yahoo.co.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> Thanks for clarifying - as you say, the spec is specific to PCI.
-> Our silicon has its own host interface which was confused by a length of zero !
+Alan Cox <alan <at> lxorguk.ukuu.org.uk> writes:
 
-You aren't the first. If you look at the current tree you'll see we now
-have
+>
+> SFF 8038i covers the standard taskfile IDE class PCI device interface for
+> PIO and DMA. It also covers the alternate ADMA interface.
+>
+>> Since DMA controller details may vary according to hardware, I
+>> would have expected that ata_fill_sg() would be one of the overloadable
+>> function entries with a driver-specific function that knew about
+>> the DMA controller niceties, and how to stuff a sg entry.
+>
+> It is not directly however but by overloading qc_prep. That makes more
+> sense than overloading fill_sg as not all controllers fit a simple
+> SFF like scatter/gather list model in the first place.
+>
+> Alan
+> -
 
-	ata_dumb_qc_prep()
+I note also that Intel's Serial ATA AHCI spec has a 22-bit DMA byte count
+in the PRDT, so 0 == 64k cannot be assumed here either.
 
-for interfaces that think 0x0000 is zero. Set that as your qc_prep method
-and set sg_tablesize in the driver to LIBATA_DUMB_MAX_PRD and it should
-work (we have to use a smaller sglist limit as the worst case is now 2
-entries per 64K block)
+Cheers,
+MikeW
+
