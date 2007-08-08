@@ -1,39 +1,34 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 08 Aug 2007 11:54:53 +0900
-Message-ID: <46B9307D.3000105@gmail.com>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>	 <46B8140E.3000509@gmail.com>  <1186497925.8780.78.camel@queen.suse.de> <1186514618.5622.9.camel@nx6310>
+Date: Wed, 08 Aug 2007 11:56:45 +0900
+Message-ID: <46B930ED.6040607@gmail.com>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <1186514618.5622.9.camel@nx6310> <8db1092f0708071309h5cf6f68bo80b44d9a2fbeabeb@mail.gmail.com> <200708072233.52500.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1186514618.5622.9.camel@nx6310>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michael Sedkowski <sedmich@gmail.com>
-Cc: trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from qb-out-0506.google.com ([72.14.204.238]:8407 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759598AbXHHC55 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 22:57:57 -0400
+Received: by qb-out-0506.google.com with SMTP id e11so25176qbe
+        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 19:57:55 -0700 (PDT)
+In-Reply-To: <200708072233.52500.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-Michael Sedkowski wrote:
-> I did some additional checking today...
-> On kernels prior to 2.6.22 line, the bug exists and manifests itself
-> exactly the same way. However, when I removed the "-h" flag
-> from /etc/init.d/halt, the drive spins down only once on "Power down"
-> message and there is no sign of the bug and the emergency unload count
-> remains constant. I've verified this on kernels 2.6.21.6; 2.6.20.4;
-> 2.6.18-4-686-Etch.
-> The obvious conclusion is that something must have changed it the 2.6.22
-> kernels, so that removing the "-h" has no effect.
-> I dunno if my observations are of any value, but I thought You should
-> know...
+Rafael J. Wysocki wrote:
+> Well, on my box (nx6325) with the appended (experimental) patch applied
+> on top of 2.6.23-rc1 with the patchset from
+> http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.23-rc2/patches/ , the
+> double spin down doesn't occur during hibernation and the system is shut down
+> notceably faster.
 
-Yeah, till 2.6.22, libata didn't spindown disks on suspend or power off
-which incremented emergency unload count on all normal systems, so only
-the ACPI S5 routine is spinning down the disk on you system.  The
-problem here is that now that libata is fixed there are two entities
-trying to spin down the disk and the disk is dumb enough to spin back up
-when FLUSH CACHE or STANDBYNOW is received while spun down.  :-(
-
-Thanks.
+Can you please explain what the patch does?  So, I take it that entering
+S4 also spins down the disk.  Does the patch remove the ACPI spin down
+or libata one?
 
 -- 
 tejun
