@@ -1,33 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] pata_hpt37x: actually clock HPT374 by 50 MHz DPLL
-Date: Wed, 8 Aug 2007 02:41:00 +0100
-Message-ID: <20070808024100.0d9d444d@the-village.bc.nu>
-References: <200708052245.16406.sshtylyov@ru.mvista.com>
-	<20070805202359.41fd0236@the-village.bc.nu>
-	<46B9131E.3040404@garzik.org>
-	<20070808021703.77114775@the-village.bc.nu>
-	<46B91ACD.2000104@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
+ HDS724040KLSA80
+Date: Wed, 08 Aug 2007 11:21:08 +0900
+Message-ID: <46B92894.8060502@gmail.com>
+References: <20070807054250.GQ13674@htj.dyndns.org>	<20070807162529.1781b21c@the-village.bc.nu>	<46B89177.2040209@gmail.com> <20070807175844.6818ffc9@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47282 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935591AbXHHBdh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 21:33:37 -0400
-In-Reply-To: <46B91ACD.2000104@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.190]:59370 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757567AbXHHCWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 22:22:18 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so22206rvb
+        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 19:22:17 -0700 (PDT)
+In-Reply-To: <20070807175844.6818ffc9@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, rah@bash.sh
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
 
-> > Its a real fix for a real bug. The 374 needs a bit more stuff which is
-> > sitting in my tree and I'll push for Sergei to comment tomorrow
+Alan Cox wrote:
+>>> I'd rather know what is going on here. A drive can legitimately
+>>> support LBA48 and HPA and refuse READ_NATIVE_MAX_EXT.
+>> READ_NATIVE_MAX_EXT is mandatory if HPA && LBA48, no
 > 
-> 
-> OK, thanks.  Do you also ACK
-> 
-> [PATCH 2/2] pata_hpt{37x|3x2n}: fix clock reporting
+> Ok the report in that thread is different. The offending Maxtor simply
+> aborts the read_native_max_ext
 
+I'll resend sans ata_id_has_hpa() change.  Does that sound okay?  I
+don't really think we can do anything other than blacklisting it.
 
-Yep
+-- 
+tejun
