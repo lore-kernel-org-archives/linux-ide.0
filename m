@@ -1,35 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: implement BROKEN_HPA horkage and apply it to
- HDS724040KLSA80
-Date: Wed, 08 Aug 2007 11:21:08 +0900
-Message-ID: <46B92894.8060502@gmail.com>
-References: <20070807054250.GQ13674@htj.dyndns.org>	<20070807162529.1781b21c@the-village.bc.nu>	<46B89177.2040209@gmail.com> <20070807175844.6818ffc9@the-village.bc.nu>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Wed, 08 Aug 2007 11:54:53 +0900
+Message-ID: <46B9307D.3000105@gmail.com>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>	 <46B8140E.3000509@gmail.com>  <1186497925.8780.78.camel@queen.suse.de> <1186514618.5622.9.camel@nx6310>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:59370 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757567AbXHHCWS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 22:22:18 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so22206rvb
-        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 19:22:17 -0700 (PDT)
-In-Reply-To: <20070807175844.6818ffc9@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1186514618.5622.9.camel@nx6310>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Michael Sedkowski <sedmich@gmail.com>
+Cc: trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org, kelk1@comcast.net, lcapitulino@mandriva.com.br
 
-Alan Cox wrote:
->>> I'd rather know what is going on here. A drive can legitimately
->>> support LBA48 and HPA and refuse READ_NATIVE_MAX_EXT.
->> READ_NATIVE_MAX_EXT is mandatory if HPA && LBA48, no
-> 
-> Ok the report in that thread is different. The offending Maxtor simply
-> aborts the read_native_max_ext
+Michael Sedkowski wrote:
+> I did some additional checking today...
+> On kernels prior to 2.6.22 line, the bug exists and manifests itself
+> exactly the same way. However, when I removed the "-h" flag
+> from /etc/init.d/halt, the drive spins down only once on "Power down"
+> message and there is no sign of the bug and the emergency unload count
+> remains constant. I've verified this on kernels 2.6.21.6; 2.6.20.4;
+> 2.6.18-4-686-Etch.
+> The obvious conclusion is that something must have changed it the 2.6.22
+> kernels, so that removing the "-h" has no effect.
+> I dunno if my observations are of any value, but I thought You should
+> know...
 
-I'll resend sans ata_id_has_hpa() change.  Does that sound okay?  I
-don't really think we can do anything other than blacklisting it.
+Yeah, till 2.6.22, libata didn't spindown disks on suspend or power off
+which incremented emergency unload count on all normal systems, so only
+the ACPI S5 routine is spinning down the disk on you system.  The
+problem here is that now that libata is fixed there are two entities
+trying to spin down the disk and the disk is dumb enough to spin back up
+when FLUSH CACHE or STANDBYNOW is received while spun down.  :-(
+
+Thanks.
 
 -- 
 tejun
