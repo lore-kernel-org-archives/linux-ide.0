@@ -1,34 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 08 Aug 2007 11:56:45 +0900
-Message-ID: <46B930ED.6040607@gmail.com>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <1186514618.5622.9.camel@nx6310> <8db1092f0708071309h5cf6f68bo80b44d9a2fbeabeb@mail.gmail.com> <200708072233.52500.rjw@sisk.pl>
+Date: Wed, 8 Aug 2007 01:06:07 -0300
+Message-ID: <20070808040607.GA16466@khazad-dum.debian.net>
+References: <fa.kWUtPRLMmU/fKL6dyOOVKsSM0fg@ifi.uio.no> <fa.EbjjD+/NapKvm3jfMLnkxumomC0@ifi.uio.no> <fa.dm4O1sGL4RetYq2szbwwJT3cf2c@ifi.uio.no> <fa.7tYfpSdE8/lmfK5ulSN+/6TRSbw@ifi.uio.no> <fa.R1sVaL6mATofNd18aEZgwlczb8M@ifi.uio.no> <fa.Z030SpvZYAHux0f8UtlnJwatsvY@ifi.uio.no> <46B90AE0.2070403@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.238]:8407 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759598AbXHHC55 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 22:57:57 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so25176qbe
-        for <linux-ide@vger.kernel.org>; Tue, 07 Aug 2007 19:57:55 -0700 (PDT)
-In-Reply-To: <200708072233.52500.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <46B90AE0.2070403@shaw.ca>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-Rafael J. Wysocki wrote:
-> Well, on my box (nx6325) with the appended (experimental) patch applied
-> on top of 2.6.23-rc1 with the patchset from
-> http://www.sisk.pl/kernel/hibernation_and_suspend/2.6.23-rc2/patches/ , the
-> double spin down doesn't occur during hibernation and the system is shut down
-> notceably faster.
+On Tue, 07 Aug 2007, Robert Hancock wrote:
+>> You *do* have to worry about it in any box you turn off daily.  Desktop
+>> HDs will croak fast in that scenario, laptop HDs less so, but still too
+>> fast.  A very good laptop HD can last about 20k emergency unloads (this
+>> is a unit that can do about 600k normal unloads in its lifetime).
+>> Desktop and server HDs don't even come close to those numbers, last time
+>> I checked.
+>
+> It only matters on hard drives which actually use load-unload heads. Lots
+> of desktop/server drives (perhaps some laptop ones as well) still use
+> contact start/stop, which doesn't remove the heads from the platters on
 
-Can you please explain what the patch does?  So, I take it that entering
-S4 also spins down the disk.  Does the patch remove the ACPI spin down
-or libata one?
+I am not so sure about that.
+
+Please correct me if I am wrong, but contact stop in an emergency retract
+shakes the head assembly badly as well. It subjects the head assembly to
+higher acceleration than a normal seek, and a nasty impulse at impact with
+the stopper.  And I very much doubt it is nice to the heads to slide into
+the parking zone at high speed and hit the bumper while over it.
+
+Unless I missed something, I don't why an emergency retract would not be as
+big a problem as an emergency unload.
+
+Maybe we should hunt down some proper datasheets for drives lacking head
+load/unload technology, and check what they say about emergency unloads...
 
 -- 
-tejun
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
