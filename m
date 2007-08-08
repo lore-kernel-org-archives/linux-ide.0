@@ -1,40 +1,82 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 08 Aug 2007 23:30:18 +0900
-Message-ID: <46B9D37A.4070403@gmail.com>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>	 <46B8140E.3000509@gmail.com>  <1186497925.8780.78.camel@queen.suse.de> <1186514618.5622.9.camel@nx6310> <46B9307D.3000105@gmail.com> <46B9CE79.5030307@rtr.ca> <46B9CFB3.6020402@gmail.com> <46B9D219.6030509@rtr.ca>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: libata git tree, mbox queue status and contents
+Date: Wed, 08 Aug 2007 10:42:22 -0400
+Message-ID: <46B9D64E.6070609@rtr.ca>
+References: <46B35344.3090208@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46B9D219.6030509@rtr.ca>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:3698 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764900AbXHHOmZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Aug 2007 10:42:25 -0400
+In-Reply-To: <46B35344.3090208@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alan <alan@lxorguk.ukuu.org.uk>
 
-Mark Lord wrote:
-> Heh.. I haven't instrumented it yet, but I did discover a bit more about
-> it:
-> 
-> The Power-Off_Retract_Count incrmenents *only* when there's data in the
-> on-drive write-cache.  So if I haven't written anything significantly large
-> before suspending, then it often does NOT increment the retract counter.
-> 
-> But if I copy a couple of multi-MB files around and then suspend (to RAM),
-> the retract count gets incremented.
-> 
-> So I've now just stuck "hdparm -F /dev/sda" into my suspend script,
-> and that cures the problem completely for me.  "-F" does a FLUSH_CACHE,
-> and requires a recent copy of hdparm.
-> 
-> Perhaps libata should also do a FLUSH_CACHE before any STANDBYNOW command,
-> prior to entering STR, which is what my script is currently now doing..
-> 
-> I'll instrument libata and see what the current sequence is.
+Jeff,
 
-Hmmmm.. libata should issue FLUSH CACHE on STR too.  sd_suspend() and
-sd_shutdown() are pretty similar after all.
+This patch (below) is needed by WD drives that powerup-in-standby.
 
--- 
-tejun
+Cheers
+
+Mark
+
+-------- Original Message --------
+Subject: + libata-adjust-libata-to-ignore-errors-after.patch added to -mm tree
+Date: Wed, 18 Jul 2007 17:03:29 -0700
+From: akpm@linux-foundation.org
+To: mm-commits@vger.kernel.org
+CC: rpower@sysreset.com, htejun@gmail.com, jeff@garzik.org,	liml@rtr.ca
+
+
+The patch titled
+     libata: adjust libata to ignore errors after spinup
+has been added to the -mm tree.  Its filename is
+     libata-adjust-libata-to-ignore-errors-after.patch
+
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
+
+See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+out what to do about this
+
+------------------------------------------------------
+Subject: libata: adjust libata to ignore errors after spinup
+From: Ryan Power <rpower@sysreset.com>
+
+Adjust libata to ignore errors after spinup
+
+This patch is to ignore errors from the spinup attempt if the drive is
+in the "standby id" state.
+
+Signed-off-by: Ryan Power <rpower@sysreset.com>
+Acked-by: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ata/libata-core.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN /dev/null /dev/null
+diff -puN drivers/ata/libata-core.c~libata-adjust-libata-to-ignore-errors-after drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-adjust-libata-to-ignore-errors-after
++++ a/drivers/ata/libata-core.c
+@@ -1723,7 +1723,7 @@ int ata_dev_read_id(struct ata_device *d
+ 		tf.protocol = ATA_PROT_NODATA;
+ 		tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-		if (err_mask) {
++		if (err_mask && id[2] != 0x738c) {
+ 			rc = -EIO;
+ 			reason = "SPINUP failed";
+ 			goto err_out;
+_
+
+Patches currently in -mm which might be from rpower@sysreset.com are
+
+libata-adjust-libata-to-ignore-errors-after.patch
