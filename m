@@ -1,79 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Tue, 7 Aug 2007 21:07:33 -0400
-Message-ID: <20070808010733.GA3849@havoc.gtf.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] pata_hpt37x: actually clock HPT374 by 50 MHz DPLL
+Date: Wed, 8 Aug 2007 02:17:03 +0100
+Message-ID: <20070808021703.77114775@the-village.bc.nu>
+References: <200708052245.16406.sshtylyov@ru.mvista.com>
+	<20070805202359.41fd0236@the-village.bc.nu>
+	<46B9131E.3040404@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:54094 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757864AbXHHBHe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Aug 2007 21:07:34 -0400
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46235 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933776AbXHHBKK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 21:10:10 -0400
+In-Reply-To: <46B9131E.3040404@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, rah@bash.sh
+
+On Tue, 07 Aug 2007 20:49:34 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> Alan Cox wrote:
+> >>  		/* Compute DPLL */
+> >> -		dpll = 2;
+> >> -		if (port->udma_mask & 0xE0)
+> >> -			dpll = 3;
+> >> +		dpll = (port->udma_mask & 0xC0) ? 3 : 2;
+> > 
+> > Gak, I'd much rather people kept to the nice easy to read if() but fine
+> > 
+> > is_author_p()?Signed-off-by:Acked-by Alan Cox <alan@redhat.com>
+> 
+> Does your ACK stand, even though it still locks up for Bob Ham?
 
 
-The only non-fix are two sata_mv PCI ID additions.
-
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ata_piix.c    |    2 +-
- drivers/ata/pata_isapnp.c |    2 ++
- drivers/ata/sata_mv.c     |    3 +++
- 3 files changed, 6 insertions(+), 1 deletions(-)
-
-Alan Cox (1):
-      sata_mv: PCI IDs for Hightpoint RocketRaid 1740/1742
-
-Jeff Garzik (1):
-      [libata] pata_isapnp: replace missing module device table
-
-Tejun Heo (1):
-      ata_piix: update map 10b for ich8m
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a78832e..c5b4509 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -436,7 +436,7 @@ static const struct piix_map_db ich8_map_db = {
- 		/* PM   PS   SM   SS       MAP */
- 		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI) */
- 		{  RV,  RV,  RV,  RV },
--		{  IDE,  IDE,  NA,  NA }, /* 10b (IDE mode) */
-+		{  P0,  P2, IDE, IDE }, /* 10b (IDE mode) */
- 		{  RV,  RV,  RV,  RV },
- 	},
- };
-diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
-index 5525518..91a396f 100644
---- a/drivers/ata/pata_isapnp.c
-+++ b/drivers/ata/pata_isapnp.c
-@@ -139,6 +139,8 @@ static struct pnp_device_id isapnp_devices[] = {
- 	{.id = ""}
- };
- 
-+MODULE_DEVICE_TABLE(pnp, isapnp_devices);
-+
- static struct pnp_driver isapnp_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= isapnp_devices,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 8ec5208..3acf65e 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -621,6 +621,9 @@ static const struct pci_device_id mv_pci_tbl[] = {
- 	{ PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
- 	{ PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
- 	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
-+	/* RocketRAID 1740/174x have different identifiers */
-+	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
-+	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
- 
- 	{ PCI_VDEVICE(MARVELL, 0x6040), chip_604x },
- 	{ PCI_VDEVICE(MARVELL, 0x6041), chip_604x },
+Its a real fix for a real bug. The 374 needs a bit more stuff which is
+sitting in my tree and I'll push for Sergei to comment tomorrow
