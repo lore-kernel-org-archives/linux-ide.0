@@ -1,50 +1,84 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 08 Aug 2007 13:04:50 -0400
-Message-ID: <46B9F7B2.6050604@rtr.ca>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>	 <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no>	 <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no>	 <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no>	 <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>	 <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca>	 <46B8140E.3000509@gmail.com>  <1186497925.8780.78.camel@queen.suse.de> <1186514618.5622.9.camel@nx6310> <46B9307D.3000105@gmail.com> <46B9CE79.5030307@rtr.ca> <46B9CFB3.6020402@gmail.com> <46B9D219.6030509@rtr.ca> <46B9DF91.7050709@rtr.ca> <46B9E2C4.7070307@rtr.ca> <46B9ED48.1010901@gmail.com>
+From: "Brian J. Murrell" <brian@interlinx.bc.ca>
+Subject: Re: [SOLVED] problems while mounting /boot partition
+Date: Wed, 08 Aug 2007 14:18:16 -0400
+Message-ID: <1186597096.6259.22.camel@pc.ilinx>
+References: <1186504459.6949.40.camel@pc.ilinx>
+	 <46B9EF1D.4010907@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46B9ED48.1010901@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Michael Sedkowski <sedmich@gmail.com>, trenn@suse.de, Robert Hancock <hancockr@shaw.ca>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N3wVdtNzK3vUEvd7wAZ6"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S937955AbXHHSSd@vger.kernel.org>
+In-Reply-To: <46B9EF1D.4010907@googlemail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Further to this, if I have an active-writer running at the time of suspend,
->> then even my scripted "sleep 1" is not good enough, as additional writes
->> are still happening before/after the flush.
->>
->> Now I'll reboot and try it with the "sleep 1" hardcoded inside
->> sd_suspend().
-> 
-> Hmmm... queue quiescing might be broken.  Can you verify there's no
-> command issued between STANDBYNOW1 and suspending?
 
-Yeah, I verified that already.  Nothing happens other than
-the FLUSH_CACHE_EXT and STANDBY commands.
+--=-N3wVdtNzK3vUEvd7wAZ6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've now tried adding various sleeps into the sd_suspend() routine.
-The sleeps actually do sleep, but they don't seem to solve the problem there.
-The "hdparm -F /dev/sda ; sleep 1" inside my script actually works better,
-though even it fails if there's a ton of writes happening.
+On Wed, 2007-08-08 at 18:28 +0200, Michal Piotrowski wrote:
+> Hi Brian,
 
-I put a 4-second sleep in front of the sd_start_stop_device() call,
-and here is what I observed:
+Hi Michal,
 
-the disk light flickers briefly,
-then the system does absolutely nothing for the 4-seconds,
-and then it flickers again,
-and then the light comes on solid for a second or two,
-and then it suspends.
+> Brian J. Murrell pisze:
+> > I am using Ubuntu Gutsy, which is the in-development branch heading for
+> > their next stable release.
+>=20
+> You forgot about message subject, so no one has read this report.
 
-I am ssssoooooooo confused now.  :)
+Indeed.  Very unfortunate.  I did re-post with a subject but I have not
+seen it show up yet, which I have been waiting for to post the solution.
 
-We need Eric (from Seagate) to enlighten us.
+Maybe I will just do that here and again if it shows up with the subject
+posted.
 
-Cheers
+The crux of the problem is that the real partitions are being
+mapped/managed by device mapper, which is being used by LVM:
 
+$ ls -l /dev/mapper/
+total 0
+crw-rw---- 1 root root 10, 63 2007-08-08 04:56 control
+lrwxrwxrwx 1 root root      7 2007-08-08 04:56 hda1 -> ../dm-0
+lrwxrwxrwx 1 root root      7 2007-08-08 04:56 hda2 -> ../dm-1
+lrwxrwxrwx 1 root root      7 2007-08-08 04:56 hda3 -> ../dm-2
+
+This is of course causing those partitions to be opened exclusively,
+preventing any further uses (i.e. sys_mount()) from being able to use
+them.  Only hda3 of those above is actually an LVM PV.  hda1 is an ext3
+filesystem (/boot) and hda2 is a FAT32 (could even be FAT16) filesystem.
+
+Of course, mounting /dev/dm-0 instead of /dev/hda1 solves the problem.
+
+Why this started with Ubuntu's 2.6.22 kernel in Gutsy, I'm not sure.
+Whether it's a new DM feature or some change in the way Ubuntu handles
+devices, I don't know.  Whatever the case, they need to fix
+their /dev/disk/by-uuid mappings anyway:
+
+$ ls -l /dev/disk/by-uuid/ | grep hda
+lrwxrwxrwx 1 root root 10 2007-08-08 08:56 12b8250a-d031-4ee1-b486-5e67478d=
+06b4 -> ../../hda1
+
+Cheers,
+b.
+
+--=20
+A day in the yard with my son is just like a day at work.  He goes
+hunting around for stuff and brings it back to me and says: "Hey Dad,
+look what I found.  The money is for me and the screw is for you."
+
+--=-N3wVdtNzK3vUEvd7wAZ6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBGugjol3EQlGLyuXARAkg2AKC9mhfJlDKqmdbxT3DPuZwd7DRsswCg5nrL
++0fg0jasartopv6a936FsXM=
+=7E4D
+-----END PGP SIGNATURE-----
+
+--=-N3wVdtNzK3vUEvd7wAZ6--
