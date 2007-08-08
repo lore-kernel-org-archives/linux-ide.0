@@ -1,31 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_ali: trouble with DVD combo
-Date: Wed, 8 Aug 2007 02:19:38 +0100
-Message-ID: <20070808021938.44e45c32@the-village.bc.nu>
-References: <20070808005739.221200@gmx.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] pata_hpt37x: actually clock HPT374 by 50 MHz DPLL
+Date: Tue, 07 Aug 2007 21:22:21 -0400
+Message-ID: <46B91ACD.2000104@garzik.org>
+References: <200708052245.16406.sshtylyov@ru.mvista.com>	<20070805202359.41fd0236@the-village.bc.nu>	<46B9131E.3040404@garzik.org> <20070808021703.77114775@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43704 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933525AbXHHBME (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2007 21:12:04 -0400
-In-Reply-To: <20070808005739.221200@gmx.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:33513 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934458AbXHHBWX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2007 21:22:23 -0400
+In-Reply-To: <20070808021703.77114775@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Cornell Gonschior <df6fr@gmx.de>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, rah@bash.sh
 
-> The boot process takes several minutes when trying to configure the Combo
-> drive with UDMA/33 and finally settles with UDMA/25:
+Alan Cox wrote:
+> On Tue, 07 Aug 2007 20:49:34 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
+> 
+>> Alan Cox wrote:
+>>>>  		/* Compute DPLL */
+>>>> -		dpll = 2;
+>>>> -		if (port->udma_mask & 0xE0)
+>>>> -			dpll = 3;
+>>>> +		dpll = (port->udma_mask & 0xC0) ? 3 : 2;
+>>> Gak, I'd much rather people kept to the nice easy to read if() but fine
+>>>
+>>> is_author_p()?Signed-off-by:Acked-by Alan Cox <alan@redhat.com>
+>> Does your ACK stand, even though it still locks up for Bob Ham?
+> 
+> 
+> Its a real fix for a real bug. The 374 needs a bit more stuff which is
+> sitting in my tree and I'll push for Sergei to comment tomorrow
 
-Known problem. Still under investigation and not yet understood fully.
 
-> Is this a problem with my drive? It works fine with alim15x3, so.
-> Did I forget to enable something in the kernel?
+OK, thanks.  Do you also ACK
 
-Please send me an lspci -vvxxx after booting both the libata and non
-libata kernel.
+[PATCH 2/2] pata_hpt{37x|3x2n}: fix clock reporting
 
-Alan
+?
+
+	Jeff
+
+
