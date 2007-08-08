@@ -1,60 +1,44 @@
-From: Michael Sedkowski <sedmich@gmail.com>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 08 Aug 2007 11:29:37 +0200
-Message-ID: <1186565377.4410.2.camel@nx6310>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no>
-	 <8db1092f0708071309h5cf6f68bo80b44d9a2fbeabeb@mail.gmail.com>
-	 <200708072233.52500.rjw@sisk.pl> <200708072241.24091.rjw@sisk.pl>
-	 <8db1092f0708071428lde63dc7o2b422ed81797a16e@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata-core.c: ata_fill_sg() ... sanity check on arithmentic ?
+Date: Wed, 8 Aug 2007 11:02:18 +0100
+Message-ID: <20070808110218.601fbda3@the-village.bc.nu>
+References: <loom.20070807T172323-813@post.gmane.org>
+	<20070807180714.25b1a8c1@the-village.bc.nu>
+	<loom.20070808T110804-590@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <8db1092f0708071428lde63dc7o2b422ed81797a16e@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, trenn@suse.de, Tejun Heo <htejun@gmail.com>, Robert Hancock <hancockr@shaw.ca>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57103 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754016AbXHHJyr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Aug 2007 05:54:47 -0400
+In-Reply-To: <loom.20070808T110804-590@post.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: MikeW <mw_phil@yahoo.co.uk>
+Cc: linux-ide@vger.kernel.org
 
-Dnia 07-08-2007, Wt o godzinie 23:28 +0200, Maciej Rutecki napisa=C5=82=
-(a):
-> > > Well, on my box (nx6325) with the appended (experimental) patch a=
-pplied
-> > > on top of 2.6.23-rc1 with the patchset from
-> >
-> > s/2.6.23-rc1/2.6.23-rc2/
-> >
->=20
-> HP nx 6310, _old_ shutdown 2.6.23-rc2+above patches:
->=20
-> 1. Before:
-> rutek:/home/maciek# /usr/sbin/smartctl --all -d ata /dev/sda | grep
-> Power-Off_Retract_Count
-> 192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
-> Always       -       61
->=20
-> 2. Try suspend to disk, double spin down doesn't exist
->=20
-> 3. Normal shutdown, double spin down exists, BUT NOTE: I have still
-> old shutdown utility from Debian package.
->=20
-> 4. After:
-> rutek:/home/maciek# /usr/sbin/smartctl --all -d ata /dev/sda | grep
-> Power-Off_Retract_Count
-> 192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age
-> Always       -       61
->=20
-> (it doesn't change=3D61).
->=20
-> I wait for Michael, He has new shutdown from Sidux, and the same note=
-book.
->=20
-Same here. On suspend to disk the problem disappeared, on shut down
-remained unchanged, although it is a bit faster. The emergency unload
-count remain unchanged. I have the updated shut down...
+> > The specification says that 0x0000 means 64K. A couple of controllers do
+> > get this wrong and we did recently add a second sg list builder for those.
+> > 
+> > Perhaps a comment or two is in order ?
+> > -
+> 
+> Thanks - but which specification is this ?
+> 
+> As far as I am aware there is no spec for DMA controllers running ATA.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SFF 8038i covers the standard taskfile IDE class PCI device interface for
+PIO and DMA. It also covers the alternate ADMA interface.
+
+> Since DMA controller details may vary according to hardware, I
+> would have expected that ata_fill_sg() would be one of the overloadable
+> function entries with a driver-specific function that knew about
+> the DMA controller niceties, and how to stuff a sg entry.
+
+It is -n ot directly however but by overloading qc_prep. That makes more
+sense than overloading fill_sg as not all controllers fit a simple
+SFF like scatter/gather list model in the first place.
+
+Alan
