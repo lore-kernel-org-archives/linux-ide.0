@@ -1,50 +1,27 @@
-From: Al Boldi <a1426z@gawab.com>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Wed, 8 Aug 2007 21:58:32 +0300
-Message-ID: <200708082158.32806.a1426z@gawab.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/4] Updated AN patches, now without gendisk
+Date: Wed, 8 Aug 2007 12:07:39 -0700
+Message-ID: <20070808120739.c3097d19.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S938262AbXHHS6d@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:38426 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764111AbXHHTKb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Aug 2007 15:10:31 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-Tejun Heo  wrote:
-> Mark Lord wrote:
-> > Heh.. I haven't instrumented it yet, but I did discover a bit more about
-> > it:
-> >
-> > The Power-Off_Retract_Count incrmenents *only* when there's data in the
-> > on-drive write-cache.  So if I haven't written anything significantly
-> > large before suspending, then it often does NOT increment the retract
-> > counter.
-> >
-> > But if I copy a couple of multi-MB files around and then suspend (to
-> > RAM), the retract count gets incremented.
-> >
-> > So I've now just stuck "hdparm -F /dev/sda" into my suspend script,
-> > and that cures the problem completely for me.  "-F" does a FLUSH_CACHE,
-> > and requires a recent copy of hdparm.
-> >
-> > Perhaps libata should also do a FLUSH_CACHE before any STANDBYNOW
-> > command, prior to entering STR, which is what my script is currently now
-> > doing..
-> >
-> > I'll instrument libata and see what the current sequence is.
->
-> Hmmmm.. libata should issue FLUSH CACHE on STR too.  sd_suspend() and
-> sd_shutdown() are pretty similar after all.
+Hello,
+Here is an updated set of patches that implement Asynchronous Notification
+support for ATAPI devices.  In this version I no longer export the AN
+capability through genhd, and the uevent is sent by the scsi_device 
+instead of gendisk.  I added a generic SCSI device event mechanism so
+that it can be expanded in the future with other types of events.  Please
+let me know what you think.
 
-IMHO, this is a mess because we are essentially trying to work around 
-firmware bugs, which may only be solved by having the kernel load a 
-user-supplied shutdown sequence, instead of hardcoding it into the kernel.
-
-
-Thanks!
-
---
-Al
+Kristen
+-- 
