@@ -1,131 +1,101 @@
-From: Sebastian Witt <hasw@hasw.net>
-Subject: sata_promise: Warning/Errors with SATA300 TX4 and SAMSUNG HD501LJ
-Date: Thu, 09 Aug 2007 23:19:09 +0200
-Message-ID: <46BB84CD.8080006@hasw.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_artop: fix UDMA5 for AEC6280[R] and UDMA6 for AEC6880[R]
+Date: Thu, 9 Aug 2007 23:19:34 +0200
+Message-ID: <200708092319.34828.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42756 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755490AbXHIVTW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Aug 2007 17:19:22 -0400
+Received: from nf-out-0910.google.com ([64.233.182.190]:34923 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754921AbXHIVXD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 17:23:03 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so167949nfb
+        for <linux-ide@vger.kernel.org>; Thu, 09 Aug 2007 14:23:02 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
-
-Hello,
-
-I'm using a Promise SATA300 TX4 with SAMSUNG HD501LJ harddisks on kernel 2.6.21. 
-On high disk load sometimes warning/error messages are printed out:
-
-...
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata4.00: cmd c8/00:08:8f:7f:85/00:00:00:00:00/ef tag 0 cdb 0x0 data 4096 in
-          res 50/00:00:96:7f:85/00:00:11:00:00/ef Emask 0x1 (device error)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-...
-
-They are not happening very often (three in the last few days) and also
-no other problems occured (filesystem/data ok).
-
-dmesg:
-...
-scsi0 : sata_promise
-ata1: SATA link down (SStatus 0 SControl 300)
-scsi1 : sata_promise
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: ATA-8: SAMSUNG HD501LJ, CR100-10, max UDMA7
-ata2.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata2.00: configured for UDMA/133
-scsi2 : sata_promise
-ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3.00: ATA-8: SAMSUNG HD501LJ, CR100-10, max UDMA7
-ata3.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata3.00: configured for UDMA/133
-scsi3 : sata_promise
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.00: ATA-8: SAMSUNG HD501LJ, CR100-10, max UDMA7
-ata4.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata4.00: configured for UDMA/133
-scsi 1:0:0:0: Direct-Access     ATA      SAMSUNG HD501LJ  CR10 PQ: 0 ANSI: 5
-sd 1:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 1:0:0:0: [sda] Write Protect is off
-sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-sd 1:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-sd 1:0:0:0: [sda] Write Protect is off
-sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-  sda: sda1
-sd 1:0:0:0: [sda] Attached SCSI disk
-sd 1:0:0:0: Attached scsi generic sg0 type 0
-scsi 2:0:0:0: Direct-Access     ATA      SAMSUNG HD501LJ  CR10 PQ: 0 ANSI: 5
-sd 2:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-sd 2:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-  sdb: sdb1
-sd 2:0:0:0: [sdb] Attached SCSI disk
-sd 2:0:0:0: Attached scsi generic sg1 type 0
-scsi 3:0:0:0: Direct-Access     ATA      SAMSUNG HD501LJ  CR10 PQ: 0 ANSI: 5
-sd 3:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdc] Write Protect is off
-sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-sd 3:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdc] Write Protect is off
-sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-  sdc: sdc1
-sd 3:0:0:0: [sdc] Attached SCSI disk
-sd 3:0:0:0: Attached scsi generic sg2 type 0
-....
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata4.00: cmd 25/00:28:d7:51:a5/00:00:11:00:00/e0 tag 0 cdb 0x0 data 20480 in
-          res 50/00:00:fe:51:a5/00:00:11:00:00/e0 Emask 0x1 (device error)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-sd 3:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdc] Write Protect is off
-sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata4.00: cmd c8/00:08:8f:7f:85/00:00:00:00:00/ef tag 0 cdb 0x0 data 4096 in
-          res 50/00:00:96:7f:85/00:00:11:00:00/ef Emask 0x1 (device error)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-sd 3:0:0:0: [sdc] 976773168 512-byte hardware sectors (500108 MB)
-sd 3:0:0:0: [sdc] Write Protect is off
-sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
-ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata3.00: cmd 25/00:80:2f:fd:c2/00:00:1a:00:00/e0 tag 0 cdb 0x0 data 65536 in
-          res 50/00:00:ae:fd:c2/00:00:1a:00:00/e0 Emask 0x1 (device error)
-ata3.00: configured for UDMA/133
-ata3: EH complete
-sd 2:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
-sd 2:0:0:0: [sdb] Write Protect is off
-sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO 
-or FUA
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Some ideas? Not optimal/not good/bad/very bad?
+Maximum supported UDMA mode for AEC6280[R] is UDMA5 (not UDMA4)
+and for AEC6880[R] it is UDMA6 (not UDMA5):
 
-Regards,
-Sebastian
+* Fix the problem by adding missing struct ata_port_info to artop_init_one().
+
+* Use the right naming (s/626/628/).
+
+* Bump driver version.
+
+Fixes IDE->libata regression, problem was never present in IDE aec62xx driver.
+
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ata/pata_artop.c |   19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+Index: b/drivers/ata/pata_artop.c
+===================================================================
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -2,6 +2,7 @@
+  *    pata_artop.c - ARTOP ATA controller driver
+  *
+  *	(C) 2006 Red Hat <alan@redhat.com>
++ *	(C) 2007 Bartlomiej Zolnierkiewicz
+  *
+  *    Based in part on drivers/ide/pci/aec62xx.c
+  *	Copyright (C) 1999-2002	Andre Hedrick <andre@linux-ide.org>
+@@ -28,7 +29,7 @@
+ #include <linux/ata.h>
+ 
+ #define DRV_NAME	"pata_artop"
+-#define DRV_VERSION	"0.4.3"
++#define DRV_VERSION	"0.4.4"
+ 
+ /*
+  *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
+@@ -430,7 +431,7 @@ static int artop_init_one (struct pci_de
+ 		.udma_mask 	= ATA_UDMA4,
+ 		.port_ops	= &artop6260_ops,
+ 	};
+-	static const struct ata_port_info info_626x_fast = {
++	static const struct ata_port_info info_628x = {
+ 		.sht		= &artop_sht,
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+@@ -438,6 +439,14 @@ static int artop_init_one (struct pci_de
+ 		.udma_mask 	= ATA_UDMA5,
+ 		.port_ops	= &artop6260_ops,
+ 	};
++	static const struct ata_port_info info_628x_fast = {
++		.sht		= &artop_sht,
++		.flags		= ATA_FLAG_SLAVE_POSS,
++		.pio_mask	= 0x1f,	/* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask 	= ATA_UDMA6,
++		.port_ops	= &artop6260_ops,
++	};
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+ 
+ 	if (!printed_version++)
+@@ -455,13 +464,13 @@ static int artop_init_one (struct pci_de
+ 	}
+ 	else if (id->driver_data == 1)	/* 6260 */
+ 		ppi[0] = &info_626x;
+-	else if (id->driver_data == 2)	{ /* 6260 or 6260 + fast */
++	else if (id->driver_data == 2)	{ /* 6280 or 6280 + fast */
+ 		unsigned long io = pci_resource_start(pdev, 4);
+ 		u8 reg;
+ 
+-		ppi[0] = &info_626x;
++		ppi[0] = &info_628x;
+ 		if (inb(io) & 0x10)
+-			ppi[0] = &info_626x_fast;
++			ppi[0] = &info_628x_fast;
+ 		/* Mac systems come up with some registers not set as we
+ 		   will need them */
+ 
