@@ -1,55 +1,88 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA open bugs)
-Date: Thu, 9 Aug 2007 21:28:50 +0200
-Message-ID: <20070809192850.GA32280@one.firstfloor.org>
-References: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com> <46BA9101.6080407@gmail.com> <20070809145336.6d728f9b@the-village.bc.nu> <20070809170540.GA30700@one.firstfloor.org> <20070809182101.710c3c5b@the-village.bc.nu> <20070809172304.GB30700@one.firstfloor.org> <20070809185310.682dffbc@the-village.bc.nu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [2.6.22.2 review 06/84] Add a PCI ID for santa rosas PATA
+ controller.
+Date: Thu, 9 Aug 2007 12:39:48 -0700
+Message-ID: <20070809123948.1d62be70.akpm@linux-foundation.org>
+References: <20070807204034.882009319@mini.kroah.org>
+	<20070807204257.GG23028@kroah.com>
+	<200708080139.14248.chunkeey@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:41291 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbXHIT2w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 15:28:52 -0400
-Content-Disposition: inline
-In-Reply-To: <20070809185310.682dffbc@the-village.bc.nu>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55553 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751166AbXHITlZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 15:41:25 -0400
+In-Reply-To: <200708080139.14248.chunkeey@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andi Kleen <andi@firstfloor.org>, Tejun Heo <htejun@gmail.com>, Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: Chr <chunkeey@web.de>
+Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gaston@debian64.daheim, Jason D <jason.d.gaston@intel.com>
 
-On Thu, Aug 09, 2007 at 06:53:10PM +0100, Alan Cox wrote:
-> > Or perhaps you got the wrong device here? For ISA devices we 
-> > traditionally used NULL. Or if you set up your own ISA devices
-> > (which I can't see a reason for but there might be one I'm missing) 
-> > at least give them a dma mask. Then it should probably work on x86-64.
+On Wed, 8 Aug 2007 01:39:12 +0200
+Chr <chunkeey@web.de> wrote:
+
+> On Tuesday, 7. August 2007, Greg KH wrote:
+> > 
+> > From: Christian Lamparter <chunkeey@web.de>
+> > 
+> > This is commit c1e6f28cc5de37dcd113b9668a185c0b9334ba8a which is
+> > merged during 23-rc1 window.  Considering the popularity of these
+> > chips, I think including it in -stable release would be good idea.
+> > 
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> > 
 > 
-> The libata code currently (and this seems to work for all but x86-64)
-> does the following if it is setting up a potentially DMA capable device
+> I did not receive any complains. I guess it's stable enough for -stable ;-) ...
+> 
+> --- 
+> 
+> Not OT: 
+> 
+> There is another outstanding issue with ata_piix.c.
+> Intel has never officially supported anything faster than PATA 100MB/s.
+> 
+> But, the ata_piix.c driver "define" the ICH5 & ICH7 as UDMA6 (aka 133MB/s) capable.
+> [ Well, no one has probably noticed it before, because there is bug in do_pata_set_dmamode... 
+> Just look at libata_atapiix_enable_real_udma133.patch and you'll see what wrong with it. ] 
+> 
+> Here are Intel's datasheets for the affected chipsets:
+> ICH5 Datasheet: http://www.intel.com/design/chipsets/datashts/252516.htm
+> (See note on page 183: "... the ICH5 supports reads at the maximum rate of 100MB/s.")
+> 
+> ICH7 Datasheet: http://www.intel.com/design/chipsets/datashts/307013.htm
+> (See first note on page 190: "... the ICH7 supports reads at the maximum rate of 100MB/s.")
+> 
+> -
+> 
+> They are two different ways to deal with it:
+> 
+> - Either -
+> 
+> 1. replace all ich_pata_133 with ich_pata_100. 
+>    (libata_atapiix_disable_udma6.diff - diff from 2.6.22 )
+> 
+> - Or -
+> 
+> 2. keep all ich_pata_133 and fix the bug in "do_pata_set_dmamode".
+>    (libata_atapiix_enable_real_udma133.patch - diff from 2.6.22) 
+>    If there are any concerns about the safety of the patch patch: 
+>    http://lkml.org/lkml/2007/7/6/292 (It was already tested by an Intel employee,
+>    but I guess a bit more user input is necessary here... )
+> 
+> Both ways have their pros and cons. Unfortunately, I don't have the time to follow this
+> discussion right now, so here's a: 
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> (Just in case, if one of the patches really gets merged!)
+> 
 
-Where does the device come from? What device is it?
-Is that known already?
+You kinda hid these patches rather well.
 
-> Thus I think dma_alloc_coherent() for an ISA, PCMCIA or other class
-> (platform particularly) shouldn't explode on AMD64 but simply return
-> NULL. Its a sane request to make when you don't in your library know what
-> dev is.
+I chose option 1. 
 
-But at least on x86-64 the device is likely DMA capable. At least
-PCMCIA usually is.  Near all devices are DMA capable, except perhaps
-SMBus and some real oddballs. So the device should not have a NULL dma_mask
-in the first place. Or it is the wrong device. e.g. we have platform
-devices for things like timers etc. which are really not DMA capable
-because it doesn't make much sense to DMA your timer; but there
-should be really no reason to use such a device in a libata driver. 
 
-If it's some kind of PCMCIA device like implied by pata_pcmcia
-then it's likely DMA capable.
-
-So if I return NULL then either a really DMA capable device will
-not work. Or you got a real oddball device that you shouldn't have gotten
-in the first place. 
-
-Perhaps the PCMCIA code sets up some of its devices wrong? 
-
--Andi
 
