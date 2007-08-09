@@ -1,48 +1,45 @@
 From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Thu, 9 Aug 2007 15:06:35 +0000
-Message-ID: <20070809150634.GA3926@ucw.cz>
-References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no> <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no> <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no> <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no> <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca> <46B8140E.3000509@gmail.com>
+Date: Thu, 9 Aug 2007 15:16:10 +0000
+Message-ID: <20070809151610.GD3926@ucw.cz>
+References: <1186424492.4355.1.camel@nx6310> <46B76BBC.9010107@gmail.com> <20070806234509.GC27640@khazad-dum.debian.net> <46B816FF.7060303@gmail.com> <20070807125104.GC30661@khazad-dum.debian.net> <46B86F21.4030805@gmail.com> <20070807131651.GE30661@khazad-dum.debian.net> <46B87457.4020704@gmail.com> <1186494328.8780.66.camel@queen.suse.de> <46B87B4A.1020305@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:3175 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S966187AbXHIPIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Aug 2007 11:08:50 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <46B8140E.3000509@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <46B87B4A.1020305@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Thomas Renninger <trenn@suse.de>
+Cc: trenn@suse.de, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>, firmwarekit-discuss <firmwarekit-discuss@bughost.org>
+List-Id: linux-ide@vger.kernel.org
 
 Hi!
 
-> >> Oh... crap, so acpi wants to sync cache on shutdown.  I wonder whether
-> >> it spins down the disk correctly.  Does emergency unload count increase
-> >> after each power down?  Also, please post the result of 'dmidecode'.
+> > firmwarekit-discuss <firmwarekit-discuss@bughost.org> (added to CC list)
+> > see: http://linuxfirmwarekit.org/
 > > 
-> > I know that my Compaq X1000-series laptop does do some kind of ACPI
-> > games with the disk on ACPI power off (I assume it is putting the disk
-> > in standby before power-off at least). It also does this if you boot
-> > into DOS, GRUB, etc. and then hit the power button. Could be if the disk
-> > is dumb enough to spin up for sync cache and standby when there is
-> > nothing to flush, and the kernel does its own standby, this could cause
-> > an extra spinup/down..
+> > But if I understand this problem right, this won't be easy.
+> > The ACPI tables are just parsed with system ("iasl ...") and syntactical
+> > errors/warnings are printed out.
+> > I also thought about a test, interpreting the DSDT and read out values
+> > of cpufreq tables and sanity check them. AFAIK the linuxfirmwarekit is
+> > not designed for that atm. You need to compile in most parts of the
+> > acpica code and parse and interpret DSDT/SSDT code yourself in the
+> > firmwarekit core or inside a plugin, then do a walk_namespace call or
+> > whatever to find the functions/parts you like to examine. This is a lot
+> > work and needs a proper design (providing an interface to plugins to let
+> > them easily check specific AML/ASL code).
 > 
-> Yeah, that seems to be what's going on.  I don't think we have any other
-> choice than blacklisting those notebooks.  This is a mess.  How does the
-> other OS cope with this?
-> 
-> I'm thinking about using DMI vendor/product match to detect the affected
-> systems but I think it would be better to match the ACPI implementation
-> directly.  Is there a way to match specific ACPI implementation?
+> Furthermore, we don't really know what we're looking for.  How can you
+> tell a given write to an ioport is issuing STANDBYNOW to an ATA disk or
+> trying to power the machine off?  Adding to the fun, many modern ATA
+> controller have more than one way to issue a command.  Maybe we can
+> match accesses inside regions specified by PCI BARs....  :-(
 
-Well.. unless they use some SMM trick, it is ACPI AML code telling
-kernel to spin the disk down. I guess we could detect that, and simply
-ignore the request.
-
+Hmmm... perhaps we should do it the other way. ACPI is allowed to
+touch the embedded controller, what else? Maybe we should warn as soon
+as API touches non-EC I/O port?
+							Pavel
 -- 
 (english) http://www.livejournal.com/~pavelmachek
 (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
