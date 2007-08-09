@@ -1,70 +1,155 @@
-From: Thomas Renninger <trenn@suse.de>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Thu, 09 Aug 2007 17:56:15 +0200
-Message-ID: <1186674976.8780.238.camel@queen.suse.de>
-References: <1186424492.4355.1.camel@nx6310> <46B76BBC.9010107@gmail.com>
-	 <20070806234509.GC27640@khazad-dum.debian.net> <46B816FF.7060303@gmail.com>
-	 <20070807125104.GC30661@khazad-dum.debian.net> <46B86F21.4030805@gmail.com>
-	 <20070807131651.GE30661@khazad-dum.debian.net> <46B87457.4020704@gmail.com>
-	 <1186494328.8780.66.camel@queen.suse.de> <46B87B4A.1020305@gmail.com>
-	 <20070809151610.GD3926@ucw.cz>
-Reply-To: trenn@suse.de
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Kumar Gala <kumar.gala@freescale.com>
+Subject: pata error messages?
+Date: Thu, 9 Aug 2007 10:59:12 -0500
+Message-ID: <5E26159C-2122-4FE3-9CBF-F50644B7EE5C@freescale.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20070809151610.GD3926@ucw.cz>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Tejun Heo <htejun@gmail.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>, firmwarekit-discuss <firmwarekit-discuss@bughost.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from az33egw01.freescale.net ([192.88.158.102]:40619 "EHLO
+	az33egw01.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762075AbXHIP5p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 11:57:45 -0400
+Received: from az33smr01.freescale.net (az33smr01.freescale.net [10.64.34.199])
+	by az33egw01.freescale.net (8.12.11/az33egw01) with ESMTP id l79Fvd48006315
+	for <linux-ide@vger.kernel.org>; Thu, 9 Aug 2007 08:57:39 -0700 (MST)
+Received: from [10.82.244.181] ([10.82.244.181])
+	by az33smr01.freescale.net (8.13.1/8.13.0) with ESMTP id l79FvdH6027418
+	for <linux-ide@vger.kernel.org>; Thu, 9 Aug 2007 10:57:39 -0500 (CDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 2007-08-09 at 15:16 +0000, Pavel Machek wrote:
-> Hi!
-> 
-> > > firmwarekit-discuss <firmwarekit-discuss@bughost.org> (added to CC list)
-> > > see: http://linuxfirmwarekit.org/
-> > > 
-> > > But if I understand this problem right, this won't be easy.
-> > > The ACPI tables are just parsed with system ("iasl ...") and syntactical
-> > > errors/warnings are printed out.
-> > > I also thought about a test, interpreting the DSDT and read out values
-> > > of cpufreq tables and sanity check them. AFAIK the linuxfirmwarekit is
-> > > not designed for that atm. You need to compile in most parts of the
-> > > acpica code and parse and interpret DSDT/SSDT code yourself in the
-> > > firmwarekit core or inside a plugin, then do a walk_namespace call or
-> > > whatever to find the functions/parts you like to examine. This is a lot
-> > > work and needs a proper design (providing an interface to plugins to let
-> > > them easily check specific AML/ASL code).
-> > 
-> > Furthermore, we don't really know what we're looking for.  How can you
-> > tell a given write to an ioport is issuing STANDBYNOW to an ATA disk or
-> > trying to power the machine off?  Adding to the fun, many modern ATA
-> > controller have more than one way to issue a command.  Maybe we can
-> > match accesses inside regions specified by PCI BARs....  :-(
-> 
-> Hmmm... perhaps we should do it the other way. ACPI is allowed to
-> touch the embedded controller, what else? Maybe we should warn as soon
-> as API touches non-EC I/O port?
+I'm trying to figure out what could cause the following error  
+messages.  This is on a PPC host using a ULI 1575 southbridge:
 
-This is not working...
-ACPI can and does access all kind of other I/O ports and other
-resources.
-Hmm, are the disk accesses done by ACPI via OperationRegion/Field
-declared variables?
-I try to get a check for those clashing with native drivers (hopefully
-this approach is successful for 2.6.24, can't say for sure yet), I
-wonder whether this one would give a warning like "Libata driver is
-using the same SystemIO/SystemMem resources than ACPI OperationRegion
-declaration XY".
-This would not solve the problem, but at least show the need of such a
-test. Such ACPI vs native driver interference problems are very hard
-nuts (in identifying and solving).
+- k
 
-Can someone post an ASL code snippet how ACPI actually access the disk
-and in which parts/functions, pls.
-
-Thanks,
-
-   Thomas
+ata5: PATA max UDMA/133 cmd 0xfdfee300 ctl 0xfdfee30a bmdma  
+0xfdfee320 irq 6
+ata6: PATA max UDMA/133 cmd 0xfdfee310 ctl 0xfdfee31a bmdma  
+0xfdfee328 irq 6
+ata5.00: ATAPI: SONY    DVD RW AW-Q170A, 1.72, max UDMA/66
+ata5.00: configured for UDMA/66
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/66
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/66
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/66
+ata5: EH complete
+ata5.00: limiting speed to UDMA/44:PIO4
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/44
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/44
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/44
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/44
+ata5: EH complete
+ata5.00: limiting speed to UDMA/33:PIO4
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
+ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata5.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x12 data  
+36 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata5: soft resetting port
+ata5.00: configured for UDMA/33
+ata5: EH complete
 
