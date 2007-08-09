@@ -1,62 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA
-	open bugs)
-Date: Thu, 09 Aug 2007 16:26:32 -0700
-Message-ID: <1186701992.3426.19.camel@localhost.localdomain>
-References: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com>
-	 <46BA9101.6080407@gmail.com> <20070809145336.6d728f9b@the-village.bc.nu>
-	 <20070809170540.GA30700@one.firstfloor.org>
-	 <20070809182101.710c3c5b@the-village.bc.nu>
-	 <20070809172304.GB30700@one.firstfloor.org>
-	 <20070809185310.682dffbc@the-village.bc.nu>
-	 <1186690789.3426.4.camel@localhost.localdomain>
-	 <20070809233708.11e6f3c4@the-village.bc.nu>
-	 <1186700006.3426.8.camel@localhost.localdomain>
-	 <20070810001713.3e098338@the-village.bc.nu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_artop: fix UDMA5 for AEC6280[R] and UDMA6 for AEC6880[R]
+Date: Fri, 10 Aug 2007 01:45:38 +0200
+Message-ID: <200708100145.38739.bzolnier@gmail.com>
+References: <200708092319.34828.bzolnier@gmail.com> <20070809235455.3117d5dc@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50459 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750792AbXHIX0f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 19:26:35 -0400
-In-Reply-To: <20070810001713.3e098338@the-village.bc.nu>
+Received: from mu-out-0910.google.com ([209.85.134.190]:45692 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755784AbXHIXq7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 19:46:59 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so860265mue
+        for <linux-ide@vger.kernel.org>; Thu, 09 Aug 2007 16:46:58 -0700 (PDT)
+In-Reply-To: <20070809235455.3117d5dc@the-village.bc.nu>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andi Kleen <andi@firstfloor.org>, Tejun Heo <htejun@gmail.com>, Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2007-08-10 at 00:17 +0100, Alan Cox wrote:
-> > If the device you're passing has a NULL dma_mask pointer that means the
-> > platform hasn't set it up correctly for dma ... and that's the
+On Friday 10 August 2007, Alan Cox wrote:
+> On Thu, 9 Aug 2007 23:19:34 +0200
+> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
-> Well it may not do DMA. 
-
-Unfortunately, I don't think we've considered that possibility in the
-integration of the dma API and generic devices.
-
-> > underlying problem (although it's not necessarily a libata problem): you
-> > can't call dma_ operations on a device that hasn't been set up in the
-> > platform for it.
+> > 
+> > Maximum supported UDMA mode for AEC6280[R] is UDMA5 (not UDMA4)
+> > and for AEC6880[R] it is UDMA6 (not UDMA5):
+> > 
+> > * Fix the problem by adding missing struct ata_port_info to artop_init_one().
+> > 
+> > * Use the right naming (s/626/628/).
+> > 
+> > * Bump driver version.
+> > 
+> > Fixes IDE->libata regression, problem was never present in IDE aec62xx driver.
 > 
-> Right.
-> 
-> Ok so what is the right way given a random *correctly* set up device that
-> may or may not be DMA capable to determine this. Its an arbitary device
-> pointer for an arbitary device class on an arbitary platform which may or
-> may not support DMA for this device class ?
-> 
-> Can I called dma_alloc_coherent and get a NULL back or do we need a
-> device_can_dma() check in each platform ?
+> Have you tested this ??
 
-Fundamentally it's a different question.  The dma_alloc is just saying
-can you set up a coherent memory area that this device can reach.  Often
-the platform cannot necessarily discover this.  I'd say the best signal
-is that the driver has called dma_set_mask(dev, DMA_MASK_NONE) (which
-isn't defined yet). So the platform has a signal that the device isn't
-DMA capable.
+-ENODEV so no and testing is welcomed.
 
-James
+However I went over both drivers to make sure that this change is safe
+and correct.
 
+BTW presence of the above bugs would strongly indicate that pata_artop has
+never been tested (properly) with AEC6x80[R], otherwise these bugs should
+have been noticed and fixed much earlier.
 
+Thanks,
+Bart
