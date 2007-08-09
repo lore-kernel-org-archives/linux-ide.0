@@ -1,41 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata-core: support wildcard matching in
- ata_blacklist_entry
-Date: Thu, 9 Aug 2007 00:31:34 +0100
-Message-ID: <20070809003134.12de8576@the-village.bc.nu>
-References: <20070808202057.GA23314@dhcp-210.hsv.redhat.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SATA open bugs
+Date: Wed, 08 Aug 2007 22:17:45 -0400
+Message-ID: <46BA7949.8070104@rtr.ca>
+References: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40924 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759431AbXHHXYL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Aug 2007 19:24:11 -0400
-In-Reply-To: <20070808202057.GA23314@dhcp-210.hsv.redhat.com>
+Received: from rtr.ca ([64.26.128.89]:2897 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754696AbXHICRq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Aug 2007 22:17:46 -0400
+In-Reply-To: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, dmilburn@redhat.com
+To: Natalie Protasevich <protasnb@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
 
-On Wed, 8 Aug 2007 15:20:57 -0500
-David Milburn <dmilburn@redhat.com> wrote:
-
-> Support the use of '*' in model_num and model_rev entries
-> in ata_device_blacklist[].
+Natalie Protasevich wrote:
+> Hi Tejun, Alan, Jeff,
 > 
-> CC: alan@lxorguk.ukuu.org.uk
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> This is open bug list for SATA subsystem. It has more items than other
+...
+> http://bugzilla.kernel.org/show_bug.cgi?id=7693
+> http://bugzilla.kernel.org/show_bug.cgi?id=8738 adaptec and sata bad interaction
+> http://bugzilla.kernel.org/show_bug.cgi?id=8563 - waiting on alan
+> http://bugzilla.kernel.org/show_bug.cgi?id=8441 - patch review
+> http://bugzilla.kernel.org/show_bug.cgi?id=8649
+> http://bugzilla.kernel.org/show_bug.cgi?id=8649
+> http://bugzilla.kernel.org/show_bug.cgi?id=8424 - patch review
+...
 
-Suggestion: Pull the match function out of line so you don't have two
-copies of it and can remove all the wacky ? operators
+Err.. this would be far more useful if the posting also included
+one-liner descriptions of the bugs.
 
-something like this ? (untested)
+Clicking on one link at a time over and over just doesn't encourage
+the same level of participation.
 
-	strpatterncmp(const char *name, const char *patt)
-	{
-		const char *p = strchr(patt, '*');
-		if (p == NULL)
-			p = patt + strlen(patt);
-		return strncmp(name, patt, p-patt);
-	}
-
+Cheers
