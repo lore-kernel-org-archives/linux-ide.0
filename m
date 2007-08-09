@@ -1,88 +1,43 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [2.6.22.2 review 06/84] Add a PCI ID for santa rosas PATA
- controller.
-Date: Thu, 9 Aug 2007 12:39:48 -0700
-Message-ID: <20070809123948.1d62be70.akpm@linux-foundation.org>
-References: <20070807204034.882009319@mini.kroah.org>
-	<20070807204257.GG23028@kroah.com>
-	<200708080139.14248.chunkeey@web.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2/11] it8213/piix/slc90e66: remove {it8213,piix,slc90e66}_dma_2_pio()
+Date: Thu, 9 Aug 2007 21:40:22 +0200
+Message-ID: <200708092140.22179.bzolnier@gmail.com>
+References: <200708042206.22546.bzolnier@gmail.com> <46B5F305.5040206@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:55553 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751166AbXHITlZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 15:41:25 -0400
-In-Reply-To: <200708080139.14248.chunkeey@web.de>
+Received: from nf-out-0910.google.com ([64.233.182.185]:48944 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652AbXHIUP6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 16:15:58 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so163750nfb
+        for <linux-ide@vger.kernel.org>; Thu, 09 Aug 2007 13:15:57 -0700 (PDT)
+In-Reply-To: <46B5F305.5040206@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chr <chunkeey@web.de>
-Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gaston@debian64.daheim, Jason D <jason.d.gaston@intel.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 8 Aug 2007 01:39:12 +0200
-Chr <chunkeey@web.de> wrote:
+On Sunday 05 August 2007, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+>     Sigh... when I was talking about getting rid of that function, I meant 
+> that we need to also decouple UltraDMA from PIO -- which is what this patch 
+> misses...
 
-> On Tuesday, 7. August 2007, Greg KH wrote:
-> > 
-> > From: Christian Lamparter <chunkeey@web.de>
-> > 
-> > This is commit c1e6f28cc5de37dcd113b9668a185c0b9334ba8a which is
-> > merged during 23-rc1 window.  Considering the popularity of these
-> > chips, I think including it in -stable release would be good idea.
-> > 
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > Signed-off-by: Jeff Garzik <jeff@garzik.org>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> > 
-> 
-> I did not receive any complains. I guess it's stable enough for -stable ;-) ...
-> 
-> --- 
-> 
-> Not OT: 
-> 
-> There is another outstanding issue with ata_piix.c.
-> Intel has never officially supported anything faster than PATA 100MB/s.
-> 
-> But, the ata_piix.c driver "define" the ICH5 & ICH7 as UDMA6 (aka 133MB/s) capable.
-> [ Well, no one has probably noticed it before, because there is bug in do_pata_set_dmamode... 
-> Just look at libata_atapiix_enable_real_udma133.patch and you'll see what wrong with it. ] 
-> 
-> Here are Intel's datasheets for the affected chipsets:
-> ICH5 Datasheet: http://www.intel.com/design/chipsets/datashts/252516.htm
-> (See note on page 183: "... the ICH5 supports reads at the maximum rate of 100MB/s.")
-> 
-> ICH7 Datasheet: http://www.intel.com/design/chipsets/datashts/307013.htm
-> (See first note on page 190: "... the ICH7 supports reads at the maximum rate of 100MB/s.")
-> 
-> -
-> 
-> They are two different ways to deal with it:
-> 
-> - Either -
-> 
-> 1. replace all ich_pata_133 with ich_pata_100. 
->    (libata_atapiix_disable_udma6.diff - diff from 2.6.22 )
-> 
-> - Or -
-> 
-> 2. keep all ich_pata_133 and fix the bug in "do_pata_set_dmamode".
->    (libata_atapiix_enable_real_udma133.patch - diff from 2.6.22) 
->    If there are any concerns about the safety of the patch patch: 
->    http://lkml.org/lkml/2007/7/6/292 (It was already tested by an Intel employee,
->    but I guess a bit more user input is necessary here... )
-> 
-> Both ways have their pros and cons. Unfortunately, I don't have the time to follow this
-> discussion right now, so here's a: 
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> (Just in case, if one of the patches really gets merged!)
-> 
+Addressed in the follow-up patch.
 
-You kinda hid these patches rather well.
+>     Actually, I intended to decouple DMA form PIO in this drivers completely 
+> but that would be a next step...
 
-I chose option 1. 
+DMA and PIO timings are shared on these controllers (except when DTE bit is
+set, then PIO0 timings are always used and DMA timings are independent)...?
 
-
-
+Bart
