@@ -1,29 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA open
- bugs)
-Date: Thu, 9 Aug 2007 14:53:36 +0100
-Message-ID: <20070809145336.6d728f9b@the-village.bc.nu>
-References: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com>
-	<46BA9101.6080407@gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Thu, 9 Aug 2007 15:06:35 +0000
+Message-ID: <20070809150634.GA3926@ucw.cz>
+References: <fa.bsWpbo79BZgHoaIGhEMfTEBxs54@ifi.uio.no> <fa.mg6p0itaOQUo/t8deCaYpyqj6Nk@ifi.uio.no> <fa.RxWYL8z8KktgL8LGZ/cTB2nI1Yc@ifi.uio.no> <fa.AyyCtZ2yLjC5noHPHtmzn4ffhhE@ifi.uio.no> <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no> <fa.QgWcLG2hfRb92g4blN61qYfRjlQ@ifi.uio.no> <46B7AF53.1040307@shaw.ca> <46B8140E.3000509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39638 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933764AbXHINwy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 09:52:54 -0400
-In-Reply-To: <46BA9101.6080407@gmail.com>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:3175 "EHLO spitz.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S966187AbXHIPIu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Aug 2007 11:08:50 -0400
+Content-Disposition: inline
+In-Reply-To: <46B8140E.3000509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Andi Kleen <andi@firstfloor.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Thomas Renninger <trenn@suse.de>
 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=8424 - patch review
-> This one is on Alan.
+Hi!
 
-I think not - something horrible is happening in dma_alloc_coherent when
-called from dmam_* with a non PCI device
+> >> Oh... crap, so acpi wants to sync cache on shutdown.  I wonder whether
+> >> it spins down the disk correctly.  Does emergency unload count increase
+> >> after each power down?  Also, please post the result of 'dmidecode'.
+> > 
+> > I know that my Compaq X1000-series laptop does do some kind of ACPI
+> > games with the disk on ACPI power off (I assume it is putting the disk
+> > in standby before power-off at least). It also does this if you boot
+> > into DOS, GRUB, etc. and then hit the power button. Could be if the disk
+> > is dumb enough to spin up for sync cache and standby when there is
+> > nothing to flush, and the kernel does its own standby, this could cause
+> > an extra spinup/down..
+> 
+> Yeah, that seems to be what's going on.  I don't think we have any other
+> choice than blacklisting those notebooks.  This is a mess.  How does the
+> other OS cope with this?
+> 
+> I'm thinking about using DMI vendor/product match to detect the affected
+> systems but I think it would be better to match the ACPI implementation
+> directly.  Is there a way to match specific ACPI implementation?
 
+Well.. unless they use some SMM trick, it is ACPI AML code telling
+kernel to spin the disk down. I guess we could detect that, and simply
+ignore the request.
 
-Seems to be some kind of AMD64 specific DMA mapping bug ?
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
