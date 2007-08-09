@@ -1,39 +1,48 @@
-From: Kumar Gala <kumar.gala@freescale.com>
-Subject: Re: pata error messages?
-Date: Thu, 9 Aug 2007 12:22:02 -0500
-Message-ID: <7ADFEAE9-1937-45AE-B4CA-BDE9FE200BF2@freescale.com>
-References: <5E26159C-2122-4FE3-9CBF-F50644B7EE5C@freescale.com> <20070809181734.736e8ed4@the-village.bc.nu>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA open bugs)
+Date: Thu, 9 Aug 2007 19:23:04 +0200
+Message-ID: <20070809172304.GB30700@one.firstfloor.org>
+References: <32209efe0708081531o4215bac5teac2113c3518c743@mail.gmail.com> <46BA9101.6080407@gmail.com> <20070809145336.6d728f9b@the-village.bc.nu> <20070809170540.GA30700@one.firstfloor.org> <20070809182101.710c3c5b@the-village.bc.nu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:59297 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934812AbXHIRUe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 13:20:34 -0400
-In-Reply-To: <20070809181734.736e8ed4@the-village.bc.nu>
+Received: from one.firstfloor.org ([213.235.205.2]:35014 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765639AbXHIRXG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2007 13:23:06 -0400
+Content-Disposition: inline
+In-Reply-To: <20070809182101.710c3c5b@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+Cc: Andi Kleen <andi@firstfloor.org>, Tejun Heo <htejun@gmail.com>, Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
+On Thu, Aug 09, 2007 at 06:21:01PM +0100, Alan Cox wrote:
+> > > Seems to be some kind of AMD64 specific DMA mapping bug ?
+> > 
+> > I think it's dev->dma_mask == NULL. Clearly you're passing a non DMA
+> > able device to dma_alloc_coherent(). Which seems like a caller bug.
+> 
+> Ok - other archs seem to just return NULL in this case. If its your view
 
-On Aug 9, 2007, at 12:17 PM, Alan Cox wrote:
+Ok then the initialization would fail.
 
-> On Thu, 9 Aug 2007 10:59:12 -0500
-> Kumar Gala <kumar.gala@freescale.com> wrote:
->
->> I'm trying to figure out what could cause the following error
->> messages.  This is on a PPC host using a ULI 1575 southbridge:
->
-> I'm still chasing problems with ATAPI DMA on some ALi host bridges.  
-> I'd
-> like to say I knew what was going on but the truth is I'm currently
-> diffing lspci out and staring at spec sheets with little result.
+I could do that, but clearly there must be some other bug
+in the process that tries to do DMA on such random devices
+in the first place.
 
-yeah, the ALi spec I have for 1575 is terse at best.
+> that dma_alloc_coherent(dev) should explode not return NULL then we can
+> wrap dma_alloc_coherent but I'm not sure the caller library has any
+> business knowing whether a specific class of device is DMA capable on a
+> specific platform ?
 
-I'd be interested in possible register dumps, I'm not sure if we are  
-even setting up the controllers properly or not.
+Someone must ask that caller library to DMA to/from that device
+in the first place. Whoever it is it is wrong. 
 
-- k
+Or perhaps you got the wrong device here? For ISA devices we 
+traditionally used NULL. Or if you set up your own ISA devices
+(which I can't see a reason for but there might be one I'm missing) 
+at least give them a dma mask. Then it should probably work on x86-64.
+
+-Andi
+
