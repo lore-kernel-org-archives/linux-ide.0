@@ -1,66 +1,44 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Fri, 10 Aug 2007 23:54:21 +0200
-Message-ID: <200708102354.21897.bzolnier@gmail.com>
-References: <200708060006.35511.sshtylyov@ru.mvista.com> <20070810181907.61fd514d@the-village.bc.nu> <46BCA06A.8040609@ru.mvista.com>
+Subject: Re: [PATCH 3/11] au1xxx-ide: use ide_tune_dma()
+Date: Fri, 10 Aug 2007 23:58:25 +0200
+Message-ID: <200708102358.25715.bzolnier@gmail.com>
+References: <200708042206.57529.bzolnier@gmail.com> <200708090057.13155.bzolnier@gmail.com> <46BCB86A.1010107@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:25511 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbXHJV4J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:56:09 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so325943nfb
-        for <linux-ide@vger.kernel.org>; Fri, 10 Aug 2007 14:56:07 -0700 (PDT)
-In-Reply-To: <46BCA06A.8040609@ru.mvista.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:47118 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752353AbXHJV6w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:58:52 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1242939mue
+        for <linux-ide@vger.kernel.org>; Fri, 10 Aug 2007 14:58:49 -0700 (PDT)
+In-Reply-To: <46BCB86A.1010107@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, rah@bash.sh, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 On Friday 10 August 2007, Sergei Shtylyov wrote:
-> Alan Cox wrote:
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> >>>>+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
-> >>>>+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
-> >>>>+							     dev->devfn - 1);
+> >>    Good, that's what I lacked for hpt366.c!  Were you planning to push it to 
+> >>Linus soon?
 > 
-> >>>Can be NULL
+> > Not really but if needed I will extract MWDMA filter part and push it sooner.
 > 
-> >>    Not really. This may not be called if it's NULL -- see hpt374_init_setup().
-> >>Maybe worth a comment though...
-> 
-> >>>>+			unsigned long io_base = pci_resource_start(dev1, 4);
-> >>
-> >>>Kaboom
-> >>
-> >>    That was a dud bomb. ;-)
-> 
-> > What stops a hot unplug of a 374 from causing that to occur. I don't see
-> 
->     Pinned as in pci_get_device()? If so, see setup-ide.c:ide_scan_pcibus().
-> The IDE core does that for me.
+>     Erm, may I just merge it to my patch (mentioning you of course)?
 
-ide_scan_pcibus() is used iff IDE is built-in.
+Sure.
 
-Moreover pci_get_device() holds reference _only_ to the current PCI device
-(the reference count to @from PCI device is _always_ decremented).
-
-> > where you have the other pci_dev pinned on a hotplug on a box set to scan
-> > the devices in reverse order
+> > I planned to cc: AU1XXX platform maintainers on this patch but to my
+> > surprise MAINTAINERS lacks AU1XXX entry.
 > 
->     Function 1 will always be skipped, regardless of the scan order.
+>     It's been solt out to Raza Microelectronics last year and those guys never
+> sent a single patch to linux-mips...
 
-Yes, but init_chipset_hpt366() will still try to access Function 1
-even if earlier init_setup_hpt374() failed to obtain reference to it.
-
-> > (yes its an extremely obscure case ;))
-> 
->     "Security through obscurity". :-)
-
-Not in this case. :-)
+Thanks for the info.
 
 Bart
