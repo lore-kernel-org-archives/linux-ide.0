@@ -1,40 +1,73 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA
- open bugs) II
-Date: Fri, 10 Aug 2007 17:58:08 +0100
-Message-ID: <20070810175808.52b5446a@the-village.bc.nu>
-References: <46BA9101.6080407@gmail.com>
-	<20070809145336.6d728f9b@the-village.bc.nu>
-	<20070809170540.GA30700@one.firstfloor.org>
-	<20070809182101.710c3c5b@the-village.bc.nu>
-	<20070809172304.GB30700@one.firstfloor.org>
-	<20070809185310.682dffbc@the-village.bc.nu>
-	<20070809192850.GA32280@one.firstfloor.org>
-	<20070809233458.12d8447c@the-village.bc.nu>
-	<20070809224305.GA1611@one.firstfloor.org>
-	<20070810001443.610185e1@the-village.bc.nu>
-	<20070809231141.GB1845@one.firstfloor.org>
-	<20070810002453.384a9b4c@the-village.bc.nu>
-	<p73sl6rencd.fsf@bingen.suse.de>
-	<20070810145430.17d72a76@the-village.bc.nu>
-	<1186757538.3335.3.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2] pata_hpt37x: actually clock HPT374 with 50 MHz DPLL (take 2)
+Date: Fri, 10 Aug 2007 20:58:46 +0400
+Message-ID: <200708102058.46160.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48964 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S940901AbXHJQwS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 12:52:18 -0400
-In-Reply-To: <1186757538.3335.3.camel@localhost.localdomain>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7576 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1763452AbXHJQ4g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 12:56:36 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Tejun Heo <htejun@gmail.com>, Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, rah@bash.sh
 
-> Not in non platform code, please ... somewhere on the Janitor's list is
-> moving the dma_mask from the bus specific devices into the generic
-> device ... when that happens this quantity will become u64 and they
-> won't know what to do with the NULL check.
+The DPLL tuning code always set up it for 66 MHz due to wrong UltraDMA mask
+including mode 5 used to check for the necessity of 66 MHz clocking -- this
+caused 66 MHz clock to be used for HPT374 chip that does not tolerate it.
+While fixing this, also remove PLL mode from the TODO list -- I don't think
+it's still a relevant item.
 
-Ok filed for "kernel summit" 
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+---
+This is against the current Linus tree -- with wording in the header fixed. :-)
+
+ drivers/ata/pata_hpt37x.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -8,12 +8,10 @@
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+  * Portions Copyright (C) 2003		Red Hat Inc
+- * Portions Copyright (C) 2005-2006	MontaVista Software, Inc.
++ * Portions Copyright (C) 2005-2007	MontaVista Software, Inc.
+  *
+  * TODO
+- *	PLL mode
+- *	Look into engine reset on timeout errors. Should not be
+- *		required.
++ *	Look into engine reset on timeout errors. Should not be	required.
+  */
+ 
+ #include <linux/kernel.h>
+@@ -26,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.7"
++#define DRV_VERSION	"0.6.8"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -1092,9 +1090,7 @@ static int hpt37x_init_one(struct pci_de
+ 		int dpll, adjust;
+ 
+ 		/* Compute DPLL */
+-		dpll = 2;
+-		if (port->udma_mask & 0xE0)
+-			dpll = 3;
++		dpll = (port->udma_mask & 0xC0) ? 3 : 2;
+ 
+ 		f_low = (MHz[clock_slot] * 48) / MHz[dpll];
+ 		f_high = f_low + 2;
+
