@@ -1,39 +1,39 @@
 From: akpm@linux-foundation.org
-Subject: [patch 09/25] ALPM: increase number of allowable device flags
-Date: Fri, 10 Aug 2007 13:59:39 -0700
-Message-ID: <200708102059.l7AKxdUl008593@imap1.linux-foundation.org>
+Subject: [patch 06/25] sata_nv: allow changing queue depth
+Date: Fri, 10 Aug 2007 13:59:35 -0700
+Message-ID: <200708102059.l7AKxZqR008584@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:60283 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:56879 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933634AbXHJVAk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:00:40 -0400
+	by vger.kernel.org with ESMTP id S933950AbXHJVAm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:00:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, kristen.c.accardi@intel.com, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca
 
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+From: Robert Hancock <hancockr@shaw.ca>
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+The sata_nv driver was missing the change_queue_depth hook in the SCSI host
+template which the other NCQ-capable libata drivers had.  This made it
+impossible to change the queue depth by user request.  Add this in.
+
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- include/linux/libata.h |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/sata_nv.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-diff -puN include/linux/libata.h~alpm-increase-number-of-allowable-device-flags include/linux/libata.h
---- a/include/linux/libata.h~alpm-increase-number-of-allowable-device-flags
-+++ a/include/linux/libata.h
-@@ -139,7 +139,7 @@ enum {
- 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
- 	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
- 	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
--	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
-+	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
- 
- 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
- 	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
+diff -puN drivers/ata/sata_nv.c~sata_nv-allow-changing-queue-depth drivers/ata/sata_nv.c
+--- a/drivers/ata/sata_nv.c~sata_nv-allow-changing-queue-depth
++++ a/drivers/ata/sata_nv.c
+@@ -420,6 +420,7 @@ static struct scsi_host_template nv_swnc
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+ 	.queuecommand		= ata_scsi_queuecmd,
++	.change_queue_depth	= ata_scsi_change_queue_depth,
+ 	.can_queue		= ATA_MAX_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
 _
