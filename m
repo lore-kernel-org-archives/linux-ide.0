@@ -1,68 +1,115 @@
 From: akpm@linux-foundation.org
-Subject: [patch 17/25] libata: correct IORDY handling
-Date: Fri, 10 Aug 2007 13:59:44 -0700
-Message-ID: <200708102059.l7AKxjLQ008617@imap1.linux-foundation.org>
+Subject: [patch 24/25] pata_cmd64x: Set up MWDMA modes properly
+Date: Fri, 10 Aug 2007 13:59:49 -0700
+Message-ID: <200708102059.l7AKxnUd008639@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:49286 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42386 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932204AbXHJVQf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:16:35 -0400
+	by vger.kernel.org with ESMTP id S1765998AbXHJVQb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:16:31 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com, sshtylyov@ru.mvista.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, mikpe@it.uu.se
 
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Debugging a report of a problem with an ancient solid state disk showed up
-some problems in the IORDY handling
-
-1.	We check the wrong bit to see if the device has IORDY
-2.	Even then some ancient creaking piles of crap don't support
-	SETXFER at all.
-
-I think this should go via -mm for a bit.  The cases it fixes are obscure
-and the risk of side effects is slight but possible.  This also moves us
-slightly closer to supporting original MFM/RLL disks with libata but before
-Jeff panics I have no plans to do that....
+Set the MWDMA timing by updating the correct registers.  Split the PIO path as
+this is mostly shared code.  Wants testing.
 
 Signed-off-by: Alan Cox <alan@redhat.com>
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
+Tested-by: Mikael Pettersson <mikpe@it.uu.se>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |    6 +++++-
- include/linux/ata.h       |    2 +-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/ata/pata_cmd64x.c |   37 +++++++++++++++++++++++++-----------
+ 1 files changed, 26 insertions(+), 11 deletions(-)
 
-diff -puN drivers/ata/libata-core.c~libata-correct-iordy-handling drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-correct-iordy-handling
-+++ a/drivers/ata/libata-core.c
-@@ -2770,7 +2770,11 @@ static int ata_dev_set_mode(struct ata_d
- 	/* Old CFA may refuse this command, which is just fine */
- 	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
-         	err_mask &= ~AC_ERR_DEV;
+diff -puN drivers/ata/pata_cmd64x.c~pata_cmd64x-set-up-mwdma-modes-properly drivers/ata/pata_cmd64x.c
+--- a/drivers/ata/pata_cmd64x.c~pata_cmd64x-set-up-mwdma-modes-properly
++++ a/drivers/ata/pata_cmd64x.c
+@@ -31,7 +31,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_cmd64x"
+-#define DRV_VERSION "0.2.4"
++#define DRV_VERSION "0.2.5"
+ 
+ /*
+  * CMD64x specific registers definition.
+@@ -88,14 +88,15 @@ static int cmd648_cable_detect(struct at
+ }
+ 
+ /**
+- *	cmd64x_set_piomode	-	set initial PIO mode data
++ *	cmd64x_set_piomode	-	set PIO and MWDMA timing
+  *	@ap: ATA interface
+  *	@adev: ATA device
++ *	@mode: mode
+  *
+- *	Called to do the PIO mode setup.
++ *	Called to do the PIO and MWDMA mode setup.
+  */
+ 
+-static void cmd64x_set_piomode(struct ata_port *ap, struct ata_device *adev)
++static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 mode)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	struct ata_timing t;
+@@ -117,8 +118,9 @@ static void cmd64x_set_piomode(struct at
+ 	int arttim = arttim_port[ap->port_no][adev->devno];
+ 	int drwtim = drwtim_port[ap->port_no][adev->devno];
+ 
 -
-+	/* Some very old devices and some bad newer ones fail any kind of
-+	   SET_XFERMODE request but support PIO0-2 timings and no IORDY */
-+	if (dev->xfer_shift == ATA_SHIFT_PIO && !ata_id_has_iordy(dev->id) &&
-+			dev->pio_mode <= XFER_PIO_2)
-+		err_mask &= ~AC_ERR_DEV;
- 	if (err_mask) {
- 		ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
- 			       "(err_mask=0x%x)\n", err_mask);
-diff -puN include/linux/ata.h~libata-correct-iordy-handling include/linux/ata.h
---- a/include/linux/ata.h~libata-correct-iordy-handling
-+++ a/include/linux/ata.h
-@@ -345,7 +345,7 @@ struct ata_taskfile {
- #define ata_id_removeable(id)	((id)[0] & (1 << 7))
- #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
- #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
--#define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
-+#define ata_id_has_iordy(id) ((id)[49] & (1 << 11))
- #define ata_id_u32(id,n)	\
- 	(((u32) (id)[(n) + 1] << 16) | ((u32) (id)[(n)]))
- #define ata_id_u64(id,n)	\
+-	if (ata_timing_compute(adev, adev->pio_mode, &t, T, 0) < 0) {
++	/* ata_timing_compute is smart and will produce timings for MWDMA
++	   that don't violate the drives PIO capabilities. */
++	if (ata_timing_compute(adev, mode, &t, T, 0) < 0) {
+ 		printk(KERN_ERR DRV_NAME ": mode computation failed.\n");
+ 		return;
+ 	}
+@@ -168,6 +170,20 @@ static void cmd64x_set_piomode(struct at
+ }
+ 
+ /**
++ *	cmd64x_set_piomode	-	set initial PIO mode data
++ *	@ap: ATA interface
++ *	@adev: ATA device
++ *
++ *	Used when configuring the devices ot set the PIO timings. All the
++ *	actual work is done by the PIO/MWDMA setting helper
++ */
++
++static void cmd64x_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	cmd64x_set_timing(ap, adev, adev->pio_mode);
++}
++
++/**
+  *	cmd64x_set_dmamode	-	set initial DMA mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+@@ -180,9 +196,6 @@ static void cmd64x_set_dmamode(struct at
+ 	static const u8 udma_data[] = {
+ 		0x30, 0x20, 0x10, 0x20, 0x10, 0x00
+ 	};
+-	static const u8 mwdma_data[] = {
+-		0x30, 0x20, 0x10
+-	};
+ 
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u8 regU, regD;
+@@ -208,8 +221,10 @@ static void cmd64x_set_dmamode(struct at
+ 		regU |= 1 << adev->devno; /* UDMA on */
+ 		if (adev->dma_mode > 2)	/* 15nS timing */
+ 			regU |= 4 << adev->devno;
+-	} else
+-		regD |= mwdma_data[adev->dma_mode - XFER_MW_DMA_0] << shift;
++	} else {
++		regU &= ~ (1 << adev->devno);	/* UDMA off */
++		cmd64x_set_timing(ap, adev, adev->dma_mode);
++	}
+ 
+ 	regD |= 0x20 << adev->devno;
+ 
 _
