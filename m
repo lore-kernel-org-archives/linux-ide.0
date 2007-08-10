@@ -1,110 +1,45 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/11] au1xxx-ide: use ide_tune_dma()
-Date: Fri, 10 Aug 2007 23:11:38 +0400
-Message-ID: <46BCB86A.1010107@ru.mvista.com>
-References: <200708042206.57529.bzolnier@gmail.com> <46B764EF.9000506@ru.mvista.com> <200708090057.13155.bzolnier@gmail.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA open
+	bugs) II
+Date: Fri, 10 Aug 2007 22:27:18 +0200
+Message-ID: <20070810202718.GB11892@one.firstfloor.org>
+References: <20070809233458.12d8447c@the-village.bc.nu>
+	<20070809224305.GA1611@one.firstfloor.org>
+	<20070810001443.610185e1@the-village.bc.nu>
+	<20070809231141.GB1845@one.firstfloor.org>
+	<20070810002453.384a9b4c@the-village.bc.nu>
+	<p73sl6rencd.fsf@bingen.suse.de>
+	<20070810145430.17d72a76@the-village.bc.nu>
+	<1186757538.3335.3.camel@localhost.localdomain>
+	<20070810175808.52b5446a@the-village.bc.nu>
+	<1186770505.6334.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:57350 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752697AbXHJTJ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Aug 2007 15:09:27 -0400
-In-Reply-To: <200708090057.13155.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1186770505.6334.3.camel@localhost.localdomain>
+List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-pcmcia@lists.infradead.org, Natalie Protasevich <protasnb@gmail.com>, linux-ide@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+> Surely we don't need to wait until then?  This is the correct fix, isn't
+> it?  (Obviously I'll split it into a generic and a pcmcia specific piece
+> if it looks OK to everyone).
+> 
+> It sets the PCMCIA dma_mask up correctly and introduces a DMA_MASK_NONE
+> (I prefer that to DMA_0BIT_MASK but I can add that too if people want)
+> and gives Alan his is_device_dma_capable() API.
 
->>    Good, that's what I lacked for hpt366.c!  Were you planning to push it to 
->>Linus soon?
+Patch looks good to me.
 
-> Not really but if needed I will extract MWDMA filter part and push it sooner.
-
-    Erm, may I just merge it to my patch (mentioning you of course)?
-
->>>* Add ->mdma_filter to ide_hwif_t and use it in ide_get_mode_mask().
-
->>    Hm, why not mwdma_filter()?  That "mdma" word has unneeded connotation. ;-)
-
-> Ha!  As predicted:
-
-> ->mdma_filter name would make people more ecstatic about the code
-
-> ;)
-
-    Nice one. 8-)
-
->>>* Remove needless setting of drive->using_dma from auide_dma_check().
-
->>>* Split off auide_mdma_filter() from auide_dma_check().
-
->>>* Use ide_tune_dma() in auide_dma_check(), this fixes following issues:
->>>  - device's DMA capability bit not being checked
->>>  - device not being checked against generic DMA blacklist
->>>  - transfer mode not being set on device/host
-
->>>* Add PIO autotune fallback to auide_dma_check().
-
->>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
->>>Index: b/drivers/ide/mips/au1xxx-ide.c
->>>===================================================================
->>>--- a/drivers/ide/mips/au1xxx-ide.c
->>>+++ b/drivers/ide/mips/au1xxx-ide.c
->>>@@ -351,11 +351,18 @@ static int auide_dma_setup(ide_drive_t *
->>> 	return 0;
->>> }
->>> 
->>>-static int auide_dma_check(ide_drive_t *drive)
->>>+static u8 auide_mdma_filter(ide_drive_t *drive)
->>> {
->>>-	u8 speed = ide_max_dma_mode(drive);
->>>+	/*
->>>+	 * FIXME: ->white_list and ->black_list are based on completely bogus
->>>+	 * ->ide_dma_check implementation which didn't set neither the host
->>>+	 * controller timings nor the device for the desired transfer mode.
->>>+	 *
->>>+	 * They should be either removed or 0x00 MWDMA mask should be
->>>+	 * returned for devices on the ->black_list.
->>>+	 */
-
->>    I don't get it -- why then introduce a method that does nothing?
-
-> It does something as you've noticed yourself:
-
-    Yeah, I saw that it does something that shouldn't be done there. :-)
-The more is the reason to move that method into my recent hpt366 filter patch.
-
->>>-	if( dbdma_init_done == 0 ){
->>>+	if (dbdma_init_done == 0) {
-
->>    I wonder what this code is doing here at all...
-
->>> 		auide_hwif.white_list = ide_in_drive_list(drive->id,
->>> 							  dma_white_list);
->>> 		auide_hwif.black_list = ide_in_drive_list(drive->id,
-
->>    Why the results of the drive list lockup gets tied to auide_hwif? :-O
-
-    Yet I was sure I'd typed "lookup". Probably a freudian slip. :-)
-
-> To use results in auide_ddma_init()...  (which needs fixing of course).
-
-> The more interesting questions are: WTF is "safe MWDMA" mode (tsize == 1,
-> devwidth == 16) and whether ->white/black_list is really needed.
-
-    No time to look into the manuals right now...
-
-> I planned to cc: AU1XXX platform maintainers on this patch but to my
-> surprise MAINTAINERS lacks AU1XXX entry.
-
-    It's been solt out to Raza Microelectronics last year and those guys never
-sent a single patch to linux-mips...
-
-> Bart
-
-MBR, Sergei
+-Andi
