@@ -1,44 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/25] libata: adjust libata to ignore errors after spinup
-Date: Fri, 10 Aug 2007 13:59:35 -0700
-Message-ID: <200708102059.l7AKxZ9I008587@imap1.linux-foundation.org>
+Subject: [patch 16/25] Fix libata warnings with CONFIG_PM=n
+Date: Fri, 10 Aug 2007 13:59:44 -0700
+Message-ID: <200708102059.l7AKxifI008614@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52842 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52010 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S938121AbXHJVAs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:00:48 -0400
+	by vger.kernel.org with ESMTP id S1756133AbXHJVPv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:15:51 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, rpower@sysreset.com, htejun@gmail.com, liml@rtr.ca
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, nix.or.die@googlemail.com
 
-From: Ryan Power <rpower@sysreset.com>
+From: Gabriel C <nix.or.die@googlemail.com>
 
-Adjust libata to ignore errors after spinup
+drivers/ata/libata-core.c:5993: warning: 'ata_host_disable_link_pm' defined but not used
+drivers/ata/libata-core.c:6004: warning: 'ata_host_enable_link_pm' defined but not used
 
-This patch is to ignore errors from the spinup attempt if the drive is
-in the "standby id" state.
-
-Signed-off-by: Ryan Power <rpower@sysreset.com>
-Acked-by: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
+Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/libata-core.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/ata/libata-core.c~libata-adjust-libata-to-ignore-errors-after drivers/ata/libata-core.c
---- a/drivers/ata/libata-core.c~libata-adjust-libata-to-ignore-errors-after
+diff -puN drivers/ata/libata-core.c~fix-libata-warnings-with-config_pm=n drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~fix-libata-warnings-with-config_pm=n
 +++ a/drivers/ata/libata-core.c
-@@ -1723,7 +1723,7 @@ int ata_dev_read_id(struct ata_device *d
- 		tf.protocol = ATA_PROT_NODATA;
- 		tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--		if (err_mask) {
-+		if (err_mask && id[2] != 0x738c) {
- 			rc = -EIO;
- 			reason = "SPINUP failed";
- 			goto err_out;
+@@ -5923,6 +5923,7 @@ int ata_flush_cache(struct ata_device *d
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
+ static void ata_host_disable_link_pm(struct ata_host *host)
+ {
+ 	int i;
+@@ -5944,7 +5945,7 @@ static void ata_host_enable_link_pm(stru
+ 	}
+ }
+ 
+-#ifdef CONFIG_PM
++
+ static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+ 			       int wait)
 _
