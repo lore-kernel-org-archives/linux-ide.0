@@ -1,181 +1,144 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] hpt366: UltraDMA filtering for SATA cards
-Date: Fri, 10 Aug 2007 22:12:21 +0400
-Message-ID: <46BCAA85.3070905@ru.mvista.com>
-References: <200708060008.38077.sshtylyov@ru.mvista.com> <200708090008.10352.bzolnier@gmail.com>
+Subject: [PATCH] hpt366: fix PCI clock detection for HPT374
+Date: Fri, 10 Aug 2007 22:26:35 +0400
+Message-ID: <200708102226.35996.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:56740 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755364AbXHJSKL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Aug 2007 14:10:11 -0400
-In-Reply-To: <200708090008.10352.bzolnier@gmail.com>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7728 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756321AbXHJSY2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 14:24:28 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: rah@bash.sh, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+HPT374 BIOS seems to only save f_CNT register value for the function #0 before
+re-tuning DPLL (that causes the driver to report obviously distorted f_CNT for
+the function #1) -- fix this by always reading the saved f_CNT register value
+from the function #0 in init_chipset_hpt374().
+While at it, introduce 'chip_type' for holding the 'struct hpt_info' field
+of the same name and replace the structure assignment with memcpy()...
 
->>The Marvell bridge chips used on HighPoint SATA cards do not seem to support
->>the UltraDMA modes 1, 2, and 3 (as well as any MWDMA modes), so the driver
->>needs to account for this in the udma_filter() method.  In order to achieve
->>that, do the following changes:
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
->>- install the method for all chips, not only HPT36x/370 (improve code formatting
->>  by killing an extra tabs while at it);
+---
+This is against the current Linus tree and unfortunately I was able to
+only compile test it since that tree gives MODPOST warning and dies early.
 
->>- add to the end of the 'switch' statement in hpt3xx_udma_filter() case for
->>  HPT372[AN] and HPT374 chips upon which the SATA cards are based and check
->>  there whether we're dealing with SATA drive (by looking at words 80 and 93
->>  of the drive's identify data), reorder HPT370[A] cases for consistency...
+ drivers/ide/pci/hpt366.c |   41 +++++++++++++++++++++++++++++------------
+ 1 files changed, 29 insertions(+), 12 deletions(-)
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.10	Jun 29, 2007
++ * linux/drivers/ide/pci/hpt366.c		Version 1.11	Aug 9, 2007
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -981,6 +981,7 @@ static unsigned int __devinit init_chips
+ 	struct hpt_info *info	= kmalloc(sizeof(struct hpt_info), GFP_KERNEL);
+ 	unsigned long io_base	= pci_resource_start(dev, 4);
+ 	u8 pci_clk,  dpll_clk	= 0;	/* PCI and DPLL clock in MHz */
++	u8 chip_type;
+ 	enum ata_clock	clock;
+ 
+ 	if (info == NULL) {
+@@ -992,7 +993,8 @@ static unsigned int __devinit init_chips
+ 	 * Copy everything from a static "template" structure
+ 	 * to just allocated per-chip hpt_info structure.
+ 	 */
+-	*info = *(struct hpt_info *)pci_get_drvdata(dev);
++	memcpy(info, pci_get_drvdata(dev), sizeof(struct hpt_info));
++	chip_type = info->chip_type;
+ 
+ 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, (L1_CACHE_BYTES / 4));
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x78);
+@@ -1002,7 +1004,7 @@ static unsigned int __devinit init_chips
+ 	/*
+ 	 * First, try to estimate the PCI clock frequency...
+ 	 */
+-	if (info->chip_type >= HPT370) {
++	if (chip_type >= HPT370) {
+ 		u8  scr1  = 0;
+ 		u16 f_cnt = 0;
+ 		u32 temp  = 0;
+@@ -1016,7 +1018,7 @@ static unsigned int __devinit init_chips
+ 		 * HighPoint does this for HPT372A.
+ 		 * NOTE: This register is only writeable via I/O space.
+ 		 */
+-		if (info->chip_type == HPT372A)
++		if (chip_type == HPT372A)
+ 			outb(0x0e, io_base + 0x9c);
+ 
+ 		/*
+@@ -1034,13 +1036,28 @@ static unsigned int __devinit init_chips
+ 		 * First try reading the register in which the HighPoint BIOS
+ 		 * saves f_CNT value before  reprogramming the DPLL from its
+ 		 * default setting (which differs for the various chips).
+-		 * NOTE: This register is only accessible via I/O space.
+ 		 *
+-		 * In case the signature check fails, we'll have to resort to
+-		 * reading the f_CNT register itself in hopes that nobody has
+-		 * touched the DPLL yet...
++		 * NOTE: This register is only accessible via I/O space;
++		 * the HPT374 BIOS seems to only set it for the function 0,
++		 * so we always get it from there -- there's no need to check
++		 * result of pci_get_slot() since the function 0 is guaranteed
++		 * to be there by this time (by the IDE core itself)...
++		 */
++		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
++			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
++							     dev->devfn - 1);
++			unsigned long io_base = pci_resource_start(dev1, 4);
++
++			temp =	inl(io_base + 0x90);
++			pci_dev_put(dev1);
++		} else
++			temp =	inl(io_base + 0x90);
++
++		/*
++		 * In case the signature check fails, we'll have to
++		 * resort to reading the f_CNT register itself in hopes
++		 * that nobody has touched the DPLL yet...
+ 		 */
+-		temp = inl(io_base + 0x90);
+ 		if ((temp & 0xFFFFF000) != 0xABCDE000) {
+ 			int i;
+ 
+@@ -1120,7 +1137,7 @@ static unsigned int __devinit init_chips
+ 	 * We also  don't like using  the DPLL because this causes glitches
+ 	 * on PRST-/SRST- when the state engine gets reset...
+ 	 */
+-	if (info->chip_type >= HPT374 || info->settings[clock] == NULL) {
++	if (chip_type >= HPT374 || info->settings[clock] == NULL) {
+ 		u16 f_low, delta = pci_clk < 50 ? 2 : 4;
+ 		int adjust;
+ 
+@@ -1190,7 +1207,7 @@ static unsigned int __devinit init_chips
+ 	/* Point to this chip's own instance of the hpt_info structure. */
+ 	pci_set_drvdata(dev, info);
+ 
+-	if (info->chip_type >= HPT370) {
++	if (chip_type >= HPT370) {
+ 		u8  mcr1, mcr4;
+ 
+ 		/*
+@@ -1209,7 +1226,7 @@ static unsigned int __devinit init_chips
+ 	 * the MISC. register to stretch the UltraDMA Tss timing.
+ 	 * NOTE: This register is only writeable via I/O space.
+ 	 */
+-	if (info->chip_type == HPT371N && clock == ATA_CLOCK_66MHZ)
++	if (chip_type == HPT371N && clock == ATA_CLOCK_66MHZ)
+ 
+ 		outb(inb(io_base + 0x9c) | 0x04, io_base + 0x9c);
+ 
 
-> applied but
-
->> drivers/ide/pci/hpt366.c |   75 ++++++++++++++++++++++++++---------------------
->> 1 files changed, 43 insertions(+), 32 deletions(-)
-
->>Index: linux-2.6/drivers/ide/pci/hpt366.c
->>===================================================================
->>--- linux-2.6.orig/drivers/ide/pci/hpt366.c
->>+++ linux-2.6/drivers/ide/pci/hpt366.c
-[...]
->>@@ -517,29 +517,17 @@ static int check_in_drive_list(ide_drive
->> }
->> 
->> /*
->>- *	Note for the future; the SATA hpt37x we must set
->>- *	either PIO or UDMA modes 0,4,5
->>+ * The Marvell bridge chips used on the HighPoint SATA cards do not seem
->>+ * to support the UltraDMA modes 1, 2, and 3 -- as well as any MWDMA modes
->>+ * (that we should start filtering out once the IDE core allows that).
->>  */
->>-
->> static u8 hpt3xx_udma_filter(ide_drive_t *drive)
->> {
->> 	struct hpt_info *info	= pci_get_drvdata(HWIF(drive)->pci_dev);
->>+	struct hd_driveid *id	= drive->id;
->> 	u8 mask;
->> 
->> 	switch (info->chip_type) {
-
-> HPT374/HPT372[NA] case could be added here so re-ordering wouldn't be needed.
-
-    I did that on purpose -- to keep an alphanumeric ordering. ;-)
-
->>@@ -551,6 +539,30 @@ static u8 hpt3xx_udma_filter(ide_drive_t
->> 		    check_in_drive_list(drive, bad_ata66_3))
->> 			mask = 0x07;
->> 		break;
->>+	case HPT370:
->>+		if (!HPT370_ALLOW_ATA100_5 ||
->>+		    check_in_drive_list(drive, bad_ata100_5))
->>+			mask = 0x1f;
->>+		else
->>+			mask = 0x3f;
-
-> ATA_UDMA* defines should be used if you insist on re-ordering
-
-    OK, recasting...
-
->>+	case HPT372 :
->>+	case HPT372A:
->>+	case HPT372N:
->>+	case HPT374 :
->>+		/*
->>+		 * Check for SATA drive by verifying that the word 93 is 0 and
->>+		 * the drive is ATA-5 or higher compatible.
->>+		 */
->>+		if (id->hw_config == 0 && (id->major_rev_num & 0x7fe0))
-
-> Same check as in ide-iops.c::eighty_ninty_three().
-> Would make sense to add ide_id_is_sata_dev() inline to <linux/ide.h>.
-
-    Actually, libata already has ata_id_is_sata() defined in <linux/ata.h> but 
-it takes <const u16 *> argument.
-
->>+			return 0x71;
->>+		/* fall thru */
->> 	default:
->> 		return 0x7f;
-
-> HPT371[N]/HPT302[N] will use the default mask which is correct but adds
-> hidden dependency on HPT*_ALLOW_ATA_133 being always defined as "1".
-
-    No, it doesn't since all this will be AND'ed with & hwif->udma_mask... But 
-wait, ide_rate_filter has the different code, it just sets mask to the result 
-of the udma_filter() method... I wonder which code is correct? :-O
-
-> IMO all HPT*_ALLOW_ATA* defines should just go away...
-
-    I think it's still worth to keep 'em alive for the possible blacklist 
-additions.
-
-> Also now that ->udma_filter is always present the initial hwif->ultra_mask
-> doesn't matter so as well we may set it to ATA_UDMA6 (0x7f) and cleanup
-> struct hpt_info (by removing max_ultra after fixing init_chipset_hpt366()
-> to use info->chip_type >= HPT374 check instead),
-
-    It's all interesting but you've missed one aspect -- this will make the 
-kernel larger while the current code keeps all this logic in the init.text 
-section.
-
-> init_setup_hpt366() and hpt366_chipsets[] (by removing udma_mask).
-
-    I'll think about it in my copious free time (I have plenty of time spent 
-offline now indeed :-)...
-
->>@@ -1229,25 +1241,24 @@ static unsigned int __devinit init_chips
->> 
->> static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
->> {
->>-	struct pci_dev	*dev		= hwif->pci_dev;
->>-	struct hpt_info *info		= pci_get_drvdata(dev);
->>-	int serialize			= HPT_SERIALIZE_IO;
->>-	u8  scr1 = 0, ata66		= hwif->channel ? 0x01 : 0x02;
->>-	u8  chip_type			= info->chip_type;
->>-	u8  new_mcr, old_mcr 		= 0;
->>+	struct pci_dev	*dev	= hwif->pci_dev;
->>+	struct hpt_info *info	= pci_get_drvdata(dev);
->>+	int serialize		= HPT_SERIALIZE_IO;
->>+	u8  scr1 = 0, ata66	= hwif->channel ? 0x01 : 0x02;
->>+	u8  chip_type		= info->chip_type;
->>+	u8  new_mcr, old_mcr	= 0;
->> 
->> 	/* Cache the channel's MISC. control registers' offset */
->>-	hwif->select_data		= hwif->channel ? 0x54 : 0x50;
->>+	hwif->select_data	= hwif->channel ? 0x54 : 0x50;
->> 
->>-	hwif->tuneproc			= &hpt3xx_tune_drive;
->>-	hwif->speedproc			= &hpt3xx_tune_chipset;
->>-	hwif->quirkproc			= &hpt3xx_quirkproc;
->>-	hwif->intrproc			= &hpt3xx_intrproc;
->>-	hwif->maskproc			= &hpt3xx_maskproc;
->>-	hwif->busproc			= &hpt3xx_busproc;
->>+	hwif->tuneproc		= &hpt3xx_tune_drive;
->>+	hwif->speedproc		= &hpt3xx_tune_chipset;
->>+	hwif->quirkproc		= &hpt3xx_quirkproc;
->>+	hwif->intrproc		= &hpt3xx_intrproc;
->>+	hwif->maskproc		= &hpt3xx_maskproc;
->>+	hwif->busproc		= &hpt3xx_busproc;
->> 
->>-	if (chip_type <= HPT370A)
->>-		hwif->udma_filter	= &hpt3xx_udma_filter;
->>+	hwif->udma_filter	= &hpt3xx_udma_filter;
-
-> Uh, the only real change here consists of the three lines above, the rest
-> is just a noise caused by removal of one tab.
-
-> Such changes are really not worth it - in this case it caused rejects in
-> two patches from IDE quilt tree which I had to fix manually.
-
-    I hope now that you've fixed it, I may leave this part intact? ;-)
-
-> Thanks,
-> Bart
-
-MBR, Sergei
