@@ -1,144 +1,114 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] hpt366: fix PCI clock detection for HPT374
-Date: Fri, 10 Aug 2007 22:26:35 +0400
-Message-ID: <200708102226.35996.sshtylyov@ru.mvista.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: AMD64 dma_alloc_coherent crashes on non PCI device (was SATA
+	open bugs) II
+Date: Fri, 10 Aug 2007 11:28:25 -0700
+Message-ID: <1186770505.6334.3.camel@localhost.localdomain>
+References: <46BA9101.6080407@gmail.com>
+	 <20070809145336.6d728f9b@the-village.bc.nu>
+	 <20070809170540.GA30700@one.firstfloor.org>
+	 <20070809182101.710c3c5b@the-village.bc.nu>
+	 <20070809172304.GB30700@one.firstfloor.org>
+	 <20070809185310.682dffbc@the-village.bc.nu>
+	 <20070809192850.GA32280@one.firstfloor.org>
+	 <20070809233458.12d8447c@the-village.bc.nu>
+	 <20070809224305.GA1611@one.firstfloor.org>
+	 <20070810001443.610185e1@the-village.bc.nu>
+	 <20070809231141.GB1845@one.firstfloor.org>
+	 <20070810002453.384a9b4c@the-village.bc.nu>
+	 <p73sl6rencd.fsf@bingen.suse.de>
+	 <20070810145430.17d72a76@the-village.bc.nu>
+	 <1186757538.3335.3.camel@localhost.localdomain>
+	 <20070810175808.52b5446a@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:7728 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756321AbXHJSY2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 14:24:28 -0400
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:37411 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755741AbXHJS2c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 14:28:32 -0400
+In-Reply-To: <20070810175808.52b5446a@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andi Kleen <andi@firstfloor.org>, Tejun Heo <htejun@gmail.com>, Natalie Protasevich <protasnb@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-pcmcia@lists.infradead.org
 
-HPT374 BIOS seems to only save f_CNT register value for the function #0 before
-re-tuning DPLL (that causes the driver to report obviously distorted f_CNT for
-the function #1) -- fix this by always reading the saved f_CNT register value
-from the function #0 in init_chipset_hpt374().
-While at it, introduce 'chip_type' for holding the 'struct hpt_info' field
-of the same name and replace the structure assignment with memcpy()...
+On Fri, 2007-08-10 at 17:58 +0100, Alan Cox wrote:
+> > Not in non platform code, please ... somewhere on the Janitor's list is
+> > moving the dma_mask from the bus specific devices into the generic
+> > device ... when that happens this quantity will become u64 and they
+> > won't know what to do with the NULL check.
+> 
+> Ok filed for "kernel summit" 
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Surely we don't need to wait until then?  This is the correct fix, isn't
+it?  (Obviously I'll split it into a generic and a pcmcia specific piece
+if it looks OK to everyone).
 
----
-This is against the current Linus tree and unfortunately I was able to
-only compile test it since that tree gives MODPOST warning and dies early.
+It sets the PCMCIA dma_mask up correctly and introduces a DMA_MASK_NONE
+(I prefer that to DMA_0BIT_MASK but I can add that too if people want)
+and gives Alan his is_device_dma_capable() API.
 
- drivers/ide/pci/hpt366.c |   41 +++++++++++++++++++++++++++++------------
- 1 files changed, 29 insertions(+), 12 deletions(-)
+James
 
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.10	Jun 29, 2007
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.11	Aug 9, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -981,6 +981,7 @@ static unsigned int __devinit init_chips
- 	struct hpt_info *info	= kmalloc(sizeof(struct hpt_info), GFP_KERNEL);
- 	unsigned long io_base	= pci_resource_start(dev, 4);
- 	u8 pci_clk,  dpll_clk	= 0;	/* PCI and DPLL clock in MHz */
-+	u8 chip_type;
- 	enum ata_clock	clock;
+diff --git a/drivers/pcmcia/ds.c b/drivers/pcmcia/ds.c
+index a996071..b3837d3 100644
+--- a/drivers/pcmcia/ds.c
++++ b/drivers/pcmcia/ds.c
+@@ -23,6 +23,7 @@
+ #include <linux/crc32.h>
+ #include <linux/firmware.h>
+ #include <linux/kref.h>
++#include <linux/dma-mapping.h>
  
- 	if (info == NULL) {
-@@ -992,7 +993,8 @@ static unsigned int __devinit init_chips
- 	 * Copy everything from a static "template" structure
- 	 * to just allocated per-chip hpt_info structure.
- 	 */
--	*info = *(struct hpt_info *)pci_get_drvdata(dev);
-+	memcpy(info, pci_get_drvdata(dev), sizeof(struct hpt_info));
-+	chip_type = info->chip_type;
+ #define IN_CARD_SERVICES
+ #include <pcmcia/cs_types.h>
+@@ -670,6 +671,9 @@ struct pcmcia_device * pcmcia_device_add(struct pcmcia_socket *s, unsigned int f
+ 	p_dev->dev.bus = &pcmcia_bus_type;
+ 	p_dev->dev.parent = s->dev.parent;
+ 	p_dev->dev.release = pcmcia_release_dev;
++	/* by default don't allow DMA */
++	p_dev->dma_mask = DMA_MASK_NONE;
++	p_dev->dev.dma_mask = &p_dev->dma_mask;
+ 	bus_id_len = sprintf (p_dev->dev.bus_id, "%d.%d", p_dev->socket->sock, p_dev->device_no);
  
- 	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, (L1_CACHE_BYTES / 4));
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x78);
-@@ -1002,7 +1004,7 @@ static unsigned int __devinit init_chips
- 	/*
- 	 * First, try to estimate the PCI clock frequency...
- 	 */
--	if (info->chip_type >= HPT370) {
-+	if (chip_type >= HPT370) {
- 		u8  scr1  = 0;
- 		u16 f_cnt = 0;
- 		u32 temp  = 0;
-@@ -1016,7 +1018,7 @@ static unsigned int __devinit init_chips
- 		 * HighPoint does this for HPT372A.
- 		 * NOTE: This register is only writeable via I/O space.
- 		 */
--		if (info->chip_type == HPT372A)
-+		if (chip_type == HPT372A)
- 			outb(0x0e, io_base + 0x9c);
+ 	p_dev->devname = kmalloc(6 + bus_id_len + 1, GFP_KERNEL);
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 2dc21cb..0ebfafb 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -24,6 +24,8 @@ enum dma_data_direction {
+ #define DMA_28BIT_MASK	0x000000000fffffffULL
+ #define DMA_24BIT_MASK	0x0000000000ffffffULL
  
- 		/*
-@@ -1034,13 +1036,28 @@ static unsigned int __devinit init_chips
- 		 * First try reading the register in which the HighPoint BIOS
- 		 * saves f_CNT value before  reprogramming the DPLL from its
- 		 * default setting (which differs for the various chips).
--		 * NOTE: This register is only accessible via I/O space.
- 		 *
--		 * In case the signature check fails, we'll have to resort to
--		 * reading the f_CNT register itself in hopes that nobody has
--		 * touched the DPLL yet...
-+		 * NOTE: This register is only accessible via I/O space;
-+		 * the HPT374 BIOS seems to only set it for the function 0,
-+		 * so we always get it from there -- there's no need to check
-+		 * result of pci_get_slot() since the function 0 is guaranteed
-+		 * to be there by this time (by the IDE core itself)...
-+		 */
-+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
-+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
-+							     dev->devfn - 1);
-+			unsigned long io_base = pci_resource_start(dev1, 4);
++#define DMA_MASK_NONE	0x0ULL
 +
-+			temp =	inl(io_base + 0x90);
-+			pci_dev_put(dev1);
-+		} else
-+			temp =	inl(io_base + 0x90);
+ static inline int valid_dma_direction(int dma_direction)
+ {
+ 	return ((dma_direction == DMA_BIDIRECTIONAL) ||
+@@ -31,6 +33,11 @@ static inline int valid_dma_direction(int dma_direction)
+ 		(dma_direction == DMA_FROM_DEVICE));
+ }
+ 
++static inline int is_device_dma_capable(struct device *dev)
++{
++	return dev->dma_mask != NULL && *dev->dma_mask != DMA_MASK_NONE;
++}
 +
-+		/*
-+		 * In case the signature check fails, we'll have to
-+		 * resort to reading the f_CNT register itself in hopes
-+		 * that nobody has touched the DPLL yet...
- 		 */
--		temp = inl(io_base + 0x90);
- 		if ((temp & 0xFFFFF000) != 0xABCDE000) {
- 			int i;
+ #ifdef CONFIG_HAS_DMA
+ #include <asm/dma-mapping.h>
+ #else
+diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
+index 90ef552..f047a1f 100644
+--- a/include/pcmcia/ds.h
++++ b/include/pcmcia/ds.h
+@@ -184,6 +184,7 @@ struct pcmcia_device {
  
-@@ -1120,7 +1137,7 @@ static unsigned int __devinit init_chips
- 	 * We also  don't like using  the DPLL because this causes glitches
- 	 * on PRST-/SRST- when the state engine gets reset...
- 	 */
--	if (info->chip_type >= HPT374 || info->settings[clock] == NULL) {
-+	if (chip_type >= HPT374 || info->settings[clock] == NULL) {
- 		u16 f_low, delta = pci_clk < 50 ? 2 : 4;
- 		int adjust;
+ 	char *			prod_id[4];
  
-@@ -1190,7 +1207,7 @@ static unsigned int __devinit init_chips
- 	/* Point to this chip's own instance of the hpt_info structure. */
- 	pci_set_drvdata(dev, info);
++	u64			dma_mask;
+ 	struct device		dev;
  
--	if (info->chip_type >= HPT370) {
-+	if (chip_type >= HPT370) {
- 		u8  mcr1, mcr4;
- 
- 		/*
-@@ -1209,7 +1226,7 @@ static unsigned int __devinit init_chips
- 	 * the MISC. register to stretch the UltraDMA Tss timing.
- 	 * NOTE: This register is only writeable via I/O space.
- 	 */
--	if (info->chip_type == HPT371N && clock == ATA_CLOCK_66MHZ)
-+	if (chip_type == HPT371N && clock == ATA_CLOCK_66MHZ)
- 
- 		outb(inb(io_base + 0x9c) | 0x04, io_base + 0x9c);
- 
+ #ifdef CONFIG_PCMCIA_IOCTL
+
 
