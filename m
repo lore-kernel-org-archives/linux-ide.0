@@ -1,117 +1,68 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/25] libata: add human-readable error value decoding
-Date: Fri, 10 Aug 2007 13:59:45 -0700
-Message-ID: <200708102059.l7AKxjUK008621@imap1.linux-foundation.org>
+Subject: [patch 17/25] libata: correct IORDY handling
+Date: Fri, 10 Aug 2007 13:59:44 -0700
+Message-ID: <200708102059.l7AKxjLQ008617@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:39618 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:49286 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760740AbXHJVQ2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:16:28 -0400
+	by vger.kernel.org with ESMTP id S932204AbXHJVQf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 17:16:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, hancockr@shaw.ca, alan@redhat.com, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, htejun@gmail.com, sshtylyov@ru.mvista.com
 
-From: Robert Hancock <hancockr@shaw.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-This adds human-readable decoding of the ATA status and error registers
-(similar to what drivers/ide does) as well as the SATA Serror register to
-libata error handling output.  This prevents the need to pore through
-standards documents to figure out the meaning of the bits in these
-registers when looking at error reports.  Some bits that drivers/ide
-decoded are not decoded here, since the bits are either command-dependent
-or obsolete, and properly parsing them would add too much complexity.
+Debugging a report of a problem with an ancient solid state disk showed up
+some problems in the IORDY handling
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-Acked-by: Alan Cox <alan@redhat.com>
+1.	We check the wrong bit to see if the device has IORDY
+2.	Even then some ancient creaking piles of crap don't support
+	SETXFER at all.
+
+I think this should go via -mm for a bit.  The cases it fixes are obscure
+and the risk of side effects is slight but possible.  This also moves us
+slightly closer to supporting original MFM/RLL disks with libata but before
+Jeff panics I have no plans to do that....
+
+Signed-off-by: Alan Cox <alan@redhat.com>
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Cc: Jeff Garzik <jeff@garzik.org>
 Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/ata/libata-eh.c |   45 ++++++++++++++++++++++++++++++++++++++
- include/linux/ata.h     |    9 +++++++
- 2 files changed, 54 insertions(+)
+ drivers/ata/libata-core.c |    6 +++++-
+ include/linux/ata.h       |    2 +-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff -puN drivers/ata/libata-eh.c~libata-add-human-readable-error-value-decoding-v3 drivers/ata/libata-eh.c
---- a/drivers/ata/libata-eh.c~libata-add-human-readable-error-value-decoding-v3
-+++ a/drivers/ata/libata-eh.c
-@@ -1698,6 +1698,27 @@ static void ata_eh_report(struct ata_por
- 			ata_port_printk(ap, KERN_ERR, "%s\n", desc);
- 	}
- 
-+	if (ehc->i.serror)
-+		ata_port_printk(ap, KERN_ERR,
-+		  "SError: {%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s}\n",
-+		  ehc->i.serror & SERR_DATA_RECOVERED ? "RecovData " : "",
-+		  ehc->i.serror & SERR_COMM_RECOVERED ? "RecovComm " : "",
-+		  ehc->i.serror & SERR_DATA ? "UnrecovData " : "",
-+		  ehc->i.serror & SERR_PERSISTENT ? "Persist " : "",
-+		  ehc->i.serror & SERR_PROTOCOL ? "Proto " : "",
-+		  ehc->i.serror & SERR_INTERNAL ? "HostInt " : "",
-+		  ehc->i.serror & SERR_PHYRDY_CHG ? "PHYRdyChg " : "",
-+		  ehc->i.serror & SERR_PHY_INT_ERR ? "PHYInt " : "",
-+		  ehc->i.serror & SERR_COMM_WAKE ? "CommWake " : "",
-+		  ehc->i.serror & SERR_10B_8B_ERR ? "10B8B " : "",
-+		  ehc->i.serror & SERR_DISPARITY ? "Dispar " : "",
-+		  ehc->i.serror & SERR_CRC ? "BadCRC " : "",
-+		  ehc->i.serror & SERR_HANDSHAKE ? "Handshk " : "",
-+		  ehc->i.serror & SERR_LINK_SEQ_ERR ? "LinkSeq " : "",
-+		  ehc->i.serror & SERR_TRANS_ST_ERROR ? "TrStaTrns " : "",
-+		  ehc->i.serror & SERR_UNRECOG_FIS ? "UnrecFIS " : "",
-+		  ehc->i.serror & SERR_DEV_XCHG ? "DevExch " : "" );
-+
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		static const char *dma_str[] = {
- 			[DMA_BIDIRECTIONAL]	= "bidi",
-@@ -1728,6 +1749,30 @@ static void ata_eh_report(struct ata_por
- 			res->hob_lbal, res->hob_lbam, res->hob_lbah,
- 			res->device, qc->err_mask, ata_err_string(qc->err_mask),
- 			qc->err_mask & AC_ERR_NCQ ? " <F>" : "");
-+
-+		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
-+				    ATA_ERR) ) {
-+			if (res->command & ATA_BUSY)
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {Busy}\n" );
-+			else
-+				ata_dev_printk(qc->dev, KERN_ERR,
-+				  "status: {%s%s%s%s}\n",
-+				  res->command & ATA_DRDY ? "DRDY " : "",
-+				  res->command & ATA_DF ? "DF " : "",
-+				  res->command & ATA_DRQ ? "DRQ " : "",
-+				  res->command & ATA_ERR ? "ERR " : "" );
-+		}
-+
-+		if (cmd->command != ATA_CMD_PACKET &&
-+		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_IDNF |
-+				     ATA_ABORTED)))
-+			ata_dev_printk(qc->dev, KERN_ERR,
-+			  "error: {%s%s%s%s}\n",
-+			  res->feature & ATA_ICRC ? "ICRC " : "",
-+			  res->feature & ATA_UNC ? "UNC " : "",
-+			  res->feature & ATA_IDNF ? "IDNF " : "",
-+			  res->feature & ATA_ABORTED ? "ABRT " : "" );
- 	}
- }
- 
-diff -puN include/linux/ata.h~libata-add-human-readable-error-value-decoding-v3 include/linux/ata.h
---- a/include/linux/ata.h~libata-add-human-readable-error-value-decoding-v3
+diff -puN drivers/ata/libata-core.c~libata-correct-iordy-handling drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-correct-iordy-handling
++++ a/drivers/ata/libata-core.c
+@@ -2770,7 +2770,11 @@ static int ata_dev_set_mode(struct ata_d
+ 	/* Old CFA may refuse this command, which is just fine */
+ 	if (dev->xfer_shift == ATA_SHIFT_PIO && ata_id_is_cfa(dev->id))
+         	err_mask &= ~AC_ERR_DEV;
+-
++	/* Some very old devices and some bad newer ones fail any kind of
++	   SET_XFERMODE request but support PIO0-2 timings and no IORDY */
++	if (dev->xfer_shift == ATA_SHIFT_PIO && !ata_id_has_iordy(dev->id) &&
++			dev->pio_mode <= XFER_PIO_2)
++		err_mask &= ~AC_ERR_DEV;
+ 	if (err_mask) {
+ 		ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
+ 			       "(err_mask=0x%x)\n", err_mask);
+diff -puN include/linux/ata.h~libata-correct-iordy-handling include/linux/ata.h
+--- a/include/linux/ata.h~libata-correct-iordy-handling
 +++ a/include/linux/ata.h
-@@ -268,6 +268,15 @@ enum {
- 	SERR_PROTOCOL		= (1 << 10), /* protocol violation */
- 	SERR_INTERNAL		= (1 << 11), /* host internal error */
- 	SERR_PHYRDY_CHG		= (1 << 16), /* PHY RDY changed */
-+	SERR_PHY_INT_ERR	= (1 << 17), /* PHY internal error */
-+	SERR_COMM_WAKE		= (1 << 18), /* Comm wake */
-+	SERR_10B_8B_ERR		= (1 << 19), /* 10b to 8b decode error */
-+	SERR_DISPARITY		= (1 << 20), /* Disparity */
-+	SERR_CRC		= (1 << 21), /* CRC error */
-+	SERR_HANDSHAKE		= (1 << 22), /* Handshake error */
-+	SERR_LINK_SEQ_ERR	= (1 << 23), /* Link sequence error */
-+	SERR_TRANS_ST_ERROR	= (1 << 24), /* Transport state trans. error */
-+	SERR_UNRECOG_FIS	= (1 << 25), /* Unrecognized FIS */
- 	SERR_DEV_XCHG		= (1 << 26), /* device exchanged */
- 
- 	/* struct ata_taskfile flags */
+@@ -345,7 +345,7 @@ struct ata_taskfile {
+ #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+ #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+ #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
+-#define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
++#define ata_id_has_iordy(id) ((id)[49] & (1 << 11))
+ #define ata_id_u32(id,n)	\
+ 	(((u32) (id)[(n) + 1] << 16) | ((u32) (id)[(n)]))
+ #define ata_id_u64(id,n)	\
 _
