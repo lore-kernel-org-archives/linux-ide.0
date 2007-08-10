@@ -1,39 +1,44 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 1/2] pata_hpt37x: actually clock HPT374 by 50 MHz DPLL
-Date: Fri, 10 Aug 2007 19:34:51 +0400
-Message-ID: <46BC859B.6080606@ru.mvista.com>
-References: <200708052245.16406.sshtylyov@ru.mvista.com> <200708092248.44675.bzolnier@gmail.com>
+Date: Fri, 10 Aug 2007 19:36:25 +0400
+Message-ID: <46BC85F9.1040903@ru.mvista.com>
+References: <200708052245.16406.sshtylyov@ru.mvista.com> <200708092248.44675.bzolnier@gmail.com> <20070809235213.391ab6c9@the-village.bc.nu> <200708100152.32753.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:55447 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:55491 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757855AbXHJPcm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Aug 2007 11:32:42 -0400
-In-Reply-To: <200708092248.44675.bzolnier@gmail.com>
+	id S1763944AbXHJPeP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Aug 2007 11:34:15 -0400
+In-Reply-To: <200708100152.32753.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rah@bash.sh
-
-Hello.
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, rah@bash.sh
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>Index: linux-2.6/drivers/ata/pata_hpt37x.c
->>===================================================================
->>--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
->>+++ linux-2.6/drivers/ata/pata_hpt37x.c
->>@@ -8,12 +8,10 @@
+>>> * This driver is heavily based upon:
+>>> *
+>>> * linux/drivers/ide/pci/hpt366.c               Version 0.36    April 25, 2003
+>>> *
+>>>reference to hpt366 version should also be updated (or removed)
 
-> this driver is lacking author/maintainer info:
+>>Disagree - its not based on the newer hpt366 driver. Its based on the old
 
-    Why I'm seeing it there then? :-O
+> But this patch has just updated copyright references to match with the new
+> driver while the version still matches the old one!
 
-> /*
->  * Libata driver for the highpoint 37x and 30x UDMA66 ATA controllers.
+    Err... I've updated the copyright to reflect that I've done some changes 
+to these drivers as well...
 
-    They're actually not UDMA66, they are UDMA100/133.
+>>one. Actually by now it bears almost no resemblence any of them
+
+> Indeed, unfortunately...
+
+    :-)
+
+> Bart
 
 MBR, Sergei
