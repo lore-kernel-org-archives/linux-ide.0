@@ -1,44 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_artop: fix UDMA5 for AEC6280[R] and UDMA6 for
- AEC6880[R]
-Date: Fri, 10 Aug 2007 18:33:43 +0100
-Message-ID: <20070810183343.6f1ebed0@the-village.bc.nu>
-References: <200708101438.l7AEcNna029762@harpo.it.uu.se>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
+Date: Fri, 10 Aug 2007 21:29:14 +0400
+Message-ID: <46BCA06A.8040609@ru.mvista.com>
+References: <200708060006.35511.sshtylyov@ru.mvista.com>	<20070806202958.25670cc1@the-village.bc.nu>	<46BC8747.4020307@ru.mvista.com> <20070810181907.61fd514d@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47827 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750866AbXHJR0e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2007 13:26:34 -0400
-In-Reply-To: <200708101438.l7AEcNna029762@harpo.it.uu.se>
+Received: from h155.mvista.com ([63.81.120.155]:56463 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756442AbXHJR1E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Aug 2007 13:27:04 -0400
+In-Reply-To: <20070810181907.61fd514d@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: bzolnier@gmail.com, rah@bash.sh, linux-ide@vger.kernel.org
 
-> Tested on ATP865 (1191:0008 rev 07) in a DS101 box (an ARM-based NAS).
-> Seems to work fine.
+Alan Cox wrote:
 
-Its tested fairly hard on several NAS boxes (and still needs a fix for
-one)
+>>>>+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
+>>>>+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
+>>>>+							     dev->devfn - 1);
 
-> However, I'm gettting consistently lower read throughput with pata_artop
-> (13-19 MB/s) than with aec62xx (22 MB/s) on an oldish WD drive, and using
-> pata_artop triggers a WARN_ON(irqs_disabled()) in arch/arm/mm/consistent.c:
+>>>Can be NULL
 
-It would be nice to know why - is the cable detet coming out right on
-this ?
+>>    Not really. This may not be called if it's NULL -- see hpt374_init_setup().
+>>Maybe worth a comment though...
 
-> WARNING: at arch/arm/mm/consistent.c:364 dma_free_coherent()
+>>>>+			unsigned long io_base = pci_resource_start(dev1, 4);
+>>
+>>>Kaboom
+>>
+>>    That was a dud bomb. ;-)
 
-ARM has a problem with dma_free_coherent with IRQ disabled. Unfortunately
-under high load ARM decides to use dma_free_coherent inside
-dma_unmap_sg(). This as far as I can see is an ARM problem not a libata
-problem and one you can duplicate with other drivers under high load.
+> What stops a hot unplug of a 374 from causing that to occur. I don't see
 
-If any ARM people can tell me what is going on and help fix it either in
-ARM or libata that would be great.
+    Pinned as in pci_get_device()? If so, see setup-ide.c:ide_scan_pcibus().
+The IDE core does that for me.
 
-Alan
+> where you have the other pci_dev pinned on a hotplug on a box set to scan
+> the devices in reverse order
+
+    Function 1 will always be skipped, regardless of the scan order.
+
+> (yes its an extremely obscure case ;))
+
+    "Security through obscurity". :-)
+
+MBR, Sergei
