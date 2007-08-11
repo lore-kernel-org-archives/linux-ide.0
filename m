@@ -1,53 +1,53 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: [PATCH 2/2] hpt366: UltraDMA filtering for SATA cards
-Date: Sat, 11 Aug 2007 22:59:50 +0400
-Message-ID: <46BE0726.1080609@ru.mvista.com>
-References: <200708060008.38077.sshtylyov@ru.mvista.com> <200708090008.10352.bzolnier@gmail.com> <46BCAA85.3070905@ru.mvista.com> <200708102316.09960.bzolnier@gmail.com> <46BDD989.6060202@ru.mvista.com>
+Date: Sat, 11 Aug 2007 23:23:13 +0400
+Message-ID: <46BE0CA1.8020606@ru.mvista.com>
+References: <200708060008.38077.sshtylyov@ru.mvista.com> <200708090008.10352.bzolnier@gmail.com> <46BDF1A4.2020902@ru.mvista.com> <200708112003.35489.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:61609 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:61702 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754405AbXHKS5i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Aug 2007 14:57:38 -0400
-In-Reply-To: <46BDD989.6060202@ru.mvista.com>
+	id S1756484AbXHKTVB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Aug 2007 15:21:01 -0400
+In-Reply-To: <200708112003.35489.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: rah@bash.sh, linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->>  101 files changed, 1880 insertions(+), 2828 deletions(-)
+>>>>Index: linux-2.6/drivers/ide/pci/hpt366.c
+>>>>===================================================================
+>>>>--- linux-2.6.orig/drivers/ide/pci/hpt366.c
+>>>>+++ linux-2.6/drivers/ide/pci/hpt366.c
 
->> please look at -mm or IDE quilt tree instead. :)
+>>[...]
 
->    Looking...
+>>>>+	case HPT372 :
+>>>>+	case HPT372A:
+>>>>+	case HPT372N:
+>>>>+	case HPT374 :
+>>>>+		/*
+>>>>+		 * Check for SATA drive by verifying that the word 93 is 0 and
+>>>>+		 * the drive is ATA-5 or higher compatible.
+>>>>+		 */
+>>>>+		if (id->hw_config == 0 && (id->major_rev_num & 0x7fe0))
+>>
+>>>Same check as in ide-iops.c::eighty_ninty_three().
+>>
+>>>Would make sense to add ide_id_is_sata_dev() inline to <linux/ide.h>.
+>>
+>>    Right in this patch, or a later cleanup?
 
-    When are you planning to push out to Linus the 
-ide-mode-limiting-fixes-for-user-requested-speed-changes.patch? I'd like my 
-HPT37x SATA mode filtering stuff to be atop of this one, after looking at it.
+> I prefer doing it in this patch but later cleanup is also OK...
 
->> ide_rate_filter() happily uses ide_find_dma_mode() nowadays (however this
->> hpt366 patch is for vanilla kernel which doesn't have the needed 
->> changes).
+    Alas, you'll have to wait till the next weekend -- the patch doesn't seem 
+to be critical though, it didn't fix the bug... :-]
 
-    Yeah, it keeps being in the same vein (same bug rather :-) as the old 
-code, i.e. not looking at hwif->mwdma_mask when falling back in 
-ide_rate_filter()...
-
-[...]
-
->> I wouldn't be surprised if we actually _decrease_ the driver size a bit
->> (in addition to removal of ~35 LOC).
-
->    Decrasing .init.text section's width doesn't buy you much.
-
-    Ugh, I meant "decreasing", not decraZing (another freudian slip :-) and 
-"length", not "width"
-
->> Thanks,
->> Bart
+> Thanks.
+> Bart
 
 MBR, Sergei
