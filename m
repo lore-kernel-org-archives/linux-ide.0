@@ -1,100 +1,61 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Sat, 11 Aug 2007 23:31:14 +0200
-Message-ID: <200708112331.14270.bzolnier@gmail.com>
-References: <200708060006.35511.sshtylyov@ru.mvista.com> <200708111907.29501.bzolnier@gmail.com> <46BDF08C.1070508@ru.mvista.com>
+Subject: Re: [PATCH] pata_cmd64x: Set up MWDMA modes properly
+Date: Sat, 11 Aug 2007 23:37:48 +0200
+Message-ID: <200708112337.48458.bzolnier@gmail.com>
+References: <20070808143320.0de8c5d9@the-village.bc.nu> <46BE1452.4010603@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:18783 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.187]:18520 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757167AbXHKVij (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Aug 2007 17:38:39 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1036100fkz
-        for <linux-ide@vger.kernel.org>; Sat, 11 Aug 2007 14:38:37 -0700 (PDT)
-In-Reply-To: <46BDF08C.1070508@ru.mvista.com>
+	with ESMTP id S1760519AbXHKVil (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Aug 2007 17:38:41 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1036110fkz
+        for <linux-ide@vger.kernel.org>; Sat, 11 Aug 2007 14:38:39 -0700 (PDT)
+In-Reply-To: <46BE1452.4010603@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
 
 On Saturday 11 August 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
+> Hello.
 > 
-> >>>>>>>>>>+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
-> >>>>>>>>>>+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
-> >>>>>>>>>>+							     dev->devfn - 1);
+> Alan Cox wrote:
 > 
-> >>>>>>>>>Can be NULL
+> > Set the MWDMA timing by updating the correct registers. Split the PIO
+> > path as this is mostly shared code. Wants testing.
 > 
-> >>>>>>>> Not really. This may not be called if it's NULL -- see hpt374_init_setup().
-> >>>>>>>>Maybe worth a comment though...
+>     Cool! So much simpler than my fix to the old IDE driver...
 > 
-> >>>>>>>>>>+			unsigned long io_base = pci_resource_start(dev1, 4);
+> > Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> >>>>>>>>>Kaboom
+> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 > 
-> >>>>>>>> That was a dud bomb. ;-)
+> > diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c
+> > --- linux.vanilla-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-07-26 15:01:52.000000000 +0100
+> > +++ linux-2.6.23rc1-mm1/drivers/ata/pata_cmd64x.c	2007-08-08 11:52:23.000000000 +0100
+> [...]
+> > @@ -117,8 +118,9 @@
+> >  	int arttim = arttim_port[ap->port_no][adev->devno];
+> >  	int drwtim = drwtim_port[ap->port_no][adev->devno];
+> >  
+> > -
+> > -	if (ata_timing_compute(adev, adev->pio_mode, &t, T, 0) < 0) {
+> > +	/* ata_timing_compute is smart and will produce timings for MWDMA
+> > +	   that don't violate the drives PIO capabilities. */
+> > +	if (ata_timing_compute(adev, mode, &t, T, 0) < 0) {
+> >  		printk(KERN_ERR DRV_NAME ": mode computation failed.\n");
+> >  		return;
+> >  	}
 > 
-> >>>>>>>What stops a hot unplug of a 374 from causing that to occur. I don't see
-> 
-> >>>>>>  Pinned as in pci_get_device()? If so, see setup-ide.c:ide_scan_pcibus().
-> >>>>>>The IDE core does that for me.
-> 
-> >>>>>ide_scan_pcibus() is used iff IDE is built-in.
-> 
-> >>>>>Moreover pci_get_device() holds reference _only_ to the current PCI device
-> >>>>>(the reference count to @from PCI device is _always_ decremented).
-> 
-> >>>>   Indeed... doesn't it look like a buglet in the IDE core?
-> 
-> >>>It is OK, when ide_scan_pcibus() is not used
-> 
-> >>    But whan it is used?
-> 
-> > Then it keeps the reference to PCI device itself by using pci_get_device()...
-> 
->     Well, that I know. What I was asking is where the reference is kept after 
-> the driver init time -- we're still working with the PCI device, so unplagging 
-> it would be wrong thing to do. Actually, we should never call pci_dev_put() 
-> since IDE drivers are not unloadable, right?
+>     That function rocks (except I didn't get what the address setup timings 
+> mean to SW/MW DMA)...
 
-Now that I look at pci_device_probe() it seems that there should be additional
-pci_dev_get() call in ide_scan_pcidev() if d->probe() succeeds.  Care to fix it?
-
-> >>>probing is done by PCI layer
-> >>>and it keeps the reference to the PCI device in pci_device_probe().
-> 
-> >>>>>>>where you have the other pci_dev pinned on a hotplug on a box set to scan
-> >>>>>>>the devices in reverse order
-> 
-> >>>>>>  Function 1 will always be skipped, regardless of the scan order.
-> 
-> >>>>>Yes, but init_chipset_hpt366() will still try to access Function 1
-> 
-> >>>>   No!  Re-read the code please: init_chipset_hpt366() won't be called for 
-> >>>>function 1 if that one is not detected, and only in this case it does function 
-> >>>>0 access to read the saved f_CNT value.
-> 
-> >>>Argh, thinko on my side.
-> 
-> >>    Alas, it's your thinko, *again*. ;-)
-> 
-> >>>Unfortunately patch needs fixing anyway since the new comment is incorrect
-> >>>because the reference is kept by hpt366 driver itself - pci_get_slot() in
-> >>>init_setup_hpt374() - not the IDE core...
-> 
-> >>    Actually, init_setup_hpt374() grabs function 1 to register pair of devices 
-> >>(in hopes that the callers have already "pinned" function 0), and 
-> >>init_chipset_hpt366() "pins" function 0 to read the saved f_CNT.
-> 
-> > Yep, this would make a nice code comment instead the current one. :)
-> 
->    Ugh, will try to reword it... :-|
-
-Thanks.
+JFYI: this function was "borrowed" from drivers/ide/ide-timing.h,
+you can use it in IDE host drivers as well... ;)
 
 Bart
