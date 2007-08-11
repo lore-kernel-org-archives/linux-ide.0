@@ -1,73 +1,55 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Fri, 10 Aug 2007 20:21:19 -0600
-Message-ID: <46BD1D1F.70707@shaw.ca>
-References: <fa.SuAjism+m0z0haqCRVjkc2S978o@ifi.uio.no>
- <fa.3VfWxxgY+5IvJGIam0al/rUn/Q4@ifi.uio.no>
- <fa.WVQYJNYB2uuhgQFoGpK6eCfWazo@ifi.uio.no>
- <fa.5IFtia9VWM6ePZjGzb+WVMoHQCY@ifi.uio.no>
- <fa.M8tTjYMrntIRJ5aXHPFPjCNEk6k@ifi.uio.no>
- <fa.IDurvYCLZ5ArGLsuNcLC3l1CSqQ@ifi.uio.no>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Sat, 11 Aug 2007 00:58:49 -0400
+Message-ID: <9122.1186808329@turing-police.cc.vt.edu>
+References: <20070809211800.022150464@intel.com>
+            <20070809142416.a110ba25.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: multipart/signed; boundary="==_Exmh_1186808329_3018P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-reply-to: <fa.IDurvYCLZ5ArGLsuNcLC3l1CSqQ@ifi.uio.no>
-Sender: linux-acpi-owner@vger.kernel.org
-To: trenn@suse.de
-Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <htejun@gmail.com>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Michael Sedkowski <sedmich@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>, firmwarekit-discuss <firmwarekit-discuss@bughost.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755150AbXHKE7Q@vger.kernel.org>
+In-Reply-To: Your message of "Thu, 09 Aug 2007 14:24:16 PDT."
+             <20070809142416.a110ba25.kristen.c.accardi@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, htejun@gmail.com, akpm@linux-foundation.org, arjan@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Thomas Renninger wrote:
-> On Thu, 2007-08-09 at 15:16 +0000, Pavel Machek wrote:
->> Hi!
->>
->>>> firmwarekit-discuss <firmwarekit-discuss@bughost.org> (added to CC list)
->>>> see: http://linuxfirmwarekit.org/
->>>>
->>>> But if I understand this problem right, this won't be easy.
->>>> The ACPI tables are just parsed with system ("iasl ...") and syntactical
->>>> errors/warnings are printed out.
->>>> I also thought about a test, interpreting the DSDT and read out values
->>>> of cpufreq tables and sanity check them. AFAIK the linuxfirmwarekit is
->>>> not designed for that atm. You need to compile in most parts of the
->>>> acpica code and parse and interpret DSDT/SSDT code yourself in the
->>>> firmwarekit core or inside a plugin, then do a walk_namespace call or
->>>> whatever to find the functions/parts you like to examine. This is a lot
->>>> work and needs a proper design (providing an interface to plugins to let
->>>> them easily check specific AML/ASL code).
->>> Furthermore, we don't really know what we're looking for.  How can you
->>> tell a given write to an ioport is issuing STANDBYNOW to an ATA disk or
->>> trying to power the machine off?  Adding to the fun, many modern ATA
->>> controller have more than one way to issue a command.  Maybe we can
->>> match accesses inside regions specified by PCI BARs....  :-(
->> Hmmm... perhaps we should do it the other way. ACPI is allowed to
->> touch the embedded controller, what else? Maybe we should warn as soon
->> as API touches non-EC I/O port?
-> 
-> This is not working...
-> ACPI can and does access all kind of other I/O ports and other
-> resources.
-> Hmm, are the disk accesses done by ACPI via OperationRegion/Field
-> declared variables?
-> I try to get a check for those clashing with native drivers (hopefully
-> this approach is successful for 2.6.24, can't say for sure yet), I
-> wonder whether this one would give a warning like "Libata driver is
-> using the same SystemIO/SystemMem resources than ACPI OperationRegion
-> declaration XY".
-> This would not solve the problem, but at least show the need of such a
-> test. Such ACPI vs native driver interference problems are very hard
-> nuts (in identifying and solving).
-> 
-> Can someone post an ASL code snippet how ACPI actually access the disk
-> and in which parts/functions, pls.
+--==_Exmh_1186808329_3018P
+Content-Type: text/plain; charset=us-ascii
 
-Again, it's not believed that this is being done via AML, but via a BIOS 
-SMM trap on the ACPI sleep state hardware IO port. We have no real 
-ability to find out what the BIOS is doing or prevent it in this case.
+On Thu, 09 Aug 2007 14:24:16 PDT, Kristen Carlson Accardi said:
+> +++ 2.6-git/drivers/ata/libata-scsi.c
+> @@ -2904,6 +2976,52 @@ void ata_scsi_simulate(struct ata_device
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+> +		if ((dev->horkage & ATA_HORKAGE_IPM) ||
+> +			!(dev->flags & ATA_DFLAG_IPM)) {
+> +			ata_dev_printk(dev, KERN_ERR,
+> +				"Unable to set Link PM policy\n");
+> +			ap->pm_policy = MAX_PERFORMANCE;
+> +		}
 
+KERN_INFO please, or KERN_WARNING at the highest, at least until such time
+as enough drivers support enough hardware that it really *does* qualify for
+"this should not fail" status.
+
+(OK, so I'm just cranky because I'm tired of seeing a KERN_ERR thrown at every
+reboot, just because the ata_piix driver doesn't know how to set this stuff up
+for the DVD?RW drive in my laptop.  But when this goes upstream, lots of
+*other* people are going to get hit by the exact same thing and think there's
+something actually *wrong* with their hardware.)
+
+--==_Exmh_1186808329_3018P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFGvUIJcC3lWbTT17ARAhSfAJ9hzXj+RJxaN7P1v+QjUmlGwFy+VQCgibOk
+b0thawrrkeq4YY2ZoP9HOU0=
+=krIW
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1186808329_3018P--
