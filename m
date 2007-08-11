@@ -1,61 +1,51 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: Re: pata_ali exceptions (timeout)
-Date: Sat, 11 Aug 2007 14:34:40 +0400
-Message-ID: <200708111434.45994.arvidjaar@mail.ru>
-References: <200708111203.34965.fhimpe@telenet.be>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: [patch 0/4] Updated AN patches, now without gendisk
+Date: Sat, 11 Aug 2007 16:00:53 +0200
+Message-ID: <3ae72650708110700x7ddf3d57ue9a8875761425f52@mail.gmail.com>
+References: <20070808120739.c3097d19.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1269618.6DQK0hVEaI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback.mail.ru ([194.67.57.14]:32177 "EHLO mx4.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754407AbXHKKgx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Aug 2007 06:36:53 -0400
-In-Reply-To: <200708111203.34965.fhimpe@telenet.be>
+Received: from wa-out-1112.google.com ([209.85.146.179]:59885 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbXHKOAz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Aug 2007 10:00:55 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1224842wah
+        for <linux-ide@vger.kernel.org>; Sat, 11 Aug 2007 07:00:54 -0700 (PDT)
+In-Reply-To: <20070808120739.c3097d19.kristen.c.accardi@intel.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frederik Himpe <fhimpe@telenet.be>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, David Zeuthen <david@fubar.dk>
 
---nextPart1269618.6DQK0hVEaI
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On 8/8/07, Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
+> Here is an updated set of patches that implement Asynchronous Notification
+> support for ATAPI devices.  In this version I no longer export the AN
+> capability through genhd, and the uevent is sent by the scsi_device
+> instead of gendisk.  I added a generic SCSI device event mechanism so
+> that it can be expanded in the future with other types of events.  Please
+> let me know what you think.
 
-On Saturday 11 August 2007, Frederik Himpe wrote:
-> I'm using a Linux 2.6.22.2 kernel. When the pata_ali driver loads and dis=
-ks
-> are detected, the system appears to hang for some time, and there are
-> exceptions/timeouts in the dmesg log.
->
-> The hardware is a Compaq Evo N1020v laptop computer.
->
-> I attach the output of dmesg and lspci -vvxx
->
-> I suppose this is the same problem as discussed earlier in these threads?
-> http://lkml.org/lkml/2006/6/20/309
-> http://www.opensubscriber.com/message/linux-ide%40vger.kernel.org/7326463=
-=2Eh
->tml
+Does that mean:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8ce7ad7b2d11fae2c3d285a6a0caea9322c0b8fc
 
-yes very much looks like it. At least it rules out specific ATAPI device is=
-sue=20
-which I suspected at some point
+will go away?
 
---nextPart1269618.6DQK0hVEaI
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Then we will need to come up with an idea to propagate that to the
+blockdev, it gets a bit nasty for userspace to find out which
+blockdevice it should update. It's certainly possible, but just not as
+easy as it is now, because userspace just doesn't really care in most
+cases what kind of bus device a block device is coming from.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+And it would also be nice to plug exactly the same kind of media
+change notification for devices which only revalidate at open(). That
+way we could unify all the removable media handling into a single code
+path. We would just check if AN is supported, and wait for events, or
+start polling the device if AN isn't supported. It would be great if
+we can get the same events in both cases, so we don't need to keep two
+completely different ways to implement this.
 
-iD8DBQBGvZDBR6LMutpd94wRAtYHAJwK0d+87QTftlhYugDJFHFO/nYX4gCgr1Cf
-Ekl7B6ABDcEBwbbpYlFJQmg=
-=SPPu
------END PGP SIGNATURE-----
-
---nextPart1269618.6DQK0hVEaI--
+Thanks,
+Kay
