@@ -1,88 +1,40 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Sat, 11 Aug 2007 19:07:29 +0200
-Message-ID: <200708111907.29501.bzolnier@gmail.com>
-References: <200708060006.35511.sshtylyov@ru.mvista.com> <200708111841.34648.bzolnier@gmail.com> <46BDE9D4.1020702@ru.mvista.com>
+Subject: Re: [PATCH 3/11] au1xxx-ide: use ide_tune_dma()
+Date: Sat, 11 Aug 2007 19:10:15 +0200
+Message-ID: <200708111910.15921.bzolnier@gmail.com>
+References: <200708042206.57529.bzolnier@gmail.com> <200708102358.25715.bzolnier@gmail.com> <46BDEB54.6060609@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:28090 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.189]:28193 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbXHKRK7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Aug 2007 13:10:59 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so989451fkz
-        for <linux-ide@vger.kernel.org>; Sat, 11 Aug 2007 10:10:57 -0700 (PDT)
-In-Reply-To: <46BDE9D4.1020702@ru.mvista.com>
+	with ESMTP id S1752120AbXHKRLA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Aug 2007 13:11:00 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so989454fkz
+        for <linux-ide@vger.kernel.org>; Sat, 11 Aug 2007 10:10:58 -0700 (PDT)
+In-Reply-To: <46BDEB54.6060609@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, rah@bash.sh, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Saturday 11 August 2007, Sergei Shtylyov wrote:
+On Saturday 11 August 2007, you wrote:
 > Bartlomiej Zolnierkiewicz wrote:
 > 
-> >>>>>>>>+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
-> >>>>>>>>+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
-> >>>>>>>>+							     dev->devfn - 1);
+> >>>>   Good, that's what I lacked for hpt366.c!  Were you planning to push it to 
+> >>>>Linus soon?
 > 
-> >>>>>>>Can be NULL
+> >>>Not really but if needed I will extract MWDMA filter part and push it sooner.
 > 
-> >>>>>>  Not really. This may not be called if it's NULL -- see hpt374_init_setup().
-> >>>>>>Maybe worth a comment though...
+> >>    Erm, may I just merge it to my patch (mentioning you of course)?
 > 
-> >>>>>>>>+			unsigned long io_base = pci_resource_start(dev1, 4);
+> > Sure.
 > 
-> >>>>>>>Kaboom
-> 
-> >>>>>>  That was a dud bomb. ;-)
-> 
-> >>>>>What stops a hot unplug of a 374 from causing that to occur. I don't see
-> 
-> >>>>   Pinned as in pci_get_device()? If so, see setup-ide.c:ide_scan_pcibus().
-> >>>>The IDE core does that for me.
-> 
-> >>>ide_scan_pcibus() is used iff IDE is built-in.
-> 
-> >>>Moreover pci_get_device() holds reference _only_ to the current PCI device
-> >>>(the reference count to @from PCI device is _always_ decremented).
-> 
-> >>    Indeed... doesn't it look like a buglet in the IDE core?
-> 
-> > It is OK, when ide_scan_pcibus() is not used
-> 
->     But whan it is used?
+>    I guess you want to keep the method's name? :-)
 
-Then it keeps the reference to PCI device itself by using pci_get_device()...
-
-> > probing is done by PCI layer
-> > and it keeps the reference to the PCI device in pci_device_probe().
-> 
-> >>>>>where you have the other pci_dev pinned on a hotplug on a box set to scan
-> >>>>>the devices in reverse order
-> 
-> >>>>   Function 1 will always be skipped, regardless of the scan order.
-> 
-> >>>Yes, but init_chipset_hpt366() will still try to access Function 1
-> 
-> >>    No!  Re-read the code please: init_chipset_hpt366() won't be called for 
-> >>function 1 if that one is not detected, and only in this case it does function 
-> >>0 access to read the saved f_CNT value.
-> 
-> > Argh, thinko on my side.
-> 
->     Alas, it's your thinko, *again*. ;-)
-> 
-> > Unfortunately patch needs fixing anyway since the new comment is incorrect
-> > because the reference is kept by hpt366 driver itself - pci_get_slot() in
-> > init_setup_hpt374() - not the IDE core...
-> 
->     Actually, init_setup_hpt374() grabs function 1 to register pair of devices 
-> (in hopes that the callers have already "pinned" function 0), and 
-> init_chipset_hpt366() "pins" function 0 to read the saved f_CNT.
-
-Yep, this would make a nice code comment instead the current one. :)
+Not really, it may be ->mwdma_filter (to keep consistency with ->mwmda_mask).
 
 Bart
