@@ -1,82 +1,61 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] pata_artop: fix UDMA5 for AEC6280[R] and UDMA6 for AEC6880[R]
-Date: Sun, 12 Aug 2007 13:53:54 +0200 (MEST)
-Message-ID: <200708121153.l7CBrsm5011470@harpo.it.uu.se>
+From: Frederik Himpe <fhimpe@telenet.be>
+Subject: Re: pata_ali exceptions (timeout)
+Date: Sun, 12 Aug 2007 15:17:47 +0200
+Message-ID: <1186924667.3832.9.camel@Anastacia>
+References: <200708111203.34965.fhimpe@telenet.be>
+	 <200708121407.03403.arvidjaar@mail.ru>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-qYGv+XGE4tot3V9pGT9l"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:40487 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765561AbXHLLyJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Aug 2007 07:54:09 -0400
+Received: from ananke.telenet-ops.be ([195.130.137.78]:35382 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759571AbXHLNRt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Aug 2007 09:17:49 -0400
+In-Reply-To: <200708121407.03403.arvidjaar@mail.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, mikpe@it.uu.se
-Cc: bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 10 Aug 2007 18:33:43 +0100, Alan Cox wrote:
-> > However, I'm gettting consistently lower read throughput with pata_artop
-> > (13-19 MB/s) than with aec62xx (22 MB/s) on an oldish WD drive, and using
-> > pata_artop triggers a WARN_ON(irqs_disabled()) in arch/arm/mm/consistent.c:
+
+--=-qYGv+XGE4tot3V9pGT9l
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+
+On Sun, 2007-08-12 at 14:07 +0400, Andrey Borzenkov wrote:
+> On Saturday 11 August 2007, you wrote:
+> > I attach the output of dmesg and lspci -vvxx
+> >
 > 
-> It would be nice to know why - is the cable detet coming out right on
-> this ?
+> could you please use lspci -nn... it displays numerical IDs in addition to 
+> textual translation, making it easier to check.
 
-The box has a short 40-wire cable, so pata_artop drops to udma/33
-while aec62xx does udma/100 without intervention. I added an override
-to artop6260_cable_detect() to make it return PATA40_SHORT on this
-platform, and with that it does udma/100 as expected.
+I have attached the output of lspci -nn.
 
-Read performance fluctuates quite a bit, but seems to be 1-3 MB/s
-slower than aec62xx on average. I compared lspci -vvxxx and the
-only differences are a latency setting and some ROM thingy:
+-- 
+Frederik Himpe
 
---- lspci-ide	2007-08-12 13:07:12.000000000 +0200
-+++ lspci-libata	2007-08-12 13:12:55.000000000 +0200
-@@ -1,32 +1,32 @@
- 00:01.0 Mass storage controller: Artop Electronic Corp ATP865 NO-ROM (rev 07)
- 	Subsystem: Artop Electronic Corp ATP865 NO-ROM
- 	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B-
- 	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
--	Latency: 0 (2750ns min, 1000ns max), Cache Line Size 08
-+	Latency: 144 (2750ns min, 1000ns max), Cache Line Size 08
- 	Interrupt: pin A routed to IRQ 28
- 	Region 0: I/O ports at 1050 [size=8]
- 	Region 1: I/O ports at 1060 [size=4]
- 	Region 2: I/O ports at 1058 [size=8]
- 	Region 3: I/O ports at 1064 [size=4]
- 	Region 4: I/O ports at 1040 [size=16]
--	Expansion ROM at 48000000 [disabled by cmd] [size=64K]
-+	Expansion ROM at 48000000 [disabled] [size=64K]
- 	Capabilities: [58] Power Management version 2
- 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
- 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
--00: 91 11 08 00 45 01 90 02 07 00 80 01 08 00 00 00
-+00: 91 11 08 00 45 01 90 02 07 00 80 01 08 90 00 00
- 10: 51 10 00 00 61 10 00 00 59 10 00 00 65 10 00 00
- 20: 41 10 00 00 00 00 00 00 00 00 00 00 91 11 08 00
--30: 01 00 00 48 58 00 00 00 00 00 00 00 1c 01 0b 04
-+30: 00 00 00 48 58 00 00 00 00 00 00 00 1c 01 0b 04
- 40: 31 00 00 00 06 00 00 00 70 84 96 00 00 00 00 02
- 50: ff ff ff ff f0 ff 34 50 01 00 02 06 00 00 00 00
- 60: 31 00 00 00 06 00 00 00 70 84 96 00 00 00 00 02
- 70: 00 00 00 00 f0 ff 34 50 01 00 02 06 00 00 00 00
- 80: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- 90: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
- c0: 31 00 00 00 06 00 00 00 70 84 96 00 00 00 00 02
- d0: 00 00 00 00 f0 ff 34 50 01 00 02 06 00 00 00 00
- e0: 31 00 00 00 06 00 00 00 70 84 96 00 00 00 00 02
- f0: 00 00 00 00 f0 ff 34 50 01 00 02 06 00 00 00 00
+--=-qYGv+XGE4tot3V9pGT9l
+Content-Disposition: attachment; filename=lspci-nn
+Content-Type: text/plain; name=lspci-nn; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-> > WARNING: at arch/arm/mm/consistent.c:364 dma_free_coherent()
-> 
-> ARM has a problem with dma_free_coherent with IRQ disabled. Unfortunately
-> under high load ARM decides to use dma_free_coherent inside
-> dma_unmap_sg(). This as far as I can see is an ARM problem not a libata
-> problem and one you can duplicate with other drivers under high load.
+00:00.0 Host bridge [0600]: ATI Technologies Inc RS200/RS200M AGP Bridge [IGP 340M] [1002:cab2] (rev 02)
+00:01.0 PCI bridge [0604]: ATI Technologies Inc PCI Bridge [IGP 340M] [1002:7010]
+00:06.0 Multimedia audio controller [0401]: ALi Corporation M5451 PCI AC-Link Controller Audio Device [10b9:5451] (rev 02)
+00:07.0 ISA bridge [0601]: ALi Corporation M1533/M1535 PCI to ISA Bridge [Aladdin IV/V/V+] [10b9:1533]
+00:0a.0 CardBus bridge [0607]: Texas Instruments PCI4410 PC card Cardbus Controller [104c:ac41] (rev 02)
+00:0a.1 FireWire (IEEE 1394) [0c00]: Texas Instruments PCI4410 FireWire Controller [104c:8017] (rev 02)
+00:0b.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+ [10ec:8139] (rev 20)
+00:0c.0 Communication controller [0780]: Conexant HSF 56k HSFi Modem [14f1:2f00] (rev 01)
+00:10.0 IDE interface [0101]: ALi Corporation M5229 IDE [10b9:5229] (rev c4)
+00:11.0 Bridge [0680]: ALi Corporation M7101 Power Management Controller [PMU] [10b9:7101]
+00:13.0 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 41)
+00:13.1 USB Controller [0c03]: NEC Corporation USB [1033:0035] (rev 41)
+00:13.2 USB Controller [0c03]: NEC Corporation USB 2.0 [1033:00e0] (rev 02)
+01:05.0 VGA compatible controller [0300]: ATI Technologies Inc Radeon IGP 330M/340M/350M [1002:4337]
+02:00.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g Wireless LAN Controller [14e4:4320] (rev 03)
 
-Yes, I now see that happening also with the IDE aec62xx driver.
-It used to only be a single-line WARNING, only recently has the
-ARM kernel started to also do a stack dump when it triggers.
+--=-qYGv+XGE4tot3V9pGT9l--
 
-/Mikael
