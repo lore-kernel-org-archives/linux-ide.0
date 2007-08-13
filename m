@@ -1,46 +1,44 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 0/4] Updated AN patches, now without gendisk
-Date: Mon, 13 Aug 2007 09:26:43 -0700
-Message-ID: <20070813092643.6f15aa8a.kristen.c.accardi@intel.com>
-References: <20070808120739.c3097d19.kristen.c.accardi@intel.com>
-	<3ae72650708110700x7ddf3d57ue9a8875761425f52@mail.gmail.com>
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Mon, 13 Aug 2007 10:26:23 -0700
+Message-ID: <20070813102623.7ef91e1e.kristen.c.accardi@intel.com>
+References: <20070809211800.022150464@intel.com>
+	<20070809142416.a110ba25.kristen.c.accardi@intel.com>
+	<9122.1186808329@turing-police.cc.vt.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <3ae72650708110700x7ddf3d57ue9a8875761425f52@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: jeff@garzik.org, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, David Zeuthen <david@fubar.dk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:41788 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S948118AbXHMR30 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Aug 2007 13:29:26 -0400
+In-Reply-To: <9122.1186808329@turing-police.cc.vt.edu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Valdis.Kletnieks@vt.edu
+Cc: jeff@garzik.org, htejun@gmail.com, akpm@linux-foundation.org, arjan@linux.intel.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, 11 Aug 2007 16:00:53 +0200
-"Kay Sievers" <kay.sievers@vrfy.org> wrote:
+Andrew, can you fold this into this patch
 
-> On 8/8/07, Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
-> > Here is an updated set of patches that implement Asynchronous Notification
-> > support for ATAPI devices.  In this version I no longer export the AN
-> > capability through genhd, and the uevent is sent by the scsi_device
-> > instead of gendisk.  I added a generic SCSI device event mechanism so
-> > that it can be expanded in the future with other types of events.  Please
-> > let me know what you think.
-> 
-> Does that mean:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8ce7ad7b2d11fae2c3d285a6a0caea9322c0b8fc
-> 
-> will go away?
 
-Yes - this method was rejected by James, so I had to change away from
-using the genhd to transmit events.
+change to KERN_INFO for failure to set pm policy
 
-> 
-> Then we will need to come up with an idea to propagate that to the
-> blockdev, it gets a bit nasty for userspace to find out which
-> blockdevice it should update. It's certainly possible, but just not as
-> easy as it is now, because userspace just doesn't really care in most
-> cases what kind of bus device a block device is coming from.
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+---
+ drivers/ata/libata-scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Is it possible to use the linkage that is in the scsi_device directory
-of the disk that is sending the event to find the relevant block devices?
-For example, /sys/class/scsi_device/0:0:0:0/device/block:sda
-on my system tells me which block devices belong to this device.
+Index: 2.6-git/drivers/ata/libata-scsi.c
+===================================================================
+--- 2.6-git.orig/drivers/ata/libata-scsi.c	2007-08-13 09:40:18.000000000 -0700
++++ 2.6-git/drivers/ata/libata-scsi.c	2007-08-13 10:23:04.000000000 -0700
+@@ -3009,7 +3009,7 @@ int ata_scsi_set_link_pm_policy(struct a
+  		 */
+ 		if ((dev->horkage & ATA_HORKAGE_IPM) ||
+ 			!(dev->flags & ATA_DFLAG_IPM)) {
+-			ata_dev_printk(dev, KERN_ERR,
++			ata_dev_printk(dev, KERN_INFO,
+ 				"Unable to set Link PM policy\n");
+ 			ap->pm_policy = MAX_PERFORMANCE;
+ 		}
