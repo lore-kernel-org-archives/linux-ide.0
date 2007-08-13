@@ -1,31 +1,30 @@
 From: "Paul Fryer" <paul.fryer@cfoa.org.uk>
-Subject: FW: Libata
-Date: Mon, 13 Aug 2007 09:04:27 +0100
-Message-ID: <B5FC65CA9955A4448C31FB6BD9796E5D27B7AB@rho.cfoa.org.uk>
+Subject: RE: Libata
+Date: Mon, 13 Aug 2007 08:57:33 +0100
+Message-ID: <B5FC65CA9955A4448C31FB6BD9796E5D27B7A7@rho.cfoa.org.uk>
+References: <B5FC65CA9955A4448C31FB6BD9796E5D0D55A8@rho.cfoa.org.uk> <46BC9732.9080309@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay.mail.cfoa.org.uk ([195.80.32.21]:51906 "EHLO
+Received: from relay.mail.cfoa.org.uk ([195.80.32.21]:51632 "EHLO
 	callisto.cfoa.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S940819AbXHMIEr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 04:04:47 -0400
+	with ESMTP id S936783AbXHMILT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 04:11:19 -0400
 Content-class: urn:content-classes:message
+In-Reply-To: <46BC9732.9080309@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
- Many thanks for getting back to me.
+Thank you for getting back to me.
 
-I am currently using Debian Unstable (kernel 2.6.22 I think off hand), I
-had the same problems with Debian stable (2.6.18).
+I am currently using Debian unstable kernel 2.22 (I think off hand), I
+had the same problem with the Debian stable dist (2.18).
 
-At the moment I do not have remote access but I will try changing the IO
-scheduler and let you know.
-
-Paul
+ 
 
 -----Original Message-----
 From: Tejun Heo [mailto:htejun@gmail.com] 
