@@ -1,39 +1,41 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: libata git tree, mbox queue status and contents
-Date: Mon, 13 Aug 2007 14:09:31 +0200
-Message-ID: <20070813120930.GQ23758@kernel.dk>
-References: <46B35344.3090208@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_artop: fix UDMA5 for AEC6280[R] and UDMA6 for
+ AEC6880[R]
+Date: Mon, 13 Aug 2007 14:30:32 +0100
+Message-ID: <20070813143032.4caffc28@the-village.bc.nu>
+References: <200708121153.l7CBrsm5011470@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:18867 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S945126AbXHMMJf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Aug 2007 08:09:35 -0400
-Content-Disposition: inline
-In-Reply-To: <46B35344.3090208@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60589 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S972837AbXHMNXT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 09:23:19 -0400
+In-Reply-To: <200708121153.l7CBrsm5011470@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Alan <alan@lxorguk.ukuu.org.uk>
+Cc: mikpe@it.uu.se, bzolnier@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 03 2007, Jeff Garzik wrote:
-> * Kristen: ALPM patches.  We definitely want them, as they save a ton of 
-> power.
+> > It would be nice to know why - is the cable detet coming out right on
+> > this ?
+> 
+> The box has a short 40-wire cable, so pata_artop drops to udma/33
+> while aec62xx does udma/100 without intervention. I added an override
 
-The problem with ALPM, as I see it, is that it is way too aggressive. It
-really needs to be combined with a timer to be useful, it's really a
-huge shame that it doesn't come equipped with a timeout setting in
-hardware. Lacking that, we could punt to using a second aligned timer
-that just checks for activity in the last second, and if none was seen
-then enable ALPM. That should have absolutely minimal impact on CPU
-consumption. Likewise for when we see IO, when the rate/sec goes beyond
-a low threshold then disable ALPM again.
+Curious as both use the same cable detect logic. 
 
-In my testing on this notebook (x60), throughput was reduced to about
-30% when using ALPM. So while it does save a good amount of power, it
-also makes the disk a slow dog if you are actually using it.
+> to artop6260_cable_detect() to make it return PATA40_SHORT on this
+> platform, and with that it does udma/100 as expected.
 
--- 
-Jens Axboe
+Patch would be good. Looks like there are a couple of cases anyway where
+artop needs platform specific uglies
 
+
+> 
+> Read performance fluctuates quite a bit, but seems to be 1-3 MB/s
+> slower than aec62xx on average. I compared lspci -vvxxx and the
+> only differences are a latency setting and some ROM thingy:
+
+Latency shouldn't matter but you can tweak the driver to verify easily
+enough
