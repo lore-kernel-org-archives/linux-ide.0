@@ -1,76 +1,38 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: sata drive loosing connection/resetting port
-Date: Mon, 13 Aug 2007 22:11:29 +0200
-Message-ID: <6bffcb0e0708131311k51238bb0l63eeb2fce53e3481@mail.gmail.com>
-References: <20070813220241.3f4b8df5@workstation64.home>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] [428/2many] MAINTAINERS - SERIAL ATA (SATA) SUBSYSTEM:
+Date: Mon, 13 Aug 2007 14:43:35 -0700
+Message-ID: <1187041415.10249.332.camel@localhost>
+References: <46bffbb6.4FinvGMu+SlIxG24%joe@perches.com>
+	 <20070813120221.2e70e32f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:34202 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758145AbXHMULa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 16:11:30 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1950484wah
-        for <linux-ide@vger.kernel.org>; Mon, 13 Aug 2007 13:11:29 -0700 (PDT)
-In-Reply-To: <20070813220241.3f4b8df5@workstation64.home>
-Content-Disposition: inline
+Received: from DSL022.labridge.com ([206.117.136.22]:3767 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754359AbXHMVns (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Aug 2007 17:43:48 -0400
+In-Reply-To: <20070813120221.2e70e32f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Radke <a.radke@arcor.de>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, akpm@linux-foundation.org
 
-Hi Andreas,
+On Mon, 2007-08-13 at 12:02 +0100, Alan Cox wrote:
+> > @@ -4077,6 +4077,7 @@ M:	jgarzik@pobox.com
+> >  L:	linux-ide@vger.kernel.org
+> >  T:	git kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> >  S:	Supported
+> > +F:	drivers/ata/sata_*
+> 
+> NAK
+> 	sata_inic is Tejun
+> 
+> and various others are also different
 
-[Adding Jeff and linux-ide to CC]
+How does adding
 
-On 13/08/07, Andreas Radke <a.radke@arcor.de> wrote:
-> running ArchLinux kernel 2.6.22.2 on a Abit IP35 Pro motherboard with
-> Pro Intel P35 chipset (ICH9R + Jmicron) i have these entries all few
-> minutes:
->
-> ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x400101 action 0x2 frozen
-> ata1.00: (irq_stat 0x08000000, interface fatal error)
-> ata1.00: cmd ca/00:f8:18:d2:27/00:00:00:00:00/e6 tag 0 cdb 0x0 data
-> 126976 out res 50/00:00:80:2b:3d/00:00:00:00:00/e0 Emask 0x10 (ATA bus
-> error) ata1: soft resetting port
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: configured for UDMA/133
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 145226112 512-byte hardware sectors (74356 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
->
->
-> hard disc is a Western Digital 10k Raptor connected to the ICH9R. on
-> the second port of the southbridge is another Samsung hard disc drive
-> connected without errors. both controllers are running ahci mode.
->
-> lsmod:
-> sr_mod                 16548  0
-> cdrom                  38312  1 sr_mod
-> sd_mod                 25088  6
-> pata_jmicron            5888  0
-> ahci                   22404  4
-> libata                119440  2 pata_jmicron,ahci
->
-> i've tried changing the SATA cables and also the power wire to the
-> disc without success. i checked the disc successfully with Hitachi
-> drive fitness test. it has worked without any trouble so far in a Intel
-> P965 ICH8 based mainboard.
->
-> any idea how to find the reason?
->
-> Andreas Radke
-> ArchLinux developer/maintainer
+X:	file patterns to exclude
 
-Please try to CC to the appropriate maintainer(s).
+and updating the script sound?
 
-Regards,
-Michal
-
--- 
-LOG
-http://www.stardust.webpages.pl/log/
