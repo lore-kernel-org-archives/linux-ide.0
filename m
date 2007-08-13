@@ -1,32 +1,63 @@
-From: joe@perches.com
-Subject: [PATCH] [428/2many] MAINTAINERS - SERIAL ATA (SATA) SUBSYSTEM:
-Date: Sun, 12 Aug 2007 23:35:34 -0700
-Message-ID: <46bffbb6.4FinvGMu+SlIxG24%joe@perches.com>
+From: "Paul Fryer" <paul.fryer@cfoa.org.uk>
+Subject: FW: Libata
+Date: Mon, 13 Aug 2007 09:04:27 +0100
+Message-ID: <B5FC65CA9955A4448C31FB6BD9796E5D27B7AB@rho.cfoa.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:2526 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967573AbXHMGlB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Aug 2007 02:41:01 -0400
+Received: from relay.mail.cfoa.org.uk ([195.80.32.21]:51906 "EHLO
+	callisto.cfoa.org.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S940819AbXHMIEr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 04:04:47 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, akpm@linux-foundation.org
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Add file pattern to MAINTAINER entry
+ Many thanks for getting back to me.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+I am currently using Debian Unstable (kernel 2.6.22 I think off hand), I
+had the same problems with Debian stable (2.6.18).
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 04c969c..016cd0c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4077,6 +4077,7 @@ M:	jgarzik@pobox.com
- L:	linux-ide@vger.kernel.org
- T:	git kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
- S:	Supported
-+F:	drivers/ata/sata_*
- 
- SGI SN-IA64 (Altix) SERIAL CONSOLE DRIVER
- P:	Pat Gefre
+At the moment I do not have remote access but I will try changing the IO
+scheduler and let you know.
+
+Paul
+
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Friday, August 10, 2007 5:50 PM
+To: Paul Fryer
+Subject: Re: Libata
+
+Hello,
+
+Paul Fryer wrote:
+> Hi,
+>  
+> I got your details from the latest kernel change log. I am after some 
+> help with the libata sata_sil driver.
+>  
+> A few of us have the Thecus N2100 NAS which is an ARM based NAS with 
+> the
+> Sil3512 ECTU128 which seems to have serious performance problems at 
+> some point after libata 1.11 or  sata_sil version 0.9.
+>  
+> See
+> http://thecususergroup.proboards106.com/index.cgi?board=modifications&
+> action=display&thread=1186052573 
+> <http://thecususergroup.proboards106.com/index.cgi?board=modifications
+> &action=display&thread=1186052573> for further information.
+>  
+> I am trying to find the contact information of the person developing 
+> this driver / aspect of libata, is there anything you can do to help?
+
+Please cc linux-ide@vger.kernel.org.  I don't really keep track of
+libata or sata_sil versions.  Which kernel version are you using?  Does
+switching IO scheduler make any difference?
+
+--
+tejun
