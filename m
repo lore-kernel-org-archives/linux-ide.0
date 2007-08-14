@@ -1,50 +1,44 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [-mm patch] make
-	drivers/ata/libata-scsi.c:ata_scsi_link_pm_policy() static
-Date: Tue, 14 Aug 2007 23:23:00 +0200
-Message-ID: <20070814212259.GI18945@stusta.de>
+Subject: [-mm patch] unexport ide_acpi_set_state
+Date: Tue, 14 Aug 2007 23:23:07 +0200
+Message-ID: <20070814212307.GK18945@stusta.de>
 References: <20070809015106.cd0bfc53.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:38427 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755214AbXHNVXJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 17:23:09 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20070809015106.cd0bfc53.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Shaohua Li <shaohua.li@intel.com>, Len Brown <lenb@kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 On Thu, Aug 09, 2007 at 01:51:06AM -0700, Andrew Morton wrote:
 >...
 > Changes since 2.6.23-rc2-mm1:
 >...
-> +alpm-enable-link-power-management-for-ata-drivers.patch
+> +ide-ide-hook-acpi-psx-method-to-ide-power-on-off.patch
 >...
->  Updated ATA Aggressive Link Power Management patches
+>  IDE tree updates
 >...
 
-
-ata_scsi_link_pm_policy() can become static.
+This patch removes the unused EXPORT_SYMBOL_GPL(ide_acpi_set_state)
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-91a4450d6bf353600316328f0a95299e8bb17ee0 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ce631eb..1db065c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -121,7 +121,7 @@ static const struct {
- 	{ MEDIUM_POWER, "medium_power" },
- };
+
+83b4e185ad61709d63cb44516b46a343d221d9f9 
+diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
+index 6bff81a..1d5f682 100644
+--- a/drivers/ide/ide-acpi.c
++++ b/drivers/ide/ide-acpi.c
+@@ -649,7 +649,6 @@ void ide_acpi_set_state(ide_hwif_t *hwif, int on)
+ 	if (!on)
+ 		acpi_bus_set_power(hwif->acpidata->obj_handle, ACPI_STATE_D3);
+ }
+-EXPORT_SYMBOL_GPL(ide_acpi_set_state);
  
--const char *ata_scsi_link_pm_policy(enum link_pm policy)
-+static const char *ata_scsi_link_pm_policy(enum link_pm policy)
- {
- 	int i;
- 	char *name = NULL;
+ /**
+  * ide_acpi_init - initialize the ACPI link for an IDE interface
 
