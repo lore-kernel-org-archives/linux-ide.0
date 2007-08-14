@@ -1,39 +1,63 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
-Date: Wed, 15 Aug 2007 00:24:47 +0100
-Message-ID: <20070815002447.40f7f206@the-village.bc.nu>
-References: <46C1DCBB.9020308@double-you.de>
-	<20070814184301.3201d162@the-village.bc.nu>
-	<46C2047D.4040901@double-you.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Rusty Conover <rconover@infogears.com>
+Subject: Resets on sil3124 & sil3726 PMP
+Date: Tue, 14 Aug 2007 17:39:42 -0600
+Message-ID: <36D83AB0-1848-4240-B8FC-D634D9E90B31@infogears.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45006 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753895AbXHNXQ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 19:16:56 -0400
-In-Reply-To: <46C2047D.4040901@double-you.de>
+Received: from mail.infogears.com ([69.51.90.143]:48533 "EHLO
+	mail.infogears.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754917AbXHOAAW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 20:00:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Karim 'Kasi Mir' Senoucci <ks@double-you.de>
+To: htejun@gmail.com
 Cc: linux-ide@vger.kernel.org
 
-> in the sata_mv source. Should I add something like:
-> 
->         { PCI_VDEVICE(TTI, 0x2300), chip_604x },
-> 
-> as well?
+Hi Tejun,
 
-Yes
+I'm having some trouble with my e-SATA ports being reset.  I'm  
+testing 2.6.22.1 with the 20070808 patch tarball on a nortec ds-1220  
+flashed to Silicon Image bios version 6.4.09 (the latest).
 
+I'm testing with 6 500gig SATA drives shown as:
 
-> Last but not least: I'm assuming that this driver - when working 
-> correctly - will let me access the RAID arrays I setup via BIOS or 
-> Windows driver, but there will be no way to create or modify the arrays 
-> from within linux itself, right?
+WD5000AAKS-22TMA0, 12.01C01, max UDMA/133
 
-The RAID is entirely software so its up to software what is handled. I
-don't know if dmraid will handle whatever format HPT have used this time
-but you may be lucky.
+The error I'm getting is:
+
+ata3.04: exception Emask 0x0 SAct 0x2 SErr 0x0 action 0x2 frozen
+ata3.04: cmd 61/00:08:3f:c9:00/04:00:00:00:00/40 tag 1 cdb 0x0 data  
+524288 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata3.15: hard resetting link
+ata3.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata3.00: hard resetting link
+ata3.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.01: hard resetting link
+ata3.01: SATA link down (SStatus 0 SControl 300)
+ata3.02: hard resetting link
+ata3.02: SATA link down (SStatus 0 SControl 300)
+ata3.03: hard resetting link
+ata3.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.04: hard resetting link
+ata3.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.05: hard resetting link
+ata3.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: configured for UDMA/100
+ata3.03: configured for UDMA/100
+ata3.04: configured for UDMA/100
+ata3: EH complete
+
+This is happening under moderate load, but it does appear to recover  
+and have all of the drives come back.  I'd be happy to provide a full  
+dmesg log if desired.
+
+If you have any ideas how I can work around this or what's causing  
+the problem it would be greatly appreciated.
+
+Thanks,
+
+Rusty
 
