@@ -1,71 +1,49 @@
-From: Karim 'Kasi Mir' Senoucci <ks@double-you.de>
-Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
-Date: Tue, 14 Aug 2007 21:37:33 +0200
-Message-ID: <46C2047D.4040901@double-you.de>
-References: <46C1DCBB.9020308@double-you.de> <20070814184301.3201d162@the-village.bc.nu>
+From: Andreas Radke <a.radke@arcor.de>
+Subject: Re: sata drive loosing connection/resetting port
+Date: Tue, 14 Aug 2007 22:19:28 +0200
+Message-ID: <20070814221928.243949b6@workstation64.home>
+References: <20070813220241.3f4b8df5@workstation64.home>
+	<6bffcb0e0708131311k51238bb0l63eeb2fce53e3481@mail.gmail.com>
+	<46C180D8.9060005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.melzone.de ([81.169.156.183]:49498 "EHLO mx1.melzone.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758317AbXHNThb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Aug 2007 15:37:31 -0400
-In-Reply-To: <20070814184301.3201d162@the-village.bc.nu>
+Received: from mail-in-08.arcor-online.net ([151.189.21.48]:55698 "EHLO
+	mail-in-08.arcor-online.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757234AbXHNUTe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 16:19:34 -0400
+In-Reply-To: <46C180D8.9060005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox schrieb:
-> On Tue, 14 Aug 2007 18:47:55 +0200
-> "Karim 'Kasi Mir' Senoucci" <ks@double-you.de> wrote:
->
->   
->> Hello all,
->> sorry if this it too dumb a question, but since I haven't gotten any 
->> results with the sata_mv driver (kernel 2.6.22.2), I was wondering if 
->> the Highpoint RocketRaid 2300 controller - which features a Marvell chip 
->> - is even supposed to work with sata_mv.
->>     
->
-> It should but the vendor issued the chip with different PCI identifiers
-> to a normal Marvell chip. Add it to the sata_mv driver and it should work.
->
->   
-I'm not entirely sure what to add there - I'm gathering you mean those 
-lines:
+Am Tue, 14 Aug 2007 19:15:52 +0900
+schrieb Tejun Heo <htejun@gmail.com>:
 
-       { PCI_VDEVICE(MARVELL, 0x6040), chip_604x },
-       { PCI_VDEVICE(MARVELL, 0x6041), chip_604x },
-       { PCI_VDEVICE(MARVELL, 0x6042), chip_6042 },
-       { PCI_VDEVICE(MARVELL, 0x6080), chip_608x },
-       { PCI_VDEVICE(MARVELL, 0x6081), chip_608x },
+> Most likely a hardware issue.
+> 
+> * Please try a different harddrive/cable and connect to a different
+> port.
+> 
+> * Get a different power supply and see whether that changes anything.
+> 
 
-and so on, and thus would add something like:
+already tried different ports, several SATA cables on that mainboard and
+psu works well. the Samsung drive works well no matter where
+connected. never had any issues with the Raptor drive when it was
+connected to the "old" Intel P965 board before. what's the difference
+form ICH8 to ICH9R? any changes in how the driver works?
 
-      { PCI_VDEVICE(MARVELL, 0x11ab), chip_614x },
+i confirmed, that the issues still resist in kernel 2.6.23rc3 and also
+when using controller in "ide" mode together with ata_piix modul.
 
-(for the 88SE614x apparently used on the RocketRAID 2300) except that 
-there is no  "chip_614x" in the module.
-Should I write "chip_604x" instead or do I need to do something else 
-entirely.
+but on thing that is really weird: i used our installer iso to boot
+with 2.6.22 kernel and even after several hours the error did not
+appear! can you explain that? so it only happens when filesystems are
+mounted (also / partition is on that drive). 
 
-Along the same lines, theres is an entry:
+any idea?
 
-        { PCI_VDEVICE(TTI, 0x2310), chip_7042 },
-
-in the sata_mv source. Should I add something like:
-
-        { PCI_VDEVICE(TTI, 0x2300), chip_604x },
-
-as well?
-
-Last but not least: I'm assuming that this driver - when working 
-correctly - will let me access the RAID arrays I setup via BIOS or 
-Windows driver, but there will be no way to create or modify the arrays 
-from within linux itself, right?
-
-Thank for any help, past, present or future. :-)
-
-Greetings, Karim.
+Andreas
