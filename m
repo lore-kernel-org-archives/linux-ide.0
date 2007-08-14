@@ -1,55 +1,46 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Still having problems with sata_promise on all late kernels -
- shutdown too - BISECTED
-Date: Tue, 14 Aug 2007 20:42:58 +0400
-Message-ID: <46C1DB92.7080806@wasp.net.au>
-References: <46C11BBE.6010802@wasp.net.au> <46C1316F.4010906@wasp.net.au>
+From: Karim 'Kasi Mir' Senoucci <ks@double-you.de>
+Subject: Should sata_mv work with Highpoint RocketRAID 2300?
+Date: Tue, 14 Aug 2007 18:47:55 +0200
+Message-ID: <46C1DCBB.9020308@double-you.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:41906 "EHLO wasp.net.au"
+Received: from mx1.melzone.de ([81.169.156.183]:41266 "EHLO mx1.melzone.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763264AbXHNQnE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Aug 2007 12:43:04 -0400
-In-Reply-To: <46C1316F.4010906@wasp.net.au>
+	id S1753398AbXHNR2u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Aug 2007 13:28:50 -0400
+Received: from [85.177.103.65] (helo=[10.0.2.181])
+	by mx1.melzone.de with esmtpa (Exim 4.60)
+	(envelope-from <ks@double-you.de>)
+	id 1IKzYf-0001vX-AF
+	for linux-ide@vger.kernel.org; Tue, 14 Aug 2007 18:47:53 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
+Hello all,
+sorry if this it too dumb a question, but since I haven't gotten any 
+results with the sata_mv driver (kernel 2.6.22.2), I was wondering if 
+the Highpoint RocketRaid 2300 controller - which features a Marvell chip 
+- is even supposed to work with sata_mv.
 
-> http://www.fnarfbargle.com/CIMG1029.JPG (I have posted this screen shot 
-> previously. It's still doing exactly the same thing on both boxes).
-> 
+lspci shows in regard to the controller card:
 
-git-bisect shows up this commit as the guilty party. I can't just revert it on a recent tree though.
-Will investigate further.
+06:00.0 SCSI storage controller [0100]: Triones Technologies, Inc. 
+Unknown device [1103:2300] (rev 02)
+        Subsystem: Marvell Technology Group Ltd. Unknown device [11ab:11ab]
+        Flags: bus master, fast devsel, latency 0, IRQ 11
+        Memory at fd500000 (64-bit, non-prefetchable) [size=1M]
+        I/O ports at 4800 [size=256]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit+ 
+Queue=0/0 Enable-
+        Capabilities: [60] Express Legacy Endpoint IRQ 0
 
-brad@bkmac:~/git/linux-2.6$ git-bisect good
-13b8d09f5de0aaa3153bbccc98baf247387823dc is first bad commit
-commit 13b8d09f5de0aaa3153bbccc98baf247387823dc
-Author: Tejun Heo <htejun@gmail.com>
-Date:   Tue May 15 12:29:22 2007 +0200
+Is this one of the cards the sata_mv driver should handle, or do I need 
+to use another kernel module, or is that chip without linux support so far?
 
-     libata: track spindown status and skip spindown_compat if possible
+Thanks for any insight into the matter.
 
-     Our assumption that most distros issue STANDBYNOW seems wrong.  The
-     upstream sysvinit and thus many distros including gentoo and opensuse
-     don't take any action for libata disks on spindown.  We can skip
-     compat handling for these distros so that they don't need to update
-     anything to take advantage of kernel-side shutdown.
-
-     Signed-off-by: Tejun Heo <htejun@gmail.com>
-     Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-:040000 040000 6084e11e2d53daf2506d16896d0aa5635f95a9af cd30a7aad2a6a6af63779797889d4d9eed52e473 M 
-     drivers
-:040000 040000 75e3a561488e2902eed8f197da960e55fbd88f27 a7f586a83645bedbce4b4286c2e9dbcfd69f8f86 M 
-     include
-
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+Greetings, Karim.
