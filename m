@@ -1,1741 +1,605 @@
-From: Sonic Zhang <sonic.adi@gmail.com>
-Subject: [PATCH again] [libata] libata driver for bf548 on chip ATAPI
-	controller.
-Date: Tue, 14 Aug 2007 09:48:38 +0800
-Message-ID: <1187056118.16255.1.camel@sevens.analog.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Still having problems with sata_promise on all late kernels
+Date: Tue, 14 Aug 2007 07:04:30 +0400
+Message-ID: <46C11BBE.6010802@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nwd2mail11.analog.com ([137.71.25.57]:29386 "EHLO
-	nwd2mail11.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765046AbXHNByK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Aug 2007 21:54:10 -0400
+Received: from wasp.net.au ([203.190.192.17]:38060 "EHLO wasp.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755720AbXHNDEp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Aug 2007 23:04:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>, "; linux-kernel"@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
 
-Sorry, wrong address in my last email. So, send again.
+G'day all,
 
-This driver is for bf548 on chip ATAPI controller. 
-Both PIO 4 and UDMA5 mode are enabled.
+This has been happening on a lightly loaded box for a while now. I have posted about it before.
+The issue is now I've upgraded 3 drives from 250GB Maxtors to 750GB WD's, it's just getting worse, 
+particularly when the drives are loaded. I've jumpered the WD's to 1.5GB PHY speed (I had to do that 
+or the on-board via sata controller would not recognise one of the drives.
+The box is a bit of a mish-mash of controllers. I have 3 Promise SATA150TX4, one SIL3112 (all on PCI 
+cards) and the on-board 2 port VIA driver.
 
+I'm at a bit of a loss as to what to do really, short of replacing the Promise cards with something 
+else.
 
-Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
----
- drivers/ata/Kconfig      |   28 +
- drivers/ata/Makefile     |    1 +
- drivers/ata/pata_bf54x.c | 1585
-++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 1614 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ata/pata_bf54x.c
+brad@srv:~$ dmesg | grep "hard resetting port" | wc -l
+990
+brad@srv:~$ uptime
+  06:55:04 up  8:14,  9 users,  load average: 5.21, 5.27, 4.92
+brad@srv:~$ uname -a
+Linux srv 2.6.23-rc3 #3 Mon Aug 13 11:20:23 GST 2007 i686 GNU/Linux
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index b4a8d60..e679f04 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -583,4 +583,32 @@ config PATA_SCC
- 
-          If unsure, say N.
- 
-+config PATA_BF54X
-+       tristate "Blackfin 54x ATAPI support"
-+       depends on BF542 || BF548 || BF549
-+       help
-+         This option enables support for the built-in ATAPI controller
-on
-+         Blackfin 54x family chips.
-+
-+         If unsure, say N.
-+
-+choice
-+       prompt "Blackfin 54x ATAPI mode"
-+       depends on PATA_BF54X
-+       default PATA_BF54X_DMA
-+       help
-+         This option selects bf54x ATAPI controller working mode.
-+
-+config PATA_BF54X_PIO
-+       bool "PIO mode"
-+       help
-+         Blackfin ATAPI controller works under PIO mode.
-+
-+config PATA_BF54X_DMA
-+       bool "DMA mode"
-+       help
-+         Blackfin ATAPI controller works under DMA mode.
-+
-+endchoice
-+
- endif # ATA
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 8149c68..c2ecba5 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -61,6 +61,7 @@ obj-$(CONFIG_PATA_SIS)                += pata_sis.o
- obj-$(CONFIG_PATA_TRIFLEX)     += pata_triflex.o
- obj-$(CONFIG_PATA_IXP4XX_CF)   += pata_ixp4xx_cf.o
- obj-$(CONFIG_PATA_SCC)         += pata_scc.o
-+obj-$(CONFIG_PATA_BF54X)       += pata_bf54x.o
- obj-$(CONFIG_PATA_PLATFORM)    += pata_platform.o
- obj-$(CONFIG_PATA_ICSIDE)      += pata_icside.o
- # Should be last but one libata driver
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-new file mode 100644
-index 0000000..e1236ea
---- /dev/null
-+++ b/drivers/ata/pata_bf54x.c
-@@ -0,0 +1,1585 @@
-+/*
-+ * File:         drivers/ata/pata_bf54x.c
-+ * Author:       Sonic Zhang <sonic.zhang@analog.com>
-+ *
-+ * Created:
-+ * Description:  ATAPI Driver for blackfin 54x
-+ *
-+ * Modified:
-+ *               Copyright 2007 Analog Devices Inc.
-+ *
-+ * Bugs:         Enter bugs at http://blackfin.uclinux.org/
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, see the file COPYING, or write
-+ * to the Free Software Foundation, Inc.,
-+ * 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/libata.h>
-+#include <linux/platform_device.h>
-+#include <asm/dma.h>
-+#include <asm/gpio.h>
-+#include <asm/portmux.h>
-+
-+#define DRV_NAME               "bf54x-atapi"
-+#define DRV_VERSION            "0.6"
-+
-+#define ATA_REG_CTRL           0x0E
-+#define ATA_REG_ALTSTATUS      ATA_REG_CTRL
-+
-+#define ATAPI_OFFSET_CONTROL           0x00
-+#define ATAPI_OFFSET_STATUS            0x04
-+#define ATAPI_OFFSET_DEV_ADDR          0x08
-+#define ATAPI_OFFSET_DEV_TXBUF         0x0c
-+#define ATAPI_OFFSET_DEV_RXBUF         0x10
-+#define ATAPI_OFFSET_INT_MASK          0x14
-+#define ATAPI_OFFSET_INT_STATUS                0x18
-+#define ATAPI_OFFSET_XFER_LEN          0x1c
-+#define ATAPI_OFFSET_LINE_STATUS       0x20
-+#define ATAPI_OFFSET_SM_STATE          0x24
-+#define ATAPI_OFFSET_TERMINATE         0x28
-+#define ATAPI_OFFSET_PIO_TFRCNT                0x2c
-+#define ATAPI_OFFSET_DMA_TFRCNT                0x30
-+#define ATAPI_OFFSET_UMAIN_TFRCNT      0x34
-+#define ATAPI_OFFSET_UDMAOUT_TFRCNT    0x38
-+#define ATAPI_OFFSET_REG_TIM_0         0x40
-+#define ATAPI_OFFSET_PIO_TIM_0         0x44
-+#define ATAPI_OFFSET_PIO_TIM_1         0x48
-+#define ATAPI_OFFSET_MULTI_TIM_0       0x50
-+#define ATAPI_OFFSET_MULTI_TIM_1       0x54
-+#define ATAPI_OFFSET_MULTI_TIM_2       0x58
-+#define ATAPI_OFFSET_ULTRA_TIM_0       0x60
-+#define ATAPI_OFFSET_ULTRA_TIM_1       0x64
-+#define ATAPI_OFFSET_ULTRA_TIM_2       0x68
-+#define ATAPI_OFFSET_ULTRA_TIM_3       0x6c
-+
-+
-+#define ATAPI_GET_CONTROL(base)\
-+       bfin_read16(base + ATAPI_OFFSET_CONTROL)
-+#define ATAPI_SET_CONTROL(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_CONTROL, val)
-+#define ATAPI_GET_STATUS(base)\
-+       bfin_read16(base + ATAPI_OFFSET_STATUS)
-+#define ATAPI_GET_DEV_ADDR(base)\
-+       bfin_read16(base + ATAPI_OFFSET_DEV_ADDR)
-+#define ATAPI_SET_DEV_ADDR(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_DEV_ADDR, val)
-+#define ATAPI_GET_DEV_TXBUF(base)\
-+       bfin_read16(base + ATAPI_OFFSET_DEV_TXBUF)
-+#define ATAPI_SET_DEV_TXBUF(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_DEV_TXBUF, val)
-+#define ATAPI_GET_DEV_RXBUF(base)\
-+       bfin_read16(base + ATAPI_OFFSET_DEV_RXBUF)
-+#define ATAPI_SET_DEV_RXBUF(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_DEV_RXBUF, val)
-+#define ATAPI_GET_INT_MASK(base)\
-+       bfin_read16(base + ATAPI_OFFSET_INT_MASK)
-+#define ATAPI_SET_INT_MASK(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_INT_MASK, val)
-+#define ATAPI_GET_INT_STATUS(base)\
-+       bfin_read16(base + ATAPI_OFFSET_INT_STATUS)
-+#define ATAPI_SET_INT_STATUS(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_INT_STATUS, val)
-+#define ATAPI_GET_XFER_LEN(base)\
-+       bfin_read16(base + ATAPI_OFFSET_XFER_LEN)
-+#define ATAPI_SET_XFER_LEN(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_XFER_LEN, val)
-+#define ATAPI_GET_LINE_STATUS(base)\
-+       bfin_read16(base + ATAPI_OFFSET_LINE_STATUS)
-+#define ATAPI_GET_SM_STATE(base)\
-+       bfin_read16(base + ATAPI_OFFSET_SM_STATE)
-+#define ATAPI_GET_TERMINATE(base)\
-+       bfin_read16(base + ATAPI_OFFSET_TERMINATE)
-+#define ATAPI_SET_TERMINATE(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_TERMINATE, val)
-+#define ATAPI_GET_PIO_TFRCNT(base)\
-+       bfin_read16(base + ATAPI_OFFSET_PIO_TFRCNT)
-+#define ATAPI_GET_DMA_TFRCNT(base)\
-+       bfin_read16(base + ATAPI_OFFSET_DMA_TFRCNT)
-+#define ATAPI_GET_UMAIN_TFRCNT(base)\
-+       bfin_read16(base + ATAPI_OFFSET_UMAIN_TFRCNT)
-+#define ATAPI_GET_UDMAOUT_TFRCNT(base)\
-+       bfin_read16(base + ATAPI_OFFSET_UDMAOUT_TFRCNT)
-+#define ATAPI_GET_REG_TIM_0(base)\
-+       bfin_read16(base + ATAPI_OFFSET_REG_TIM_0)
-+#define ATAPI_SET_REG_TIM_0(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_REG_TIM_0, val)
-+#define ATAPI_GET_PIO_TIM_0(base)\
-+       bfin_read16(base + ATAPI_OFFSET_PIO_TIM_0)
-+#define ATAPI_SET_PIO_TIM_0(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_PIO_TIM_0, val)
-+#define ATAPI_GET_PIO_TIM_1(base)\
-+       bfin_read16(base + ATAPI_OFFSET_PIO_TIM_1)
-+#define ATAPI_SET_PIO_TIM_1(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_PIO_TIM_1, val)
-+#define ATAPI_GET_MULTI_TIM_0(base)\
-+       bfin_read16(base + ATAPI_OFFSET_MULTI_TIM_0)
-+#define ATAPI_SET_MULTI_TIM_0(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_MULTI_TIM_0, val)
-+#define ATAPI_GET_MULTI_TIM_1(base)\
-+       bfin_read16(base + ATAPI_OFFSET_MULTI_TIM_1)
-+#define ATAPI_SET_MULTI_TIM_1(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_MULTI_TIM_1, val)
-+#define ATAPI_GET_MULTI_TIM_2(base)\
-+       bfin_read16(base + ATAPI_OFFSET_MULTI_TIM_2)
-+#define ATAPI_SET_MULTI_TIM_2(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_MULTI_TIM_2, val)
-+#define ATAPI_GET_ULTRA_TIM_0(base)\
-+       bfin_read16(base + ATAPI_OFFSET_ULTRA_TIM_0)
-+#define ATAPI_SET_ULTRA_TIM_0(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_ULTRA_TIM_0, val)
-+#define ATAPI_GET_ULTRA_TIM_1(base)\
-+       bfin_read16(base + ATAPI_OFFSET_ULTRA_TIM_1)
-+#define ATAPI_SET_ULTRA_TIM_1(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_ULTRA_TIM_1, val)
-+#define ATAPI_GET_ULTRA_TIM_2(base)\
-+       bfin_read16(base + ATAPI_OFFSET_ULTRA_TIM_2)
-+#define ATAPI_SET_ULTRA_TIM_2(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_ULTRA_TIM_2, val)
-+#define ATAPI_GET_ULTRA_TIM_3(base)\
-+       bfin_read16(base + ATAPI_OFFSET_ULTRA_TIM_3)
-+#define ATAPI_SET_ULTRA_TIM_3(base, val)\
-+       bfin_write16(base + ATAPI_OFFSET_ULTRA_TIM_3, val)
-+
-+/**
-+ * PIO Mode - Frequency compatibility
-+ */
-+/* mode: 0         1         2         3         4 */
-+static u32 pio_fsclk[] =
-+{ 33333333, 33333333, 33333333, 33333333, 33333333 };
-+
-+/**
-+ * MDMA Mode - Frequency compatibility
-+ */
-+/*               mode:      0         1         2        */
-+static u32 mdma_fsclk[] = { 33333333, 33333333, 33333333 };
-+
-+/**
-+ * UDMA Mode - Frequency compatibility
-+ *
-+ * UDMA5 - 100 MB/s   - SCLK  = 133 MHz
-+ * UDMA4 - 66 MB/s    - SCLK >=  80 MHz
-+ * UDMA3 - 44.4 MB/s  - SCLK >=  50 MHz
-+ * UDMA2 - 33 MB/s    - SCLK >=  40 MHz
-+ */
-+/* mode: 0         1         2         3         4          5 */
-+static u32 udma_fsclk[] =
-+{ 33333333, 33333333, 40000000, 50000000, 80000000, 133333333 };
-+
-+/**
-+ * Register transfer timing table
-+ */
-+/*               mode:       0    1    2    3    4    */
-+/* Cycle Time                     */
-+static u32 reg_t0min[]   = { 600, 383, 330, 180, 120 };
-+/* DIOR/DIOW to end cycle         */
-+static u32 reg_t2min[]   = { 290, 290, 290, 70,  25  };
-+/* DIOR/DIOW asserted pulse width */
-+static u32 reg_teocmin[] = { 290, 290, 290, 80,  70  };
-+
-+/**
-+ * PIO timing table
-+ */
-+/*               mode:       0    1    2    3    4    */
-+/* Cycle Time                     */
-+static u32 pio_t0min[]   = { 600, 383, 240, 180, 120 };
-+/* Address valid to DIOR/DIORW    */
-+static u32 pio_t1min[]   = { 70,  50,  30,  30,  25  };
-+/* DIOR/DIOW to end cycle         */
-+static u32 pio_t2min[]   = { 165, 125, 100, 80,  70  };
-+/* DIOR/DIOW asserted pulse width */
-+static u32 pio_teocmin[] = { 165, 125, 100, 70,  25  };
-+/* DIOW data hold                 */
-+static u32 pio_t4min[]   = { 30,  20,  15,  10,  10  };
-+
-+/* ******************************************************************
-+ * Multiword DMA timing table
-+ * ******************************************************************
-+ */
-+/*               mode:       0   1    2        */
-+/* Cycle Time                     */
-+static u32 mdma_t0min[]  = { 480, 150, 120 };
-+/* DIOR/DIOW asserted pulse width */
-+static u32 mdma_tdmin[]  = { 215, 80,  70  };
-+/* DMACK to read data released    */
-+static u32 mdma_thmin[]  = { 20,  15,  10  };
-+/* DIOR/DIOW to DMACK hold        */
-+static u32 mdma_tjmin[]  = { 20,  5,   5   };
-+/* DIOR negated pulse width       */
-+static u32 mdma_tkrmin[] = { 50,  50,  25  };
-+/* DIOR negated pulse width       */
-+static u32 mdma_tkwmin[] = { 215, 50,  25  };
-+/* CS[1:0] valid to DIOR/DIOW     */
-+static u32 mdma_tmmin[]  = { 50,  30,  25  };
-+/* DMACK to read data released    */
-+static u32 mdma_tzmax[]  = { 20,  25,  25  };
-+
-+/**
-+ * Ultra DMA timing table
-+ */
-+/*               mode:         0    1    2    3    4    5       */
-+static u32 udma_tcycmin[]  = { 112, 73,  54,  39,  25,  17 };
-+static u32 udma_tdvsmin[]  = { 70,  48,  31,  20,  7,   5  };
-+static u32 udma_tenvmax[]  = { 70,  70,  70,  55,  55,  50 };
-+static u32 udma_trpmin[]   = { 160, 125, 100, 100, 100, 85 };
-+static u32 udma_tmin[]     = { 5,   5,   5,   5,   3,   3  };
-+
-+
-+static u32 udma_tmlimin = 20;
-+static u32 udma_tzahmin = 20;
-+static u32 udma_tenvmin = 20;
-+static u32 udma_tackmin = 20;
-+static u32 udma_tssmin = 50;
-+
-+/**
-+ *
-+ *     Function:       num_clocks_min
-+ *
-+ *     Description:
-+ *     calculate number of SCLK cycles to meet minimum timing
-+ */
-+static unsigned short num_clocks_min(unsigned long tmin,
-+                               unsigned long fsclk)
-+{
-+       unsigned long tmp ;
-+       unsigned short result;
-+
-+       tmp = tmin * (fsclk/1000/1000) / 1000;
-+       result = (unsigned short)tmp;
-+       if ((tmp*1000*1000) < (tmin*(fsclk/1000))) {
-+               result++;
-+       }
-+
-+       return result;
-+}
-+
-+/**
-+ *     bfin_set_piomode - Initialize host controller PATA PIO timings
-+ *     @ap: Port whose timings we are configuring
-+ *     @adev: um
-+ *
-+ *     Set PIO mode for device.
-+ *
-+ *     LOCKING:
-+ *     None (inherited from caller).
-+ */
-+
-+static void bfin_set_piomode(struct ata_port *ap, struct ata_device
-*adev)
-+{
-+       int mode = adev->pio_mode - XFER_PIO_0;
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned int fsclk = get_sclk();
-+       unsigned short teoc_reg, t2_reg, teoc_pio;
-+       unsigned short t4_reg, t2_pio, t1_reg;
-+       unsigned short n0, n6, t6min = 5;
-+
-+       /* the most restrictive timing value is t6 and tc, the DIOW -
-data hold
-+       * If one SCLK pulse is longer than this minimum value then
-register
-+       * transfers cannot be supported at this frequency.
-+       */
-+       n6 = num_clocks_min(t6min, fsclk);
-+       if (mode >= 0 && mode <= 4 && n6 >= 1) {
-+               pr_debug("set piomode: mode=%d, fsclk=%ud\n", mode,
-fsclk);
-+               /* calculate the timing values for register transfers.
-*/
-+               while (mode > 0 && pio_fsclk[mode] > fsclk) {
-+                       mode--;
-+               }
-+
-+               /* DIOR/DIOW to end cycle time */
-+               t2_reg = num_clocks_min(reg_t2min[mode], fsclk);
-+               /* DIOR/DIOW asserted pulse width */
-+               teoc_reg = num_clocks_min(reg_teocmin[mode], fsclk);
-+               /* Cycle Time */
-+               n0  = num_clocks_min(reg_t0min[mode], fsclk);
-+
-+               /* increase t2 until we meed the minimum cycle length */
-+               while ((t2_reg + teoc_reg) < n0) {
-+                       t2_reg++;
-+               }
-+
-+               /* calculate the timing values for pio transfers. */
-+
-+               /* DIOR/DIOW to end cycle time */
-+               t2_pio = num_clocks_min(pio_t2min[mode], fsclk);
-+               /* DIOR/DIOW asserted pulse width */
-+               teoc_pio = num_clocks_min(pio_teocmin[mode], fsclk);
-+               /* Cycle Time */
-+               n0  = num_clocks_min(pio_t0min[mode], fsclk);
-+
-+               /* increase t2 until we meed the minimum cycle length */
-+               while ((t2_pio + teoc_pio) < n0) {
-+                       t2_pio++;
-+               }
-+
-+               /* Address valid to DIOR/DIORW */
-+               t1_reg = num_clocks_min(pio_t1min[mode], fsclk);
-+
-+               /* DIOW data hold */
-+               t4_reg = num_clocks_min(pio_t4min[mode], fsclk);
-+
-+               ATAPI_SET_REG_TIM_0(base, (teoc_reg<<8 | t2_reg));
-+               ATAPI_SET_PIO_TIM_0(base, (t4_reg<<12 | t2_pio<<4 |
-t1_reg));
-+               ATAPI_SET_PIO_TIM_1(base, teoc_pio);
-+               if (mode > 2) {
-+                       ATAPI_SET_CONTROL(base,
-+                               ATAPI_GET_CONTROL(base) | IORDY_EN);
-+               } else {
-+                       ATAPI_SET_CONTROL(base,
-+                               ATAPI_GET_CONTROL(base) & ~IORDY_EN);
-+               }
-+
-+               /* Disable host ATAPI PIO interrupts */
-+               ATAPI_SET_INT_MASK(base, ATAPI_GET_INT_MASK(base)
-+                       & ~(PIO_DONE_MASK | HOST_TERM_XFER_MASK));
-+               SSYNC();
-+       }
-+}
-+
-+/**
-+ *     bfin_set_dmamode - Initialize host controller PATA DMA timings
-+ *     @ap: Port whose timings we are configuring
-+ *     @adev: um
-+ *     @udma: udma mode, 0 - 6
-+ *
-+ *     Set UDMA mode for device.
-+ *
-+ *     LOCKING:
-+ *     None (inherited from caller).
-+ */
-+
-+static void bfin_set_dmamode (struct ata_port *ap, struct ata_device
-*adev)
-+{
-+       int mode;
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned long fsclk = get_sclk();
-+       unsigned short tenv, tack, tcyc_tdvs, tdvs, tmli, tss, trp,
-tzah;
-+       unsigned short tm, td, tkr, tkw, teoc, th;
-+       unsigned short n0, nf, tfmin = 5;
-+       unsigned short nmin, tcyc;
-+
-+       mode = adev->dma_mode - XFER_UDMA_0;
-+       if (mode >= 0 && mode <= 5) {
-+               pr_debug("set udmamode: mode=%d\n", mode);
-+               /* the most restrictive timing value is t6 and tc,
-+                * the DIOW - data hold. If one SCLK pulse is longer
-+                * than this minimum value then register
-+                * transfers cannot be supported at this frequency.
-+                */
-+               while (mode > 0 && udma_fsclk[mode] > fsclk) {
-+                       mode--;
-+               }
-+               nmin = num_clocks_min(udma_tmin[mode], fsclk);
-+               if (nmin >= 1) {
-+                       /* calculate the timing values for Ultra DMA. */
-+                       tdvs = num_clocks_min(udma_tdvsmin[mode],
-fsclk);
-+                       tcyc = num_clocks_min(udma_tcycmin[mode],
-fsclk);
-+                       tcyc_tdvs = 2;
-+
-+                       /* increase tcyc - tdvs (tcyc_tdvs) until we
-meed
-+                        * the minimum cycle length
-+                        */
-+                       while ( (tdvs + tcyc_tdvs) < tcyc ) {
-+                               tcyc_tdvs++;
-+                       }
-+
-+                       /* Mow assign the values required for the timing
-+                        * registers
-+                        */
-+                       if (tcyc_tdvs < 2) {
-+                               tcyc_tdvs = 2;
-+                       }
-+
-+                       if (tdvs < 2) {
-+                               tdvs = 2;
-+                       }
-+                       tack = num_clocks_min(udma_tackmin, fsclk);
-+                       tss = num_clocks_min(udma_tssmin, fsclk);
-+                       tmli = num_clocks_min(udma_tmlimin, fsclk);
-+                       tzah = num_clocks_min(udma_tzahmin, fsclk);
-+                       trp = num_clocks_min(udma_trpmin[mode], fsclk);
-+                       tenv = num_clocks_min(udma_tenvmin, fsclk);
-+                       if (tenv <= udma_tenvmax[mode]) {
-+                               ATAPI_SET_ULTRA_TIM_0(base, (tenv<<8 |
-tack));
-+                               ATAPI_SET_ULTRA_TIM_1(base,
-+                                       (tcyc_tdvs<<8 | tdvs));
-+                               ATAPI_SET_ULTRA_TIM_2(base, (tmli<<8 |
-tss));
-+                               ATAPI_SET_ULTRA_TIM_3(base, (trp<<8 |
-tzah));
-+
-+                               /* Enable host ATAPI Untra DMA
-interrupts */
-+                               ATAPI_SET_INT_MASK(base,
-+                                       ATAPI_GET_INT_MASK(base)
-+                                       | UDMAIN_DONE_MASK
-+                                       | UDMAOUT_DONE_MASK
-+                                       | UDMAIN_TERM_MASK
-+                                       | UDMAOUT_TERM_MASK);
-+                       }
-+               }
-+       }
-+
-+       mode = adev->dma_mode - XFER_MW_DMA_0;
-+       if (mode >= 0 && mode <= 2) {
-+               pr_debug("set mdmamode: mode=%d\n", mode);
-+               /* the most restrictive timing value is tf, the DMACK to
-+                * read data released. If one SCLK pulse is longer than
-+                * this maximum value then the MDMA mode
-+                * cannot be supported at this frequency.
-+                */
-+               while (mode > 0 && mdma_fsclk[mode] > fsclk) {
-+                       mode--;
-+               }
-+               nf = num_clocks_min(tfmin, fsclk);
-+               if (nf >= 1) {
-+                       /* calculate the timing values for Multi-word
-DMA. */
-+
-+                       /* DIOR/DIOW asserted pulse width */
-+                       td = num_clocks_min(mdma_tdmin[mode], fsclk);
-+
-+                       /* DIOR negated pulse width */
-+                       tkw = num_clocks_min(mdma_tkwmin[mode], fsclk);
-+
-+                       /* Cycle Time */
-+                       n0  = num_clocks_min(mdma_t0min[mode], fsclk);
-+
-+                       /* increase tk until we meed the minimum cycle
-length */
-+                       while ( (tkw+td) < n0 ) {
-+                               tkw++;
-+                       }
-+
-+                       /* DIOR negated pulse width - read */
-+                       tkr = num_clocks_min(mdma_tkrmin[mode], fsclk);
-+                       /* CS{1:0] valid to DIOR/DIOW */
-+                       tm = num_clocks_min(mdma_tmmin[mode], fsclk);
-+                       /* DIOR/DIOW to DMACK hold */
-+                       teoc = num_clocks_min(mdma_tjmin[mode], fsclk);
-+                       /* DIOW Data hold */
-+                       th = num_clocks_min(mdma_thmin[mode], fsclk);
-+
-+                       ATAPI_SET_MULTI_TIM_0(base, (tm<<8 | td));
-+                       ATAPI_SET_MULTI_TIM_1(base, (tkr<<8 | tkw));
-+                       ATAPI_SET_MULTI_TIM_2(base, (teoc<<8 | th));
-+
-+                       /* Enable host ATAPI Multi DMA interrupts */
-+                       ATAPI_SET_INT_MASK(base,
-ATAPI_GET_INT_MASK(base)
-+                               | MULTI_DONE_MASK | MULTI_TERM_MASK);
-+                       SSYNC();
-+               }
-+       }
-+       return;
-+}
-+
-+/**
-+ *
-+ *    Function:       wait_complete
-+ *
-+ *    Description:    Waits the interrupt from device
-+ *
-+ */
-+static void inline wait_complete(unsigned long base, unsigned short
-mask)
-+{
-+       unsigned short status;
-+
-+       do {
-+               status = ATAPI_GET_INT_STATUS(base) & mask;
-+       } while (!status);
-+
-+       ATAPI_SET_INT_STATUS(base, mask);
-+}
-+
-+/**
-+ *
-+ *    Function:       write_atapi_register
-+ *
-+ *    Description:    Writes to ATA Device Resgister
-+ *
-+ */
-+
-+static void write_atapi_register(unsigned long base,
-+               unsigned long ata_reg, unsigned short value)
-+{
-+       /* Program the ATA_DEV_TXBUF register with write data (to be
-+        * written into the device).
-+        */
-+       ATAPI_SET_DEV_TXBUF(base, value);
-+
-+       /* Program the ATA_DEV_ADDR register with address of the
-+        * device register (0x01 to 0x0F).
-+        */
-+       ATAPI_SET_DEV_ADDR(base, ata_reg);
-+
-+       /* Program the ATA_CTRL register with dir set to write (1)
-+        */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) | XFER_DIR));
-+
-+       /* ensure PIO DMA is not set */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) &
-~PIO_USE_DMA));
-+
-+       /* and start the transfer */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) | PIO_START));
-+
-+       /* Wait for the interrupt to indicate the end of the transfer.
-+        * (We need to wait on and clear rhe ATA_DEV_INT interrupt
-status)
-+        */
-+       wait_complete(base, PIO_DONE_INT);
-+}
-+
-+/**
-+ *
-+ *     Function:       read_atapi_register
-+ *
-+ *Description:    Reads from ATA Device Resgister
-+ *
-+ */
-+
-+static unsigned short read_atapi_register(unsigned long base,
-+               unsigned long ata_reg)
-+{
-+       /* Program the ATA_DEV_ADDR register with address of the
-+        * device register (0x01 to 0x0F).
-+        */
-+       ATAPI_SET_DEV_ADDR(base, ata_reg);
-+
-+       /* Program the ATA_CTRL register with dir set to read (0) and
-+        */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) & ~XFER_DIR));
-+
-+       /* ensure PIO DMA is not set */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) &
-~PIO_USE_DMA));
-+
-+       /* and start the transfer */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) | PIO_START));
-+
-+       /* Wait for the interrupt to indicate the end of the transfer.
-+        * (PIO_DONE interrupt is set and it doesn't seem to matter
-+        * that we don't clear it)
-+        */
-+       wait_complete(base, PIO_DONE_INT);
-+
-+       /* Read the ATA_DEV_RXBUF register with write data (to be
-+        * written into the device).
-+        */
-+       return ATAPI_GET_DEV_RXBUF(base);
-+}
-+
-+/**
-+ *
-+ *    Function:       write_atapi_register_data
-+ *
-+ *    Description:    Writes to ATA Device Resgister
-+ *
-+ */
-+
-+static void write_atapi_data(unsigned long base,
-+               int len, unsigned short *buf)
-+{
-+       int i;
-+
-+       /* Set transfer length to 1 */
-+       ATAPI_SET_XFER_LEN(base, 1);
-+
-+       /* Program the ATA_DEV_ADDR register with address of the
-+        * ATA_REG_DATA
-+        */
-+       ATAPI_SET_DEV_ADDR(base, ATA_REG_DATA);
-+
-+       /* Program the ATA_CTRL register with dir set to write (1)
-+        */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) | XFER_DIR));
-+
-+       /* ensure PIO DMA is not set */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) &
-~PIO_USE_DMA));
-+
-+       for (i = 0; i < len; i++) {
-+               /* Program the ATA_DEV_TXBUF register with write data
-(to be
-+                * written into the device).
-+                */
-+               ATAPI_SET_DEV_TXBUF(base, buf[i]);
-+
-+               /* and start the transfer */
-+               ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) |
-PIO_START));
-+
-+               /* Wait for the interrupt to indicate the end of the
-transfer.
-+                * (We need to wait on and clear rhe ATA_DEV_INT
-+                * interrupt status)
-+                */
-+               wait_complete(base, PIO_DONE_INT);
-+       }
-+}
-+
-+/**
-+ *
-+ *     Function:       read_atapi_register_data
-+ *
-+ *     Description:    Reads from ATA Device Resgister
-+ *
-+ */
-+
-+static void read_atapi_data(unsigned long base,
-+               int len, unsigned short *buf)
-+{
-+       int i;
-+
-+       /* Set transfer length to 1 */
-+       ATAPI_SET_XFER_LEN(base, 1);
-+
-+       /* Program the ATA_DEV_ADDR register with address of the
-+        * ATA_REG_DATA
-+        */
-+       ATAPI_SET_DEV_ADDR(base, ATA_REG_DATA);
-+
-+       /* Program the ATA_CTRL register with dir set to read (0) and
-+        */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) & ~XFER_DIR));
-+
-+       /* ensure PIO DMA is not set */
-+       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) &
-~PIO_USE_DMA));
-+
-+       for (i = 0; i < len; i++) {
-+               /* and start the transfer */
-+               ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base) |
-PIO_START));
-+
-+               /* Wait for the interrupt to indicate the end of the
-transfer.
-+                * (PIO_DONE interrupt is set and it doesn't seem to
-matter
-+                * that we don't clear it)
-+                */
-+               wait_complete(base, PIO_DONE_INT);
-+
-+               /* Read the ATA_DEV_RXBUF register with write data (to
-be
-+                * written into the device).
-+                */
-+               buf[i] = ATAPI_GET_DEV_RXBUF(base);
-+       }
-+}
-+
-+/**
-+ *     bfin_tf_load - send taskfile registers to host controller
-+ *     @ap: Port to which output is sent
-+ *     @tf: ATA taskfile register set
-+ *
-+ *     Note: Original code is ata_tf_load().
-+ */
-+
-+static void bfin_tf_load (struct ata_port *ap, const struct
-ata_taskfile *tf)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
-+
-+       if (tf->ctl != ap->last_ctl) {
-+               write_atapi_register(base, ATA_REG_CTRL, tf->ctl);
-+               ap->last_ctl = tf->ctl;
-+               ata_wait_idle(ap);
-+       }
-+
-+       if (is_addr) {
-+               if (tf->flags & ATA_TFLAG_LBA48) {
-+                       write_atapi_register(base, ATA_REG_FEATURE,
-+                                               tf->hob_feature);
-+                       write_atapi_register(base, ATA_REG_NSECT,
-+                                               tf->hob_nsect);
-+                       write_atapi_register(base, ATA_REG_LBAL,
-tf->hob_lbal);
-+                       write_atapi_register(base, ATA_REG_LBAM,
-tf->hob_lbam);
-+                       write_atapi_register(base, ATA_REG_LBAH,
-tf->hob_lbah);
-+                       pr_debug("hob: feat 0x%X nsect 0x%X, lba 0x%X "
-+                                "0x%X 0x%X\n",
-+                               tf->hob_feature,
-+                               tf->hob_nsect,
-+                               tf->hob_lbal,
-+                               tf->hob_lbam,
-+                               tf->hob_lbah);
-+               }
-+
-+               write_atapi_register(base, ATA_REG_FEATURE,
-tf->feature);
-+               write_atapi_register(base, ATA_REG_NSECT, tf->nsect);
-+               write_atapi_register(base, ATA_REG_LBAL, tf->lbal);
-+               write_atapi_register(base, ATA_REG_LBAM, tf->lbam);
-+               write_atapi_register(base, ATA_REG_LBAH, tf->lbah);
-+               pr_debug("feat 0x%X nsect 0x%X lba 0x%X 0x%X 0x%X\n",
-+                       tf->feature,
-+                       tf->nsect,
-+                       tf->lbal,
-+                       tf->lbam,
-+                       tf->lbah);
-+       }
-+
-+       if (tf->flags & ATA_TFLAG_DEVICE) {
-+               write_atapi_register(base, ATA_REG_DEVICE, tf->device);
-+               pr_debug("device 0x%X\n", tf->device);
-+       }
-+
-+       ata_wait_idle(ap);
-+}
-+
-+/**
-+ *     bfin_check_status - Read device status reg & clear interrupt
-+ *     @ap: port where the device is
-+ *
-+ *     Note: Original code is ata_check_status().
-+ */
-+
-+static u8 bfin_check_status (struct ata_port *ap)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       return read_atapi_register(base, ATA_REG_STATUS);
-+}
-+
-+/**
-+ *     bfin_tf_read - input device's ATA taskfile shadow registers
-+ *     @ap: Port from which input is read
-+ *     @tf: ATA taskfile register set for storing input
-+ *
-+ *     Note: Original code is ata_tf_read().
-+ */
-+
-+static void bfin_tf_read (struct ata_port *ap, struct ata_taskfile *tf)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       tf->command = bfin_check_status(ap);
-+       tf->feature = read_atapi_register(base, ATA_REG_ERR);
-+       tf->nsect = read_atapi_register(base, ATA_REG_NSECT);
-+       tf->lbal = read_atapi_register(base, ATA_REG_LBAL);
-+       tf->lbam = read_atapi_register(base, ATA_REG_LBAM);
-+       tf->lbah = read_atapi_register(base, ATA_REG_LBAH);
-+       tf->device = read_atapi_register(base, ATA_REG_DEVICE);
-+
-+       if (tf->flags & ATA_TFLAG_LBA48) {
-+               write_atapi_register(base, ATA_REG_CTRL, tf->ctl |
-ATA_HOB);
-+               tf->hob_feature = read_atapi_register(base,
-ATA_REG_ERR);
-+               tf->hob_nsect = read_atapi_register(base,
-ATA_REG_NSECT);
-+               tf->hob_lbal = read_atapi_register(base, ATA_REG_LBAL);
-+               tf->hob_lbam = read_atapi_register(base, ATA_REG_LBAM);
-+               tf->hob_lbah = read_atapi_register(base, ATA_REG_LBAH);
-+       }
-+}
-+
-+/**
-+ *     bfin_exec_command - issue ATA command to host controller
-+ *     @ap: port to which command is being issued
-+ *     @tf: ATA taskfile register set
-+ *
-+ *     Note: Original code is ata_exec_command().
-+ */
-+
-+static void bfin_exec_command (struct ata_port *ap,
-+                             const struct ata_taskfile *tf)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       pr_debug("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
-+
-+       write_atapi_register(base, ATA_REG_CMD, tf->command);
-+       ata_pause(ap);
-+}
-+
-+/**
-+ *     bfin_check_altstatus - Read device alternate status reg
-+ *     @ap: port where the device is
-+ */
-+
-+static u8 bfin_check_altstatus (struct ata_port *ap)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       return read_atapi_register(base, ATA_REG_ALTSTATUS);
-+}
-+
-+/**
-+ *     bfin_std_dev_select - Select device 0/1 on ATA bus
-+ *     @ap: ATA channel to manipulate
-+ *     @device: ATA device (numbered from zero) to select
-+ *
-+ *     Note: Original code is ata_std_dev_select().
-+ */
-+
-+static void bfin_std_dev_select (struct ata_port *ap, unsigned int
-device)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       u8 tmp;
-+
-+       if (device == 0)
-+               tmp = ATA_DEVICE_OBS;
-+       else
-+               tmp = ATA_DEVICE_OBS | ATA_DEV1;
-+
-+       write_atapi_register(base, ATA_REG_DEVICE, tmp);
-+       ata_pause(ap);
-+}
-+
-+/**
-+ *     bfin_bmdma_setup - Set up IDE DMA transaction
-+ *     @qc: Info associated with this ATA transaction.
-+ *
-+ *     Note: Original code is ata_bmdma_setup().
-+ */
-+
-+static void bfin_bmdma_setup (struct ata_queued_cmd *qc)
-+{
-+       unsigned short config = WDSIZE_16;
-+       struct scatterlist *sg;
-+
-+       pr_debug("in atapi dma setup\n");
-+       /* Program the ATA_CTRL register with dir */
-+       if (qc->tf.flags & ATA_TFLAG_WRITE) {
-+               /* fill the ATAPI DMA controller */
-+               set_dma_config(CH_ATAPI_TX, config);
-+               set_dma_x_modify(CH_ATAPI_TX, 2);
-+               ata_for_each_sg(sg, qc) {
-+                       set_dma_start_addr(CH_ATAPI_TX,
-sg_dma_address(sg));
-+                       set_dma_x_count(CH_ATAPI_TX, sg_dma_len(sg) >>
-1);
-+               }
-+       } else {
-+               config |= WNR;
-+               /* fill the ATAPI DMA controller */
-+               set_dma_config(CH_ATAPI_RX, config);
-+               set_dma_x_modify(CH_ATAPI_RX, 2);
-+               ata_for_each_sg(sg, qc) {
-+                       set_dma_start_addr(CH_ATAPI_RX,
-sg_dma_address(sg));
-+                       set_dma_x_count(CH_ATAPI_RX, sg_dma_len(sg) >>
-1);
-+               }
-+       }
-+}
-+
-+/**
-+ *     bfin_bmdma_start - Start an IDE DMA transaction
-+ *     @qc: Info associated with this ATA transaction.
-+ *
-+ *     Note: Original code is ata_bmdma_start().
-+ */
-+
-+static void bfin_bmdma_start (struct ata_queued_cmd *qc)
-+{
-+       struct ata_port *ap = qc->ap;
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       struct scatterlist *sg;
-+
-+       pr_debug("in atapi dma start\n");
-+       if (ap->udma_mask || ap->mwdma_mask) {
-+               /* start ATAPI DMA controller*/
-+               if (qc->tf.flags & ATA_TFLAG_WRITE) {
-+                       ata_for_each_sg(sg, qc) {
-+                               flush_dcache_range(sg_dma_address(sg),
-+                                       sg_dma_address(sg) +
-sg_dma_len(sg));
-+                       }
-+                       enable_dma(CH_ATAPI_TX);
-+                       pr_debug("enable udma write\n");
-+
-+                       /* Send ATA DMA write command */
-+                       bfin_exec_command(ap, &qc->tf);
-+
-+                       /* set ATA DMA write direction */
-+                       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base)
-+                               | XFER_DIR));
-+               } else {
-+                       enable_dma(CH_ATAPI_RX);
-+                       pr_debug("enable udma read\n");
-+
-+                       /* Send ATA DMA read command */
-+                       bfin_exec_command(ap, &qc->tf);
-+
-+                       /* set ATA DMA read direction */
-+                       ATAPI_SET_CONTROL(base, (ATAPI_GET_CONTROL(base)
-+                               & ~XFER_DIR));
-+               }
-+
-+               /* Reset all transfer count */
-+               ATAPI_SET_CONTROL(base,
-+                       ATAPI_GET_CONTROL(base) | TFRCNT_RST);
-+
-+               /* Set transfer length to buffer len */
-+               ata_for_each_sg(sg, qc) {
-+                       ATAPI_SET_XFER_LEN(base, (sg_dma_len(sg) >> 1));
-+               }
-+
-+               /* Enable ATA DMA operation*/
-+               if (ap->udma_mask) {
-+                       ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base)
-+                               | ULTRA_START);
-+               } else {
-+                       ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base)
-+                               | MULTI_START);
-+               }
-+       }
-+}
-+
-+/**
-+ *     bfin_bmdma_stop - Stop IDE DMA transfer
-+ *     @qc: Command we are ending DMA for
-+ */
-+
-+static void bfin_bmdma_stop (struct ata_queued_cmd *qc)
-+{
-+       struct ata_port *ap = qc->ap;
-+       struct scatterlist *sg;
-+
-+       pr_debug("in atapi dma stop\n");
-+       if (ap->udma_mask || ap->mwdma_mask) {
-+               /* stop ATAPI DMA controller*/
-+               if (qc->tf.flags & ATA_TFLAG_WRITE) {
-+                       disable_dma(CH_ATAPI_TX);
-+               } else {
-+                       disable_dma(CH_ATAPI_RX);
-+                       if (ap->hsm_task_state & HSM_ST_LAST) {
-+                               ata_for_each_sg(sg, qc) {
-+                                       invalidate_dcache_range(
-+                                               sg_dma_address(sg),
-+                                               sg_dma_address(sg)
-+                                               + sg_dma_len(sg));
-+                               }
-+                       }
-+               }
-+       }
-+}
-+
-+/**
-+ *     bfin_devchk - PATA device presence detection
-+ *     @ap: ATA channel to examine
-+ *     @device: Device to examine (starting at zero)
-+ *
-+ *     Note: Original code is ata_devchk().
-+ */
-+
-+static unsigned int bfin_devchk (struct ata_port *ap,
-+                               unsigned int device)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       u8 nsect, lbal;
-+
-+       ap->ops->dev_select(ap, device);
-+
-+       write_atapi_register(base, ATA_REG_NSECT, 0x55);
-+       write_atapi_register(base, ATA_REG_LBAL, 0xaa);
-+
-+       write_atapi_register(base, ATA_REG_NSECT, 0xaa);
-+       write_atapi_register(base, ATA_REG_LBAL, 0x55);
-+
-+       write_atapi_register(base, ATA_REG_NSECT, 0x55);
-+       write_atapi_register(base, ATA_REG_LBAL, 0xaa);
-+
-+       nsect = read_atapi_register(base, ATA_REG_NSECT);
-+       lbal = read_atapi_register(base, ATA_REG_LBAL);
-+
-+       if ((nsect == 0x55) && (lbal == 0xaa))
-+               return 1;       /* we found a device */
-+
-+       return 0;               /* nothing found */
-+}
-+
-+/**
-+ *     bfin_bus_post_reset - PATA device post reset
-+ *
-+ *     Note: Original code is ata_bus_post_reset().
-+ */
-+
-+static void bfin_bus_post_reset (struct ata_port *ap, unsigned int
-devmask)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned int dev0 = devmask & (1 << 0);
-+       unsigned int dev1 = devmask & (1 << 1);
-+       unsigned long timeout;
-+
-+       /* if device 0 was found in ata_devchk, wait for its
-+        * BSY bit to clear
-+        */
-+       if (dev0)
-+               ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK,
-ATA_TMOUT_BOOT);
-+
-+       /* if device 1 was found in ata_devchk, wait for
-+        * register access, then wait for BSY to clear
-+        */
-+       timeout = jiffies + ATA_TMOUT_BOOT;
-+       while (dev1) {
-+               u8 nsect, lbal;
-+
-+               ap->ops->dev_select(ap, 1);
-+               nsect = read_atapi_register(base, ATA_REG_NSECT);
-+               lbal = read_atapi_register(base, ATA_REG_LBAL);
-+               if ((nsect == 1) && (lbal == 1))
-+                       break;
-+               if (time_after(jiffies, timeout)) {
-+                       dev1 = 0;
-+                       break;
-+               }
-+               msleep(50);     /* give drive a breather */
-+       }
-+       if (dev1)
-+               ata_busy_sleep(ap, ATA_TMOUT_BOOT_QUICK,
-ATA_TMOUT_BOOT);
-+
-+       /* is all this really necessary? */
-+       ap->ops->dev_select(ap, 0);
-+       if (dev1)
-+               ap->ops->dev_select(ap, 1);
-+       if (dev0)
-+               ap->ops->dev_select(ap, 0);
-+}
-+
-+/**
-+ *     bfin_bus_softreset - PATA device software reset
-+ *
-+ *     Note: Original code is ata_bus_softreset().
-+ */
-+
-+static unsigned int bfin_bus_softreset (struct ata_port *ap,
-+                                      unsigned int devmask)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       /* software reset.  causes dev0 to be selected */
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
-+       udelay(20);
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl | ATA_SRST);
-+       udelay(20);
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
-+
-+       /* spec mandates ">= 2ms" before checking status.
-+        * We wait 150ms, because that was the magic delay used for
-+        * ATAPI devices in Hale Landis's ATADRVR, for the period of
-time
-+        * between when the ATA command register is written, and then
-+        * status is checked.  Because waiting for "a while" before
-+        * checking status is fine, post SRST, we perform this magic
-+        * delay here as well.
-+        *
-+        * Old drivers/ide uses the 2mS rule and then waits for ready
-+        */
-+       msleep(150);
-+
-+       /* Before we perform post reset processing we want to see if
-+        * the bus shows 0xFF because the odd clown forgets the D7
-+        * pulldown resistor.
-+        */
-+       if (bfin_check_status(ap) == 0xFF)
-+               return 0;
-+
-+       bfin_bus_post_reset(ap, devmask);
-+
-+       return 0;
-+}
-+
-+/**
-+ *     bfin_std_softreset - reset host port via ATA SRST
-+ *     @ap: port to reset
-+ *     @classes: resulting classes of attached devices
-+ *
-+ *     Note: Original code is ata_std_softreset().
-+ */
-+
-+static int bfin_std_softreset(struct ata_port *ap, unsigned int
-*classes,
-+               unsigned long deadline)
-+{
-+       unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
-+       unsigned int devmask = 0, err_mask;
-+       u8 err;
-+
-+       if (ata_port_offline(ap)) {
-+               classes[0] = ATA_DEV_NONE;
-+               goto out;
-+       }
-+
-+       /* determine if device 0/1 are present */
-+       if (bfin_devchk(ap, 0))
-+               devmask |= (1 << 0);
-+       if (slave_possible && bfin_devchk(ap, 1))
-+               devmask |= (1 << 1);
-+
-+       /* select device 0 again */
-+       ap->ops->dev_select(ap, 0);
-+
-+       /* issue bus reset */
-+       err_mask = bfin_bus_softreset(ap, devmask);
-+       if (err_mask) {
-+               ata_port_printk(ap, KERN_ERR, "SRST failed (err_mask=0x%
-x)\n",
-+                               err_mask);
-+               return -EIO;
-+       }
-+
-+       /* determine by signature whether we have ATA or ATAPI devices
-*/
-+       classes[0] = ata_dev_try_classify(ap, 0, &err);
-+       if (slave_possible && err != 0x81)
-+               classes[1] = ata_dev_try_classify(ap, 1, &err);
-+
-+ out:
-+       return 0;
-+}
-+
-+/**
-+ *     bfin_bmdma_status - Read IDE DMA status
-+ *     @ap: Port associated with this ATA transaction.
-+ */
-+
-+static unsigned char bfin_bmdma_status (struct ata_port *ap)
-+{
-+       unsigned char host_stat = 0;
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned short int_status = ATAPI_GET_INT_STATUS(base);
-+
-+       if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON|ULTRA_XFER_ON)) {
-+               host_stat = ATA_DMA_ACTIVE;
-+       }
-+       if (int_status & (MULTI_DONE_INT|UDMAIN_DONE_INT|
-UDMAOUT_DONE_INT)) {
-+               host_stat = ATA_DMA_INTR;
-+       }
-+       if (int_status & (MULTI_TERM_INT|UDMAIN_TERM_INT|
-UDMAOUT_TERM_INT)) {
-+               host_stat = ATA_DMA_ERR;
-+       }
-+
-+       return host_stat;
-+}
-+
-+/**
-+ *     bfin_data_xfer - Transfer data by PIO
-+ *     @adev: device for this I/O
-+ *     @buf: data buffer
-+ *     @buflen: buffer length
-+ *     @write_data: read/write
-+ *
-+ *     Note: Original code is ata_data_xfer().
-+ */
-+
-+static void bfin_data_xfer (struct ata_device *adev, unsigned char
-*buf,
-+                          unsigned int buflen, int write_data)
-+{
-+       struct ata_port *ap = adev->ap;
-+       unsigned int words = buflen >> 1;
-+       unsigned short *buf16 = (u16 *) buf;
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       /* Transfer multiple of 2 bytes */
-+       if (write_data) {
-+               write_atapi_data(base, words, buf16);
-+       } else {
-+               read_atapi_data(base, words, buf16);
-+       }
-+
-+       /* Transfer trailing 1 byte, if any. */
-+       if (unlikely(buflen & 0x01)) {
-+               unsigned short align_buf[1] = { 0 };
-+               unsigned char *trailing_buf = buf + buflen - 1;
-+
-+               if (write_data) {
-+                       memcpy(align_buf, trailing_buf, 1);
-+                       write_atapi_data(base, 1, align_buf);
-+               } else {
-+                       read_atapi_data(base, 1, align_buf);
-+                       memcpy(trailing_buf, align_buf, 1);
-+               }
-+       }
-+}
-+
-+/**
-+ *     bfin_irq_on - Enable interrupts on a port.
-+ *     @ap: Port on which interrupts are enabled.
-+ *
-+ *     Note: Original code is ata_irq_on().
-+ */
-+
-+static unsigned char bfin_irq_on (struct ata_port *ap)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       u8 tmp;
-+
-+       pr_debug("in atapi irq on\n");
-+       ap->ctl &= ~ATA_NIEN;
-+       ap->last_ctl = ap->ctl;
-+
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
-+       tmp = ata_wait_idle(ap);
-+
-+       ap->ops->irq_clear(ap);
-+
-+       return tmp;
-+}
-+
-+/**
-+ *     bfin_irq_ack - Acknowledge a device interrupt.
-+ *     @ap: Port on which interrupts are enabled.
-+ *
-+ *     Note: Original code is ata_irq_ack().
-+ */
-+
-+static unsigned char bfin_irq_ack (struct ata_port *ap, unsigned int
-chk_drq)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+       unsigned int bits = chk_drq ? ATA_BUSY | ATA_DRQ : ATA_BUSY;
-+       unsigned char status;
-+
-+       pr_debug("in atapi irq ack\n");
-+       status = ata_busy_wait(ap, bits, 1000);
-+       if (status & bits)
-+               if (ata_msg_err(ap))
-+                       dev_err(ap->dev, "abnormal status 0x%X\n",
-status);
-+
-+       /* get controller status; clear intr, err bits */
-+       ATAPI_SET_INT_STATUS(base, ATAPI_GET_INT_STATUS(base)|
-ATAPI_DEV_INT
-+               | MULTI_DONE_INT | UDMAIN_DONE_INT | UDMAOUT_DONE_INT
-+               | MULTI_TERM_INT | UDMAIN_TERM_INT | UDMAOUT_TERM_INT);
-+
-+       return bfin_bmdma_status(ap);
-+}
-+
-+/**
-+ *     bfin_bmdma_freeze - Freeze DMA controller port
-+ *     @ap: port to freeze
-+ *
-+ *     Note: Original code is ata_bmdma_freeze().
-+ */
-+
-+static void bfin_bmdma_freeze (struct ata_port *ap)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       pr_debug("in atapi dma freeze\n");
-+       ap->ctl |= ATA_NIEN;
-+       ap->last_ctl = ap->ctl;
-+
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
-+
-+       /* Under certain circumstances, some controllers raise IRQ on
-+        * ATA_NIEN manipulation.  Also, many controllers fail to mask
-+        * previously pending IRQ on ATA_NIEN assertion.  Clear it.
-+        */
-+       ata_chk_status(ap);
-+
-+       ap->ops->irq_clear(ap);
-+}
-+
-+/**
-+ *     bfin_std_postreset - standard postreset callback
-+ *     @ap: the target ata_port
-+ *     @classes: classes of attached devices
-+ *
-+ *     Note: Original code is ata_std_postreset().
-+ */
-+
-+static void bfin_std_postreset (struct ata_port *ap, unsigned int
-*classes)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       /* re-enable interrupts */
-+       if (!ap->ops->error_handler)
-+               ap->ops->irq_on(ap);
-+
-+       /* is double-select really necessary? */
-+       if (classes[0] != ATA_DEV_NONE)
-+               ap->ops->dev_select(ap, 1);
-+       if (classes[1] != ATA_DEV_NONE)
-+               ap->ops->dev_select(ap, 0);
-+
-+       /* bail out if no device is present */
-+       if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
-+               return;
-+       }
-+
-+       /* set up device control */
-+       write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
-+}
-+
-+/**
-+ *     bfin_error_handler - Stock error handler for DMA controller
-+ *     @ap: port to handle error for
-+ */
-+
-+static void bfin_error_handler (struct ata_port *ap)
-+{
-+       ata_bmdma_drive_eh(ap, ata_std_prereset, bfin_std_softreset,
-NULL,
-+                          bfin_std_postreset);
-+}
-+
-+/**
-+ *     bfin_bmdma_irq_clear - Clear ATAPI interrupt.
-+ *     @ap: Port associated with this ATA transaction.
-+ *
-+ *     Note: Original code is ata_bmdma_irq_clear().
-+ */
-+
-+static void bfin_bmdma_irq_clear (struct ata_port *ap)
-+{
-+       unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
-+
-+       pr_debug("in atapi irq clear\n");
-+       ATAPI_SET_INT_STATUS(base, 0x1FF);
-+}
-+
-+static void bfin_port_stop(struct ata_port *ap)
-+{
-+       pr_debug("in atapi port stop\n");
-+       if (ap->udma_mask != 0 || ap->mwdma_mask != 0) {
-+               free_dma(CH_ATAPI_RX);
-+               free_dma(CH_ATAPI_TX);
-+       }
-+}
-+
-+static int bfin_port_start(struct ata_port *ap)
-+{
-+       pr_debug("in atapi port start\n");
-+       if (ap->udma_mask != 0 || ap->mwdma_mask != 0) {
-+               if (request_dma(CH_ATAPI_RX, "BFIN ATAPI RX DMA") >= 0)
-{
-+                       if (request_dma(CH_ATAPI_TX,
-+                               "BFIN ATAPI TX DMA") >= 0) {
-+                               return 0;
-+                       }
-+                       free_dma(CH_ATAPI_RX);
-+               }
-+               ap->udma_mask = 0;
-+               ap->mwdma_mask = 0;
-+               dev_err(ap->dev, "Unable to request ATAPI DMA!\n");
-+               return -EBUSY;
-+       }
-+       return 0;
-+}
-+
-+void bfin_qc_prep(struct ata_queued_cmd *qc)
-+{
-+}
-+
-+static struct scsi_host_template bfin_sht = {
-+       .module                 = THIS_MODULE,
-+       .name                   = DRV_NAME,
-+       .ioctl                  = ata_scsi_ioctl,
-+       .queuecommand           = ata_scsi_queuecmd,
-+       .can_queue              = ATA_DEF_QUEUE,
-+       .this_id                = ATA_SHT_THIS_ID,
-+/*     .sg_tablesize           = LIBATA_MAX_PRD,*/
-+       .sg_tablesize           = SG_NONE,
-+       .cmd_per_lun            = ATA_SHT_CMD_PER_LUN,
-+       .emulated               = ATA_SHT_EMULATED,
-+       .use_clustering         = ATA_SHT_USE_CLUSTERING,
-+       .proc_name              = DRV_NAME,
-+       .dma_boundary           = ATA_DMA_BOUNDARY,
-+       .slave_configure        = ata_scsi_slave_config,
-+       .slave_destroy          = ata_scsi_slave_destroy,
-+       .bios_param             = ata_std_bios_param,
-+#ifdef CONFIG_PM
-+       .resume                 = ata_scsi_device_resume,
-+       .suspend                = ata_scsi_device_suspend,
-+#endif
-+};
-+
-+static const struct ata_port_operations bfin_pata_ops = {
-+       .port_disable           = ata_port_disable,
-+       .set_piomode            = bfin_set_piomode,
-+       .set_dmamode            = bfin_set_dmamode,
-+
-+       .tf_load                = bfin_tf_load,
-+       .tf_read                = bfin_tf_read,
-+       .exec_command           = bfin_exec_command,
-+       .check_status           = bfin_check_status,
-+       .check_altstatus        = bfin_check_altstatus,
-+       .dev_select             = bfin_std_dev_select,
-+
-+       .bmdma_setup            = bfin_bmdma_setup,
-+       .bmdma_start            = bfin_bmdma_start,
-+       .bmdma_stop             = bfin_bmdma_stop,
-+       .bmdma_status           = bfin_bmdma_status,
-+       .data_xfer              = bfin_data_xfer,
-+
-+       .qc_prep                = bfin_qc_prep,
-+       .qc_issue               = ata_qc_issue_prot,
-+
-+       .freeze                 = bfin_bmdma_freeze,
-+       .error_handler          = bfin_error_handler,
-+       .post_internal_cmd      = bfin_bmdma_stop,
-+
-+       .irq_handler            = ata_interrupt,
-+       .irq_clear              = bfin_bmdma_irq_clear,
-+       .irq_on                 = bfin_irq_on,
-+       .irq_ack                = bfin_irq_ack,
-+
-+       .port_start             = bfin_port_start,
-+       .port_stop              = bfin_port_stop,
-+};
-+
-+static struct ata_port_info bfin_port_info[] = {
-+       {
-+               .sht            = &bfin_sht,
-+               .flags          = ATA_FLAG_SLAVE_POSS
-+                               | ATA_FLAG_MMIO
-+                               | ATA_FLAG_NO_LEGACY,
-+               .pio_mask       = 0x1f, /* pio0-4 */
-+               .mwdma_mask     = 0,
-+#ifdef CONFIG_PATA_BF54X_DMA
-+               .udma_mask      = ATA_UDMA5,
-+#else
-+               .udma_mask      = 0,
-+#endif
-+               .port_ops       = &bfin_pata_ops,
-+       },
-+};
-+
-+/**
-+ *     bfin_reset_controller - initialize BF54x ATAPI controller.
-+ */
-+
-+static int bfin_reset_controller(struct ata_host *host)
-+{
-+       unsigned long base = (unsigned
-long)host->ports[0]->ioaddr.ctl_addr;
-+       int count;
-+       unsigned short status;
-+
-+       /* Disable all ATAPI interrupts */
-+       ATAPI_SET_INT_MASK(base, 0);
-+       SSYNC();
-+
-+       /* Assert the RESET signal 25us*/
-+       ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | DEV_RST);
-+       udelay(30);
-+
-+       /* Negate the RESET signal for 2ms*/
-+       ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) & ~DEV_RST);
-+       udelay(2100);
-+
-+       /* Wait on Busy flag to clear */
-+       count = 10000000;
-+       do {
-+               status = read_atapi_register(base, ATA_REG_STATUS);
-+       } while (count-- && (status & ATA_BUSY));
-+
-+       /* Enable only ATAPI Device interrupt */
-+       ATAPI_SET_INT_MASK(base, 1);
-+       SSYNC();
-+
-+       return (!count);
-+}
-+
-+/**
-+ *     atapi_io_port - define atapi peripheral port pins.
-+ */
-+static unsigned short atapi_io_port[] = {
-+       P_ATAPI_RESET,
-+       P_ATAPI_DIOR,
-+       P_ATAPI_DIOW,
-+       P_ATAPI_CS0,
-+       P_ATAPI_CS1,
-+       P_ATAPI_DMACK,
-+       P_ATAPI_DMARQ,
-+       P_ATAPI_INTRQ,
-+       P_ATAPI_IORDY,
-+       0
-+};
-+
-+/**
-+ *     bfin_atapi_probe        -       attach a bfin atapi interface
-+ *     @pdev: platform device
-+ *
-+ *     Register a bfin atapi interface.
-+ *
-+ *
-+ *     Platform devices are expected to contain 2 resources per port:
-+ *
-+ *             - I/O Base (IORESOURCE_IO)
-+ *             - IRQ      (IORESOURCE_IRQ)
-+ *
-+ */
-+static int __devinit bfin_atapi_probe(struct platform_device *pdev)
-+{
-+       int board_idx = 0;
-+       struct resource *res;
-+       struct ata_host *host;
-+       const struct ata_port_info *ppi[] =
-+               { &bfin_port_info[board_idx], NULL };
-+
-+       /*
-+        * Simple resource validation ..
-+        */
-+       if (unlikely(pdev->num_resources != 2)) {
-+               dev_err(&pdev->dev, "invalid number of resources\n");
-+               return -EINVAL;
-+       }
-+
-+       /*
-+        * Get the register base first
-+        */
-+       res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+       if (res == NULL)
-+               return -EINVAL;
-+
-+       /*
-+        * Now that that's out of the way, wire up the port..
-+        */
-+       host = ata_host_alloc_pinfo(&pdev->dev, ppi, 1);
-+       if (!host)
-+               return -ENOMEM;
-+
-+       host->ports[0]->ioaddr.ctl_addr = (void *)res->start;
-+
-+       if (peripheral_request_list(atapi_io_port, "atapi-io-port")) {
-+               dev_err(&pdev->dev, "Requesting Peripherals faild\n");
-+               return -EFAULT;
-+       }
-+
-+       if (bfin_reset_controller(host)) {
-+               peripheral_free_list(atapi_io_port);
-+               dev_err(&pdev->dev, "Fail to reset ATAPI device\n");
-+               return -EFAULT;
-+       }
-+
-+       if (ata_host_activate(host, platform_get_irq(pdev, 0),
-+               ata_interrupt, IRQF_SHARED, &bfin_sht) != 0) {
-+               peripheral_free_list(atapi_io_port);
-+               dev_err(&pdev->dev, "Fail to attach ATAPI device\n");
-+               return -ENODEV;
-+       }
-+
-+       return 0;
-+}
-+
-+/**
-+ *     bfin_atapi_remove       -       unplug a bfin atapi interface
-+ *     @pdev: platform device
-+ *
-+ *     A bfin atapi device has been unplugged. Perform the needed
-+ *     cleanup. Also called on module unload for any active devices.
-+ */
-+static int __devexit bfin_atapi_remove(struct platform_device *pdev)
-+{
-+       struct device *dev = &pdev->dev;
-+       struct ata_host *host = dev_get_drvdata(dev);
-+
-+       ata_host_detach(host);
-+
-+       peripheral_free_list(atapi_io_port);
-+
-+       return 0;
-+}
-+
-+static struct platform_driver bfin_atapi_driver = {
-+       .probe                  = bfin_atapi_probe,
-+       .remove                 = __devexit_p(bfin_atapi_remove),
-+       .driver = {
-+               .name           = DRV_NAME,
-+               .owner          = THIS_MODULE,
-+       },
-+};
-+
-+static int __init bfin_atapi_init (void)
-+{
-+       pr_info("register bfin atapi driver\n");
-+       return platform_driver_register(&bfin_atapi_driver);
-+}
-+
-+static void __exit bfin_atapi_exit (void)
-+{
-+       platform_driver_unregister(&bfin_atapi_driver);
-+}
-+
-+module_init(bfin_atapi_init);
-+module_exit(bfin_atapi_exit);
-+
-+MODULE_AUTHOR("Sonic Zhang <sonic.zhang@analog.com>");
-+MODULE_DESCRIPTION("ATAPI libata driver for blackfin 54x ATAPI
-controller");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(DRV_VERSION);
+brad@srv:~$ lspci
+00:00.0 Host bridge: VIA Technologies, Inc. VT8377 [KT400/KT600 AGP] Host Bridge (rev 80)
+00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
+00:09.0 Ethernet controller: 3Com Corporation 3c940 10/100/1000Base-T [Marvell] (rev 12)
+00:0b.0 Mass storage controller: Promise Technology, Inc. PDC20318 (SATA150 TX4) (rev 02)
+00:0c.0 Mass storage controller: Silicon Image, Inc. SiI 3112 [SATALink/SATARaid] Serial ATA 
+Controller (rev 02)
+00:0d.0 Ethernet controller: Marvell Technology Group Ltd. 88E8001 Gigabit Ethernet Controller (rev 12)
+00:0e.0 Mass storage controller: Promise Technology, Inc. PDC20318 (SATA150 TX4) (rev 02)
+00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAID Controller (rev 80)
+00:0f.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master 
+IDE (rev 06)
+00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 81)
+00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 81)
+00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 81)
+00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1 Controller (rev 81)
+00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 86)
+00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge [KT600/K8T800/K8T890 South]
+00:11.5 Multimedia audio controller: VIA Technologies, Inc. VT8233/A/8235/8237 AC97 Audio Controller 
+(rev 60)
+00:11.6 Communication controller: VIA Technologies, Inc. AC'97 Modem Controller (rev 80)
+00:13.0 Mass storage controller: Promise Technology, Inc. PDC20318 (SATA150 TX4) (rev 02)
+01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS] 315PRO PCI/AGP VGA Display Adapter
+
+brad@srv:~$ cat /proc/cpuinfo
+processor       : 0
+vendor_id       : AuthenticAMD
+cpu family      : 6
+model           : 10
+model name      : AMD Athlon(TM) XP 2600+
+stepping        : 0
+cpu MHz         : 1916.544
+cache size      : 512 KB
+fdiv_bug        : no
+hlt_bug         : no
+f00f_bug        : no
+coma_bug        : no
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 1
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr 
+sse syscall mmxext 3dnowext 3dnow ts
+bogomips        : 3835.54
+clflush size    : 32
+
+brad@srv:~$ cat /proc/interrupts
+            CPU0
+   0:      71848   IO-APIC-edge      timer
+   1:         17   IO-APIC-edge      i8042
+   4:         62   IO-APIC-edge      serial
+   8:          3   IO-APIC-edge      rtc
+   9:          0   IO-APIC-fasteoi   acpi
+  16:    1323517   IO-APIC-fasteoi   sata_sil, sata_promise
+  17:     211665   IO-APIC-fasteoi   sata_via
+  18:     272230   IO-APIC-fasteoi   sata_promise
+  19:    4770431   IO-APIC-fasteoi   sata_promise, eth0
+  20:    7353914   IO-APIC-fasteoi   eth1
+  21:    4038815   IO-APIC-fasteoi   uhci_hcd:usb1, uhci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb4, 
+ehci_hcd:usb5
+NMI:          0
+LOC:    9811571
+ERR:          0
+MIS:          0
+
+brad@srv:~$ cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+md2 : active raid5 sdo[0] sdb[3] sdn[2]
+       1465148928 blocks level 5, 128k chunk, algorithm 2 [3/2] [U_U]
+       [===========>.........]  recovery = 55.8% (409462104/732574464) finish=383.5min speed=14041K/sec
+
+md0 : active raid5 sdd1[0] sdm1[9] sdl1[8] sdk1[7] sdj1[6] sdi1[5] sdh1[4] sdg1[3] sdf1[2] sde1[1]
+       2206003968 blocks level 5, 128k chunk, algorithm 0 [10/10] [UUUUUUUUUU]
+
+md5 : active raid1 sdc4[0] sda4[1]
+       200217984 blocks [2/2] [UU]
+
+md4 : active raid1 sdc3[0] sda3[1]
+       4891712 blocks [2/2] [UU]
+
+md3 : active raid1 sdc2[0] sda2[1]
+       19542976 blocks [2/2] [UU]
+
+md1 : active raid1 sdc1[0] sda1[1]
+       19542976 blocks [2/2] [UU]
+
+unused devices: <none>
+
+[   28.626959] Freeing unused kernel memory: 192k freed
+[   28.685039] sata_sil 0000:00:0c.0: version 2.2
+[   28.685118] ACPI: PCI Interrupt 0000:00:0c.0[A] -> GSI 19 (level, low) -> IRQ 16
+[   28.685361] scsi0 : sata_sil
+[   28.685466] scsi1 : sata_sil
+[   28.685545] ata1: SATA max UDMA/100 cmd 0xf881e080 ctl 0xf881e08a bmdma 0xf881e000 irq 16
+[   28.685596] ata2: SATA max UDMA/100 cmd 0xf881e0c0 ctl 0xf881e0ca bmdma 0xf881e008 irq 16
+[   29.165502] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   29.185927] ata1.00: ATA-7: Maxtor 7Y250M0, YAR51HW0, max UDMA/133
+[   29.185968] ata1.00: 490234752 sectors, multi 16: LBA48
+[   29.225879] ata1.00: configured for UDMA/100
+[   29.715175] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   29.742761] ata2.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max UDMA/133
+[   29.742803] ata2.00: 1465149168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+[   29.776035] ata2.00: configured for UDMA/100
+[   29.776181] scsi 0:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   29.776333] sd 0:0:0:0: [sda] 490234752 512-byte hardware sectors (251000 MB)
+[   29.776387] sd 0:0:0:0: [sda] Write Protect is off
+[   29.776427] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   29.776444] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   29.776540] sd 0:0:0:0: [sda] 490234752 512-byte hardware sectors (251000 MB)
+[   29.776589] sd 0:0:0:0: [sda] Write Protect is off
+[   29.776629] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   29.776643] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   29.776694]  sda: sda1 sda2 sda3 sda4
+[   29.790518] sd 0:0:0:0: [sda] Attached SCSI disk
+[   29.790620] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[   29.790727] scsi 1:0:0:0: Direct-Access     ATA      WDC WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
+[   29.790855] sd 1:0:0:0: [sdb] 1465149168 512-byte hardware sectors (750156 MB)
+[   29.790911] sd 1:0:0:0: [sdb] Write Protect is off
+[   29.790950] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[   29.790965] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   29.791053] sd 1:0:0:0: [sdb] 1465149168 512-byte hardware sectors (750156 MB)
+[   29.791108] sd 1:0:0:0: [sdb] Write Protect is off
+[   29.791147] sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[   29.791161] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   29.791212]  sdb: unknown partition table
+[   29.800633] sd 1:0:0:0: [sdb] Attached SCSI disk
+[   29.800732] sd 1:0:0:0: Attached scsi generic sg1 type 0
+[   29.806178] sata_via 0000:00:0f.0: version 2.2
+[   29.806224] ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 17
+[   29.806376] sata_via 0000:00:0f.0: routed to hard irq line 0
+[   29.806472] scsi2 : sata_via
+[   29.806580] scsi3 : sata_via
+[   29.806667] ata3: SATA max UDMA/133 cmd 0x00017400 ctl 0x00017002 bmdma 0x00016000 irq 17
+[   29.806718] ata4: SATA max UDMA/133 cmd 0x00016800 ctl 0x00016402 bmdma 0x00016008 irq 17
+[   30.014986] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   30.215202] ata3.00: ATA-7: Maxtor 7Y250M0, YAR51HW0, max UDMA/133
+[   30.215243] ata3.00: 490234752 sectors, multi 0: LBA48
+[   30.255162] ata3.00: configured for UDMA/133
+[   30.464719] ata4: SATA link down 1.5 Gbps (SStatus 0 SControl 300)
+[   30.475365] scsi 2:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   30.475510] sd 2:0:0:0: [sdc] 490234752 512-byte hardware sectors (251000 MB)
+[   30.475563] sd 2:0:0:0: [sdc] Write Protect is off
+[   30.475603] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[   30.475619] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   30.475715] sd 2:0:0:0: [sdc] 490234752 512-byte hardware sectors (251000 MB)
+[   30.475763] sd 2:0:0:0: [sdc] Write Protect is off
+[   30.475803] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[   30.475816] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   30.475868]  sdc: sdc1 sdc2 sdc3 sdc4
+[   30.483558] sd 2:0:0:0: [sdc] Attached SCSI disk
+[   30.483662] sd 2:0:0:0: Attached scsi generic sg2 type 0
+[   30.488904] sata_promise 0000:00:0b.0: version 2.09
+[   30.488930] ACPI: PCI Interrupt 0000:00:0b.0[A] -> GSI 19 (level, low) -> IRQ 16
+[   30.504787] scsi4 : sata_promise
+[   30.504903] scsi5 : sata_promise
+[   30.504992] scsi6 : sata_promise
+[   30.505081] scsi7 : sata_promise
+[   30.505172] ata5: SATA max UDMA/133 cmd 0xf882c200 ctl 0xf882c238 bmdma 0x00000000 irq 16
+[   30.505223] ata6: SATA max UDMA/133 cmd 0xf882c280 ctl 0xf882c2b8 bmdma 0x00000000 irq 16
+[   30.505274] ata7: SATA max UDMA/133 cmd 0xf882c300 ctl 0xf882c338 bmdma 0x00000000 irq 16
+[   30.505324] ata8: SATA max UDMA/133 cmd 0xf882c380 ctl 0xf882c3b8 bmdma 0x00000000 irq 16
+[   30.994427] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   31.014865] ata5.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   31.014906] ata5.00: 490234752 sectors, multi 0: LBA48
+[   31.054821] ata5.00: configured for UDMA/133
+[   31.544099] ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   31.564540] ata6.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   31.564581] ata6.00: 490234752 sectors, multi 0: LBA48
+[   31.604496] ata6.00: configured for UDMA/133
+[   32.093775] ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   32.114196] ata7.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   32.114237] ata7.00: 490234752 sectors, multi 0: LBA48
+[   32.154173] ata7.00: configured for UDMA/133
+[   32.643450] ata8: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   32.663870] ata8.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   32.663911] ata8.00: 490234752 sectors, multi 0: LBA48
+[   32.703859] ata8.00: configured for UDMA/133
+[   32.704007] scsi 4:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   32.704153] sd 4:0:0:0: [sdd] 490234752 512-byte hardware sectors (251000 MB)
+[   32.704207] sd 4:0:0:0: [sdd] Write Protect is off
+[   32.704247] sd 4:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+[   32.704264] sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.704367] sd 4:0:0:0: [sdd] 490234752 512-byte hardware sectors (251000 MB)
+[   32.704416] sd 4:0:0:0: [sdd] Write Protect is off
+[   32.704456] sd 4:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+[   32.704471] sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.704522]  sdd: sdd1
+[   32.721933] sd 4:0:0:0: [sdd] Attached SCSI disk
+[   32.722035] sd 4:0:0:0: Attached scsi generic sg3 type 0
+[   32.722135] scsi 5:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   32.722270] sd 5:0:0:0: [sde] 490234752 512-byte hardware sectors (251000 MB)
+[   32.722320] sd 5:0:0:0: [sde] Write Protect is off
+[   32.722359] sd 5:0:0:0: [sde] Mode Sense: 00 3a 00 00
+[   32.722374] sd 5:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.722452] sd 5:0:0:0: [sde] 490234752 512-byte hardware sectors (251000 MB)
+[   32.722501] sd 5:0:0:0: [sde] Write Protect is off
+[   32.722541] sd 5:0:0:0: [sde] Mode Sense: 00 3a 00 00
+[   32.722555] sd 5:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.722605]  sde: sde1
+[   32.741783] sd 5:0:0:0: [sde] Attached SCSI disk
+[   32.741880] sd 5:0:0:0: Attached scsi generic sg4 type 0
+[   32.741977] scsi 6:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   32.742111] sd 6:0:0:0: [sdf] 490234752 512-byte hardware sectors (251000 MB)
+[   32.742160] sd 6:0:0:0: [sdf] Write Protect is off
+[   32.742200] sd 6:0:0:0: [sdf] Mode Sense: 00 3a 00 00
+[   32.742214] sd 6:0:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.742290] sd 6:0:0:0: [sdf] 490234752 512-byte hardware sectors (251000 MB)
+[   32.742339] sd 6:0:0:0: [sdf] Write Protect is off
+[   32.742378] sd 6:0:0:0: [sdf] Mode Sense: 00 3a 00 00
+[   32.742392] sd 6:0:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.742443]  sdf: sdf1
+[   32.787559] sd 6:0:0:0: [sdf] Attached SCSI disk
+[   32.787655] sd 6:0:0:0: Attached scsi generic sg5 type 0
+[   32.787757] scsi 7:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   32.787879] sd 7:0:0:0: [sdg] 490234752 512-byte hardware sectors (251000 MB)
+[   32.787929] sd 7:0:0:0: [sdg] Write Protect is off
+[   32.787969] sd 7:0:0:0: [sdg] Mode Sense: 00 3a 00 00
+[   32.787983] sd 7:0:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.788060] sd 7:0:0:0: [sdg] 490234752 512-byte hardware sectors (251000 MB)
+[   32.788109] sd 7:0:0:0: [sdg] Write Protect is off
+[   32.788148] sd 7:0:0:0: [sdg] Mode Sense: 00 3a 00 00
+[   32.788163] sd 7:0:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   32.788213]  sdg: sdg1
+[   32.812064] sd 7:0:0:0: [sdg] Attached SCSI disk
+[   32.812157] sd 7:0:0:0: Attached scsi generic sg6 type 0
+[   32.812993] ACPI: PCI Interrupt 0000:00:0e.0[A] -> GSI 17 (level, low) -> IRQ 18
+[   32.823377] scsi8 : sata_promise
+[   32.823466] scsi9 : sata_promise
+[   32.823549] scsi10 : sata_promise
+[   32.823635] scsi11 : sata_promise
+[   32.823718] ata9: SATA max UDMA/133 cmd 0xf882e200 ctl 0xf882e238 bmdma 0x00000000 irq 18
+[   32.823769] ata10: SATA max UDMA/133 cmd 0xf882e280 ctl 0xf882e2b8 bmdma 0x00000000 irq 18
+[   32.823819] ata11: SATA max UDMA/133 cmd 0xf882e300 ctl 0xf882e338 bmdma 0x00000000 irq 18
+[   32.823869] ata12: SATA max UDMA/133 cmd 0xf882e380 ctl 0xf882e3b8 bmdma 0x00000000 irq 18
+[   33.313055] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   33.333475] ata9.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   33.333517] ata9.00: 490234752 sectors, multi 0: LBA48
+[   33.373459] ata9.00: configured for UDMA/133
+[   33.862730] ata10: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   33.883156] ata10.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   33.883197] ata10.00: 490234752 sectors, multi 0: LBA48
+[   33.923143] ata10.00: configured for UDMA/133
+[   34.412405] ata11: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   34.432835] ata11.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   34.432876] ata11.00: 490234752 sectors, multi 0: LBA48
+[   34.472799] ata11.00: configured for UDMA/133
+[   34.962080] ata12: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   34.982499] ata12.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   34.982540] ata12.00: 490234752 sectors, multi 0: LBA48
+[   35.022488] ata12.00: configured for UDMA/133
+[   35.022581] scsi 8:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   35.022713] sd 8:0:0:0: [sdh] 490234752 512-byte hardware sectors (251000 MB)
+[   35.022763] sd 8:0:0:0: [sdh] Write Protect is off
+[   35.022802] sd 8:0:0:0: [sdh] Mode Sense: 00 3a 00 00
+[   35.022817] sd 8:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.022897] sd 8:0:0:0: [sdh] 490234752 512-byte hardware sectors (251000 MB)
+[   35.022946] sd 8:0:0:0: [sdh] Write Protect is off
+[   35.022985] sd 8:0:0:0: [sdh] Mode Sense: 00 3a 00 00
+[   35.023000] sd 8:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.023051]  sdh: sdh1
+[   35.042161] sd 8:0:0:0: [sdh] Attached SCSI disk
+[   35.042259] sd 8:0:0:0: Attached scsi generic sg7 type 0
+[   35.042364] scsi 9:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   35.042494] sd 9:0:0:0: [sdi] 490234752 512-byte hardware sectors (251000 MB)
+[   35.042544] sd 9:0:0:0: [sdi] Write Protect is off
+[   35.042584] sd 9:0:0:0: [sdi] Mode Sense: 00 3a 00 00
+[   35.042598] sd 9:0:0:0: [sdi] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.042676] sd 9:0:0:0: [sdi] 490234752 512-byte hardware sectors (251000 MB)
+[   35.042725] sd 9:0:0:0: [sdi] Write Protect is off
+[   35.042764] sd 9:0:0:0: [sdi] Mode Sense: 00 3a 00 00
+[   35.042778] sd 9:0:0:0: [sdi] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.042829]  sdi: sdi1
+[   35.061735] sd 9:0:0:0: [sdi] Attached SCSI disk
+[   35.061842] sd 9:0:0:0: Attached scsi generic sg8 type 0
+[   35.061937] scsi 10:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   35.062073] sd 10:0:0:0: [sdj] 490234752 512-byte hardware sectors (251000 MB)
+[   35.062129] sd 10:0:0:0: [sdj] Write Protect is off
+[   35.062169] sd 10:0:0:0: [sdj] Mode Sense: 00 3a 00 00
+[   35.062183] sd 10:0:0:0: [sdj] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.062271] sd 10:0:0:0: [sdj] 490234752 512-byte hardware sectors (251000 MB)
+[   35.062326] sd 10:0:0:0: [sdj] Write Protect is off
+[   35.062365] sd 10:0:0:0: [sdj] Mode Sense: 00 3a 00 00
+[   35.062379] sd 10:0:0:0: [sdj] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.062430]  sdj: sdj1
+[   35.083112] sd 10:0:0:0: [sdj] Attached SCSI disk
+[   35.083216] sd 10:0:0:0: Attached scsi generic sg9 type 0
+[   35.083312] scsi 11:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   35.083437] sd 11:0:0:0: [sdk] 490234752 512-byte hardware sectors (251000 MB)
+[   35.083492] sd 11:0:0:0: [sdk] Write Protect is off
+[   35.083532] sd 11:0:0:0: [sdk] Mode Sense: 00 3a 00 00
+[   35.083546] sd 11:0:0:0: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.083623] sd 11:0:0:0: [sdk] 490234752 512-byte hardware sectors (251000 MB)
+[   35.083678] sd 11:0:0:0: [sdk] Write Protect is off
+[   35.083718] sd 11:0:0:0: [sdk] Mode Sense: 00 3a 00 00
+[   35.083732] sd 11:0:0:0: [sdk] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   35.083783]  sdk: sdk1
+[   35.102151] sd 11:0:0:0: [sdk] Attached SCSI disk
+[   35.102247] sd 11:0:0:0: Attached scsi generic sg10 type 0
+[   35.102328] ACPI: PCI Interrupt 0000:00:13.0[A] -> GSI 18 (level, low) -> IRQ 19
+[   35.122021] scsi12 : sata_promise
+[   35.122118] scsi13 : sata_promise
+[   35.122202] scsi14 : sata_promise
+[   35.122293] scsi15 : sata_promise
+[   35.122370] ata13: SATA max UDMA/133 cmd 0xf8830200 ctl 0xf8830238 bmdma 0x00000000 irq 19
+[   35.122421] ata14: SATA max UDMA/133 cmd 0xf8830280 ctl 0xf88302b8 bmdma 0x00000000 irq 19
+[   35.122472] ata15: SATA max UDMA/133 cmd 0xf8830300 ctl 0xf8830338 bmdma 0x00000000 irq 19
+[   35.122522] ata16: SATA max UDMA/133 cmd 0xf8830380 ctl 0xf88303b8 bmdma 0x00000000 irq 19
+[   35.611701] ata13: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   35.632191] ata13.00: ATA-7: Maxtor 7Y250M0, YAR51EW0, max UDMA/133
+[   35.632233] ata13.00: 490234752 sectors, multi 0: LBA48
+[   35.672183] ata13.00: configured for UDMA/133
+[   36.161376] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   36.181863] ata14.00: ATA-7: Maxtor 7Y250M0, YAR511W0, max UDMA/133
+[   36.181904] ata14.00: 490234752 sectors, multi 0: LBA48
+[   36.221848] ata14.00: configured for UDMA/133
+[   36.711051] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   36.731024] Switched to high resolution mode on CPU 0
+[   36.740905] ata15.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max UDMA/133
+[   36.740946] ata15.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+[   36.771967] ata15.00: configured for UDMA/133
+[   37.260977] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   37.291678] ata16.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max UDMA/133
+[   37.291720] ata16.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+[   37.331930] ata16.00: configured for UDMA/133
+[   37.332018] scsi 12:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   37.332145] sd 12:0:0:0: [sdl] 490234752 512-byte hardware sectors (251000 MB)
+[   37.332201] sd 12:0:0:0: [sdl] Write Protect is off
+[   37.332240] sd 12:0:0:0: [sdl] Mode Sense: 00 3a 00 00
+[   37.332255] sd 12:0:0:0: [sdl] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.332335] sd 12:0:0:0: [sdl] 490234752 512-byte hardware sectors (251000 MB)
+[   37.332390] sd 12:0:0:0: [sdl] Write Protect is off
+[   37.332430] sd 12:0:0:0: [sdl] Mode Sense: 00 3a 00 00
+[   37.332444] sd 12:0:0:0: [sdl] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.332495]  sdl: sdl1
+[   37.355681] sd 12:0:0:0: [sdl] Attached SCSI disk
+[   37.355776] sd 12:0:0:0: Attached scsi generic sg11 type 0
+[   37.355874] scsi 13:0:0:0: Direct-Access     ATA      Maxtor 7Y250M0   YAR5 PQ: 0 ANSI: 5
+[   37.356000] sd 13:0:0:0: [sdm] 490234752 512-byte hardware sectors (251000 MB)
+[   37.356056] sd 13:0:0:0: [sdm] Write Protect is off
+[   37.356096] sd 13:0:0:0: [sdm] Mode Sense: 00 3a 00 00
+[   37.356110] sd 13:0:0:0: [sdm] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.356187] sd 13:0:0:0: [sdm] 490234752 512-byte hardware sectors (251000 MB)
+[   37.356242] sd 13:0:0:0: [sdm] Write Protect is off
+[   37.356282] sd 13:0:0:0: [sdm] Mode Sense: 00 3a 00 00
+[   37.356296] sd 13:0:0:0: [sdm] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.356347]  sdm: sdm1
+[   37.366978] sd 13:0:0:0: [sdm] Attached SCSI disk
+[   37.367080] sd 13:0:0:0: Attached scsi generic sg12 type 0
+[   37.367176] scsi 14:0:0:0: Direct-Access     ATA      WDC WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
+[   37.367303] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[   37.367359] sd 14:0:0:0: [sdn] Write Protect is off
+[   37.367399] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[   37.367413] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.367498] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[   37.368305] sd 14:0:0:0: [sdn] Write Protect is off
+[   37.368345] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[   37.368359] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.368409]  sdn: unknown partition table
+[   37.371026] sd 14:0:0:0: [sdn] Attached SCSI disk
+[   37.371129] sd 14:0:0:0: Attached scsi generic sg13 type 0
+[   37.371225] scsi 15:0:0:0: Direct-Access     ATA      WDC WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
+[   37.371355] sd 15:0:0:0: [sdo] 1465149168 512-byte hardware sectors (750156 MB)
+[   37.371411] sd 15:0:0:0: [sdo] Write Protect is off
+[   37.371450] sd 15:0:0:0: [sdo] Mode Sense: 00 3a 00 00
+[   37.371465] sd 15:0:0:0: [sdo] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.371550] sd 15:0:0:0: [sdo] 1465149168 512-byte hardware sectors (750156 MB)
+[   37.371606] sd 15:0:0:0: [sdo] Write Protect is off
+[   37.371645] sd 15:0:0:0: [sdo] Mode Sense: 00 3a 00 00
+[   37.371659] sd 15:0:0:0: [sdo] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[   37.371710]  sdo: unknown partition table
+[   37.374420] sd 15:0:0:0: [sdo] Attached SCSI disk
+[   37.374523] sd 15:0:0:0: Attached scsi generic sg14 type 0
+
+<snip lots and lots of errors>
+
+[28709.825489] ata15: hard resetting port
+[28710.327227] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[28710.378398] ata15.00: configured for UDMA/33
+[28710.378441] ata15: EH complete
+[28710.460556] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[28710.499998] sd 14:0:0:0: [sdn] Write Protect is off
+[28710.500028] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[28710.562799] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[28741.832705] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[28741.832733] ata15.00: port_status 0x20200000
+[28741.832751] ata15.00: cmd 25/00:00:00:b1:54/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[28741.832753]          res 51/0c:5f:a1:b1:54/0c:03:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[28741.832806] ata15: hard resetting port
+[28742.358261] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[28742.413120] ata15.00: configured for UDMA/33
+[28742.413163] ata15: EH complete
+[28742.487607] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[28742.526602] sd 14:0:0:0: [sdn] Write Protect is off
+[28742.526631] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[28742.591078] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[28795.033648] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[28795.033675] ata15.00: port_status 0x20200000
+[28795.033693] ata15.00: cmd 25/00:00:00:85:6b/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[28795.033695]          res 51/0c:2f:d1:85:6b/0c:03:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[28795.033747] ata15: hard resetting port
+[28795.536735] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[28795.617197] ata15.00: configured for UDMA/33
+[28795.617241] ata15: EH complete
+[28795.703828] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[28795.752159] sd 14:0:0:0: [sdn] Write Protect is off
+[28795.752190] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[28795.803082] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[28940.313319] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[28940.313347] ata15.00: port_status 0x20200000
+[28940.313365] ata15.00: cmd 25/00:00:a0:57:a0/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[28940.313367]          res 51/0c:5f:41:5a:a0/0c:01:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[28940.313423] ata15: hard resetting port
+[28940.821227] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[28940.881930] ata15.00: configured for UDMA/33
+[28940.881973] ata15: EH complete
+[28940.960533] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[28940.968408] sd 14:0:0:0: [sdn] Write Protect is off
+[28940.968427] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[28940.979329] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29193.654162] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29193.654193] ata15.00: port_status 0x20200000
+[29193.654211] ata15.00: cmd 25/00:00:00:db:ec/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29193.654213]          res 51/0c:2f:d1:db:ec/0c:03:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[29193.654271] ata15: hard resetting port
+[29194.160468] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29194.241583] ata15.00: configured for UDMA/33
+[29194.241627] ata15: EH complete
+[29194.410207] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29194.410746] sd 14:0:0:0: [sdn] Write Protect is off
+[29194.410763] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29194.495828] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29195.659632] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29195.659659] ata15.00: port_status 0x20200000
+[29195.659677] ata15.00: cmd 25/00:00:00:4b:ed/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29195.659679]          res 51/0c:bf:41:4d:ed/0c:01:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[29195.659732] ata15: hard resetting port
+[29196.159157] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29196.240367] ata15.00: configured for UDMA/33
+[29196.240410] ata15: EH complete
+[29196.311812] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29196.312786] sd 14:0:0:0: [sdn] Write Protect is off
+[29196.312805] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29196.327517] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29203.938497] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29203.938524] ata15.00: port_status 0x20200000
+[29203.938542] ata15.00: cmd 25/00:00:b0:ea:ef/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29203.938545]          res 51/0c:7f:31:eb:ef/0c:03:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[29203.938598] ata15: hard resetting port
+[29204.524234] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29204.595683] ata15.00: configured for UDMA/33
+[29204.595726] ata15: EH complete
+[29204.677730] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29204.718810] sd 14:0:0:0: [sdn] Write Protect is off
+[29204.718841] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29204.781863] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29209.243050] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29209.243078] ata15.00: port_status 0x20200000
+[29209.243096] ata15.00: cmd 25/00:00:d0:56:f1/00:04:2f:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29209.243098]          res 51/0c:0f:c1:57:f1/0c:03:2f:00:00/e0 Emask 0x10 (ATA bus error)
+[29209.243151] ata15: hard resetting port
+[29209.801099] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29209.882794] ata15.00: configured for UDMA/33
+[29209.882836] ata15: EH complete
+[29209.968689] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29209.983562] sd 14:0:0:0: [sdn] Write Protect is off
+[29209.983592] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29209.987341] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29264.619705] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29264.619734] ata15.00: port_status 0x20200000
+[29264.619752] ata15.00: cmd 25/00:00:00:1b:02/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29264.619754]          res 51/0c:00:ff:1e:02/0c:00:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29264.619808] ata15: hard resetting port
+[29265.199696] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29265.248788] ata15.00: configured for UDMA/33
+[29265.248832] ata15: EH complete
+[29265.328952] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29265.369406] sd 14:0:0:0: [sdn] Write Protect is off
+[29265.369436] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29265.432610] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29309.946702] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29309.946730] ata15.00: port_status 0x20200000
+[29309.946748] ata15.00: cmd 25/00:00:00:6b:15/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29309.946750]          res 51/0c:9f:61:6e:15/0c:00:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29309.946811] ata15: hard resetting port
+[29310.491333] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29310.572766] ata15.00: configured for UDMA/33
+[29310.572808] ata15: EH complete
+[29310.655530] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29310.695178] sd 14:0:0:0: [sdn] Write Protect is off
+[29310.695208] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29310.763870] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29312.542555] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29312.542582] ata15.00: port_status 0x20200000
+[29312.542600] ata15.00: cmd 25/00:00:00:47:16/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29312.542602]          res 51/0c:ff:01:48:16/0c:02:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29312.542655] ata15: hard resetting port
+[29313.049971] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29313.100785] ata15.00: configured for UDMA/33
+[29313.100820] ata15: EH complete
+[29313.248726] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29313.319242] sd 14:0:0:0: [sdn] Write Protect is off
+[29313.319272] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29313.389715] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29317.568100] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29317.568128] ata15.00: port_status 0x20200000
+[29317.568146] ata15.00: cmd 25/00:00:30:4d:18/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29317.568148]          res 51/0c:7f:b1:4e:18/0c:02:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29317.568201] ata15: hard resetting port
+[29318.077123] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29318.137807] ata15.00: configured for UDMA/33
+[29318.137850] ata15: EH complete
+[29318.216414] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29318.256434] sd 14:0:0:0: [sdn] Write Protect is off
+[29318.256491] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29318.394857] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29470.310985] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29470.311012] ata15.00: port_status 0x20200000
+[29470.311030] ata15.00: cmd 25/00:00:00:ea:56/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29470.311032]          res 51/0c:7f:81:ea:56/0c:03:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29470.311085] ata15: hard resetting port
+[29470.816829] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29470.897960] ata15.00: configured for UDMA/33
+[29470.898034] ata15: EH complete
+[29470.980584] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29471.022850] sd 14:0:0:0: [sdn] Write Protect is off
+[29471.022879] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29471.086914] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29506.727933] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29506.727961] ata15.00: port_status 0x20200000
+[29506.727979] ata15.00: cmd 25/00:00:00:71:64/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29506.727981]          res 51/0c:4f:b1:72:64/0c:02:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29506.728034] ata15: hard resetting port
+[29507.234647] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29507.296034] ata15.00: configured for UDMA/33
+[29507.296071] ata15: EH complete
+[29507.373399] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29507.545398] sd 14:0:0:0: [sdn] Write Protect is off
+[29507.545430] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29507.622395] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29555.709386] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29555.709414] ata15.00: port_status 0x20200000
+[29555.709432] ata15.00: cmd 25/00:00:00:bd:75/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29555.709434]          res 51/0c:ef:11:c0:75/0c:00:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29555.709488] ata15: hard resetting port
+[29556.235991] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29556.306323] ata15.00: configured for UDMA/33
+[29556.306360] ata15: EH complete
+[29556.378394] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29556.549202] sd 14:0:0:0: [sdn] Write Protect is off
+[29556.549232] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29556.609265] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[29559.807528] ata15.00: exception Emask 0x10 SAct 0x0 SErr 0x100 action 0x2
+[29559.807555] ata15.00: port_status 0x20200000
+[29559.807573] ata15.00: cmd 25/00:00:00:51:77/00:04:30:00:00/e0 tag 0 cdb 0x0 data 524288 in
+[29559.807575]          res 51/0c:9f:61:52:77/0c:02:30:00:00/e0 Emask 0x10 (ATA bus error)
+[29559.807654] ata15: hard resetting port
+[29560.313376] ata15: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[29560.394924] ata15.00: configured for UDMA/33
+[29560.394961] ata15: EH complete
+[29560.543396] sd 14:0:0:0: [sdn] 1465149168 512-byte hardware sectors (750156 MB)
+[29560.573796] sd 14:0:0:0: [sdn] Write Protect is off
+[29560.573825] sd 14:0:0:0: [sdn] Mode Sense: 00 3a 00 00
+[29560.657737] sd 14:0:0:0: [sdn] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+Regards,
+Brad
 -- 
-1.5.1.3
-
-
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
