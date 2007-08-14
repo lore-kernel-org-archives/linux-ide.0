@@ -1,44 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] ata_piix: add TECRA M7 to broken suspend list
-Date: Tue, 14 Aug 2007 19:56:04 +0900
-Message-ID: <20070814105604.GB21623@htj.dyndns.org>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Tue, 14 Aug 2007 14:02:26 +0200
+Message-ID: <20070814120226.GO19429@boogie.lpds.sztaki.hu>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <46C17634.2040504@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:7901 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754423AbXHNK4M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 06:56:12 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2148475wah
-        for <linux-ide@vger.kernel.org>; Tue, 14 Aug 2007 03:56:11 -0700 (PDT)
+Received: from boogie.lpds.sztaki.hu ([193.224.70.237]:53324 "EHLO
+	boogie.lpds.sztaki.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154AbXHNMC3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Aug 2007 08:02:29 -0400
 Content-Disposition: inline
+In-Reply-To: <46C17634.2040504@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, kbug@koreen.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Add TECRA M7 to broken suspend list.  Reported by Marie Koreen.
+On Tue, Aug 14, 2007 at 06:30:28PM +0900, Tejun Heo wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Marie Koreen <kbug@koreen.com>
----
- drivers/ata/ata_piix.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+> Hmmm... That's timeout on cache flush, indicative of failing disk.
+> Please post the result of 'smartctl -a /dev/sdc'.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a78832e..4947213 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -901,6 +901,13 @@ static int piix_broken_suspend(void)
- 			},
- 		},
- 		{
-+			.ident = "TECRA M7",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M7"),
-+			},
-+		},
-+		{
- 			.ident = "Satellite U205",
- 			.matches = {
- 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+Will do when I get home. Note however that this only occurs in ADMA
+mode. It never occured with 2.6.20 and it never occured with 2.6.22 ever
+since I have disabled ADMA.
+
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
