@@ -1,42 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata drive loosing connection/resetting port
-Date: Wed, 15 Aug 2007 15:19:20 +0900
-Message-ID: <46C29AE8.5070903@gmail.com>
-References: <20070813220241.3f4b8df5@workstation64.home>	<6bffcb0e0708131311k51238bb0l63eeb2fce53e3481@mail.gmail.com>	<46C180D8.9060005@gmail.com> <20070814221928.243949b6@workstation64.home>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 01/14] libata-link: introduce ata_link
+Date: Wed, 15 Aug 2007 03:00:34 -0400
+Message-ID: <46C2A492.8040108@garzik.org>
+References: <11863929824079-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:26579 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750932AbXHOGTh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 02:19:37 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1647563rvb
-        for <linux-ide@vger.kernel.org>; Tue, 14 Aug 2007 23:19:37 -0700 (PDT)
-In-Reply-To: <20070814221928.243949b6@workstation64.home>
+Received: from srv5.dvmed.net ([207.36.208.214]:53045 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750859AbXHOHAg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Aug 2007 03:00:36 -0400
+In-Reply-To: <11863929824079-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Radke <a.radke@arcor.de>
-Cc: linux-kernel@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Andreas Radke wrote:
-> already tried different ports, several SATA cables on that mainboard and
-> psu works well. the Samsung drive works well no matter where
-> connected. never had any issues with the Raptor drive when it was
-> connected to the "old" Intel P965 board before. what's the difference
-> form ICH8 to ICH9R? any changes in how the driver works?
+Tejun Heo wrote:
+> Introduce ata_link.  It abstracts PHY and sits between ata_port and
+> ata_device.  This new level of abstraction is necessary to support
+> SATA Port Multiplier, which basically adds a bunch of links (PHYs) to
+> a ATA host port.  Fields related to command execution, spd_limit and
+> EH are per-link and thus moved to ata_link.
 > 
-> i confirmed, that the issues still resist in kernel 2.6.23rc3 and also
-> when using controller in "ide" mode together with ata_piix modul.
+> This patch only defines the host link.  Multiple link handling will be
+> added later.  Also, a lot of ap->link derefences are added but many of
+> them will be removed as each part is converted to deal directly with
+> ata_link instead of ata_port.
 > 
-> but on thing that is really weird: i used our installer iso to boot
-> with 2.6.22 kernel and even after several hours the error did not
-> appear! can you explain that? so it only happens when filesystems are
-> mounted (also / partition is on that drive). 
+> This patch introduces no behavior change.
 > 
-> any idea?
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> ---
+>  drivers/ata/ahci.c            |   18 +++---
+>  drivers/ata/ata_generic.c     |    2 +-
+>  drivers/ata/libata-acpi.c     |   21 +++---
+>  drivers/ata/libata-core.c     |  157 ++++++++++++++++++++++-------------------
+>  drivers/ata/libata-eh.c       |  100 +++++++++++++-------------
+>  drivers/ata/libata-scsi.c     |   41 ++++++-----
+>  drivers/ata/libata-sff.c      |    4 +-
+>  drivers/ata/pata_it821x.c     |    4 +-
+>  drivers/ata/pata_ixp4xx_cf.c  |    4 +-
+>  drivers/ata/pata_legacy.c     |    4 +-
+>  drivers/ata/pata_optidma.c    |    4 +-
+>  drivers/ata/pata_pcmcia.c     |    4 +-
+>  drivers/ata/pata_pdc2027x.c   |    2 +-
+>  drivers/ata/pata_platform.c   |    2 +-
+>  drivers/ata/pata_qdi.c        |    2 +-
+>  drivers/ata/pata_rz1000.c     |    2 +-
+>  drivers/ata/pata_scc.c        |    2 +-
+>  drivers/ata/pata_sis.c        |    2 +-
+>  drivers/ata/pata_winbond.c    |    2 +-
+>  drivers/ata/pdc_adma.c        |    9 ++-
+>  drivers/ata/sata_inic162x.c   |    7 +-
+>  drivers/ata/sata_mv.c         |   14 ++--
+>  drivers/ata/sata_nv.c         |   26 ++++----
+>  drivers/ata/sata_promise.c    |    6 +-
+>  drivers/ata/sata_qstor.c      |    4 +-
+>  drivers/ata/sata_sil.c        |   14 ++--
+>  drivers/ata/sata_sil24.c      |   14 ++--
+>  drivers/ata/sata_sx4.c        |    4 +-
+>  drivers/ata/sata_via.c        |    2 +-
+>  drivers/ata/sata_vsc.c        |    2 +-
+>  drivers/scsi/ipr.c            |    6 +-
+>  drivers/scsi/libsas/sas_ata.c |   10 ++--
+>  include/linux/libata.h        |   40 +++++++----
+>  33 files changed, 280 insertions(+), 255 deletions(-)
 
-Can you post full boot log and the result of 'lspci -nn'?
+applied 1-14 to #upstream
 
--- 
-tejun
+
