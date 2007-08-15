@@ -1,67 +1,273 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/4] libata: implement BROKEN_HPA horkage and apply to affected drives
-Date: Thu, 16 Aug 2007 03:07:21 +0900
-Message-ID: <20070815180721.GF21623@htj.dyndns.org>
+Subject: [PATCH 3/4] libata: clean up read/set native_max address functions
+Date: Thu, 16 Aug 2007 03:08:02 +0900
+Message-ID: <20070815180802.GG21623@htj.dyndns.org>
 References: <20070815180508.GD21623@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:28908 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.189]:29012 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935108AbXHOSHh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 14:07:37 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so4082rvb
-        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 11:07:36 -0700 (PDT)
+	with ESMTP id S935251AbXHOSIL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 14:08:11 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so4190rvb
+        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 11:08:10 -0700 (PDT)
 Content-Disposition: inline
 In-Reply-To: <20070815180508.GD21623@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Some drives choke on READ_NATIVE_MAX_ADDRESS[_EXT].  Implement
-ATA_HORKAGE_BROKEN_HPA and apply it to affected drives.
+Merge ata_read_native_max_addres_ext() into ata_read_native_max_address()
+and combine ata_set_native_max_address_ext() and
+ata_set_native_max_address() into ata_set_max_sectors().
+
+* reduce duplicate code
+* return 0 or -errno depending on error conditions
+* report if command fails
+* use ATA_LBA instead of 0x40
+
+This is in preparation of ata_hpa_resize() update.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-WDC drives are from bugzilla bug 8888.
-
- drivers/ata/libata-core.c |    6 +++++-
- include/linux/libata.h    |    1 +
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c |  174 ++++++++++++++++++++--------------------------
+ 1 file changed, 77 insertions(+), 97 deletions(-)
 
 Index: work/drivers/ata/libata-core.c
 ===================================================================
 --- work.orig/drivers/ata/libata-core.c
 +++ work/drivers/ata/libata-core.c
-@@ -1911,7 +1911,8 @@ int ata_dev_configure(struct ata_device 
- 					dev->flags |= ATA_DFLAG_FLUSH_EXT;
- 			}
+@@ -858,129 +858,113 @@ static u64 ata_tf_to_lba(struct ata_task
+ }
  
--			if (ata_id_hpa_enabled(dev->id))
-+			if (!(dev->horkage & ATA_HORKAGE_BROKEN_HPA) &&
-+			    ata_id_hpa_enabled(dev->id))
- 				dev->n_sectors = ata_hpa_resize(dev);
+ /**
+- *	ata_read_native_max_address_ext	-	LBA48 native max query
+- *	@dev: Device to query
++ *	ata_read_native_max_address - Read native max address
++ *	@dev: target device
++ *	@max_sectors: out parameter for the result native max address
+  *
+- *	Perform an LBA48 size query upon the device in question. Return the
+- *	actual LBA48 size or zero if the command fails.
+- */
+-
+-static u64 ata_read_native_max_address_ext(struct ata_device *dev)
+-{
+-	unsigned int err;
+-	struct ata_taskfile tf;
+-
+-	ata_tf_init(dev, &tf);
+-
+-	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
+-	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
+-	tf.protocol |= ATA_PROT_NODATA;
+-	tf.device |= 0x40;
+-
+-	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-	if (err)
+-		return 0;
+-
+-	return ata_tf_to_lba48(&tf);
+-}
+-
+-/**
+- *	ata_read_native_max_address	-	LBA28 native max query
+- *	@dev: Device to query
++ *	Perform an LBA48 or LBA28 native size query upon the device in
++ *	question.
+  *
+- *	Performa an LBA28 size query upon the device in question. Return the
+- *	actual LBA28 size or zero if the command fails.
++ *	RETURNS:
++ *	0 on success, -EACCES if command is aborted by the drive.
++ *	-EIO on other errors.
+  */
+-
+-static u64 ata_read_native_max_address(struct ata_device *dev)
++static int ata_read_native_max_address(struct ata_device *dev, u64 *max_sectors)
+ {
+-	unsigned int err;
++	unsigned int err_mask;
+ 	struct ata_taskfile tf;
++	int lba48 = ata_id_has_lba48(dev->id);
  
- 			/* config NCQ */
-@@ -3789,6 +3790,9 @@ static const struct ata_blacklist_entry 
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
- 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
- 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
-+	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
-+	{ "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_HORKAGE_BROKEN_HPA },
-+	{ "WDC WD2500JD-00HBB0", "WD-WMAL71490727", ATA_HORKAGE_BROKEN_HPA },
+ 	ata_tf_init(dev, &tf);
  
- 	/* Devices with NCQ limits */
+-	tf.command = ATA_CMD_READ_NATIVE_MAX;
++	/* always clear all address registers */
+ 	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+-	tf.protocol |= ATA_PROT_NODATA;
+-	tf.device |= 0x40;
  
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -303,6 +303,7 @@ enum {
- 	ATA_HORKAGE_NODMA	= (1 << 1),	/* DMA problems */
- 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
-+	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
- };
+-	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-	if (err)
+-		return 0;
+-
+-	return ata_tf_to_lba(&tf);
+-}
+-
+-/**
+- *	ata_set_native_max_address_ext	-	LBA48 native max set
+- *	@dev: Device to query
+- *	@new_sectors: new max sectors value to set for the device
+- *
+- *	Perform an LBA48 size set max upon the device in question. Return the
+- *	actual LBA48 size or zero if the command fails.
+- */
+-
+-static u64 ata_set_native_max_address_ext(struct ata_device *dev, u64 new_sectors)
+-{
+-	unsigned int err;
+-	struct ata_taskfile tf;
+-
+-	new_sectors--;
+-
+-	ata_tf_init(dev, &tf);
++	if (lba48) {
++		tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
++		tf.flags |= ATA_TFLAG_LBA48;
++	} else
++		tf.command = ATA_CMD_READ_NATIVE_MAX;
  
- enum hsm_task_states {
+-	tf.command = ATA_CMD_SET_MAX_EXT;
+-	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
+ 	tf.protocol |= ATA_PROT_NODATA;
+-	tf.device |= 0x40;
+-
+-	tf.lbal = (new_sectors >> 0) & 0xff;
+-	tf.lbam = (new_sectors >> 8) & 0xff;
+-	tf.lbah = (new_sectors >> 16) & 0xff;
++	tf.device |= ATA_LBA;
+ 
+-	tf.hob_lbal = (new_sectors >> 24) & 0xff;
+-	tf.hob_lbam = (new_sectors >> 32) & 0xff;
+-	tf.hob_lbah = (new_sectors >> 40) & 0xff;
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err_mask) {
++		ata_dev_printk(dev, KERN_WARNING, "failed to read native "
++			       "max address (err_mask=0x%x)\n", err_mask);
++		if (err_mask == AC_ERR_DEV && (tf.feature & ATA_ABORTED))
++			return -EACCES;
++		return -EIO;
++	}
+ 
+-	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-	if (err)
+-		return 0;
++	if (lba48)
++		*max_sectors = ata_tf_to_lba48(&tf);
++	else
++		*max_sectors = ata_tf_to_lba(&tf);
+ 
+-	return ata_tf_to_lba48(&tf);
++	return 0;
+ }
+ 
+ /**
+- *	ata_set_native_max_address	-	LBA28 native max set
+- *	@dev: Device to query
++ *	ata_set_max_sectors - Set max sectors
++ *	@dev: target device
+  *	@new_sectors: new max sectors value to set for the device
++ *	@res_sectors: result max sectors
+  *
+- *	Perform an LBA28 size set max upon the device in question. Return the
+- *	actual LBA28 size or zero if the command fails.
++ *	Set max sectors of @dev to @new_sectors.
++ *
++ *	RETURNS:
++ *	0 on success, -EACCES if command is aborted or denied (due to
++ *	previous non-volatile SET_MAX) by the drive.  -EIO on other
++ *	errors.
+  */
+-
+-static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
++static int ata_set_max_sectors(struct ata_device *dev, u64 new_sectors,
++			       u64 *res_sectors)
+ {
+-	unsigned int err;
++	unsigned int err_mask;
+ 	struct ata_taskfile tf;
++	int lba48 = ata_id_has_lba48(dev->id);
+ 
+ 	new_sectors--;
+ 
+ 	ata_tf_init(dev, &tf);
+ 
+-	tf.command = ATA_CMD_SET_MAX;
+ 	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++
++	if (lba48) {
++		tf.command = ATA_CMD_SET_MAX_EXT;
++		tf.flags |= ATA_TFLAG_LBA48;
++
++		tf.hob_lbal = (new_sectors >> 24) & 0xff;
++		tf.hob_lbam = (new_sectors >> 32) & 0xff;
++		tf.hob_lbah = (new_sectors >> 40) & 0xff;
++	} else
++		tf.command = ATA_CMD_SET_MAX;
++
+ 	tf.protocol |= ATA_PROT_NODATA;
++	tf.device |= ATA_LBA;
+ 
+ 	tf.lbal = (new_sectors >> 0) & 0xff;
+ 	tf.lbam = (new_sectors >> 8) & 0xff;
+ 	tf.lbah = (new_sectors >> 16) & 0xff;
+-	tf.device |= ((new_sectors >> 24) & 0x0f) | 0x40;
+ 
+-	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+-	if (err)
+-		return 0;
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++	if (err_mask) {
++		ata_dev_printk(dev, KERN_WARNING, "failed to set "
++			       "max address (err_mask=0x%x)\n", err_mask);
++		if (err_mask == AC_ERR_DEV &&
++		    (tf.feature & (ATA_ABORTED | ATA_IDNF)))
++			return -EACCES;
++		return -EIO;
++	}
+ 
+-	return ata_tf_to_lba(&tf);
++	if (lba48)
++		*res_sectors = ata_tf_to_lba48(&tf);
++	else
++		*res_sectors = ata_tf_to_lba(&tf);
++
++	return 0;
+ }
+ 
+ /**
+@@ -996,11 +980,11 @@ static u64 ata_hpa_resize(struct ata_dev
+ {
+ 	u64 sectors = dev->n_sectors;
+ 	u64 hpa_sectors;
++	int rc;
+ 
+-	if (ata_id_has_lba48(dev->id))
+-		hpa_sectors = ata_read_native_max_address_ext(dev);
+-	else
+-		hpa_sectors = ata_read_native_max_address(dev);
++	rc = ata_read_native_max_address(dev, &hpa_sectors);
++	if (rc)
++		return 0;
+ 
+ 	if (hpa_sectors > sectors) {
+ 		ata_dev_printk(dev, KERN_INFO,
+@@ -1010,13 +994,9 @@ static u64 ata_hpa_resize(struct ata_dev
+ 			(long long)sectors, (long long)hpa_sectors);
+ 
+ 		if (ata_ignore_hpa) {
+-			if (ata_id_has_lba48(dev->id))
+-				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
+-			else
+-				hpa_sectors = ata_set_native_max_address(dev,
+-								hpa_sectors);
++			rc = ata_set_max_sectors(dev, hpa_sectors, &hpa_sectors);
+ 
+-			if (hpa_sectors) {
++			if (rc == 0) {
+ 				ata_dev_printk(dev, KERN_INFO, "native size "
+ 					"increased to %lld sectors\n",
+ 					(long long)hpa_sectors);
