@@ -1,26 +1,42 @@
-From: Mikko Rapeli <mikko.rapeli@iki.fi>
-Subject: Re: [PATCH] ST340823A, HPA and libata
-Date: Wed, 15 Aug 2007 16:56:33 +0300
-Message-ID: <20070815135633.GA1920@nalle>
-References: <20070801092903.GA1199@nalle> <200708030034.13193.bzolnier@gmail.com> <20070802231100.GA1861@nalle> <200708030135.16910.bzolnier@gmail.com> <20070805190616.GA1932@nalle> <20070808142505.3213a1a6@the-village.bc.nu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 2/4] scsi: expose AN support to user space
+Date: Wed, 15 Aug 2007 09:01:49 -0500
+Message-ID: <1187186509.3327.7.camel@localhost.localdomain>
+References: <20070808190613.616085010@localhost.localdomain>
+	 <20070808120822.9cf187bb.kristen.c.accardi@intel.com>
+	 <46C2B59A.6070200@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw03.mail.saunalahti.fi ([195.197.172.111]:50757 "EHLO
-	gw03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334AbXHON4m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 09:56:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20070808142505.3213a1a6@the-village.bc.nu>
+Received: from hancock.steeleye.com ([71.30.118.248]:45859 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751363AbXHOOBv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 10:01:51 -0400
+In-Reply-To: <46C2B59A.6070200@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, jeff@garzik.org, akpm@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Wed, Aug 08, 2007 at 02:25:05PM +0100, Alan Cox wrote:
-> Ok this is a different approach to handling it - knowing it is an off by
-> one so we can handle the drive if clipped
+On Wed, 2007-08-15 at 04:13 -0400, Jeff Garzik wrote:
+> Kristen Carlson Accardi wrote:
+> > If a scsi_device supports async notification for media change, then
+> > let user space know this capability exists by creating a new sysfs
+> > entry "media_change_notify", which will be 1 if it is supported, and
+> > 0 if not supported.  Create a routine which allows scsi devices to
+> > send a uevent when media change events occur.
+> > 
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> if James is happy with this patch, I'm happy with patch #2 and #3
 
-Patch works with 2.6.23-rc2 after the boot problem was solved.
+Actually, we just got a second potential consumer ... although I'll
+reprod to have the reporter send it to the list.  It's a device that
+needs notice of report luns data changing.  The proposed mechanism looks
+a bit narrow now (too tied to media change).  I'll see if I can propose
+a more generic update.
 
--Mikko
+James
+
+
