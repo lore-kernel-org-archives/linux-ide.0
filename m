@@ -1,30 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Early ATA devices
-Date: Wed, 15 Aug 2007 18:48:43 +0100
-Message-ID: <20070815184843.75f10457@the-village.bc.nu>
-References: <20070801014137.4ab39e94@the-village.bc.nu>
-	<46B021FC.20507@gmail.com>
-	<20070802214706.50c3040c@the-village.bc.nu>
-	<20070815171952.GA20237@gateway.home>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] libata: fix n_sectors failure handling during revalidation
+Date: Thu, 16 Aug 2007 03:02:22 +0900
+Message-ID: <20070815180222.GC21623@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37144 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932355AbXHORlG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 13:41:06 -0400
-In-Reply-To: <20070815171952.GA20237@gateway.home>
+Received: from rv-out-0910.google.com ([209.85.198.188]:21738 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbXHOSCe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 14:02:34 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so3068rvb
+        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 11:02:34 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Erik Mouw <mouw@nl.linux.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-> FWIW, I have a Seagate ST225 (still zero bad blocks) with controller.
-> If I can persuade the old 386 to do a netboot I can test it.
+If revalidation fails because device has different n_sectors after
+configuration the original n_sectors should be restored before failing
+revalidation.  Without this fix, n_sectors difference will incorrectly
+and silently pass revalidation when revalidation is retried.
 
-Right now it'll fail on the identify (may fail earlier on the reset
-signature test actually).
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Alan
-
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -3705,6 +3705,10 @@ int ata_dev_revalidate(struct ata_device
+ 			       "%llu != %llu\n",
+ 			       (unsigned long long)n_sectors,
+ 			       (unsigned long long)dev->n_sectors);
++
++		/* restore original n_sectors */
++		dev->n_sectors = n_sectors;
++
+ 		rc = -ENODEV;
+ 		goto fail;
+ 	}
