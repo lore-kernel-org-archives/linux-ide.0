@@ -1,37 +1,37 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Still having problems with sata_promise on all late kernels -
- shutdown too - BISECTED
-Date: Wed, 15 Aug 2007 16:50:30 +0900
-Message-ID: <46C2B046.7060708@gmail.com>
-References: <46C11BBE.6010802@wasp.net.au> <46C1316F.4010906@wasp.net.au> <46C1DB92.7080806@wasp.net.au>
+Subject: Re: regression problem with Maxtor disk
+Date: Wed, 15 Aug 2007 16:53:33 +0900
+Message-ID: <46C2B0FD.5030101@gmail.com>
+References: <87tzr4zvpt.fsf@wyrd.be> <46C17AE0.5090601@gmail.com>	<46C23746.6030203@shaw.ca> <878x8dl07z.fsf@wyrd.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:20167 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.184]:24833 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbXHOHul (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 03:50:41 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1661165rvb
-        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 00:50:41 -0700 (PDT)
-In-Reply-To: <46C1DB92.7080806@wasp.net.au>
+	with ESMTP id S1751633AbXHOHxv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Aug 2007 03:53:51 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1661756rvb
+        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 00:53:51 -0700 (PDT)
+In-Reply-To: <878x8dl07z.fsf@wyrd.be>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-ide@vger.kernel.org
+To: Lieven Marchand <mal@wyrd.be>
+Cc: Robert Hancock <hancockr@shaw.ca>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-> Brad Campbell wrote:
+Lieven Marchand wrote:
+> Robert Hancock <hancockr@shaw.ca> writes:
 > 
->> http://www.fnarfbargle.com/CIMG1029.JPG (I have posted this screen
->> shot previously. It's still doing exactly the same thing on both boxes).
->>
+>> It looks like there are some lines missing from this log, there should
+>> be a line before the "res" lines indicating what the failed command
+>> was..
 > 
-> git-bisect shows up this commit as the guilty party. I can't just revert
-> it on a recent tree though.
-> Will investigate further.
+> There isn't. I snipped some irrelevant stuff but nothing about a
+> command. The full log is appended.
 
-Weird.  Does 'hdparm -y /dev/sdX' work?
+It seems klogd clipped some messages.  Can you please turn on printk
+timestamp, enlarge printk log buffersize and post the result of 'dmesg'
+after errors?
 
 -- 
 tejun
