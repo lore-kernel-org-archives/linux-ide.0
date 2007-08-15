@@ -1,193 +1,224 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 1/4] libata: check for AN support
-Date: Wed, 15 Aug 2007 03:59:10 -0400
-Message-ID: <46C2B24E.1010506@garzik.org>
-References: <20070808190613.616085010@localhost.localdomain> <20070808120810.5f8ed457.kristen.c.accardi@intel.com>
+From: Lieven Marchand <mal@wyrd.be>
+Subject: Re: regression problem with Maxtor disk
+Date: Wed, 15 Aug 2007 09:34:56 +0200
+Message-ID: <878x8dl07z.fsf@wyrd.be>
+References: <87tzr4zvpt.fsf@wyrd.be> <46C17AE0.5090601@gmail.com>
+	<46C23746.6030203@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33040 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267AbXHOH7N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Aug 2007 03:59:13 -0400
-In-Reply-To: <20070808120810.5f8ed457.kristen.c.accardi@intel.com>
+Received: from 213.219.189.104.adsl.dyn.edpnet.net ([213.219.189.104]:47026
+	"EHLO black" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753218AbXHOII1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Aug 2007 04:08:27 -0400
+In-Reply-To: <46C23746.6030203@shaw.ca> (Robert Hancock's message of "Tue, 14 Aug 2007 17:14:14 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
-> Check to see if an ATAPI device supports Asynchronous Notification.
-> If so, enable it.
-> 
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> 
-> Index: 2.6-git/drivers/ata/libata-core.c
-> ===================================================================
-> --- 2.6-git.orig/drivers/ata/libata-core.c
-> +++ 2.6-git/drivers/ata/libata-core.c
-> @@ -70,6 +70,7 @@ const unsigned long sata_deb_timing_long
->  static unsigned int ata_dev_init_params(struct ata_device *dev,
->  					u16 heads, u16 sectors);
->  static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
-> +static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable);
->  static void ata_dev_xfermask(struct ata_device *dev);
->  static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
->  
-> @@ -1974,6 +1975,22 @@ int ata_dev_configure(struct ata_device 
->  		}
->  		dev->cdb_len = (unsigned int) rc;
->  
-> +		/*
-> +		 * check to see if this ATAPI device supports
-> +		 * Asynchronous Notification
-> +		 */
-> +		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
-> +			int err;
-> +			/* issue SET feature command to turn this on */
-> +			err = ata_dev_set_AN(dev, SETFEATURES_SATA_ENABLE);
-> +			if (err)
-> +				ata_dev_printk(dev, KERN_ERR,
-> +						"unable to set AN, err %x\n",
-> +						err);
-> +			else
-> +				dev->flags |= ATA_DFLAG_AN;
-> +		}
-> +
->  		if (ata_id_cdb_intr(dev->id)) {
->  			dev->flags |= ATA_DFLAG_CDB_INTR;
->  			cdb_intr_string = ", CDB intr";
-> @@ -3948,6 +3965,42 @@ static unsigned int ata_dev_set_xfermode
->  }
->  
->  /**
-> + *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
-> + *	@dev: Device to which command will be sent
-> + *	@enable: Whether to enable or disable the feature
-> + *
-> + *	Issue SET FEATURES - SATA FEATURES command to device @dev
-> + *	on port @ap with sector count set to indicate Asynchronous
-> + *	Notification feature
-> + *
-> + *	LOCKING:
-> + *	PCI/etc. bus probe sem.
-> + *
-> + *	RETURNS:
-> + *	0 on success, AC_ERR_* mask otherwise.
-> + */
-> +static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable)
-> +{
-> +	struct ata_taskfile tf;
-> +	unsigned int err_mask;
-> +
-> +	/* set up set-features taskfile */
-> +	DPRINTK("set features - SATA features\n");
-> +
-> +	ata_tf_init(dev, &tf);
-> +	tf.command = ATA_CMD_SET_FEATURES;
-> +	tf.feature = enable;
-> +	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-> +	tf.protocol = ATA_PROT_NODATA;
-> +	tf.nsect = SATA_AN;
-> +
-> +	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-> +
-> +	DPRINTK("EXIT, err_mask=%x\n", err_mask);
-> +	return err_mask;
-> +}
-> +
-> +/**
->   *	ata_dev_init_params - Issue INIT DEV PARAMS command
->   *	@dev: Device to which command will be sent
->   *	@heads: Number of heads (taskfile parameter)
-> Index: 2.6-git/include/linux/ata.h
-> ===================================================================
-> --- 2.6-git.orig/include/linux/ata.h
-> +++ 2.6-git/include/linux/ata.h
-> @@ -217,6 +217,12 @@ enum {
->  
->  	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
->  
-> +	SETFEATURES_SATA_ENABLE = 0x10, /* Enable use of SATA feature */
-> +	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
-> +
-> +	/* SETFEATURE Sector counts for SATA features */
-> +	SATA_AN			= 0x05,  /* Asynchronous Notification */
-> +
->  	/* ATAPI stuff */
->  	ATAPI_PKT_DMA		= (1 << 0),
->  	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
-> @@ -344,6 +350,9 @@ struct ata_taskfile {
->  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
->  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
->  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
-> +#define ata_id_has_AN(id)	\
-> +	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
-> +	  ((id)[78] & (1 << 5)) )
->  #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
->  #define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
->  #define ata_id_u32(id,n)	\
-> Index: 2.6-git/include/linux/libata.h
-> ===================================================================
-> --- 2.6-git.orig/include/linux/libata.h
-> +++ 2.6-git/include/linux/libata.h
-> @@ -139,7 +139,8 @@ enum {
->  	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
->  	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
->  	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
-> -	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
-> +	ATA_DFLAG_AN		= (1 << 7), /* device supports AN */
-> +	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
->  
->  	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
->  	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
-> @@ -177,6 +178,7 @@ enum {
->  	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
->  	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
->  	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
-> +	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
+Robert Hancock <hancockr@shaw.ca> writes:
 
+> It looks like there are some lines missing from this log, there should
+> be a line before the "res" lines indicating what the failed command
+> was..
 
-I applied the above changes, in order to move AN forward
+There isn't. I snipped some irrelevant stuff but nothing about a
+command. The full log is appended.
 
+> My guess, though, is that NCQ is somehow busted on this drive, as is
+> known to be the case with a number of other Maxtor disks..
 
->  	/* The following flag belongs to ap->pflags but is kept in
->  	 * ap->flags because it's referenced in many LLDs and will be
-> Index: 2.6-git/drivers/ata/ahci.c
-> ===================================================================
-> --- 2.6-git.orig/drivers/ata/ahci.c
-> +++ 2.6-git/drivers/ata/ahci.c
-> @@ -332,14 +332,15 @@ static const struct ata_port_operations 
->  static const struct ata_port_info ahci_port_info[] = {
->  	/* board_ahci */
->  	{
-> -		.flags		= AHCI_FLAG_COMMON,
-> +		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_AN,
->  		.pio_mask	= 0x1f, /* pio0-4 */
->  		.udma_mask	= ATA_UDMA6,
->  		.port_ops	= &ahci_ops,
->  	},
->  	/* board_ahci_pi */
->  	{
-> -		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
-> +		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI |
-> +				  ATA_FLAG_AN,
->  		.pio_mask	= 0x1f, /* pio0-4 */
->  		.udma_mask	= ATA_UDMA6,
->  		.port_ops	= &ahci_ops,
-> 
-
-Since I wanted to get in Tejun's ata_link changes before this, this will 
-require a rediff.
-
-But more importantly, as I was going to apply it I noticed another 
-problem:  we need to verify that SiS and NVIDIA both support AN support 
-turning this on, since this patch affects not only Intel but also those 
-vendors' AHCI hardware as well.
-
-It's a bit annoying but this is a cross-vendor driver after all...
-
-	Jeff
-
-
+Aug 11 10:27:51 black kernel: sata_nv 0000:00:07.0: Using ADMA mode
+Aug 11 10:27:51 black kernel: scsi3 : sata_nv
+Aug 11 10:27:51 black kernel: scsi4 : sata_nv
+Aug 11 10:27:51 black kernel: ata1: SATA max UDMA/133 cmd 0xf8840480 ctl 0xf88404a0 bmdma 0x0001cc00 irq 19
+Aug 11 10:27:51 black kernel: ata2: SATA max UDMA/133 cmd 0xf8840580 ctl 0xf88405a0 bmdma 0x0001cc08 irq 19
+Aug 11 10:27:51 black kernel: hda: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache, UDMA(33)
+Aug 11 10:27:51 black kernel: Uniform CD-ROM driver Revision: 3.20
+Aug 11 10:27:51 black kernel: hdb: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 2000kB Cache, UDMA(66)
+Aug 11 10:27:51 black kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata1.00: ATA-7: MAXTOR STM3320820AS, 3.AAE, max UDMA/133
+Aug 11 10:27:51 black kernel: ata1.00: 625142448 sectors, multi 16: LBA48 NCQ (depth 31/32)
+Aug 11 10:27:51 black kernel: ata1.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata2.00: ATA-7: Maxtor 7H500F0, HA431DN0, max UDMA/133
+Aug 11 10:27:51 black kernel: ata2.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: scsi 3:0:0:0: Direct-Access     ATA      MAXTOR STM332082 3.AA PQ: 0 ANSI: 5
+Aug 11 10:27:51 black kernel: ata1: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
+Aug 11 10:27:51 black kernel: scsi 4:0:0:0: Direct-Access     ATA      Maxtor 7H500F0   HA43 PQ: 0 ANSI: 5
+Aug 11 10:27:51 black kernel: ata2: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
+Aug 11 10:27:51 black kernel: ACPI: PCI Interrupt Link [APSJ] enabled at IRQ 23
+Aug 11 10:27:51 black kernel: ACPI: PCI Interrupt 0000:00:08.0[A] -> Link [APSJ] -> GSI 23 (level, low) -> IRQ 16
+Aug 11 10:27:51 black kernel: sata_nv 0000:00:08.0: Using ADMA mode
+Aug 11 10:27:51 black kernel: scsi5 : sata_nv
+Aug 11 10:27:51 black kernel: scsi6 : sata_nv
+Aug 11 10:27:51 black kernel: ata3: SATA max UDMA/133 cmd 0xf88de480 ctl 0xf88de4a0 bmdma 0x0001b800 irq 16
+Aug 11 10:27:51 black kernel: ata4: SATA max UDMA/133 cmd 0xf88de580 ctl 0xf88de5a0 bmdma 0x0001b808 irq 16
+Aug 11 10:27:51 black kernel: ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata3.00: ATA-7: Maxtor 6Y200M0, YAR51HW0, max UDMA/133
+Aug 11 10:27:51 black kernel: ata3.00: 398297088 sectors, multi 16: LBA48 
+Aug 11 10:27:51 black kernel: ata3.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata4.00: ATA-7: Maxtor 6B300S0, BANC1980, max UDMA/133
+Aug 11 10:27:51 black kernel: ata4.00: 586114704 sectors, multi 16: LBA48 NCQ (depth 31/32)
+Aug 11 10:27:51 black kernel: ata4.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: scsi 5:0:0:0: Direct-Access     ATA      Maxtor 6Y200M0   YAR5 PQ: 0 ANSI: 5
+Aug 11 10:27:51 black kernel: ata3: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
+Aug 11 10:27:51 black kernel: scsi 6:0:0:0: Direct-Access     ATA      Maxtor 6B300S0   BANC PQ: 0 ANSI: 5
+Aug 11 10:27:51 black kernel: ata4: bounce limit 0xFFFFFFFFFFFFFFFF, segment boundary 0xFFFFFFFF, hw segs 61
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel:  sda: sda1
+Aug 11 10:27:51 black kernel: sd 3:0:0:0: [sda] Attached SCSI disk
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel:  sdb: sdb1 sdb2 < sdb5 sdb6 >
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Attached SCSI disk
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] 398297088 512-byte hardware sectors (203928 MB)
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] 398297088 512-byte hardware sectors (203928 MB)
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel:  sdc: sdc1 sdc2 sdc3 < sdc5 sdc6 >
+Aug 11 10:27:51 black kernel: sd 5:0:0:0: [sdc] Attached SCSI disk
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] 586114704 512-byte hardware sectors (300091 MB)
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] 586114704 512-byte hardware sectors (300091 MB)
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel:  sdd: sdd1 sdd2
+Aug 11 10:27:51 black kernel: sd 6:0:0:0: [sdd] Attached SCSI disk
+Aug 11 10:27:51 black kernel: device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised: dm-devel@redhat.com
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: scsi 1:0:0:0: Direct-Access     Seagate  External Drive        PQ: 0 ANSI: 0
+Aug 11 10:27:51 black kernel: scsi 0:0:0:0: Direct-Access     USB 2.0  Storage Device   0100 PQ: 0 ANSI: 0 CCS
+Aug 11 10:27:51 black kernel: sd 0:0:0:0: [sde] 320173056 512-byte hardware sectors (163929 MB)
+Aug 11 10:27:51 black kernel: sd 0:0:0:0: [sde] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 0:0:0:0: [sde] 320173056 512-byte hardware sectors (163929 MB)
+Aug 11 10:27:51 black kernel: scsi 2:0:0:0: Direct-Access     ST332082 0A               3.AA PQ: 0 ANSI: 0
+Aug 11 10:27:51 black kernel: sd 0:0:0:0: [sde] Write Protect is off
+Aug 11 10:27:51 black kernel:  sde: sde1
+Aug 11 10:27:51 black kernel: sd 0:0:0:0: [sde] Attached SCSI disk
+Aug 11 10:27:51 black kernel: sd 2:0:0:0: [sdf] 625142448 512-byte hardware sectors (320073 MB)
+Aug 11 10:27:51 black kernel: sd 2:0:0:0: [sdf] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 2:0:0:0: [sdf] 625142448 512-byte hardware sectors (320073 MB)
+Aug 11 10:27:51 black kernel: sd 2:0:0:0: [sdf] Write Protect is off
+Aug 11 10:27:51 black kernel:  sdf:<6>i2c-adapter i2c-0: nForce2 SMBus adapter at 0x4c00
+Aug 11 10:27:51 black kernel: i2c-adapter i2c-1: nForce2 SMBus adapter at 0x4c40
+Aug 11 10:27:51 black kernel: input: PC Speaker as /class/input/input1
+Aug 11 10:27:51 black kernel: Real Time Clock Driver v1.12ac
+Aug 11 10:27:51 black kernel: ACPI: PCI Interrupt Link [APCJ] enabled at IRQ 22
+Aug 11 10:27:51 black kernel: ACPI: PCI Interrupt 0000:00:04.0[A] -> Link [APCJ] -> GSI 22 (level, low) -> IRQ 17
+Aug 11 10:27:51 black kernel: NET: Registered protocol family 23
+Aug 11 10:27:51 black kernel: intel8x0_measure_ac97_clock: measured 54821 usecs
+Aug 11 10:27:51 black kernel: intel8x0: clocking to 46989
+Aug 11 10:27:51 black kernel: input: ImPS/2 Logitech Wheel Mouse as /class/input/input2
+Aug 11 10:27:51 black kernel: parport_pc 00:0a: reported by Plug and Play ACPI
+Aug 11 10:27:51 black kernel: parport0: PC-style at 0x378, irq 7 [PCSPP,TRISTATE]
+Aug 11 10:27:51 black kernel:  sdf1
+Aug 11 10:27:51 black kernel: sd 2:0:0:0: [sdf] Attached SCSI disk
+Aug 11 10:27:51 black kernel: sd 1:0:0:0: [sdg] 312581808 512-byte hardware sectors (160042 MB)
+Aug 11 10:27:51 black kernel: sd 1:0:0:0: [sdg] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 1:0:0:0: [sdg] 312581808 512-byte hardware sectors (160042 MB)
+Aug 11 10:27:51 black kernel: sd 1:0:0:0: [sdg] Write Protect is off
+Aug 11 10:27:51 black kernel:  sdg: sdg1 sdg2 sdg3
+Aug 11 10:27:51 black kernel: sd 1:0:0:0: [sdg] Attached SCSI disk
+Aug 11 10:27:51 black kernel: Adding 3036244k swap on /dev/sdb5.  Priority:-1 extents:1 across:3036244k
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA IDLE, stat=0x440
+Aug 11 10:27:51 black kernel:          res 51/04:00:00:00:00/04:00:00:00:00/40 Emask 0x1 (device error)
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: EH complete
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: EXT3 FS on dm-0, internal journal
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on sdb1, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on dm-4, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on dm-3, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on dm-1, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on dm-2, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on sdd1, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on sda1, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: kjournald starting.  Commit interval 5 seconds
+Aug 11 10:27:51 black kernel: EXT3 FS on sdd2, internal journal
+Aug 11 10:27:51 black kernel: EXT3-fs: mounted filesystem with ordered data mode.
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA IDLE, stat=0x440
+Aug 11 10:27:51 black kernel:          res 51/04:00:00:00:00/04:00:00:00:00/40 Emask 0x1 (device error)
+Aug 11 10:27:51 black last message repeated 2 times
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: EH complete
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY clear and IDLE, stat=0x440
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA IDLE, stat=0x400
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY, stat=0x400
+Aug 11 10:27:51 black kernel:          res 40/00:00:00:00:00/04:00:00:00:00/40 Emask 0x4 (timeout)
+Aug 11 10:27:51 black last message repeated 2 times
+Aug 11 10:27:51 black kernel:          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Aug 11 10:27:51 black kernel: ata2: soft resetting port
+Aug 11 10:27:51 black kernel: ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: EH complete
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY clear and IDLE, stat=0x400
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA IDLE, stat=0x400
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY, stat=0x400
+Aug 11 10:27:51 black kernel: ata2.00: NCQ disabled due to excessive errors
+Aug 11 10:27:51 black kernel:          res 40/00:00:00:00:00/04:00:00:00:00/40 Emask 0x4 (timeout)
+Aug 11 10:27:51 black last message repeated 2 times
+Aug 11 10:27:51 black kernel:          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Aug 11 10:27:51 black kernel: ata2: soft resetting port
+Aug 11 10:27:51 black kernel: ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: EH complete
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY clear and IDLE, stat=0x400
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA IDLE, stat=0x400
+Aug 11 10:27:51 black kernel: ata2: timeout waiting for ADMA LEGACY, stat=0x400
+Aug 11 10:27:51 black kernel:          res 40/00:00:00:00:00/04:00:00:00:00/40 Emask 0x4 (timeout)
+Aug 11 10:27:51 black kernel: ata2: soft resetting port
+Aug 11 10:27:51 black kernel: ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Aug 11 10:27:51 black kernel: ata2.00: configured for UDMA/133
+Aug 11 10:27:51 black kernel: ata2: EH complete
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] 976773168 512-byte hardware sectors (500108 MB)
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write Protect is off
+Aug 11 10:27:51 black kernel: sd 4:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+Aug 11 10:27:51 black kernel: input: Power Button (FF) as /class/input/input3
+Aug 11 10:27:51 black kernel: ACPI: Power Button (FF) [PWRF]
+Aug 11 10:27:51 black kernel: input: Power Button (CM) as /class/input/input4
+Aug 11 10:27:51 black kernel: ACPI: Power Button (CM) [PWRB]
+Aug 11 10:27:53 black kernel: NET: Registered protocol family 10
+Aug 11 10:27:53 black kernel: lo: Disabled Privacy Extensions
+Aug 11 10:28:35 black kernel: Linux agpgart interface v0.102 (c) Dave Jones
