@@ -1,52 +1,59 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: booting from MD raid using libata
-Date: Thu, 16 Aug 2007 21:04:46 +0900
-Message-ID: <46C43D5E.8000403@gmail.com>
-References: <46C2FA67.5060005@gac.edu> <46C42D65.9030607@gmail.com> <46C43B4A.4000308@gustavus.edu>
+From: Bodo Eggert <7eggert@gmx.de>
+Subject: Re: Bad CD disk disables IDE DMA
+Date: Thu, 16 Aug 2007 14:11:53 +0200
+Message-ID: <E1ILeCg-0000iH-2W@be1.lrz>
+References: <8Squ5-2cU-19@gated-at.bofh.it> <8SIKl-5IK-13@gated-at.bofh.it>
+Reply-To: 7eggert@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:8351 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313AbXHPMEx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 08:04:53 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so258388wah
-        for <linux-ide@vger.kernel.org>; Thu, 16 Aug 2007 05:04:53 -0700 (PDT)
-In-Reply-To: <46C43B4A.4000308@gustavus.edu>
+Received: from moutng.kundenserver.de ([212.227.126.187]:62302 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbXHPMME (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 08:12:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sommere <sommere@gustavus.edu>
-Cc: Ethan Sommer <sommere@gac.edu>, linux-ide@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Zoltan Boszormenyi <zboszor@dunaweb.hu>, linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-sommere wrote:
-> Tejun Heo wrote:
->> Ethan Sommer wrote:
->>  
->>> I've been trying to diagnose a problem we've been having for a few days
->>> and I think I've found the problem. (I'm hoping you might have the
->>> solution.)
->>>
->>> I have a system which has a intel 965 MB and a couple SIL based SATA
->>> cards one of which is hooked up to a few PMPs.
->>>
->>> If I try to boot the system normally after installing the libata-tj
->>> patch, it can't find the root partition because MD can't find any raid
->>> devices because the kernel hasn't detected the SATA partitions yet.
->>>     
+Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+> On 15/08/07, Zoltan Boszormenyi <zboszor@dunaweb.hu> wrote:
+
+>> I noticed that a bad CD of mine makes DMA disabled:
+
+[...]
+>> hda: cdrom_decode_status: error=0x40 { LastFailedSense=0x04 }
+>> ide: failed opcode was: unknown
+>> hda: DMA disabled
+>> hda: ide_intr: huh? expected NULL handler on exit
+>> hda: ATAPI reset complete
 >>
->> Do you load sd before or after md?
->>
->>   
-> How would I affect that?
+>> Every time I put the said CD into to drive and DMA is on, I get the
+>> above messages.
 > 
-> I've since tried installing linux without using raid for the system
-> disks, and it still doesn't detect the partitions for the sata drives
-> before trying to mount the root partition when using the libata-tj patch
-> against 2.6.22.1
+> This might be intended.
 
-Are libata, sd and md modules?  If you don't know what's going on, just
-build all needed drivers into the kernel.
+Maybe, and maybe only a certain effect might be intended. And maybe I can
+help by asking these questions:
 
+1) Does disabling DMA fix the seek errors, or does it hide them by the PIO
+   interfce not printing them?
+
+2) If it does hide them, would filtering for seek errors be a sane thing to
+   do, or does the DMA engine (or HDD) behave badly on these errors, or
+   do bad-DMA devices report seek errors, too?
+
+3) If it does not hide them, would re-enabling DMA on disk change be a
+   feasable workaround?
+   (proposed interface: use hdparm -d $num where $num =
+     0, 1: as before
+     3: DMA on, if switched off automatically, will be set to 2
+     2: DMA off, will be turned on (set to 3) on disk change)
+
+4) Does libata work well enough for making all effort put into that old
+   IDE layer be a waste of time?
 -- 
-tejun
+Fun things to slip into your budget
+True: NASA couldn't get money approved for hangars for Space Shuttle so they
+put in request for 'Space Vehicle Refurbishment and Storage Facilities'
+       - and got the money to build hangars
