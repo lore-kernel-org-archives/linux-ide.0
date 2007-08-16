@@ -1,50 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Still having problems with sata_promise on all late kernels -
- shutdown too - BISECTED
-Date: Thu, 16 Aug 2007 14:43:19 +0900
-Message-ID: <46C3E3F7.2010803@gmail.com>
-References: <46C11BBE.6010802@wasp.net.au> <46C1316F.4010906@wasp.net.au> <46C1DB92.7080806@wasp.net.au> <46C2B046.7060708@gmail.com> <46C3273F.1070306@wasp.net.au>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/4] libata: ACPI checks for 80wire cable
+Date: Thu, 16 Aug 2007 02:34:33 -0400
+Message-ID: <46C3EFF9.9080508@garzik.org>
+References: <20070726183647.1ee7f2d4@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:21192 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbXHPFn1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 01:43:27 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so124564rvb
-        for <linux-ide@vger.kernel.org>; Wed, 15 Aug 2007 22:43:26 -0700 (PDT)
-In-Reply-To: <46C3273F.1070306@wasp.net.au>
+Received: from srv5.dvmed.net ([207.36.208.214]:55192 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758690AbXHPGeh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Aug 2007 02:34:37 -0400
+In-Reply-To: <20070726183647.1ee7f2d4@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Brad Campbell wrote:
-> Tejun Heo wrote:
->> Brad Campbell wrote:
->>> Brad Campbell wrote:
->>>
->>>> http://www.fnarfbargle.com/CIMG1029.JPG (I have posted this screen
->>>> shot previously. It's still doing exactly the same thing on both
->>>> boxes).
->>>>
->>> git-bisect shows up this commit as the guilty party. I can't just revert
->>> it on a recent tree though.
->>> Will investigate further.
->>
->> Weird.  Does 'hdparm -y /dev/sdX' work?
+Alan Cox wrote:
+> We can use the ACPI mode information with several drivers as a hint to
+> cable type. If the ACPI mode set by the BIOS is faster than UDMA33 then
+> we know the BIOS thinks there are 80wire cables. If it doesn't set such a
+> mode or it has no ACPI method then we get no further information and can
+> rely on existing approaches
 > 
-> Very interesting indeed..
+> Introduce the function headers needed. Null it out for non ACPI boxes
 > 
-> for i in /dev/sd* ; do echo $i ; hdparm -y $i ; done
-> 
-> sda-sdh worked fine.. sdi locked the box.
-> 
-> So it's dying on the 3rd or 4th controller.
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-That's weird.  You seem to have the same controllers and drives.  What
-happens if you spin down from hdi upwards?
+applied 1-2, after combining into a single changeset.
 
--- 
-tejun
+When adding a new API, IMO it's better to keep definition and 
+implementation additions in a single changeset.
+
+
