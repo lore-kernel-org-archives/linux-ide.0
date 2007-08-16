@@ -1,48 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata-core: support wildcard matching in ata_blacklist_entry
-Date: Thu, 16 Aug 2007 15:07:07 -0400
-Message-ID: <46C4A05B.4000007@garzik.org>
-References: <20070808202057.GA23314@dhcp-210.hsv.redhat.com> <20070809003134.12de8576@the-village.bc.nu>
+Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
+Date: Thu, 16 Aug 2007 15:11:02 -0400
+Message-ID: <46C4A146.6090701@garzik.org>
+References: <200707092304.l69N4Ggd023137@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51234 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56437 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756179AbXHPTHK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Aug 2007 15:07:10 -0400
-In-Reply-To: <20070809003134.12de8576@the-village.bc.nu>
+	id S1752292AbXHPTLK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Aug 2007 15:11:10 -0400
+In-Reply-To: <200707092304.l69N4Ggd023137@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: David Milburn <dmilburn@redhat.com>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: albertl@mail.com, alan@lxorguk.ukuu.org.uk, bahadir.balban@gmail.com, dwm@enoyolf.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, sshtylyov@ru.mvista.com
 
-Alan Cox wrote:
-> On Wed, 8 Aug 2007 15:20:57 -0500
-> David Milburn <dmilburn@redhat.com> wrote:
+Mikael Pettersson wrote:
+> (cc:ing linuxppc-dev)
 > 
->> Support the use of '*' in model_num and model_rev entries
->> in ata_device_blacklist[].
+> On Tue, 26 Jun 2007 13:43:15 +0800, Albert Lee wrote:
+>> Recently the PLL input clock of pata_pdc2027x is sometimes detected
+>> higer than expected (e.g. 20.027 MHz compared to 16.714 MHz).
+>> It seems sometimes the mdelay() function is not as precise as it
+>> used to be. Per Alan's advice, HT or power management might affect
+>> the precision of mdelay().
 >>
->> CC: alan@lxorguk.ukuu.org.uk
->> Signed-off-by: David Milburn <dmilburn@redhat.com>
+>> This patch calls gettimeofday() to mesure the time elapsed and
+>> calculate the PLL input clock accordingly.
 > 
-> Suggestion: Pull the match function out of line so you don't have two
-> copies of it and can remove all the wacky ? operators
-> 
-> something like this ? (untested)
-> 
-> 	strpatterncmp(const char *name, const char *patt)
-> 	{
-> 		const char *p = strchr(patt, '*');
-> 		if (p == NULL)
-> 			p = patt + strlen(patt);
-> 		return strncmp(name, patt, p-patt);
-> 	}
+> Unfortunately this breaks pata_pdc2027x on my PowerMac G3:
 
-Seems quite sane to me...
+Did this ever get resolved?
 
-And I support the addition of wildcard operators; that should make 
-maintenance a bit easier.
+	Jeff
+
 
 
