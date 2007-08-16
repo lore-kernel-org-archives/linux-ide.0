@@ -1,103 +1,73 @@
-From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
-Subject: Re: Bad CD disk disables IDE DMA
-Date: Thu, 16 Aug 2007 14:39:25 +0200
-Message-ID: <46C4457D.5030703@dunaweb.hu>
-References: <8Squ5-2cU-19@gated-at.bofh.it> <8SIKl-5IK-13@gated-at.bofh.it> <E1ILeCg-0000iH-2W@be1.lrz>
+From: Jonathan Bastien-Filiatrault <joe@dastyle.net>
+Subject: Re: Enabling AHCI on ICH7 without BIOS support
+Date: Thu, 16 Aug 2007 08:58:45 -0400
+Message-ID: <46C44A05.9040302@dastyle.net>
+References: <46C1A999.5070109@dastyle.net> <46C441CB.8020805@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from linux.dunaweb.hu ([62.77.196.1]:40563 "EHLO linux.dunaweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753112AbXHPMjr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 08:39:47 -0400
-In-Reply-To: <E1ILeCg-0000iH-2W@be1.lrz>
+Received: from relais.videotron.ca ([24.201.245.36]:49342 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754259AbXHPM6q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 08:58:46 -0400
+Received: from [172.16.1.150] ([74.59.112.80]) by VL-MH-MR002.ip.videotron.ca
+ (Sun Java System Messaging Server 6.2-2.05 (built Apr 28 2005))
+ with ESMTP id <0JMV00I4GAPXF890@VL-MH-MR002.ip.videotron.ca> for
+ linux-ide@vger.kernel.org; Thu, 16 Aug 2007 08:58:46 -0400 (EDT)
+In-reply-to: <46C441CB.8020805@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 7eggert@gmx.de
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Bodo Eggert =EDrta:
-> Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
->  =20
->> On 15/08/07, Zoltan Boszormenyi <zboszor@dunaweb.hu> wrote:
->>    =20
+Tejun Heo wrote:
+
+> Hello,
 >
->  =20
->>> I noticed that a bad CD of mine makes DMA disabled:
->>>      =20
+> Jonathan Bastien-Filiatrault wrote:
+>   
+>> Hello,
+>>
+>> I am the owner of a Dell Latitude D620 notebook with an ICH7 SATA
+>> controller, unfortunately, the BIOS does not offer the option of using
+>> "native mode" instead of "compatibility mode" when it comes to SATA. For
+>> now, the ata_piix runs happily in compatibility mode. Looking at the
+>> ICH7 docs, I found that poking register 0x90 in PCI configuration space
+>> with value 0x40 should enable AHCI. However, there are some issues with
+>> poking that register with setpci in an early initramfs:
+>>
+>>
+>> - The kernel does not seem to update the device id from PCI config
+>> space, which changes with the controller mode (it would seem the PCI
+>> subsystem keeps a copy)
+>>
+>> - Poking PCI registers from userspace is far from ideal
+>>
+>>
+>> It would be great if the AHCI driver (or otherwise) had a
+>> "force_ich7_ahci" to properly setup and initialize this device in full
+>> "native" AHCI mode. This option would be greatly welcome from users like
+>> me who have a stupid bios (eh, who doesn't).
+>>     
 >
-> [...]
->  =20
->>> hda: cdrom_decode_status: error=3D0x40 { LastFailedSense=3D0x04 }
->>> ide: failed opcode was: unknown
->>> hda: DMA disabled
->>> hda: ide_intr: huh? expected NULL handler on exit
->>> hda: ATAPI reset complete
->>>
->>> Every time I put the said CD into to drive and DMA is on, I get the
->>> above messages.
->>>      =20
->> This might be intended.
->>    =20
+> Sorry but most BIOSen don't map ABAR unless it supports AHCI and there
+> usually isn't a hole to fit in ABAR afterwards unless the kernel
+> completely reallocates IO resources, which, again unfortunately, can't
+> be done reliably cuz machines can be quirky and might puke if addresses
+> aren't laid out as their BIOSen would do.
 >
-> Maybe, and maybe only a certain effect might be intended. And maybe I=
- can
-> help by asking these questions:
+> So, you'll have to live with ata_piix.
 >
-> 1) Does disabling DMA fix the seek errors, or does it hide them by th=
-e PIO
->    interfce not printing them?
->  =20
-
-With DMA off no seek error occurs. When the transfer rate is
-limited to UDMA3 I get this:
-
-hda: drive_cmd: status=3D0x51 { DriveReady SeekComplete Error }
-hda: drive_cmd: error=3D0x04 { AbortedCommand }
-ide: failed opcode was: 0xec
-
-Note the difference: the error code is different and
-it knows the failed opcode as well. But DMA remains on.
-Can it be a bad 80w cable? I don't think so, considering that
-it doesn't occur for DVDs when using UDMA4...
-
-> 2) If it does hide them, would filtering for seek errors be a sane th=
-ing to
->    do, or does the DMA engine (or HDD) behave badly on these errors, =
-or
->    do bad-DMA devices report seek errors, too?
->
-> 3) If it does not hide them, would re-enabling DMA on disk change be =
-a
->    feasable workaround?
->    (proposed interface: use hdparm -d $num where $num =3D
->      0, 1: as before
->      3: DMA on, if switched off automatically, will be set to 2
->      2: DMA off, will be turned on (set to 3) on disk change)
->  =20
-
-The automatic DMA re-enabling would be a good solution.
-
-> 4) Does libata work well enough for making all effort put into that o=
-ld
->    IDE layer be a waste of time?
->  =20
-
-Unfortunately libata (or pata_amd) doesn't work very well on this machi=
-ne,
-I tried to switch to libata for the CD drive but it lost the DVD-playin=
-g=20
-capability.
-It seems the error was that libdvdcss couldn't get the keys via the scd=
-=20
-device.
-This is the main obstacle that stops me switching to Fedora 7 from FC6.
-I reported it some time ago but got no answer. Look for subject
-"DVD-playing, ide-cd vs scsi-cd drivers".
-
-Best regards,
-Zolt=E1n B=F6sz=F6rm=E9nyi
+>   
+So far, I have managed to patch up the AHCI driver to initialize the 
+ICH7 AHCI state machine as the BIOS would do (as per the AHCI spec 
+instructions). This involves mapping ABAR and such. So far, I have 
+gotten the AHCI driver to detect the chip properly, but it does not 
+detect any drives. It looks like I will need to further initialize the 
+chip. I think there might be a chance of success, but it will involve 
+manually specifying which ports are present via a module parameter.
 
 
+Thank you,
+Jonathan
