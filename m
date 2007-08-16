@@ -1,44 +1,74 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [patch 2/4] scsi: expose AN support to user space
-Date: Wed, 15 Aug 2007 17:37:45 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70916A58@NAMAIL4.ad.lsil.com>
-References: <1187186509.3327.7.camel@localhost.localdomain>
+From: vandrove@vc.cvut.cz
+Subject: RE: sata_sil, sil3512, and PMP?
+Date: Thu, 16 Aug 2007 03:55:41 +0200
+Message-ID: <1187229341.46c3ae9d6f1ff@imap.vc.cvut.cz>
+References: <E8F452C423BB2E439AA9E397EB8A95F3038D9875@telegraph.siliconimage.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1187186509.3327.7.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, venkatr@promise.com, vimal.nakum@promise.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from imap.vc.cvut.cz ([147.32.240.222]:52232 "EHLO imap.vc.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755593AbXHPCjX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Aug 2007 22:39:23 -0400
+In-Reply-To: <E8F452C423BB2E439AA9E397EB8A95F3038D9875@telegraph.siliconimage.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Eunice Chen <Eunice.Chen@siliconimage.com>
+Cc: Petr Vandrovec <petr@vandrovec.name>, linux-ide@vger.kernel.org
 
-On Wednesday, August 15, 2007 8:02 AM, James Bottomley wrote: 
-> Actually, we just got a second potential consumer ... although I'll
-> reprod to have the reporter send it to the list.  It's a device that
-> needs notice of report luns data changing.  The proposed 
-> mechanism looks
-> a bit narrow now (too tied to media change).  I'll see if I 
-> can propose
-> a more generic update.
+Quoting Eunice Chen <Eunice.Chen@siliconimage.com>:
+
+> 3512/3112/3114 controllers do not support PMP. 3124/3132 controllers do.
+
+Um...  Well, that's bad.  Can you update datasheet then?  
+
+http://www.siliconimage.com/docs/SiI-DS-0102-D.pdf says on page 77:
+
+===
+Serial ATA SControl
+Address Offset: 0x100 (Channel 0) / 0x180 (Channel 1)
+Access Type: Read/Write
+Reset Value: 0x0000_0010
+...
+This register is the SControl register as defined by the Serial ATA specification.
+&#8226; Bit [19:16]: PMP - This field is the 4-bit value to be placed in the Port
+Multiplier Port field of all transmitted FISes.
+===
+and there is also pm_fiscfg bitfield in SMisc :-(
+
+Provoking false hopes from unsuspecting readers :-(  I'll shell out some money
+then...
+                                     Thanks,
+                                             Petr
+
+> Eunice
+> 
+> -----Original Message-----
+> From: linux-ide-owner@vger.kernel.org
+> [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Petr Vandrovec
+> Sent: Wednesday, August 15, 2007 5:47 AM
+> To: linux-ide@vger.kernel.org
+> Subject: sata_sil, sil3512, and PMP?
+> 
+> Hello,
+>    is anybody working on PMP support in sata_sil driver, or should I 
+> give it a try, or is it simpler to just shell out $70 to get 3124 based 
+> device with FIS based switching?
+> 
+> According to datasheet it seems that 3512 should be able to do command 
+> based switching without (too big) problems.  Though I'm not very 
+> confident as whole PMP support fits into two sentences in 3512 public 
+> datasheet :-(
+> 					Thanks,
+> 						Petr Vandrovec
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 > 
 
-I believe James is referring to my Promise issue. That is -  the
-customers mutipath enclosure our SAS controller.  They have alternating
-luns mapped to each path.  The odd luns mapped to a single path, and the
-even luns to the other.  When a cable is pulled, a check condition is
-generated (0x6, 0x3F, 0xE),  means report_luns data has changed.  What
-the enclosure does it move the luns over to the alternate path.    Our
-driver is not reporting the new luns because no event is generated to
-mpt fusion driver from controller firmware (firmware only reports when a
-target has been added/removed, not lun).     The mpt fusion driver
-reports to the sas transport layer, the libata layer is not involved.
-Shouldn't someone above sscsi lld be snooping that sence, and then
-sending REPORT_LUNS to find out what changed.       
 
-I've added some Promise contacts,  I hope they include the interested
-partied to this discussion.
 
-Eric
