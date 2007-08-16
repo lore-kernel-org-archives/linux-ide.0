@@ -1,97 +1,35 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] libata: kill sector_buf temporary buffer
-Date: Thu, 16 Aug 2007 11:00:59 +0200
-Message-ID: <20070816090059.GP23758@kernel.dk>
+Date: Thu, 16 Aug 2007 11:31:38 +0100
+Message-ID: <20070816113138.4e4fe446@the-village.bc.nu>
 References: <20070816080451.GA6547@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:17323 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489AbXHPJBC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Aug 2007 05:01:02 -0400
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39903 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760185AbXHPKXu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Aug 2007 06:23:50 -0400
 In-Reply-To: <20070816080451.GA6547@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-On Thu, Aug 16 2007, Jeff Garzik wrote:
+On Thu, 16 Aug 2007 04:04:51 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
 > 
 > Rather than carrying around this buffer all the time, for rare
 > circumstances, it seems that we can easily alloc/free a temp buffer as
 > needed.
 > 
 > Saves a big chunk of per-port memory.
-> 
-> I forget the justification for what it was in ata_port to begin with,
-> but the code uses don't see to justify any need.
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 735f74b..5e9049f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3679,20 +3679,29 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
->  int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
->  {
->  	unsigned int class = dev->class;
-> -	u16 *id = (void *)dev->link->ap->sector_buf;
-> -	int rc;
-> +	u16 *id;
-> +	int rc = 0;
-> +
-> +	id = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
-> +	if (!id)
-> +		return -ENOMEM;
->  
->  	/* read ID data */
->  	rc = ata_dev_read_id(dev, &class, readid_flags, id);
->  	if (rc)
-> -		return rc;
-> +		goto out;
->  
->  	/* is the device still there? */
-> -	if (!ata_dev_same_device(dev, class, id))
-> -		return -ENODEV;
-> +	if (!ata_dev_same_device(dev, class, id)) {
-> +		rc = -ENODEV;
-> +		goto out;
-> +	}
->  
->  	memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
-> -	return 0;
-> +
-> +out:
-> +	kfree(id);
-> +	return rc;
->  }
->  
->  /**
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 2ddc2ed..fc731e2 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1133,14 +1133,20 @@ static unsigned int ata_read_log_page(struct ata_device *dev,
->  static int ata_eh_read_log_10h(struct ata_device *dev,
->  			       int *tag, struct ata_taskfile *tf)
->  {
-> -	u8 *buf = dev->link->ap->sector_buf;
-> +	u8 *buf;
->  	unsigned int err_mask;
->  	u8 csum;
-> -	int i;
-> +	int i, rc = 0;
-> +
-> +	buf = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
-> +	if (!buf)
-> +		return -ENOMEM;
 
-How can this work? If we're issuing this log page read, we cannot do any
-IO to the device. So this allocation must not generate any IO. And if we
-fail in allocating memory and just return, the device wont talk to us in
-the future.
+NAK. The allocation may deadlock, and if you set it not to do I/O you
+must then handle failure.
 
--- 
-Jens Axboe
-
+It may be possible to get down to one buffer by serializing the use of it
+and proving we can always make progress but thats pretty hairy work for
+512 bytes of room.
