@@ -1,31 +1,56 @@
-From: Bob Ham <rah@bash.sh>
-Subject: Re: [PATCH] hpt366: fix PCI clock detection for HPT374 (take 4)
-Date: Thu, 16 Aug 2007 08:40:40 +0100
-Message-ID: <1187250040.6071.1.camel@localhost>
-References: <200708112349.50483.sshtylyov@ru.mvista.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Still having problems with sata_promise on all late kernels -
+ shutdown too - BISECTED
+Date: Thu, 16 Aug 2007 11:54:22 +0400
+Message-ID: <46C402AE.6010605@wasp.net.au>
+References: <46C11BBE.6010802@wasp.net.au> <46C1316F.4010906@wasp.net.au> <46C1DB92.7080806@wasp.net.au> <46C2B046.7060708@gmail.com> <46C3273F.1070306@wasp.net.au> <46C3E3F7.2010803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waffl.ing.me.uk ([217.147.94.6]:37665 "EHLO waffl.ing.me.uk"
+Received: from wasp.net.au ([203.190.192.17]:50671 "EHLO wasp.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752015AbXHPHle (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Aug 2007 03:41:34 -0400
-In-Reply-To: <200708112349.50483.sshtylyov@ru.mvista.com>
+	id S1756472AbXHPHy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Aug 2007 03:54:28 -0400
+In-Reply-To: <46C3E3F7.2010803@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 2007-08-11 at 23:49 +0400, Sergei Shtylyov wrote:
-> HPT374 BIOS seems to only save f_CNT register value for the function #0 before
-> re-tuning DPLL (that causes the driver to report obviously distorted f_CNT for
-> the function #1) -- fix this by always reading the saved f_CNT register value
-> from the function #0 in the driver's init_chipset() method.
+Tejun Heo wrote:
+> Brad Campbell wrote:
+>> Tejun Heo wrote:
+>>> Brad Campbell wrote:
+>>>> Brad Campbell wrote:
+>>>>
+>>>>> http://www.fnarfbargle.com/CIMG1029.JPG (I have posted this screen
+>>>>> shot previously. It's still doing exactly the same thing on both
+>>>>> boxes).
+>>>>>
+>>>> git-bisect shows up this commit as the guilty party. I can't just revert
+>>>> it on a recent tree though.
+>>>> Will investigate further.
+>>> Weird.  Does 'hdparm -y /dev/sdX' work?
+>> Very interesting indeed..
+>>
+>> for i in /dev/sd* ; do echo $i ; hdparm -y $i ; done
+>>
+>> sda-sdh worked fine.. sdi locked the box.
+>>
+>> So it's dying on the 3rd or 4th controller.
+> 
+> That's weird.  You seem to have the same controllers and drives.  What
+> happens if you spin down from hdi upwards?
+> 
 
-I'm assuming you don't need me to test these latest patches, and that
-you'll explicitly ask if you do?
+Any attempt to spin down sdi-sdo in any order locks hard. Any attempt to spin down sda-sdh works in 
+any combination/permutation.
 
-Bob
+Yes, all controllers and drives are identical.
 
-
+Brad
+-- 
+"Human beings, who are almost unique in having the ability
+to learn from the experience of others, are also remarkable
+for their apparent disinclination to do so." -- Douglas Adams
