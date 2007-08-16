@@ -1,29 +1,60 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Thu, 16 Aug 2007 14:45:06 -0400
-Message-ID: <20070816184505.GA4453@jim.sh>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <46C17634.2040504@gmail.com> <20070816160629.GL8108@boogie.lpds.sztaki.hu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH take #5] [libata] libata driver for bf548 on chip ATAPI
+ controller.
+Date: Thu, 16 Aug 2007 14:56:22 -0400
+Message-ID: <46C49DD6.9050508@garzik.org>
+References: <1187169256.31383.3.camel@sevens.analog.com>	 <46C3F6FB.2070909@garzik.org>	 <8bd0f97a0708160927s625fd5ax84cd6d12a693d9ad@mail.gmail.com>	 <46C49A0D.5080002@garzik.org> <8bd0f97a0708161146l70eeea69jd5fdedbaa8486590@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:49953 "EHLO neurosis.jim.sh"
+Received: from srv5.dvmed.net ([207.36.208.214]:40207 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932727AbXHPSui (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Aug 2007 14:50:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20070816160629.GL8108@boogie.lpds.sztaki.hu>
+	id S1760010AbXHPS4Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Aug 2007 14:56:24 -0400
+In-Reply-To: <8bd0f97a0708161146l70eeea69jd5fdedbaa8486590@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mike Frysinger <vapier.adi@gmail.com>
+Cc: Sonic Zhang <sonic.adi@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Bryan Wu <bryan.wu@analog.com>
 
-Gabor Gombas wrote:
-> On Tue, Aug 14, 2007 at 06:30:28PM +0900, Tejun Heo wrote:
-> > Hmmm... That's timeout on cache flush, indicative of failing disk.
-> > Please post the result of 'smartctl -a /dev/sdc'.
+Mike Frysinger wrote:
+> On 8/16/07, Jeff Garzik <jeff@garzik.org> wrote:
+>> Mike Frysinger wrote:
+>>> On 8/16/07, Jeff Garzik <jeff@garzik.org> wrote:
+>>>> Sonic Zhang wrote:
+>>>>> +static void bfin_set_piomode(struct ata_port *ap, struct ata_device *adev)
+>>>>> +{
+>>>>> +     int mode = adev->pio_mode - XFER_PIO_0;
+>>>>> +     unsigned long base = (unsigned long)ap->ioaddr.ctl_addr;
+>>>> (added Bryan Wu to CC)
+>>>>
+>>>> Someone needs to need fix the bfin architecture:  the addresses on the
+>>>> bfin_read/bfin_write functions should be 'void __iomem *' not unsigned long.
+>>> there are no address pointers anymore, so there is nothing to cast ...
+>>> the bfin_read/bfin_write macros are done in sexy asm:
+>>> #define bfin_write8(addr,val) __asm__ __volatile__("b[%0] = %1;" ::
+>>> "a"(addr), "d"(val))
+>>> or i'm misunderstanding what you mean ...
+>>>
+>>> where do you see (unsigned long) ?
+>> Look up (into the message you quoted).
 > 
-> Ok, so something is fishy in 2.6.22 wrt. SMART.
+> yes, you quoted the driver, not the Blackfin core parts
+> 
+>> Regardless of the implementation, the C type system should be employed
+>> to ensure that 'addr' is known to the compiler as 'void __iomem *'
+>> rather than unsigned long.
+> 
+> i agree the specific pata driver should be declared the way you
+> described, however i dont see how that has bearing on the
+> bfin_read/bfin_write macros as you seemed to indicate
 
-See http://lkml.org/lkml/2007/7/8/198
+Macros completely ignore the C type system.  Look at other architectures 
+if you cannot figure out how to implement a static inline with stronger 
+typing.
 
--jim
+	Jeff
+
+
+
