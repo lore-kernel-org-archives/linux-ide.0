@@ -1,56 +1,131 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: Still having problems with sata_promise on all late kernels -
- shutdown too - BISECTED
-Date: Thu, 16 Aug 2007 11:54:22 +0400
-Message-ID: <46C402AE.6010605@wasp.net.au>
-References: <46C11BBE.6010802@wasp.net.au> <46C1316F.4010906@wasp.net.au> <46C1DB92.7080806@wasp.net.au> <46C2B046.7060708@gmail.com> <46C3273F.1070306@wasp.net.au> <46C3E3F7.2010803@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] libata: kill sector_buf temporary buffer
+Date: Thu, 16 Aug 2007 04:04:51 -0400
+Message-ID: <20070816080451.GA6547@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wasp.net.au ([203.190.192.17]:50671 "EHLO wasp.net.au"
+Received: from havoc.gtf.org ([69.61.125.42]:57384 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756472AbXHPHy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Aug 2007 03:54:28 -0400
-In-Reply-To: <46C3E3F7.2010803@gmail.com>
+	id S1753785AbXHPIEw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Aug 2007 04:04:52 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Brad Campbell wrote:
->> Tejun Heo wrote:
->>> Brad Campbell wrote:
->>>> Brad Campbell wrote:
->>>>
->>>>> http://www.fnarfbargle.com/CIMG1029.JPG (I have posted this screen
->>>>> shot previously. It's still doing exactly the same thing on both
->>>>> boxes).
->>>>>
->>>> git-bisect shows up this commit as the guilty party. I can't just revert
->>>> it on a recent tree though.
->>>> Will investigate further.
->>> Weird.  Does 'hdparm -y /dev/sdX' work?
->> Very interesting indeed..
->>
->> for i in /dev/sd* ; do echo $i ; hdparm -y $i ; done
->>
->> sda-sdh worked fine.. sdi locked the box.
->>
->> So it's dying on the 3rd or 4th controller.
-> 
-> That's weird.  You seem to have the same controllers and drives.  What
-> happens if you spin down from hdi upwards?
-> 
 
-Any attempt to spin down sdi-sdo in any order locks hard. Any attempt to spin down sda-sdh works in 
-any combination/permutation.
+Rather than carrying around this buffer all the time, for rare
+circumstances, it seems that we can easily alloc/free a temp buffer as
+needed.
 
-Yes, all controllers and drives are identical.
+Saves a big chunk of per-port memory.
 
-Brad
--- 
-"Human beings, who are almost unique in having the ability
-to learn from the experience of others, are also remarkable
-for their apparent disinclination to do so." -- Douglas Adams
+I forget the justification for what it was in ata_port to begin with,
+but the code uses don't see to justify any need.
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 735f74b..5e9049f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3679,20 +3679,29 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
+ int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
+ {
+ 	unsigned int class = dev->class;
+-	u16 *id = (void *)dev->link->ap->sector_buf;
+-	int rc;
++	u16 *id;
++	int rc = 0;
++
++	id = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
++	if (!id)
++		return -ENOMEM;
+ 
+ 	/* read ID data */
+ 	rc = ata_dev_read_id(dev, &class, readid_flags, id);
+ 	if (rc)
+-		return rc;
++		goto out;
+ 
+ 	/* is the device still there? */
+-	if (!ata_dev_same_device(dev, class, id))
+-		return -ENODEV;
++	if (!ata_dev_same_device(dev, class, id)) {
++		rc = -ENODEV;
++		goto out;
++	}
+ 
+ 	memcpy(dev->id, id, sizeof(id[0]) * ATA_ID_WORDS);
+-	return 0;
++
++out:
++	kfree(id);
++	return rc;
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 2ddc2ed..fc731e2 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1133,14 +1133,20 @@ static unsigned int ata_read_log_page(struct ata_device *dev,
+ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 			       int *tag, struct ata_taskfile *tf)
+ {
+-	u8 *buf = dev->link->ap->sector_buf;
++	u8 *buf;
+ 	unsigned int err_mask;
+ 	u8 csum;
+-	int i;
++	int i, rc = 0;
++
++	buf = kzalloc(ATA_SECT_SIZE, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, buf, 1);
+-	if (err_mask)
+-		return -EIO;
++	if (err_mask) {
++		rc = -EIO;
++		goto out;
++	}
+ 
+ 	csum = 0;
+ 	for (i = 0; i < ATA_SECT_SIZE; i++)
+@@ -1149,8 +1155,10 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 		ata_dev_printk(dev, KERN_WARNING,
+ 			       "invalid checksum 0x%x on log page 10h\n", csum);
+ 
+-	if (buf[0] & 0x80)
+-		return -ENOENT;
++	if (buf[0] & 0x80) {
++		rc = -ENOENT;
++		goto out;
++	}
+ 
+ 	*tag = buf[0] & 0x1f;
+ 
+@@ -1166,7 +1174,9 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 	tf->nsect = buf[12];
+ 	tf->hob_nsect = buf[13];
+ 
+-	return 0;
++out:
++	kfree(buf);
++	return rc;
+ }
+ 
+ /**
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a9a4e43..09637a0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -595,7 +595,6 @@ struct ata_port {
+ 	acpi_handle		acpi_handle;
+ 	struct ata_acpi_gtm	acpi_gtm;
+ #endif
+-	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
+ };
+ 
+ struct ata_port_operations {
