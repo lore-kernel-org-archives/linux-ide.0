@@ -1,48 +1,41 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_cmd64x: Set up MWDMA modes properly
-Date: Fri, 17 Aug 2007 19:41:47 +0400
-Message-ID: <46C5C1BB.5020802@ru.mvista.com>
-References: <20070808143320.0de8c5d9@the-village.bc.nu> <46BE1452.4010603@ru.mvista.com> <200708112337.48458.bzolnier@gmail.com>
+Subject: Re: [PATCH] [428/2many] MAINTAINERS - SERIAL ATA (SATA) SUBSYSTEM:
+Date: Fri, 17 Aug 2007 19:45:37 +0400
+Message-ID: <46C5C2A1.3020701@ru.mvista.com>
+References: <46bffbb6.4FinvGMu+SlIxG24%joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49916 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:49938 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756313AbXHQPjY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Aug 2007 11:39:24 -0400
-In-Reply-To: <200708112337.48458.bzolnier@gmail.com>
+	id S1755076AbXHQPnO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Aug 2007 11:43:14 -0400
+In-Reply-To: <46bffbb6.4FinvGMu+SlIxG24%joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
+To: joe@perches.com
+Cc: torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, akpm@linux-foundation.org
 
 Hello.
 
-Bartlomiej Zolnierkiewicz wrote:
+joe@perches.com wrote:
 
->>>@@ -117,8 +118,9 @@
->>> 	int arttim = arttim_port[ap->port_no][adev->devno];
->>> 	int drwtim = drwtim_port[ap->port_no][adev->devno];
->>> 
->>>-
->>>-	if (ata_timing_compute(adev, adev->pio_mode, &t, T, 0) < 0) {
->>>+	/* ata_timing_compute is smart and will produce timings for MWDMA
->>>+	   that don't violate the drives PIO capabilities. */
->>>+	if (ata_timing_compute(adev, mode, &t, T, 0) < 0) {
->>> 		printk(KERN_ERR DRV_NAME ": mode computation failed.\n");
->>> 		return;
->>> 	}
+> Add file pattern to MAINTAINER entry
 
->>    That function rocks (except I didn't get what the address setup timings 
->>mean to SW/MW DMA)...
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-> JFYI: this function was "borrowed" from drivers/ide/ide-timing.h,
-> you can use it in IDE host drivers as well... ;)
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 04c969c..016cd0c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -4077,6 +4077,7 @@ M:	jgarzik@pobox.com
+>  L:	linux-ide@vger.kernel.org
+>  T:	git kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>  S:	Supported
+> +F:	drivers/ata/sata_*
 
-    Heh, I know.  What I don't know is where to borrow the time for doing 
-this... :-/
-
-> Bart
+    The libata core doesn't match this pattern, ain't a a vital part of both 
+SAT and PATA drivers?
 
 MBR, Sergei
