@@ -1,89 +1,114 @@
-From: Petr Vandrovec <petr@vandrovec.name>
-Subject: Re: sata_sil, sil3512, and PMP?
-Date: Fri, 17 Aug 2007 05:26:26 -0700
-Message-ID: <46C593F2.60201@vandrovec.name>
-References: <E8F452C423BB2E439AA9E397EB8A95F3038D9875@telegraph.siliconimage.com> <1187229341.46c3ae9d6f1ff@imap.vc.cvut.cz>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] advertise correct IDE mode on Pegasos2
+Date: Fri, 17 Aug 2007 15:10:48 +0200
+Message-ID: <20070817131048.GA31192@aepfle.de>
+References: <20070404111635.GA1855@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw.cvut.cz ([147.32.3.235]:39628 "EHLO mailgw.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752216AbXHQM0b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Aug 2007 08:26:31 -0400
-In-Reply-To: <1187229341.46c3ae9d6f1ff@imap.vc.cvut.cz>
+Received: from mail-out.m-online.net ([212.18.0.10]:38424 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759924AbXHQNKg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2007 09:10:36 -0400
+Content-Disposition: inline
+In-Reply-To: <20070404111635.GA1855@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Eunice Chen <Eunice.Chen@siliconimage.com>
-
-vandrove@vc.cvut.cz wrote:
-> Quoting Eunice Chen <Eunice.Chen@siliconimage.com>:
-> 
->> 3512/3112/3114 controllers do not support PMP. 3124/3132 controllers do.
-> 
-> Um...  Well, that's bad.  Can you update datasheet then?  
-> 
-> http://www.siliconimage.com/docs/SiI-DS-0102-D.pdf says on page 77:
-
-Hello,
-   it seems that there is some hope ;-)  It is currently in 
-ugly-nasty-hack-with-screwed-exception-handling state, but it seems to 
-work as advertised in documentation.
-
-Only thing I noticed during development was that SError on 3726's port 5 
-(SEMB) reports 0x04050000, and if code attempts to clear bit 26 then 
-multiplier responds with status 0x00 instead of 0x50, and seems a bit 
-unhappy (like returning 0xFF in all registers (including reserved device 
-bits) on subsequent read from SError).  Apparently sil24 driver does not 
-notice as it does not look at DRDY (and always-one) bit in PMP 
-read/write responses (doc says DRDY should be 1, so I tested it, and it 
-ended up in repeated resets and disabled port #5)...
-								Petr
-
-# dmesg | tail -2000 | grep ^[as]
-sata_sil 0000:02:01.0: version 2.2
-scsi6 : sata_sil
-scsi7 : sata_sil
-ata5: SATA max UDMA/100 cmd 0xffffc20002f5ec80 ctl 0xffffc20002f5ec8a 
-bmdma 0xffffc20002f5ec00 irq 24
-ata6: SATA max UDMA/100 cmd 0xffffc20002f5ecc0 ctl 0xffffc20002f5ecca 
-bmdma 0xffffc20002f5ec08 irq 24
-ata5: SATA link down (SStatus 0 SControl F0310)
-ata6: SATA link down (SStatus 0 SControl F0310)
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xa frozen
-ata5: hard resetting link
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl F0310)
-ata5.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-ata5.15: SDB_NOTIFY not supported on host port, hotplug won't work on
-ata5.00: hard resetting link
-ata5.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata5.01: hard resetting link
-ata5.01: SATA link down (SStatus 0 SControl 300)
-ata5.02: hard resetting link
-ata5.02: SATA link down (SStatus 0 SControl 300)
-ata5.03: hard resetting link
-ata5.03: SATA link down (SStatus 0 SControl 300)
-ata5.04: hard resetting link
-ata5.04: SATA link down (SStatus 0 SControl 300)
-ata5.05: hard resetting link
-ata5.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata5.00: ATA-7: Hitachi HDS721010KLA330, GKAOA70F, max UDMA/133
-ata5.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-ata5.00: configured for UDMA/100
-ata5: EH complete
-scsi 6:0:0:0: Direct-Access     ATA      Hitachi HDS72101 GKAO PQ: 0 ANSI: 5
-sd 6:0:0:0: [sdd] 1953525168 512-byte hardware sectors (1000205 MB)
-sd 6:0:0:0: [sdd] Write Protect is off
-sd 6:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 6:0:0:0: [sdd] 1953525168 512-byte hardware sectors (1000205 MB)
-sd 6:0:0:0: [sdd] Write Protect is off
-sd 6:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 6:0:0:0: [sdd] Attached SCSI disk
-sd 6:0:0:0: Attached scsi generic sg4 type 0
+To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
 
+The built-in IDE controller is configured in legacy mode,
+but the PCI registers advertise native mode.
+Force the PCI class into legacy mode. This allows pata_via to access
+two drives.
+The Pegasos specific irq enforcement in the via82cxxx driver
+can be removed.
+
+Tested on Pegasos2 with firmware version 20040810, and two IDE disks.
+
+
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+
+---
+ arch/powerpc/kernel/prom_init.c   |   11 ++++++++---
+ arch/powerpc/platforms/chrp/pci.c |   28 ++++++++++++++++++++++++++++
+ drivers/ide/pci/via82cxxx.c       |    7 -------
+ 3 files changed, 36 insertions(+), 10 deletions(-)
+
+--- a/arch/powerpc/kernel/prom_init.c
++++ b/arch/powerpc/kernel/prom_init.c
+@@ -2041,6 +2041,7 @@ static void __init fixup_device_tree_map
+ /*
+  * Pegasos and BriQ lacks the "ranges" property in the isa node
+  * Pegasos needs decimal IRQ 14/15, not hexadecimal
++ * Pegasos has the IDE configured in legacy mode, but advertised as native
+  */
+ static void __init fixup_device_tree_chrp(void)
+ {
+@@ -2078,9 +2079,13 @@ static void __init fixup_device_tree_chr
+ 		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
+ 		prop[0] = 14;
+ 		prop[1] = 0x0;
+-		prop[2] = 15;
+-		prop[3] = 0x0;
+-		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
++		prom_setprop(ph, name, "interrupts", prop, 2*sizeof(u32));
++		prom_printf("Fixing up IDE class-code on Pegasos...\n");
++		rc = prom_getprop(ph, "class-code", prop, sizeof(u32));
++		if (rc == sizeof(u32)) {
++			prop[0] &= ~0x5;
++			prom_setprop(ph, name, "class-code", prop, sizeof(u32));
++		}
+ 	}
+ }
+ #else
+--- a/arch/powerpc/platforms/chrp/pci.c
++++ b/arch/powerpc/platforms/chrp/pci.c
+@@ -338,3 +338,31 @@ void chrp_pci_fixup_winbond_ata(struct p
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 		chrp_pci_fixup_winbond_ata);
++
++/* Pegasos2 firmware version 20040810 configures the built-in IDE controller
++ * in legacy mode, but sets the PCI registers to PCI native mode.
++ * The chip can only operate in legacy mode, so force the PCI class into legacy
++ * mode as well. The same fixup must be done to the class-code property in
++ * the IDE node /pci@80000000/ide@C,1
++ */
++static void chrp_pci_fixup_vt8231_ata(struct pci_dev *viaide)
++{
++	u8 progif;
++	struct pci_dev *viaisa;
++
++	if (!machine_is(chrp) || _chrp_type != _CHRP_Pegasos)
++		return;
++	if (viaide->irq != 14)
++		return;
++
++	viaisa = pci_get_device(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8231, NULL);
++	if (!viaisa)
++		return;
++	printk("Fixing VIA IDE, force legacy mode on '%s'\n", viaide->dev.bus_id);
++
++	pci_read_config_byte(viaide, PCI_CLASS_PROG, &progif);
++	pci_write_config_byte(viaide, PCI_CLASS_PROG, progif & ~0x5);
++
++	pci_dev_put(viaisa);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, chrp_pci_fixup_vt8231_ata);
+--- a/drivers/ide/pci/via82cxxx.c
++++ b/drivers/ide/pci/via82cxxx.c
+@@ -436,13 +436,6 @@ static void __devinit init_hwif_via82cxx
+ 	hwif->tuneproc = &via82cxxx_tune_drive;
+ 	hwif->speedproc = &via_set_drive;
+ 
+-
+-#ifdef CONFIG_PPC_CHRP
+-	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
+-		hwif->irq = hwif->channel ? 15 : 14;
+-	}
+-#endif
+-
+ 	for (i = 0; i < 2; i++) {
+ 		hwif->drives[i].io_32bit = 1;
+ 		hwif->drives[i].unmask = (vdev->via_config->flags & VIA_NO_UNMASK) ? 0 : 1;
