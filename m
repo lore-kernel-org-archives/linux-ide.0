@@ -1,114 +1,48 @@
 From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] advertise correct IDE mode on Pegasos2
-Date: Fri, 17 Aug 2007 15:10:48 +0200
-Message-ID: <20070817131048.GA31192@aepfle.de>
-References: <20070404111635.GA1855@aepfle.de>
+Subject: Re: [PATCH] advertise correct IDE mode on Pegasos2
+Date: Fri, 17 Aug 2007 16:33:11 +0200
+Message-ID: <20070817143311.GA32390@aepfle.de>
+References: <20070404111635.GA1855@aepfle.de> <20070817131048.GA31192@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:38424 "EHLO
+Received: from mail-out.m-online.net ([212.18.0.10]:33769 "EHLO
 	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759924AbXHQNKg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2007 09:10:36 -0400
+	with ESMTP id S1764427AbXHQOdA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2007 10:33:00 -0400
 Content-Disposition: inline
-In-Reply-To: <20070404111635.GA1855@aepfle.de>
+In-Reply-To: <20070817131048.GA31192@aepfle.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
+On Fri, Aug 17, Olaf Hering wrote:
 
-The built-in IDE controller is configured in legacy mode,
-but the PCI registers advertise native mode.
-Force the PCI class into legacy mode. This allows pata_via to access
-two drives.
-The Pegasos specific irq enforcement in the via82cxxx driver
-can be removed.
+Still not 100% perfect.
 
-Tested on Pegasos2 with firmware version 20040810, and two IDE disks.
+> +		prom_printf("Fixing up IDE class-code on Pegasos...\n");
+> +		rc = prom_getprop(ph, "class-code", prop, sizeof(u32));
+> +		if (rc == sizeof(u32)) {
+> +			prop[0] &= ~0x5;
+> +			prom_setprop(ph, name, "class-code", prop, sizeof(u32));
+> +		}
 
+This updates the class code in the device-tree, but sysfs still shows
+the old value.
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
+> +	pci_read_config_byte(viaide, PCI_CLASS_PROG, &progif);
+> +	pci_write_config_byte(viaide, PCI_CLASS_PROG, progif & ~0x5);
 
----
- arch/powerpc/kernel/prom_init.c   |   11 ++++++++---
- arch/powerpc/platforms/chrp/pci.c |   28 ++++++++++++++++++++++++++++
- drivers/ide/pci/via82cxxx.c       |    7 -------
- 3 files changed, 36 insertions(+), 10 deletions(-)
+Is this a readonly register by any chance?
+Appending a 'viaide->class &= ~0x5;' changes the code paths in
+do_ide_setup_pci_device(), now IDE prints 'not 100%% native mode,
+will probe irqs later'. Where are the irqs supposed to come from?
 
---- a/arch/powerpc/kernel/prom_init.c
-+++ b/arch/powerpc/kernel/prom_init.c
-@@ -2041,6 +2041,7 @@ static void __init fixup_device_tree_map
- /*
-  * Pegasos and BriQ lacks the "ranges" property in the isa node
-  * Pegasos needs decimal IRQ 14/15, not hexadecimal
-+ * Pegasos has the IDE configured in legacy mode, but advertised as native
-  */
- static void __init fixup_device_tree_chrp(void)
- {
-@@ -2078,9 +2079,13 @@ static void __init fixup_device_tree_chr
- 		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
- 		prop[0] = 14;
- 		prop[1] = 0x0;
--		prop[2] = 15;
--		prop[3] = 0x0;
--		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
-+		prom_setprop(ph, name, "interrupts", prop, 2*sizeof(u32));
-+		prom_printf("Fixing up IDE class-code on Pegasos...\n");
-+		rc = prom_getprop(ph, "class-code", prop, sizeof(u32));
-+		if (rc == sizeof(u32)) {
-+			prop[0] &= ~0x5;
-+			prom_setprop(ph, name, "class-code", prop, sizeof(u32));
-+		}
- 	}
- }
- #else
---- a/arch/powerpc/platforms/chrp/pci.c
-+++ b/arch/powerpc/platforms/chrp/pci.c
-@@ -338,3 +338,31 @@ void chrp_pci_fixup_winbond_ata(struct p
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 		chrp_pci_fixup_winbond_ata);
-+
-+/* Pegasos2 firmware version 20040810 configures the built-in IDE controller
-+ * in legacy mode, but sets the PCI registers to PCI native mode.
-+ * The chip can only operate in legacy mode, so force the PCI class into legacy
-+ * mode as well. The same fixup must be done to the class-code property in
-+ * the IDE node /pci@80000000/ide@C,1
-+ */
-+static void chrp_pci_fixup_vt8231_ata(struct pci_dev *viaide)
-+{
-+	u8 progif;
-+	struct pci_dev *viaisa;
-+
-+	if (!machine_is(chrp) || _chrp_type != _CHRP_Pegasos)
-+		return;
-+	if (viaide->irq != 14)
-+		return;
-+
-+	viaisa = pci_get_device(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8231, NULL);
-+	if (!viaisa)
-+		return;
-+	printk("Fixing VIA IDE, force legacy mode on '%s'\n", viaide->dev.bus_id);
-+
-+	pci_read_config_byte(viaide, PCI_CLASS_PROG, &progif);
-+	pci_write_config_byte(viaide, PCI_CLASS_PROG, progif & ~0x5);
-+
-+	pci_dev_put(viaisa);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, chrp_pci_fixup_vt8231_ata);
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -436,13 +436,6 @@ static void __devinit init_hwif_via82cxx
- 	hwif->tuneproc = &via82cxxx_tune_drive;
- 	hwif->speedproc = &via_set_drive;
- 
--
--#ifdef CONFIG_PPC_CHRP
--	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
--		hwif->irq = hwif->channel ? 15 : 14;
--	}
--#endif
--
- 	for (i = 0; i < 2; i++) {
- 		hwif->drives[i].io_32bit = 1;
- 		hwif->drives[i].unmask = (vdev->via_config->flags & VIA_NO_UNMASK) ? 0 : 1;
+> -#ifdef CONFIG_PPC_CHRP
+> -	if(machine_is(chrp) && _chrp_type == _CHRP_Pegasos) {
+> -		hwif->irq = hwif->channel ? 15 : 14;
+> -	}
+> -#endif
+
+Maybe we should just leave this in and dont bother about the arch
+specific tweak?
