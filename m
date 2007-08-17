@@ -1,65 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] hpt366: fix PCI clock detection for HPT374
-Date: Fri, 17 Aug 2007 21:43:25 +0400
-Message-ID: <46C5DE3D.8040204@ru.mvista.com>
-References: <200708060006.35511.sshtylyov@ru.mvista.com> <200708111907.29501.bzolnier@gmail.com> <46BDF08C.1070508@ru.mvista.com> <200708112331.14270.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Sat, 18 Aug 2007 03:06:30 +0900
+Message-ID: <46C5E3A6.9020907@gmail.com>
+References: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:50972 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757918AbXHQRlB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 17 Aug 2007 13:41:01 -0400
-In-Reply-To: <200708112331.14270.bzolnier@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.186]:40150 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650AbXHQSGi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2007 14:06:38 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so523530rvb
+        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2007 11:06:38 -0700 (PDT)
+In-Reply-To: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Rusty Conover <rconover@infogears.com>
+Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Rusty Conover wrote:
+> Hello Tejun,
+> 
+> Thanks for your reply.
+> 
+> 
+>> * Please post kernel log including boot messages and errors.
+>>
+> 
+> I've included the full log at the bottom of this message.
+> 
+>> * Please post the result of 'hdparm -I /dev/sdX' where sdX is the
+>> offending device.
+>>
+>> * Are the errors localized to ata3.04 or are other drives affected too?
+>>
+> 
+> 
+> Its interesting because its not consistent, I've seen exceptions in this
+> recent log with:
+> 
+> ata5.00 - ATA bus error
+> ata5.03 - media error (hdparm below for sdg), timeout
+> ata5.04 - timeout
+> ata3.00 - timeout
 
->>>>>>>>>>>>+		if (chip_type == HPT374 && (PCI_FUNC(dev->devfn) & 1)) {
->>>>>>>>>>>>+			struct pci_dev	*dev1 = pci_get_slot(dev->bus,
->>>>>>>>>>>>+							     dev->devfn - 1);
+Aieeee....  Definitely looks like some sort of hardware problem to me.
+Please re-seat and re-cable stuff and remove drives from the machine
+other than the one necessary to boot.  Please test things while adding
+disk-by-disk.
 
->>>>>>>>>>>Can be NULL
+Thanks.
 
->>>>>>>>>>Not really. This may not be called if it's NULL -- see hpt374_init_setup().
->>>>>>>>>>Maybe worth a comment though...
-
->>>>>>>>>>>>+			unsigned long io_base = pci_resource_start(dev1, 4);
-
->>>>>>>>>>>Kaboom
-
->>>>>>>>>>That was a dud bomb. ;-)
-
->>>>>>>>>What stops a hot unplug of a 374 from causing that to occur. I don't see
-
->>>>>>>> Pinned as in pci_get_device()? If so, see setup-ide.c:ide_scan_pcibus().
->>>>>>>>The IDE core does that for me.
-
->>>>>>>ide_scan_pcibus() is used iff IDE is built-in.
-
->>>>>>>Moreover pci_get_device() holds reference _only_ to the current PCI device
->>>>>>>(the reference count to @from PCI device is _always_ decremented).
-
->>>>>>  Indeed... doesn't it look like a buglet in the IDE core?
-
->>>>>It is OK, when ide_scan_pcibus() is not used
-
->>>>   But whan it is used?
-
->>>Then it keeps the reference to PCI device itself by using pci_get_device()...
-
->>    Well, that I know. What I was asking is where the reference is kept after 
->>the driver init time -- we're still working with the PCI device, so unplagging 
->>it would be wrong thing to do. Actually, we should never call pci_dev_put() 
->>since IDE drivers are not unloadable, right?
-
-> Now that I look at pci_device_probe() it seems that there should be additional
-> pci_dev_get() call in ide_scan_pcidev() if d->probe() succeeds.  Care to fix it?
-
-    Yeah. OK to convert it to kernel style by the same patch?
-
-MBR, Sergei
+-- 
+tejun
