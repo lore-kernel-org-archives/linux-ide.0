@@ -1,27 +1,26 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: Re: [PATCH] advertise correct IDE mode on Pegasos2
-Date: Fri, 17 Aug 2007 20:30:13 +0200
-Message-ID: <20070817183013.GA769@aepfle.de>
-References: <20070404111635.GA1855@aepfle.de> <20070817131048.GA31192@aepfle.de> <20070817143311.GA32390@aepfle.de> <46C5E6B9.6080408@genesi-usa.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH 1/1] libata: pata_pdc2027x PLL input clock fix
+Date: Fri, 17 Aug 2007 22:51:23 +0200 (MEST)
+Message-ID: <200708172051.l7HKpNtq009682@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:47269 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbXHQSaA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2007 14:30:00 -0400
-Content-Disposition: inline
-In-Reply-To: <46C5E6B9.6080408@genesi-usa.com>
+Received: from aun.it.uu.se ([130.238.12.36]:34649 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754545AbXHQUwF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Aug 2007 16:52:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matt Sealey <matt@genesi-usa.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk, jeff@garzik.org
+Cc: albertl@mail.com, bahadir.balban@gmail.com, dwm@enoyolf.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, mikpe@it.uu.se, sshtylyov@ru.mvista.com
 
-On Fri, Aug 17, Matt Sealey wrote:
+On Thu, 16 Aug 2007 21:19:40 +0100, Alan Cox wrote:
+> > > Unfortunately this breaks pata_pdc2027x on my PowerMac G3:
+> > 
+> > Did this ever get resolved?
+> 
+> All went quiet so I assume its gone away ?
 
-> Setting them to ~0x5 will set them to 0 (legacy mode) and they will always 
-> read
-> back as 0 (legacy mode.. sigh) even if in native mode.
+-ENOTIME
 
-The pci_dev->class needs updating as well, see second version of the
-patch.
+The regression is still there in 2.6.23-rc3 (I just checked),
+but I haven't had time to debug it yet. I'll try to do something
+about it this weekend.
