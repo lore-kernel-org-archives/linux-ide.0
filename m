@@ -1,231 +1,107 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
-Date: Sat, 18 Aug 2007 21:05:59 +0100
-Message-ID: <46C75127.2020506@genesi-usa.com>
-References: <46C69913.1060505@g7.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.23-rc3] pata_pdc2027x: PLL detection fixes
+Date: Sat, 18 Aug 2007 22:58:53 +0200 (MEST)
+Message-ID: <200708182058.l7IKwrcJ016820@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:4547 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758450AbXHRUEh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 16:04:37 -0400
-In-Reply-To: <46C69913.1060505@g7.org>
+Received: from aun.it.uu.se ([130.238.12.36]:43684 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754081AbXHRU7I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Aug 2007 16:59:08 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Malcolm Gillies <malcolm@g7.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, albertl@mail.com, jeff@garzik.org
 
-Having the dual-slot CF-IDE adapter AND a hard disk means you have 3 devices
-there whether you plug something into the slot or not.
+Previously I reported that the pata_pdc2027x PLL detection changes
+in kernel 2.6.22 broke the driver on my PowerMac:
 
-You'd get the same error if you had a 3-way IDE cable :)
+>pata_pdc2027x: Invalid PLL input clock 1691742kHz, give up!
 
-Just move the CF adapter to a different cable, or the hard disk to a different
-cable, and it'll be fine.
+This is followed by a number of errors and speed reduction
+steps on the affected ports.
 
--- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+There are two bugs in pata_pdc2027x's PLL detection code:
 
-Malcolm Gillies wrote:
-> My PATA hard disk is crippled by CRC errors when it's on the same cable 
-> as a 1GB SanDisk Ultra II CompactFlash card in CF to IDE adaptor. Any 
-> ideas why?
-> 
-> By swapping around components, I've established that the problem is 
-> unlikely due to the cable (which is 50cm long 80-wire), hard disk or 
-> controller. When I swap to another, slower CF card (one that only 
-> supports PIO rather than MWDMA), the error goes away and the hard disk 
-> operates happily at UDMA/33.
-> 
-> No errors are reported for the CF card I/O.
-> 
-> The adaptor card is unbranded, model CF-IDE40 V.A1. It's a double-sided 
-> type, but I'm only using one of the two CF sockets.
-> 
-> The spec sheet says
-> 
-> * Accord with: CF spec Ver2.0 and IDE/ATA-33 spec.
-> * Standard IDE interface: true-IDE mode, support DMA-33 transfer mode
-> 
-> I see the errors both with the old IDE code in 2.6.18 and with libata in 
-> 2.6.22
-> 
-> cheers,
-> 
-> Malcolm
-> -- 
-> Here are the relevant dmesg lines:
-> 
-> ata_piix 0000:00:1f.1: version 2.11
-> PCI: Enabling device 0000:00:1f.1 (0005 -> 0007)
-> ACPI: PCI Interrupt 0000:00:1f.1[A] -> Link [LNKC] -> GSI 11 (level, 
-> low) -> IRQ
->  11
-> PCI: Setting latency timer of device 0000:00:1f.1 to 64
-> scsi0 : ata_piix
-> scsi1 : ata_piix
-> ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ffa0 
-> irq 14
-> ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ffa8 
-> irq 15
-> ata1.00: CFA: SanDisk SDCFH-1024, HDX 4.07, max MWDMA2
-> ata1.00: 2001888 sectors, multi 0: LBA
-> ata1.01: ATA-7: SAMSUNG HD400LD, WQ100-14, max UDMA/100
-> ata1.01: 781422768 sectors, multi 0: LBA48
-> ata1.01: limited to UDMA/33 due to 40-wire cable
-> ata1.00: configured for MWDMA2
-> ata1.01: configured for UDMA/33
-> ata2.00: ATAPI: LG CD-ROM CRN-8245B, 1.18, max UDMA/33
-> ata2.00: configured for UDMA/33
-> scsi 0:0:0:0: Direct-Access     ATA      SanDisk SDCFH-10 HDX  PQ: 0 
-> ANSI: 5
-> scsi 0:0:1:0: Direct-Access     ATA      SAMSUNG HD400LD  WQ10 PQ: 0 
-> ANSI: 5
-> scsi 1:0:0:0: CD-ROM            LG       CD-ROM CRN-8245B 1.18 PQ: 0 
-> ANSI: 5
-> sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
-> support DPO or FUA
->  sda: sda1
-> sd 0:0:0:0: [sda] Attached SCSI removable disk
-> sd 0:0:1:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-> sd 0:0:1:0: [sdb] Write Protect is off
-> sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> sd 0:0:1:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
-> sd 0:0:1:0: [sdb] Write Protect is off
-> sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
->  sdb:<3>ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-> ata1.01: (BMDMA stat 0x25)
-> ata1.01: cmd c8/00:08:00:00:00/00:00:00:00:00/f0 tag 0 cdb 0x0 data 4096 in
->          res 51/84:00:07:00:00/00:00:00:00:00/f0 Emask 0x10 (ATA bus error)
-> ata1: soft resetting port
-> 
-> [subsequently ata1.01 is downrated to UDMA/25 and finally PIO4]
-> 
->  # hdparm -I /dev/sda
-> 
-> /dev/sda:
-> 
-> CompactFlash ATA device, with removable media
->         Model Number:       SanDisk SDCFH-1024
->         Serial Number:      004123D2804C2249
->         Firmware Revision:  HDX 4.07
-> Standards:
->         Supported: 4
->         Likely used: 4
-> Configuration:
->         Logical         max     current
->         cylinders       1986    1986
->         heads           16      16
->         sectors/track   63      63
->         --
->         CHS current addressable sectors:    2001888
->         LBA    user addressable sectors:    2001888
->         device size with M = 1024*1024:         977 MBytes
->         device size with M = 1000*1000:        1024 MBytes (1 GB)
-> Capabilities:
->         LBA, IORDY(may be)(cannot be disabled)
->         Standby timer values: spec'd by Vendor
->         R/W multiple sector transfer: Max = 4   Current = 0
->         DMA: mdma0 mdma1 *mdma2
->              Cycle time: min=120ns recommended=120ns
->         PIO: pio0 pio1 pio2 pio3 pio4
->              Cycle time: no flow control=120ns  IORDY flow control=120ns
-> Commands/features:
->         Enabled Supported:
->            *    CFA feature set
-> 
->  # hdparm -I /dev/sdb
-> 
-> /dev/sdb:
-> 
-> ATA device, with non-removable media
->         Model Number:       SAMSUNG HD400LD
->         Serial Number:      S0AXJ1MP308674
->         Firmware Revision:  WQ100-14
-> Standards:
->         Used: ATA/ATAPI-7 T13 1532D revision 4a
->         Supported: 7 6 5 4
-> Configuration:
->         Logical         max     current
->         cylinders       16383   16383
->         heads           16      16
->         sectors/track   63      63
->         --
->         CHS current addressable sectors:   16514064
->         LBA    user addressable sectors:  268435455
->         LBA48  user addressable sectors:  781422768
->         device size with M = 1024*1024:      381554 MBytes
->         device size with M = 1000*1000:      400088 MBytes (400 GB)
-> Capabilities:
->         LBA, IORDY(can be disabled)
->         Standby timer values: spec'd by Standard, no device specific 
-> minimum
->         R/W multiple sector transfer: Max = 16  Current = ?
->         Recommended acoustic management value: 254, current value: 254
->         DMA: mdma0 mdma1 mdma2 udma0 *udma1 udma2 udma3 udma4 udma5
->              Cycle time: min=120ns recommended=120ns
->         PIO: pio0 pio1 pio2 pio3 pio4
->              Cycle time: no flow control=240ns  IORDY flow control=120ns
-> Commands/features:
->         Enabled Supported:
->            *    SMART feature set
->                 Security Mode feature set
->            *    Power Management feature set
->            *    Write cache
->            *    Look-ahead
->            *    Host Protected Area feature set
->            *    WRITE_BUFFER command
->            *    READ_BUFFER command
->            *    NOP cmd
->            *    DOWNLOAD_MICROCODE
->                 Power-Up In Standby feature set
->                 SET_FEATURES required to spinup after power up
->                 SET_MAX security extension
->            *    Automatic Acoustic Management feature set
->            *    48-bit Address feature set
->            *    Device Configuration Overlay feature set
->            *    Mandatory FLUSH_CACHE
->            *    FLUSH_CACHE_EXT
->            *    SMART error logging
->            *    SMART self-test
->                 Media Card Pass-Through
->            *    General Purpose Logging feature set
->            *    SMART Command Transport (SCT) feature set
->            *    SCT Long Sector Access (AC1)
->            *    SCT LBA Segment Access (AC2)
->            *    SCT Error Recovery Control (AC3)
->            *    SCT Features Control (AC4)
->            *    SCT Data Tables (AC5)
-> Security:
->         Master password revision code = 65534
->                 supported
->         not     enabled
->         not     locked
->         not     frozen
->         not     expired: security count
->                 supported: enhanced erase
->         228min for SECURITY ERASE UNIT. 228min for ENHANCED SECURITY 
-> ERASE UNIT.
-> HW reset results:
->         CBLID- above Vih
->         Device num = 1 determined by CSEL
-> Checksum: correct
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1. The PLL counter's start value is read before the chip is
+   put in "test mode". Outside of test mode the counter is
+   halted, and on the PowerMac the counter is zero because
+   the chip hasn't been initialised by its BIOS.
+
+   The fix is to move the read of the start value to after
+   test mode is started, but before the mdelay() in test mode.
+   This also improves the precision of the PLL detection.
+
+2. The code to compute the number of PLL decrements during the
+   mdelay() in test mode fails to consider that the PLL counter
+   only is 30 bits wide. If there is a wraparound, it will compute
+   an incorrect and much too large value. On the PowerMac, the
+   start count is zero, the end count is a large 30-bit value, so
+   wraparound occurs and an out of bounds PLL clock is detected.
+
+   The fix is to mask the (start - end) computation to 30 bits.
+
+While debugging this I also noticed that pdc_read_counter()
+reads the two halves of the 30-bit PLL counter as 16-bit values,
+and then combines them as if the halves only are 15 bits wide.
+To avoid confusion, the halves should be read as 15-bit values.
+
+This patch implements all three changes. It fixes the PLL detection
+failure on my PowerMac, and doesn't cause any regressions on an x86
+with an identical card.
+
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+---
+ drivers/ata/pata_pdc2027x.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
+
+diff -rupN linux-2.6.23-rc3/drivers/ata/pata_pdc2027x.c linux-2.6.23-rc3.pata_pdc2027x-pll-detection-fixes/drivers/ata/pata_pdc2027x.c
+--- linux-2.6.23-rc3/drivers/ata/pata_pdc2027x.c	2007-07-09 22:01:31.000000000 +0200
++++ linux-2.6.23-rc3.pata_pdc2027x-pll-detection-fixes/drivers/ata/pata_pdc2027x.c	2007-08-18 21:53:40.000000000 +0200
+@@ -563,13 +563,13 @@ static long pdc_read_counter(struct ata_
+ 	u32 bccrl, bccrh, bccrlv, bccrhv;
+ 
+ retry:
+-	bccrl = readl(mmio_base + PDC_BYTE_COUNT) & 0xffff;
+-	bccrh = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0xffff;
++	bccrl = readl(mmio_base + PDC_BYTE_COUNT) & 0x7fff;
++	bccrh = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0x7fff;
+ 	rmb();
+ 
+ 	/* Read the counter values again for verification */
+-	bccrlv = readl(mmio_base + PDC_BYTE_COUNT) & 0xffff;
+-	bccrhv = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0xffff;
++	bccrlv = readl(mmio_base + PDC_BYTE_COUNT) & 0x7fff;
++	bccrhv = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0x7fff;
+ 	rmb();
+ 
+ 	counter = (bccrh << 15) | bccrl;
+@@ -692,16 +692,16 @@ static long pdc_detect_pll_input_clock(s
+ 	struct timeval start_time, end_time;
+ 	long pll_clock, usec_elapsed;
+ 
+-	/* Read current counter value */
+-	start_count = pdc_read_counter(host);
+-	do_gettimeofday(&start_time);
+-
+ 	/* Start the test mode */
+ 	scr = readl(mmio_base + PDC_SYS_CTL);
+ 	PDPRINTK("scr[%X]\n", scr);
+ 	writel(scr | (0x01 << 14), mmio_base + PDC_SYS_CTL);
+ 	readl(mmio_base + PDC_SYS_CTL); /* flush */
+ 
++	/* Read current counter value */
++	start_count = pdc_read_counter(host);
++	do_gettimeofday(&start_time);
++
+ 	/* Let the counter run for 100 ms. */
+ 	mdelay(100);
+ 
+@@ -719,7 +719,7 @@ static long pdc_detect_pll_input_clock(s
+ 	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+ 		(end_time.tv_usec - start_time.tv_usec);
+ 
+-	pll_clock = (start_count - end_count) / 100 *
++	pll_clock = ((start_count - end_count) & 0x3fffffff) / 100 *
+ 		(100000000 / usec_elapsed);
+ 
+ 	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
