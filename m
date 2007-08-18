@@ -1,105 +1,125 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ide: fix PCI refcounting
-Date: Sat, 18 Aug 2007 23:15:46 +0400
-Message-ID: <200708182315.46802.sshtylyov@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/7] ide: remove CONFIG_BLK_DEV_IDEDMA_FORCED
+Date: Sat, 18 Aug 2007 20:48:03 +0200
+Message-ID: <200708182048.04009.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:20767 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756954AbXHRTNW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:13:22 -0400
+Received: from fk-out-0910.google.com ([209.85.128.189]:65316 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756979AbXHRTTG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:06 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so797158fkz
+        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:04 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-The IDE core never marked the PCI IDE devices as being in use after succesfull
-driver probe call (the devices were marked in use only while being probed), and
-so was susceptible to issues caused by unsolicited PCI hotplug device removal.
-So, add pci_dev_get() call to ide_scan_pcidev() and convert this function to
-the kernel style, also dropping a bunch of useless curly braces from its caller,
-ide_scan_pcibus() and somewhat beautifying printk() call there, while at it...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+This code doesn't use pci_assign_resource() and ide_get_or_set_dma_base() uses
+pci_resource_start() to get DMA base address so it has no chance of working.
+Moreover this belongs to PCI quirks (in case somebody would like to fix it).
 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Posting as promised (with a free bonus of 2 pdc202xx_new patches ;-).
-This patch is also against the current Linus' tree.
+ drivers/ide/Kconfig     |    8 --------
+ drivers/ide/setup-pci.c |   46 +++-------------------------------------------
+ 2 files changed, 3 insertions(+), 51 deletions(-)
 
- drivers/ide/setup-pci.c |   41 ++++++++++++++++-------------------------
- 1 files changed, 16 insertions(+), 25 deletions(-)
-
-Index: linux-2.6/drivers/ide/setup-pci.c
+Index: b/drivers/ide/Kconfig
 ===================================================================
---- linux-2.6.orig/drivers/ide/setup-pci.c
-+++ linux-2.6/drivers/ide/setup-pci.c
-@@ -816,19 +816,15 @@ static int __init ide_scan_pcidev(struct
- 	struct list_head *l;
- 	struct pci_driver *d;
- 	
--	list_for_each(l, &ide_pci_drivers)
--	{
-+	list_for_each(l, &ide_pci_drivers) {
- 		d = list_entry(l, struct pci_driver, node);
--		if(d->id_table)
--		{
--			const struct pci_device_id *id = pci_match_id(d->id_table, dev);
--			if(id != NULL)
--			{
--				if(d->probe(dev, id) >= 0)
--				{
--					dev->driver = d;
--					return 1;
--				}
-+		if (d->id_table) {
-+			const struct pci_device_id *id = pci_match_id(d->id_table,
-+								      dev);
-+			if (id != NULL && d->probe(dev, id) >= 0) {
-+				dev->driver = d;
-+				pci_dev_get(dev);
-+				return 1;
- 			}
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -435,14 +435,6 @@ config BLK_DEV_IDEDMA_PCI
+ 	bool
+ 	select BLK_DEV_IDEPCI
+ 
+-config BLK_DEV_IDEDMA_FORCED
+-	bool "Force enable legacy 2.0.X HOSTS to use DMA"
+-	depends on BLK_DEV_IDEDMA_PCI
+-	help
+-	  This is an old piece of lost code from Linux 2.0 Kernels.
+-
+-	  Generally say N here.
+-
+ # TODO: remove it
+ config IDEDMA_ONLYDISK
+ 	bool "Enable DMA only for disks "
+Index: b/drivers/ide/setup-pci.c
+===================================================================
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -145,27 +145,13 @@ static int ide_setup_pci_baseregs (struc
+ }
+ 
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
+-
+-#ifdef CONFIG_BLK_DEV_IDEDMA_FORCED
+-/*
+- * Long lost data from 2.0.34 that is now in 2.0.39
+- *
+- * This was used in ./drivers/block/triton.c to do DMA Base address setup
+- * when PnP failed.  Oh the things we forget.  I believe this was part
+- * of SFF-8038i that has been withdrawn from public access... :-((
+- */
+-#define DEFAULT_BMIBA	0xe800	/* in case BIOS did not init it */
+-#define DEFAULT_BMCRBA	0xcc00	/* VIA's default value */
+-#define DEFAULT_BMALIBA	0xd400	/* ALI's default value */
+-#endif /* CONFIG_BLK_DEV_IDEDMA_FORCED */
+-
+ /**
+  *	ide_get_or_set_dma_base		-	setup BMIBA
+  *	@hwif: Interface
+  *
+- *	Fetch the DMA Bus-Master-I/O-Base-Address (BMIBA) from PCI space:
+- *	If need be we set up the DMA base. Where a device has a partner that
+- *	is already in DMA mode we check and enforce IDE simplex rules.
++ *	Fetch the DMA Bus-Master-I/O-Base-Address (BMIBA) from PCI space.
++ *	Where a device has a partner that is already in DMA mode we check
++ *	and enforce IDE simplex rules.
+  */
+ 
+ static unsigned long ide_get_or_set_dma_base (ide_hwif_t *hwif)
+@@ -173,12 +159,6 @@ static unsigned long ide_get_or_set_dma_
+ 	unsigned long	dma_base = 0;
+ 	struct pci_dev	*dev = hwif->pci_dev;
+ 
+-#ifdef CONFIG_BLK_DEV_IDEDMA_FORCED
+-	int second_chance = 0;
+-
+-second_chance_to_dma:
+-#endif /* CONFIG_BLK_DEV_IDEDMA_FORCED */
+-
+ 	if (hwif->mmio)
+ 		return hwif->dma_base;
+ 
+@@ -192,26 +172,6 @@ second_chance_to_dma:
  		}
  	}
-@@ -851,15 +847,13 @@ void __init ide_scan_pcibus (int scan_di
- 	struct list_head *l, *n;
  
- 	pre_init = 0;
--	if (!scan_direction) {
--		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
-+	if (!scan_direction)
-+		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
- 			ide_scan_pcidev(dev);
+-#ifdef CONFIG_BLK_DEV_IDEDMA_FORCED
+-	/* FIXME - should use pci_assign_resource surely */
+-	if ((!dma_base) && (!second_chance)) {
+-		unsigned long set_bmiba = 0;
+-		second_chance++;
+-		switch(dev->vendor) {
+-			case PCI_VENDOR_ID_AL:
+-				set_bmiba = DEFAULT_BMALIBA; break;
+-			case PCI_VENDOR_ID_VIA:
+-				set_bmiba = DEFAULT_BMCRBA; break;
+-			case PCI_VENDOR_ID_INTEL:
+-				set_bmiba = DEFAULT_BMIBA; break;
+-			default:
+-				return dma_base;
 -		}
--	} else {
--		while ((dev = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
-+	else
-+		while ((dev = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, dev))
-+		       != NULL)
- 			ide_scan_pcidev(dev);
--		}
+-		pci_write_config_dword(dev, 0x20, set_bmiba|1);
+-		goto second_chance_to_dma;
 -	}
- 	
- 	/*
- 	 *	Hand the drivers over to the PCI layer now we
-@@ -869,12 +863,9 @@ void __init ide_scan_pcibus (int scan_di
- 	list_for_each_safe(l, n, &ide_pci_drivers) {
- 		list_del(l);
- 		d = list_entry(l, struct pci_driver, node);
--		if (__pci_register_driver(d, d->driver.owner,
--					d->driver.mod_name)) {
--			printk(KERN_ERR "%s: failed to register driver "
--					"for %s\n", __FUNCTION__,
--					 d->driver.mod_name);
--		}
-+		if (__pci_register_driver(d, d->driver.owner, d->driver.mod_name))
-+			printk(KERN_ERR "%s: failed to register driver for %s\n",
-+			       __FUNCTION__, d->driver.mod_name);
- 	}
- }
- #endif
-
+-#endif /* CONFIG_BLK_DEV_IDEDMA_FORCED */
+-
+ 	if (dma_base) {
+ 		u8 simplex_stat = 0;
+ 		dma_base += hwif->channel ? 8 : 0;
