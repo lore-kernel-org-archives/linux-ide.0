@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/7] ide: use PCI_VDEVICE() macro
-Date: Sat, 18 Aug 2007 20:47:25 +0200
-Message-ID: <200708182047.25528.bzolnier@gmail.com>
+Subject: [PATCH 4/7] ide: remove hwif->autodma and drive->autodma
+Date: Sat, 18 Aug 2007 20:49:32 +0200
+Message-ID: <200708182049.32350.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,770 +9,992 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from fk-out-0910.google.com ([209.85.128.187]:65378 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756970AbXHRTTF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:05 -0400
+	with ESMTP id S1757006AbXHRTTJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:09 -0400
 Received: by fk-out-0910.google.com with SMTP id z23so797152fkz
-        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:03 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:07 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
+* hpt34x.c: disable DMA masks for HPT345
+  (hwif->autodma is zero so DMA won't be enabled anyway).
+
+* trm290.c: disable IDE_HFLAG_TRUST_BIOS_FOR_DMA flag
+  (hwif->autodma is zero so DMA won't be enabled anyway).
+
+* Check noautodma global variable instead of drive->autodma in ide_tune_dma().
+
+  This fixes handling of "ide=nodma" kernel parameter for icside, ide-cris,
+  au1xxx-ide, pmac, it821x, jmicron, sgiioc4 and siimage host drivers.
+
+* Remove hwif->autodma (it was not checked by IDE core code anyway) and
+  drive->autodma (was set by all host drivers - except HPT345/TRM290 special
+  cases - unless "ide=nodma" was used).
+
 While at it:
-- make struct pci_device_id tables const
-- use PCI_DEVICE_ID_ITE_8213 define in it8213.c
-- fix comment in generic.c
+- remove needless printk() from icside.c
+- remove stale FIXME/comment from ide-probe.c
+- don't force DMA off if PCI bus-mastering had to be enabled in setup-pci.c
+  (this setting was always later over-ridden by host drivers anyway)
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/aec62xx.c      |   12 ++++-----
- drivers/ide/pci/alim15x3.c     |    6 ++--
- drivers/ide/pci/amd74xx.c      |   48 ++++++++++++++++++-------------------
- drivers/ide/pci/atiixp.c       |   12 ++++-----
- drivers/ide/pci/cmd64x.c       |   10 +++----
- drivers/ide/pci/cs5520.c       |    6 ++--
- drivers/ide/pci/cs5530.c       |    4 +--
- drivers/ide/pci/cs5535.c       |    6 +---
- drivers/ide/pci/cy82c693.c     |    4 +--
- drivers/ide/pci/generic.c      |   37 +++++++++++++++--------------
- drivers/ide/pci/hpt34x.c       |    4 +--
- drivers/ide/pci/hpt366.c       |   14 +++++------
- drivers/ide/pci/it8213.c       |    5 +--
- drivers/ide/pci/it821x.c       |    6 ++--
- drivers/ide/pci/ns87415.c      |    4 +--
- drivers/ide/pci/opti621.c      |    6 ++--
- drivers/ide/pci/pdc202xx_new.c |   16 ++++++------
- drivers/ide/pci/pdc202xx_old.c |   12 ++++-----
- drivers/ide/pci/piix.c         |   52 ++++++++++++++++++++---------------------
- drivers/ide/pci/rz1000.c       |    6 ++--
- drivers/ide/pci/sc1200.c       |    4 +--
- drivers/ide/pci/scc_pata.c     |    4 +--
- drivers/ide/pci/serverworks.c  |   12 ++++-----
- drivers/ide/pci/siimage.c      |    8 +++---
- drivers/ide/pci/sis5513.c      |    8 +++---
- drivers/ide/pci/sl82c105.c     |    4 +--
- drivers/ide/pci/slc90e66.c     |    4 +--
- drivers/ide/pci/tc86c001.c     |    5 +--
- drivers/ide/pci/triflex.c      |    5 +--
- drivers/ide/pci/trm290.c       |    4 +--
- drivers/ide/pci/via82cxxx.c    |   10 +++----
- drivers/ide/ppc/pmac.c         |   17 ++++---------
- 32 files changed, 174 insertions(+), 181 deletions(-)
+ drivers/ide/arm/icside.c       |    8 --------
+ drivers/ide/cris/ide-cris.c    |    3 ---
+ drivers/ide/ide-dma.c          |    2 +-
+ drivers/ide/ide-probe.c        |    9 ---------
+ drivers/ide/ide.c              |    1 -
+ drivers/ide/mips/au1xxx-ide.c  |    5 -----
+ drivers/ide/pci/aec62xx.c      |    4 ----
+ drivers/ide/pci/alim15x3.c     |    7 -------
+ drivers/ide/pci/amd74xx.c      |    7 -------
+ drivers/ide/pci/atiixp.c       |    7 -------
+ drivers/ide/pci/cmd64x.c       |    4 ----
+ drivers/ide/pci/cs5520.c       |    6 ------
+ drivers/ide/pci/cs5530.c       |    6 ------
+ drivers/ide/pci/cs5535.c       |    7 -------
+ drivers/ide/pci/cy82c693.c     |    6 ------
+ drivers/ide/pci/generic.c      |    5 -----
+ drivers/ide/pci/hpt34x.c       |   10 +++-------
+ drivers/ide/pci/hpt366.c       |    4 ----
+ drivers/ide/pci/it8213.c       |   12 ------------
+ drivers/ide/pci/it821x.c       |   22 +++++-----------------
+ drivers/ide/pci/jmicron.c      |   12 ++----------
+ drivers/ide/pci/ns87415.c      |    6 ------
+ drivers/ide/pci/opti621.c      |    6 ------
+ drivers/ide/pci/pdc202xx_new.c |    6 ------
+ drivers/ide/pci/pdc202xx_old.c |    6 ------
+ drivers/ide/pci/piix.c         |    8 --------
+ drivers/ide/pci/sc1200.c       |    7 -------
+ drivers/ide/pci/scc_pata.c     |    6 ------
+ drivers/ide/pci/serverworks.c  |    6 ------
+ drivers/ide/pci/sgiioc4.c      |    7 +------
+ drivers/ide/pci/siimage.c      |   11 -----------
+ drivers/ide/pci/sis5513.c      |    8 --------
+ drivers/ide/pci/sl82c105.c     |    4 ----
+ drivers/ide/pci/slc90e66.c     |    7 -------
+ drivers/ide/pci/tc86c001.c     |    4 ----
+ drivers/ide/pci/triflex.c      |    5 -----
+ drivers/ide/pci/trm290.c       |    5 ++---
+ drivers/ide/pci/via82cxxx.c    |    7 -------
+ drivers/ide/ppc/pmac.c         |    3 ---
+ drivers/ide/setup-pci.c        |    2 --
+ include/linux/ide.h            |    2 --
+ 41 files changed, 14 insertions(+), 249 deletions(-)
 
+Index: b/drivers/ide/arm/icside.c
+===================================================================
+--- a/drivers/ide/arm/icside.c
++++ b/drivers/ide/arm/icside.c
+@@ -415,8 +415,6 @@ static void icside_dma_lost_irq(ide_driv
+ 
+ static void icside_dma_init(ide_hwif_t *hwif)
+ {
+-	printk("    %s: SG-DMA", hwif->name);
+-
+ 	hwif->atapi_dma		= 1;
+ 	hwif->mwdma_mask	= 7; /* MW0..2 */
+ 	hwif->swdma_mask	= 7; /* SW0..2 */
+@@ -424,7 +422,6 @@ static void icside_dma_init(ide_hwif_t *
+ 	hwif->dmatable_cpu	= NULL;
+ 	hwif->dmatable_dma	= 0;
+ 	hwif->set_dma_mode	= icside_set_dma_mode;
+-	hwif->autodma		= 1;
+ 
+ 	hwif->dma_host_off	= icside_dma_host_off;
+ 	hwif->dma_off_quietly	= icside_dma_off_quietly;
+@@ -437,11 +434,6 @@ static void icside_dma_init(ide_hwif_t *
+ 	hwif->ide_dma_test_irq	= icside_dma_test_irq;
+ 	hwif->dma_timeout	= icside_dma_timeout;
+ 	hwif->dma_lost_irq	= icside_dma_lost_irq;
+-
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
+-
+-	printk(" capable%s\n", hwif->autodma ? ", auto-enable" : "");
+ }
+ #else
+ #define icside_dma_init(hwif)	(0)
+Index: b/drivers/ide/cris/ide-cris.c
+===================================================================
+--- a/drivers/ide/cris/ide-cris.c
++++ b/drivers/ide/cris/ide-cris.c
+@@ -810,9 +810,6 @@ init_e100_ide (void)
+ 		hwif->drives[1].autotune = 1;
+ 		hwif->ultra_mask = cris_ultra_mask;
+ 		hwif->mwdma_mask = 0x07; /* Multiword DMA 0-2 */
+-		hwif->autodma = 1;
+-		hwif->drives[0].autodma = 1;
+-		hwif->drives[1].autodma = 1;
+ 	}
+ 
+ 	/* Reset pulse */
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -754,7 +754,7 @@ static int ide_tune_dma(ide_drive_t *dri
+ {
+ 	u8 speed;
+ 
+-	if ((drive->id->capability & 1) == 0 || drive->autodma == 0)
++	if (noautodma || (drive->id->capability & 1) == 0)
+ 		return 0;
+ 
+ 	/* consult the list of known "bad" drives */
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -835,15 +835,6 @@ static void probe_hwif(ide_hwif_t *hwif,
+ 
+ 			drive->nice1 = 1;
+ 
+-			/*
+-			 * MAJOR HACK BARF :-/
+-			 *
+-			 * FIXME: chipsets own this cruft!
+-			 */
+-			/*
+-			 * Move here to prevent module loading clashing.
+-			 */
+-	//		drive->autodma = hwif->autodma;
+ 			if (hwif->ide_dma_on) {
+ 				/*
+ 				 * Force DMAing for the beginning of the check.
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -460,7 +460,6 @@ static void ide_hwif_restore(ide_hwif_t 
+ 	hwif->select_data		= tmp_hwif->select_data;
+ 	hwif->extra_base		= tmp_hwif->extra_base;
+ 	hwif->extra_ports		= tmp_hwif->extra_ports;
+-	hwif->autodma			= tmp_hwif->autodma;
+ 
+ 	hwif->hwif_data			= tmp_hwif->hwif_data;
+ }
+Index: b/drivers/ide/mips/au1xxx-ide.c
+===================================================================
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -700,19 +700,14 @@ static int au_ide_probe(struct device *d
+ 	hwif->dma_lost_irq		= &auide_dma_lost_irq;
+ 	hwif->ide_dma_on                = &auide_dma_on;
+ 
+-	hwif->autodma                   = 1;
+-	hwif->drives[0].autodma         = hwif->autodma;
+-	hwif->drives[1].autodma         = hwif->autodma;
+ 	hwif->atapi_dma                 = 1;
+ 
+ #else /* !CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
+-	hwif->autodma                   = 0;
+ 	hwif->channel                   = 0;
+ 	hwif->hold                      = 1;
+ 	hwif->select_data               = 0;    /* no chipset-specific code */
+ 	hwif->config_data               = 0;    /* no chipset-specific code */
+ 
+-	hwif->drives[0].autodma         = 0;
+ 	hwif->drives[0].autotune        = 1;    /* 1=autotune, 2=noautotune, 0=default */
+ #endif
+ 	hwif->drives[0].no_io_32bit     = 1;   
 Index: b/drivers/ide/pci/aec62xx.c
 ===================================================================
 --- a/drivers/ide/pci/aec62xx.c
 +++ b/drivers/ide/pci/aec62xx.c
-@@ -313,12 +313,12 @@ static int __devinit aec62xx_init_one(st
- 	return d.init_setup(dev, &d);
+@@ -218,10 +218,6 @@ static void __devinit init_hwif_aec62xx(
+ 
+ 		hwif->cbl = (ata66 & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+ 	}
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id aec62xx_pci_tbl[] = {
--	{ PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_ATP850UF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_ATP860,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1 },
--	{ PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_ATP860R,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2 },
--	{ PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_ATP865,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3 },
--	{ PCI_VENDOR_ID_ARTOP, PCI_DEVICE_ID_ARTOP_ATP865R,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4 },
-+static const struct pci_device_id aec62xx_pci_tbl[] = {
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP850UF), 0 },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP860),   1 },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP860R),  2 },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP865),   3 },
-+	{ PCI_VDEVICE(ARTOP, PCI_DEVICE_ID_ARTOP_ATP865R),  4 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, aec62xx_pci_tbl);
+ static int __devinit init_setup_aec62xx(struct pci_dev *dev, ide_pci_device_t *d)
 Index: b/drivers/ide/pci/alim15x3.c
 ===================================================================
 --- a/drivers/ide/pci/alim15x3.c
 +++ b/drivers/ide/pci/alim15x3.c
-@@ -808,9 +808,9 @@ static int __devinit alim15x3_init_one(s
+@@ -653,7 +653,6 @@ static u8 __devinit ata66_ali15x3(ide_hw
+  
+ static void __devinit init_hwif_common_ali15x3 (ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+ 	hwif->set_pio_mode = &ali_set_pio_mode;
+ 	hwif->set_dma_mode = &ali_set_dma_mode;
+ 	hwif->udma_filter = &ali_udma_filter;
+@@ -692,12 +691,6 @@ static void __devinit init_hwif_common_a
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = ata66_ali15x3(hwif);
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
- 
--static struct pci_device_id alim15x3_pci_tbl[] = {
--	{ PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M5229, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M5228, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+static const struct pci_device_id alim15x3_pci_tbl[] = {
-+	{ PCI_VDEVICE(AL, PCI_DEVICE_ID_AL_M5229), 0 },
-+	{ PCI_VDEVICE(AL, PCI_DEVICE_ID_AL_M5228), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, alim15x3_pci_tbl);
+ /**
 Index: b/drivers/ide/pci/amd74xx.c
 ===================================================================
 --- a/drivers/ide/pci/amd74xx.c
 +++ b/drivers/ide/pci/amd74xx.c
-@@ -478,34 +478,34 @@ static int __devinit amd74xx_probe(struc
- 	return ide_setup_pci_device(dev, amd_chipset);
+@@ -376,8 +376,6 @@ static void __devinit init_hwif_amd74xx(
+ 	if (hwif->irq == 0) /* 0 is bogus but will do for now */
+ 		hwif->irq = pci_get_legacy_ide_irq(hwif->pci_dev, hwif->channel);
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &amd_set_pio_mode;
+ 	hwif->set_dma_mode = &amd_set_drive;
+ 
+@@ -404,11 +402,6 @@ static void __devinit init_hwif_amd74xx(
+ 		else
+ 			hwif->cbl = ATA_CBL_PATA40;
+ 	}
+-
+-        if (!noautodma)
+-                hwif->autodma = 1;
+-        hwif->drives[0].autodma = hwif->autodma;
+-        hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id amd74xx_pci_tbl[] = {
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_COBRA_7401,		PCI_ANY_ID, PCI_ANY_ID, 0, 0,  0 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7409,		PCI_ANY_ID, PCI_ANY_ID, 0, 0,  1 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7411,		PCI_ANY_ID, PCI_ANY_ID, 0, 0,  2 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_OPUS_7441,		PCI_ANY_ID, PCI_ANY_ID, 0, 0,  3 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_8111_IDE,		PCI_ANY_ID, PCI_ANY_ID, 0, 0,  4 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0,  5 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0,  6 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0,  7 },
-+static const struct pci_device_id amd74xx_pci_tbl[] = {
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_COBRA_7401),		 0 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7409),		 1 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_VIPER_7411),		 2 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_OPUS_7441),		 3 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_8111_IDE),		 4 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_IDE),	 5 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2_IDE),	 6 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_IDE),	 7 },
- #ifdef CONFIG_BLK_DEV_IDE_SATA
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE2S_SATA,	PCI_ANY_ID, PCI_ANY_ID, 0, 0,  8 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE2S_SATA),	 8 },
- #endif
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0,  9 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3_IDE),	 9 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_IDE),	10 },
- #ifdef CONFIG_BLK_DEV_IDE_SATA
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA2,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA),	11 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE3S_SATA2),	12 },
- #endif
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE,	PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 19 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20 },
--	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 21 },
--	{ PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE,		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 22 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_IDE),	13 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_IDE),	14 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_IDE),	15 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_IDE),	16 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_IDE),	17 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP65_IDE),	18 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	19 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	20 },
-+	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	21 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		22 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, amd74xx_pci_tbl);
+ #define DECLARE_AMD_DEV(name_str)					\
 Index: b/drivers/ide/pci/atiixp.c
 ===================================================================
 --- a/drivers/ide/pci/atiixp.c
 +++ b/drivers/ide/pci/atiixp.c
-@@ -239,12 +239,12 @@ static int __devinit atiixp_init_one(str
- 	return ide_setup_pci_device(dev, &atiixp_pci_info[id->driver_data]);
+@@ -175,7 +175,6 @@ static void __devinit init_hwif_atiixp(i
+ 	if (!hwif->irq)
+ 		hwif->irq = ch ? 15 : 14;
+ 
+-	hwif->autodma = 0;
+ 	hwif->set_pio_mode = &atiixp_set_pio_mode;
+ 	hwif->set_dma_mode = &atiixp_set_dma_mode;
+ 	hwif->drives[0].autotune = 1;
+@@ -197,12 +196,6 @@ static void __devinit init_hwif_atiixp(i
+ 
+ 	hwif->dma_host_on = &atiixp_dma_host_on;
+ 	hwif->dma_host_off = &atiixp_dma_host_off;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[1].autodma = hwif->autodma;
+-	hwif->drives[0].autodma = hwif->autodma;
  }
  
--static struct pci_device_id atiixp_pci_tbl[] = {
--	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP200_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-+static const struct pci_device_id atiixp_pci_tbl[] = {
-+	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP200_IDE), 0 },
-+	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP300_IDE), 0 },
-+	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP400_IDE), 0 },
-+	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP600_IDE), 1 },
-+	{ PCI_VDEVICE(ATI, PCI_DEVICE_ID_ATI_IXP700_IDE), 1 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, atiixp_pci_tbl);
+ 
 Index: b/drivers/ide/pci/cmd64x.c
 ===================================================================
 --- a/drivers/ide/pci/cmd64x.c
 +++ b/drivers/ide/pci/cmd64x.c
-@@ -641,11 +641,11 @@ static int __devinit cmd64x_init_one(str
- 	return d.init_setup(dev, &d);
+@@ -559,10 +559,6 @@ static void __devinit init_hwif_cmd64x(i
+ 		hwif->ide_dma_test_irq	= &cmd64x_ide_dma_test_irq;
+ 		break;
+ 	}
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id cmd64x_pci_tbl[] = {
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_CMD_643, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_CMD_646, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_CMD_648, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_CMD_649, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
-+static const struct pci_device_id cmd64x_pci_tbl[] = {
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_643), 0 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_646), 1 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 2 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 3 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, cmd64x_pci_tbl);
+ static int __devinit init_setup_cmd64x(struct pci_dev *dev, ide_pci_device_t *d)
 Index: b/drivers/ide/pci/cs5520.c
 ===================================================================
 --- a/drivers/ide/pci/cs5520.c
 +++ b/drivers/ide/pci/cs5520.c
-@@ -224,9 +224,9 @@ static int __devinit cs5520_init_one(str
- 	return 0;
+@@ -146,12 +146,6 @@ static void __devinit init_hwif_cs5520(i
+ 	hwif->ultra_mask = 0;
+ 	hwif->swdma_mask = 0;
+ 	hwif->mwdma_mask = 0;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id cs5520_pci_tbl[] = {
--	{ PCI_VENDOR_ID_CYRIX, PCI_DEVICE_ID_CYRIX_5510, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_CYRIX, PCI_DEVICE_ID_CYRIX_5520, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-+static const struct pci_device_id cs5520_pci_tbl[] = {
-+	{ PCI_VDEVICE(CYRIX, PCI_DEVICE_ID_CYRIX_5510), 0 },
-+	{ PCI_VDEVICE(CYRIX, PCI_DEVICE_ID_CYRIX_5520), 1 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, cs5520_pci_tbl);
+ #define DECLARE_CS_DEV(name_str)				\
 Index: b/drivers/ide/pci/cs5530.c
 ===================================================================
 --- a/drivers/ide/pci/cs5530.c
 +++ b/drivers/ide/pci/cs5530.c
-@@ -292,8 +292,8 @@ static int __devinit cs5530_init_one(str
- 	return ide_setup_pci_device(dev, &cs5530_chipset);
+@@ -244,7 +244,6 @@ static void __devinit init_hwif_cs5530 (
+ {
+ 	unsigned long basereg;
+ 	u32 d0_timings;
+-	hwif->autodma = 0;
+ 
+ 	if (hwif->mate)
+ 		hwif->serialized = hwif->mate->serialized = 1;
+@@ -270,11 +269,6 @@ static void __devinit init_hwif_cs5530 (
+ 	hwif->mwdma_mask = 0x07;
+ 
+ 	hwif->udma_filter = cs5530_udma_filter;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id cs5530_pci_tbl[] = {
--	{ PCI_VENDOR_ID_CYRIX, PCI_DEVICE_ID_CYRIX_5530_IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id cs5530_pci_tbl[] = {
-+	{ PCI_VDEVICE(CYRIX, PCI_DEVICE_ID_CYRIX_5530_IDE), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, cs5530_pci_tbl);
+ static ide_pci_device_t cs5530_chipset __devinitdata = {
 Index: b/drivers/ide/pci/cs5535.c
 ===================================================================
 --- a/drivers/ide/pci/cs5535.c
 +++ b/drivers/ide/pci/cs5535.c
-@@ -214,10 +214,8 @@ static int __devinit cs5535_init_one(str
- 	return ide_setup_pci_device(dev, &cs5535_chipset);
+@@ -177,8 +177,6 @@ static u8 __devinit cs5535_cable_detect(
+  */
+ static void __devinit init_hwif_cs5535(ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &cs5535_set_pio_mode;
+ 	hwif->set_dma_mode = &cs5535_set_dma_mode;
+ 
+@@ -192,11 +190,6 @@ static void __devinit init_hwif_cs5535(i
+ 	hwif->mwdma_mask = 0x07;
+ 
+ 	hwif->cbl = cs5535_cable_detect(hwif->pci_dev);
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[1].autodma = hwif->drives[0].autodma = hwif->autodma;
  }
  
--static struct pci_device_id cs5535_pci_tbl[] =
--{
--	{ PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_CS5535_IDE, PCI_ANY_ID,
--		PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id cs5535_pci_tbl[] = {
-+	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_CS5535_IDE), 0 },
- 	{ 0, },
- };
- 
+ static ide_pci_device_t cs5535_chipset __devinitdata = {
 Index: b/drivers/ide/pci/cy82c693.c
 ===================================================================
 --- a/drivers/ide/pci/cy82c693.c
 +++ b/drivers/ide/pci/cy82c693.c
-@@ -489,8 +489,8 @@ static int __devinit cy82c693_init_one(s
- 	return ret;
+@@ -428,8 +428,6 @@ static unsigned int __devinit init_chips
+  */
+ static void __devinit init_hwif_cy82c693(ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+-
+ 	hwif->chipset = ide_cy82c693;
+ 	hwif->set_pio_mode = &cy82c693_set_pio_mode;
+ 
+@@ -444,10 +442,6 @@ static void __devinit init_hwif_cy82c693
+ 	hwif->swdma_mask = 0x04;
+ 
+ 	hwif->ide_dma_on = &cy82c693_ide_dma_on;
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id cy82c693_pci_tbl[] = {
--	{ PCI_VENDOR_ID_CONTAQ, PCI_DEVICE_ID_CONTAQ_82C693, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id cy82c693_pci_tbl[] = {
-+	{ PCI_VDEVICE(CONTAQ, PCI_DEVICE_ID_CONTAQ_82C693), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, cy82c693_pci_tbl);
+ static __devinitdata ide_hwif_t *primary;
 Index: b/drivers/ide/pci/generic.c
 ===================================================================
 --- a/drivers/ide/pci/generic.c
 +++ b/drivers/ide/pci/generic.c
-@@ -241,25 +241,28 @@ out:
- 	return ret;
+@@ -73,11 +73,6 @@ static void __devinit init_hwif_generic 
+ 	hwif->ultra_mask = 0x7f;
+ 	hwif->mwdma_mask = 0x07;
+ 	hwif->swdma_mask = 0x07;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id generic_pci_tbl[] = {
--	{ PCI_VENDOR_ID_NS,     PCI_DEVICE_ID_NS_87410,            PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_SAMURAI_IDE,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_HOLTEK, PCI_DEVICE_ID_HOLTEK_6565,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8673F,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
--	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886A,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
--	{ PCI_VENDOR_ID_UMC,    PCI_DEVICE_ID_UMC_UM8886BF,        PCI_ANY_ID, PCI_ANY_ID, 0, 0, 6},
--	{ PCI_VENDOR_ID_HINT,   PCI_DEVICE_ID_HINT_VXPROII_IDE,    PCI_ANY_ID, PCI_ANY_ID, 0, 0, 7},
--	{ PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8},
--	{ PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558,         PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9},
-+static const struct pci_device_id generic_pci_tbl[] = {
-+	{ PCI_VDEVICE(NS,	PCI_DEVICE_ID_NS_87410),		 1 },
-+	{ PCI_VDEVICE(PCTECH,	PCI_DEVICE_ID_PCTECH_SAMURAI_IDE),	 2 },
-+	{ PCI_VDEVICE(HOLTEK,	PCI_DEVICE_ID_HOLTEK_6565),		 3 },
-+	{ PCI_VDEVICE(UMC,	PCI_DEVICE_ID_UMC_UM8673F),		 4 },
-+	{ PCI_VDEVICE(UMC,	PCI_DEVICE_ID_UMC_UM8886A),		 5 },
-+	{ PCI_VDEVICE(UMC,	PCI_DEVICE_ID_UMC_UM8886BF),		 6 },
-+	{ PCI_VDEVICE(HINT,	PCI_DEVICE_ID_HINT_VXPROII_IDE),	 7 },
-+	{ PCI_VDEVICE(VIA,	PCI_DEVICE_ID_VIA_82C561),		 8 },
-+	{ PCI_VDEVICE(OPTI,	PCI_DEVICE_ID_OPTI_82C558),		 9 },
- #ifdef CONFIG_BLK_DEV_IDE_SATA
--	{ PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_8237_SATA,	   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10},
-+	{ PCI_VDEVICE(VIA,	PCI_DEVICE_ID_VIA_8237_SATA),		10 },
- #endif
--	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
--	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
--	{ PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
--	{ PCI_VENDOR_ID_NETCELL,PCI_DEVICE_ID_REVOLUTION,          PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
--	/* Must come last. If you add entries adjust this table appropriately and the init_one code */
--	{ PCI_ANY_ID,		PCI_ANY_ID,			   PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0},
-+	{ PCI_VDEVICE(TOSHIBA,	PCI_DEVICE_ID_TOSHIBA_PICCOLO),		11 },
-+	{ PCI_VDEVICE(TOSHIBA,	PCI_DEVICE_ID_TOSHIBA_PICCOLO_1),	12 },
-+	{ PCI_VDEVICE(TOSHIBA,	PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),	13 },
-+	{ PCI_VDEVICE(NETCELL,	PCI_DEVICE_ID_REVOLUTION),		14 },
-+	/*
-+	 * Must come last.  If you add entries adjust
-+	 * this table and generic_chipsets[] appropriately.
-+	 */
-+	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, generic_pci_tbl);
+ #if 0
 Index: b/drivers/ide/pci/hpt34x.c
 ===================================================================
 --- a/drivers/ide/pci/hpt34x.c
 +++ b/drivers/ide/pci/hpt34x.c
-@@ -176,8 +176,8 @@ static int __devinit hpt34x_init_one(str
- 	return ide_setup_pci_device(dev, d);
+@@ -127,8 +127,6 @@ static void __devinit init_hwif_hpt34x(i
+ {
+ 	u16 pcicmd = 0;
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &hpt34x_set_pio_mode;
+ 	hwif->set_dma_mode = &hpt34x_set_mode;
+ 
+@@ -141,15 +139,13 @@ static void __devinit init_hwif_hpt34x(i
+ 		return;
+ 
+ #ifdef CONFIG_HPT34X_AUTODMA
++	if ((pcicmd & PCI_COMMAND_MEMORY) == 0)
++		return;
++
+ 	hwif->ultra_mask = 0x07;
+ 	hwif->mwdma_mask = 0x07;
+ 	hwif->swdma_mask = 0x07;
+ #endif
+-
+-	if (!noautodma)
+-		hwif->autodma = (pcicmd & PCI_COMMAND_MEMORY) ? 1 : 0;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id hpt34x_pci_tbl[] = {
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT343, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id hpt34x_pci_tbl[] = {
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT343), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, hpt34x_pci_tbl);
+ static ide_pci_device_t hpt34x_chipset __devinitdata = {
 Index: b/drivers/ide/pci/hpt366.c
 ===================================================================
 --- a/drivers/ide/pci/hpt366.c
 +++ b/drivers/ide/pci/hpt366.c
-@@ -1625,13 +1625,13 @@ static int __devinit hpt366_init_one(str
- 	return d.init_setup(dev, &d);
+@@ -1328,10 +1328,6 @@ static void __devinit init_hwif_hpt366(i
+ 		hwif->dma_timeout	= &hpt370_dma_timeout;
+ 	} else
+ 		hwif->dma_lost_irq	= &hpt366_dma_lost_irq;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id hpt366_pci_tbl[] = {
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT366, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT372, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT302, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT371, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT374, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
--	{ PCI_VENDOR_ID_TTI, PCI_DEVICE_ID_TTI_HPT372N, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
-+static const struct pci_device_id hpt366_pci_tbl[] = {
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT366),  0 },
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT372),  1 },
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT302),  2 },
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT371),  3 },
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT374),  4 },
-+	{ PCI_VDEVICE(TTI, PCI_DEVICE_ID_TTI_HPT372N), 5 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, hpt366_pci_tbl);
+ static void __devinit init_dma_hpt366(ide_hwif_t *hwif, unsigned long dmabase)
 Index: b/drivers/ide/pci/it8213.c
 ===================================================================
 --- a/drivers/ide/pci/it8213.c
 +++ b/drivers/ide/pci/it8213.c
-@@ -234,9 +234,8 @@ static int __devinit it8213_init_one(str
- 	return 0;
+@@ -172,8 +172,6 @@ static void __devinit init_hwif_it8213(i
+ 	hwif->set_dma_mode = &it8213_set_dma_mode;
+ 	hwif->set_pio_mode = &it8213_set_pio_mode;
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->drives[0].autotune = 1;
+ 	hwif->drives[1].autotune = 1;
+ 
+@@ -189,16 +187,6 @@ static void __devinit init_hwif_it8213(i
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = (reg42h & 0x02) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-
+-	/*
+-	 *	The BIOS often doesn't set up DMA on this controller
+-	 *	so we always do it.
+-	 */
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--
--static struct pci_device_id it8213_pci_tbl[] = {
--	{ PCI_VENDOR_ID_ITE, 0x8213, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+static const struct pci_device_id it8213_pci_tbl[] = {
-+	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8213), 0 },
- 	{ 0, },
- };
  
 Index: b/drivers/ide/pci/it821x.c
 ===================================================================
 --- a/drivers/ide/pci/it821x.c
 +++ b/drivers/ide/pci/it821x.c
-@@ -675,9 +675,9 @@ static int __devinit it821x_init_one(str
- 	return 0;
+@@ -537,10 +537,11 @@ static void __devinit init_hwif_it821x(i
+ 	struct it821x_dev *idev = kzalloc(sizeof(struct it821x_dev), GFP_KERNEL);
+ 	u8 conf;
+ 
+-	if(idev == NULL) {
++	if (idev == NULL) {
+ 		printk(KERN_ERR "it821x: out of memory, falling back to legacy behaviour.\n");
+-		goto fallback;
++		return;
+ 	}
++
+ 	ide_set_hwifdata(hwif, idev);
+ 
+ 	hwif->atapi_dma = 1;
+@@ -589,27 +590,14 @@ static void __devinit init_hwif_it821x(i
+ 	hwif->drives[0].autotune = 1;
+ 	hwif->drives[1].autotune = 1;
+ 
+-	if (!hwif->dma_base)
+-		goto fallback;
++	if (hwif->dma_base == 0)
++		return;
+ 
+ 	hwif->ultra_mask = 0x7f;
+ 	hwif->mwdma_mask = 0x07;
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = ata66_it821x(hwif);
+-
+-	/*
+-	 *	The BIOS often doesn't set up DMA on this controller
+-	 *	so we always do it.
+-	 */
+-
+-	hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
+-	return;
+-fallback:
+-	hwif->autodma = 0;
+-	return;
  }
  
--static struct pci_device_id it821x_pci_tbl[] = {
--	{ PCI_VENDOR_ID_ITE, PCI_DEVICE_ID_ITE_8211,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_ITE, PCI_DEVICE_ID_ITE_8212,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id it821x_pci_tbl[] = {
-+	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8211), 0 },
-+	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8212), 0 },
- 	{ 0, },
- };
+ static void __devinit it8212_disable_raid(struct pci_dev *dev)
+Index: b/drivers/ide/pci/jmicron.c
+===================================================================
+--- a/drivers/ide/pci/jmicron.c
++++ b/drivers/ide/pci/jmicron.c
+@@ -114,8 +114,8 @@ static void __devinit init_hwif_jmicron(
+ 	hwif->drives[0].autotune = 1;
+ 	hwif->drives[1].autotune = 1;
  
+-	if (!hwif->dma_base)
+-		goto fallback;
++	if (hwif->dma_base == 0)
++		return;
+ 
+ 	hwif->atapi_dma = 1;
+ 	hwif->ultra_mask = 0x7f;
+@@ -123,14 +123,6 @@ static void __devinit init_hwif_jmicron(
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = ata66_jmicron(hwif);
+-
+-	hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
+-	return;
+-fallback:
+-	hwif->autodma = 0;
+-	return;
+ }
+ 
+ #define DECLARE_JMB_DEV(name_str)			\
 Index: b/drivers/ide/pci/ns87415.c
 ===================================================================
 --- a/drivers/ide/pci/ns87415.c
 +++ b/drivers/ide/pci/ns87415.c
-@@ -282,8 +282,8 @@ static int __devinit ns87415_init_one(st
- 	return ide_setup_pci_device(dev, &ns87415_chipset);
+@@ -197,7 +197,6 @@ static void __devinit init_hwif_ns87415 
+ 	u8 stat;
+ #endif
+ 
+-	hwif->autodma = 0;
+ 	hwif->selectproc = &ns87415_selectproc;
+ 
+ 	/*
+@@ -259,11 +258,6 @@ static void __devinit init_hwif_ns87415 
+ 	outb(0x60, hwif->dma_status);
+ 	hwif->dma_setup = &ns87415_ide_dma_setup;
+ 	hwif->ide_dma_end = &ns87415_ide_dma_end;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id ns87415_pci_tbl[] = {
--	{ PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_87415, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id ns87415_pci_tbl[] = {
-+	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_87415), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, ns87415_pci_tbl);
+ static ide_pci_device_t ns87415_chipset __devinitdata = {
 Index: b/drivers/ide/pci/opti621.c
 ===================================================================
 --- a/drivers/ide/pci/opti621.c
 +++ b/drivers/ide/pci/opti621.c
-@@ -372,9 +372,9 @@ static int __devinit opti621_init_one(st
- 	return ide_setup_pci_device(dev, &opti621_chipsets[id->driver_data]);
+@@ -328,7 +328,6 @@ static void opti621_set_pio_mode(ide_dri
+  */
+ static void __devinit init_hwif_opti621 (ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+ 	hwif->drives[0].drive_data = PIO_DONT_KNOW;
+ 	hwif->drives[1].drive_data = PIO_DONT_KNOW;
+ 
+@@ -340,11 +339,6 @@ static void __devinit init_hwif_opti621 
+ 	hwif->atapi_dma = 1;
+ 	hwif->mwdma_mask = 0x07;
+ 	hwif->swdma_mask = 0x07;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id opti621_pci_tbl[] = {
--	{ PCI_VENDOR_ID_OPTI, PCI_DEVICE_ID_OPTI_82C621, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_OPTI, PCI_DEVICE_ID_OPTI_82C825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-+static const struct pci_device_id opti621_pci_tbl[] = {
-+	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C621), 0 },
-+	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C825), 1 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, opti621_pci_tbl);
+ static ide_pci_device_t opti621_chipsets[] __devinitdata = {
 Index: b/drivers/ide/pci/pdc202xx_new.c
 ===================================================================
 --- a/drivers/ide/pci/pdc202xx_new.c
 +++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -634,14 +634,14 @@ static int __devinit pdc202new_init_one(
- 	return d->init_setup(dev, d);
+@@ -469,8 +469,6 @@ static unsigned int __devinit init_chips
+ 
+ static void __devinit init_hwif_pdc202new(ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &pdcnew_set_pio_mode;
+ 	hwif->set_dma_mode = &pdcnew_set_mode;
+ 
+@@ -491,10 +489,6 @@ static void __devinit init_hwif_pdc202ne
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = pdcnew_cable_detect(hwif);
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id pdc202new_pci_tbl[] = {
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20268, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20269, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20270, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20271, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20275, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20276, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20277, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 6},
-+static const struct pci_device_id pdc202new_pci_tbl[] = {
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20268), 0 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20269), 1 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20270), 2 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20271), 3 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20275), 4 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20276), 5 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20277), 6 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, pdc202new_pci_tbl);
+ static int __devinit init_setup_pdcnew(struct pci_dev *dev, ide_pci_device_t *d)
 Index: b/drivers/ide/pci/pdc202xx_old.c
 ===================================================================
 --- a/drivers/ide/pci/pdc202xx_old.c
 +++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -496,12 +496,12 @@ static int __devinit pdc202xx_init_one(s
- 	return d->init_setup(dev, d);
+@@ -312,8 +312,6 @@ static void __devinit init_hwif_pdc202xx
+ 	    (dev->device == PCI_DEVICE_ID_PROMISE_20265))
+ 		hwif->rqsize = 256;
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &pdc202xx_set_pio_mode;
+ 	hwif->set_dma_mode = &pdc202xx_set_mode;
+ 
+@@ -345,10 +343,6 @@ static void __devinit init_hwif_pdc202xx
+ 		hwif->ide_dma_end = &pdc202xx_old_ide_dma_end;
+ 	} 
+ 	hwif->ide_dma_test_irq = &pdc202xx_old_ide_dma_test_irq;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id pdc202xx_pci_tbl[] = {
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20246, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20262, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20263, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20265, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_PROMISE, PCI_DEVICE_ID_PROMISE_20267, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
-+static const struct pci_device_id pdc202xx_pci_tbl[] = {
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20246), 0 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20262), 1 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20263), 2 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20265), 3 },
-+	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20267), 4 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, pdc202xx_pci_tbl);
+ static void __devinit init_dma_pdc202xx(ide_hwif_t *hwif, unsigned long dmabase)
 Index: b/drivers/ide/pci/piix.c
 ===================================================================
 --- a/drivers/ide/pci/piix.c
 +++ b/drivers/ide/pci/piix.c
-@@ -520,34 +520,34 @@ static void __devinit piix_check_450nx(v
- 		printk(KERN_WARNING "piix: A BIOS update may resolve this.\n");
- }		
+@@ -384,8 +384,6 @@ static void __devinit init_hwif_piix(ide
+ 		return;
+ 	}
  
--static struct pci_device_id piix_pci_tbl[] = {
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371FB_0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371FB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371MX,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371SB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82371AB,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 5},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82443MX_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 6},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801AA_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 7},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82372FB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 8},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82451NX,   PCI_ANY_ID, PCI_ANY_ID, 0, 0, 9},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_9, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 10},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801BA_8, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 11},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_10,PCI_ANY_ID, PCI_ANY_ID, 0, 0, 12},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801CA_11,PCI_ANY_ID, PCI_ANY_ID, 0, 0, 13},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_11,PCI_ANY_ID, PCI_ANY_ID, 0, 0, 14},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_11,PCI_ANY_ID, PCI_ANY_ID, 0, 0, 15},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801E_11, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 16},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_10,PCI_ANY_ID, PCI_ANY_ID, 0, 0, 17},
-+static const struct pci_device_id piix_pci_tbl[] = {
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82371FB_0),   0 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82371FB_1),   1 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82371MX),     2 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82371SB_1),   3 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82371AB),     4 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801AB_1),   5 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82443MX_1),   6 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801AA_1),   7 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82372FB_1),   8 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82451NX),     9 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801BA_9),  10 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801BA_8),  11 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801CA_10), 12 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801CA_11), 13 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801DB_11), 14 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801EB_11), 15 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801E_11),  16 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801DB_10), 17 },
- #ifdef CONFIG_BLK_DEV_IDE_SATA
-- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801EB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 18},
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801EB_1),  18 },
- #endif
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB_2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 19},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH6_19, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 20},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH7_21, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 21},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 22},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ESB2_18, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 23},
--	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ICH8_6, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 24},
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ESB_2),      19 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICH6_19),    20 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICH7_21),    21 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_82801DB_1),  22 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ESB2_18),    23 },
-+	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_ICH8_6),     24 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
-Index: b/drivers/ide/pci/rz1000.c
-===================================================================
---- a/drivers/ide/pci/rz1000.c
-+++ b/drivers/ide/pci/rz1000.c
-@@ -61,9 +61,9 @@ static int __devinit rz1000_init_one(str
- 	return ide_setup_pci_device(dev, &rz1000_chipset);
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &piix_set_pio_mode;
+ 	hwif->set_dma_mode = &piix_set_dma_mode;
+ 
+@@ -412,12 +410,6 @@ static void __devinit init_hwif_piix(ide
+ 
+ 	if (no_piix_dma)
+ 		hwif->ultra_mask = hwif->mwdma_mask = hwif->swdma_mask = 0;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[1].autodma = hwif->autodma;
+-	hwif->drives[0].autodma = hwif->autodma;
  }
  
--static struct pci_device_id rz1000_pci_tbl[] = {
--	{ PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_RZ1000, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_PCTECH, PCI_DEVICE_ID_PCTECH_RZ1001, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id rz1000_pci_tbl[] = {
-+	{ PCI_VDEVICE(PCTECH, PCI_DEVICE_ID_PCTECH_RZ1000), 0 },
-+	{ PCI_VDEVICE(PCTECH, PCI_DEVICE_ID_PCTECH_RZ1001), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, rz1000_pci_tbl);
+ #define DECLARE_PIIX_DEV(name_str, udma) \
 Index: b/drivers/ide/pci/sc1200.c
 ===================================================================
 --- a/drivers/ide/pci/sc1200.c
 +++ b/drivers/ide/pci/sc1200.c
-@@ -403,8 +403,8 @@ static int __devinit sc1200_init_one(str
- 	return ide_setup_pci_device(dev, &sc1200_chipset);
+@@ -364,7 +364,6 @@ static void __devinit init_hwif_sc1200 (
+ {
+ 	if (hwif->mate)
+ 		hwif->serialized = hwif->mate->serialized = 1;
+-	hwif->autodma = 0;
+ 
+ 	hwif->set_pio_mode = &sc1200_set_pio_mode;
+ 	hwif->set_dma_mode = &sc1200_set_dma_mode;
+@@ -378,15 +377,9 @@ static void __devinit init_hwif_sc1200 (
+ 	hwif->udma_filter = sc1200_udma_filter;
+ 	hwif->ide_dma_end   = &sc1200_ide_dma_end;
+ 
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+         hwif->atapi_dma = 1;
+         hwif->ultra_mask = 0x07;
+         hwif->mwdma_mask = 0x07;
+-
+-        hwif->drives[0].autodma = hwif->autodma;
+-        hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id sc1200_pci_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_NS, PCI_DEVICE_ID_NS_SCx200_IDE), 0},
-+static const struct pci_device_id sc1200_pci_tbl[] = {
-+	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_SCx200_IDE), 0},
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, sc1200_pci_tbl);
+ static ide_pci_device_t sc1200_chipset __devinitdata = {
 Index: b/drivers/ide/pci/scc_pata.c
 ===================================================================
 --- a/drivers/ide/pci/scc_pata.c
 +++ b/drivers/ide/pci/scc_pata.c
-@@ -770,8 +770,8 @@ static void __devexit scc_remove(struct 
- 	memset(ports, 0, sizeof(*ports));
+@@ -697,12 +697,6 @@ static void __devinit init_hwif_scc(ide_
+ 
+ 	/* we support 80c cable only. */
+ 	hwif->cbl = ATA_CBL_PATA80;
+-
+-	hwif->autodma = 0;
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id scc_pci_tbl[] = {
--	{ PCI_VENDOR_ID_TOSHIBA_2, PCI_DEVICE_ID_TOSHIBA_SCC_ATA,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id scc_pci_tbl[] = {
-+	{ PCI_VDEVICE(TOSHIBA_2, PCI_DEVICE_ID_TOSHIBA_SCC_ATA), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, scc_pci_tbl);
+ #define DECLARE_SCC_DEV(name_str)			\
 Index: b/drivers/ide/pci/serverworks.c
 ===================================================================
 --- a/drivers/ide/pci/serverworks.c
 +++ b/drivers/ide/pci/serverworks.c
-@@ -476,12 +476,12 @@ static int __devinit svwks_init_one(stru
- 	return d->init_setup(dev, d);
+@@ -373,8 +373,6 @@ static void __devinit init_hwif_svwks (i
+ 
+ 	hwif->mwdma_mask = 0x07;
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->drives[0].autotune = 1;
+ 	hwif->drives[1].autotune = 1;
+ 
+@@ -385,10 +383,6 @@ static void __devinit init_hwif_svwks (i
+ 		if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 			hwif->cbl = ata66_svwks(hwif);
+ 	}
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = 1;
  }
  
--static struct pci_device_id svwks_pci_tbl[] = {
--	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_OSB4IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
--	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 3},
--	{ PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT1000IDE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 4},
-+static const struct pci_device_id svwks_pci_tbl[] = {
-+	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_OSB4IDE),   0 },
-+	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE),   1 },
-+	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE),   2 },
-+	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2),  3 },
-+	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT1000IDE), 4 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, svwks_pci_tbl);
+ static int __devinit init_setup_svwks (struct pci_dev *dev, ide_pci_device_t *d)
+Index: b/drivers/ide/pci/sgiioc4.c
+===================================================================
+--- a/drivers/ide/pci/sgiioc4.c
++++ b/drivers/ide/pci/sgiioc4.c
+@@ -673,12 +673,7 @@ sgiioc4_ide_setup_pci_device(struct pci_
+ 	/* Initializing chipset IRQ Registers */
+ 	writel(0x03, (void __iomem *)(irqport + IOC4_INTR_SET * 4));
+ 
+-	hwif->autodma = 0;
+-
+-	if (dma_base && ide_dma_sgiioc4(hwif, dma_base) == 0) {
+-		hwif->autodma = 1;
+-		hwif->drives[1].autodma = hwif->drives[0].autodma = 1;
+-	} else
++	if (dma_base == 0 || ide_dma_sgiioc4(hwif, dma_base))
+ 		printk(KERN_INFO "%s: %s Bus-Master DMA disabled\n",
+ 				 hwif->name, DRV_NAME);
+ 
 Index: b/drivers/ide/pci/siimage.c
 ===================================================================
 --- a/drivers/ide/pci/siimage.c
 +++ b/drivers/ide/pci/siimage.c
-@@ -955,11 +955,11 @@ static int __devinit siimage_init_one(st
- 	return ide_setup_pci_device(dev, &siimage_chipsets[id->driver_data]);
+@@ -873,8 +873,6 @@ static u8 __devinit ata66_siimage(ide_hw
+ 
+ static void __devinit init_hwif_siimage(ide_hwif_t *hwif)
+ {
+-	hwif->autodma = 0;
+-	
+ 	hwif->resetproc = &siimage_reset;
+ 	hwif->set_pio_mode = &sil_set_pio_mode;
+ 	hwif->set_dma_mode = &sil_set_dma_mode;
+@@ -912,15 +910,6 @@ static void __devinit init_hwif_siimage(
+ 	} else {
+ 		hwif->ide_dma_test_irq = & siimage_io_ide_dma_test_irq;
+ 	}
+-	
+-	/*
+-	 *	The BIOS often doesn't set up DMA on this controller
+-	 *	so we always do it.
+-	 */
+-
+-	hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id siimage_pci_tbl[] = {
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_680,  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id siimage_pci_tbl[] = {
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_SII_680),    0 },
- #ifdef CONFIG_BLK_DEV_IDE_SATA
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_3112, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_CMD, PCI_DEVICE_ID_SII_1210SA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_SII_3112),   1 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_SII_1210SA), 2 },
- #endif
- 	{ 0, },
- };
+ #define DECLARE_SII_DEV(name_str)			\
 Index: b/drivers/ide/pci/sis5513.c
 ===================================================================
 --- a/drivers/ide/pci/sis5513.c
 +++ b/drivers/ide/pci/sis5513.c
-@@ -611,10 +611,10 @@ static int __devinit sis5513_init_one(st
- 	return ide_setup_pci_device(dev, &sis5513_chipset);
+@@ -564,8 +564,6 @@ static void __devinit init_hwif_sis5513 
+ {
+ 	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
+ 
+-	hwif->autodma = 0;
+-
+ 	if (!hwif->irq)
+ 		hwif->irq = hwif->channel ? 15 : 14;
+ 
+@@ -588,12 +586,6 @@ static void __devinit init_hwif_sis5513 
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = ata66_sis5513(hwif);
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id sis5513_pci_tbl[] = {
--	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5513, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_5518, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_SI, PCI_DEVICE_ID_SI_1180, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id sis5513_pci_tbl[] = {
-+	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_5513), 0 },
-+	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_5518), 0 },
-+	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_1180), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, sis5513_pci_tbl);
+ static ide_pci_device_t sis5513_chipset __devinitdata = {
 Index: b/drivers/ide/pci/sl82c105.c
 ===================================================================
 --- a/drivers/ide/pci/sl82c105.c
 +++ b/drivers/ide/pci/sl82c105.c
-@@ -420,8 +420,8 @@ static int __devinit sl82c105_init_one(s
- 	return ide_setup_pci_device(dev, &sl82c105_chipset);
- }
+@@ -397,10 +397,6 @@ static void __devinit init_hwif_sl82c105
+ 	hwif->dma_start			= &sl82c105_dma_start;
+ 	hwif->dma_timeout		= &sl82c105_dma_timeout;
  
--static struct pci_device_id sl82c105_pci_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105), 0},
-+static const struct pci_device_id sl82c105_pci_tbl[] = {
-+	{ PCI_VDEVICE(WINBOND, PCI_DEVICE_ID_WINBOND_82C105), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, sl82c105_pci_tbl);
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
+-
+ 	if (hwif->mate)
+ 		hwif->serialized = hwif->mate->serialized = 1;
+ }
 Index: b/drivers/ide/pci/slc90e66.c
 ===================================================================
 --- a/drivers/ide/pci/slc90e66.c
 +++ b/drivers/ide/pci/slc90e66.c
-@@ -178,8 +178,8 @@ static int __devinit slc90e66_init_one(s
- 	return ide_setup_pci_device(dev, &slc90e66_chipset);
+@@ -133,8 +133,6 @@ static void __devinit init_hwif_slc90e66
+ 	u8 reg47 = 0;
+ 	u8 mask = hwif->channel ? 0x01 : 0x02;  /* bit0:Primary */
+ 
+-	hwif->autodma = 0;
+-
+ 	if (!hwif->irq)
+ 		hwif->irq = hwif->channel ? 15 : 14;
+ 
+@@ -157,11 +155,6 @@ static void __devinit init_hwif_slc90e66
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		/* bit[0(1)]: 0:80, 1:40 */
+ 		hwif->cbl = (reg47 & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id slc90e66_pci_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_EFAR, PCI_DEVICE_ID_EFAR_SLC90E66_1), 0},
-+static const struct pci_device_id slc90e66_pci_tbl[] = {
-+	{ PCI_VDEVICE(EFAR, PCI_DEVICE_ID_EFAR_SLC90E66_1), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, slc90e66_pci_tbl);
+ static ide_pci_device_t slc90e66_chipset __devinitdata = {
 Index: b/drivers/ide/pci/tc86c001.c
 ===================================================================
 --- a/drivers/ide/pci/tc86c001.c
 +++ b/drivers/ide/pci/tc86c001.c
-@@ -244,9 +244,8 @@ static int __devinit tc86c001_init_one(s
- 	return ide_setup_pci_device(dev, &tc86c001_chipset);
+@@ -212,10 +212,6 @@ static void __devinit init_hwif_tc86c001
+ 		scr1 = hwif->INW(sc_base + 0x00);
+ 		hwif->cbl = (scr1 & 0x2000) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+ 	}
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id tc86c001_pci_tbl[] = {
--	{ PCI_VENDOR_ID_TOSHIBA_2, PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id tc86c001_pci_tbl[] = {
-+	{ PCI_VDEVICE(TOSHIBA_2, PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE), 0 },
- 	{ 0, }
- };
- MODULE_DEVICE_TABLE(pci, tc86c001_pci_tbl);
+ static unsigned int __devinit init_chipset_tc86c001(struct pci_dev *dev,
 Index: b/drivers/ide/pci/triflex.c
 ===================================================================
 --- a/drivers/ide/pci/triflex.c
 +++ b/drivers/ide/pci/triflex.c
-@@ -129,9 +129,8 @@ static int __devinit triflex_init_one(st
- 	return ide_setup_pci_device(dev, &triflex_device);
+@@ -107,11 +107,6 @@ static void __devinit init_hwif_triflex(
+ 	hwif->atapi_dma  = 1;
+ 	hwif->mwdma_mask = 0x07;
+ 	hwif->swdma_mask = 0x07;
+-	
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id triflex_pci_tbl[] = {
--	{ PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+static const struct pci_device_id triflex_pci_tbl[] = {
-+	{ PCI_VDEVICE(COMPAQ, PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE), 0 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
+ static ide_pci_device_t triflex_device __devinitdata = {
 Index: b/drivers/ide/pci/trm290.c
 ===================================================================
 --- a/drivers/ide/pci/trm290.c
 +++ b/drivers/ide/pci/trm290.c
-@@ -337,8 +337,8 @@ static int __devinit trm290_init_one(str
- 	return ide_setup_pci_device(dev, &trm290_chipset);
- }
+@@ -292,9 +292,6 @@ static void __devinit init_hwif_trm290(i
+ 	hwif->ide_dma_test_irq = &trm290_ide_dma_test_irq;
  
--static struct pci_device_id trm290_pci_tbl[] = {
--	{ PCI_VENDOR_ID_TEKRAM, PCI_DEVICE_ID_TEKRAM_DC290, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id trm290_pci_tbl[] = {
-+	{ PCI_VDEVICE(TEKRAM, PCI_DEVICE_ID_TEKRAM_DC290), 0 },
- 	{ 0, },
+ 	hwif->selectproc = &trm290_selectproc;
+-	hwif->autodma = 0;		/* play it safe for now */
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
+ #if 1
+ 	{
+ 	/*
+@@ -329,7 +326,9 @@ static ide_pci_device_t trm290_chipset _
+ 	.init_hwif	= init_hwif_trm290,
+ 	.autodma	= NOAUTODMA,
+ 	.bootable	= ON_BOARD,
++#if 0 /* play it safe for now */
+ 	.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
++#endif
  };
- MODULE_DEVICE_TABLE(pci, trm290_pci_tbl);
+ 
+ static int __devinit trm290_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 Index: b/drivers/ide/pci/via82cxxx.c
 ===================================================================
 --- a/drivers/ide/pci/via82cxxx.c
 +++ b/drivers/ide/pci/via82cxxx.c
-@@ -495,11 +495,11 @@ static int __devinit via_init_one(struct
- 	return ide_setup_pci_device(dev, &via82cxxx_chipsets[id->driver_data]);
+@@ -417,8 +417,6 @@ static void __devinit init_hwif_via82cxx
+ 	struct via82cxxx_dev *vdev = pci_get_drvdata(hwif->pci_dev);
+ 	int i;
+ 
+-	hwif->autodma = 0;
+-
+ 	hwif->set_pio_mode = &via_set_pio_mode;
+ 	hwif->set_dma_mode = &via_set_drive;
+ 
+@@ -446,11 +444,6 @@ static void __devinit init_hwif_via82cxx
+ 
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+ 		hwif->cbl = via82cxxx_cable_detect(hwif);
+-
+-	if (!noautodma)
+-		hwif->autodma = 1;
+-	hwif->drives[0].autodma = hwif->autodma;
+-	hwif->drives[1].autodma = hwif->autodma;
  }
  
--static struct pci_device_id via_pci_tbl[] = {
--	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C576_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_6410,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--	{ PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_SATA_EIDE,     PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
-+static const struct pci_device_id via_pci_tbl[] = {
-+	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C576_1),  0 },
-+	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_82C586_1),  0 },
-+	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_6410),      1 },
-+	{ PCI_VDEVICE(VIA, PCI_DEVICE_ID_VIA_SATA_EIDE), 1 },
- 	{ 0, },
- };
- MODULE_DEVICE_TABLE(pci, via_pci_tbl);
+ static ide_pci_device_t via82cxxx_chipsets[] __devinitdata = {
 Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
 --- a/drivers/ide/ppc/pmac.c
 +++ b/drivers/ide/ppc/pmac.c
-@@ -1421,17 +1421,12 @@ static struct macio_driver pmac_ide_maci
- 	.resume		= pmac_ide_macio_resume,
- };
+@@ -1803,9 +1803,6 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
+ 			hwif->swdma_mask = 0x00;
+ 			break;
+ 	}
+-
+-	hwif->autodma = 1;
+-	hwif->drives[1].autodma = hwif->drives[0].autodma = hwif->autodma;
+ }
  
--static struct pci_device_id pmac_ide_pci_match[] = {
--	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_SH_ATA,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+static const struct pci_device_id pmac_ide_pci_match[] = {
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_UNI_N_ATA),	0 },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID_ATA100),	0 },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_K2_ATA100),	0 },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_SH_ATA),	0 },
-+	{ PCI_VDEVICE(APPLE, PCI_DEVICE_ID_APPLE_IPID2_ATA),	0 },
- };
+ #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
+Index: b/drivers/ide/setup-pci.c
+===================================================================
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -438,8 +438,6 @@ static void ide_hwif_setup_dma(struct pc
+  			 * Set up BM-DMA capability
+ 			 * (PnP BIOS should have done this)
+  			 */
+-			/* default DMA off if we had to configure it here */
+-			hwif->autodma = 0;
+ 			pci_set_master(dev);
+ 			if (pci_read_config_word(dev, PCI_COMMAND, &pcicmd) || !(pcicmd & PCI_COMMAND_MASTER)) {
+ 				printk(KERN_ERR "%s: %s error updating PCICMD\n",
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -576,7 +576,6 @@ typedef struct ide_drive_s {
+ 	select_t	select;		/* basic drive/head select reg value */
  
- static struct pci_driver pmac_ide_pci_driver = {
+ 	u8	keep_settings;		/* restore settings after drive reset */
+-	u8	autodma;		/* device can safely use dma on host */
+ 	u8	using_dma;		/* disk is using dma for read/write */
+ 	u8	retry_pio;		/* retrying dma capable host in pio */
+ 	u8	state;			/* retry state */
+@@ -797,7 +796,6 @@ typedef struct hwif_s {
+ 	unsigned	serialized : 1;	/* serialized all channel operation */
+ 	unsigned	sharing_irq: 1;	/* 1 = sharing irq with another hwif */
+ 	unsigned	reset      : 1;	/* reset after probe */
+-	unsigned	autodma    : 1;	/* auto-attempt using DMA at boot */
+ 	unsigned	no_lba48   : 1; /* 1 = cannot do LBA48 */
+ 	unsigned	no_lba48_dma : 1; /* 1 = cannot do LBA48 DMA */
+ 	unsigned	auto_poll  : 1; /* supports nop auto-poll */
