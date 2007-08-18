@@ -1,75 +1,67 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/7] ide: remove "idex=dma" kernel parameter
-Date: Sat, 18 Aug 2007 20:48:35 +0200
-Message-ID: <200708182048.35285.bzolnier@gmail.com>
+Subject: [PATCH 6/7] ide: remove CONFIG_IDEDMA_ONLYDISK
+Date: Sat, 18 Aug 2007 20:51:26 +0200
+Message-ID: <200708182051.26177.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:64200 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757014AbXHRTTL (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.189]:65316 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757016AbXHRTTL (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:11 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1246464mue
-        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:06 -0700 (PDT)
+Received: by fk-out-0910.google.com with SMTP id z23so797158fkz
+        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:10 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-It has been obsoleted since 1 Nov 2004, is valid only when used together with
-"ide=nodma" kernel parameter (which makes no sense) and only for aec62xx,
-cmd64x, cs5220, generic, hpt366, sl82c105, tc86c001 and triflex host drivers.
+ATAPI devices with broken DMA support should be handled by DMA blacklist
+and for debugging purposes we have new shiny "hdx=nodma" kernel paremeter.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- Documentation/ide.txt |    2 --
- drivers/ide/ide.c     |    6 ++----
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ drivers/ide/Kconfig     |   10 ----------
+ drivers/ide/ide-probe.c |    5 +----
+ 2 files changed, 1 insertion(+), 14 deletions(-)
 
-Index: b/Documentation/ide.txt
+Index: b/drivers/ide/Kconfig
 ===================================================================
---- a/Documentation/ide.txt
-+++ b/Documentation/ide.txt
-@@ -278,8 +278,6 @@ Summary of ide driver parameters for ker
-  "idex=four"		: four drives on idex and ide(x^1) share same ports
- 			
-  "idex=reset"		: reset interface after probe
-- 
-- "idex=dma"		: automatically configure/use DMA if possible.
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -435,16 +435,6 @@ config BLK_DEV_IDEDMA_PCI
+ 	bool
+ 	select BLK_DEV_IDEPCI
  
-  "idex=ata66"		: informs the interface that it has an 80c cable
- 			  for chipsets that are ATA-66 capable, but the
-Index: b/drivers/ide/ide.c
+-# TODO: remove it
+-config IDEDMA_ONLYDISK
+-	bool "Enable DMA only for disks "
+-	depends on BLK_DEV_IDEDMA_PCI
+-	help
+-	  This is used if you know your ATAPI Devices are going to fail DMA
+-	  Transfers.
+-
+-	  Generally say N here.
+-
+ config BLK_DEV_AEC62XX
+ 	tristate "AEC62XX chipset support"
+ 	select BLK_DEV_IDEDMA_PCI
+Index: b/drivers/ide/ide-probe.c
 ===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1398,7 +1398,7 @@ static int __init ide_setup(char *s)
- 		 */
- 		static const char *ide_words[] = {
- 			"noprobe", "serialize", "minus3", "minus4",
--			"reset", "dma", "ata66", "minus8", "minus9",
-+			"reset", "minus6", "ata66", "minus8", "minus9",
- 			"minus10", "four", "qd65xx", "ht6560b", "cmd640_vlb",
- 			"dtc2278", "umc8672", "ali14xx", NULL };
- 		hw = s[3] - '0';
-@@ -1477,6 +1477,7 @@ static int __init ide_setup(char *s)
- 			case -10: /* minus10 */
- 			case -9: /* minus9 */
- 			case -8: /* minus8 */
-+			case -6:
- 			case -4:
- 			case -3:
- 				goto bad_option;
-@@ -1491,9 +1492,6 @@ static int __init ide_setup(char *s)
- #else
- 				goto bad_hwif;
- #endif
--			case -6: /* dma */
--				hwif->autodma = 1;
--				goto obsolete_option;
- 			case -5: /* "reset" */
- 				hwif->reset = 1;
- 				goto obsolete_option;
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -843,10 +843,7 @@ static void probe_hwif(ide_hwif_t *hwif,
+ 				 *   PARANOIA!!!
+ 				 */
+ 				hwif->dma_off_quietly(drive);
+-#ifdef CONFIG_IDEDMA_ONLYDISK
+-				if (drive->media == ide_disk)
+-#endif
+-					ide_set_dma(drive);
++				ide_set_dma(drive);
+ 			}
+ 		}
+ 	}
