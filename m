@@ -1,43 +1,30 @@
-From: Daniel Schroeder <sec@dschroeder.info>
-Subject: Re: sata_nv hotplug
-Date: Sat, 18 Aug 2007 23:25:59 +0200
-Message-ID: <46C763E7.1060200@dschroeder.info>
-References: <20070818192250.GE2419@kvack.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
+Date: Sat, 18 Aug 2007 23:41:36 +0100
+Message-ID: <20070818234136.22043c6c@the-village.bc.nu>
+References: <46C69913.1060505@g7.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:59680 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755209AbXHRV0k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 17:26:40 -0400
-In-Reply-To: <20070818192250.GE2419@kvack.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53904 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750828AbXHRWdn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 18:33:43 -0400
+In-Reply-To: <46C69913.1060505@g7.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin LaHaise <bcrl@kvack.org>
+To: Malcolm Gillies <malcolm@g7.org>
 Cc: linux-ide@vger.kernel.org
 
-Benjamin LaHaise wrote:
-> Hello folks,
->
-> Does anyone know the state of hot plug support for the sata_nv driver?  I'm 
-> certainly willing to help out with any development and testing that's needed, 
-> as it doesn't seem to function in basic testing at present.
->
-> 		-ben
->   
-hi,
+On Sat, 18 Aug 2007 17:00:35 +1000
+Malcolm Gillies <malcolm@g7.org> wrote:
 
-i am using the following command for hotplug (warmplug):
+> My PATA hard disk is crippled by CRC errors when it's on the same cable 
+> as a 1GB SanDisk Ultra II CompactFlash card in CF to IDE adaptor. Any 
+> ideas why?
 
-echo 0 - 0 > /sys/class/scsi_host/host5/scan
+I would guess the resulting pipe of cables and bits means you are out of
+spec for UDMA66 speeds. The restrictions on cables are very tight and
+dangling convertors off them is often enough to mess it up.
 
-and after umount before turning off the device:
-
-echo 1 > /sys/class/scsi_device/5\:0\:0\:0/device/delete
-
-i think that the "hot plug polling" patch is needed for automatic
-detection of new devices, but i am only a user, not a developer ;)
-
-cheers,
-ds
