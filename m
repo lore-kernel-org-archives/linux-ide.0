@@ -1,169 +1,112 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/7] ide: add DECLARE_GENERIC_PCI_DEV() macro to generic IDE PCI host driver
-Date: Sat, 18 Aug 2007 20:51:56 +0200
-Message-ID: <200708182051.56133.bzolnier@gmail.com>
+Subject: [PATCH 5/7] ide: add "hdx=nodma" kernel parameter
+Date: Sat, 18 Aug 2007 20:50:50 +0200
+Message-ID: <200708182050.50372.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:65378 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757042AbXHRTTM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:12 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so797152fkz
-        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:11 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.190]:64045 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756970AbXHRTTL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:19:11 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1246480mue
+        for <linux-ide@vger.kernel.org>; Sat, 18 Aug 2007 12:19:08 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-* Add DECLARE_GENERIC_PCI_DEV() macro to generic IDE PCI host driver
-  and use it to cleanup generic_chipsets[].
+* Add "hdx=nodma" option allowing user to disallow DMA for a given device.
 
-* Remove dead/obsolete code while at it.
+* Obsolete "ide=nodma" option.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/generic.c |  113 +++++++++++-----------------------------------
- 1 file changed, 29 insertions(+), 84 deletions(-)
+ Documentation/ide.txt |    4 ++--
+ drivers/ide/ide-dma.c |    2 +-
+ drivers/ide/ide.c     |    7 +++++--
+ include/linux/ide.h   |    1 +
+ 4 files changed, 9 insertions(+), 5 deletions(-)
 
-Index: b/drivers/ide/pci/generic.c
+Index: b/Documentation/ide.txt
 ===================================================================
---- a/drivers/ide/pci/generic.c
-+++ b/drivers/ide/pci/generic.c
-@@ -75,104 +75,49 @@ static void __devinit init_hwif_generic 
- 	hwif->swdma_mask = 0x07;
- }
+--- a/Documentation/ide.txt
++++ b/Documentation/ide.txt
+@@ -242,6 +242,8 @@ Summary of ide driver parameters for ker
+ 			  and quite likely to cause trouble with
+ 			  older/odd IDE drives.
  
--#if 0
--	/* Logic to add back later on */
++ "hdx=nodma"		: disallow DMA
++
+  "hdx=swapdata"		: when the drive is a disk, byte swap all data
+ 
+  "hdx=bswap"		: same as above..........
+@@ -286,8 +288,6 @@ Summary of ide driver parameters for ker
+ 
+  "ide=reverse"		: formerly called to pci sub-system, but now local.
+ 
+- "ide=nodma"		: disable DMA globally for the IDE subsystem.
 -
--	if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
--		ide_pci_device_t *unknown = unknown_chipset;
--		init_setup_unknown(dev, unknown);
--		return 1;
-+#define DECLARE_GENERIC_PCI_DEV(name_str, dma_setting) \
-+	{ \
-+		.name		= name_str, \
-+		.init_hwif	= init_hwif_generic, \
-+		.autodma	= dma_setting, \
-+		.bootable	= ON_BOARD, \
-+		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA, \
- 	}
--	return 0;
--#endif	
+ The following are valid ONLY on ide0, which usually corresponds
+ to the first ATA interface found on the particular host, and the defaults for
+ the base,ctl ports must not be altered.
+Index: b/drivers/ide/ide-dma.c
+===================================================================
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -754,7 +754,7 @@ static int ide_tune_dma(ide_drive_t *dri
+ {
+ 	u8 speed;
  
- static ide_pci_device_t generic_chipsets[] __devinitdata = {
--	{	/* 0 */
--		.name		= "Unknown",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 1 */
-+	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",		AUTODMA),
-+
-+	{	/* 1 */
- 		.name		= "NS87410",
- 		.init_hwif	= init_hwif_generic,
- 		.autodma	= AUTODMA,
- 		.enablebits	= {{0x43,0x08,0x08}, {0x47,0x08,0x08}},
- 		.bootable	= ON_BOARD,
- 		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--        },{	/* 2 */
--		.name		= "SAMURAI",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 3 */
--		.name		= "HT6565",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 4 */
--		.name		= "UM8673F",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 5 */
--		.name		= "UM8886A",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 6 */
--		.name		= "UM8886BF",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 7 */
--		.name		= "HINT_IDE",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= AUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 8 */
--		.name		= "VIA_IDE",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NOAUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 9 */
--		.name		= "OPTI621V",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NOAUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 10 */
-+	},
-+
-+	/*  2 */ DECLARE_GENERIC_PCI_DEV("SAMURAI",		AUTODMA),
-+	/*  3 */ DECLARE_GENERIC_PCI_DEV("HT6565",		AUTODMA),
-+	/*  4 */ DECLARE_GENERIC_PCI_DEV("UM8673F",		NODMA),
-+	/*  5 */ DECLARE_GENERIC_PCI_DEV("UM8886A",		NODMA),
-+	/*  6 */ DECLARE_GENERIC_PCI_DEV("UM8886BF",		NODMA),
-+	/*  7 */ DECLARE_GENERIC_PCI_DEV("HINT_IDE",		AUTODMA),
-+	/*  8 */ DECLARE_GENERIC_PCI_DEV("VIA_IDE",		NOAUTODMA),
-+	/*  9 */ DECLARE_GENERIC_PCI_DEV("OPTI621V",		NOAUTODMA),
-+
-+	{	/* 10 */
- 		.name		= "VIA8237SATA",
- 		.init_hwif	= init_hwif_generic,
- 		.autodma	= AUTODMA,
- 		.bootable	= OFF_BOARD,
- 		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 11 */
--		.name 		= "Piccolo0102",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NOAUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 12 */
--		.name 		= "Piccolo0103",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NOAUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 13 */
--		.name 		= "Piccolo0105",
--		.init_hwif	= init_hwif_generic,
--		.autodma	= NOAUTODMA,
--		.bootable	= ON_BOARD,
--		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA,
--	},{	/* 14 */
-+	},
-+
-+	/* 11 */ DECLARE_GENERIC_PCI_DEV("Piccolo0102",		NOAUTODMA),
-+	/* 12 */ DECLARE_GENERIC_PCI_DEV("Piccolo0103",		NOAUTODMA),
-+	/* 13 */ DECLARE_GENERIC_PCI_DEV("Piccolo0105",		NOAUTODMA),
-+
-+	{	/* 14 */
- 		.name		= "Revolution",
- 		.init_hwif	= init_hwif_generic,
- 		.autodma	= AUTODMA,
+-	if (noautodma || (drive->id->capability & 1) == 0)
++	if (noautodma || drive->nodma || (drive->id->capability & 1) == 0)
+ 		return 0;
+ 
+ 	/* consult the list of known "bad" drives */
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1274,7 +1274,7 @@ static int __init ide_setup(char *s)
+ 	if (!strcmp(s, "ide=nodma")) {
+ 		printk(" : Prevented DMA\n");
+ 		noautodma = 1;
+-		return 1;
++		goto obsolete_option;
+ 	}
+ 
+ #ifdef CONFIG_IDEPCI_PCIBUS_ORDER
+@@ -1308,7 +1308,7 @@ static int __init ide_setup(char *s)
+ 	 */
+ 	if (s[0] == 'h' && s[1] == 'd' && s[2] >= 'a' && s[2] <= max_drive) {
+ 		const char *hd_words[] = {
+-			"none", "noprobe", "nowerr", "cdrom", "minus5",
++			"none", "noprobe", "nowerr", "cdrom", "nodma",
+ 			"autotune", "noautotune", "minus8", "swapdata", "bswap",
+ 			"noflush", "remap", "remap63", "scsi", NULL };
+ 		unit = s[2] - 'a';
+@@ -1336,6 +1336,9 @@ static int __init ide_setup(char *s)
+ 				drive->ready_stat = 0;
+ 				hwif->noprobe = 0;
+ 				goto done;
++			case -5: /* nodma */
++				drive->nodma = 1;
++				goto done;
+ 			case -6: /* "autotune" */
+ 				drive->autotune = IDE_TUNE_AUTO;
+ 				goto obsolete_option;
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -599,6 +599,7 @@ typedef struct ide_drive_s {
+ 	unsigned nice0		: 1;	/* give obvious excess bandwidth */
+ 	unsigned nice2		: 1;	/* give a share in our own bandwidth */
+ 	unsigned doorlocking	: 1;	/* for removable only: door lock/unlock works */
++	unsigned nodma		: 1;	/* disallow DMA */
+ 	unsigned autotune	: 2;	/* 0=default, 1=autotune, 2=noautotune */
+ 	unsigned remap_0_to_1	: 1;	/* 0=noremap, 1=remap 0->1 (for EZDrive) */
+ 	unsigned blocked        : 1;	/* 1=powermanagment told us not to do anything, so sleep nicely */
