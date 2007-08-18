@@ -1,144 +1,208 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH libata-dev#upstream REGENERATED] libata: move EH repeat reporting into ata_eh_report()
-Date: Sat, 18 Aug 2007 13:28:49 +0900
-Message-ID: <20070818042849.GE8590@htj.dyndns.org>
-References: <20070731074203.GA13674@htj.dyndns.org> <20070731075100.GB13674@htj.dyndns.org> <46C2BEDA.5070105@garzik.org>
+From: Malcolm Gillies <malcolm@g7.org>
+Subject: CompactFlash and HD unhappy together on the same IDE channel
+Date: Sat, 18 Aug 2007 17:00:35 +1000
+Message-ID: <46C69913.1060505@g7.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:65304 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbXHRE25 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 00:28:57 -0400
-Received: by wa-out-1112.google.com with SMTP id j4so72974wah
-        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2007 21:28:56 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <46C2BEDA.5070105@garzik.org>
+Received: from webmail.icp-qv1-irony2.iinet.net.au ([203.59.1.107]:23407 "EHLO
+	webmail.icp-qv1-irony2.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751123AbXHRHLJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 03:11:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: linux-ide@vger.kernel.org
 
-EH is sometimes repeated without any error or action.  For example,
-this happens when probing IDENTIFY fails because of a phantom device.
-In these cases, all the repeated EH does is making sure there is no
-unhandled error or pending action and return.  This repeation is
-necessary to avoid losing any event which occurred while EH was in
-progress.
+My PATA hard disk is crippled by CRC errors when it's on the same cable 
+as a 1GB SanDisk Ultra II CompactFlash card in CF to IDE adaptor. Any 
+ideas why?
 
-Unfortunately, this dry run causes annonying "EH pending after
-completion" message.  This patch moves the repeat reporting into
-ata_eh_report() such that it's more compact and skipped on dry runs.
+By swapping around components, I've established that the problem is 
+unlikely due to the cable (which is 50cm long 80-wire), hard disk or 
+controller. When I swap to another, slower CF card (one that only 
+supports PIO rather than MWDMA), the error goes away and the hard disk 
+operates happily at UDMA/33.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Mikael Pettersson <mikep@it.uu.se>
----
-Regenerated against #upstream (41b135c7) +
-implement-and-use-ata_port_desc patch.
+No errors are reported for the CF card I/O.
 
- drivers/ata/libata-eh.c |   30 ++++++++++++++++++------------
- include/linux/libata.h  |    5 +++--
- 2 files changed, 21 insertions(+), 14 deletions(-)
+The adaptor card is unbranded, model CF-IDE40 V.A1. It's a double-sided 
+type, but I'm only using one of the two CF sockets.
 
-Index: work/drivers/ata/libata-eh.c
-===================================================================
---- work.orig/drivers/ata/libata-eh.c
-+++ work/drivers/ata/libata-eh.c
-@@ -358,7 +358,7 @@ enum scsi_eh_timer_return ata_scsi_timed
- void ata_scsi_error(struct Scsi_Host *host)
- {
- 	struct ata_port *ap = ata_shost_to_port(host);
--	int i, repeat_cnt = ATA_EH_MAX_REPEAT;
-+	int i;
- 	unsigned long flags;
- 
- 	DPRINTK("ENTER\n");
-@@ -424,6 +424,9 @@ void ata_scsi_error(struct Scsi_Host *ho
- 			__ata_port_freeze(ap);
- 
- 		spin_unlock_irqrestore(ap->lock, flags);
-+
-+		/* initialize eh_tries */
-+		ap->eh_tries = ATA_EH_MAX_TRIES;
- 	} else
- 		spin_unlock_wait(ap->lock);
- 
-@@ -468,15 +471,12 @@ void ata_scsi_error(struct Scsi_Host *ho
- 		spin_lock_irqsave(ap->lock, flags);
- 
- 		if (ap->pflags & ATA_PFLAG_EH_PENDING) {
--			if (--repeat_cnt) {
--				ata_port_printk(ap, KERN_INFO,
--					"EH pending after completion, "
--					"repeating EH (cnt=%d)\n", repeat_cnt);
-+			if (--ap->eh_tries) {
- 				spin_unlock_irqrestore(ap->lock, flags);
- 				goto repeat;
- 			}
- 			ata_port_printk(ap, KERN_ERR, "EH pending after %d "
--					"tries, giving up\n", ATA_EH_MAX_REPEAT);
-+					"tries, giving up\n", ATA_EH_MAX_TRIES);
- 			ap->pflags &= ~ATA_PFLAG_EH_PENDING;
- 		}
- 
-@@ -1778,6 +1778,7 @@ static void ata_eh_link_report(struct at
- 	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	const char *frozen, *desc;
-+	char tries_buf[6];
- 	int tag, nr_failed = 0;
- 
- 	desc = NULL;
-@@ -1802,18 +1803,23 @@ static void ata_eh_link_report(struct at
- 	if (ap->pflags & ATA_PFLAG_FROZEN)
- 		frozen = " frozen";
- 
-+	memset(tries_buf, 0, sizeof(tries_buf));
-+	if (ap->eh_tries < ATA_EH_MAX_TRIES)
-+		snprintf(tries_buf, sizeof(tries_buf) - 1, " t%d",
-+			 ap->eh_tries);
-+
- 	if (ehc->i.dev) {
- 		ata_dev_printk(ehc->i.dev, KERN_ERR, "exception Emask 0x%x "
--			       "SAct 0x%x SErr 0x%x action 0x%x%s\n",
--			       ehc->i.err_mask, link->sactive,
--			       ehc->i.serror, ehc->i.action, frozen);
-+			       "SAct 0x%x SErr 0x%x action 0x%x%s%s\n",
-+			       ehc->i.err_mask, link->sactive, ehc->i.serror,
-+			       ehc->i.action, frozen, tries_buf);
- 		if (desc)
- 			ata_dev_printk(ehc->i.dev, KERN_ERR, "%s\n", desc);
- 	} else {
- 		ata_link_printk(link, KERN_ERR, "exception Emask 0x%x "
--				"SAct 0x%x SErr 0x%x action 0x%x%s\n",
--				ehc->i.err_mask, link->sactive,
--				ehc->i.serror, ehc->i.action, frozen);
-+				"SAct 0x%x SErr 0x%x action 0x%x%s%s\n",
-+				ehc->i.err_mask, link->sactive, ehc->i.serror,
-+				ehc->i.action, frozen, tries_buf);
- 		if (desc)
- 			ata_link_printk(link, KERN_ERR, "%s\n", desc);
- 	}
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -293,8 +293,8 @@ enum {
- 	ATA_EHI_DID_RESET	= ATA_EHI_DID_SOFTRESET | ATA_EHI_DID_HARDRESET,
- 	ATA_EHI_RESET_MODIFIER_MASK = ATA_EHI_RESUME_LINK,
- 
--	/* max repeat if error condition is still set after ->error_handler */
--	ATA_EH_MAX_REPEAT	= 5,
-+	/* max tries if error condition is still set after ->error_handler */
-+	ATA_EH_MAX_TRIES	= 5,
- 
- 	/* how hard are we gonna try to probe/recover devices */
- 	ATA_PROBE_MAX_TRIES	= 3,
-@@ -580,6 +580,7 @@ struct ata_port {
- 	u32			msg_enable;
- 	struct list_head	eh_done_q;
- 	wait_queue_head_t	eh_wait_q;
-+	int			eh_tries;
- 
- 	pm_message_t		pm_mesg;
- 	int			*pm_result;
+The spec sheet says
+
+* Accord with: CF spec Ver2.0 and IDE/ATA-33 spec.
+* Standard IDE interface: true-IDE mode, support DMA-33 transfer mode
+
+I see the errors both with the old IDE code in 2.6.18 and with libata in 
+2.6.22
+
+cheers,
+
+Malcolm
+--
+Here are the relevant dmesg lines:
+
+ata_piix 0000:00:1f.1: version 2.11
+PCI: Enabling device 0000:00:1f.1 (0005 -> 0007)
+ACPI: PCI Interrupt 0000:00:1f.1[A] -> Link [LNKC] -> GSI 11 (level, 
+low) -> IRQ
+  11
+PCI: Setting latency timer of device 0000:00:1f.1 to 64
+scsi0 : ata_piix
+scsi1 : ata_piix
+ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ffa0 
+irq 14
+ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ffa8 
+irq 15
+ata1.00: CFA: SanDisk SDCFH-1024, HDX 4.07, max MWDMA2
+ata1.00: 2001888 sectors, multi 0: LBA
+ata1.01: ATA-7: SAMSUNG HD400LD, WQ100-14, max UDMA/100
+ata1.01: 781422768 sectors, multi 0: LBA48
+ata1.01: limited to UDMA/33 due to 40-wire cable
+ata1.00: configured for MWDMA2
+ata1.01: configured for UDMA/33
+ata2.00: ATAPI: LG CD-ROM CRN-8245B, 1.18, max UDMA/33
+ata2.00: configured for UDMA/33
+scsi 0:0:0:0: Direct-Access     ATA      SanDisk SDCFH-10 HDX  PQ: 0 ANSI: 5
+scsi 0:0:1:0: Direct-Access     ATA      SAMSUNG HD400LD  WQ10 PQ: 0 ANSI: 5
+scsi 1:0:0:0: CD-ROM            LG       CD-ROM CRN-8245B 1.18 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
+support DPO or FUA
+sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
+support DPO or FUA
+  sda: sda1
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+sd 0:0:1:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 0:0:1:0: [sdb] Write Protect is off
+sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+sd 0:0:1:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 0:0:1:0: [sdb] Write Protect is off
+sd 0:0:1:0: [sdb] Mode Sense: 00 3a 00 00
+sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+  sdb:<3>ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata1.01: (BMDMA stat 0x25)
+ata1.01: cmd c8/00:08:00:00:00/00:00:00:00:00/f0 tag 0 cdb 0x0 data 4096 in
+          res 51/84:00:07:00:00/00:00:00:00:00/f0 Emask 0x10 (ATA bus error)
+ata1: soft resetting port
+
+[subsequently ata1.01 is downrated to UDMA/25 and finally PIO4]
+
+  # hdparm -I /dev/sda
+
+/dev/sda:
+
+CompactFlash ATA device, with removable media
+         Model Number:       SanDisk SDCFH-1024
+         Serial Number:      004123D2804C2249
+         Firmware Revision:  HDX 4.07
+Standards:
+         Supported: 4
+         Likely used: 4
+Configuration:
+         Logical         max     current
+         cylinders       1986    1986
+         heads           16      16
+         sectors/track   63      63
+         --
+         CHS current addressable sectors:    2001888
+         LBA    user addressable sectors:    2001888
+         device size with M = 1024*1024:         977 MBytes
+         device size with M = 1000*1000:        1024 MBytes (1 GB)
+Capabilities:
+         LBA, IORDY(may be)(cannot be disabled)
+         Standby timer values: spec'd by Vendor
+         R/W multiple sector transfer: Max = 4   Current = 0
+         DMA: mdma0 mdma1 *mdma2
+              Cycle time: min=120ns recommended=120ns
+         PIO: pio0 pio1 pio2 pio3 pio4
+              Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+         Enabled Supported:
+            *    CFA feature set
+
+  # hdparm -I /dev/sdb
+
+/dev/sdb:
+
+ATA device, with non-removable media
+         Model Number:       SAMSUNG HD400LD
+         Serial Number:      S0AXJ1MP308674
+         Firmware Revision:  WQ100-14
+Standards:
+         Used: ATA/ATAPI-7 T13 1532D revision 4a
+         Supported: 7 6 5 4
+Configuration:
+         Logical         max     current
+         cylinders       16383   16383
+         heads           16      16
+         sectors/track   63      63
+         --
+         CHS current addressable sectors:   16514064
+         LBA    user addressable sectors:  268435455
+         LBA48  user addressable sectors:  781422768
+         device size with M = 1024*1024:      381554 MBytes
+         device size with M = 1000*1000:      400088 MBytes (400 GB)
+Capabilities:
+         LBA, IORDY(can be disabled)
+         Standby timer values: spec'd by Standard, no device specific 
+minimum
+         R/W multiple sector transfer: Max = 16  Current = ?
+         Recommended acoustic management value: 254, current value: 254
+         DMA: mdma0 mdma1 mdma2 udma0 *udma1 udma2 udma3 udma4 udma5
+              Cycle time: min=120ns recommended=120ns
+         PIO: pio0 pio1 pio2 pio3 pio4
+              Cycle time: no flow control=240ns  IORDY flow control=120ns
+Commands/features:
+         Enabled Supported:
+            *    SMART feature set
+                 Security Mode feature set
+            *    Power Management feature set
+            *    Write cache
+            *    Look-ahead
+            *    Host Protected Area feature set
+            *    WRITE_BUFFER command
+            *    READ_BUFFER command
+            *    NOP cmd
+            *    DOWNLOAD_MICROCODE
+                 Power-Up In Standby feature set
+                 SET_FEATURES required to spinup after power up
+                 SET_MAX security extension
+            *    Automatic Acoustic Management feature set
+            *    48-bit Address feature set
+            *    Device Configuration Overlay feature set
+            *    Mandatory FLUSH_CACHE
+            *    FLUSH_CACHE_EXT
+            *    SMART error logging
+            *    SMART self-test
+                 Media Card Pass-Through
+            *    General Purpose Logging feature set
+            *    SMART Command Transport (SCT) feature set
+            *    SCT Long Sector Access (AC1)
+            *    SCT LBA Segment Access (AC2)
+            *    SCT Error Recovery Control (AC3)
+            *    SCT Features Control (AC4)
+            *    SCT Data Tables (AC5)
+Security:
+         Master password revision code = 65534
+                 supported
+         not     enabled
+         not     locked
+         not     frozen
+         not     expired: security count
+                 supported: enhanced erase
+         228min for SECURITY ERASE UNIT. 228min for ENHANCED SECURITY 
+ERASE UNIT.
+HW reset results:
+         CBLID- above Vih
+         Device num = 1 determined by CSEL
+Checksum: correct
