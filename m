@@ -1,118 +1,105 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] pdc202xx_new: switch to using pci_get_slot()
-Date: Sat, 18 Aug 2007 22:53:58 +0400
-Message-ID: <200708182253.58679.sshtylyov@ru.mvista.com>
+Subject: [PATCH] ide: fix PCI refcounting
+Date: Sat, 18 Aug 2007 23:15:46 +0400
+Message-ID: <200708182315.46802.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:20733 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:20767 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756447AbXHRSve (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 14:51:34 -0400
+	by vger.kernel.org with ESMTP id S1756954AbXHRTNW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2007 15:13:22 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org
 
-Switch to using pci_get_slot() in init_setup_pdc20270() to get to the mate chip
-behind DC21150 bridge as there's no need for the driver itself to walk the list
-of the PCI devices (and the driver didn't check the bus # of the found device).
-While at it, make it emit warning about IRQ # being fixed up (just like hpt366.c
-does) and "beautify" this whole function as well as init_setup_pdc20276()...
+The IDE core never marked the PCI IDE devices as being in use after succesfull
+driver probe call (the devices were marked in use only while being probed), and
+so was susceptible to issues caused by unsolicited PCI hotplug device removal.
+So, add pci_dev_get() call to ide_scan_pcidev() and convert this function to
+the kernel style, also dropping a bunch of useless curly braces from its caller,
+ide_scan_pcibus() and somewhat beautifying printk() call there, while at it...
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-This patch is against the current Linus' tree, it has only been compile tested
-since I do not have PDC2027x chips and even less so the fancy RAID card based
-on i960 CPU or having DC21150 PCI bridge, so testing is desirable  if anybody
-has such stuff. :-)
+Posting as promised (with a free bonus of 2 pdc202xx_new patches ;-).
+This patch is also against the current Linus' tree.
 
- drivers/ide/pci/pdc202xx_new.c |   58 ++++++++++++++++++++++-------------------
- 1 files changed, 32 insertions(+), 26 deletions(-)
+ drivers/ide/setup-pci.c |   41 ++++++++++++++++-------------------------
+ 1 files changed, 16 insertions(+), 25 deletions(-)
 
-Index: linux-2.6/drivers/ide/pci/pdc202xx_new.c
+Index: linux-2.6/drivers/ide/setup-pci.c
 ===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_new.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_new.c
-@@ -518,44 +518,50 @@ static int __devinit init_setup_pdcnew(s
- 	return ide_setup_pci_device(dev, d);
- }
- 
--static int __devinit init_setup_pdc20270(struct pci_dev *dev,
--					 ide_pci_device_t *d)
-+static int __devinit init_setup_pdc20270(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	struct pci_dev *findev;
--	int ret;
-+	struct pci_dev *bridge = dev->bus->self;
-+
-+	if (bridge != NULL &&
-+	    bridge->vendor == PCI_VENDOR_ID_DEC &&
-+	    bridge->device == PCI_DEVICE_ID_DEC_21150) {
-+		struct pci_dev *dev2;
- 
--	if ((dev->bus->self &&
--	     dev->bus->self->vendor == PCI_VENDOR_ID_DEC) &&
--	    (dev->bus->self->device == PCI_DEVICE_ID_DEC_21150)) {
- 		if (PCI_SLOT(dev->devfn) & 2)
- 			return -ENODEV;
- 
--		while ((findev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, findev)) != NULL) {
--			if ((findev->vendor == dev->vendor) &&
--			    (findev->device == dev->device) &&
--			    (PCI_SLOT(findev->devfn) & 2)) {
--				if (findev->irq != dev->irq) {
--					findev->irq = dev->irq;
+--- linux-2.6.orig/drivers/ide/setup-pci.c
++++ linux-2.6/drivers/ide/setup-pci.c
+@@ -816,19 +816,15 @@ static int __init ide_scan_pcidev(struct
+ 	struct list_head *l;
+ 	struct pci_driver *d;
+ 	
+-	list_for_each(l, &ide_pci_drivers)
+-	{
++	list_for_each(l, &ide_pci_drivers) {
+ 		d = list_entry(l, struct pci_driver, node);
+-		if(d->id_table)
+-		{
+-			const struct pci_device_id *id = pci_match_id(d->id_table, dev);
+-			if(id != NULL)
+-			{
+-				if(d->probe(dev, id) >= 0)
+-				{
+-					dev->driver = d;
+-					return 1;
 -				}
--				ret = ide_setup_pci_devices(dev, findev, d);
--				if (ret < 0)
--					pci_dev_put(findev);
--				return ret;
-+		dev2 = pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn) + 2,
-+							PCI_FUNC(dev->devfn)));
-+		if (dev2 != NULL) {
-+			int ret;
-+
-+			if (dev2->irq != dev->irq) {
-+				dev2->irq = dev->irq;
-+
-+				printk(KERN_WARNING "%s: PCI config space "
-+				       "interrupt fixed.\n", d->name);
++		if (d->id_table) {
++			const struct pci_device_id *id = pci_match_id(d->id_table,
++								      dev);
++			if (id != NULL && d->probe(dev, id) >= 0) {
++				dev->driver = d;
++				pci_dev_get(dev);
++				return 1;
  			}
-+
-+			ret = ide_setup_pci_devices(dev, dev2, d);
-+			if (ret < 0)
-+				pci_dev_put(dev2);
-+			return ret;
  		}
  	}
- 	return ide_setup_pci_device(dev, d);
- }
+@@ -851,15 +847,13 @@ void __init ide_scan_pcibus (int scan_di
+ 	struct list_head *l, *n;
  
--static int __devinit init_setup_pdc20276(struct pci_dev *dev,
--					 ide_pci_device_t *d)
-+static int __devinit init_setup_pdc20276(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	if ((dev->bus->self) &&
--	    (dev->bus->self->vendor == PCI_VENDOR_ID_INTEL) &&
--	    ((dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960) ||
--	     (dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960RM))) {
--		printk(KERN_INFO "ide: Skipping Promise PDC20276 "
--			"attached to I2O RAID controller.\n");
-+	struct pci_dev *bridge = dev->bus->self;
-+
-+	if (bridge != NULL &&
-+	    bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+	   (bridge->device == PCI_DEVICE_ID_INTEL_I960 ||
-+	    bridge->device == PCI_DEVICE_ID_INTEL_I960RM)) {
-+
-+		printk(KERN_INFO "%s: attached to I2O RAID controller, "
-+				 "skipping.\n", d->name);
- 		return -ENODEV;
+ 	pre_init = 0;
+-	if (!scan_direction) {
+-		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
++	if (!scan_direction)
++		while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
+ 			ide_scan_pcidev(dev);
+-		}
+-	} else {
+-		while ((dev = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
++	else
++		while ((dev = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, dev))
++		       != NULL)
+ 			ide_scan_pcidev(dev);
+-		}
+-	}
+ 	
+ 	/*
+ 	 *	Hand the drivers over to the PCI layer now we
+@@ -869,12 +863,9 @@ void __init ide_scan_pcibus (int scan_di
+ 	list_for_each_safe(l, n, &ide_pci_drivers) {
+ 		list_del(l);
+ 		d = list_entry(l, struct pci_driver, node);
+-		if (__pci_register_driver(d, d->driver.owner,
+-					d->driver.mod_name)) {
+-			printk(KERN_ERR "%s: failed to register driver "
+-					"for %s\n", __FUNCTION__,
+-					 d->driver.mod_name);
+-		}
++		if (__pci_register_driver(d, d->driver.owner, d->driver.mod_name))
++			printk(KERN_ERR "%s: failed to register driver for %s\n",
++			       __FUNCTION__, d->driver.mod_name);
  	}
- 	return ide_setup_pci_device(dev, d);
+ }
+ #endif
 
