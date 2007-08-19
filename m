@@ -1,122 +1,74 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] pdc202xx_new: switch to using pci_get_slot() (take 2)
-Date: Sun, 19 Aug 2007 18:57:40 +0400
-Message-ID: <200708191857.40309.sshtylyov@ru.mvista.com>
+From: Maciek Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: SATA error while resume
+Date: Sun, 19 Aug 2007 17:16:40 +0200
+Message-ID: <46C85ED8.5080801@gmail.com>
+References: <46C80999.1060700@gmail.com> <46C852DE.8040701@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:21676 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753513AbXHSOzQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 10:55:16 -0400
-Content-Disposition: inline
+Received: from fk-out-0910.google.com ([209.85.128.187]:36431 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513AbXHSPQp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 11:16:45 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so971515fkz
+        for <linux-ide@vger.kernel.org>; Sun, 19 Aug 2007 08:16:44 -0700 (PDT)
+In-Reply-To: <46C852DE.8040701@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Linux-kernel <linux-kernel@vger.kernel.org>, htejun@gmail.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, rjw@sisk.pl
 
-Switch to using pci_get_slot() in init_setup_pdc20270() to get to the mate chip
-behind DC21150 bridge as there's no need for the driver itself to walk the list
-of the PCI devices (and the driver didn't check the bus # of the found device).
-While at it, make it emit warning about IRQ # being fixed up (just like hpt366.c
-does) and "beautify" this whole function as well as init_setup_pdc20276()...
+Mark Lord pisze:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>=20
+> Looks like a bad sector in the swap partition.
+> You can probably repair it by using this sequence of commands:
+>=20
+> swapoff /dev/sdX    <--- replace sdX with actual swap partition dev n=
+ame
+> sync
+> cat /dev/zero > /dev/sdX
+> mkswap /dev/sdX
+> swapon /dev/sdX
+>=20
+> If it recurs after doing that, then it's time for a new drive.
+>=20
+> -ml
+> -
 
----
-This patch is against the current Linus' tree, it has only been compile tested
-since I do not have PDC2027x chips and even less so the fancy RAID card based
-on i960 CPU or having DC21150 PCI bridge, so testing is desirable  if anybody
-has such stuff. :-)
-This version of patch makes sure that both PCI devices behind the i960 CPU have
-the same vendor/device ID.  I'm CCing LKML for a wider tester audience...
+rutek:/home/maciek# swapoff /dev/sda6
+rutek:/home/maciek# sync
+rutek:/home/maciek# cat /dev/zero > /dev/sda6
+cat: b=C5=82=C4=85d zapisu: B=C5=82=C4=85d wej=C5=9Bcia/wyj=C5=9Bcia (w=
+rite error, after few minutes,
+probably sda6 is full)
 
- drivers/ide/pci/pdc202xx_new.c |   60 +++++++++++++++++++++++------------------
- 1 files changed, 34 insertions(+), 26 deletions(-)
+rutek:/home/maciek# dd if=3D/dev/zero of=3D/dev/sda6
+dd: zapis do `/dev/sda6': B=C5=82=C4=85d wej=C5=9Bcia/wyj=C5=9Bcia
+5992177+0 przeczytanych record=C3=B3w
+5992176+0 zapisanych record=C3=B3w
+skopiowane 3067994112 bajt=C3=B3w (3,1 GB), 298,159 sekund, 10,3 MB/s
+rutek:/home/maciek# mkswap /dev/sda6
+Setting up swapspace version 1, size =3D 3067990 kB
+no label, UUID=3D2061df6e-d385-4367-9a4c-c8431e57b73a
+rutek:/home/maciek# swapon /dev/sda6
 
-Index: linux-2.6/drivers/ide/pci/pdc202xx_new.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/pdc202xx_new.c
-+++ linux-2.6/drivers/ide/pci/pdc202xx_new.c
-@@ -518,44 +518,52 @@ static int __devinit init_setup_pdcnew(s
- 	return ide_setup_pci_device(dev, d);
- }
- 
--static int __devinit init_setup_pdc20270(struct pci_dev *dev,
--					 ide_pci_device_t *d)
-+static int __devinit init_setup_pdc20270(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	struct pci_dev *findev;
--	int ret;
-+	struct pci_dev *bridge = dev->bus->self;
-+
-+	if (bridge != NULL &&
-+	    bridge->vendor == PCI_VENDOR_ID_DEC &&
-+	    bridge->device == PCI_DEVICE_ID_DEC_21150) {
-+		struct pci_dev *dev2;
- 
--	if ((dev->bus->self &&
--	     dev->bus->self->vendor == PCI_VENDOR_ID_DEC) &&
--	    (dev->bus->self->device == PCI_DEVICE_ID_DEC_21150)) {
- 		if (PCI_SLOT(dev->devfn) & 2)
- 			return -ENODEV;
- 
--		while ((findev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, findev)) != NULL) {
--			if ((findev->vendor == dev->vendor) &&
--			    (findev->device == dev->device) &&
--			    (PCI_SLOT(findev->devfn) & 2)) {
--				if (findev->irq != dev->irq) {
--					findev->irq = dev->irq;
--				}
--				ret = ide_setup_pci_devices(dev, findev, d);
--				if (ret < 0)
--					pci_dev_put(findev);
--				return ret;
-+		dev2 = pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn) + 2,
-+							PCI_FUNC(dev->devfn)));
-+		if (dev2 != NULL &&
-+		    dev2->vendor == dev->vendor &&
-+		    dev2->device == dev->device) {
-+			int ret;
-+
-+			if (dev2->irq != dev->irq) {
-+				dev2->irq = dev->irq;
-+
-+				printk(KERN_WARNING "%s: PCI config space "
-+				       "interrupt fixed.\n", d->name);
- 			}
-+
-+			ret = ide_setup_pci_devices(dev, dev2, d);
-+			if (ret < 0)
-+				pci_dev_put(dev2);
-+			return ret;
- 		}
- 	}
- 	return ide_setup_pci_device(dev, d);
- }
- 
--static int __devinit init_setup_pdc20276(struct pci_dev *dev,
--					 ide_pci_device_t *d)
-+static int __devinit init_setup_pdc20276(struct pci_dev *dev, ide_pci_device_t *d)
- {
--	if ((dev->bus->self) &&
--	    (dev->bus->self->vendor == PCI_VENDOR_ID_INTEL) &&
--	    ((dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960) ||
--	     (dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960RM))) {
--		printk(KERN_INFO "ide: Skipping Promise PDC20276 "
--			"attached to I2O RAID controller.\n");
-+	struct pci_dev *bridge = dev->bus->self;
-+
-+	if (bridge != NULL &&
-+	    bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+	   (bridge->device == PCI_DEVICE_ID_INTEL_I960 ||
-+	    bridge->device == PCI_DEVICE_ID_INTEL_I960RM)) {
-+
-+		printk(KERN_INFO "%s: attached to I2O RAID controller, "
-+				 "skipping.\n", d->name);
- 		return -ENODEV;
- 	}
- 	return ide_setup_pci_device(dev, d);
+
+dmesg:
+Adding 2996080k swap on /dev/sda6.  Priority:-2 extents:1 across:299608=
+0k
+
+Also I try:
+dd if=3D=3D/dev/sda... of=3D/dev/null for all partitions
+Test disk with bios utility and smartctl. Use autotest (bash shared
+mapping and disktest). No errors/warnings. Only (sometimes) while syste=
+m
+resume from suspend to disk. Disk 10 months old...
+
+Regards
+--=20
+Maciej Rutecki
+http://www.unixy.pl
+
 
