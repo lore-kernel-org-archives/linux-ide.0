@@ -1,58 +1,32 @@
-From: Maciek Rutecki <maciej.rutecki@gmail.com>
-Subject: Re: SATA error while resume
-Date: Sun, 19 Aug 2007 18:25:12 +0200
-Message-ID: <46C86EE8.1020803@gmail.com>
-References: <46C80999.1060700@gmail.com> <46C852DE.8040701@rtr.ca> <46C85ED8.5080801@gmail.com> <46C8666F.4080603@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
+Date: Sun, 19 Aug 2007 17:56:32 +0100
+Message-ID: <20070819175632.349d11c5@the-village.bc.nu>
+References: <46C69913.1060505@g7.org>
+	<46C799E8.8080407@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:58022 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831AbXHSQZS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 12:25:18 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so497534nfb
-        for <linux-ide@vger.kernel.org>; Sun, 19 Aug 2007 09:25:16 -0700 (PDT)
-In-Reply-To: <46C8666F.4080603@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44473 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753435AbXHSQsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 12:48:46 -0400
+In-Reply-To: <46C799E8.8080407@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, rjw@sisk.pl
+To: Mark Lord <liml@rtr.ca>
+Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
 
-Tejun Heo pisze:
+> I don't think we can safely assume that UDMA can co-operate with non-UDMA
+> on the same cable.  In this case, it might be causing the CF device to falsely
+> detect control cycles.
 
-> Hmmmm... Does Power-Off_Retract_Count increase after suspend/resume cycle?
->
+Improbable and never observed. The PIO address setup timing requires care
+but not the rest, and especially not UDMA where you've got different
+signalling and different timing active.
 
-
-No.
-
-Before:
-
-rutek:/home/maciek# smartctl -A -d ata /dev/sda  | grep
-Power-Off_Retract_Count
-192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always
-      -       66
-
-
-Tested:
-
-2.6.22.1 OK (double spin down of disk issue).
-
-2.6.23-rc2 with patches [1] (prevent double spin down while suspend to
-disk), also was tested ealier [2] OK
-
-[1] http://www.ussg.iu.edu/hypermail/linux/kernel/0708.0/2655.html
-[2] http://www.ussg.iu.edu/hypermail/linux/kernel/0708.0/2784.html
-
-
-After:
-rutek:/home/maciek# smartctl -A -d ata /dev/sda  | grep
-Power-Off_Retract_Count
-192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always
-      -       66
-
-
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+Sounds to me like the usual case of people putting CF convertors onto
+spec compliant cables and ending up with electrical problems. If you
+stick additional connectors, wires and plugs onto the cable it goes out
+of spec.
