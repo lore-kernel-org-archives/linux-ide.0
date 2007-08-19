@@ -1,97 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2.6.23-rc3] pata_pdc2027x: PLL detection fixes
-Date: Sun, 19 Aug 2007 20:13:46 +0400
-Message-ID: <46C86C3A.7000404@ru.mvista.com>
-References: <200708182058.l7IKwrcJ016820@harpo.it.uu.se>
+From: Maciek Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: SATA error while resume
+Date: Sun, 19 Aug 2007 18:25:12 +0200
+Message-ID: <46C86EE8.1020803@gmail.com>
+References: <46C80999.1060700@gmail.com> <46C852DE.8040701@rtr.ca> <46C85ED8.5080801@gmail.com> <46C8666F.4080603@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:61646 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753953AbXHSQLY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Aug 2007 12:11:24 -0400
-In-Reply-To: <200708182058.l7IKwrcJ016820@harpo.it.uu.se>
+Received: from nf-out-0910.google.com ([64.233.182.188]:58022 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753831AbXHSQZS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 12:25:18 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so497534nfb
+        for <linux-ide@vger.kernel.org>; Sun, 19 Aug 2007 09:25:16 -0700 (PDT)
+In-Reply-To: <46C8666F.4080603@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, albertl@mail.com, jeff@garzik.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, rjw@sisk.pl
 
-Mikael Pettersson wrote:
+Tejun Heo pisze:
 
-> Previously I reported that the pata_pdc2027x PLL detection changes
-> in kernel 2.6.22 broke the driver on my PowerMac:
+> Hmmmm... Does Power-Off_Retract_Count increase after suspend/resume cycle?
+>
 
->>pata_pdc2027x: Invalid PLL input clock 1691742kHz, give up!
 
-> This is followed by a number of errors and speed reduction
-> steps on the affected ports.
+No.
 
-> There are two bugs in pata_pdc2027x's PLL detection code:
+Before:
 
-> 1. The PLL counter's start value is read before the chip is
->    put in "test mode". Outside of test mode the counter is
->    halted, and on the PowerMac the counter is zero because
->    the chip hasn't been initialised by its BIOS.
+rutek:/home/maciek# smartctl -A -d ata /dev/sda  | grep
+Power-Off_Retract_Count
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always
+      -       66
 
-    So what?
 
->    The fix is to move the read of the start value to after
->    test mode is started, but before the mdelay() in test mode.
+Tested:
 
-    This is not an issue, so no fix is needed.
+2.6.22.1 OK (double spin down of disk issue).
 
->    This also improves the precision of the PLL detection.
+2.6.23-rc2 with patches [1] (prevent double spin down while suspend to
+disk), also was tested ealier [2] OK
 
-    BTW, looks like we don't even need to bother reading the darn counter 
-beforehand: bit 1 of the indexed register 1 (the same used to enter/exit test 
-mode by twiddling its bit 6) when being cleared should reset the counter to 0 
--- I'm looking at the internal sources which were written based on the 
-*fragment* of the PDC20270 datasheet (yeah, Promise didn't even give us the 
-whole datasheet!) about the PLL calibration.
+[1] http://www.ussg.iu.edu/hypermail/linux/kernel/0708.0/2655.html
+[2] http://www.ussg.iu.edu/hypermail/linux/kernel/0708.0/2784.html
 
-> 2. The code to compute the number of PLL decrements during the
->    mdelay() in test mode fails to consider that the PLL counter
->    only is 30 bits wide. If there is a wraparound, it will compute
->    an incorrect and much too large value. On the PowerMac, the
->    start count is zero, the end count is a large 30-bit value, so
->    wraparound occurs and an out of bounds PLL clock is detected.
 
->    The fix is to mask the (start - end) computation to 30 bits.
+After:
+rutek:/home/maciek# smartctl -A -d ata /dev/sda  | grep
+Power-Off_Retract_Count
+192 Power-Off_Retract_Count 0x0032   100   100   000    Old_age   Always
+      -       66
 
-    Yeah, that's what I've done for the old IDE driver...
 
-> While debugging this I also noticed that pdc_read_counter()
-> reads the two halves of the 30-bit PLL counter as 16-bit values,
-> and then combines them as if the halves only are 15 bits wide.
-> To avoid confusion, the halves should be read as 15-bit values.
-
-    Shouldn't matter, the bit is most probably reseved and so always remains 0.
-Actually, those 2 counters count the data bytes transferred over PCI bus when 
-the chip in not in the test mode.
-
-> This patch implements all three changes. It fixes the PLL detection
-> failure on my PowerMac, and doesn't cause any regressions on an x86
-> with an identical card.
-
-> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> diff -rupN linux-2.6.23-rc3/drivers/ata/pata_pdc2027x.c linux-2.6.23-rc3.pata_pdc2027x-pll-detection-fixes/drivers/ata/pata_pdc2027x.c
-> --- linux-2.6.23-rc3/drivers/ata/pata_pdc2027x.c	2007-07-09 22:01:31.000000000 +0200
-> +++ linux-2.6.23-rc3.pata_pdc2027x-pll-detection-fixes/drivers/ata/pata_pdc2027x.c	2007-08-18 21:53:40.000000000 +0200
-[...]
-> @@ -719,7 +719,7 @@ static long pdc_detect_pll_input_clock(s
->  	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
->  		(end_time.tv_usec - start_time.tv_usec);
->  
-> -	pll_clock = (start_count - end_count) / 100 *
-> +	pll_clock = ((start_count - end_count) & 0x3fffffff) / 100 *
->  		(100000000 / usec_elapsed);
->  
->  	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
-
-    Only this fragment really matters.
-
-MBR, Sergei
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
