@@ -1,54 +1,30 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: SATA error while resume
-Date: Sun, 19 Aug 2007 10:25:34 -0400
-Message-ID: <46C852DE.8040701@rtr.ca>
-References: <46C80999.1060700@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 6/7] ide: remove CONFIG_IDEDMA_ONLYDISK
+Date: Sun, 19 Aug 2007 18:32:22 +0400
+Message-ID: <46C85476.1080007@ru.mvista.com>
+References: <200708182051.26177.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2128 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751233AbXHSO0G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Aug 2007 10:26:06 -0400
-In-Reply-To: <46C80999.1060700@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:61351 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753473AbXHSO37 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Aug 2007 10:29:59 -0400
+In-Reply-To: <200708182051.26177.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maciek Rutecki <maciej.rutecki@gmail.com>
-Cc: Linux-kernel <linux-kernel@vger.kernel.org>, htejun@gmail.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, rjw@sisk.pl
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Maciek Rutecki wrote:
-> Kernel: 2.6.23-rc2 witch patches [1], but older and stable versions also
-.. 
-> Sometimes (one in ten, or rarely) I have this error while system resume
-> from suspend to disk:
-..
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> ata1.00: irq_stat 0x40000001
-> ata1.00: cmd 25/00:00:10:0b:f3/00:04:05:00:00/e0 tag 0 cdb 0x0 data
-> 524288 in
->          res 51/40:a4:6c:0b:f3/00:03:05:00:00/e0 Emask 0x9 (media error)
-> ata1.00: configured for UDMA/100
-> sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> sd 0:0:0:0: [sda] Sense Key : Medium Error [current] [descriptor]
-> Descriptor sense data with sense descriptors (in hex):
->         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
->         05 f3 0b 6c
-> sd 0:0:0:0: [sda] Add. Sense: Unrecovered read error - auto reallocate
-> failed
-> end_request: I/O error, dev sda, sector 99814252
-> Read-error on swap-device (8:0:99814256)
-...
+Bartlomiej Zolnierkiewicz wrote:
 
-Looks like a bad sector in the swap partition.
-You can probably repair it by using this sequence of commands:
+> ATAPI devices with broken DMA support should be handled by DMA blacklist
+> and for debugging purposes we have new shiny "hdx=nodma" kernel paremeter.
 
-swapoff /dev/sdX	<--- replace sdX with actual swap partition dev name
-sync
-cat /dev/zero > /dev/sdX
-mkswap /dev/sdX
-swapon /dev/sdX
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-If it recurs after doing that, then it's time for a new drive.
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
--ml
+MBR, Sergei
+
