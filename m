@@ -1,32 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
-Date: Sun, 19 Aug 2007 17:56:32 +0100
-Message-ID: <20070819175632.349d11c5@the-village.bc.nu>
-References: <46C69913.1060505@g7.org>
-	<46C799E8.8080407@rtr.ca>
+Subject: Re: PATA hotplug
+Date: Sun, 19 Aug 2007 18:06:11 +0100
+Message-ID: <20070819180611.7b83e476@the-village.bc.nu>
+References: <540684.20873.qm@web57912.mail.re3.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44473 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35987 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753435AbXHSQsq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 12:48:46 -0400
-In-Reply-To: <46C799E8.8080407@rtr.ca>
+	with ESMTP id S1754152AbXHSQ6I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Aug 2007 12:58:08 -0400
+In-Reply-To: <540684.20873.qm@web57912.mail.re3.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
+To: Paul Wakeman <prwakeman@yahoo.com>
+Cc: linux-ide@vger.kernel.org
 
-> I don't think we can safely assume that UDMA can co-operate with non-UDMA
-> on the same cable.  In this case, it might be causing the CF device to falsely
-> detect control cycles.
+On Fri, 17 Aug 2007 08:56:35 -0700 (PDT)
+Paul Wakeman <prwakeman@yahoo.com> wrote:
 
-Improbable and never observed. The PIO address setup timing requires care
-but not the rest, and especially not UDMA where you've got different
-signalling and different timing active.
+> Does libata support PATA hotplug?
+> 
+> I have a PCMCIA CF using TrueIDE mode and want to be able to hotplug CF
+> cards. Would I get hotplug for free if I convert the existing IDE
+> driver to a libata pata platform driver?
 
-Sounds to me like the usual case of people putting CF convertors onto
-spec compliant cables and ending up with electrical problems. If you
-stick additional connectors, wires and plugs onto the cable it goes out
-of spec.
+If your hardware supports PATA hotplug (most doesn't) then you can tell
+the kernel to remove the device, pull it, add a new one and tell the
+kernel to rescan (exactly as you do with any other scsi device).
+Autodetect support right now is only in the SATA side and afaik no PATA
+controller supports PATA hot plug autodetect.
+
