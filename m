@@ -1,68 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream-fixes 2/2] libata: prevent EH from being scheduled
- after port is detached
-Date: Mon, 20 Aug 2007 21:27:35 +0900
-Message-ID: <46C988B7.8030408@gmail.com>
-References: <20070820115000.GA2909@htj.dyndns.org> <20070820115356.GB2909@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Rusty Conover <rconover@infogears.com>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Mon, 20 Aug 2007 13:56:36 -0600
+Message-ID: <DFEB0E31-D017-4527-85A4-8D18D379CB0B@infogears.com>
+References: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com> <46C5E3A6.9020907@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:19397 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbXHTM1m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Aug 2007 08:27:42 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so954220rvb
-        for <linux-ide@vger.kernel.org>; Mon, 20 Aug 2007 05:27:42 -0700 (PDT)
-In-Reply-To: <20070820115356.GB2909@htj.dyndns.org>
+Received: from mail.infogears.com ([69.51.90.143]:35130 "EHLO
+	mail.infogears.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084AbXHTT4i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Aug 2007 15:56:38 -0400
+In-Reply-To: <46C5E3A6.9020907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> SCSI EH thread is stopped during SCSI host release which can happen
-> after ATA host detach and free.  This leads to the following oops.
-> 
->   general protection fault: 0000 [1] PREEMPT SMP 
->   CPU 0 
->   Modules linked in: ahci libata
->   Pid: 98, comm: kblockd/0 Not tainted 2.6.23-rc2-work #19
->   RIP: 0010:[<ffffffff80242aa7>]  [<ffffffff80242aa7>] run_workqueue+0xb7/0x190
->   RSP: 0018:ffff81001fd2be80  EFLAGS: 00010087
->   RAX: 6b6b6b6b6b6b6b6b RBX: ffff81001fae4a18 RCX: 1240000000000000
->   RDX: 6b6b6b6b6b6b6b6b RSI: 9200000000000000 RDI: ffff81001fc1b930
->   RBP: ffff81001fd2beb0 R08: fffffffffedc0049 R09: 0000000000000000
->   R10: ffffffff80242a09 R11: 0000000000000000 R12: ffff81001fae4a10
->   R13: ffff81001fc1b930 R14: 6b6b6b6b6b6b6b6b R15: ffff81001fc1b960
->   FS:  0000000000000000(0000) GS:ffffffff808cb000(0000) knlGS:0000000000000000
->   CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
->   CR2: 00002b531964d890 CR3: 0000000000201000 CR4: 00000000000006e0
->   DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->   DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->   Process kblockd/0 (pid: 98, threadinfo ffff81001fd2a000, task ffff81001fe78140)
->   Stack:  ffff81001fd2beb0 ffff81001fc1b970 ffff81001fc1b930 ffff81001fd2bec0
->    ffff81001fc1b960 0000000000000000 ffff81001fd2bf10 ffffffff8024385a
->    0000000000000000 ffff81001fe78140 ffffffff80247450 ffff81001fd2bed8
->   Call Trace:
->    [<ffffffff8024385a>] worker_thread+0xca/0x130
->    [<ffffffff80247450>] autoremove_wake_function+0x0/0x40
->    [<ffffffff80243790>] worker_thread+0x0/0x130
->    [<ffffffff8024706d>] kthread+0x4d/0x80
->    [<ffffffff8020cbf8>] child_rip+0xa/0x12
->    [<ffffffff8020c2e0>] restore_args+0x0/0x30
->    [<ffffffff80247178>] kthreadd+0xd8/0x160
->    [<ffffffff80247020>] kthread+0x0/0x80
->    [<ffffffff8020cbee>] child_rip+0x0/0x12
-> 
-> This patch clears ATA_PFLAG_RUNNING after final freeze and moves
-> ATA_PFLAG_RUNNING check into ata_eh_set_pending() to cover all EH
-> schedule functions.
+Hi Tejun,
 
-Oops, please hold a bit.  After 30min of testing, it happened again.  It
-seems it needs more fixing.  I'll write when I know more.
+I've taken your advice, reseat-ed and re-cabled everything.  I did  
+find one bad drive that I've removed, but sadly I'm still having  
+problems.
 
-Thanks.
+I've done some more testing that may be able to help you out.
 
--- 
-tejun
+I've tested all 5 WDC drives, they all work.  The problem is I get  
+this exception:
+
+ata6.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
+ata6.00: cmd 60/80:00:3f:45:08/00:00:00:00:00/40 tag 0 cdb 0x0 data  
+65536 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+
+It only happens whenever I have any drive in any of the PMP ports.  I  
+can have 4 drives in all native ports and they all work great. I've  
+tested all of the position/port/disk combinations, so I've eliminated  
+the drives as being part of the problem. I can swap any combination  
+into the 4 native SATA ports and things work great (that is I can  
+setup a RAID10, and create a ext3 fs without any resets).
+
+It doesn't matter if I place the drive in the first or second PMP  
+group it still causes a timeout.
+
+On the Norco-1220 block diagram it shows:
+
+Bays
+1-4 = Sil3726 #1 - PMP
+5   = Sil3726 #1 - Native SATA port
+6-9 = Sil3726 #2 - PMP
+10  = Sil3726 #2 - Native SATA port
+11  = Sil3124 - Native SATA port
+12  = Sil3124 - Native SATA port
+
+When I've got disks in ports 5, 10, 11, and 12 thinks work great, if  
+any disks are in ports 1-4 or 6-9 I have timeout problems.
+
+I've tried turning down the speed of the PCI-X board, but it doesn't  
+have any effect.
+
+I've posted my kernel log at:
+
+http://rusty.devel.infogears.com/silerrors.txt
+
+The interesting thing is when I create the raid with:
+
+echo -n 500000 > /proc/sys/dev/raid/speed_limit_max
+mdadm --create /dev/md2 --chunk=128 --level=10 --layout n2 --raid- 
+devices=5 /dev/sd{c,d,e,f,g}1
+mkfs -t ext3 -b 4096 -m 0 -R stride=16 /dev/md2
+
+It always fails around the same area but not the same exact inode  
+table number, with just over 2000 inode tables written its where the  
+first error is triggered.  Could this be some point a point of  
+inflection where the I/O is no longer hitting the cache, and  
+therefore the disk times out since the disk or PMP port can't keep up  
+with some built in timer?
+
+I've posted the results of
+
+hdparm -I and smartctl -a for all of the disks at:
+
+http://rusty.devel.infogears.com/disk.info.txt
+
+Thank you for your help,
+
+Rusty
