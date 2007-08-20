@@ -1,77 +1,104 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes 1/2] libata: invert ATA_PFLAG_INITIALIZING to RUNNING
-Date: Mon, 20 Aug 2007 20:50:00 +0900
-Message-ID: <20070820115000.GA2909@htj.dyndns.org>
+Subject: [PATCH #upstream-fixes 2/2] libata: prevent EH from being scheduled after port is detached
+Date: Mon, 20 Aug 2007 20:53:56 +0900
+Message-ID: <20070820115356.GB2909@htj.dyndns.org>
+References: <20070820115000.GA2909@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:33980 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.190]:38492 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbXHTLuG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Aug 2007 07:50:06 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so948884rvb
-        for <linux-ide@vger.kernel.org>; Mon, 20 Aug 2007 04:50:06 -0700 (PDT)
+	with ESMTP id S1755115AbXHTLyD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Aug 2007 07:54:03 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so949534rvb
+        for <linux-ide@vger.kernel.org>; Mon, 20 Aug 2007 04:54:02 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20070820115000.GA2909@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Invert the meaning of ATA_PFLAG_INITIALIZING and rename it to
-ATA_PFLAG_RUNNING.  This will be used to prevent EH from being
-scheduled during host removal.
+SCSI EH thread is stopped during SCSI host release which can happen
+after ATA host detach and free.  This leads to the following oops.
+
+  general protection fault: 0000 [1] PREEMPT SMP 
+  CPU 0 
+  Modules linked in: ahci libata
+  Pid: 98, comm: kblockd/0 Not tainted 2.6.23-rc2-work #19
+  RIP: 0010:[<ffffffff80242aa7>]  [<ffffffff80242aa7>] run_workqueue+0xb7/0x190
+  RSP: 0018:ffff81001fd2be80  EFLAGS: 00010087
+  RAX: 6b6b6b6b6b6b6b6b RBX: ffff81001fae4a18 RCX: 1240000000000000
+  RDX: 6b6b6b6b6b6b6b6b RSI: 9200000000000000 RDI: ffff81001fc1b930
+  RBP: ffff81001fd2beb0 R08: fffffffffedc0049 R09: 0000000000000000
+  R10: ffffffff80242a09 R11: 0000000000000000 R12: ffff81001fae4a10
+  R13: ffff81001fc1b930 R14: 6b6b6b6b6b6b6b6b R15: ffff81001fc1b960
+  FS:  0000000000000000(0000) GS:ffffffff808cb000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+  CR2: 00002b531964d890 CR3: 0000000000201000 CR4: 00000000000006e0
+  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+  DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+  Process kblockd/0 (pid: 98, threadinfo ffff81001fd2a000, task ffff81001fe78140)
+  Stack:  ffff81001fd2beb0 ffff81001fc1b970 ffff81001fc1b930 ffff81001fd2bec0
+   ffff81001fc1b960 0000000000000000 ffff81001fd2bf10 ffffffff8024385a
+   0000000000000000 ffff81001fe78140 ffffffff80247450 ffff81001fd2bed8
+  Call Trace:
+   [<ffffffff8024385a>] worker_thread+0xca/0x130
+   [<ffffffff80247450>] autoremove_wake_function+0x0/0x40
+   [<ffffffff80243790>] worker_thread+0x0/0x130
+   [<ffffffff8024706d>] kthread+0x4d/0x80
+   [<ffffffff8020cbf8>] child_rip+0xa/0x12
+   [<ffffffff8020c2e0>] restore_args+0x0/0x30
+   [<ffffffff80247178>] kthreadd+0xd8/0x160
+   [<ffffffff80247020>] kthread+0x0/0x80
+   [<ffffffff8020cbee>] child_rip+0x0/0x12
+
+This patch clears ATA_PFLAG_RUNNING after final freeze and moves
+ATA_PFLAG_RUNNING check into ata_eh_set_pending() to cover all EH
+schedule functions.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    4 +---
- drivers/ata/libata-eh.c   |    2 +-
- include/linux/libata.h    |    2 +-
- 3 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/ata/libata-core.c |    3 ++-
+ drivers/ata/libata-eh.c   |    8 +++-----
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
 Index: work/drivers/ata/libata-core.c
 ===================================================================
 --- work.orig/drivers/ata/libata-core.c
 +++ work/drivers/ata/libata-core.c
-@@ -6052,7 +6052,6 @@ struct ata_port *ata_port_alloc(struct a
- 	if (!ap)
- 		return NULL;
+@@ -6547,7 +6547,8 @@ void ata_port_detach(struct ata_port *ap
+ 	 * target.
+ 	 */
+ 	spin_lock_irqsave(ap->lock, flags);
+-	ata_port_freeze(ap);	/* won't be thawed */
++	ata_port_freeze(ap);			/* won't be thawed */
++	ap->pflags &= ~ATA_PFLAG_RUNNING;	/* port is dead now */
+ 	spin_unlock_irqrestore(ap->lock, flags);
  
--	ap->pflags |= ATA_PFLAG_INITIALIZING;
- 	ap->lock = &host->lock;
- 	ap->flags = ATA_FLAG_DISABLED;
- 	ap->print_id = -1;
-@@ -6428,8 +6427,7 @@ int ata_host_register(struct ata_host *h
- 			ehi->action |= ATA_EH_SOFTRESET;
- 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
- 
--			ap->pflags &= ~ATA_PFLAG_INITIALIZING;
--			ap->pflags |= ATA_PFLAG_LOADING;
-+			ap->pflags |= ATA_PFLAG_LOADING | ATA_PFLAG_RUNNING;
- 			ata_port_schedule_eh(ap);
- 
- 			spin_unlock_irqrestore(ap->lock, flags);
+ 	ata_port_wait_eh(ap);
 Index: work/drivers/ata/libata-eh.c
 ===================================================================
 --- work.orig/drivers/ata/libata-eh.c
 +++ work/drivers/ata/libata-eh.c
-@@ -709,7 +709,7 @@ void ata_port_schedule_eh(struct ata_por
+@@ -648,8 +648,9 @@ static void ata_eh_set_pending(struct at
+ {
+ 	int cnt;
+ 
+-	/* already scheduled? */
+-	if (ap->pflags & ATA_PFLAG_EH_PENDING)
++	/* nothing to do if port isn't running or EH is already scheduled */
++	if (!(ap->pflags & ATA_PFLAG_RUNNING) ||
++	    (ap->pflags & ATA_PFLAG_EH_PENDING))
+ 		return;
+ 
+ 	ap->pflags |= ATA_PFLAG_EH_PENDING;
+@@ -709,9 +710,6 @@ void ata_port_schedule_eh(struct ata_por
  {
  	WARN_ON(!ap->ops->error_handler);
  
--	if (ap->pflags & ATA_PFLAG_INITIALIZING)
-+	if (!(ap->pflags & ATA_PFLAG_RUNNING))
- 		return;
- 
+-	if (!(ap->pflags & ATA_PFLAG_RUNNING))
+-		return;
+-
  	ata_eh_set_pending(ap, 1);
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -194,7 +194,7 @@ enum {
- 	ATA_PFLAG_LOADING	= (1 << 4), /* boot/loading probe */
- 	ATA_PFLAG_UNLOADING	= (1 << 5), /* module is unloading */
- 	ATA_PFLAG_SCSI_HOTPLUG	= (1 << 6), /* SCSI hotplug scheduled */
--	ATA_PFLAG_INITIALIZING	= (1 << 7), /* being initialized, don't touch */
-+	ATA_PFLAG_RUNNING	= (1 << 7), /* port up & running */
+ 	scsi_schedule_eh(ap->scsi_host);
  
- 	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
- 	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
