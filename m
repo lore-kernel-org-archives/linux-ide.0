@@ -1,48 +1,38 @@
-From: Brandon Philips <brandon@ifup.org>
-Subject: Re: Question about "Disk might not be spun down properly"
-Date: Tue, 21 Aug 2007 09:59:28 -0700
-Message-ID: <20070821165928.GA15287@ifup.org>
-References: <17631.80.127.80.206.1187693752.squirrel@webmail.xs4all.nl>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: sata_via: write errors on PATA drive connected to VT6421
+Date: Tue, 21 Aug 2007 19:09:30 +0200
+Message-ID: <200708211909.30652.linux@rainbow-software.org>
+References: <200708202242.07290.linux@rainbow-software.org> <20070821132731.6bf10b50@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.237]:17291 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224AbXHUQ7g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Aug 2007 12:59:36 -0400
-Received: by hu-out-0506.google.com with SMTP id 19so2261388hue
-        for <linux-ide@vger.kernel.org>; Tue, 21 Aug 2007 09:59:33 -0700 (PDT)
+Received: from mail.atlantis.sk ([80.94.52.35]:37631 "EHLO mail.atlantis.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754576AbXHURJU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Aug 2007 13:09:20 -0400
+In-Reply-To: <20070821132731.6bf10b50@the-village.bc.nu>
 Content-Disposition: inline
-In-Reply-To: <17631.80.127.80.206.1187693752.squirrel@webmail.xs4all.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vahid <vahid@xs4all.nl>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 12:55 Tue 21 Aug 2007, Vahid wrote:
-> Recently I noticed that I have been getting the following message
-> everytime I shutdown my PC.
-> 
-> "DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY"
-> 
-> I have also checked your website at http://linux-ata.org/shutdown.html.
-> 
-> I just recently reinstalled Linux (Debian Etch), and noticed that I have
-> been getting this problem, currently I am using kernel 2.6.22.2. I must
-> say that I am pretty new to this issue and currently can't seem to figure
-> out how to resolve this. I do see a warning during shutdown and am also
-> using a new kernel.
+On Tuesday 21 August 2007 14:27:31 Alan Cox wrote:
+> > The transfer mode decreases from UDMA/100 to UDMA/66 and then UDMA/33 but
+> > it doesn't help at all. The drive itself is fine, the problems also
+> > appear with
+>
+> Does it settle at UDMA33 or keep going down lower ?
 
-The Debian bug is here:
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=426224
+It does not go below UDMA33. 
+dd if=/dev/zero of=some.file bs=131072 count=1024 takes 526 seconds (amazing 
+transfer rate 255KB/s) with system being unresponsive most of the time.
 
-However, it looks like things are moving slowly.  :(  Other distros are
-carrying fixes so it seems like it should be a non-issue getting this
-fixed.
+Commenting out the UDMA support in sata_via.c (.udma_mask and .set_dmamode for 
+PATA port) causes the driver to run in PIO4 mode which seems to work without 
+errors but slowly (3MB/s with 100% CPU load).
 
-In any case, this has been annoying me also so I will try and help out
-when I get a chance.
-
-Hope that helps.
-
-	Brandon
+-- 
+Ondrej Zary
