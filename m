@@ -1,55 +1,55 @@
-From: Rene Herman <rene.herman@gmail.com>
-Subject: Re: Problems with IDE on linux 2.6.22.X
-Date: Wed, 22 Aug 2007 18:54:07 +0200
-Message-ID: <46CC6A2F.5000406@gmail.com>
-References: <200708212149.12912.jopan@alumni.uv.es> <46CB626F.8020801@gmail.com> <200708220339.45138.jopan@alumni.uv.es> <46CBA0F0.70503@gmail.com> <20070822122359.7ce8ddaa@the-village.bc.nu> <46CC5AE4.1090600@gmail.com> <20070822162312.GG9412@csclub.uwaterloo.ca>
+From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+Subject: Re: 2.6.23-rc3-mm1
+Date: Wed, 22 Aug 2007 19:24:39 +0200
+Message-ID: <64bb37e0708221024p5184aa65x5d36c7c049049124@mail.gmail.com>
+References: <20070822020648.5ea3a612.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:59973 "EHLO
-	smtpq2.tilbu1.nb.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760634AbXHVQ7C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 12:59:02 -0400
-In-Reply-To: <20070822162312.GG9412@csclub.uwaterloo.ca>
+Received: from wa-out-1112.google.com ([209.85.146.176]:35405 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758144AbXHVRYk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 13:24:40 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so257138wah
+        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 10:24:40 -0700 (PDT)
+In-Reply-To: <20070822020648.5ea3a612.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jos? Luis Pati?o Andr?s <jopan@alumni.uv.es>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 08/22/2007 06:23 PM, Lennart Sorensen wrote:
+On 8/22/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc3/2.6.23-rc3-mm1/
+[snip]
+> -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61.patch
+> -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61-fix.patch
+[snip]
+>  Merged into mainline or a subsystem tree
 
-> On Wed, Aug 22, 2007 at 05:48:52PM +0200, Rene Herman wrote:
+That patch is no longer in 2.6.23-rc3-mm1, my bootlog says:
+[    0.000000] Unknown boot option `sata_nv.swncq=1': ignoring
 
->> He has a SATA harddrive and an IDE DVD drive. When he compiles with=20
->> CONFIG_ATA_PIIX (a driver which advertises both SATA and PATA in its=
-=20
->> description) his drive works, his DVD does not. Is that not the corr=
-ect=20
->> driver? Does he need something else? How does he get his DVD to work=
-?
->=20
-> Well of course the DVD should show up as /dev/sr0 or scd0 with the ne=
-w
-> driver, not the /dev/hd? name.  And scsi cdrom support is required to=
-o.
+I could not find this patch in any git trees I looked and its removal
+mail from mm-commit said:
+"This patch was dropped because Changes in Jeff's tree destroyed it."
 
-Obviously. Looking back through the report, him having SCSI CD-ROM supp=
-ort=20
-wasn't actually explicit so that might in fact be the problem but his=20
-self-compiled 2.6.20.15 worked and a 2.6.22 based Open SuSE Live CD doe=
-s not=20
-(and he does have SCSI disk support, which suggests he will've likely a=
-lso=20
-have thought of SCSI CD-ROM support) so it does not seem to be.
 
-Jos=E9: do you have SCSI CD-ROM support compiled in? What are the ATA/S=
-CSI=20
-related messages in the output of "dmesg" when you compile with the=20
-CONFIG_ATA_PIIX driver, SCSI disk and SCSI CD-ROM support (and nothing =
-from=20
-the old IDE menu)?
+I only found out about the swncq=1 command line option yesterday and
+so tested it only one day.
+But I did not have any trouble with it, even as my drive was made by Maxtor.
 
-Rene.
+The chipset:
+00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
+00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
+00:05.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
 
+The drive:
+Device Model:     MAXTOR STM3320820AS
+Serial Number:    5QF2E698
+Firmware Version: 3.AAE
+
+As it worked for me, I hope that patch will be picked up by someone. :)
+
+Torsten
