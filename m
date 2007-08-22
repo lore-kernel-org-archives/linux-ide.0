@@ -1,55 +1,59 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: 2.6.23-rc3-mm1
-Date: Wed, 22 Aug 2007 19:24:39 +0200
-Message-ID: <64bb37e0708221024p5184aa65x5d36c7c049049124@mail.gmail.com>
-References: <20070822020648.5ea3a612.akpm@linux-foundation.org>
+From: Brandon Philips <brandon@ifup.org>
+Subject: Re: [PATCH ] /drivers/ata ioremap returncode check
+Date: Wed, 22 Aug 2007 11:11:18 -0700
+Message-ID: <20070822181118.GA15764@ifup.org>
+References: <387498.11798.qm@web44905.mail.sp1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:35405 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758144AbXHVRYk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 13:24:40 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so257138wah
-        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 10:24:40 -0700 (PDT)
-In-Reply-To: <20070822020648.5ea3a612.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <387498.11798.qm@web44905.mail.sp1.yahoo.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: postfail@hushmail.com
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 8/22/07, Andrew Morton <akpm@linux-foundation.org> wrote:
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc3/2.6.23-rc3-mm1/
-[snip]
-> -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61.patch
-> -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61-fix.patch
-[snip]
->  Merged into mainline or a subsystem tree
+On 20:31 Mon 13 Aug 2007, Scott Thompson wrote:
+> patchset against 2.6.23-rc3.  corrects missing ioremap return checks.
+> 
+> Warning -- cleanup handler here may miss additional required cleanup as has occurred on other
+> portions of ioremap audit.
+> 
+> This patch had been submitted previously but hushmail client caused wordwrap issues, resending
+> with different mail client.
+> 
+> Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
+> ----------------------------------------------------------
+> 
+> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+> index 4ca7fd6..eaebc4d 100644
+> --- a/drivers/ata/pata_ixp4xx_cf.c
+> +++ b/drivers/ata/pata_ixp4xx_cf.c
+> @@ -189,6 +189,14 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
+>  	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
+>  	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
+>  
+> +	if (!data->cs0 || !data->cs1) {
+> +		if (data->cs0)
+> +			iounmap(data->cs0);
+> +		if (data->cs1)
+> +			iounmap(data->cs1);
+> +		return -ENOMEM;
+> +	}
+> +
+>  	irq = platform_get_irq(pdev, 0);
+>  	if (irq)
+>  		set_irq_type(irq, IRQT_RISING);
 
-That patch is no longer in 2.6.23-rc3-mm1, my bootlog says:
-[    0.000000] Unknown boot option `sata_nv.swncq=1': ignoring
+The iounmap calls are unnecessary since devm_ioremap will un-allocate
+the space if you return an error from probe.  See
+Documentation/driver-model/devres.txt
 
-I could not find this patch in any git trees I looked and its removal
-mail from mm-commit said:
-"This patch was dropped because Changes in Jeff's tree destroyed it."
+But, something like this is needed.
 
++	if (!data->cs0 || !data->cs1)
++		return -ENOMEM;
 
-I only found out about the swncq=1 command line option yesterday and
-so tested it only one day.
-But I did not have any trouble with it, even as my drive was made by Maxtor.
+Thanks,
 
-The chipset:
-00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-00:05.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-
-The drive:
-Device Model:     MAXTOR STM3320820AS
-Serial Number:    5QF2E698
-Firmware Version: 3.AAE
-
-As it worked for me, I hope that patch will be picked up by someone. :)
-
-Torsten
+	Brandon
