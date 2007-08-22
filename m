@@ -1,58 +1,37 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.23-rc3] pata_via cable override for Arima W730-K8
-Date: Wed, 22 Aug 2007 11:26:03 +0200 (MEST)
-Message-ID: <200708220926.l7M9Q3eb014746@alkaid.it.uu.se>
+From: Kiko Piris <kernel@pirispons.net>
+Subject: Re: Problems with IDE on linux 2.6.22.X
+Date: Wed, 22 Aug 2007 08:15:08 +0200
+Message-ID: <20070822061508.GA16152@bacterio.pirispons.net>
+References: <200708212149.12912.jopan@alumni.uv.es> <46CB626F.8020801@gmail.com> <200708220339.45138.jopan@alumni.uv.es> <46CBA0F0.70503@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:40992 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169AbXHVJ0K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Aug 2007 05:26:10 -0400
+Received: from outbound.mailhop.org ([63.208.196.171]:3699 "EHLO
+	outbound.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758226AbXHVJmI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 05:42:08 -0400
+Content-Disposition: inline
+In-Reply-To: <46CBA0F0.70503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: linux-ide@vger.kernel.org
+To: Rene Herman <rene.herman@gmail.com>
+Cc: =?iso-8859-1?Q?Jos=E9_Luis_Pati=F1o_Andr=E9s?= <jopan@alumni.uv.es>, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Fri, 3 Aug 2007 23:32:17 +0100, Alan Cox wrote:
->On Fri, 3 Aug 2007 20:28:39 +0200 (MEST)
->Mikael Pettersson <mikpe@it.uu.se> wrote:
->
->> The machine is an Athlon64 laptop with a K8T800 chipset. With the IDE
->> VIA driver the disk is detected as udma/100:
->
->Currently old IDE via driver has a hack in it which goes 'did the BIOS
->set UDMA3+' then I guess the cable is 80 wire regardless. libata doesn't
->do that as it breaks with hotplug, breaks with suspend/resume before the
->driver is loaded and other bits.
->
->Instead we have two things - an ACPI snoop and a table of wonky laptops
->(eg those that use 40 wire ultrashort cables which are valid for UDMA133
->but not detected as 80 wire). If your laptop is done that way then it
->just needs adding to the magic list and/or 2.6.23-rc1-mm should spot it
->by ACPI. I'd prefer the table entry anyway as I don't like relying on ACPI
->so an lspci -vvxx would be appreciated
+On 22/08/2007 at 04:35 +0200, Rene Herman wrote:
 
-This patch updates the pata_via cable override DMI table to also
-recognise my Targa Visionary 811 laptop (== Arima W730-K8).
-With this patch pata_via does UDMA100 just like the old IDE driver.
+> The old SATA driver available from the IDE menu also does not support=
+ your=20
+> chip, so I don't believe there are any workarounds -- you'll need the=
+ issue=20
+> fixed.
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
- drivers/ata/pata_via.c |    7 +++++++
- 1 files changed, 7 insertions(+)
+I had the same issue when I compiled 2.6.22 on my T60 (SATA_AHCI drives
+my hd). I workarounded it selecting IDE_GENERIC as a module.
 
---- linux-2.6.23-rc3/drivers/ata/pata_via.c.~1~	2007-08-21 00:45:11.000000000 +0200
-+++ linux-2.6.23-rc3/drivers/ata/pata_via.c	2007-08-21 01:01:27.000000000 +0200
-@@ -136,6 +136,13 @@ static struct dmi_system_id cable_dmi_ta
- 			DMI_MATCH(DMI_BOARD_NAME, "Ferrari 3400"),
- 		},
- 	},
-+	{
-+		.ident = "Arima W730-K8",
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "ACTEBIS"),
-+			DMI_MATCH(DMI_BOARD_NAME, "SAM#451B"),
-+		},
-+	},
- 	{ }
- };
- 
+Worth a try=E2=80=A6
+
+--=20
+Kiko
+Private mail is preferred encrypted:
+http://www.pirispons.net/pgpkey.html
