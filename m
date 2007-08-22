@@ -1,68 +1,31 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.23-rc3-mm1
-Date: Wed, 22 Aug 2007 11:14:28 -0700
-Message-ID: <20070822111428.ad3f437c.akpm@linux-foundation.org>
-References: <20070822020648.5ea3a612.akpm@linux-foundation.org>
-	<64bb37e0708221024p5184aa65x5d36c7c049049124@mail.gmail.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: no need to add new DID's to AHCI driver?
+Date: Wed, 22 Aug 2007 11:19:00 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701AE8117@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:43902 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761707AbXHVSOn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 14:14:43 -0400
-In-Reply-To: <64bb37e0708221024p5184aa65x5d36c7c049049124@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:42451 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761628AbXHVSTR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 14:19:17 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-On Wed, 22 Aug 2007 19:24:39 +0200
-"Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
+Hello,
 
-> On 8/22/07, Andrew Morton <akpm@linux-foundation.org> wrote:
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23-rc3/2.6.23-rc3-mm1/
-> [snip]
-> > -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61.patch
-> > -ata-add-the-sw-ncq-support-to-sata_nv-for-mcp51-mcp55-mcp61-fix.patch
-> [snip]
-> >  Merged into mainline or a subsystem tree
-> 
-> That patch is no longer in 2.6.23-rc3-mm1, my bootlog says:
-> [    0.000000] Unknown boot option `sata_nv.swncq=1': ignoring
-> 
-> I could not find this patch in any git trees I looked and its removal
-> mail from mm-commit said:
-> "This patch was dropped because Changes in Jeff's tree destroyed it."
-> 
-> 
-> I only found out about the swncq=1 command line option yesterday and
-> so tested it only one day.
-> But I did not have any trouble with it, even as my drive was made by Maxtor.
-> 
-> The chipset:
-> 00:05.0 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-> 00:05.1 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-> 00:05.2 IDE interface: nVidia Corporation MCP55 SATA Controller (rev a3)
-> 
-> The drive:
-> Device Model:     MAXTOR STM3320820AS
-> Serial Number:    5QF2E698
-> Firmware Version: 3.AAE
-> 
-> As it worked for me, I hope that patch will be picked up by someone. :)
-> 
+Now that the AHCI driver has support for all controllers with the 0x0106
+(AHCI) class code, I am not planning on adding controller DeviceID's for
+AHCI controllers.  I want to verify that this is the correct course of
+action.
 
-This is a fairly regular occurrence in ata land: patches from maintainers
-don't get merged, so I merge them for testing, then some fairly pointless
-cleanup-style patch goes on a great tree-wide rampage thus destabilising or
-simply destroying the more important, mysteriously-not-merged patch.
+Note:  I still will have to add the Intel SW "RAID" controller
+DeviceID's as they have a 0x0104 (RAID) class code.
 
-Nobody knows why this happens.
+Thanks,
 
-Peer and Kuan: can you please redo that patch against the current ata
-development tree?
-
-Thanks.
-
+Jason
