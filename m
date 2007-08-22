@@ -1,78 +1,62 @@
-From: "chia" <liuc@ceat.okstate.edu>
-Subject: Re:
-Date: Tue, 21 Aug 2007 23:18:51 -0500
-Message-ID: <006101c7e473$8b924760$a378c00a@chia>
-References: <114377ad0708211840i638c4cb4v4187caab39868a12@mail.gmail.com> <46CBA353.7090108@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+From: Rusty Conover <rconover@infogears.com>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Tue, 21 Aug 2007 23:00:32 -0600
+Message-ID: <F3FDFA8B-A2EF-4EEE-ACE2-E67776650CF4@infogears.com>
+References: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com> <46C5E3A6.9020907@gmail.com> <DFEB0E31-D017-4527-85A4-8D18D379CB0B@infogears.com> <98147300-A282-4909-A393-079365833BD8@infogears.com> <46CBA78D.2070405@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.ceat.okstate.edu ([139.78.73.125]:1127 "EHLO
-	mail.ceat.okstate.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbXHVE0Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 00:26:24 -0400
+Received: from mail.infogears.com ([69.51.90.143]:49462 "EHLO
+	mail.infogears.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637AbXHVFAf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 01:00:35 -0400
+In-Reply-To: <46CBA78D.2070405@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Dear Tejun, Is 10.3 beta stable? Do I still need to patch it? If I do, what 
-version I should use? Can I apply a higher version patch to lower version of 
-kernel? Thanks!
---------------------------------------------------------------
-Chia-Ming Liu, Ph.D.
-Mixed Signal VLSI Design Group
-Advanced Technology Research Center 235
-Oklahoma State University
-
-Website: http://msvlsi.okstate.edu
-US Mail: 202 Engineering South Stillwater, OK 74078
-Phone: 405-744-1662, 405-744-6241
-Fax: 405-744-9198
------ Original Message ----- 
-From: "Tejun Heo" <htejun@gmail.com>
-To: "chia-ming liu" <chiaming.liu@gmail.com>
-Cc: <linux-ide@vger.kernel.org>; <liuc@okstate.edu>
-Sent: Tuesday, August 21, 2007 9:45 PM
-Subject: Re:
 
 
-> chia-ming liu wrote:
->> Dear Tejun, I am not very good at linux and just enough to get by. I
->> have tried to use your patch by issuing the command 'patch -p1 <
->> combined.patch' and I receive this
+On Aug 21, 2007, at 9:03 PM, Tejun Heo wrote:
+
+> Rusty Conover wrote:
+>> Hi Tejun,
 >>
->> msvlsi63:~/libata-tj-2.6.18.1-20061020 # patch -p1 < combined.patch
->> can't find file to patch at input line 5
->> Perhaps you used the wrong -p or --strip option?
->> The text leading up to this was:
->> --------------------------
->> |Index: work/drivers/scsi/Kconfig
->> |===================================================================
->> |--- work.orig/drivers/scsi/Kconfig     2006-10-20 10:48:25.000000000 
->> +0900
->> |+++ work/drivers/scsi/Kconfig  2006-10-20 10:48:35.000000000 +0900
->> --------------------------
->> File to patch:
+>> Just as some further testing and poking I added the drives to the  
+>> list
+>> of disks to disable NCQ for, it didn't resolve the issue.
 >>
->> Then, I opened combined.path and look for line 5
+>> I increased the PMP timeout to 1000 rather then 250 and that didn't
+>> resolve the problem either.
 >>
->>  source "drivers/scsi/megaraid/Kconfig.megaraid"
->>
->> which point out the file I don't have. Am I missing something? I have
->> Opensuse 10.2 and Norco DS-1220 disk array which has Silicon Image
->> 3726 port multiplier.
->>
->> I don't have any driver install but Suse has recognized the PCI card
->> with Silicon Image 3124.
+>> The interface still has timeout errors writing the ext3 fs.
 >
-> OpenSUSE 10.3 Beta contains PMP support.  I think that will be easier.
+> Can you just put one harddisk into one of the PMP slots and test it?
+> Does it still suffer timeouts?
 >
 > -- 
 > tejun
-> 
 
 
+Hi Tejun,
+
+Putting just one hard disk into the PMP slots, works great all by  
+itself. I created an ext3 fs on it, used dd to dump lots of data to  
+it, no problems in all of my testing.
+
+One hard disk in a PMP slot and another hard disk in a native slot on  
+a different SATA port work great together.
+
+Two hard disks in the same PMP slot range (slots 1-2), timeout right  
+away.
+
+Could it be a problem with timing the PMP requests?
+
+I've tested this on a second separate machine and I'm seeing the same  
+timeout errors.
+
+Thanks,
+
+Rusty
