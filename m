@@ -1,57 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/4] hpt366: UltraDMA filter for SATA cards (take 2)
-Date: Tue, 21 Aug 2007 22:36:10 +0200
-Message-ID: <200708212236.10803.bzolnier@gmail.com>
-References: <200708192300.35564.sshtylyov@ru.mvista.com>
+From: "chia-ming liu" <chiaming.liu@gmail.com>
+Subject: (unknown)
+Date: Tue, 21 Aug 2007 20:40:58 -0500
+Message-ID: <114377ad0708211840i638c4cb4v4187caab39868a12@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:40889 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.184]:63708 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbXHUUkk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Aug 2007 16:40:40 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so970232nfb
-        for <linux-ide@vger.kernel.org>; Tue, 21 Aug 2007 13:40:40 -0700 (PDT)
-In-Reply-To: <200708192300.35564.sshtylyov@ru.mvista.com>
+	with ESMTP id S1750820AbXHVBlC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Aug 2007 21:41:02 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so16904nfb
+        for <linux-ide@vger.kernel.org>; Tue, 21 Aug 2007 18:41:00 -0700 (PDT)
+Subject: 
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: rah@bash.sh, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, liuc@okstate.edu
 
-On Sunday 19 August 2007, Sergei Shtylyov wrote:
-> The Marvell bridge chips used on HighPoint SATA cards do not seem to support
-> the UltraDMA modes 1, 2, and 3 as well as any MWDMA modes, so the driver needs
-> to account for this in the udma_filter() method.  In order to achieve that, do
-> the following changes:
-> 
-> - install the method for all chips, not only HPT36x/370 and impove the code
->   formatting by killing the extra tabs while at it;
+Dear Tejun, I am not very good at linux and just enough to get by. I
+have tried to use your patch by issuing the command 'patch -p1 <
+combined.patch' and I receive this
 
-s/impove/improve/
+msvlsi63:~/libata-tj-2.6.18.1-20061020 # patch -p1 < combined.patch
+can't find file to patch at input line 5
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|Index: work/drivers/scsi/Kconfig
+|===================================================================
+|--- work.orig/drivers/scsi/Kconfig     2006-10-20 10:48:25.000000000 +0900
+|+++ work/drivers/scsi/Kconfig  2006-10-20 10:48:35.000000000 +0900
+--------------------------
+File to patch:
 
-> - add to the end of the 'switch' statement in the method cases for HPT372[AN]
->   and HPT374 chips upon which the known SATA cards are based;
-> 
-> - use hwif->ultra_mask as a default mask for the ide_dma_filter() method to
->   behave correctly;
-> 
-> - move the HPT370[A] cases below the HPT36x case for consistency.
-> 
-> While at it, replace the explicit UltraDMA mode masks with ATA_UDMA* constants
-> all over the driver...
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Then, I opened combined.path and look for line 5
 
-applied
+ source "drivers/scsi/megaraid/Kconfig.megaraid"
 
-> ---
-> This is against the current Linus tree and unfortunately I was able to only
-> compile test it since that tree gives MODPOST warning and dies early on bootup.
+which point out the file I don't have. Am I missing something? I have
+Opensuse 10.2 and Norco DS-1220 disk array which has Silicon Image
+3726 port multiplier.
 
-Is this still case?  Not an IDE problem but definitely needs fixing especially
-given that we are already in -rc3...
+I don't have any driver install but Suse has recognized the PCI card
+with Silicon Image 3124.
 
-> Will hopefully finish with the patch series next weekend...
+Thanks!
+
+--------------------------------------------------------------
+Chia-Ming Liu, Ph.D.
+Mixed Signal VLSI Design Group
+Advanced Technology Research Center 235
+Oklahoma State University
+
+Website: http://cottonmouth.ecen.okstate.edu
+US Mail: 202 Engineering South Stillwater, OK 74078
+Phone: 405-744-6241, 405-744-4580
+Fax: 405-744-9198
