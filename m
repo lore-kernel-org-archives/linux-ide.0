@@ -1,84 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] ata_piix: implement IOCFG bit18 quirk
-Date: Thu, 23 Aug 2007 10:15:18 +0900
-Message-ID: <20070823011518.GD2909@htj.dyndns.org>
+From: Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH] hook ACPI _PSx method to IDE power on/off
+Date: Wed, 22 Aug 2007 21:26:10 -0400
+Message-ID: <200708222126.11045.lenb@kernel.org>
+References: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com> <200708042155.24843.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:4873 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbXHWBP1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 21:15:27 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so264065rvb
-        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 18:15:27 -0700 (PDT)
+Received: from hera.kernel.org ([140.211.167.34]:45977 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757197AbXHWB0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Aug 2007 21:26:17 -0400
+In-Reply-To: <200708042155.24843.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, dangelis@beta-cae.gr
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Shaohua Li <shaohua.li@intel.com>, linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Some notebooks need bit18 of IOCFG to be cleared for the drive bay to
-work even though the bit is NOOP according to the datasheet.  This
-patch implement IOCFG bit18 quirk and apply it to Clevo M570U.
+On Saturday 04 August 2007 15:55, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 02 August 2007, Shaohua Li wrote:
+> > ACPI spec defines the sequence of IDE power on/off:
+> > Powering down:
+> > 	Call _GTM.
+> > 	Power down drive (calls _PS3 method and turns off power planes).
+> > Powering up:
+> > 	Power up drive (calls _PS0 method if present and turns on power planes).
+> > 	Call _STM passing info from _GTM (possibly modified), with ID data from
+> > 	each drive.
+> > 	Initialize the channel.
+> > 	May modify the results of _GTF.
+> > 	For each drive:
+> > 		Call _GTF.
+> > 		Execute task file (possibly modified).
+> > This patch adds the missed _PS0/_PS3 methods call.
+> > 
+> > Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> 
+> applied, thanks
+> 
+> Len, are you OK with the ACPI part of the patch (below)?
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=8051
+yes.
+Acked-by: Len Brown <len.brown@intel.com>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: D. Angelis <dangelis@beta-cae.gr>
----
- drivers/ata/ata_piix.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+thanks,
+-Len
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index a78832e..15ec19b 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1132,6 +1132,39 @@ static void __devinit piix_init_sata_map(struct pci_dev *pdev,
- 	hpriv->map = map;
- }
- 
-+static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
-+{
-+	static struct dmi_system_id sysids[] = {
-+		{
-+			/* Clevo M570U sets IOCFG bit 18 if the cdrom
-+			 * isn't used to boot the system which
-+			 * disables the channel.
-+			 */
-+			.ident = "M570U",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR, "Clevo Co."),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "M570U"),
-+			},
-+		},
-+	};
-+	u32 iocfg;
-+
-+	if (!dmi_check_system(sysids))
-+		return;
-+
-+	/* The datasheet says that bit 18 is NOOP but certain systems
-+	 * seem to use it to disable a channel.  Clear the bit on the
-+	 * affected systems.
-+	 */
-+	pci_read_config_dword(pdev, PIIX_IOCFG, &iocfg);
-+	if (iocfg & (1 << 18)) {
-+		dev_printk(KERN_INFO, &pdev->dev,
-+			   "applying IOCFG bit18 quirk\n");
-+		iocfg &= ~(1 << 18);
-+		pci_write_config_dword(pdev, PIIX_IOCFG, iocfg);
-+	}
-+}
-+
- /**
-  *	piix_init_one - Register PIIX ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -1193,6 +1226,9 @@ static int piix_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 			      piix_map_db_table[ent->driver_data]);
- 	}
- 
-+	/* apply IOCFG bit18 quirk */
-+	piix_iocfg_bit18_quirk(pdev);
-+
- 	/* On ICH5, some BIOSen disable the interrupt using the
- 	 * PCI_COMMAND_INTX_DISABLE bit added in PCI 2.3.
- 	 * On ICH6, this bit has the same effect, but only when
+> > Index: linux/drivers/acpi/bus.c
+> > ===================================================================
+> > --- linux.orig/drivers/acpi/bus.c	2007-08-02 13:35:06.000000000 +0800
+> > +++ linux/drivers/acpi/bus.c	2007-08-02 13:56:56.000000000 +0800
+> > @@ -262,10 +262,12 @@ int acpi_bus_set_power(acpi_handle handl
+> >  		printk(KERN_WARNING PREFIX
+> >  			      "Transitioning device [%s] to D%d\n",
+> >  			      device->pnp.bus_id, state);
+> > -	else
+> > +	else {
+> > +		device->power.state = state;
+> >  		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+> >  				  "Device [%s] transitioned to D%d\n",
+> >  				  device->pnp.bus_id, state));
+> > +	}
+> >  
+> >  	return result;
+> >  }
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
