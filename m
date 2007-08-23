@@ -1,46 +1,84 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: no need to add new DID's to AHCI driver?
-Date: Thu, 23 Aug 2007 09:53:20 +0900
-Message-ID: <46CCDA80.7040109@gmail.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701AE8117@orsmsx420.amr.corp.intel.com> <46CC8C31.3040502@garzik.org>
+Subject: [PATCH #upstream-fixes] ata_piix: implement IOCFG bit18 quirk
+Date: Thu, 23 Aug 2007 10:15:18 +0900
+Message-ID: <20070823011518.GD2909@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:60368 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419AbXHWAx2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 20:53:28 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so386465wah
-        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 17:53:28 -0700 (PDT)
-In-Reply-To: <46CC8C31.3040502@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.190]:4873 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbXHWBP1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 21:15:27 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so264065rvb
+        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 18:15:27 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, dangelis@beta-cae.gr
 
-Jeff Garzik wrote:
-> Gaston, Jason D wrote:
->> Hello,
->>
->> Now that the AHCI driver has support for all controllers with the 0x0106
->> (AHCI) class code, I am not planning on adding controller DeviceID's for
->> AHCI controllers.  I want to verify that this is the correct course of
->> action.
->>
->> Note:  I still will have to add the Intel SW "RAID" controller
->> DeviceID's as they have a 0x0104 (RAID) class code.
-> 
-> Yep, that's fine -- and the encouraged direction.
-> 
-> The ideal situation for users is when new hardware is "automagically"
-> supported, without needing any driver PCI ID modifications at all.
+Some notebooks need bit18 of IOCFG to be cleared for the drive bay to
+work even though the bit is NOOP according to the datasheet.  This
+patch implement IOCFG bit18 quirk and apply it to Clevo M570U.
 
-One remaining hurdle tho is the distinction between board_ahci and
-board_ahci_pi (whether to honor PORTS_IMPL or not).  AHCI class matching
-uses board_ahci so PI will be ignored by default.  There's a pending
-patch which removes this distinction, so this won't be a problem after
-the patch is merged.
+  http://bugzilla.kernel.org/show_bug.cgi?id=8051
 
--- 
-tejun
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: D. Angelis <dangelis@beta-cae.gr>
+---
+ drivers/ata/ata_piix.c |   36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index a78832e..15ec19b 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1132,6 +1132,39 @@ static void __devinit piix_init_sata_map(struct pci_dev *pdev,
+ 	hpriv->map = map;
+ }
+ 
++static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
++{
++	static struct dmi_system_id sysids[] = {
++		{
++			/* Clevo M570U sets IOCFG bit 18 if the cdrom
++			 * isn't used to boot the system which
++			 * disables the channel.
++			 */
++			.ident = "M570U",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Clevo Co."),
++				DMI_MATCH(DMI_PRODUCT_NAME, "M570U"),
++			},
++		},
++	};
++	u32 iocfg;
++
++	if (!dmi_check_system(sysids))
++		return;
++
++	/* The datasheet says that bit 18 is NOOP but certain systems
++	 * seem to use it to disable a channel.  Clear the bit on the
++	 * affected systems.
++	 */
++	pci_read_config_dword(pdev, PIIX_IOCFG, &iocfg);
++	if (iocfg & (1 << 18)) {
++		dev_printk(KERN_INFO, &pdev->dev,
++			   "applying IOCFG bit18 quirk\n");
++		iocfg &= ~(1 << 18);
++		pci_write_config_dword(pdev, PIIX_IOCFG, iocfg);
++	}
++}
++
+ /**
+  *	piix_init_one - Register PIIX ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+@@ -1193,6 +1226,9 @@ static int piix_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			      piix_map_db_table[ent->driver_data]);
+ 	}
+ 
++	/* apply IOCFG bit18 quirk */
++	piix_iocfg_bit18_quirk(pdev);
++
+ 	/* On ICH5, some BIOSen disable the interrupt using the
+ 	 * PCI_COMMAND_INTX_DISABLE bit added in PCI 2.3.
+ 	 * On ICH6, this bit has the same effect, but only when
