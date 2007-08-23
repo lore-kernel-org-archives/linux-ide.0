@@ -1,45 +1,34 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] pata_via: Add Armia W730-K8 and other rebadgings
-Date: Thu, 23 Aug 2007 10:04:37 +0200 (MEST)
-Message-ID: <200708230804.l7N84bmk005429@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] libata: fix n_sectors failure handling
+ during revalidation
+Date: Thu, 23 Aug 2007 05:25:59 -0400
+Message-ID: <46CD52A7.4030901@garzik.org>
+References: <20070815180222.GC21623@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:50119 "EHLO aun.it.uu.se"
+Received: from srv5.dvmed.net ([207.36.208.214]:39827 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755311AbXHWIEy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Aug 2007 04:04:54 -0400
+	id S1758051AbXHWJ0B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Aug 2007 05:26:01 -0400
+In-Reply-To: <20070815180222.GC21623@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 22 Aug 2007 22:57:48 +0100, Alan Cox wrote:
-> More cable funnies
+Tejun Heo wrote:
+> If revalidation fails because device has different n_sectors after
+> configuration the original n_sectors should be restored before failing
+> revalidation.  Without this fix, n_sectors difference will incorrectly
+> and silently pass revalidation when revalidation is retried.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_via.c linux-2.6.23rc3-mm1/drivers/ata/pata_via.c
-> --- linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_via.c	2007-08-22 17:23:00.000000000 +0100
-> +++ linux-2.6.23rc3-mm1/drivers/ata/pata_via.c	2007-08-22 17:46:53.000000000 +0100
-> @@ -63,7 +63,7 @@
->  #include <linux/dmi.h>
->  
->  #define DRV_NAME "pata_via"
-> -#define DRV_VERSION "0.3.1"
-> +#define DRV_VERSION "0.3.2"
->  
->  /*
->   *	The following comes directly from Vojtech Pavlik's ide/pci/via82cxxx
-> @@ -144,6 +144,9 @@
->  	/* Systems by DMI */
->  	if (dmi_check_system(cable_dmi_table))
->  		return 1;
-> +	/* Armia W730-K8/Targa Visionary 811/... */
-> +	if (pdev->subsystem_vendor == 0x161F && pdev->subsystem_device == 0x2032)
-> +		return 1;
->  	return 0;
->  }
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/libata-core.c |    4 ++++
+>  1 file changed, 4 insertions(+)
 
-s/Armia/Arima/
+applied
 
-Apart from that it works fine on my '811.
 
-Tested-by: Mikael Pettersson <mikpe@it.uu.se>
