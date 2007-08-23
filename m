@@ -1,96 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata: Add a drivers/ide style  DMA disable
-Date: Wed, 22 Aug 2007 23:37:10 +0100
-Message-ID: <20070822233710.415faaf0@the-village.bc.nu>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: File corruption in 2.6.18 thru 2.6.22
+Date: Wed, 22 Aug 2007 20:16:34 -0400
+Message-ID: <20070823001634.GC18739@redhat.com>
+References: <46C70565.1040308@romig.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54523 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758559AbXHVW3O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 18:29:14 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:34499 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932811AbXHWAQh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Aug 2007 20:16:37 -0400
+Content-Disposition: inline
+In-Reply-To: <46C70565.1040308@romig.demon.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Neil Romig <neil@romig.demon.co.uk>
+Cc: linux-ide@vger.kernel.org
 
-This is useful when debugging, handling problem systems, or for
-distributions just to get the system installed so it can be sorted
-out later.
-
-This is a bit smarter than the old IDE one and lets you do
-
-libata.pata_dma=0		Disable all PATA DMA like old IDE
-libata.pata_dma=1		Disk DMA only
-libata.pata_dma=2		ATAPI DMA only
-libata.pata_dma=4		CF DMA only
-
-(or combinations thereof - 0,1,3 being the useful ones I suspect)
-
-(I've split CF as it seems to be a seperate case of pain and suffering
-different to the others and caused by assorted PIO wired adapters etc)
-
-SATA is not affected - for one its not clear it makes sense to disable
-DMA for SATA if even always possible, for two we've seen no failure 
-evidence to justify needing to support this kind of hammer on SATA.
-
-Signed-off-by: Alan Cox <alan@redhat.com>
-
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/include/linux/libata.h linux-2.6.23rc3-mm1/include/linux/libata.h
---- linux.vanilla-2.6.23rc3-mm1/include/linux/libata.h	2007-08-22 17:23:14.000000000 +0100
-+++ linux-2.6.23rc3-mm1/include/linux/libata.h	2007-08-22 17:50:32.000000000 +0100
-@@ -315,6 +315,12 @@
- 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
- 	ATA_HORKAGE_HPA_SIZE	= (1 << 4), 	/* Reports native size off by one */
-+ 
-+	/* DMA mask for user DMA control: User visible values do not 
-+	   renumber */
-+	ATA_DMA_MASK_ATA	= (1 << 0),	/* DMA on ATA Disk */
-+	ATA_DMA_MASK_ATAPI	= (1 << 1),	/* DMA on ATAPI */
-+	ATA_DMA_MASK_CFA	= (1 << 2),	/* DMA on CF Card */
- };
+On Sat, Aug 18, 2007 at 02:42:45PM +0000, Neil Romig wrote:
  
- enum hsm_task_states {
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/libata-core.c linux-2.6.23rc3-mm1/drivers/ata/libata-core.c
---- linux.vanilla-2.6.23rc3-mm1/drivers/ata/libata-core.c	2007-08-22 17:23:00.000000000 +0100
-+++ linux-2.6.23rc3-mm1/drivers/ata/libata-core.c	2007-08-22 18:17:31.321738376 +0100
-@@ -99,6 +99,10 @@
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
- MODULE_PARM_DESC(ignore_hpa, "Ignore HPA limit (0=keep BIOS limits, 1=ignore limits, using full disk)");
- 
-+static int ata_pata_dma = ATA_DMA_MASK_ATA|ATA_DMA_MASK_ATAPI|ATA_DMA_MASK_CFA;
-+module_param_named(pata_dma, ata_pata_dma, int, 0644);
-+MODULE_PARM_DESC(pata_dma, "Use DMA on PATA devices");
-+
- static int ata_probe_timeout = ATA_TMOUT_INTERNAL / HZ;
- module_param(ata_probe_timeout, int, 0444);
- MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
-@@ -2839,14 +2854,27 @@
- 	/* step 1: calculate xfer_mask */
- 	ata_link_for_each_dev(dev, link) {
- 		unsigned int pio_mask, dma_mask;
-+		unsigned int mode_mask;
- 
- 		if (!ata_dev_enabled(dev))
- 			continue;
- 
-+		mode_mask = ATA_DMA_MASK_ATA;
-+		if (dev->class == ATA_DEV_ATAPI)
-+			mode_mask = ATA_DMA_MASK_ATAPI;
-+		else if (ata_id_is_cfa(dev->id))
-+			mode_mask = ATA_DMA_MASK_CFA;
-+
- 		ata_dev_xfermask(dev);
- 
- 		pio_mask = ata_pack_xfermask(dev->pio_mask, 0, 0);
- 		dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
-+
-+		if ((ata_pata_dma & mode_mask) || ap->cbl == ATA_CBL_SATA)
-+			dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
-+		else
-+			dma_mask = 0;
-+
- 		dev->pio_mode = ata_xfer_mask2mode(pio_mask);
- 		dev->dma_mode = ata_xfer_mask2mode(dma_mask);
- 
+ > Everything is O.K using kernel 2.6.17.14, but 2.6.18 and beyond all have
+ > this problem. It may take me months to sort this out on my own - any
+ > suggestions?
+
+In most (though not all), a single bit was flipped.
+This is usually a sign of bad memory.
+Give it a going over with memtest86+ ?
+
+	Dave
+
+-- 
+http://www.codemonkey.org.uk
