@@ -1,52 +1,41 @@
-From: Scott Thompson <postfailathushmaildotcom@yahoo.com>
-Subject: [PATCH resubmit] /drivers/ata ioremap returncode check
-Date: Thu, 23 Aug 2007 12:34:31 -0700 (PDT)
-Message-ID: <648310.70195.qm@web44903.mail.sp1.yahoo.com>
-Reply-To: postfail@hushmail.com
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: sata_via.c: TO DO: VT6421 PATA support
+Date: Thu, 23 Aug 2007 21:50:20 +0200
+Message-ID: <46CDE4FC.9040704@wpkg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: brandon@ifup.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.syneticon.net ([213.239.212.131]:44350 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129AbXHWTup (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 15:50:45 -0400
+Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
+	by mail2.syneticon.net (Postfix) with ESMTP id 7FD4250E74
+	for <linux-ide@vger.kernel.org>; Thu, 23 Aug 2007 21:50:40 +0200 (CEST)
+Received: from localhost (filter1.syneticon.net [192.168.113.3])
+	by postfix1.syneticon.net (Postfix) with ESMTP id 08AD094DC
+	for <linux-ide@vger.kernel.org>; Thu, 23 Aug 2007 21:50:39 +0200 (CEST)
+Received: from postfix1.syneticon.net ([192.168.113.4])
+	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
+	with ESMTP id OrMQ560pdJWp for <linux-ide@vger.kernel.org>;
+	Thu, 23 Aug 2007 21:50:29 +0200 (CEST)
+Received: from [192.168.10.145] (xdsl-87-79-106-143.netcologne.de [87.79.106.143])
+	by postfix1.syneticon.net (Postfix) with ESMTP
+	for <linux-ide@vger.kernel.org>; Thu, 23 Aug 2007 21:50:29 +0200 (CEST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-Patchset against 2.6.23-rc3.  corrects missing ioremap return 
-checks, resending after fixing for documentation making changes suggested...
+Lines 33-34 of sata_via.c of 2.6.23-rc3 say:
 
-As for suggestions, I did fix the {} that weren't needed.  I did not add in a
-"printk" err or warn statement as the rest of the module does not contain these
-messages.  When auditing (as I am for ioremap checking here) I am attempting
-to keep changes "in the style of their surroundings".  Otherwise it's massive
-scope screep on these patches.
- 
-Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
----------------------------------------------------------------
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 4ca7fd6..6f9a2b7 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -189,6 +189,9 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
- 	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
- 	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
- 
-+	if (!data->cs0 || !data->cs1) 
-+		return -ENOMEM;
-+	
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq)
- 		set_irq_type(irq, IRQT_RISING);
+  *  To-do list:
+  *  - VT6421 PATA support
 
 
-       
-____________________________________________________________________________________
-Moody friends. Drama queens. Your life? Nope! - their life, your story. Play Sims Stories at
-Yahoo! Games.
-http://sims.yahoo.com/  
+Wasn't VT6421 PATA support already added in 2.6.21?
 
 
-       
-____________________________________________________________________________________
-Looking for a deal? Find great prices on flights and hotels with Yahoo! FareChase.
-http://farechase.yahoo.com/
-
+-- 
+Tomasz Chmielewski
+http://wpkg.org
