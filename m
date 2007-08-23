@@ -1,56 +1,46 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: [PATCH] pata_marvell: Add another PCI identifier
-Date: Wed, 22 Aug 2007 17:16:26 -0700
-Message-ID: <20070823001626.GO28502@curie-int.orbis-terrarum.net>
-References: <20070822232705.2decea96@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: no need to add new DID's to AHCI driver?
+Date: Thu, 23 Aug 2007 09:53:20 +0900
+Message-ID: <46CCDA80.7040109@gmail.com>
+References: <39B20DF628532344BC7A2692CB6AEE0701AE8117@orsmsx420.amr.corp.intel.com> <46CC8C31.3040502@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="teKjxxMjPsACTz/N"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b01.ext.isohunt.com ([208.71.112.51]:34184 "EHLO
-	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750709AbXHWAXE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 20:23:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20070822232705.2decea96@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.180]:60368 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419AbXHWAx2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 20:53:28 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so386465wah
+        for <linux-ide@vger.kernel.org>; Wed, 22 Aug 2007 17:53:28 -0700 (PDT)
+In-Reply-To: <46CC8C31.3040502@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
-Cc: akpm@osdl.org, jeff@garzik.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Jeff Garzik wrote:
+> Gaston, Jason D wrote:
+>> Hello,
+>>
+>> Now that the AHCI driver has support for all controllers with the 0x0106
+>> (AHCI) class code, I am not planning on adding controller DeviceID's for
+>> AHCI controllers.  I want to verify that this is the correct course of
+>> action.
+>>
+>> Note:  I still will have to add the Intel SW "RAID" controller
+>> DeviceID's as they have a 0x0104 (RAID) class code.
+> 
+> Yep, that's fine -- and the encouraged direction.
+> 
+> The ideal situation for users is when new hardware is "automagically"
+> supported, without needing any driver PCI ID modifications at all.
 
---teKjxxMjPsACTz/N
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+One remaining hurdle tho is the distinction between board_ahci and
+board_ahci_pi (whether to honor PORTS_IMPL or not).  AHCI class matching
+uses board_ahci so PI will be ignored by default.  There's a pending
+patch which removes this distinction, so this won't be a problem after
+the patch is merged.
 
-On Wed, Aug 22, 2007 at 11:27:05PM +0100, Alan Cox wrote:
->  static const struct pci_device_id marvell_pci_tbl[] =3D {
->  	{ PCI_DEVICE(0x11AB, 0x6101), },
-> -	{ PCI_DEVICE(0x11AB, 0x6145), },
-Why is this ID being removed?
-
-Not that I have that model (I have 0x6101), it just looks weird given
-the patch description to "Add another PCI identifier" and I thought I
-should check.
-
---=20
-Robin Hugh Johnson
-Gentoo Linux Developer
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---teKjxxMjPsACTz/N
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
-
-iD8DBQFGzNHaPpIsIjIzwiwRAnncAKCf0+QEzKAKv+cfInerdqtV7U8YZgCg1cRM
-tkFRQYe8oVK6zExRDip83+c=
-=eULh
------END PGP SIGNATURE-----
-
---teKjxxMjPsACTz/N--
+-- 
+tejun
