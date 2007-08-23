@@ -1,32 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_marvell: Add more identifiers
-Date: Thu, 23 Aug 2007 20:19:55 +0100
-Message-ID: <20070823201955.4d1067b7@the-village.bc.nu>
+From: Neil Romig <neil@romig.demon.co.uk>
+Subject: Re: File corruption in 2.6.18 thru 2.6.22
+Date: Thu, 23 Aug 2007 20:12:31 +0000
+Message-ID: <46CDEA2F.6040508@romig.demon.co.uk>
+References: <46C70565.1040308@romig.demon.co.uk> <20070823001634.GC18739@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47551 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750922AbXHWTLz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 15:11:55 -0400
+Received: from anchor-post-31.mail.demon.net ([194.217.242.89]:1524 "EHLO
+	anchor-post-31.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752307AbXHWTM0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 15:12:26 -0400
+In-Reply-To: <20070823001634.GC18739@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Dave Jones <davej@redhat.com>
+Cc: linux-ide@vger.kernel.org
 
-This replaces the patch which incorrectly removed the 6145
+Dave Jones wrote:
+> On Sat, Aug 18, 2007 at 02:42:45PM +0000, Neil Romig wrote:
+>  
+>  > Everything is O.K using kernel 2.6.17.14, but 2.6.18 and beyond all have
+>  > this problem. It may take me months to sort this out on my own - any
+>  > suggestions?
+> 
+> In most (though not all), a single bit was flipped.
+> This is usually a sign of bad memory.
+> Give it a going over with memtest86+ ?
+> 
+> 	Dave
+> 
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+I have run memtest86+ twice without error, so I remain stumped. I can set up a loop to copy
+a file and do a diff which runs OK, but when I boot 2.6.18 it drops out within a second or two.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_marvell.c linux-2.6.23rc3-mm1/drivers/ata/pata_marvell.c
---- linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_marvell.c	2007-08-22 17:23:00.000000000 +0100
-+++ linux-2.6.23rc3-mm1/drivers/ata/pata_marvell.c	2007-08-23 13:02:02.000000000 +0100
-@@ -190,6 +190,8 @@
- 
- static const struct pci_device_id marvell_pci_tbl[] = {
- 	{ PCI_DEVICE(0x11AB, 0x6101), },
-+	{ PCI_DEVICE(0x11AB, 0x6121), },
-+	{ PCI_DEVICE(0x11AB, 0x6123), },
- 	{ PCI_DEVICE(0x11AB, 0x6145), },
- 	{ }	/* terminate list */
- };
+Neil.
+
