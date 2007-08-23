@@ -1,34 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: fix n_sectors failure handling
- during revalidation
-Date: Thu, 23 Aug 2007 05:25:59 -0400
-Message-ID: <46CD52A7.4030901@garzik.org>
-References: <20070815180222.GC21623@htj.dyndns.org>
+Subject: Re: [PATCH] pata_marvell: Add another PCI identifier
+Date: Thu, 23 Aug 2007 05:30:30 -0400
+Message-ID: <46CD53B6.1000906@garzik.org>
+References: <20070822232705.2decea96@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39827 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48525 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758051AbXHWJ0B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Aug 2007 05:26:01 -0400
-In-Reply-To: <20070815180222.GC21623@htj.dyndns.org>
+	id S1758561AbXHWJaf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Aug 2007 05:30:35 -0400
+In-Reply-To: <20070822232705.2decea96@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> If revalidation fails because device has different n_sectors after
-> configuration the original n_sectors should be restored before failing
-> revalidation.  Without this fix, n_sectors difference will incorrectly
-> and silently pass revalidation when revalidation is retried.
+Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |    4 ++++
->  1 file changed, 4 insertions(+)
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_marvell.c linux-2.6.23rc3-mm1/drivers/ata/pata_marvell.c
+> --- linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_marvell.c	2007-08-22 17:23:00.000000000 +0100
+> +++ linux-2.6.23rc3-mm1/drivers/ata/pata_marvell.c	2007-08-22 17:46:28.000000000 +0100
+> @@ -190,7 +190,8 @@
+>  
+>  static const struct pci_device_id marvell_pci_tbl[] = {
+>  	{ PCI_DEVICE(0x11AB, 0x6101), },
+> -	{ PCI_DEVICE(0x11AB, 0x6145), },
+> +	{ PCI_DEVICE(0x11AB, 0x6121), },
+> +	{ PCI_DEVICE(0x11AB, 0x6123), },
+>  	{ }	/* terminate list */
 
-applied
+same question as with other poster:  where does 0x6145 go, and why?
+
+Is this for -mm only?
 
 
