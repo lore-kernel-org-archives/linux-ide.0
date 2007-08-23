@@ -1,73 +1,67 @@
-From: Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH] hook ACPI _PSx method to IDE power on/off
-Date: Wed, 22 Aug 2007 21:26:10 -0400
-Message-ID: <200708222126.11045.lenb@kernel.org>
-References: <1186035248.29979.5.camel@sli10-conroe.sh.intel.com> <200708042155.24843.bzolnier@gmail.com>
+From: Scott Thompson <postfailathushmaildotcom@yahoo.com>
+Subject: [PATCH resubmit] /drivers/ata ioremap returncode check
+Date: Wed, 22 Aug 2007 19:47:16 -0700 (PDT)
+Message-ID: <159327.52462.qm@web44910.mail.sp1.yahoo.com>
+References: <20070823023328.19E6CDA82B@mailserver7.hushmail.com>
+Reply-To: postfail@hushmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45977 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757197AbXHWB0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Aug 2007 21:26:17 -0400
-In-Reply-To: <200708042155.24843.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from n5.bullet.mail.re4.yahoo.com ([206.190.56.24]:45269 "HELO
+	n5.bullet.mail.re4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752275AbXHWCrR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Aug 2007 22:47:17 -0400
+In-Reply-To: <20070823023328.19E6CDA82B@mailserver7.hushmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Shaohua Li <shaohua.li@intel.com>, linux acpi <linux-acpi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: brandon@ifup.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Saturday 04 August 2007 15:55, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday 02 August 2007, Shaohua Li wrote:
-> > ACPI spec defines the sequence of IDE power on/off:
-> > Powering down:
-> > 	Call _GTM.
-> > 	Power down drive (calls _PS3 method and turns off power planes).
-> > Powering up:
-> > 	Power up drive (calls _PS0 method if present and turns on power planes).
-> > 	Call _STM passing info from _GTM (possibly modified), with ID data from
-> > 	each drive.
-> > 	Initialize the channel.
-> > 	May modify the results of _GTF.
-> > 	For each drive:
-> > 		Call _GTF.
-> > 		Execute task file (possibly modified).
-> > This patch adds the missed _PS0/_PS3 methods call.
-> > 
-> > Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-> 
-> applied, thanks
-> 
-> Len, are you OK with the ACPI part of the patch (below)?
+Patchset against 2.6.23-rc3.  corrects missing ioremap return 
+checks, resending after making changes suggested....
 
-yes.
-Acked-by: Len Brown <len.brown@intel.com>
+Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
+------------------------------------------------------------
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 4ca7fd6..8dc7c3b 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -189,6 +189,10 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
+ 	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
+ 	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
+ 
++	if (!data->cs0 || !data->cs1) {
++		return -ENOMEM;
++	}
++
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq)
+ 		set_irq_type(irq, IRQT_RISING);
 
-thanks,
--Len
-
-> > Index: linux/drivers/acpi/bus.c
-> > ===================================================================
-> > --- linux.orig/drivers/acpi/bus.c	2007-08-02 13:35:06.000000000 +0800
-> > +++ linux/drivers/acpi/bus.c	2007-08-02 13:56:56.000000000 +0800
-> > @@ -262,10 +262,12 @@ int acpi_bus_set_power(acpi_handle handl
-> >  		printk(KERN_WARNING PREFIX
-> >  			      "Transitioning device [%s] to D%d\n",
-> >  			      device->pnp.bus_id, state);
-> > -	else
-> > +	else {
-> > +		device->power.state = state;
-> >  		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
-> >  				  "Device [%s] transitioned to D%d\n",
-> >  				  device->pnp.bus_id, state));
-> > +	}
-> >  
-> >  	return result;
-> >  }
+> ----- Forwarded message from Brandon Philips <brandon@ifup.org> ----
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The iounmap calls are unnecessary since devm_ioremap will un-
+> allocate the space if you return an error from probe.  See
+> Documentation/driver-model/devres.txt
 > 
+> But, something like this is needed.
+> 
+> +	if (!data->cs0 || !data->cs1)
+> +		return -ENOMEM;
+> 
+> Thanks,	Brandon
+
+
+
+
+       
+____________________________________________________________________________________
+Pinpoint customers who are looking for what you sell. 
+http://searchmarketing.yahoo.com/
+
+
+       
+____________________________________________________________________________________
+Building a website is a piece of cake. Yahoo! Small Business gives you all the tools to get online.
+http://smallbusiness.yahoo.com/webhosting 
+
