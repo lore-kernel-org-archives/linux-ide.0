@@ -1,58 +1,37 @@
-From: Brandon Philips <brandon@ifup.org>
-Subject: Re: [PATCH resubmit] /drivers/ata ioremap returncode check
-Date: Thu, 23 Aug 2007 10:53:40 -0700
-Message-ID: <20070823175340.GA6848@ifup.org>
-References: <20070823023328.19E6CDA82B@mailserver7.hushmail.com> <159327.52462.qm@web44910.mail.sp1.yahoo.com> <20070823053458.GA4418@ifup.org> <20070823174204.GB1818@martell.zuzino.mipt.ru>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_it821x: Fix regression/corruptor
+Date: Thu, 23 Aug 2007 20:18:55 +0100
+Message-ID: <20070823201855.3f6b13e1@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.231]:16187 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760175AbXHWRxq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 13:53:46 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so367501nze
-        for <linux-ide@vger.kernel.org>; Thu, 23 Aug 2007 10:53:46 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20070823174204.GB1818@martell.zuzino.mipt.ru>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47547 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750922AbXHWTKy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 15:10:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: postfail@hushmail.com, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
+To: akpm@osdl.org, torvalds@osdl.org, linux-ide@vger.kernel.org
 
-On 21:42 Thu 23 Aug 2007, Alexey Dobriyan wrote:
-> On Wed, Aug 22, 2007 at 10:34:58PM -0700, Brandon Philips wrote:
-> > On 19:47 Wed 22 Aug 2007, Scott Thompson wrote:
-> > > Patchset against 2.6.23-rc3.  corrects missing ioremap return 
-> > > checks, resending after making changes suggested....
-> > > 
-> > > Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
-> > > ------------------------------------------------------------
-> > > diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-> > > index 4ca7fd6..8dc7c3b 100644
-> > > --- a/drivers/ata/pata_ixp4xx_cf.c
-> > > +++ b/drivers/ata/pata_ixp4xx_cf.c
-> > > @@ -189,6 +189,10 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
-> > >  	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
-> > >  	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
-> > >  
-> > > +	if (!data->cs0 || !data->cs1) {
-> > > +		return -ENOMEM;
-> > > +	}
-> > > +
-> > 
-> > You aren't following the Kernel CodingStyle there.  
-> > 
-> > See Documentation/CodingStyle:
-> > 
-> > "Do not unnecessarily use braces where a single statement will do."
-> > 
-> > +	if (!data->cs0 || !data->cs1)
-> > +		return -ENOMEM;
-> 
-> This and nice printk message absence. :)
+Whoever did the PCI revision patch slipped up on the it821x, and I didn't
+spot this at the time either. They moved the check for the errata from
+the 0x10 revision to 0x11. Put it back
 
-Huh?  What do you mean?
+This one is important for 2.6.23 final as in some cases bad things will
+occur if 0x10 revision boards don't get the fixups.
 
-Thanks,
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-	Brandon
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_it821x.c linux-2.6.23rc3-mm1/drivers/ata/pata_it821x.c
+--- linux.vanilla-2.6.23rc3-mm1/drivers/ata/pata_it821x.c	2007-08-22 17:23:00.000000000 +0100
++++ linux-2.6.23rc3-mm1/drivers/ata/pata_it821x.c	2007-08-23 19:40:10.000000000 +0100
+@@ -586,7 +586,7 @@
+ 	itdev->want[1][1] = ATA_ANY;
+ 	itdev->last_device = -1;
+ 
+-	if (pdev->revision == 0x11) {
++	if (pdev->revision == 0x10) {
+ 		itdev->timing10 = 1;
+ 		/* Need to disable ATAPI DMA for this case */
+ 		if (!itdev->smart)
