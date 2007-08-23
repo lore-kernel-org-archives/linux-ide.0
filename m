@@ -1,151 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Thu, 23 Aug 2007 06:08:33 -0400
-Message-ID: <20070823100833.GA24725@havoc.gtf.org>
+From: Jose Alberto Reguero <jareguero@telefonica.net>
+Subject: Problem with pata_via and HL-DT-ST GCE-8525B cdrom with kernels 2.6.22+
+Date: Thu, 23 Aug 2007 12:11:26 +0200
+Message-ID: <200708231211.26490.jareguero@telefonica.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:39591 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756766AbXHWKIj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Aug 2007 06:08:39 -0400
+Received: from smtp.telefonica.net ([213.4.149.66]:16213 "EHLO
+	ctsmtpout4.frontal.correo" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759404AbXHWKL2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2007 06:11:28 -0400
+Received: from jar.dominio (80.25.230.35) by ctsmtpout4.frontal.correo (7.2.056.6) (authenticated as jareguero$telefonica.net)
+        id 46C07BCD001137DC for linux-ide@vger.kernel.org; Thu, 23 Aug 2007 12:11:27 +0200
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+I have a problem with pata_via and a  HL-DT-ST GCE-8525B cdrom, with kernels 
+2.6.22 and 2.6.23-rc3. When burning cds, the burning speed drop down to ~ 1.
+Also I have problems readind cds.
+With kernel 2.6.21, the cdrom work well.
+There are not error messages in dmesg and /var/log/messages, only some error 
+when shutdown de pc(reseting port, ...).
+I have also a HL-DT-ST DVDRAM GSA-4167B DVD that work well.
 
-Fixes + more laptop IDs
+DVD(work well):
+[root@jar ~]# hdparm -i /dev/scd0
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+/dev/scd0:
 
-to receive the following updates:
+ Model=HL-DT-ST DVDRAM GSA-4167B               , FwRev=DL10    , 
+SerialNo=C70B8EB84B89
+ Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+ RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=0
+ (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 *udma2
+ AdvancedPM=no
+ Drive conforms to: Unspecified:  ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 
+ATA/ATAPI-5
 
- drivers/ata/libata-core.c   |    7 ++++++-
- drivers/ata/pata_pdc2027x.c |   18 +++++++++---------
- drivers/ata/pata_sis.c      |    1 +
- drivers/ata/pata_via.c      |    5 ++++-
- 4 files changed, 20 insertions(+), 11 deletions(-)
+ * signifies the current active mode
 
-Alan Cox (2):
-      pata_sis: Add the FSC Amilo and friends
-      pata_via: Add Arima W730-K8 and other rebadgings
+CDROM
+[root@jar ~]# hdparm -i /dev/scd1
 
-Mikael Pettersson (1):
-      pata_pdc2027x: PLL detection fixes
+/dev/scd1:
 
-Tejun Heo (2):
-      libata: fix n_sectors failure handling during revalidation
-      libata: don't check n_sectors during revalidation if zero
+ Model=HL-DT-ST GCE-8525B                      , FwRev=1.05    , SerialNo=      
+ Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+ RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=0
+ (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+ IORDY=yes, tPIO={min:227,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4
+ DMA modes:  mdma0 mdma1 mdma2
+ UDMA modes: udma0 udma1 *udma2
+ AdvancedPM=no
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 99d4fbf..2ad4dda 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3700,11 +3700,16 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int readid_flags)
- 		goto fail;
- 
- 	/* verify n_sectors hasn't changed */
--	if (dev->class == ATA_DEV_ATA && dev->n_sectors != n_sectors) {
-+	if (dev->class == ATA_DEV_ATA && n_sectors &&
-+	    dev->n_sectors != n_sectors) {
- 		ata_dev_printk(dev, KERN_INFO, "n_sectors mismatch "
- 			       "%llu != %llu\n",
- 			       (unsigned long long)n_sectors,
- 			       (unsigned long long)dev->n_sectors);
-+
-+		/* restore original n_sectors */
-+		dev->n_sectors = n_sectors;
-+
- 		rc = -ENODEV;
- 		goto fail;
- 	}
-diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index 69a5aa4..e3245b3 100644
---- a/drivers/ata/pata_pdc2027x.c
-+++ b/drivers/ata/pata_pdc2027x.c
-@@ -563,13 +563,13 @@ static long pdc_read_counter(struct ata_host *host)
- 	u32 bccrl, bccrh, bccrlv, bccrhv;
- 
- retry:
--	bccrl = readl(mmio_base + PDC_BYTE_COUNT) & 0xffff;
--	bccrh = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0xffff;
-+	bccrl = readl(mmio_base + PDC_BYTE_COUNT) & 0x7fff;
-+	bccrh = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0x7fff;
- 	rmb();
- 
- 	/* Read the counter values again for verification */
--	bccrlv = readl(mmio_base + PDC_BYTE_COUNT) & 0xffff;
--	bccrhv = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0xffff;
-+	bccrlv = readl(mmio_base + PDC_BYTE_COUNT) & 0x7fff;
-+	bccrhv = readl(mmio_base + PDC_BYTE_COUNT + 0x100) & 0x7fff;
- 	rmb();
- 
- 	counter = (bccrh << 15) | bccrl;
-@@ -692,16 +692,16 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
- 	struct timeval start_time, end_time;
- 	long pll_clock, usec_elapsed;
- 
--	/* Read current counter value */
--	start_count = pdc_read_counter(host);
--	do_gettimeofday(&start_time);
--
- 	/* Start the test mode */
- 	scr = readl(mmio_base + PDC_SYS_CTL);
- 	PDPRINTK("scr[%X]\n", scr);
- 	writel(scr | (0x01 << 14), mmio_base + PDC_SYS_CTL);
- 	readl(mmio_base + PDC_SYS_CTL); /* flush */
- 
-+	/* Read current counter value */
-+	start_count = pdc_read_counter(host);
-+	do_gettimeofday(&start_time);
-+
- 	/* Let the counter run for 100 ms. */
- 	mdelay(100);
- 
-@@ -719,7 +719,7 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
- 	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
- 		(end_time.tv_usec - start_time.tv_usec);
- 
--	pll_clock = (start_count - end_count) / 100 *
-+	pll_clock = ((start_count - end_count) & 0x3fffffff) / 100 *
- 		(100000000 / usec_elapsed);
- 
- 	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 66bd0e8..2bd7645 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -54,6 +54,7 @@ struct sis_laptop {
- static const struct sis_laptop sis_laptop[] = {
- 	/* devid, subvendor, subdev */
- 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
-+	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
- 	/* end marker */
- 	{ 0, }
- };
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index f645fe2..ea18e33 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -63,7 +63,7 @@
- #include <linux/dmi.h>
- 
- #define DRV_NAME "pata_via"
--#define DRV_VERSION "0.3.1"
-+#define DRV_VERSION "0.3.2"
- 
- /*
-  *	The following comes directly from Vojtech Pavlik's ide/pci/via82cxxx
-@@ -144,6 +144,9 @@ static int via_cable_override(struct pci_dev *pdev)
- 	/* Systems by DMI */
- 	if (dmi_check_system(cable_dmi_table))
- 		return 1;
-+	/* Arima W730-K8/Targa Visionary 811/... */
-+	if (pdev->subsystem_vendor == 0x161F && pdev->subsystem_device == 0x2032)
-+		return 1;
- 	return 0;
- }
- 
+ * signifies the current active mode
+
+Thanks.
+Jose Alberto
