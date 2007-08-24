@@ -1,41 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2.6.23-rc3] pata_pdc2027x: PLL detection fixes
-Date: Fri, 24 Aug 2007 20:29:17 +0400
-Message-ID: <46CF075D.5090205@ru.mvista.com>
-References: <200708191717.l7JHHtMO021933@harpo.it.uu.se> <46C8832D.8040801@ru.mvista.com> <46C89E55.90708@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH][resend] fix IDE legacy mode resources
+Date: Fri, 24 Aug 2007 17:37:13 +0100
+Message-ID: <20070824173713.2bc20bac@the-village.bc.nu>
+References: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
+	<20070824161442.GB15305@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:43844 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754654AbXHXQ0m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 12:26:42 -0400
-In-Reply-To: <46C89E55.90708@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49014 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751242AbXHXQ32 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 12:29:28 -0400
+In-Reply-To: <20070824161442.GB15305@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, albertl@mail.com, linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
 
-Hello.
+>>     PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+> > 
+> > In some architectures, PCI bus regions have the offset from PCI resources.
+> > For this reason, pci_setup_device() should set PCI bus regions to dev->resource[]. 
+> 
+> I thought this patch was rejected in the past as it broke other
+> machines.
 
-Jeff Garzik wrote:
+News to me.
 
->>    What have really surpried me about Promise was that they gave their 
->> SATA chip docs to Jeff who made them public and yet they continue to 
->> conceal the old PATA chip docs... :-/
+Ths one looks sane and is different to the one Andrew has been fiddling
+with to stop broken X servers from crashing.
 
-> They probably just need to be poked.  I've been sitting on the sata_sx4 
-
-    It's not tat MV not poked them but al we've got was a hard copy of one 
-section under an agreement to ship the calibration code only to the 
-customer... :-/
-     Luckily, there were Albert's patches floating around by rhis time. :-)
-
-> docs and cards, waiting on them to give me permission to post the SX4 
-> docs since January.  Previous doc pokings were successful, but sometimes 
-> they disappear for months at a time.
-
->     Jeff
-
-MBR, Sergei
+Alan
