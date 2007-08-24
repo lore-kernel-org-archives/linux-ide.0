@@ -1,73 +1,94 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/4] hpt366: UltraDMA filter for SATA cards (take 2)
-Date: Fri, 24 Aug 2007 22:11:05 +0400
-Message-ID: <46CF1F39.6000908@ru.mvista.com>
-References: <200708192300.35564.sshtylyov@ru.mvista.com> <200708212236.10803.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.23-rc3] pata_pdc2027x: PLL detection fixes
+Date: Fri, 24 Aug 2007 20:31:08 +0200
+Message-ID: <200708242031.08399.bzolnier@gmail.com>
+References: <200708191717.l7JHHtMO021933@harpo.it.uu.se> <46CABEAC.3070203@tw.ibm.com> <46CF0657.3080004@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:44486 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763135AbXHXSIa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 14:08:30 -0400
-In-Reply-To: <200708212236.10803.bzolnier@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.187]:14321 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761462AbXHXSbA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 14:31:00 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so1186751mue
+        for <linux-ide@vger.kernel.org>; Fri, 24 Aug 2007 11:30:59 -0700 (PDT)
+In-Reply-To: <46CF0657.3080004@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: rah@bash.sh, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: albertl@mail.com, Mikael Pettersson <mikpe@it.uu.se>, alan@lxorguk.ukuu.org.uk, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Friday 24 August 2007, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Albert Lee wrote:
+> 
+> >>>b) puts more work [the enter test mode stuff] in between the start
+> >>>   and and sampling points, reducing the precision of the PLL
+> >>>   detection; I actually observed quite noticeable differences
+> >>>   in detected PLL frequency based on whether the start was sampled
+> >>>   before or after the test mode enter code
+> 
+> >>   I'd think this differnce is negligible with 100 ms delay. But why not
+> >>-- shouldn't harm indeed (except it's better to read a stable counter
+> >>before than unstable one after entering test mode)?
+> 
+> >>>>>  The fix is to move the read of the start value to after
+> >>>>>  test mode is started, but before the mdelay() in test mode.
+> 
+> >>>>   This is not an issue, so no fix is needed.
+> 
+> >>>>>  This also improves the precision of the PLL detection.
+> 
+> >>>>   BTW, looks like we don't even need to bother reading the darn
+> >>>>counter beforehand: bit 1 of the indexed register 1 (the same used to
+> >>>>enter/exit test mode by twiddling its bit 6) when being cleared
+> >>>>should reset the counter to 0 
+> 
+> >>   Or maybe to 0x7fff?  I can't remember already -- never seen those
+> >>infamous Promise papers, and I was testing this code looong ago
+> >>already... :-)
+> 
+> > I've tested reloading the pata_pdc2027x module before.
+> > The counter seems not cleared when leaving the test mode.
+> 
+>      I never saud that. Counter should be cleared by resetting "test mode" bit.
+> But I'm seeing the cause of misinteprettion: one may think that bit 1 is used 
+> to clear counters but I meant to say that clearing bit 1 of that ssme register 
+> should clear the counters...
+> 
+> >>>>>2. The code to compute the number of PLL decrements during the
+> >>>>>  mdelay() in test mode fails to consider that the PLL counter
+> >>>>>  only is 30 bits wide. If there is a wraparound, it will compute
+> >>>>>  an incorrect and much too large value. On the PowerMac, the
+> >>>>>  start count is zero, the end count is a large 30-bit value, so
+> >>>>>  wraparound occurs and an out of bounds PLL clock is detected.
+> 
+> >>>>>  The fix is to mask the (start - end) computation to 30 bits.
+> 
+> >>>>   Yeah, that's what I've done for the old IDE driver...
+> 
+> >>>Except that due to what may be a typo pdc202xx_new masks to
+> >>>26 bits, not 30.
+> 
+> >>   Indeed! :-<
+> >>   Thanks for noticing -- this is a typo, of course... And it's a pity
+> >>that Albert failed to notice it when he last touched that driver...
+> 
+> > I was too blind to notice the wrong 26-bit mask. :(
+> 
+> > Fortunately with the 10ms delay used by the IDE pdc202xx_new driver,
+> > (start_count - end_count) is smaller than the 26-bit mask. So it
+> > doesn't actually damage anything.
+> 
+>     Yeah, I thought so.
 
->>The Marvell bridge chips used on HighPoint SATA cards do not seem to support
->>the UltraDMA modes 1, 2, and 3 as well as any MWDMA modes, so the driver needs
->>to account for this in the udma_filter() method.  In order to achieve that, do
->>the following changes:
+I'm a bit lost in this discussion.
 
->>- install the method for all chips, not only HPT36x/370 and impove the code
->>  formatting by killing the extra tabs while at it;
+Do we need some of these pata_pdc2027x fixes in pdc202xx_new or not?
 
-> s/impove/improve/
-
-    Will fix in the updated patch...
-
->>- add to the end of the 'switch' statement in the method cases for HPT372[AN]
->>  and HPT374 chips upon which the known SATA cards are based;
-
->>- use hwif->ultra_mask as a default mask for the ide_dma_filter() method to
->>  behave correctly;
-
-    ... and I was actually going to get rid of all explict masks there, just 
-modifying the 'mask' variable -- this was may paper version but I was in hury 
-and forgotten to look at this particular place.
-
->>- move the HPT370[A] cases below the HPT36x case for consistency.
-
->>While at it, replace the explicit UltraDMA mode masks with ATA_UDMA* constants
->>all over the driver...
-
-    This is certainly worth a big patch covering all PCI drivers. Maybe I'll 
-cook it up.  For now, I'm going to drop this part
-
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> applied
-
-    ... with imminent recast. :-)
-
->>---
->>This is against the current Linus tree and unfortunately I was able to only
->>compile test it since that tree gives MODPOST warning and dies early on bootup.
-
-> Is this still case?  Not an IDE problem but definitely needs fixing especially
-> given that we are already in -rc3...
-
-    Yeah, it is, at least on my Geode GX2 testing target.
-
->>Will hopefully finish with the patch series next weekend...
-
-    I'll do my best (althou I've already encountered trouble with displays 
-suddenly being blanked -- some{one|thing} set the standby timer to 1-2 
-minutes. :-) Beside that my typing loses as an effect of some pills. +:-)
-
-MBR, Sergei
+Thanks,
+Bart
