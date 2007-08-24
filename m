@@ -1,110 +1,49 @@
-From: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-Subject: [PATCH][resend] fix IDE legacy mode resources
-Date: Fri, 24 Aug 2007 11:55:59 +0900
-Message-ID: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
+From: Karim 'Kasi Mir' Senoucci <ks@double-you.de>
+Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
+Date: Fri, 24 Aug 2007 09:46:15 +0200
+Message-ID: <46CE8CC7.4080900@double-you.de>
+References: <46C1DCBB.9020308@double-you.de>	<20070814184301.3201d162@the-village.bc.nu>	<46C2047D.4040901@double-you.de> <20070815002447.40f7f206@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo30.po.2iij.NET ([210.128.50.53]:12821 "EHLO mo30.po.2iij.net"
+Received: from mx1.melzone.de ([81.169.156.183]:33259 "EHLO mx1.melzone.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933596AbXHXC4Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Aug 2007 22:56:25 -0400
+	id S1753974AbXHXIUj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Aug 2007 04:20:39 -0400
+In-Reply-To: <20070815002447.40f7f206@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: yoichi_yuasa@tripeaks.co.jp, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+Alan Cox schrieb:
+>> in the sata_mv source. Should I add something like:
+>>
+>>         { PCI_VDEVICE(TTI, 0x2300), chip_604x },
+>>
+>> Yes
+>>     
+Just to not leave this thread hanging in the mail archives: this didn't 
+work for me. With the above patch, the controller is detected, but the 
+system hangs upon inclusion of the sata_mv driver. dmess shows:
 
-I got the following error on MIPS Cobalt.
+[   32.240000] sata_mv 0000:06:00.0: version 0.81
+[   32.272000] ACPI: PCI Interrupt 0000:06:00.0[A] -> Done.Link [APC6] 
+->GSI 16 (level, low) -> IRQ 17
+[   32.336000] sata_mv 0000:06:00.0: Applying B2 workarounds to unknown rev
+[   32.388000] sata_mv 0000:06:00.0: 32 slots 4 ports SCSI mode IRQ via INTx
+[   32.432000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
+[   32.464000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
+[   32.496000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
+[   32.528000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
+[   32.560000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
+[   32.592000] sata_mv: PCI ERROR; PCI IRQ cause=0x00000000
 
-PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
-pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
-PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
-pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
-pata_via 0000:00:09.1: no available native port
+and many many more PCI ERRORS until I reboot the system. So, I guess 
+that particular Highpoint controller does not work yet with sata_mv.
 
-The legacy mode IDE resources set the following order. 
+Thanks very much for your efforts, anyway.
 
-pci_setup_device()
-    Legacy mode ATA controllers have fixed addresses.
-    IDE resources: 0x1F0-0x1F7, 0x3F6, 0x170-0x177, 0x376
-    |
-    V
-pcibios_fixup_bus()
-    MIPS Cobalt PCI bus regions have the -0x10000000 offset from PCI resources.
-    pcibios_fixup_bus() fix PCI bus regions.
-    0x1F0 - 0x10000000 = 0xF00001F0
-    |
-    V
-ata_pci_init_one()
-    PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+Greetings, Karim.
 
-In some architectures, PCI bus regions have the offset from PCI resources.
-For this reason, pci_setup_device() should set PCI bus regions to dev->resource[]. 
-
-Yoichi
-
----
-
-Fix legacy mode IDE resources 
-
-Signed-off-by: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
-
-diff -pruN -X generic/Documentation/dontdiff generic-orig/drivers/pci/probe.c generic/drivers/pci/probe.c
---- generic-orig/drivers/pci/probe.c	2007-07-26 17:07:44.151670750 +0900
-+++ generic/drivers/pci/probe.c	2007-07-26 17:25:42.227046250 +0900
-@@ -744,22 +744,40 @@ static int pci_setup_device(struct pci_d
- 		 */
- 		if (class == PCI_CLASS_STORAGE_IDE) {
- 			u8 progif;
-+			struct pci_bus_region region;
-+			struct resource resource;
- 			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
- 			if ((progif & 1) == 0) {
--				dev->resource[0].start = 0x1F0;
--				dev->resource[0].end = 0x1F7;
--				dev->resource[0].flags = LEGACY_IO_RESOURCE;
--				dev->resource[1].start = 0x3F6;
--				dev->resource[1].end = 0x3F6;
--				dev->resource[1].flags = LEGACY_IO_RESOURCE;
-+				resource.start = 0x1F0;
-+				resource.end = 0x1F7;
-+				resource.flags = LEGACY_IO_RESOURCE;
-+				pcibios_resource_to_bus(dev, &region, &resource);
-+				dev->resource[0].start = region.start;
-+				dev->resource[0].end = region.end;
-+				dev->resource[0].flags = resource.flags;
-+				resource.start = 0x3F6;
-+				resource.end = 0x3F6;
-+				resource.flags = LEGACY_IO_RESOURCE;
-+				pcibios_resource_to_bus(dev, &region, &resource);
-+				dev->resource[1].start = region.start;
-+				dev->resource[1].end = region.end;
-+				dev->resource[1].flags = resource.flags;
- 			}
- 			if ((progif & 4) == 0) {
--				dev->resource[2].start = 0x170;
--				dev->resource[2].end = 0x177;
--				dev->resource[2].flags = LEGACY_IO_RESOURCE;
--				dev->resource[3].start = 0x376;
--				dev->resource[3].end = 0x376;
--				dev->resource[3].flags = LEGACY_IO_RESOURCE;
-+				resource.start = 0x170;
-+				resource.end = 0x177;
-+				resource.flags = LEGACY_IO_RESOURCE;
-+				pcibios_resource_to_bus(dev, &region, &resource);
-+				dev->resource[2].start = region.start;
-+				dev->resource[2].end = region.end;
-+				dev->resource[2].flags = resource.flags;
-+				resource.start = 0x376;
-+				resource.end = 0x376;
-+				resource.flags = LEGACY_IO_RESOURCE;
-+				pcibios_resource_to_bus(dev, &region, &resource);
-+				dev->resource[3].start = region.start;
-+				dev->resource[3].end = region.end;
-+				dev->resource[3].flags = resource.flags;
- 			}
- 		}
- 		break;
