@@ -1,39 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
-Date: Fri, 24 Aug 2007 14:48:58 +0100
-Message-ID: <20070824144858.384b1040@the-village.bc.nu>
-References: <46C1DCBB.9020308@double-you.de>
-	<20070814184301.3201d162@the-village.bc.nu>
-	<46C2047D.4040901@double-you.de>
-	<20070815002447.40f7f206@the-village.bc.nu>
-	<46CE8CC7.4080900@double-you.de>
-	<46CEAB1B.9060908@garzik.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH][resend] fix IDE legacy mode resources
+Date: Fri, 24 Aug 2007 09:14:42 -0700
+Message-ID: <20070824161442.GB15305@kroah.com>
+References: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42966 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752403AbXHXNky (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 09:40:54 -0400
-In-Reply-To: <46CEAB1B.9060908@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761769AbXHXQQ5@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Karim 'Kasi Mir' Senoucci <ks@double-you.de>, linux-ide@vger.kernel.org
 
-On Fri, 24 Aug 2007 05:55:39 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Karim 'Kasi Mir' Senoucci wrote:
-> > Alan Cox schrieb:
-> >>> in the sata_mv source. Should I add something like:
-> >>>
-> >>>         { PCI_VDEVICE(TTI, 0x2300), chip_604x }
-
-> You need to use the sata_mv from kernel 2.6.23-rcX.
+On Fri, Aug 24, 2007 at 11:55:59AM +0900, Yoichi Yuasa wrote:
+> Hi,
 > 
-> Patching into older drivers isn't guaranteed to work.
+> I got the following error on MIPS Cobalt.
+> 
+> PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
+> PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
+> pata_via 0000:00:09.1: no available native port
+> 
+> The legacy mode IDE resources set the following order. 
+> 
+> pci_setup_device()
+>     Legacy mode ATA controllers have fixed addresses.
+>     IDE resources: 0x1F0-0x1F7, 0x3F6, 0x170-0x177, 0x376
+>     |
+>     V
+> pcibios_fixup_bus()
+>     MIPS Cobalt PCI bus regions have the -0x10000000 offset from PCI resources.
+>     pcibios_fixup_bus() fix PCI bus regions.
+>     0x1F0 - 0x10000000 = 0xF00001F0
+>     |
+>     V
+> ata_pci_init_one()
+>     PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+> 
+> In some architectures, PCI bus regions have the offset from PCI resources.
+> For this reason, pci_setup_device() should set PCI bus regions to dev->resource[]. 
 
-May also be the actual chip on the 2300 is different to the older ones
-and isn't a 604x.
+I thought this patch was rejected in the past as it broke other
+machines.
+
+thanks,
+
+greg k-h
