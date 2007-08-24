@@ -1,71 +1,208 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/4] ide: add ide_dev_is_sata() helper
-Date: Fri, 24 Aug 2007 22:49:14 +0400
-Message-ID: <46CF282A.9020601@ru.mvista.com>
-References: <200708192259.08171.sshtylyov@ru.mvista.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH][resend] fix IDE legacy mode resources
+Date: Fri, 24 Aug 2007 15:20:05 -0700
+Message-ID: <20070824152005.45167160.akpm@linux-foundation.org>
+References: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:44679 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763030AbXHXSqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 14:46:38 -0400
-In-Reply-To: <200708192259.08171.sshtylyov@ru.mvista.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:54143 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760818AbXHXWUV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Aug 2007 18:20:21 -0400
+In-Reply-To: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>, Jan Beulich <jbeulich@novell.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
 
-Hello, I wrote:
+On Fri, 24 Aug 2007 11:55:59 +0900
+Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp> wrote:
 
-> Make the SATA drive detection code from eighty_ninty_three() into inline
-> ide_dev_is_sata() helper fixing it along the way to be more strict while
-> checking word 80 for the reserved values...
+> Hi,
+> 
+> I got the following error on MIPS Cobalt.
+> 
+> PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 0 (errno=-16)
+> PCI: Unable to reserve I/O region #3:8@f0000170 for device 0000:00:09.1
+> pata_via 0000:00:09.1: failed to request/iomap BARs for port 1 (errno=-16)
+> pata_via 0000:00:09.1: no available native port
+> 
+> The legacy mode IDE resources set the following order. 
+> 
+> pci_setup_device()
+>     Legacy mode ATA controllers have fixed addresses.
+>     IDE resources: 0x1F0-0x1F7, 0x3F6, 0x170-0x177, 0x376
+>     |
+>     V
+> pcibios_fixup_bus()
+>     MIPS Cobalt PCI bus regions have the -0x10000000 offset from PCI resources.
+>     pcibios_fixup_bus() fix PCI bus regions.
+>     0x1F0 - 0x10000000 = 0xF00001F0
+>     |
+>     V
+> ata_pci_init_one()
+>     PCI: Unable to reserve I/O region #1:8@f00001f0 for device 0000:00:09.1
+> 
+> In some architectures, PCI bus regions have the offset from PCI resources.
+> For this reason, pci_setup_device() should set PCI bus regions to dev->resource[]. 
+> 
+> Yoichi
+> 
+> ---
+> 
+> Fix legacy mode IDE resources 
+> 
+> Signed-off-by: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
+> 
+> diff -pruN -X generic/Documentation/dontdiff generic-orig/drivers/pci/probe.c generic/drivers/pci/probe.c
+> --- generic-orig/drivers/pci/probe.c	2007-07-26 17:07:44.151670750 +0900
+> +++ generic/drivers/pci/probe.c	2007-07-26 17:25:42.227046250 +0900
+> @@ -744,22 +744,40 @@ static int pci_setup_device(struct pci_d
+>  		 */
+>  		if (class == PCI_CLASS_STORAGE_IDE) {
+>  			u8 progif;
+> +			struct pci_bus_region region;
+> +			struct resource resource;
+>  			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
+>  			if ((progif & 1) == 0) {
+> -				dev->resource[0].start = 0x1F0;
+> -				dev->resource[0].end = 0x1F7;
+> -				dev->resource[0].flags = LEGACY_IO_RESOURCE;
+> -				dev->resource[1].start = 0x3F6;
+> -				dev->resource[1].end = 0x3F6;
+> -				dev->resource[1].flags = LEGACY_IO_RESOURCE;
+> +				resource.start = 0x1F0;
+> +				resource.end = 0x1F7;
+> +				resource.flags = LEGACY_IO_RESOURCE;
+> +				pcibios_resource_to_bus(dev, &region, &resource);
+> +				dev->resource[0].start = region.start;
+> +				dev->resource[0].end = region.end;
+> +				dev->resource[0].flags = resource.flags;
+> +				resource.start = 0x3F6;
+> +				resource.end = 0x3F6;
+> +				resource.flags = LEGACY_IO_RESOURCE;
+> +				pcibios_resource_to_bus(dev, &region, &resource);
+> +				dev->resource[1].start = region.start;
+> +				dev->resource[1].end = region.end;
+> +				dev->resource[1].flags = resource.flags;
+>  			}
+>  			if ((progif & 4) == 0) {
+> -				dev->resource[2].start = 0x170;
+> -				dev->resource[2].end = 0x177;
+> -				dev->resource[2].flags = LEGACY_IO_RESOURCE;
+> -				dev->resource[3].start = 0x376;
+> -				dev->resource[3].end = 0x376;
+> -				dev->resource[3].flags = LEGACY_IO_RESOURCE;
+> +				resource.start = 0x170;
+> +				resource.end = 0x177;
+> +				resource.flags = LEGACY_IO_RESOURCE;
+> +				pcibios_resource_to_bus(dev, &region, &resource);
+> +				dev->resource[2].start = region.start;
+> +				dev->resource[2].end = region.end;
+> +				dev->resource[2].flags = resource.flags;
+> +				resource.start = 0x376;
+> +				resource.end = 0x376;
+> +				resource.flags = LEGACY_IO_RESOURCE;
+> +				pcibios_resource_to_bus(dev, &region, &resource);
+> +				dev->resource[3].start = region.start;
+> +				dev->resource[3].end = region.end;
+> +				dev->resource[3].flags = resource.flags;
+>  			}
+>  		}
+>  		break;
 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+ho hum.
 
-[...]
-> Index: linux-2.6/drivers/ide/ide-iops.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/ide-iops.c
-> +++ linux-2.6/drivers/ide/ide-iops.c
-> @@ -580,8 +580,7 @@ u8 eighty_ninty_three (ide_drive_t *driv
->  	if (hwif->cbl != ATA_CBL_PATA80)
->  		goto no_80w;
->  
-> -	/* Check for SATA but only if we are ATA5 or higher */
-> -	if (id->hw_config == 0 && (id->major_rev_num & 0x7FE0))
-> +	if (ide_dev_is_sata(id))
->  		return 1;
->  
->  	/*
-> Index: linux-2.6/include/linux/ide.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/ide.h
-> +++ linux-2.6/include/linux/ide.h
-> @@ -1380,6 +1380,19 @@ static inline int ide_dev_has_iordy(stru
->  	return ((id->field_valid & 2) && (id->capability & 8)) ? 1 : 0;
->  }
->  
-> +static inline int ide_dev_is_sata(struct hd_driveid *id)
-> +{
-> +	/*
-> +	 * See if word 93 is 0 AND drive is at least ATA-5 compatible
-> +	 * making sure that word 80 is valid by flipping its MSB --
-> +	 * this trick allows us to filter out reserved values of 0
-> +	 * and 0xffff along with the earlier ATA revisions.
-> +	 */
-> +	if (id->hw_config == 0 && (id->major_rev_num ^ 0x8000) >= 0x8020)
-> +		return 1;
-> +	return 0;
-> +}
-> +
+Below is the patch from Jan (which I'll now need to drop) which we are, in
+a rather haphazard manner, trying to get into some sort of working shape.
 
-    The same could have been achieved more simply:
+Please discuss.
 
-	if (id->hw_config == 0 && (short}id->major_rev_num >= 0x0020
+From: Jan Beulich <jbeulich@novell.com>
 
-    so I'll probably recast...
+Fix http://bugzilla.kernel.org/show_bug.cgi?id=8187
 
-MBR, Sergei
+The change to force legacy mode IDE channels' resources to fixed non-zero
+values confuses (at least some versions of) X, because the values reported by
+the kernel and those readable from PCI config space aren't consistent anymore.
+ Therefore, this patch arranges for the respective BARs to also get updated if
+possible.
+
+[akpm@linux-foundation.org: <alan>Just remove that chunk</aman>]
+Signed-off-by: Jan Beulich <jbeulich@novell.com>
+Cc: Kristofer T. Karas" <ktk@enterprise.bidmc.harvard.edu>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Natalie Protasevich <protasnb@gmail.com>
+Cc: Greg KH <greg@kroah.com>
+Cc: Gabriel C <nix.or.die@googlemail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/pci/probe.c |   40 +++++++++++++++++++++++++++-------------
+ 1 files changed, 27 insertions(+), 13 deletions(-)
+
+diff -puN drivers/pci/probe.c~pci-align-bar-settings-for-legacy-mode-ide drivers/pci/probe.c
+--- a/drivers/pci/probe.c~pci-align-bar-settings-for-legacy-mode-ide
++++ a/drivers/pci/probe.c
+@@ -741,7 +741,29 @@ static void pci_read_irq(struct pci_dev 
+ 	dev->irq = irq;
+ }
+ 
+-#define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
++static void change_legacy_io_resource(struct pci_dev * dev, unsigned index,
++				resource_size_t start, resource_size_t end)
++{
++	resource_size_t base = start & PCI_BASE_ADDRESS_IO_MASK;
++	resource_size_t len = (end | ~PCI_BASE_ADDRESS_IO_MASK) - base + 1;
++
++	if (pci_resource_len(dev, index) != len) {
++		printk(KERN_WARNING "%s: cannot adjust BAR%u (size %Lx)\n",
++			pci_name(dev), index,
++			(unsigned long long)pci_resource_len(dev, index));
++	} else {
++		printk(KERN_INFO "%s: trying to change BAR%u from %Lx to %Lx\n",
++			pci_name(dev), index,
++			(unsigned long long)pci_resource_start(dev, index),
++			(unsigned long long)base);
++		pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4,
++					base);
++	}
++	pci_resource_start(dev, index) = start;
++	pci_resource_end(dev, index) = end;
++	pci_resource_flags(dev, index) = IORESOURCE_IO|IORESOURCE_PCI_FIXED|
++					PCI_BASE_ADDRESS_SPACE_IO;
++}
+ 
+ /**
+  * pci_setup_device - fill in class and map information of a device
+@@ -795,20 +817,12 @@ static int pci_setup_device(struct pci_d
+ 			u8 progif;
+ 			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
+ 			if ((progif & 1) == 0) {
+-				dev->resource[0].start = 0x1F0;
+-				dev->resource[0].end = 0x1F7;
+-				dev->resource[0].flags = LEGACY_IO_RESOURCE;
+-				dev->resource[1].start = 0x3F6;
+-				dev->resource[1].end = 0x3F6;
+-				dev->resource[1].flags = LEGACY_IO_RESOURCE;
++				change_legacy_io_resource(dev, 0, 0x1F0, 0x1F7);
++				change_legacy_io_resource(dev, 1, 0x3F6, 0x3F6);
+ 			}
+ 			if ((progif & 4) == 0) {
+-				dev->resource[2].start = 0x170;
+-				dev->resource[2].end = 0x177;
+-				dev->resource[2].flags = LEGACY_IO_RESOURCE;
+-				dev->resource[3].start = 0x376;
+-				dev->resource[3].end = 0x376;
+-				dev->resource[3].flags = LEGACY_IO_RESOURCE;
++				change_legacy_io_resource(dev, 2, 0x170, 0x177);
++				change_legacy_io_resource(dev, 3, 0x376, 0x376);
+ 			}
+ 		}
+ 		break;
+_
+
