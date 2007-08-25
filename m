@@ -1,42 +1,79 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: readXs on pci*iomap-ped regions [Was: [PATCH] /drivers/char
- sx.c ioremap -> pci_ioremap api]
-Date: Sat, 25 Aug 2007 11:17:58 +0100
-Message-ID: <20070825111758.47500f39@the-village.bc.nu>
-References: <46CF2849.2090008@gmail.com>
-	<4af2d03a0708241159v56b46299h46df9777a98590e5@mail.gmail.com>
-	<20070824201530.5d741b37@the-village.bc.nu>
-	<46CF399E.3010808@gmail.com>
-	<20070824213439.0007e653@the-village.bc.nu>
-	<46CFEC40.7060006@gmail.com>
-	<46CFEEB3.6000802@pobox.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] hpt366: UltraDMA filtering for SATA cards
+Date: Sat, 25 Aug 2007 21:13:45 +0400
+Message-ID: <46D06349.7050009@ru.mvista.com>
+References: <200708060008.38077.sshtylyov@ru.mvista.com> <200708090008.10352.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39320 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751735AbXHYKJ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 06:09:56 -0400
-In-Reply-To: <46CFEEB3.6000802@pobox.com>
+Received: from h155.mvista.com ([63.81.120.155]:50346 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752394AbXHYRLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Aug 2007 13:11:08 -0400
+In-Reply-To: <200708090008.10352.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org, Greg KH <gregkh@suse.de>, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 25 Aug 2007 04:56:19 -0400
-Jeff Garzik <jgarzik@pobox.com> wrote:
+Hello.
 
-> If the driver knows its MMIO, using readX/writeX after pci_iomap() is 
-> just fine, for all current implementations, and it makes sense that way.
+Bartlomiej Zolnierkiewicz wrote:
 
-There is nothing that guarantees this is permitted, any more than there
-is anything saying not to use outb/outl. Some of the implementations do
-quite strange things. It may happen to work but its not in the
-documentation or the comments.
+>>The Marvell bridge chips used on HighPoint SATA cards do not seem to support
+>>the UltraDMA modes 1, 2, and 3 (as well as any MWDMA modes), so the driver
+>>needs to account for this in the udma_filter() method.  In order to achieve
+>>that, do the following changes:
 
-If you want to change this then you need to check the existing usages and
-update all the docs if its safe, oh and tell the sparc64 pcmcia people to
-take a hike, which is probably not a big problem.
+>>- install the method for all chips, not only HPT36x/370 (improve code formatting
+>>  by killing an extra tabs while at it);
 
-Alan
+>>- add to the end of the 'switch' statement in hpt3xx_udma_filter() case for
+>>  HPT372[AN] and HPT374 chips upon which the SATA cards are based and check
+>>  there whether we're dealing with SATA drive (by looking at words 80 and 93
+>>  of the drive's identify data), reorder HPT370[A] cases for consistency...
+
+>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+[...]
+
+> Also now that ->udma_filter is always present the initial hwif->ultra_mask
+
+    Aha, so this method's semantics intended to *completely override* the 
+ultra_mask field?!  Wouldn't it be better to make the code behave more 
+consistent, i.e. in ide_get_mode_mask() do:
+
+         unsigned int mask = 0;
+
+         switch(base) {
+         case XFER_UDMA_0:
+                 if ((id->field_valid & 4) == 0)
+                         break;
+
+                 if (hwif->udma_filter)
+                         mask = hwif->udma_filter(drive);
+		else
+                         mask = hwif->ultra_mask;
+
+                 mask &= id->dma_ultra;
+                 if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
+                         mask &= 0x07;
+                 break;
+         case XFER_MW_DMA_0:
+                 if ((id->field_valid & 2) == 0)
+                         break;
+
+                 if (hwif->mdma_filter)
+                         mask = hwif->mdma_filter(drive);
+		else
+                         mask = hwif->mwdma_mask;
+                 mask &= id->dma_mword;
+                 break;
+
+to avoid the further confusion? ;-)
+
+> Thanks,
+> Bart
+
+WBR, Sergei
