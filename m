@@ -1,109 +1,75 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [Bugme-new] [Bug 8936] New: sata_promise 2.09 fails to identify ST3400832AS
-Date: Sat, 25 Aug 2007 19:12:31 +0200 (MEST)
-Message-ID: <200708251712.l7PHCV45008981@harpo.it.uu.se>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/4] ide: add ide_dev_is_sata() helper (take 2)
+Date: Sat, 25 Aug 2007 23:08:26 +0400
+Message-ID: <200708252308.26202.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:44310 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753028AbXHYRN7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 25 Aug 2007 13:13:59 -0400
+Received: from rtsoft3.corbina.net ([85.21.88.6]:8025 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759034AbXHYTFt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 15:05:49 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org, linux-ide@vger.kernel.org, michal.k.k.piotrowski@gmail.com, mikpe@it.uu.se, sziemba@ecn.purdue.edu
-Cc: bugme-daemon@bugzilla.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 24 Aug 2007 22:21:47 -0700, Andrew Morton wrote:
-> On Fri, 24 Aug 2007 21:14:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=8936
-> > 
-> >            Summary: sata_promise 2.09 fails to identify ST3400832AS
-> >            Product: IO/Storage
-> >            Version: 2.5
-> >      KernelVersion: 2.6.23-rc1
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: high
-> >           Priority: P1
-> >          Component: Serial ATA
-> >         AssignedTo: jgarzik@pobox.com
-> >         ReportedBy: sziemba@ecn.purdue.edu
-> > 
-> > 
-> > Most recent kernel where this bug did not occur: 2.6.22 
-> > 
-> > Using git bisect I have identified the first bad commit.
-> > 
-> > linux-2.6# git bisect good
-> > a77720ad0a4049e4bc6355e4febf899966a48222 is first bad commit
-> > commit a77720ad0a4049e4bc6355e4febf899966a48222
-> > Author: Mikael Pettersson <mikpe@it.uu.se>
-> > Date:   Tue Jul 3 01:09:05 2007 +0200
-> > 
-> > Distribution: Debian etch (stable)
-> > 
-> > Hardware Environment: Sun Fire x4100
-> > (http://www.crocom.com.pl/ulotki/X4100.pdf)
-> > 8 ST3400832AS drives connected to Promise FastTrak TX4200
-> > 2 ST973401LSUN72G drives connected to on board Fusion SAS
-> > 
-> > Software Environment:
-> > Problem Description:  
-> > 
-> > I will attach dmesg output, hdparm and lspci.  I have tried acpi=noirq, noapic,
-> >  irqpoll and pci=routeirq.  The drives connected to promise controller fail to
-> > identify.  The dmesg for rc-3 with sata_promise 2.09 is truncated as the kernel
-> > loops indefinitely.  Replacing sata_promise.c with version 2.08 from previous
-> > kernels allows 2.6.23-rc3 to boot (with some warnings during compile/boot).
-> > 
-> > Steps to reproduce:  Boot the machine with the promise card connected.
-> > 
-> 
-> Thanks for doing the bisection - it really helps.
-> 
-> Michal, one for the regression file, please.
-> 
-> Mikael: tsk ;)
+Make the SATA drive detection code from eighty_ninty_three() into inline
+ide_dev_is_sata() helper fixing it along the way to be more strict while
+checking word 80 for the reserved values...
 
-According to the lspci the boards are FastTrak TX4200 with DID 0x3519.
-Unfortunately these aren't publicly documented, but judging from what
-little information there is in Promise's partial-source FT TX4200 driver,
-DID 0x3519 is a second-generation chip.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-However, sata_promise.c declares it as a first-generation chip, which
-changes some details. This didn't matter too much before, but with the
-hotplug changes in 2.6.23-rc1, it matters more because the location of
-the SATA hotplug register is different in 1st and 2nd generation chips.
-(There are also some "failed to resume link for reset" errors with the
-2.08 driver that may be caused by the 1st-vs-2nd generation confusion.)
+---
+This version doesn't flip the MSB, it just casts word80 to 'signed short'
+This is still against the current Linus' tree and unfortunately I was able to
+only compile test it since that tree gives MODPOST warning and dies early on
+bootup (yes, Bart this is still the case).  Alos, I have no SATA bridge/drive
+here at hand...
 
-I suspect that correcting the driver to mark DID 0x3515/0x3519 as
-2nd-generation should fix the problem. The patch below does just that;
-please try it and let us know if it makes any difference.
+ drivers/ide/ide-iops.c |    3 +--
+ include/linux/ide.h    |   13 +++++++++++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-/Mikael
-
---- linux-2.6.23-rc3/drivers/ata/sata_promise.c.~1~	2007-08-18 21:51:23.000000000 +0200
-+++ linux-2.6.23-rc3/drivers/ata/sata_promise.c	2007-08-25 18:55:37.000000000 +0200
-@@ -45,7 +45,7 @@
- #include "sata_promise.h"
+Index: linux-2.6/drivers/ide/ide-iops.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-iops.c
++++ linux-2.6/drivers/ide/ide-iops.c
+@@ -615,8 +615,7 @@ u8 eighty_ninty_three (ide_drive_t *driv
+ 	if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
+ 		goto no_80w;
  
- #define DRV_NAME	"sata_promise"
--#define DRV_VERSION	"2.09"
-+#define DRV_VERSION	"2.10"
+-	/* Check for SATA but only if we are ATA5 or higher */
+-	if (id->hw_config == 0 && (id->major_rev_num & 0x7FE0))
++	if (ide_dev_is_sata(id))
+ 		return 1;
  
- enum {
- 	PDC_MAX_PORTS		= 4,
-@@ -328,8 +328,8 @@ static const struct pci_device_id pdc_at
+ 	/*
+Index: linux-2.6/include/linux/ide.h
+===================================================================
+--- linux-2.6.orig/include/linux/ide.h
++++ linux-2.6/include/linux/ide.h
+@@ -1380,6 +1380,19 @@ static inline int ide_dev_has_iordy(stru
+ 	return ((id->field_valid & 2) && (id->capability & 8)) ? 1 : 0;
+ }
  
- 	{ PCI_VDEVICE(PROMISE, 0x3318), board_20319 },
- 	{ PCI_VDEVICE(PROMISE, 0x3319), board_20319 },
--	{ PCI_VDEVICE(PROMISE, 0x3515), board_20319 },
--	{ PCI_VDEVICE(PROMISE, 0x3519), board_20319 },
-+	{ PCI_VDEVICE(PROMISE, 0x3515), board_40518 },
-+	{ PCI_VDEVICE(PROMISE, 0x3519), board_40518 },
- 	{ PCI_VDEVICE(PROMISE, 0x3d17), board_40518 },
- 	{ PCI_VDEVICE(PROMISE, 0x3d18), board_40518 },
++static inline int ide_dev_is_sata(struct hd_driveid *id)
++{
++	/*
++	 * See if word 93 is 0 AND drive is at least ATA-5 compatible
++	 * verifying that word 80 by casting it to a signed type --
++	 * this trick allows us to filter out the reserved values of
++	 * 0x0000 and 0xffff along with the earlier ATA revisions...
++	 */
++	if (id->hw_config == 0 && (short)id->major_rev_num >= 0x0020)
++		return 1;
++	return 0;
++}
++
+ u8 ide_dump_status(ide_drive_t *, const char *, u8);
  
+ typedef struct ide_pio_timings_s {
+
