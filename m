@@ -1,73 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 8936] New: sata_promise 2.09 fails to identify
- ST3400832AS
-Date: Fri, 24 Aug 2007 22:21:47 -0700
-Message-ID: <20070824222147.230263de.akpm@linux-foundation.org>
-References: <bug-8936-10286@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH 1/1] Ata: pata_marvell, use ioread* for iomap-ped memory
+Date: Sat, 25 Aug 2007 04:00:48 -0400
+Message-ID: <14077223792606026025@pripojeni.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:58295 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755571AbXHYFWk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 01:22:40 -0400
-In-Reply-To: <bug-8936-10286@http.bugzilla.kernel.org/>
+Received: from general-networks3.cust.sloane.cz ([88.146.176.14]:33591 "EHLO
+	server.generalnetworks.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932997AbXHYIAs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 04:00:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sziemba@ecn.purdue.edu, linux-ide@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>
-Cc: bugme-daemon@bugzilla.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Fri, 24 Aug 2007 21:14:49 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+pata_marvell, use ioread* for iomap-ped memory
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=8936
-> 
->            Summary: sata_promise 2.09 fails to identify ST3400832AS
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.23-rc1
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: high
->           Priority: P1
->          Component: Serial ATA
->         AssignedTo: jgarzik@pobox.com
->         ReportedBy: sziemba@ecn.purdue.edu
-> 
-> 
-> Most recent kernel where this bug did not occur: 2.6.22 
-> 
-> Using git bisect I have identified the first bad commit.
-> 
-> linux-2.6# git bisect good
-> a77720ad0a4049e4bc6355e4febf899966a48222 is first bad commit
-> commit a77720ad0a4049e4bc6355e4febf899966a48222
-> Author: Mikael Pettersson <mikpe@it.uu.se>
-> Date:   Tue Jul 3 01:09:05 2007 +0200
-> 
-> Distribution: Debian etch (stable)
-> 
-> Hardware Environment: Sun Fire x4100
-> (http://www.crocom.com.pl/ulotki/X4100.pdf)
-> 8 ST3400832AS drives connected to Promise FastTrak TX4200
-> 2 ST973401LSUN72G drives connected to on board Fusion SAS
-> 
-> Software Environment:
-> Problem Description:  
-> 
-> I will attach dmesg output, hdparm and lspci.  I have tried acpi=noirq, noapic,
->  irqpoll and pci=routeirq.  The drives connected to promise controller fail to
-> identify.  The dmesg for rc-3 with sata_promise 2.09 is truncated as the kernel
-> loops indefinitely.  Replacing sata_promise.c with version 2.08 from previous
-> kernels allows 2.6.23-rc3 to boot (with some warnings during compile/boot).
-> 
-> Steps to reproduce:  Boot the machine with the promise card connected.
-> 
+read* on pci_iomapped memory is incorrect, fix it
 
-Thanks for doing the bisection - it really helps.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Michal, one for the regression file, please.
+---
+commit 5a28a23f3c53993aaf6e7ef6c392e5f4c20d4a3b
+tree 4b3387d330556da54d61d989f2dc75d5258af4ea
+parent f5f10b061961546a77300f3ebe92abd9cb5b9b48
+author Jiri Slaby <jirislaby@gmail.com> Sat, 25 Aug 2007 09:41:44 +0200
+committer Jiri Slaby <jirislaby@gmail.com> Sat, 25 Aug 2007 09:41:44 +0200
 
-Mikael: tsk ;)
+ drivers/ata/pata_marvell.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index f8db900..a657754 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -45,10 +45,10 @@ static int marvell_pre_reset(struct ata_link *link, unsigned long deadline)
+ 		return -ENOMEM;
+ 	printk("BAR5:");
+ 	for(i = 0; i <= 0x0F; i++)
+-		printk("%02X:%02X ", i, readb(barp + i));
++		printk("%02X:%02X ", i, ioread8(barp + i));
+ 	printk("\n");
+ 
+-	devices = readl(barp + 0x0C);
++	devices = ioread32(barp + 0x0C);
+ 	pci_iounmap(pdev, barp);
+ 
+ 	if ((pdev->device == 0x6145) && (ap->port_no == 0) &&
