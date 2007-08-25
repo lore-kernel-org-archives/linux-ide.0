@@ -1,25 +1,30 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: readXs on pci*iomap-ped regions [Was: [PATCH] /drivers/char sx.c
- ioremap -> pci_ioremap api]
-Date: Sat, 25 Aug 2007 11:02:44 +0200
-Message-ID: <46CFF034.1030403@gmail.com>
-References: <46CF2849.2090008@gmail.com> <4af2d03a0708241159v56b46299h46df9777a98590e5@mail.gmail.com> <20070824201530.5d741b37@the-village.bc.nu>	<46CF399E.3010808@gmail.com> <20070824213439.0007e653@the-village.bc.nu> <46CFEC40.7060006@gmail.com> <46CFEEB3.6000802@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/1] Ata: pata_marvell, use ioread* for iomap-ped memory
+Date: Sat, 25 Aug 2007 11:02:44 +0100
+Message-ID: <20070825110244.794c8fd6@the-village.bc.nu>
+References: <14077223792606026025@pripojeni.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933914AbXHYJB5@vger.kernel.org>
-In-Reply-To: <46CFEEB3.6000802@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, Greg KH <gregkh@suse.de>, linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59275 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1765493AbXHYJyv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 05:54:51 -0400
+In-Reply-To: <14077223792606026025@pripojeni.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Jeff Garzik napsal(a):
-> If the driver knows its MMIO, using readX/writeX after pci_iomap() is
-> just fine, for all current implementations, and it makes sense that way.
+On Sat, 25 Aug 2007 08:54:27 +0100
+Jiri Slaby <jirislaby@gmail.com> wrote:
 
-Hmm, that's what I'm claiming.
+> pata_marvell, use ioread* for iomap-ped memory
+> 
+> read* on pci_iomapped memory is incorrect, fix it
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
--- 
-Jiri Slaby (jirislaby@gmail.com)
-Faculty of Informatics, Masaryk University
+Acked-by: Alan Cox <alan@redhat.com>
