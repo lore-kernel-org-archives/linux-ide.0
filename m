@@ -1,169 +1,68 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/4] hpt366: UltraDMA filter for SATA cards (take 3)
-Date: Sat, 25 Aug 2007 23:28:03 +0400
-Message-ID: <200708252328.03826.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] hpt366: UltraDMA filtering for SATA cards
+Date: Sun, 26 Aug 2007 00:49:11 +0400
+Message-ID: <46D095C7.9020000@ru.mvista.com>
+References: <200708060008.38077.sshtylyov@ru.mvista.com> <46BDD989.6060202@ru.mvista.com> <46BE0726.1080609@ru.mvista.com> <200708182118.45356.bzolnier@gmail.com> <46C85207.6030401@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:8057 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757745AbXHYTZ0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2007 15:25:26 -0400
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:50973 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750912AbXHYUqe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Aug 2007 16:46:34 -0400
+In-Reply-To: <46C85207.6030401@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-The Marvell bridge chips used on HighPoint SATA cards do not seem to support
-the UltraDMA modes 1, 2, and 3 as well as any MWDMA modes, so the driver needs
-to account for this in the udma_filter() method.  In order to achieve that, do
-the following changes:
+Hello, I wrote:
 
-- install the method for all chips, not only HPT36x/370 and impove the code
-  formatting by killing the extra tabs while at it;
+>>>    When are you planning to push out to Linus the 
+>>> ide-mode-limiting-fixes-for-user-requested-speed-changes.patch? I'd 
+>>> like my HPT37x SATA mode filtering stuff to be atop of this one, 
+>>> after looking at it.
 
-- add to the end of the 'switch' statement in the method cases for HPT372[AN]
-  and HPT374 chips upon which the known SATA cards are based;
+>> Preferably 2.6.24 material and ide_rate_filter() FIXME (respecting 
+>> device PIO
+>> limits) still needs to be addressed before pushing all mode limiting 
+>> patches
+>> upstream.
 
-- use hwif->ultra_mask as a default mask for the ide_dma_filter() method to
-  behave correctly;
+>    Maybe I'll look into this...
 
-- move the HPT370[A] cases below the HPT36x case for consistency...
+    PIO stuff seems done.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>>>>> ide_rate_filter() happily uses ide_find_dma_mode() nowadays 
+>>>>> (however this
+>>>>> hpt366 patch is for vanilla kernel which doesn't have the needed 
+>>>>> changes).
 
----
-Argh!  I've managed to put = instead of &= here and there, so please disregard
-the take #2... :-/
-This version doesn't use explicit UltraDMA masks, so converting them to the
-ATA_UDMA* is left for another, global patch.  This patch against the current
-Linus' tree and unfortunately I was able to only compile test it since that
-tree gives MODPOST warning and dies early on bootup.
+>>>    Yeah, it keeps being in the same vein (same bug rather :-) as the 
+>>> old code, i.e. not looking at hwif->mwdma_mask when falling back in 
+>>> ide_rate_filter()...
 
- drivers/ide/pci/hpt366.c |   78 ++++++++++++++++++++++++-----------------------
- 1 files changed, 40 insertions(+), 38 deletions(-)
+>> Worth fixing but deserves a separate patch.
 
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.11	Aug 11, 2007
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.12	Aug 25, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -114,6 +114,7 @@
-  *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
-  *   the register setting lists into the table indexed by the clock selected
-  * - set the correct hwif->ultra_mask for each individual chip
-+ * - add UltraDMA mode filtering for the HPT37[24] based SATA cards
-  *	Sergei Shtylyov, <sshtylyov@ru.mvista.com> or <source@mvista.com>
-  */
- 
-@@ -524,36 +525,38 @@ static int check_in_drive_list(ide_drive
- 
- static u8 hpt3xx_udma_filter(ide_drive_t *drive)
- {
--	struct hpt_info *info	= pci_get_drvdata(HWIF(drive)->pci_dev);
--	u8 mask;
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	struct hpt_info *info	= pci_get_drvdata(hwif->pci_dev);
-+	u8 mask 		= hwif->ultra_mask;
- 
- 	switch (info->chip_type) {
--	case HPT370A:
--		if (!HPT370_ALLOW_ATA100_5 ||
--		    check_in_drive_list(drive, bad_ata100_5))
--			return 0x1f;
--		else
--			return 0x3f;
--	case HPT370:
--		if (!HPT370_ALLOW_ATA100_5 ||
--		    check_in_drive_list(drive, bad_ata100_5))
--			mask = 0x1f;
--		else
--			mask = 0x3f;
--		break;
- 	case HPT36x:
--		if (!HPT366_ALLOW_ATA66_4 ||
-+		if (HPT366_ALLOW_ATA66_4 &&
- 		    check_in_drive_list(drive, bad_ata66_4))
--			mask = 0x0f;
--		else
--			mask = 0x1f;
-+			mask &= ~0x10;
- 
--		if (!HPT366_ALLOW_ATA66_3 ||
-+		if (HPT366_ALLOW_ATA66_3 &&
- 		    check_in_drive_list(drive, bad_ata66_3))
--			mask = 0x07;
-+			mask &= ~0x08;
- 		break;
-+	case HPT370 :
-+	case HPT370A:
-+		if (HPT370_ALLOW_ATA100_5 &&
-+		    check_in_drive_list(drive, bad_ata100_5))
-+			mask &= ~0x20;
-+
-+		if (info->chip_type == HPT370A)
-+			return mask;
-+		break;
-+	case HPT372 :
-+	case HPT372A:
-+	case HPT372N:
-+	case HPT374 :
-+		if (ide_dev_is_sata(drive->id))
-+			mask &= ~0x0e;
-+		/* Fall thru */
- 	default:
--		return 0x7f;
-+		return mask;
- 	}
- 
- 	return check_in_drive_list(drive, bad_ata33) ? 0x00 : mask;
-@@ -1236,25 +1239,24 @@ static unsigned int __devinit init_chips
- 
- static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
- {
--	struct pci_dev	*dev		= hwif->pci_dev;
--	struct hpt_info *info		= pci_get_drvdata(dev);
--	int serialize			= HPT_SERIALIZE_IO;
--	u8  scr1 = 0, ata66		= hwif->channel ? 0x01 : 0x02;
--	u8  chip_type			= info->chip_type;
--	u8  new_mcr, old_mcr 		= 0;
-+	struct pci_dev	*dev	= hwif->pci_dev;
-+	struct hpt_info *info	= pci_get_drvdata(dev);
-+	int serialize		= HPT_SERIALIZE_IO;
-+	u8  scr1 = 0, ata66	= hwif->channel ? 0x01 : 0x02;
-+	u8  chip_type		= info->chip_type;
-+	u8  new_mcr, old_mcr	= 0;
- 
- 	/* Cache the channel's MISC. control registers' offset */
--	hwif->select_data		= hwif->channel ? 0x54 : 0x50;
-+	hwif->select_data	= hwif->channel ? 0x54 : 0x50;
- 
--	hwif->tuneproc			= &hpt3xx_tune_drive;
--	hwif->speedproc			= &hpt3xx_tune_chipset;
--	hwif->quirkproc			= &hpt3xx_quirkproc;
--	hwif->intrproc			= &hpt3xx_intrproc;
--	hwif->maskproc			= &hpt3xx_maskproc;
--	hwif->busproc			= &hpt3xx_busproc;
-+	hwif->tuneproc		= &hpt3xx_tune_drive;
-+	hwif->speedproc		= &hpt3xx_tune_chipset;
-+	hwif->quirkproc		= &hpt3xx_quirkproc;
-+	hwif->intrproc		= &hpt3xx_intrproc;
-+	hwif->maskproc		= &hpt3xx_maskproc;
-+	hwif->busproc		= &hpt3xx_busproc;
- 
--	if (chip_type <= HPT370A)
--		hwif->udma_filter	= &hpt3xx_udma_filter;
-+	hwif->udma_filter	= &hpt3xx_udma_filter;
- 
- 	/*
- 	 * HPT3xxN chips have some complications:
+    Fixed (I hope).
 
+>    It does. Unfortunately, after you said that this issue has been already
+> dealt width, I've dropped (and lost) the code fixing this -- will have 
+> to redo
+> it now. :-/
+>    I'm now envisioning the HPT37[24] SATA filtering work as series of n 
+> patches:
+
+> [1/4] introduce drive_is_sata() helper + minor fix to eighty_ninty_three()
+> [2/4] hpt366: UltraDMA mode filter for SATA cards
+> [3/4] fix ide_rate_filter() to respect hwif->mwdma_mask
+> [4/4] introduce mwdma_filter() method and use it for HPT37x-based SATA 
+> cards
+
+    Looks like I'm done with [3/4] and almost done with [4/4]...
+    "I have no more whiskey, I have to go home" %-)
+
+>> Bart
+
+MBR, Sergei
