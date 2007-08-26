@@ -1,52 +1,40 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] Prefix each line of multiline printk(KERN_<level>
- "foo\nbar") with KERN_<level>
-Date: Sun, 26 Aug 2007 10:30:41 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0708261028120.31149@anakin>
-References: <1187999098.32738.179.camel@localhost>
+From: "Dong Feng" <middle.fengdong@gmail.com>
+Subject: Re: 2.6.22.5 SATA Failure
+Date: Sun, 26 Aug 2007 18:04:06 +0800
+Message-ID: <a2ebde260708260304y40394ea9jb6065a51f789ca3f@mail.gmail.com>
+References: <fa.9lnv231u8AU5Nlw9OFEhJs+u+Yw@ifi.uio.no>
+	 <46D1013D.5040801@shaw.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1187999098.32738.179.camel@localhost>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, blinux-list@redhat.com, cluster-devel@redhat.com, discuss@x86-64.org, jffs-dev@axis.com, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org, mpt_linux_developer@lsi.com, netdev@vger.kernel.org, osst-users@lists.sourceforge.net, parisc-linux@parisc-linux.org, tpmdd-devel@lists.sourceforge.net, uclinux-dist-devel@blackfin.uclinux.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:46811 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbXHZKEH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 06:04:07 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so1656820wah
+        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 03:04:06 -0700 (PDT)
+In-Reply-To: <46D1013D.5040801@shaw.ca>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 24 Aug 2007, Joe Perches wrote:
-> Corrected printk calls with multiple output lines which
-> did not correctly preface each line with KERN_<level>
-> 
-> Fixed uses of some single lines with too many KERN_<level>
+2007/8/26, Robert Hancock <hancockr@shaw.ca>:
+>
+> It looks like you have some CONFIG_IDE options enabled in your kernel
+> configuration that result in drivers/ide trying to drive part or all of
+> that controller, preventing libata from doing so. Likely the easiest
+> thing to do is just set CONFIG_IDE=n entirely..
+>
+> --
+> Robert Hancock      Saskatoon, SK, Canada
+> To email, remove "nospam" from hancockr@nospamshaw.ca
+> Home Page: http://www.roberthancock.com/
+>
+>
 
-> --- a/arch/arm/kernel/ecard.c
-> +++ b/arch/arm/kernel/ecard.c
-> @@ -547,7 +547,8 @@ static void ecard_check_lockup(struct irq_desc *desc)
->  	if (last == jiffies) {
->  		lockup += 1;
->  		if (lockup > 1000000) {
-> -			printk(KERN_ERR "\nInterrupt lockup detected - "
-> +			printk(KERN_ERR "\n"
-> +			       KERN_ERR "Interrupt lockup detected - "
->  			       "disabling all expansion card interrupts\n");
->  
->  			desc->chip->mask(IRQ_EXPANSIONCARD);
+The SATA works with 2.6.22.5 after CONFIG_IDE =n being set.
 
-What's the purpose of having lines printed with e.g. `KERN_ERR "\n"' only?
-Shouldn't these just be removed?
-
-Usually lines starting with `\n' are continuations, but given some other
-module may call printk() in between, there's no guarantee continuations
-appear on the same line.
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Thank you very much.
