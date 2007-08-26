@@ -1,82 +1,52 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: 2.6.22.5 SATA Failure
-Date: Sat, 25 Aug 2007 22:27:41 -0600
-Message-ID: <46D1013D.5040801@shaw.ca>
-References: <fa.9lnv231u8AU5Nlw9OFEhJs+u+Yw@ifi.uio.no>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] Prefix each line of multiline printk(KERN_<level>
+ "foo\nbar") with KERN_<level>
+Date: Sun, 26 Aug 2007 10:30:41 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0708261028120.31149@anakin>
+References: <1187999098.32738.179.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:43868 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbXHZE3O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 00:29:14 -0400
-In-reply-to: <fa.9lnv231u8AU5Nlw9OFEhJs+u+Yw@ifi.uio.no>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1187999098.32738.179.camel@localhost>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, blinux-list@redhat.com, cluster-devel@redhat.com, discuss@x86-64.org, jffs-dev@axis.com, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org, mpt_linux_developer@lsi.com, netdev@vger.kernel.org, osst-users@lists.sourceforge.net, parisc-linux@parisc-linux.org, tpmdd-devel@lists.sourceforge.net, uclinux-dist-devel@blackfin.uclinux.org
 List-Id: linux-ide@vger.kernel.org
-To: Dong Feng <middle.fengdong@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Dong Feng wrote:
-> I have been using 2.6.21.1. It seems working well, that is, all my
-> disk partitions are mapped as "/dev/sda*" and the performance looks
-> good. After I upgrade to 2.6.22.5 with the exact same configuration,
-> all the disk device turn to "/dev/hda*" and the performance degrade
-> obviously.
+On Fri, 24 Aug 2007, Joe Perches wrote:
+> Corrected printk calls with multiple output lines which
+> did not correctly preface each line with KERN_<level>
 > 
-> While I boot with 2.6.21.1, the logs regarding disk are:
-> 
-> Aug 26 06:11:26 localhost kernel: ata_piix 0000:00:1f.2: MAP [ P0 P2 IDE IDE ]
-> Aug 26 06:11:26 localhost kernel: ACPI: PCI Interrupt 0000:00:1f.2[B]
-> -> GSI 17 (level, low) -> IRQ 17
-> Aug 26 06:11:26 localhost kernel: ata: 0x170 IDE port busy
-> Aug 26 06:11:26 localhost kernel: ata: conflict with ide1
-> Aug 26 06:11:26 localhost kernel: ata1: SATA max UDMA/133 cmd
-> 0x000101f0 ctl 0x000103f6 bmdma 0x0001bfa0 irq 14
-> Aug 26 06:11:26 localhost kernel: ata2: DUMMY
-> Aug 26 06:11:26 localhost kernel: scsi0 : ata_piix
-> Aug 26 06:11:26 localhost kernel: ata1.00: ATA-7: ST9120821AS, 8.03,
-> max UDMA/133
-> Aug 26 06:11:26 localhost kernel: ata1.00: 234441648 sectors, multi 8:
-> LBA48 NCQ (depth 0/32)
-> Aug 26 06:11:26 localhost kernel: ata1.00: configured for UDMA/133
-> Aug 26 06:11:26 localhost kernel: scsi1 : ata_piix
-> Aug 26 06:11:26 localhost kernel: scsi 0:0:0:0: Direct-Access     ATA
->     ST9120821AS      8.03 PQ: 0 ANSI: 5
-> Aug 26 06:11:26 localhost kernel: SCSI device sda: 234441648 512-byte
-> hdwr sectors (120034 MB)
-> Aug 26 06:11:26 localhost kernel: sda: Write Protect is off
-> Aug 26 06:11:26 localhost kernel: SCSI device sda: write cache:
-> enabled, read cache: enabled, doesn't support DPO or FUA
-> Aug 26 06:11:26 localhost kernel: SCSI device sda: 234441648 512-byte
-> hdwr sectors (120034 MB)
-> Aug 26 06:11:26 localhost kernel: sda: Write Protect is off
-> Aug 26 06:11:26 localhost kernel: SCSI device sda: write cache:
-> enabled, read cache: enabled, doesn't support DPO or FUA
-> Aug 26 06:11:26 localhost kernel:  sda: sda1 sda2 sda3 < sda5 sda6 sda7 >
-> 
-> 
-> 
-> While booting with 2.6.22.5, the logs are:
-> 
-> Aug 26 09:30:04 localhost kernel: ACPI: PCI Interrupt 0000:00:1f.2[B]
-> -> GSI 17 (level, low) -> IRQ 17
-> Aug 26 09:30:04 localhost kernel: ata_piix 0000:00:1f.2: 0x1F0 IDE port busy
-> Aug 26 09:30:04 localhost kernel: ata_piix 0000:00:1f.2: 0x170 IDE port busy
-> Aug 26 09:30:04 localhost kernel: ata_piix 0000:00:1f.2: no available
-> legacy port
-> 
-> 
-> 
-> It seems the dramatic change in libata.c incurs this failure.
+> Fixed uses of some single lines with too many KERN_<level>
 
-It looks like you have some CONFIG_IDE options enabled in your kernel 
-configuration that result in drivers/ide trying to drive part or all of 
-that controller, preventing libata from doing so. Likely the easiest 
-thing to do is just set CONFIG_IDE=n entirely..
+> --- a/arch/arm/kernel/ecard.c
+> +++ b/arch/arm/kernel/ecard.c
+> @@ -547,7 +547,8 @@ static void ecard_check_lockup(struct irq_desc *desc)
+>  	if (last == jiffies) {
+>  		lockup += 1;
+>  		if (lockup > 1000000) {
+> -			printk(KERN_ERR "\nInterrupt lockup detected - "
+> +			printk(KERN_ERR "\n"
+> +			       KERN_ERR "Interrupt lockup detected - "
+>  			       "disabling all expansion card interrupts\n");
+>  
+>  			desc->chip->mask(IRQ_EXPANSIONCARD);
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+What's the purpose of having lines printed with e.g. `KERN_ERR "\n"' only?
+Shouldn't these just be removed?
 
+Usually lines starting with `\n' are continuations, but given some other
+module may call printk() in between, there's no guarantee continuations
+appear on the same line.
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
