@@ -1,87 +1,92 @@
-From: Rusty Conover <rconover@infogears.com>
-Subject: Re: Resets on sil3124 & sil3726 PMP
-Date: Sun, 26 Aug 2007 10:37:09 -0600
-Message-ID: <D1F202E2-89B9-44D4-8E9E-0EEFF4CD0612@infogears.com>
-References: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com> <46C5E3A6.9020907@gmail.com> <DFEB0E31-D017-4527-85A4-8D18D379CB0B@infogears.com> <98147300-A282-4909-A393-079365833BD8@infogears.com> <46CBA78D.2070405@gmail.com> <F3FDFA8B-A2EF-4EEE-ACE2-E67776650CF4@infogears.com> <46CBCD18.7070507@gmail.com> <B209C20A-580B-4AD6-A6A0-B4377499B8FC@infogears.com> <46CBDA17.6010009@gmail.com> <D2865984-EF5E-400F-9B71-1F95363D4C3F@infogears.com> <46CBDF82.6020206@gmail.com> <7644C0A3-8AEF-4C00-837A-429F73DD616D@infogears.com> <46CF91BA.7030608@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v752.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: Stardom SATA HSM violation
+Date: Mon, 27 Aug 2007 01:10:13 +0200
+Message-ID: <6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
+References: <46CFA08E.6090604@arbores.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.infogears.com ([69.51.90.143]:46646 "EHLO
-	mail.infogears.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264AbXHZQhM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 12:37:12 -0400
-In-Reply-To: <46CF91BA.7030608@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:47250 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752794AbXHZXKN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 19:10:13 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1871324wah
+        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 16:10:13 -0700 (PDT)
+In-Reply-To: <46CFA08E.6090604@arbores.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: bryan@arbores.ca
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Hi,
 
-On Aug 24, 2007, at 8:19 PM, Tejun Heo wrote:
+[Adding linux-ide to CC]
 
-> Hello, Rusty.
+On 25/08/07, Bryan Woods <bryan@arbores.ca> wrote:
+> Hi KML
 >
-> Rusty Conover wrote:
->> I have some interesting results.
->>
->> I had a pair of Seagate 250 GB SATA disks (models below) and tried  
->> those
->> out rather then the WD's.    At the 1.5 gbps rather they appear to  
->> work
->> just fine both being on the same PMP, at 3.0 gbps they timeout  
->> just like
->> the other disks did.  Possibly, the code isn't detecting the max  
->> rate of
->> the disks correctly since these drives only do 1.5 and it  
->> attempted to
->> do 3.0 gbps?
+> I am installing gentoo 2007.0 (kernel 2.6.19) on a dual AMD Opteron server (total of 4 cores). The hard disk is a Stardom 2611-2S-S1 device: actually two 250GB drives in a RAID0 config managed by the device itself - it should appear to the kernel as one SATA drive. If it matters, the underlying HDs are "Seagate Barracuda 7200 10"s. Here's the device:
 >
-> Hardware PHY layer is fully responsible of 1.5/3.0 negotiation.  The
-> driver can limit the maximum it can go but doesn't have much say in  
-> the
-> actual negotiation.
+>  http://www.synetic.net/Synetic-Products/Stardoms/SR-2611-SA/Stardom-2611.htm
 >
-> Unfortunately, some SATA PHY combinations have problems at 3.0bps.  I
-> saw quite a few weird cases.  e.g. marvell PMP can't detect older
-> Seagate drives on 3Gbps and can't talk to a first gen Maxtor even at
-> 1.5.  I'm still not quite sure how to solve this.  Once detected,  
-> libata
-> EH will do the right thing and speed down to 1.5 after a few
-> transmission errors but it's a bit trickier before detection.  It's
-> probably not worth driving fan-out ports at 3.0Ghz in the first  
-> place so
-> maybe limiting PMP fan-out ports to 1.5 by default can alleviate most
-> situations.  Oh well, users won't be happy tho.
+> During the install and at different points in the process I get an "HSM violation" and the system becomes unresponsive. It looks like a similar situation to:
 >
->> Have you found that drives can be picky if they will work or not with
->> PMP ports?
+>   http://lkml.org/lkml/2007/6/6/195
 >
-> As I said above, yeap.  Not only PMPs some host PHYs do that too.
+> Will more recent kernels work with this hardware (should I keep it and try the install again) or should I switch hardware to something more compatible (like an Adaptec card)?
 >
->> I'll be trying to get a bunch of different drives to replace the ones
->> that don't work with PMP.
+> Thanks!
+> Bryan
 >
-> Yeah, that will be the easiest way out for the moment.
+> --
+> console output:
 >
-> Thanks.
+> tag 0 cmd 0x39 Emask 0x2 stat 0x58 err 0x0 (HSM violation)
+> exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>
+> --
+> Output from hdparm -I /dev/sda:
+>
+> /dev/sda:
+>
+> ATA device, with non-removable media
+>         Model Number:   STARDOM V.36.A0B
+>         Serial Number:
+>         Firmware Revision:      V.36.A0B
+> Standards:
+>         Used: ATA/ATAPI-6 T13 1410D revision 0
+>
+> [snip]
+>
+> Commands/features:
+>         Enabled Supported:
+>         *       SMART feature set
+>         *       Power Management feature set
+>         *       Advanced Power Management feature set
+>         *       48-bit Address feature set
+>         *       Mandatory FLUSH_CACHE
+>         *       SATA-I signaling speed (1.5 Gb/s)
+>         *       SATA-II signaling speed (3.0 Gb/s)
+>
+> --
+> Parts of dmesg:
+> libata version 2.00 loaded
+> sata_nv 0000:00:05.0: version 2.0
+> ata1: SATA max UDMA/133 cmd 0xD480 ctl 0xD402 bmdma 0xCC00 irq 21
+> ata2: SATA max UDMA/133 cmd 0xD080 ctl 0xD002 bmdma 0xCC08 irq 21
+> scsi0 : sata_nv
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ATA-6, max UDMA/133,976794112 sectors: LBA48
+> ata1.00: ata1: dev 0 multi count 1
+> ata1.00: applying bridge limits
+> ata1.00: configured for UDMA/100
 >
 
-Hi Tejun,
+Regards,
+Michal
 
-After a lot of fiddling with speed limiting and different drives, I  
-still couldn't avoid the port resets under high load.  The new  
-seagate drives did work okay when both of them were paired in two PMP  
-ports, but when I assembled the full array under high load one or the  
-other PMP's would timeout and reset.  Of course this might be okay  
-for some people, who don't put a high amount of load on their drives  
-but it isn't going to work for me.
-
-After all I decided to send back the piece of hardware and just  
-switch to a solution that has the SATA ports on the main board.   
-Thanks for you help trying to get all of this working, I probably  
-just had a bad adaptor card or drive enclosure.
-
-Thanks again,
-
-Rusty
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
