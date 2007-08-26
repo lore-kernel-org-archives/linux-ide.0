@@ -1,81 +1,57 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/2] pdc202xx_new: fix PCI refcounting
-Date: Sun, 26 Aug 2007 16:56:49 +0400
-Message-ID: <46D17891.4010007@ru.mvista.com>
-References: <200708182246.48109.sshtylyov@ru.mvista.com> <200708212201.36591.bzolnier@gmail.com>
+From: Izik Weksler <iweksler@bezeqint.net>
+Subject: Re: Fwd: Re: libata pmp support
+Date: Sun, 26 Aug 2007 18:36:56 +0300
+Message-ID: <200708261836.56416.iweksler@bezeqint.net>
+References: <200708241951.45684.iweksler@bezeqint.net> <46CF8F20.5040107@gmail.com>
+Reply-To: iweksler@bezeqint.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:54030 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751341AbXHZMyN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 08:54:13 -0400
-In-Reply-To: <200708212201.36591.bzolnier@gmail.com>
+Received: from sa7.bezeqint.net ([192.115.104.21]:56349 "EHLO sa7.bezeqint.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470AbXHZPhD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Aug 2007 11:37:03 -0400
+In-Reply-To: <46CF8F20.5040107@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
->>The driver erroneously "lets go" the mate IDE chip in init_setup_pdc2=
-0270()
->>when ide_setup_pci_devices() call succeeds -- fix this, and drop a co=
-uple of
->>useless assignments in this function while at it...
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+ >>>On Saturday 25 August 2007, Tejun Heo wrote:
+> Izik Weksler wrote:
+> > ----------  Forwarded Message  ----------
+> >
+> > Subject: Re: libata pmp support
+> > Date: Thursday 23 August 2007
+> > From: Izik Weksler <iweksler@bezeqint.net>
+> > To: Tejun Heo <htejun@gmail.com>
+> >
+> >  >>>On Thursday 23 August 2007, you wrote:
+> >>
+> >> Izik Weksler wrote:
+> >>> Tejun,
+> >>>
+> >>> If you're sending the patch please send it to this address.
+> >>
+> >> Okay, please test the attached patch and please cc
+> >> linux-ide@vger.kernel.org when replying.  Thanks.
+> >
+> > Tejun,
+> >
+> > The patch failed. It sais:
+>
+> Against which version?  The patch will apply to 2.6.22.5 & 2.6.23-rcX
+> w/o the PMP patches.
 
-> applied but
+Yeah. I realized that it applies to a version that doesn't contain pmp 
+support. I tried to apply it to the 2.6.22.2-3 that goes with the SUSE 10.3 
+and of course it failed because it is pmp patched.
+So you suggest that I use the 2.6.22.5 vanilla from the www.kernel.org? If not 
+please send me a link to the applicable version.
 
->>---
->>This patch is against the current Linus' tree, it has only been compi=
-le tested
->>since I do not have PDC2027x chips (and even less so behind DC21150 b=
-ridge :-).
-
->>Index: linux-2.6/drivers/ide/pci/pdc202xx_new.c
->>=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>--- linux-2.6.orig/drivers/ide/pci/pdc202xx_new.c
->>+++ linux-2.6/drivers/ide/pci/pdc202xx_new.c
-[...]
->>@@ -521,7 +521,7 @@ static int __devinit init_setup_pdcnew(s
->> static int __devinit init_setup_pdc20270(struct pci_dev *dev,
->> 					 ide_pci_device_t *d)
->> {
->>-	struct pci_dev *findev =3D NULL;
->>+	struct pci_dev *findev;
-
-> drivers/ide/pci/pdc202xx_new.c: In function =E2=80=98init_setup_pdc20=
-270=E2=80=99:
-> drivers/ide/pci/pdc202xx_new.c:530: warning: =E2=80=98findev=E2=80=99=
- may be used uninitialized in this function
-
-> with gcc version 4.1.2 20070626 (Red Hat 4.1.2-13)
-
-> Seems to be gcc problem
-
-    No, it must be all those pills I'm taking... ;-)
-
-> but I reverted this chunk.
-
-    And you were absolutely right -- findev must be NULL for the search=
- to go=20
-thru all the PCI devices. :-/
-
-> Update: after applying patch #2/2 and fixing the reject caused by the=
- above change
-> warning disappears (patch #2/2 besides renaming "findev" to "dev2" mo=
-ves the code
-> around making it easier for gcc to deduce what is going on :).
-
-    Right, because pci_get_slot() is not a "device scanner" and so does=
-n't=20
-need the starting node.
-    I guess there's no need to recast now?
-
-WBR, Sergei
+Isaac
