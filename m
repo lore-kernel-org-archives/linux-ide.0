@@ -1,88 +1,71 @@
 From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: Stardom SATA HSM violation
-Date: Mon, 27 Aug 2007 01:10:13 +0200
-Message-ID: <6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
-References: <46CFA08E.6090604@arbores.ca>
+Subject: Re: libata not working for sis5533
+Date: Mon, 27 Aug 2007 01:27:25 +0200
+Message-ID: <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
+References: <46D132C5.5000803@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:47250 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794AbXHZXKN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 19:10:13 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1871324wah
-        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 16:10:13 -0700 (PDT)
-In-Reply-To: <46CFA08E.6090604@arbores.ca>
+Received: from nz-out-0506.google.com ([64.233.162.239]:35480 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662AbXHZX10 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 19:27:26 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so944392nze
+        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 16:27:26 -0700 (PDT)
+In-Reply-To: <46D132C5.5000803@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bryan@arbores.ca
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: patrizio.bassi@gmail.com
+Cc: "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Hi,
 
-[Adding linux-ide to CC]
+[Adding IDE wizards to CC]
 
-On 25/08/07, Bryan Woods <bryan@arbores.ca> wrote:
-> Hi KML
+On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
+> My sis630 chipset shipped with Asus A1000
+> doesn't work properly with suspend with ide drivers
+> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
 >
-> I am installing gentoo 2007.0 (kernel 2.6.19) on a dual AMD Opteron server (total of 4 cores). The hard disk is a Stardom 2611-2S-S1 device: actually two 250GB drives in a RAID0 config managed by the device itself - it should appear to the kernel as one SATA drive. If it matters, the underlying HDs are "Seagate Barracuda 7200 10"s. Here's the device:
+> i tried to switch to libata but i cannot boot.
+> I've enabled generic ide and sis specific code, both in-kernel. of
+> course scsi too.
 >
->  http://www.synetic.net/Synetic-Products/Stardoms/SR-2611-SA/Stardom-2611.htm
+> when i boot i get: irq #14 nobody cared and stop
 >
-> During the install and at different points in the process I get an "HSM violation" and the system becomes unresponsive. It looks like a similar situation to:
+> i have to remove battery to reboot pc.
+> I'm using 2.6.22.5, but i never got any libata kernel working.
 >
->   http://lkml.org/lkml/2007/6/6/195
+> Patrizio
 >
-> Will more recent kernels work with this hardware (should I keep it and try the install again) or should I switch hardware to something more compatible (like an Adaptec card)?
+> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
+> the laptop and could not boot it
 >
-> Thanks!
-> Bryan
+> Please CC me.
 >
-> --
-> console output:
->
-> tag 0 cmd 0x39 Emask 0x2 stat 0x58 err 0x0 (HSM violation)
-> exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->
-> --
-> Output from hdparm -I /dev/sda:
->
-> /dev/sda:
->
-> ATA device, with non-removable media
->         Model Number:   STARDOM V.36.A0B
->         Serial Number:
->         Firmware Revision:      V.36.A0B
-> Standards:
->         Used: ATA/ATAPI-6 T13 1410D revision 0
->
-> [snip]
->
-> Commands/features:
->         Enabled Supported:
->         *       SMART feature set
->         *       Power Management feature set
->         *       Advanced Power Management feature set
->         *       48-bit Address feature set
->         *       Mandatory FLUSH_CACHE
->         *       SATA-I signaling speed (1.5 Gb/s)
->         *       SATA-II signaling speed (3.0 Gb/s)
->
-> --
-> Parts of dmesg:
-> libata version 2.00 loaded
-> sata_nv 0000:00:05.0: version 2.0
-> ata1: SATA max UDMA/133 cmd 0xD480 ctl 0xD402 bmdma 0xCC00 irq 21
-> ata2: SATA max UDMA/133 cmd 0xD080 ctl 0xD002 bmdma 0xCC08 irq 21
-> scsi0 : sata_nv
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: ATA-6, max UDMA/133,976794112 sectors: LBA48
-> ata1.00: ata1: dev 0 multi count 1
-> ata1.00: applying bridge limits
-> ata1.00: configured for UDMA/100
->
+> lspci:
+> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
+> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
+> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
+> Bridge)
+> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
+> PCI Fast Ethernet (rev 80)
+> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
+> Controller (rev 07)
+> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
+> Controller (rev 07)
+> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
+> SiS PCI Audio Accelerator (rev 01)
+>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
+> Controller (rev a0)
+> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
+> PCI-to-PCI bridge (AGP)
+> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
+> 630/730 PCI/AGP VGA Display Adapter (rev 11)
 
 Regards,
 Michal
