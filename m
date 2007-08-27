@@ -1,107 +1,36 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: Problems with disc-performance and libata
-Date: Mon, 27 Aug 2007 01:59:11 +0200
-Message-ID: <6bffcb0e0708261659y15b344b7h783a1f5ea43a3899@mail.gmail.com>
-References: <1188158937.6896.4.camel@WG4>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Mon, 27 Aug 2007 10:18:32 +0900
+Message-ID: <46D22668.4070601@gmail.com>
+References: <EA70552E-75C2-451D-BF58-A73482FBB14D@infogears.com> <46C5E3A6.9020907@gmail.com> <DFEB0E31-D017-4527-85A4-8D18D379CB0B@infogears.com> <98147300-A282-4909-A393-079365833BD8@infogears.com> <46CBA78D.2070405@gmail.com> <F3FDFA8B-A2EF-4EEE-ACE2-E67776650CF4@infogears.com> <46CBCD18.7070507@gmail.com> <B209C20A-580B-4AD6-A6A0-B4377499B8FC@infogears.com> <46CBDA17.6010009@gmail.com> <D2865984-EF5E-400F-9B71-1F95363D4C3F@infogears.com> <46CBDF82.6020206@gmail.com> <7644C0A3-8AEF-4C00-837A-429F73DD616D@infogears.com> <46CF91BA.7030608@gmail.com> <D1F202E2-89B9-44D4-8E9E-0EEFF4CD0612@infogears.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:6301 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:17543 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752697AbXHZX7M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 19:59:12 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1887163wah
-        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 16:59:11 -0700 (PDT)
-In-Reply-To: <1188158937.6896.4.camel@WG4>
-Content-Disposition: inline
+	with ESMTP id S1752208AbXH0BSp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Aug 2007 21:18:45 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so1875934wah
+        for <linux-ide@vger.kernel.org>; Sun, 26 Aug 2007 18:18:42 -0700 (PDT)
+In-Reply-To: <D1F202E2-89B9-44D4-8E9E-0EEFF4CD0612@infogears.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Oliver Janscheidt <oliver.janscheidt@rub.de>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Rusty Conover <rconover@infogears.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi Oliver,
+Hello, Rusty.
 
-[Adding linux-ide to CC]
+Rusty Conover wrote:
+> After all I decided to send back the piece of hardware and just switch
+> to a solution that has the SATA ports on the main board.  Thanks for you
+> help trying to get all of this working, I probably just had a bad
+> adaptor card or drive enclosure.
 
-On 26/08/07, Oliver Janscheidt <oliver.janscheidt@rub.de> wrote:
-> Hi,
->
-> I'm using a Lenovo Thinkpad with TOSHIBA MK1234GS HD and MATSHITA
-> DVD-RAM UJ-850 on 82801GBM/GHM (ICH7 Family) Serial ATA Storage
-> Controller IDE. The Kernel is a 2.6.22.1 from Kernel.org (with 2.6.23-rc1-
-> and hdaps-queue-freezing-patch).
+3726/4726 work very well under high load with most drives.  I guess you
+had some problem with the cage.
 
-Could you try 2.6.23-rc3-git10?
-
->
-> sudo hdparm -t /dev/scd0 gives
->
-> Timing buffered disk reads:    2 MB in  4.47 seconds = 457.75 kB/sec
-
-Are you using cracked cd/dvd?
-
-
-cracked dvd
-
-/sbin/hdparm -t /dev/scd0
-
-/dev/scd0:
- Timing buffered disk reads:    2 MB in  6.36 seconds = 321.78 kB/sec
-
-
-new shiny dvd
-
-/sbin/hdparm -t /dev/scd0
-
-/dev/scd0:
- Timing buffered disk reads:   14 MB in  3.14 seconds =   4.46 MB/sec
-
->
-> sudo hdparm -t /dev/sda gives
->
-> Timing buffered disk reads:  102 MB in  3.04 seconds =  33.51 MB/sec
-
-I've got an old Maxtor HDD (also 5,400 rpm) results are similar.
-
->
-> which is a quite poor performance and makes any streaming impossible.
-> Obviously UDMA is working correctly as dmesg | grep UDMA says:
->
-> [   43.636590] ata1: SATA max UDMA/133 cmd 0xffffc20004612500 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> [   43.636595] ata2: SATA max UDMA/133 cmd 0xffffc20004612580 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> [   43.636599] ata3: SATA max UDMA/133 cmd 0xffffc20004612600 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> [   43.636603] ata4: SATA max UDMA/133 cmd 0xffffc20004612680 ctl
-> 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> [   44.177980] ata1.00: ATA-7: TOSHIBA MK1234GSX, AH002E, max UDMA/100
-> [   44.179192] ata1.00: configured for UDMA/100
-> [   44.326918] ata5: PATA max UDMA/133 cmd 0x00000000000101f0 ctl
-> 0x00000000000103f6 bmdma 0x0000000000011880 irq 14
-> [   44.326922] ata6: PATA max UDMA/133 cmd 0x0000000000010170 ctl
-> 0x0000000000010376 bmdma 0x0000000000011888 irq 15
-> [   44.571970] ata5.00: ATAPI: MATSHITADVD-RAM UJ-850, RB01, max UDMA/33
-> [   44.738552] ata5.00: configured for UDMA/33
-> [    0.610332] ata5.00: configured for UDMA/33
-> [    0.750296] ata1.00: configured for UDMA/100
->
-> Is there any solution for that problem or at least a workaround?
->
-> I also tried to recompile the kernel as recommended in the official
-> libata-faq ( http://linux-ata.org/faq.html ) but the system stuck when
-> booting the root-partition. Booting with combined_mode=libata or
-> combined_mode=ide didn't affect the performance, too.
->
-> Thanks in advance,
->
-> Oli
->
-
-Regards,
-Michal
+Thanks.
 
 -- 
-LOG
-http://www.stardust.webpages.pl/log/
+tejun
