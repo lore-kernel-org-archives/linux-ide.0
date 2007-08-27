@@ -1,126 +1,145 @@
-From: Oliver Janscheidt <oliver.janscheidt@rub.de>
-Subject: Re: Problems with disc-performance and libata
-Date: Mon, 27 Aug 2007 08:44:00 +0200
-Message-ID: <1188197040.6622.21.camel@WG4>
-References: <1188158937.6896.4.camel@WG4>
-	 <6bffcb0e0708261659y15b344b7h783a1f5ea43a3899@mail.gmail.com>
+From: Petr Vandrovec <vandrove@vc.cvut.cz>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Mon, 27 Aug 2007 00:11:39 -0700
+Message-ID: <46D2792B.401@vc.cvut.cz>
+References: <46D2595B.1030409@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.rz.ruhr-uni-bochum.de ([134.147.64.33]:48102 "HELO
-	mx3.rz.ruhr-uni-bochum.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751243AbXH0Gun (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Aug 2007 02:50:43 -0400
-In-Reply-To: <6bffcb0e0708261659y15b344b7h783a1f5ea43a3899@mail.gmail.com>
+Received: from mailgw.cvut.cz ([147.32.3.235]:50307 "EHLO mailgw.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849AbXH0HLl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Aug 2007 03:11:41 -0400
+In-Reply-To: <46D2595B.1030409@sauce.co.nz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: linux-ide@vger.kernel.org
 
-Hi Michal,
+Richard Scobie wrote:
+>  > 3726/4726 work very well under high load with most drives.  I guess
+>  > you had some problem with the cage.
+> 
+> Does anyone have any performance figures to share, with these PMP 
+> interfaces?
 
-thanks for your reply!
+Hello,
+   what exactly you are looking for?  For me it behaves exactly as 
+intended, and I did not notice any problems.  When I communicate with 
+only one harddrive then performance is same as native.  When I 
+communicate with more than one drive, then of course bandwidth between 
+host and PMP becomes bottleneck.  /dev/sdf is using 1.5Gbps, everybody 
+else claims 3.0Gbps.  Not that I see any difference :-(
 
-Am Montag, den 27.08.2007, 01:59 +0200 schrieb Michal Piotrowski:
-> Hi Oliver,
-> 
-> [Adding linux-ide to CC]
-> 
-> On 26/08/07, Oliver Janscheidt <oliver.janscheidt@rub.de> wrote:
-> > Hi,
-> >
-> > I'm using a Lenovo Thinkpad with TOSHIBA MK1234GS HD and MATSHITA
-> > DVD-RAM UJ-850 on 82801GBM/GHM (ICH7 Family) Serial ATA Storage
-> > Controller IDE. The Kernel is a 2.6.22.1 from Kernel.org (with 2.6.23-rc1-
-> > and hdaps-queue-freezing-patch).
-> 
-> Could you try 2.6.23-rc3-git10?
+Though I do not run any RAID on them (I would say that with PMP's 
+bottleneck it would be bad idea), so maybe I'm not stressing them 
+sufficiently to trip over bugs.
 
-As soon as possible I'll compile the 2.6.23-rc3-git10 source code and
-give a feedback at this point. Could the problem have to do with the
-queue freezing patch?
+/dev/sda: 320GB Hitachi on sata_nv
+/dev/sdb: 1TB Hitachi on sata_sil24 + 3726 (Sans Digital MS4UM)
+/dev/sdc: 750GB Seagate on sata_sil24 + 3726
+/dev/sdd: 1TB Hitachi on sata_sil24 + 3726
+/dev/sde: 750GB Seagate on sata_sil24 + 3726
+/dev/sdf: Sans Digital MS2UT with two 750GB in RAID1 on second sil24 port
 
-> 
-> >
-> > sudo hdparm -t /dev/scd0 gives
-> >
-> > Timing buffered disk reads:    2 MB in  4.47 seconds = 457.75 kB/sec
-> 
-> Are you using cracked cd/dvd?
-> 
-> 
-> cracked dvd
-> 
-> /sbin/hdparm -t /dev/scd0
-> 
-> /dev/scd0:
->  Timing buffered disk reads:    2 MB in  6.36 seconds = 321.78 kB/sec
-> 
-> 
-> new shiny dvd
-> 
-> /sbin/hdparm -t /dev/scd0
-> 
-> /dev/scd0:
->  Timing buffered disk reads:   14 MB in  3.14 seconds =   4.46 MB/sec
+gwy:~# for a in /dev/sd[abcdef]; do hdparm -t $a; done
 
-Obviously it makes no difference weather the disc is new or old
-(original or cracked). For my first post I used an original film-dvd.
-But I repeated it with copy (DVD+R) and got the same results about 400
-kB/sec.  
+/dev/sda:
+  Timing buffered disk reads:  214 MB in  3.01 seconds =  71.07 MB/sec
 
-> 
-> >
-> > sudo hdparm -t /dev/sda gives
-> >
-> > Timing buffered disk reads:  102 MB in  3.04 seconds =  33.51 MB/sec
-> 
-> I've got an old Maxtor HDD (also 5,400 rpm) results are similar.
+/dev/sdb:
+  Timing buffered disk reads:  236 MB in  3.00 seconds =  78.58 MB/sec
 
-So maybe the problem only affects /dev/scd0? Possibly the driver can't
-deal with the IBM Ultrabay (swapping drives "on the fly")?
+/dev/sdc:
+  Timing buffered disk reads:  220 MB in  3.02 seconds =  72.74 MB/sec
 
-> >
-> > which is a quite poor performance and makes any streaming impossible.
-> > Obviously UDMA is working correctly as dmesg | grep UDMA says:
-> >
-> > [   43.636590] ata1: SATA max UDMA/133 cmd 0xffffc20004612500 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> > [   43.636595] ata2: SATA max UDMA/133 cmd 0xffffc20004612580 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> > [   43.636599] ata3: SATA max UDMA/133 cmd 0xffffc20004612600 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> > [   43.636603] ata4: SATA max UDMA/133 cmd 0xffffc20004612680 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 314
-> > [   44.177980] ata1.00: ATA-7: TOSHIBA MK1234GSX, AH002E, max UDMA/100
-> > [   44.179192] ata1.00: configured for UDMA/100
-> > [   44.326918] ata5: PATA max UDMA/133 cmd 0x00000000000101f0 ctl
-> > 0x00000000000103f6 bmdma 0x0000000000011880 irq 14
-> > [   44.326922] ata6: PATA max UDMA/133 cmd 0x0000000000010170 ctl
-> > 0x0000000000010376 bmdma 0x0000000000011888 irq 15
-> > [   44.571970] ata5.00: ATAPI: MATSHITADVD-RAM UJ-850, RB01, max UDMA/33
-> > [   44.738552] ata5.00: configured for UDMA/33
-> > [    0.610332] ata5.00: configured for UDMA/33
-> > [    0.750296] ata1.00: configured for UDMA/100
-> >
-> > Is there any solution for that problem or at least a workaround?
-> >
-> > I also tried to recompile the kernel as recommended in the official
-> > libata-faq ( http://linux-ata.org/faq.html ) but the system stuck when
-> > booting the root-partition. Booting with combined_mode=libata or
-> > combined_mode=ide didn't affect the performance, too.
-> >
-> > Thanks in advance,
-> >
-> > Oli
-> >
-> 
-> Regards,
-> Michal
-> 
+/dev/sdd:
+  Timing buffered disk reads:  240 MB in  3.02 seconds =  79.41 MB/sec
 
-Thanks,
+/dev/sde:
+  Timing buffered disk reads:  218 MB in  3.00 seconds =  72.64 MB/sec
 
-Oli
+/dev/sdf:
+  Timing buffered disk reads:  226 MB in  3.02 seconds =  74.95 MB/sec
+
+Apparently 1TB Hitachis are slightly faster than 750GB Seagates...
+
+gwy:~# hdparm -t /dev/sdb & hdparm -t /dev/sdd & sleep 20
+(reformatted to show values in order, not interleaved)
+
+/dev/sdd:
+  Timing buffered disk reads:  158 MB in  3.02 seconds =  52.40 MB/sec
+
+/dev/sdb:
+  Timing buffered disk reads:  168 MB in  3.02 seconds =  55.68 MB/sec
+
+gwy:~# hdparm -t /dev/sdc & hdparm -t /dev/sde & sleep 20
+
+/dev/sde:
+  Timing buffered disk reads:  168 MB in  3.01 seconds =  55.89 MB/sec
+
+/dev/sdc:
+  Timing buffered disk reads:  150 MB in  3.01 seconds =  49.77 MB/sec
+
+gwy:~# hdparm -t /dev/sdb & hdparm -t /dev/sdc & hdparm -t /dev/sdd & 
+hdparm -t /dev/sde & sleep 20
+
+/dev/sde:
+  Timing buffered disk reads:   98 MB in  3.02 seconds =  32.46 MB/sec
+
+/dev/sdd:
+  Timing buffered disk reads:  100 MB in  3.06 seconds =  32.73 MB/sec
+
+/dev/sdc:
+  Timing buffered disk reads:   92 MB in  3.07 seconds =  30.01 MB/sec
+
+/dev/sdb:
+  Timing buffered disk reads:  118 MB in  3.05 seconds =  38.75 MB/sec
+
+gwy:~# hdparm -t /dev/sdb & hdparm -t /dev/sdf & sleep 20
+
+/dev/sdb:
+  Timing buffered disk reads:  194 MB in  3.02 seconds =  64.31 MB/sec
+
+/dev/sdf:
+  Timing buffered disk reads:  224 MB in  3.02 seconds =  74.09 MB/sec
+
+gwy:~# hdparm -t /dev/sda & hdparm -t /dev/sdb & hdparm -t /dev/sdc & 
+hdparm -t /dev/sdd & hdparm -t /dev/sde & hdparm -t /dev/sdf & sleep 20
+
+/dev/sda:
+  Timing buffered disk reads:  200 MB in  3.03 seconds =  66.00 MB/sec
+
+/dev/sdf:
+  Timing buffered disk reads:  220 MB in  3.05 seconds =  72.11 MB/sec
+
+/dev/sde:
+  Timing buffered disk reads:   58 MB in  3.03 seconds =  19.12 MB/sec
+
+/dev/sdd:
+  Timing buffered disk reads:   64 MB in  3.04 seconds =  21.06 MB/sec
+
+/dev/sdb:
+  Timing buffered disk reads:   70 MB in  3.03 seconds =  23.10 MB/sec
+
+/dev/sdc:
+  Timing buffered disk reads:   56 MB in  3.01 seconds =  18.59 MB/sec
+
+gwy:~#
+
+
+For comparsion 1TB Hitachi behind 3726 PMP (again MS4UM) with sata_sil 
+patch I sent last week (no NCQ, 1.5Gbps link between 3512 and PMP, and 
+3.0Gbps link between PMP and drive... why is it faster?):
+
+petr-dev3:~# hdparm -t /dev/sdd
+
+/dev/sdd:
+  Timing buffered disk reads:  248 MB in  3.01 seconds =  82.48 MB/sec
+
+petr-dev3:~#
+
+							Petr
+
 
