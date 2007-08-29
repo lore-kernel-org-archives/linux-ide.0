@@ -1,83 +1,53 @@
-From: Eddie Atherton <stunnel@attglobal.net>
-Subject: Re: ST340823A disk size issue - Revisited
-Date: Wed, 29 Aug 2007 15:24:40 -0700
-Message-ID: <46D5F228.1020907@attglobal.net>
-References: <46C34C43.3020705@attglobal.net>
-Reply-To: stunnel@attglobal.net
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: ATAPI tape drives broken with libata
+Date: Wed, 29 Aug 2007 18:55:55 -0400
+Message-ID: <46D5F97B.3050808@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kcout01.prserv.net ([12.154.55.31]:60246 "EHLO
-	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755499AbXH2WYV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 18:24:21 -0400
-In-Reply-To: <46C34C43.3020705@attglobal.net>
+Received: from mx1.redhat.com ([66.187.233.31]:48691 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756903AbXH2Wz7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Aug 2007 18:55:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: craig48@swbell.net
 
-Eddie Atherton wrote:
-> Hi,
->
-> I found the above thread while searching for the reason I was getting 
-> lots of errors while trying to build out a new server.  Yes, I am 
-> using an ST340823A drive.  However, I am getting slightly different 
-> results for the drive capacity, which I'm not sure if that could cause 
-> issues with the patch.
->
-> I actually have 2 of these drives.  One is in a WinBlows machine, and 
-> the other is in my new server.  Using an Ubuntu Live CD, I was able to 
-> verify that the drive in the WinBlows machine is behaving exactly the 
-> same as the original problem report.  However, the drive in my server, 
-> running Slackware 11.0, reports a different "current capacity", as 
-> shown here:
->
-> Linux version 2.6.17.13 (root@tree) (gcc version 3.4.6) #1 Sat Sep 9 
-> 01:11:49 CDT 2006
-> ...
-> hda: Host Protected Area detected.
->        current capacity is 78165359 sectors (40020 MB)
->        native  capacity is 78165361 sectors (40020 MB)
-> hda: Host Protected Area disabled.
-> hda: 78165361 sectors (40020 MB) w/512KiB Cache, CHS=65535/16/63, 
-> UDMA(100)
+https://bugzilla.redhat.com/show_bug.cgi?id=243568
 
-An update to this.  I applied the latest patch set at the time, rc3 + 
-git7, and it all appeared to work.  I didn't get the errors any more.
+Using kernel 2.6.22:
 
-Well, I didn't the first time I checked.  :)
+Aug 29 17:08:11 itox kernel: ata2.00: ATAPI: Seagate STT8000A, 5.51, max MWDMA2
+Aug 29 17:08:11 itox kernel: ata2.00: configured for MWDMA2
+Aug 29 17:08:11 itox kernel: scsi 1:0:0:0: Sequential-Access Seagate  STT8000A         5.51 PQ: 0 ANSI: 2
+Aug 29 17:08:12 itox kernel: scsi 1:0:0:0: Attached scsi generic sg1 type 1
+Aug 29 17:08:12 itox kernel: st: Version 20070203, fixed bufsize 32768, s/g segs 256
+Aug 29 17:08:12 itox kernel: st 1:0:0:0: Attached scsi tape st0
+Aug 29 17:08:12 itox kernel: st 1:0:0:0: st0: try direct i/o: yes (alignment 512 B)
+Aug 29 17:08:12 itox kernel: ata2: DRQ=1 with device error, dev_stat 0x59
+Aug 29 17:08:12 itox kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+Aug 29 17:08:12 itox kernel: ata2.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
+Aug 29 17:08:12 itox kernel:          res 51/60:03:00:00:20/00:00:00:00:00/a0 Emask 0x3 (HSM violation)
+Aug 29 17:08:13 itox kernel: ata2: soft resetting port
+Aug 29 17:08:13 itox kernel: ata2.00: revalidation failed (errno=-2)
+Aug 29 17:08:13 itox kernel: ata2: failed to recover some devices, retrying in 5 secs
+Aug 29 17:08:13 itox kernel: ata2: soft resetting port
+Aug 29 17:08:13 itox kernel: ata2.00: revalidation failed (errno=-2)
+Aug 29 17:08:13 itox kernel: ata2: failed to recover some devices, retrying in 5 secs
+Aug 29 17:08:13 itox kernel: ata2: soft resetting port
+Aug 29 17:08:13 itox kernel: ata2.00: revalidation failed (errno=-2)
+Aug 29 17:08:13 itox kernel: ata2.00: disabled
+Aug 29 17:08:13 itox kernel: ata2: EH complete
 
-Now I've noticed that they are happening again.  Sometimes.  Here's the 
-interesting part, this is what I saw one time:
+Opening the device returns -EIO and prints this kernel message:
 
-Linux version 2.6.23-rc3-git7-smp (root@Brutus) (gcc version 3.4.6) #2 
-SMP Wed Aug 29 04:12:27 PDT 2007
-...
-hda: Host Protected Area detected.
-        current capacity is 78165357 sectors (40020 MB)
-        native  capacity is 78165361 sectors (40020 MB)
-hda: Host Protected Area disabled.
-hda: 78165361 sectors (40020 MB) w/512KiB Cache, CHS=65535/16/63, UDMA(100)
+Aug 29 17:20:29 itox kernel: st0: Error 40000 (sugg. bt 0x0, driver bt 0x0, host bt 0x4).
 
-Notice the current capacity.  It's low by 4 sectors, where previously it 
-was only 2.  My guess is that my "working" versions were when the sector 
-count was an even number, which is why I questioned the patch 
-initially.  Looking back through my /var/log/syslog, I see capacities 
-of, in chronological sequence:
 
-78165359
-78165360
-78165360
-78165359
-78165359
-78165357
-78165357
-78165358
-78165357
-78165359
+17:23:45.360014 open("/dev/nst0", O_RDONLY|O_NONBLOCK) = -1 EIO (Input/output error)
 
-Weird.
 
-Cheers,
-Eddie
+
+The old ide drivers with ide-scsi work.
