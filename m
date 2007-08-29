@@ -1,42 +1,115 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: [PATCH] Prefix each line of multiline printk(KERN_<level>
- "foo\nbar") with KERN_<level>
-Date: Wed, 29 Aug 2007 12:22:41 +0100 (BST)
-Message-ID: <Pine.LNX.4.64N.0708291205020.26167@blysk.ds.pg.gda.pl>
-References: <1187999098.32738.179.camel@localhost> <Pine.LNX.4.64.0708261028120.31149@anakin>
- <8bd0f97a0708260354xb4c8546od0cc19a590820f32@mail.gmail.com>
- <Pine.LNX.4.64.0708261305020.31149@anakin>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [1/2] 2.6.23-rc3: known regressions with patches
+Date: Wed, 29 Aug 2007 17:28:01 +0200
+Message-ID: <46D59081.2040605__21031.6513236195$1188401401$gmane$org@googlemail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758792AbXH2LXN@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0708261305020.31149@anakin>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Mike Frysinger <vapier.adi@gmail.com>, Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, blinux-list@redhat.com, cluster-devel@redhat.com, discuss@x86-64.org, jffs-dev@axis.com, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org, mpt_linux_developer@lsi.com, netdev@vger.kernel.org, osst-users@lists.sourceforge.net, parisc-linux@parisc-linux.org, tpmdd-devel@lists.sourceforge.net, uclinux-dist-devel@blackfin.uclinux.org
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.184]:63377 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758642AbXH2P2z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 11:28:55 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so197542nfb
+        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 08:28:54 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, Len Brown <len.brown@intel.com>, linux-acpi@vger.kernel.org, Alexey Starikovskiy <astarikovskiy@suse.de>, Daniel Ritz <daniel.ritz-ml@swissonline.ch>, Tony Luck <tony.luck@intel.com>, John Stultz <johnstul@us.ibm.com>, Paolo Ornati <ornati@fastwebnet.it>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, Stephen Ziemba <sziemba@ecn.purdue.edu>
 
-On Sun, 26 Aug 2007, Geert Uytterhoeven wrote:
+Hi all,
 
-> What I mean is that probably there used to be a printk() call starting with
-> `\n'. Then someone added a `KERN_ERR' in front of it.
+Here is a list of some known regressions in 2.6.23-rc4
+with patches available.
 
- I gather '\n' at the beginning is to assure the following line is output 
-on a separate line rather than as a continuation of another one which may 
-have been output without a trailing '\n'.  A situation where printk() is 
-called with a string containing no trailing '\n' may be discouraged, but 
-there are some more or less justified exceptions.  For example the SCSI 
-disk spin-up code is one.
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
- Therefore it may be reasonable for more critical messages -- perhaps not 
-ones at KERN_ERR, but certainly KERN_CRIT and higher ones -- that may 
-potentially happen asynchronously to start with '\n'.  In this case a call 
-would look like this:
+List of Aces
 
-	printk("\n" KERN_CRIT "The actual message.\n");
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            9
+Andi Kleen                             5
+Linus Torvalds                         5
+Andrew Morton                          4
+Hugh Dickins                           4
+Al Viro                                3
+Alan Stern                             3
+Cornelia Huck                          3
+Jens Axboe                             3
+Tejun Heo                              3
 
-Of course based on "console_loglevel" and "default_message_level" the 
-leading '\n' may still get swallowed from what gets printed to the console 
-terminal, but in reality I do not think that poses a problem, as these 
-both can be set by a system administrator according to the local policy.
 
-  Maciej
+
+Unclassified
+
+Subject         : 8250 claims non existing device blocking IO port
+References      : http://lkml.org/lkml/2007/8/18/20
+Last known good : ?
+Submitter       : Andrey Borzenkov <arvidjaar@mail.ru>
+Caused-By       : ?
+Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch           : http://lkml.org/lkml/2007/8/21/291
+Status          : patch was suggested
+
+Subject         : Oops while modprobing phy fixed module
+References      : http://lkml.org/lkml/2007/7/14/63
+Last known good : ?
+Submitter       : Gabriel C <nix.or.die@googlemail.com>
+Caused-By       : ?
+Handled-By      : Satyam Sharma <satyam.sharma@gmail.com>
+                  Vitaly Bordug <vitb@kernel.crashing.org>
+Patch1          : http://lkml.org/lkml/2007/7/18/506
+Status          : patch available
+
+
+
+ACPI
+
+Subject         : the fan doesn't work any more
+References      : http://lkml.org/lkml/2007/8/28/359
+Last known good : ?
+Submitter       : Daniel Ritz <daniel.ritz-ml@swissonline.ch>
+Caused-By       : Alexey Starikovskiy <astarikovskiy@suse.de>
+                  commit cd8c93a4e04dce8f00d1ef3a476aac8bd65ae40b
+Handled-By      : Alexey Starikovskiy <astarikovskiy@suse.de>
+Patch           : http://lkml.org/lkml/2007/8/29/15
+Status          : patch was suggested
+
+
+
+Clocks & time
+
+Subject         : "double" hpet clocksource && hard freeze
+References      : http://lkml.org/lkml/2007/8/23/257
+Last known good : ?
+Submitter       : Paolo Ornati <ornati@fastwebnet.it>
+Caused-By       : Tony Luck <tony.luck@intel.com>
+                  commit 0aa366f351d044703e25c8425e508170e80d83b1
+Handled-By      : John Stultz <johnstul@us.ibm.com>
+                  Tony Luck <tony.luck@intel.com>
+Patch           : http://lkml.org/lkml/2007/8/23/285
+Status          : patch available
+
+
+
+SATA/PATA
+
+Subject         : sata_promise 2.09 fails to identify ST3400832AS
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8936
+Last known good : ?
+Submitter       : Stephen Ziemba <sziemba@ecn.purdue.edu>
+Caused-By       : Mikael Pettersson <mikpe@it.uu.se>
+                  commit a77720ad0a4049e4bc6355e4febf899966a48222
+Handled-By      : Mikael Pettersson <mikpe@it.uu.se>
+Patch           : http://bugzilla.kernel.org/show_bug.cgi?id=8936#c3
+Status          : patch available
+
+
+
+Regards,
+Michal
+
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
