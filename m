@@ -1,155 +1,224 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/10] ide: use pci_dev->revision
-Date: Wed, 29 Aug 2007 23:16:38 +0200
-Message-ID: <200708292316.38779.bzolnier@gmail.com>
+Subject: [PATCH 2/10] ide: use I/O ops directly part #2
+Date: Wed, 29 Aug 2007 23:18:23 +0200
+Message-ID: <200708292318.23393.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:44326 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.184]:44265 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756416AbXH2VZN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 17:25:13 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so293495nfb
-        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 14:25:11 -0700 (PDT)
+	with ESMTP id S1756461AbXH2VZP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 17:25:15 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so293505nfb
+        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 14:25:13 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Auke Kok <auke-jan.h.kok@intel.com>, Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 
-Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID so
-they were not converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65.
-
-Cc: Auke Kok <auke-jan.h.kok@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-Quick grep over kernel tree finds out many other places using either
-pci_read_config_dword(dev, PCI_CLASS_REVISION, ...) & 0xff or simply
-pci_read_config_byte(dev, PCI_CLASS_REVISION, ...) and they all can be
-converted to using dev->revision.
+ drivers/ide/pci/hpt366.c   |   43 ++++++++++++++++++++-----------------------
+ drivers/ide/pci/piix.c     |    4 ++--
+ drivers/ide/pci/tc86c001.c |   12 ++++++------
+ 3 files changed, 28 insertions(+), 31 deletions(-)
 
-Auke, a "PCI_CLASS_REVISION" follow-up to your previous patch would be great.
-:)
-
- drivers/ide/pci/pdc202xx_new.c |    6 +-----
- drivers/ide/pci/sgiioc4.c      |    8 +++-----
- drivers/ide/pci/siimage.c      |   19 +++++--------------
- drivers/ide/setup-pci.c        |    6 ++----
- 4 files changed, 11 insertions(+), 28 deletions(-)
-
-Index: b/drivers/ide/pci/pdc202xx_new.c
+Index: b/drivers/ide/pci/hpt366.c
 ===================================================================
---- a/drivers/ide/pci/pdc202xx_new.c
-+++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -332,16 +332,12 @@ static long __devinit detect_pll_input_c
- static void __devinit apple_kiwi_init(struct pci_dev *pdev)
+--- a/drivers/ide/pci/hpt366.c
++++ b/drivers/ide/pci/hpt366.c
+@@ -658,12 +658,11 @@ static int hpt3xx_quirkproc(ide_drive_t 
+ 
+ static void hpt3xx_intrproc(ide_drive_t *drive)
  {
- 	struct device_node *np = pci_device_to_OF_node(pdev);
--	unsigned int class_rev = 0;
- 	u8 conf;
- 
- 	if (np == NULL || !of_device_is_compatible(np, "kiwi-root"))
- 		return;
- 
--	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class_rev);
--	class_rev &= 0xff;
+-	ide_hwif_t *hwif = HWIF(drive);
 -
--	if (class_rev >= 0x03) {
-+	if (pdev->revision >= 0x03) {
- 		/* Setup chip magic config stuff (from darwin) */
- 		pci_read_config_byte (pdev, 0x40, &conf);
- 		pci_write_config_byte(pdev, 0x40, (conf | 0x01));
-Index: b/drivers/ide/pci/sgiioc4.c
-===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -690,14 +690,12 @@ sgiioc4_ide_setup_pci_device(struct pci_
- static unsigned int __devinit
- pci_init_sgiioc4(struct pci_dev *dev)
- {
--	unsigned int class_rev;
- 	int ret;
- 
--	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
--	class_rev &= 0xff;
- 	printk(KERN_INFO "%s: IDE controller at PCI slot %s, revision %d\n",
--			 DRV_NAME, pci_name(dev), class_rev);
--	if (class_rev < IOC4_SUPPORTED_FIRMWARE_REV) {
-+			 DRV_NAME, pci_name(dev), dev->revision);
-+
-+	if (dev->revision < IOC4_SUPPORTED_FIRMWARE_REV) {
- 		printk(KERN_ERR "Skipping %s IDE controller in slot %s: "
- 				"firmware is obsolete - please upgrade to "
- 				"revision46 or higher\n",
-Index: b/drivers/ide/pci/siimage.c
-===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -640,13 +640,9 @@ static unsigned int setup_mmio_siimage (
- 
- static unsigned int __devinit init_chipset_siimage(struct pci_dev *dev, const char *name)
- {
--	u32 class_rev	= 0;
--	u8 tmpbyte	= 0;
--	u8 BA5_EN	= 0;
--
--        pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
--        class_rev &= 0xff;
--	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, (class_rev) ? 1 : 255);	
-+	u8 rev = dev->revision, tmpbyte = 0, BA5_EN = 0;
-+
-+	pci_write_config_byte(dev, PCI_CACHE_LINE_SIZE, rev ? 1 : 255);
- 
- 	pci_read_config_byte(dev, 0x8A, &BA5_EN);
- 	if ((BA5_EN & 0x01) || (pci_resource_start(dev, 5))) {
-@@ -825,19 +821,14 @@ static void __devinit siimage_fixup(ide_
- 
- static void __devinit init_iops_siimage(ide_hwif_t *hwif)
- {
--	struct pci_dev *dev	= hwif->pci_dev;
--	u32 class_rev		= 0;
--
--	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
--	class_rev &= 0xff;
--	
- 	hwif->hwif_data = NULL;
- 
- 	/* Pessimal until we finish probing */
- 	hwif->rqsize = 15;
- 
--	if (pci_get_drvdata(dev) == NULL)
-+	if (pci_get_drvdata(hwif->pci_dev) == NULL)
+ 	if (drive->quirk_list)
  		return;
 +
- 	init_mmio_iops_siimage(hwif);
+ 	/* drives in the quirk_list may not like intr setups/cleanups */
+-	hwif->OUTB(drive->ctl | 2, IDE_CONTROL_REG);
++	outb(drive->ctl | 2, IDE_CONTROL_REG);
  }
  
-Index: b/drivers/ide/setup-pci.c
-===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -478,7 +478,6 @@ static void ide_hwif_setup_dma(struct pc
- static int ide_setup_pci_controller(struct pci_dev *dev, ide_pci_device_t *d, int noisy, int *config)
+ static void hpt3xx_maskproc(ide_drive_t *drive, int mask)
+@@ -691,8 +690,8 @@ static void hpt3xx_maskproc(ide_drive_t 
+ 				enable_irq (hwif->irq);
+ 		}
+ 	} else
+-		hwif->OUTB(mask ? (drive->ctl | 2) : (drive->ctl & ~2),
+-			   IDE_CONTROL_REG);
++		outb(mask ? (drive->ctl | 2) : (drive->ctl & ~2),
++		     IDE_CONTROL_REG);
+ }
+ 
+ /*
+@@ -732,9 +731,9 @@ static void hpt370_irq_timeout(ide_drive
+ 	printk(KERN_DEBUG "%s: %d bytes in FIFO\n", drive->name, bfifo & 0x1ff);
+ 
+ 	/* get DMA command mode */
+-	dma_cmd = hwif->INB(hwif->dma_command);
++	dma_cmd = inb(hwif->dma_command);
+ 	/* stop DMA */
+-	hwif->OUTB(dma_cmd & ~0x1, hwif->dma_command);
++	outb(dma_cmd & ~0x1, hwif->dma_command);
+ 	hpt370_clear_engine(drive);
+ }
+ 
+@@ -749,12 +748,12 @@ static void hpt370_ide_dma_start(ide_dri
+ static int hpt370_ide_dma_end(ide_drive_t *drive)
  {
- 	int ret;
--	u32 class_rev;
- 	u16 pcicmd;
+ 	ide_hwif_t *hwif	= HWIF(drive);
+-	u8  dma_stat		= hwif->INB(hwif->dma_status);
++	u8  dma_stat		= inb(hwif->dma_status);
  
- 	if (noisy)
-@@ -501,10 +500,9 @@ static int ide_setup_pci_controller(stru
- 		printk(KERN_INFO "%s: device enabled (Linux)\n", d->name);
+ 	if (dma_stat & 0x01) {
+ 		/* wait a little */
+ 		udelay(20);
+-		dma_stat = hwif->INB(hwif->dma_status);
++		dma_stat = inb(hwif->dma_status);
+ 		if (dma_stat & 0x01)
+ 			hpt370_irq_timeout(drive);
  	}
+@@ -815,34 +814,32 @@ static int hpt374_ide_dma_end(ide_drive_
  
--	pci_read_config_dword(dev, PCI_CLASS_REVISION, &class_rev);
--	class_rev &= 0xff;
- 	if (noisy)
--		printk(KERN_INFO "%s: chipset revision %d\n", d->name, class_rev);
-+		printk(KERN_INFO "%s: chipset revision %d\n",
-+				 d->name, dev->revision);
- out:
- 	return ret;
+ static void hpt3xxn_set_clock(ide_hwif_t *hwif, u8 mode)
+ {
+-	u8 scr2 = hwif->INB(hwif->dma_master + 0x7b);
++	u8 scr2 = inb(hwif->dma_master + 0x7b);
+ 
+ 	if ((scr2 & 0x7f) == mode)
+ 		return;
+ 
+ 	/* Tristate the bus */
+-	hwif->OUTB(0x80, hwif->dma_master + 0x73);
+-	hwif->OUTB(0x80, hwif->dma_master + 0x77);
++	outb(0x80, hwif->dma_master + 0x73);
++	outb(0x80, hwif->dma_master + 0x77);
+ 
+ 	/* Switch clock and reset channels */
+-	hwif->OUTB(mode, hwif->dma_master + 0x7b);
+-	hwif->OUTB(0xc0, hwif->dma_master + 0x79);
++	outb(mode, hwif->dma_master + 0x7b);
++	outb(0xc0, hwif->dma_master + 0x79);
+ 
+ 	/*
+ 	 * Reset the state machines.
+ 	 * NOTE: avoid accidentally enabling the disabled channels.
+ 	 */
+-	hwif->OUTB(hwif->INB(hwif->dma_master + 0x70) | 0x32,
+-		   hwif->dma_master + 0x70);
+-	hwif->OUTB(hwif->INB(hwif->dma_master + 0x74) | 0x32,
+-		   hwif->dma_master + 0x74);
++	outb(inb(hwif->dma_master + 0x70) | 0x32, hwif->dma_master + 0x70);
++	outb(inb(hwif->dma_master + 0x74) | 0x32, hwif->dma_master + 0x74);
+ 
+ 	/* Complete reset */
+-	hwif->OUTB(0x00, hwif->dma_master + 0x79);
++	outb(0x00, hwif->dma_master + 0x79);
+ 
+ 	/* Reconnect channels to bus */
+-	hwif->OUTB(0x00, hwif->dma_master + 0x73);
+-	hwif->OUTB(0x00, hwif->dma_master + 0x77);
++	outb(0x00, hwif->dma_master + 0x73);
++	outb(0x00, hwif->dma_master + 0x77);
+ }
+ 
+ /**
+@@ -1332,7 +1329,7 @@ static void __devinit init_dma_hpt366(id
+ 	u8 dma_new	= 0, dma_old	= 0;
+ 	unsigned long flags;
+ 
+-	dma_old = hwif->INB(dmabase + 2);
++	dma_old = inb(dmabase + 2);
+ 
+ 	local_irq_save(flags);
+ 
+@@ -1343,7 +1340,7 @@ static void __devinit init_dma_hpt366(id
+ 	if (masterdma & 0x30)	dma_new |= 0x20;
+ 	if ( slavedma & 0x30)	dma_new |= 0x40;
+ 	if (dma_new != dma_old)
+-		hwif->OUTB(dma_new, dmabase + 2);
++		outb(dma_new, dmabase + 2);
+ 
+ 	local_irq_restore(flags);
+ 
+Index: b/drivers/ide/pci/piix.c
+===================================================================
+--- a/drivers/ide/pci/piix.c
++++ b/drivers/ide/pci/piix.c
+@@ -318,9 +318,9 @@ static void piix_dma_clear_irq(ide_drive
+ 	u8 dma_stat;
+ 
+ 	/* clear the INTR & ERROR bits */
+-	dma_stat = hwif->INB(hwif->dma_status);
++	dma_stat = inb(hwif->dma_status);
+ 	/* Should we force the bit as well ? */
+-	hwif->OUTB(dma_stat, hwif->dma_status);
++	outb(dma_stat, hwif->dma_status);
+ }
+ 
+ struct ich_laptop {
+Index: b/drivers/ide/pci/tc86c001.c
+===================================================================
+--- a/drivers/ide/pci/tc86c001.c
++++ b/drivers/ide/pci/tc86c001.c
+@@ -17,7 +17,7 @@ static void tc86c001_set_mode(ide_drive_
+ {
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	unsigned long scr_port	= hwif->config_data + (drive->dn ? 0x02 : 0x00);
+-	u16 mode, scr		= hwif->INW(scr_port);
++	u16 mode, scr		= inw(scr_port);
+ 
+ 	switch (speed) {
+ 		case XFER_UDMA_4:	mode = 0x00c0; break;
+@@ -65,7 +65,7 @@ static int tc86c001_timer_expiry(ide_dri
+ 	ide_hwif_t *hwif	= HWIF(drive);
+ 	ide_expiry_t *expiry	= ide_get_hwifdata(hwif);
+ 	ide_hwgroup_t *hwgroup	= HWGROUP(drive);
+-	u8 dma_stat		= hwif->INB(hwif->dma_status);
++	u8 dma_stat		= inb(hwif->dma_status);
+ 
+ 	/* Restore a higher level driver's expiry handler first. */
+ 	hwgroup->expiry	= expiry;
+@@ -73,7 +73,7 @@ static int tc86c001_timer_expiry(ide_dri
+ 	if ((dma_stat & 5) == 1) {	/* DMA active and no interrupt */
+ 		unsigned long sc_base	= hwif->config_data;
+ 		unsigned long twcr_port	= sc_base + (drive->dn ? 0x06 : 0x04);
+-		u8 dma_cmd		= hwif->INB(hwif->dma_command);
++		u8 dma_cmd		= inb(hwif->dma_command);
+ 
+ 		printk(KERN_WARNING "%s: DMA interrupt possibly stuck, "
+ 		       "attempting recovery...\n", drive->name);
+@@ -135,7 +135,7 @@ static int tc86c001_busproc(ide_drive_t 
+ 	u16 scr1;
+ 
+ 	/* System Control 1 Register bit 11 (ATA Hard Reset) read */
+-	scr1 = hwif->INW(sc_base + 0x00);
++	scr1 = inw(sc_base + 0x00);
+ 
+ 	switch (state) {
+ 		case BUSSTATE_ON:
+@@ -165,7 +165,7 @@ static int tc86c001_busproc(ide_drive_t 
+ static void __devinit init_hwif_tc86c001(ide_hwif_t *hwif)
+ {
+ 	unsigned long sc_base	= pci_resource_start(hwif->pci_dev, 5);
+-	u16 scr1		= hwif->INW(sc_base + 0x00);;
++	u16 scr1		= inw(sc_base + 0x00);
+ 
+ 	/* System Control 1 Register bit 15 (Soft Reset) set */
+ 	outw(scr1 |  0x8000, sc_base + 0x00);
+@@ -205,7 +205,7 @@ static void __devinit init_hwif_tc86c001
+ 		 * System Control  1 Register bit 13 (PDIAGN):
+ 		 * 0=80-pin cable, 1=40-pin cable
+ 		 */
+-		scr1 = hwif->INW(sc_base + 0x00);
++		scr1 = inw(sc_base + 0x00);
+ 		hwif->cbl = (scr1 & 0x2000) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+ 	}
  }
