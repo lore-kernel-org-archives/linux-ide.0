@@ -1,148 +1,114 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 7/10] pdc202xx_old: remove ->init_setup
-Date: Wed, 29 Aug 2007 23:23:21 +0200
-Message-ID: <200708292323.21868.bzolnier@gmail.com>
+Subject: [PATCH 4/10] cmd64x: remove ->init_setup
+Date: Wed, 29 Aug 2007 23:20:02 +0200
+Message-ID: <200708292320.02730.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:44403 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.189]:44174 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756416AbXH2VZW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 17:25:22 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so293536nfb
-        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 14:25:20 -0700 (PDT)
+	with ESMTP id S1756669AbXH2VZR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 17:25:17 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so293512nfb
+        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 14:25:15 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 
-* Split off pdc202ata4_fixup_irq() helper from init_setup_pdc202ata4().
+Merge init_setup_{cmd64x,cmd646}() into cmd64x_init_one().
 
-* Merge init_setup_{pdc202ata4,pdc20265,pdc202xx}() into pdc202xx_init_one().
-
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/pdc202xx_old.c |   57 +++++++++++++++++------------------------
- 1 file changed, 25 insertions(+), 32 deletions(-)
+ drivers/ide/pci/cmd64x.c |   39 ++++++++++++---------------------------
+ 1 file changed, 12 insertions(+), 27 deletions(-)
 
-Index: b/drivers/ide/pci/pdc202xx_old.c
+Index: b/drivers/ide/pci/cmd64x.c
 ===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -369,8 +369,8 @@ static void __devinit init_dma_pdc202xx(
- 	ide_setup_dma(hwif, dmabase, 8);
- }
- 
--static int __devinit init_setup_pdc202ata4(struct pci_dev *dev,
--					   ide_pci_device_t *d)
-+static void __devinit pdc202ata4_fixup_irq(struct pci_dev *dev,
-+					   const char *name)
- {
- 	if ((dev->class >> 8) != PCI_CLASS_STORAGE_IDE) {
- 		u8 irq = 0, irq2 = 0;
-@@ -380,37 +380,15 @@ static int __devinit init_setup_pdc202at
- 		if (irq != irq2) {
- 			pci_write_config_byte(dev,
- 				(PCI_INTERRUPT_LINE)|0x80, irq);     /* 0xbc */
--			printk(KERN_INFO "%s: pci-config space interrupt "
--				"mirror fixed.\n", d->name);
-+			printk(KERN_INFO "%s: PCI config space interrupt "
-+					 "mirror fixed\n", name);
- 		}
+--- a/drivers/ide/pci/cmd64x.c
++++ b/drivers/ide/pci/cmd64x.c
+@@ -551,27 +551,9 @@ static void __devinit init_hwif_cmd64x(i
  	}
--	return ide_setup_pci_device(dev, d);
--}
--
--static int __devinit init_setup_pdc20265(struct pci_dev *dev,
--					 ide_pci_device_t *d)
--{
--	if ((dev->bus->self) &&
--	    (dev->bus->self->vendor == PCI_VENDOR_ID_INTEL) &&
--	    ((dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960) ||
--	     (dev->bus->self->device == PCI_DEVICE_ID_INTEL_I960RM))) {
--		printk(KERN_INFO "ide: Skipping Promise PDC20265 "
--			"attached to I2O RAID controller.\n");
--		return -ENODEV;
--	}
--	return ide_setup_pci_device(dev, d);
--}
--
--static int __devinit init_setup_pdc202xx(struct pci_dev *dev,
--					 ide_pci_device_t *d)
--{
--	return ide_setup_pci_device(dev, d);
  }
  
- static ide_pci_device_t pdc202xx_chipsets[] __devinitdata = {
+-static int __devinit init_setup_cmd64x(struct pci_dev *dev, ide_pci_device_t *d)
+-{
+-	return ide_setup_pci_device(dev, d);
+-}
+-
+-static int __devinit init_setup_cmd646(struct pci_dev *dev, ide_pci_device_t *d)
+-{
+-	/*
+-	 * The original PCI0646 didn't have the primary channel enable bit,
+-	 * it appeared starting with PCI0646U (i.e. revision ID 3).
+-	 */
+-	if (dev->revision < 3)
+-		d->enablebits[0].reg = 0;
+-
+-	return ide_setup_pci_device(dev, d);
+-}
+-
+ static ide_pci_device_t cmd64x_chipsets[] __devinitdata = {
  	{	/* 0 */
- 		.name		= "PDC20246",
--		.init_setup	= init_setup_pdc202ata4,
- 		.init_chipset	= init_chipset_pdc202xx,
- 		.init_hwif	= init_hwif_pdc202xx,
- 		.init_dma	= init_dma_pdc202xx,
-@@ -421,7 +399,6 @@ static ide_pci_device_t pdc202xx_chipset
- 		.udma_mask	= ATA_UDMA2,
+ 		.name		= "CMD643",
+-		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.enablebits	= {{0x00,0x00,0x00}, {0x51,0x08,0x08}},
+@@ -581,7 +563,6 @@ static ide_pci_device_t cmd64x_chipsets[
+ 		.udma_mask	= 0x00, /* no udma */
  	},{	/* 1 */
- 		.name		= "PDC20262",
--		.init_setup	= init_setup_pdc202ata4,
- 		.init_chipset	= init_chipset_pdc202xx,
- 		.init_hwif	= init_hwif_pdc202xx,
- 		.init_dma	= init_dma_pdc202xx,
-@@ -432,7 +409,6 @@ static ide_pci_device_t pdc202xx_chipset
- 		.udma_mask	= ATA_UDMA4,
+ 		.name		= "CMD646",
+-		.init_setup	= init_setup_cmd646,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+@@ -591,7 +572,6 @@ static ide_pci_device_t cmd64x_chipsets[
+ 		.udma_mask	= ATA_UDMA2,
  	},{	/* 2 */
- 		.name		= "PDC20263",
--		.init_setup	= init_setup_pdc202ata4,
- 		.init_chipset	= init_chipset_pdc202xx,
- 		.init_hwif	= init_hwif_pdc202xx,
- 		.init_dma	= init_dma_pdc202xx,
-@@ -443,7 +419,6 @@ static ide_pci_device_t pdc202xx_chipset
+ 		.name		= "CMD648",
+-		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+@@ -601,7 +581,6 @@ static ide_pci_device_t cmd64x_chipsets[
  		.udma_mask	= ATA_UDMA4,
  	},{	/* 3 */
- 		.name		= "PDC20265",
--		.init_setup	= init_setup_pdc20265,
- 		.init_chipset	= init_chipset_pdc202xx,
- 		.init_hwif	= init_hwif_pdc202xx,
- 		.init_dma	= init_dma_pdc202xx,
-@@ -454,7 +429,6 @@ static ide_pci_device_t pdc202xx_chipset
- 		.udma_mask	= ATA_UDMA5,
- 	},{	/* 4 */
- 		.name		= "PDC20267",
--		.init_setup	= init_setup_pdc202xx,
- 		.init_chipset	= init_chipset_pdc202xx,
- 		.init_hwif	= init_hwif_pdc202xx,
- 		.init_dma	= init_dma_pdc202xx,
-@@ -477,9 +451,28 @@ static ide_pci_device_t pdc202xx_chipset
-  
- static int __devinit pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		.name		= "CMD649",
+-		.init_setup	= init_setup_cmd64x,
+ 		.init_chipset	= init_chipset_cmd64x,
+ 		.init_hwif	= init_hwif_cmd64x,
+ 		.enablebits	= {{0x51,0x04,0x04}, {0x51,0x08,0x08}},
+@@ -612,15 +591,21 @@ static ide_pci_device_t cmd64x_chipsets[
+ 	}
+ };
+ 
+-/*
+- * We may have to modify enablebits for PCI0646, so we'd better pass
+- * a local copy of the ide_pci_device_t structure down the call chain...
+- */
+ static int __devinit cmd64x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
  {
--	ide_pci_device_t *d = &pdc202xx_chipsets[id->driver_data];
-+	ide_pci_device_t *d;
+-	ide_pci_device_t d = cmd64x_chipsets[id->driver_data];
++	ide_pci_device_t d;
 +	u8 idx = id->driver_data;
 +
-+	d = &pdc202xx_chipsets[idx];
++	d = cmd64x_chipsets[idx];
 +
-+	if (idx < 3)
-+		pdc202ata4_fixup_irq(dev, d->name);
++	/*
++	 * The original PCI0646 didn't have the primary channel enable bit,
++	 * it appeared starting with PCI0646U (i.e. revision ID 3).
++	 */
++	if (idx == 1 && dev->revision < 3)
++		d.enablebits[0].reg = 0;
  
--	return d->init_setup(dev, d);
-+	if (idx == 3) {
-+		struct pci_dev *bridge = dev->bus->self;
-+
-+		if (bridge &&
-+		    bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+		    (bridge->device == PCI_DEVICE_ID_INTEL_I960 ||
-+		     bridge->device == PCI_DEVICE_ID_INTEL_I960RM)) {
-+			printk(KERN_INFO "ide: Skipping Promise PDC20265 "
-+				"attached to I2O RAID controller\n");
-+			return -ENODEV;
-+		}
-+	}
-+
-+	return ide_setup_pci_device(dev, d);
+-	return d.init_setup(dev, &d);
++	return ide_setup_pci_device(dev, &d);
  }
  
- static const struct pci_device_id pdc202xx_pci_tbl[] = {
+ static const struct pci_device_id cmd64x_pci_tbl[] = {
