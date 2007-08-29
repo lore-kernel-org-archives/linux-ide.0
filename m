@@ -1,21 +1,15 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: [1/2] 2.6.23-rc3: known regressions with patches
 Date: Wed, 29 Aug 2007 17:28:01 +0200
-Message-ID: <46D59081.2040605__21031.6513236195$1188401401$gmane$org@googlemail.com>
+Message-ID: <46D59081.2040605__4284.36297593198$1188401403$gmane$org@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:63377 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758642AbXH2P2z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 11:28:55 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so197542nfb
-        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 08:28:54 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, Len Brown <len.brown@intel.com>, linux-acpi@vger.kernel.org, Alexey Starikovskiy <astarikovskiy@suse.de>, Daniel Ritz <daniel.ritz-ml@swissonline.ch>, Tony Luck <tony.luck@intel.com>, John Stultz <johnstul@us.ibm.com>, Paolo Ornati <ornati@fastwebnet.it>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, Stephen Ziemba <sziemba@ecn.purdue.edu>
+List-Id: linux-ide@vger.kernel.org
 
 Hi all,
 
