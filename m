@@ -1,40 +1,83 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/10] ide: use pci_dev->revision
-Date: Thu, 30 Aug 2007 00:09:39 +0200
-Message-ID: <200708300009.39138.bzolnier@gmail.com>
-References: <200708292316.38779.bzolnier@gmail.com> <46D5E77B.5030800@intel.com>
+From: Eddie Atherton <stunnel@attglobal.net>
+Subject: Re: ST340823A disk size issue - Revisited
+Date: Wed, 29 Aug 2007 15:24:40 -0700
+Message-ID: <46D5F228.1020907@attglobal.net>
+References: <46C34C43.3020705@attglobal.net>
+Reply-To: stunnel@attglobal.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:38271 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbXH2WIX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 18:08:23 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so302907nfb
-        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2007 15:08:21 -0700 (PDT)
-In-Reply-To: <46D5E77B.5030800@intel.com>
-Content-Disposition: inline
+Received: from kcout01.prserv.net ([12.154.55.31]:60246 "EHLO
+	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755499AbXH2WYV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 18:24:21 -0400
+In-Reply-To: <46C34C43.3020705@attglobal.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Kok, Auke" <auke-jan.h.kok@intel.com>
-Cc: linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+To: linux-ide@vger.kernel.org
 
-On Wednesday 29 August 2007, Kok, Auke wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID so
-> > they were not converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65.
-> 
-> 
-> that's actually another effort that I'm working on atm. You can either hold off 
+Eddie Atherton wrote:
+> Hi,
+>
+> I found the above thread while searching for the reason I was getting 
+> lots of errors while trying to build out a new server.  Yes, I am 
+> using an ST340823A drive.  However, I am getting slightly different 
+> results for the drive capacity, which I'm not sure if that could cause 
+> issues with the patch.
+>
+> I actually have 2 of these drives.  One is in a WinBlows machine, and 
+> the other is in my new server.  Using an Ubuntu Live CD, I was able to 
+> verify that the drive in the WinBlows machine is behaving exactly the 
+> same as the original problem report.  However, the drive in my server, 
+> running Slackware 11.0, reports a different "current capacity", as 
+> shown here:
+>
+> Linux version 2.6.17.13 (root@tree) (gcc version 3.4.6) #1 Sat Sep 9 
+> 01:11:49 CDT 2006
+> ...
+> hda: Host Protected Area detected.
+>        current capacity is 78165359 sectors (40020 MB)
+>        native  capacity is 78165361 sectors (40020 MB)
+> hda: Host Protected Area disabled.
+> hda: 78165361 sectors (40020 MB) w/512KiB Cache, CHS=65535/16/63, 
+> UDMA(100)
 
-Great.
+An update to this.  I applied the latest patch set at the time, rc3 + 
+git7, and it all appeared to work.  I didn't get the errors any more.
 
-> on your patch or we'll see how my patches bounce against yours ;)
+Well, I didn't the first time I checked.  :)
 
-I don't envision problems here - my patch is limited to drivers/ide/
-and will just get dumped if the more complete patch shows up. :)
+Now I've noticed that they are happening again.  Sometimes.  Here's the 
+interesting part, this is what I saw one time:
 
-Thanks,
-Bart
+Linux version 2.6.23-rc3-git7-smp (root@Brutus) (gcc version 3.4.6) #2 
+SMP Wed Aug 29 04:12:27 PDT 2007
+...
+hda: Host Protected Area detected.
+        current capacity is 78165357 sectors (40020 MB)
+        native  capacity is 78165361 sectors (40020 MB)
+hda: Host Protected Area disabled.
+hda: 78165361 sectors (40020 MB) w/512KiB Cache, CHS=65535/16/63, UDMA(100)
+
+Notice the current capacity.  It's low by 4 sectors, where previously it 
+was only 2.  My guess is that my "working" versions were when the sector 
+count was an even number, which is why I questioned the patch 
+initially.  Looking back through my /var/log/syslog, I see capacities 
+of, in chronological sequence:
+
+78165359
+78165360
+78165360
+78165359
+78165359
+78165357
+78165357
+78165358
+78165357
+78165359
+
+Weird.
+
+Cheers,
+Eddie
