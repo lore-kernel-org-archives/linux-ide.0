@@ -1,51 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATAPI tape drives broken with libata
-Date: Thu, 30 Aug 2007 00:50:06 +0100
-Message-ID: <20070830005006.6951265a@the-village.bc.nu>
-References: <46D5F97B.3050808@redhat.com>
+From: Tom Evans <tom@23palmer.net>
+Subject: Port Multiplier Patch 2.6.22.1 on Alpha
+Date: Wed, 29 Aug 2007 23:25:23 -0400
+Message-ID: <46D638A3.2030704@23palmer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57211 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756292AbXH2Xlw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 19:41:52 -0400
-In-Reply-To: <46D5F97B.3050808@redhat.com>
+Received: from smtp02.lnh.mail.rcn.net ([207.172.157.102]:6966 "EHLO
+	smtp02.lnh.mail.rcn.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172AbXH3DfJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Aug 2007 23:35:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, craig48@swbell.net
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 29 Aug 2007 18:55:55 -0400
-Chuck Ebbert <cebbert@redhat.com> wrote:
+Hi Tejun and all -
 
-> https://bugzilla.redhat.com/show_bug.cgi?id=243568
-> 
-> Using kernel 2.6.22:
-> 
-> Aug 29 17:08:11 itox kernel: ata2.00: ATAPI: Seagate STT8000A, 5.51, max MWDMA2
-> Aug 29 17:08:11 itox kernel: ata2.00: configured for MWDMA2
-> Aug 29 17:08:11 itox kernel: scsi 1:0:0:0: Sequential-Access Seagate  STT8000A         5.51 PQ: 0 ANSI: 2
-> Aug 29 17:08:12 itox kernel: scsi 1:0:0:0: Attached scsi generic sg1 type 1
-> Aug 29 17:08:12 itox kernel: st: Version 20070203, fixed bufsize 32768, s/g segs 256
-> Aug 29 17:08:12 itox kernel: st 1:0:0:0: Attached scsi tape st0
-> Aug 29 17:08:12 itox kernel: st 1:0:0:0: st0: try direct i/o: yes (alignment 512 B)
-> Aug 29 17:08:12 itox kernel: ata2: DRQ=1 with device error, dev_stat 0x59
-> Aug 29 17:08:12 itox kernel: ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> Aug 29 17:08:12 itox kernel: ata2.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
-> Aug 29 17:08:12 itox kernel:          res 51/60:03:00:00:20/00:00:00:00:00/a0 Emask 0x3 (HSM
+I have applied the libata-tj-stable patch to the 2.6.22.1 kernel and am 
+having some issues.
+I'm not certain if it is the PMP patches, or my platform.
 
+I have a Silicon Images 3124-2 based PCI-X card (Norco 4618) for my 
+Alpha system .
+I realize this is not the usual test platform and I understand if you 
+decide to blame it on the platform.
 
-Device Ready, Seek Complete, Data Request, Error
+I also have a "StorBox" which is a 5-bay eSATA box based with the Si4276 
+port multiplier, which is noted to be "quirky" in the README.
 
-DRQ and Error together is a bit odd to say the least
+The problem arises when I try to create/assemble a linux software raid 
+using 4 disks (level 6).  At the time the system becomes very very slow 
+- basically unresponsive - I can get an occasional keystroke in on the 
+console, but the machine is essentially dead.
 
-It then commits suicide and falls off the bus. That may be due to the
-fact we use SRST on ATAPI device errors still rather than trying an ATAPI
-reset first. Shouldn't matter though.
+If I pull the eSATAcable out of the card, the sata_si24 driver does its 
+thing and the machine comes back to life.
+The unit is plugged into the port designated as the first - all drive 
+bays contain a drive.
 
-Since you are the lucky owner of the object in question can you dump the
-contents of the packet command going to the device when this occurs ?
+I am able to individually address and to format individual drives 
+without performance issue, but the creation of a raid is deadly ....
 
-Alan
+Have you heard of such and issue with the 3124-2/4276 combination?
+Is anyone else trying this driver on an Alpha?
+
+I have similar such behavior before when using drivers that generate 
+many unaligned accesses - I only have seen 2 places they occur in 
+sata_sil24 and have fixed them myself, but that made no difference.
+
+Are there any logs or output that might help?  Should I attempt to 
+upgrade the firmware of the devices?
+
+Thanks,
+...tom
