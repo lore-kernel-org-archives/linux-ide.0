@@ -1,57 +1,35 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH 2.6.23-rc4][RESEND] ahci: RAID mode SATA patch for Intel Tolapai
-Date: Thu, 30 Aug 2007 20:35:24 -0700
-Message-ID: <20070831033524.GH114642@sgi.com>
-References: <200708301753.31692.jason.d.gaston@intel.com> <39B20DF628532344BC7A2692CB6AEE0701B5BC46@orsmsx420.amr.corp.intel.com>
+From: Jason Gaston <jason.d.gaston@intel.com>
+Subject: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel Tolapai
+Date: Thu, 30 Aug 2007 21:27:19 -0700
+Message-ID: <200708302127.19535.jason.d.gaston@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:49754 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755771AbXHaDf1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Aug 2007 23:35:27 -0400
+Received: from mga02.intel.com ([134.134.136.20]:57807 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750958AbXHaEZI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 00:25:08 -0400
 Content-Disposition: inline
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701B5BC46@orsmsx420.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com, jason.d.gaston@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 30, 2007 at 06:00:26PM -0700, Gaston, Jason D wrote:
-> >
-> >Resend without wordwrap.
-> >
-> >This patch adds the Intel Tolapai RAID controller DID's for SATA sup=
-port.
-> >
-> >Signed-off-by: =A0Jason Gaston <jason.d.gaston@intel.com>
-> >
-> >--- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27
-> >18:32:35.000000000 -0700
-> >+++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28 16:58:11.00000000=
-0 -
-> >0700
-> >@@ -411,6 +411,8 @@
-> > 	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
-> > 	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
-> > 	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
-> >+	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
-> >+	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
-> >
-> > 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
-> > 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->=20
->=20
-> I am having trouble sending these patches.  When I look in the LKML.o=
-rg message archive, I see "=3DA0" and "=3D20" in the messages.  I am us=
-ing KMail to send these, I have wordwrap turned off and am inserting th=
-e patch file.  Does anyone know what I am doing wrong?
+Resend trying to remove 8-bit characters in the email.
 
+This patch adds the Intel Tolapai RAID controller DID's for SATA support.
 
-It seems that you have some 8-bit characters in the email.
-The '=3D20' in the middle of the patch was stripped for me by sendmail,
-apparently, but you can see the character before your name in the
-'Signed-off-by' line.
+Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
 
-Maybe try mutt?
+--- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27 18:32:35.000000000 -0700
++++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28 16:58:11.000000000 -0700
+@@ -411,6 +411,8 @@
+ 	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+ 	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+ 	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
++	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
