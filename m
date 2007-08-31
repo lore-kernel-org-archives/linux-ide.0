@@ -1,83 +1,42 @@
-From: Jason Gaston <jason.d.gaston@intel.com>
-Subject: [PATCH 2.6.23-rc4][reRESEND] ata_piix: IDE mode SATA patch for Intel Tolapai
-Date: Thu, 30 Aug 2007 21:36:56 -0700
-Message-ID: <200708302136.57215.jason.d.gaston@intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata-core: Allow translation setting to fail
+Date: Fri, 31 Aug 2007 03:38:51 -0400
+Message-ID: <46D7C58B.8020009@garzik.org>
+References: <20070808142849.7927173d@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760915AbXHaEe5@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, jason.d.gaston@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:51085 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752660AbXHaHix (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 03:38:53 -0400
+In-Reply-To: <20070808142849.7927173d@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Resend trying to remove 8-bit characters in the email.
+Alan Cox wrote:
+> On some early drives (pre ATA1) this feature is not supported. If it
+> fails then we know the drive geometry is the hardware geometry and the
+> one we tried to set anyway so just carry on.
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc1-mm1/drivers/ata/libata-core.c linux-2.6.23rc1-mm1/drivers/ata/libata-core.c
+> --- linux.vanilla-2.6.23rc1-mm1/drivers/ata/libata-core.c	2007-07-26 15:02:57.000000000 +0100
+> +++ linux-2.6.23rc1-mm1/drivers/ata/libata-core.c	2007-08-08 13:38:39.257549616 +0100
+> @@ -4081,6 +4170,11 @@
+>  	tf.device |= (heads - 1) & 0x0f; /* max head = num. of heads - 1 */
+>  
+>  	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+> +	/* A clean abort indicates an original or just out of spec drive
+> +	   and we should continue as we issue the setup based on the
+> +	   drive reported working geometry */
+> +	if (err_mask == AC_ERR_DEV && (tf.feature & ATA_ABORTED))
+> +		err_mask &= ~AC_ERR_DEV;
 
-This patch adds the Intel Tolapai IDE mode SATA controller DID's.
+applied, after changing the above quoted line to 'err_mask = 0'.
 
-Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
 
---- linux-2.6.23-rc4/drivers/ata/ata_piix.c.orig	2007-08-27 18:32:35.000000000 -0700
-+++ linux-2.6.23-rc4/drivers/ata/ata_piix.c	2007-08-29 17:13:13.000000000 -0700
-@@ -130,6 +130,7 @@
- 	ich6m_sata_ahci		= 8,
- 	ich8_sata_ahci		= 9,
- 	piix_pata_mwdma		= 10,	/* PIIX3 MWDMA only */
-+	tolapai_sata_ahci	= 11,
- 
- 	/* constants for mapping table */
- 	P0			= 0,  /* port 0 */
-@@ -253,6 +254,8 @@
- 	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
- 	/* SATA Controller IDE (ICH9M) */
- 	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	/* SATA Controller IDE (Tolapai) */
-+	{ 0x8086, 0x5028, PCI_ANY_ID, PCI_ANY_ID, 0, 0, tolapai_sata_ahci },
- 
- 	{ }	/* terminate list */
- };
-@@ -441,12 +444,25 @@
- 	},
- };
- 
-+static const struct piix_map_db tolapai_map_db = {
-+        .mask = 0x3,
-+        .port_enable = 0x3,
-+        .map = {
-+                /* PM   PS   SM   SS       MAP */
-+                {  P0,  NA,  P1,  NA }, /* 00b */
-+                {  RV,  RV,  RV,  RV }, /* 01b */
-+                {  RV,  RV,  RV,  RV }, /* 10b */
-+                {  RV,  RV,  RV,  RV },
-+        },
-+};
-+
- static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich5_sata]		= &ich5_map_db,
- 	[ich6_sata]		= &ich6_map_db,
- 	[ich6_sata_ahci]	= &ich6_map_db,
- 	[ich6m_sata_ahci]	= &ich6m_map_db,
- 	[ich8_sata_ahci]	= &ich8_map_db,
-+	[tolapai_sata_ahci]	= &tolapai_map_db,
- };
- 
- static struct ata_port_info piix_port_info[] = {
-@@ -560,6 +576,17 @@
- 		.mwdma_mask	= 0x06, /* mwdma1-2 ?? CHECK 0 should be ok but slow */
- 		.port_ops	= &piix_pata_ops,
- 	},
-+
-+	/* tolapai_sata_ahci: 11: */
-+	{
-+		.sht		= &piix_sht,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-+				  PIIX_FLAG_AHCI,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &piix_sata_ops,
-+	},
- };
- 
- static struct pci_bits piix_enable_bits[] = {
