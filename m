@@ -1,41 +1,83 @@
-From: Len Brown <lenb@kernel.org>
-Subject: Re: [1/2] 2.6.23-rc3: known regressions with patches
-Date: Fri, 31 Aug 2007 17:41:22 -0400
-Message-ID: <200708311741.22863.lenb@kernel.org>
-References: <46D59081.2040605@googlemail.com>
+From: Patrizio Bassi <patrizio.bassi@gmail.com>
+Subject: Re: libata not working for sis5533
+Date: Sat, 01 Sep 2007 00:20:25 +0200
+Message-ID: <46D89429.7080802@gmail.com>
+References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com>
+Reply-To: patrizio.bassi@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41690 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbXHaVnX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Aug 2007 17:43:23 -0400
-In-Reply-To: <46D59081.2040605@googlemail.com>
-Content-Disposition: inline
+Received: from fk-out-0910.google.com ([209.85.128.191]:19432 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbXHaWUj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Aug 2007 18:20:39 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so709508fkz
+        for <linux-ide@vger.kernel.org>; Fri, 31 Aug 2007 15:20:37 -0700 (PDT)
+In-Reply-To: <46D8921E.3010304@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, Len Brown <len.brown@intel.com>, linux-acpi@vger.kernel.org, Alexey Starikovskiy <astarikovskiy@suse.de>, Daniel Ritz <daniel.ritz-ml@swissonline.ch>, Tony Luck <tony.luck@intel.com>, John Stultz <johnstul@us.ibm.com>, Paolo Ornati <ornati@fastwebnet.it>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, Stephen Ziemba <sziemba@ecn.purdue.edu>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Wednesday 29 August 2007 11:28, Michal Piotrowski wrote:
+Patrizio Bassi ha scritto:
+> Michal Piotrowski ha scritto:
+>> Hi,
+>>
+>> [Adding IDE wizards to CC]
+>>
+>> On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
+>>   
+>>> My sis630 chipset shipped with Asus A1000
+>>> doesn't work properly with suspend with ide drivers
+>>> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
+>>>
+>>> i tried to switch to libata but i cannot boot.
+>>> I've enabled generic ide and sis specific code, both in-kernel. of
+>>> course scsi too.
+>>>
+>>> when i boot i get: irq #14 nobody cared and stop
+>>>
+>>> i have to remove battery to reboot pc.
+>>> I'm using 2.6.22.5, but i never got any libata kernel working.
+>>>
+>>> Patrizio
+>>>
+>>> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
+>>> the laptop and could not boot it
+>>>
+>>> Please CC me.
+>>>
+>>> lspci:
+>>> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
+>>> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
+>>> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
+>>> Bridge)
+>>> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
+>>> PCI Fast Ethernet (rev 80)
+>>> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
+>>> Controller (rev 07)
+>>> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
+>>> Controller (rev 07)
+>>> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
+>>> SiS PCI Audio Accelerator (rev 01)
+>>>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
+>>> Controller (rev a0)
+>>> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
+>>> PCI-to-PCI bridge (AGP)
+>>> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+>>> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+>>> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
+>>> 630/730 PCI/AGP VGA Display Adapter (rev 11)
+>>>     
+>>
+>> Regards,
+>> Michal
+>>
+>>   
+>
+>
+i've been out for a week, but found no notice, did i lost any email or
+no activity on this issue?
 
-> ACPI
-> 
-> Subject         : the fan doesn't work any more
-> References      : http://lkml.org/lkml/2007/8/28/359
-> Last known good : ?
-> Submitter       : Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-> Caused-By       : Alexey Starikovskiy <astarikovskiy@suse.de>
->                   commit cd8c93a4e04dce8f00d1ef3a476aac8bd65ae40b
-> Handled-By      : Alexey Starikovskiy <astarikovskiy@suse.de>
-> Patch           : http://lkml.org/lkml/2007/8/29/15
-> Status          : patch was suggested
+Patrizio
 
-I believe that this is gone as of 2.6.23-rc4-git3
-
-http://bugzilla.kernel.org/show_bug.cgi?id=8958
-
-thanks,
--Len
