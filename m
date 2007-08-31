@@ -1,53 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 8/8] ata: add ATA_MWDMA* and ATA_SWDMA* defines
-Date: Fri, 31 Aug 2007 04:01:15 -0400
-Message-ID: <46D7CACB.6070400@garzik.org>
-References: <200708271935.22751.bzolnier@gmail.com>
+Subject: Re: [PATCH 2.6.23-rc4] sata_promise: FastTrack TX4200 is a second-generation
+ chip
+Date: Fri, 31 Aug 2007 04:15:07 -0400
+Message-ID: <46D7CE0B.5050806@garzik.org>
+References: <200708290825.l7T8PbYL016964@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47711 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44113 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754734AbXHaIBR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Aug 2007 04:01:17 -0400
-In-Reply-To: <200708271935.22751.bzolnier@gmail.com>
+	id S1755982AbXHaIPM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 04:15:12 -0400
+In-Reply-To: <200708290825.l7T8PbYL016964@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, sziemba@ecn.purdue.edu
 
-Bartlomiej Zolnierkiewicz wrote:
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  include/linux/ata.h |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
+Mikael Pettersson wrote:
+> This patch corrects sata_promise to classify FastTrack TX4200
+> (DID 3515/3519) as a second-generation chip. Promise's partial-
+> source FT TX4200 driver confirms this classification.
 > 
-> Index: b/include/linux/ata.h
-> ===================================================================
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -73,6 +73,19 @@ enum {
->  	ATA_PIO5		= ATA_PIO4 | (1 << 5),
->  	ATA_PIO6		= ATA_PIO5 | (1 << 6),
->  
-> +	ATA_SWDMA0		= (1 << 0),
-> +	ATA_SWDMA1		= ATA_SWDMA0 | (1 << 1),
-> +	ATA_SWDMA2		= ATA_SWDMA1 | (1 << 2),
-> +
-> +	ATA_SWDMA2_ONLY		= (1 << 2),
-> +
-> +	ATA_MWDMA0		= (1 << 0),
-> +	ATA_MWDMA1		= ATA_MWDMA0 | (1 << 1),
-> +	ATA_MWDMA2		= ATA_MWDMA1 | (1 << 2),
-> +
-> +	ATA_MWDMA12_ONLY	= (1 << 1) | (1 << 2),
-> +	ATA_MWDMA2_ONLY		= (1 << 2),
-> +
->  	ATA_UDMA0		= (1 << 0),
->  	ATA_UDMA1		= ATA_UDMA0 | (1 << 1),
->  	ATA_UDMA2		= ATA_UDMA1 | (1 << 2),
+> Treating it as a first-generation chip causes several problems:
+> 1. Detection failures. This is a recent regression triggered by
+>    the hotplug-enabling changes in 2.6.23-rc1.
+> 2. Various "failed to resume link for reset" warnings.
+> 
+> This patch fixes <http://bugzilla.kernel.org/show_bug.cgi?id=8936>.
+> 
+> Thanks to Stephen Ziemba for reporting the bug and for testing the fix.
+> 
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> Tested-by: Stephen Ziemba <sziemba@ecn.purdue.edu>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> This patch is identical to the one Stephen tested, I've
+> just updated the description.
+> 
+>  drivers/ata/sata_promise.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 
 applied
 
