@@ -1,50 +1,44 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH libata-dev#upstream 3/3 REGENERATED] libata: implement
- and use ata_port_desc() to report port configuration
-Date: Fri, 31 Aug 2007 05:35:46 -0400
-Message-ID: <46D7E0F2.1020100@garzik.org>
-References: <20070730052303.GH22374@htj.dyndns.org> <20070730052415.GI22374@htj.dyndns.org> <20070730052527.GJ22374@htj.dyndns.org> <46C2BDEE.7060705@garzik.org> <20070818041455.GB8590@htj.dyndns.org>
+Subject: Re: [PATCH libata-dev#upstream REGENERATED] libata: move EH repeat
+ reporting into ata_eh_report()
+Date: Fri, 31 Aug 2007 05:35:53 -0400
+Message-ID: <46D7E0F9.7080107@garzik.org>
+References: <20070731074203.GA13674@htj.dyndns.org> <20070731075100.GB13674@htj.dyndns.org> <46C2BEDA.5070105@garzik.org> <20070818042849.GE8590@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45127 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:45135 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932146AbXHaJfs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Aug 2007 05:35:48 -0400
-In-Reply-To: <20070818041455.GB8590@htj.dyndns.org>
+	id S932149AbXHaJfy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 05:35:54 -0400
+In-Reply-To: <20070818042849.GE8590@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, mikpe@it.uu.se
 
 Tejun Heo wrote:
-> Currently, port configuration reporting has the following problems.
+> EH is sometimes repeated without any error or action.  For example,
+> this happens when probing IDENTIFY fails because of a phantom device.
+> In these cases, all the repeated EH does is making sure there is no
+> unhandled error or pending action and return.  This repeation is
+> necessary to avoid losing any event which occurred while EH was in
+> progress.
 > 
-> * iomapped address is reported instead of raw address
-> * report contains irrelevant fields or lacks necessary fields for
->   non-SFF controllers.
-> * host->irq/irq2 are there just for reporting and hacky.
-> 
-> This patch implements and uses ata_port_desc() and
-> ata_port_pbar_desc().  ata_port_desc() is almost identical to
-> ata_ehi_push_desc() except that it takes @ap instead of @ehi, has no
-> locking requirement, can only be used during host initialization and "
-> " is used as separator instead of ", ".  ata_port_pbar_desc() is a
-> helper to ease reporting of a PCI BAR or an offsetted address into it.
-> 
-> LLD pushes whatever description it wants using the above two
-> functions.  The accumulated description is printed on host
-> registration after "[S/P]ATA max MAX_XFERMODE ".
-> 
-> SFF init helpers and ata_host_activate() automatically add
-> descriptions for addresses and irq respectively, so only LLDs which
-> isn't standard SFF need to add custom descriptions.  In many cases,
-> such controllers need to report different things anyway.
+> Unfortunately, this dry run causes annonying "EH pending after
+> completion" message.  This patch moves the repeat reporting into
+> ata_eh_report() such that it's more compact and skipped on dry runs.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Mikael Pettersson <mikep@it.uu.se>
 > ---
-> Regenerated against the current #upstream (41b135c7).
+> Regenerated against #upstream (41b135c7) +
+> implement-and-use-ata_port_desc patch.
+> 
+>  drivers/ata/libata-eh.c |   30 ++++++++++++++++++------------
+>  include/linux/libata.h  |    5 +++--
+>  2 files changed, 21 insertions(+), 14 deletions(-)
 
 applied
 
