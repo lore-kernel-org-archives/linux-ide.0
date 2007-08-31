@@ -1,33 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH take #6] [libata] libata driver for bf548 on chip ATAPI
- controller.
-Date: Fri, 31 Aug 2007 05:37:25 -0400
-Message-ID: <46D7E155.409@garzik.org>
-References: <1187673151.16526.5.camel@sevens.analog.com>
+Subject: Re: [PATCH 1/1] AVR32 PATA driver
+Date: Fri, 31 Aug 2007 05:38:40 -0400
+Message-ID: <46D7E1A0.2050002@garzik.org>
+References: <200708071126.08735.kngregertsen@norway.atmel.com> <200708071127.09751.kngregertsen@norway.atmel.com> <20070807165409.4c2a4451@the-village.bc.nu> <200708081657.08448.kngregertsen@norway.atmel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41827 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41852 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932517AbXHaJh0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Aug 2007 05:37:26 -0400
-In-Reply-To: <1187673151.16526.5.camel@sevens.analog.com>
+	id S1753730AbXHaJir (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 05:38:47 -0400
+In-Reply-To: <200708081657.08448.kngregertsen@norway.atmel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sonic Zhang <sonic.adi@gmail.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, gregerts@stud.ntnu.no
 
-Sonic Zhang wrote:
-> Fix all issues pointed out in Jeff's email.
+Kristoffer Nyborg Gregertsen wrote:
+> Updated and simplified driver. Use only register transfer timing for both
+> data and register transfers. This gives poorer performance in PIO1 and 2,
+> but should not be a problem in PIO3 and 4, correct me if I'm wrong :)
 > 
-> Acked-by: Alan Cox <alan@redhat.com>
-> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
-> ---
->  drivers/ata/Kconfig      |   16
->  drivers/ata/Makefile     |    1
->  drivers/ata/pata_bf54x.c | 1627 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 1644 insertions(+)
+> The driver works very we'll but I still wonder about the interrupts. I have
+> an interrupt line, that works nicely when POLLING flag is not set. The
+> problem is the number of interrupts that eat away my CPU cycles.
+> 
+> When using the POLLING flag there seem to be some interrupts that dosen't get
+> cleared. Furthermore the device dosen't drive INTRQ high, it stays at 2.5 volts
+> and generates a lot of interrupts due to ripple / noise. What to do?
+> 
+> Signed-off-by: Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
 
 applied
 
