@@ -1,40 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/2 #upstream] libata: udpate ata_dev_try_classify() arguments
-Date: Fri, 31 Aug 2007 05:18:29 -0400
-Message-ID: <46D7DCE5.8090700@garzik.org>
-References: <20070808053739.GS13674@htj.dyndns.org>
+Subject: Re: [PATCH] libata: Switch most of the remaining SFF drivers to ata_sff_port_start
+Date: Fri, 31 Aug 2007 05:29:07 -0400
+Message-ID: <46D7DF63.7090006@garzik.org>
+References: <20070822225541.380ce097@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38483 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:49287 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756501AbXHaJSb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 31 Aug 2007 05:18:31 -0400
-In-Reply-To: <20070808053739.GS13674@htj.dyndns.org>
+	id S1753651AbXHaJ3L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 31 Aug 2007 05:29:11 -0400
+In-Reply-To: <20070822225541.380ce097@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, amsden_linux@earthlink.net
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Make ata_dev_try_classify() take a pointer to ata_device instead of
-> ata_port/port_number combination for consistency and add @present
-> argument.  @present indicates whether the device seems present during
-> reset.  It's the result of TF access during softreset and link
-> onlineness during hardreset.  @present will be used to improve
-> diagnostic failure handling.
+Alan Cox wrote:
+> This avoids allocating DMA buffers if not needed but at the moment is
+> mostly just a neatness item.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |   31 +++++++++++++++++--------------
->  drivers/ata/pata_scc.c    |    6 ++++--
->  drivers/ata/sata_mv.c     |    2 +-
->  include/linux/libata.h    |    3 ++-
->  4 files changed, 24 insertions(+), 18 deletions(-)
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-ACK patches 1-2
-
-request rediff+resend
+applied sans pata_acpi change, which is because pata_acpi is not in 
+libata-dev.git#upstream
 
 
