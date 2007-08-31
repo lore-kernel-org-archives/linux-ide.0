@@ -1,83 +1,153 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: libata not working for sis5533
-Date: Sat, 01 Sep 2007 00:20:25 +0200
-Message-ID: <46D89429.7080802@gmail.com>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com>
-Reply-To: patrizio.bassi@gmail.com
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 0/7] blk_end_request: full I/O completion handler
+Date: Fri, 31 Aug 2007 18:39:55 -0400 (EDT)
+Message-ID: <20070831.183955.122623475.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:19432 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbXHaWUj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Aug 2007 18:20:39 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so709508fkz
-        for <linux-ide@vger.kernel.org>; Fri, 31 Aug 2007 15:20:37 -0700 (PDT)
-In-Reply-To: <46D8921E.3010304@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca
+Cc: dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Patrizio Bassi ha scritto:
-> Michal Piotrowski ha scritto:
->> Hi,
->>
->> [Adding IDE wizards to CC]
->>
->> On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
->>   
->>> My sis630 chipset shipped with Asus A1000
->>> doesn't work properly with suspend with ide drivers
->>> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
->>>
->>> i tried to switch to libata but i cannot boot.
->>> I've enabled generic ide and sis specific code, both in-kernel. of
->>> course scsi too.
->>>
->>> when i boot i get: irq #14 nobody cared and stop
->>>
->>> i have to remove battery to reboot pc.
->>> I'm using 2.6.22.5, but i never got any libata kernel working.
->>>
->>> Patrizio
->>>
->>> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
->>> the laptop and could not boot it
->>>
->>> Please CC me.
->>>
->>> lspci:
->>> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
->>> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
->>> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
->>> Bridge)
->>> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
->>> PCI Fast Ethernet (rev 80)
->>> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
->>> Controller (rev 07)
->>> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
->>> Controller (rev 07)
->>> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
->>> SiS PCI Audio Accelerator (rev 01)
->>>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
->>> Controller (rev a0)
->>> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
->>> PCI-to-PCI bridge (AGP)
->>> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
->>> 630/730 PCI/AGP VGA Display Adapter (rev 11)
->>>     
->>
->> Regards,
->> Michal
->>
->>   
->
->
-i've been out for a week, but found no notice, did i lost any email or
-no activity on this issue?
+Hello,
 
-Patrizio
+This set of patches changes request completion interface
+between device drivers and block layer to 1 step procedure
+from current 2 step procedures using end_that_request_{first/chunk}
+and end_that_request_last().
 
+This change allows request-based multipath to hook in before
+completing each chunk of request, check errors for it and
+retry it using another path if error is detected.
+
+Summaries of each patch are below:
+  1/7: add new request completion interface, blk_end_request()
+  2/7: add some macros to get the size of request in bytes
+  3/7: convert normal drivers to use blk_end_request()
+  4/7: convert odd drivers like cciss/cpqarray/xsysace to use
+       blk_end_request()
+  5/7: convert ide-cd (cdrom_newpc_intr) to use blk_end_request()
+  6/7: remove/unexport no longer needed end_that_request_*
+  7/7: change rq->end_io to cover request completion as a whole
+
+I have tested the patch on two machines, ia64+QLA1280+QLA2200
+and x86_64+SATA+IDE-CDROM.
+I can't test other device drivers for which I don't have hardware.
+So testing help and any comments would be very much appreciated.
+
+The interface change causes code modifications of *ALL DEVICE DRIVERS*
+which are using end_that_request_{first/chunk/last} to complete request.
+But it should not affect the behavior.
+
+Please review and apply if no problem.
+This patch-set should be applied on top of 2.6.23-rc3-mm1.
+
+
+BACKGROUND
+==========
+The patch is necessary to allow device stacking at request level,
+that is request-based device-mapper multipath.
+Currently, device-mapper is implemented as a stacking block device
+at BIO level.  OTOH, request-based DM will stack at request level to
+allow better multipathing decision.
+To allow device stacking at request level, the completion procedure
+need to provide a hook for it.
+For example, dm-multipath has to check errors and retry with other
+paths if necessary before returning the I/O result to upper layer.
+struct request has 'end_io' hook currently.  But it's called at
+the very late stage of completion handling where the I/O result
+is already returned to the upper layer.
+So we need something here.
+
+The first approach to hook in completion of each chunk of request
+was adding a new rq->end_io_first() hook and calling it on the top
+of __end_that_request_first().
+  - http://marc.theaimsgroup.com/?l=linux-scsi&m=115520444515914&w=2
+  - http://marc.theaimsgroup.com/?l=linux-kernel&m=116656637425880&w=2
+However, Jens pointed out that redesigning rq->end_io() as a full
+completion handler would be better:
+
+On Thu, 21 Dec 2006 08:49:47 +0100, Jens Axboe <jens.axboe@oracle.com> wrote:
+> Ok, I see what you are getting at. The current ->end_io() is called when
+> the request has fully completed, you want notification for each chunk
+> potentially completed.
+> 
+> I think a better design here would be to use ->end_io() as the full
+> completion handler, similar to how bio->bi_end_io() works. A request
+> originating from __make_request() would set something ala:
+.....
+> instead of calling the functions manually. That would allow you to get
+> notification right at the beginning and do what you need, without adding
+> a special hook for this.
+
+I thought his comment was reasonable.
+So I modified the patches based on his suggestion.
+
+
+WHAT IS CHANGED
+===============
+The change is basically illustlated by the following pseudo code:
+
+[Before]
+  if (end_that_request_{first/chunk} succeeds) { <-- completes bios
+     <do something driver specific>
+     end_that_request_last() <-- calls end_io()
+     <the request is free from the driver>
+  } else {
+     <the request was incomplete, retry for leftover or ignoring>
+  }
+
+[After]
+  if (blk_end_request() succeeds) { <-- calls end_io(), completes bios
+     <the request is free from the driver>
+  } else {
+     <the request was incomplete, retry for leftover or ignoring>
+  }
+
+
+In detail, request completion procedures are changed like below.
+
+[Before]
+  o 2 steps completion using end_that_request_{first/chunk}
+    and end_that_request_last().
+  o Device drivers have ownership of a request until they
+    call end_that_request_last().
+  o rq->end_io() is called at the last stage of
+    end_that_request_last() for some block layer codes need
+    specific request handling when completing it.
+
+[After]
+  o 1 step completion using blk_end_request().
+    (end_that_request_* are no longer used from device drivers.)
+  o Device drivers give over ownership of a request
+    when calling blk_end_request().
+    If it returns 0, the request is completed.
+    If it returns 1, the request isn't completed and
+    the ownership is returned to the device driver again.
+  o rq->end_io() is called at the top of blk_end_request() to
+    allow to hook all parts of request completion.
+    Existing users of rq->end_io() must be changed to do
+    all parts of request completion.
+
+
+EXAMPLE CODE
+============
+Request-based Device-mapper multipath patch-set is attached as appendix,
+although it still needs some work and isn't ready for review.
+It checks error of a request and retries the request using other paths
+if error is detected, before completing bios in the request.
+(See clone_end_request() in appendix#1.)
+
+Thanks,
+Kiyoshi Ueda
