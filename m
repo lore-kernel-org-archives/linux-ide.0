@@ -1,80 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/2] hpt366: UltraDMA filtering for SATA cards
-Date: Sat, 01 Sep 2007 18:36:33 +0400
-Message-ID: <46D978F1.7030903@ru.mvista.com>
-References: <200708060008.38077.sshtylyov@ru.mvista.com> <200708090008.10352.bzolnier@gmail.com> <46D06349.7050009@ru.mvista.com> <200708271922.35546.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] sata_mv: Test patch for Hightpoint RocketRaid 1740/1742
+Date: Sat, 1 Sep 2007 15:49:23 +0100
+Message-ID: <20070901154923.557fa4ad@the-village.bc.nu>
+References: <20070709143841.133abb71@the-village.bc.nu>
+	<46B08F5F.9040500@garzik.org>
+	<20070801164603.456f1540@the-village.bc.nu>
+	<46D96B63.7050302@ans.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:48833 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753042AbXIAOdq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 10:33:46 -0400
-In-Reply-To: <200708271922.35546.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39927 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753218AbXIAOlL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 10:41:11 -0400
+In-Reply-To: <46D96B63.7050302@ans.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Sat, 01 Sep 2007 15:38:43 +0200
+Krzysztof Oledzki <olel@ans.pl> wrote:
 
->>>>The Marvell bridge chips used on HighPoint SATA cards do not seem to support
->>>>the UltraDMA modes 1, 2, and 3 (as well as any MWDMA modes), so the driver
->>>>needs to account for this in the udma_filter() method.  In order to achieve
->>>>that, do the following changes:
+> On 2007-08-01 17:46, Alan Cox wrote:
+> > On Wed, 01 Aug 2007 09:49:19 -0400
+> > Jeff Garzik <jeff@garzik.org> wrote:
+> > 
+> >> Alan Cox wrote:
+> >>> Underneath all the HPT packaging, PCI identifiers, binary driver modules
+> >>> and stuff you find that ...
+> >>>
+> >>> Signed-off-by: Alan Cox <alan@redhat.com>
+> >>>
+> >>> --- drivers/ata/sata_mv.c~	2007-07-09 13:19:57.003052904 +0100
+> >>> +++ drivers/ata/sata_mv.c	2007-07-09 13:19:57.004052752 +0100
+> >>> @@ -573,6 +573,9 @@
+> >>>  	{ PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
+> >>>  	{ PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
+> >>>  	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+> >>> +	/* RocketRAID 1740/174x have different identifiers */
+> >>> +	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
+> >>> +	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
+> >> Is this still a test patch, or can it go upstream?
+> > 
+> > Upstream
+> 
+> Are you sure that 1740/1742 are 508x (GEN I)? According to these [1] 
+> pictures there may be a 6042 chipset (GEN IIe) placed onboard.
 
->>>>- install the method for all chips, not only HPT36x/370 (improve code formatting
->>>> by killing an extra tabs while at it);
+The ones I checked and the code used as a reference clearly indicate a
+508x. I've had two reports of a TTI 0x23xx ID number which may perhaps be
+a 6042 as it didn't appear to work with a 508x driver.
 
->>>>- add to the end of the 'switch' statement in hpt3xx_udma_filter() case for
->>>> HPT372[AN] and HPT374 chips upon which the SATA cards are based and check
->>>> there whether we're dealing with SATA drive (by looking at words 80 and 93
->>>> of the drive's identify data), reorder HPT370[A] cases for consistency...
-
->>>>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
->>[...]
-
->>>Also now that ->udma_filter is always present the initial hwif->ultra_mask
-
->>    Aha, so this method's semantics intended to *completely override* the 
->>ultra_mask field?!  Wouldn't it be better to make the code behave more 
->>consistent, i.e. in ide_get_mode_mask() do:
-
->>         unsigned int mask = 0;
->>
->>         switch(base) {
->>         case XFER_UDMA_0:
->>                 if ((id->field_valid & 4) == 0)
->>                         break;
->>
->>                 if (hwif->udma_filter)
->>                         mask = hwif->udma_filter(drive);
->>		else
->>                         mask = hwif->ultra_mask;
->>
->>                 mask &= id->dma_ultra;
->>                 if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
->>                         mask &= 0x07;
->>                 break;
->>         case XFER_MW_DMA_0:
->>                 if ((id->field_valid & 2) == 0)
->>                         break;
->>
->>                 if (hwif->mdma_filter)
->>                         mask = hwif->mdma_filter(drive);
->>		else
->>                         mask = hwif->mwdma_mask;
->>                 mask &= id->dma_mword;
->>                 break;
-
->>to avoid the further confusion? ;-)
-
-> Fine with me but you forgot to attach a patch. ;)
-
-    That was only a trial ball. ;-)
-
-> Bart
-
-MBR, Sergei
+Alan
