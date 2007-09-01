@@ -1,77 +1,46 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: ATA_PIIX - soft resetting port, port is slow to respond, machine
- "freezes" for a few seconds
-Date: Sat, 01 Sep 2007 14:26:23 +0200
-Message-ID: <46D95A6F.6060808@wpkg.org>
-References: <46D94BBB.9080403@wpkg.org> <6b9952490709010500q2a93156cq399434a3a44a2d25@mail.gmail.com>
+From: Krzysztof Oledzki <olel@ans.pl>
+Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
+Date: Sat, 01 Sep 2007 15:46:56 +0200
+Message-ID: <46D96D50.3080600@ans.pl>
+References: <46C1DCBB.9020308@double-you.de>	<20070814184301.3201d162@the-village.bc.nu>	<46C2047D.4040901@double-you.de>	<20070815002447.40f7f206@the-village.bc.nu>	<46CE8CC7.4080900@double-you.de>	<46CEAB1B.9060908@garzik.org> <20070824144858.384b1040@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-2;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:45682 "EHLO
-	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754225AbXIAM0g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 08:26:36 -0400
-In-Reply-To: <6b9952490709010500q2a93156cq399434a3a44a2d25@mail.gmail.com>
+Received: from pigeon.axelspringer.pl ([195.177.210.68]:53710 "EHLO
+	mx1.axelspringer.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658AbXIANq6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 09:46:58 -0400
+In-Reply-To: <20070824144858.384b1040@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joris <joris@v5.be>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Karim 'Kasi Mir' Senoucci <ks@double-you.de>, linux-ide@vger.kernel.org
 
-Joris schrieb:
-> Hello Tomasz,
-> 
-> 
-> This appears remarkably simelar to what I'm experiencing, altough I'm
-> getting that on sata ports.
-> I'm currently at a loss on what caused this, but if there's two of us... ;-)
-> See: http://marc.info/?l=linux-ide&m=118812690407577&w=2
-> 
-> What kind of hardware are you running?
+On 2007-08-24 15:48, Alan Cox wrote:
+> On Fri, 24 Aug 2007 05:55:39 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
+>=20
+>> Karim 'Kasi Mir' Senoucci wrote:
+>>> Alan Cox schrieb:
+>>>>> in the sata_mv source. Should I add something like:
+>>>>>
+>>>>>         { PCI_VDEVICE(TTI, 0x2300), chip_604x }
+>=20
+>> You need to use the sata_mv from kernel 2.6.23-rcX.
+>>
+>> Patching into older drivers isn't guaranteed to work.
+>=20
+> May also be the actual chip on the 2300 is different to the older one=
+s
+> and isn't a 604x.
 
-It's a dual core Xeon.
+Indeed, it seems to be a 7042:
 
-Root filesystem starts off a 2 GB Transcend IDE flash disk, and there is 
-a 4-disk RAID-10 array behind a hardware RAID, with LVM on it.
+http://www.highpoint-tech.com/image/products/SATAII/RR2300_Card_big.jpg
 
-I noticed it doesn't soft reset anymore once the kernel said:
+Best regards,
 
-ata1.00: limiting speed to MWDMA1:PIO4
+				Krzysztof Ol=EAdzki
 
-
-# lspci
-00:00.0 Host bridge: Intel Corporation E7320 Memory Controller Hub (rev 0c)
-00:00.1 Class ff00: Intel Corporation E7320 Error Reporting Registers 
-(rev 0c)
-00:02.0 PCI bridge: Intel Corporation E7525/E7520/E7320 PCI Express Port 
-A (rev 0c)
-00:03.0 PCI bridge: Intel Corporation E7525/E7520/E7320 PCI Express Port 
-A1 (rev 0c)
-00:1c.0 PCI bridge: Intel Corporation 6300ESB 64-bit PCI-X Bridge (rev 02)
-00:1d.0 USB Controller: Intel Corporation 6300ESB USB Universal Host 
-Controller (rev 02)
-00:1d.1 USB Controller: Intel Corporation 6300ESB USB Universal Host 
-Controller (rev 02)
-00:1d.4 System peripheral: Intel Corporation 6300ESB Watchdog Timer (rev 02)
-00:1d.5 PIC: Intel Corporation 6300ESB I/O Advanced Programmable 
-Interrupt Controller (rev 02)
-00:1d.7 USB Controller: Intel Corporation 6300ESB USB2 Enhanced Host 
-Controller (rev 02)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 0a)
-00:1f.0 ISA bridge: Intel Corporation 6300ESB LPC Interface Controller 
-(rev 02)
-00:1f.1 IDE interface: Intel Corporation 6300ESB PATA Storage Controller 
-(rev 02)
-00:1f.3 SMBus: Intel Corporation 6300ESB SMBus Controller (rev 02)
-01:00.0 Ethernet controller: Intel Corporation 82571EB Gigabit Ethernet 
-Controller (rev 06)
-01:00.1 Ethernet controller: Intel Corporation 82571EB Gigabit Ethernet 
-Controller (rev 06)
-03:02.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID (rev 01)
-04:02.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27)
-04:04.0 SCSI storage controller: Adaptec AHA-2940U/UW/D / AIC-7881U (rev 01)
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
