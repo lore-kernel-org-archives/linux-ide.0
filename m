@@ -1,46 +1,54 @@
 From: Krzysztof Oledzki <olel@ans.pl>
-Subject: Re: Should sata_mv work with Highpoint RocketRAID 2300?
-Date: Sat, 01 Sep 2007 15:46:56 +0200
-Message-ID: <46D96D50.3080600@ans.pl>
-References: <46C1DCBB.9020308@double-you.de>	<20070814184301.3201d162@the-village.bc.nu>	<46C2047D.4040901@double-you.de>	<20070815002447.40f7f206@the-village.bc.nu>	<46CE8CC7.4080900@double-you.de>	<46CEAB1B.9060908@garzik.org> <20070824144858.384b1040@the-village.bc.nu>
+Subject: Re: [PATCH] sata_mv: Test patch for Hightpoint RocketRaid 1740/1742
+Date: Sat, 01 Sep 2007 15:38:43 +0200
+Message-ID: <46D96B63.7050302@ans.pl>
+References: <20070709143841.133abb71@the-village.bc.nu>	<46B08F5F.9040500@garzik.org> <20070801164603.456f1540@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pigeon.axelspringer.pl ([195.177.210.68]:53710 "EHLO
+Received: from pigeon.axelspringer.pl ([195.177.210.68]:63301 "EHLO
 	mx1.axelspringer.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752658AbXIANq6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 09:46:58 -0400
-In-Reply-To: <20070824144858.384b1040@the-village.bc.nu>
+	with ESMTP id S1752599AbXIANua (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 09:50:30 -0400
+In-Reply-To: <20070801164603.456f1540@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Karim 'Kasi Mir' Senoucci <ks@double-you.de>, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-On 2007-08-24 15:48, Alan Cox wrote:
-> On Fri, 24 Aug 2007 05:55:39 -0400
+On 2007-08-01 17:46, Alan Cox wrote:
+> On Wed, 01 Aug 2007 09:49:19 -0400
 > Jeff Garzik <jeff@garzik.org> wrote:
 >=20
->> Karim 'Kasi Mir' Senoucci wrote:
->>> Alan Cox schrieb:
->>>>> in the sata_mv source. Should I add something like:
->>>>>
->>>>>         { PCI_VDEVICE(TTI, 0x2300), chip_604x }
+>> Alan Cox wrote:
+>>> Underneath all the HPT packaging, PCI identifiers, binary driver mo=
+dules
+>>> and stuff you find that ...
+>>>
+>>> Signed-off-by: Alan Cox <alan@redhat.com>
+>>>
+>>> --- drivers/ata/sata_mv.c~	2007-07-09 13:19:57.003052904 +0100
+>>> +++ drivers/ata/sata_mv.c	2007-07-09 13:19:57.004052752 +0100
+>>> @@ -573,6 +573,9 @@
+>>>  	{ PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
+>>>  	{ PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
+>>>  	{ PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
+>>> +	/* RocketRAID 1740/174x have different identifiers */
+>>> +	{ PCI_VDEVICE(TTI, 0x1740), chip_508x },
+>>> +	{ PCI_VDEVICE(TTI, 0x1742), chip_508x },
+>> Is this still a test patch, or can it go upstream?
 >=20
->> You need to use the sata_mv from kernel 2.6.23-rcX.
->>
->> Patching into older drivers isn't guaranteed to work.
->=20
-> May also be the actual chip on the 2300 is different to the older one=
-s
-> and isn't a 604x.
+> Upstream
 
-Indeed, it seems to be a 7042:
+Are you sure that 1740/1742 are 508x (GEN I)? According to these [1]=20
+pictures there may be a 6042 chipset (GEN IIe) placed onboard.
 
-http://www.highpoint-tech.com/image/products/SATAII/RR2300_Card_big.jpg
+[1] http://www.highpoint-tech.com/image/products/SATAII/RR1740_card_big=
+=2Ejpg
+http://www.highpoint-tech.com/image/products/eSATA/RR1742_card_big.jpg
 
 Best regards,
 
 				Krzysztof Ol=EAdzki
-
