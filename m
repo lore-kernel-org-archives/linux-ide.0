@@ -1,67 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: CF as IDE on ICH6M using libata
-Date: Sun, 02 Sep 2007 22:08:45 +0900
-Message-ID: <46DAB5DD.80807@gmail.com>
-References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Read Prefetch, Post Write on IDE chipsets
+Date: Sun, 2 Sep 2007 15:00:34 +0100
+Message-ID: <20070902150034.7a6713f5@the-village.bc.nu>
+References: <46DAB1DF.5050109@genesi-usa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:55282 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965116AbXIBNKJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 09:10:09 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1570979wah
-        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 06:10:08 -0700 (PDT)
-In-Reply-To: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34659 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752562AbXIBNwA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 09:52:00 -0400
+In-Reply-To: <46DAB1DF.5050109@genesi-usa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eddie Hung <eddie.hung@gmail.com>
+To: Matt Sealey <matt@genesi-usa.com>
 Cc: linux-ide@vger.kernel.org
 
-Eddie Hung wrote:
-> Hello everyone,
+On Sun, 02 Sep 2007 13:51:43 +0100
+Matt Sealey <matt@genesi-usa.com> wrote:
+
+> Hi guys,
 > 
-> In the hope of making myself a cheap SSD, I decided to replace my IDE
-> HDD on my IBM Thinkpad X41 (non tablet) with a generic CF-IDE adaptor,
-> and a Sandisk Extreme IV 4Gb CF, for reasonable prices off ebay. This
-> was partly influenced by the report that one X41 Tablet user had it
-> working successfully: http://forum.thinkpads.com/viewtopic.php?t=41568
-> (last post on that page)
+> Does anyone have any decent information on the purpose, performance potential
+> or perhaps quirks of the "read prefetch" and "post write" buffer features on
+> some IDE chipsets?
 > 
-> As some of you may know, the X41 uses a SATA controller, which goes
-> into a SATA-PATA bridge, and then connects to a PATA HDD. This is a
-> strange setup, and may go some distance as to explaining why it
-> doesn't work.
+> It doesn't look like any standard but at least is included in quite a few
+> of the libata drivers, and a lot of x86 BIOS control has toggles to try and
+> turn it on or off.
 > 
-> The first I tried was the Ubuntu Feisty LiveCD, which uses 2.6.20, and
-> libata picks the drive up correctly. A hdparm -I showed that the
-> device was currently running at mdma2 - which was not what I expected
-> - the Sandisk, as garnered from review websites, supports UDMA. A
-> quick hdparm -t also revealed that I was only getting about 6MB/s.
-> 
-> Nonetheless, I tried to partition the disk - at which point mkfs.ext3
-> froze. Looking at dmesg, I saw some timeout commands, looking
-> something like:
-> ata1: port is slow to respond, please be patient (Status 0xd0)
-> ata1: soft resetting port
-> ata1: ... exception ... res 40/00:00:00:00:00/00:00:00:00:00/a0 Emask
-> 0x4 (timeout)
+> But, what is it? I've never seen any documentation but which register to use
+> to toggle it.. no vendor recommendations to turn it on, it seems like a rather
+> secret feature..?
 
->From 2.6.22, please post the boot log and full error log (dmesg result)
-and the result of 'hdparm -I /dev/sda'.
+Chipset specific. Some public documentation discusses it for certain
+chips (eg the Intel ATA tuning guidelines). For others you may need the
+BIOS vendor manual or similar.
 
-I don't think the device supports UDMA.  Supported transfer modes are
-indicated in the IDENTIFY page (hdparm -I) and libata/ide would use UDMA
-if the device reports so.  There's no black magic there.
-
-Regarding MWDMA2 not working, are you sure that windows uses mwdma2?
-We've had quite some number of reports about broken mwdma2 and till now
-we thought those devices were broken and black listed them but it's also
-possible that mwdma2 mode programming or something else is broken in
-ata_piix.  If so, it really needs fixing.
-
-Thanks.
-
--- 
-tejun
+Alan
