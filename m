@@ -1,76 +1,133 @@
-From: "Eddie Hung" <eddie.hung@gmail.com>
-Subject: Re: CF as IDE on ICH6M using libata
-Date: Sun, 2 Sep 2007 20:14:52 +0100
-Message-ID: <6f9550040709021214p1c18078eg78e3fb1983d23560@mail.gmail.com>
-References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
-	 <20070902150423.75687a98@the-village.bc.nu>
-	 <6f9550040709021141m1a76ed37n291274b06a9875fe@mail.gmail.com>
-	 <20070902195806.3becceaa@the-village.bc.nu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 3/4] ide: make ide_rate_filter() also respect PIO and SW/MW DMA mode masks (take 2)
+Date: Sun, 2 Sep 2007 23:44:18 +0400
+Message-ID: <200709022344.18565.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:47957 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbXIBTOz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 15:14:55 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1173328fkz
-        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 12:14:53 -0700 (PDT)
-In-Reply-To: <20070902195806.3becceaa@the-village.bc.nu>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:2896 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750715AbXIBTla (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 15:41:30 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 02/09/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> > In my research on this issue, I do remember coming across an
-> > announcement you made not so long ago regarding the libata.pata_dma
-> > command - however because of my revelations with Windows detailed at
-> > the end of my reply to tejun, I am curious as to whether MWDMA is
-> > really DMA at all? I also believe it runs at about the same speed as
-> > the top PIO speeds too?
->
-> MWDMA is DMA but MWDMA2 and PIO4 use the same data transfer rates - the
-> DMA modes make it easier to offload the processing. In fact MWDMA isn't
-> really needed - the Cyrix CS5520 and some other chipsets can do DMA in
-> the chipset up to MWDMA while talking PIO4 to the device.
->
-> But to answer the question - there is a real difference electrically
-> between MWDMA2 and PIO4
->
-> > I also know that my SATA-PATA arrangement is hardly ideal - but the
-> > controller, using the original HDD, supports udma5 - so I am wondering
-> > why it does not detect, and use, that with the CF card - this brings
-> > me back to the question I originally posed and tejun answered - is
-> > there any way to force it to use UDMA4 - because I know it is
-> > supported by the card?
->
-> If it is offered by the card it should be automatically selected. Can you
-> mail me the hdparm identify data for the drive ?
-> >
-> > Also, the CF-IDE bridge is a cheap one (not that there were much
-> > choices) from ebay - and the documentation that comes with it states
-> > that it supports DMA - in which case is there any way I can verify
-> > that? What are the prerequisites for DMA support? (Do certain pins
-> > need to be connected, for example?)
->
-> For DMA certain pins must be connected correctly. For UDMA the entire
-> cable assembly including adapter must also meet very strict capacitance
-> and other loading requirements - few do, especially hung off the end of
-> cables.
->
->
+Make ide_rate_filter() also respect PIO/SWDMA/MWDMA mode masks.  While at it,
+make the udma_filter() method calls take precedence over using the mode masks.
 
-Hello Alan,
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-I sent a reply to the list with the data that tejun asked for before I
-replied to you - I guess you haven't got it (yet?). I'll forward it to
-you once I finish this e-mail.
+---
+Alas, the previous version of the patch wasn't even worth signing it off --
+the code had to be much trickier. The patch against the current Linus' tree and
+unfortunately I was able to only compile test it since that tree gives MODPOST
+warning and dies early on bootup. I'm hoping to give it more tesring when/if
+I have time... :-)
 
-The CF-IDE adaptor is plugged straight into the header - and as far as
-I can tell it doesn't do anything fancy (e.g. there are no ICs on
-there) - but simply maps the pins from the CF slot to the IDE
-connector. As such, its effect should be minimal...
+ drivers/ide/ide-dma.c |    7 +++---
+ drivers/ide/ide-lib.c |   57 ++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 39 insertions(+), 25 deletions(-)
 
-Eddie
+Index: linux-2.6/drivers/ide/ide-dma.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-dma.c
++++ linux-2.6/drivers/ide/ide-dma.c
+@@ -664,10 +664,11 @@ static unsigned int ide_get_mode_mask(id
+ 		if ((id->field_valid & 4) == 0)
+ 			break;
+ 
+-		mask = id->dma_ultra & hwif->ultra_mask;
+-
+ 		if (hwif->udma_filter)
+-			mask &= hwif->udma_filter(drive);
++			mask = hwif->udma_filter(drive);
++		else
++			mask = hwif->ultra_mask;
++		mask &= id->dma_ultra;
+ 
+ 		if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
+ 			mask &= 0x07;
+Index: linux-2.6/drivers/ide/ide-lib.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide-lib.c
++++ linux-2.6/drivers/ide/ide-lib.c
+@@ -75,38 +75,51 @@ EXPORT_SYMBOL(ide_xfer_verbose);
+  *
+  *	Given the available transfer modes this function returns
+  *	the best available speed at or below the speed requested.
+- *
+- *	FIXME: filter also PIO/SWDMA/MWDMA modes
+  */
+ 
+ u8 ide_rate_filter(ide_drive_t *drive, u8 speed)
+ {
+-#ifdef CONFIG_BLK_DEV_IDEDMA
+ 	ide_hwif_t *hwif = drive->hwif;
+-	u8 mask = hwif->ultra_mask, mode = XFER_MW_DMA_2;
++	u8 mask, base = speed & 0xf8, bit = 1 << (speed & 0x07);
+ 
+-	if (hwif->udma_filter)
+-		mask = hwif->udma_filter(drive);
++	switch (base) {
++#ifdef CONFIG_BLK_DEV_IDEDMA
++	case XFER_UDMA_0:
++		mask = hwif->udma_filter ? hwif->udma_filter(drive) :
++					   hwif->ultra_mask;
+ 
+-	/*
+-	 * TODO: speed > XFER_UDMA_2 extra check is needed to avoid false
+-	 * cable warning from eighty_ninty_three(), moving ide_rate_filter()
+-	 * calls from ->speedproc to core code will make this hack go away
+-	 */
+-	if (speed > XFER_UDMA_2) {
+-		if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
++		/*
++		 * TODO: if speed > XFER_UDMA_2, an extra check is needed to
++		 * avoid a false cable warning from eighty_ninty_three() --
++		 * moving ide_rate_filter() calls from ->speedproc to core
++		 * code will make this hack go away...
++		 */
++		if (speed > XFER_UDMA_2 && (mask & 0x78) &&
++		    eighty_ninty_three(drive) == 0)
+ 			mask &= 0x07;
+-	}
+-
+-	if (mask)
+-		mode = fls(mask) - 1 + XFER_UDMA_0;
+ 
+-//	printk("%s: mode 0x%02x, speed 0x%02x\n", __FUNCTION__, mode, speed);
+-
+-	return min(speed, mode);
+-#else /* !CONFIG_BLK_DEV_IDEDMA */
+-	return min(speed, (u8)XFER_PIO_4);
++		if (mask & bit)
++			break;
++		base = XFER_MW_DMA_0;
++		/* Fall thru */
++	case XFER_MW_DMA_0:
++		if (hwif->mwdma_mask & bit)
++			break;
++		base = XFER_SW_DMA_0;
++		/* Fall thru */
++	case XFER_SW_DMA_0:
++		if (hwif->swdma_mask & bit)
++			break;
++		base = XFER_PIO_0;
++		/* Fall thru */
+ #endif /* CONFIG_BLK_DEV_IDEDMA */
++	case XFER_PIO_0:
++		if (hwif->pio_mask & bit)
++			break;
++	default:
++		BUG();
++	}
++	return base | bit;
+ }
+ 
+ EXPORT_SYMBOL(ide_rate_filter);
+
