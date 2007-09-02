@@ -1,37 +1,33 @@
-From: Satyam Sharma <satyam@infradead.org>
-Subject: Re: [PATCH] drivers/firmware: const-ify DMI API and internals
-Date: Sun, 2 Sep 2007 02:51:53 +0530 (IST)
-Message-ID: <alpine.LFD.0.999.0709020249190.20781@enigma.security.iitk.ac.in>
-References: <20070901142719.GA31990@havoc.gtf.org>
- <200709011833.08581.ak@suse.de>
+From: Alex <lex.garcia@gmail.com>
+Subject: Serial ATA (SATA) shutdown info
+Date: Sun, 02 Sep 2007 03:37:38 +0200
+Message-ID: <46DA13E2.7090405@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37464 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553AbXIAVJX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 17:09:23 -0400
-In-Reply-To: <200709011833.08581.ak@suse.de>
+Received: from fk-out-0910.google.com ([209.85.128.187]:64659 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932749AbXIBBh6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 1 Sep 2007 21:37:58 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1010602fkz
+        for <linux-ide@vger.kernel.org>; Sat, 01 Sep 2007 18:37:56 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, len.brown@intel.com, linux-ide@vger.kernel.org, dz@debian.org, minyard@acm.org, j.w.r.degoede@hhs.nl, lm-sensors@lm-sensors.org, rlove@rlove.org, bzolnier@gmail.com, dmitry.torokhov@gmail.com, mzxreary@0pointer.de, stelian@popies.net, ibm-acpi@hmh.eng.br, ambx1@neo.rr.com, gimli@dark-green.com
+To: linux-ide@vger.kernel.org
 
+Hi!
 
+I'm Debian Linux distro user and when my computer go down it was saying to 
+update my shutdown utility and this url: http://linux-ata.org/shutdown.html
 
-On Sat, 1 Sep 2007, Andi Kleen wrote:
-> 
-> >     And if we're really lucky, this might enable some additional
-> >     optimizations on the part of the compiler.
-> 
-> Only if the kernel was compiled C++. C compilers generally ignore constness
-> for optimization purposes because it can be so easily casted away.
+I wrote this e-mail to you to inform that when I update the Debian distro 
+yesterday (01-Sep-2007) the message disappears, if I'm not wrong Debian distro 
+have now update the shutdown. If you confirm my words, can you update the part 
+of the web that say there isn't any distro updated yet? Debian's user will be 
+happy to update they distro's simply with apt-get utility ;)
 
-???
+Thanks!
 
-I can't speak for the exact const-ification that Jeff did in this
-particular patch, but if you intended your comment up there to be a
-blanket statement, then you're totally and horribly wrong. There's a
-whole plethora of optimizations that gcc does when dealing with const-
-marked data. If you've seen / experienced otherwise, please post some
-testcases.
+Alex
+http://counter.li.org/cgi-bin/certificate.cgi/411619
