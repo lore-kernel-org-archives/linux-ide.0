@@ -1,133 +1,156 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 3/4] ide: make ide_rate_filter() also respect PIO and SW/MW DMA mode masks (take 2)
-Date: Sun, 2 Sep 2007 23:44:18 +0400
-Message-ID: <200709022344.18565.sshtylyov@ru.mvista.com>
+Subject: [PATCH 2/4] hpt366: MWDMA filter for SATA cards
+Date: Mon, 3 Sep 2007 00:19:22 +0400
+Message-ID: <200709030019.22732.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:2896 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:2928 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750715AbXIBTla (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 15:41:30 -0400
+	by vger.kernel.org with ESMTP id S1750715AbXIBUQf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 16:16:35 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Make ide_rate_filter() also respect PIO/SWDMA/MWDMA mode masks.  While at it,
-make the udma_filter() method calls take precedence over using the mode masks.
+The Marvell bridge chips used on HighPoint SATA cards do not seem to support
+the MWDMA modes (at least that caould be seen in their so-called drivers :-),
+so the driver needs to account for this -- to achieve this:
+
+- add mdma_filter() method from the original patch by Bartlomiej Zolnierkewicz
+  with his consent, also adding the method callout to ide_rate_filter();
+
+- installed the method for all chips to only return empty mask if a SATA drive
+  is detected onHPT372{AN]/374 chips...
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-Alas, the previous version of the patch wasn't even worth signing it off --
-the code had to be much trickier. The patch against the current Linus' tree and
-unfortunately I was able to only compile test it since that tree gives MODPOST
-warning and dies early on bootup. I'm hoping to give it more tesring when/if
-I have time... :-)
+This patch against the current Linus' tree and unfortunately I was able to only
+compile test it since that tree gives MODPOST warning and dies early on bootup.
+Will hopefully try to test if/when I have time... :-)
 
- drivers/ide/ide-dma.c |    7 +++---
- drivers/ide/ide-lib.c |   57 ++++++++++++++++++++++++++++++--------------------
- 2 files changed, 39 insertions(+), 25 deletions(-)
+ drivers/ide/ide-dma.c    |    9 +++++++--
+ drivers/ide/ide-lib.c    |    4 +++-
+ drivers/ide/ide.c        |    1 +
+ drivers/ide/pci/hpt366.c |   23 +++++++++++++++++++++--
+ include/linux/ide.h      |    1 +
+ 5 files changed, 33 insertions(+), 5 deletions(-)
 
 Index: linux-2.6/drivers/ide/ide-dma.c
 ===================================================================
 --- linux-2.6.orig/drivers/ide/ide-dma.c
 +++ linux-2.6/drivers/ide/ide-dma.c
-@@ -664,10 +664,11 @@ static unsigned int ide_get_mode_mask(id
- 		if ((id->field_valid & 4) == 0)
- 			break;
- 
--		mask = id->dma_ultra & hwif->ultra_mask;
--
- 		if (hwif->udma_filter)
--			mask &= hwif->udma_filter(drive);
-+			mask = hwif->udma_filter(drive);
-+		else
-+			mask = hwif->ultra_mask;
-+		mask &= id->dma_ultra;
- 
- 		if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
+@@ -674,8 +674,13 @@ static unsigned int ide_get_mode_mask(id
  			mask &= 0x07;
+ 		break;
+ 	case XFER_MW_DMA_0:
+-		if (id->field_valid & 2)
+-			mask = id->dma_mword & hwif->mwdma_mask;
++		if ((id->field_valid & 2) == 0)
++			break;
++		if (hwif->mdma_filter)
++			mask = hwif->mdma_filter(drive);
++		else
++			mask = hwif->mwdma_mask;
++		mask &= id->dma_mword;
+ 		break;
+ 	case XFER_SW_DMA_0:
+ 		if (id->field_valid & 2) {
 Index: linux-2.6/drivers/ide/ide-lib.c
 ===================================================================
 --- linux-2.6.orig/drivers/ide/ide-lib.c
 +++ linux-2.6/drivers/ide/ide-lib.c
-@@ -75,38 +75,51 @@ EXPORT_SYMBOL(ide_xfer_verbose);
+@@ -103,7 +103,9 @@ u8 ide_rate_filter(ide_drive_t *drive, u
+ 		base = XFER_MW_DMA_0;
+ 		/* Fall thru */
+ 	case XFER_MW_DMA_0:
+-		if (hwif->mwdma_mask & bit)
++		mask = hwif->mdma_filter ? hwif->mdma_filter(drive) :
++					   hwif->mwdma_mask;
++		if (mask & bit)
+ 			break;
+ 		base = XFER_SW_DMA_0;
+ 		/* Fall thru */
+Index: linux-2.6/drivers/ide/ide.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/ide.c
++++ linux-2.6/drivers/ide/ide.c
+@@ -398,6 +398,7 @@ static void ide_hwif_restore(ide_hwif_t 
+ 
+ 	hwif->tuneproc			= tmp_hwif->tuneproc;
+ 	hwif->speedproc			= tmp_hwif->speedproc;
++	hwif->mdma_filter		= tmp_hwif->mdma_filter;
+ 	hwif->udma_filter		= tmp_hwif->udma_filter;
+ 	hwif->selectproc		= tmp_hwif->selectproc;
+ 	hwif->reset_poll		= tmp_hwif->reset_poll;
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.12	Aug 25, 2007
++ * linux/drivers/ide/pci/hpt366.c		Version 1.13	Aug 22, 2007
   *
-  *	Given the available transfer modes this function returns
-  *	the best available speed at or below the speed requested.
-- *
-- *	FIXME: filter also PIO/SWDMA/MWDMA modes
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -114,7 +114,7 @@
+  *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
+  *   the register setting lists into the table indexed by the clock selected
+  * - set the correct hwif->ultra_mask for each individual chip
+- * - add UltraDMA mode filtering for the HPT37[24] based SATA cards
++ * - add Ultra and MW DMA mode filtering for the HPT37[24] based SATA cards
+  *	Sergei Shtylyov, <sshtylyov@ru.mvista.com> or <source@mvista.com>
   */
  
- u8 ide_rate_filter(ide_drive_t *drive, u8 speed)
- {
--#ifdef CONFIG_BLK_DEV_IDEDMA
- 	ide_hwif_t *hwif = drive->hwif;
--	u8 mask = hwif->ultra_mask, mode = XFER_MW_DMA_2;
-+	u8 mask, base = speed & 0xf8, bit = 1 << (speed & 0x07);
- 
--	if (hwif->udma_filter)
--		mask = hwif->udma_filter(drive);
-+	switch (base) {
-+#ifdef CONFIG_BLK_DEV_IDEDMA
-+	case XFER_UDMA_0:
-+		mask = hwif->udma_filter ? hwif->udma_filter(drive) :
-+					   hwif->ultra_mask;
- 
--	/*
--	 * TODO: speed > XFER_UDMA_2 extra check is needed to avoid false
--	 * cable warning from eighty_ninty_three(), moving ide_rate_filter()
--	 * calls from ->speedproc to core code will make this hack go away
--	 */
--	if (speed > XFER_UDMA_2) {
--		if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
-+		/*
-+		 * TODO: if speed > XFER_UDMA_2, an extra check is needed to
-+		 * avoid a false cable warning from eighty_ninty_three() --
-+		 * moving ide_rate_filter() calls from ->speedproc to core
-+		 * code will make this hack go away...
-+		 */
-+		if (speed > XFER_UDMA_2 && (mask & 0x78) &&
-+		    eighty_ninty_three(drive) == 0)
- 			mask &= 0x07;
--	}
--
--	if (mask)
--		mode = fls(mask) - 1 + XFER_UDMA_0;
- 
--//	printk("%s: mode 0x%02x, speed 0x%02x\n", __FUNCTION__, mode, speed);
--
--	return min(speed, mode);
--#else /* !CONFIG_BLK_DEV_IDEDMA */
--	return min(speed, (u8)XFER_PIO_4);
-+		if (mask & bit)
-+			break;
-+		base = XFER_MW_DMA_0;
-+		/* Fall thru */
-+	case XFER_MW_DMA_0:
-+		if (hwif->mwdma_mask & bit)
-+			break;
-+		base = XFER_SW_DMA_0;
-+		/* Fall thru */
-+	case XFER_SW_DMA_0:
-+		if (hwif->swdma_mask & bit)
-+			break;
-+		base = XFER_PIO_0;
-+		/* Fall thru */
- #endif /* CONFIG_BLK_DEV_IDEDMA */
-+	case XFER_PIO_0:
-+		if (hwif->pio_mask & bit)
-+			break;
-+	default:
-+		BUG();
-+	}
-+	return base | bit;
+@@ -562,6 +562,24 @@ static u8 hpt3xx_udma_filter(ide_drive_t
+ 	return check_in_drive_list(drive, bad_ata33) ? 0x00 : mask;
  }
  
- EXPORT_SYMBOL(ide_rate_filter);
++static u8 hpt3xx_mdma_filter(ide_drive_t *drive)
++{
++	ide_hwif_t *hwif	= HWIF(drive);
++	struct hpt_info *info	= pci_get_drvdata(hwif->pci_dev);
++
++	switch (info->chip_type) {
++	case HPT372 :
++	case HPT372A:
++	case HPT372N:
++	case HPT374 :
++		if (ide_dev_is_sata(drive->id))
++			return 0x00;
++		/* Fall thru */
++	default:
++		return 0x07;
++	}
++}
++
+ static u32 get_speed_setting(u8 speed, struct hpt_info *info)
+ {
+ 	int i;
+@@ -1257,6 +1275,7 @@ static void __devinit init_hwif_hpt366(i
+ 	hwif->busproc		= &hpt3xx_busproc;
+ 
+ 	hwif->udma_filter	= &hpt3xx_udma_filter;
++	hwif->mdma_filter	= &hpt3xx_mdma_filter;
+ 
+ 	/*
+ 	 * HPT3xxN chips have some complications:
+Index: linux-2.6/include/linux/ide.h
+===================================================================
+--- linux-2.6.orig/include/linux/ide.h
++++ linux-2.6/include/linux/ide.h
+@@ -723,6 +723,7 @@ typedef struct hwif_s {
+ 	/* driver soft-power interface */
+ 	int	(*busproc)(ide_drive_t *, int);
+ #endif
++	u8 (*mdma_filter)(ide_drive_t *);
+ 	u8 (*udma_filter)(ide_drive_t *);
+ 
+ 	void (*ata_input_data)(ide_drive_t *, void *, u32);
 
