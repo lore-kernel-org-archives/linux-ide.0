@@ -1,79 +1,69 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: Serial ATA (SATA) shutdown info
-Date: Sun, 02 Sep 2007 13:11:05 +0100
-Message-ID: <46DAA859.5000804@genesi-usa.com>
-References: <46DA13E2.7090405@gmail.com> <46DAA15C.4060505@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata critical fixes
+Date: Sun, 2 Sep 2007 08:12:16 -0400
+Message-ID: <20070902121216.GA32010@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:3588 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964789AbXIBMJd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 08:09:33 -0400
-In-Reply-To: <46DAA15C.4060505@gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:32998 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756909AbXIBMMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Sep 2007 08:12:17 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alex <lex.garcia@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-I think Debian updated the shutdown utility in experimental/testing alr=
-eady
-(and Gentoo seems to have a patch in portage, but it's masked). Every d=
-istro
-is doing a different thing, but none of the support is anything people =
-are
-going to push to the current set of systems.
 
-Part of the problem is everyone is basing "last year"'s distros off "la=
-st
-year"'s kernels (2.6.18, 2.6.19, 2.6.20) which do not have the shutdown
-changes. If you update to the very latest kernel, you are in fact on yo=
-ur
-own.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
 
-Ubuntu Gutsy (about a month away), openSUSE 10.3 (about a month away) a=
-nd
-the next Fedora Core work fine, as they have a need to (affected kernel
-and userland combination) but current distros like Etch, Hoary, 10.2 an=
-d
-=46edora Core 7 just have no reason to update for the vast majority of
-users and their unaffected standard kernels.
+to receive the following updates:
 
---=20
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+ drivers/ata/ata_piix.c |    5 ++++-
+ drivers/ata/sata_via.c |    2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Alex wrote:
-> I'm sorry, but another time the message appears, I don't understand,=20
-> sorry but the shutdown isn't updated at Debian.
->=20
-> Alex
-> http://counter.li.org/cgi-bin/certificate.cgi/411619
->=20
-> Alex escribi=C3=B3:
->> Hi!
->>
->> I'm Debian Linux distro user and when my computer go down it was=20
->> saying to update my shutdown utility and this url:=20
->> http://linux-ata.org/shutdown.html
->>
->> I wrote this e-mail to you to inform that when I update the Debian=20
->> distro yesterday (01-Sep-2007) the message disappears, if I'm not=20
->> wrong Debian distro have now update the shutdown. If you confirm my=20
->> words, can you update the part of the web that say there isn't any=20
->> distro updated yet? Debian's user will be happy to update they=20
->> distro's simply with apt-get utility ;)
->>
->> Thanks!
->>
->> Alex
->> http://counter.li.org/cgi-bin/certificate.cgi/411619
->>
->=20
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jeff Garzik (1):
+      [libata] ata_piix: properly terminate DMI system list
+
+Ondrej Zary (1):
+      Fix sata_via write errors on PATA drive connected to VT6421
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index e40c94f..3b8bf18 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -955,7 +955,8 @@ static int piix_broken_suspend(void)
+ 				DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
+ 			},
+ 		},
+-		{ }
++
++		{ }	/* terminate list */
+ 	};
+ 	static const char *oemstrs[] = {
+ 		"Tecra M3,",
+@@ -1187,6 +1188,8 @@ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
+ 				DMI_MATCH(DMI_PRODUCT_NAME, "M570U"),
+ 			},
+ 		},
++
++		{ }	/* terminate list */
+ 	};
+ 	u32 iocfg;
+ 
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index a4e6317..57fd30d 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -371,7 +371,7 @@ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	static const u8 udma_bits[] = { 0xEE, 0xE8, 0xE6, 0xE4, 0xE2, 0xE1, 0xE0, 0xE0 };
+-	pci_write_config_byte(pdev, PATA_UDMA_TIMING, udma_bits[adev->pio_mode - XFER_UDMA_0]);
++	pci_write_config_byte(pdev, PATA_UDMA_TIMING, udma_bits[adev->dma_mode - XFER_UDMA_0]);
+ }
+ 
+ static const unsigned int svia_bar_sizes[] = {
