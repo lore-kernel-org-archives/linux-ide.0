@@ -1,52 +1,32 @@
-From: Alex <lex.garcia@gmail.com>
-Subject: Re: Serial ATA (SATA) shutdown info
-Date: Sun, 02 Sep 2007 13:41:16 +0200
-Message-ID: <46DAA15C.4060505@gmail.com>
-References: <46DA13E2.7090405@gmail.com>
+From: "n" <xellos@bluebottle.com>
+Subject: libata / pata drivers and smart , pata_via . pata_pdc202xx_old
+Date: Sun, 2 Sep 2007 04:58:11 -0700
+Message-ID: <200709021158.l82BwCcN013983@mi0.bluebottle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:23876 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964950AbXIBLlg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 07:41:36 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1611038mue
-        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 04:41:35 -0700 (PDT)
-In-Reply-To: <46DA13E2.7090405@gmail.com>
+Received: from mi0.bluebottle.com ([206.188.25.15]:35218 "EHLO
+	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965304AbXIBL6M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 07:58:12 -0400
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id l82BwCcN013983
+	for <linux-ide@vger.kernel.org>; Sun, 2 Sep 2007 04:58:12 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, patrizio.bassi@gmail.com
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-I'm sorry, but another time the message appears, I don't understand, so=
-rry but=20
-the shutdown isn't updated at Debian.
+is it possible to get the new libata drivers (pata_via . pata_pdc202xx_old) 
+to support smart?
+i was looking at smartcrl -a and it says Device does not support SMART even 
+though it does.
 
-Alex
-http://counter.li.org/cgi-bin/certificate.cgi/411619
-
-Alex escribi=F3:
-> Hi!
->=20
-> I'm Debian Linux distro user and when my computer go down it was sayi=
-ng=20
-> to update my shutdown utility and this url:=20
-> http://linux-ata.org/shutdown.html
->=20
-> I wrote this e-mail to you to inform that when I update the Debian=20
-> distro yesterday (01-Sep-2007) the message disappears, if I'm not wro=
-ng=20
-> Debian distro have now update the shutdown. If you confirm my words, =
-can=20
-> you update the part of the web that say there isn't any distro update=
-d=20
-> yet? Debian's user will be happy to update they distro's simply with=20
-> apt-get utility ;)
->=20
-> Thanks!
->=20
-> Alex
-> http://counter.li.org/cgi-bin/certificate.cgi/411619
->=20
+----------------------------------------------------------------------
+Get a free email address with REAL anti-spam protection.
+http://www.bluebottle.com/tag/1
 
