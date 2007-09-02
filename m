@@ -1,69 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata critical fixes
-Date: Sun, 2 Sep 2007 08:12:16 -0400
-Message-ID: <20070902121216.GA32010@havoc.gtf.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata / pata drivers and smart , pata_via . pata_pdc202xx_old
+Date: Sun, 2 Sep 2007 13:38:00 +0100
+Message-ID: <20070902133800.7c188e98@the-village.bc.nu>
+References: <200709021158.l82BwCcR013983@mi0.bluebottle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:32998 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756909AbXIBMMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Sep 2007 08:12:17 -0400
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54665 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965480AbXIBM3t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 08:29:49 -0400
+In-Reply-To: <200709021158.l82BwCcR013983@mi0.bluebottle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: n <xellos@bluebottle.com>
+Cc: patrizio.bassi@gmail.com, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+On Sun, 2 Sep 2007 04:58:11 -0700
+"n" <xellos@bluebottle.com> wrote:
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+> is it possible to get the new libata drivers (pata_via . pata_pdc202xx_old) 
+> to support smart?
+> i was looking at smartcrl -a and it says Device does not support SMART even 
+> though it does.
 
-to receive the following updates:
-
- drivers/ata/ata_piix.c |    5 ++++-
- drivers/ata/sata_via.c |    2 +-
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-Jeff Garzik (1):
-      [libata] ata_piix: properly terminate DMI system list
-
-Ondrej Zary (1):
-      Fix sata_via write errors on PATA drive connected to VT6421
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index e40c94f..3b8bf18 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -955,7 +955,8 @@ static int piix_broken_suspend(void)
- 				DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
- 			},
- 		},
--		{ }
-+
-+		{ }	/* terminate list */
- 	};
- 	static const char *oemstrs[] = {
- 		"Tecra M3,",
-@@ -1187,6 +1188,8 @@ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
- 				DMI_MATCH(DMI_PRODUCT_NAME, "M570U"),
- 			},
- 		},
-+
-+		{ }	/* terminate list */
- 	};
- 	u32 iocfg;
- 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index a4e6317..57fd30d 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -371,7 +371,7 @@ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	static const u8 udma_bits[] = { 0xEE, 0xE8, 0xE6, 0xE4, 0xE2, 0xE1, 0xE0, 0xE0 };
--	pci_write_config_byte(pdev, PATA_UDMA_TIMING, udma_bits[adev->pio_mode - XFER_UDMA_0]);
-+	pci_write_config_byte(pdev, PATA_UDMA_TIMING, udma_bits[adev->dma_mode - XFER_UDMA_0]);
- }
- 
- static const unsigned int svia_bar_sizes[] = {
+They support smart. You may need a newer smartctl or to use different
+options
