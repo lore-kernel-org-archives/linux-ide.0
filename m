@@ -1,53 +1,73 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/4] hpt366: MWDMA filter for SATA cards
-Date: Mon, 03 Sep 2007 00:25:52 +0400
-Message-ID: <46DB1C50.2020205@ru.mvista.com>
-References: <200709030019.22732.sshtylyov@ru.mvista.com>
+From: Kantor Zsolt <kantorzsolt@yahoo.com>
+Subject: (unknown)
+Date: Sun, 2 Sep 2007 14:24:59 -0700 (PDT)
+Message-ID: <686098.41553.qm@web35404.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:54548 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750816AbXIBUXF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 16:23:05 -0400
-In-Reply-To: <200709030019.22732.sshtylyov@ru.mvista.com>
+Received: from web35404.mail.mud.yahoo.com ([66.163.179.113]:42450 "HELO
+	web35404.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752888AbXIBVZA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 17:25:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Hi, I want get the information from the hard drive via ioctl command. I want to use the HDIO_DRIVE
+_TASK command not the HDIO_DRIVE_CMD. With the HDIO_DRIVE _TASK the function returns 0 thats ok,
+but no data is in the additional 512 unsigned char array. Here is the code:
 
-    The patch was 4/4 of course. :-<
-     Probably I was too esctatic about the code. ;-)
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/hdreg.h>
 
-> The Marvell bridge chips used on HighPoint SATA cards do not seem to support
-> the MWDMA modes (at least that caould be seen in their so-called drivers :-),
-> so the driver needs to account for this -- to achieve this:
+#define SIZE 520
 
-> - add mdma_filter() method from the original patch by Bartlomiej Zolnierkewicz
->   with his consent, also adding the method callout to ide_rate_filter();
+int main ()
+{
+int fd, i;
+	unsigned char args[SIZE]; 
+	
+	for (i = 0; i < SIZE; i++)
+		 args[i] = 0;
+ 
+  // prerequisites DRDY set to 1
+  
+  args[0] = 0xEC;	   //COMMAND
+ 	//args[1] = 0xD0;	   //FEATURE
+ //args[2] = 0x1;   	//NSECTOR
+	//args[3] =  0x1;	   //SECTOR
+	//args[4] = 0x4F;	   //LCYL
+	//args[5] = 0xC2;	   //HCYL
+	//args[6] = 64;	     //SELECT
+	args[7] = 0xff;
+	
+ 	fd = open ("/dev/hda", O_RDONLY);
 
-> - installed the method for all chips to only return empty mask if a SATA drive
->   is detected onHPT372{AN]/374 chips...
+	printf ("%d\n", ioctl (fd, HDIO_DRIVE_TASK, &args));
 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+	
+	for (i = 0; i < SIZE; i++)
+		{
+			if (i == 7)
+				puts ("\ndata:");	
+			printf ("%X|", args[i]);
+		}
+	
+	
+	close (fd);
+	
+	puts ("");
+	
+	return (0);
+}
 
-> ---
-> This patch against the current Linus' tree and unfortunately I was able to only
-> compile test it since that tree gives MODPOST warning and dies early on bootup.
-> Will hopefully try to test if/when I have time... :-)
 
-> Index: linux-2.6/drivers/ide/pci/hpt366.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ide/pci/hpt366.c
-> +++ linux-2.6/drivers/ide/pci/hpt366.c
-> @@ -1,5 +1,5 @@
->  /*
-> - * linux/drivers/ide/pci/hpt366.c		Version 1.12	Aug 25, 2007
-> + * linux/drivers/ide/pci/hpt366.c		Version 1.13	Aug 22, 2007
-
-    Errr... and version shuold Aug 02 -- thought I've fixed that. :-/
-
-MBR, Sergei
+       
+____________________________________________________________________________________
+Got a little couch potato? 
+Check out fun summer activities for kids.
+http://search.yahoo.com/search?fr=oni_on_mail&p=summer+activities+for+kids&cs=bz 
