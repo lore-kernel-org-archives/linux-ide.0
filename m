@@ -1,41 +1,69 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: libata not working for sis5533
-Date: Mon, 03 Sep 2007 21:54:42 +0200
-Message-ID: <46DC6682.7070400@gmail.com>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com> <20070902114032.7dbfb21a@the-village.bc.nu> <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
-Reply-To: patrizio.bassi@gmail.com
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Mon, 3 Sep 2007 13:34:41 -0700
+Message-ID: <20070903203441.GF23498@curie-int.orbis-terrarum.net>
+References: <46DC62E4.8050901@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ISKrrfpKsPiF35CV"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:29353 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251AbXICTyr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 15:54:47 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so152776ugc
-        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 12:54:46 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
+Received: from b01.ext.isohunt.com ([208.71.112.51]:36856 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753257AbXICUef (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 16:34:35 -0400
+Content-Disposition: inline
+In-Reply-To: <46DC62E4.8050901@sauce.co.nz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@computergmbh.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Richard Scobie <richard@sauce.co.nz>, linux-ide@vger.kernel.org
 
-Jan Engelhardt ha scritto:
-> On Sep 2 2007 11:40, Alan Cox wrote:
->   
->>> i've been out for a week, but found no notice, did i lost any email or
->>> no activity on this issue?
->>>       
->> I tagged it onto the obscure IDE report pile. It doesn't contain any
->> really useful information and its probably not an IDE layer bug as of
->> itself. But its on the todo list for further investigation and to see if
->> patterns emerge
->>     
->
-> I shall give this a spin too, since I happen to have sis5513.
->
->   
 
-oops i just noticed i made a typo in the subject...5513 for me too
+--ISKrrfpKsPiF35CV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Patrizio
+On Tue, Sep 04, 2007 at 07:39:16AM +1200, Richard Scobie wrote:
+>  > Yeah, that seems to be the hardware limit and is consistent with what =
+> I=20
+>  hear from non-linux people too.
+>=20
+>  My comment earlier regarding "broken silicon" was based on comments here=
+ and=20
+>  reports from Mac users and only pertained to the 3132.
+>=20
+>  For some reasonably impressive numbers using the 3124, along with the 37=
+26=20
+>  PM on OSX, have a look at:
+>  http://www.amug.org/amug-web/html/amug/reviews/articles/addonics/adsa3gp=
+x8-4em/
+The single PMP numbers they have (under "Addonics ADSA3GPX8-4EM Striped RAI=
+D Set
+Performance Comparison") has Write=3D211MB/sec Read=3D231MB/sec.
+
+However I don't see any discussion of what PMP enclosure they used :-(.
+
+Abybody got their hands on one of those Addonics controllers so we can comp=
+are
+to other 3132/3124 cards?
+
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Infra Guy
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--ISKrrfpKsPiF35CV
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFG3G/hPpIsIjIzwiwRAvv6AKC3UbWQoJ7KCTNUplmJ8gsotL5ppwCffJ7z
+bmPcMpHHRgOrG+bS9SMclM8=
+=xIWf
+-----END PGP SIGNATURE-----
+
+--ISKrrfpKsPiF35CV--
