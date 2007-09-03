@@ -1,38 +1,36 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: sata_promise: port is slow to respond, reset failed
-Date: Mon, 3 Sep 2007 10:11:12 +0200 (MEST)
-Message-ID: <200709030811.l838BC9a026315@harpo.it.uu.se>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:35550 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206AbXICILR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Sep 2007 04:11:17 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH resubmit] /drivers/ata ioremap returncode check
+Date: Mon, 03 Sep 2007 17:29:57 +0900
+Message-ID: <46DBC605.9040401@gmail.com>
+References: <648310.70195.qm@web44903.mail.sp1.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <648310.70195.qm@web44903.mail.sp1.yahoo.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: postfail@hushmail.com
+Cc: brandon@ifup.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@how.dk, linux-ide@vger.kernel.org, mikpe@it.uu.se
 
-On Mon, 03 Sep 2007 01:04:08 +0200, Peter Favrholdt wrote:
-> Hi Mikael Pettersson wrote:
-> > I'm easily able to reproduce this problem on my sata_promise test rig.
-> > Using 2.6.23-rc5 to dd read a single Seagate disk on a SATA300 TX4 card
-> > quickly fails as Peter described.
-> > 
-> > Applying the 1.5Gbps patch to the driver appears to make things stable.
-> > 
-> > Those SATAII chips really don't seem to like 3Gbps mode. Or else we're
-> > missing some critical documentation on how to make them work.
+Scott Thompson wrote:
+> Patchset against 2.6.23-rc3.  corrects missing ioremap return 
+> checks, resending after fixing for documentation making changes suggested...
 > 
-> The funny thing is: I have the exact same adapter and disks in a Dell 
-> PE1800 server. This doesn't show any errors.
-> 
-> Only difference is the card is in a PCI-X slot and the server is running
-> Linux 2.6.19.5.
+> As for suggestions, I did fix the {} that weren't needed.  I did not add in a
+> "printk" err or warn statement as the rest of the module does not contain these
+> messages.  When auditing (as I am for ioremap checking here) I am attempting
+> to keep changes "in the style of their surroundings".  Otherwise it's massive
+> scope screep on these patches.
+>  
+> Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
 
-I assume the PE1800 has some Intel chipset? Which one?
-And the machine that does have problems, what chipset does it have?
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-I'm actually beginning to think there's some PCI compatibility breakage
-somewhere, as I too see sata_promise working fine in some machines but
-not in others. Alas, my knowledge of PCI tweakables is close to nil.
+It would be better to start the subject line with pata_ixp4xx_cf: but
+maybe Jeff can fix it up while applying.
 
-/Mikael
+Thanks.
+
+-- 
+tejun
