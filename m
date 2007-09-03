@@ -1,207 +1,154 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH REGENERATED] ahci: reimplement port_map handling
-Date: Mon, 3 Sep 2007 12:44:57 +0900
-Message-ID: <20070903034457.GE16890@htj.dyndns.org>
-References: <20070720085934.GD22374@htj.dyndns.org> <46A0A5C4.1050808@garzik.org> <46A0A85D.6000300@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/7] blk_end_request: add new request completion
+	interface
+Date: Mon, 3 Sep 2007 09:45:45 +0200
+Message-ID: <20070903074545.GH4253@kernel.dk>
+References: <20070831.184112.45519768.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:43256 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbXICDpF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 23:45:05 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so857263rvb
-        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 20:45:05 -0700 (PDT)
+Received: from brick.kernel.dk ([87.55.233.238]:25159 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752278AbXICHuD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Sep 2007 03:50:03 -0400
 Content-Disposition: inline
-In-Reply-To: <46A0A85D.6000300@gmail.com>
+In-Reply-To: <20070831.184112.45519768.k-ueda@ct.jp.nec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 
-Reimplement port_map handling such that
+On Fri, Aug 31 2007, Kiyoshi Ueda wrote:
+> This patch adds 2 new interfaces for request completion:
+>   o blk_end_request()   : called without queue lock
+>   o __blk_end_request() : called with queue lock held
+> 
+> Some device drivers call some generic functions below between
+> end_that_request_{first/chunk} and end_that_request_last().
+>   o add_disk_randomness()
+>   o blk_queue_end_tag()
+>   o blkdev_dequeue_request()
+> These are called in the blk_end_request() as a part of generic
+> request completion.
+> So all device drivers become to call above functions.
+> 
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> ---
+>  block/ll_rw_blk.c      |   82 +++++++++++++++++++++++++++++++++++++++++++++++++ include/linux/blkdev.h |    2 +
+>  2 files changed, 84 insertions(+)
+> 
+> diff -rupN 2.6.23-rc3-mm1/block/ll_rw_blk.c 01-blkendreq-interface/block/ll_rw_blk.c
+> --- 2.6.23-rc3-mm1/block/ll_rw_blk.c	2007-08-22 18:54:03.000000000 -0400
+> +++ 01-blkendreq-interface/block/ll_rw_blk.c	2007-08-23 17:19:20.000000000 -0400
+> @@ -3669,6 +3669,88 @@ void end_request(struct request *req, in
+>  
+>  EXPORT_SYMBOL(end_request);
+>  
+> +/**
+> + * ____blk_end_request - Generic end_io function to complete a request.
+> + * @rq:           the request being processed
+> + * @uptodate:     1 for success, 0 for I/O error, < 0 for specific error
+> + * @nr_bytes:     number of bytes to complete
+> + * @needlock:     1 for queue lock need to be held.
+> + *                0 for queue lock held already.
+> + *
+> + * Description:
+> + *     Ends I/O on a number of bytes attached to @rq.
+> + *     If @rq has leftover, sets it up for the next range of segments.
+> + *
+> + * Return:
+> + *     0 - we are done with this request
+> + *     1 - this request is not freed yet, it still has pending buffers.
+> + **/
+> +static int ____blk_end_request(struct request *rq, int uptodate, int nr_bytes,
+> +			       int needlock)
+> +{
+> +	struct request_queue *q = rq->q;
+> +	unsigned long flags = 0UL;
+> +
+> +	if (blk_fs_request(rq) || blk_pc_request(rq)) {
+> +		if (__end_that_request_first(rq, uptodate, nr_bytes))
+> +			return 1;
+> +	}
+> +
+> +	/*
+> +	 * No need to check the argument here because it is done
+> +	 * in add_disk_randomness().
+> +	 */
+> +	add_disk_randomness(rq->rq_disk);
+> +
+> +	if (needlock)
+> +		spin_lock_irqsave(q->queue_lock, flags);
+> +
+> +	if (blk_rq_tagged(rq))
+> +		blk_queue_end_tag(q, rq);
+> +
+> +	if (!list_empty(&rq->queuelist))
+> +		blkdev_dequeue_request(rq);
+> +
+> +	end_that_request_last(rq, uptodate);
+> +
+> +	if (needlock)
+> +		spin_unlock_irqrestore(q->queue_lock, flags);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * blk_end_request - Helper function for drivers to complete the request.
+> + * @rq:       the request being processed
+> + * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
+> + * @nr_bytes: number of bytes to complete
+> + *
+> + * Description:
+> + *     Ends I/O on a number of bytes attached to @rq.
+> + *     If @rq has leftover, sets it up for the next range of segments.
+> + *
+> + * Return:
+> + *     0 - we are done with this request
+> + *     1 - still buffers pending for this request
+> + **/
+> +int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
+> +{
+> +	return ____blk_end_request(rq, uptodate, nr_bytes, 1);
+> +}
+> +EXPORT_SYMBOL_GPL(blk_end_request);
+> +
+> +/**
+> + * __blk_end_request - Helper function for drivers to complete the request.
+> + *
+> + * Description:
+> + *     Must be called with queue lock held unlike blk_end_request().
+> + **/
+> +int __blk_end_request(struct request *rq, int uptodate, int nr_bytes)
+> +{
+> +	return ____blk_end_request(rq, uptodate, nr_bytes, 0);
+> +}
+> +EXPORT_SYMBOL_GPL(__blk_end_request);
+> +
+>  void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+>  		     struct bio *bio)
+>  {
+> diff -rupN 2.6.23-rc3-mm1/include/linux/blkdev.h 01-blkendreq-interface/include/linux/blkdev.h
+> --- 2.6.23-rc3-mm1/include/linux/blkdev.h	2007-08-13 00:25:24.000000000 -0400
+> +++ 01-blkendreq-interface/include/linux/blkdev.h	2007-08-23 17:22:50.000000000 -0400
+> @@ -728,6 +728,8 @@ static inline void blk_run_address_space
+>   * for parts of the original function. This prevents
+>   * code duplication in drivers.
+>   */
+> +extern int blk_end_request(struct request *rq, int uptodate, int nr_bytes);
+> +extern int __blk_end_request(struct request *rq, int uptodate, int nr_bytes);
+>  extern int end_that_request_first(struct request *, int, int);
+>  extern int end_that_request_chunk(struct request *, int, int);
+>  extern void end_that_request_last(struct request *, int);
 
-1. Non-zero PORTS_IMPL value is always examined and used if consistent
-   with cap.n_ports.
+We get in to way too many levels of underscores here. Please changes
+this to be blk_end_request() and blk_end_request_locked(), where the
+former grabs the queue lock but the latter assumes it's held. Then have
+the static __blk_end_request() where the lock MUST be held - do this in
+the caller, don't pass it as an argument!
 
-2. When PI and cat.n_ports are inconsistent, honor cap.n_ports and
-   force port_map to be ((1 << cap.n_ports) - 1).
-
-3. There were two separate places dealing with port_map.  Unify them
-   to one.
-
-As all newer ahci chips seem to get PI correct and older ones usually
-have zero PI.  Controllers with holes in PI are very unlikely to screw
-up PI, so #2 makes more sense than following inconsistent PI.
-
-Without this change, not setting ATA_FLAG_HONOR_PI when it's needed
-results in weird detection failure.  This changed logic should be able
-to handle all known cases correctly automatically.
-
-Verified on ICH6 (reports 0 PI), ICH8 (with holes in port_map), ICH9,
-JMB360 and JMB363.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-Regenerated on top of the current #upstream.
-
- drivers/ata/ahci.c |   89 +++++++++++++++++++++++-----------------------------
- 1 files changed, 39 insertions(+), 50 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index cba6168..d0c5044 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -77,11 +77,10 @@ enum {
- 	RX_FIS_UNK		= 0x60, /* offset of Unknown FIS data */
- 
- 	board_ahci		= 0,
--	board_ahci_pi		= 1,
--	board_ahci_vt8251	= 2,
--	board_ahci_ign_iferr	= 3,
--	board_ahci_sb600	= 4,
--	board_ahci_mv		= 5,
-+	board_ahci_vt8251	= 1,
-+	board_ahci_ign_iferr	= 2,
-+	board_ahci_sb600	= 3,
-+	board_ahci_mv		= 4,
- 
- 	/* global controller registers */
- 	HOST_CAP		= 0x00, /* host capabilities */
-@@ -170,7 +169,6 @@ enum {
- 	/* ap->flags bits */
- 	AHCI_FLAG_NO_NCQ		= (1 << 24),
- 	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 25), /* ignore IRQ_IF_ERR */
--	AHCI_FLAG_HONOR_PI		= (1 << 26), /* honor PORTS_IMPL */
- 	AHCI_FLAG_IGN_SERR_INTERNAL	= (1 << 27), /* ignore SERR_INTERNAL */
- 	AHCI_FLAG_32BIT_ONLY		= (1 << 28), /* force 32bit */
- 	AHCI_FLAG_MV_PATA		= (1 << 29), /* PATA port */
-@@ -332,14 +330,6 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
--	/* board_ahci_pi */
--	{
--		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
--		.link_flags	= AHCI_LFLAG_COMMON,
--		.pio_mask	= 0x1f, /* pio0-4 */
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
--	},
- 	/* board_ahci_vt8251 */
- 	{
- 		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_NO_NCQ,
-@@ -371,8 +361,8 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.sht		= &ahci_sht,
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--				  AHCI_FLAG_HONOR_PI | AHCI_FLAG_NO_NCQ |
--				  AHCI_FLAG_NO_MSI | AHCI_FLAG_MV_PATA,
-+				  AHCI_FLAG_NO_NCQ | AHCI_FLAG_NO_MSI |
-+				  AHCI_FLAG_MV_PATA,
- 		.link_flags	= AHCI_LFLAG_COMMON,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -392,23 +382,23 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
- 	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
--	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci_pi }, /* ICH8 */
--	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_pi }, /* ICH8 */
--	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci_pi }, /* ICH8 */
--	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci_pi }, /* ICH8M */
--	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci_pi }, /* ICH8M */
--	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_pi }, /* ICH9M */
--	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_pi }, /* ICH9M */
--	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_pi }, /* ICH9M */
--	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_pi }, /* ICH9M */
--	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
--	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
--	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
-+	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* ICH8 */
-+	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
-+	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
-+	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
-+	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci }, /* ICH9M */
-+	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci }, /* ICH9 */
-+	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci }, /* ICH9M */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-@@ -560,16 +550,6 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 		cap &= ~HOST_CAP_NCQ;
- 	}
- 
--	/* fixup zero port_map */
--	if (!port_map) {
--		port_map = (1 << ahci_nr_ports(cap)) - 1;
--		dev_printk(KERN_WARNING, &pdev->dev,
--			   "PORTS_IMPL is zero, forcing 0x%x\n", port_map);
--
--		/* write the fixed up value to the PI register */
--		hpriv->saved_port_map = port_map;
--	}
--
- 	/*
- 	 * Temporary Marvell 6145 hack: PATA port presence
- 	 * is asserted through the standard AHCI port
-@@ -585,7 +565,7 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 	}
- 
- 	/* cross check port_map and cap.n_ports */
--	if (pi->flags & AHCI_FLAG_HONOR_PI) {
-+	if (port_map) {
- 		u32 tmp_port_map = port_map;
- 		int n_ports = ahci_nr_ports(cap);
- 
-@@ -596,17 +576,26 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
- 			}
- 		}
- 
--		/* Whine if inconsistent.  No need to update cap.
--		 * port_map is used to determine number of ports.
-+		/* If n_ports and port_map are inconsistent, whine and
-+		 * clear port_map and let it be generated from n_ports.
- 		 */
--		if (n_ports || tmp_port_map)
-+		if (n_ports || tmp_port_map) {
- 			dev_printk(KERN_WARNING, &pdev->dev,
- 				   "nr_ports (%u) and implemented port map "
--				   "(0x%x) don't match\n",
-+				   "(0x%x) don't match, using nr_ports\n",
- 				   ahci_nr_ports(cap), port_map);
--	} else {
--		/* fabricate port_map from cap.nr_ports */
-+			port_map = 0;
-+		}
-+	}
-+
-+	/* fabricate port_map from cap.nr_ports */
-+	if (!port_map) {
- 		port_map = (1 << ahci_nr_ports(cap)) - 1;
-+		dev_printk(KERN_WARNING, &pdev->dev,
-+			   "forcing PORTS_IMPL to 0x%x\n", port_map);
-+
-+		/* write the fixed up value to the PI register */
-+		hpriv->saved_port_map = port_map;
- 	}
- 
- 	/* record values to use during operation */
 -- 
-1.5.0.3
+Jens Axboe
 
