@@ -1,54 +1,110 @@
-From: Petr Vandrovec <vandrove@vc.cvut.cz>
-Subject: Re: Resets on sil3124 & sil3726 PMP
-Date: Mon, 03 Sep 2007 02:57:24 -0700
-Message-ID: <46DBDA84.3050505@vc.cvut.cz>
-References: <46D2595B.1030409@sauce.co.nz> <46D2792B.401@vc.cvut.cz> <46DBCCE9.9080806@gmail.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [1/2] 2.6.23-rc5: known regressions with patches
+Date: Mon, 03 Sep 2007 12:11:03 +0200
+Message-ID: <46DBDDB7.2090806@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw.cvut.cz ([147.32.3.235]:43231 "EHLO mailgw.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752641AbXICJ5a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Sep 2007 05:57:30 -0400
-In-Reply-To: <46DBCCE9.9080806@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.235]:33534 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755001AbXICKLl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 06:11:41 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1468714wxd
+        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 03:11:40 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, linux-fsdevel@vger.kernel.org, nfs@lists.sourceforge.net, Trond Myklebust <Trond.Myklebust@netapp.com>, Harry Edmon <harry@atmos.washington.edu>, Hua Zhong <hzhong@gmail.com>, Ian Kent <raven@themaw.net>, autofs@linux.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Bret Towe <magnade@gmail.com>, Tony Breeds <tony@bakeyournoodle.com>
 
-Tejun Heo wrote:
-> Petr Vandrovec wrote:
->> For comparsion 1TB Hitachi behind 3726 PMP (again MS4UM) with sata_sil
->> patch I sent last week (no NCQ, 1.5Gbps link between 3512 and PMP, and
->> 3.0Gbps link between PMP and drive... why is it faster?):
-> 
-> If you turn off NCQ by echoing 1 to /sys/block/sdd/device/queue_depth on
-> sata_sil24, does the performance change?
+Hi all,
 
-I have recompiled kernel with all debugging disabled, and it brought me 
-1.5MBps, so it is still consistently 1MBps slower than on sil. 
-Disabling NCQ seems to improve concurrent access a bit (for which I have 
-no explanation), while slows down single drive scenario:
+Here is a list of some known regressions in 2.6.23-rc5
+with patches available.
 
-With NCQ:
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
 
-1TB alone: 81.22, 79.86
-1TB+1TB:   56.28+56.70, 53.51+56.11
+List of Aces
 
-Without NCQ:
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            9
+Linus Torvalds                         6
+Andi Kleen                             5
+Hugh Dickins                           5
+Andrew Morton                          4
+Al Viro                                3
+Alan Stern                             3
+Alexey Starikovskiy                    3
+Cornelia Huck                          3
+Jens Axboe                             3
+Stephen Hemminger                      3
+Tejun Heo                              3
 
-1TB alone: 79.78, 80.82
-1TB+1TB:   57.99+58.12, 56.50+56.46
 
-3512 sil, no NCQ:
 
-1TB alone: 82.28, 82.18
-1TB+1TB:   47.20+47.54    # Here apparently command based switching or 
-1.5Gbps link between device and PMP becomes bottleneck
+Unclassified
 
-And it seems that I observe what other poster pointed out - that 
-apparently all SiI chips are limited somewhere around 120-130MBps, and 
-cannot do more even if you pretty ask...
-							Petr
+Subject         : 8250 claims non existing device blocking IO port
+References      : http://lkml.org/lkml/2007/8/18/20
+Last known good : ?
+Submitter       : Andrey Borzenkov <arvidjaar@mail.ru>
+Caused-By       : ?
+Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch           : http://lkml.org/lkml/2007/8/21/291
+Status          : patch available
 
+Subject         : Oops while modprobing phy fixed module
+References      : http://lkml.org/lkml/2007/7/14/63
+Last known good : ?
+Submitter       : Gabriel C <nix.or.die@googlemail.com>
+Caused-By       : ?
+Handled-By      : Satyam Sharma <satyam.sharma@gmail.com>
+                  Vitaly Bordug <vitb@kernel.crashing.org>
+Patch1          : http://lkml.org/lkml/2007/7/18/506
+Status          : patch available
+
+
+
+FS
+
+Subject         : NFSv4 client OOPS
+References      : http://lkml.org/lkml/2007/8/28/207
+Last known good : ?
+Submitter       : Harry Edmon <harry@atmos.washington.edu>
+Caused-By       : ?
+Handled-By      : Trond Myklebust <Trond.Myklebust@netapp.com>
+Patch           : http://lkml.org/lkml/2007/8/28/204
+Status          : patch available
+
+Subject         : autofs mounts mysteriously disappeared
+References      : http://lkml.org/lkml/2007/8/29/222
+                  http://lkml.org/lkml/2007/8/30/234
+Last known good : 2.6.22
+Submitter       : Hua Zhong <hzhong@gmail.com>
+Caused-By       : ?
+Handled-By      : Trond Myklebust <Trond.Myklebust@netapp.com>
+Patch           : http://lkml.org/lkml/2007/8/31/189
+Status          : patch available
+
+
+
+IDE
+
+Subject         : linux-2.6.23-rc4 ppc build failure
+References      : http://lkml.org/lkml/2007/8/29/154
+Last known good : ?
+Submitter       : Bret Towe <magnade@gmail.com>
+Caused-By       : ?
+Handled-By      : Tony Breeds <tony@bakeyournoodle.com>
+Patch           : http://lkml.org/lkml/2007/8/31/1
+Status          : patch was suggested
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
