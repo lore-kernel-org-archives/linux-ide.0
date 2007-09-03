@@ -1,52 +1,86 @@
-From: "Tomi Orava" <Tomi.Orava@ncircle.nullnet.fi>
-Subject: Re: sata_promise: port is slow to respond, reset failed
-Date: Mon, 3 Sep 2007 14:59:07 +0300 (EEST)
-Message-ID: <47267.194.237.142.7.1188820747.squirrel@ncircle.nullnet.fi>
-References: <200709030811.l838BC9a026315@harpo.it.uu.se>
+From: "Eddie Hung" <eddie.hung@gmail.com>
+Subject: Re: CF as IDE on ICH6M using libata
+Date: Mon, 3 Sep 2007 13:20:21 +0100
+Message-ID: <6f9550040709030520q1682ca06k99a2537cae847ec6@mail.gmail.com>
+References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
+	 <46DAB5DD.80807@gmail.com>
+	 <6f9550040709021129m63b143f5jdda365f6042560d5@mail.gmail.com>
+	 <46DB755C.308@gmail.com>
+	 <6f9550040709030340h42dfbce4ud5919dafde4e5b69@mail.gmail.com>
+	 <46DBF430.1050508@gmail.com>
+	 <6f9550040709030503m1d0db50bo4266aed0475f951d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45702 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbXICMIp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 08:08:45 -0400
-In-Reply-To: <200709030811.l838BC9a026315@harpo.it.uu.se>
+Received: from mu-out-0910.google.com ([209.85.134.185]:38612 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856AbXICMUe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 08:20:34 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so2002359mue
+        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 05:20:32 -0700 (PDT)
+In-Reply-To: <6f9550040709030503m1d0db50bo4266aed0475f951d@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@how.dk, linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-
->> > Those SATAII chips really don't seem to like 3Gbps mode. Or else we're
->> > missing some critical documentation on how to make them work.
->>
->> The funny thing is: I have the exact same adapter and disks in a Dell
->> PE1800 server. This doesn't show any errors.
->>
->> Only difference is the card is in a PCI-X slot and the server is running
->> Linux 2.6.19.5.
+On 03/09/07, Eddie Hung <eddie.hung@gmail.com> wrote:
+> On 03/09/07, Tejun Heo <htejun@gmail.com> wrote:
+> > The report mechanism is simple and the controller doesn't have much to
+> > do with it.  Bridge chip may affect it but I'm doubtful.
 >
-> I assume the PE1800 has some Intel chipset? Which one?
-> And the machine that does have problems, what chipset does it have?
+> > >
+> > > My X41 has a 1.5Ghz P4M, and a 0.1MB/s hit (if it is using PIO) is
+> > > hardly going to make a dent - I'm fairly sure that it is spending most
+> > > of its time waiting for IO, but I shall take a deeper look tonight.
+> >
+> > The beautiful thing about PIO is that it doesn't matter how fast your
+> > cpu is.  Faster CPUs will just burn more cycles while transferring data
+> > at the same measly speed. :-)
+>
+> Ahh yes, that makes sense - it's more about the time it takes rather
+> than the cycles consumed...
+>
+> > > What's confusing me is that my 40MB/s card only supporting MWDMA2 -
+> > > which offers only a max transfer rate of 16.7MB/s - how have other
+> > > people achieved 30MB/s then!?! (I'm referring to an ICH8 user who
+> > > claims he has here, with a very similar CF card:
+> > > http://www.opensubscriber.com/message/linux-ide@vger.kernel.org/6818048.html
+> >
+> > Whatever the device is, it should support UDMA to do 30MB/s.  MWDMA2
+> > just can't reach that speed electronically.
+>
+> Sorry, I was implying that he mustn't be using MWDMA to achieve them
+> sort of speeds, and indeed from his hdparm -I he is not. I'm currently
+> in touch with an X41 user who has reported success with a different CF
+> card, who is getting 35MB/s and 0.2ms access time under Windows
+> *drool*
+>
+> > > Also, does libATA support the PIO5 and PIO6 modes, which according to
+> > > Wikipedia are not part of the ATA standard, but the CF 2.0 standard?
+> > > (source: http://en.wikipedia.org/wiki/Programmed_input/output )
+> >
+> > I dunno much about those fancy PIO modes.  Maybe Alan knows?
+>
+> From the wiki article, I get the impression that the faster PIO modes
+> are simply lower cycle times, with everything else more or less the
+> same - so that shouldn't be too hard to add if it's not already there?
+> More importantly I guess, I wonder if hdparm -I supports the detection
+> of pio5 or pio6? I'll dig into the sources later.
+>
+> Thanks,
+>
+> Eddie
+>
 
-I can verify that at least my Asus A7V880 motherboard which
-is based on Amd Athlon (K7) & Via KT880-chipset the Promise Sata 300 TX 4
-never worked without problems with high I/O together with Seagate 7200.10
-disks.
+I am pursuing another possibility: the CF card is not a genuine
+Sandisk one at all, especially as it was off eBay! I compared my
+hdparm -I with the one in the thread above (which as I've found out is
+a Sandisk Extreme II 4GB) and there are big differences, namely the
+model number, serial number and firmware version.
 
-> I'm actually beginning to think there's some PCI compatibility breakage
-> somewhere, as I too see sata_promise working fine in some machines but
-> not in others. Alas, my knowledge of PCI tweakables is close to nil.
+This might explain everything!
 
-This would not amaze me at all as there has been more than enough
-compatibility problems with certain PCI-cards <-> motherboards in the past
-couple of years.
-
-Regards,
-Tomi Orava
-
-
-
--- 
-
-
+Eddie
