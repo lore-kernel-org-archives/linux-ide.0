@@ -1,64 +1,68 @@
-From: "Eddie Hung" <eddie.hung@gmail.com>
-Subject: Re: CF as IDE on ICH6M using libata
-Date: Mon, 3 Sep 2007 13:51:47 +0100
-Message-ID: <6f9550040709030551n30fe67e8w576a5d7fd9270aec@mail.gmail.com>
-References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
-	 <46DAB5DD.80807@gmail.com>
-	 <6f9550040709021129m63b143f5jdda365f6042560d5@mail.gmail.com>
-	 <46DB755C.308@gmail.com>
-	 <6f9550040709030340h42dfbce4ud5919dafde4e5b69@mail.gmail.com>
-	 <46DBF430.1050508@gmail.com>
-	 <6f9550040709030503m1d0db50bo4266aed0475f951d@mail.gmail.com>
-	 <6f9550040709030520q1682ca06k99a2537cae847ec6@mail.gmail.com>
-	 <46DC00D8.30205@gmail.com>
+From: John Sigler <linux.kernel@free.fr>
+Subject: Re: hda: set_drive_speed_status: status=0x51 { DriveReady SeekComplete
+ Error }
+Date: Mon, 03 Sep 2007 15:17:42 +0200
+Message-ID: <46DC0976.10003@free.fr>
+References: <46D59ED2.4000900@free.fr> <46D9876F.1070405@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:48600 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbXICMvt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 08:51:49 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so1196812nfh
-        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 05:51:47 -0700 (PDT)
-In-Reply-To: <46DC00D8.30205@gmail.com>
-Content-Disposition: inline
+Received: from smtp4-g19.free.fr ([212.27.42.30]:49916 "EHLO smtp4-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752596AbXICNSX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Sep 2007 09:18:23 -0400
+In-Reply-To: <46D9876F.1070405@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/09/07, Tejun Heo <htejun@gmail.com> wrote:
-> Eddie Hung wrote:
-> > I am pursuing another possibility: the CF card is not a genuine
-> > Sandisk one at all, especially as it was off eBay! I compared my
-> > hdparm -I with the one in the thread above (which as I've found out is
-> > a Sandisk Extreme II 4GB) and there are big differences, namely the
-> > model number, serial number and firmware version.
-> >
-> > This might explain everything!
->
-> We still need to fix your device.  :-)
->
+Sergei Shtylyov wrote:
 
-Haha.. well if the CF card is cheap knockoff which doesn't support
-MDMA (or does it extremely, extremely badly) then we have our culprit!
+> John Sigler wrote:
+> 
+>> When my system boots, I get several set_drive_speed_status errors.
+>> (Please see attached dmesg output.)
+> 
+>> Can someone explain what they mean? How do I get rid of them?
+> 
+>    IDE code attempts to autotune PIO mode and fails at that because your 
+> device is too old (or its manufacturer was too lazy) to support ATA-2 
+> (or EIDE from marketing PoV) is its full glory.
 
-I am beginning to be more and more inclined to think that it's a fake
-(the packaging and presentation was the genuine deal, though!) - and
-I'm in touch with Sandisk to confirm. I've not found that much
-information on the Internet - but one particularly interesting post is
-that another user had bought a Kingston card off ebay, and his -I is
-very similar to mine. For the record:
+But the data sheet seems to state the drive supports PIO modes 1 and 2?
 
-Kingston Elite Pro 45x (possibly fake):
-ATA device, with non-removable media
-Model Number: SMI MODEL
-Serial Number: AS 0055FA00
-Firmware Revision: 20070131
+>> Is there something I need to set in the config? or something I should 
+>> not have set?
+> 
+>    No, it just means that the IDE code is *too young* to support such 
+> pre-EIDE devices. :-D
 
-Source; http://1src.com/forums/showpost.php?p=993663&postcount=655
+Wow! This is a device that was purchased only a few months ago...
 
-Don't forget my device works just fine with the original HDD, though!
+>> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+>> ide: Assuming 33MHz system bus speed for PIO modes; override with 
+>> idebus=xx
+>> VP_IDE: IDE controller at PCI slot 0000:00:07.1
+>> VP_IDE: chipset revision 6
+>> VP_IDE: not 100% native mode: will probe irqs later
+>> VP_IDE: VIA vt82c686b (rev 40) IDE UDMA100 controller on pci0000:00:07.1
+>>     ide0: BM-DMA at 0xd000-0xd007, BIOS settings: hda:pio, hdb:pio
+>>     ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:pio, hdd:pio
+>> Probing IDE interface ide0...
+>> hda: PQI IDE DiskOnModule, ATA DISK drive
+>> hda: set_drive_speed_status: status=0x51 { DriveReady SeekComplete 
+>> Error }
+>> hda: set_drive_speed_status: error=0x04 { DriveStatusError }
+>> hda: set_drive_speed_status: status=0x51 { DriveReady SeekComplete 
+>> Error }
+>> hda: set_drive_speed_status: error=0x04 { DriveStatusError }
+> 
+>   That means that you've managed to find pre-EIDE/ATA hardware which 
+> doesn't support setting arbitrary PIO modes. What's funny is that 
+> recently being discussed here, so expect a patch RSN. :-)
 
-Eddie
+In 2.6.23?
+
+Regards.
