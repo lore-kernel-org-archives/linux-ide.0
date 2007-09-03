@@ -1,21 +1,23 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: [1/2] 2.6.23-rc5: known regressions with patches
-Date: Mon, 03 Sep 2007 12:11:03 +0200
-Message-ID: <46DBDDB7.2090806@googlemail.com>
+Subject: Re: [2/2] 2.6.23-rc5: known regressions with patches
+Date: Mon, 03 Sep 2007 12:11:18 +0200
+Message-ID: <46DBDDC6.9030602__17057.2790354074$1188814492$gmane$org@googlemail.com>
+References: <46DBDCF4.6040805@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:33534 "EHLO
+Received: from wx-out-0506.google.com ([66.249.82.236]:33754 "EHLO
 	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755001AbXICKLl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 06:11:41 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so1468714wxd
-        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 03:11:40 -0700 (PDT)
+	with ESMTP id S1755636AbXICKMC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 06:12:02 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1468715wxd
+        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 03:12:01 -0700 (PDT)
+In-Reply-To: <46DBDCF4.6040805@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, linux-fsdevel@vger.kernel.org, nfs@lists.sourceforge.net, Trond Myklebust <Trond.Myklebust@netapp.com>, Harry Edmon <harry@atmos.washington.edu>, Hua Zhong <hzhong@gmail.com>, Ian Kent <raven@themaw.net>, autofs@linux.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Bret Towe <magnade@gmail.com>, Tony Breeds <tony@bakeyournoodle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, kbuild-devel@lists.sourceforge.net, Roman Zippel <zippel@linux-m68k.org>, Sam Ravnborg <sam@ravnborg.org>, Hugh Dickins <hugh@veritas.com>, Pierre Ossman <drzeus-mmc@drzeus.cx>, Christian Casteyde <casteyde.christian@free.fr>, Alan Stern <stern@rowland.harvard.edu>, linux-mtd@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>, Ingo Molnar <mingo@elte.hu>, "David S. Miller" <davem@sunset.davemloft.net>, netdev@vger.kernel.org, Mark Hindley <mark@hindley.org.uk>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Grant Wilson <grant.wilson@zen.co.uk>, Ondrej Zary <linux@rainbow-software.org>
 
 Hi all,
 
@@ -43,62 +45,78 @@ Tejun Heo                              3
 
 
 
-Unclassified
+Kconfig
 
-Subject         : 8250 claims non existing device blocking IO port
-References      : http://lkml.org/lkml/2007/8/18/20
+Subject         : CONFIG_HOTPLUG_CPU: kconfig bug?
+References      : http://lkml.org/lkml/2007/8/27/204
 Last known good : ?
-Submitter       : Andrey Borzenkov <arvidjaar@mail.ru>
+Submitter       : Hugh Dickins <hugh@veritas.com>
 Caused-By       : ?
-Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch           : http://lkml.org/lkml/2007/8/21/291
-Status          : patch available
-
-Subject         : Oops while modprobing phy fixed module
-References      : http://lkml.org/lkml/2007/7/14/63
-Last known good : ?
-Submitter       : Gabriel C <nix.or.die@googlemail.com>
-Caused-By       : ?
-Handled-By      : Satyam Sharma <satyam.sharma@gmail.com>
-                  Vitaly Bordug <vitb@kernel.crashing.org>
-Patch1          : http://lkml.org/lkml/2007/7/18/506
+Handled-By      : Roman Zippel <zippel@linux-m68k.org>
+                  Sam Ravnborg <sam@ravnborg.org>
+Patch           : http://lkml.org/lkml/2007/8/29/301
 Status          : patch available
 
 
 
-FS
+MMC
 
-Subject         : NFSv4 client OOPS
-References      : http://lkml.org/lkml/2007/8/28/207
+Subject         : Unable to access memory card reader anymore
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8885
 Last known good : ?
-Submitter       : Harry Edmon <harry@atmos.washington.edu>
+Submitter       : Christian Casteyde <casteyde.christian@free.fr>
 Caused-By       : ?
-Handled-By      : Trond Myklebust <Trond.Myklebust@netapp.com>
-Patch           : http://lkml.org/lkml/2007/8/28/204
-Status          : patch available
-
-Subject         : autofs mounts mysteriously disappeared
-References      : http://lkml.org/lkml/2007/8/29/222
-                  http://lkml.org/lkml/2007/8/30/234
-Last known good : 2.6.22
-Submitter       : Hua Zhong <hzhong@gmail.com>
-Caused-By       : ?
-Handled-By      : Trond Myklebust <Trond.Myklebust@netapp.com>
-Patch           : http://lkml.org/lkml/2007/8/31/189
+Handled-By      : Alan Stern <stern@rowland.harvard.edu>
+Patch           : http://bugzilla.kernel.org/attachment.cgi?id=12438
 Status          : patch available
 
 
 
-IDE
+MTD
 
-Subject         : linux-2.6.23-rc4 ppc build failure
-References      : http://lkml.org/lkml/2007/8/29/154
+Subject         : error: implicit declaration of function 'cfi_interleave'
+References      : http://lkml.org/lkml/2007/8/6/272
 Last known good : ?
-Submitter       : Bret Towe <magnade@gmail.com>
+Submitter       : Ingo Molnar <mingo@elte.hu>
 Caused-By       : ?
-Handled-By      : Tony Breeds <tony@bakeyournoodle.com>
-Patch           : http://lkml.org/lkml/2007/8/31/1
-Status          : patch was suggested
+Handled-By      : David Woodhouse <dwmw2@infradead.org>
+Patch           : http://lkml.org/lkml/2007/8/9/586
+Status          : patch available
+
+
+
+Networking
+
+Subject         : [OOPS] 2.6.23-rc5 ? network/via-rhine
+References      : http://lkml.org/lkml/2007/9/2/58
+Last known good : ?
+Submitter       : Mark Hindley <mark@hindley.org.uk>
+Caused-By       : ?
+Handled-By      : David S. Miller <davem@sunset.davemloft.net>
+Patch           : http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=5c127c58ae9bf196d787815b1bd6b0aec5aee816
+Status          : patch available
+
+
+
+PATA/SATA
+
+Subject         : sata_via: write errors on PATA drive connected to VT6421
+References      : http://lkml.org/lkml/2007/8/20/248
+Last known good : ?
+Submitter       : Ondrej Zary <linux@rainbow-software.org>
+Caused-By       : ?
+Handled-By      : Ondrej Zary <linux@rainbow-software.org>
+Patch           : http://lkml.org/lkml/2007/8/31/310
+Status          : patch available
+
+Subject         : NULL pointer dereference in ata_piix
+References      : http://lkml.org/lkml/2007/9/1/33
+Last known good : ?
+Submitter       : Grant Wilson <grant.wilson@zen.co.uk>
+Caused-By       : ?
+Handled-By      : Jeff Garzik <jeff@garzik.org>
+Patch           : http://lkml.org/lkml/2007/9/1/46
+Status          : patch available
 
 
 
