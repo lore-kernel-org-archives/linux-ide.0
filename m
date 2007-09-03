@@ -1,70 +1,32 @@
-From: "Alexander E. Patrakov" <patrakov@ums.usu.ru>
-Subject: Re: libata equivalent for hdX=remap63
-Date: Mon, 03 Sep 2007 21:18:42 +0600
-Message-ID: <46DC25D2.6090705@ums.usu.ru>
-References: <46DA73B5.5010107@ums.usu.ru> <20070902104645.0c6b291c@the-village.bc.nu>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: libata not working for sis5533
+Date: Mon, 3 Sep 2007 19:58:20 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
+References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
+ <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com>
+ <20070902114032.7dbfb21a@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay4.usu.ru ([194.226.235.39]:47905 "EHLO relay4.usu.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428AbXICPTP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Sep 2007 11:19:15 -0400
-Received: from relay4.usu.ru (localhost [127.0.0.1])
-	by relay4.usu.ru (PostSystem) with ESMTP id 71CD017F02
-	for <linux-ide@vger.kernel.org>; Mon,  3 Sep 2007 21:21:47 +0600 (YEKST)
-Received: from usu2.usu.ru (usu2.usu.ru [194.226.237.16])
-	by relay4.usu.ru (PostSystem) with ESMTP id 2EABC17F02
-	for <linux-ide@vger.kernel.org>; Mon,  3 Sep 2007 21:21:46 +0600 (YEKST)
-Received: from usu2.usu.ru (localhost.usu2.usu.ru [127.0.0.1])
-	by usu2.usu.ru (Postfix) with ESMTP id 282C4A7EBA
-	for <linux-ide@vger.kernel.org>; Mon,  3 Sep 2007 21:19:08 +0600 (YEKST)
-Received: from ums.usu.ru (ums.usu.ru [194.226.236.116])
-	by usu2.usu.ru (Postfix) with ESMTP id ACDD1A7EAC
-	for <linux-ide@vger.kernel.org>; Mon,  3 Sep 2007 21:19:07 +0600 (YEKST)
-In-Reply-To: <20070902104645.0c6b291c@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756017AbXICR6f@vger.kernel.org>
+In-Reply-To: <20070902114032.7dbfb21a@the-village.bc.nu>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, Mauelshagen@RedHat.com
+Cc: patrizio.bassi@gmail.com, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> The remap63 hack is ancient. Since the kernel acquired device mapper its
-> also unneccessary as you can use device mapper to set up a 63 sector
-> offset volume.
+
+On Sep 2 2007 11:40, Alan Cox wrote:
 >
-> I'm amazed anyone is still using it but the right way to handle it on a
-> vaguely modern system isn't more kernel hacks but to teach dmraid to
-> handle it. If you've got an example of what the layout looks like
-> (especially if there is a way to autodetect it) then talk to Heinz (cc'd)
-> about getting it added to dmraid.
->   
+>> i've been out for a week, but found no notice, did i lost any email or
+>> no activity on this issue?
+>
+>I tagged it onto the obscure IDE report pile. It doesn't contain any
+>really useful information and its probably not an IDE layer bug as of
+>itself. But its on the todo list for further investigation and to see if
+>patterns emerge
 
-I got no useful reply to my request for the user to send the first 
-megabyte of the hard disk. However, using a cracked version of Hitachi 
-OEM variant of OnTrack Disk Manager, I produced a 64GB qemu disk image 
-with this disk manager, Windows 98 and a Linux partition (just in case). 
-It works fine with hda=remap63 and thus serves the purpose of being an 
-example of the layout.
+I shall give this a spin too, since I happen to have sis5513.
 
-The first 64 KB of this hard disk can be found at 
-http://ums.usu.ru/~patrakov/first-64-kb.dsk (please tell me when I can 
-remove this file).
 
-The full disk image (obviously, without Windows 98 - but you can install 
-it yourself) can be reconstructed as:
-
-dd if=/dev/null of=first-64-kb.dsk bs=1M seek=65536
-
-Note that you can't just reinterpret the OnTrackDM6 partition as a disk 
-image because it doesn't start at sector 63. To use this image in qemu:
-
-qemu -hda first-64-kb.dsk -hdachs 1024,16,63,none -cdrom 
-your-favourite-livecd.iso
-
-In the original image, I could do a "mount -t vfat -o loop,offset=64512 
-/dev/hda /mnt" and see the Windows partition.
-
+	Jan
 -- 
-Alexander E. Patrakov
