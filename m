@@ -1,60 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/4] hpt366: MWDMA filter for SATA cards
-Date: Mon, 3 Sep 2007 20:50:32 +0200
-Message-ID: <200709032050.32397.bzolnier@gmail.com>
-References: <200709030019.22732.sshtylyov@ru.mvista.com> <46DB1C50.2020205@ru.mvista.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Tue, 04 Sep 2007 07:39:16 +1200
+Message-ID: <46DC62E4.8050901@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:43250 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753891AbXICSuc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 14:50:32 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so147485ugc
-        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2007 11:50:30 -0700 (PDT)
-In-Reply-To: <46DB1C50.2020205@ru.mvista.com>
-Content-Disposition: inline
+Received: from smtp.sauce.co.nz ([210.48.49.72]:58880 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752939AbXICTfO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Sep 2007 15:35:14 -0400
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp22.sauce.co.nz (Postfix) with ESMTP id 81D12288263
+	for <linux-ide@vger.kernel.org>; Tue,  4 Sep 2007 07:35:10 +1200 (NZST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sunday 02 September 2007, Sergei Shtylyov wrote:
-> Hello, I wrote:
-> 
->     The patch was 4/4 of course. :-<
->      Probably I was too esctatic about the code. ;-)
-> 
-> > The Marvell bridge chips used on HighPoint SATA cards do not seem to support
-> > the MWDMA modes (at least that caould be seen in their so-called drivers :-),
-> > so the driver needs to account for this -- to achieve this:
-> 
-> > - add mdma_filter() method from the original patch by Bartlomiej Zolnierkewicz
-> >   with his consent, also adding the method callout to ide_rate_filter();
-> 
-> > - installed the method for all chips to only return empty mask if a SATA drive
-> >   is detected onHPT372{AN]/374 chips...
-> 
-> > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> > ---
-> > This patch against the current Linus' tree and unfortunately I was able to only
-> > compile test it since that tree gives MODPOST warning and dies early on bootup.
-> > Will hopefully try to test if/when I have time... :-)
-> 
-> > Index: linux-2.6/drivers/ide/pci/hpt366.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/ide/pci/hpt366.c
-> > +++ linux-2.6/drivers/ide/pci/hpt366.c
-> > @@ -1,5 +1,5 @@
-> >  /*
-> > - * linux/drivers/ide/pci/hpt366.c		Version 1.12	Aug 25, 2007
-> > + * linux/drivers/ide/pci/hpt366.c		Version 1.13	Aug 22, 2007
-> 
->     Errr... and version shuold Aug 02 -- thought I've fixed that. :-/
+Hi,
 
-and we have ATA_MWDMA2 define in _vanilla_ kernel now :)
+Tejun said:
 
-Bart
+ > Yeah, that seems to be the hardware limit and is consistent with what 
+ > I hear from non-linux people too.
+
+My comment earlier regarding "broken silicon" was based on comments here 
+and reports from Mac users and only pertained to the 3132.
+
+For some reasonably impressive numbers using the 3124, along with the 
+3726 PM on OSX, have a look at:
+
+http://www.amug.org/amug-web/html/amug/reviews/articles/addonics/adsa3gpx8-4em/
+
+
+Regards,
+
+Richard
+
