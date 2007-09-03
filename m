@@ -1,276 +1,207 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/3] libata: clean up read/set native_max address functions
-Date: Mon, 3 Sep 2007 12:32:30 +0900
-Message-ID: <20070903033230.GC16890@htj.dyndns.org>
-References: <20070903033158.GB16890@htj.dyndns.org>
+Subject: [PATCH REGENERATED] ahci: reimplement port_map handling
+Date: Mon, 3 Sep 2007 12:44:57 +0900
+Message-ID: <20070903034457.GE16890@htj.dyndns.org>
+References: <20070720085934.GD22374@htj.dyndns.org> <46A0A5C4.1050808@garzik.org> <46A0A85D.6000300@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:26776 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.186]:43256 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbXICDch (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 23:32:37 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so855168rvb
-        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 20:32:37 -0700 (PDT)
+	with ESMTP id S1753165AbXICDpF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Sep 2007 23:45:05 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so857263rvb
+        for <linux-ide@vger.kernel.org>; Sun, 02 Sep 2007 20:45:05 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20070903033158.GB16890@htj.dyndns.org>
+In-Reply-To: <46A0A85D.6000300@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Merge ata_read_native_max_addres_ext() into ata_read_native_max_address()
-and combine ata_set_native_max_address_ext() and
-ata_set_native_max_address() into ata_set_max_sectors().
+Reimplement port_map handling such that
 
-* reduce duplicate code
-* return 0 or -errno depending on error conditions
-* report if command fails
-* use ATA_LBA instead of 0x40
+1. Non-zero PORTS_IMPL value is always examined and used if consistent
+   with cap.n_ports.
 
-This is in preparation of ata_hpa_resize() update.
+2. When PI and cat.n_ports are inconsistent, honor cap.n_ports and
+   force port_map to be ((1 << cap.n_ports) - 1).
+
+3. There were two separate places dealing with port_map.  Unify them
+   to one.
+
+As all newer ahci chips seem to get PI correct and older ones usually
+have zero PI.  Controllers with holes in PI are very unlikely to screw
+up PI, so #2 makes more sense than following inconsistent PI.
+
+Without this change, not setting ATA_FLAG_HONOR_PI when it's needed
+results in weird detection failure.  This changed logic should be able
+to handle all known cases correctly automatically.
+
+Verified on ICH6 (reports 0 PI), ICH8 (with holes in port_map), ICH9,
+JMB360 and JMB363.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |  174 ++++++++++++++++++++-------------------------
- 1 files changed, 77 insertions(+), 97 deletions(-)
+Regenerated on top of the current #upstream.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b7b0c42..cdead90 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -863,129 +863,113 @@ static u64 ata_tf_to_lba(struct ata_taskfile *tf)
- }
+ drivers/ata/ahci.c |   89 +++++++++++++++++++++++-----------------------------
+ 1 files changed, 39 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index cba6168..d0c5044 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -77,11 +77,10 @@ enum {
+ 	RX_FIS_UNK		= 0x60, /* offset of Unknown FIS data */
  
- /**
-- *	ata_read_native_max_address_ext	-	LBA48 native max query
-- *	@dev: Device to query
-+ *	ata_read_native_max_address - Read native max address
-+ *	@dev: target device
-+ *	@max_sectors: out parameter for the result native max address
-  *
-- *	Perform an LBA48 size query upon the device in question. Return the
-- *	actual LBA48 size or zero if the command fails.
-- */
--
--static u64 ata_read_native_max_address_ext(struct ata_device *dev)
--{
--	unsigned int err;
--	struct ata_taskfile tf;
--
--	ata_tf_init(dev, &tf);
--
--	tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
--	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
--	tf.protocol |= ATA_PROT_NODATA;
--	tf.device |= 0x40;
--
--	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--	if (err)
--		return 0;
--
--	return ata_tf_to_lba48(&tf);
--}
--
--/**
-- *	ata_read_native_max_address	-	LBA28 native max query
-- *	@dev: Device to query
-+ *	Perform an LBA48 or LBA28 native size query upon the device in
-+ *	question.
-  *
-- *	Performa an LBA28 size query upon the device in question. Return the
-- *	actual LBA28 size or zero if the command fails.
-+ *	RETURNS:
-+ *	0 on success, -EACCES if command is aborted by the drive.
-+ *	-EIO on other errors.
-  */
--
--static u64 ata_read_native_max_address(struct ata_device *dev)
-+static int ata_read_native_max_address(struct ata_device *dev, u64 *max_sectors)
- {
--	unsigned int err;
-+	unsigned int err_mask;
- 	struct ata_taskfile tf;
-+	int lba48 = ata_id_has_lba48(dev->id);
+ 	board_ahci		= 0,
+-	board_ahci_pi		= 1,
+-	board_ahci_vt8251	= 2,
+-	board_ahci_ign_iferr	= 3,
+-	board_ahci_sb600	= 4,
+-	board_ahci_mv		= 5,
++	board_ahci_vt8251	= 1,
++	board_ahci_ign_iferr	= 2,
++	board_ahci_sb600	= 3,
++	board_ahci_mv		= 4,
  
- 	ata_tf_init(dev, &tf);
+ 	/* global controller registers */
+ 	HOST_CAP		= 0x00, /* host capabilities */
+@@ -170,7 +169,6 @@ enum {
+ 	/* ap->flags bits */
+ 	AHCI_FLAG_NO_NCQ		= (1 << 24),
+ 	AHCI_FLAG_IGN_IRQ_IF_ERR	= (1 << 25), /* ignore IRQ_IF_ERR */
+-	AHCI_FLAG_HONOR_PI		= (1 << 26), /* honor PORTS_IMPL */
+ 	AHCI_FLAG_IGN_SERR_INTERNAL	= (1 << 27), /* ignore SERR_INTERNAL */
+ 	AHCI_FLAG_32BIT_ONLY		= (1 << 28), /* force 32bit */
+ 	AHCI_FLAG_MV_PATA		= (1 << 29), /* PATA port */
+@@ -332,14 +330,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+-	/* board_ahci_pi */
+-	{
+-		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
+-		.link_flags	= AHCI_LFLAG_COMMON,
+-		.pio_mask	= 0x1f, /* pio0-4 */
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	},
+ 	/* board_ahci_vt8251 */
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_NO_NCQ,
+@@ -371,8 +361,8 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.sht		= &ahci_sht,
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
+-				  AHCI_FLAG_HONOR_PI | AHCI_FLAG_NO_NCQ |
+-				  AHCI_FLAG_NO_MSI | AHCI_FLAG_MV_PATA,
++				  AHCI_FLAG_NO_NCQ | AHCI_FLAG_NO_MSI |
++				  AHCI_FLAG_MV_PATA,
+ 		.link_flags	= AHCI_LFLAG_COMMON,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+@@ -392,23 +382,23 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2 */
+ 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
+ 	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
+-	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci_pi }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_pi }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci_pi }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci_pi }, /* ICH8M */
+-	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci_pi }, /* ICH8M */
+-	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_pi }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_pi }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_pi }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_pi }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
++	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
++	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci }, /* ICH9M */
  
--	tf.command = ATA_CMD_READ_NATIVE_MAX;
-+	/* always clear all address registers */
- 	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
--	tf.protocol |= ATA_PROT_NODATA;
--	tf.device |= 0x40;
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+@@ -560,16 +550,6 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
+ 		cap &= ~HOST_CAP_NCQ;
+ 	}
  
--	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--	if (err)
--		return 0;
+-	/* fixup zero port_map */
+-	if (!port_map) {
+-		port_map = (1 << ahci_nr_ports(cap)) - 1;
+-		dev_printk(KERN_WARNING, &pdev->dev,
+-			   "PORTS_IMPL is zero, forcing 0x%x\n", port_map);
 -
--	return ata_tf_to_lba(&tf);
--}
+-		/* write the fixed up value to the PI register */
+-		hpriv->saved_port_map = port_map;
+-	}
 -
--/**
-- *	ata_set_native_max_address_ext	-	LBA48 native max set
-- *	@dev: Device to query
-- *	@new_sectors: new max sectors value to set for the device
-- *
-- *	Perform an LBA48 size set max upon the device in question. Return the
-- *	actual LBA48 size or zero if the command fails.
-- */
--
--static u64 ata_set_native_max_address_ext(struct ata_device *dev, u64 new_sectors)
--{
--	unsigned int err;
--	struct ata_taskfile tf;
--
--	new_sectors--;
--
--	ata_tf_init(dev, &tf);
-+	if (lba48) {
-+		tf.command = ATA_CMD_READ_NATIVE_MAX_EXT;
-+		tf.flags |= ATA_TFLAG_LBA48;
-+	} else
-+		tf.command = ATA_CMD_READ_NATIVE_MAX;
+ 	/*
+ 	 * Temporary Marvell 6145 hack: PATA port presence
+ 	 * is asserted through the standard AHCI port
+@@ -585,7 +565,7 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
+ 	}
  
--	tf.command = ATA_CMD_SET_MAX_EXT;
--	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 | ATA_TFLAG_ISADDR;
- 	tf.protocol |= ATA_PROT_NODATA;
--	tf.device |= 0x40;
--
--	tf.lbal = (new_sectors >> 0) & 0xff;
--	tf.lbam = (new_sectors >> 8) & 0xff;
--	tf.lbah = (new_sectors >> 16) & 0xff;
-+	tf.device |= ATA_LBA;
+ 	/* cross check port_map and cap.n_ports */
+-	if (pi->flags & AHCI_FLAG_HONOR_PI) {
++	if (port_map) {
+ 		u32 tmp_port_map = port_map;
+ 		int n_ports = ahci_nr_ports(cap);
  
--	tf.hob_lbal = (new_sectors >> 24) & 0xff;
--	tf.hob_lbam = (new_sectors >> 32) & 0xff;
--	tf.hob_lbah = (new_sectors >> 40) & 0xff;
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+	if (err_mask) {
-+		ata_dev_printk(dev, KERN_WARNING, "failed to read native "
-+			       "max address (err_mask=0x%x)\n", err_mask);
-+		if (err_mask == AC_ERR_DEV && (tf.feature & ATA_ABORTED))
-+			return -EACCES;
-+		return -EIO;
+@@ -596,17 +576,26 @@ static void ahci_save_initial_config(struct pci_dev *pdev,
+ 			}
+ 		}
+ 
+-		/* Whine if inconsistent.  No need to update cap.
+-		 * port_map is used to determine number of ports.
++		/* If n_ports and port_map are inconsistent, whine and
++		 * clear port_map and let it be generated from n_ports.
+ 		 */
+-		if (n_ports || tmp_port_map)
++		if (n_ports || tmp_port_map) {
+ 			dev_printk(KERN_WARNING, &pdev->dev,
+ 				   "nr_ports (%u) and implemented port map "
+-				   "(0x%x) don't match\n",
++				   "(0x%x) don't match, using nr_ports\n",
+ 				   ahci_nr_ports(cap), port_map);
+-	} else {
+-		/* fabricate port_map from cap.nr_ports */
++			port_map = 0;
++		}
 +	}
- 
--	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--	if (err)
--		return 0;
-+	if (lba48)
-+		*max_sectors = ata_tf_to_lba48(&tf);
-+	else
-+		*max_sectors = ata_tf_to_lba(&tf);
- 
--	return ata_tf_to_lba48(&tf);
-+	return 0;
- }
- 
- /**
-- *	ata_set_native_max_address	-	LBA28 native max set
-- *	@dev: Device to query
-+ *	ata_set_max_sectors - Set max sectors
-+ *	@dev: target device
-  *	@new_sectors: new max sectors value to set for the device
-+ *	@res_sectors: result max sectors
-  *
-- *	Perform an LBA28 size set max upon the device in question. Return the
-- *	actual LBA28 size or zero if the command fails.
-+ *	Set max sectors of @dev to @new_sectors.
-+ *
-+ *	RETURNS:
-+ *	0 on success, -EACCES if command is aborted or denied (due to
-+ *	previous non-volatile SET_MAX) by the drive.  -EIO on other
-+ *	errors.
-  */
--
--static u64 ata_set_native_max_address(struct ata_device *dev, u64 new_sectors)
-+static int ata_set_max_sectors(struct ata_device *dev, u64 new_sectors,
-+			       u64 *res_sectors)
- {
--	unsigned int err;
-+	unsigned int err_mask;
- 	struct ata_taskfile tf;
-+	int lba48 = ata_id_has_lba48(dev->id);
- 
- 	new_sectors--;
- 
- 	ata_tf_init(dev, &tf);
- 
--	tf.command = ATA_CMD_SET_MAX;
- 	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
 +
-+	if (lba48) {
-+		tf.command = ATA_CMD_SET_MAX_EXT;
-+		tf.flags |= ATA_TFLAG_LBA48;
++	/* fabricate port_map from cap.nr_ports */
++	if (!port_map) {
+ 		port_map = (1 << ahci_nr_ports(cap)) - 1;
++		dev_printk(KERN_WARNING, &pdev->dev,
++			   "forcing PORTS_IMPL to 0x%x\n", port_map);
 +
-+		tf.hob_lbal = (new_sectors >> 24) & 0xff;
-+		tf.hob_lbam = (new_sectors >> 32) & 0xff;
-+		tf.hob_lbah = (new_sectors >> 40) & 0xff;
-+	} else
-+		tf.command = ATA_CMD_SET_MAX;
-+
- 	tf.protocol |= ATA_PROT_NODATA;
-+	tf.device |= ATA_LBA;
++		/* write the fixed up value to the PI register */
++		hpriv->saved_port_map = port_map;
+ 	}
  
- 	tf.lbal = (new_sectors >> 0) & 0xff;
- 	tf.lbam = (new_sectors >> 8) & 0xff;
- 	tf.lbah = (new_sectors >> 16) & 0xff;
--	tf.device |= ((new_sectors >> 24) & 0x0f) | 0x40;
- 
--	err = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
--	if (err)
--		return 0;
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+	if (err_mask) {
-+		ata_dev_printk(dev, KERN_WARNING, "failed to set "
-+			       "max address (err_mask=0x%x)\n", err_mask);
-+		if (err_mask == AC_ERR_DEV &&
-+		    (tf.feature & (ATA_ABORTED | ATA_IDNF)))
-+			return -EACCES;
-+		return -EIO;
-+	}
- 
--	return ata_tf_to_lba(&tf);
-+	if (lba48)
-+		*res_sectors = ata_tf_to_lba48(&tf);
-+	else
-+		*res_sectors = ata_tf_to_lba(&tf);
-+
-+	return 0;
- }
- 
- /**
-@@ -1001,11 +985,11 @@ static u64 ata_hpa_resize(struct ata_device *dev)
- {
- 	u64 sectors = dev->n_sectors;
- 	u64 hpa_sectors;
-+	int rc;
- 
--	if (ata_id_has_lba48(dev->id))
--		hpa_sectors = ata_read_native_max_address_ext(dev);
--	else
--		hpa_sectors = ata_read_native_max_address(dev);
-+	rc = ata_read_native_max_address(dev, &hpa_sectors);
-+	if (rc)
-+		return 0;
- 
- 	if (hpa_sectors > sectors) {
- 		ata_dev_printk(dev, KERN_INFO,
-@@ -1015,13 +999,9 @@ static u64 ata_hpa_resize(struct ata_device *dev)
- 			(long long)sectors, (long long)hpa_sectors);
- 
- 		if (ata_ignore_hpa) {
--			if (ata_id_has_lba48(dev->id))
--				hpa_sectors = ata_set_native_max_address_ext(dev, hpa_sectors);
--			else
--				hpa_sectors = ata_set_native_max_address(dev,
--								hpa_sectors);
-+			rc = ata_set_max_sectors(dev, hpa_sectors, &hpa_sectors);
- 
--			if (hpa_sectors) {
-+			if (rc == 0) {
- 				ata_dev_printk(dev, KERN_INFO, "native size "
- 					"increased to %lld sectors\n",
- 					(long long)hpa_sectors);
+ 	/* record values to use during operation */
 -- 
 1.5.0.3
 
