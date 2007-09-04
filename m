@@ -1,103 +1,63 @@
-From: "Eddie Hung" <eddie.hung@gmail.com>
-Subject: Re: CF as IDE on ICH6M using libata
-Date: Tue, 4 Sep 2007 19:17:30 +0100
-Message-ID: <6f9550040709041117ub6eff93w3006796f5f108761@mail.gmail.com>
-References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
-	 <46DAB5DD.80807@gmail.com>
-	 <6f9550040709021129m63b143f5jdda365f6042560d5@mail.gmail.com>
-	 <46DB755C.308@gmail.com>
-	 <6f9550040709030340h42dfbce4ud5919dafde4e5b69@mail.gmail.com>
-	 <46DBF430.1050508@gmail.com>
-	 <6f9550040709030503m1d0db50bo4266aed0475f951d@mail.gmail.com>
-	 <6f9550040709030520q1682ca06k99a2537cae847ec6@mail.gmail.com>
-	 <46DC00D8.30205@gmail.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: sata_promise: port is slow to respond, reset failed
+Date: Tue, 4 Sep 2007 20:47:57 +0200
+Message-ID: <18141.43101.618644.38451@alkaid.it.uu.se>
+References: <200709030811.l838BC9a026315@harpo.it.uu.se>
+	<46DC70AE.6050100@how.dk>
+	<18141.5115.238011.870159@alkaid.it.uu.se>
+	<46DD93DD.8020100@how.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:20653 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754660AbXIDSRd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2007 14:17:33 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2563174mue
-        for <linux-ide@vger.kernel.org>; Tue, 04 Sep 2007 11:17:31 -0700 (PDT)
-In-Reply-To: <46DC00D8.30205@gmail.com>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:53857 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751993AbXIDSsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Sep 2007 14:48:33 -0400
+In-Reply-To: <46DD93DD.8020100@how.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Peter Favrholdt <linux-ide@how.dk>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-On 03/09/07, Tejun Heo <htejun@gmail.com> wrote:
-> Eddie Hung wrote:
-> > I am pursuing another possibility: the CF card is not a genuine
-> > Sandisk one at all, especially as it was off eBay! I compared my
-> > hdparm -I with the one in the thread above (which as I've found out is
-> > a Sandisk Extreme II 4GB) and there are big differences, namely the
-> > model number, serial number and firmware version.
-> >
-> > This might explain everything!
->
-> We still need to fix your device.  :-)
->
-> --
-> tejun
->
+Peter Favrholdt writes:
+ > Mikael Pettersson wrote:
+ > > nForce2. Hmm..
+ > 
+ > Peter Favrholdt wrote:
+ > >  >   11:      27474    XT-PIC-XT        libata, libata, ohci_hcd:usb3, 
+ > >  > NVidia nForce2
+ > 
+ > > That "mystery" device makes me strongly suspect that you've
+ > > loaded the binary-only nvidia drivers. If that's true, then
+ > > the machine's problems may just as well be caused by that driver,
+ > > not sata_promise. (We've seen that happen before.)
+ > 
+ > I didn't load any special NVidia driver - vanilla kernel only. The 
+ > graphics card is Matrox G550. The nForce2 could be the nForce2 SMBus or 
+ > the nForce2 IDE. Here is the result of dmesg | grep -i nforce
+ > [   26.379422] NFORCE2: IDE controller at PCI slot 0000:00:09.0
+ > [   26.379481] NFORCE2: chipset revision 162
+ > [   26.379525] NFORCE2: not 100% native mode: will probe irqs later
+ > [   26.379575] NFORCE2: BIOS didn't set cable bits correctly. Enabling 
+ > workaround.
+ > [   26.379634] NFORCE2: 0000:00:09.0 (rev a2) UDMA133 controller
+ > [   31.861284] i2c_adapter i2c-0: nForce2 SMBus adapter at 0x5000
+ > [   31.861391] i2c_adapter i2c-1: nForce2 SMBus adapter at 0x5500
 
-Uhm.. it seems like I spoke too soon!
+OK, sorry about that. The 'NVidia nForce2' string does occur in two
+sound drivers, so that may be where it's coming from.
 
-I have now acquired a Sandisk Extreme III 8GB CF card, from a
-reputable source, but it doesn't support UDMA as the Extreme IV card
-was supposed to... and this means I'm getting MWDMA again - and the
-same timeout problems!
+ > > I can reproduce it on an Intel 440BX chipset machine with a PIII.
+ > > However, that chipset, while very good in its day, is rather old now.
+ > 
+ > I believe the problem here only shows if all four sata ports are 
+ > stressed simultaneously (I should test this thoroughly). The dependence 
+ > on Barracuda 7200.10 could be because these disks are faster than the 
+ > others tested, this needed in order for the PCI contention to arise? 
+ > (I'm still wild-guessing here).
 
-I had previously blamed the timeout problems on it being a completely
-naff card which wasn't standards compliant, but now I know this can't
-be the case.
+On my old 440BX reading a single Barracuda (7200.10 or .9 I don't remember)
+or Spinpoint disk was enough to trigger the errors.
 
-Here is the hdparm:
-
-/dev/sda:
-
-CompactFlash ATA device, with removable media
-	Model Number:       SanDisk SDCFX3-8192
-	Serial Number:      019324G2207I5851
-	Firmware Revision:  HDX 4.03
-Standards:
-	Supported: 4
-	Likely used: 4
-Configuration:
-	Logical		max	current
-	cylinders	15880	15880
-	heads		16	16
-	sectors/track	63	63
-	--
-	CHS current addressable sectors:   16007040
-	LBA    user addressable sectors:   16007040
-	device size with M = 1024*1024:        7815 MBytes
-	device size with M = 1000*1000:        8195 MBytes (8 GB)
-Capabilities:
-	LBA, IORDY(may be)(cannot be disabled)
-	Standby timer values: spec'd by Vendor
-	R/W multiple sector transfer: Max = 4	Current = 0
-	DMA: mdma0 mdma1 *mdma2
-	     Cycle time: min=120ns recommended=120ns
-	PIO: pio0 pio1 pio2 pio3 pio4
-	     Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-	Enabled	Supported:
-	    	Write cache
-	   *	CFA feature set
-	   *	CFA advanced modes: pio5 *pio6
-
-Note that it does identify PIO5 and PIO6 (answering my previous
-question), with PIO6 even starred. I got about 9MB/s under hdparm,
-too.
-
-However, the timeouts remain, I triggered it again by doing a mkfs.ext3.
-
-Any ideas?
-
-Thanks,
-
-Eddie
+/Mikael
