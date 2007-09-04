@@ -1,25 +1,18 @@
 From: "n" <xellos@bluebottle.com>
 Subject: pata_pdc202xx_old bug?  (ATA bus error)
 Date: Tue, 4 Sep 2007 04:19:04 -0700
-Message-ID: <200709041119.l84BJ1H7008726@mi0.bluebottle.com>
+Message-ID: <200709041119.l84BJ1H8008726@mi0.bluebottle.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
 	charset="Windows-1252";
 	reply-type=response
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mi0.bluebottle.com ([206.188.25.15]:39999 "EHLO
-	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753001AbXIDLTD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2007 07:19:03 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id l84BJ1H7008726
-	for <linux-ide@vger.kernel.org>; Tue, 4 Sep 2007 04:19:01 -0700
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754167AbXIDLTU@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: n <xellos@bluebottle.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, patrizio.bassi@gmail.com
 Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
 anyone come up with a patch/fix for this?
 
@@ -227,4 +220,3 @@ XFS: log mount failed
 ----------------------------------------------------------------------
 Get a free email account with anti spam protection.
 http://www.bluebottle.com/tag/2
-
