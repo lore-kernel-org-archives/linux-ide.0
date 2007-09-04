@@ -1,25 +1,65 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 8976] New: Regression (ata_piix): Kernel panic
- during driver initialization
-Date: Mon, 3 Sep 2007 15:48:38 -0700
-Message-ID: <20070903154838.1c0f239a.akpm@linux-foundation.org>
-References: <bug-8976-10286@http.bugzilla.kernel.org/>
+From: Petr Vandrovec <vandrove@vc.cvut.cz>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Mon, 03 Sep 2007 18:38:17 -0700
+Message-ID: <46DCB709.902@vc.cvut.cz>
+References: <46D2595B.1030409@sauce.co.nz> <46D2792B.401@vc.cvut.cz> <46DBCCE9.9080806@gmail.com> <46DBDA84.3050505@vc.cvut.cz> <46DC030E.9070704@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38770 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1749667AbXICWta (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2007 18:49:30 -0400
-In-Reply-To: <bug-8976-10286@http.bugzilla.kernel.org/>
+Received: from mailgw.cvut.cz ([147.32.3.235]:34873 "EHLO mailgw.cvut.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752079AbXIDBiT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Sep 2007 21:38:19 -0400
+In-Reply-To: <46DC030E.9070704@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-ide@vger.kernel.org
 
-> On Mon,  3 Sep 2007 13:40:10 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
->
-> http://bugzilla.kernel.org/show_bug.cgi?id=8976
+Tejun Heo wrote:
+> Hello,
+> 
+> Petr Vandrovec wrote:
+>> I have recompiled kernel with all debugging disabled, and it brought me
+>> 1.5MBps, so it is still consistently 1MBps slower than on sil. Disabling
+>> NCQ seems to improve concurrent access a bit (for which I have no
+>> explanation), while slows down single drive scenario:
+>>
+>> With NCQ:
+>>
+>> 1TB alone: 81.22, 79.86
+>> 1TB+1TB:   56.28+56.70, 53.51+56.11
+>>
+>> Without NCQ:
+>>
+>> 1TB alone: 79.78, 80.82
+>> 1TB+1TB:   57.99+58.12, 56.50+56.46
 
-This one is apparantly a post-2.6.22 regression.
+3124-2 (norco 4618):
+
+NCQ:
+
+1TB alone:   82.30, 82.43
+1TB+1TB:     68.36+68.25
+
+noNCQ:
+
+1TB alone:   82.39, 82.29
+1TB+1TB:     70.33+70.32, 69.47+70.01
+
+Unfortunately that enclosure has only two slots used.  I'll try to not 
+forget bring two more disks tomorrow to get it fully populated.
+
+>> 3512 sil, no NCQ:
+>>
+>> 1TB alone: 82.28, 82.18
+>> 1TB+1TB:   47.20+47.54    # Here apparently command based switching or
+>> 1.5Gbps link between device and PMP becomes bottleneck
+> 
+> Hmmmm.... Weird.  Is the different still there if you take PMP out of
+> the picture?
+
+Will do tomorrow.  I need physical access to the box to do that.
+								Petr
+
