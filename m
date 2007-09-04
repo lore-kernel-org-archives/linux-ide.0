@@ -1,58 +1,50 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: MDADM restart at system boot time
-Date: Wed, 05 Sep 2007 10:47:50 +1200
-Message-ID: <46DDE096.5030904@sauce.co.nz>
-References: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 6/7] blk_end_request: remove/unexport
+	end_that_request_*
+Date: Tue, 04 Sep 2007 19:13:18 -0400 (EDT)
+Message-ID: <20070904.191318.23007091.k-ueda@ct.jp.nec.com>
+References: <20070831.184335.85683085.k-ueda@ct.jp.nec.com>
+	<E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:35029 "EHLO smtp.sauce.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753470AbXIDWne (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Sep 2007 18:43:34 -0400
-Received: from [192.168.4.111] (unknown [192.168.4.111])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp22.sauce.co.nz (Postfix) with ESMTP id 0DE43288263
-	for <linux-ide@vger.kernel.org>; Wed,  5 Sep 2007 10:43:32 +1200 (NZST)
-In-Reply-To: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: bhalevy@panasas.com
+Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Paul wrote:
-> Hi,
+Hi,
+
+On Tue, 4 Sep 2007 17:25:14 -0400, "Halevy, Benny" <bhalevy@panasas.com> wrote:
+> We suspect we'll still need the extern entry points for handling the bidi 
+> request in the scsi_io_completion() path as we only want to call
+> end_that_request_chunk on req->next_rq and never
+> end_that_request_last.
 >  
-> I hope someone can help.
->  
-> I have manually installed mdadm and now have a working array. I installed mdadm from the tarball, then did 'make install'
->  
-> My problem is after system reboot the array will not start as the daemon is not running, I guess.
->  
-> In order to access my files I have to re-create the array, which it complains about and then re-mount the disks, via the usual 'mount /dev/md0 /data', I know this 'mount' can be done via fstab, but I need the first part to work first.
->  
-> I have the following info in my mdadm.conf file:
-> 
-> DEVICE /dev/hdb1 /dev/hdc1
-> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=0f0e3d1f:52580ad4:2ef6a2e7:f760e130
->         devices=/dev/hdb1,/dev/hdc1
+> (see 
+> http://www.bhalevy.com/open-osd/download/linux-2.6.23-rc2_and_iscsi-iscsi-2007_08_09/0005-SCSI-bidi-support.patch)
 
-Apologies, I was slightly incorrect on the last part.
+If this patch-set is merged, there may be other way to do that.
 
-Replace the "DEVICE" entry with:
+For tricky drivers, special interface, blk_end_request_callback(),
+is added in the patch 5/7.
+(http://marc.info/?l=linux-kernel&m=118860027714753&w=2)
+Currently, only user of the interface is ide-cd (cdrom_newpc_intr()).
+It needs to call only end_that_request_first() too.
 
-DEVICE partitions
+With the patch 7/7, you can set your own handler in rq->end_io()
+to complete the request by your own way.
 
-and add
-
-auto=part
-
-in place of the "devices=/dev/hdb1,/dev/hdc1" section at
-the end of your ARRAY entry.
-
-
-Regards,
-
-Richard
-
+Thanks,
+Kiyoshi Ueda
