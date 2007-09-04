@@ -1,63 +1,72 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: sata_promise: port is slow to respond, reset failed
-Date: Tue, 4 Sep 2007 20:47:57 +0200
-Message-ID: <18141.43101.618644.38451@alkaid.it.uu.se>
-References: <200709030811.l838BC9a026315@harpo.it.uu.se>
-	<46DC70AE.6050100@how.dk>
-	<18141.5115.238011.870159@alkaid.it.uu.se>
-	<46DD93DD.8020100@how.dk>
+From: "Steffen D." <ml@saxnet.de>
+Subject: CF-Card DMA problem
+Date: Tue, 04 Sep 2007 23:02:42 +0200
+Message-ID: <46DDC7F2.8080502@saxnet.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:53857 "EHLO aun.it.uu.se"
+Received: from saxnet.de ([85.10.198.206]:57182 "EHLO coredumb.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751993AbXIDSsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Sep 2007 14:48:33 -0400
-In-Reply-To: <46DD93DD.8020100@how.dk>
+	id S1753746AbXIDVOE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Sep 2007 17:14:04 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by coredumb.de (Postfix) with ESMTP id D9CB91C805C
+	for <linux-ide@vger.kernel.org>; Tue,  4 Sep 2007 23:02:56 +0200 (CEST)
+Received: from coredumb.de ([127.0.0.1])
+	by localhost (saxnet.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id pF053PDIe9FE for <linux-ide@vger.kernel.org>;
+	Tue,  4 Sep 2007 23:02:52 +0200 (CEST)
+Received: from [192.168.2.24] (p54B4CF6C.dip.t-dialin.net [84.180.207.108])
+	by coredumb.de (Postfix) with ESMTP id C15B11C805B
+	for <linux-ide@vger.kernel.org>; Tue,  4 Sep 2007 23:02:52 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Favrholdt <linux-ide@how.dk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Peter Favrholdt writes:
- > Mikael Pettersson wrote:
- > > nForce2. Hmm..
- > 
- > Peter Favrholdt wrote:
- > >  >   11:      27474    XT-PIC-XT        libata, libata, ohci_hcd:usb3, 
- > >  > NVidia nForce2
- > 
- > > That "mystery" device makes me strongly suspect that you've
- > > loaded the binary-only nvidia drivers. If that's true, then
- > > the machine's problems may just as well be caused by that driver,
- > > not sata_promise. (We've seen that happen before.)
- > 
- > I didn't load any special NVidia driver - vanilla kernel only. The 
- > graphics card is Matrox G550. The nForce2 could be the nForce2 SMBus or 
- > the nForce2 IDE. Here is the result of dmesg | grep -i nforce
- > [   26.379422] NFORCE2: IDE controller at PCI slot 0000:00:09.0
- > [   26.379481] NFORCE2: chipset revision 162
- > [   26.379525] NFORCE2: not 100% native mode: will probe irqs later
- > [   26.379575] NFORCE2: BIOS didn't set cable bits correctly. Enabling 
- > workaround.
- > [   26.379634] NFORCE2: 0000:00:09.0 (rev a2) UDMA133 controller
- > [   31.861284] i2c_adapter i2c-0: nForce2 SMBus adapter at 0x5000
- > [   31.861391] i2c_adapter i2c-1: nForce2 SMBus adapter at 0x5500
+Hello,
 
-OK, sorry about that. The 'NVidia nForce2' string does occur in two
-sound drivers, so that may be where it's coming from.
+im building a kernel for my db800 development board running with linux.
 
- > > I can reproduce it on an Intel 440BX chipset machine with a PIII.
- > > However, that chipset, while very good in its day, is rather old now.
- > 
- > I believe the problem here only shows if all four sata ports are 
- > stressed simultaneously (I should test this thoroughly). The dependence 
- > on Barracuda 7200.10 could be because these disks are faster than the 
- > others tested, this needed in order for the PCI contention to arise? 
- > (I'm still wild-guessing here).
+In short "words", here is the problem:
 
-On my old 440BX reading a single Barracuda (7200.10 or .9 I don't remember)
-or Spinpoint disk was enough to trigger the errors.
+-----------------------------------copy------------------------------------------------- 
 
-/Mikael
+ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+AMD5536: IDE controller at PCI slot 0000:00:0f.2
+AMD5536: chipset revision 1
+AMD5536: not 100% native mode: will probe irqs later
+AMD5536: 0000:00:0f.2 (rev 01) UDMA100 controller
+  ide0: BM-DMA at 0x1ca0-0x1ca7, BIOS settings: hda:pio, hdb:pio
+hda: SanDisk SDCFH-2048, CFA DISK drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+hda: max request size: 128KiB
+hda: 4001760 sectors (2048 MB) w/1KiB Cache, CHS=3970/16/63, DMA
+hda:<4>hda: dma_timer_expiry: dma status == 0x21
+hda: DMA timeout error
+hda: dma timeout error: status=0x58 { DriveReady SeekComplete DataRequest }
+ide: failed opcode was: unknown
+hda: DMA disabled
+ide0: reset: success
+hda1
+-----------------------------------/copy------------------------------------------------- 
+
+
+Here are some more information...
+
+Full bootlog - http://nopaste.info/5498e6335b.html
+
+Kernel .config - http://rootbox.de/kernelconf
+
+Im very that it is a real sandisk, hdparm says the DMA is disabled. The 
+card supports MWDMA modes 0 to 2...
+Does anybody have i idea what todo here?
+
+Any tipps are very welcome :)
+
+Regards,
+
+Steffen
+
+
+
