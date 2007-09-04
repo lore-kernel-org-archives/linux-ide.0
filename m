@@ -1,124 +1,58 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 1/7] blk_end_request: add new request
- completion interface
-Date: Tue, 04 Sep 2007 18:23:31 -0400 (EDT)
-Message-ID: <20070904.182331.88469348.k-ueda@ct.jp.nec.com>
-References: <20070831.184112.45519768.k-ueda@ct.jp.nec.com>
-	<20070903074545.GH4253@kernel.dk>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: MDADM restart at system boot time
+Date: Wed, 05 Sep 2007 10:47:50 +1200
+Message-ID: <46DDE096.5030904@sauce.co.nz>
+References: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20070903074545.GH4253@kernel.dk>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:35029 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753470AbXIDWne (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Sep 2007 18:43:34 -0400
+Received: from [192.168.4.111] (unknown [192.168.4.111])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp22.sauce.co.nz (Postfix) with ESMTP id 0DE43288263
+	for <linux-ide@vger.kernel.org>; Wed,  5 Sep 2007 10:43:32 +1200 (NZST)
+In-Reply-To: <8f2c1194b4839dee2ea49eedfeaf783a@7digital.co.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Jens,
-
-Thank you for the comments.
-
-On Mon, 3 Sep 2007 09:45:45 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
-> > +extern int blk_end_request(struct request *rq, int uptodate, int nr_bytes);
-> > +extern int __blk_end_request(struct request *rq, int uptodate, int nr_bytes);
-> >  extern int end_that_request_first(struct request *, int, int);
-> >  extern int end_that_request_chunk(struct request *, int, int);
-> >  extern void end_that_request_last(struct request *, int);
+Paul wrote:
+> Hi,
+>  
+> I hope someone can help.
+>  
+> I have manually installed mdadm and now have a working array. I installed mdadm from the tarball, then did 'make install'
+>  
+> My problem is after system reboot the array will not start as the daemon is not running, I guess.
+>  
+> In order to access my files I have to re-create the array, which it complains about and then re-mount the disks, via the usual 'mount /dev/md0 /data', I know this 'mount' can be done via fstab, but I need the first part to work first.
+>  
+> I have the following info in my mdadm.conf file:
 > 
-> We get in to way too many levels of underscores here. Please changes
-> this to be blk_end_request() and blk_end_request_locked(), where the
-> former grabs the queue lock but the latter assumes it's held. Then have
-> the static __blk_end_request() where the lock MUST be held - do this in
-> the caller, don't pass it as an argument!
+> DEVICE /dev/hdb1 /dev/hdc1
+> ARRAY /dev/md0 level=raid1 num-devices=2 UUID=0f0e3d1f:52580ad4:2ef6a2e7:f760e130
+>         devices=/dev/hdb1,/dev/hdc1
 
-It makes perfect sense but I have a reason I couldn't do it.
+Apologies, I was slightly incorrect on the last part.
 
-The goal of our patch set is to change the role of rq->end_io()
-so that the request submitter can set its own procedure of
-request completion (please see the patch 7/7).
+Replace the "DEVICE" entry with:
 
-So if the caller must hold the lock, we have to hold the lock
-during the whole rq->end_io(), that includes end_that_request_first().
-It would cause performance regression by making the lock held longer.
-OTOH, the 'needlock' argument allows the completion handler to hold
-the lock during the minimum piece of the code.
+DEVICE partitions
 
-If you have any idea to fix the situation, I would appreciate it.
+and add
+
+auto=part
+
+in place of the "devices=/dev/hdb1,/dev/hdc1" section at
+the end of your ARRAY entry.
 
 
-Below is the detailed explanation of the above.
-I took your comment as below.
------------------------------------------------------------------
-static void __blk_end_request(rq, uptodate) {
-	blk_queue_end_tag();
-	blkdev_dequeue_request();
-	end_that_request_last(rq, uptodate);
-}
-int blk_end_request_locked(rq, uptodate, nr_bytes) {
-	if (end_that_request_first(rq, uptodate, nr_bytes))
-		return 1;
-	add_disk_randomness();
-	__blk_end_request(rq, uptodate);
-	return 0;
-}
-EXPORT_SYMBOL_GPL(blk_end_request_locked);
-int blk_end_request(rq, uptodate, nr_bytes) {
-	if (end_that_request_first(rq, uptodate, nr_bytes))
-		return 1;
-	add_disk_randomness();
-	spin_lock_irqsave();
-	__blk_end_request(rq, uptodate);
-	spin_unlock_irqrestore();
-	return 0;
-}
-EXPORT_SYMBOL_GPL(blk_end_request);
------------------------------------------------------------------
+Regards,
 
-It's quite reasonable on the patch 1/7.
-But the goal of this patch-set is to allow to hook the whole request
-completion procedures by a single rq->end_io() hook.
-(Please see the patch 7/7 for details)
-So the callee (funciton_to_be_set_in_rq_end_io() below) needs to know
-whether it has the lock or not.
-To prepare for the change of the patch 7/7 and avoid code duplication,
-I chose passing the lock information as an argument.
------------------------------------------------------------------
-static int function_to_be_set_in_rq_end_io(rq, uptodate, nr_bytes, needlock) {
-	if (end_that_request_first(rq, uptodate, nr_bytes))
-		return 1;
-	add_disk_randomness();
-	if (needlock)
-		spin_lock_irqsave();
-	__blk_end_request(rq, uptodate);
-	if (needlock)
-		spin_unlock_irqrestore();
-	return 0;
-}
-int blk_end_request_locked(rq, uptodate, nr_bytes) {
-	if (rq->end_io)
-		return rq->end_io(rq, uptodate, nr_bytes, 0);
+Richard
 
-	if (end_that_request_first(rq, uptodate, nr_bytes))
-	....
-}
-int blk_end_request(rq, uptodate, nr_bytes) {
-	if (rq->end_io)
-		return rq->end_io(rq, uptodate, nr_bytes, 1);
-
-	if (end_that_request_first(rq, uptodate, nr_bytes))
-	....
-}
------------------------------------------------------------------
-
-Thanks,
-Kiyoshi Ueda
