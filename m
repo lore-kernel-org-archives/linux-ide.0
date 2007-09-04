@@ -1,48 +1,55 @@
-From: Chuck Ebbert <cebbert@redhat.com>
+From: Peter Favrholdt <linux-ide@how.dk>
 Subject: Re: sata_promise: port is slow to respond, reset failed
-Date: Tue, 04 Sep 2007 12:37:02 -0400
-Message-ID: <46DD89AE.7020802@redhat.com>
-References: <200709030811.l838BC9a026315@harpo.it.uu.se>
+Date: Tue, 04 Sep 2007 19:20:29 +0200
+Message-ID: <46DD93DD.8020100@how.dk>
+References: <200709030811.l838BC9a026315@harpo.it.uu.se>	<46DC70AE.6050100@how.dk> <18141.5115.238011.870159@alkaid.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:35651 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753492AbXIDQhL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Sep 2007 12:37:11 -0400
-In-Reply-To: <200709030811.l838BC9a026315@harpo.it.uu.se>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:52115 "EHLO
+	pfepb.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754812AbXIDRUc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2007 13:20:32 -0400
+In-Reply-To: <18141.5115.238011.870159@alkaid.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@how.dk, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On 09/03/2007 04:11 AM, Mikael Pettersson wrote:
-> On Mon, 03 Sep 2007 01:04:08 +0200, Peter Favrholdt wrote:
->> Hi Mikael Pettersson wrote:
->>> I'm easily able to reproduce this problem on my sata_promise test rig.
->>> Using 2.6.23-rc5 to dd read a single Seagate disk on a SATA300 TX4 card
->>> quickly fails as Peter described.
->>>
->>> Applying the 1.5Gbps patch to the driver appears to make things stable.
->>>
->>> Those SATAII chips really don't seem to like 3Gbps mode. Or else we're
->>> missing some critical documentation on how to make them work.
->> The funny thing is: I have the exact same adapter and disks in a Dell 
->> PE1800 server. This doesn't show any errors.
->>
->> Only difference is the card is in a PCI-X slot and the server is running
->> Linux 2.6.19.5.
-> 
-> I assume the PE1800 has some Intel chipset? Which one?
-> And the machine that does have problems, what chipset does it have?
-> 
-> I'm actually beginning to think there's some PCI compatibility breakage
-> somewhere, as I too see sata_promise working fine in some machines but
-> not in others. Alas, my knowledge of PCI tweakables is close to nil.
+Mikael Pettersson wrote:
+> nForce2. Hmm..
 
-I am seeing some problems solved by using pci=nomsi and/or pci=nommconf.
-We either have a bug in MSI, especially on x86_64, or some chipsets just
-don't work very well with it.
+Peter Favrholdt wrote:
+>  >   11:      27474    XT-PIC-XT        libata, libata, ohci_hcd:usb3, 
+>  > NVidia nForce2
 
+> That "mystery" device makes me strongly suspect that you've
+> loaded the binary-only nvidia drivers. If that's true, then
+> the machine's problems may just as well be caused by that driver,
+> not sata_promise. (We've seen that happen before.)
 
+I didn't load any special NVidia driver - vanilla kernel only. The 
+graphics card is Matrox G550. The nForce2 could be the nForce2 SMBus or 
+the nForce2 IDE. Here is the result of dmesg | grep -i nforce
+[   26.379422] NFORCE2: IDE controller at PCI slot 0000:00:09.0
+[   26.379481] NFORCE2: chipset revision 162
+[   26.379525] NFORCE2: not 100% native mode: will probe irqs later
+[   26.379575] NFORCE2: BIOS didn't set cable bits correctly. Enabling 
+workaround.
+[   26.379634] NFORCE2: 0000:00:09.0 (rev a2) UDMA133 controller
+[   31.861284] i2c_adapter i2c-0: nForce2 SMBus adapter at 0x5000
+[   31.861391] i2c_adapter i2c-1: nForce2 SMBus adapter at 0x5500
+
+> I can reproduce it on an Intel 440BX chipset machine with a PIII.
+> However, that chipset, while very good in its day, is rather old now.
+
+I believe the problem here only shows if all four sata ports are 
+stressed simultaneously (I should test this thoroughly). The dependence 
+on Barracuda 7200.10 could be because these disks are faster than the 
+others tested, this needed in order for the PCI contention to arise? 
+(I'm still wild-guessing here).
+
+Best regards,
+
+Peter
