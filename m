@@ -1,53 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 8/13] alim15x3: always tune PIO
-Date: Wed, 5 Sep 2007 23:59:53 +0200
-Message-ID: <200709052359.53505.bzolnier@gmail.com>
+From: "Eddie Hung" <eddie.hung@gmail.com>
+Subject: Re: CF as IDE on ICH6M using libata
+Date: Wed, 5 Sep 2007 23:03:59 +0100
+Message-ID: <6f9550040709051503k5b0a07b1x3e21bae3667ce17@mail.gmail.com>
+References: <6f9550040709020542h530f0bfap5b01fb4ff0c00f25@mail.gmail.com>
+	 <46DAB5DD.80807@gmail.com> <46DEE72B.2060702@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:1704 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756784AbXIEV7C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 17:59:02 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so1828160nfh
-        for <linux-ide@vger.kernel.org>; Wed, 05 Sep 2007 14:59:02 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.187]:48183 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754324AbXIEWEC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 18:04:02 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so3175310mue
+        for <linux-ide@vger.kernel.org>; Wed, 05 Sep 2007 15:04:00 -0700 (PDT)
+In-Reply-To: <46DEE72B.2060702@rtr.ca>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
+Hello all,
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/alim15x3.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+After trying a fake Extreme IV, then an Extreme III (which doesn't
+support UDMA) and then back onto another Extreme IV - I can finally
+report success!
 
-Index: b/drivers/ide/pci/alim15x3.c
-===================================================================
---- a/drivers/ide/pci/alim15x3.c
-+++ b/drivers/ide/pci/alim15x3.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/alim15x3.c		Version 0.26	Jul 14 2007
-+ * linux/drivers/ide/pci/alim15x3.c		Version 0.27	Aug 27 2007
-  *
-  *  Copyright (C) 1998-2000 Michel Aubry, Maintainer
-  *  Copyright (C) 1998-2000 Andrzej Krzysztofowicz, Maintainer
-@@ -668,11 +668,11 @@ static void __devinit init_hwif_common_a
- 	if (m5229_revision <= 0xC4)
- 		hwif->host_flags |= IDE_HFLAG_NO_LBA48_DMA;
- 
--	if (!hwif->dma_base) {
--		hwif->drives[0].autotune = 1;
--		hwif->drives[1].autotune = 1;
-+	hwif->drives[0].autotune = 1;
-+	hwif->drives[1].autotune = 1;
-+
-+	if (hwif->dma_base == 0)
- 		return;
--	}
- 
- 	/*
- 	 * check in ->init_dma guarantees m5229_revision >= 0x20 here
+I am now using UDMA4 and enjoying speeds of 30+MB/s which is all very
+nice!!! (The other X41 user who reported success was also using a UDMA
+capable card)
+
+However, I think we can conclude that ICH6M (which on the X41, has a
+SATA-PATA bridge to connect a PATA drive) does not seem to support
+MWDMA (especially as it is not completely supported under Windows
+either - it is *incredibly* slow but does not give the same timeout
+problems as with libata), nor does libata it drop down gracefully to
+PIO4 when it detects these timeouts.
+
+Thanks everybody,
+
+Eddie
+
+On 05/09/07, Mark Lord <liml@rtr.ca> wrote:
+> Tejun Heo wrote:
+> > ..
+> > I don't think the device supports UDMA.  Supported transfer modes are
+> > indicated in the IDENTIFY page (hdparm -I) and libata/ide would use UDMA
+> > if the device reports so.  There's no black magic there.
+> >
+> >
+>
+> Some newer CF Cards have a funky way of reporting UDMA.
+> Get a copy of hdparm-7.7 (sourceforge) and try "hdparm -I"
+> using it, and post the output here.
+>
+> We may (or not) need to update libata to recognize UDMA on CF cards.
+>
+> Cheers
+>
