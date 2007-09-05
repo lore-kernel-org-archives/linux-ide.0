@@ -1,92 +1,52 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/7] blk_end_request: changing "normal" drivers
-Date: Wed, 05 Sep 2007 10:45:54 +0300
-Message-ID: <46DE5EB2.4050505@panasas.com>
-References: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
+From: richard kennedy <richard@rsk.demon.co.uk>
+Subject: Re: pata_via cd/dvd timeout problems
+Date: Wed, 05 Sep 2007 09:50:10 +0100
+Message-ID: <1188982210.3075.9.camel@castor.rsk.org>
+References: <124748.3608.qm@web54408.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:14279 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755597AbXIEHqn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 03:46:43 -0400
-In-Reply-To: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
+Received: from anchor-post-36.mail.demon.net ([194.217.242.86]:2999 "EHLO
+	anchor-post-36.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756024AbXIEIuW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 04:50:22 -0400
+In-Reply-To: <124748.3608.qm@web54408.mail.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+To: Vlad <vladc6@yahoo.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Sep 01 2007 at 1:42 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> This patch converts "normal" drivers, which complete request
-> in a standard way shown below, to use blk_end_request().
+On Tue, 2007-09-04 at 17:40 -0700, Vlad wrote:
+> Hi,
 > 
->  a) end_that_request_{chunk/first}
->     spin_lock_irqsave()
->     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
->     end_that_request_last()
->     spin_unlock_irqrestore()
->     => blk_end_request()
+> > I have both a dvd RW drive & a cd rom drive connected
+> > the second ide interface on my motherboard with a via
+> > chipset, using pata_via I see timeout messages in the
+> > log & after some time both drives lockup and are
+> > unable to mount any disks. 
 > 
->  b) spin_lock_irqsave()
->     end_that_request_{chunk/first}
->     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
->     end_that_request_last()
->     spin_unlock_irqrestore()
->     => spin_lock_irqsave()
->        __blk_end_request()
->        spin_unlock_irqsave()
+> I would suggest trying the following things:
 > 
->  c) end_that_request_last()
->     => __blk_end_request()
+> 1) Add both drives ("_NEC DVD_RW ND-3520" and "TSSTcorpDVD-ROM
+> TS-H352A") to ata_device_blacklist in drivers/ata/libata-core.c using
+> the ATA_HORKAGE_NODMA and ATA_HORKAGE_MAX_SEC_128 keywords and then
+> recompile the kernel.
 > 
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> ---
->  arch/arm/plat-omap/mailbox.c    |    9 ++++++---
->  arch/um/drivers/ubd_kern.c      |   10 +---------
->  block/elevator.c                |    4 ++--
->  block/ll_rw_blk.c               |   15 +++++----------
->  drivers/block/DAC960.c          |    6 ++----
->  drivers/block/floppy.c          |    8 +++-----
->  drivers/block/lguest_blk.c      |    5 +----
->  drivers/block/nbd.c             |    4 +---
->  drivers/block/ps3disk.c         |    6 +-----
->  drivers/block/sunvdc.c          |    5 +----
->  drivers/block/sx8.c             |    4 +---
->  drivers/block/ub.c              |    4 ++--
->  drivers/block/viodasd.c         |    5 +----
->  drivers/block/xen-blkfront.c    |    5 ++---
->  drivers/cdrom/viocd.c           |    5 +----
->  drivers/ide/ide-cd.c            |    6 +++---
->  drivers/ide/ide-io.c            |   22 +++++++---------------
->  drivers/message/i2o/i2o_block.c |    8 ++------
->  drivers/mmc/card/block.c        |   24 +++++-------------------
->  drivers/mmc/card/queue.c        |    4 ++--
->  drivers/s390/block/dasd.c       |    4 +---
->  drivers/s390/char/tape_block.c  |    3 +--
->  drivers/scsi/ide-scsi.c         |    8 ++++----
->  drivers/scsi/scsi_lib.c         |   13 ++-----------
->  24 files changed, 57 insertions(+), 130 deletions(-)
+> 2) Move the CD and DVD RW drives to a computer with another chipset to
+> determine whether they or the chipset are to blame.
 > 
-> diff -rupN 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c 03-normal-caller-change/arch/arm/plat-omap/mailbox.c
-> --- 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c	2007-08-13 00:25:24.000000000 -0400
-> +++ 03-normal-caller-change/arch/arm/plat-omap/mailbox.c	2007-08-23 17:51:33.000000000 -0400
-> @@ -117,7 +117,8 @@ static void mbox_tx_work(struct work_str
->  
-> ...
+> Vlad
+> 
+Thanks for the suggestion I'll give it a try.
 
-Please Separate this patch to at least three patches.
-1. Block layer - block/elevator.c block/ll_rw_blk.c
-2. SCSI-ML - drivers/scsi/scsi_lib.c
-3. Normal drivers, can also be separated into logical
-   groups like scsi/block etc..
+Unfortunately I don't have another machine to try these drives in. But
+they both worked OK under the old ide code -- the problems only started
+with the move to libata.
 
-This is because these patches introduce conflicts
-to lots of queued work I have, and if you separate
-them it will help me with my giting. Also I think
-that this is logical. Block-layer and scsi_lib are
-not drivers, the Subject of the patch does not match.
+I guess the commands timing out are udev probing to see if a disk has
+been inserted ?
 
-Thanks
-Boaz
+thanks
+Richard
+
