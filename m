@@ -1,76 +1,56 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 3/7] blk_end_request: changing "normal"
-	drivers
-Date: Wed, 05 Sep 2007 09:54:15 -0400 (EDT)
-Message-ID: <20070905.095415.74754238.k-ueda@ct.jp.nec.com>
-References: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
-	<46DE5EB2.4050505@panasas.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [sata_nv] timeout waiting for ADMA IDLE, stat=0x440
+Date: Wed, 5 Sep 2007 09:48:45 -0700
+Message-ID: <20070905094845.1d2f84cb.akpm@linux-foundation.org>
+References: <fa.JryGluomV43EviuSMJKX+JI+tvU@ifi.uio.no>
+	<46CF68C4.9040506@shaw.ca>
+	<6d4bc9fc0708250637g10c75f44x20ae1533874c986a@mail.gmail.com>
+	<Pine.LNX.4.64.0708281515340.3018@fbirervta.pbzchgretzou.qr>
+	<6d4bc9fc0708280706q278fe285kdf90a27f40d2a55@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <46DE5EB2.4050505@panasas.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bharrosh@panasas.com
-Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:34474 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755335AbXIEQuA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 12:50:00 -0400
+In-Reply-To: <6d4bc9fc0708280706q278fe285kdf90a27f40d2a55@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Maarten Maathuis <madman2003@gmail.com>
+Cc: jengelh@computergmbh.de, linux-kernel@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Hi Benny,
-
-Thank you for the comments.
-
-On Wed, 05 Sep 2007 10:45:54 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> On Sat, Sep 01 2007 at 1:42 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> >  arch/arm/plat-omap/mailbox.c    |    9 ++++++---
-> >  arch/um/drivers/ubd_kern.c      |   10 +---------
-> >  block/elevator.c                |    4 ++--
-> >  block/ll_rw_blk.c               |   15 +++++----------
-> >  drivers/block/DAC960.c          |    6 ++----
-> >  drivers/block/floppy.c          |    8 +++-----
-> >  drivers/block/lguest_blk.c      |    5 +----
-> >  drivers/block/nbd.c             |    4 +---
-> >  drivers/block/ps3disk.c         |    6 +-----
-> >  drivers/block/sunvdc.c          |    5 +----
-> >  drivers/block/sx8.c             |    4 +---
-> >  drivers/block/ub.c              |    4 ++--
-> >  drivers/block/viodasd.c         |    5 +----
-> >  drivers/block/xen-blkfront.c    |    5 ++---
-> >  drivers/cdrom/viocd.c           |    5 +----
-> >  drivers/ide/ide-cd.c            |    6 +++---
-> >  drivers/ide/ide-io.c            |   22 +++++++---------------
-> >  drivers/message/i2o/i2o_block.c |    8 ++------
-> >  drivers/mmc/card/block.c        |   24 +++++-------------------
-> >  drivers/mmc/card/queue.c        |    4 ++--
-> >  drivers/s390/block/dasd.c       |    4 +---
-> >  drivers/s390/char/tape_block.c  |    3 +--
-> >  drivers/scsi/ide-scsi.c         |    8 ++++----
-> >  drivers/scsi/scsi_lib.c         |   13 ++-----------
-> >  24 files changed, 57 insertions(+), 130 deletions(-)
+> On Tue, 28 Aug 2007 16:06:41 +0200 "Maarten Maathuis" <madman2003@gmail.com> wrote:
+> I have not had any issues, i swapped the cable because a while ago i
+> had to check the connection of the drive after the bios failed to
+> detect the drive. That is why i considered that a posibility. Kernel
+> 2.6.18 does not have NCQ support for nvidia chipsets, so that cannot
+> be it.
 > 
-> Please Separate this patch to at least three patches.
-> 1. Block layer - block/elevator.c block/ll_rw_blk.c
-> 2. SCSI-ML - drivers/scsi/scsi_lib.c
-> 3. Normal drivers, can also be separated into logical
->    groups like scsi/block etc..
+> Maarten.
 > 
-> This is because these patches introduce conflicts
-> to lots of queued work I have, and if you separate
-> them it will help me with my giting. Also I think
-> that this is logical. Block-layer and scsi_lib are
-> not drivers, the Subject of the patch does not match.
+> On 8/28/07, Jan Engelhardt <jengelh@computergmbh.de> wrote:
+> >
+> > On Aug 25 2007 15:37, Maarten Maathuis wrote:
+> > >
+> > >A broken cable seems like a realistic possibility, so i swapped it for
+> > >another cable. I will try if that solves the problem.
+> >
+> > Hi, did you have any success/failure, other updates?
+> > I am facing a similar problem (just posted to linux-ide@vger.kernel.org),
+> > but also with 2.6.18, and it does not look like an NCQ or loose cable problem (got a
+> > backplane, and sda is working normal).
+> >
 
-I see.
-OK, I will separate this patch for each driver so that
-driver maintainers and developers can apply them easily.
+This is a rather comedic email thread, with people top-posting, others
+leaving others off the cc list, Robert's MUA reliably and inexplicably
+mangling both In-Reply-To: and References: thus breaking threading, no
+visible sign of how Jan got involved and no linux-ide cc's.
 
-Thanks,
-Kiyoshi Ueda
+Enough time has passed for everyone to forget all about this.  So Maarten,
+if you still believe that this is still a kernel bug then please update us
+on its status and provide a full description for linux-ide..  Please use
+reply-to-all for that.
+
+Thanks.
