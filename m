@@ -1,50 +1,42 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 6/7] blk_end_request: remove/unexport
-	end_that_request_*
-Date: Tue, 04 Sep 2007 19:13:18 -0400 (EDT)
-Message-ID: <20070904.191318.23007091.k-ueda@ct.jp.nec.com>
-References: <20070831.184335.85683085.k-ueda@ct.jp.nec.com>
-	<E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Vlad <vladc6@yahoo.com>
+Subject: Re: pata_via cd/dvd timeout problems
+Date: Tue, 4 Sep 2007 17:40:26 -0700 (PDT)
+Message-ID: <124748.3608.qm@web54408.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bhalevy@panasas.com
-Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web54408.mail.yahoo.com ([206.190.49.138]:34485 "HELO
+	web54408.mail.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754669AbXIEArH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2007 20:47:07 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: richard kennedy <richard@rsk.demon.co.uk>
+Cc: linux-ide@vger.kernel.org
 
 Hi,
 
-On Tue, 4 Sep 2007 17:25:14 -0400, "Halevy, Benny" <bhalevy@panasas.com> wrote:
-> We suspect we'll still need the extern entry points for handling the bidi 
-> request in the scsi_io_completion() path as we only want to call
-> end_that_request_chunk on req->next_rq and never
-> end_that_request_last.
->  
-> (see 
-> http://www.bhalevy.com/open-osd/download/linux-2.6.23-rc2_and_iscsi-iscsi-2007_08_09/0005-SCSI-bidi-support.patch)
+> I have both a dvd RW drive & a cd rom drive connected
+> the second ide interface on my motherboard with a via
+> chipset, using pata_via I see timeout messages in the
+> log & after some time both drives lockup and are
+> unable to mount any disks. 
 
-If this patch-set is merged, there may be other way to do that.
+I would suggest trying the following things:
 
-For tricky drivers, special interface, blk_end_request_callback(),
-is added in the patch 5/7.
-(http://marc.info/?l=linux-kernel&m=118860027714753&w=2)
-Currently, only user of the interface is ide-cd (cdrom_newpc_intr()).
-It needs to call only end_that_request_first() too.
+1) Add both drives ("_NEC DVD_RW ND-3520" and "TSSTcorpDVD-ROM
+TS-H352A") to ata_device_blacklist in drivers/ata/libata-core.c using
+the ATA_HORKAGE_NODMA and ATA_HORKAGE_MAX_SEC_128 keywords and then
+recompile the kernel.
 
-With the patch 7/7, you can set your own handler in rq->end_io()
-to complete the request by your own way.
+2) Move the CD and DVD RW drives to a computer with another chipset to
+determine whether they or the chipset are to blame.
 
-Thanks,
-Kiyoshi Ueda
+Vlad
+
+
+       
+____________________________________________________________________________________
+Pinpoint customers who are looking for what you sell. 
+http://searchmarketing.yahoo.com/
