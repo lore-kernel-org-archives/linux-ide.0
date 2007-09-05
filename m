@@ -1,73 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] via82cxxx: add Arima W730-K8 and other rebadgings to short cables list
-Date: Wed, 5 Sep 2007 22:42:57 +0200
-Message-ID: <200709052242.57591.bzolnier@gmail.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: Re: Resets on sil3124 & sil3726 PMP
+Date: Wed, 5 Sep 2007 14:30:06 -0700
+Message-ID: <20070905213006.GH22695@curie-int.orbis-terrarum.net>
+References: <46D2595B.1030409@sauce.co.nz> <46D2792B.401@vc.cvut.cz> <46DBCCE9.9080806@gmail.com> <46DBDA84.3050505@vc.cvut.cz> <46DC030E.9070704@gmail.com> <46DCB709.902@vc.cvut.cz> <46DE9C20.9030007@vc.cvut.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3XA6nns4nE4KvaS/"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:21791 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757906AbXIEUlf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 16:41:35 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so1814038nfh
-        for <linux-ide@vger.kernel.org>; Wed, 05 Sep 2007 13:41:34 -0700 (PDT)
+Received: from b01.ext.isohunt.com ([208.71.112.51]:39061 "EHLO
+	mail.isohunt.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755689AbXIEVaB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 17:30:01 -0400
 Content-Disposition: inline
+In-Reply-To: <46DE9C20.9030007@vc.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mikael Pettersson <mikpe@it.uu.se>
+To: Petr Vandrovec <vandrove@vc.cvut.cz>, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, Richard Scobie <richard@sauce.co.nz>
 
 
-Port of Alan's patch for pata_via.c.
+--3XA6nns4nE4KvaS/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/via82cxxx.c |   15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+On Wed, Sep 05, 2007 at 05:08:00AM -0700, Petr Vandrovec wrote:
+> > 3124-2 (norco 4618):
+> > NCQ:
+> > 1TB alone:   82.30, 82.43
+> > 1TB+1TB:     68.36+68.25
+> > noNCQ:
+> > 1TB alone:   82.39, 82.29
+> > 1TB+1TB:     70.33+70.32, 69.47+70.01
+> > Unfortunately that enclosure has only two slots used.  I'll try to not=
+=20
+> > forget bring two more disks tomorrow to get it fully populated.
+>  In case you are still follwing this thread, 3124-2 with 4 1TB drives=20
+>  delivers 58.5MBps for each drive with NCQ enabled, and 60MBps with NCQ=
+=20
+>  disabled - total 235-240MBps read speed.  I would like to see 320MBps, b=
+ut=20
+>  apparently today is not my lucky day...
+Just to confirm, how were you testing the multiple drive combination?
 
-Index: b/drivers/ide/pci/via82cxxx.c
-===================================================================
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -1,6 +1,6 @@
- /*
-  *
-- * Version 3.46
-+ * Version 3.47
-  *
-  * VIA IDE driver for Linux. Supported southbridges:
-  *
-@@ -429,19 +429,26 @@ static struct dmi_system_id cable_dmi_ta
- 	{ }
- };
- 
--static int via_cable_override(void)
-+static int via_cable_override(struct pci_dev *pdev)
- {
- 	/* Systems by DMI */
- 	if (dmi_check_system(cable_dmi_table))
- 		return 1;
-+
-+	/* Arima W730-K8/Targa Visionary 811/... */
-+	if (pdev->subsystem_vendor == 0x161F &&
-+	    pdev->subsystem_device == 0x2032)
-+		return 1;
-+
- 	return 0;
- }
- 
- static u8 __devinit via82cxxx_cable_detect(ide_hwif_t *hwif)
- {
--	struct via82cxxx_dev *vdev = pci_get_drvdata(hwif->pci_dev);
-+	struct pci_dev *pdev = hwif->pci_dev;
-+	struct via82cxxx_dev *vdev = pci_get_drvdata(pdev);
- 
--	if (via_cable_override())
-+	if (via_cable_override(pdev))
- 		return ATA_CBL_PATA40_SHORT;
- 
- 	if ((vdev->via_80w >> hwif->channel) & 1)
+--=20
+Robin Hugh Johnson
+Gentoo Linux Developer & Infra Guy
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+
+--3XA6nns4nE4KvaS/
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iD8DBQFG3x/ePpIsIjIzwiwRAvz6AJ44EqvI6CMRwU2ZyVrosLqr3Pw91QCeMI4a
+QKxOoiNUeroUYumDmeFuWok=
+=0ypZ
+-----END PGP SIGNATURE-----
+
+--3XA6nns4nE4KvaS/--
