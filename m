@@ -1,41 +1,32 @@
-From: Paul Wouters <paul@xelerance.com>
-Subject: CF as IDE with pata_via or VIA_IDE fails on lexar CF
-Date: Wed, 5 Sep 2007 18:31:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0709051702590.24400@newtla.xelerance.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ICH Intel PATA short cable override...
+Date: Thu, 6 Sep 2007 01:42:09 +0100
+Message-ID: <20070906014209.142382c8@the-village.bc.nu>
+References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from newtla.xelerance.com ([193.110.157.143]:39959 "EHLO
-	newtla.xelerance.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756574AbXIEXLI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 19:11:08 -0400
+Received: from mobileweb01.london.02.net ([193.113.235.167]:55418 "EHLO
+	the-village.bc.nu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756881AbXIFAek (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 20:34:40 -0400
+In-Reply-To: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Daniel J Blueman <daniel.blueman@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
+On Tue, 4 Sep 2007 13:37:22 +0100
+"Daniel J Blueman" <daniel.blueman@gmail.com> wrote:
 
-Hi,
+> We see that in ata_piix.c, there is a whitelist for (laptop) Intel ICH
+> controllers with short cables, tied to specific vendor subsystem IDs.
+> Since my mini-ITX Ibase MI910F has the subsystem IDs specified as
+> Intel [1], this is unusable.
+> 
+> I can't find another existing mechanism to add short cable
+> information, to allow UDMA/66 for my on-board CF socket.
 
-I followed the discussion on this list about people with CF as IDE
-problems, eg: http://www.mail-archive.com/linux-ide@vger.kernel.org/msg07402.html
-
-I was using Lexar Premium 80x 512MB cards on a VIA VT823x chipset (both on a
-VIA cpu and an P4 board), and they also fail to boot linux. What I tried:
-
-- set pio mode 4 in the BIOS
-- disable DMA in the BIOS
-- boot with ide=nodma
-- boot with noapic
-- try booting with sata_via
-- try booting with old VIA_IDE
-
-A PQI HiSpeed 40 2GB card worked without problems.  A Kingston 2GB
-(no other identifying numbers on the card) also worked without problems.
-
-I tried two different CF adapters, same results.
-
-I now have a few spare, to me useless, Lexar Premium 512M cards lying
-around. If anyone working on the CF-IDE issues would like to receive
-one for free, send me an email.
-
-Paul
+DMI is the other approach (if your box has sane responses to the
+dmidecode command we can do this). 
