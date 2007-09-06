@@ -1,29 +1,30 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata equivalent for hdX=remap63
-Date: Thu, 6 Sep 2007 01:44:44 +0100
-Message-ID: <20070906014444.4604e163@the-village.bc.nu>
-References: <46DA73B5.5010107@ums.usu.ru>
-	<20070902104645.0c6b291c@the-village.bc.nu>
-	<46DC25D2.6090705@ums.usu.ru>
+Subject: Re: pata_via cd/dvd timeout problems
+Date: Thu, 6 Sep 2007 01:33:47 +0100
+Message-ID: <20070906013347.1f588dc4@the-village.bc.nu>
+References: <124748.3608.qm@web54408.mail.yahoo.com>
+	<1188982210.3075.9.camel@castor.rsk.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mobileweb01.london.02.net ([193.113.235.167]:57066 "EHLO
+Received: from mobileweb01.london.02.net ([193.113.235.167]:58170 "EHLO
 	the-village.bc.nu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932250AbXIFAjD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 20:39:03 -0400
-In-Reply-To: <46DC25D2.6090705@ums.usu.ru>
+	with ESMTP id S932193AbXIFAmB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2007 20:42:01 -0400
+In-Reply-To: <1188982210.3075.9.camel@castor.rsk.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Alexander E. Patrakov" <patrakov@ums.usu.ru>
-Cc: linux-ide@vger.kernel.org, Mauelshagen@RedHat.com
+To: richard kennedy <richard@rsk.demon.co.uk>
+Cc: Vlad <vladc6@yahoo.com>, linux-ide@vger.kernel.org
 
-> The first 64 KB of this hard disk can be found at 
-> http://ums.usu.ru/~patrakov/first-64-kb.dsk (please tell me when I can 
-> remove this file).
+> Unfortunately I don't have another machine to try these drives in. But
+> they both worked OK under the old ide code -- the problems only started
+> with the move to libata.
+> 
+> I guess the commands timing out are udev probing to see if a disk has
+> been inserted ?
 
-Thanks - it'll probably be after the kernel summit before anything
-happens but the general question of using device mapper for this has been
-raised there and looks a promising approach.
-
+Probably. If you can file a bug in bugzilla and assign it to me I'll take
+a look at this after the kernel summit. There are one or two reports with
+pata_via and ATAPI (ie CD) that look similar.
