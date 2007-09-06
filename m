@@ -1,49 +1,49 @@
-From: Petr Vandrovec <vandrove@vc.cvut.cz>
-Subject: Re: Resets on sil3124 & sil3726 PMP
-Date: Thu, 06 Sep 2007 02:52:48 -0700
-Message-ID: <46DFCDF0.6050107@vc.cvut.cz>
-References: <46D2595B.1030409@sauce.co.nz> <46D2792B.401@vc.cvut.cz> <46DBCCE9.9080806@gmail.com> <46DBDA84.3050505@vc.cvut.cz> <46DC030E.9070704@gmail.com> <46DCB709.902@vc.cvut.cz> <46DE9C20.9030007@vc.cvut.cz> <20070905213006.GH22695@curie-int.orbis-terrarum.net>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: [sata_nv] timeout waiting for ADMA IDLE, stat=0x440
+Date: Thu, 6 Sep 2007 13:07:57 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0709061302370.25942@fbirervta.pbzchgretzou.qr>
+References: <fa.JryGluomV43EviuSMJKX+JI+tvU@ifi.uio.no> <46CF68C4.9040506@shaw.ca>
+ <6d4bc9fc0708250637g10c75f44x20ae1533874c986a@mail.gmail.com>
+ <Pine.LNX.4.64.0708281515340.3018@fbirervta.pbzchgretzou.qr>
+ <6d4bc9fc0708280706q278fe285kdf90a27f40d2a55@mail.gmail.com>
+ <20070905094845.1d2f84cb.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw.cvut.cz ([147.32.3.235]:44722 "EHLO mailgw.cvut.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753439AbXIFJwz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Sep 2007 05:52:55 -0400
-In-Reply-To: <20070905213006.GH22695@curie-int.orbis-terrarum.net>
+Received: from sovereign.computergmbh.de ([85.214.69.204]:45441 "EHLO
+	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433AbXIFLH6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2007 07:07:58 -0400
+In-Reply-To: <20070905094845.1d2f84cb.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Richard Scobie <richard@sauce.co.nz>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Maarten Maathuis <madman2003@gmail.com>, linux-kernel@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Robin H. Johnson wrote:
-> On Wed, Sep 05, 2007 at 05:08:00AM -0700, Petr Vandrovec wrote:
->>> 3124-2 (norco 4618):
->>> NCQ:
->>> 1TB alone:   82.30, 82.43
->>> 1TB+1TB:     68.36+68.25
->>> noNCQ:
->>> 1TB alone:   82.39, 82.29
->>> 1TB+1TB:     70.33+70.32, 69.47+70.01
->>> Unfortunately that enclosure has only two slots used.  I'll try to not 
->>> forget bring two more disks tomorrow to get it fully populated.
->>  In case you are still follwing this thread, 3124-2 with 4 1TB drives 
->>  delivers 58.5MBps for each drive with NCQ enabled, and 60MBps with NCQ 
->>  disabled - total 235-240MBps read speed.  I would like to see 320MBps, but 
->>  apparently today is not my lucky day...
-> Just to confirm, how were you testing the multiple drive combination?
 
-Concurrent hdparm -t, like
+On Sep 5 2007 09:48, Andrew Morton wrote:
+>> On 8/28/07, Jan Engelhardt <jengelh@computergmbh.de> wrote:
+>> > On Aug 25 2007 15:37, Maarten Maathuis wrote:
+>> > >
+>> > >A broken cable seems like a realistic possibility, so i swapped it for
+>> > >another cable. I will try if that solves the problem.
+>> >
+>> > Hi, did you have any success/failure, other updates?
+>> > I am facing a similar problem (just posted to linux-ide@vger.kernel.org),
+>> > but also with 2.6.18, and it does not look like an NCQ or loose cable problem (got a
+>> > backplane, and sda is working normal).
+>
+>This is a rather comedic email thread, with people top-posting, others
+>leaving others off the cc list, Robert's MUA reliably and inexplicably
+>mangling both In-Reply-To: and References: thus breaking threading, no
+>visible sign of how Jan got involved and no linux-ide cc's.
 
-hdparm -t /dev/sdd & hdparm -t /dev/sde & hdparm -t /dev/sdf & hdparm -t 
-/dev/sdg & sleep 20
+I wrote Maarten a private mail, w/o any mailing lists CCed or BCCed, 
+but with References: (just hit reply button and removed CCs) because I 
+assumed his problem was really just the cabling in the end, which does 
+not apply to me at all.
 
-(and from hdparm output & visually confirmed that all activity LEDs go 
-on & off simultaneously)
-
-So NCQ should not be able to show any (definitely not huge) benefits, 
-but there should not be any reason to not get 4x 1 drive speed as long 
-as neither PMP link nor PCI-X limits are hit.
-								Petr
-
+>Enough time has passed for everyone to forget all about this.  So Maarten,
+>if you still believe that this is still a kernel bug then please update us
+>on its status and provide a full description for linux-ide..  Please use
+>reply-to-all for that.
