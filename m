@@ -1,41 +1,61 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Stardom SATA HSM violation
-Date: Fri, 07 Sep 2007 09:58:59 +0900
-Message-ID: <46E0A253.7060803@gmail.com>
-References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com> <20070905095327.6277d054.akpm@linux-foundation.org> <46DEE617.4050004@rtr.ca>
+Subject: Re: [PATCH] ahci.c: fix ati sb600 sata IRQ_TF_ERR
+Date: Fri, 07 Sep 2007 10:24:17 +0900
+Message-ID: <46E0A841.3090300@gmail.com>
+References: <5767b9100703140222k79dbed9dq6419b4f35d276242@mail.gmail.com>	 <45F7E7E9.6010703@gmail.com>	 <5767b9100703150500t1c34dfb0kc6a199b5374a8d78@mail.gmail.com>	 <45F93888.1080207@gmail.com> <5767b9100703270253j2ac3b543y499323b42c6402b@mail.gmail.com> <46CCA483.4080105@aj.net-lab.net> <46CCB23E.1000506@aj.net-lab.net> <46CD692D.3070508@aj.net-lab.net> <46CF92E2.8080207@gmail.com> <46D2298E.7010105@gmail.com> <46DDE7E7.5030605@net-lab.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:36645 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964896AbXIGA7J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2007 20:59:09 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so364056wah
-        for <linux-ide@vger.kernel.org>; Thu, 06 Sep 2007 17:59:09 -0700 (PDT)
-In-Reply-To: <46DEE617.4050004@rtr.ca>
+Received: from rv-out-0910.google.com ([209.85.198.184]:18084 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932344AbXIGBYZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2007 21:24:25 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so293415rvb
+        for <linux-ide@vger.kernel.org>; Thu, 06 Sep 2007 18:24:25 -0700 (PDT)
+In-Reply-To: <46DDE7E7.5030605@net-lab.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andreas John <aj@net-lab.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Conke Hu <conke.hu@gmail.com>, Neil Brown <neilb@suse.de>
 
-Hello,
+[restoring cc list, please don't drop them]
 
-Mark Lord wrote:
-> I reported a very similar bug back a few releases ago.
-> Anyone who wants to try it themselves, can do this with hdparm-7.7 (from
-> sourceforge):
+Andreas John wrote:
+> Hi,
+> sorry for replying not quicker, but I just wanted to re-test all the
+> theories.
 > 
->    hdparm --drq-hsm-error /dev/sda
+> 1. I was not able to reproduce the problem with 2.6.22 ubuntu gutsy
+> (amd64 and i386). I ran checkarray --all many many times together with
+> dds, but didnt tigger the bug. (even with a second new board!)
 > 
-> Whether or not it hangs the machine does depend upon exactly which SATA
-> LLD is used,
-> and what model/revision of drive is installed.  But if it hangs for you
-> (eg. Tejun),
-> then you now have a way to reproduce a HSM error "on demand" for
-> testing.  :)
+> 2. The only explaination I have is that the sata connector on the HDD
+> itself had some "plaque" on it (production?)
+> 
+> 3. The 1.5GB Sata jumper made no difference - that was our 1st try.
 
-Neat.  Is this the FIFO-draining issue?
+Hmmm.... Well, probably caused by faulty hardware or cosmic rays. :-P
+
+> 4. I think the board can do MSI, as the test above shows
+
+Not sure.  IRQ messages don't seem to indicate MSI is in use.  Have you
+enabled it in the kernel config?
+
+> 5. I still dont know _why_ the problem ocurred. By now I have about 5
+> machines in production - no crash. Another two observations:
+>   a) If mdX is sync'ing, the machines somestimes locks up for 5-100 secs
+
+Does kernel say anything during this lock up?
+
+>   b) If you hotplug a hdd (pull out) you get a sata "frozen" line in the
+> log. Then e.g. md0 sets the disk to faulty, but the same disk (other
+> partition) is still marked active on md1. It gets removeed, on 1st
+> access on md1. Is that the intended behavior? Or should I file a bug?
+> Where? Neil?
+
+Currently, there's no mechanism to notify unplug to md inside the
+kernel.  It can probably done via udev trick or some such.  Cc'd Neil
+for advice.
 
 Thanks.
 
