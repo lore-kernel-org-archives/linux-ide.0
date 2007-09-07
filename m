@@ -1,82 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Stardom SATA HSM violation
-Date: Fri, 07 Sep 2007 09:40:46 -0400
-Message-ID: <46E154DE.2060602@rtr.ca>
-References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com> <20070905095327.6277d054.akpm@linux-foundation.org> <46DEE617.4050004@rtr.ca> <46E0A253.7060803@gmail.com>
+From: "Adrian B. Weissman" <aweissma_ppc@yahoo.com>
+Subject: drivers/ata/ahci.c driver questions / recommendations
+Date: Fri, 7 Sep 2007 12:09:08 -0700 (PDT)
+Message-ID: <324023.28314.qm@web35214.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2001 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965252AbXIGNkr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2007 09:40:47 -0400
-In-Reply-To: <46E0A253.7060803@gmail.com>
+Received: from web35214.mail.mud.yahoo.com ([66.163.179.93]:20390 "HELO
+	web35214.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758158AbXIGTJJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2007 15:09:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linux IDE <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Hello,
-> 
-> Mark Lord wrote:
->> I reported a very similar bug back a few releases ago.
->> Anyone who wants to try it themselves, can do this with hdparm-7.7 (from
->> sourceforge):
->>
->>    hdparm --drq-hsm-error /dev/sda
->>
->> Whether or not it hangs the machine does depend upon exactly which SATA
->> LLD is used,
->> and what model/revision of drive is installed.  But if it hangs for you
->> (eg. Tejun),
->> then you now have a way to reproduce a HSM error "on demand" for
->> testing.  :)
-> 
-> Neat.  Is this the FIFO-draining issue?
+Hello Mr Garzik or Linux IDE contributors:
+     My name is Adrian B. Weissman.  I am looking for
+open source AHCI / Sata II  compliance test software. 
+I read your name ( jgarzik@pobox.com ) at the top of
+the drivers/ata/ahci.c source file, and figured that
+you would be a good person to speak with.
+     Basically, I was wondering what you or the
+linux-ide crew use to verify that your software is
+AHCI / Sata II Compliant?  My initial guess if this
+type of software was not available was to purchase
+several of the various AHCI / Sata II controllers on
+PCI express card and build up a test suite.  Any
+pointers or recommendations would be greatly
+appreciated.
 
-Yeah, that's the one.  And I still patch my own kernels to
-automatically drain up to 512 words from the FIFO when this happens.
+Regards,
 
-Works like a charm.  Patch below for demonstration purposes.
+Adrian B. Weissman
 
-Signed-Off-By:  Mark Lord <mlord@pobox.com>
----
 
---- linux/drivers/ata/libata-sff.c.orig	2007-04-26 12:02:46.000000000 -0400
-+++ linux/drivers/ata/libata-sff.c	2007-04-29 08:29:27.000000000 -0400
-@@ -413,6 +413,24 @@
- 	ap->ops->irq_on(ap);
- }
- 
-+static void ata_drain_fifo (struct ata_port *ap, struct ata_queued_cmd *qc)
-+{
-+	u8 stat = ata_chk_status(ap);
-+	/*
-+	 * Try to clear stuck DRQ if necessary.
-+	 */
-+	if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
-+		unsigned int i, limit = 512;
-+		printk("Draining up to %u words from data FIFO.\n", limit);
-+		for (i = 0; i < limit ; ++i) {
-+			ioread16(ap->ioaddr.data_addr);
-+			if (!(ata_chk_status(ap) & ATA_DRQ))
-+				break;
-+		}
-+		printk("Drained %u/%u words.\n", i, limit);
-+	}
-+}
-+
- /**
-  *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
-  *	@ap: port to handle error for
-@@ -469,7 +487,7 @@
- 	}
- 
- 	ata_altstatus(ap);
--	ata_chk_status(ap);
-+	ata_drain_fifo(ap, qc);
- 	ap->ops->irq_clear(ap);
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
+       
+____________________________________________________________________________________
+Building a website is a piece of cake. Yahoo! Small Business gives you all the tools to get online.
+http://smallbusiness.yahoo.com/webhosting 
