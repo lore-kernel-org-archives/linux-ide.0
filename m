@@ -1,92 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel
- Tolapai
-Date: Fri, 07 Sep 2007 18:39:15 -0400
-Message-ID: <46E1D313.2060302@pobox.com>
-References: <200708302127.19535.jason.d.gaston@intel.com> <46D7C783.8050803@pobox.com> <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
+Date: Fri, 07 Sep 2007 18:44:15 -0400
+Message-ID: <46E1D43F.5020202@garzik.org>
+References: <20070711200538.GA7374@havoc.gtf.org> <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org> <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org> <loom.20070713T053938-434@post.gmane.org> <Pine.LNX.4.64.0709060858030.19388@twinlark.arctic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49065 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43036 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758480AbXIGWjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2007 18:39:19 -0400
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com>
+	id S1750699AbXIGWoU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Sep 2007 18:44:20 -0400
+In-Reply-To: <Pine.LNX.4.64.0709060858030.19388@twinlark.arctic.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dean gaudet <dean@arctic.org>
+Cc: greg <greg-dated-1184731565.7e0579@lucidsolutions.co.nz>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
 
-Gaston, Jason D wrote:
->> -----Original Message-----
->> From: Gaston, Jason D
->> Sent: Friday, August 31, 2007 10:10 AM
->> To: 'Jeff Garzik'
->> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
->> Subject: RE: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
-> for
->> Intel Tolapai
->>
->> This device has both AHCI and RAID modes that use the ahci driver.
-> Only
->> the RAID mode DID's are being added as the PCI class code support will
->> cover the AHCI mode.  Looking at the Generic, PCI class code support
->> section, it uses "board_ahci".  I assumed that they should be the same
-> as
->> the generic class code support is working on this platform.
->>
->> Thanks,
->>
->> Jason
->>
->>
->>> -----Original Message-----
->>> From: Jeff Garzik [mailto:jgarzik@pobox.com]
->>> Sent: Friday, August 31, 2007 12:47 AM
->>> To: Gaston, Jason D
->>> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
->>> Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
-> for
->>> Intel Tolapai
->>>
->>> Jason Gaston wrote:
->>>> Resend trying to remove 8-bit characters in the email.
->>>>
->>>> This patch adds the Intel Tolapai RAID controller DID's for SATA
->> support.
->>>> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
->>>>
->>>> --- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27
->>> 18:32:35.000000000 -0700
->>>> +++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28
->> 16:58:11.000000000 -
->>> 0700
->>>> @@ -411,6 +411,8 @@
->>>>  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
->>>>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
->>>>  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
->>>> +	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
->>>> +	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
->>> Why did you not use board_ahci_pi?  Is the AHCI ports-implemented
->>> register unreliable on this platform?
+dean gaudet wrote:
+> On Fri, 13 Jul 2007, greg wrote:
 > 
-> Jeff,
+>> dean gaudet <dean <at> arctic.org> writes:
+>>> if you've got any other workload you'd like me to throw at it, 
+>>> let me know.  
+>> I've had a few problems with the driver in 2.6.20 (fc6xen x86_64). The machine 
+>> tended to lock up after a random period of time (from a few minutes upwards), 
+>> without any messages. Performing a smartctl on all the disks, or leaving smartd 
+>> running, seemed to speed up the rate at which the crash occurred. What I found 
+>> was that by moving the sata_mv device onto it's own bus (or a bus with two 
+>> sata_mv devices), the crashes went away. Are you doing tests with the 
+>> controller sharing a bus with other devices?
+>>
+>> Is there an merit to my observation that it might be an issue with devices 
+>> sharing a PCI-X bus?
+>>
+>> Cards: Supermicro 5081 (SAT-MV8), Supermicro 6081 (SAT2-MV8), Highpoint 5081 
+>> (RocketRaid 1820A v1.1). Motherboards: Tyan S2882, AMD 8131 chipset; IBM x206, 
+>> Intel 6300ESB.
 > 
-> Do I need to change this to board_ahci_pi or is it ok to leave it at
-> board_ahci, which will be used by the AHCI class code devices?
+> hmm!  i don't seem to have replied to this.
+> 
+> you know, i've seen this problem.  the first time it happened was with a 
+> promise ultra tx/100 or tx/133 (on a dual k7 box, two controllers on the 
+> same bus certainly)... a 5 minute cronjob logging HD temperatures via 
+> smart would occasionally cause one of the disks to just disappear, return 
+> errors on every request, and required a reboot to rediscover it.  
+> eliminating the cronjob stopped the problem.
 
-You are the one who needs to answer this question ;-)
+Promise cards, in particular, snoop the ATA commands and occasionally 
+update registers and do other internal magic based upon those commands.
 
-Most new Intel AHCI have a sane and reliable Ports-Implemented register 
-value even across reset, unlike earlier ones or some clones.  For those, 
-we use board_ahci_pi.
-
-If PI is not reliable across reset or if BIOS is absent (yes we care 
-about that case, when we do our own PCI resume for example), then you 
-should use board_ahci.
+It is possible that SMART commands have the same requirements as SET 
+FEATURES - XFER MODE: namely, all ports must be idle when the command is 
+issued, not just the port in question.
 
 	Jeff
-
 
 
