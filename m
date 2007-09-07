@@ -1,29 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: HSM violation spew.
-Date: Fri, 07 Sep 2007 13:42:07 +0900
-Message-ID: <46E0D69F.9060107@gmail.com>
-References: <20070829184925.GF31948@redhat.com>
+From: richard kennedy <richard@rsk.demon.co.uk>
+Subject: Re: pata_via cd/dvd timeout problems
+Date: Fri, 07 Sep 2007 10:17:14 +0100
+Message-ID: <1189156634.3154.5.camel@castor.rsk.org>
+References: <124748.3608.qm@web54408.mail.yahoo.com>
+	 <1188982210.3075.9.camel@castor.rsk.org>
+	 <20070906013347.1f588dc4@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:42590 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269AbXIGEmP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2007 00:42:15 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so330411rvb
-        for <linux-ide@vger.kernel.org>; Thu, 06 Sep 2007 21:42:15 -0700 (PDT)
-In-Reply-To: <20070829184925.GF31948@redhat.com>
+Received: from anchor-post-34.mail.demon.net ([194.217.242.92]:4285 "EHLO
+	anchor-post-34.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965015AbXIGJRS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2007 05:17:18 -0400
+In-Reply-To: <20070906013347.1f588dc4@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Vlad <vladc6@yahoo.com>, linux-ide@vger.kernel.org
 
-Dave Jones wrote:
-> scsi 2:0:0:0: Direct-Access     ATA      WDC WD3200AAJS-0 12.0 PQ: 0 ANSI: 5
+On Thu, 2007-09-06 at 01:33 +0100, Alan Cox wrote:
+> > Unfortunately I don't have another machine to try these drives in. But
+> > they both worked OK under the old ide code -- the problems only started
+> > with the move to libata.
+> > 
+> > I guess the commands timing out are udev probing to see if a disk has
+> > been inserted ?
+> 
+> Probably. If you can file a bug in bugzilla and assign it to me I'll take
+> a look at this after the kernel summit. There are one or two reports with
+> pata_via and ATAPI (ie CD) that look similar.
 
-This could have been truncated, please post the result of 'hdparm -I
-/dev/sda'.  Thanks.
+Hi Alan,
+I've created a bug for this
 
--- 
-tejun
+http://bugzilla.kernel.org/show_bug.cgi?id=8986
+
+but somehow I messed up and it didn't get assigned to you and now I
+can't change who it's assigned too. Can you take ownership or should I
+delete it and start again ?
+sorry
+Richard
+ 
+
