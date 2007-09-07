@@ -1,62 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Add a drivers/ide style  DMA disable
-Date: Fri, 07 Sep 2007 18:47:23 -0400
-Message-ID: <46E1D4FB.8030409@garzik.org>
-References: <20070822233710.415faaf0@the-village.bc.nu> <46E0CC76.70101@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: ICH Intel PATA short cable override...
+Date: Fri, 07 Sep 2007 19:19:10 -0400
+Message-ID: <46E1DC6E.9060001@pobox.com>
+References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com> <20070906014209.142382c8@the-village.bc.nu> <46DF63F8.8070805@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39703 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41949 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750725AbXIGWr1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2007 18:47:27 -0400
-In-Reply-To: <46E0CC76.70101@gmail.com>
+	id S1750908AbXIGXTQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Sep 2007 19:19:16 -0400
+In-Reply-To: <46DF63F8.8070805@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel J Blueman <daniel.blueman@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->> This is useful when debugging, handling problem systems, or for
->> distributions just to get the system installed so it can be sorted
->> out later.
->>
->> This is a bit smarter than the old IDE one and lets you do
->>
->> libata.pata_dma=0		Disable all PATA DMA like old IDE
->> libata.pata_dma=1		Disk DMA only
->> libata.pata_dma=2		ATAPI DMA only
->> libata.pata_dma=4		CF DMA only
->>
->> (or combinations thereof - 0,1,3 being the useful ones I suspect)
->>
->> (I've split CF as it seems to be a seperate case of pain and suffering
->> different to the others and caused by assorted PIO wired adapters etc)
->>
->> SATA is not affected - for one its not clear it makes sense to disable
->> DMA for SATA if even always possible, for two we've seen no failure 
->> evidence to justify needing to support this kind of hammer on SATA.
->>
->> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> Acked-by: Tejun Heo <htejun@gmail.com>
+Mark Lord wrote:
+> Ditto for selecting transfer modes.
 
-FWIW -- as I noted to Alan personally at KS, I would rather drop the 
-"pata_" and have it apply to all, PATA or SATA.
 
-It is far less useful on SATA, but I can still see a possibility that 
-somebody might want to avoid DMA for whatever reason, chiefly, possibly 
-keeping failing hardware alive by slowing things down via PIO.  And 
-being able to avoid the DMA protocols can be useful for debugging or 
-other things.
+Waiting on one thing AFAICS:
 
-As an aside, it would be nice to get the EH in shape where it can pause 
-all ports, so we can finally allow userspace to submit SET FEATURES - 
-XFER MODE and have it handled cleanly and properly.
+	ability to drain/idle all ports +
+	issue a command on one port +
+	resume normal parallel port operation
+
+SET FEATURES - XFER MODE is special in that it requires all sorts of 
+additional controller handling and careful cross-port synchronization.
 
 	Jeff
-
 
 
