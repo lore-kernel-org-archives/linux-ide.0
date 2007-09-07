@@ -1,41 +1,41 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Stardom SATA HSM violation
-Date: Fri, 07 Sep 2007 09:58:19 +0900
-Message-ID: <46E0A22B.6040202@gmail.com>
-References: <46CFA08E.6090604@arbores.ca> <6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com> <46DBCB6C.8080206@gmail.com> <46E01601.9010907@arbores.ca>
+Date: Fri, 07 Sep 2007 09:58:59 +0900
+Message-ID: <46E0A253.7060803@gmail.com>
+References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com> <20070905095327.6277d054.akpm@linux-foundation.org> <46DEE617.4050004@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:44222 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964875AbXIGA61 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2007 20:58:27 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so288443rvb
-        for <linux-ide@vger.kernel.org>; Thu, 06 Sep 2007 17:58:26 -0700 (PDT)
-In-Reply-To: <46E01601.9010907@arbores.ca>
+Received: from wa-out-1112.google.com ([209.85.146.177]:36645 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964896AbXIGA7J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2007 20:59:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so364056wah
+        for <linux-ide@vger.kernel.org>; Thu, 06 Sep 2007 17:59:09 -0700 (PDT)
+In-Reply-To: <46DEE617.4050004@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bryan@arbores.ca
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Michal.k.k.Piotrowski@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Bryan Woods wrote:
+Hello,
 
-> The full dmesg and hdparm -I command output are attached.
+Mark Lord wrote:
+> I reported a very similar bug back a few releases ago.
+> Anyone who wants to try it themselves, can do this with hdparm-7.7 (from
+> sourceforge):
 > 
-> I have received word from the vendor that the Stardom 2611 will do
-> RAID0 or 1 under windows, but only RAID1 under Linux. (Their manual
-> said it worked with Linux but failed to mention the RAID mode
-> restriction: argh!)
+>    hdparm --drq-hsm-error /dev/sda
 > 
-> They recommended the 2600 model for RAID0 with Linux, but that model
-> is only SATA-I so I will probably go with alternate hardware.
-> 
-> The vendor also suggested the possibility of a firmware upgrade to
-> the 2611 - I am still waiting to hear. I will post a followup if
-> this happens.
+> Whether or not it hangs the machine does depend upon exactly which SATA
+> LLD is used,
+> and what model/revision of drive is installed.  But if it hangs for you
+> (eg. Tejun),
+> then you now have a way to reproduce a HSM error "on demand" for
+> testing.  :)
 
-If possible, please post dmesg from 2.6.22.5.
+Neat.  Is this the FIFO-draining issue?
 
 Thanks.
 
