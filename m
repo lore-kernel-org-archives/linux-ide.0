@@ -1,35 +1,112 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ICH Intel PATA short cable override...
-Date: Fri, 07 Sep 2007 19:19:10 -0400
-Message-ID: <46E1DC6E.9060001@pobox.com>
-References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com> <20070906014209.142382c8@the-village.bc.nu> <46DF63F8.8070805@rtr.ca>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel Tolapai
+Date: Fri, 7 Sep 2007 16:37:58 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701BCF3B5@orsmsx420.amr.corp.intel.com>
+References: <200708302127.19535.jason.d.gaston@intel.com> <46D7C783.8050803@pobox.com> <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com> <46E1D313.2060302@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41949 "EHLO mail.dvmed.net"
+Received: from mga03.intel.com ([143.182.124.21]:20088 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750908AbXIGXTQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2007 19:19:16 -0400
-In-Reply-To: <46DF63F8.8070805@rtr.ca>
+	id S1751222AbXIGXiF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2007 19:38:05 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <46E1D313.2060302@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel J Blueman <daniel.blueman@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mark Lord wrote:
-> Ditto for selecting transfer modes.
+>-----Original Message-----
+>From: Jeff Garzik [mailto:jgarzik@pobox.com]
+>Sent: Friday, September 07, 2007 3:39 PM
+>To: Gaston, Jason D
+>Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+>Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
+for
+>Intel Tolapai
+>
+>Gaston, Jason D wrote:
+>>> -----Original Message-----
+>>> From: Gaston, Jason D
+>>> Sent: Friday, August 31, 2007 10:10 AM
+>>> To: 'Jeff Garzik'
+>>> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+>>> Subject: RE: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
+>> for
+>>> Intel Tolapai
+>>>
+>>> This device has both AHCI and RAID modes that use the ahci driver.
+>> Only
+>>> the RAID mode DID's are being added as the PCI class code support
+will
+>>> cover the AHCI mode.  Looking at the Generic, PCI class code support
+>>> section, it uses "board_ahci".  I assumed that they should be the
+same
+>> as
+>>> the generic class code support is working on this platform.
+>>>
+>>> Thanks,
+>>>
+>>> Jason
+>>>
+>>>
+>>>> -----Original Message-----
+>>>> From: Jeff Garzik [mailto:jgarzik@pobox.com]
+>>>> Sent: Friday, August 31, 2007 12:47 AM
+>>>> To: Gaston, Jason D
+>>>> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+>>>> Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA
+patch
+>> for
+>>>> Intel Tolapai
+>>>>
+>>>> Jason Gaston wrote:
+>>>>> Resend trying to remove 8-bit characters in the email.
+>>>>>
+>>>>> This patch adds the Intel Tolapai RAID controller DID's for SATA
+>>> support.
+>>>>> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
+>>>>>
+>>>>> --- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27
+>>>> 18:32:35.000000000 -0700
+>>>>> +++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28
+>>> 16:58:11.000000000 -
+>>>> 0700
+>>>>> @@ -411,6 +411,8 @@
+>>>>>  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+>>>>>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+>>>>>  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
+>>>>> +	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+>>>>> +	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+>>>> Why did you not use board_ahci_pi?  Is the AHCI ports-implemented
+>>>> register unreliable on this platform?
+>>
+>> Jeff,
+>>
+>> Do I need to change this to board_ahci_pi or is it ok to leave it at
+>> board_ahci, which will be used by the AHCI class code devices?
+>
+>You are the one who needs to answer this question ;-)
+>
+>Most new Intel AHCI have a sane and reliable Ports-Implemented register
+>value even across reset, unlike earlier ones or some clones.  For
+those,
+>we use board_ahci_pi.
+>
+>If PI is not reliable across reset or if BIOS is absent (yes we care
+>about that case, when we do our own PCI resume for example), then you
+>should use board_ahci.
+>
+>	Jeff
 
+At this time, I don't have any way to test those particular DeviceID's
+and I know that the AHCI mode DeviceID works by using the class code
+support.  So, I would like to just leave them at they are, if that is
+ok.
 
-Waiting on one thing AFAICS:
+Thanks,
 
-	ability to drain/idle all ports +
-	issue a command on one port +
-	resume normal parallel port operation
-
-SET FEATURES - XFER MODE is special in that it requires all sorts of 
-additional controller handling and careful cross-port synchronization.
-
-	Jeff
-
-
+Jason
