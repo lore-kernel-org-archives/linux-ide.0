@@ -1,59 +1,62 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFT][PATCH v7] sata_mv: convert to new EH
-Date: Fri, 07 Sep 2007 18:44:15 -0400
-Message-ID: <46E1D43F.5020202@garzik.org>
-References: <20070711200538.GA7374@havoc.gtf.org> <Pine.LNX.4.64.0707120212210.25837@twinlark.arctic.org> <46960225.5000502@garzik.org> <Pine.LNX.4.64.0707121140560.29365@twinlark.arctic.org> <loom.20070713T053938-434@post.gmane.org> <Pine.LNX.4.64.0709060858030.19388@twinlark.arctic.org>
+Subject: Re: [PATCH] libata: Add a drivers/ide style  DMA disable
+Date: Fri, 07 Sep 2007 18:47:23 -0400
+Message-ID: <46E1D4FB.8030409@garzik.org>
+References: <20070822233710.415faaf0@the-village.bc.nu> <46E0CC76.70101@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43036 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39703 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbXIGWoU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2007 18:44:20 -0400
-In-Reply-To: <Pine.LNX.4.64.0709060858030.19388@twinlark.arctic.org>
+	id S1750725AbXIGWr1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Sep 2007 18:47:27 -0400
+In-Reply-To: <46E0CC76.70101@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dean gaudet <dean@arctic.org>
-Cc: greg <greg-dated-1184731565.7e0579@lucidsolutions.co.nz>, linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-ide@vger.kernel.org
 
-dean gaudet wrote:
-> On Fri, 13 Jul 2007, greg wrote:
-> 
->> dean gaudet <dean <at> arctic.org> writes:
->>> if you've got any other workload you'd like me to throw at it, 
->>> let me know.  
->> I've had a few problems with the driver in 2.6.20 (fc6xen x86_64). The machine 
->> tended to lock up after a random period of time (from a few minutes upwards), 
->> without any messages. Performing a smartctl on all the disks, or leaving smartd 
->> running, seemed to speed up the rate at which the crash occurred. What I found 
->> was that by moving the sata_mv device onto it's own bus (or a bus with two 
->> sata_mv devices), the crashes went away. Are you doing tests with the 
->> controller sharing a bus with other devices?
+Tejun Heo wrote:
+> Alan Cox wrote:
+>> This is useful when debugging, handling problem systems, or for
+>> distributions just to get the system installed so it can be sorted
+>> out later.
 >>
->> Is there an merit to my observation that it might be an issue with devices 
->> sharing a PCI-X bus?
+>> This is a bit smarter than the old IDE one and lets you do
 >>
->> Cards: Supermicro 5081 (SAT-MV8), Supermicro 6081 (SAT2-MV8), Highpoint 5081 
->> (RocketRaid 1820A v1.1). Motherboards: Tyan S2882, AMD 8131 chipset; IBM x206, 
->> Intel 6300ESB.
+>> libata.pata_dma=0		Disable all PATA DMA like old IDE
+>> libata.pata_dma=1		Disk DMA only
+>> libata.pata_dma=2		ATAPI DMA only
+>> libata.pata_dma=4		CF DMA only
+>>
+>> (or combinations thereof - 0,1,3 being the useful ones I suspect)
+>>
+>> (I've split CF as it seems to be a seperate case of pain and suffering
+>> different to the others and caused by assorted PIO wired adapters etc)
+>>
+>> SATA is not affected - for one its not clear it makes sense to disable
+>> DMA for SATA if even always possible, for two we've seen no failure 
+>> evidence to justify needing to support this kind of hammer on SATA.
+>>
+>> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> hmm!  i don't seem to have replied to this.
-> 
-> you know, i've seen this problem.  the first time it happened was with a 
-> promise ultra tx/100 or tx/133 (on a dual k7 box, two controllers on the 
-> same bus certainly)... a 5 minute cronjob logging HD temperatures via 
-> smart would occasionally cause one of the disks to just disappear, return 
-> errors on every request, and required a reboot to rediscover it.  
-> eliminating the cronjob stopped the problem.
+> Acked-by: Tejun Heo <htejun@gmail.com>
 
-Promise cards, in particular, snoop the ATA commands and occasionally 
-update registers and do other internal magic based upon those commands.
+FWIW -- as I noted to Alan personally at KS, I would rather drop the 
+"pata_" and have it apply to all, PATA or SATA.
 
-It is possible that SMART commands have the same requirements as SET 
-FEATURES - XFER MODE: namely, all ports must be idle when the command is 
-issued, not just the port in question.
+It is far less useful on SATA, but I can still see a possibility that 
+somebody might want to avoid DMA for whatever reason, chiefly, possibly 
+keeping failing hardware alive by slowing things down via PIO.  And 
+being able to avoid the DMA protocols can be useful for debugging or 
+other things.
+
+As an aside, it would be nice to get the EH in shape where it can pause 
+all ports, so we can finally allow userspace to submit SET FEATURES - 
+XFER MODE and have it handled cleanly and properly.
 
 	Jeff
+
 
 
