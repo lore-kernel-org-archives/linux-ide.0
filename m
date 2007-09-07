@@ -1,40 +1,92 @@
-From: "Adrian B. Weissman" <aweissma_ppc@yahoo.com>
-Subject: drivers/ata/ahci.c driver questions / recommendations
-Date: Fri, 7 Sep 2007 12:09:08 -0700 (PDT)
-Message-ID: <324023.28314.qm@web35214.mail.mud.yahoo.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel
+ Tolapai
+Date: Fri, 07 Sep 2007 18:39:15 -0400
+Message-ID: <46E1D313.2060302@pobox.com>
+References: <200708302127.19535.jason.d.gaston@intel.com> <46D7C783.8050803@pobox.com> <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web35214.mail.mud.yahoo.com ([66.163.179.93]:20390 "HELO
-	web35214.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758158AbXIGTJJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2007 15:09:09 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:49065 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758480AbXIGWjT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Sep 2007 18:39:19 -0400
+In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
+To: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Mr Garzik or Linux IDE contributors:
-     My name is Adrian B. Weissman.  I am looking for
-open source AHCI / Sata II  compliance test software. 
-I read your name ( jgarzik@pobox.com ) at the top of
-the drivers/ata/ahci.c source file, and figured that
-you would be a good person to speak with.
-     Basically, I was wondering what you or the
-linux-ide crew use to verify that your software is
-AHCI / Sata II Compliant?  My initial guess if this
-type of software was not available was to purchase
-several of the various AHCI / Sata II controllers on
-PCI express card and build up a test suite.  Any
-pointers or recommendations would be greatly
-appreciated.
+Gaston, Jason D wrote:
+>> -----Original Message-----
+>> From: Gaston, Jason D
+>> Sent: Friday, August 31, 2007 10:10 AM
+>> To: 'Jeff Garzik'
+>> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+>> Subject: RE: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
+> for
+>> Intel Tolapai
+>>
+>> This device has both AHCI and RAID modes that use the ahci driver.
+> Only
+>> the RAID mode DID's are being added as the PCI class code support will
+>> cover the AHCI mode.  Looking at the Generic, PCI class code support
+>> section, it uses "board_ahci".  I assumed that they should be the same
+> as
+>> the generic class code support is working on this platform.
+>>
+>> Thanks,
+>>
+>> Jason
+>>
+>>
+>>> -----Original Message-----
+>>> From: Jeff Garzik [mailto:jgarzik@pobox.com]
+>>> Sent: Friday, August 31, 2007 12:47 AM
+>>> To: Gaston, Jason D
+>>> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+>>> Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch
+> for
+>>> Intel Tolapai
+>>>
+>>> Jason Gaston wrote:
+>>>> Resend trying to remove 8-bit characters in the email.
+>>>>
+>>>> This patch adds the Intel Tolapai RAID controller DID's for SATA
+>> support.
+>>>> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
+>>>>
+>>>> --- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27
+>>> 18:32:35.000000000 -0700
+>>>> +++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28
+>> 16:58:11.000000000 -
+>>> 0700
+>>>> @@ -411,6 +411,8 @@
+>>>>  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+>>>>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+>>>>  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
+>>>> +	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+>>>> +	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+>>> Why did you not use board_ahci_pi?  Is the AHCI ports-implemented
+>>> register unreliable on this platform?
+> 
+> Jeff,
+> 
+> Do I need to change this to board_ahci_pi or is it ok to leave it at
+> board_ahci, which will be used by the AHCI class code devices?
 
-Regards,
+You are the one who needs to answer this question ;-)
 
-Adrian B. Weissman
+Most new Intel AHCI have a sane and reliable Ports-Implemented register 
+value even across reset, unlike earlier ones or some clones.  For those, 
+we use board_ahci_pi.
+
+If PI is not reliable across reset or if BIOS is absent (yes we care 
+about that case, when we do our own PCI resume for example), then you 
+should use board_ahci.
+
+	Jeff
 
 
-       
-____________________________________________________________________________________
-Building a website is a piece of cake. Yahoo! Small Business gives you all the tools to get online.
-http://smallbusiness.yahoo.com/webhosting 
+
