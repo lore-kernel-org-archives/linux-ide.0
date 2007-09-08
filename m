@@ -1,54 +1,40 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sat, 8 Sep 2007 09:48:52 -0700
-Message-ID: <20070908094852.3a6fd3f0.randy.dunlap@oracle.com>
-References: <20070907124800.GP16806@vanheusden.com>
-	<20070907083522.3191a4ba.randy.dunlap@oracle.com>
-	<20070907155903.GR16806@vanheusden.com>
-	<46E17A81.7020304@s5r6.in-berlin.de>
-	<20070907230529.GX16806@vanheusden.com>
-	<46E249CB.5070505@s5r6.in-berlin.de>
-	<46E2CE73.3000207@oracle.com>
-	<46E2D17E.9050805@s5r6.in-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel
+ Tolapai
+Date: Sat, 08 Sep 2007 14:51:59 +0900
+Message-ID: <46E2387F.4020404@gmail.com>
+References: <200708302127.19535.jason.d.gaston@intel.com> <46D7C783.8050803@pobox.com> <39B20DF628532344BC7A2692CB6AEE0701B9A4CA@orsmsx420.amr.corp.intel.com> <46E1D313.2060302@pobox.com> <39B20DF628532344BC7A2692CB6AEE0701BCF3B5@orsmsx420.amr.corp.intel.com> <46E1E559.4000702@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:35087 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbXIHQuu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 12:50:50 -0400
-In-Reply-To: <46E2D17E.9050805@s5r6.in-berlin.de>
+Received: from wa-out-1112.google.com ([209.85.146.178]:41515 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536AbXIHRGo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 13:06:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so939980wah
+        for <linux-ide@vger.kernel.org>; Sat, 08 Sep 2007 10:06:43 -0700 (PDT)
+In-Reply-To: <46E1E559.4000702@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 08 Sep 2007 18:44:46 +0200 Stefan Richter wrote:
-
-> Randy Dunlap wrote:
-> > Stefan Richter wrote:
-> >> I am not a friend of 'select', but maybe the following actually helps.
-> ...
-> > The problem with 'select' here is that it will enable BLK_DEV_SD,
-> > but if SCSI is not enabled, it will not become enabled -- i.e.,
-> > select does not follow the dependency chain.  So usually the
-> > kernel will not build unless SCSI is enabled by the user.
-> ...
-> >> config ATA_SD
-> >>     tristate "SATA/PATA HDD support (via SCSI disk support)"
-> >>     depends on ATA
-> >>     select BLK_DEV_SD
-> >>     help
-> >>       'SCSI disk support' is required to access SATA HDDs.  It is
-> ...
+Jeff Garzik wrote:
+> Gaston, Jason D wrote:
+>> At this time, I don't have any way to test those particular DeviceID's
+>> and I know that the AHCI mode DeviceID works by using the class code
+>> support.  So, I would like to just leave them at they are, if that is
+>> ok.
 > 
-> I checked the dependencies.  ATA depends on SCSI (actually, selects
-> SCSI), so all is well.  Otherwise I would have added more dependencies
-> to ATA_SD.
+> 
+> Fine by me...  Overall I'll follow "vendor's best advice" here :)
 
-Ah, that's good, then.  Thanks.
+The distinction between board_ahci and board_ahci_pi has been removed in
+#upstream anyway, so it doesn't matter too much anyway.
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Thanks.
+
+-- 
+tejun
+
