@@ -1,43 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Port Multiplier Patch 2.6.22.1 on Alpha
-Date: Sat, 08 Sep 2007 22:53:30 +0200
-Message-ID: <46E30BCA.1070705@gmail.com>
-References: <46D638A3.2030704@23palmer.net> <46D64290.2010306@garzik.org> <46E22817.9080200@23palmer.net>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Disk spin down issue on shut down/suspend to disk
+Date: Sat, 8 Sep 2007 23:29:56 +0200
+Message-ID: <200709082329.57811.rjw@sisk.pl>
+References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com> <838f88840708051433k6deed4bdg8d411e79c629ca49@mail.gmail.com> <6bffcb0e0709080832o30fb21b5vcd09baa8387efcc0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:7940 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbXIHUzG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 16:55:06 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so992373wah
-        for <linux-ide@vger.kernel.org>; Sat, 08 Sep 2007 13:55:06 -0700 (PDT)
-In-Reply-To: <46E22817.9080200@23palmer.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <6bffcb0e0709080832o30fb21b5vcd09baa8387efcc0@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: =?iso-8859-2?q?Micha=B3?= sed <sedmich@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, htejun@gmail.com, hmh@hmh.eng.br, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tom Evans <tom@23palmer.net>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Tom Evans wrote:
-> 
-> I decided to put the Norco 4618 card into the first PCI slot of my DS20.
-> 
-> It and the PMP support seem to like that location much better - I'm
-> successfully creating an array at the moment.
-> 
-> The system still responds, but accessing currently running filesystems
-> (another array and the local scsi boot disk) seems to "freeze" for 20-30
-> seconds.
+On Saturday, 8 September 2007 17:32, Michal Piotrowski wrote:
+> Hi,
+>=20
+> On 05/08/2007, Micha=B3 sed <sedmich@gmail.com> wrote:
+> > Greetings
+> >
+> > I'm experiencing double disk spin down issue on my HP nx6310 laptop
+> > during shut down and suspend to disk. The drive is power down on "W=
+ill
+> > now halt message" then turned back on and off again with the laptop
+> > itself. I'm using the newest bios available F.0D, 2.6.23-rc1-mm ker=
+nel
+> > along with Debian Unstable plus fixes from Sidux repository so I ha=
+ve
+> > the updated shut down script. I have also verified on two other
+> > systems [AMD/Nforce based] that the spin down issue has been resolv=
+ed
+> > by the Sidux update and I'm certain that this is a hp bios bug or a
+> > piix kernel module problem.
+> >
+>=20
+> What is the _actual_ state of this bug? Does anyone work on this?
+>=20
+> I see the report
+> http://lkml.org/lkml/2007/8/5/214
+>=20
+> and a very long thread
+> http://lkml.org/lkml/2007/8/6/4
+>=20
+> dmidecode stuff
+> http://bugzilla.kernel.org/show_bug.cgi?id=3D8855
+>=20
+> and _only_one_fix_ - for Suspend To Disc (thanks Rafael)
+> http://lkml.org/lkml/2007/8/7/316
 
-Does kernel complain anything during the freeze?
+There's an updated version of that patch at
+http://lkml.org/lkml/2007/8/27/392
+=20
+> Shutdown is completely broken on HP NX6??? laptops.
 
-> I was able to move the graphics card to another slot (which for a period
-> in the past was also limited to the first PCI slot).
-> 
-> Maybe this will make sense to some folks out there - thanks!
+It's not completely broken, it just handles disks incorrectly and we ar=
+e not
+sure whether or not there are any serious consequences of that.  Moreov=
+er,
+it has happened for a long time now, AFAICT, so that's not a regression=
+=2E
 
-To me, not much yet.  :-(
+BTW, in my opinion, we don't really understand why the patch at
+http://lkml.org/lkml/2007/8/27/392 actually helps and understanding tha=
+t might
+allow us to fix the problem in general.
 
--- 
-tejun
+Greetings,
+Rafael
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
