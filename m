@@ -1,86 +1,58 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/10] hpt366: remove ->init_setup
-Date: Sat, 08 Sep 2007 16:15:18 +0400
-Message-ID: <46E29256.9020506@ru.mvista.com>
-References: <200708292321.03722.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Bug#419482: Kernel 2.6.18 - ALI15X3 driver too optmistic about
+ UDMA
+Date: Sat, 8 Sep 2007 15:21:59 +0100
+Message-ID: <20070908152159.2f76850e@the-village.bc.nu>
+References: <20070415232959.GE25207@einval.com>
+	<20070416012635.GA29219@deprecation.cyrius.com>
+	<20070418212536.GC30335@einval.com>
+	<20070906222759.GI29259@einval.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49224 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751654AbXIHMMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Sep 2007 08:12:17 -0400
-In-Reply-To: <200708292321.03722.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39548 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752754AbXIHONn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 10:13:43 -0400
+In-Reply-To: <20070906222759.GI29259@einval.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Steve McIntyre <steve@einval.com>
+Cc: linux-ide@vger.kernel.org, 419482@bugs.debian.org
 
-Bartlomiej Zolnierkiewicz wrote:
+>         if (m5229_revision <= 0x20) {
+>                 return 0;
+>         } else if ((m5229_revision < 0xC2) &&
 
-> * Split off hpt{374,371,366}_init() helper from init_setup_hpt{374,371,366}().
+So 0xC1 takes this path
 
-> * Merge init_setup_{374,372n,371,372a,302,366}() into hpt366_init_one().
+> Looking back at the equivalent code in 2.4.27 (the previous kernel
+> this machine ran), that's rather different:
+> 
+>         if (m5229_revision < 0xC1) {    /* According to ALi */
+>                 return 0;
+>         } else if ((m5229_revision < 0xC2) &&
 
-> While at it:
+And 0xC1 takes the same path.
 
-> * Use "HPT36x" name for HPT366/HPT368 chipsets.
+> So it would seem there has been a regression here - the assumption now
+> is that versions between 0x20 and 0xC1 can use UDMA fine unless there
+> is a WDC drive attached, but the old code wouldn't try UDMA at all on
+> chips older than rev C1.
 
-> * Add .chip_name to struct hpt_info and use it to set set d->name.
+There are no versions between 0x21 and 0xC0.
 
-> * Convert .max_ultra in struct hpt_info to .udma_mask and use it to set
->   d->udma_mask.
+> I have the machine out and ready to experiment with if any more
+> details are needed to help solve this problem.
 
-> * Fix hpt302 to use HPT302_ALLOW_ATA133_6 define.
+Interesting report as we've had essentially no corruption reports
+equivalent to this on common architectures for a long time and the
+hardware is in a huge number of PC systems. Also UDMA transfers are CRC
+protected by hardware at each end.
 
-    I haven't found that change...
+That makes me wonder if you have a platform or endian bug, or indeed your
+firmware isn't setting up all the chipset as required by the ALi chipset
+and BIOS documentation (which unfortunately is NDA)
 
-> * Change HPT366/HPT374 interrupt fixup message from KERN_WARNING to KERN_INFO.
-
-> * Use the second hpt366_chipsets[] entry for HPT37x chipsets using HPT36x PCI
->   device ID and fix .enablebits/.host_flags for HPT36x hpt366_chipsets[] entry.
-
-    Well, if you're ruining my nearly perfect desigh...
-
-> * Bump driver version.
-
-    ... it's worth to label it 1.20. :-)
-
-> +	d = hpt366_chipsets[idx];
-> +
-> +	d.name = /info->chip_name;
-> +	d.udma_mask = info->udma_mask;
-> +
-> +	pci_set_drvdata(dev, info);
-> +
-> +	if (info == &hpt36x || info == &hpt374)
-> +		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
-> +
-> +	if (dev2) {
-> +		int ret;
-> +
-> +		pci_set_drvdata(dev2, info);
-> +
-> +		if (info == &hpt374)
-> +			hpt374_init(dev, dev2);
-> +		else {
-> +			if (hpt36x_init(dev, dev2))
-> +				d.host_flags |= IDE_HFLAG_BOOTABLE;
-> +		}
-> +
-> +		ret = ide_setup_pci_devices(dev, dev2, &d);
-> +		if (ret < 0)
-> +			pci_dev_put(dev2);
-> +		return ret;
-> +	}
->  
-> -	return d.init_setup(dev, &d);
-> +	return ide_setup_pci_device(dev, &d);
->  }
-
-    NAK the patch because it's breaking the HPT374 code. Those chips are 
-*signle* function, and sit in perfect copule (and why I alsway mistype in this 
-word :o) on 2 DEVSELs behind i960.
-
-MBR, Sergei
+Alan
