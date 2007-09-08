@@ -1,15 +1,15 @@
 From: Tom Evans <tom@23palmer.net>
 Subject: Re: Port Multiplier Patch 2.6.22.1 on Alpha
-Date: Sat, 08 Sep 2007 00:41:59 -0400
-Message-ID: <46E22817.9080200@23palmer.net>
+Date: Sat, 08 Sep 2007 00:37:03 -0400
+Message-ID: <46E226EF.2070703@23palmer.net>
 References: <46D638A3.2030704@23palmer.net> <46D64290.2010306@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.lnh.mail.rcn.net ([207.172.157.102]:64362 "EHLO
+Received: from smtp02.lnh.mail.rcn.net ([207.172.157.102]:4713 "EHLO
 	smtp02.lnh.mail.rcn.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827AbXIHE4g (ORCPT
+	with ESMTP id S1750808AbXIHE4g (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 00:56:36 -0400
 In-Reply-To: <46D64290.2010306@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
