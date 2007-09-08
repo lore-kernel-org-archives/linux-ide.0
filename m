@@ -1,35 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 5/13] ide: add IDE_HFLAG_ERROR_STOPS_FIFO host flag
-Date: Sat, 08 Sep 2007 12:42:52 -0400
-Message-ID: <46E2D10C.40304@garzik.org>
-References: <200709052352.57848.bzolnier@gmail.com>	<20070906081356.GA20007@havoc.gtf.org>	<20070908161755.10902b54@the-village.bc.nu>	<46E2BCA8.30402@garzik.org> <20070908162729.0f203af5@the-village.bc.nu>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Sat, 08 Sep 2007 18:44:46 +0200
+Message-ID: <46E2D17E.9050805@s5r6.in-berlin.de>
+References: <20070907124800.GP16806@vanheusden.com> <20070907083522.3191a4ba.randy.dunlap@oracle.com> <20070907155903.GR16806@vanheusden.com> <46E17A81.7020304@s5r6.in-berlin.de> <20070907230529.GX16806@vanheusden.com> <46E249CB.5070505@s5r6.in-berlin.de> <46E2CE73.3000207@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54555 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbXIHQmz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Sep 2007 12:42:55 -0400
-In-Reply-To: <20070908162729.0f203af5@the-village.bc.nu>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:37887 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448AbXIHQp6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 12:45:58 -0400
+In-Reply-To: <46E2CE73.3000207@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>> You'd have to add the drain data on error hack first, right now we will
->>> reset in that case (which for one or two devices has another problem in
->>> that it won't clear a stuck FIFO)
->> Nod.  There was nothing ever wrong with Mark's drain patch, I just never 
->> saw a solid justification for it outside of root 
-> 
-> You don't need to be root, any user can do this with the right commands
-> via SG_IO - and it happens on errors occassionally for real.
+Randy Dunlap wrote:
+> Stefan Richter wrote:
+>> I am not a friend of 'select', but maybe the following actually helps.
+...
+> The problem with 'select' here is that it will enable BLK_DEV_SD,
+> but if SCSI is not enabled, it will not become enabled -- i.e.,
+> select does not follow the dependency chain.  So usually the
+> kernel will not build unless SCSI is enabled by the user.
+...
+>> config ATA_SD
+>>     tristate "SATA/PATA HDD support (via SCSI disk support)"
+>>     depends on ATA
+>>     select BLK_DEV_SD
+>>     help
+>>       'SCSI disk support' is required to access SATA HDDs.  It is
+...
 
-Which commands?
-
-	Jeff
-
-
-
+I checked the dependencies.  ATA depends on SCSI (actually, selects
+SCSI), so all is well.  Otherwise I would have added more dependencies
+to ATA_SD.
+-- 
+Stefan Richter
+-=====-=-=== =--= -=---
+http://arcgraph.de/sr/
