@@ -1,58 +1,44 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Bug#419482: Kernel 2.6.18 - ALI15X3 driver too optmistic about
- UDMA
-Date: Sat, 8 Sep 2007 15:21:59 +0100
-Message-ID: <20070908152159.2f76850e@the-village.bc.nu>
-References: <20070415232959.GE25207@einval.com>
-	<20070416012635.GA29219@deprecation.cyrius.com>
-	<20070418212536.GC30335@einval.com>
-	<20070906222759.GI29259@einval.com>
+Subject: Re: [PATCH 5/13] ide: add IDE_HFLAG_ERROR_STOPS_FIFO host flag
+Date: Sat, 8 Sep 2007 16:17:55 +0100
+Message-ID: <20070908161755.10902b54@the-village.bc.nu>
+References: <200709052352.57848.bzolnier@gmail.com>
+	<20070906081356.GA20007@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:39548 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56681 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752754AbXIHONn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 10:13:43 -0400
-In-Reply-To: <20070906222759.GI29259@einval.com>
+	with ESMTP id S1752857AbXIHPJq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 11:09:46 -0400
+In-Reply-To: <20070906081356.GA20007@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steve McIntyre <steve@einval.com>
-Cc: linux-ide@vger.kernel.org, 419482@bugs.debian.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
->         if (m5229_revision <= 0x20) {
->                 return 0;
->         } else if ((m5229_revision < 0xC2) &&
+On Thu, 6 Sep 2007 04:13:56 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-So 0xC1 takes this path
-
-> Looking back at the equivalent code in 2.4.27 (the previous kernel
-> this machine ran), that's rather different:
+> On Wed, Sep 05, 2007 at 11:52:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > 
+> > Add IDE_HFLAG_ERROR_STOPS_FIFO host flag and use it instead
+> > of hwif->err_stops_fifo.  As a side-effect this change fixes
+> > hwif->err_stops_fifo not being restored by ide_hwif_restore().
+> > 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > ---
+> >  drivers/ide/ide-io.c           |    3 ++-
+> >  drivers/ide/pci/pdc202xx_new.c |    3 +--
+> >  drivers/ide/pci/pdc202xx_old.c |    8 ++++----
+> >  include/linux/ide.h            |    3 ++-
+> >  4 files changed, 9 insertions(+), 8 deletions(-)
 > 
->         if (m5229_revision < 0xC1) {    /* According to ALi */
->                 return 0;
->         } else if ((m5229_revision < 0xC2) &&
+> Hum, I wonder if libata needs something like this.
 
-And 0xC1 takes the same path.
-
-> So it would seem there has been a regression here - the assumption now
-> is that versions between 0x20 and 0xC1 can use UDMA fine unless there
-> is a WDC drive attached, but the old code wouldn't try UDMA at all on
-> chips older than rev C1.
-
-There are no versions between 0x21 and 0xC0.
-
-> I have the machine out and ready to experiment with if any more
-> details are needed to help solve this problem.
-
-Interesting report as we've had essentially no corruption reports
-equivalent to this on common architectures for a long time and the
-hardware is in a huge number of PC systems. Also UDMA transfers are CRC
-protected by hardware at each end.
-
-That makes me wonder if you have a platform or endian bug, or indeed your
-firmware isn't setting up all the chipset as required by the ALi chipset
-and BIOS documentation (which unfortunately is NDA)
+You'd have to add the drain data on error hack first, right now we will
+reset in that case (which for one or two devices has another problem in
+that it won't clear a stuck FIFO)
 
 Alan
