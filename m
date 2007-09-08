@@ -1,32 +1,86 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/4] ide: make ide_rate_filter() also respect PIO and
- SW/MW DMA mode masks (take 2)
-Date: Sat, 08 Sep 2007 16:05:33 +0400
-Message-ID: <46E2900D.5010004@ru.mvista.com>
-References: <200709022344.18565.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 5/10] hpt366: remove ->init_setup
+Date: Sat, 08 Sep 2007 16:15:18 +0400
+Message-ID: <46E29256.9020506@ru.mvista.com>
+References: <200708292321.03722.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:49200 "EHLO imap.sh.mvista.com"
+Received: from h155.mvista.com ([63.81.120.155]:49224 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751532AbXIHMCc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Sep 2007 08:02:32 -0400
-In-Reply-To: <200709022344.18565.sshtylyov@ru.mvista.com>
+	id S1751654AbXIHMMR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Sep 2007 08:12:17 -0400
+In-Reply-To: <200708292321.03722.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Once I quothed:
+Bartlomiej Zolnierkiewicz wrote:
 
-> Make ide_rate_filter() also respect PIO/SWDMA/MWDMA mode masks.  While at it,
-> make the udma_filter() method calls take precedence over using the mode masks.
+> * Split off hpt{374,371,366}_init() helper from init_setup_hpt{374,371,366}().
 
-    This one not looking to pretty -- I've geve some thought on how to 
-beautify all these switch fallthoughs but haven't got something much better 
-then uour original approach (AKA Occam's razor :-).
+> * Merge init_setup_{374,372n,371,372a,302,366}() into hpt366_init_one().
 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> While at it:
 
-Farewell!
+> * Use "HPT36x" name for HPT366/HPT368 chipsets.
+
+> * Add .chip_name to struct hpt_info and use it to set set d->name.
+
+> * Convert .max_ultra in struct hpt_info to .udma_mask and use it to set
+>   d->udma_mask.
+
+> * Fix hpt302 to use HPT302_ALLOW_ATA133_6 define.
+
+    I haven't found that change...
+
+> * Change HPT366/HPT374 interrupt fixup message from KERN_WARNING to KERN_INFO.
+
+> * Use the second hpt366_chipsets[] entry for HPT37x chipsets using HPT36x PCI
+>   device ID and fix .enablebits/.host_flags for HPT36x hpt366_chipsets[] entry.
+
+    Well, if you're ruining my nearly perfect desigh...
+
+> * Bump driver version.
+
+    ... it's worth to label it 1.20. :-)
+
+> +	d = hpt366_chipsets[idx];
+> +
+> +	d.name = /info->chip_name;
+> +	d.udma_mask = info->udma_mask;
+> +
+> +	pci_set_drvdata(dev, info);
+> +
+> +	if (info == &hpt36x || info == &hpt374)
+> +		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
+> +
+> +	if (dev2) {
+> +		int ret;
+> +
+> +		pci_set_drvdata(dev2, info);
+> +
+> +		if (info == &hpt374)
+> +			hpt374_init(dev, dev2);
+> +		else {
+> +			if (hpt36x_init(dev, dev2))
+> +				d.host_flags |= IDE_HFLAG_BOOTABLE;
+> +		}
+> +
+> +		ret = ide_setup_pci_devices(dev, dev2, &d);
+> +		if (ret < 0)
+> +			pci_dev_put(dev2);
+> +		return ret;
+> +	}
+>  
+> -	return d.init_setup(dev, &d);
+> +	return ide_setup_pci_device(dev, &d);
+>  }
+
+    NAK the patch because it's breaking the HPT374 code. Those chips are 
+*signle* function, and sit in perfect copule (and why I alsway mistype in this 
+word :o) on 2 DEVSELs behind i960.
+
+MBR, Sergei
