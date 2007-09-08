@@ -1,42 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Asynchronous scan support for libata
-Date: Sat, 8 Sep 2007 19:48:35 +0100
-Message-ID: <20070908194835.03f1e39f@the-village.bc.nu>
-References: <20070906210505.GF27404@parisc-linux.org>
-	<46E258F3.20805@gmail.com>
-	<20070908171917.GC6809@parisc-linux.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Sat, 08 Sep 2007 21:45:49 +0200
+Message-ID: <46E2FBED.2050705@s5r6.in-berlin.de>
+References: <20070907124800.GP16806@vanheusden.com>	<20070907083522.3191a4ba.randy.dunlap@oracle.com>	<20070907155903.GR16806@vanheusden.com>	<46E17A81.7020304@s5r6.in-berlin.de>	<20070907230529.GX16806@vanheusden.com>	<46E249CB.5070505@s5r6.in-berlin.de>	<46E2CE73.3000207@oracle.com>	<46E2D17E.9050805@s5r6.in-berlin.de> <20070908094852.3a6fd3f0.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34985 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754137AbXIHSk0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 14:40:26 -0400
-In-Reply-To: <20070908171917.GC6809@parisc-linux.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:41427 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754651AbXIHTrW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 15:47:22 -0400
+In-Reply-To: <20070908094852.3a6fd3f0.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, 8 Sep 2007 11:19:17 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
-
-> On Sat, Sep 08, 2007 at 05:10:27PM +0900, Tejun Heo wrote:
-> > I think it's generally okay although it would need to spend quite some
-> > time in -mm and we'll need to exclude several drivers which require
-> > host-wide silence for mode programming (the current code is buggy but
-> > sequential probing hides it pretty well) till host-wide exclusion is
-> > implemented.
+Randy Dunlap wrote:
+> On Sat, 08 Sep 2007 18:44:46 +0200 Stefan Richter wrote:
+>> Randy Dunlap wrote:
+>>> The problem with 'select' here is that it will enable BLK_DEV_SD,
+>>> but if SCSI is not enabled, it will not become enabled -- i.e.,
+>>> select does not follow the dependency chain.  So usually the
+>>> kernel will not build unless SCSI is enabled by the user.
+...
+>> I checked the dependencies.  ATA depends on SCSI (actually, selects
+>> SCSI), so all is well.  Otherwise I would have added more dependencies
+>> to ATA_SD.
 > 
-> Can you tell me a bit more about these drivers?  Would it be possible to
-> convert them to one host/many channels, which would give us the exclusion
-> we want?
+> Ah, that's good, then.
 
-That would be a more natural way to do it and it would help for the cases
-we don't support which are one command per controller not one per
-channel. The PMP code has removed the two devices per channel assumption
-so in theory we could already fake such a controller as a PMP setup but
-obviously should expose the two things seperately.
-
-Alan
+Not completely though.  Whenever a 'select' is inserted into the
+dependency graph, the whole thing becomes more fragile WRT future changes.
+-- 
+Stefan Richter
+-=====-=-=== =--= -=---
+http://arcgraph.de/sr/
