@@ -1,42 +1,108 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: libata not working for sis5533
-Date: Sat, 8 Sep 2007 12:45:32 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
- <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com>
- <20070902114032.7dbfb21a@the-village.bc.nu>
- <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
- <Pine.LNX.4.64.0709061156220.25942@fbirervta.pbzchgretzou.qr>
- <46E26DAF.9020906@gmail.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [1/2] 2.6.23-rc5: known regressions with patches v2
+Date: Sat, 08 Sep 2007 13:11:35 +0200
+Message-ID: <46E28367.2070001__19756.3139292926$1189250046$gmane$org@googlemail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753363AbXIHKpr@vger.kernel.org>
-In-Reply-To: <46E26DAF.9020906@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Patrizio Bassi <patrizio.bassi@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fk-out-0910.google.com ([209.85.128.186]:46472 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753443AbXIHLNI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2007 07:13:08 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so681285fkz
+        for <linux-ide@vger.kernel.org>; Sat, 08 Sep 2007 04:13:05 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Gabriel C <nix.or.die@googlemail.com>, Satyam Sharma <satyam.sharma@gmail.com>, Vitaly Bordug <vitb@kernel.crashing.org>, Andrey Borzenkov <arvidjaar@mail.ru>, Bjorn Helgaas <bjorn.helgaas@hp.com>, linux-fsdevel@vger.kernel.org, nfs@lists.sourceforge.net, Trond Myklebust <Trond.Myklebust@netapp.com>, Peter Kovar <peter.kovar@gmail.com>, Neil Brown <neilb@suse.de>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Bret Towe <magnade@gmail.com>, Tony Breeds <tony@bakeyournoodle.com>
+
+Hi all,
+
+Here is a list of some known regressions in 2.6.23-rc5
+with patches available.
+
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+List of Aces
+
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            10
+Linus Torvalds                         6
+Andi Kleen                             5
+Hugh Dickins                           5
+Trond Myklebust                        5
+Andrew Morton                          4
+Al Viro                                3
+Alan Stern                             3
+Alexey Starikovskiy                    3
+Cornelia Huck                          3
+David S. Miller                        3
+Jens Axboe                             3
+Stephen Hemminger                      3
+Tejun Heo                              3
 
 
-On Sep 8 2007 11:38, Patrizio Bassi wrote:
->Jan Engelhardt wrote:
->>
->> I shall give this a spin too, since I happen to have sis5513.
->>
->> Just booted this fresh ata-enabled system (a matter of mkinitrd). It has 
->>not exploded yet.
->
->don't you have the "irq 14" issue?
 
-No, does not seem so.
-
->can you post here your .config?
-
-http://rafb.net/p/vfTX0966.html
-
-Maybe it is solved in 2.6.22.3? (I don't remember what your version 
-was.)
+Some of these patches are available in -krf (known regressions fixes) tree
+http://www.stardust.webpages.pl/files/patches/krf/2.6.23-rc5-git1/linux-2.6.23-rc5-git1-krf1.patch.bz2
+http://www.stardust.webpages.pl/files/patches/krf/2.6.23-rc5-git1/linux-2.6.23-rc5-git1-krf1.tar.bz2
 
 
-	Jan
--- 
+
+Unclassified
+
+Subject         : 8250 claims non existing device blocking IO port
+References      : http://lkml.org/lkml/2007/8/18/20
+Last known good : ?
+Submitter       : Andrey Borzenkov <arvidjaar@mail.ru>
+Caused-By       : ?
+Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch           : http://lkml.org/lkml/2007/8/21/291
+Status          : patch available
+
+Subject         : Oops while modprobing phy fixed module
+References      : http://lkml.org/lkml/2007/7/14/63
+Last known good : ?
+Submitter       : Gabriel C <nix.or.die@googlemail.com>
+Caused-By       : ?
+Handled-By      : Satyam Sharma <satyam.sharma@gmail.com>
+                  Vitaly Bordug <vitb@kernel.crashing.org>
+Patch1          : http://lkml.org/lkml/2007/7/18/506
+Status          : patch available
+
+
+
+FS
+
+Subject         : NFSv3 server error in LOOKUP after READDIRPLUS Call
+References      : http://bugzilla.kernel.org/show_bug.cgi?id=8966
+Last known good : ?
+Submitter       : Peter Kovar <peter.kovar@gmail.com>
+Caused-By       : ?
+Handled-By      : Neil Brown <neilb@suse.de>
+Patch           : http://bugzilla.kernel.org/attachment.cgi?id=12689
+Status          : patch available
+
+
+
+IDE
+
+Subject         : linux-2.6.23-rc4 ppc build failure
+References      : http://lkml.org/lkml/2007/8/29/154
+Last known good : ?
+Submitter       : Bret Towe <magnade@gmail.com>
+Caused-By       : ?
+Handled-By      : Tony Breeds <tony@bakeyournoodle.com>
+Patch           : http://lkml.org/lkml/2007/8/31/1
+Status          : patch was suggested
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
