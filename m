@@ -1,72 +1,35 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sat, 08 Sep 2007 09:31:47 -0700
-Message-ID: <46E2CE73.3000207@oracle.com>
-References: <20070907124800.GP16806@vanheusden.com> <20070907083522.3191a4ba.randy.dunlap@oracle.com> <20070907155903.GR16806@vanheusden.com> <46E17A81.7020304@s5r6.in-berlin.de> <20070907230529.GX16806@vanheusden.com> <46E249CB.5070505@s5r6.in-berlin.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 5/13] ide: add IDE_HFLAG_ERROR_STOPS_FIFO host flag
+Date: Sat, 08 Sep 2007 12:42:52 -0400
+Message-ID: <46E2D10C.40304@garzik.org>
+References: <200709052352.57848.bzolnier@gmail.com>	<20070906081356.GA20007@havoc.gtf.org>	<20070908161755.10902b54@the-village.bc.nu>	<46E2BCA8.30402@garzik.org> <20070908162729.0f203af5@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754026AbXIHQcc@vger.kernel.org>
-In-Reply-To: <46E249CB.5070505@s5r6.in-berlin.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:54555 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750929AbXIHQmz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Sep 2007 12:42:55 -0400
+In-Reply-To: <20070908162729.0f203af5@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-Stefan Richter wrote:
-> (added Cc linux-ide)
+Alan Cox wrote:
+>>> You'd have to add the drain data on error hack first, right now we will
+>>> reset in that case (which for one or two devices has another problem in
+>>> that it won't clear a stuck FIFO)
+>> Nod.  There was nothing ever wrong with Mark's drain patch, I just never 
+>> saw a solid justification for it outside of root 
 > 
-> Folkert van Heusden wrote:
->>>>> A popup makes some sense, but I don't know if menuconfig knows how to
->>>>> do popup warnings... and it needs to be done for all *configs,
->>>>> not just menuconfig.
->>>> Maybe add a new type?
->>> How about
->>> comment "Note: 'SCSI disk support' is required for SATA/PATA HDDs!"
->>> 	depends on ATA && !BLK_DEV_SD
->> Yes! Maybe create some status-line at the bottom of the screen in which
->> these hints scrollby. Like powertop does.
-> 
-> 'comment' is already supported by make {menu,x,g}config and AFAIK by
-> make oldconfig too.  It is not effective in make oldconfig though
-> because it will scroll off the screen quickly.
-> 
-> I am not a friend of 'select', but maybe the following actually helps.
-> I didn't follow all of this and previous related discussions, so I guess
-> somebody else suggested something like this before:
-> 
+> You don't need to be root, any user can do this with the right commands
+> via SG_IO - and it happens on errors occassionally for real.
 
-The problem with 'select' here is that it will enable BLK_DEV_SD,
-but if SCSI is not enabled, it will not become enabled -- i.e.,
-select does not follow the dependency chain.  So usually the
-kernel will not build unless SCSI is enabled by the user.
+Which commands?
 
-> # drivers/ata/Kconfig
-> 
-> config ATA
-> 	[...]
-> 
-> comment "Controller drivers"
-> 
-> [...low-level drivers go here...]
-> 
-> comment "Storage device drivers"
-> 
-> config ATA_SD
-> 	tristate "SATA/PATA HDD support (via SCSI disk support)"
-> 	depends on ATA
-> 	select BLK_DEV_SD
-> 	help
-> 	  'SCSI disk support' is required to access SATA HDDs.  It is
-> 	  also necessary for parallel ATA (IDE) HDDs if you use the
-> 	  experimental parallel ATA option.
-> 
-> 	  You can say Y or M here to select SCSI disk support, or you
-> 	  can do so in the 'SCSI device support' section.
-> 
-> [...ditto for CD/DVD-ROMs, tapes, and generic support...]
+	Jeff
 
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+
