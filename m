@@ -1,75 +1,66 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Disk spin down issue on shut down/suspend to disk
-Date: Sat, 8 Sep 2007 23:29:56 +0200
-Message-ID: <200709082329.57811.rjw@sisk.pl>
-References: <838f88840708051428p3d65ff42w627af4bc38f57de3@mail.gmail.com> <838f88840708051433k6deed4bdg8d411e79c629ca49@mail.gmail.com> <6bffcb0e0709080832o30fb21b5vcd09baa8387efcc0@mail.gmail.com>
+From: Paul Rolland <rol@as2917.net>
+Subject: Re: [2.6.22.5] irq X: nobody cared but X is successfully used by
+ libata
+Date: Sun, 9 Sep 2007 08:59:23 +0200
+Message-ID: <20070909085923.76cebcb1@tux.DEF.witbe.net>
+References: <20070826203513.4fa35f68@tux.DEF.witbe.net>
+	<46E24DE8.4050603@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <6bffcb0e0709080832o30fb21b5vcd09baa8387efcc0@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: =?iso-8859-2?q?Micha=B3?= sed <sedmich@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, htejun@gmail.com, hmh@hmh.eng.br, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755553AbXIIG7h@vger.kernel.org>
+In-Reply-To: <46E24DE8.4050603@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Saturday, 8 September 2007 17:32, Michal Piotrowski wrote:
-> Hi,
->=20
-> On 05/08/2007, Micha=B3 sed <sedmich@gmail.com> wrote:
-> > Greetings
-> >
-> > I'm experiencing double disk spin down issue on my HP nx6310 laptop
-> > during shut down and suspend to disk. The drive is power down on "W=
-ill
-> > now halt message" then turned back on and off again with the laptop
-> > itself. I'm using the newest bios available F.0D, 2.6.23-rc1-mm ker=
-nel
-> > along with Debian Unstable plus fixes from Sidux repository so I ha=
-ve
-> > the updated shut down script. I have also verified on two other
-> > systems [AMD/Nforce based] that the spin down issue has been resolv=
-ed
-> > by the Sidux update and I'm certain that this is a hp bios bug or a
-> > piix kernel module problem.
-> >
->=20
-> What is the _actual_ state of this bug? Does anyone work on this?
->=20
-> I see the report
-> http://lkml.org/lkml/2007/8/5/214
->=20
-> and a very long thread
-> http://lkml.org/lkml/2007/8/6/4
->=20
-> dmidecode stuff
-> http://bugzilla.kernel.org/show_bug.cgi?id=3D8855
->=20
-> and _only_one_fix_ - for Suspend To Disc (thanks Rafael)
-> http://lkml.org/lkml/2007/8/7/316
+Hello Tejun,
 
-There's an updated version of that patch at
-http://lkml.org/lkml/2007/8/27/392
-=20
-> Shutdown is completely broken on HP NX6??? laptops.
+On Sat, 08 Sep 2007 16:23:20 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-It's not completely broken, it just handles disks incorrectly and we ar=
-e not
-sure whether or not there are any serious consequences of that.  Moreov=
-er,
-it has happened for a long time now, AFAICT, so that's not a regression=
-=2E
+> Paul Rolland wrote:
+> > Hello,
+> > 
+> > My machine (an ASUS P5W-DH-Deluxe, Core2, 4Go RAM, 3 SATA and 2IDE) is
+> > reporting a :
+> > irq 23: nobody cared (try booting with the "irqpoll" option)
+> > together with a Call Trace, but :
+> >  - irqpoll is present on the command line,
+> >  - the irq is reported to be used by libata,
+> >  - the irqpoll option is mandatory if I want _some_ of my SATA disks to
+> > be accessible.
+> 
+> So, if you don't add the 'irqpoll' option, IO to disks don't work at all
+> after nobody cared message, right?
 
-BTW, in my opinion, we don't really understand why the patch at
-http://lkml.org/lkml/2007/8/27/392 actually helps and understanding tha=
-t might
-allow us to fix the problem in general.
+IO to disks don't work for SOME disks, but some others are still Ok (I've
+three SATA and two IDE).
 
-Greetings,
-Rafael
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, what is weird is the content of dmesg : after the nobody care, it looks
+as if IRQ 23 is reuse for another device (SMBus), but /proc/interrupts still
+reports it being used by libata.
+
+I've been trying 2.6.23-rc5, and I'm still having this IRQ 23 nobody cared 
+message.
+
+Regards,
+Paul
+
+
+
+-- 
+Paul Rolland                                E-Mail : rol(at)witbe.net
+Witbe.net SA                                Tel. +33 (0)1 47 67 77 77
+Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
+F-92057 Paris La Defense                    RIPE : PR12-RIPE
+
+Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navigateur 
+"Some people dream of success... while others wake up and work hard at it" 
+
+"I worry about my child and the Internet all the time, even though she's too 
+young to have logged on yet. Here's what I worry about. I worry that 10 or 15 
+years from now, she will come to me and say 'Daddy, where were you when they 
+took freedom of the press away from the Internet?'"
+--Mike Godwin, Electronic Frontier Foundation 
