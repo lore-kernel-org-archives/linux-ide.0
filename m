@@ -1,66 +1,44 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: libata not working for sis5533
-Date: Sun, 09 Sep 2007 13:35:26 +0200
-Message-ID: <46E3DA7E.7060709@gmail.com>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com> <20070902114032.7dbfb21a@the-village.bc.nu> <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr> <Pine.LNX.4.64.0709061156220.25942@fbirervta.pbzchgretzou.qr> <46E26DAF.9020906@gmail.com> <Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
-Reply-To: patrizio.bassi@gmail.com
+From: "Michal Suchanek" <hramrach@centrum.cz>
+Subject: Re: Maxtor 6L200M0 sata irq timeouts
+Date: Sun, 9 Sep 2007 18:20:56 +0200
+Message-ID: <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
+References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>
+	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:4519 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602AbXIILfi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 07:35:38 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so389998ugc
-        for <linux-ide@vger.kernel.org>; Sun, 09 Sep 2007 04:35:37 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
+Received: from nf-out-0910.google.com ([64.233.182.186]:36844 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756749AbXIIQU7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 12:20:59 -0400
+Received: by nf-out-0910.google.com with SMTP id f5so641893nfh
+        for <linux-ide@vger.kernel.org>; Sun, 09 Sep 2007 09:20:57 -0700 (PDT)
+In-Reply-To: <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@computergmbh.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Joris <joris@v5.be>, linux-ide@vger.kernel.org
 
-Patrizio Bassi ha scritto:
-> Jan Engelhardt ha scritto:
->> On Sep 8 2007 11:38, Patrizio Bassi wrote:
->>  
->>> Jan Engelhardt wrote:
->>>    
->>>> I shall give this a spin too, since I happen to have sis5513.
->>>>
->>>> Just booted this fresh ata-enabled system (a matter of mkinitrd).
-It has
->>>> not exploded yet.
->>>>      
->>> don't you have the "irq 14" issue?
->>>    
->> No, does not seem so.
->>
->>  
->>> can you post here your .config?
->>>    
->> http://rafb.net/p/vfTX0966.html
->>
->> Maybe it is solved in 2.6.22.3? (I don't remember what your version
->> was.)
->>
->>
->>     Jan
->>  
->
-> For Alan, libata devs...hope can help debug...
-> this is http://www.patriziobassi.it/downloads/libata_issue.jpg
->
-> and this is the relative config i'm using
-> http://www.patriziobassi.it/downloads/config
->
-> Let me know
->
-> Patrizio
+Hello
 
-more debug:
+(please CC me when replying)
 
-I tried as suggested with the irqpoll option, i just get a faster panic
-as i don't have the 3 xfermode lines...but always impossibile to boot...
+On 09/09/2007, Joris <joris@v5.be> wrote:
+> Hi,
+>
+> Just a note to let you know you're not alone.
+> I have the same problem, and someone else reported something simelar.
+>
+> What sata controller are you using?
 
-Patrizio
+The via onboard controller on the via chipset board and the Intel ICH7
+integrated controller with this board. Looks like it is the drive and
+the used controller does not make any difference.
+
+00:1f.2 IDE interface: Intel Corporation 82801GB/GR/GH (ICH7 Family)
+Serial ATA Storage Controller IDE (rev 01)
+
+Thanks
+
+Michal
