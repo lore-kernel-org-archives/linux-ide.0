@@ -1,41 +1,102 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [-mm patch] unexport noautodma
-Date: Sun, 9 Sep 2007 22:25:21 +0200
-Message-ID: <20070909202521.GR3563@stusta.de>
+Subject: [-mm patch] remove ide_get_error_location()
+Date: Sun, 9 Sep 2007 22:24:55 +0200
+Message-ID: <20070909202455.GM3563@stusta.de>
+References: <20070831215822.26e1432b.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:60729 "EHLO
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:60709 "EHLO
 	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759478AbXIIUZO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 16:25:14 -0400
+	with ESMTP id S1759275AbXIIUYs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 16:24:48 -0400
 Content-Disposition: inline
+In-Reply-To: <20070831215822.26e1432b.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-noautodma can now be unexported.
+On Fri, Aug 31, 2007 at 09:58:22PM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.23-rc3-mm1:
+>...
+>  git-block.patch
+>...
+>  git trees
+>...
+
+ide_get_error_location() is no longer used.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
-This patch has been sent on:
-- 27 Aug 2007
+ drivers/ide/ide-io.c |   35 -----------------------------------
+ include/linux/ide.h  |    5 -----
+ 2 files changed, 40 deletions(-)
 
-957dc7601c050cb14a7afc842db0c2d62aaf3509 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index b3b5f00..5b09066 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -100,8 +100,6 @@ static int ide_scan_direction; /* THIS was formerly 2.2.x pci=reverse */
+924249789a0c0d577c5c5bfa91f4e514b7ebde60 
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index c1692d9..ec835e3 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -322,41 +322,6 @@ static void ide_complete_pm_request (ide_drive_t *drive, struct request *rq)
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ }
  
- int noautodma = 0;
- 
--EXPORT_SYMBOL(noautodma);
+-/*
+- * FIXME: probably move this somewhere else, name is bad too :)
+- */
+-u64 ide_get_error_location(ide_drive_t *drive, char *args)
+-{
+-	u32 high, low;
+-	u8 hcyl, lcyl, sect;
+-	u64 sector;
 -
- #ifdef CONFIG_BLK_DEV_IDEACPI
- int ide_noacpi = 0;
- int ide_noacpitfs = 1;
+-	high = 0;
+-	hcyl = args[5];
+-	lcyl = args[4];
+-	sect = args[3];
+-
+-	if (ide_id_has_flush_cache_ext(drive->id)) {
+-		low = (hcyl << 16) | (lcyl << 8) | sect;
+-		HWIF(drive)->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
+-		high = ide_read_24(drive);
+-	} else {
+-		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
+-		if (cur & 0x40) {
+-			high = cur & 0xf;
+-			low = (hcyl << 16) | (lcyl << 8) | sect;
+-		} else {
+-			low = hcyl * drive->head * drive->sect;
+-			low += lcyl * drive->sect;
+-			low += sect - 1;
+-		}
+-	}
+-
+-	sector = ((u64) high << 24) | low;
+-	return sector;
+-}
+-EXPORT_SYMBOL(ide_get_error_location);
+-
+ /**
+  *	ide_end_drive_cmd	-	end an explicit drive command
+  *	@drive: command 
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 48871f9..65de5c3 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1088,11 +1088,6 @@ extern ide_startstop_t ide_do_reset (ide_drive_t *);
+ extern void ide_init_drive_cmd (struct request *rq);
+ 
+ /*
+- * this function returns error location sector offset in case of a write error
+- */
+-extern u64 ide_get_error_location(ide_drive_t *, char *);
+-
+-/*
+  * "action" parameter type for ide_do_drive_cmd() below.
+  */
+ typedef enum {
 
