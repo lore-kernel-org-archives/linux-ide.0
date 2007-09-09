@@ -1,102 +1,40 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [-mm patch] remove ide_get_error_location()
-Date: Sun, 9 Sep 2007 22:24:55 +0200
-Message-ID: <20070909202455.GM3563@stusta.de>
-References: <20070831215822.26e1432b.akpm@linux-foundation.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] drivers/firmware: const-ify DMI API and internals
+Date: Sun, 9 Sep 2007 14:12:56 -0700
+Message-ID: <20070909211256.GB6310@kroah.com>
+References: <20070901142719.GA31990@havoc.gtf.org> <20070901153644.GA530@kroah.com> <46D98CD0.9040206@garzik.org> <20070909175142.GB32447@kroah.com> <20070909202442.GA21086@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:60709 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759275AbXIIUYs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 16:24:48 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:42910 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759685AbXIIVLo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 17:11:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20070831215822.26e1432b.akpm@linux-foundation.org>
+In-Reply-To: <20070909202442.GA21086@uranus.ravnborg.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, ak@suse.de, len.brown@intel.com, linux-ide@vger.kernel.org, dz@debian.org, minyard@acm.org, j.w.r.degoede@hhs.nl, lm-sensors@lm-sensors.org, rlove@rlove.org, bzolnier@gmail.com, dmitry.torokhov@gmail.com, mzxreary@0pointer.de, stelian@popies.net, ibm-acpi@hmh.eng.br, ambx1@neo.rr.com, gimli@dark-green.com
 
-On Fri, Aug 31, 2007 at 09:58:22PM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.23-rc3-mm1:
->...
->  git-block.patch
->...
->  git trees
->...
+On Sun, Sep 09, 2007 at 10:24:42PM +0200, Sam Ravnborg wrote:
+> > >
+> > > I was just going to push it myself, but have no strong feelings on the 
+> > > matter.
+> > 
+> > Ok, you can push it, that's fine with me.  Feel free to add my:
+> > 	Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> > 
+> > if you want.
+> That should be "Acked-by:" since the patch does not pass via you but you
+> acknowledge it is OK by your Ack.
 
-ide_get_error_location() is no longer used.
+Well, as I am the maintainer for that subsystem, and I did review the
+patch and it looks good, that is a bit more than just an "ack" :)
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+But whatever you want, I'm not going to get technical here with
+"reviewed-by" and such right now...
 
----
+thanks,
 
- drivers/ide/ide-io.c |   35 -----------------------------------
- include/linux/ide.h  |    5 -----
- 2 files changed, 40 deletions(-)
-
-924249789a0c0d577c5c5bfa91f4e514b7ebde60 
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index c1692d9..ec835e3 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -322,41 +322,6 @@ static void ide_complete_pm_request (ide_drive_t *drive, struct request *rq)
- 	spin_unlock_irqrestore(&ide_lock, flags);
- }
- 
--/*
-- * FIXME: probably move this somewhere else, name is bad too :)
-- */
--u64 ide_get_error_location(ide_drive_t *drive, char *args)
--{
--	u32 high, low;
--	u8 hcyl, lcyl, sect;
--	u64 sector;
--
--	high = 0;
--	hcyl = args[5];
--	lcyl = args[4];
--	sect = args[3];
--
--	if (ide_id_has_flush_cache_ext(drive->id)) {
--		low = (hcyl << 16) | (lcyl << 8) | sect;
--		HWIF(drive)->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
--		high = ide_read_24(drive);
--	} else {
--		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
--		if (cur & 0x40) {
--			high = cur & 0xf;
--			low = (hcyl << 16) | (lcyl << 8) | sect;
--		} else {
--			low = hcyl * drive->head * drive->sect;
--			low += lcyl * drive->sect;
--			low += sect - 1;
--		}
--	}
--
--	sector = ((u64) high << 24) | low;
--	return sector;
--}
--EXPORT_SYMBOL(ide_get_error_location);
--
- /**
-  *	ide_end_drive_cmd	-	end an explicit drive command
-  *	@drive: command 
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 48871f9..65de5c3 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1088,11 +1088,6 @@ extern ide_startstop_t ide_do_reset (ide_drive_t *);
- extern void ide_init_drive_cmd (struct request *rq);
- 
- /*
-- * this function returns error location sector offset in case of a write error
-- */
--extern u64 ide_get_error_location(ide_drive_t *, char *);
--
--/*
-  * "action" parameter type for ide_do_drive_cmd() below.
-  */
- typedef enum {
-
+greg k-h
