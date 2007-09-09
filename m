@@ -1,29 +1,55 @@
-From: Janne Kario <janne.kario@gmail.com>
-Subject: USB and smartmontools
-Date: Sun, 9 Sep 2007 10:14:36 -0700 (PDT)
-Message-ID: <12580845.post@talk.nabble.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] drivers/firmware: const-ify DMI API and internals
+Date: Sun, 9 Sep 2007 10:51:42 -0700
+Message-ID: <20070909175142.GB32447@kroah.com>
+References: <20070901142719.GA31990@havoc.gtf.org> <20070901153644.GA530@kroah.com> <46D98CD0.9040206@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:46543 "EHLO
-	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753010AbXIIROh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 13:14:37 -0400
-Received: from isper.nabble.com ([192.168.236.156])
-	by kuber.nabble.com with esmtp (Exim 4.63)
-	(envelope-from <lists@nabble.com>)
-	id 1IUQMm-0007fk-Os
-	for linux-ide@vger.kernel.org; Sun, 09 Sep 2007 10:14:36 -0700
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759467AbXIIUG1@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <46D98CD0.9040206@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, ak@suse.de, len.brown@intel.com, linux-ide@vger.kernel.org, dz@debian.org, minyard@acm.org, j.w.r.degoede@hhs.nl, lm-sensors@lm-sensors.org, rlove@rlove.org, bzolnier@gmail.com, dmitry.torokhov@gmail.com, mzxreary@0pointer.de, stelian@popies.net, ibm-acpi@hmh.eng.br, ambx1@neo.rr.com, gimli@dark-green.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+On Sat, Sep 01, 2007 at 12:01:20PM -0400, Jeff Garzik wrote:
+> Greg KH wrote:
+>> On Sat, Sep 01, 2007 at 10:27:19AM -0400, Jeff Garzik wrote:
+>>> commit 457b6eb3bf3341d2e143518a0bb99ffbb8d754c4
+>>> Author: Jeff Garzik <jeff@garzik.org>
+>>> Date:   Sat Sep 1 10:16:45 2007 -0400
+>>>
+>>>     drivers/firmware: const-ify DMI API and internals
+>>>         Three main sets of changes:
+>>>         1) dmi_get_system_info() return value should have been marked 
+>>> const,
+>>>        since callers should not be changing that data.
+>>>         2) const-ify DMI internals, since DMI firmware tables should,
+>>>        whenever possible, be marked const to ensure we never ever write 
+>>> to
+>>>        that data area.
+>>>         3) const-ify DMI API, to enable marking tables const where 
+>>> possible
+>>>        in low-level drivers.
+>>>         And if we're really lucky, this might enable some additional
+>>>     optimizations on the part of the compiler.
+>>>         The bulk of the changes are #2 and #3, which are interrelated.  
+>>> #1 could
+>>>     have been a separate patch, but it was so small compared to the 
+>>> others,
+>>>     it was easier to roll it into this changeset.
+>> Looks great to me, do you want me to take this through my driver tree?
+>> I'd be glad to do so.
+>
+> I was just going to push it myself, but have no strong feelings on the 
+> matter.
 
-What is the status of USB and smartmontools? Are there any USB mass storage
-enclosures with SAT(L) built in them which would allow me to run smartctl on
-them using the ATA passthrough in libata?
--- 
-View this message in context: http://www.nabble.com/USB-and-smartmontools-tf4410067.html#a12580845
-Sent from the linux-ide mailing list archive at Nabble.com.
+Ok, you can push it, that's fine with me.  Feel free to add my:
+	Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
+if you want.
+
+thanks,
+
+greg k-h
