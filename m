@@ -1,27 +1,41 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] drivers/firmware: const-ify DMI API and internals
-Date: Sun, 9 Sep 2007 22:24:42 +0200
-Message-ID: <20070909202442.GA21086@uranus.ravnborg.org>
-References: <20070901142719.GA31990@havoc.gtf.org> <20070901153644.GA530@kroah.com> <46D98CD0.9040206@garzik.org> <20070909175142.GB32447@kroah.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [-mm patch] unexport noautodma
+Date: Sun, 9 Sep 2007 22:25:21 +0200
+Message-ID: <20070909202521.GR3563@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759343AbXIIUXc@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:60729 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759478AbXIIUZO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2007 16:25:14 -0400
 Content-Disposition: inline
-In-Reply-To: <20070909175142.GB32447@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, ak@suse.de, len.brown@intel.com, linux-ide@vger.kernel.org, dz@debian.org, minyard@acm.org, j.w.r.degoede@hhs.nl, lm-sensors@lm-sensors.org, rlove@rlove.org, bzolnier@gmail.com, dmitry.torokhov@gmail.com, mzxreary@0pointer.de, stelian@popies.net, ibm-acpi@hmh.eng.br, ambx1@neo.rr.com, gimli@dark-green.com
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> >
-> > I was just going to push it myself, but have no strong feelings on the 
-> > matter.
-> 
-> Ok, you can push it, that's fine with me.  Feel free to add my:
-> 	Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> if you want.
-That should be "Acked-by:" since the patch does not pass via you but you
-acknowledge it is OK by your Ack.
+noautodma can now be unexported.
 
-	Sam
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+---
+
+This patch has been sent on:
+- 27 Aug 2007
+
+957dc7601c050cb14a7afc842db0c2d62aaf3509 
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index b3b5f00..5b09066 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -100,8 +100,6 @@ static int ide_scan_direction; /* THIS was formerly 2.2.x pci=reverse */
+ 
+ int noautodma = 0;
+ 
+-EXPORT_SYMBOL(noautodma);
+-
+ #ifdef CONFIG_BLK_DEV_IDEACPI
+ int ide_noacpi = 0;
+ int ide_noacpitfs = 1;
+
