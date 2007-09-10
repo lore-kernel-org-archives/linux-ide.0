@@ -1,42 +1,36 @@
-From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
-Subject: Re: HSM violation on bootup, ICH7 + ata_piix 2.6.22
-Date: Mon, 10 Sep 2007 09:59:43 +0100
-Message-ID: <1189414783.13360.16.camel@ukabzc383.uk.saic.com>
-References: <46E254D7.5020902@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ICH Intel PATA short cable override...
+Date: Mon, 10 Sep 2007 08:15:16 -0400
+Message-ID: <46E53554.1090604@rtr.ca>
+References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com> <20070906014209.142382c8@the-village.bc.nu> <46DF63F8.8070805@rtr.ca> <46E1DC6E.9060001@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpmx2.mail.saic.com ([139.121.17.172]:46132 "EHLO
-	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbXIJJAY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2007 05:00:24 -0400
-In-Reply-To: <46E254D7.5020902@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933265AbXIJMPb@vger.kernel.org>
+In-Reply-To: <46E1DC6E.9060001@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel J Blueman <daniel.blueman@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Hi Tejun,
-
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Ditto for selecting transfer modes.
 > 
-> Please disable or upgrade smartd.
 > 
+> Waiting on one thing AFAICS:
+> 
+>     ability to drain/idle all ports +
+>     issue a command on one port +
+>     resume normal parallel port operation
+> 
+> SET FEATURES - XFER MODE is special in that it requires all sorts of 
+> additional controller handling and careful cross-port synchronization.
 
-Thanks for that, I checked the disks and sure enough they were in an
-extended self test, I aborted that and it's all back to normal.
+Absolutely.
 
-the only problem, however, is that the system is already running version
-5.37 of the smartmontools package, which is the most recent as I
-understand it? I don't really want to leave the system with it's disks
-unmonitored, is there anything I can be doing to prevent this behaviour?
+Also note that I'm *not* advocating HDIO_SET_PIO_MODE (and kin) here,
+but rather perhaps a sysfs option per-drive.  It is needed, especially for
+custom/embedded systems, and I suppose we will get there eventually.  :)
 
-Cheers,
-Eamonn
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+Cheers
