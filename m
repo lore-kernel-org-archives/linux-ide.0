@@ -1,160 +1,42 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: SATA problems
-Date: Mon, 10 Sep 2007 02:02:43 -0700
-Message-ID: <20070910020243.1101cf7a.akpm@linux-foundation.org>
-References: <4671366B.7090702@lbsd.net>
-	<46716B1D.1070902@garzik.org>
-	<20070614182854.GC1223@redhat.com>
-	<20070618200703.GB13344@redhat.com>
-	<46776223.3050402@lbsd.net>
-	<46D68CC2.3030206@lbsd.net>
+From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
+Subject: Re: HSM violation on bootup, ICH7 + ata_piix 2.6.22
+Date: Mon, 10 Sep 2007 09:59:43 +0100
+Message-ID: <1189414783.13360.16.camel@ukabzc383.uk.saic.com>
+References: <46E254D7.5020902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756714AbXIJJDV@vger.kernel.org>
-In-Reply-To: <46D68CC2.3030206@lbsd.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nigel Kukard <nkukard@lbsd.net>
-Cc: Dave Jones <davej@redhat.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cpmx2.mail.saic.com ([139.121.17.172]:46132 "EHLO
+	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbXIJJAY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2007 05:00:24 -0400
+In-Reply-To: <46E254D7.5020902@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 30 Aug 2007 09:24:18 +0000 Nigel Kukard <nkukard@lbsd.net> wrote:
+Hi Tejun,
 
-> Hrmmm,
 > 
-> >>  > 
-> >>  >  > > Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
-> >>  >  > > 0x0001c807
-> >>  >  > > Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
-> >>  >  > > 0x0001c807
-> >>  > 
-> >>  > Unrelated to the other error, but I've been meaning to ask for a while..
-> >>  > If this is 'abnormal', why does every SATA box I've seen do it?
-> >>
-> >> *crickets*
-
-chirp, chirp.
-
-> >> Should we check for this case explicitly, and not print this?
-> >>
-> >>   
-> >>     
-> > After I get the above errors, my entire SATA bus crashes and I need to
-> > hard reset the box ... not sure we can just ignore the errors?
-> >
-> >   
-> 
-> Appears even with the patch provided a few months ago I'm getting
-> freezes. Replaced the HDD & all cables, same errors ... especially
-> whilst doing heavy IO.
-> 
-> Can anyone shed some light?
+> Please disable or upgrade smartd.
 > 
 
-I think I was told last week that copying the appropriate mailing list will
-at least prevent chirping, so let's try that.
+Thanks for that, I checked the disks and sure enough they were in an
+extended self test, I aborted that and it's all back to normal.
 
-Original thread here: http://lkml.org/lkml/2007/6/14/154
+the only problem, however, is that the system is already running version
+5.37 of the smartmontools package, which is the most recent as I
+understand it? I don't really want to leave the system with it's disks
+unmonitored, is there anything I can be doing to prevent this behaviour?
 
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/133
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/133
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/133
-> ata2: EH complete
-> ata2.00: limiting speed to UDMA/100:PIO4
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/100
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/100
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/100
-> sd 3:0:0:0: SCSI error: return code = 0x08000002
-> sda: Current [descriptor]: sense key=0xb
->     ASC=0x0 ASCQ=0x0
-> Descriptor sense data with sense descriptors (in hex):
->         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
->         00 00 00 00
-> end_request: I/O error, dev sda, sector 30132639
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/100
-> ata2: EH complete
-> ata2.00: limiting speed to UDMA/33:PIO4
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/33
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/33
-> ata2: EH complete
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
-> 131072 in
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata2: soft resetting port
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ATA: abnormal status 0x7F on port 0x0001c807
-> ata2.00: configured for UDMA/33
-> ata2: EH complete
-> 
-> 
-> 
+Cheers,
+Eamonn
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
