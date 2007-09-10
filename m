@@ -1,46 +1,160 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Maxtor 6L200M0 sata irq timeouts
-Date: Mon, 10 Sep 2007 00:29:38 +0200
-Message-ID: <46E473D2.20907@gmail.com>
-References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com> <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: SATA problems
+Date: Mon, 10 Sep 2007 02:02:43 -0700
+Message-ID: <20070910020243.1101cf7a.akpm@linux-foundation.org>
+References: <4671366B.7090702@lbsd.net>
+	<46716B1D.1070902@garzik.org>
+	<20070614182854.GC1223@redhat.com>
+	<20070618200703.GB13344@redhat.com>
+	<46776223.3050402@lbsd.net>
+	<46D68CC2.3030206@lbsd.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.233]:17457 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754372AbXIJGJM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2007 02:09:12 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so1017154qbe
-        for <linux-ide@vger.kernel.org>; Sun, 09 Sep 2007 23:09:10 -0700 (PDT)
-In-Reply-To: <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756714AbXIJJDV@vger.kernel.org>
+In-Reply-To: <46D68CC2.3030206@lbsd.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nigel Kukard <nkukard@lbsd.net>
+Cc: Dave Jones <davej@redhat.com>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Suchanek <hramrach@centrum.cz>
-Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
 
-Michal Suchanek wrote:
-> Hello
-> 
-> (please CC me when replying)
-> 
-> On 09/09/2007, Joris <joris@v5.be> wrote:
->> Hi,
->>
->> Just a note to let you know you're not alone.
->> I have the same problem, and someone else reported something simelar.
->>
->> What sata controller are you using?
-> 
-> The via onboard controller on the via chipset board and the Intel ICH7
-> integrated controller with this board. Looks like it is the drive and
-> the used controller does not make any difference.
-> 
-> 00:1f.2 IDE interface: Intel Corporation 82801GB/GR/GH (ICH7 Family)
-> Serial ATA Storage Controller IDE (rev 01)
+On Thu, 30 Aug 2007 09:24:18 +0000 Nigel Kukard <nkukard@lbsd.net> wrote:
 
-What does 'smartctl -a /dev/sda' say?
+> Hrmmm,
+> 
+> >>  > 
+> >>  >  > > Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
+> >>  >  > > 0x0001c807
+> >>  >  > > Jun 14 07:55:52 nigel-m2v kernel: ATA: abnormal status 0x7F on port
+> >>  >  > > 0x0001c807
+> >>  > 
+> >>  > Unrelated to the other error, but I've been meaning to ask for a while..
+> >>  > If this is 'abnormal', why does every SATA box I've seen do it?
+> >>
+> >> *crickets*
 
--- 
-tejun
+chirp, chirp.
 
+> >> Should we check for this case explicitly, and not print this?
+> >>
+> >>   
+> >>     
+> > After I get the above errors, my entire SATA bus crashes and I need to
+> > hard reset the box ... not sure we can just ignore the errors?
+> >
+> >   
+> 
+> Appears even with the patch provided a few months ago I'm getting
+> freezes. Replaced the HDD & all cables, same errors ... especially
+> whilst doing heavy IO.
+> 
+> Can anyone shed some light?
+> 
+
+I think I was told last week that copying the appropriate mailing list will
+at least prevent chirping, so let's try that.
+
+Original thread here: http://lkml.org/lkml/2007/6/14/154
+
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/133
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/133
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/133
+> ata2: EH complete
+> ata2.00: limiting speed to UDMA/100:PIO4
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/100
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/100
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:c9:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/100
+> sd 3:0:0:0: SCSI error: return code = 0x08000002
+> sda: Current [descriptor]: sense key=0xb
+>     ASC=0x0 ASCQ=0x0
+> Descriptor sense data with sense descriptors (in hex):
+>         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+>         00 00 00 00
+> end_request: I/O error, dev sda, sector 30132639
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/100
+> ata2: EH complete
+> ata2.00: limiting speed to UDMA/33:PIO4
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> ata2.00: cmd c8/00:00:9f:ca:cb/00:00:00:00:00/e1 tag 0 cdb 0x0 data
+> 131072 in
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> ata2: soft resetting port
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ATA: abnormal status 0x7F on port 0x0001c807
+> ata2.00: configured for UDMA/33
+> ata2: EH complete
+> 
+> 
+> 
