@@ -1,55 +1,88 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] drivers/firmware: const-ify DMI API and internals
-Date: Tue, 11 Sep 2007 23:54:41 +0200
-Message-ID: <200709112354.41774.bzolnier@gmail.com>
-References: <20070901142719.GA31990@havoc.gtf.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: libata not working for sis5533
+Date: Tue, 11 Sep 2007 15:46:58 -0700
+Message-ID: <20070911154658.ab1fe162.akpm@linux-foundation.org>
+References: <46D132C5.5000803@gmail.com>
+	<6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
+	<46D8921E.3010304@gmail.com>
+	<46D89429.7080802@gmail.com>
+	<20070902114032.7dbfb21a@the-village.bc.nu>
+	<Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
+	<Pine.LNX.4.64.0709061156220.25942@fbirervta.pbzchgretzou.qr>
+	<46E26DAF.9020906@gmail.com>
+	<Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
+	<46E3DA7E.7060709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:43612 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934027AbXIKVwz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:52:55 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so139799ugc
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:52:53 -0700 (PDT)
-In-Reply-To: <20070901142719.GA31990@havoc.gtf.org>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45682 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756938AbXIKWrZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 18:47:25 -0400
+In-Reply-To: <46E3DA7E.7060709@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, ak@suse.de, Greg KH <greg@kroah.com>, len.brown@intel.com, linux-ide@vger.kernel.org, dz@debian.org, minyard@acm.org, j.w.r.degoede@hhs.nl, lm-sensors@lm-sensors.org, rlove@rlove.org, dmitry.torokhov@gmail.com, mzxreary@0pointer.de, stelian@popies.net, ibm-acpi@hmh.eng.br, ambx1@neo.rr.com, gimli@dark-green.com
+To: patrizio.bassi@gmail.com
+Cc: Jan Engelhardt <jengelh@computergmbh.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andi Kleen <ak@suse.de>, linux-acpi@vger.kernel.org
 
-On Saturday 01 September 2007, Jeff Garzik wrote:
+On Sun, 09 Sep 2007 13:35:26 +0200
+Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
+
+> Patrizio Bassi ha scritto:
+> > Jan Engelhardt ha scritto:
+> >> On Sep 8 2007 11:38, Patrizio Bassi wrote:
+> >>  
+> >>> Jan Engelhardt wrote:
+> >>>    
+> >>>> I shall give this a spin too, since I happen to have sis5513.
+> >>>>
+> >>>> Just booted this fresh ata-enabled system (a matter of mkinitrd).
+> It has
+> >>>> not exploded yet.
+> >>>>      
+> >>> don't you have the "irq 14" issue?
+> >>>    
+> >> No, does not seem so.
+> >>
+> >>  
+> >>> can you post here your .config?
+> >>>    
+> >> http://rafb.net/p/vfTX0966.html
+> >>
+> >> Maybe it is solved in 2.6.22.3? (I don't remember what your version
+> >> was.)
+> >>
+> >>
+> >>     Jan
+> >>  
+> >
+> > For Alan, libata devs...hope can help debug...
+> > this is http://www.patriziobassi.it/downloads/libata_issue.jpg
+
+Looks more like a platform irq routing issue than an ata issue.
+
+Perhaps an x86 or an acpi person can help out with this.
+
+Probably nothing will happen, in which case I'll get back to you later
+and ask you to raise a bugzilla entry, not that this will get it fixed :(
+
+
+> > and this is the relative config i'm using
+> > http://www.patriziobassi.it/downloads/config
+> >
+> > Let me know
+> >
+> > Patrizio
 > 
-> commit 457b6eb3bf3341d2e143518a0bb99ffbb8d754c4
-> Author: Jeff Garzik <jeff@garzik.org>
-> Date:   Sat Sep 1 10:16:45 2007 -0400
+> more debug:
 > 
->     drivers/firmware: const-ify DMI API and internals
->     
->     Three main sets of changes:
->     
->     1) dmi_get_system_info() return value should have been marked const,
->        since callers should not be changing that data.
->     
->     2) const-ify DMI internals, since DMI firmware tables should,
->        whenever possible, be marked const to ensure we never ever write to
->        that data area.
->     
->     3) const-ify DMI API, to enable marking tables const where possible
->        in low-level drivers.
->     
->     And if we're really lucky, this might enable some additional
->     optimizations on the part of the compiler.
->     
->     The bulk of the changes are #2 and #3, which are interrelated.  #1 could
->     have been a separate patch, but it was so small compared to the others,
->     it was easier to roll it into this changeset.
->     
->     Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-[ a bit late ]
-
-Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> I tried as suggested with the irqpoll option, i just get a faster panic
+> as i don't have the 3 xfermode lines...but always impossibile to boot...
+> 
+> Patrizio
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
