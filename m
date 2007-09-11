@@ -1,43 +1,31 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: 2.6.23-rc4-mm1
-Date: Mon, 10 Sep 2007 22:43:07 +0200
-Message-ID: <64bb37e0709101343t2a621239pfc3545263e0b7674@mail.gmail.com>
-References: <20070910111926.9c942358.akpm@linux-foundation.org>
-	 <64bb37e0709101159v47f586aby7f078ef1db5cbc39@mail.gmail.com>
-	 <20070910122038.1f1bb006.akpm@linux-foundation.org>
-	 <20070910045503O.tomof@acm.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Maxtor 6L200M0 sata irq timeouts
+Date: Tue, 11 Sep 2007 03:37:30 +0200
+Message-ID: <46E5F15A.2090803@gmail.com>
+References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>	 <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>	 <46E473D2.20907@gmail.com> <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070910045503O.tomof@acm.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: akpm@linux-foundation.org, apw@shadowen.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.227]:28859 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758558AbXIKBjO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2007 21:39:14 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so639637nze
+        for <linux-ide@vger.kernel.org>; Mon, 10 Sep 2007 18:39:14 -0700 (PDT)
+In-Reply-To: <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michal Suchanek <hramrach@centrum.cz>
+Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
 
-On 9/10/07, FUJITA Tomonori <tomof@acm.org> wrote:
-> On Mon, 10 Sep 2007 12:20:38 -0700
-> Andrew Morton <akpm@linux-foundation.org> wrote:
->
-> > On Mon, 10 Sep 2007 20:59:49 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
-> > > The system boots, reads the partition tables, starts the RAID and then
-> > > kicks one drive out because of errors.
-> >
-> > Andy is using qla1280.  You're using sata.  So it's probably a different
-> > bug, with the same symptoms.
->
-> This might be a sg chaining bug too (probabaly sg chaining libata
-> patch).
->
-> Can you try the following patch that I've just sent:
->
-> http://lkml.org/lkml/2007/9/10/251
->
-> The patch also disables chaining sg list for libata.
->
-With this patch 2.6.23-rc4-mm1 works for me.
-Mainline 2.6.23-rc5-git1 works also without needing any patches.
+Michal Suchanek wrote:
+>> What does 'smartctl -a /dev/sda' say?
+>>
+> Attaching output.
 
-Torsten
+Hmmm... How often does the condition occur?  smartlog records only two
+occasions.
+
+-- 
+tejun
