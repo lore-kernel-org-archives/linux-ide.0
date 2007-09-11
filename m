@@ -1,125 +1,43 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 5/10] hpt366: remove ->init_setup
-Date: Tue, 11 Sep 2007 23:27:16 +0200
-Message-ID: <200709112327.16294.bzolnier@gmail.com>
-References: <200708292321.03722.bzolnier@gmail.com> <46E29256.9020506@ru.mvista.com>
+Subject: Re: [PATCH 3/4] ide: make ide_rate_filter() also respect PIO and SW/MW DMA mode masks (take 2)
+Date: Tue, 11 Sep 2007 22:52:02 +0200
+Message-ID: <200709112252.02576.bzolnier@gmail.com>
+References: <200709022344.18565.sshtylyov@ru.mvista.com> <46E2900D.5010004@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:27488 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754096AbXIKVkN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:13 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so138060ugc
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:12 -0700 (PDT)
-In-Reply-To: <46E29256.9020506@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.186]:27656 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049AbXIKVkM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:12 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1156nfb
+        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:10 -0700 (PDT)
+In-Reply-To: <46E2900D.5010004@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+
+Hi,
 
 On Saturday 08 September 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
+> Once I quothed:
 > 
-> > * Split off hpt{374,371,366}_init() helper from init_setup_hpt{374,371,366}().
+> > Make ide_rate_filter() also respect PIO/SWDMA/MWDMA mode masks.  While at it,
+> > make the udma_filter() method calls take precedence over using the mode masks.
 > 
-> > * Merge init_setup_{374,372n,371,372a,302,366}() into hpt366_init_one().
-> 
-> > While at it:
-> 
-> > * Use "HPT36x" name for HPT366/HPT368 chipsets.
-> 
-> > * Add .chip_name to struct hpt_info and use it to set set d->name.
-> 
-> > * Convert .max_ultra in struct hpt_info to .udma_mask and use it to set
-> >   d->udma_mask.
-> 
-> > * Fix hpt302 to use HPT302_ALLOW_ATA133_6 define.
-> 
->     I haven't found that change...
+>     This one not looking to pretty -- I've geve some thought on how to 
+> beautify all these switch fallthoughs but haven't got something much better 
+> then uour original approach (AKA Occam's razor :-).
 
- static struct hpt_info hpt302 __devinitdata = {
-+       .chip_name      = "HPT302",
-        .chip_type      = HPT302,
--       .max_ultra      = HPT372_ALLOW_ATA133_6 ? 6 : 5,
-+       .udma_mask      = HPT302_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-        .dpll_clk       = 66,
-        .settings       = hpt37x_settings
- };
+Care to recast the patch to contain only udma_filter() part?
 
-> > * Change HPT366/HPT374 interrupt fixup message from KERN_WARNING to KERN_INFO.
-> 
-> > * Use the second hpt366_chipsets[] entry for HPT37x chipsets using HPT36x PCI
-> >   device ID and fix .enablebits/.host_flags for HPT36x hpt366_chipsets[] entry.
-> 
->     Well, if you're ruining my nearly perfect desigh...
+BTW ide_rate_filter() still lacks respecting PIO limits of the device
+(Occam's razor doesn't apply to "PIO side" of ide_rate_filter() ;-)
 
-I was just adjusting hpt366 for ->init_setup removal, the other changes
-happened by the way... 8)
-
-> > * Bump driver version.
-> 
->     ... it's worth to label it 1.20. :-)
-
-updated
-
-> > +	d = hpt366_chipsets[idx];
-> > +
-> > +	d.name = /info->chip_name;
-> > +	d.udma_mask = info->udma_mask;
-> > +
-> > +	pci_set_drvdata(dev, info);
-> > +
-> > +	if (info == &hpt36x || info == &hpt374)
-> > +		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
-> > +
-> > +	if (dev2) {
-> > +		int ret;
-> > +
-> > +		pci_set_drvdata(dev2, info);
-> > +
-> > +		if (info == &hpt374)
-> > +			hpt374_init(dev, dev2);
-> > +		else {
-> > +			if (hpt36x_init(dev, dev2))
-> > +				d.host_flags |= IDE_HFLAG_BOOTABLE;
-> > +		}
-> > +
-> > +		ret = ide_setup_pci_devices(dev, dev2, &d);
-> > +		if (ret < 0)
-> > +			pci_dev_put(dev2);
-> > +		return ret;
-> > +	}
-> >  
-> > -	return d.init_setup(dev, &d);
-> > +	return ide_setup_pci_device(dev, &d);
-> >  }
-> 
->     NAK the patch because it's breaking the HPT374 code. Those chips are 
-> *signle* function, and sit in perfect copule (and why I alsway mistype in this 
-> word :o) on 2 DEVSELs behind i960.
-
-Please explain - there shouldn't be any behavior change for HPT374 caused
-by this patch.
-
-Could it be that HPT374 code was already buggy
-
-+static void __devinit hpt374_init(struct pci_dev *dev, struct pci_dev *dev2)
- {
--       struct pci_dev *dev2;
--
--       if (PCI_FUNC(dev->devfn) & 1)
--               return -ENODEV;
--
--       pci_set_drvdata(dev, &hpt374);
--
--       if ((dev2 = pci_get_slot(dev->bus, dev->devfn + 1)) != NULL) {
--               int ret;
--
-
-?
-
+Thanks,
 Bart
