@@ -1,53 +1,43 @@
-From: "Michal Suchanek" <hramrach@centrum.cz>
-Subject: Re: Maxtor 6L200M0 sata irq timeouts
-Date: Tue, 11 Sep 2007 13:29:02 +0200
-Message-ID: <a5d587fb0709110429j6ce52fb2wb1d558281b36f8a7@mail.gmail.com>
-References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>
-	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>
-	 <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
-	 <46E473D2.20907@gmail.com>
-	 <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>
-	 <46E5F15A.2090803@gmail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch] ata: increase allowed config flags
+Date: Tue, 11 Sep 2007 11:41:59 -0700
+Message-ID: <20070911114159.4854ba4c.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:31144 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762367AbXIKL3E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 07:29:04 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so1043416nfh
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 04:29:03 -0700 (PDT)
-In-Reply-To: <46E5F15A.2090803@gmail.com>
-Content-Disposition: inline
+Received: from mga11.intel.com ([192.55.52.93]:26977 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757585AbXIKSqH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Sep 2007 14:46:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello
+In anticipation of more features, increase number of config flags
+allowed, and move the init flags.
 
-(please CC me when replying)
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Hugh Dickens <hugh@veritas.com>
 
-On 11/09/2007, Tejun Heo <htejun@gmail.com> wrote:
-> Michal Suchanek wrote:
-> >> What does 'smartctl -a /dev/sda' say?
-> >>
-> > Attaching output.
->
-> Hmmm... How often does the condition occur?  smartlog records only two
-> occasions.
->
-
-Every few minutes when the system is under load, less often when not.
-
-I think the logged drive errors are unrelated, the drive delivers the
-interrupt, just a bit later than Linux expects. At least that is my
-impression after looking at the these logs and the logs from the old
-system (I am not sure I could still find the saved logs but with some
-combination of irq related kernel options I got spurious interrupt
-instead of timeout, and the drive got disabled).
-
-Thanks
-
-Michal
+Index: 2.6-mm/include/linux/libata.h
+===================================================================
+--- 2.6-mm.orig/include/linux/libata.h
++++ 2.6-mm/include/linux/libata.h
+@@ -140,11 +140,11 @@ enum {
+ 	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
+ 	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
+ 	ATA_DFLAG_AN		= (1 << 7), /* device supports AN */
+-	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
++	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
+ 
+-	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+-	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
+-	ATA_DFLAG_SPUNDOWN	= (1 << 10), /* XXX: for spindown_compat */
++	ATA_DFLAG_PIO		= (1 << 12), /* device limited to PIO mode */
++	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
++	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 16),
