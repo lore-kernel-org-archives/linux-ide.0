@@ -1,43 +1,119 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/4] ide: make ide_rate_filter() also respect PIO and SW/MW DMA mode masks (take 2)
-Date: Tue, 11 Sep 2007 22:52:02 +0200
-Message-ID: <200709112252.02576.bzolnier@gmail.com>
-References: <200709022344.18565.sshtylyov@ru.mvista.com> <46E2900D.5010004@ru.mvista.com>
+Subject: Re: [-mm patch] remove ide_get_error_location()
+Date: Tue, 11 Sep 2007 23:27:20 +0200
+Message-ID: <200709112327.20764.bzolnier@gmail.com>
+References: <20070831215822.26e1432b.akpm@linux-foundation.org> <20070909202455.GM3563@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:27656 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.185]:27602 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754049AbXIKVkM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:12 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1156nfb
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:10 -0700 (PDT)
-In-Reply-To: <46E2900D.5010004@ru.mvista.com>
+	with ESMTP id S1754173AbXIKVkO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:14 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1153nfb
+        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:13 -0700 (PDT)
+In-Reply-To: <20070909202455.GM3563@stusta.de>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Saturday 08 September 2007, Sergei Shtylyov wrote:
-> Once I quothed:
+On Sunday 09 September 2007, Adrian Bunk wrote:
+> On Fri, Aug 31, 2007 at 09:58:22PM -0700, Andrew Morton wrote:
+> >...
+> > Changes since 2.6.23-rc3-mm1:
+> >...
+> >  git-block.patch
+> >...
+> >  git trees
+> >...
 > 
-> > Make ide_rate_filter() also respect PIO/SWDMA/MWDMA mode masks.  While at it,
-> > make the udma_filter() method calls take precedence over using the mode masks.
+> ide_get_error_location() is no longer used.
 > 
->     This one not looking to pretty -- I've geve some thought on how to 
-> beautify all these switch fallthoughs but haven't got something much better 
-> then uour original approach (AKA Occam's razor :-).
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-Care to recast the patch to contain only udma_filter() part?
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-BTW ide_rate_filter() still lacks respecting PIO limits of the device
-(Occam's razor doesn't apply to "PIO side" of ide_rate_filter() ;-)
+Since git-block contains the patch which removes the only user of
+ide_get_error_location() I think that this patch should be also merged
+through block tree.  Jens?
 
-Thanks,
-Bart
+PS none of the blkdev_issue_flush() users uses *error_sector argument
+so it can be probably removed as well
+
+> ---
+> 
+>  drivers/ide/ide-io.c |   35 -----------------------------------
+>  include/linux/ide.h  |    5 -----
+>  2 files changed, 40 deletions(-)
+> 
+> 924249789a0c0d577c5c5bfa91f4e514b7ebde60 
+> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+> index c1692d9..ec835e3 100644
+> --- a/drivers/ide/ide-io.c
+> +++ b/drivers/ide/ide-io.c
+> @@ -322,41 +322,6 @@ static void ide_complete_pm_request (ide_drive_t *drive, struct request *rq)
+>  	spin_unlock_irqrestore(&ide_lock, flags);
+>  }
+>  
+> -/*
+> - * FIXME: probably move this somewhere else, name is bad too :)
+> - */
+> -u64 ide_get_error_location(ide_drive_t *drive, char *args)
+> -{
+> -	u32 high, low;
+> -	u8 hcyl, lcyl, sect;
+> -	u64 sector;
+> -
+> -	high = 0;
+> -	hcyl = args[5];
+> -	lcyl = args[4];
+> -	sect = args[3];
+> -
+> -	if (ide_id_has_flush_cache_ext(drive->id)) {
+> -		low = (hcyl << 16) | (lcyl << 8) | sect;
+> -		HWIF(drive)->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
+> -		high = ide_read_24(drive);
+> -	} else {
+> -		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
+> -		if (cur & 0x40) {
+> -			high = cur & 0xf;
+> -			low = (hcyl << 16) | (lcyl << 8) | sect;
+> -		} else {
+> -			low = hcyl * drive->head * drive->sect;
+> -			low += lcyl * drive->sect;
+> -			low += sect - 1;
+> -		}
+> -	}
+> -
+> -	sector = ((u64) high << 24) | low;
+> -	return sector;
+> -}
+> -EXPORT_SYMBOL(ide_get_error_location);
+> -
+>  /**
+>   *	ide_end_drive_cmd	-	end an explicit drive command
+>   *	@drive: command 
+> diff --git a/include/linux/ide.h b/include/linux/ide.h
+> index 48871f9..65de5c3 100644
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+> @@ -1088,11 +1088,6 @@ extern ide_startstop_t ide_do_reset (ide_drive_t *);
+>  extern void ide_init_drive_cmd (struct request *rq);
+>  
+>  /*
+> - * this function returns error location sector offset in case of a write error
+> - */
+> -extern u64 ide_get_error_location(ide_drive_t *, char *);
+> -
+> -/*
+>   * "action" parameter type for ide_do_drive_cmd() below.
+>   */
+>  typedef enum {
+> 
+> 
+
+
