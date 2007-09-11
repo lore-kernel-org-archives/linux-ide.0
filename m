@@ -1,46 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: 2.6.23-rc4-mm1
-Date: Tue, 11 Sep 2007 10:32:04 +0200
-Message-ID: <20070911083204.GE4187@kernel.dk>
-References: <20070910111926.9c942358.akpm@linux-foundation.org> <64bb37e0709101159v47f586aby7f078ef1db5cbc39@mail.gmail.com> <20070910122038.1f1bb006.akpm@linux-foundation.org> <20070910045503O.tomof@acm.org> <64bb37e0709101343t2a621239pfc3545263e0b7674@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH 7/7] blk_end_request: change rq->end_io to
+	cover request completion as a whole
+Date: Tue, 11 Sep 2007 11:22:40 +0200
+Message-ID: <20070911112240.pe40oufzz4k8wsg8@imap.suse.de>
+References: <20070831.184357.125900174.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20070831.184357.125900174.k-ueda@ct.jp.nec.com>
 Content-Disposition: inline
-In-Reply-To: <64bb37e0709101343t2a621239pfc3545263e0b7674@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, akpm@linux-foundation.org, apw@shadowen.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 10 2007, Torsten Kaiser wrote:
-> On 9/10/07, FUJITA Tomonori <tomof@acm.org> wrote:
-> > On Mon, 10 Sep 2007 12:20:38 -0700
-> > Andrew Morton <akpm@linux-foundation.org> wrote:
-> >
-> > > On Mon, 10 Sep 2007 20:59:49 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
-> > > > The system boots, reads the partition tables, starts the RAID and then
-> > > > kicks one drive out because of errors.
-> > >
-> > > Andy is using qla1280.  You're using sata.  So it's probably a different
-> > > bug, with the same symptoms.
-> >
-> > This might be a sg chaining bug too (probabaly sg chaining libata
-> > patch).
-> >
-> > Can you try the following patch that I've just sent:
-> >
-> > http://lkml.org/lkml/2007/9/10/251
-> >
-> > The patch also disables chaining sg list for libata.
-> >
-> With this patch 2.6.23-rc4-mm1 works for me.
-> Mainline 2.6.23-rc5-git1 works also without needing any patches.
+Am Sat 01 Sep 2007 12:43:57 AM CEST schrieb Kiyoshi Ueda  
+<k-ueda@ct.jp.nec.com>:
 
-OK, thanks for testing that. I'll merge Tomo's patch so that we can
-selectively enable drivers when we KNOW they work, instead of trying to
-do this (massive) operation whole sale.
+> This patch moves the rq->end_io() calling point to the top of
+> blk_end_request() from the last of end_that_request_last().
+> This means that whole request completion can be hooked by rq->end_io()
+> because all device drivers call blk_end_request() to complete request.
+>
+> Because the meaning of rq->end_io() is changed, existing rq->end_io()
+> users are changed as below:
+>   o Create a new end_io handler using blk_end_io().
+>     blk_end_io() is a default rq->end_io() handler and can take
+>     a callback function, which is called after end_that_request_last().
+>     So the old end_io() handler can be used as the callback.
+>   o Set the new end_io handler to rq->end_io.
+>
+Hmm. I must say I don't really like it.
+Defining a callback function which itself takes a callback as an argument
+looks like a conceptual weakness.
 
--- 
-Jens Axboe
+It's actually possible to solve it differently: We could insert a bio in
+front of the bio list of the cloned request, which can take a pointer to
+the request in it's ->bi_endio callback. This way, the bio can serve as
+a meta-callback for the request and everything can be done there.
+
+This way we don't have to change the interface at all and everything
+works as expected.
+
+I'll post a patch shortly.
+
+Cheers,
+
+Hannes
+---
+No .sig today, my .message went away ...
 
