@@ -1,119 +1,42 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [-mm patch] remove ide_get_error_location()
-Date: Tue, 11 Sep 2007 23:27:20 +0200
-Message-ID: <200709112327.20764.bzolnier@gmail.com>
-References: <20070831215822.26e1432b.akpm@linux-foundation.org> <20070909202455.GM3563@stusta.de>
+Subject: [PATCH 3/10] rz1000: set serialized flag only if mate interface exists
+Date: Tue, 11 Sep 2007 23:37:07 +0200
+Message-ID: <200709112337.07455.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:27602 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173AbXIKVkO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:14 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1153nfb
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:13 -0700 (PDT)
-In-Reply-To: <20070909202455.GM3563@stusta.de>
+Received: from ug-out-1314.google.com ([66.249.92.172]:27120 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754681AbXIKVkS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 17:40:18 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so138055ugc
+        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 14:40:17 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sunday 09 September 2007, Adrian Bunk wrote:
-> On Fri, Aug 31, 2007 at 09:58:22PM -0700, Andrew Morton wrote:
-> >...
-> > Changes since 2.6.23-rc3-mm1:
-> >...
-> >  git-block.patch
-> >...
-> >  git trees
-> >...
-> 
-> ide_get_error_location() is no longer used.
-> 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+Setting hwif->serialized makes sense only if the mate interface exists.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/rz1000.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Since git-block contains the patch which removes the only user of
-ide_get_error_location() I think that this patch should be also merged
-through block tree.  Jens?
-
-PS none of the blkdev_issue_flush() users uses *error_sector argument
-so it can be probably removed as well
-
-> ---
-> 
->  drivers/ide/ide-io.c |   35 -----------------------------------
->  include/linux/ide.h  |    5 -----
->  2 files changed, 40 deletions(-)
-> 
-> 924249789a0c0d577c5c5bfa91f4e514b7ebde60 
-> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> index c1692d9..ec835e3 100644
-> --- a/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -322,41 +322,6 @@ static void ide_complete_pm_request (ide_drive_t *drive, struct request *rq)
->  	spin_unlock_irqrestore(&ide_lock, flags);
->  }
->  
-> -/*
-> - * FIXME: probably move this somewhere else, name is bad too :)
-> - */
-> -u64 ide_get_error_location(ide_drive_t *drive, char *args)
-> -{
-> -	u32 high, low;
-> -	u8 hcyl, lcyl, sect;
-> -	u64 sector;
-> -
-> -	high = 0;
-> -	hcyl = args[5];
-> -	lcyl = args[4];
-> -	sect = args[3];
-> -
-> -	if (ide_id_has_flush_cache_ext(drive->id)) {
-> -		low = (hcyl << 16) | (lcyl << 8) | sect;
-> -		HWIF(drive)->OUTB(drive->ctl|0x80, IDE_CONTROL_REG);
-> -		high = ide_read_24(drive);
-> -	} else {
-> -		u8 cur = HWIF(drive)->INB(IDE_SELECT_REG);
-> -		if (cur & 0x40) {
-> -			high = cur & 0xf;
-> -			low = (hcyl << 16) | (lcyl << 8) | sect;
-> -		} else {
-> -			low = hcyl * drive->head * drive->sect;
-> -			low += lcyl * drive->sect;
-> -			low += sect - 1;
-> -		}
-> -	}
-> -
-> -	sector = ((u64) high << 24) | low;
-> -	return sector;
-> -}
-> -EXPORT_SYMBOL(ide_get_error_location);
-> -
->  /**
->   *	ide_end_drive_cmd	-	end an explicit drive command
->   *	@drive: command 
-> diff --git a/include/linux/ide.h b/include/linux/ide.h
-> index 48871f9..65de5c3 100644
-> --- a/include/linux/ide.h
-> +++ b/include/linux/ide.h
-> @@ -1088,11 +1088,6 @@ extern ide_startstop_t ide_do_reset (ide_drive_t *);
->  extern void ide_init_drive_cmd (struct request *rq);
->  
->  /*
-> - * this function returns error location sector offset in case of a write error
-> - */
-> -extern u64 ide_get_error_location(ide_drive_t *, char *);
-> -
-> -/*
->   * "action" parameter type for ide_do_drive_cmd() below.
->   */
->  typedef enum {
-> 
-> 
-
-
+Index: b/drivers/ide/pci/rz1000.c
+===================================================================
+--- a/drivers/ide/pci/rz1000.c
++++ b/drivers/ide/pci/rz1000.c
+@@ -41,7 +41,8 @@ static void __devinit init_hwif_rz1000 (
+ 		printk(KERN_INFO "%s: disabled chipset read-ahead "
+ 			"(buggy RZ1000/RZ1001)\n", hwif->name);
+ 	} else {
+-		hwif->serialized = 1;
++		if (hwif->mate)
++			hwif->mate->serialized = hwif->serialized = 1;
+ 		hwif->drives[0].no_unmask = 1;
+ 		hwif->drives[1].no_unmask = 1;
+ 		printk(KERN_INFO "%s: serialized, disabled unmasking "
