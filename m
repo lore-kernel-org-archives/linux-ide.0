@@ -1,56 +1,53 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [PATCH 7/7] blk_end_request: change rq->end_io to
-	cover request completion as a whole
-Date: Tue, 11 Sep 2007 11:22:40 +0200
-Message-ID: <20070911112240.pe40oufzz4k8wsg8@imap.suse.de>
-References: <20070831.184357.125900174.k-ueda@ct.jp.nec.com>
+From: "Michal Suchanek" <hramrach@centrum.cz>
+Subject: Re: Maxtor 6L200M0 sata irq timeouts
+Date: Tue, 11 Sep 2007 13:29:02 +0200
+Message-ID: <a5d587fb0709110429j6ce52fb2wb1d558281b36f8a7@mail.gmail.com>
+References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>
+	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>
+	 <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
+	 <46E473D2.20907@gmail.com>
+	 <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>
+	 <46E5F15A.2090803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070831.184357.125900174.k-ueda@ct.jp.nec.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:31144 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762367AbXIKL3E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 07:29:04 -0400
+Received: by nf-out-0910.google.com with SMTP id f5so1043416nfh
+        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 04:29:03 -0700 (PDT)
+In-Reply-To: <46E5F15A.2090803@gmail.com>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
 
-Am Sat 01 Sep 2007 12:43:57 AM CEST schrieb Kiyoshi Ueda  
-<k-ueda@ct.jp.nec.com>:
+Hello
 
-> This patch moves the rq->end_io() calling point to the top of
-> blk_end_request() from the last of end_that_request_last().
-> This means that whole request completion can be hooked by rq->end_io()
-> because all device drivers call blk_end_request() to complete request.
+(please CC me when replying)
+
+On 11/09/2007, Tejun Heo <htejun@gmail.com> wrote:
+> Michal Suchanek wrote:
+> >> What does 'smartctl -a /dev/sda' say?
+> >>
+> > Attaching output.
 >
-> Because the meaning of rq->end_io() is changed, existing rq->end_io()
-> users are changed as below:
->   o Create a new end_io handler using blk_end_io().
->     blk_end_io() is a default rq->end_io() handler and can take
->     a callback function, which is called after end_that_request_last().
->     So the old end_io() handler can be used as the callback.
->   o Set the new end_io handler to rq->end_io.
+> Hmmm... How often does the condition occur?  smartlog records only two
+> occasions.
 >
-Hmm. I must say I don't really like it.
-Defining a callback function which itself takes a callback as an argument
-looks like a conceptual weakness.
 
-It's actually possible to solve it differently: We could insert a bio in
-front of the bio list of the cloned request, which can take a pointer to
-the request in it's ->bi_endio callback. This way, the bio can serve as
-a meta-callback for the request and everything can be done there.
+Every few minutes when the system is under load, less often when not.
 
-This way we don't have to change the interface at all and everything
-works as expected.
+I think the logged drive errors are unrelated, the drive delivers the
+interrupt, just a bit later than Linux expects. At least that is my
+impression after looking at the these logs and the logs from the old
+system (I am not sure I could still find the saved logs but with some
+combination of irq related kernel options I got spurious interrupt
+instead of timeout, and the drive got disabled).
 
-I'll post a patch shortly.
+Thanks
 
-Cheers,
-
-Hannes
----
-No .sig today, my .message went away ...
-
+Michal
