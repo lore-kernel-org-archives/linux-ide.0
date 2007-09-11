@@ -1,88 +1,84 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: libata not working for sis5533
-Date: Tue, 11 Sep 2007 15:46:58 -0700
-Message-ID: <20070911154658.ab1fe162.akpm@linux-foundation.org>
-References: <46D132C5.5000803@gmail.com>
-	<6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
-	<46D8921E.3010304@gmail.com>
-	<46D89429.7080802@gmail.com>
-	<20070902114032.7dbfb21a@the-village.bc.nu>
-	<Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
-	<Pine.LNX.4.64.0709061156220.25942@fbirervta.pbzchgretzou.qr>
-	<46E26DAF.9020906@gmail.com>
-	<Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
-	<46E3DA7E.7060709@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] IDE fixes for 2.6.23-rc6
+Date: Tue, 11 Sep 2007 19:40:32 -0400
+Message-ID: <46E72770.5070608@garzik.org>
+References: <200709112237.40613.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45682 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756938AbXIKWrZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 18:47:25 -0400
-In-Reply-To: <46E3DA7E.7060709@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:49305 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755049AbXIKXkh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Sep 2007 19:40:37 -0400
+In-Reply-To: <200709112237.40613.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: patrizio.bassi@gmail.com
-Cc: Jan Engelhardt <jengelh@computergmbh.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andi Kleen <ak@suse.de>, linux-acpi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 09 Sep 2007 13:35:26 +0200
-Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
-
-> Patrizio Bassi ha scritto:
-> > Jan Engelhardt ha scritto:
-> >> On Sep 8 2007 11:38, Patrizio Bassi wrote:
-> >>  
-> >>> Jan Engelhardt wrote:
-> >>>    
-> >>>> I shall give this a spin too, since I happen to have sis5513.
-> >>>>
-> >>>> Just booted this fresh ata-enabled system (a matter of mkinitrd).
-> It has
-> >>>> not exploded yet.
-> >>>>      
-> >>> don't you have the "irq 14" issue?
-> >>>    
-> >> No, does not seem so.
-> >>
-> >>  
-> >>> can you post here your .config?
-> >>>    
-> >> http://rafb.net/p/vfTX0966.html
-> >>
-> >> Maybe it is solved in 2.6.22.3? (I don't remember what your version
-> >> was.)
-> >>
-> >>
-> >>     Jan
-> >>  
-> >
-> > For Alan, libata devs...hope can help debug...
-> > this is http://www.patriziobassi.it/downloads/libata_issue.jpg
-
-Looks more like a platform irq routing issue than an ata issue.
-
-Perhaps an x86 or an acpi person can help out with this.
-
-Probably nothing will happen, in which case I'll get back to you later
-and ask you to raise a bugzilla entry, not that this will get it fixed :(
-
-
-> > and this is the relative config i'm using
-> > http://www.patriziobassi.it/downloads/config
-> >
-> > Let me know
-> >
-> > Patrizio
+Bartlomiej Zolnierkiewicz wrote:
+> Please pull from:
 > 
-> more debug:
+> master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
 > 
-> I tried as suggested with the irqpoll option, i just get a faster panic
-> as i don't have the 3 xfermode lines...but always impossibile to boot...
+> to receive the following updates:
 > 
-> Patrizio
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+>  drivers/ata/pata_ali.c         |    7 ++
+>  drivers/ide/Kconfig            |    4 +-
+>  drivers/ide/ide-iops.c         |    3 +-
+>  drivers/ide/pci/alim15x3.c     |    7 ++
+>  drivers/ide/pci/hpt366.c       |  138 +++++++++++++++++++++++-----------------
+>  drivers/ide/pci/pdc202xx_new.c |    9 ++-
+>  drivers/ide/pci/via82cxxx.c    |   15 +++-
+>  drivers/ide/ppc/mpc8xx.c       |    1 -
+>  drivers/ide/setup-pci.c        |   41 +++++-------
+>  include/linux/ide.h            |   13 ++++
+>  10 files changed, 141 insertions(+), 97 deletions(-)
+> 
+> 
+> Bartlomiej Zolnierkiewicz (1):
+>       via82cxxx: add Arima W730-K8 and other rebadgings to short cables list
+> 
+> Daniel Exner (1):
+>       pata_ali/alim15x3: override 80-wire cable detection for Toshiba S1800-814
+> 
+> Kumar Gala (1):
+>       mpc8xx: Only build mpc8xx on arch/ppc
+> 
+> Mikael Pettersson (1):
+>       pdc202xx_new: PLL detection fix
+> 
+> Sergei Shtylyov (5):
+>       ide: fix PCI refcounting
+>       pdc202xx_new: fix PCI refcounting
+>       hpt366: fix PCI clock detection for HPT374 (take 4)
+>       ide: add ide_dev_is_sata() helper (take 2)
+>       hpt366: UltraDMA filter for SATA cards (take 2)
+> 
+> Tony Breeds (1):
+>       pmac: build fix
+> 
+> 
+> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+> index 94e5edc..71bdc3b 100644
+> --- a/drivers/ata/pata_ali.c
+> +++ b/drivers/ata/pata_ali.c
+> @@ -48,6 +48,13 @@ static struct dmi_system_id cable_dmi_table[] = {
+>  			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
+>  		},
+>  	},
+> +	{
+> +		.ident = "Toshiba Satelite S1800-814",
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+> +			DMI_MATCH(DMI_PRODUCT_NAME, "S1800-814"),
+> +		},
+> +	},
+>  	{ }
+>  };
+>  
+
+ACK
+
+
