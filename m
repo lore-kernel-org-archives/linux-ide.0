@@ -1,43 +1,174 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [patch] ata: increase allowed config flags
-Date: Tue, 11 Sep 2007 11:41:59 -0700
-Message-ID: <20070911114159.4854ba4c.kristen.c.accardi@intel.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH 00/27] blk_end_request: full I/O completion
+	handler (take 2)
+Date: Tue, 11 Sep 2007 14:55:01 -0400 (EDT)
+Message-ID: <20070911.145501.53331755.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26977 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757585AbXIKSqH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Sep 2007 14:46:07 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, mike.miller@hp.com, grant.likely@secretlab.ca
+Cc: dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-In anticipation of more features, increase number of config flags
-allowed, and move the init flags.
+Hello,
 
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Hugh Dickens <hugh@veritas.com>
+The following is the revised patch-set, fixing the issue pointed
+out by Jens and Benny.  Changes from the previous post are below:
+  o Rebased on top of 2.6.23-rc4-mm1
+  o Don't pass the lock held information (PATCH 01)
+  o Removed sect2byte() macro (PATCH 02)
+  o fixed blk_rq_size() and blk_rq_cur_size() for blk_pc_requests (PATCH 02)
+  o Separated the patch for changes of end_that_request_* user (PATCH 03-26)
+  o Removed the patch which changes the role of rq->end_io()
+    from this patch-set because some more discussions are needed
+    about it.
 
-Index: 2.6-mm/include/linux/libata.h
-===================================================================
---- 2.6-mm.orig/include/linux/libata.h
-+++ 2.6-mm/include/linux/libata.h
-@@ -140,11 +140,11 @@ enum {
- 	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
- 	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
- 	ATA_DFLAG_AN		= (1 << 7), /* device supports AN */
--	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
-+	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
- 
--	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
--	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
--	ATA_DFLAG_SPUNDOWN	= (1 << 10), /* XXX: for spindown_compat */
-+	ATA_DFLAG_PIO		= (1 << 12), /* device limited to PIO mode */
-+	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
-+	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
- 	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 16),
+Summary of each patch are below:
+  01/27: add new request completion interface, blk_end_request()
+  02/27: add some functions to get the size of request in bytes
+  03/27: convert to use blk_end_request() (core parts of block layer)
+  04/27: convert to use blk_end_request() (arm)
+  05/27: convert to use blk_end_request() (um)
+  06/27: convert to use blk_end_request() (DAC960)
+  07/27: convert to use blk_end_request() (floppy)
+  08/27: convert to use blk_end_request() (lguest)
+  09/27: convert to use blk_end_request() (nbd)
+  10/27: convert to use blk_end_request() (ps3disk)
+  11/27: convert to use blk_end_request() (sunvdc)
+  12/27: convert to use blk_end_request() (sx8)
+  13/27: convert to use blk_end_request() (ub)
+  14/27: convert to use blk_end_request() (viodasd)
+  15/27: convert to use blk_end_request() (xen-blkfront)
+  16/27: convert to use blk_end_request() (viocd)
+  17/27: convert to use blk_end_request() (i2o_block)
+  18/27: convert to use blk_end_request() (mmc)
+  19/27: convert to use blk_end_request() (s390)
+  20/27: convert to use blk_end_request() (scsi mid-layer)
+  21/27: convert to use blk_end_request() (ide-scsi)
+  22/27: convert to use blk_end_request() (xsysace)
+  23/27: convert to use blk_end_request() (cciss)
+  24/27: convert to use blk_end_request() (cpqarray)
+  25/27: convert to use blk_end_request() (normal parts of ide)
+  26/27: convert to use blk_end_request() (ide-cd, cdrom_newpc_intr())
+  27/27: remove/unexport no longer needed end_that_request_*
+
+I have tested this patch-set on two machines,
+IA64+QLA1280+QLA2200 box and x86_64+SATA+IDE-CDROM box.
+Please review and apply.
+
+
+Below is the explanation about needs and details of this patch-set.
+
+SUMMARY
+=======
+This set of patches changes request completion interface
+between device drivers and block layer to 1 step procedure
+from current 2 step procedures using end_that_request_{first/chunk}
+and end_that_request_last().
+
+This patch-set prepares for realizing another patch-set which changes
+the role of rq->end_io().  It allows request-based multipath to hook
+in before completing each chunk of request, check errors for it and
+retry it using another path if error is detected.
+
+
+BACKGROUND
+==========
+The patch-set which changes the role of rq->end_io() is necessary
+to allow device stacking at request level, that is request-based
+device-mapper multipath.
+Currently, device-mapper is implemented as a stacking block device
+at BIO level.  OTOH, request-based dm will stack at request level
+to allow better multipathing decision.
+To allow device stacking at request level, the completion procedure
+need to provide a hook for it.
+For example, dm-multipath has to check errors and retry with other
+paths if necessary before returning the I/O result to upper layer.
+struct request has 'end_io' hook currently.  But it's called at
+the very late stage of completion handling where the I/O result
+is already returned to the upper layer.
+So we need something here.
+
+The first approach to hook in completion of each chunk of request
+was adding a new rq->end_io_first() hook and calling it on the top
+of __end_that_request_first().
+  - http://marc.theaimsgroup.com/?l=linux-scsi&m=115520444515914&w=2
+  - http://marc.theaimsgroup.com/?l=linux-kernel&m=116656637425880&w=2
+However, Jens pointed out that redesigning rq->end_io() as a full
+completion handler would be better:
+
+On Thu, 21 Dec 2006 08:49:47 +0100, Jens Axboe <jens.axboe@oracle.com> wrote:
+> Ok, I see what you are getting at. The current ->end_io() is called when
+> the request has fully completed, you want notification for each chunk
+> potentially completed.
+> 
+> I think a better design here would be to use ->end_io() as the full
+> completion handler, similar to how bio->bi_end_io() works. A request
+> originating from __make_request() would set something ala:
+.....
+> instead of calling the functions manually. That would allow you to get
+> notification right at the beginning and do what you need, without adding
+> a special hook for this.
+
+I thought his comment was reasonable.
+So I modified the patches based on his suggestion.
+
+
+WHAT IS CHANGED
+===============
+The change is basically illustlated by the following pseudo code:
+
+[Before]
+  if (end_that_request_{first/chunk} succeeds) { <-- completes bios
+     <do something driver specific>
+     end_that_request_last() <-- calls end_io()
+     <the request is free from the driver>
+  } else {
+     <the request was incomplete, retry for leftover or ignoring>
+  }
+
+[After]
+  if (blk_end_request() succeeds) { <-- calls end_io(), completes bios
+     <the request is free from the driver>
+  } else {
+     <the request was incomplete, retry for leftover or ignoring>
+  }
+
+
+In detail, request completion procedures are changed like below.
+
+[Before]
+  o 2 steps completion using end_that_request_{first/chunk}
+    and end_that_request_last().
+  o Device drivers have ownership of a request until they
+    call end_that_request_last().
+  o rq->end_io() is called at the last stage of
+    end_that_request_last() for some block layer codes need
+    specific request handling when completing it.
+
+[After]
+  o 1 step completion using blk_end_request().
+    (end_that_request_* are no longer used from device drivers.)
+  o Device drivers give over ownership of a request
+    when calling blk_end_request().
+    If it returns 0, the request is completed.
+    If it returns 1, the request isn't completed and
+    the ownership is returned to the device driver again.
+  o rq->end_io() is called at the top of blk_end_request() to
+    allow to hook all parts of request completion.
+    Existing users of rq->end_io() must be changed to do
+    all parts of request completion.
+
+Thanks,
+Kiyoshi Ueda
