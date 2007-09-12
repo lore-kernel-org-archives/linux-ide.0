@@ -1,84 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] IDE fixes for 2.6.23-rc6
-Date: Tue, 11 Sep 2007 19:40:32 -0400
-Message-ID: <46E72770.5070608@garzik.org>
-References: <200709112237.40613.bzolnier@gmail.com>
+From: "Maurizio Monge" <maurizio.monge@gmail.com>
+Subject: [PATCH] Blacklist NCQ for WDC1600BEVS-22RST0
+Date: Wed, 12 Sep 2007 03:38:07 +0200
+Message-ID: <e4c519350709111838n1fdc6f01tdfa5722cbee605a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49305 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755049AbXIKXkh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Sep 2007 19:40:37 -0400
-In-Reply-To: <200709112237.40613.bzolnier@gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.190]:6018 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbXILBiJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 21:38:09 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so43239fkz
+        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 18:38:08 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> Please pull from:
-> 
-> master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-> 
-> to receive the following updates:
-> 
->  drivers/ata/pata_ali.c         |    7 ++
->  drivers/ide/Kconfig            |    4 +-
->  drivers/ide/ide-iops.c         |    3 +-
->  drivers/ide/pci/alim15x3.c     |    7 ++
->  drivers/ide/pci/hpt366.c       |  138 +++++++++++++++++++++++-----------------
->  drivers/ide/pci/pdc202xx_new.c |    9 ++-
->  drivers/ide/pci/via82cxxx.c    |   15 +++-
->  drivers/ide/ppc/mpc8xx.c       |    1 -
->  drivers/ide/setup-pci.c        |   41 +++++-------
->  include/linux/ide.h            |   13 ++++
->  10 files changed, 141 insertions(+), 97 deletions(-)
-> 
-> 
-> Bartlomiej Zolnierkiewicz (1):
->       via82cxxx: add Arima W730-K8 and other rebadgings to short cables list
-> 
-> Daniel Exner (1):
->       pata_ali/alim15x3: override 80-wire cable detection for Toshiba S1800-814
-> 
-> Kumar Gala (1):
->       mpc8xx: Only build mpc8xx on arch/ppc
-> 
-> Mikael Pettersson (1):
->       pdc202xx_new: PLL detection fix
-> 
-> Sergei Shtylyov (5):
->       ide: fix PCI refcounting
->       pdc202xx_new: fix PCI refcounting
->       hpt366: fix PCI clock detection for HPT374 (take 4)
->       ide: add ide_dev_is_sata() helper (take 2)
->       hpt366: UltraDMA filter for SATA cards (take 2)
-> 
-> Tony Breeds (1):
->       pmac: build fix
-> 
-> 
-> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-> index 94e5edc..71bdc3b 100644
-> --- a/drivers/ata/pata_ali.c
-> +++ b/drivers/ata/pata_ali.c
-> @@ -48,6 +48,13 @@ static struct dmi_system_id cable_dmi_table[] = {
->  			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
->  		},
->  	},
-> +	{
-> +		.ident = "Toshiba Satelite S1800-814",
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "S1800-814"),
-> +		},
-> +	},
->  	{ }
->  };
->  
+This patch fixes the "spurious completions during NCQ" kernel error i
+used to get.
+Unluckily this drive SHOULD work with NCQ, but on my system it does not.
+If you think that instead it should work i will provide you additional
+information amout my system (i have already posted some on this list
+and on lkml).
+Best regards
+Maurizio Monge
 
-ACK
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3796,6 +3796,8 @@ static const struct ata_blacklist_entry
+ata_device_blacklist [] = {
+        { "ST9160821AS",        "3.CLF",        ATA_HORKAGE_NONCQ, },
+        { "SAMSUNG HD401LJ",    "ZZ100-15",     ATA_HORKAGE_NONCQ, },
++       { "WDC WD1600BEVS-22RST0",      "04.01G04",     ATA_HORKAGE_NONCQ, },
 
-
+        /* devices which puke on READ_NATIVE_MAX */
+        { "HDS724040KLSA80",    "KFAOA20N",     ATA_HORKAGE_BROKEN_HPA, },
+        { "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_HORKAGE_BROKEN_HPA },
