@@ -1,39 +1,51 @@
-From: "Maurizio Monge" <maurizio.monge@gmail.com>
-Subject: [PATCH] Blacklist NCQ for WDC1600BEVS-22RST0
-Date: Wed, 12 Sep 2007 03:38:07 +0200
-Message-ID: <e4c519350709111838n1fdc6f01tdfa5722cbee605a@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [-mm patch] remove ide_get_error_location()
+Date: Wed, 12 Sep 2007 07:54:45 +0200
+Message-ID: <20070912055445.GF25592@kernel.dk>
+References: <20070831215822.26e1432b.akpm@linux-foundation.org> <20070909202455.GM3563@stusta.de> <200709112327.20764.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:6018 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbXILBiJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Sep 2007 21:38:09 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so43239fkz
-        for <linux-ide@vger.kernel.org>; Tue, 11 Sep 2007 18:38:08 -0700 (PDT)
+Received: from brick.kernel.dk ([87.55.233.238]:16087 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750814AbXILFqH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 12 Sep 2007 01:46:07 -0400
 Content-Disposition: inline
+In-Reply-To: <200709112327.20764.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This patch fixes the "spurious completions during NCQ" kernel error i
-used to get.
-Unluckily this drive SHOULD work with NCQ, but on my system it does not.
-If you think that instead it should work i will provide you additional
-information amout my system (i have already posted some on this list
-and on lkml).
-Best regards
-Maurizio Monge
+On Tue, Sep 11 2007, Bartlomiej Zolnierkiewicz wrote:
+> On Sunday 09 September 2007, Adrian Bunk wrote:
+> > On Fri, Aug 31, 2007 at 09:58:22PM -0700, Andrew Morton wrote:
+> > >...
+> > > Changes since 2.6.23-rc3-mm1:
+> > >...
+> > >  git-block.patch
+> > >...
+> > >  git trees
+> > >...
+> > 
+> > ide_get_error_location() is no longer used.
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Since git-block contains the patch which removes the only user of
+> ide_get_error_location() I think that this patch should be also merged
+> through block tree.  Jens?
 
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3796,6 +3796,8 @@ static const struct ata_blacklist_entry
-ata_device_blacklist [] = {
-        { "ST9160821AS",        "3.CLF",        ATA_HORKAGE_NONCQ, },
-        { "SAMSUNG HD401LJ",    "ZZ100-15",     ATA_HORKAGE_NONCQ, },
-+       { "WDC WD1600BEVS-22RST0",      "04.01G04",     ATA_HORKAGE_NONCQ, },
+Yeah, I'll add it there.
 
-        /* devices which puke on READ_NATIVE_MAX */
-        { "HDS724040KLSA80",    "KFAOA20N",     ATA_HORKAGE_BROKEN_HPA, },
-        { "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_HORKAGE_BROKEN_HPA },
+> PS none of the blkdev_issue_flush() users uses *error_sector argument
+> so it can be probably removed as well
+
+I had hoped that the existance was enough incentive, but it didn't
+happen. I'll make a note to kill that again.
+
+-- 
+Jens Axboe
+
