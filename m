@@ -1,39 +1,109 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: libata not working for sis5533
-Date: Wed, 12 Sep 2007 22:01:51 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0709122201100.32380@fbirervta.pbzchgretzou.qr>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com>
- <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com>
- <20070902114032.7dbfb21a@the-village.bc.nu>
- <Pine.LNX.4.64.0709031957390.24179@fbirervta.pbzchgretzou.qr>
- <Pine.LNX.4.64.0709061156220.25942@fbirervta.pbzchgretzou.qr>
- <46E26DAF.9020906@gmail.com> <Pine.LNX.4.64.0709081243050.25942@fbirervta.pbzchgretzou.qr>
- <46E3DA7E.7060709@gmail.com> <20070911154658.ab1fe162.akpm@linux-foundation.org>
- <Pine.LNX.4.64.0709122018400.22467@fbirervta.pbzchgretzou.qr>
- <46E834A2.2020205@gmail.com>
+From: Sergey Dolgov <dolgovs@gmail.com>
+Subject: Re: ata_piix, laptop cdrom, ICH7: EH, limiting speed to PIO
+Date: Thu, 13 Sep 2007 00:07:06 +0400
+Message-ID: <20070912200706.GA2620@slk.laptop>
+References: <20070911212030.GA2817@slk.laptop> <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46E834A2.2020205@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Patrizio Bassi <patrizio.bassi@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andi Kleen <ak@suse.de>, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ag-out-0708.google.com ([72.14.246.248]:15678 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773AbXILUHY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Sep 2007 16:07:24 -0400
+Received: by ag-out-0708.google.com with SMTP id 35so172779aga
+        for <linux-ide@vger.kernel.org>; Wed, 12 Sep 2007 13:07:23 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Hi Michal,
 
-On Sep 12 2007 20:49, Patrizio Bassi wrote:
->>>>       
->>> Looks more like a platform irq routing issue than an ata issue.
->>>
->>> Perhaps an x86 or an acpi person can help out with this.
->>
->> Patrizio, have you tried with the old IDE? (And without suspend at that...)
->
->yes yes old IDE works ok, but the suspend functionality is broken....
+On Wed, Sep 12, 2007 at 06:33:20PM +0200, Michal Piotrowski wrote:
+> Hi Sergey,
+> 
+> On 11/09/2007, Sergey Dolgov <dolgovs@gmail.com> wrote:
+> > Hi!
+> >
+> > On my hp nx7300 laptop, 2 following scenarios can happen during bootup
+> > (see attachments for the full logs): the "good" one [1] and the one
+> > where multiple EHs lead to limiting the speed [2].
+> >
+> > [1] one is more rare, but it seems to be persistent over reboots: once
+> > it happened, just rebooting the machine always results in behaviour
+> > like [1].
+> >
+> > [1] results in a working cdrom from the start. An attempt to use cdrom
+> > after [2] happened results in even more EHs, resulting in "configured
+> > for PIO4", after which the cdrom is finaly working.
+> >
+> > The version I'm using is 2.6.23-rc6, but the same used to happen with
+> > the previous rc's, and probably with 2.6.22 too (I can check).
+> 
+> It would be great if you could check it.
 
-Well, that is a starting point. Now it is time for some ide dev :)
+I've just built 2.6.22.6 with basically the same configuration, and
+the behaviour is just the same, i.e. both [1] and [2] still can
+happen.
 
+> >
+> > [1]:
+> >
+> >    [   13.026676] ata_piix 0000:00:1f.1: version 2.12
+> >    [   13.026701] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
+> >    [   13.026898] PCI: Setting latency timer of device 0000:00:1f.1 to 64
+> >    [   13.026994] scsi4 : ata_piix
+> >    [   13.027209] scsi5 : ata_piix
+> >    [   13.027385] ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x000140a0 irq 14
+> >    [   13.027484] ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x000140a8 irq 15
+> >    [   13.339308] ata5.00: ATAPI: HL-DT-ST DVDRAM GSA-T10N, PC05, max MWDMA2
+> >    [   13.505922] ata5.00: configured for MWDMA2
+> >    [   13.506026] ata6: port disabled. ignoring.
+> >    [   13.509916] scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-T10N  PC05 PQ: 0 ANSI: 5
+> >
+> > [2]:
+> >
+> >    [   10.007152] ata_piix 0000:00:1f.1: version 2.12
+> >    [   10.007178] ACPI: PCI Interrupt 0000:00:1f.1[A] -> GSI 16 (level, low) -> IRQ 16
+> >    [   10.007369] PCI: Setting latency timer of device 0000:00:1f.1 to 64
+> >    [   10.007464] scsi4 : ata_piix
+> >    [   10.007680] scsi5 : ata_piix
+> >    [   10.007856] ata5: PATA max UDMA/133 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x000140a0 irq 14
+> >    [   10.007956] ata6: PATA max UDMA/133 cmd 0x00010170 ctl 0x00010376 bmdma 0x000140a8 irq 15
+> >    [   10.320462] ata5.00: ATAPI: HL-DT-ST DVDRAM GSA-T10N, PC05, max MWDMA2
+> >    [   10.487077] ata5.00: configured for MWDMA2
+> >    [   10.487181] ata6: port disabled. ignoring.
+> >    [   15.985240] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> >    [   15.985325] ata5.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
+> >    [   15.985327]          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> >    [   15.985532] ata5: soft resetting port
+> >    [   16.465489] ata5.00: configured for MWDMA2
+> >    [   16.465571] ata5: EH complete
+> >    [   21.963643] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> >    [   21.963725] ata5.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
+> >    [   21.963727]          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> >    [   21.963930] ata5: soft resetting port
+> >    [   22.443900] ata5.00: configured for MWDMA2
+> >    [   22.443979] ata5: EH complete
+> >    [   27.942051] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> >    [   27.942134] ata5.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
+> >    [   27.942136]          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> >    [   27.942341] ata5: soft resetting port
+> >    [   28.422309] ata5.00: configured for MWDMA2
+> >    [   28.422389] ata5: EH complete
+> >    [   33.920457] ata5.00: limiting speed to MWDMA1:PIO4
+> >    [   33.920532] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> >    [   33.920614] ata5.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
+> >    [   33.920616]          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> >    [   33.920820] ata5: soft resetting port
+> >    [   34.400708] ata5.00: configured for MWDMA1
+> >    [   34.400790] ata5: EH complete
+> >    [   34.400869] scsi scan: 96 byte inquiry failed.  Consider BLIST_INQUIRY_36 for this device
+> >    [   34.402855] scsi 4:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-T10N  PC05 PQ: 0 ANSI: 5
+> >
+> >
 
-
-	Jan
--- 
+--
+Sergey
