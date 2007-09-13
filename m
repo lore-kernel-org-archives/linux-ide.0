@@ -1,71 +1,49 @@
-From: Vegard Lima <vegard.lima@uia.no>
-Subject: 2.6.23-rc6: pata_ali cdrom doesn't work
-Date: Thu, 13 Sep 2007 17:03:58 +0200
-Message-ID: <46E9515E.2060808@hia.no>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ATAPI tape drives broken with libata
+Date: Thu, 13 Sep 2007 12:35:14 -0400
+Message-ID: <46E966C2.1050405@rtr.ca>
+References: <46D5F97B.3050808@redhat.com>	<20070830005006.6951265a@the-village.bc.nu>	<46D6EC3B.8090306@redhat.com> <20070831151903.37a60ba9@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pat.hia.no ([158.36.80.149]:57465 "EHLO pat.hia.no"
+Received: from rtr.ca ([76.10.145.34]:2033 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755473AbXIMPgn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Sep 2007 11:36:43 -0400
+	id S1751770AbXIMQfQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Sep 2007 12:35:16 -0400
+In-Reply-To: <20070831151903.37a60ba9@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, craig48@swbell.net
 
-Hi,
+Alan Cox wrote:
+> On Thu, 30 Aug 2007 12:11:39 -0400
+> Chuck Ebbert <cebbert@redhat.com> wrote:
+> 
+>> On 08/29/2007 07:50 PM, Alan Cox wrote:
+>>> Device Ready, Seek Complete, Data Request, Error
+>>>
+>>> DRQ and Error together is a bit odd to say the least
+>>>
+>>> It then commits suicide and falls off the bus. That may be due to the
+>>> fact we use SRST on ATAPI device errors still rather than trying an ATAPI
+>>> reset first. Shouldn't matter though.
+>>>
+>>> Since you are the lucky owner of the object in question can you dump the
+>>> contents of the packet command going to the device when this occurs ?
+>>>
+>> I don't have it, it's a Fedora user. Maybe I should ask Mark Lord if he'll
+>> send me the one he has.
+>>
+>> IAC how do I dump the packet? Use ata_scsi_dump_cdb()?
+> 
+> Yep - if the command issued is a packet command the cdb is 12-16 bytes of
+> SCSI command block.
 
-same laptop that had trouble with the Fedroa 7 test kernels:
-   https://bugzilla.redhat.com/show_bug.cgi?id=227207
+More or less the same behaviour is observed here with the Conner ATAPI tape unit
+that I (still!) have on the shelf.
 
-Timeout messages below appear during boot and mounting
-a cd times out and fails. Full dmesg output at:
-   http://www.math.missouri.edu/~lima/2.6.23-rc6-dmesg.txt
+I'll see about instrumenting things for more info.  It really sucks as is, though!  :)
 
-Is this a known bug?
-
-scsi0 : pata_ali
-scsi1 : pata_ali
-ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x00012480 irq 14
-ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x00012488 irq 15
-ata1.00: ATA-5: IC25N030ATCS04-0, CA3OA71A, max UDMA/100
-ata1.00: 58605120 sectors, multi 16: LBA
-ata1.00: limited to UDMA/33 due to 40-wire cable
-ata1.00: configured for UDMA/33
-ata2.00: ATAPI: SONY    CD-RW  CRX800E, 1.1d, max MWDMA2
-ata2.00: configured for MWDMA2
-scsi 0:0:0:0: Direct-Access     ATA      IC25N030ATCS04-0 CA3O PQ: 0 ANSI: 5
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
-          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata2: soft resetting port
-ata2.00: configured for MWDMA2
-ata2: EH complete
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
-          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata2: soft resetting port
-ata2.00: configured for MWDMA2
-ata2: EH complete
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
-          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata2: soft resetting port
-ata2.00: configured for MWDMA2
-ata2: EH complete
-ata2.00: limiting speed to MWDMA1:PIO4
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata2.00: cmd a0/01:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x12 data 96 in
-          res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata2: soft resetting port
-ata2.00: configured for MWDMA1
-ata2: EH complete
-scsi scan: 96 byte inquiry failed.  Consider BLIST_INQUIRY_36 for this device
-scsi 1:0:0:0: CD-ROM            SONY     CD-RW  CRX800E   1.1d PQ: 0 ANSI: 5
-
-
-Thanks,
--- 
-Vegard Lima
+Cheers
