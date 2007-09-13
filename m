@@ -1,155 +1,276 @@
 From: "Michal Suchanek" <hramrach@centrum.cz>
-Subject: some ide cd-rom dma broken on older intel chipsets
-Date: Thu, 13 Sep 2007 11:19:11 +0000
-Message-ID: <a5d587fb0709130419n45a371bap74908e95a83ed67c@mail.gmail.com>
+Subject: Re: some ide cd-rom dma broken on older intel chipsets
+Date: Thu, 13 Sep 2007 11:58:00 +0000
+Message-ID: <a5d587fb0709130458v5930e95pe7b620f8c12e5682@mail.gmail.com>
+References: <a5d587fb0709130419n45a371bap74908e95a83ed67c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_28164_20105220.1189684680269"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:28025 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.172]:6129 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbXIMLTO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2007 07:19:14 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so368187ugc
-        for <linux-ide@vger.kernel.org>; Thu, 13 Sep 2007 04:19:12 -0700 (PDT)
-Content-Disposition: inline
+	with ESMTP id S1751826AbXIML6E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2007 07:58:04 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so372387ugc
+        for <linux-ide@vger.kernel.org>; Thu, 13 Sep 2007 04:58:02 -0700 (PDT)
+In-Reply-To: <a5d587fb0709130419n45a371bap74908e95a83ed67c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hello
+------=_Part_28164_20105220.1189684680269
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-(please CC me when replying)
+On 13/09/2007, Michal Suchanek <hramrach@centrum.cz> wrote:
+> Hello
+>
+> (please CC me when replying)
+>
+> I tried booting a livecd (2.6.21 Debian kernel) on several systems
+> with Intel 440BX chipset and a Sony CD-ROM. I got some DMA error and
+> the system froze for about half a minute while reseting the ide
+> interface. It then disabled DMA and proceedded booting. Replacing with
+> a different brand unit fixed the problem.
+>
+Attaching dmesg from the affected system.
 
-I tried booting a livecd (2.6.21 Debian kernel) on several systems
-with Intel 440BX chipset and a Sony CD-ROM. I got some DMA error and
-the system froze for about half a minute while reseting the ide
-interface. It then disabled DMA and proceedded booting. Replacing with
-a different brand unit fixed the problem.
+Looks like the kernel won't continue booting unless a key is pressed,
+at least in some cases. Scary.
 
-Earlier with some ~ 2.6.10 kernel I tried installing on a i430VX/LX
-system with a Mitsumi CD-ROM and I got kernel oops in interrupt
-handler unless I disabled DMA.
+Linux debian-live 2.6.21-2-486 #1 Wed Jul 11 03:17:09 UTC 2007 i686 GNU/Linux
 
-Now I put both CD-ROMs into a different system to read the ident info,
-and I can read from both fine, DMA is enabled, and I see no problems.
-However, dd on the 52x unit gives only about 2MB/s while on the 8x
-about 1MB/s.
-
- dd if=/dev/hdd of=/dev/null
-187857+0 records in
-187856+0 records out
-96182272 bytes (96 MB) copied, 91.5743 seconds, 1.1 MB/s
-
-dd if=/dev/hdc of=/dev/null
-170433+0 records in
-170432+0 records out
-87261184 bytes (87 MB) copied, 45.9842 seconds, 1.9 MB/s
-
-
-
-/dev/hdc:
-
- Model=CDU5211, FwRev=YYS2, SerialNo=
- Config={ SpinMotCtl Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
- RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
- BuffType=unknown, BuffSize=0kB, MaxMultSect=0
- (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 *udma2
- AdvancedPM=no
-
- * signifies the current active mode
-
-
-/dev/hdd:
-
- Model=FX800S, FwRev=R03, SerialNo=
- Config={ SpinMotCtl Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
- RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
- BuffType=unknown, BuffSize=256kB, MaxMultSect=0
- (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
- IORDY=on/off, tPIO={min:180,w/IORDY:180}, tDMA={min:150,rec:172}
- PIO modes:  pio0 pio1 pio2 pio3
- DMA modes:  sdma0 sdma1 sdma2 mdma0 *mdma1
- AdvancedPM=no
-
- * signifies the current active mode
-00:00.0 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:00.1 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:00.2 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:00.3 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:00.4 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:00.7 Host bridge: VIA Technologies, Inc. K8M800 Host Bridge
-00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI bridge
-[K8T800/K8T890 South]
-00:0f.0 IDE interface: VIA Technologies, Inc. VIA VT6420 SATA RAID
-Controller (rev 80)
-00:0f.1 IDE interface: VIA Technologies, Inc.
-VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
-00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev 81)
-00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 86)
-00:11.0 ISA bridge: VIA Technologies, Inc. VT8237 ISA bridge
-[KT600/K8T800/K8T890 South]
-00:11.5 Multimedia audio controller: VIA Technologies, Inc.
-VT8233/A/8235/8237 AC97 Audio Controller (rev 60)
-00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II] (rev 78)
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-01:00.0 VGA compatible controller: VIA Technologies, Inc. S3 Unichrome
-Pro VGA Adapter (rev 01)
-
-
-Sep 13 11:23:57  kernel: ACPI: PCI Interrupt 0000:00:0f.1[A] -> Link
-[ALKA] -> GSI 20 (level, low) -> IRQ 18
-Sep 13 11:23:57  kernel: VP_IDE: chipset revision 6
-Sep 13 11:23:57  kernel: VP_IDE: not 100% native mode: will probe irqs later
-Sep 13 11:23:57  kernel: VP_IDE: VIA vt8237 (rev 00) IDE UDMA133
-controller on pci0000:00:0f.1
-Sep 13 11:23:57  kernel:     ide0: BM-DMA at 0xe600-0xe607, BIOS
-settings: hda:DMA, hdb:pio
-Sep 13 11:23:57  kernel:     ide1: BM-DMA at 0xe608-0xe60f, BIOS
-settings: hdc:DMA, hdd:DMA
-Sep 13 11:23:57  kernel: input: PC Speaker as /class/input/input2
-Sep 13 11:23:57  kernel: Floppy drive(s): fd0 is 1.44M
-Sep 13 11:23:57  kernel: hda: ST340014A, ATA DISK drive
-Sep 13 11:23:57  kernel: FDC 0 is a post-1991 82077
-Sep 13 11:23:57  kernel: parport: PnPBIOS parport detected.
-Sep 13 11:23:57  kernel: parport0: PC-style at 0x378 (0x778), irq 7,
-dma 3 [PCSPP,TRISTATE,COMPAT,ECP,DMA]
-Sep 13 11:23:57  kernel: Real Time Clock Driver v1.12ac
-Sep 13 11:23:57  kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Sep 13 11:23:57  kernel: hdc: CDU5211, ATAPI CD/DVD-ROM drive
-Sep 13 11:23:57  kernel: hdd: FX800S, ATAPI CD/DVD-ROM drive
-Sep 13 11:23:57  kernel: ide1 at 0x170-0x177,0x376 on irq 15
-Sep 13 11:23:57  kernel: ACPI: PCI Interrupt Link [ALKC] enabled at IRQ 22
-Sep 13 11:23:57  kernel: ACPI: PCI Interrupt 0000:00:11.5[C] -> Link
-[ALKC] -> GSI 22 (level, low) -> IRQ 19
-Sep 13 11:23:57  kernel: hda: max request size: 512KiB
-Sep 13 11:23:57  kernel: hda: 78165360 sectors (40020 MB) w/2048KiB
-Cache, CHS=16383/255/63, UDMA(100)
-Sep 13 11:23:57  kernel: hda: cache flushes supported
-Sep 13 11:23:57  kernel:  hda: hda1
-Sep 13 11:23:57  kernel: hdc: ATAPI 52X CD-ROM drive, 120kB Cache, UDMA(33)
-Sep 13 11:23:57  kernel: Uniform CD-ROM driver Revision: 3.20
-Sep 13 11:23:57  kernel: hdd: ATAPI 8X CD-ROM drive, 256kB Cache, DMA
-
+00:00.0 Host bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX
+Host bridge (rev 03)
+00:01.0 PCI bridge: Intel Corporation 440BX/ZX/DX - 82443BX/ZX/DX AGP
+bridge (rev 03)
+00:07.0 ISA bridge: Intel Corporation 82371AB/EB/MB PIIX4 ISA (rev 02)
+00:07.1 IDE interface: Intel Corporation 82371AB/EB/MB PIIX4 IDE (rev 01)
+00:07.2 USB Controller: Intel Corporation 82371AB/EB/MB PIIX4 USB (rev 01)
+00:07.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 02)
+00:0f.0 Communication controller: Intel Corporation 536EP Data Fax Modem
+00:10.0 Ethernet controller: 3Com Corporation 3c900B-TPO Etherlink XL
+[Cyclone] (rev 04)
+00:11.0 Multimedia audio controller: Ensoniq 5880 AudioPCI (rev 02)
+01:00.0 VGA compatible controller: nVidia Corporation NV5M64 [RIVA
+TNT2 Model 64/Model 64 Pro] (rev 15)
 
 Thanks
 
 Michal
+
+------=_Part_28164_20105220.1189684680269
+Content-Type: application/octet-stream; name="dmesg.log"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="dmesg.log"
+X-Attachment-Id: f_f6jbmslx
+
+TGludXggdmVyc2lvbiAyLjYuMjEtMi00ODYgKERlYmlhbiAyLjYuMjEtNikgKHdhbGRpQGRlYmlh
+bi5vcmcpIChnY2MgdmVyc2lvbiA0LjEuMyAyMDA3MDYyOSAocHJlcmVsZWFzZSkgKERlYmlhbiA0
+LjEuMi0xMykpICMxIFdlZCBKdWwgMTEgMDM6MTc6MDkgVVRDIDIwMDcKQklPUy1wcm92aWRlZCBw
+aHlzaWNhbCBSQU0gbWFwOgpzYW5pdGl6ZSBzdGFydApzYW5pdGl6ZSBlbmQKY29weV9lODIwX21h
+cCgpIHN0YXJ0OiAwMDAwMDAwMDAwMDAwMDAwIHNpemU6IDAwMDAwMDAwMDAwYTAwMDAgZW5kOiAw
+MDAwMDAwMDAwMGEwMDAwIHR5cGU6IDEKY29weV9lODIwX21hcCgpIHR5cGUgaXMgRTgyMF9SQU0K
+Y29weV9lODIwX21hcCgpIHN0YXJ0OiAwMDAwMDAwMDAwMGYwMDAwIHNpemU6IDAwMDAwMDAwMDAw
+MTAwMDAgZW5kOiAwMDAwMDAwMDAwMTAwMDAwIHR5cGU6IDIKY29weV9lODIwX21hcCgpIHN0YXJ0
+OiAwMDAwMDAwMDAwMTAwMDAwIHNpemU6IDAwMDAwMDAwMTdlZjAwMDAgZW5kOiAwMDAwMDAwMDE3
+ZmYwMDAwIHR5cGU6IDEKY29weV9lODIwX21hcCgpIHR5cGUgaXMgRTgyMF9SQU0KY29weV9lODIw
+X21hcCgpIHN0YXJ0OiAwMDAwMDAwMDE3ZmYwMDAwIHNpemU6IDAwMDAwMDAwMDAwMDMwMDAgZW5k
+OiAwMDAwMDAwMDE3ZmYzMDAwIHR5cGU6IDQKY29weV9lODIwX21hcCgpIHN0YXJ0OiAwMDAwMDAw
+MDE3ZmYzMDAwIHNpemU6IDAwMDAwMDAwMDAwMGQwMDAgZW5kOiAwMDAwMDAwMDE4MDAwMDAwIHR5
+cGU6IDMKY29weV9lODIwX21hcCgpIHN0YXJ0OiAwMDAwMDAwMGZmZmYwMDAwIHNpemU6IDAwMDAw
+MDAwMDAwMTAwMDAgZW5kOiAwMDAwMDAwMTAwMDAwMDAwIHR5cGU6IDIKIEJJT1MtZTgyMDogMDAw
+MDAwMDAwMDAwMDAwMCAtIDAwMDAwMDAwMDAwYTAwMDAgKHVzYWJsZSkKIEJJT1MtZTgyMDogMDAw
+MDAwMDAwMDBmMDAwMCAtIDAwMDAwMDAwMDAxMDAwMDAgKHJlc2VydmVkKQogQklPUy1lODIwOiAw
+MDAwMDAwMDAwMTAwMDAwIC0gMDAwMDAwMDAxN2ZmMDAwMCAodXNhYmxlKQogQklPUy1lODIwOiAw
+MDAwMDAwMDE3ZmYwMDAwIC0gMDAwMDAwMDAxN2ZmMzAwMCAoQUNQSSBOVlMpCiBCSU9TLWU4MjA6
+IDAwMDAwMDAwMTdmZjMwMDAgLSAwMDAwMDAwMDE4MDAwMDAwIChBQ1BJIGRhdGEpCiBCSU9TLWU4
+MjA6IDAwMDAwMDAwZmZmZjAwMDAgLSAwMDAwMDAwMTAwMDAwMDAwIChyZXNlcnZlZCkKMzgzTUIg
+TE9XTUVNIGF2YWlsYWJsZS4KRW50ZXJpbmcgYWRkX2FjdGl2ZV9yYW5nZSgwLCAwLCA5ODI4OCkg
+MCBlbnRyaWVzIG9mIDI1NiB1c2VkClpvbmUgUEZOIHJhbmdlczoKICBETUEgICAgICAgICAgICAg
+MCAtPiAgICAgNDA5NgogIE5vcm1hbCAgICAgICA0MDk2IC0+ICAgIDk4Mjg4CmVhcmx5X25vZGVf
+bWFwWzFdIGFjdGl2ZSBQRk4gcmFuZ2VzCiAgICAwOiAgICAgICAgMCAtPiAgICA5ODI4OApPbiBu
+b2RlIDAgdG90YWxwYWdlczogOTgyODgKICBETUEgem9uZTogMzIgcGFnZXMgdXNlZCBmb3IgbWVt
+bWFwCiAgRE1BIHpvbmU6IDAgcGFnZXMgcmVzZXJ2ZWQKICBETUEgem9uZTogNDA2NCBwYWdlcywg
+TElGTyBiYXRjaDowCiAgTm9ybWFsIHpvbmU6IDczNSBwYWdlcyB1c2VkIGZvciBtZW1tYXAKICBO
+b3JtYWwgem9uZTogOTM0NTcgcGFnZXMsIExJRk8gYmF0Y2g6MzEKRE1JIDIuMiBwcmVzZW50LgpB
+Q1BJOiBSU0RQIDAwMEY2Q0EwLCAwMDE0IChyMCBTT1lPICApCkFDUEk6IFJTRFQgMTdGRjMwMDAs
+IDAwMjggKHIxIFNPWU8gICBBV1JEQUNQSSA0MjMwMkUzMSBBV1JEICAgICAgICAwKQpBQ1BJOiBG
+QUNQIDE3RkYzMDQwLCAwMDc0IChyMSBTT1lPICAgQVdSREFDUEkgNDIzMDJFMzEgQVdSRCAgICAg
+ICAgMCkKQUNQSTogRFNEVCAxN0ZGMzBDMCwgMjFFNiAocjEgU09ZTyAgIEFXUkRBQ1BJICAgICAx
+MDAwIE1TRlQgIDEwMDAwMEMpCkFDUEk6IEZBQ1MgMTdGRjAwMDAsIDAwNDAKQUNQSTogUE0tVGlt
+ZXIgSU8gUG9ydDogMHg0MDA4CkFsbG9jYXRpbmcgUENJIHJlc291cmNlcyBzdGFydGluZyBhdCAy
+MDAwMDAwMCAoZ2FwOiAxODAwMDAwMDplN2ZmMDAwMCkKQnVpbHQgMSB6b25lbGlzdHMuICBUb3Rh
+bCBwYWdlczogOTc1MjEKS2VybmVsIGNvbW1hbmQgbGluZTogaW5pdHJkPS9saXZlL2luaXRyZC5p
+bWcgYm9vdD1saXZlIHhkZWJjb25mIHVzcGxhc2ggaXA9IHVzZXJuYW1lPWdob3N0IGhvc3RuYW1l
+PWRlYmlhbi1saXZlIEJPT1RfSU1BR0U9L2xpdmUvdm1saW51eiAKTG9jYWwgQVBJQyBkaXNhYmxl
+ZCBieSBCSU9TIC0tIHlvdSBjYW4gZW5hYmxlIGl0IHdpdGggImxhcGljIgptYXBwZWQgQVBJQyB0
+byBmZmZmZDAwMCAoMDEzMDIwMDApCkVuYWJsaW5nIGZhc3QgRlBVIHNhdmUgYW5kIHJlc3RvcmUu
+Li4gZG9uZS4KSW5pdGlhbGl6aW5nIENQVSMwClBJRCBoYXNoIHRhYmxlIGVudHJpZXM6IDIwNDgg
+KG9yZGVyOiAxMSwgODE5MiBieXRlcykKRGV0ZWN0ZWQgMzUwLjgwMCBNSHogcHJvY2Vzc29yLgpD
+b25zb2xlOiBjb2xvdXIgVkdBKyA4MHgyNQpEZW50cnkgY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVz
+OiA2NTUzNiAob3JkZXI6IDYsIDI2MjE0NCBieXRlcykKSW5vZGUtY2FjaGUgaGFzaCB0YWJsZSBl
+bnRyaWVzOiAzMjc2OCAob3JkZXI6IDUsIDEzMTA3MiBieXRlcykKTWVtb3J5OiAzODAzODBrLzM5
+MzE1MmsgYXZhaWxhYmxlICgxNjI5ayBrZXJuZWwgY29kZSwgMTIxNDRrIHJlc2VydmVkLCA2NDVr
+IGRhdGEsIDMwMGsgaW5pdCwgMGsgaGlnaG1lbSkKdmlydHVhbCBrZXJuZWwgbWVtb3J5IGxheW91
+dDoKICAgIGZpeG1hcCAgOiAweGZmZmI2MDAwIC0gMHhmZmZmZjAwMCAgICggMjkyIGtCKQogICAg
+dm1hbGxvYyA6IDB4ZDg4MDAwMDAgLSAweGZmZmI0MDAwICAgKCA2MzEgTUIpCiAgICBsb3dtZW0g
+IDogMHhjMDAwMDAwMCAtIDB4ZDdmZjAwMDAgICAoIDM4MyBNQikKICAgICAgLmluaXQgOiAweGMw
+MzNjMDAwIC0gMHhjMDM4NzAwMCAgICggMzAwIGtCKQogICAgICAuZGF0YSA6IDB4YzAyOTc1NjUg
+LSAweGMwMzM4Y2Y0ICAgKCA2NDUga0IpCiAgICAgIC50ZXh0IDogMHhjMDEwMDAwMCAtIDB4YzAy
+OTc1NjUgICAoMTYyOSBrQikKQ2hlY2tpbmcgaWYgdGhpcyBwcm9jZXNzb3IgaG9ub3VycyB0aGUg
+V1AgYml0IGV2ZW4gaW4gc3VwZXJ2aXNvciBtb2RlLi4uIE9rLgpDYWxpYnJhdGluZyBkZWxheSB1
+c2luZyB0aW1lciBzcGVjaWZpYyByb3V0aW5lLi4gNzAyLjQ1IEJvZ29NSVBTIChscGo9MTQwNDkx
+MCkKU2VjdXJpdHkgRnJhbWV3b3JrIHYxLjAuMCBpbml0aWFsaXplZApTRUxpbnV4OiAgRGlzYWJs
+ZWQgYXQgYm9vdC4KQ2FwYWJpbGl0eSBMU00gaW5pdGlhbGl6ZWQKTW91bnQtY2FjaGUgaGFzaCB0
+YWJsZSBlbnRyaWVzOiA1MTIKQ1BVOiBBZnRlciBnZW5lcmljIGlkZW50aWZ5LCBjYXBzOiAwMTgz
+ZjlmZiAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAw
+MApDUFU6IEwxIEkgY2FjaGU6IDE2SywgTDEgRCBjYWNoZTogMTZLCkNQVTogTDIgY2FjaGU6IDUx
+MksKQ1BVOiBBZnRlciBhbGwgaW5pdHMsIGNhcHM6IDAxODNmOWZmIDAwMDAwMDAwIDAwMDAwMDAw
+IDAwMDAwMDQwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwCkNvbXBhdCB2RFNPIG1hcHBlZCB0
+byBmZmZmZTAwMC4KQ1BVOiBJbnRlbCBQZW50aXVtIElJIChEZXNjaHV0ZXMpIHN0ZXBwaW5nIDAy
+CkNoZWNraW5nICdobHQnIGluc3RydWN0aW9uLi4uIE9LLgpBQ1BJOiBDb3JlIHJldmlzaW9uIDIw
+MDcwMTI2CkFDUEk6IHNldHRpbmcgRUxDUiB0byAwMjAwIChmcm9tIDFjMjApCkJvb3RpbmcgcGFy
+YXZpcnR1YWxpemVkIGtlcm5lbCBvbiBiYXJlIGhhcmR3YXJlCk5FVDogUmVnaXN0ZXJlZCBwcm90
+b2NvbCBmYW1pbHkgMTYKRUlTQSBidXMgcmVnaXN0ZXJlZApBQ1BJOiBidXMgdHlwZSBwY2kgcmVn
+aXN0ZXJlZApQQ0k6IFBDSSBCSU9TIHJldmlzaW9uIDIuMTAgZW50cnkgYXQgMHhmYjI0MCwgbGFz
+dCBidXM9MQpQQ0k6IFVzaW5nIGNvbmZpZ3VyYXRpb24gdHlwZSAxClNldHRpbmcgdXAgc3RhbmRh
+cmQgUENJIHJlc291cmNlcwpBQ1BJOiBJbnRlcnByZXRlciBlbmFibGVkCkFDUEk6IChzdXBwb3J0
+cyBTMCBTMSBTNCBTNSkKQUNQSTogVXNpbmcgUElDIGZvciBpbnRlcnJ1cHQgcm91dGluZwpBQ1BJ
+OiBQQ0kgUm9vdCBCcmlkZ2UgW1BDSTBdICgwMDAwOjAwKQpQQ0k6IFByb2JpbmcgUENJIGhhcmR3
+YXJlIChidXMgMDApCiogRm91bmQgUE0tVGltZXIgQnVnIG9uIHRoZSBjaGlwc2V0LiBEdWUgdG8g
+d29ya2Fyb3VuZHMgZm9yIGEgYnVnLAoqIHRoaXMgY2xvY2sgc291cmNlIGlzIHNsb3cuIENvbnNp
+ZGVyIHRyeWluZyBvdGhlciBjbG9jayBzb3VyY2VzClBDSSBxdWlyazogcmVnaW9uIDQwMDAtNDAz
+ZiBjbGFpbWVkIGJ5IFBJSVg0IEFDUEkKUENJIHF1aXJrOiByZWdpb24gNTAwMC01MDBmIGNsYWlt
+ZWQgYnkgUElJWDQgU01CCkJvb3QgdmlkZW8gZGV2aWNlIGlzIDAwMDA6MDE6MDAuMApBQ1BJOiBQ
+Q0kgSW50ZXJydXB0IFJvdXRpbmcgVGFibGUgW1xfU0JfLlBDSTAuX1BSVF0KQUNQSTogUENJIElu
+dGVycnVwdCBMaW5rIFtMTktBXSAoSVJRcyAzIDQgNSA2IDcgMTAgKjExIDEyIDE0IDE1KQpBQ1BJ
+OiBQQ0kgSW50ZXJydXB0IExpbmsgW0xOS0JdIChJUlFzIDMgNCA1IDYgNyAxMCAxMSAqMTIgMTQg
+MTUpCkFDUEk6IFBDSSBJbnRlcnJ1cHQgTGluayBbTE5LQ10gKElSUXMgMyA0ICo1IDYgNyAxMCAx
+MSAxMiAxNCAxNSkKQUNQSTogUENJIEludGVycnVwdCBMaW5rIFtMTktEXSAoSVJRcyAzIDQgNSA2
+IDcgKjEwIDExIDEyIDE0IDE1KQpBQ1BJOiBQb3dlciBSZXNvdXJjZSBbUEZBTl0gKG9uKQpMaW51
+eCBQbHVnIGFuZCBQbGF5IFN1cHBvcnQgdjAuOTcgKGMpIEFkYW0gQmVsYXkKcG5wOiBQblAgQUNQ
+SSBpbml0CnBucDogUG5QIEFDUEk6IGZvdW5kIDEyIGRldmljZXMKUG5QQklPUzogRGlzYWJsZWQg
+YnkgQUNQSSBQTlAKUENJOiBVc2luZyBBQ1BJIGZvciBJUlEgcm91dGluZwpQQ0k6IElmIGEgZGV2
+aWNlIGRvZXNuJ3Qgd29yaywgdHJ5ICJwY2k9cm91dGVpcnEiLiAgSWYgaXQgaGVscHMsIHBvc3Qg
+YSByZXBvcnQKTkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSA4Ck5FVDogUmVnaXN0ZXJl
+ZCBwcm90b2NvbCBmYW1pbHkgMjAKcG5wOiAwMDowMDogaW9tZW0gcmFuZ2UgMHhkMDAwMC0weGQz
+ZmZmIGhhcyBiZWVuIHJlc2VydmVkCnBucDogMDA6MDA6IGlvbWVtIHJhbmdlIDB4ZjAwMDAtMHhm
+N2ZmZiBjb3VsZCBub3QgYmUgcmVzZXJ2ZWQKcG5wOiAwMDowMDogaW9tZW0gcmFuZ2UgMHhmODAw
+MC0weGZiZmZmIGNvdWxkIG5vdCBiZSByZXNlcnZlZApwbnA6IDAwOjAwOiBpb21lbSByYW5nZSAw
+eGZjMDAwLTB4ZmZmZmYgY291bGQgbm90IGJlIHJlc2VydmVkClRpbWU6IHRzYyBjbG9ja3NvdXJj
+ZSBoYXMgYmVlbiBpbnN0YWxsZWQuClBDSTogQnJpZGdlOiAwMDAwOjAwOjAxLjAKICBJTyB3aW5k
+b3c6IGRpc2FibGVkLgogIE1FTSB3aW5kb3c6IGQ0MDAwMDAwLWQ1ZmZmZmZmCiAgUFJFRkVUQ0gg
+d2luZG93OiBkNjAwMDAwMC1kN2ZmZmZmZgpORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5
+IDIKSVAgcm91dGUgY2FjaGUgaGFzaCB0YWJsZSBlbnRyaWVzOiA0MDk2IChvcmRlcjogMiwgMTYz
+ODQgYnl0ZXMpClRDUCBlc3RhYmxpc2hlZCBoYXNoIHRhYmxlIGVudHJpZXM6IDE2Mzg0IChvcmRl
+cjogNSwgMTMxMDcyIGJ5dGVzKQpUQ1AgYmluZCBoYXNoIHRhYmxlIGVudHJpZXM6IDE2Mzg0IChv
+cmRlcjogNCwgNjU1MzYgYnl0ZXMpClRDUDogSGFzaCB0YWJsZXMgY29uZmlndXJlZCAoZXN0YWJs
+aXNoZWQgMTYzODQgYmluZCAxNjM4NCkKVENQIHJlbm8gcmVnaXN0ZXJlZApjaGVja2luZyBpZiBp
+bWFnZSBpcyBpbml0cmFtZnMuLi48Nj5Td2l0Y2hlZCB0byBoaWdoIHJlc29sdXRpb24gbW9kZSBv
+biBDUFUgMAogaXQgaXMKRnJlZWluZyBpbml0cmQgbWVtb3J5OiA1ODAyayBmcmVlZAphdWRpdDog
+aW5pdGlhbGl6aW5nIG5ldGxpbmsgc29ja2V0IChkaXNhYmxlZCkKYXVkaXQoMTE4OTY5MDA1OS43
+MzI6MSk6IGluaXRpYWxpemVkClZGUzogRGlzayBxdW90YXMgZHF1b3RfNi41LjEKRHF1b3QtY2Fj
+aGUgaGFzaCB0YWJsZSBlbnRyaWVzOiAxMDI0IChvcmRlciAwLCA0MDk2IGJ5dGVzKQppbyBzY2hl
+ZHVsZXIgbm9vcCByZWdpc3RlcmVkCmlvIHNjaGVkdWxlciBhbnRpY2lwYXRvcnkgcmVnaXN0ZXJl
+ZAppbyBzY2hlZHVsZXIgZGVhZGxpbmUgcmVnaXN0ZXJlZAppbyBzY2hlZHVsZXIgY2ZxIHJlZ2lz
+dGVyZWQgKGRlZmF1bHQpCkxpbWl0aW5nIGRpcmVjdCBQQ0kvUENJIHRyYW5zZmVycy4KaXNhcG5w
+OiBTY2FubmluZyBmb3IgUG5QIGNhcmRzLi4uCmlzYXBucDogTm8gUGx1ZyAmIFBsYXkgZGV2aWNl
+IGZvdW5kClNlcmlhbDogODI1MC8xNjU1MCBkcml2ZXIgJFJldmlzaW9uOiAxLjkwICQgNCBwb3J0
+cywgSVJRIHNoYXJpbmcgZW5hYmxlZApzZXJpYWw4MjUwOiB0dHlTMCBhdCBJL08gMHgzZjggKGly
+cSA9IDQpIGlzIGEgMTY1NTBBCnNlcmlhbDgyNTA6IHR0eVMxIGF0IEkvTyAweDJmOCAoaXJxID0g
+MykgaXMgYSAxNjU1MEEKMDA6MDg6IHR0eVMwIGF0IEkvTyAweDNmOCAoaXJxID0gNCkgaXMgYSAx
+NjU1MEEKMDA6MDk6IHR0eVMxIGF0IEkvTyAweDJmOCAoaXJxID0gMykgaXMgYSAxNjU1MEEKUkFN
+RElTSyBkcml2ZXIgaW5pdGlhbGl6ZWQ6IDE2IFJBTSBkaXNrcyBvZiA4MTkySyBzaXplIDEwMjQg
+YmxvY2tzaXplClBOUDogUFMvMiBDb250cm9sbGVyIFtQTlAwMzAzOlBTMktdIGF0IDB4NjAsMHg2
+NCBpcnEgMQpQTlA6IFBTLzIgY29udHJvbGxlciBkb2Vzbid0IGhhdmUgQVVYIGlycTsgdXNpbmcg
+ZGVmYXVsdCAxMgpzZXJpbzogaTgwNDIgS0JEIHBvcnQgYXQgMHg2MCwweDY0IGlycSAxCm1pY2U6
+IFBTLzIgbW91c2UgZGV2aWNlIGNvbW1vbiBmb3IgYWxsIG1pY2UKRUlTQTogUHJvYmluZyBidXMg
+MCBhdCBlaXNhLjAKQ2Fubm90IGFsbG9jYXRlIHJlc291cmNlIGZvciBFSVNBIHNsb3QgNApDYW5u
+b3QgYWxsb2NhdGUgcmVzb3VyY2UgZm9yIEVJU0Egc2xvdCA1CkVJU0E6IERldGVjdGVkIDAgY2Fy
+ZHMuClRDUCBiaWMgcmVnaXN0ZXJlZApORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDEK
+TkVUOiBSZWdpc3RlcmVkIHByb3RvY29sIGZhbWlseSAxNwpVc2luZyBJUEkgU2hvcnRjdXQgbW9k
+ZQpGcmVlaW5nIHVudXNlZCBrZXJuZWwgbWVtb3J5OiAzMDBrIGZyZWVkCmlucHV0OiBBVCBUcmFu
+c2xhdGVkIFNldCAyIGtleWJvYXJkIGFzIC9jbGFzcy9pbnB1dC9pbnB1dDAKQUNQSTogRmFuIFtG
+QU5dIChvbikKQUNQSTogQ1BVMCAocG93ZXIgc3RhdGVzOiBDMVtDMV0gQzJbQzJdKQpBQ1BJOiBQ
+cm9jZXNzb3IgW0NQVTBdIChzdXBwb3J0cyAyIHRocm90dGxpbmcgc3RhdGVzKQpBQ1BJOiBUaGVy
+bWFsIFpvbmUgW1RIUk1dICgzNCBDKQpTQ1NJIHN1YnN5c3RlbSBpbml0aWFsaXplZApBQ1BJOiBQ
+Q0kgSW50ZXJydXB0IExpbmsgW0xOS0JdIGVuYWJsZWQgYXQgSVJRIDEyClBDSTogc2V0dGluZyBJ
+UlEgMTIgYXMgbGV2ZWwtdHJpZ2dlcmVkCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDoxMC4w
+W0FdIC0+IExpbmsgW0xOS0JdIC0+IEdTSSAxMiAobGV2ZWwsIGxvdykgLT4gSVJRIDEyCjNjNTl4
+OiBEb25hbGQgQmVja2VyIGFuZCBvdGhlcnMuIHd3dy5zY3lsZC5jb20vbmV0d29yay92b3J0ZXgu
+aHRtbAowMDAwOjAwOjEwLjA6IDNDb20gUENJIDNjOTAwIEN5Y2xvbmUgMTBNYnBzIFRQTyBhdCBk
+ODgyMDAwMC4KbGliYXRhIHZlcnNpb24gMi4yMCBsb2FkZWQuCnVzYmNvcmU6IHJlZ2lzdGVyZWQg
+bmV3IGludGVyZmFjZSBkcml2ZXIgdXNiZnMKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJm
+YWNlIGRyaXZlciBodWIKdXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgZGV2aWNlIGRyaXZlciB1c2IK
+VVNCIFVuaXZlcnNhbCBIb3N0IENvbnRyb2xsZXIgSW50ZXJmYWNlIGRyaXZlciB2My4wCkFDUEk6
+IFBDSSBJbnRlcnJ1cHQgTGluayBbTE5LRF0gZW5hYmxlZCBhdCBJUlEgMTAKUENJOiBzZXR0aW5n
+IElSUSAxMCBhcyBsZXZlbC10cmlnZ2VyZWQKQUNQSTogUENJIEludGVycnVwdCAwMDAwOjAwOjA3
+LjJbRF0gLT4gTGluayBbTE5LRF0gLT4gR1NJIDEwIChsZXZlbCwgbG93KSAtPiBJUlEgMTAKdWhj
+aV9oY2QgMDAwMDowMDowNy4yOiBVSENJIEhvc3QgQ29udHJvbGxlcgp1aGNpX2hjZCAwMDAwOjAw
+OjA3LjI6IG5ldyBVU0IgYnVzIHJlZ2lzdGVyZWQsIGFzc2lnbmVkIGJ1cyBudW1iZXIgMQp1aGNp
+X2hjZCAwMDAwOjAwOjA3LjI6IGlycSAxMCwgaW8gYmFzZSAweDAwMDBlMDAwCnVzYiB1c2IxOiBj
+b25maWd1cmF0aW9uICMxIGNob3NlbiBmcm9tIDEgY2hvaWNlCmh1YiAxLTA6MS4wOiBVU0IgaHVi
+IGZvdW5kCmh1YiAxLTA6MS4wOiAyIHBvcnRzIGRldGVjdGVkCmh1YiAxLTA6MS4wOiBvdmVyLWN1
+cnJlbnQgY2hhbmdlIG9uIHBvcnQgMQpVbmlmb3JtIE11bHRpLVBsYXRmb3JtIEUtSURFIGRyaXZl
+ciBSZXZpc2lvbjogNy4wMGFscGhhMgppZGU6IEFzc3VtaW5nIDMzTUh6IHN5c3RlbSBidXMgc3Bl
+ZWQgZm9yIFBJTyBtb2Rlczsgb3ZlcnJpZGUgd2l0aCBpZGVidXM9eHgKUElJWDQ6IElERSBjb250
+cm9sbGVyIGF0IFBDSSBzbG90IDAwMDA6MDA6MDcuMQpQSUlYNDogY2hpcHNldCByZXZpc2lvbiAx
+ClBJSVg0OiBub3QgMTAwJSBuYXRpdmUgbW9kZTogd2lsbCBwcm9iZSBpcnFzIGxhdGVyCiAgICBp
+ZGUwOiBCTS1ETUEgYXQgMHhmMDAwLTB4ZjAwNywgQklPUyBzZXR0aW5nczogaGRhOkRNQSwgaGRi
+OnBpbwogICAgaWRlMTogQk0tRE1BIGF0IDB4ZjAwOC0weGYwMGYsIEJJT1Mgc2V0dGluZ3M6IGhk
+YzpETUEsIGhkZDpwaW8KUHJvYmluZyBJREUgaW50ZXJmYWNlIGlkZTAuLi4KdXNiIDEtMjogbmV3
+IGxvdyBzcGVlZCBVU0IgZGV2aWNlIHVzaW5nIHVoY2lfaGNkIGFuZCBhZGRyZXNzIDIKdXNiIDEt
+MjogY29uZmlndXJhdGlvbiAjMSBjaG9zZW4gZnJvbSAxIGNob2ljZQpoZGE6IFNUMzY0MjJBLCBB
+VEEgRElTSyBkcml2ZQpGbG9wcHkgZHJpdmUocyk6IGZkMCBpcyAxLjQ0TQpGREMgMCBpcyBhIHBv
+c3QtMTk5MSA4MjA3Nwp1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIGhp
+ZGRldgppbnB1dDogSElEIDEyNDE6MTEyMiBhcyAvY2xhc3MvaW5wdXQvaW5wdXQxCmlucHV0OiBV
+U0IgSElEIHYxLjAwIE1vdXNlIFtISUQgMTI0MToxMTIyXSBvbiB1c2ItMDAwMDowMDowNy4yLTIK
+dXNiY29yZTogcmVnaXN0ZXJlZCBuZXcgaW50ZXJmYWNlIGRyaXZlciB1c2JoaWQKZHJpdmVycy91
+c2IvaW5wdXQvaGlkLWNvcmUuYzogdjIuNjpVU0IgSElEIGNvcmUgZHJpdmVyCmlkZTAgYXQgMHgx
+ZjAtMHgxZjcsMHgzZjYgb24gaXJxIDE0ClByb2JpbmcgSURFIGludGVyZmFjZSBpZGUxLi4uClRp
+bWU6IGFjcGlfcG0gY2xvY2tzb3VyY2UgaGFzIGJlZW4gaW5zdGFsbGVkLgpoZGM6IENEVTUyMTEs
+IEFUQVBJIENEL0RWRC1ST00gZHJpdmUKaWRlMSBhdCAweDE3MC0weDE3NywweDM3NiBvbiBpcnEg
+MTUKaGRhOiBtYXggcmVxdWVzdCBzaXplOiAxMjhLaUIKaGRhOiAxMjUwMDQ2MCBzZWN0b3JzICg2
+NDAwIE1CKSB3LzI1NktpQiBDYWNoZSwgQ0hTPTEzMjI4LzE1LzYzLCBVRE1BKDMzKQpoZGE6IGNh
+Y2hlIGZsdXNoZXMgbm90IHN1cHBvcnRlZAogaGRhOiBoZGExCmhkYzogQVRBUEkgNTJYIENELVJP
+TSBkcml2ZSwgMTIwa0IgQ2FjaGUsIFVETUEoMzMpClVuaWZvcm0gQ0QtUk9NIGRyaXZlciBSZXZp
+c2lvbjogMy4yMAplbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgZmQwLCBzZWN0b3IgMAppZGUt
+Y2Q6IGNtZCAweDI4IHRpbWVkIG91dApoZGM6IERNQSBpbnRlcnJ1cHQgcmVjb3ZlcnkKaGRjOiBs
+b3N0IGludGVycnVwdApoZGM6IHN0YXR1cyB0aW1lb3V0OiBzdGF0dXM9MHhkMCB7IEJ1c3kgfQpp
+ZGU6IGZhaWxlZCBvcGNvZGUgd2FzOiB1bmtub3duCmhkYzogRE1BIGRpc2FibGVkCmhkYzogZHJp
+dmUgbm90IHJlYWR5IGZvciBjb21tYW5kCkNsb2Nrc291cmNlIHRzYyB1bnN0YWJsZSAoZGVsdGEg
+PSA3MTI0NTA1MTcwNzEgbnMpCmhkYzogQVRBUEkgcmVzZXQgY29tcGxldGUKSVNPIDk2NjAgRXh0
+ZW5zaW9uczogTWljcm9zb2Z0IEpvbGlldCBMZXZlbCAzCklTTyA5NjYwIEV4dGVuc2lvbnM6IFJS
+SVBfMTk5MUEKUmVnaXN0ZXJpbmcgdW5pb25mcyAxLjQKdW5pb25mczogZGVidWdnaW5nIGlzIG5v
+dCBlbmFibGVkCmxvb3A6IGxvYWRlZCAobWF4IDggZGV2aWNlcykKc3F1YXNoZnM6IHZlcnNpb24g
+My4yLXIyICgyMDA3LzAxLzE1KSBQaGlsbGlwIExvdWdoZXIKTGludXggYWdwZ2FydCBpbnRlcmZh
+Y2UgdjAuMTAyIChjKSBEYXZlIEpvbmVzCnBjaV9ob3RwbHVnOiBQQ0kgSG90IFBsdWcgUENJIENv
+cmUgdmVyc2lvbjogMC41CmFncGdhcnQ6IERldGVjdGVkIGFuIEludGVsIDQ0MEJYIENoaXBzZXQu
+CmFncGdhcnQ6IEFHUCBhcGVydHVyZSBpcyA2NE0gQCAweGQwMDAwMDAwCnNocGNocDogU3RhbmRh
+cmQgSG90IFBsdWcgUENJIENvbnRyb2xsZXIgRHJpdmVyIHZlcnNpb246IDAuNApwaWl4NF9zbWJ1
+cyAwMDAwOjAwOjA3LjM6IEZvdW5kIDAwMDA6MDA6MDcuMyBkZXZpY2UKaW5wdXQ6IFBDIFNwZWFr
+ZXIgYXMgL2NsYXNzL2lucHV0L2lucHV0MgpSZWFsIFRpbWUgQ2xvY2sgRHJpdmVyIHYxLjEyYWMK
+cGFycG9ydDogUG5QQklPUyBwYXJwb3J0IGRldGVjdGVkLgpwYXJwb3J0MDogUEMtc3R5bGUgYXQg
+MHgzNzggKDB4Nzc4KSwgaXJxIDcsIGRtYSAzIFtQQ1NQUCxUUklTVEFURSxDT01QQVQsRUNQLERN
+QV0KQUNQSTogUENJIEludGVycnVwdCBMaW5rIFtMTktDXSBlbmFibGVkIGF0IElSUSA1ClBDSTog
+c2V0dGluZyBJUlEgNSBhcyBsZXZlbC10cmlnZ2VyZWQKQUNQSTogUENJIEludGVycnVwdCAwMDAw
+OjAwOjExLjBbQV0gLT4gTGluayBbTE5LQ10gLT4gR1NJIDUgKGxldmVsLCBsb3cpIC0+IElSUSA1
+Cldhcm5pbmchIGRpcnMgZGVsZXRlIGFuZCBpbWFwIG9wdGlvbnMgdG8gcmVtb3VudCBhcmUgaWdu
+b3JlZApkZXZpY2UtbWFwcGVyOiBpb2N0bDogNC4xMS4wLWlvY3RsICgyMDA2LTEwLTEyKSBpbml0
+aWFsaXNlZDogZG0tZGV2ZWxAcmVkaGF0LmNvbQpFYnRhYmxlcyB2Mi4wIHJlZ2lzdGVyZWQKQnJp
+ZGdlIGZpcmV3YWxsaW5nIHJlZ2lzdGVyZWQKZnVzZSBpbml0IChBUEkgdmVyc2lvbiA3LjgpCmV0
+aDA6ICBzZXR0aW5nIGZ1bGwtZHVwbGV4LgpORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5
+IDEwCmxvOiBEaXNhYmxlZCBQcml2YWN5IEV4dGVuc2lvbnMKZXRoMDogbm8gSVB2NiByb3V0ZXJz
+IHByZXNlbnQKZGV2aWNlIGV0aDAgZW50ZXJlZCBwcm9taXNjdW91cyBtb2RlCmF1ZGl0KDExODk2
+OTEwMjYuODE1OjIpOiBkZXY9ZXRoMCBwcm9tPTI1NiBvbGRfcHJvbT0wIGF1aWQ9NDI5NDk2NzI5
+NQpkZXZpY2UgZXRoMCBsZWZ0IHByb21pc2N1b3VzIG1vZGUKYXVkaXQoMTE4OTY5MTAzOS4zMTY6
+Myk6IGRldj1ldGgwIHByb209MCBvbGRfcHJvbT0yNTYgYXVpZD00Mjk0OTY3Mjk1CmlwX3RhYmxl
+czogKEMpIDIwMDAtMjAwNiBOZXRmaWx0ZXIgQ29yZSBUZWFtCnVzYiAxLTI6IFVTQiBkaXNjb25u
+ZWN0LCBhZGRyZXNzIDIKdXNiIDEtMjogbmV3IGxvdyBzcGVlZCBVU0IgZGV2aWNlIHVzaW5nIHVo
+Y2lfaGNkIGFuZCBhZGRyZXNzIDMKdXNiIDEtMjogY29uZmlndXJhdGlvbiAjMSBjaG9zZW4gZnJv
+bSAxIGNob2ljZQppbnB1dDogSElEIDEyNDE6MTEyMiBhcyAvY2xhc3MvaW5wdXQvaW5wdXQzCmlu
+cHV0OiBVU0IgSElEIHYxLjAwIE1vdXNlIFtISUQgMTI0MToxMTIyXSBvbiB1c2ItMDAwMDowMDow
+Ny4yLTIK
+------=_Part_28164_20105220.1189684680269--
