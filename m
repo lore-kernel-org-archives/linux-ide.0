@@ -1,58 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: HSM violation on bootup, ICH7 + ata_piix 2.6.22
-Date: Thu, 13 Sep 2007 22:09:22 +0200
-Message-ID: <46E998F2.8070301@gmail.com>
-References: <46E254D7.5020902@gmail.com> <1189414783.13360.16.camel@ukabzc383.uk.saic.com>
+From: Kantor Zsolt <kantorzsolt@yahoo.com>
+Subject: HDIO_DRIVE_TASKFILE not supported in libata ?
+Date: Thu, 13 Sep 2007 15:21:25 -0700 (PDT)
+Message-ID: <348832.98955.qm@web35402.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:9521 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755675AbXIMULS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2007 16:11:18 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so733423wah
-        for <linux-ide@vger.kernel.org>; Thu, 13 Sep 2007 13:11:08 -0700 (PDT)
-In-Reply-To: <1189414783.13360.16.camel@ukabzc383.uk.saic.com>
+Received: from web35402.mail.mud.yahoo.com ([66.163.179.111]:28107 "HELO
+	web35402.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755932AbXIMWV1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2007 18:21:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
-Cc: linux-ide@vger.kernel.org, ballen@gravity.phys.uwm.edu
+To: linux-ide@vger.kernel.org
 
-Eamonn Hamilton wrote:
-> Thanks for that, I checked the disks and sure enough they were in an
-> extended self test, I aborted that and it's all back to normal.
-> 
-> the only problem, however, is that the system is already running version
-> 5.37 of the smartmontools package, which is the most recent as I
-> understand it? I don't really want to leave the system with it's disks
-> unmonitored, is there anything I can be doing to prevent this behaviour?
+HDIO_DRIVE_TASKFILE is not supported in libata ? and if not then which was the last version of
+libata that supported the HDIO_DRIVE_TASKFILE command in which kernel ?
 
-Hmmm... That gotta be a different issue then.  Cc'ing Bruce and quoting
-the original report.
+Thanks
+  Kantor
 
-Eamonn Hamilton wrote:
-> > Hi,
-> >
-> > I'm looking ta a Dell SC440 system for a friend, and it's giving HSM
-> > violations at startup.
-> >
-> > The system itself has an ICH7 chipset, with two seagate ST3160812AS
-> > drives attached along with a single ST3400832AS, running kernel 2.6.22
-> > and the ata_piix driver.
-> >
-> > I'm guessing this isn't good  :(
-> >
-> > Anybody gt any suggestions?
-> >
-> > The violations are :
-> >
-> >
-> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > ata1.00: cmd b0/d2:f1:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data
-> > 123392 in
-> >          res 50/00:f1:00:4f:c2/00:00:00:00:00/00 Emask 0x202 (HSM
-> > violation)
 
--- 
-tejun
+       
+____________________________________________________________________________________
+Looking for a deal? Find great prices on flights and hotels with Yahoo! FareChase.
+http://farechase.yahoo.com/
