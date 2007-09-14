@@ -1,97 +1,29 @@
-From: Eamonn Hamilton <EAMONN.HAMILTON@saic.com>
-Subject: Re: HSM violation on bootup, ICH7 + ata_piix 2.6.22
-Date: Fri, 14 Sep 2007 16:09:25 +0100
-Message-ID: <1189782565.4978.17.camel@ukabzc383.uk.saic.com>
-References: <46E254D7.5020902@gmail.com>
-	 <1189414783.13360.16.camel@ukabzc383.uk.saic.com>
-	 <46E998F2.8070301@gmail.com>
-	 <Pine.LNX.4.63.0709140853350.24438@trinity.phys.uwm.edu>
+From: Kantor Zsolt <kantorzsolt@yahoo.com>
+Subject: SG_IO and HDIO_DRIVE_TASKFILE issue
+Date: Fri, 14 Sep 2007 09:58:39 -0700 (PDT)
+Message-ID: <365498.12393.qm@web35414.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpmx2.mail.saic.com ([139.121.17.172]:57865 "EHLO
-	cpmx2.mail.saic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751943AbXINPJy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Sep 2007 11:09:54 -0400
-In-Reply-To: <Pine.LNX.4.63.0709140853350.24438@trinity.phys.uwm.edu>
+Received: from web35414.mail.mud.yahoo.com ([66.163.179.123]:44511 "HELO
+	web35414.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754295AbXINQ6j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Sep 2007 12:58:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Cc: Tejun Heo <htejun@gmail.com>, Bruce Allen <bruce.allen@aei.mpg.de>, Douglas Gilbert <dougg@torque.net>, Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-OK,
-
-
-On Fri, 2007-09-14 at 08:56 -0500, Bruce Allen wrote:
-...
-> Eamonn: could you please build the latest version of smartmontools from 
-> CVS HEAD source and see if the problem exists in that version?  Then write 
-> back.  I don't think this will help but want to eliminate obvious things.
-> 
+Can be executed a SG_IO command for a ATA hard drive ? because I have tried everything. I have
+deeply studied the hdparm (version 7.7) source code and I came to realize that ATA commands like
+setting the acoustic value, setting the drive write-caching, identify device can not be executed
+with the SG_IO, so after hdparm tries with SG_IO which can't be executed jumps with a goto to the
+legacy command (HDIO_DRIVE_CMD) to execute the required task. And I also know that libata don't
+include support for the HDIO_DRIVE_TASKFILE command, so my question is how can I have full control
+over a hard drive because for that you must to use either HDIO_DRIVE_TASKFILE but that is not
+supported or SG_IO which is not working like HDIO_DRIVE_TASKFILE
 
 
-I built the latest version which reports itself as 5.38 from cvs.
-
-The results, as you suspected, were no different. 
-
-The setup :
-
-The system is setup with sda and sdb being partitioned as follows :
-/dev/sda1   *           1         243     1951866   fd  Linux raid
-autodetect
-/dev/sda2             244        1459     9767520   fd  Linux raid
-autodetect
-/dev/sda3            1460        1824     2931862+  fd  Linux raid
-autodetect
-/dev/sda4            1825       19452   141596910    5  Extended
-/dev/sda5            1825        7295    43945776   fd  Linux raid
-autodetect
-/dev/sda6            7296       19452    97651071   fd  Linux raid
-autodetect
-
-
-raid1 mirrors are then setup between the corresponding partitions on the
-two disks.
-
-The results :
-
-using either 5.37 or 5.38, issuing a smartctl -t long on either one of
-the disk devices allows filesystem access at full speed, and issuing a
-smartctl -X on the disk returns inside a second. All is well:
-
-time dd if=/dev/zero of=file bs=1k count=1024
-1024+0 records in
-1024+0 records out
-1048576 bytes (1.0 MB) copied, 0.00488519 seconds, 215 MB/s
-
-
-Starting an extended self-test on *both* disks, however, and filesystem
-access is *extremely* slow, which may be why the violations are
-happening, although I didn't leave it running long enough to impact the
-box:
- time dd if=/dev/zero of=file bs=1k count=1024
-1024+0 records in
-1024+0 records out
-1048576 bytes (1.0 MB) copied, 0.00505913 seconds, 207 MB/s
-
-real    0m9.107s
-user    0m0.000s
-sys     0m0.004s
-
-Now, I'm asking the guy who runs the system as to when I can test the
-smartd, but I'm guessing from this that the results will be exactly the
-same.
-
-Comments?
-
-Cheers,
-Eamonn
-
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+      ____________________________________________________________________________________
+Catch up on fall's hot new shows on Yahoo! TV. Watch previews, get listings, and more!
+http://tv.yahoo.com/collections/3658 
