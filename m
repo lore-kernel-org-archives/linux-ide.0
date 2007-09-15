@@ -1,50 +1,28 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ide: call udma_filter() before resorting to the UltraDMA mask
-Date: Sat, 15 Sep 2007 20:42:37 +0400
-Message-ID: <200709152042.37892.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/10] cmd64x: always set hwif->chipset for CMD646
+Date: Sat, 15 Sep 2007 20:54:31 +0400
+Message-ID: <46EC0E47.1000102@ru.mvista.com>
+References: <200709112335.54396.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:7864 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751286AbXIOQjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Sep 2007 12:39:22 -0400
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:59292 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751948AbXIOQvP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Sep 2007 12:51:15 -0400
+In-Reply-To: <200709112335.54396.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Give the udma_filter() method call taking precedence over using the mode masks.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> hwif->chipset should be set to ide_cmd646 also when DMA base is invalid.
 
----
-Posting this change separately as have been asked.  Should apply to the current
-Linus' tree...
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
- drivers/ide/ide-dma.c |    7 +++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Index: linux-2.6/drivers/ide/ide-dma.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-dma.c
-+++ linux-2.6/drivers/ide/ide-dma.c
-@@ -664,10 +664,11 @@ static unsigned int ide_get_mode_mask(id
- 		if ((id->field_valid & 4) == 0)
- 			break;
- 
--		mask = id->dma_ultra & hwif->ultra_mask;
--
- 		if (hwif->udma_filter)
--			mask &= hwif->udma_filter(drive);
-+			mask = hwif->udma_filter(drive);
-+		else
-+			mask = hwif->ultra_mask;
-+		mask &= id->dma_ultra;
- 
- 		if ((mask & 0x78) && (eighty_ninty_three(drive) == 0))
- 			mask &= 0x07;
-
+MBR, Sergei
