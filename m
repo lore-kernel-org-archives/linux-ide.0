@@ -1,56 +1,68 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ICH Intel PATA short cable override...
-Date: Sun, 16 Sep 2007 03:58:07 -0400
-Message-ID: <46ECE20F.5020609@pobox.com>
-References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com> <20070906014209.142382c8@the-village.bc.nu> <46DF63F8.8070805@rtr.ca> <46E1DC6E.9060001@pobox.com> <46E53554.1090604@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_piix, laptop cdrom, ICH7: EH, limiting speed to PIO
+Date: Sun, 16 Sep 2007 13:56:32 +0200
+Message-ID: <46ED19F0.8060205@gmail.com>
+References: <20070911212030.GA2817@slk.laptop> <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com> <20070912200706.GA2620@slk.laptop> <46E849B7.9040402@googlemail.com> <20070912212025.GB2620@slk.laptop> <46E8663E.3080205@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35657 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751243AbXIPH6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Sep 2007 03:58:13 -0400
-In-Reply-To: <46E53554.1090604@rtr.ca>
+Received: from wa-out-1112.google.com ([209.85.146.176]:22130 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbXIPL6Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Sep 2007 07:58:24 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1641204wah
+        for <linux-ide@vger.kernel.org>; Sun, 16 Sep 2007 04:58:23 -0700 (PDT)
+In-Reply-To: <46E8663E.3080205@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel J Blueman <daniel.blueman@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Sergey Dolgov <dolgovs@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Mark Lord wrote:
->>> Ditto for selecting transfer modes.
->>
->>
->> Waiting on one thing AFAICS:
->>
->>     ability to drain/idle all ports +
->>     issue a command on one port +
->>     resume normal parallel port operation
->>
->> SET FEATURES - XFER MODE is special in that it requires all sorts of 
->> additional controller handling and careful cross-port synchronization.
+Michal Piotrowski wrote:
+> Sergey Dolgov pisze:
+>> On Wed, Sep 12, 2007 at 10:19:03PM +0200, Michal Piotrowski wrote:
+>>> Sergey Dolgov pisze:
+>>>> Hi Michal,
+>>>>
+>>>> On Wed, Sep 12, 2007 at 06:33:20PM +0200, Michal Piotrowski wrote:
+>>>>> Hi Sergey,
+>>>>>
+>>>>> On 11/09/2007, Sergey Dolgov <dolgovs@gmail.com> wrote:
+>>>>>> Hi!
+>>>>>>
+>>>>>> On my hp nx7300 laptop, 2 following scenarios can happen during bootup
+>>>>>> (see attachments for the full logs): the "good" one [1] and the one
+>>>>>> where multiple EHs lead to limiting the speed [2].
+>>>>>>
+>>>>>> [1] one is more rare, but it seems to be persistent over reboots: once
+>>>>>> it happened, just rebooting the machine always results in behaviour
+>>>>>> like [1].
+>>>>>>
+>>>>>> [1] results in a working cdrom from the start. An attempt to use cdrom
+>>>>>> after [2] happened results in even more EHs, resulting in "configured
+>>>>>> for PIO4", after which the cdrom is finaly working.
+>>>>>>
+>>>>>> The version I'm using is 2.6.23-rc6, but the same used to happen with
+>>>>>> the previous rc's, and probably with 2.6.22 too (I can check).
+>>>>> It would be great if you could check it.
+>>>> I've just built 2.6.22.6 with basically the same configuration, and
+>>>> the behaviour is just the same, i.e. both [1] and [2] still can
+>>>> happen.
+>>> Ok, thanks.
+>>>
+>>> BTW please check cables and PCU.
+>> What's a PCU?
 > 
-> Absolutely.
+> s/PCU/PSU - power supply unit
 > 
-> Also note that I'm *not* advocating HDIO_SET_PIO_MODE (and kin) here,
-> but rather perhaps a sysfs option per-drive.  It is needed, especially for
-> custom/embedded systems, and I suppose we will get there eventually.  :)
+>> BTW, this only happens when using libata of course. The
+>> old CONFIG_IDE stuff works fine every time.
+> 
+> This maybe one of libata weirdness (I really don't get it why some hardware
+> works perfectly fine with an old IDE and don't work well with libata).
 
-(did I reply to this already?  I forget)
+Hmmm... Is MWDMA2 mode used with ide driver too?
 
-We don't need any sysfs options.  Just normal SG_IO sending a SET 
-FEATURES - XFER MODE command to the desired device.
-
-Currently, that [sub-]command is intentionally filtered out because of 
-the problems that would ensue.
-
-Once the above EH mods are in place, we simply remove that filter, and 
-The Right Thing(tm) happens when you submit an ATA command via normal 
-methods.  No need for new sysfs hooks or new ioctls or anything.
-
-	Jeff
-
-
-
+-- 
+tejun
