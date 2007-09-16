@@ -1,64 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Fw: Spurious completions during NCQ
-Date: Sat, 15 Sep 2007 19:57:13 -0400
-Message-ID: <46EC7159.6000904@garzik.org>
-References: <20070915005751.353d0c69.akpm@linux-foundation.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: ICH Intel PATA short cable override...
+Date: Sun, 16 Sep 2007 03:58:07 -0400
+Message-ID: <46ECE20F.5020609@pobox.com>
+References: <6278d2220709040537n4c96ffcagd9c25c94ddd29ca1@mail.gmail.com> <20070906014209.142382c8@the-village.bc.nu> <46DF63F8.8070805@rtr.ca> <46E1DC6E.9060001@pobox.com> <46E53554.1090604@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55073 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35657 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753283AbXIOX5S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Sep 2007 19:57:18 -0400
-In-Reply-To: <20070915005751.353d0c69.akpm@linux-foundation.org>
+	id S1751243AbXIPH6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Sep 2007 03:58:13 -0400
+In-Reply-To: <46E53554.1090604@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Sumanth J.V" <sumanth@cse.unl.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel J Blueman <daniel.blueman@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Andrew Morton wrote:
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Mark Lord wrote:
+>>> Ditto for selecting transfer modes.
+>>
+>>
+>> Waiting on one thing AFAICS:
+>>
+>>     ability to drain/idle all ports +
+>>     issue a command on one port +
+>>     resume normal parallel port operation
+>>
+>> SET FEATURES - XFER MODE is special in that it requires all sorts of 
+>> additional controller handling and careful cross-port synchronization.
 > 
-> Begin forwarded message:
+> Absolutely.
 > 
-> Date: Fri, 07 Sep 2007 12:57:14 -0500
-> From: "Sumanth J.V" <sumanth@cse.unl.edu>
-> To: linux-kernel@vger.kernel.org
-> Subject: Spurious completions during NCQ
-> 
-> 
-> I keep seeing this message a few times a day on my box.
-> 
-> ata1.00: exception Emask 0x2 SAct 0x18 SErr 0x0 action 0x2 frozen
-> ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x18 
-> FIS=004040a1:00000004)
-> ata1.00: cmd 60/08:18:bf:04:df/00:00:23:00:00/40 tag 3 cdb 0x0 data 4096 in
->          res 40/00:24:c7:04:df/00:00:23:00:00/40 Emask 0x2 (HSM violation)
-> ata1.00: cmd 60/78:20:c7:04:df/00:00:23:00:00/40 tag 4 cdb 0x0 data 61440 in
->          res 40/00:24:c7:04:df/00:00:23:00:00/40 Emask 0x2 (HSM violation)
-> ata1: soft resetting port
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/133
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> 
-> 
-> 
-> Can I assume that my data integrity is not compromised? Any idea what is 
-> happening to the pending writes during the soft reset? How can I verify 
-> that all the pending writes were committed?
-> 
-> I have attached the output of my dmesg, lspci, sdparm and mdadm. Do let 
-> me know if you need any other info?
+> Also note that I'm *not* advocating HDIO_SET_PIO_MODE (and kin) here,
+> but rather perhaps a sysfs option per-drive.  It is needed, especially for
+> custom/embedded systems, and I suppose we will get there eventually.  :)
 
+(did I reply to this already?  I forget)
 
-If the error handler can detect the condition (it did), then there is no 
-data integrity problem.  We just "down-shift".
+We don't need any sysfs options.  Just normal SG_IO sending a SET 
+FEATURES - XFER MODE command to the desired device.
+
+Currently, that [sub-]command is intentionally filtered out because of 
+the problems that would ensue.
+
+Once the above EH mods are in place, we simply remove that filter, and 
+The Right Thing(tm) happens when you submit an ATA command via normal 
+methods.  No need for new sysfs hooks or new ioctls or anything.
 
 	Jeff
+
 
 
