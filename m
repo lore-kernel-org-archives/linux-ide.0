@@ -1,40 +1,35 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/6] alim15x3: fix CD_ROM DMA and PIO FIFO settings setup
-Date: Mon, 17 Sep 2007 22:07:11 +0200
-Message-ID: <200709172207.11275.bzolnier@gmail.com>
+Subject: [PATCH 2/6] alim15x3: use ->host_flags and ->udma_mask fields from ide_pci_device_t
+Date: Mon, 17 Sep 2007 22:07:35 +0200
+Message-ID: <200709172207.35179.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:8879 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547AbXIQUIS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 16:08:18 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so8883ugc
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 13:08:17 -0700 (PDT)
+Received: from wx-out-0506.google.com ([66.249.82.235]:10981 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755031AbXIQUIU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 16:08:20 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1419915wxd
+        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 13:08:19 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-* Setup CD_ROM DMA and PIO FIFO settings in init_chipset_ali15x3() instead
-  of ata66_ali15x3().  The latter is called from init_hwif_common_ali15x3()
-  only if DMA base exists (which insists m5529_revision > 0x20).
+* Make a local copy of ali15x3_chipset in alim15x3_init_one() and set
+  ->host_flags / ->udma_mask according to the controller capabilities.
 
-  This changes makes CD_ROM DMA / PIO FIFO bits being set only once
-  and also when "idex=ata66" kernel parameter is used.
-
-* While at it move also chip_is_1543c_e setup from ata66_ali15x3() to
-  init_chipset_ali15x3() and check if isa_dev exists before accessing it.
+* Cleanup init_hwif_common_ali15x3().
 
 * Bump driver version.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/alim15x3.c |   60 +++++++++++++++++++++++----------------------
- 1 file changed, 31 insertions(+), 29 deletions(-)
+ drivers/ide/pci/alim15x3.c |   49 +++++++++++++++++++++------------------------
+ 1 file changed, 23 insertions(+), 26 deletions(-)
 
 Index: b/drivers/ide/pci/alim15x3.c
 ===================================================================
@@ -42,90 +37,78 @@ Index: b/drivers/ide/pci/alim15x3.c
 +++ b/drivers/ide/pci/alim15x3.c
 @@ -1,5 +1,5 @@
  /*
-- * linux/drivers/ide/pci/alim15x3.c		Version 0.27	Aug 27 2007
-+ * linux/drivers/ide/pci/alim15x3.c		Version 0.28	Sep 15 2007
+- * linux/drivers/ide/pci/alim15x3.c		Version 0.28	Sep 15 2007
++ * linux/drivers/ide/pci/alim15x3.c		Version 0.29	Sep 16 2007
   *
   *  Copyright (C) 1998-2000 Michel Aubry, Maintainer
   *  Copyright (C) 1998-2000 Andrzej Krzysztofowicz, Maintainer
-@@ -492,6 +492,13 @@ static unsigned int __devinit init_chips
- 		 * clear bit 7
- 		 */
- 		pci_write_config_byte(dev, 0x4b, tmpbyte & 0x7F);
-+		/*
-+		 * check m1533, 0x5e, bit 1~4 == 1001 => & 00011110 = 00010010
-+		 */
-+		if (m5229_revision >= 0x20 && isa_dev) {
-+			pci_read_config_byte(isa_dev, 0x5e, &tmpbyte);
-+			chip_is_1543c_e = ((tmpbyte & 0x1e) == 0x12) ? 1: 0;
-+		}
- 		goto out;
- 	}
+@@ -666,31 +666,9 @@ static void __devinit init_hwif_common_a
+ 	hwif->set_dma_mode = &ali_set_dma_mode;
+ 	hwif->udma_filter = &ali_udma_filter;
  
-@@ -537,7 +544,30 @@ static unsigned int __devinit init_chips
- 			pci_write_config_byte(isa_dev, 0x79, tmpbyte | 0x02);
- 		}
- 	}
-+
- out:
-+	/*
-+	 * CD_ROM DMA on (m5229, 0x53, bit0)
-+	 *      Enable this bit even if we want to use PIO.
-+	 * PIO FIFO off (m5229, 0x53, bit1)
-+	 *      The hardware will use 0x54h and 0x55h to control PIO FIFO.
-+	 *	(Not on later devices it seems)
-+	 *
-+	 *	0x53 changes meaning on later revs - we must no touch
-+	 *	bit 1 on them.  Need to check if 0x20 is the right break.
-+	 */
-+	if (m5229_revision >= 0x20) {
-+		pci_read_config_byte(dev, 0x53, &tmpbyte);
-+
-+		if (m5229_revision <= 0x20)
-+			tmpbyte = (tmpbyte & (~0x02)) | 0x01;
-+		else if (m5229_revision == 0xc7 || m5229_revision == 0xc8)
-+			tmpbyte |= 0x03;
-+		else
-+			tmpbyte |= 0x01;
-+
-+		pci_write_config_byte(dev, 0x53, tmpbyte);
-+	}
- 	pci_dev_put(north);
- 	pci_dev_put(isa_dev);
- 	local_irq_restore(flags);
-@@ -616,36 +646,8 @@ static u8 __devinit ata66_ali15x3(ide_hw
- 			if ((tmpbyte & (1 << hwif->channel)) == 0)
- 				cbl = ATA_CBL_PATA80;
- 		}
--	} else {
--		/*
--		 * check m1533, 0x5e, bit 1~4 == 1001 => & 00011110 = 00010010
--		 */
--		pci_read_config_byte(isa_dev, 0x5e, &tmpbyte);
--		chip_is_1543c_e = ((tmpbyte & 0x1e) == 0x12) ? 1: 0;
- 	}
+-	/* don't use LBA48 DMA on ALi devices before rev 0xC5 */
+-	if (m5229_revision <= 0xC4)
+-		hwif->host_flags |= IDE_HFLAG_NO_LBA48_DMA;
+-
+ 	if (hwif->dma_base == 0)
+ 		return;
  
 -	/*
--	 * CD_ROM DMA on (m5229, 0x53, bit0)
--	 *      Enable this bit even if we want to use PIO
--	 * PIO FIFO off (m5229, 0x53, bit1)
--	 *      The hardware will use 0x54h and 0x55h to control PIO FIFO
--	 *	(Not on later devices it seems)
--	 *
--	 *	0x53 changes meaning on later revs - we must no touch
--	 *	bit 1 on them. Need to check if 0x20 is the right break
+-	 * check in ->init_dma guarantees m5229_revision >= 0x20 here
 -	 */
--	 
--	pci_read_config_byte(dev, 0x53, &tmpbyte);
--	
--	if(m5229_revision <= 0x20)
--		tmpbyte = (tmpbyte & (~0x02)) | 0x01;
--	else if (m5229_revision == 0xc7 || m5229_revision == 0xc8)
--		tmpbyte |= 0x03;
+-
+-	if (m5229_revision == 0x20)
+-		hwif->host_flags |= IDE_HFLAG_NO_ATAPI_DMA;
+-
+-	if (m5229_revision <= 0x20)
+-		hwif->ultra_mask = 0x00; /* no udma */
+-	else if (m5229_revision < 0xC2)
+-		hwif->ultra_mask = ATA_UDMA2;
+-	else if (m5229_revision == 0xC2 || m5229_revision == 0xC3)
+-		hwif->ultra_mask = ATA_UDMA4;
+-	else if (m5229_revision == 0xC4)
+-		hwif->ultra_mask = ATA_UDMA5;
 -	else
--		tmpbyte |= 0x01;
+-		hwif->ultra_mask = ATA_UDMA6;
 -
--	pci_write_config_byte(dev, 0x53, tmpbyte);
--
- 	local_irq_restore(flags);
+ 	hwif->dma_setup = &ali15x3_dma_setup;
  
- 	return cbl;
+ 	if (hwif->cbl != ATA_CBL_PATA40_SHORT)
+@@ -794,15 +772,34 @@ static int __devinit alim15x3_init_one(s
+ 		{ },
+ 	};
+ 
+-	ide_pci_device_t *d = &ali15x3_chipset;
++	ide_pci_device_t d = ali15x3_chipset;
++	u8 rev = dev->revision;
+ 
+ 	if (pci_dev_present(ati_rs100))
+ 		printk(KERN_WARNING "alim15x3: ATI Radeon IGP Northbridge is not yet fully tested.\n");
+ 
++	/* don't use LBA48 DMA on ALi devices before rev 0xC5 */
++	if (rev <= 0xC4)
++		d.host_flags |= IDE_HFLAG_NO_LBA48_DMA;
++
++	if (rev >= 0x20) {
++		if (rev == 0x20)
++			d.host_flags |= IDE_HFLAG_NO_ATAPI_DMA;
++
++		if (rev < 0xC2)
++			d.udma_mask = ATA_UDMA2;
++		else if (rev == 0xC2 || rev == 0xC3)
++			d.udma_mask = ATA_UDMA4;
++		else if (rev == 0xC4)
++			d.udma_mask = ATA_UDMA5;
++		else
++			d.udma_mask = ATA_UDMA6;
++	}
++
+ #if defined(CONFIG_SPARC64)
+-	d->init_hwif = init_hwif_common_ali15x3;
++	d.init_hwif = init_hwif_common_ali15x3;
+ #endif /* CONFIG_SPARC64 */
+-	return ide_setup_pci_device(dev, d);
++	return ide_setup_pci_device(dev, &d);
+ }
+ 
+ 
