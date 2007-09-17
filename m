@@ -1,78 +1,66 @@
-From: "su henry" <henry.su.ati@gmail.com>
-Subject: [patch] Add device IDs for supporting ATI/AMD SB800 SATA controller
-Date: Mon, 17 Sep 2007 22:32:55 +0800
-Message-ID: <c660f0910709170732s3c7dcfb3p66ba5b9f30a57b9e@mail.gmail.com>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Re: 2.6.22.6 sata_sil device errors & timeouts
+Date: Mon, 17 Sep 2007 12:04:28 -0400
+Message-ID: <76366b180709170904i7b2f5ab0o8605eb899d20f921@mail.gmail.com>
+References: <76366b180709170135v6c46f3d6qd3586ea79f9abc2@mail.gmail.com>
+	 <46EE4679.7030600@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_12637_15986271.1190039575792"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:5047 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469AbXIQOc5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 10:32:57 -0400
-Received: by py-out-1112.google.com with SMTP id u77so3175838pyb
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 07:32:56 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, gregkh@suse.de, "henry. su" <henry.su@amd.com>, jgarzik@pobox.com
-
-------=_Part_12637_15986271.1190039575792
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.186]:27880 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbXIQQE3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 12:04:29 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1341790rvb
+        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 09:04:28 -0700 (PDT)
+In-Reply-To: <46EE4679.7030600@gmail.com>
 Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: henry su<henry.su.ati@gmail.com>
+On 9/17/07, Tejun Heo <htejun@gmail.com> wrote:
+> Andrew Paprocki wrote:
+> > boot configuration more complicated if booting off the pata drive. Is
+> > there any way to control which order the drives are assigned when not
+> > building w/ modules?
+>
+> Please use mount-by-LABEL or UUID.
 
-ATI/AMD SB800 shares some device IDs with SB700,
-and SB800 adds two more device IDs:0x4394,0x4395.
+Thanks, wasn't aware of that functionality. Works like a charm.
 
-Signed-off-by:  henry su<henry.su.ati@gmail.com>
----------------------------
-diff -Nur a/drivers/ata/ahci.c b/drivers/ata/ahci.c
---- a/drivers/ata/ahci.c        2007-09-17 22:07:04.000000000 +0800
-+++ b/drivers/ata/ahci.c        2007-09-17 22:10:46.000000000 +0800
-@@ -399,10 +399,12 @@
+> > ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x2400000 action 0x2 frozen
+> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x280000 action 0x0
+>
+> In both cases, SError is indicating transmission problem. Handshake
+> error and Unrecognized FIS type in the first case, 10b to 8b decode
+> error and CRC error on the second case.  I can't tell why but signals
+> flying through those redish cables are getting corrupted.
 
-        /* ATI */
-        { PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
--       { PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700 IDE */
--       { PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700 AHCI */
--       { PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700 nraid5 */
--       { PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700 raid5 */
-+       { PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700/800 */
-+       { PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700/800 */
-+       { PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700/800 */
-+       { PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700/800 */
-+       { PCI_VDEVICE(ATI, 0x4394), board_ahci_sb600 }, /* ATI SB700/800 */
-+       { PCI_VDEVICE(ATI, 0x4395), board_ahci_sb600 }, /* ATI SB700/800 */
+I've replaced the cables with a different brand I had laying around,
+and I haven't seen a problem yet. I'll need to test it heavily, though
+to see if I can trigger anything to pop up.
 
-        /* VIA */
-        { PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
+I didn't mention it before, but I'm also getting these errors every
+time I boot. I'm thinking they're related to the drive not supporting
+cmds that smartd is sending it. If so, is there any way that
+libata/smartd can handle this more gracefully? This stuff spews into
+dmesg and gives a scare that there is a real hardware problem that may
+cause data corruption. I get exactly 6 instances of each of these two
+blocks of output prior to reaching the login prompt:
 
-------=_Part_12637_15986271.1190039575792
-Content-Type: text/x-patch; name="sb800sata.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="sb800sata.patch"
-X-Attachment-Id: f_f6p2lv2e
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata1.00: cmd b0/db:f8:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+         res 51/04:f8:00:4f:c2/00:00:00:00:00/00 Emask 0x1 (device error)
+ata1.00: configured for UDMA/100
+ata1: EH complete
 
-ZGlmZiAtTnVyIGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEvYWhjaS5jCi0tLSBh
-L2RyaXZlcnMvYXRhL2FoY2kuYwkyMDA3LTA5LTE3IDIyOjA3OjA0LjAwMDAwMDAwMCArMDgwMAor
-KysgYi9kcml2ZXJzL2F0YS9haGNpLmMJMjAwNy0wOS0xNyAyMjoxMDo0Ni4wMDAwMDAwMDAgKzA4
-MDAKQEAgLTM5OSwxMCArMzk5LDEyIEBACiAKIAkvKiBBVEkgKi8KIAl7IFBDSV9WREVWSUNFKEFU
-SSwgMHg0MzgwKSwgYm9hcmRfYWhjaV9zYjYwMCB9LCAvKiBBVEkgU0I2MDAgKi8KLQl7IFBDSV9W
-REVWSUNFKEFUSSwgMHg0MzkwKSwgYm9hcmRfYWhjaV9zYjYwMCB9LCAvKiBBVEkgU0I3MDAgSURF
-ICovCi0JeyBQQ0lfVkRFVklDRShBVEksIDB4NDM5MSksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyog
-QVRJIFNCNzAwIEFIQ0kgKi8KLQl7IFBDSV9WREVWSUNFKEFUSSwgMHg0MzkyKSwgYm9hcmRfYWhj
-aV9zYjYwMCB9LCAvKiBBVEkgU0I3MDAgbnJhaWQ1ICovCi0JeyBQQ0lfVkRFVklDRShBVEksIDB4
-NDM5MyksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyogQVRJIFNCNzAwIHJhaWQ1ICovCisJeyBQQ0lf
-VkRFVklDRShBVEksIDB4NDM5MCksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyogQVRJIFNCNzAwLzgw
-MCAqLworCXsgUENJX1ZERVZJQ0UoQVRJLCAweDQzOTEpLCBib2FyZF9haGNpX3NiNjAwIH0sIC8q
-IEFUSSBTQjcwMC84MDAgKi8KKwl7IFBDSV9WREVWSUNFKEFUSSwgMHg0MzkyKSwgYm9hcmRfYWhj
-aV9zYjYwMCB9LCAvKiBBVEkgU0I3MDAvODAwICovCisJeyBQQ0lfVkRFVklDRShBVEksIDB4NDM5
-MyksIGJvYXJkX2FoY2lfc2I2MDAgfSwgLyogQVRJIFNCNzAwLzgwMCAqLworCXsgUENJX1ZERVZJ
-Q0UoQVRJLCAweDQzOTQpLCBib2FyZF9haGNpX3NiNjAwIH0sIC8qIEFUSSBTQjcwMC84MDAgKi8K
-Kwl7IFBDSV9WREVWSUNFKEFUSSwgMHg0Mzk1KSwgYm9hcmRfYWhjaV9zYjYwMCB9LCAvKiBBVEkg
-U0I3MDAvODAwICovCiAKIAkvKiBWSUEgKi8KIAl7IFBDSV9WREVWSUNFKFZJQSwgMHgzMzQ5KSwg
-Ym9hcmRfYWhjaV92dDgyNTEgfSwgLyogVklBIFZUODI1MSAqLwo=
-------=_Part_12637_15986271.1190039575792--
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: cmd b0/db:f8:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+         res 51/04:f8:00:4f:c2/00:00:00:00:00/00 Emask 0x1 (device error)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+
+Thanks, -Andrew
