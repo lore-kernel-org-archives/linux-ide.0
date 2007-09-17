@@ -1,56 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] pata_it821x: fix lost interrupt with atapi devices
-Date: Mon, 17 Sep 2007 06:00:19 -0400
-Message-ID: <46EE5033.7060708@garzik.org>
-References: <200709041607.l84G7KsT032647@norden.math.tntech.edu>	<18141.42848.537873.349518@alkaid.it.uu.se> <20070906013929.1621849d@the-village.bc.nu> <46EE09D3.9010201@gmail.com>
+From: ROQUE Damien - FIP 1A <damien.roque@enst-bretagne.fr>
+Subject: Spin down warning message Debian/lenny
+Date: Mon, 17 Sep 2007 11:45:38 +0200
+Message-ID: <1190022338.29675.7.camel@pc-df-191.priv.enst-bretagne.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59473 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753115AbXIQKAe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Sep 2007 06:00:34 -0400
-In-Reply-To: <46EE09D3.9010201@gmail.com>
+Received: from coliposte.enst-bretagne.fr ([192.108.115.12]:48324 "EHLO
+	coliposte.enst-bretagne.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751426AbXIQKlI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 06:41:08 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by coliposte.enst-bretagne.fr (8.13.7/8.13.7/2006.08.11) with ESMTP id l8H9jlXt004009
+	for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 11:45:48 +0200
+Received: from courrier.enst-bretagne.fr (vss-mail-02.priv.enst-bretagne.fr [10.29.90.4])
+	by coliposte.enst-bretagne.fr (8.13.7/8.13.7/2007.03.20) with ESMTP id l8H9jf5r003937
+	for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 11:45:43 +0200
+Received: from pc-df-191.priv.enst-bretagne.fr (pc-df-191.priv.enst-bretagne.fr [10.29.220.11])
+	by courrier.enst-bretagne.fr (8.13.1/8.13.1/2006.06.07) with ESMTP id l8H9jbcp022505
+	for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 11:45:37 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Norden <jeff@math.tntech.edu>, alan@redhat.com, linux-kernel@vger.kernel.org, Albert CC Lee <albertcc@tw.ibm.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> [cc'ing Albert and linux-ide]
-> 
-> Alan Cox wrote:
->> /from the media. */
->>>  > +	if (qc->nbytes < 2048)
->>>  > +		return -EOPNOTSUPP;
->>>  > +
->>>  >  	/* No ATAPI DMA in smart mode */
->>>  >  	if (itdev->smart)
->>>  >  		return -EOPNOTSUPP;
->>>  > 
->>>
->>> This looks like a gross hack. Aren't you supposed to inspect
->>> the command instead and whitelist the ones you know are OK,
->>> like pata_pdc2027x.c and sata_promise.c do?
->> It does seem to be about transfer size in the IT821x case not commands.
->> It may be to do with how we issue ATAPI command transfer sizes from high
->> up (patch went to Jeff) but for now this is definitely the right approach
->>
->> Reviewed-by: Alan Cox <alan@redhat.com>
-> 
-> I wonder whether we should be using similar check in generic path too.
-> We have quite a few cases where MWDMA ATAPI devices choking on commands
-> with small transfer sizes.  I don't think we'll experience significant
-> performance regression with this applied and even if there is some, it's
-> far better to have slightly slower working device.
-> 
-> What do you guys think?
+Hello,
+I use a Debian Lenny with a 2.6.22.6 kernel, and I always see the spin
+down warning message (at each shutdown).
+What do I have to do :
+- Update the kernel to a higher version ?
+- Downgrade the kernel ?
+- Which version ?
 
-Need to look at, or know, a standard profile of submitted commands. 
-It's quite possible some high performance commands want this, where 
-possible.
+Thank you...
 
-	Jeff
+Kind regards,
 
+Damien ROQUE
 
