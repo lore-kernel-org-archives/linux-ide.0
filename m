@@ -1,75 +1,79 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata_piix, laptop cdrom, ICH7: EH, limiting speed to PIO
-Date: Mon, 17 Sep 2007 13:37:14 +0200
-Message-ID: <46EE66EA.3090902@gmail.com>
-References: <20070911212030.GA2817@slk.laptop>	 <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com>	 <20070912200706.GA2620@slk.laptop> <46E849B7.9040402@googlemail.com>	 <20070912212025.GB2620@slk.laptop> <46E8663E.3080205@googlemail.com>	 <46ED19F0.8060205@gmail.com> <ac0be4d70709170257o62e856f4re049c968ab5590a7@mail.gmail.com>
+Subject: Re: [PATCH 1/1] pata_it821x: fix lost interrupt with atapi devices
+Date: Mon, 17 Sep 2007 13:46:01 +0200
+Message-ID: <46EE68F9.9050707@gmail.com>
+References: <200709041607.l84G7KsT032647@norden.math.tntech.edu>	<18141.42848.537873.349518@alkaid.it.uu.se> <20070906013929.1621849d@the-village.bc.nu> <46EE09D3.9010201@gmail.com> <46EE5033.7060708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:32377 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262AbXIQLjJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:39:09 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2002637wah
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:39:09 -0700 (PDT)
-In-Reply-To: <ac0be4d70709170257o62e856f4re049c968ab5590a7@mail.gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.191]:44109 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbXIQLr6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:47:58 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1282195rvb
+        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:47:57 -0700 (PDT)
+In-Reply-To: <46EE5033.7060708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Dolgov <dolgovs@gmail.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Norden <jeff@math.tntech.edu>, alan@redhat.com, linux-kernel@vger.kernel.org, Albert CC Lee <albertcc@tw.ibm.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Sergey Dolgov wrote:
-> On 9/16/07, Tejun Heo <htejun@gmail.com> wrote:
->> Michal Piotrowski wrote:
->>> Sergey Dolgov pisze:
->>>> On Wed, Sep 12, 2007 at 10:19:03PM +0200, Michal Piotrowski wrote:
->>>>> Sergey Dolgov pisze:
->>>>>> Hi Michal,
->>>>>>
->>>>>> On Wed, Sep 12, 2007 at 06:33:20PM +0200, Michal Piotrowski wrote:
->>>>>>> Hi Sergey,
->>>>>>>
->>>>>>> On 11/09/2007, Sergey Dolgov <dolgovs@gmail.com> wrote:
->>>>>>>> Hi!
->>>>>>>>
->>>>>>>> On my hp nx7300 laptop, 2 following scenarios can happen during bootup
->>>>>>>> (see attachments for the full logs): the "good" one [1] and the one
->>>>>>>> where multiple EHs lead to limiting the speed [2].
->>>>>>>>
->>>>>>>> [1] one is more rare, but it seems to be persistent over reboots: once
->>>>>>>> it happened, just rebooting the machine always results in behaviour
->>>>>>>> like [1].
->>>>>>>>
->>>>>>>> [1] results in a working cdrom from the start. An attempt to use cdrom
->>>>>>>> after [2] happened results in even more EHs, resulting in "configured
->>>>>>>> for PIO4", after which the cdrom is finaly working.
->>>>>>>>
->>>>>>>> The version I'm using is 2.6.23-rc6, but the same used to happen with
->>>>>>>> the previous rc's, and probably with 2.6.22 too (I can check).
->>>>>>> It would be great if you could check it.
->>>>>> I've just built 2.6.22.6 with basically the same configuration, and
->>>>>> the behaviour is just the same, i.e. both [1] and [2] still can
->>>>>> happen.
->>>>> Ok, thanks.
->>>>>
->>>>> BTW please check cables and PCU.
->>>> What's a PCU?
->>> s/PCU/PSU - power supply unit
->>>
->>>> BTW, this only happens when using libata of course. The
->>>> old CONFIG_IDE stuff works fine every time.
->>> This maybe one of libata weirdness (I really don't get it why some hardware
->>> works perfectly fine with an old IDE and don't work well with libata).
->> Hmmm... Is MWDMA2 mode used with ide driver too?
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> [cc'ing Albert and linux-ide]
 >>
+>> Alan Cox wrote:
+>>> /from the media. */
+>>>>  > +    if (qc->nbytes < 2048)
+>>>>  > +        return -EOPNOTSUPP;
+>>>>  > +
+>>>>  >      /* No ATAPI DMA in smart mode */
+>>>>  >      if (itdev->smart)
+>>>>  >          return -EOPNOTSUPP;
+>>>>  >
+>>>> This looks like a gross hack. Aren't you supposed to inspect
+>>>> the command instead and whitelist the ones you know are OK,
+>>>> like pata_pdc2027x.c and sata_promise.c do?
+>>> It does seem to be about transfer size in the IT821x case not commands.
+>>> It may be to do with how we issue ATAPI command transfer sizes from high
+>>> up (patch went to Jeff) but for now this is definitely the right
+>>> approach
+>>>
+>>> Reviewed-by: Alan Cox <alan@redhat.com>
+>>
+>> I wonder whether we should be using similar check in generic path too.
+>> We have quite a few cases where MWDMA ATAPI devices choking on commands
+>> with small transfer sizes.  I don't think we'll experience significant
+>> performance regression with this applied and even if there is some, it's
+>> far better to have slightly slower working device.
+>>
+>> What do you guys think?
 > 
-> What's the best way to tell whether it does or not? (the log says
-> "selected mode 0x22", see below)
+> Need to look at, or know, a standard profile of submitted commands. It's
+> quite possible some high performance commands want this, where possible.
 
-Yes, that's MWDMA2.  Hmm... We're seeing many cases where MWDMA doesn't
-work with libata while it works fine with IDE but have no idea what's
-going on yet.  :-(
+Yeah, agreed.  I'm quite confused what's going on with all these MWDMA
+failures and would really like to know what's broken.  The reason can be
+one of the following two.
+
+1. libata itself isn't doing anything wrong but using SCSI for mid and
+high level drivers are causing problems as more types of commands are used.
+
+2. Mode programming for MWDMA is broken.  This doesn't seem too likely
+as we're seeing MWDMA failures across different low level drivers but is
+still a possibility.
+
+However, it's now like drivers/ide drivers didn't have MWDMA problems.
+Some drives show similar behavior on IDE too.  It's less noticeable
+because IDE is much quicker to downstep to PIO mode.  libata EH logic
+definitely can use some improvements here.
+
+I think the correct thing to do regarding command DMA filtering is to
+follow what the other OS does.  Apparently, that's all ATAPI device
+vendors test against.
+
+Thanks.
 
 -- 
 tejun
