@@ -1,41 +1,75 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 7/10] ide: add ->chipset field to ide_pci_device_t
-Date: Mon, 17 Sep 2007 13:09:30 +0200
-Message-ID: <200709171309.30705.bzolnier@gmail.com>
-References: <200709112339.34991.bzolnier@gmail.com> <46EC1459.8000709@ru.mvista.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata_piix, laptop cdrom, ICH7: EH, limiting speed to PIO
+Date: Mon, 17 Sep 2007 13:37:14 +0200
+Message-ID: <46EE66EA.3090902@gmail.com>
+References: <20070911212030.GA2817@slk.laptop>	 <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com>	 <20070912200706.GA2620@slk.laptop> <46E849B7.9040402@googlemail.com>	 <20070912212025.GB2620@slk.laptop> <46E8663E.3080205@googlemail.com>	 <46ED19F0.8060205@gmail.com> <ac0be4d70709170257o62e856f4re049c968ab5590a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:28266 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752886AbXIQLHH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:07:07 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1117543nfb
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:07:07 -0700 (PDT)
-In-Reply-To: <46EC1459.8000709@ru.mvista.com>
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.181]:32377 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753262AbXIQLjJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:39:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2002637wah
+        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:39:09 -0700 (PDT)
+In-Reply-To: <ac0be4d70709170257o62e856f4re049c968ab5590a7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergey Dolgov <dolgovs@gmail.com>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Saturday 15 September 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
+Sergey Dolgov wrote:
+> On 9/16/07, Tejun Heo <htejun@gmail.com> wrote:
+>> Michal Piotrowski wrote:
+>>> Sergey Dolgov pisze:
+>>>> On Wed, Sep 12, 2007 at 10:19:03PM +0200, Michal Piotrowski wrote:
+>>>>> Sergey Dolgov pisze:
+>>>>>> Hi Michal,
+>>>>>>
+>>>>>> On Wed, Sep 12, 2007 at 06:33:20PM +0200, Michal Piotrowski wrote:
+>>>>>>> Hi Sergey,
+>>>>>>>
+>>>>>>> On 11/09/2007, Sergey Dolgov <dolgovs@gmail.com> wrote:
+>>>>>>>> Hi!
+>>>>>>>>
+>>>>>>>> On my hp nx7300 laptop, 2 following scenarios can happen during bootup
+>>>>>>>> (see attachments for the full logs): the "good" one [1] and the one
+>>>>>>>> where multiple EHs lead to limiting the speed [2].
+>>>>>>>>
+>>>>>>>> [1] one is more rare, but it seems to be persistent over reboots: once
+>>>>>>>> it happened, just rebooting the machine always results in behaviour
+>>>>>>>> like [1].
+>>>>>>>>
+>>>>>>>> [1] results in a working cdrom from the start. An attempt to use cdrom
+>>>>>>>> after [2] happened results in even more EHs, resulting in "configured
+>>>>>>>> for PIO4", after which the cdrom is finaly working.
+>>>>>>>>
+>>>>>>>> The version I'm using is 2.6.23-rc6, but the same used to happen with
+>>>>>>>> the previous rc's, and probably with 2.6.22 too (I can check).
+>>>>>>> It would be great if you could check it.
+>>>>>> I've just built 2.6.22.6 with basically the same configuration, and
+>>>>>> the behaviour is just the same, i.e. both [1] and [2] still can
+>>>>>> happen.
+>>>>> Ok, thanks.
+>>>>>
+>>>>> BTW please check cables and PCU.
+>>>> What's a PCU?
+>>> s/PCU/PSU - power supply unit
+>>>
+>>>> BTW, this only happens when using libata of course. The
+>>>> old CONFIG_IDE stuff works fine every time.
+>>> This maybe one of libata weirdness (I really don't get it why some hardware
+>>> works perfectly fine with an old IDE and don't work well with libata).
+>> Hmmm... Is MWDMA2 mode used with ide driver too?
+>>
 > 
-> > Add ->chipset field to ide_pci_device_t and use it in ide_hwif_configure()
-> > to set hwif->chipset.  Convert cmd64x, cy82c693, rz1000 and trm290 host
-> > drivers to use this new ability.
-> 
-> > While at it define hwif_chipset_t as u8 to save some space in hw_regs_t,
-> > ide_hwif_t and ide_pci_device_t instances.
-> 
->     I( wonder what's so special about say cmd64x_chipset -- why it's got its 
-> own value?  Some histerical raisins? :-)
+> What's the best way to tell whether it does or not? (the log says
+> "selected mode 0x22", see below)
 
-It seems that ide_cmd646 causes serialization of interfaces in init_irq()...
-Would be great if somebody could comment more on the reasons for ide_cmd646.
+Yes, that's MWDMA2.  Hmm... We're seeing many cases where MWDMA doesn't
+work with libata while it works fine with IDE but have no idea what's
+going on yet.  :-(
 
-Thanks,
-Bart
+-- 
+tejun
