@@ -1,66 +1,41 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Mon, 17 Sep 2007 12:38:50 +0200
-Message-ID: <200709171238.50304.bzolnier@gmail.com>
+Subject: Re: [PATCH 7/10] ide: add ->chipset field to ide_pci_device_t
+Date: Mon, 17 Sep 2007 13:09:30 +0200
+Message-ID: <200709171309.30705.bzolnier@gmail.com>
+References: <200709112339.34991.bzolnier@gmail.com> <46EC1459.8000709@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:27223 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.190]:28266 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbXIQLHB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:07:01 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1117545nfb
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:07:01 -0700 (PDT)
+	with ESMTP id S1752886AbXIQLHH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 07:07:07 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1117543nfb
+        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 04:07:07 -0700 (PDT)
+In-Reply-To: <46EC1459.8000709@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
+On Saturday 15 September 2007, Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > Add ->chipset field to ide_pci_device_t and use it in ide_hwif_configure()
+> > to set hwif->chipset.  Convert cmd64x, cy82c693, rz1000 and trm290 host
+> > drivers to use this new ability.
+> 
+> > While at it define hwif_chipset_t as u8 to save some space in hw_regs_t,
+> > ide_hwif_t and ide_pci_device_t instances.
+> 
+>     I( wonder what's so special about say cmd64x_chipset -- why it's got its 
+> own value?  Some histerical raisins? :-)
 
-Please pull from:
+It seems that ide_cmd646 causes serialization of interfaces in init_irq()...
+Would be great if somebody could comment more on the reasons for ide_cmd646.
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/ide-disk.c |    1 +
- drivers/ide/ppc/pmac.c |    2 --
- 2 files changed, 1 insertions(+), 2 deletions(-)
-
-
-Jorge Juan Chico (1):
-      ide: ST320413A has the same problem as ST340823A
-
-Stephen Rothwell (1):
-      ide: remove unused variables from drivers/ide/ppc/pmac.c
-
-
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index eba1adb..4754769 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -487,6 +487,7 @@ static inline int idedisk_supports_lba48(const struct hd_driveid *id)
-  */
- static const struct drive_list_entry hpa_list[] = {
- 	{ "ST340823A",	NULL },
-+	{ "ST320413A",	NULL },
- 	{ NULL,		NULL }
- };
- 
-diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
-index 4b13cd9..f19eb6d 100644
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1802,9 +1802,7 @@ pmac_ide_dma_check(ide_drive_t *drive)
- {
- 	struct hd_driveid *id = drive->id;
- 	ide_hwif_t *hwif = HWIF(drive);
--	pmac_ide_hwif_t* pmif = (pmac_ide_hwif_t *)hwif->hwif_data;
- 	int enable = 1;
--	int map;
- 	drive->using_dma = 0;
- 	
- 	if (drive->media == ide_floppy)
+Thanks,
+Bart
