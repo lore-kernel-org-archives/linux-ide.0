@@ -1,58 +1,114 @@
-From: "Andrew Paprocki" <andrew.m.paprocki@gmail.com>
-Subject: Re: 2.6.22.6 sata_sil device errors & timeouts
-Date: Mon, 17 Sep 2007 17:06:40 -0400
-Message-ID: <76366b180709171406g61f09f39la8deeb3201ad0e37@mail.gmail.com>
-References: <76366b180709170135v6c46f3d6qd3586ea79f9abc2@mail.gmail.com>
-	 <46EE4679.7030600@gmail.com>
-	 <76366b180709170904i7b2f5ab0o8605eb899d20f921@mail.gmail.com>
-	 <46EEB449.8010305@gmail.com>
-	 <76366b180709171205v5783fb9ave52b7e999da96f07@mail.gmail.com>
-	 <76366b180709171226j5a299502q1a13f158d9b704aa@mail.gmail.com>
-	 <Pine.LNX.4.63.0709171433120.28104@trinity.phys.uwm.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Emil Medve <Emilian.Medve@Freescale.com>
+Subject: [PATCH] [POWERPC] Fix build errors when BLOCK=n
+Date: Mon, 17 Sep 2007 16:58:33 -0500
+Message-ID: <11900663131073-git-send-email-Emilian.Medve@Freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.233]:33646 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760188AbXIQVGm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 17:06:42 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so1813732qbe
-        for <linux-ide@vger.kernel.org>; Mon, 17 Sep 2007 14:06:40 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.63.0709171433120.28104@trinity.phys.uwm.edu>
-Content-Disposition: inline
+Received: from az33egw01.freescale.net ([192.88.158.102]:54910 "EHLO
+	az33egw01.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760318AbXIQWC6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Sep 2007 18:02:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: paulus@samba.org, kumar.gala@Freescale.com, linuxppc-dev@ozlabs.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+Cc: Emil Medve <Emilian.Medve@Freescale.com>
 
-Bruce,
+These are the symptom error messages:
 
-Just built it -- it eliminated the HSM violations, but I still get the
-device errors:
+  CC      arch/powerpc/kernel/setup_32.o
+In file included from include/linux/blkdev.h:17,
+                 from include/linux/ide.h:13,
+                 from arch/powerpc/kernel/setup_32.c:13:
+include/linux/bsg.h:67: warning: 'struct request_queue' declared inside parameter list
+include/linux/bsg.h:67: warning: its scope is only this definition or declaration, which is probably not what you want
+include/linux/bsg.h:71: warning: 'struct request_queue' declared inside parameter list
+In file included from arch/powerpc/kernel/setup_32.c:13:
+include/linux/ide.h:857: error: field 'wrq' has incomplete type
 
-smartmontools release 5.38 dated 2006/12/20 at 20:37:59 UTC
-(I see the above date, even though I verified it is built from CVS head)
+  CC      arch/powerpc/kernel/ppc_ksyms.o
+In file included from include/linux/blkdev.h:17,
+                 from include/linux/ide.h:13,
+                 from arch/powerpc/kernel/ppc_ksyms.c:15:
+include/linux/bsg.h:67: warning: 'struct request_queue' declared inside parameter list
+include/linux/bsg.h:67: warning: its scope is only this definition or declaration, which is probably not what you want
+include/linux/bsg.h:71: warning: 'struct request_queue' declared inside parameter list
+In file included from arch/powerpc/kernel/ppc_ksyms.c:15:
+include/linux/ide.h:857: error: field 'wrq' has incomplete type
 
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata2.00: cmd b0/db:f8:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
-         res 51/04:f8:00:4f:c2/00:00:00:00:00/00 Emask 0x1 (device error)
-ata2.00: configured for UDMA/100
-ata2: EH complete
+The fix tries to use the smallest scope CONFIG_* symbols that will fix the build
+problem. In this case <linux/ide.h> needs to be included only if IDE=y or
+IDE=m were selected. Also, ppc_ide_md is needed only if BLK_DEV_IDE=y or
+BLK_DEV_IDE=m
 
-This is what it is in smartd.conf:
-/dev/sda -d ata -a -o on -S on
-/dev/sdb -d ata -a -o on -S on
-/dev/sdc -d ata -a -o on -S on
+Signed-off-by: Emil Medve <Emilian.Medve@Freescale.com>
+---
 
-Thanks, -Andrew
+I tested that the code builds with this patch in various combinations of
+configuration options: all the combinations involving BLOCK, IDE and BLK_DEV_IDE
 
-On 9/17/07, Bruce Allen <ballen@gravity.phys.uwm.edu> wrote:
-> Hi Andrew,
->
-> Please build the CVS version (unreleased) of smartmontools.  The versions
-> below are dated 2006/12/20 and 2006/04/12.  You need to build a code
-> version based on the past few weeks of code.
->
-> Cheers,
->         Bruce
+A patch for the warnings above has been already commited here: http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=49892223f7d3a2333ef9e6cbdd526676e1fc517a
+
+This a patch against Paul's tree (01f1c735f57548e6b862e815cc845e452405643d)
+
+powerpc> scripts/checkpatch.pl 0001-POWERPC-Fix-build-errors-when-BLOCK-n.patch 
+Your patch has no obvious style problems and is ready for submission.
+
+ arch/powerpc/kernel/ppc_ksyms.c |    5 ++++-
+ arch/powerpc/kernel/setup_32.c  |    4 ++++
+ 2 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/arch/powerpc/kernel/ppc_ksyms.c b/arch/powerpc/kernel/ppc_ksyms.c
+index 430c502..ba3a928 100644
+--- a/arch/powerpc/kernel/ppc_ksyms.c
++++ b/arch/powerpc/kernel/ppc_ksyms.c
+@@ -12,12 +12,15 @@
+ #include <linux/irq.h>
+ #include <linux/pci.h>
+ #include <linux/delay.h>
++#if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE)
+ #include <linux/ide.h>
++#endif
+ #include <linux/bitops.h>
+ 
+ #include <asm/page.h>
+ #include <asm/semaphore.h>
+ #include <asm/processor.h>
++#include <asm/cacheflush.h>
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+ #include <asm/atomic.h>
+@@ -95,7 +98,7 @@ EXPORT_SYMBOL(__strnlen_user);
+ EXPORT_SYMBOL(copy_4K_page);
+ #endif
+ 
+-#if defined(CONFIG_PPC32) && (defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE))
++#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+ EXPORT_SYMBOL(ppc_ide_md);
+ #endif
+ 
+diff --git a/arch/powerpc/kernel/setup_32.c b/arch/powerpc/kernel/setup_32.c
+index a288a5f..3d46a30 100644
+--- a/arch/powerpc/kernel/setup_32.c
++++ b/arch/powerpc/kernel/setup_32.c
+@@ -10,7 +10,9 @@
+ #include <linux/reboot.h>
+ #include <linux/delay.h>
+ #include <linux/initrd.h>
++#if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE)
+ #include <linux/ide.h>
++#endif
+ #include <linux/tty.h>
+ #include <linux/bootmem.h>
+ #include <linux/seq_file.h>
+@@ -49,7 +51,9 @@
+ 
+ extern void bootx_init(unsigned long r4, unsigned long phys);
+ 
++#if defined(CONFIG_BLK_DEV_IDE) || defined(CONFIG_BLK_DEV_IDE_MODULE)
+ struct ide_machdep_calls ppc_ide_md;
++#endif
+ 
+ int boot_cpuid;
+ EXPORT_SYMBOL_GPL(boot_cpuid);
+-- 
+1.5.3.GIT
+
