@@ -1,105 +1,53 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH ver2 1/2] libata-scsi: Remove !use_sg code paths
-Date: Tue, 18 Sep 2007 17:46:12 +0200
-Message-ID: <46EFF2C4.8050204__17961.7236172364$1190132216$gmane$org@panasas.com>
-References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com> <46E72E4F.9020508@garzik.org>
+From: Sergey Dolgov <dolgovs@gmail.com>
+Subject: Re: ata_piix, laptop cdrom, ICH7: EH, limiting speed to PIO
+Date: Tue, 18 Sep 2007 22:05:25 +0400
+Message-ID: <20070918180525.GA21130@slk.laptop>
+References: <6bffcb0e0709120933p6d58127fv3c85076fe41daaca@mail.gmail.com> <20070912200706.GA2620@slk.laptop> <46E849B7.9040402@googlemail.com> <20070912212025.GB2620@slk.laptop> <46E8663E.3080205@googlemail.com> <46ED19F0.8060205@gmail.com> <ac0be4d70709170257o62e856f4re049c968ab5590a7@mail.gmail.com> <46EE66EA.3090902@gmail.com> <ac0be4d70709170505l6c4bba29pc8ad1c92fcb16ae9@mail.gmail.com> <f19298770709171018x6c4a150yfe6e490d7cc1721b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sa3.bezeqint.net ([192.115.104.17]:46258 "EHLO sa3.bezeqint.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755218AbXIRQQW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Sep 2007 12:16:22 -0400
-In-Reply-To: <46E72E4F.9020508@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761913AbXIRSGM@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <f19298770709171018x6c4a150yfe6e490d7cc1721b@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
+On Mon, Sep 17, 2007 at 09:18:26PM +0400, Alexey Zaytsev wrote:
+> On 9/17/07, Sergey Dolgov <dolgovs@gmail.com> wrote:
+> > On 9/17/07, Tejun Heo <htejun@gmail.com> wrote:
+> >
+> > [...]
+> > > >>>> BTW, this only happens when using libata of course. The
+> > > >>>> old CONFIG_IDE stuff works fine every time.
+> > > >>> This maybe one of libata weirdness (I really don't get it why some hardware
+> > > >>> works perfectly fine with an old IDE and don't work well with libata).
+> > > >> Hmmm... Is MWDMA2 mode used with ide driver too?
+> > > >>
+> > > >
+> > > > What's the best way to tell whether it does or not? (the log says
+> > > > "selected mode 0x22", see below)
+> > >
+> > > Yes, that's MWDMA2.  Hmm... We're seeing many cases where MWDMA doesn't
+> > > work with libata while it works fine with IDE but have no idea what's
+> > > going on yet.  :-(
+> > >
+> >
+> 
+> This may be well a hardware problem. Same laptop (HP nx7300 GB848ES)
+> works fine with either 2.6.22 and 2.6.23-rc. Maybe actually using the
+> DVD is required to trigger the problem on the next reboot?
 
-     This is a minimal patch needed to remove use of !use_sg
-     but it is not a complete clean up of the !use_sg paths.
-     Libata-core still has the qc->flags & ATA_QCFLAG_SG
-     and !qc->n_elem code paths. Perhaps an ata maintainer
-     would have a go at it.
+No, that is not required. The problem shows up on a fresh start from
+powered-off state just as well.
 
-     - TODO: further cleanup of qc->flags & ATA_QCFLAG_SG
-       and !qc->n_elem code paths in libata-core
-     - TODO: Use scsi_dma_{map,unmap} where applicable.
----
- drivers/ata/libata-scsi.c |   31 +++++++++----------------------
- 1 files changed, 9 insertions(+), 22 deletions(-)
+> Sergey, btw, on this laptop I've observed lockups twice with the -rc5.
+> After switching to 2.6.22 it was stable for at least one day. Can you
+> confirm or refute this?
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e836476..6145a64 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -450,13 +450,8 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
- 
--		if (cmd->use_sg) {
--			qc->__sg = (struct scatterlist *) cmd->request_buffer;
--			qc->n_elem = cmd->use_sg;
--		} else if (cmd->request_bufflen) {
--			qc->__sg = &qc->sgent;
--			qc->n_elem = 1;
--		}
-+		qc->__sg = (struct scatterlist *) cmd->request_buffer;
-+		qc->n_elem = cmd->use_sg;
- 	} else {
- 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
- 		done(cmd);
-@@ -1504,11 +1499,7 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			goto err_did;
- 		}
- 
--		if (cmd->use_sg)
--			ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
--		else
--			ata_sg_init_one(qc, cmd->request_buffer,
--					cmd->request_bufflen);
-+		ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
- 
- 		qc->dma_dir = cmd->sc_data_direction;
- 	}
-@@ -1562,15 +1553,14 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
- 	u8 *buf;
- 	unsigned int buflen;
- 
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
-+	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
- 
--		sg = (struct scatterlist *) cmd->request_buffer;
-+	if (sg) {
- 		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
- 		buflen = sg->length;
- 	} else {
--		buf = cmd->request_buffer;
--		buflen = cmd->request_bufflen;
-+		buf = NULL;
-+		buflen = 0;
- 	}
- 
- 	*buf_out = buf;
-@@ -1590,12 +1580,9 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
- 
- static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
- {
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
--
--		sg = (struct scatterlist *) cmd->request_buffer;
-+	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
-+	if (sg)
- 		kunmap_atomic(buf - sg->offset, KM_IRQ0);
--	}
- }
- 
- /**
--- 
-1.5.3.1
+I've been using 2.6.23 rcs (rc3, rc6) since August, often for days
+without rebooting the machine. Haven't seen any lockups (except the
+ones on a return from suspend-to-RAM, but that's another story).
 
-
+--
+Sergey
