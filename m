@@ -1,103 +1,108 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: 2.6.22.6 sata_sil device errors & timeouts
-Date: Tue, 18 Sep 2007 10:34:52 -0500 (CDT)
-Message-ID: <Pine.LNX.4.63.0709181032270.17786@trinity.phys.uwm.edu>
-References: <76366b180709170135v6c46f3d6qd3586ea79f9abc2@mail.gmail.com>
- <46EE4679.7030600@gmail.com>  <76366b180709170904i7b2f5ab0o8605eb899d20f921@mail.gmail.com>
-  <46EEB449.8010305@gmail.com>  <76366b180709171205v5783fb9ave52b7e999da96f07@mail.gmail.com>
-  <76366b180709171226j5a299502q1a13f158d9b704aa@mail.gmail.com>
- <Pine.LNX.4.63.0709171433120.28104@trinity.phys.uwm.edu>
- <76366b180709171406g61f09f39la8deeb3201ad0e37@mail.gmail.com>
- <Pine.LNX.4.63.0709180028270.28104@trinity.phys.uwm.edu>
- <76366b180709180736h57f956ccld8fba04070f02408@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH ver2 2/2] libata-scsi: convert to use the data buffer accessors
+Date: Tue, 18 Sep 2007 17:48:50 +0200
+Message-ID: <46EFF362.50308__14615.9428557896$1190132198$gmane$org@panasas.com>
+References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com> <46E72E4F.9020508@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.phys.uwm.edu ([129.89.57.159]:56789 "EHLO
-	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757570AbXIRPe6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Sep 2007 11:34:58 -0400
-In-Reply-To: <76366b180709180736h57f956ccld8fba04070f02408@mail.gmail.com>
+Received: from sa3.bezeqint.net ([192.115.104.17]:46346 "EHLO sa3.bezeqint.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755003AbXIRQQW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Sep 2007 12:16:22 -0400
+In-Reply-To: <46E72E4F.9020508@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Paprocki <andrew.m.paprocki@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-Andrew: thanks for isolating this problem.
 
-Tejun: any thoughts?  The STRANGE_BUFFER_LENGTH problem is fixed in the 
-code that Andrew is running.  The problem is provoked with '-o on' which 
-goes via a TASKFILE ioctl.
+  simple search-and-replace of direct scsi_cmnd access to
+  use the data buffer accessors.
 
-Cheers,
- 	Bruce
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/ata/libata-scsi.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
-On Tue, 18 Sep 2007, Andrew Paprocki wrote:
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 6145a64..d23a181 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -450,8 +450,8 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = done;
+ 
+-		qc->__sg = (struct scatterlist *) cmd->request_buffer;
+-		qc->n_elem = cmd->use_sg;
++		qc->__sg = scsi_sglist(cmd);
++		qc->n_elem = scsi_sg_count(cmd);
+ 	} else {
+ 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
+ 		done(cmd);
+@@ -1493,13 +1493,13 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 	/* data is present; dma-map it */
+ 	if (cmd->sc_data_direction == DMA_FROM_DEVICE ||
+ 	    cmd->sc_data_direction == DMA_TO_DEVICE) {
+-		if (unlikely(cmd->request_bufflen < 1)) {
++		if (unlikely(scsi_bufflen(cmd) < 1)) {
+ 			ata_dev_printk(dev, KERN_WARNING,
+ 				       "WARNING: zero len r/w req\n");
+ 			goto err_did;
+ 		}
+ 
+-		ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
++		ata_sg_init(qc, scsi_sglist(cmd), scsi_sg_count(cmd));
+ 
+ 		qc->dma_dir = cmd->sc_data_direction;
+ 	}
+@@ -1553,7 +1553,7 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
+ 	u8 *buf;
+ 	unsigned int buflen;
+ 
+-	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
++	struct scatterlist *sg = scsi_sglist(cmd);
+ 
+ 	if (sg) {
+ 		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+@@ -1580,7 +1580,7 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
+ 
+ static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
+ {
+-	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
++	struct scatterlist *sg = scsi_sglist(cmd);
+ 	if (sg)
+ 		kunmap_atomic(buf - sg->offset, KM_IRQ0);
+ }
+@@ -2383,7 +2383,7 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
+ 	}
+ 
+ 	qc->tf.command = ATA_CMD_PACKET;
+-	qc->nbytes = scmd->request_bufflen;
++	qc->nbytes = scsi_bufflen(scmd);
+ 
+ 	/* check whether ATAPI DMA is safe */
+ 	if (!using_pio && ata_check_atapi_dma(qc))
+@@ -2618,7 +2618,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	case ATA_CMD_WRITE_LONG_ONCE:
+ 		if (tf->protocol != ATA_PROT_PIO || tf->nsect != 1)
+ 			goto invalid_fld;
+-		qc->sect_size = scmd->request_bufflen;
++		qc->sect_size = scsi_bufflen(scmd);
+ 	}
+ 
+ 	/*
+@@ -2648,7 +2648,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	 * TODO: find out if we need to do more here to
+ 	 *       cover scatter/gather case.
+ 	 */
+-	qc->nbytes = scmd->request_bufflen;
++	qc->nbytes = scsi_bufflen(scmd);
+ 
+ 	/* request result TF */
+ 	qc->flags |= ATA_QCFLAG_RESULT_TF;
+-- 
+1.5.3.1
 
-> It appears to be the '-o on' causing the problem. If I remove that,
-> the errors go away. The strange part is that according to the smartctl
-> documentation, my drives support it:
->
-> # smartctl -c /dev/sda
-> smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-7 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
->
-> === START OF READ SMART DATA SECTION ===
-> General SMART Values:
-> Offline data collection status:  (0x00) Offline data collection activity
->                                        was never started.
->                                        Auto Offline Data Collection: Disabled.
-> Self-test execution status:      (   0) The previous self-test routine completed
->                                        without error or no self-test has ever
->                                        been run.
-> Total time to complete Offline
-> data collection:                 (4797) seconds.
-> Offline data collection
-> capabilities:                    (0x5b) SMART execute Offline immediate.
->                                        Auto Offline data collection
-> on/off support.
->                                        Suspend Offline collection upon new
->                                        command.
->                                        Offline surface scan supported.
->                                        Self-test supported.
->                                        No Conveyance Self-test supported.
->                                        Selective Self-test supported.
-> SMART capabilities:            (0x0003) Saves SMART data before entering
->                                        power-saving mode.
->                                        Supports SMART auto save timer.
-> Error logging capability:        (0x01) Error logging supported.
->                                        General Purpose Logging supported.
-> Short self-test routine
-> recommended polling time:        (   1) minutes.
-> Extended self-test routine
-> recommended polling time:        (  80) minutes.
->
-> Thanks, -Andrew
->
-> On 9/18/07, Bruce Allen <ballen@gravity.phys.uwm.edu> wrote:
->> Does removing '-o on' and/or '-S on' eliminate the errors?
->>
->>
->> On Mon, 17 Sep 2007, Andrew Paprocki wrote:
->>
->>> Bruce,
->>>
->>> Just built it -- it eliminated the HSM violations, but I still get the
->>> device errors:
->>>
->>> smartmontools release 5.38 dated 2006/12/20 at 20:37:59 UTC
->>> (I see the above date, even though I verified it is built from CVS head)
->>>
->>> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
->>> ata2.00: cmd b0/db:f8:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
->>>         res 51/04:f8:00:4f:c2/00:00:00:00:00/00 Emask 0x1 (device error)
->>> ata2.00: configured for UDMA/100
->>> ata2: EH complete
->>>
->>> This is what it is in smartd.conf:
->>> /dev/sda -d ata -a -o on -S on
->>> /dev/sdb -d ata -a -o on -S on
->>> /dev/sdc -d ata -a -o on -S on
->>>
->>> Thanks, -Andrew
->
+
