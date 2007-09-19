@@ -1,30 +1,40 @@
-From: Paul Mackerras <paulus@samba.org>
-Subject: Re: [PATCH] [POWERPC] Fix build errors when BLOCK=n
-Date: Wed, 19 Sep 2007 14:49:11 +1000
-Message-ID: <18160.43591.441863.931220@cargo.ozlabs.ibm.com>
-References: <11900663131073-git-send-email-Emilian.Medve@Freescale.com>
+From: robert@robos.org (Robert)
+Subject: Improper disk shutdown with 2.6.22.6?
+Date: Wed, 19 Sep 2007 11:33:06 +0200
+Message-ID: <20070919093306.GA2359@robos.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:34745 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752010AbXISFgb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Sep 2007 01:36:31 -0400
-In-Reply-To: <11900663131073-git-send-email-Emilian.Medve@Freescale.com>
+Received: from proxy3.bredband.net ([195.54.101.73]:49975 "EHLO
+	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235AbXISJeN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Sep 2007 05:34:13 -0400
+Received: from peru.robos.org (83.227.163.7) by proxy3.bredband.net (7.3.127)
+        id 46F02EF100097024 for linux-ide@vger.kernel.org; Wed, 19 Sep 2007 11:33:07 +0200
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Emil Medve <Emilian.Medve@Freescale.com>
-Cc: kumar.gala@Freescale.com, linuxppc-dev@ozlabs.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Emil Medve writes:
+Hello,
 
-> The fix tries to use the smallest scope CONFIG_* symbols that will fix the build
-> problem. In this case <linux/ide.h> needs to be included only if IDE=y or
-> IDE=m were selected. Also, ppc_ide_md is needed only if BLK_DEV_IDE=y or
-> BLK_DEV_IDE=m
+When shutting down this system running Linux 2.6.22.6, I get a warning =
+about
+the possibility that the disks are not properly shut down. When the pow=
+er is
+turned off, it sounds like the disks aren't spun down (but I may be mis=
+taken
+on that point).
 
-It would be nicer to remove the ppc_ide_md stuff from ppc_ksyms.c
-altogether and just put the EXPORT_SYMBOL in setup_32.c.
+http://linux-ata.org/shutdown.html claims that kernels newer than 2.6.2=
+1 will
+always spin down the disks, but is this really the case?
+The manage_start_stop files exist.
 
-Paul.
+Tell me if you'd like more detailed information about configuration and
+hardware.
+
+
+Robert =C3=96stling
+
