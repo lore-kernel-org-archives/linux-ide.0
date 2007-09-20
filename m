@@ -1,103 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Thu, 20 Sep 2007 16:15:27 -0400
-Message-ID: <20070920201527.GA12136@havoc.gtf.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] pata_acpi: Use ata_sff_port_start
+Date: Thu, 20 Sep 2007 13:27:27 -0700
+Message-ID: <20070920132727.db91be81.akpm@linux-foundation.org>
+References: <20070920150415.542a3f49@the-village.bc.nu>
+	<46F2CE39.6090403@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:52939 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751036AbXITUP2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 16:15:28 -0400
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33500 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750933AbXITU1k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 16:27:40 -0400
+In-Reply-To: <46F2CE39.6090403@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
+On Thu, 20 Sep 2007 15:47:05 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-Fixes from Alan, PCI IDs from ATI/AMD.
+> Alan Cox wrote:
+> > Purely a stylistic issue currently but best done while I notice it.
+> > 
+> > Signed-off-by: Alan Cox <alan@redhat.com>
+> > 
+> > diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_acpi.c linux-2.6.23rc6-mm1/drivers/ata/pata_acpi.c
+> > --- linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_acpi.c	2007-09-18 15:32:51.000000000 +0100
+> > +++ linux-2.6.23rc6-mm1/drivers/ata/pata_acpi.c	2007-09-18 16:18:12.000000000 +0100
+> > @@ -270,7 +270,7 @@
+> >  	acpi->mask[0] = pacpi_discover_modes(ap, &ap->device[0]);
+> >  	acpi->mask[1] = pacpi_discover_modes(ap, &ap->device[1]);
+> >  
+> > -	ret = ata_port_start(ap);
+> > +	ret = ata_sff_port_start(ap);
+> >  	if (ret < 0)
+> 
+> I request that somebody send me the pata_acpi driver against 
+> netdev-2.6.git#upstream as an "add driver" patch, complete with all the 
+> changes so far rolled into a single patch...
+> 
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/ahci.c        |   10 ++++++----
- drivers/ata/libata-core.c |    4 ++++
- drivers/ata/libata-sff.c  |    5 ++++-
- 3 files changed, 14 insertions(+), 5 deletions(-)
-
-Alan Cox (2):
-      libata: Update the blacklist with a few more devices
-      libata-sff: Fix documentation
-
-henry su (1):
-      [libata] ahci: add ATI SB800 PCI IDs
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 06f212f..c168203 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -418,10 +418,12 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 
- 	/* ATI */
- 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
--	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700 IDE */
--	{ PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700 AHCI */
--	{ PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700 nraid5 */
--	{ PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700 raid5 */
-+	{ PCI_VDEVICE(ATI, 0x4390), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4391), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4392), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4393), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4394), board_ahci_sb600 }, /* ATI SB700/800 */
-+	{ PCI_VDEVICE(ATI, 0x4395), board_ahci_sb600 }, /* ATI SB700/800 */
- 
- 	/* VIA */
- 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c43de9a..772be09 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3778,6 +3778,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "Maxtor 6L250S0",     "BANC1G10",     ATA_HORKAGE_NONCQ },
- 	{ "Maxtor 6B200M0",	"BANC1BM0",	ATA_HORKAGE_NONCQ },
- 	{ "Maxtor 6B200M0",	"BANC1B10",	ATA_HORKAGE_NONCQ },
-+	{ "Maxtor 7B250S0",	"BANC1B70",	ATA_HORKAGE_NONCQ, },
-+	{ "Maxtor 7B300S0",	"BANC1B70",	ATA_HORKAGE_NONCQ },
-+	{ "Maxtor 7V300F0",	"VA111630",	ATA_HORKAGE_NONCQ },
- 	{ "HITACHI HDS7250SASUN500G 0621KTAWSD", "K2AOAJ0AHITACHI",
- 	 ATA_HORKAGE_NONCQ },
- 	/* NCQ hard hangs device under heavier load, needs hard power cycle */
-@@ -3794,6 +3797,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
- 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
-+	{ "ST3160812AS",	"3.AD",		ATA_HORKAGE_NONCQ, },
- 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
- 
- 	/* devices which puke on READ_NATIVE_MAX */
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 1cce219..8023167 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -297,7 +297,7 @@ void ata_bmdma_start (struct ata_queued_cmd *qc)
- 	dmactl = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
- 	iowrite8(dmactl | ATA_DMA_START, ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
- 
--	/* Strictly, one may wish to issue a readb() here, to
-+	/* Strictly, one may wish to issue an ioread8() here, to
- 	 * flush the mmio write.  However, control also passes
- 	 * to the hardware at this point, and it will interrupt
- 	 * us when we are to resume control.  So, in effect,
-@@ -307,6 +307,9 @@ void ata_bmdma_start (struct ata_queued_cmd *qc)
- 	 * is expected, so I think it is best to not add a readb()
- 	 * without first all the MMIO ATA cards/mobos.
- 	 * Or maybe I'm just being paranoid.
-+	 *
-+	 * FIXME: The posting of this write means I/O starts are
-+	 * unneccessarily delayed for MMIO
- 	 */
- }
- 
+umm, I guess that would be me.  Will try to get onto that today or tomorrow..
