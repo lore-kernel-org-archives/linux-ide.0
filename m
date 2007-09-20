@@ -1,39 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel
- Tolapai
-Date: Thu, 20 Sep 2007 17:35:21 -0400
-Message-ID: <46F2E799.4020303@pobox.com>
-References: <200708302127.19535.jason.d.gaston@intel.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: Add a horkage entry for DRQ mishandling (atapi
+ tapes)
+Date: Thu, 20 Sep 2007 22:42:17 +0100
+Message-ID: <20070920224217.1c89dda9@the-village.bc.nu>
+References: <20070920152751.6b707705@the-village.bc.nu>
+	<46F2E04A.2000201@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55926 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751220AbXITVfY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 17:35:24 -0400
-In-Reply-To: <200708302127.19535.jason.d.gaston@intel.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47460 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752420AbXITVf3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 17:35:29 -0400
+In-Reply-To: <46F2E04A.2000201@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Gaston <jason.d.gaston@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Albert Lee <albertcc@tw.ibm.com>
 
-Jason Gaston wrote:
-> Resend trying to remove 8-bit characters in the email.
-> 
-> This patch adds the Intel Tolapai RAID controller DID's for SATA support.
-> 
-> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
-> 
-> --- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27 18:32:35.000000000 -0700
-> +++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28 16:58:11.000000000 -0700
-> @@ -411,6 +411,8 @@
->  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
->  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
->  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
-> +	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
-> +	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+> According to information I have received, some ATA (and possibly ATAPI?) 
+> devices intentionally return some data in these cases.  In the case of 
+> certain ATA devices, this returned data permits inspection of the 
+> incorrected data.
 
-applied manually, since it conflicted with Tejun's PI patch (not your fault)
+News to me. ATA like ST-506/ST-412 exposes error data on I/O READ/WRITE
+via the READ_BUFFER functionality but its basically useless without a lot
+of knowledge of the drive on anything post ST-412 era.
 
+Got any references ?
 
+The other possibility is to whine but accept it happens - on the other
+hand being lax about HSM errors is asking for corruption and it seems
+to be unique to this tape device.
+
+(and someone please don't tell me early pre ATAPI standard devices are
+trying to return the sense data in this way or I'll be ill)
+
+Alan
