@@ -1,59 +1,65 @@
-From: mel@skynet.ie (Mel Gorman)
-Subject: 2.6.23-rc6-mm1: Build failure on ppc64 drivers/ata/pata_scc.c
-Date: Thu, 20 Sep 2007 14:13:15 +0100
-Message-ID: <20070920131315.GE24105@skynet.ie>
-References: <20070918011841.2381bd93.akpm@linux-foundation.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] libata: Update experimental tags to reflect reality better
+Date: Thu, 20 Sep 2007 14:58:48 +0100
+Message-ID: <20070920145848.763ac782@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:53806 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753434AbXITNNT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 09:13:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20070918011841.2381bd93.akpm@linux-foundation.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47857 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753216AbXITNwN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 09:52:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: linux-ide@vger.kernel.org, jeff@garzik.org, akpm@osdl.org
 
-PPC64 building allmodconfig fails to compile drivers/ata/pata_scc.c . It
-doesn't show up on other arches because this driver is specific to the
-architecture.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-drivers/ata/pata_scc.c: In function `scc_bmdma_status':
-drivers/ata/pata_scc.c:734: error: structure has no member named `active_tag'
-drivers/ata/pata_scc.c: In function `scc_pata_prereset':
-drivers/ata/pata_scc.c:866: warning: passing arg 1 of `ata_std_prereset' from incompatible pointer type
-drivers/ata/pata_scc.c: In function `scc_error_handler':
-drivers/ata/pata_scc.c:908: warning: passing arg 2 of `ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c:908: warning: passing arg 3 of `ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c:908: warning: passing arg 5 of `ata_bmdma_drive_eh' from incompatible pointer type
-make[2]: *** [drivers/ata/pata_scc.o] Error 1
-make[1]: *** [drivers/ata] Error 2
-make: *** [drivers] Error 2
-
-The problem seems to be in git-libata-all.patch but based on similar
-changes in this patch, the following patch should be the fix. 
-
-Signed-off-by: Mel Gorman <mel@csn.ul.ie>
---- 
- drivers/ata/pata_scc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -rup -X /usr/src/patchset-0.6/bin//dontdiff linux-2.6.23-rc6-mm1-025_fix_ppc64_kgdb/drivers/ata/pata_scc.c linux-2.6.23-rc6-mm1-030_fix_ppc64_sata/drivers/ata/pata_scc.c
---- linux-2.6.23-rc6-mm1-025_fix_ppc64_kgdb/drivers/ata/pata_scc.c	2007-09-18 11:29:26.000000000 +0100
-+++ linux-2.6.23-rc6-mm1-030_fix_ppc64_sata/drivers/ata/pata_scc.c	2007-09-20 11:51:01.000000000 +0100
-@@ -731,7 +731,7 @@ static u8 scc_bmdma_status (struct ata_p
- 	void __iomem *mmio = ap->ioaddr.bmdma_addr;
- 	u8 host_stat = in_be32(mmio + SCC_DMA_STATUS);
- 	u32 int_status = in_be32(mmio + SCC_DMA_INTST);
--	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
-+	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 	static int retry = 0;
+diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/Kconfig linux-2.6.23rc6-mm1/drivers/ata/Kconfig
+--- linux.vanilla-2.6.23rc6-mm1/drivers/ata/Kconfig	2007-09-18 15:32:51.000000000 +0100
++++ linux-2.6.23rc6-mm1/drivers/ata/Kconfig	2007-09-19 15:54:54.893211536 +0100
+@@ -201,8 +201,8 @@
+ 	  If unsure, say N.
  
- 	/* return if IOS_SS is cleared */
--- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+ config PATA_ARTOP
+-	tristate "ARTOP 6210/6260 PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
++	tristate "ARTOP 6210/6260 PATA support"
++	depends on PCI
+ 	help
+ 	  This option enables support for ARTOP PATA controllers.
+ 
+@@ -218,8 +218,8 @@
+ 	  If unsure, say N.
+ 
+ config PATA_ATIIXP
+-	tristate "ATI PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
++	tristate "ATI PATA support"
++	depends on PCI
+ 	help
+ 	  This option enables support for the ATI ATA interfaces
+ 	  found on the many ATI chipsets.
+@@ -237,8 +237,8 @@
+ 	  If unsure, say N.
+ 
+ config PATA_CMD64X
+-	tristate "CMD64x PATA support (Very Experimental)"
+-	depends on PCI&& EXPERIMENTAL
++	tristate "CMD64x PATA support"
++	depends on PCI
+ 	help
+ 	  This option enables support for the CMD64x series chips
+ 	  except for the CMD640.
+@@ -300,8 +300,8 @@
+ 	  If unsure, say N.
+ 
+ config PATA_HPT366
+-	tristate "HPT 366/368 PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
++	tristate "HPT 366/368 PATA support"
++	depends on PCI
+ 	help
+ 	  This option enables support for the HPT 366 and 368
+ 	  PATA controllers via the new ATA layer.
