@@ -1,51 +1,179 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata: Add a horkage entry for DRQ mishandling (atapi
- tapes)
-Date: Thu, 20 Sep 2007 15:27:51 +0100
-Message-ID: <20070920152751.6b707705@the-village.bc.nu>
+Subject: [PATCH] hpt37x updates for comment
+Date: Thu, 20 Sep 2007 15:44:39 +0100
+Message-ID: <20070920154439.162e68ae@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44161 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57090 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752410AbXITOVZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 10:21:25 -0400
+	with ESMTP id S1757278AbXITOhZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 10:37:25 -0400
+Received: from the-village.bc.nu (localhost.localdomain [127.0.0.1])
+	by the-village.bc.nu (8.14.1/8.13.8) with ESMTP id l8KEidZ9014330
+	for <linux-ide@vger.kernel.org>; Thu, 20 Sep 2007 15:44:39 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This will allow us to handle the tape drive problems Mark Lord reported
+Split the tuning up so it is a lot more readable
+Don't try and tune the HPT374 twice
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/include/linux/libata.h linux-2.6.23rc6-mm1/include/linux/libata.h
---- linux.vanilla-2.6.23rc6-mm1/include/linux/libata.h	2007-09-18 15:33:00.000000000 +0100
-+++ linux-2.6.23rc6-mm1/include/linux/libata.h	2007-09-19 21:27:34.959820184 +0100
-@@ -316,6 +316,7 @@
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
- 	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
- 	ATA_HORKAGE_HPA_SIZE	= (1 << 5), 	/* Reports native size off by one */
-+	ATA_HORKAGE_DRQ		= (1 << 6),	/* Device forgets to clear DRQ on error */
- 
- 	/* DMA mask for user DMA control: User visible values do not
- 	   renumber */
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/libata-core.c linux-2.6.23rc6-mm1/drivers/ata/libata-core.c
---- linux.vanilla-2.6.23rc6-mm1/drivers/ata/libata-core.c	2007-09-18 15:32:51.000000000 +0100
-+++ linux-2.6.23rc6-mm1/drivers/ata/libata-core.c	2007-09-19 21:49:11.808669192 +0100
-@@ -5099,8 +5151,13 @@
- 		if (unlikely(status & (ATA_ERR | ATA_DF))) {
- 			ata_port_printk(ap, KERN_WARNING, "DRQ=1 with device "
- 					"error, dev_stat 0x%X\n", status);
--			qc->err_mask |= AC_ERR_HSM;
--			ap->hsm_task_state = HSM_ST_ERR;
+diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_hpt37x.c linux-2.6.23rc6-mm1/drivers/ata/pata_hpt37x.c
+--- linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_hpt37x.c	2007-09-18 15:32:51.000000000 +0100
++++ linux-2.6.23rc6-mm1/drivers/ata/pata_hpt37x.c	2007-09-18 16:44:32.000000000 +0100
+@@ -1,5 +1,5 @@
+ /*
+- * Libata driver for the highpoint 37x and 30x UDMA66 ATA controllers.
++ * Libata driver for the highpoint 37x and 30x UDMA ATA controllers.
+  *
+  * This driver is heavily based upon:
+  *
+@@ -844,6 +844,46 @@
+ 	/* Never went stable */
+ 	return 0;
+ }
 +
-+			/* Some tape drives muck this up so don't explode
-+			   in those cases */
-+			if (!(qc->dev->horkage & ATA_HORKAGE_DRQ)) {
-+				qc->err_mask |= AC_ERR_HSM;
-+				ap->hsm_task_state = HSM_ST_ERR;
-+			}
- 			goto fsm_start;
- 		}
++static void *hpt_tune_function(struct pci_dev *dev, int dpll, int clock_slot)
++{
++	static const int MHz[4] = { 33, 40, 50, 66 };
++	/*
++	 *	For non UDMA133 capable devices we should
++	 *	use a 50MHz DPLL by choice
++	 */
++	unsigned int f_low, f_high;
++	int adjust;
++
++	f_low = (MHz[clock_slot] * 48) / MHz[dpll];
++	f_high = f_low + 2;
++	if (clock_slot > 1)
++		f_high += 2;
++	/* Select the DPLL clock. */
++	pci_write_config_byte(dev, 0x5b, 0x21);
++	pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
++
++	for(adjust = 0; adjust < 8; adjust++) {
++		if (hpt37x_calibrate_dpll(dev))
++			break;
++		/* See if it'll settle at a fractionally different clock */
++		if (adjust & 1)
++			f_low -= adjust >> 1;
++		else
++			f_high += adjust >> 1;
++		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
++	}
++	if (adjust == 8) {
++		printk(KERN_WARNING "hpt37x: DPLL did not stabilize.\n");
++		return NULL;
++	}
++	printk(KERN_INFO "hpt37x: Bus clock %dMHz, using DPLL.\n", MHz[dpll]);
++	if (dpll == 3)
++		return hpt37x_timings_66;
++	else
++		return hpt37x_timings_50;
++}
++
+ /**
+  *	hpt37x_init_one		-	Initialise an HPT37X/302
+  *	@dev: PCI device
+@@ -944,7 +984,7 @@
+ 	u8 mcr1;
+ 	u32 freq;
+ 	int prefer_dpll = 1;
+-
++	int hpt374alt = 0;
+ 	unsigned long iobase = pci_resource_start(dev, 4);
  
+ 	const struct hpt_chip *chip_table;
+@@ -1046,16 +1086,28 @@
+ 	if (chip_table == &hpt372a)
+ 		outb(0x0e, iobase + 0x9c);
+ 
++	/*
++	 * PLL must be done once
++	 */
++	 
++	if (chip_table == &hpt374 && PCI_FUNC(dev->devfn) & 1) {
++		/* The HPT374 secondary devfn is tuned to 50MHz when we find
++		   the primary */
++		port_info = *port;
++		port_info.private_data = hpt37x_timings_50;
++	}	
+ 	/* Some devices do not let this value be accessed via PCI space
+ 	   according to the old driver */
+-
+ 	freq = inl(iobase + 0x90);
+ 	if ((freq >> 12) != 0xABCDE) {
+ 		int i;
+ 		u8 sr;
+ 		u32 total = 0;
+-
++		
+ 		printk(KERN_WARNING "pata_hpt37x: BIOS has not set timing clocks.\n");
++		if (hpt374alt == 1)
++			printk(KERN_ERR "pata_hpt37x: No saved frequency on primary function.\n");
++
+ 
+ 		/* This is the process the HPT371 BIOS is reported to use */
+ 		for(i = 0; i < 128; i++) {
+@@ -1074,48 +1126,19 @@
+ 
+ 	clock_slot = hpt37x_clock_slot(freq, chip_table->base);
+ 	if (chip_table->clocks[clock_slot] == NULL || prefer_dpll) {
+-		/*
+-		 *	We need to try PLL mode instead
+-		 *
+-		 *	For non UDMA133 capable devices we should
+-		 *	use a 50MHz DPLL by choice
+-		 */
+-		unsigned int f_low, f_high;
+-		int dpll, adjust;
+-
+ 		/* Compute DPLL */
+-		dpll = (port->udma_mask & 0xC0) ? 3 : 2;
+-
+-		f_low = (MHz[clock_slot] * 48) / MHz[dpll];
+-		f_high = f_low + 2;
+-		if (clock_slot > 1)
+-			f_high += 2;
+-
+-		/* Select the DPLL clock. */
+-		pci_write_config_byte(dev, 0x5b, 0x21);
+-		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
+-
+-		for(adjust = 0; adjust < 8; adjust++) {
+-			if (hpt37x_calibrate_dpll(dev))
+-				break;
+-			/* See if it'll settle at a fractionally different clock */
+-			if (adjust & 1)
+-				f_low -= adjust >> 1;
+-			else
+-				f_high += adjust >> 1;
+-			pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
+-		}
+-		if (adjust == 8) {
+-			printk(KERN_ERR "pata_hpt37x: DPLL did not stabilize!\n");
+-			return -ENODEV;
++		int dpll = 2;
++		if (port->udma_mask & 0xC0)
++  			dpll = 3;
++		private_data = hpt_tune_function(dev, dpll, clock_slot);
++		/* For the HPT374 tune both channels together from fn 0 */
++		if (chip_table == &hpt374 && !(PCI_FUNC(dev->devfn) & 1)) {
++			struct pci_dev *pair = pci_get_slot(dev->bus, dev->devfn + 1);
++			if (pair != NULL) {
++				hpt_tune_function(pair, dpll, clock_slot);
++				pci_dev_put(pair);
++			}
+ 		}
+-		if (dpll == 3)
+-			private_data = (void *)hpt37x_timings_66;
+-		else
+-			private_data = (void *)hpt37x_timings_50;
+-
+-		printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using %dMHz DPLL.\n",
+-		       MHz[clock_slot], MHz[dpll]);
+ 	} else {
+ 		private_data = (void *)chip_table->clocks[clock_slot];
+ 		/*
