@@ -1,40 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
-Date: Thu, 20 Sep 2007 18:00:17 -0400
-Message-ID: <46F2ED71.3070603@pobox.com>
-References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
+ 2
+Date: Thu, 20 Sep 2007 18:04:22 -0400
+Message-ID: <46F2EE66.9060207@garzik.org>
+References: <20070915030154.GA17655@srcf.ucam.org> <20070915170652.GA25504@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36635 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750913AbXITWAV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 18:00:21 -0400
-In-Reply-To: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20070915170652.GA25504@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Len Brown <lenb@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <htejun@gmail.com>
 
-Shaohua Li wrote:
-> ACPI spec (ver 3.0a, p289) requires IDE power on/off executes ACPI _PSx
-> methods. As recently most PATA drivers use libata, this patch adds _PSx
-> method support in libata. ACPI spec doesn't mention if SATA requires the
-> same _PSx method, but executing _PSx for SATA should be ok I think.
+Matthew Garrett wrote:
+> Modern laptops with hotswap bays still tend to utilise a PATA interface 
+> on a SATA bridge, generally with the host controller in some legacy 
+> emulation mode rather than AHCI. This means that the existing hotplug 
+> code in libata is unable to work. The ACPI specification states that 
+> these devices can send notifications when hotswapped, which avoids the 
+> need to obtain notification from the controller. This patch uses the 
+> existing libata-acpi code and simply registers a notification in order 
+> to trigger a rescan whenever the firmware signals an event.
 > 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
+> 
+> ---
+> 
+> Testing on an HP with the hotplug device as the slave on a PATA channel 
+> flagged a bug - the notification needs to be tied to the channel handle 
+> as well as the device ones. With this version, I can happily hotswap the 
+> HP device. It ends up sitting for a few seconds while failing to 
+> revalidate, but then recovers with everything working fine.
 
-ahci and sata_sil24 directly power off components, so it seems quite 
-unwise for "modern" SATA controllers.
+the code looks correct.  I have one main reservation.
 
-ISTR Tejun, when he cleaned up libata-acpi, finally figured out a good 
-way to distinguish ACPI's idea of "IDE" -- which sometimes includes the 
-legacy programming mode of SATA controllers, and a controller running a 
-modern programming mode.
+how can we be sure that this is active only where other hand-programmed 
+hotplug code is absent?
 
-Your best bet is to use a similar test when deciding when to execute 
-_PSx.  Or, you could simply be conservative and only do it for PATA.
+ACPI doesn't inherently know which of our controllers are already set up 
+to do hotplug, so it seems like there is a possibility of conflict if 
+both the firmware and the controller are chirping.
 
-outside of those issues, the rest of the patch looks ok.
+If we can quell my fears in that area, I'm ok with the change.
+
+	Jeff
+
+
 
