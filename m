@@ -1,35 +1,39 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: First cut at verifying and validating all the
- id checks.
-Date: Thu, 20 Sep 2007 16:55:37 -0400
-Message-ID: <46F2DE49.1040405@garzik.org>
-References: <20070808144045.5189496b@the-village.bc.nu>
+Subject: Re: [PATCH] libata: Add a horkage entry for DRQ mishandling (atapi
+ tapes)
+Date: Thu, 20 Sep 2007 17:04:10 -0400
+Message-ID: <46F2E04A.2000201@garzik.org>
+References: <20070920152751.6b707705@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51548 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:47704 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750864AbXITUzj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 16:55:39 -0400
-In-Reply-To: <20070808144045.5189496b@the-village.bc.nu>
+	id S1751649AbXITVEP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Sep 2007 17:04:15 -0400
+In-Reply-To: <20070920152751.6b707705@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>, Albert Lee <albertcc@tw.ibm.com>
 
 Alan Cox wrote:
-> - Fix those which require a word is checked for validity
-> - Note limits on version information with ancient ATA
-> - Correct EIDE dword_io check ready for adding 32bit PIO
+> This will allow us to handle the tape drive problems Mark Lord reported
 > 
 > Signed-off-by: Alan Cox <alan@redhat.com>
 
-any update on this?
+According to information I have received, some ATA (and possibly ATAPI?) 
+devices intentionally return some data in these cases.  In the case of 
+certain ATA devices, this returned data permits inspection of the 
+incorrected data.
 
-I definitely agree we should be checking the validity values.
+I dunno about ATAPI devices, but it sounds like returning data here may 
+be an unspecified but known behavior.
+
+As such, it sounds like this warrants some core changes and not simply 
+as a horkage bit?
 
 	Jeff
-
 
 
