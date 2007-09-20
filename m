@@ -1,45 +1,52 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version 2
-Date: Thu, 20 Sep 2007 23:21:39 +0100
-Message-ID: <20070920222138.GA3740@srcf.ucam.org>
-References: <20070915030154.GA17655@srcf.ucam.org> <20070915170652.GA25504@srcf.ucam.org> <46F2EE66.9060207@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
+Date: Thu, 20 Sep 2007 18:40:37 -0400
+Message-ID: <46F2F6E5.3010406@garzik.org>
+References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([78.32.9.130]:58666 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbXITWVt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 18:21:49 -0400
-Content-Disposition: inline
-In-Reply-To: <46F2EE66.9060207@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:36175 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750839AbXITWko (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Sep 2007 18:40:44 -0400
+In-Reply-To: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: akpm@linux-foundation.org, kluo@nvidia.com, pchen@nvidia.com, Robert Hancock <hancockr@shaw.ca>
+Cc: linux-ide@vger.kernel.org, zboszor@dunaweb.hu
 
-On Thu, Sep 20, 2007 at 06:04:22PM -0400, Jeff Garzik wrote:
-
-> the code looks correct.  I have one main reservation.
+akpm@linux-foundation.org wrote:
+> From: Kuan Luo <kluo@nvidia.com>
 > 
-> how can we be sure that this is active only where other hand-programmed 
-> hotplug code is absent?
+> Add the Software NCQ support to sata_nv.c for MCP51/MCP55/MCP61 SATA
+> controller.  NCQ function is disable by default, you can enable it with
+> 'swncq=1'.  NCQ will be turned off if the drive is Maxtor on MCP51 or MCP55
+> rev 0xa2 platform.
+> 
+> [akpm@linux-foundation.org: build fix]
+> Signed-off-by: Kuan Luo <kluo@nvidia.com>
+> Signed-off-by: Peer Chen <pchen@nvidia.com>
+> Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/ata/sata_nv.c |  860 +++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 851 insertions(+), 9 deletions(-)
 
-Yes, that's difficult. As Tejun pointed out, there's missing locking 
-here at the moment - if I add that, am I right in thinking that the 
-worst case scenario is that the hotplugging path will be called twice?
+I finally gave this a thorough review.
 
-One option would be to limit this to PATA-style controllers - I'm not 
-aware of any mobile hardware shipping with natively hotplug-capable 
-controllers, so that would probably do for the moment. If (when) they 
-move to AHCI, with luck the native hotplugging will work and we won't 
-have to worry about this so much.
+Overall, good work.  The state transitions all seem solid.  I made 
+several minor changes and cleanups, and checked it into the 'nv-swncq' 
+branch of 
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
-The alternative would be to add a flag to the ap structure indicating 
-whether the hotplugging is handled by the firmware or not. If we find a 
-reference to a controller or port in the firmware tables, it probably 
-indicates that the hardware has opinions about how this should be 
-handled. We might be safer leaving it to the firmware in those cases, 
-and using that flag to skip the controller-specific hotplug code.
+Two hurdles before I'm ready to push upstream:
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+* someone please verify my minor changes did not break anything; I don't 
+have real hardware
+
+* the pp->lock appears unnecessary at best, wrong at worst.  needs 
+additional analysis.
+
