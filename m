@@ -1,39 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/2 #upstream,REGENERATED] libata: udpate ata_dev_try_classify()
- arguments
-Date: Thu, 20 Sep 2007 17:32:32 -0400
-Message-ID: <46F2E6F0.9020302@garzik.org>
-References: <20070808053739.GS13674@htj.dyndns.org> <46D7DCE5.8090700@garzik.org> <20070902142357.GA21527@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.23-rc4][reRESEND] ahci: RAID mode SATA patch for Intel
+ Tolapai
+Date: Thu, 20 Sep 2007 17:35:21 -0400
+Message-ID: <46F2E799.4020303@pobox.com>
+References: <200708302127.19535.jason.d.gaston@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55890 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:55926 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751380AbXITVcd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Sep 2007 17:32:33 -0400
-In-Reply-To: <20070902142357.GA21527@htj.dyndns.org>
+	id S1751220AbXITVfY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Sep 2007 17:35:24 -0400
+In-Reply-To: <200708302127.19535.jason.d.gaston@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, amsden_linux@earthlink.net
+To: Jason Gaston <jason.d.gaston@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Make ata_dev_try_classify() take a pointer to ata_device instead of
-> ata_port/port_number combination for consistency and add @present
-> argument.  @present indicates whether the device seems present during
-> reset.  It's the result of TF access during softreset and link
-> onlineness during hardreset.  @present will be used to improve
-> diagnostic failure handling.
+Jason Gaston wrote:
+> Resend trying to remove 8-bit characters in the email.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |   30 ++++++++++++++++--------------
->  drivers/ata/pata_scc.c    |    6 ++++--
->  drivers/ata/sata_mv.c     |    2 +-
->  include/linux/libata.h    |    3 ++-
->  4 files changed, 23 insertions(+), 18 deletions(-)
+> This patch adds the Intel Tolapai RAID controller DID's for SATA support.
+> 
+> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
+> 
+> --- linux-2.6.23-rc4/drivers/ata/ahci.c.orig	2007-08-27 18:32:35.000000000 -0700
+> +++ linux-2.6.23-rc4/drivers/ata/ahci.c	2007-08-28 16:58:11.000000000 -0700
+> @@ -411,6 +411,8 @@
+>  	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pi }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pi }, /* ICH9 */
+>  	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pi }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+> +	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
 
-applied 1-2
+applied manually, since it conflicted with Tejun's PI patch (not your fault)
 
 
