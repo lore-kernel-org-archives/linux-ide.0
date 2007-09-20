@@ -1,48 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Add a drivers/ide style  DMA disable
-Date: Thu, 20 Sep 2007 10:18:47 +0900
-Message-ID: <46F1CA77.5080102@gmail.com>
-References: <20070822233710.415faaf0@the-village.bc.nu> <46F145E1.1050107@redhat.com>
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH v2] [POWERPC] Fix build errors when BLOCK=n
+Date: Thu, 20 Sep 2007 10:58:46 +1000
+Message-ID: <18161.50630.769910.207866@cargo.ozlabs.ibm.com>
+References: <1190227172-593-1-git-send-email-Emilian.Medve@Freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.227]:47642 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbXITBSy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Sep 2007 21:18:54 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so308583nze
-        for <linux-ide@vger.kernel.org>; Wed, 19 Sep 2007 18:18:54 -0700 (PDT)
-In-Reply-To: <46F145E1.1050107@redhat.com>
+Received: from ozlabs.org ([203.10.76.45]:54090 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750795AbXITBTD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Sep 2007 21:19:03 -0400
+In-Reply-To: <1190227172-593-1-git-send-email-Emilian.Medve@Freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Emil Medve <Emilian.Medve@Freescale.com>
+Cc: kumar.gala@Freescale.com, linuxppc-dev@ozlabs.org, linuxppc-embedded@ozlabs.org, bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Chuck Ebbert wrote:
-> On 08/22/2007 06:37 PM, Alan Cox wrote:
->> This is useful when debugging, handling problem systems, or for
->> distributions just to get the system installed so it can be sorted
->> out later.
->>
->> This is a bit smarter than the old IDE one and lets you do
->>
->> libata.pata_dma=0		Disable all PATA DMA like old IDE
->> libata.pata_dma=1		Disk DMA only
->> libata.pata_dma=2		ATAPI DMA only
->> libata.pata_dma=4		CF DMA only
->>
->> (or combinations thereof - 0,1,3 being the useful ones I suspect)
->>
-> 
-> This doesn't help distro installers with modular libata, as there's
-> no good way to get the parameter to the driver. (libata.pata_dma=0
-> just causes "unrecognized parameter" message on boot.)
+Emil Medve writes:
 
-Dunno how all those initrd black magics work but SUSE initrd manages to
-deliver "module.param" parameters on kernel command line to respective
-modules in initrd.  I don't think it gets to modules which are loaded
-after root is mounted tho.
+> --- a/arch/powerpc/kernel/ppc_ksyms.c
+> +++ b/arch/powerpc/kernel/ppc_ksyms.c
+> @@ -12,12 +12,15 @@
+>  #include <linux/irq.h>
+>  #include <linux/pci.h>
+>  #include <linux/delay.h>
+> +#if defined(CONFIG_IDE) || defined(CONFIG_IDE_MODULE)
+>  #include <linux/ide.h>
+> +#endif
 
--- 
-tejun
+Why are we still including linux/ide.h at all here?
+
+>  #include <linux/bitops.h>
+>  
+>  #include <asm/page.h>
+>  #include <asm/semaphore.h>
+>  #include <asm/processor.h>
+> +#include <asm/cacheflush.h>
+
+What's the point of adding this?
+
+Paul.
