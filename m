@@ -1,39 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: slightly improved req-sense, send-diag no-ops
-Date: Fri, 21 Sep 2007 07:12:59 -0400
-Message-ID: <46F3A73B.9040309@garzik.org>
-References: <20070921102424.GA17675@havoc.gtf.org> <20070921121717.16c7dcf1@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Fri, 21 Sep 2007 12:27:36 +0100
+Message-ID: <20070921122736.68335e17@the-village.bc.nu>
+References: <200709211327569648280@gmail.com>
+	<20070921103120.GK2367@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070921121717.16c7dcf1@the-village.bc.nu>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48558 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750705AbXIULUy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 07:20:54 -0400
+In-Reply-To: <20070921103120.GK2367@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
->>     REQUEST SENSE -- as we autosense, R.S. just returns zeroes
->>     
->>     SEND DIAGNOSTIC -- our default (no-op) self-test succeeds, all
->>     		   other requests for testing fail.
->>     
->>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
-> 
-> Acked-by: Alan Cox <alan@redhat.com>
-> 
-> Possibly our default SEND_DIAGNOSTIC should turn into smart or just
-> return whether the drive failed the power up diagnostic ?
+On Fri, 21 Sep 2007 12:31:20 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
 
-Either/or.  In general the SAT (SCSI/ATA translation) spec posted 
-publicly on http://www.t10.org/ gives the suggested transformation into 
-ATA commands.  And yep, you guessed it -- send diag morphs into SMART.
+> On Fri, Sep 21 2007, Peer Chen wrote:
+> > According to the description of section 5.2.2.1 and 10.1.2 of AHCI =
+specification rev1_1/rev1_2, GHC.HR shall only be set to =C2=A1=C2=AE1=C2=
+=A1=C2=AF
+> > by software when GHC.AE is set to =C2=A1=C2=AE1=C2=A1=C2=AF.
+> >=20
+> > Signed-off-by: Peer Chen <peerchen@gmail.com>
+> > ---
+> > --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.00=
+0000000 -0400
+> > +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.0000000=
+00 -0400
+> > @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
+> >  	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
+> >  	u32 tmp;
+> > =20
+> > +        /* turn on AHCI mode before controller reset*/
+> > +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
+> > +        (void) readl(mmio + HOST_CTL);  /* flush */
+> > +
+> >  	/* global controller reset */
+> >  	tmp =3D readl(mmio + HOST_CTL);
+> >  	if ((tmp & HOST_RESET) =3D=3D 0) {
+>=20
+> I appreciate the readl() flushes, but in this particular case we end =
+up
+> reading the exact offset again below.
 
-I doubt I'm motivated enough to enhance send diag, but others are 
-encouraged to do so.
+The code above is wrong btw - it is an iomap so both the new and existi=
+ng
+code should be using ioread* not readl
 
-	Jeff
-
-
-
+Alan
