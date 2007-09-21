@@ -1,80 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] libata: improve FORMAT UNIT; minor code cleanups
-Date: Fri, 21 Sep 2007 07:26:56 -0400
-Message-ID: <20070921112656.GA20981@havoc.gtf.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Fri, 21 Sep 2007 13:34:28 +0200
+Message-ID: <20070921113428.GL2367@kernel.dk>
+References: <200709211327569648280@gmail.com> <20070921103120.GK2367@kernel.dk> <20070921122736.68335e17@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([87.55.233.238]:25901 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751078AbXIULdk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Sep 2007 07:33:40 -0400
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20070921122736.68335e17@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
+On Fri, Sep 21 2007, Alan Cox wrote:
+> On Fri, 21 Sep 2007 12:31:20 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+>=20
+> > On Fri, Sep 21 2007, Peer Chen wrote:
+> > > According to the description of section 5.2.2.1 and 10.1.2 of AHC=
+I specification rev1_1/rev1_2, GHC.HR shall only be set to =A1=AE1=A1=AF
+> > > by software when GHC.AE is set to =A1=AE1=A1=AF.
+> > >=20
+> > > Signed-off-by: Peer Chen <peerchen@gmail.com>
+> > > ---
+> > > --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.=
+000000000 -0400
+> > > +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.00000=
+0000 -0400
+> > > @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
+> > >  	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
+> > >  	u32 tmp;
+> > > =20
+> > > +        /* turn on AHCI mode before controller reset*/
+> > > +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
+> > > +        (void) readl(mmio + HOST_CTL);  /* flush */
+> > > +
+> > >  	/* global controller reset */
+> > >  	tmp =3D readl(mmio + HOST_CTL);
+> > >  	if ((tmp & HOST_RESET) =3D=3D 0) {
+> >=20
+> > I appreciate the readl() flushes, but in this particular case we en=
+d up
+> > reading the exact offset again below.
+>=20
+> The code above is wrong btw - it is an iomap so both the new and exis=
+ting
+> code should be using ioread* not readl
 
-commit ee67edb0e7701f8ae9114692837a8bbee9f99a35
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Sep 21 07:26:08 2007 -0400
+Happy converting :-)
 
-    [libata] SCSI: improve FORMAT UNIT; minor code cleanups
-    
-    * SAT specifies that FORMAT UNIT should be translated into a series
-      of READ and WRITE commands that zero the ATA device.  That is far too
-      cumbersome to bother with.
-    
-      Since we don't actually format the device, the old behavior of
-      always returning success was inaccurate.  Change FORMAT UNIT from
-      returning success immediately (old behavior) to always returning
-      an error (new behavior).
-    
-    * Add some comments around SYNCHRONIZE CACHE
-    
-    * Shuffle scsi command code around a bit, so that things are close
-      to alphabetic order.
-    
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+--=20
+Jens Axboe
 
- drivers/ata/libata-scsi.c |   23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
-
-ee67edb0e7701f8ae9114692837a8bbee9f99a35
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 456b75f..cd192c1 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2961,13 +2961,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	args.done = done;
- 
- 	switch(scsicmd[0]) {
--		/* no-op's, complete with success */
--		case SYNCHRONIZE_CACHE:
--		case REZERO_UNIT:
--		case SEEK_6:
--		case SEEK_10:
--		case FORMAT_UNIT:		/* FIXME: correct? */
--			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
-+		/* TODO: worth improving? */
-+		case FORMAT_UNIT:
-+			ata_scsi_invalid_field(cmd, done);
- 			break;
- 
- 		case INQUIRY:
-@@ -3025,6 +3021,19 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			done(cmd);
- 			break;
- 
-+		/* if we reach this, then writeback caching is disabled,
-+		 * turning this into a no-op.
-+		 */
-+		case SYNCHRONIZE_CACHE:
-+			/* fall through */
-+
-+		/* no-op's, complete with success */
-+		case REZERO_UNIT:
-+		case SEEK_6:
-+		case SEEK_10:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
-+			break;
-+
- 		case SEND_DIAGNOSTIC:
- 			tmp8 = scsicmd[1] & ~(1 << 3);
- 			if ((tmp8 == 0x4) && (!scsicmd[3]) && (!scsicmd[4]))
