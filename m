@@ -1,159 +1,85 @@
-From: "Jon Chelton" <jchelton@ffpglobal.com>
-Subject: RE: sata_sil24 with port multiplier
-Date: Fri, 21 Sep 2007 13:41:06 -0400
-Message-ID: <FD6311B7ED175B4480F31633F6098B4D911C4A@ffpglobal_mail.corp.ffplus.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: translate INQUIRY VPD page 89h (ATA info)
+Date: Fri, 21 Sep 2007 16:05:06 -0400
+Message-ID: <46F423F2.40401@garzik.org>
+References: <20070921094825.GA15940@havoc.gtf.org> <1190383924.3333.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:31468
-	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066AbXIURkD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 13:40:03 -0400
-content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1190383924.3333.2.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Thanks Tejun,  
-
-I have applied the patch and rebuilt the module.  I do not seem to be
-getting the same error (although it only shows up during heavy disk
-activity).  But now I am getting a lot of spurious interrupts.
-
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0xc active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x2 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x8 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x2 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x8 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x4 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x2 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x3 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x9 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x5 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x2 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x6 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x0 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0xc active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x1 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0x2 active_tag -84148995 sactive
-0x0)
-ata5: spurious interrupt (slot_stat 0xa active_tag -84148995 sactive
-0x0)
-
-
-Thanks,
-
-Jon
-
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Friday, September 21, 2007 3:55 AM
-To: Jon Chelton
-Cc: linux-ide@vger.kernel.org
-Subject: Re: sata_sil24 with port multiplier
-
-Jon Chelton wrote:
-> Hello,
+James Bottomley wrote:
+> On Fri, 2007-09-21 at 05:48 -0400, Jeff Garzik wrote:
+>> commit a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+>> Author: Jeff Garzik <jeff@garzik.org>
+>> Date:   Fri Sep 21 05:07:19 2007 -0400
+>>
+>>     [libata] SCSI: support INQUIRY page 89h (ATA info page)
+>>     
+>>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+>>
+>>  drivers/ata/libata-scsi.c |   82 +++++++++++++++++++++++++++++++++++++++++++---
+>>  1 file changed, 78 insertions(+), 4 deletions(-)
+>>
+>> a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 7ad046b..bb5a5c1 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1804,6 +1804,71 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+>>  }
+>>  
+>>  /**
+>> + *	ata_scsiop_inq_89 - Simulate INQUIRY VPD page 89, ATA info
+>> + *	@args: device IDENTIFY data / SCSI command of interest.
+>> + *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+>> + *	@buflen: Response buffer length.
+>> + *
+>> + *	Yields SAT-specified ATA VPD page.
+>> + *
+>> + *	LOCKING:
+>> + *	spin_lock_irqsave(host lock)
+>> + */
+>> +
+>> +unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
+>> +			      unsigned int buflen)
+>> +{
+>> +	struct ata_device *dev = args->dev;
+>> +	u8 pbuf[60];
+>> +	bool is_atapi = (dev->class == ATA_DEV_ATAPI);
 > 
->  
+> I thought this was only used in the dev->class == ATA_DEV_ATA leg of the
+> ata_scsi_queuecommand(), so isn't this always false?
+
+Actually, yes, you're right.
+
+
+>> +	struct ata_taskfile tf;
+>> +	unsigned int i;
+>> +
+>> +	if (!buflen)
+>> +		return 0;
+>> +
+>> +	memset(&pbuf, 0, sizeof(pbuf));
+>> +	memset(&tf, 0, sizeof(tf));
+>> +
+>> +	if (is_atapi)
+>> +		pbuf[0] = 0x5;	/* FIXME: hardcodes MMC */
 > 
-> I am having issues using kernel 2.6.22.1 with your latest patch 
-> applied.  I am using a Addonics 4 port SATA card with an external 
-> enclosure  and port multiplier connected to 4 250GB western digital
-SATA
-> drives.   I am receiving this error frequently (on 2 systems with
-> identical kernels and hardware). 
+> Actually, in MMC implementation of INQUIRY per SPC-3 (or earlier if MMC
+> < 5) is mandatory.  The problem cases I can see are non-standard ATAPI
+> devices (probably scanners).
 
-Does the attached patch fix the problem?
+The problem at hand is that the device might -not- be an MMC device at all.
 
---
-tejun
+But it sounds like that stuff can be removed regardless.
+
+	Jeff
+
+
 
