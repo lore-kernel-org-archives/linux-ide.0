@@ -1,60 +1,52 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
-Date: Fri, 21 Sep 2007 13:34:28 +0200
-Message-ID: <20070921113428.GL2367@kernel.dk>
-References: <200709211327569648280@gmail.com> <20070921103120.GK2367@kernel.dk> <20070921122736.68335e17@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] libata: clean up R/W recovery mode page
+Date: Fri, 21 Sep 2007 07:55:25 -0400
+Message-ID: <20070921115525.GA22118@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:25901 "EHLO kernel.dk"
+Received: from havoc.gtf.org ([69.61.125.42]:34140 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbXIULdk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Sep 2007 07:33:40 -0400
+	id S1751917AbXIULzZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Sep 2007 07:55:25 -0400
 Content-Disposition: inline
-In-Reply-To: <20070921122736.68335e17@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Sep 21 2007, Alan Cox wrote:
-> On Fri, 21 Sep 2007 12:31:20 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
->=20
-> > On Fri, Sep 21 2007, Peer Chen wrote:
-> > > According to the description of section 5.2.2.1 and 10.1.2 of AHC=
-I specification rev1_1/rev1_2, GHC.HR shall only be set to =A1=AE1=A1=AF
-> > > by software when GHC.AE is set to =A1=AE1=A1=AF.
-> > >=20
-> > > Signed-off-by: Peer Chen <peerchen@gmail.com>
-> > > ---
-> > > --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.=
-000000000 -0400
-> > > +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.00000=
-0000 -0400
-> > > @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
-> > >  	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
-> > >  	u32 tmp;
-> > > =20
-> > > +        /* turn on AHCI mode before controller reset*/
-> > > +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
-> > > +        (void) readl(mmio + HOST_CTL);  /* flush */
-> > > +
-> > >  	/* global controller reset */
-> > >  	tmp =3D readl(mmio + HOST_CTL);
-> > >  	if ((tmp & HOST_RESET) =3D=3D 0) {
-> >=20
-> > I appreciate the readl() flushes, but in this particular case we en=
-d up
-> > reading the exact offset again below.
->=20
-> The code above is wrong btw - it is an iomap so both the new and exis=
-ting
-> code should be using ioread* not readl
 
-Happy converting :-)
+commit 14052d9ba16b826e4bc79db4b2b77e451faf0b01
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Fri Sep 21 07:54:49 2007 -0400
 
---=20
-Jens Axboe
+    [libata] SCSI: clean up R/W recovery mode page
+    
+    Clear ARRE, we don't do auto-reallocation on reads, just on writes.
+    
+    Also, hardcode the size of the array using RW_RECOVERY_MPAGE_LEN,
+    following the style of the surrounding code.
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
+ drivers/ata/libata-scsi.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+14052d9ba16b826e4bc79db4b2b77e451faf0b01
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index cd192c1..29e2cf6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -71,11 +71,10 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ #define ALL_SUB_MPAGES 0xff
+ 
+ 
+-static const u8 def_rw_recovery_mpage[] = {
++static const u8 def_rw_recovery_mpage[RW_RECOVERY_MPAGE_LEN] = {
+ 	RW_RECOVERY_MPAGE,
+ 	RW_RECOVERY_MPAGE_LEN - 2,
+-	(1 << 7) |	/* AWRE, sat-r06 say it shall be 0 */
+-	    (1 << 6),	/* ARRE (auto read reallocation) */
++	(1 << 7),	/* AWRE */
+ 	0,		/* read retry count */
+ 	0, 0, 0, 0,
+ 	0,		/* write retry count */
