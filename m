@@ -1,152 +1,53 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
-Date: Fri, 21 Sep 2007 10:17:03 +0800
-Message-ID: <1190341023.16930.5.camel@sli10-conroe.sh.intel.com>
-References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
-	 <46F2ED71.3070603@pobox.com>
-	 <1190337402.16463.3.camel@sli10-conroe.sh.intel.com>
-	 <46F32A81.8030508@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
+ 2
+Date: Fri, 21 Sep 2007 11:35:05 +0900
+Message-ID: <46F32DD9.7010509@gmail.com>
+References: <20070915030154.GA17655@srcf.ucam.org> <20070915170652.GA25504@srcf.ucam.org> <46F2EE66.9060207@garzik.org> <20070920222138.GA3740@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46F32A81.8030508@gmail.com>
+In-Reply-To: <20070920222138.GA3740@srcf.ucam.org>
 Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Len Brown <lenb@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, 2007-09-21 at 11:20 +0900, Tejun Heo wrote:
-> Hello,
+Matthew Garrett wrote:
+> On Thu, Sep 20, 2007 at 06:04:22PM -0400, Jeff Garzik wrote:
 > 
-> Shaohua Li wrote:
-> > +	/* channel first and then drives for power on and verse versa for power off */
-> > +	if (state.event == PM_EVENT_ON)
-> > +		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D0);
-> > +
-> > +	if (ap->flags & ATA_FLAG_SLAVE_POSS)
-> > +		max_devices++;
+>> the code looks correct.  I have one main reservation.
+>>
+>> how can we be sure that this is active only where other hand-programmed 
+>> hotplug code is absent?
 > 
-> ata_port_max_devices()?
-ok, fixed.
+> Yes, that's difficult. As Tejun pointed out, there's missing locking 
+> here at the moment - if I add that, am I right in thinking that the 
+> worst case scenario is that the hotplugging path will be called twice?
+
+Yeah, should be and libata EH won't have too much problem handling
+duplicate events.
+
+> One option would be to limit this to PATA-style controllers - I'm not 
+> aware of any mobile hardware shipping with natively hotplug-capable 
+> controllers, so that would probably do for the moment. If (when) they 
+> move to AHCI, with luck the native hotplugging will work and we won't 
+> have to worry about this so much.
 > 
-> > Index: linux/drivers/ata/libata-eh.c
-> > ===================================================================
-> > --- linux.orig/drivers/ata/libata-eh.c	2007-09-14 10:28:25.000000000 +0800
-> > +++ linux/drivers/ata/libata-eh.c	2007-09-21 08:56:40.000000000 +0800
-> > @@ -2349,6 +2349,7 @@ static void ata_eh_handle_port_suspend(s
-> >  	if (ap->ops->port_suspend)
-> >  		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
-> >  
-> > +	ata_acpi_set_state(ap, PMSG_SUSPEND);
-> >   out:
-> >  	/* report result */
-> >  	spin_lock_irqsave(ap->lock, flags);
-> > @@ -2394,6 +2395,8 @@ static void ata_eh_handle_port_resume(st
-> >  
-> >  	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
-> >  
-> > +	ata_acpi_set_state(ap, PMSG_ON);
-> > +
-> >  	if (ap->ops->port_resume)
-> >  		rc = ap->ops->port_resume(ap);
-> 
-> Can these be moved into ata_acpi_on_suspend() and ata_acpi_on_resume()?
->  Or do they have to be placed on the other side of ->port_suspend/resume
-> callbacks?
-I suppose _PSx will shutdown ports. So I want to do PS3 as later as
-possible in suspend, and vice versa in resume.
+> The alternative would be to add a flag to the ap structure indicating 
+> whether the hotplugging is handled by the firmware or not. If we find a 
+> reference to a controller or port in the firmware tables, it probably 
+> indicates that the hardware has opinions about how this should be 
+> handled. We might be safer leaving it to the firmware in those cases, 
+> and using that flag to skip the controller-specific hotplug code.
 
-Thanks,
-Shaohua
+I was thinking the other way around.  I'd rather depend on hardware
+provided events than firmware provided ones.  How about flagging drivers
+which can do native hoplugging and using ACPI hotplugging only if the
+driver can't do it natively?
 
+Thanks.
 
----
- drivers/ata/libata-acpi.c |   34 ++++++++++++++++++++++++++++++++++
- drivers/ata/libata-eh.c   |    3 +++
- drivers/ata/libata.h      |    2 ++
- 3 files changed, 39 insertions(+)
-
-Index: linux/drivers/ata/libata-acpi.c
-===================================================================
---- linux.orig/drivers/ata/libata-acpi.c	2007-09-21 09:23:13.000000000 +0800
-+++ linux/drivers/ata/libata-acpi.c	2007-09-21 10:13:32.000000000 +0800
-@@ -523,6 +523,39 @@ void ata_acpi_on_resume(struct ata_port 
- }
- 
- /**
-+ * ata_acpi_set_state - set the port power state
-+ * @ap: target ATA port
-+ * @state: state, on/off
-+ *
-+ * This function executes the _PS0/_PS3 ACPI method to set the power state.
-+ * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
-+ */
-+void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
-+{
-+	int max_devices, i;
-+
-+	if (!ap->acpi_handle || (ap->flags & ATA_FLAG_ACPI_SATA))
-+		return;
-+
-+	/* channel first and then drives for power on and verse versa for power off */
-+	if (state.event == PM_EVENT_ON)
-+		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D0);
-+
-+	max_devices = ata_port_max_devices(ap);
-+
-+	for (i = 0; i < max_devices; ++i) {
-+		struct ata_device *dev = &ap->device[i];
-+
-+		if (dev->acpi_handle)
-+			acpi_bus_set_power(dev->acpi_handle,
-+				state.event == PM_EVENT_ON ?
-+				ACPI_STATE_D0: ACPI_STATE_D3);
-+	}
-+	if (state.event != PM_EVENT_ON)
-+		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D3);
-+}
-+
-+/**
-  * ata_acpi_on_devcfg - ATA ACPI hook called on device donfiguration
-  * @dev: target ATA device
-  *
-Index: linux/drivers/ata/libata-eh.c
-===================================================================
---- linux.orig/drivers/ata/libata-eh.c	2007-09-21 09:23:13.000000000 +0800
-+++ linux/drivers/ata/libata-eh.c	2007-09-21 10:09:10.000000000 +0800
-@@ -2349,6 +2349,7 @@ static void ata_eh_handle_port_suspend(s
- 	if (ap->ops->port_suspend)
- 		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
- 
-+	ata_acpi_set_state(ap, PMSG_SUSPEND);
-  out:
- 	/* report result */
- 	spin_lock_irqsave(ap->lock, flags);
-@@ -2394,6 +2395,8 @@ static void ata_eh_handle_port_resume(st
- 
- 	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
- 
-+	ata_acpi_set_state(ap, PMSG_ON);
-+
- 	if (ap->ops->port_resume)
- 		rc = ap->ops->port_resume(ap);
- 
-Index: linux/drivers/ata/libata.h
-===================================================================
---- linux.orig/drivers/ata/libata.h	2007-09-21 09:23:13.000000000 +0800
-+++ linux/drivers/ata/libata.h	2007-09-21 10:09:10.000000000 +0800
-@@ -102,11 +102,13 @@ extern void ata_acpi_associate(struct at
- extern int ata_acpi_on_suspend(struct ata_port *ap);
- extern void ata_acpi_on_resume(struct ata_port *ap);
- extern int ata_acpi_on_devcfg(struct ata_device *adev);
-+extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- #else
- static inline void ata_acpi_associate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
- static inline void ata_acpi_on_resume(struct ata_port *ap) { }
- static inline int ata_acpi_on_devcfg(struct ata_device *adev) { return 0; }
-+static inline void ata_acpi_set_state(struct ata_port *ap, pm_message_t state) { }
- #endif
- 
- /* libata-scsi.c */
+-- 
+tejun
