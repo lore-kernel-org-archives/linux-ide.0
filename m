@@ -1,46 +1,139 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] pata_sis: add missing UDMA5 timing value in sis_66_set_dmamode()
-Date: Fri, 21 Sep 2007 16:29:05 +0900
-Message-ID: <20070921072905.GC10660@htj.dyndns.org>
+From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
+Date: Fri, 21 Sep 2007 10:04:23 +0200
+Message-ID: <46F37B07.1020006@dunaweb.hu>
+References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080703060303060501060503"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.228]:18409 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061AbXIUH3P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 03:29:15 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so568700qbe
-        for <linux-ide@vger.kernel.org>; Fri, 21 Sep 2007 00:29:13 -0700 (PDT)
-Content-Disposition: inline
+Received: from linux.dunaweb.hu ([62.77.196.1]:39413 "EHLO linux.dunaweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750718AbXIUIEq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Sep 2007 04:04:46 -0400
+In-Reply-To: <46F35C7F.20400@dunaweb.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, desaster.area@addcom.de, alan@redhat.com, bzolnier@gmail.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, kluo@nvidia.com, pchen@nvidia.com, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-sis_66_set_dmamode() also handles early UDMA100 (SIS630 ET) but is
-missing udma timing value for UDMA100.  According to sis5513, this
-should be 0x8000.  This caused UDMA100 device to fail on pata_sis till
-it downgrades to UDMA66 while it works fine on sis5513 at UDMA100.
+This is a multi-part message in MIME format.
+--------------080703060303060501060503
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Reported by Adam Blech.
+Hi,
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Adam Blech <desaster.area@addcom.de>
----
- drivers/ata/pata_sis.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Zoltan Boszormenyi =EDrta:
+> I will test the code without this locking. Can you give me a better ide=
+a
+> besides beating both my disks with separate requests? Say, bonnie++
+> and simultaneous hdparm -tT on both?
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index da3f720..3b5be77 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -376,8 +376,9 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u16 timing;
+I tested the driver without locking with the above test, it survived nice=
+ly.
+Patch is attached which deletes locking, enables swncq by default and
+a correction to my previous readability cleanup.
+
+Best regards,
+Zolt=E1n B=F6sz=F6rm=E9nyi
+
+
+--------------080703060303060501060503
+Content-Type: text/x-patch;
+ name="sata_nv.c-nolock-swncq-enabled-cleanup.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sata_nv.c-nolock-swncq-enabled-cleanup.patch"
+
+--- linux-2.6.23-rc3-mm1/drivers/ata/sata_nv.c.committed	2007-09-21 08:32:04.000000000 +0200
++++ linux-2.6.23-rc3-mm1/drivers/ata/sata_nv.c	2007-09-21 09:27:49.000000000 +0200
+@@ -279,7 +279,6 @@
  
-+	/* MWDMA 0-2 and UDMA 0-5 */
- 	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
--	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000};
-+	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000, 0x8000 };
+ 	unsigned int	last_issue_tag;
  
- 	pci_read_config_word(pdev, drive_pci, &timing);
+-	spinlock_t	lock;
+ 	/* fifo circular queue to store deferral command */
+ 	struct defer_queue defer_queue;
  
+@@ -637,7 +636,7 @@
+ MODULE_VERSION(DRV_VERSION);
+ 
+ static int adma_enabled = 1;
+-static int swncq_enabled;
++static int swncq_enabled = 1;
+ 
+ static void nv_adma_register_mode(struct ata_port *ap)
+ {
+@@ -1965,7 +1964,6 @@
+ 	pp->sactive_block = ap->ioaddr.scr_addr + 4 * SCR_ACTIVE;
+ 	pp->irq_block = mmio + NV_INT_STATUS_MCP55 + ap->port_no * 2;
+ 	pp->tag_block = mmio + NV_NCQ_REG_MCP55 + ap->port_no * 2;
+-	spin_lock_init(&pp->lock);
+ 
+ 	return 0;
+ }
+@@ -2051,18 +2049,15 @@
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct nv_swncq_port_priv *pp = ap->private_data;
+-	unsigned long flags;
+ 
+ 	if (qc->tf.protocol != ATA_PROT_NCQ)
+ 		return ata_qc_issue_prot(qc);
+ 
+ 	DPRINTK("Enter\n");
+-	spin_lock_irqsave(&pp->lock, flags);
+ 	if (!pp->qc_active)
+ 		nv_swncq_issue_atacmd(ap, qc);
+ 	else
+ 		nv_swncq_qc_to_dq(ap, qc);	/* add qc to defer queue */
+-	spin_unlock_irqrestore(&pp->lock, flags);
+ 	return 0;
+ }
+ 
+@@ -2265,7 +2260,6 @@
+ 		return;
+ 	}
+ 
+-	spin_lock(&pp->lock);
+ 	if (fis & NV_SWNCQ_IRQ_BACKOUT) {
+ 		/* If the IRQ is backout, driver must issue
+ 		 * the new command again some time later.
+@@ -2290,8 +2284,7 @@
+ 		 */
+ 		pp->dhfis_bits |= (0x1 << pp->last_issue_tag);
+ 		pp->ncq_flags |= ncq_saw_d2h;
+-		if ((pp->ncq_flags & ncq_saw_sdb) ||
+-		    (pp->ncq_flags & ncq_saw_backout)) {
++		if (pp->ncq_flags & (ncq_saw_sdb | ncq_saw_backout)) {
+ 			ata_ehi_push_desc(ehi, "illegal fis transaction");
+ 			ehi->err_mask |= AC_ERR_HSM;
+ 			ehi->action |= ATA_EH_HARDRESET;
+@@ -2302,7 +2295,7 @@
+ 		    !(pp->ncq_flags & ncq_saw_dmas)) {
+ 			ata_stat = ap->ops->check_status(ap);
+ 			if (ata_stat & ATA_BUSY)
+-				goto irq_exit;
++				return;
+ 
+ 			if (pp->defer_queue.defer_bits) {
+ 				DPRINTK("send next command\n");
+@@ -2321,13 +2314,11 @@
+ 		rc = nv_swncq_dmafis(ap);
+ 	}
+ 
+-irq_exit:
+-	spin_unlock(&pp->lock);
+ 	return;
++
+ irq_error:
+ 	ata_ehi_push_desc(ehi, "fis:0x%x", fis);
+ 	ata_port_freeze(ap);
+-	spin_unlock(&pp->lock);
+ 	return;
+ }
+ 
+
+
+--------------080703060303060501060503--
