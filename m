@@ -1,41 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
- 2
-Date: Fri, 21 Sep 2007 12:19:00 +0900
-Message-ID: <46F33824.6000707@gmail.com>
-References: <20070915030154.GA17655@srcf.ucam.org> <20070915170652.GA25504@srcf.ucam.org> <46F2EE66.9060207@garzik.org> <20070920222138.GA3740@srcf.ucam.org> <46F32DD9.7010509@gmail.com> <20070921024214.GA6317@srcf.ucam.org> <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org>
+From: "Peer Chen" <peerchen@gmail.com>
+Subject: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Fri, 21 Sep 2007 13:28:01 +0800
+Message-ID: <200709211327569648280@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.236]:8851 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbXIUDTI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Sep 2007 23:19:08 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so531536qbe
-        for <linux-ide@vger.kernel.org>; Thu, 20 Sep 2007 20:19:08 -0700 (PDT)
-In-Reply-To: <20070921031245.GA6628@srcf.ucam.org>
+Received: from wa-out-1112.google.com ([209.85.146.183]:47127 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748AbXIUF2H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 01:28:07 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so862868wah
+        for <linux-ide@vger.kernel.org>; Thu, 20 Sep 2007 22:28:07 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: jeff <jeff@garzik.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Matthew Garrett wrote:
-> On Fri, Sep 21, 2007 at 12:08:07PM +0900, Tejun Heo wrote:
-> 
->> Yeah, that's the intended behavior.  SATA PHY link can break from time
->> to time (have ever seen a SATA storage box going through ECC testing?
->> PHY goes offline as soon as you begin to hit it with some EM pulses) and
->> you don't really wanna lose your root partition over power fluctuation.
-> 
-> In this case we explicitly know that it's in response to a hotplug event 
-> (well, either that or the firmware is on impressive crack). Would it be 
-> possible to communicate that in order to avoid the revalidation?
+According to the description of section 5.2.2.1 and 10.1.2 of AHCI spec=
+ification rev1_1/rev1_2, GHC.HR shall only be set to =A1=AE1=A1=AF
+by software when GHC.AE is set to =A1=AE1=A1=AF.
 
-No, I don't thinks so && I don't really think trusting firmware that
-much is a good idea.  Also, it's much better to fix the problem in
-general than just fixing it for the firmware case which will be much
-less than the rest.
+Signed-off-by: Peer Chen <peerchen@gmail.com>
+---
+--- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.000000=
+000 -0400
++++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.000000000 -=
+0400
+@@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
+ 	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
+ 	u32 tmp;
+=20
++        /* turn on AHCI mode before controller reset*/
++        writel(HOST_AHCI_EN, mmio + HOST_CTL);
++        (void) readl(mmio + HOST_CTL);  /* flush */
++
+ 	/* global controller reset */
+ 	tmp =3D readl(mmio + HOST_CTL);
+ 	if ((tmp & HOST_RESET) =3D=3D 0) {
+-
+ 			=09
+--------------
+Peer Chen
+2007-09-21
 
--- 
-tejun
