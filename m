@@ -1,78 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] libata: slightly improved req-sense, send-diag no-ops
-Date: Fri, 21 Sep 2007 06:24:24 -0400
-Message-ID: <20070921102424.GA17675@havoc.gtf.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Fri, 21 Sep 2007 03:29:03 -0700
+Message-ID: <20070921032903.45deb785.akpm@linux-foundation.org>
+References: <200709211327569648280@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:60689 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752545AbXIUKYZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 21 Sep 2007 06:24:25 -0400
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38546 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751346AbXIUK3P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 06:29:15 -0400
+In-Reply-To: <200709211327569648280@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Peer Chen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, linux-ide <linux-ide@vger.kernel.org>
+
+On Fri, 21 Sep 2007 13:28:01 +0800 "Peer Chen" <peerchen@gmail.com> wrote:
+
+> According to the description of section 5.2.2.1 and 10.1.2 of AHCI specification rev1_1/rev1_2, GHC.HR shall only be set to __1__
+> by software when GHC.AE is set to __1__.
+
+This text contained non-ascii garbage which came through as __1__.
+
+I'll assume that you actually meant "1".
 
 
-commit 8a7a20fb60d9746ec68a876aade1f14c4f2b7b46
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Sep 21 06:23:42 2007 -0400
+> --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.000000000 -0400
+> +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.000000000 -0400
+> @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct 
+>  	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
+>  	u32 tmp;
+>  
+> +        /* turn on AHCI mode before controller reset*/
+> +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
+> +        (void) readl(mmio + HOST_CTL);  /* flush */
+> +
+>  	/* global controller reset */
+>  	tmp = readl(mmio + HOST_CTL);
+>  	if ((tmp & HOST_RESET) == 0) {
+> 
 
-    [libata] Slightly improved no-op REQUEST SENSE, SEND DIAGNOSTIC
-    
-    A few pedantic apps care about missing or lame "mandatory" SCSI
-    commands, so
-    
-    REQUEST SENSE -- as we autosense, R.S. just returns zeroes
-    
-    SEND DIAGNOSTIC -- our default (no-op) self-test succeeds, all
-    		   other requests for testing fail.
-    
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
- drivers/ata/libata-scsi.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-8a7a20fb60d9746ec68a876aade1f14c4f2b7b46
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bb5a5c1..dbe8ac3 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2922,6 +2922,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- {
- 	struct ata_scsi_args args;
- 	const u8 *scsicmd = cmd->cmnd;
-+	u8 tmp8;
- 
- 	args.dev = dev;
- 	args.id = dev->id;
-@@ -2936,7 +2937,6 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 		case SEEK_10:
- 		case TEST_UNIT_READY:
- 		case FORMAT_UNIT:		/* FIXME: correct? */
--		case SEND_DIAGNOSTIC:		/* FIXME: correct? */
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
- 			break;
- 
-@@ -2989,8 +2989,19 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_report_luns);
- 			break;
- 
--		/* mandatory commands we haven't implemented yet */
- 		case REQUEST_SENSE:
-+			ata_scsi_set_sense(cmd, 0, 0, 0);
-+			cmd->result = (DRIVER_SENSE << 24);
-+			done(cmd);
-+			break;
-+
-+		case SEND_DIAGNOSTIC:
-+			tmp8 = scsicmd[1] & ~(1 << 3);
-+			if ((tmp8 == 0x4) && (!scsicmd[3]) && (!scsicmd[4]))
-+				ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
-+			else
-+				ata_scsi_invalid_field(cmd, done);
-+			break;
- 
- 		/* all other commands */
- 		default:
+We don't normally do that (void) cast.
