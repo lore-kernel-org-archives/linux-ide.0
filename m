@@ -1,84 +1,134 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] sata_via: kill SATA_PATA_SHARING register handling
-Date: Fri, 21 Sep 2007 17:55:44 +0900
-Message-ID: <20070921085544.GE10660@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] libata: translate INQUIRY VPD page 89h (ATA info)
+Date: Fri, 21 Sep 2007 05:48:25 -0400
+Message-ID: <20070921094825.GA15940@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:3595 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705AbXIUIzv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 04:55:51 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so914554wah
-        for <linux-ide@vger.kernel.org>; Fri, 21 Sep 2007 01:55:50 -0700 (PDT)
+Received: from havoc.gtf.org ([69.61.125.42]:57056 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754710AbXIUJs0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Sep 2007 05:48:26 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-The SATA_PATA_SHARING register doesn't have anything to do with the
-SATA part of the controller.  It indicates whether an extern SATA PHY
-is attached to the PATA part of the controller and if so how it is
-wired.  As the PATA part is driven by pata_via, sata_via has no reason
-to care about that.  Also, pata_via should work fine under all
-configurations.
 
-This patch removes unnecessary attach failures.  It seems recent via
-chipsets are defaulting to different values or are actually connected
-to SATA PHY triggering this more often.
+commit a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Fri Sep 21 05:07:19 2007 -0400
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/sata_via.c |   16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+    [libata] SCSI: support INQUIRY page 89h (ATA info page)
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index f075702..1dc9b4f 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -57,7 +57,6 @@ enum {
- 	SATA_CHAN_ENAB		= 0x40, /* SATA channel enable */
- 	SATA_INT_GATE		= 0x41, /* SATA interrupt gating */
- 	SATA_NATIVE_MODE	= 0x42, /* Native mode enable */
--	SATA_PATA_SHARING	= 0x49, /* PATA/SATA sharing func ctrl */
- 	PATA_UDMA_TIMING	= 0xB3, /* PATA timing for DMA/ cable detect */
- 	PATA_PIO_TIMING		= 0xAB, /* PATA timing register */
+ drivers/ata/libata-scsi.c |   82 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 78 insertions(+), 4 deletions(-)
+
+a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7ad046b..bb5a5c1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1804,6 +1804,71 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+ }
  
-@@ -68,7 +67,6 @@ enum {
- 	NATIVE_MODE_ALL		= (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4),
+ /**
++ *	ata_scsiop_inq_89 - Simulate INQUIRY VPD page 89, ATA info
++ *	@args: device IDENTIFY data / SCSI command of interest.
++ *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
++ *	@buflen: Response buffer length.
++ *
++ *	Yields SAT-specified ATA VPD page.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ */
++
++unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
++			      unsigned int buflen)
++{
++	struct ata_device *dev = args->dev;
++	u8 pbuf[60];
++	bool is_atapi = (dev->class == ATA_DEV_ATAPI);
++	struct ata_taskfile tf;
++	unsigned int i;
++
++	if (!buflen)
++		return 0;
++
++	memset(&pbuf, 0, sizeof(pbuf));
++	memset(&tf, 0, sizeof(tf));
++
++	if (is_atapi)
++		pbuf[0] = 0x5;	/* FIXME: hardcodes MMC */
++
++	pbuf[1] = 0x89;			/* our page code */
++	pbuf[2] = (0x238 >> 8);		/* page size fixed at 238h */
++	pbuf[3] = (0x238 & 0xff);
++
++	memcpy(&pbuf[8], "ATA     ", 8);
++	ata_id_string(args->id, &pbuf[16], ATA_ID_PROD, 16);
++	ata_id_string(args->id, &pbuf[32], ATA_ID_FW_REV, 4);
++
++	/* we don't store the ATA/ATAPI device signature, so we fake it */
++	if (is_atapi) {
++		tf.command = ATA_CMD_ID_ATAPI;
++		tf.lbam = 0x14;
++		tf.lbah = 0xeb;
++	} else {
++		tf.command = ATA_CMD_ID_ATA;
++	}
++	tf.lbal = 0x1;
++	tf.nsect = 0x1;
++
++	/* FIXME: PMP. don't use H2D Reg FIS. */
++	ata_tf_to_fis(&tf, 0, 1, &pbuf[36]);
++
++	pbuf[56] = tf.command;
++
++	i = min(buflen, 60U);
++	memcpy(rbuf, &pbuf[0], i);
++	buflen -= i;
++
++	if (!i)
++		return 0;
++
++	memcpy(&rbuf[60], &args->id[0], min(buflen, 512U));
++	return 0;
++}
++
++/**
+  *	ata_scsiop_noop - Command handler that simply returns success.
+  *	@args: device IDENTIFY data / SCSI command of interest.
+  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+@@ -2880,14 +2945,23 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 				ata_scsi_invalid_field(cmd, done);
+ 			else if ((scsicmd[1] & 1) == 0)    /* is EVPD clear? */
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_std);
+-			else if (scsicmd[2] == 0x00)
++			else switch (scsicmd[2]) {
++			case 0x00:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_00);
+-			else if (scsicmd[2] == 0x80)
++				break;
++			case 0x80:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_80);
+-			else if (scsicmd[2] == 0x83)
++				break;
++			case 0x83:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_83);
+-			else
++				break;
++			case 0x89:
++				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
++				break;
++			default:
+ 				ata_scsi_invalid_field(cmd, done);
++				break;
++			}
+ 			break;
  
- 	SATA_EXT_PHY		= (1 << 6), /* 0==use PATA, 1==ext phy */
--	SATA_2DEV		= (1 << 5), /* SATA is master/slave */
- };
- 
- static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
-@@ -508,7 +506,6 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct ata_host *host;
- 	int board_id = (int) ent->driver_data;
- 	const int *bar_sizes;
--	u8 tmp8;
- 
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
-@@ -517,19 +514,10 @@ static int svia_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
--	if (board_id == vt6420) {
--		pci_read_config_byte(pdev, SATA_PATA_SHARING, &tmp8);
--		if (tmp8 & SATA_2DEV) {
--			dev_printk(KERN_ERR, &pdev->dev,
--				   "SATA master/slave not supported (0x%x)\n",
--		       		   (int) tmp8);
--			return -EIO;
--		}
--
-+	if (board_id == vt6420)
- 		bar_sizes = &svia_bar_sizes[0];
--	} else {
-+	else
- 		bar_sizes = &vt6421_bar_sizes[0];
--	}
- 
- 	for (i = 0; i < ARRAY_SIZE(svia_bar_sizes); i++)
- 		if ((pci_resource_start(pdev, i) == 0) ||
+ 		case MODE_SENSE:
