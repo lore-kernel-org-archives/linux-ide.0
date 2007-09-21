@@ -1,80 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] libata: translate INQUIRY VPD page 89h (ATA info)
-Date: Fri, 21 Sep 2007 09:12:03 -0500
-Message-ID: <1190383924.3333.2.camel@localhost.localdomain>
-References: <20070921094825.GA15940@havoc.gtf.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_via cd/dvd timeout problems
+Date: Fri, 21 Sep 2007 16:24:14 +0100
+Message-ID: <20070921162414.7ac2606a@the-village.bc.nu>
+References: <124748.3608.qm@web54408.mail.yahoo.com>
+	<1188982210.3075.9.camel@castor.rsk.org>
+	<20070906013347.1f588dc4@the-village.bc.nu>
+	<1190364785.3121.10.camel@castor.rsk.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:59863 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757735AbXIUOMI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 10:12:08 -0400
-In-Reply-To: <20070921094825.GA15940@havoc.gtf.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41084 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753277AbXIUPRR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 11:17:17 -0400
+In-Reply-To: <1190364785.3121.10.camel@castor.rsk.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: richard kennedy <richard@rsk.demon.co.uk>
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 2007-09-21 at 05:48 -0400, Jeff Garzik wrote:
-> commit a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
-> Author: Jeff Garzik <jeff@garzik.org>
-> Date:   Fri Sep 21 05:07:19 2007 -0400
+On Fri, 21 Sep 2007 09:53:05 +0100
+richard kennedy <richard@rsk.demon.co.uk> wrote:
+
+> On Thu, 2007-09-06 at 01:33 +0100, Alan Cox wrote:
 > 
->     [libata] SCSI: support INQUIRY page 89h (ATA info page)
->     
->     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> > Probably. If you can file a bug in bugzilla and assign it to me I'll take
+> > a look at this after the kernel summit. There are one or two reports with
+> > pata_via and ATAPI (ie CD) that look similar.
 > 
->  drivers/ata/libata-scsi.c |   82 +++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 78 insertions(+), 4 deletions(-)
-> 
-> a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 7ad046b..bb5a5c1 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1804,6 +1804,71 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
->  }
->  
->  /**
-> + *	ata_scsiop_inq_89 - Simulate INQUIRY VPD page 89, ATA info
-> + *	@args: device IDENTIFY data / SCSI command of interest.
-> + *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-> + *	@buflen: Response buffer length.
-> + *
-> + *	Yields SAT-specified ATA VPD page.
-> + *
-> + *	LOCKING:
-> + *	spin_lock_irqsave(host lock)
-> + */
-> +
-> +unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
-> +			      unsigned int buflen)
-> +{
-> +	struct ata_device *dev = args->dev;
-> +	u8 pbuf[60];
-> +	bool is_atapi = (dev->class == ATA_DEV_ATAPI);
+> Hi Alan,
+> your [PATCH] libata: Set transfer sizes properly for ATAPI fixes this
+> for me.
 
-I thought this was only used in the dev->class == ATA_DEV_ATA leg of the
-ata_scsi_queuecommand(), so isn't this always false?
+Yay - thanks for letting me know and for testing it.
 
-> +	struct ata_taskfile tf;
-> +	unsigned int i;
-> +
-> +	if (!buflen)
-> +		return 0;
-> +
-> +	memset(&pbuf, 0, sizeof(pbuf));
-> +	memset(&tf, 0, sizeof(tf));
-> +
-> +	if (is_atapi)
-> +		pbuf[0] = 0x5;	/* FIXME: hardcodes MMC */
-
-Actually, in MMC implementation of INQUIRY per SPC-3 (or earlier if MMC
-< 5) is mandatory.  The problem cases I can see are non-standard ATAPI
-devices (probably scanners).
-
-James
-
-
+Alan
