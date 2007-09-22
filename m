@@ -1,135 +1,107 @@
-From: Satyam Sharma <satyam@infradead.org>
-Subject: Re: 2.6.23-rc6-mm1: Build failure on ppc64 drivers/ata/pata_scc.c
-Date: Sat, 22 Sep 2007 08:20:09 +0530 (IST)
-Message-ID: <alpine.LFD.0.999.0709220816170.14412@enigma.security.iitk.ac.in>
-References: <20070918011841.2381bd93.akpm@linux-foundation.org>
- <20070920131315.GE24105@skynet.ie>
- <20070920150925.0caf3aef@the-village.bc.nu>
+From: Carsten Otto <c-otto@gmx.de>
+Subject: Re: [2.6.23-rc3] Regression: "spurious completions during NCQ"
+Date: Sat, 22 Sep 2007 15:11:04 +0200
+Message-ID: <20070922131104.GG32509@server.c-otto.de>
+Reply-To: Carsten Otto <c-otto@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="a1QUDc0q7S3U7/Jg"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:34181 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754243AbXIVCra (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 22:47:30 -0400
-In-Reply-To: <20070920150925.0caf3aef@the-village.bc.nu>
+Received: from mail.gmx.net ([213.165.64.20]:54636 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751530AbXIVNLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 22 Sep 2007 09:11:08 -0400
+Received: from carsten-otto.halifax.rwth-aachen.de ([137.226.108.169] helo=server.c-otto.de)
+	by server.c-otto.de with smtp (Exim 4.67)
+	(envelope-from <c-otto@gmx.de>)
+	id 1IZ4lE-0007kR-Os
+	for linux-ide@vger.kernel.org; Sat, 22 Sep 2007 15:11:05 +0200
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mel Gorman <mel@skynet.ie>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kamalesh@linux.vnet.ibm.com
-
-Hi,
+To: linux-ide@vger.kernel.org
 
 
-On Thu, 20 Sep 2007, Alan Cox wrote:
-> 
-> On Thu, 20 Sep 2007 14:13:15 +0100
-> mel@skynet.ie (Mel Gorman) wrote:
-> 
-> > PPC64 building allmodconfig fails to compile drivers/ata/pata_scc.c . It
-> > doesn't show up on other arches because this driver is specific to the
-> > architecture.
-> > 
-> > drivers/ata/pata_scc.c: In function `scc_bmdma_status'
-> 
-> Its not been updated to match the libata core changes. Try something like
-> this. Whoever is maintaining it should also remove the prereset cable handling
-> code and use the proper cable detect method.
+--a1QUDc0q7S3U7/Jg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It appears you forgot to fix scc_std_softreset() and one of its callsites
-in scc_bdma_stop(). A complete patch is attempted below -- please review.
+Hi!
 
+(I am referring to the thread at
+http://marc.info/?l=3Dlinux-ide&m=3D118703097726277&w=3D2)
 
-[PATCH -mm] pata_scc: Keep up with libata core API changes
+I also experience a lot of NCQ errors which look like these:
 
-Little fixlets, that the build started erroring / warning about:
+Sep 22 10:11:53 server kernel: ata1.00: exception Emask 0x2 SAct 0x7 SErr 0=
+x0 action 0x2 frozen
+Sep 22 10:11:53 server kernel: ata1.00: (spurious completions during NCQ is=
+sue=3D0x0 SAct=3D0x7 FIS=3D004040a1:00000010)
+Sep 22 10:11:53 server kernel: ata1.00: cmd 60/38:00:bd:ee:01/00:00:13:00:0=
+0/40 tag 0 cdb 0x0 data 28672 in
+Sep 22 10:11:53 server kernel:          res 40/00:20:5d:1d:eb/00:00:13:00:0=
+0/40 Emask 0x2 (HSM violation)
+Sep 22 10:11:53 server kernel: ata1.00: cmd 60/40:08:f5:ee:01/00:00:13:00:0=
+0/40 tag 1 cdb 0x0 data 32768 in
+Sep 22 10:11:53 server kernel:          res 40/00:20:5d:1d:eb/00:00:13:00:0=
+0/40 Emask 0x2 (HSM violation)
+Sep 22 10:11:53 server kernel: ata1.00: cmd 60/08:10:35:ef:01/00:00:13:00:0=
+0/40 tag 2 cdb 0x0 data 4096 in
+Sep 22 10:11:53 server kernel:          res 40/00:20:5d:1d:eb/00:00:13:00:0=
+0/40 Emask 0x2 (HSM violation)
+Sep 22 10:11:53 server kernel: ata1: soft resetting port
+Sep 22 10:11:53 server kernel: ata1: SATA link up 3.0 Gbps (SStatus 123 SCo=
+ntrol 300)
+Sep 22 10:11:53 server kernel: ata1.00: configured for UDMA/133
+Sep 22 10:11:53 server kernel: ata1: EH complete
+Sep 22 10:11:53 server kernel: sd 0:0:0:0: [sda] 586114704 512-byte hardwar=
+e sectors (300091 MB)
+Sep 22 10:11:53 server kernel: sd 0:0:0:0: [sda] Write Protect is off
+Sep 22 10:11:53 server kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Sep 22 10:11:53 server kernel: sd 0:0:0:0: [sda] Write cache: disabled, rea=
+d cache: enabled, doesn't support DPO or FUA
 
-drivers/ata/pata_scc.c: In function 'scc_bmdma_status':
-drivers/ata/pata_scc.c:734: error: structure has no member named 'active_tag'
-drivers/ata/pata_scc.c: In function 'scc_pata_prereset':
-drivers/ata/pata_scc.c:866: warning: passing arg 1 of 'ata_std_prereset' from incompatible pointer type
-drivers/ata/pata_scc.c: In function 'scc_error_handler':
-drivers/ata/pata_scc.c:908: warning: passing arg 2 of 'ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c:908: warning: passing arg 3 of 'ata_bmdma_drive_eh' from incompatible pointer type
-drivers/ata/pata_scc.c:908: warning: passing arg 5 of 'ata_bmdma_drive_eh' from incompatible pointer type
-make[2]: *** [drivers/ata/pata_scc.o] Error 1
+In total I have 355 such entries regarding my SATA disks starting on
+September 15 when I installed kernel 2.6.22.6 (before I had
+2.6.18-rc4-mm1 or so).
 
-Signed-off-by: Satyam Sharma <satyam@infradead.org>
-Cc: Alan Cox <alan@redhat.com>
-Cc: Mel Gorman <mel@skynet.ie>
+In addition I also see messages like this one:
 
----
+kern.log:Sep 20 00:42:23 server kernel: ata2.00: NCQ disabled due to excess=
+ive errors
 
-Andrew, this includes (supercedes) the previous two ones from Mel / Alan.
+Please tell me how I can help resolving the issue (if it is a bug) or,
+if possible, tell me how to fix it myself.
 
- drivers/ata/pata_scc.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+Information about my system:
+- 4x Maxtor 7V300F0 (MaxLine III, 300GB, 7200rpm, 16MB cache, SATA2),
+  firmware VA111900
+- 1x Samsung 2SP2014N (SpinPoint P, 200GB, 7200rpm, 8MB cache, PATA),
+  firmware VC100-33
+- 4 software RAIDs on the SATA disks, 1x RAID1, 3x RAID5
+- heavy usage of the RAIDs
+- ICH7R
+- 2.6.22.6
+- Pentium D 805, 2GB RAM
 
-diff -ruNp a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
---- a/drivers/ata/pata_scc.c	2007-09-22 06:26:37.000000000 +0530
-+++ b/drivers/ata/pata_scc.c	2007-09-22 08:04:42.000000000 +0530
-@@ -594,16 +594,17 @@ static unsigned int scc_bus_softreset(st
-  *	Note: Original code is ata_std_softreset().
-  */
- 
--static int scc_std_softreset (struct ata_port *ap, unsigned int *classes,
--                              unsigned long deadline)
-+static int scc_std_softreset(struct ata_link *link, unsigned int *classes,
-+                             unsigned long deadline)
- {
-+	struct ata_port *ap = link->ap;
- 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
- 	unsigned int devmask = 0, err_mask;
- 	u8 err;
- 
- 	DPRINTK("ENTER\n");
- 
--	if (ata_link_offline(&ap->link)) {
-+	if (ata_link_offline(link)) {
- 		classes[0] = ATA_DEV_NONE;
- 		goto out;
- 	}
-@@ -692,7 +693,7 @@ static void scc_bmdma_stop (struct ata_q
- 			printk(KERN_WARNING "%s: Internal Bus Error\n", DRV_NAME);
- 			out_be32(bmid_base + SCC_DMA_INTST, INTSTS_BMSINT);
- 			/* TBD: SW reset */
--			scc_std_softreset(ap, &classes, deadline);
-+			scc_std_softreset(&ap->link, &classes, deadline);
- 			continue;
- 		}
- 
-@@ -731,7 +732,7 @@ static u8 scc_bmdma_status (struct ata_p
- 	void __iomem *mmio = ap->ioaddr.bmdma_addr;
- 	u8 host_stat = in_be32(mmio + SCC_DMA_STATUS);
- 	u32 int_status = in_be32(mmio + SCC_DMA_INTST);
--	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
-+	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 	static int retry = 0;
- 
- 	/* return if IOS_SS is cleared */
-@@ -860,10 +861,10 @@ static void scc_bmdma_freeze (struct ata
-  *	@deadline: deadline jiffies for the operation
-  */
- 
--static int scc_pata_prereset(struct ata_port *ap, unsigned long deadline)
-+static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
- {
--	ap->cbl = ATA_CBL_PATA80;
--	return ata_std_prereset(ap, deadline);
-+	link->ap->cbl = ATA_CBL_PATA80;
-+	return ata_std_prereset(link, deadline);
- }
- 
- /**
-@@ -874,8 +875,10 @@ static int scc_pata_prereset(struct ata_
-  *	Note: Original code is ata_std_postreset().
-  */
- 
--static void scc_std_postreset (struct ata_port *ap, unsigned int *classes)
-+static void scc_std_postreset(struct ata_link *link, unsigned int *classes)
- {
-+	struct ata_port *ap = link->ap;
-+
- 	DPRINTK("ENTER\n");
- 
- 	/* is double-select really necessary? */
+Thanks a lot,
+--=20
+Carsten Otto
+c-otto@gmx.de
+www.c-otto.de
+
+--a1QUDc0q7S3U7/Jg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFG9RRojUF4jpCSQBQRAotNAJ9UQ3FuTRiZqLn+NRZukW/e+rHpkQCfdQ29
+FJ5Dk4Wdh03GH+MGCizv0o8=
+=T3p+
+-----END PGP SIGNATURE-----
+
+--a1QUDc0q7S3U7/Jg--
