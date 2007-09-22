@@ -1,44 +1,39 @@
-From: Thomas Evans <tom@23palmer.net>
-Subject: RE: sata_sil24 with port multiplier
-Date: Fri, 21 Sep 2007 20:00:36 -0400
-Message-ID: <E1IYsQE-0003Zt-9r@chronictown.23palmer.net>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ATAPI tape drives broken with libata
+Date: Fri, 21 Sep 2007 20:28:31 -0400
+Message-ID: <46F461AF.4020200@rtr.ca>
+References: <46D5F97B.3050808@redhat.com>	<20070830005006.6951265a@the-village.bc.nu>	<46D6EC3B.8090306@redhat.com>	<20070831151903.37a60ba9@the-village.bc.nu>	<46E966C2.1050405@rtr.ca>	<46E97FE8.5090304@rtr.ca>	<46E9848E.2000704@rtr.ca> <20070919215035.1d4557ff@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.lnh.mail.rcn.net ([207.172.157.102]:61595 "EHLO
-	smtp02.lnh.mail.rcn.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759452AbXIVAAo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Sep 2007 20:00:44 -0400
+Received: from rtr.ca ([76.10.145.34]:4217 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751067AbXIVA23 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 21 Sep 2007 20:28:29 -0400
+In-Reply-To: <20070919215035.1d4557ff@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jon Chelton <jchelton@ffpglobal.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Chuck Ebbert <cebbert@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, craig48@swbell.net
 
-Applied this patch to my 2.22.1 installation (alpha w/pcix 3124 card. The patch made a huge difference whenprobing devices at start.  No 10 second retries followed by resets.
-
-...tom
-
-
------Original Message-----
-From: Tejun Heo <htejun@gmail.com>
-Sent: Friday, September 21, 2007 6:55 AM
-To: Jon Chelton <jchelton@ffpglobal.com>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: sata_sil24 with port multiplier
-
-Jon Chelton wrote:
-> Hello,
+Alan Cox wrote:
+>> I can read and write the tape successfully, and the written data matches
+>> what is later read back from it.
+>>
+>> Here's the hack I used.  Not ready for mainline, but perhaps it will
+>> help Alan or whomever come up with something nice for Jeff.
 > 
->  
+> Its possible we should just scream and shout but for robustness and
+> paranoia I just added ATA_HORKAGE_DRQ and skip the error setup in the
+> case that HORKAGE_DRQ is set.
 > 
-> I am having issues using kernel 2.6.22.1 with your latest patch
-> applied.  I am using a Addonics 4 port SATA card with an external
-> enclosure  and port multiplier connected to 4 250GB western digital SATA
-> drives.   I am receiving this error frequently (on 2 systems with
-> identical kernels and hardware). 
+> Just need the identify data now..
 
-Does the attached patch fix the problem?
+I duspect it's *all* ATAPI tape units.  Mine (Conner) is quite a bit older
+than the other (Seagate) one that began this thread.  And ide-tape has no
+problem with either drive.  Perhaps a whitelist rather than a blacklist here.
 
--- 
-tejun
+Meanwhile, my old Conner tape unit is several hundred miles away from me at present.
+
+Cheers
