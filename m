@@ -1,50 +1,37 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: What's in linux-2.6-block.git for 2.6.24
-Date: Sun, 23 Sep 2007 17:40:44 +0200
-Message-ID: <64bb37e0709230840o599a4e39l18f85d4791c36d42@mail.gmail.com>
-References: <20070921085711.GG2367@kernel.dk>
-	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
-	 <20070923151105.5d491df4@the-village.bc.nu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
+Date: Sun, 23 Sep 2007 12:26:37 -0400
+Message-ID: <46F693BD.8070604@rtr.ca>
+References: <46C69913.1060505@g7.org>	<46C799E8.8080407@rtr.ca>	<20070819175632.349d11c5@the-village.bc.nu>	<46EC70A0.1000800@g7.org> <20070922191248.5f2bc74a@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20070923151105.5d491df4@the-village.bc.nu>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:1584 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753204AbXIWQ0f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 23 Sep 2007 12:26:35 -0400
+In-Reply-To: <20070922191248.5f2bc74a@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
 
-On 9/23/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> > Sep 18 18:50:01 treogen [   63.440000] ata1.00: status: {DRDY }
-> > Sep 18 18:50:01 treogen [   63.440000] ata1: hard resetting link
->
-> Timed out waiting for data transfers to complete that didn't. Does sound
-> like the device got told the wrong sized transfer.
->
->
-> It then falls off the bus because Jeff hasn't merged Mark Lord's DRQ
-> draining patch.
+Alan Cox wrote:
+>> I've acquired a new CF card that is capable of UDMA2, and with the same 
+>> connectors, wiring and adaptor (i.e. I popped out the MWDMA card and 
+>> inserted the UDMA one), I can now boot and read data on both devices 
+>> without error at reasonable speeds.
+> 
+> Fascinating. Does point more to a driver funny you are right. At the
+> moment I'm at a loss to guess what
 
-One time the error was different:
-Sep 11 19:19:24 treogen [   33.340000] ata1.00: exception Emask 0x20
-SAct 0x1 SErr 0x0 action 0x2
-Sep 11 19:19:24 treogen [   33.340000] ata1.00: irq_stat 0x00020002,
-PCI master abort while fetching SGT
-Sep 11 19:19:24 treogen [   33.340000] ata1.00: cmd
-61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
-Sep 11 19:19:24 treogen [   33.340000]          res
-50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-Sep 11 19:19:24 treogen [   33.340000] ata1.00: status: {DRDY }
-Sep 11 19:19:24 treogen [   33.670000] ata1: soft resetting link
-Sep 11 19:19:24 treogen [   33.710000] ata1: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Sep 11 19:19:24 treogen [   33.800000] ata1.00: configured for UDMA/100
-Sep 11 19:19:24 treogen [   33.800000] ata1: EH complete
+We seem to have had a lot of reports of CF cards failing with MDMA modes recently.
+Some of these reports are because of SATA<>PATA bridge chips that don't support MDMA,
+others are due to unknowns.
 
-This was repeated 12 times.
-(Diff between a good boot and one with that error is here:
-http://lkml.org/lkml/2007/9/14/107 )
+The solution is beginning to look more and more obvious:  default to not use MDMA
+modes for CF devices at boot.  And eventually provide a sysfs or libata parameter
+(or support/snoop SET_XFER_MODE) to change the mode later.
 
-Torsten
+Cheers
