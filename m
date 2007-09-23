@@ -1,35 +1,88 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
-Date: Sun, 23 Sep 2007 18:40:45 +0100
-Message-ID: <20070923184045.6358014a@the-village.bc.nu>
-References: <46C69913.1060505@g7.org>
-	<46C799E8.8080407@rtr.ca>
-	<20070819175632.349d11c5@the-village.bc.nu>
-	<46EC70A0.1000800@g7.org>
-	<20070922191248.5f2bc74a@the-village.bc.nu>
-	<46F693BD.8070604@rtr.ca>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: via82cxxx/pata_via 80 wire cable detection misbehaviour
+Date: Sun, 23 Sep 2007 23:57:47 +0100
+Message-ID: <46F6EF6B.2030204@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53009 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757209AbXIWReR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Sep 2007 13:34:17 -0400
-In-Reply-To: <46F693BD.8070604@rtr.ca>
+Received: from clarity.mcc.ac.uk ([130.88.200.144]:61214 "EHLO
+	clarity.mcc.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753133AbXIWXVo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Sep 2007 19:21:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: alexsaa@gmail.com, alan@lxorguk.ukuu.org.uk
 
-> The solution is beginning to look more and more obvious:  default to not use MDMA
-> modes for CF devices at boot.  And eventually provide a sysfs or libata parameter
-> (or support/snoop SET_XFER_MODE) to change the mode later.
+Hi,
 
-I strongly disagree.
+This bug was reported downstream:
+https://bugs.gentoo.org/show_bug.cgi?id=171619
+but I've summarised it below.
 
-We need to understand *why*, we need to fix any actual bugs we have.
-Lots and lots of people have no problems here. The people with problems
-and pure PATA all seem to have piix chips.
+This system includes the following IDE interface:
+VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus 
+Master IDE (rev 06)
 
-Alan
+with this southbridge:
+VIA Technologies, Inc. VT8233A ISA Bridge
+
+There are 2 disks on the primary IDE channel, and a disk and a cdrom on 
+the secondary IDE channel.  There is an 80-wire cable on the primary 
+channel, and a 40 wire one on the secondary.
+
+During boot, the secondary channel runs into some problems:
+
+hdc: hdc1 hdc2 < hdc5hdc: dma_intr: status=0x51 { DriveReady SeekComplete
+Error }
+hdc: dma_intr: error=0x84 { DriveStatusError BadCRC }
+hdc: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+hdc: dma_intr: error=0x84 { DriveStatusError BadCRC }
+hdc: dma_intr: status=0x51 { DriveReady SeekComplete Error }
+  hdc6 hdc7 hdc8 hdc9 hdc10 >
+
+or with pata_via:
+
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata2.00: BMDMA stat 0x64
+ata2.00: cmd c8/00:08:6a:40:1d/00:00:00:00:00/e1 tag 0 cdb 0x12 data 4096 in
+          res 51/84:00:71:40:1d/00:00:00:00:00/e1 Emask 0x10 (ATA bus error)
+ata2: soft resetting port
+ata2.00: configured for UDMA/100
+ata2.01: configured for UDMA/66
+ata2: EH complete
+
+Replacing the 40 wire cable with an 80 makes these problems go away.
+
+The driver reads the VIA_UDMA_TIMING register (offset 0x50 into PCI 
+configuration space) in order to determine if 40 or 80 wire cables are 
+in use. pata_via does:
+
+	if (ata66 & (0x10100000 >> (16 * ap->port_no)))
+		return ATA_CBL_PATA80;
+
+according to specs found at 
+http://gkernel.sourceforge.net/specs/via/DS686B200.pdf.bz2 page 71
+these 2 bits are:
+
+"UltraDMA mode enable" enabled by bit 6 (which is not even checked in 
+pata_via, but is handled in via82cxxx)
+"Drive transfer mode" (0 is DMA/PIO, 1 is UDMA)
+
+Sidenote: bit 4 talks about cable type reporting, but this is not 
+checked (and the specs don't make it clear how to actually detect cable 
+type if that bit is set).
+
+Anyway, the user actually added a printk to look at the ata66 values for 
+the two different cable types.
+
+80 wire on primary and 80 wire on secondary: 0xf1f1f1f6
+80 wire on primary and 40 wire on secondary: 0xf1f1f6f6
+
+The only bits that changed in this register are related to cycle time.
+
+Maybe this is the wrong register to be using for cable detection? Any ideas?
+
+Thanks,
+Daniel
