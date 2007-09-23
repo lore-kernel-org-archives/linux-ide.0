@@ -1,18 +1,18 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/10] libata-pmp: extend ACPI support to cover PMP
+Subject: [PATCH 03/10] libata-pmp: hook PMP support and enable it
 Date: Sun, 23 Sep 2007 13:19:54 +0900
-Message-ID: <11905211943774-git-send-email-htejun@gmail.com>
+Message-ID: <11905211941742-git-send-email-htejun@gmail.com>
 References: <1190521193410-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:9486 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690AbXIWEUB (ORCPT
+Received: from rv-out-0910.google.com ([209.85.198.191]:56265 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbXIWEUB (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Sep 2007 00:20:01 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1547039wah
+Received: by rv-out-0910.google.com with SMTP id k20so1141415rvb
         for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 21:20:01 -0700 (PDT)
 In-Reply-To: <1190521193410-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -20,109 +20,279 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Extend ata_acpi_associate_sata_port() such that it can handle PMP and
-call it when PMP is attached and detached.
-
-Build breakage when !CONFIG_ATA_ACPI was spotted and fixed by Petr
-Vandrovec.
+Hook PMP support into libata and enable it.  Connect SCR and probing
+functions, and update ata_dev_classify() to detect PMP.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Petr Vandrovec <petr@vandrovec.name>
 ---
- drivers/ata/libata-acpi.c |   36 ++++++++++++++++++++++++++++++++----
- drivers/ata/libata-pmp.c  |    4 ++++
- drivers/ata/libata.h      |    2 ++
- 3 files changed, 38 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c |  113 ++++++++++++++++++++++++++++++++-------------
+ drivers/ata/libata-eh.c   |   18 ++++++-
+ 2 files changed, 96 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index dc9842e..a276c06 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -40,12 +40,40 @@ static int is_pci_dev(struct device *dev)
- 	return (dev->bus == &pci_bus_type);
- }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 23441e1..3b46678 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -59,7 +59,7 @@
  
--static void ata_acpi_associate_sata_port(struct ata_port *ap)
-+/**
-+ * ata_acpi_associate_sata_port - associate SATA port with ACPI objects
-+ * @ap: target SATA port
-+ *
-+ * Look up ACPI objects associated with @ap and initialize acpi_handle
-+ * fields of @ap, the port and devices accordingly.
-+ *
-+ * LOCKING:
-+ * EH context.
-+ *
-+ * RETURNS:
-+ * 0 on success, -errno on failure.
-+ */
-+void ata_acpi_associate_sata_port(struct ata_port *ap)
+ #include "libata.h"
+ 
+-#define DRV_VERSION	"2.21"	/* must be exactly four chars */
++#define DRV_VERSION	"3.00"	/* must be exactly four chars */
+ 
+ 
+ /* debounce timing parameters in msecs { interval, duration, timeout } */
+@@ -672,29 +672,49 @@ static unsigned int ata_devchk(struct ata_port *ap, unsigned int device)
+  *	None.
+  *
+  *	RETURNS:
+- *	Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, or %ATA_DEV_UNKNOWN
+- *	the event of failure.
++ *	Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, %ATA_DEV_PMP or
++ *	%ATA_DEV_UNKNOWN the event of failure.
+  */
+-
+ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
  {
--	acpi_integer adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
-+	WARN_ON(!(ap->flags & ATA_FLAG_ACPI_SATA));
-+
-+	if (!ap->nr_pmp_links) {
-+		acpi_integer adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
-+
-+		ap->link.device->acpi_handle =
-+			acpi_get_child(ap->host->acpi_handle, adr);
-+	} else {
-+		struct ata_link *link;
-+
-+		ap->link.device->acpi_handle = NULL;
+ 	/* Apple's open source Darwin code hints that some devices only
+ 	 * put a proper signature into the LBA mid/high registers,
+ 	 * So, we only check those.  It's sufficient for uniqueness.
++	 *
++	 * ATA/ATAPI-7 (d1532v1r1: Feb. 19, 2003) specified separate
++	 * signatures for ATA and ATAPI devices attached on SerialATA,
++	 * 0x3c/0xc3 and 0x69/0x96 respectively.  However, SerialATA
++	 * spec has never mentioned about using different signatures
++	 * for ATA/ATAPI devices.  Then, Serial ATA II: Port
++	 * Multiplier specification began to use 0x69/0x96 to identify
++	 * port multpliers and 0x3c/0xc3 to identify SEMB device.
++	 * ATA/ATAPI-7 dropped descriptions about 0x3c/0xc3 and
++	 * 0x69/0x96 shortly and described them as reserved for
++	 * SerialATA.
++	 *
++	 * We follow the current spec and consider that 0x69/0x96
++	 * identifies a port multiplier and 0x3c/0xc3 a SEMB device.
+ 	 */
+-
+-	if (((tf->lbam == 0) && (tf->lbah == 0)) ||
+-	    ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))) {
++	if ((tf->lbam == 0) && (tf->lbah == 0)) {
+ 		DPRINTK("found ATA device by sig\n");
+ 		return ATA_DEV_ATA;
+ 	}
  
--	ap->link.device->acpi_handle =
--		acpi_get_child(ap->host->acpi_handle, adr);
-+		ata_port_for_each_link(link, ap) {
-+			acpi_integer adr = SATA_ADR(ap->port_no, link->pmp);
-+
-+			link->device->acpi_handle =
-+				acpi_get_child(ap->host->acpi_handle, adr);
-+		}
+-	if (((tf->lbam == 0x14) && (tf->lbah == 0xeb)) ||
+-	    ((tf->lbam == 0x69) && (tf->lbah == 0x96))) {
++	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb)) {
+ 		DPRINTK("found ATAPI device by sig\n");
+ 		return ATA_DEV_ATAPI;
+ 	}
+ 
++	if ((tf->lbam == 0x69) && (tf->lbah == 0x96)) {
++		DPRINTK("found PMP device by sig\n");
++		return ATA_DEV_PMP;
 +	}
++
++	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
++		printk("ata: SEMB device ignored\n");
++		return ATA_DEV_SEMB_UNSUP; /* not yet */
++	}
++
+ 	DPRINTK("unknown device\n");
+ 	return ATA_DEV_UNKNOWN;
  }
+@@ -3424,6 +3444,12 @@ int ata_std_prereset(struct ata_link *link, unsigned long deadline)
+ 	    (link->flags & ATA_LFLAG_HRST_TO_RESUME))
+ 		ehc->i.action |= ATA_EH_HARDRESET;
  
- static void ata_acpi_associate_ide_port(struct ata_port *ap)
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 671d171..eeffce6 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -607,6 +607,8 @@ int sata_pmp_attach(struct ata_device *dev)
- 	ata_port_for_each_link(tlink, ap)
- 		sata_link_init_spd(tlink);
- 
-+	ata_acpi_associate_sata_port(ap);
++	/* Some PMPs don't work with only SRST, force hardreset if PMP
++	 * is supported.
++	 */
++	if (ap->flags & ATA_FLAG_PMP)
++		ehc->i.action |= ATA_EH_HARDRESET;
 +
- 	return 0;
+ 	/* if we're about to do hardreset, nothing more to do */
+ 	if (ehc->i.action & ATA_EH_HARDRESET)
+ 		return 0;
+@@ -3614,6 +3640,16 @@ int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+ 	/* wait a while before checking status, see SRST for more info */
+ 	msleep(150);
  
-  fail:
-@@ -646,6 +648,8 @@ static void sata_pmp_detach(struct ata_device *dev)
- 	ap->nr_pmp_links = 0;
- 	link->pmp = 0;
- 	spin_unlock_irqrestore(ap->lock, flags);
++	/* If PMP is supported, we have to do follow-up SRST.  Note
++	 * that some PMPs don't send D2H Reg FIS after hardreset at
++	 * all if the first port is empty.  Wait for it just for a
++	 * second and request follow-up SRST.
++	 */
++	if (ap->flags & ATA_FLAG_PMP) {
++		ata_wait_ready(ap, jiffies + HZ);
++		return -EAGAIN;
++	}
 +
-+	ata_acpi_associate_sata_port(ap);
+ 	rc = ata_wait_ready(ap, deadline);
+ 	/* link occupied, -ENODEV too is an error */
+ 	if (rc) {
+@@ -5957,22 +5993,26 @@ int sata_scr_valid(struct ata_link *link)
+  *	@val: Place to store read value
+  *
+  *	Read SCR register @reg of @link into *@val.  This function is
+- *	guaranteed to succeed if the cable type of the port is SATA
+- *	and the port implements ->scr_read.
++ *	guaranteed to succeed if @link is ap->link, the cable type of
++ *	the port is SATA and the port implements ->scr_read.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+ {
+-	struct ata_port *ap = link->ap;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
+ 
+-	if (sata_scr_valid(link))
+-		return ap->ops->scr_read(ap, reg, val);
+-	return -EOPNOTSUPP;
++		if (sata_scr_valid(link))
++			return ap->ops->scr_read(ap, reg, val);
++		return -EOPNOTSUPP;
++	}
++
++	return sata_pmp_scr_read(link, reg, val);
  }
  
  /**
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 2ae92bd..b57f8c0 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -102,11 +102,13 @@ extern struct ata_port *ata_port_alloc(struct ata_host *host);
+@@ -5982,22 +6022,26 @@ int sata_scr_read(struct ata_link *link, int reg, u32 *val)
+  *	@val: value to write
+  *
+  *	Write @val to SCR register @reg of @link.  This function is
+- *	guaranteed to succeed if the cable type of the port is SATA
+- *	and the port implements ->scr_read.
++ *	guaranteed to succeed if @link is ap->link, the cable type of
++ *	the port is SATA and the port implements ->scr_read.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+ {
+-	struct ata_port *ap = link->ap;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
  
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
-+extern void ata_acpi_associate_sata_port(struct ata_port *ap);
- extern void ata_acpi_associate(struct ata_host *host);
- extern int ata_acpi_on_suspend(struct ata_port *ap);
- extern void ata_acpi_on_resume(struct ata_port *ap);
- extern int ata_acpi_on_devcfg(struct ata_device *adev);
- #else
-+static inline void ata_acpi_associate_sata_port(struct ata_port *ap) { }
- static inline void ata_acpi_associate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
- static inline void ata_acpi_on_resume(struct ata_port *ap) { }
+-	if (sata_scr_valid(link))
+-		return ap->ops->scr_write(ap, reg, val);
+-	return -EOPNOTSUPP;
++		if (sata_scr_valid(link))
++			return ap->ops->scr_write(ap, reg, val);
++		return -EOPNOTSUPP;
++	}
++
++	return sata_pmp_scr_write(link, reg, val);
+ }
+ 
+ /**
+@@ -6010,23 +6054,27 @@ int sata_scr_write(struct ata_link *link, int reg, u32 val)
+  *	function performs flush after writing to the register.
+  *
+  *	LOCKING:
+- *	None.
++ *	None if @link is ap->link.  Kernel thread context otherwise.
+  *
+  *	RETURNS:
+  *	0 on success, negative errno on failure.
+  */
+ int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
+ {
+-	struct ata_port *ap = link->ap;
+-	int rc;
++	if (ata_is_host_link(link)) {
++		struct ata_port *ap = link->ap;
++		int rc;
+ 
+-	if (sata_scr_valid(link)) {
+-		rc = ap->ops->scr_write(ap, reg, val);
+-		if (rc == 0)
+-			rc = ap->ops->scr_read(ap, reg, &val);
+-		return rc;
++		if (sata_scr_valid(link)) {
++			rc = ap->ops->scr_write(ap, reg, val);
++			if (rc == 0)
++				rc = ap->ops->scr_read(ap, reg, &val);
++			return rc;
++		}
++		return -EOPNOTSUPP;
+ 	}
+-	return -EOPNOTSUPP;
++
++	return sata_pmp_scr_write(link, reg, val);
+ }
+ 
+ /**
+@@ -6415,6 +6463,7 @@ static void ata_host_release(struct device *gendev, void *res)
+ 		if (ap->scsi_host)
+ 			scsi_host_put(ap->scsi_host);
+ 
++		kfree(ap->pmp_link);
+ 		kfree(ap);
+ 		host->ports[i] = NULL;
+ 	}
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 687419b..5f2c0f3 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2209,6 +2209,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			readid_flags |= ATA_READID_POSTRESET;
+ 
+ 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
++			WARN_ON(dev->class == ATA_DEV_PMP);
++
+ 			if (ata_link_offline(link)) {
+ 				rc = -EIO;
+ 				goto err;
+@@ -2234,8 +2236,11 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			   ata_class_enabled(ehc->classes[dev->devno])) {
+ 			dev->class = ehc->classes[dev->devno];
+ 
+-			rc = ata_dev_read_id(dev, &dev->class, readid_flags,
+-					     dev->id);
++			if (dev->class == ATA_DEV_PMP)
++				rc = sata_pmp_attach(dev);
++			else
++				rc = ata_dev_read_id(dev, &dev->class,
++						     readid_flags, dev->id);
+ 			switch (rc) {
+ 			case 0:
+ 				new_mask |= 1 << dev->devno;
+@@ -2264,7 +2269,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	 * device detection messages backwards.
+ 	 */
+ 	ata_link_for_each_dev(dev, link) {
+-		if (!(new_mask & (1 << dev->devno)))
++		if (!(new_mask & (1 << dev->devno)) ||
++		    dev->class == ATA_DEV_PMP)
+ 			continue;
+ 
+ 		ehc->i.flags |= ATA_EHI_PRINTINFO;
+@@ -2521,6 +2527,12 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		if (rc)
+ 			goto dev_fail;
+ 
++		/* if PMP got attached, return, pmp EH will take care of it */
++		if (link->device->class == ATA_DEV_PMP) {
++			ehc->i.action = 0;
++			return 0;
++		}
++
+ 		/* configure transfer mode if necessary */
+ 		if (ehc->i.flags & ATA_EHI_SETMODE) {
+ 			rc = ata_set_mode(link, &dev);
 -- 
 1.5.0.3
 
