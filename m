@@ -1,50 +1,20 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 with port multiplier
-Date: Sun, 23 Sep 2007 12:25:11 +0900
-Message-ID: <46F5DC97.4010406@gmail.com>
-References: <FD6311B7ED175B4480F31633F6098B4D911C4A@ffpglobal_mail.corp.ffplus.net>
+Subject: [PATCH #upstream-fixes,#upstream] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
+Date: Sun, 23 Sep 2007 12:26:14 +0900
+Message-ID: <20070923032614.GI10660@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040001010301040009080901"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:3698 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:6510 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825AbXIWDZT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:25:19 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1137280rvb
-        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 20:25:19 -0700 (PDT)
-In-Reply-To: <FD6311B7ED175B4480F31633F6098B4D911C4A@ffpglobal_mail.corp.ffplus.net>
+	with ESMTP id S1751842AbXIWD0X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:26:23 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1137355rvb
+        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 20:26:23 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Chelton <jchelton@ffpglobal.com>
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------040001010301040009080901
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-Jon Chelton wrote:
-> Thanks Tejun,  
-> 
-> I have applied the patch and rebuilt the module.  I do not seem to be
-> getting the same error (although it only shows up during heavy disk
-> activity).  But now I am getting a lot of spurious interrupts.
-
-Yeah, those are harmless and expected.  The attached patch should fix
-the problem.
-
--- 
-tejun
-
---------------040001010301040009080901
-Content-Type: text/plain;
- name="fix-sata_sil24"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="fix-sata_sil24"
-
-[PATCH] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
 When PCIX_IRQ_WOC is used, sil24 has an inherent race condition
 between clearing IRQ pending and reading IRQ status.  If IRQ pending
@@ -105,5 +75,3 @@ Index: work/drivers/ata/sata_sil24.c
  		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
  			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
  			slot_stat, ap->link.active_tag, ap->link.sactive);
-
---------------040001010301040009080901--
