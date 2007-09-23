@@ -1,79 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH UPDATED #upstream-fixes,#upstream] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
-Date: Sun, 23 Sep 2007 12:37:05 +0900
-Message-ID: <20070923033705.GJ10660@htj.dyndns.org>
-References: <20070923032614.GI10660@htj.dyndns.org>
+From: "Jon Chelton" <jchelton@ffpglobal.com>
+Subject: RE: sata_sil24 with port multiplier
+Date: Sat, 22 Sep 2007 23:56:40 -0400
+Message-ID: <FD6311B7ED175B4480F31633F6098B4D911C60@ffpglobal_mail.corp.ffplus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:16821 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683AbXIWDhM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:37:12 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1138220rvb
-        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 20:37:11 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20070923032614.GI10660@htj.dyndns.org>
+Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:63933
+	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbXIWDzq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:55:46 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-When PCIX_IRQ_WOC is used, sil24 has an inherent race condition
-between clearing IRQ pending and reading IRQ status.  If IRQ pending
-is cleared after reading IRQ status, there's possibility of lost IRQ.
-If IRQ pending is cleared before reading IRQ status, spurious IRQs
-will occur.
+I removed the old patch, added this one, and everything looks good, no
+kernel warnings.
 
-sata_sil24 till now cleared IRQ pending after reading IRQ status thus
-losing IRQs on machines where PCIX_IRQ_WOC was used.  Reverse the
-order and ignore spurious IRQs if PCIX_IRQ_WOC.
+Thanks For your Help!
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
-The previous patch contained a stupid mistake.  This is the correct
-one.
+Jon
 
- drivers/ata/sata_sil24.c |   16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Saturday, September 22, 2007 8:36 PM
+To: Jon Chelton
+Cc: linux-ide@vger.kernel.org
+Subject: Re: sata_sil24 with port multiplier
 
-Index: work/drivers/ata/sata_sil24.c
-===================================================================
---- work.orig/drivers/ata/sata_sil24.c
-+++ work/drivers/ata/sata_sil24.c
-@@ -889,6 +889,16 @@ static inline void sil24_host_intr(struc
- 	u32 slot_stat, qc_active;
- 	int rc;
- 
-+	/* If PCIX_IRQ_WOC, there's an inherent race window between
-+	 * clearing IRQ pending status and reading PORT_SLOT_STAT
-+	 * which may cause spurious interrupts afterwards.  This is
-+	 * unavoidable and much better than losing interrupts which
-+	 * happens if IRQ pending is cleared after reading
-+	 * PORT_SLOT_STAT.
-+	 */
-+	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-+
- 	slot_stat = readl(port + PORT_SLOT_STAT);
- 
- 	if (unlikely(slot_stat & HOST_SSTAT_ATTN)) {
-@@ -896,9 +906,6 @@ static inline void sil24_host_intr(struc
- 		return;
- 	}
- 
--	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
--		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
--
- 	qc_active = slot_stat & ~HOST_SSTAT_ATTN;
- 	rc = ata_qc_complete_multiple(ap, qc_active, sil24_finish_qc);
- 	if (rc > 0)
-@@ -911,7 +918,8 @@ static inline void sil24_host_intr(struc
- 		return;
- 	}
- 
--	if (ata_ratelimit())
-+	/* spurious interrupts are expected if PCIX_IRQ_WOC */
-+	if (!(ap->flags & SIL24_FLAG_PCIX_IRQ_WOC) && ata_ratelimit())
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
- 			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
- 			slot_stat, ap->link.active_tag, ap->link.sactive);
+Please apply without the previous patch.  Also, this is the correct
+version.
+
+-- 
+tejun
+
