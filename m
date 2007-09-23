@@ -1,220 +1,100 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/10] sata_sil24: implement PORT_RST
+Subject: [PATCH 05/10] libata-pmp: implement qc_defer for command switching PMP support
 Date: Sun, 23 Sep 2007 13:19:54 +0900
-Message-ID: <11905211942104-git-send-email-htejun@gmail.com>
+Message-ID: <11905211943477-git-send-email-htejun@gmail.com>
 References: <1190521193410-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:56265 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbXIWEUH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Sep 2007 00:20:07 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1141415rvb
-        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 21:20:07 -0700 (PDT)
+Received: from wa-out-1112.google.com ([209.85.146.178]:9486 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbXIWEUG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Sep 2007 00:20:06 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1547039wah
+        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 21:20:06 -0700 (PDT)
 In-Reply-To: <1190521193410-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-As DEV_RST (hardreset) sometimes fail to recover the controller
-(especially after PMP DMA CS errata).  In such cases, perform PORT_RST
-prior to DEV_RST.
+Implement sata_pmp_qc_defer_cmd_switch() - standard qc_defer for
+command switching PMP support.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/sata_sil24.c |   93 ++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 70 insertions(+), 23 deletions(-)
+ drivers/ata/libata-core.c |    1 +
+ drivers/ata/libata-pmp.c  |   30 ++++++++++++++++++++++++++++++
+ include/linux/libata.h    |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 03bfbb6..15b9a80 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -323,6 +323,7 @@ struct sil24_port_priv {
- 	union sil24_cmd_block *cmd_block;	/* 32 cmd blocks */
- 	dma_addr_t cmd_block_dma;		/* DMA base addr for them */
- 	struct ata_taskfile tf;			/* Cached taskfile registers */
-+	int do_port_rst;
- };
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3b46678..6fae92c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -7294,6 +7294,7 @@ EXPORT_SYMBOL_GPL(ata_pci_default_filter);
+ EXPORT_SYMBOL_GPL(ata_pci_clear_simplex);
+ #endif /* CONFIG_PCI */
  
- static void sil24_dev_config(struct ata_device *dev);
-@@ -536,6 +537,31 @@ static void sil24_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- 	*tf = pp->tf;
++EXPORT_SYMBOL_GPL(sata_pmp_qc_defer_cmd_switch);
+ EXPORT_SYMBOL_GPL(sata_pmp_read_init_tf);
+ EXPORT_SYMBOL_GPL(sata_pmp_read_val);
+ EXPORT_SYMBOL_GPL(sata_pmp_write_init_tf);
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index eeffce6..f6c4b11 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -70,6 +70,36 @@ static int sata_pmp_write(struct ata_link *link, int reg, u32 val)
  }
  
-+static void sil24_config_port(struct ata_port *ap)
+ /**
++ *	sata_pmp_qc_defer_cmd_switch - qc_defer for command switching PMP
++ *	@qc: ATA command in question
++ *
++ *	A host which has command switching PMP support cannot issue
++ *	commands to multiple links simultaneously.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	ATA_DEFER_* if deferring is needed, 0 otherwise.
++ */
++int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc)
 +{
-+	void __iomem *port = ap->ioaddr.cmd_addr;
++	struct ata_link *link = qc->dev->link;
++	struct ata_port *ap = link->ap;
 +
-+	/* configure IRQ WoC */
-+	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
-+	else
-+		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
++	if (ap->excl_link == NULL || ap->excl_link == link) {
++		if (ap->nr_active_links == 0 || ata_link_active(link)) {
++			qc->flags |= ATA_QCFLAG_CLEAR_EXCL;
++			return ata_std_qc_defer(qc);
++		}
 +
-+	/* zero error counters. */
-+	writel(0x8000, port + PORT_DECODE_ERR_THRESH);
-+	writel(0x8000, port + PORT_CRC_ERR_THRESH);
-+	writel(0x8000, port + PORT_HSHK_ERR_THRESH);
-+	writel(0x0000, port + PORT_DECODE_ERR_CNT);
-+	writel(0x0000, port + PORT_CRC_ERR_CNT);
-+	writel(0x0000, port + PORT_HSHK_ERR_CNT);
++		ap->excl_link = link;
++	}
 +
-+	/* always use 64bit activation */
-+	writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
-+
-+	/* clear port multiplier enable and resume bits */
-+	writel(PORT_CS_PMP_EN | PORT_CS_PMP_RESUME, port + PORT_CTRL_CLR);
++	return ATA_DEFER_PORT;
 +}
 +
- static void sil24_config_pmp(struct ata_port *ap, int attached)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-@@ -564,6 +590,7 @@ static void sil24_clear_pmp(struct ata_port *ap)
- static int sil24_init_port(struct ata_port *ap)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-+	struct sil24_port_priv *pp = ap->private_data;
- 	u32 tmp;
- 
- 	/* clear PMP error status */
-@@ -576,8 +603,12 @@ static int sil24_init_port(struct ata_port *ap)
- 	tmp = ata_wait_register(port + PORT_CTRL_STAT,
- 				PORT_CS_RDY, 0, 10, 100);
- 
--	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY)
-+	if ((tmp & (PORT_CS_INIT | PORT_CS_RDY)) != PORT_CS_RDY) {
-+		pp->do_port_rst = 1;
-+		ap->link.eh_context.i.action |= ATA_EH_HARDRESET;
- 		return -EIO;
-+	}
-+
- 	return 0;
- }
- 
-@@ -692,10 +723,34 @@ static int sil24_hardreset(struct ata_link *link, unsigned int *class,
- {
- 	struct ata_port *ap = link->ap;
- 	void __iomem *port = ap->ioaddr.cmd_addr;
-+	struct sil24_port_priv *pp = ap->private_data;
-+	int did_port_rst = 0;
- 	const char *reason;
- 	int tout_msec, rc;
- 	u32 tmp;
- 
-+ retry:
-+	/* Sometimes, DEV_RST is not enough to recover the controller.
-+	 * This happens often after PM DMA CS errata.
-+	 */
-+	if (pp->do_port_rst) {
-+		ata_port_printk(ap, KERN_WARNING, "controller in dubious "
-+				"state, performing PORT_RST\n");
-+
-+		writel(PORT_CS_PORT_RST, port + PORT_CTRL_STAT);
-+		msleep(10);
-+		writel(PORT_CS_PORT_RST, port + PORT_CTRL_CLR);
-+		ata_wait_register(port + PORT_CTRL_STAT, PORT_CS_RDY, 0,
-+				  10, 5000);
-+
-+		/* restore port configuration */
-+		sil24_config_port(ap);
-+		sil24_config_pmp(ap, ap->nr_pmp_links);
-+
-+		pp->do_port_rst = 0;
-+		did_port_rst = 1;
-+	}
-+
- 	/* sil24 does the right thing(tm) without any protection */
- 	sata_set_spd(link);
- 
-@@ -732,6 +787,11 @@ static int sil24_hardreset(struct ata_link *link, unsigned int *class,
- 	return -EAGAIN;
- 
-  err:
-+	if (!did_port_rst) {
-+		pp->do_port_rst = 1;
-+		goto retry;
-+	}
-+
- 	ata_link_printk(link, KERN_ERR, "hardreset failed (%s)\n", reason);
- 	return -EIO;
- }
-@@ -997,6 +1057,7 @@ static void sil24_error_intr(struct ata_port *ap)
- 			ehi->err_mask |= AC_ERR_OTHER;
- 			ehi->action |= ATA_EH_HARDRESET;
- 			ata_ehi_push_desc(ehi, "PMP DMA CS errata");
-+			pp->do_port_rst = 1;
- 			freeze = 1;
- 		}
- 
-@@ -1152,6 +1213,8 @@ static irqreturn_t sil24_interrupt(int irq, void *dev_instance)
- 
- static void sil24_error_handler(struct ata_port *ap)
- {
-+	struct sil24_port_priv *pp = ap->private_data;
-+
- 	if (sil24_init_port(ap))
- 		ata_eh_freeze_port(ap);
- 
-@@ -1160,6 +1223,8 @@ static void sil24_error_handler(struct ata_port *ap)
- 		       ata_std_postreset, sata_pmp_std_prereset,
- 		       sil24_pmp_softreset, sil24_pmp_hardreset,
- 		       sata_pmp_std_postreset);
-+
-+	pp->do_port_rst = 0;
- }
- 
- static void sil24_post_internal_cmd(struct ata_queued_cmd *qc)
-@@ -1206,7 +1271,6 @@ static int sil24_port_start(struct ata_port *ap)
- static void sil24_init_controller(struct ata_host *host)
- {
- 	void __iomem *host_base = host->iomap[SIL24_HOST_BAR];
--	void __iomem *port_base = host->iomap[SIL24_PORT_BAR];
- 	u32 tmp;
- 	int i;
- 
-@@ -1218,7 +1282,8 @@ static void sil24_init_controller(struct ata_host *host)
- 
- 	/* init ports */
- 	for (i = 0; i < host->n_ports; i++) {
--		void __iomem *port = port_base + i * PORT_REGS_SIZE;
-+		struct ata_port *ap = host->ports[i];
-+		void __iomem *port = ap->ioaddr.cmd_addr;
- 
- 		/* Initial PHY setting */
- 		writel(0x20c, port + PORT_PHY_CFG);
-@@ -1235,26 +1300,8 @@ static void sil24_init_controller(struct ata_host *host)
- 				           "failed to clear port RST\n");
- 		}
- 
--		/* Configure IRQ WoC */
--		if (host->ports[0]->flags & SIL24_FLAG_PCIX_IRQ_WOC)
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_STAT);
--		else
--			writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
--
--		/* Zero error counters. */
--		writel(0x8000, port + PORT_DECODE_ERR_THRESH);
--		writel(0x8000, port + PORT_CRC_ERR_THRESH);
--		writel(0x8000, port + PORT_HSHK_ERR_THRESH);
--		writel(0x0000, port + PORT_DECODE_ERR_CNT);
--		writel(0x0000, port + PORT_CRC_ERR_CNT);
--		writel(0x0000, port + PORT_HSHK_ERR_CNT);
--
--		/* Always use 64bit activation */
--		writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
--
--		/* Clear port multiplier enable and resume bits */
--		writel(PORT_CS_PMP_EN | PORT_CS_PMP_RESUME,
--		       port + PORT_CTRL_CLR);
-+		/* configure port */
-+		sil24_config_port(ap);
- 	}
- 
- 	/* Turn on interrupts */
++/**
+  *	sata_pmp_read_init_tf - initialize TF for PMP read
+  *	@tf: taskfile to initialize
+  *	@dev: PMP dev
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 19a962c..1467fa9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -946,6 +946,7 @@ extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
+ /*
+  * PMP
+  */
++extern int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc);
+ extern void sata_pmp_read_init_tf(struct ata_taskfile *tf,
+ 				  struct ata_device *dev, int pmp, int reg);
+ extern u32 sata_pmp_read_val(const struct ata_taskfile *tf);
 -- 
 1.5.0.3
 
