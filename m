@@ -1,42 +1,22 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 with port multiplier
-Date: Sun, 23 Sep 2007 12:36:00 +0900
-Message-ID: <46F5DF20.2010300@gmail.com>
-References: <FD6311B7ED175B4480F31633F6098B4D911C5F@ffpglobal_mail.corp.ffplus.net>
+Subject: [PATCH UPDATED #upstream-fixes,#upstream] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
+Date: Sun, 23 Sep 2007 12:37:05 +0900
+Message-ID: <20070923033705.GJ10660@htj.dyndns.org>
+References: <20070923032614.GI10660@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040400080605020606050208"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:15499 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:16821 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955AbXIWDgK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:36:10 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1138104rvb
-        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 20:36:09 -0700 (PDT)
-In-Reply-To: <FD6311B7ED175B4480F31633F6098B4D911C5F@ffpglobal_mail.corp.ffplus.net>
+	with ESMTP id S1751683AbXIWDhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Sep 2007 23:37:12 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1138220rvb
+        for <linux-ide@vger.kernel.org>; Sat, 22 Sep 2007 20:37:11 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20070923032614.GI10660@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Chelton <jchelton@ffpglobal.com>
-Cc: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------040400080605020606050208
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-Please apply without the previous patch.  Also, this is the correct version.
-
--- 
-tejun
-
---------------040400080605020606050208
-Content-Type: text/plain;
- name="fix-sata_sil24"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="fix-sata_sil24"
-
-[PATCH] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
 When PCIX_IRQ_WOC is used, sil24 has an inherent race condition
 between clearing IRQ pending and reading IRQ status.  If IRQ pending
@@ -50,8 +30,8 @@ order and ignore spurious IRQs if PCIX_IRQ_WOC.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-This fixes a long-standing IRQ loss problem (and accompanying
-timeouts) on sata_sil24.
+The previous patch contained a stupid mistake.  This is the correct
+one.
 
  drivers/ata/sata_sil24.c |   16 ++++++++++++----
  1 file changed, 12 insertions(+), 4 deletions(-)
@@ -97,5 +77,3 @@ Index: work/drivers/ata/sata_sil24.c
  		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
  			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
  			slot_stat, ap->link.active_tag, ap->link.sactive);
-
---------------040400080605020606050208--
