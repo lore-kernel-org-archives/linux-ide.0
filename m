@@ -1,57 +1,36 @@
-From: "Maurizio Monge" <maurizio.monge@gmail.com>
-Subject: Re: HSM violation with ahci+WDC WD1600BEVS-22RST0
-Date: Mon, 24 Sep 2007 23:52:51 +0200
-Message-ID: <e4c519350709241452l33c2f1b6m8ab943460248656f@mail.gmail.com>
-References: <138995186.20070924163607@efirst.ro>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
+Date: Mon, 24 Sep 2007 18:03:00 -0400
+Message-ID: <46F83414.2040809@rtr.ca>
+References: <46C69913.1060505@g7.org>	<46C799E8.8080407@rtr.ca>	<20070819175632.349d11c5@the-village.bc.nu>	<46EC70A0.1000800@g7.org>	<20070922191248.5f2bc74a@the-village.bc.nu>	<46F693BD.8070604@rtr.ca> <20070923184045.6358014a@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.188]:40720 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615AbXIXVwx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2007 17:52:53 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1851503fkz
-        for <linux-ide@vger.kernel.org>; Mon, 24 Sep 2007 14:52:51 -0700 (PDT)
-In-Reply-To: <138995186.20070924163607@efirst.ro>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:2254 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754354AbXIXWDB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Sep 2007 18:03:01 -0400
+In-Reply-To: <20070923184045.6358014a@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Catalin Constantin <catalin@efirst.ro>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
 
-No, i did not manage to improve (it should NOT be a dangerous error BTW).
-I simply think that this issue is because of buggy firmware, so i
-posted to linux-ide a patch to blacklist this hard disk from using NCQ
-(because it is triggering spurious completions).
-I don't know what the "blacklisting policy" is for linux kernel
-developers, i think that, since there probably are a lot of buggy
-drives for NCQ and so, a module parameter to disable NCQ while loading
-libata could be useful.
-Best regards.
+Alan Cox wrote:
+>> The solution is beginning to look more and more obvious:  default to not use MDMA
+>> modes for CF devices at boot.  And eventually provide a sysfs or libata parameter
+>> (or support/snoop SET_XFER_MODE) to change the mode later.
+> 
+> I strongly disagree.
+> 
+> We need to understand *why*, we need to fix any actual bugs we have.
+> Lots and lots of people have no problems here. The people with problems
+> and pure PATA all seem to have piix chips.
 
-On 9/24/07, Catalin Constantin <catalin@efirst.ro> wrote:
-> Hello,
->
-> Did you manage to find out why were you getting thoes messages ATA
-> related ?
->
-> I am having the same issue and some help would be very handy.
->
-> Thank you and sorry for disturbing you,
->
-> --
-> Catalin Constantin
-> Efirst - www.efirst.ro
-> http://www.cabanova.ro
->
->
+Well, there's a reasonable point.
 
+But when we see a CF card on a *SATA* controller, we *know* there's a bridge chip
+in there someplace, and we know that the common bridges don't do MWDMA.
 
--- 
-Ciao
-Maurizio
-http://stregatto.wordpress.com
-
-"Well we all shine on
-Like the moon and the stars and the sun" (John Lennon)
+Cheers
