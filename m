@@ -1,104 +1,146 @@
-From: Paul Rolland (=?UTF-8?Q?=E3=83=9D=E3=83=BC=E3=83=AB=E3=83=BB?=
-	=?UTF-8?Q?=E3=83=AD=E3=83=A9=E3=83=B3?=) <rol@witbe.net>
-Subject: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
-Date: Mon, 24 Sep 2007 08:33:36 +0200
-Message-ID: <20070924083336.7a08fd61@tux.DEF.witbe.net>
+From: mel@skynet.ie (Mel Gorman)
+Subject: Re: 2.6.23-rc6-mm1: Build failure on ppc64 drivers/ata/pata_scc.c
+Date: Mon, 24 Sep 2007 12:01:24 +0100
+Message-ID: <20070924110124.GB3968@skynet.ie>
+References: <20070918011841.2381bd93.akpm@linux-foundation.org> <20070920131315.GE24105@skynet.ie> <20070920150925.0caf3aef@the-village.bc.nu> <alpine.LFD.0.999.0709220816170.14412@enigma.security.iitk.ac.in>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tag.witbe.net ([81.88.96.48]:49126 "EHLO tag.witbe.net"
+Received: from gir.skynet.ie ([193.1.99.77]:39748 "EHLO gir.skynet.ie"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487AbXIXGdj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Sep 2007 02:33:39 -0400
+	id S1752674AbXIXLB2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Sep 2007 07:01:28 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.0.999.0709220816170.14412@enigma.security.iitk.ac.in>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: rol@witbe.net
+To: Satyam Sharma <satyam@infradead.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kamalesh@linux.vnet.ibm.com
 
-Hello,
+On (22/09/07 08:20), Satyam Sharma didst pronounce:
+> Hi,
+> 
+> 
+> On Thu, 20 Sep 2007, Alan Cox wrote:
+> > 
+> > On Thu, 20 Sep 2007 14:13:15 +0100
+> > mel@skynet.ie (Mel Gorman) wrote:
+> > 
+> > > PPC64 building allmodconfig fails to compile drivers/ata/pata_scc.c . It
+> > > doesn't show up on other arches because this driver is specific to the
+> > > architecture.
+> > > 
+> > > drivers/ata/pata_scc.c: In function `scc_bmdma_status'
+> > 
+> > Its not been updated to match the libata core changes. Try something like
+> > this. Whoever is maintaining it should also remove the prereset cable handling
+> > code and use the proper cable detect method.
+> 
+> It appears you forgot to fix scc_std_softreset() and one of its callsites
+> in scc_bdma_stop(). A complete patch is attempted below -- please review.
+> 
 
-I already reported kernel 2.6.23-rcX warning about irq X : nobody cared, and
-it seemed to have been fixed in 2.6.23-rc6... Unfortunately, just rebooting
-with my 2.6.23-rc7, I got it appearing again, though the previous boot was
-just fine, and I didn't change/recompile my kernel in between.
+I can confirm it builds without warnings or errors, so thanks. I'm not in
+the position to review it for correctness.
 
-So, what changed ? I've compiled two modules : qc-usb-messenger, and
-hsf-modem, to make sure all my hardware is fully supported.
+> 
+> [PATCH -mm] pata_scc: Keep up with libata core API changes
+> 
+> Little fixlets, that the build started erroring / warning about:
+> 
+> drivers/ata/pata_scc.c: In function 'scc_bmdma_status':
+> drivers/ata/pata_scc.c:734: error: structure has no member named 'active_tag'
+> drivers/ata/pata_scc.c: In function 'scc_pata_prereset':
+> drivers/ata/pata_scc.c:866: warning: passing arg 1 of 'ata_std_prereset' from incompatible pointer type
+> drivers/ata/pata_scc.c: In function 'scc_error_handler':
+> drivers/ata/pata_scc.c:908: warning: passing arg 2 of 'ata_bmdma_drive_eh' from incompatible pointer type
+> drivers/ata/pata_scc.c:908: warning: passing arg 3 of 'ata_bmdma_drive_eh' from incompatible pointer type
+> drivers/ata/pata_scc.c:908: warning: passing arg 5 of 'ata_bmdma_drive_eh' from incompatible pointer type
+> make[2]: *** [drivers/ata/pata_scc.o] Error 1
+> 
+> Signed-off-by: Satyam Sharma <satyam@infradead.org>
+> Cc: Alan Cox <alan@redhat.com>
+> Cc: Mel Gorman <mel@skynet.ie>
+> 
+> ---
+> 
+> Andrew, this includes (supercedes) the previous two ones from Mel / Alan.
+> 
+>  drivers/ata/pata_scc.c |   21 ++++++++++++---------
+>  1 file changed, 12 insertions(+), 9 deletions(-)
+> 
+> diff -ruNp a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+> --- a/drivers/ata/pata_scc.c	2007-09-22 06:26:37.000000000 +0530
+> +++ b/drivers/ata/pata_scc.c	2007-09-22 08:04:42.000000000 +0530
+> @@ -594,16 +594,17 @@ static unsigned int scc_bus_softreset(st
+>   *	Note: Original code is ata_std_softreset().
+>   */
+>  
+> -static int scc_std_softreset (struct ata_port *ap, unsigned int *classes,
+> -                              unsigned long deadline)
+> +static int scc_std_softreset(struct ata_link *link, unsigned int *classes,
+> +                             unsigned long deadline)
+>  {
+> +	struct ata_port *ap = link->ap;
+>  	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
+>  	unsigned int devmask = 0, err_mask;
+>  	u8 err;
+>  
+>  	DPRINTK("ENTER\n");
+>  
+> -	if (ata_link_offline(&ap->link)) {
+> +	if (ata_link_offline(link)) {
+>  		classes[0] = ATA_DEV_NONE;
+>  		goto out;
+>  	}
+> @@ -692,7 +693,7 @@ static void scc_bmdma_stop (struct ata_q
+>  			printk(KERN_WARNING "%s: Internal Bus Error\n", DRV_NAME);
+>  			out_be32(bmid_base + SCC_DMA_INTST, INTSTS_BMSINT);
+>  			/* TBD: SW reset */
+> -			scc_std_softreset(ap, &classes, deadline);
+> +			scc_std_softreset(&ap->link, &classes, deadline);
+>  			continue;
+>  		}
+>  
+> @@ -731,7 +732,7 @@ static u8 scc_bmdma_status (struct ata_p
+>  	void __iomem *mmio = ap->ioaddr.bmdma_addr;
+>  	u8 host_stat = in_be32(mmio + SCC_DMA_STATUS);
+>  	u32 int_status = in_be32(mmio + SCC_DMA_INTST);
+> -	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
+> +	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->link.active_tag);
+>  	static int retry = 0;
+>  
+>  	/* return if IOS_SS is cleared */
+> @@ -860,10 +861,10 @@ static void scc_bmdma_freeze (struct ata
+>   *	@deadline: deadline jiffies for the operation
+>   */
+>  
+> -static int scc_pata_prereset(struct ata_port *ap, unsigned long deadline)
+> +static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
+>  {
+> -	ap->cbl = ATA_CBL_PATA80;
+> -	return ata_std_prereset(ap, deadline);
+> +	link->ap->cbl = ATA_CBL_PATA80;
+> +	return ata_std_prereset(link, deadline);
+>  }
+>  
+>  /**
+> @@ -874,8 +875,10 @@ static int scc_pata_prereset(struct ata_
+>   *	Note: Original code is ata_std_postreset().
+>   */
+>  
+> -static void scc_std_postreset (struct ata_port *ap, unsigned int *classes)
+> +static void scc_std_postreset(struct ata_link *link, unsigned int *classes)
+>  {
+> +	struct ata_port *ap = link->ap;
+> +
+>  	DPRINTK("ENTER\n");
+>  
+>  	/* is double-select really necessary? */
+> 
 
-And now, I have :
-....
-scsi 3:0:1:0: Direct-Access     ATA      ST3500641AS      3.AA PQ: 0 ANSI: 5 
-sd 3:0:1:0: [sdd] 976773168 512-byte hardware sectors (500108 MB) 
-sd 3:0:1:0: [sdd] Write Protect is off 
-sd 3:0:1:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA 
-sd 3:0:1:0: [sdd] 976773168 512-byte hardware sectors (500108 MB) 
-sd 3:0:1:0: [sdd] Write Protect is off 
-sd 3:0:1:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support
-DPO or FUA 
-irq 23: nobody cared (try booting with the "irqpoll" option) 
- 
-Call Trace: 
- <IRQ>  [<ffffffff8105d21b>] __report_bad_irq+0x30/0x72 
- [<ffffffff8105d46c>] note_interrupt+0x20f/0x253 
- [<ffffffff8105dd38>] handle_fasteoi_irq+0xa9/0xd1 
- [<ffffffff8100ec65>] do_IRQ+0xf1/0x160 
- [<ffffffff8100b25b>] mwait_idle+0x0/0x45 
- [<ffffffff8100c431>] ret_from_intr+0x0/0xa 
- <EOI>  [<ffffffff8100b29d>] mwait_idle+0x42/0x45 
- [<ffffffff8100b1f3>] cpu_idle+0xbd/0xe0 
- [<ffffffff8175ca8e>] start_kernel+0x2bb/0x2c7 
- [<ffffffff8175c140>] _sinittext+0x140/0x144 
- 
-handlers: 
-[<ffffffff81307485>] (ata_interrupt+0x0/0x1d3) 
-Disabling IRQ #23 
- sdd:<3>ata4.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen 
-ata4.01: cmd c8/00:08:00:00:00/00:00:00:00:00/f0 tag 0 cdb 0x0 data 4096 in 
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout) 
-ata4: soft resetting port 
-ata4.01: qc timeout (cmd 0x27) 
-ata4.01: ata_hpa_resize 1: hpa sectors (0) is smaller than sectors
-(976773168) ata4.00: failed to IDENTIFY (I/O error, err_mask=0x40) 
-ata4: failed to recover some devices, retrying in 5 secs 
-ata4: soft resetting port 
-ata4.01: qc timeout (cmd 0x27) 
-
-....
-
-
-Booting with irqpoll is Ok, and I have :
-
-2 [14:55] rol@donald:~> cat /proc/interrupts 
-           CPU0       CPU1       
-  0:      31263          0   IO-APIC-edge      timer
-  1:        201          0   IO-APIC-edge      i8042
-  4:        219          0   IO-APIC-edge      serial
-  6:          5          0   IO-APIC-edge      floppy
-  8:          1          0   IO-APIC-edge      rtc
-  9:          0          0   IO-APIC-fasteoi   acpi
- 12:        129       1124   IO-APIC-edge      i8042
- 14:       7010       1235   IO-APIC-edge      libata
- 15:          0          0   IO-APIC-edge      libata
- 17:          0          0   IO-APIC-fasteoi   uhci_hcd:usb3
- 18:          0          0   IO-APIC-fasteoi   uhci_hcd:usb4
- 19:       4250          0   IO-APIC-fasteoi   uhci_hcd:usb5, HDA Intel
- 20:       1251         44   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb2
- 21:        422        640   IO-APIC-fasteoi   pata_pdc2027x, firewire_ohci
- 23:      24023          0   IO-APIC-fasteoi   libata, hsfpcibasic2
-378:         93        108   PCI-MSI-edge      eth0
-379:          1          0   PCI-MSI-edge      eth1
-NMI:          0          0 
-LOC:      31000      30803 
-ERR:          0
-
-Hell, IRQ 23 is shared between libata and my modem !!!
-
-OK, just reboot, and see what happens.... Cool, now it is booting fine, 
-no more complaint, even without irqpoll, IRQ 23 still shared...
-Another one, and Ok again... So, this looks really random :(
-
-Anything I could do to try to collect usefull traces ?
-
-Paul
+-- 
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
