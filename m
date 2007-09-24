@@ -1,123 +1,57 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: IDE broken on Pegasos PPC platform
-Date: Mon, 24 Sep 2007 22:27:43 +0100
-Message-ID: <46F82BCF.1020702@genesi-usa.com>
-References: <46F80BB1.7050902@redhat.com>
+From: "Maurizio Monge" <maurizio.monge@gmail.com>
+Subject: Re: HSM violation with ahci+WDC WD1600BEVS-22RST0
+Date: Mon, 24 Sep 2007 23:52:51 +0200
+Message-ID: <e4c519350709241452l33c2f1b6m8ab943460248656f@mail.gmail.com>
+References: <138995186.20070924163607@efirst.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mithrandir.softwarenexus.net ([66.98.186.96]:3786 "EHLO
-	mail.genesi-usa.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbXIXV0S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2007 17:26:18 -0400
-In-Reply-To: <46F80BB1.7050902@redhat.com>
+Received: from fk-out-0910.google.com ([209.85.128.188]:40720 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615AbXIXVwx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2007 17:52:53 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1851503fkz
+        for <linux-ide@vger.kernel.org>; Mon, 24 Sep 2007 14:52:51 -0700 (PDT)
+In-Reply-To: <138995186.20070924163607@efirst.ro>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Catalin Constantin <catalin@efirst.ro>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Yeah I'll ack it if it matters, although I'd make a nit about the
-fixing of device tree entries in prom_init and have it moved to
-nvramrc or a Forth script or boot loader..
+No, i did not manage to improve (it should NOT be a dangerous error BTW).
+I simply think that this issue is because of buggy firmware, so i
+posted to linux-ide a patch to blacklist this hard disk from using NCQ
+(because it is triggering spurious completions).
+I don't know what the "blacklisting policy" is for linux kernel
+developers, i think that, since there probably are a lot of buggy
+drives for NCQ and so, a module parameter to disable NCQ while loading
+libata could be useful.
+Best regards.
 
-Pegasos IDE quirks have been "fixed" so many times now in Linux,
-this code's going to get reshuffled again in other changes, I
-think the device tree should be fixed at the firmware level and
-not in the kernel.
+On 9/24/07, Catalin Constantin <catalin@efirst.ro> wrote:
+> Hello,
+>
+> Did you manage to find out why were you getting thoes messages ATA
+> related ?
+>
+> I am having the same issue and some help would be very handy.
+>
+> Thank you and sorry for disturbing you,
+>
+> --
+> Catalin Constantin
+> Efirst - www.efirst.ro
+> http://www.cabanova.ro
+>
+>
+
 
 -- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+Ciao
+Maurizio
+http://stregatto.wordpress.com
 
-Chuck Ebbert wrote:
-> Without this patch, taken from a Suse 2.6.22 kernel, the Pegasos
-> PPC machines can't use their IDE interface. Is this the right fix?
-> 
-> Bug:
-> https://bugzilla.redhat.com/show_bug.cgi?id=247602
-> Patch (also below):
-> https://bugzilla.redhat.com/attachment.cgi?id=167747
-> 
-> ===============
-> 
-> The built-in IDE controller is configured in legacy mode,
-> but the PCI registers advertise native mode.
-> Force the PCI class into legacy mode. This allows pata_via to access
-> two drives.
-> The Pegasos specific irq enforcement in the via82cxxx driver
-> must stay because there is aparently no generic way to setup irq per channel.
-> 
-> Tested on Pegasos2 with firmware version 20040810, and two IDE disks.
-> 
-> ---
->  arch/powerpc/kernel/prom_init.c   |   11 ++++++++---
->  arch/powerpc/platforms/chrp/pci.c |   29 +++++++++++++++++++++++++++++
->  2 files changed, 37 insertions(+), 3 deletions(-)
-> 
-> --- a/arch/powerpc/kernel/prom_init.c
-> +++ b/arch/powerpc/kernel/prom_init.c
-> @@ -2044,6 +2044,7 @@ static void __init fixup_device_tree_map
->  /*
->   * Pegasos and BriQ lacks the "ranges" property in the isa node
->   * Pegasos needs decimal IRQ 14/15, not hexadecimal
-> + * Pegasos has the IDE configured in legacy mode, but advertised as native
->   */
->  static void __init fixup_device_tree_chrp(void)
->  {
-> @@ -2081,9 +2082,13 @@ static void __init fixup_device_tree_chr
->  		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
->  		prop[0] = 14;
->  		prop[1] = 0x0;
-> -		prop[2] = 15;
-> -		prop[3] = 0x0;
-> -		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
-> +		prom_setprop(ph, name, "interrupts", prop, 2*sizeof(u32));
-> +		prom_printf("Fixing up IDE class-code on Pegasos...\n");
-> +		rc = prom_getprop(ph, "class-code", prop, sizeof(u32));
-> +		if (rc == sizeof(u32)) {
-> +			prop[0] &= ~0x5;
-> +			prom_setprop(ph, name, "class-code", prop, sizeof(u32));
-> +		}
->  	}
->  }
->  #else
-> --- a/arch/powerpc/platforms/chrp/pci.c
-> +++ b/arch/powerpc/platforms/chrp/pci.c
-> @@ -338,3 +338,32 @@ void chrp_pci_fixup_winbond_ata(struct p
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
->  		chrp_pci_fixup_winbond_ata);
-> +
-> +/* Pegasos2 firmware version 20040810 configures the built-in IDE controller
-> + * in legacy mode, but sets the PCI registers to PCI native mode.
-> + * The chip can only operate in legacy mode, so force the PCI class into legacy
-> + * mode as well. The same fixup must be done to the class-code property in
-> + * the IDE node /pci@80000000/ide@C,1
-> + */
-> +static void chrp_pci_fixup_vt8231_ata(struct pci_dev *viaide)
-> +{
-> +	u8 progif;
-> +	struct pci_dev *viaisa;
-> +
-> +	if (!machine_is(chrp) || _chrp_type != _CHRP_Pegasos)
-> +		return;
-> +	if (viaide->irq != 14)
-> +		return;
-> +
-> +	viaisa = pci_get_device(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8231, NULL);
-> +	if (!viaisa)
-> +		return;
-> +	printk("Fixing VIA IDE, force legacy mode on '%s'\n", viaide->dev.bus_id);
-> +
-> +	pci_read_config_byte(viaide, PCI_CLASS_PROG, &progif);
-> +	pci_write_config_byte(viaide, PCI_CLASS_PROG, progif & ~0x5);
-> +	viaide->class &= ~0x5;
-> +
-> +	pci_dev_put(viaisa);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, chrp_pci_fixup_vt8231_ata);
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"Well we all shine on
+Like the moon and the stars and the sun" (John Lennon)
