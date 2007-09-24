@@ -1,26 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: IDE broken on Pegasos PPC platform
-Date: Mon, 24 Sep 2007 21:38:14 +0100
-Message-ID: <20070924213814.7047800c@the-village.bc.nu>
-References: <46F80BB1.7050902@redhat.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: ICH9 2 port SATA controller port map?
+Date: Mon, 24 Sep 2007 13:36:46 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60754 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751074AbXIXUbz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2007 16:31:55 -0400
-In-Reply-To: <46F80BB1.7050902@redhat.com>
+Received: from mga11.intel.com ([192.55.52.93]:16179 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752129AbXIXUhs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2007 16:37:48 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Mon, 24 Sep 2007 15:10:41 -0400
-Chuck Ebbert <cebbert@redhat.com> wrote:
+Hello,
 
-> Without this patch, taken from a Suse 2.6.22 kernel, the Pegasos
-> PPC machines can't use their IDE interface. Is this the right fix?
+ICH9 has DeviceID's for 2 port, IDE mode, SATA controllers.  The current
+port map in ata_piix is setup for the 4 port controllers.  This seems to
+work ok, but I wonder if a new port map should be defined for the 2 port
+controllers, where the two ports are PM, SM?  You can refer to the ICH9
+Datasheet on intel.com for detail.
 
-I believe so yes
+Currently, ata_piix has ICH9 using this:
+
+static const struct piix_map_db ich8_map_db = {
+	.mask = 0x3,
+	.port_enable = 0x3,
+	.map = {
+		/* PM   PS   SM   SS       MAP */
+		{  P0,  P2,  P1,  P3 }, /* 00b (hardwired when in AHCI)
+*/
+		{  RV,  RV,  RV,  RV },
+		{  P0,  P2, IDE, IDE }, /* 10b (IDE mode) */
+		{  RV,  RV,  RV,  RV },
+	},
+};
+
+Thanks,
+
+Jason
