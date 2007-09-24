@@ -1,36 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: CompactFlash and HD unhappy together on the same IDE channel
-Date: Mon, 24 Sep 2007 18:03:00 -0400
-Message-ID: <46F83414.2040809@rtr.ca>
-References: <46C69913.1060505@g7.org>	<46C799E8.8080407@rtr.ca>	<20070819175632.349d11c5@the-village.bc.nu>	<46EC70A0.1000800@g7.org>	<20070922191248.5f2bc74a@the-village.bc.nu>	<46F693BD.8070604@rtr.ca> <20070923184045.6358014a@the-village.bc.nu>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: [patch 0/2] SATA Link Power Management patches
+Date: Mon, 24 Sep 2007 15:12:01 -0700
+Message-ID: <20070924151201.6974d9b5.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2254 "EHLO mail.rtr.ca"
+Received: from mga11.intel.com ([192.55.52.93]:17103 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754354AbXIXWDB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Sep 2007 18:03:01 -0400
-In-Reply-To: <20070923184045.6358014a@the-village.bc.nu>
+	id S1753333AbXIXWQw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Sep 2007 18:16:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Malcolm Gillies <malcolm@g7.org>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, akpm@linux-foundation.org
 
-Alan Cox wrote:
->> The solution is beginning to look more and more obvious:  default to not use MDMA
->> modes for CF devices at boot.  And eventually provide a sysfs or libata parameter
->> (or support/snoop SET_XFER_MODE) to change the mode later.
-> 
-> I strongly disagree.
-> 
-> We need to understand *why*, we need to fix any actual bugs we have.
-> Lots and lots of people have no problems here. The people with problems
-> and pure PATA all seem to have piix chips.
+Here's a set of patches which implement link power management for SATA. 
+We had talked at kernel summit of moving sysfs interface for setting
+the link power management policy to the block layer, but after a 
+lot of consideration, I think this doesn't make sense.  Mainly because
+I feel for SATA the link power management policy should be associated
+with the controller, not with the device. So, we continue to use
+the shost_attrs array in the scsi host template to create a sysfs
+interface that is associated with the scsi_host class. 
 
-Well, there's a reasonable point.
+These patches have changed since the last version.  The patches have
+been refreshed to use the new ata_link structures.  Additionally, I've
+separated out DIPM enabling and put it into libata-core, because DIPM
+can be used by any SATA disk that is attached to a controller which
+allows DIPM, although in this implementation the driver will need
+to explicitly set a flag which would indicate to the core that it
+is OK to set DIPM.  This is because all interface power state changes
+can cause Phy Ready interrupts, and the driver will need to know
+to ignore them. DIPM will only be enabled for the min_power link
+power management policy value.  This is because many disks are not
+clever enough to know that if a controller naks their request for
+a SLUMBER transition, they should retry for PARTIAL - instead they
+will just give up all together.
 
-But when we see a CF card on a *SATA* controller, we *know* there's a bridge chip
-in there someplace, and we know that the common bridges don't do MWDMA.
+With these patches, measured on my X60 with a Watts Up Pro meter,
+in the base station after all powertop suggestions have been applied,  
+I see a savings of approximately .7-.8 W in min_power mode, and
+.5 W in medium_power mode.  For the best power/performance tradeoff,
+it's recommended that you use the "medium_power" setting, although
+min_power can be used of course when you absolutely need to save
+every 10th of a watt and don't care about the additional performance
+loss.
 
-Cheers
+Please give them a try.
+Thanks,
+Kristen
