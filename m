@@ -1,41 +1,103 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: What's in linux-2.6-block.git for 2.6.24
-Date: Mon, 24 Sep 2007 20:48:03 +0200
-Message-ID: <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
-References: <20070921085711.GG2367@kernel.dk>
-	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
-	 <20070923225320I.tomof@acm.org>
-	 <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: IDE broken on Pegasos PPC platform
+Date: Mon, 24 Sep 2007 15:10:41 -0400
+Message-ID: <46F80BB1.7050902@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:40609 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756677AbXIXTKm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Sep 2007 15:10:42 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>
 
-On 9/23/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
-> On 9/23/07, FUJITA Tomonori <tomof@acm.org> wrote:
-> > Can you try Jens's sglist-arch branch? If it works, probably libata in
-> > -mm has bugs.
-> >
-> > For your convenience, I put a sglist-arch branch patch against v2.6.23-rc7:
-> >
-> > http://www.kernel.org/pub/linux/kernel/people/tomo/misc/v2.6.23-rc7-sglist-arch.diff.bz2
->
-> Thanks for the patch.
-> I tried it and 3 out of 3 boot attempts worked without problems.
-> But I can't rule out that the bug is still there, as I have no way to
-> trigger it on demand.
+Without this patch, taken from a Suse 2.6.22 kernel, the Pegasos
+PPC machines can't use their IDE interface. Is this the right fix?
 
-Short update:
-2 more boots with that kernel did also work.
-I have just installed 2.6.23-rc7-mm1 and booted three times.
-Also no problems with that version.
+Bug:
+https://bugzilla.redhat.com/show_bug.cgi?id=247602
+Patch (also below):
+https://bugzilla.redhat.com/attachment.cgi?id=167747
 
-I will keep on using 2.6.23-rc7-mm1 and post again, if the error shows up again.
+===============
 
-Torsten
+The built-in IDE controller is configured in legacy mode,
+but the PCI registers advertise native mode.
+Force the PCI class into legacy mode. This allows pata_via to access
+two drives.
+The Pegasos specific irq enforcement in the via82cxxx driver
+must stay because there is aparently no generic way to setup irq per channel.
+
+Tested on Pegasos2 with firmware version 20040810, and two IDE disks.
+
+---
+ arch/powerpc/kernel/prom_init.c   |   11 ++++++++---
+ arch/powerpc/platforms/chrp/pci.c |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+), 3 deletions(-)
+
+--- a/arch/powerpc/kernel/prom_init.c
++++ b/arch/powerpc/kernel/prom_init.c
+@@ -2044,6 +2044,7 @@ static void __init fixup_device_tree_map
+ /*
+  * Pegasos and BriQ lacks the "ranges" property in the isa node
+  * Pegasos needs decimal IRQ 14/15, not hexadecimal
++ * Pegasos has the IDE configured in legacy mode, but advertised as native
+  */
+ static void __init fixup_device_tree_chrp(void)
+ {
+@@ -2081,9 +2082,13 @@ static void __init fixup_device_tree_chr
+ 		prom_printf("Fixing up IDE interrupt on Pegasos...\n");
+ 		prop[0] = 14;
+ 		prop[1] = 0x0;
+-		prop[2] = 15;
+-		prop[3] = 0x0;
+-		prom_setprop(ph, name, "interrupts", prop, 4*sizeof(u32));
++		prom_setprop(ph, name, "interrupts", prop, 2*sizeof(u32));
++		prom_printf("Fixing up IDE class-code on Pegasos...\n");
++		rc = prom_getprop(ph, "class-code", prop, sizeof(u32));
++		if (rc == sizeof(u32)) {
++			prop[0] &= ~0x5;
++			prom_setprop(ph, name, "class-code", prop, sizeof(u32));
++		}
+ 	}
+ }
+ #else
+--- a/arch/powerpc/platforms/chrp/pci.c
++++ b/arch/powerpc/platforms/chrp/pci.c
+@@ -338,3 +338,32 @@ void chrp_pci_fixup_winbond_ata(struct p
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 		chrp_pci_fixup_winbond_ata);
++
++/* Pegasos2 firmware version 20040810 configures the built-in IDE controller
++ * in legacy mode, but sets the PCI registers to PCI native mode.
++ * The chip can only operate in legacy mode, so force the PCI class into legacy
++ * mode as well. The same fixup must be done to the class-code property in
++ * the IDE node /pci@80000000/ide@C,1
++ */
++static void chrp_pci_fixup_vt8231_ata(struct pci_dev *viaide)
++{
++	u8 progif;
++	struct pci_dev *viaisa;
++
++	if (!machine_is(chrp) || _chrp_type != _CHRP_Pegasos)
++		return;
++	if (viaide->irq != 14)
++		return;
++
++	viaisa = pci_get_device(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8231, NULL);
++	if (!viaisa)
++		return;
++	printk("Fixing VIA IDE, force legacy mode on '%s'\n", viaide->dev.bus_id);
++
++	pci_read_config_byte(viaide, PCI_CLASS_PROG, &progif);
++	pci_write_config_byte(viaide, PCI_CLASS_PROG, progif & ~0x5);
++	viaide->class &= ~0x5;
++
++	pci_dev_put(viaisa);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_82C586_1, chrp_pci_fixup_vt8231_ata);
