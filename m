@@ -1,159 +1,72 @@
-From: "Peer Chen" <peerchen@gmail.com>
-Subject: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
-Date: Tue, 25 Sep 2007 13:23:08 +0800
-Message-ID: <200709251323031982245@gmail.com>
+From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+Subject: Re: What's in linux-2.6-block.git for 2.6.24
+Date: Tue, 25 Sep 2007 07:52:53 +0200
+Message-ID: <64bb37e0709242252l48d54d16w5f645d324914fd16@mail.gmail.com>
+References: <20070921085711.GG2367@kernel.dk>
+	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
+	 <20070923225320I.tomof@acm.org>
+	 <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+	 <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:25928 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756034AbXIYFXU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Sep 2007 01:23:20 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2280009wah
-        for <linux-ide@vger.kernel.org>; Mon, 24 Sep 2007 22:23:16 -0700 (PDT)
+Received: from py-out-1112.google.com ([64.233.166.177]:18839 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbXIYFwy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Sep 2007 01:52:54 -0400
+Received: by py-out-1112.google.com with SMTP id u77so3348220pyb
+        for <linux-ide@vger.kernel.org>; Mon, 24 Sep 2007 22:52:53 -0700 (PDT)
+In-Reply-To: <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
-Cc: akpm <akpm@linux-foundation.org>, jeff <jeff@garzik.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Add the ahci controller legacy mode support to sata_nv.
-Move the DIDs of legacy mode from ahci.c to sata_nv.c
+On 9/24/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
+> I will keep on using 2.6.23-rc7-mm1 and post again, if the error shows up again.
 
-The patch base on kernel 2.6.23-rc8
+On the next boot it did show up again, so 2.6.23-rc7-mm1 still has the bug.
 
-Signed-off-by: Peer Chen <peerchen@gmail.com>
----
-diff -uprN -X linux-2.6.23-rc8-vanilla/Documentation/dontdiff linux-2.6.23-rc8-vanilla/drivers/ata/ahci.c linux-2.6.23-rc8/drivers/ata/ahci.c
---- linux-2.6.23-rc8-vanilla/drivers/ata/ahci.c	2007-09-25 11:53:40.000000000 -0400
-+++ linux-2.6.23-rc8/drivers/ata/ahci.c	2007-09-25 11:53:25.000000000 -0400
-@@ -434,14 +434,6 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(NVIDIA, 0x044d), board_ahci },		/* MCP65 */
- 	{ PCI_VDEVICE(NVIDIA, 0x044e), board_ahci },		/* MCP65 */
- 	{ PCI_VDEVICE(NVIDIA, 0x044f), board_ahci },		/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x045c), board_ahci },		/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x045d), board_ahci },		/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x045e), board_ahci },		/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x045f), board_ahci },		/* MCP65 */
--	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci },		/* MCP67 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci },		/* MCP67 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci },		/* MCP67 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci },		/* MCP67 */
-@@ -450,10 +442,6 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci },		/* MCP67 */
- 	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci },		/* MCP67 */
- 	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci },		/* MCP67 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x07f3), board_ahci },		/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x07f4), board_ahci },		/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x07f5), board_ahci },		/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x07f6), board_ahci },		/* MCP73 */
-@@ -462,10 +450,6 @@ static const struct pci_device_id ahci_p
- 	{ PCI_VDEVICE(NVIDIA, 0x07f9), board_ahci },		/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x07fa), board_ahci },		/* MCP73 */
- 	{ PCI_VDEVICE(NVIDIA, 0x07fb), board_ahci },		/* MCP73 */
--	{ PCI_VDEVICE(NVIDIA, 0x0ad0), board_ahci },		/* MCP77 */
--	{ PCI_VDEVICE(NVIDIA, 0x0ad1), board_ahci },		/* MCP77 */
--	{ PCI_VDEVICE(NVIDIA, 0x0ad2), board_ahci },		/* MCP77 */
--	{ PCI_VDEVICE(NVIDIA, 0x0ad3), board_ahci },		/* MCP77 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad4), board_ahci },		/* MCP77 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad5), board_ahci },		/* MCP77 */
- 	{ PCI_VDEVICE(NVIDIA, 0x0ad6), board_ahci },		/* MCP77 */
-diff -uprN -X linux-2.6.23-rc8-vanilla/Documentation/dontdiff linux-2.6.23-rc8-vanilla/drivers/ata/sata_nv.c linux-2.6.23-rc8/drivers/ata/sata_nv.c
---- linux-2.6.23-rc8-vanilla/drivers/ata/sata_nv.c	2007-09-25 11:31:03.000000000 -0400
-+++ linux-2.6.23-rc8/drivers/ata/sata_nv.c	2007-09-25 11:19:48.000000000 -0400
-@@ -266,6 +266,7 @@ static void nv_adma_tf_read(struct ata_p
- enum nv_host_type
- {
- 	GENERIC,
-+	AHCI_LEG,
- 	NFORCE2,
- 	NFORCE3 = NFORCE2,	/* NF2 == NF3 as far as sata_nv is concerned */
- 	CK804,
-@@ -287,6 +288,29 @@ static const struct pci_device_id nv_pci
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, 0x45c), AHCI_LEG },	/* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x45d), AHCI_LEG },	/* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x45e), AHCI_LEG },	/* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x45f), AHCI_LEG },	/* MCP65 */
-+	{ PCI_VDEVICE(NVIDIA, 0x550), AHCI_LEG },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x551), AHCI_LEG },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x552), AHCI_LEG },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x553), AHCI_LEG },	/* MCP67 */
-+	{ PCI_VDEVICE(NVIDIA, 0x7f0), AHCI_LEG },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x7f1), AHCI_LEG },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x7f2), AHCI_LEG },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0x7f3), AHCI_LEG },	/* MCP73 */
-+	{ PCI_VDEVICE(NVIDIA, 0xad0), AHCI_LEG },	/* MCP77 */
-+	{ PCI_VDEVICE(NVIDIA, 0xad1), AHCI_LEG },	/* MCP77 */
-+	{ PCI_VDEVICE(NVIDIA, 0xad2), AHCI_LEG },	/* MCP77 */
-+	{ PCI_VDEVICE(NVIDIA, 0xad3), AHCI_LEG },	/* MCP77 */
-+	{ PCI_VDEVICE(NVIDIA, 0xab4), AHCI_LEG },	/* MCP79 */
-+	{ PCI_VDEVICE(NVIDIA, 0xab5), AHCI_LEG },	/* MCP79 */
-+	{ PCI_VDEVICE(NVIDIA, 0xab6), AHCI_LEG },	/* MCP79 */
-+	{ PCI_VDEVICE(NVIDIA, 0xab7), AHCI_LEG },	/* MCP79 */	
-+	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
-+		PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_STORAGE_IDE<<8, 0xffff00, AHCI_LEG },
- 
- 	{ } /* terminate list */
- };
-@@ -365,6 +389,30 @@ static const struct ata_port_operations 
- 	.port_start		= ata_port_start,
- };
- 
-+static const struct ata_port_operations nv_ahci_leg_ops = {
-+	.port_disable		= ata_port_disable,
-+	.tf_load		= ata_tf_load,
-+	.tf_read		= ata_tf_read,
-+	.exec_command		= ata_exec_command,
-+	.check_status		= ata_check_status,
-+	.dev_select		= ata_std_dev_select,
-+	.bmdma_setup		= ata_bmdma_setup,
-+	.bmdma_start		= ata_bmdma_start,
-+	.bmdma_stop		= ata_bmdma_stop,
-+	.bmdma_status		= ata_bmdma_status,
-+	.qc_prep		= ata_qc_prep,
-+	.qc_issue		= ata_qc_issue_prot,
-+	.freeze			= ata_bmdma_freeze,
-+	.thaw			= ata_bmdma_thaw,
-+	.error_handler		= nv_error_handler,
-+	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
-+	.data_xfer		= ata_data_xfer,
-+	.irq_clear		= ata_bmdma_irq_clear,
-+	.irq_on			= ata_irq_on,
-+	.irq_ack		= ata_irq_ack,
-+	.port_start		= ata_port_start,
-+};
-+
- static const struct ata_port_operations nv_nf2_ops = {
- 	.port_disable		= ata_port_disable,
- 	.tf_load		= ata_tf_load,
-@@ -463,6 +511,17 @@ static const struct ata_port_info nv_por
- 		.port_ops	= &nv_generic_ops,
- 		.irq_handler	= nv_generic_interrupt,
- 	},
-+	/* ahci legacy */
-+	{
-+		.sht		= &nv_sht,
-+		.flags		= ATA_FLAG_SATA | ATA_FLAG_SLAVE_POSS |
-+				  ATA_FLAG_HRST_TO_RESUME,
-+		.pio_mask	= NV_PIO_MASK,
-+		.mwdma_mask	= NV_MWDMA_MASK,
-+		.udma_mask	= NV_UDMA_MASK,
-+		.port_ops	= &nv_ahci_leg_ops,
-+		.irq_handler	= nv_generic_interrupt,
-+	},
- 	/* nforce2/3 */
- 	{
- 		.sht		= &nv_sht,
--
- 				
---------------
-Peer Chen
-2007-09-25
+[   33.810000] md1: bitmap initialized from disk: read 10/10 pages, set 0 bits
+[   33.810000] created bitmap (145 pages) for device md1
+[   63.910000] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+[   63.910000] ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0
+cdb 0x0 data 4096 out
+[   63.910000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[   63.910000] ata1.00: status: {DRDY }
+[   63.910000] ata1: hard resetting link
+[   66.210000] ata1: softreset failed (port not ready)
+[   66.210000] ata1: reset failed (errno=-5), retrying in 8 secs
+[   73.910000] ata1: hard resetting link
+[   76.210000] ata1: softreset failed (port not ready)
+[   76.210000] ata1: reset failed (errno=-5), retrying in 8 secs
+[   83.910000] ata1: hard resetting link
+[   86.210000] ata1: softreset failed (port not ready)
+[   86.210000] ata1: reset failed (errno=-5), retrying in 33 secs
+[  118.910000] ata1: limiting SATA link speed to 1.5 Gbps
+[  118.910000] ata1: hard resetting link
+[  121.210000] ata1: softreset failed (port not ready)
+[  121.210000] ata1: reset failed, giving up
+[  121.210000] ata1.00: disabled
+[  121.210000] ata1: EH complete
+[  121.210000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  121.210000] end_request: I/O error, dev sda, sector 625137161
+[  121.210000] md: super_written gets error=-5, uptodate=0
+[  121.210000] raid5: Disk failure on sda2, disabling device.
+Operation continuing on 2 devices
 
+After that there are many more error like this in the log:
+[  135.760000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  135.760000] end_request: I/O error, dev sda, sector 19551113
+[  135.760000] Buffer I/O error on device sda2, logical block 1
+or:
+[  135.760000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  135.760000] end_request: I/O error, dev sda, sector 19551105
+
+Torsten
