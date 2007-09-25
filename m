@@ -1,110 +1,51 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: libata not working for sis5533
-Date: Tue, 25 Sep 2007 22:44:46 +0200
-Message-ID: <46F9733E.9080604@gmail.com>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com> <46E85AA8.3080302@redhat.com>
-Reply-To: patrizio.bassi@gmail.com
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: [PATCH] pata_sis: add missing UDMA5 timing value in sis_66_set_dmamode()
+Date: Tue, 25 Sep 2007 18:06:42 -0400
+Message-ID: <46F98672.7070603@redhat.com>
+References: <20070921072905.GC10660@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:11894 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752111AbXIYUoy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Sep 2007 16:44:54 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1786636nfb
-        for <linux-ide@vger.kernel.org>; Tue, 25 Sep 2007 13:44:52 -0700 (PDT)
-In-Reply-To: <46E85AA8.3080302@redhat.com>
+Received: from mx1.redhat.com ([66.187.233.31]:52108 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750878AbXIYWG6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Sep 2007 18:06:58 -0400
+In-Reply-To: <20070921072905.GC10660@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, desaster.area@addcom.de, alan@redhat.com, bzolnier@gmail.com
 
-Chuck Ebbert ha scritto:
-> On 08/31/2007 06:20 PM, Patrizio Bassi wrote:
->   
->> Patrizio Bassi ha scritto:
->>     
->>> Michal Piotrowski ha scritto:
->>>       
->>>> Hi,
->>>>
->>>> [Adding IDE wizards to CC]
->>>>
->>>> On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
->>>>   
->>>>         
->>>>> My sis630 chipset shipped with Asus A1000
->>>>> doesn't work properly with suspend with ide drivers
->>>>> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
->>>>>
->>>>> i tried to switch to libata but i cannot boot.
->>>>> I've enabled generic ide and sis specific code, both in-kernel. of
->>>>> course scsi too.
->>>>>
->>>>> when i boot i get: irq #14 nobody cared and stop
->>>>>
->>>>> i have to remove battery to reboot pc.
->>>>> I'm using 2.6.22.5, but i never got any libata kernel working.
->>>>>
->>>>> Patrizio
->>>>>
->>>>> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
->>>>> the laptop and could not boot it
->>>>>
->>>>> Please CC me.
->>>>>
->>>>> lspci:
->>>>> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
->>>>> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
->>>>> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
->>>>> Bridge)
->>>>> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
->>>>> PCI Fast Ethernet (rev 80)
->>>>> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
->>>>> Controller (rev 07)
->>>>> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
->>>>> Controller (rev 07)
->>>>> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
->>>>> SiS PCI Audio Accelerator (rev 01)
->>>>>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
->>>>> Controller (rev a0)
->>>>> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
->>>>> PCI-to-PCI bridge (AGP)
->>>>> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>>>> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>>>> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
->>>>> 630/730 PCI/AGP VGA Display Adapter (rev 11)
->>>>>     
->>>>>           
->>>> Regards,
->>>> Michal
->>>>
->>>>   
->>>>         
->> i've been out for a week, but found no notice, did i lost any email or
->> no activity on this issue?
->>
->>     
->
-> I assume you tried the standard workarounds, like
->
->   pci=nommconf,nomsi
->   pci=noacpi
->   pci=biosirq
->
-> (one at at time, not all at once.)
->
->
->   
-i just fineshed to try (had an hardware problem, could not be faster)
-but got no results :(
+On 09/21/2007 03:29 AM, Tejun Heo wrote:
+> sis_66_set_dmamode() also handles early UDMA100 (SIS630 ET) but is
+> missing udma timing value for UDMA100.  According to sis5513, this
+> should be 0x8000.  This caused UDMA100 device to fail on pata_sis till
+> it downgrades to UDMA66 while it works fine on sis5513 at UDMA100.
+> 
+> Reported by Adam Blech.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Adam Blech <desaster.area@addcom.de>
+> ---
+>  drivers/ata/pata_sis.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
+> index da3f720..3b5be77 100644
+> --- a/drivers/ata/pata_sis.c
+> +++ b/drivers/ata/pata_sis.c
+> @@ -376,8 +376,9 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+>  	int drive_pci = sis_old_port_base(adev);
+>  	u16 timing;
+>  
+> +	/* MWDMA 0-2 and UDMA 0-5 */
+>  	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
+> -	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000};
+> +	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000, 0x8000 };
+>  
+>  	pci_read_config_word(pdev, drive_pci, &timing);
+>  
 
-libata is unusable on my system.
-i'll wait 2.6.23 to be out to try again.
-
-
--- 
-
-Patrizio Bassi
-www.patriziobassi.it
+Is this going into 2.6.23?
+It's not in 2.6.23-rc8-mm1...
