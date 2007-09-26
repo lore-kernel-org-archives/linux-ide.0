@@ -1,65 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Wed, 26 Sep 2007 17:41:50 +0900
-Message-ID: <46FA1B4E.8090103@gmail.com>
-References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_pdc202xx_old
+Date: Wed, 26 Sep 2007 15:23:17 +0100
+Message-ID: <20070926152317.67f4d6fd@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:57242 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743AbXIZNvF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 09:51:05 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1458353nze
-        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 06:51:03 -0700 (PDT)
-In-Reply-To: <46F9BF3E.5050708@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49545 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753705AbXIZORQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 10:17:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jeff@garzik.org, akpm@osdl.org
 
-Jeff Garzik wrote:
-[--snip--]
-> There, even the concept of "port" is fluid, and the libata EH model of
-> freezing and thawing a port (with the desired irq-off result) just
-> doesn't fit the hardware.
+I've been doing an audit of this driver to try and find out why we have
+problems with some Clevo boxes that use it. Didn't get anywhere other
+than to discover all the bug reporters I have use vmware, which may or
+may not be chance.
 
-Well, the current model was developed while struggling with the first
-generation PMP hardware which had a lot of quirks.  More focus was on
-making the system run and keeping it that way.  Anyways, now that the
-quirks are better understood, I think we can make PMP register access
-irq-driven safely.
+In the process however I did find out our MWDMA2 performance was a bit
+low and code review showed the MWDMA0/2 timings are reversed due to a
+thinko in the table ordering
 
-[--snip--]
-> As such, polling is simply an outmoded concept.  It does not make sense
-> on new hardware, and forcing design decisions down that path only lead
-> to a cascade of similar design decisions -- pmp_read polling being just
-> one example of such a result.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-For pmp read/write, I agree that IRQ driven access would be better but
-even for fairly advanced controllers like ahci or sil24, I think
-resetting-by-polling is a good idea.
-
-> Just like the Linux kernel MM platform API presents 3 levels of page
-> table entries, even when the hardware may only have 2, libata high level
-> API _must_ be implemented as 100% asynchronous event driven API.
-
-Or allow both?
-
-> If the default implementation chooses to use polling -- i.e. all SFF
-> controllers -- that's fine.  But in the new SAS/SATA world its clear
-> that we have far too many polling-related assumptions as it is.
-> 
-> Polling just flat out doesn't make sense on modern SAS/SATA -- and even
-> a couple modern SATA controllers.  On such controllers, we are notified
-> immediately via interrupt even in the event of errors.
-
-For SAS, I don't have any strong opinion.  For SATA, I think we
-definitely need to allow or even prefer polling for host port resets.
-
-Is this NACK on the patchset or can we update PMP access later?
-
--- 
-tejun
-
+diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c linux-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c
+--- linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2007-09-18 15:32:51.000000000 +0100
++++ linux-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2007-09-26 14:03:33.430372856 +0100
+@@ -9,7 +9,7 @@
+  * First cut with LBA48/ATAPI
+  *
+  * TODO:
+- *	Channel interlock/reset on both required
++ *	Channel interlock/reset on both required ?
+  */
+ 
+ #include <linux/kernel.h>
+@@ -22,7 +22,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME "pata_pdc202xx_old"
+-#define DRV_VERSION "0.4.2"
++#define DRV_VERSION "0.4.3"
+ 
+ static int pdc2026x_cable_detect(struct ata_port *ap)
+ {
+@@ -106,9 +106,9 @@
+ 		{ 0x20, 0x01 }
+ 	};
+ 	static u8 mdma_timing[3][2] = {
+-		{ 0x60, 0x03 },
+-		{ 0x60, 0x04 },
+ 		{ 0xe0, 0x0f },
++		{ 0x60, 0x04 },
++		{ 0x60, 0x03 },
+ 	};
+ 	u8 r_bp, r_cp;
+ 
+@@ -139,6 +139,9 @@
+  *
+  *	In UDMA3 or higher we have to clock switch for the duration of the
+  *	DMA transfer sequence.
++ *
++ *	Note: The host lock held by the libata layer protects
++ *	us from two channels both trying to set DMA bits at once
+  */
+ 
+ static void pdc2026x_bmdma_start(struct ata_queued_cmd *qc)
+@@ -187,6 +190,9 @@
+  *
+  *	After a DMA completes we need to put the clock back to 33MHz for
+  *	PIO timings.
++ *
++ *	Note: The host lock held by the libata layer protects
++ *	us from two channels both trying to set DMA bits at once
+  */
+ 
+ static void pdc2026x_bmdma_stop(struct ata_queued_cmd *qc)
+@@ -206,7 +212,6 @@
+ 		iowrite32(0, atapi_reg);
+ 		iowrite8(ioread8(clock) & ~sel66, clock);
+ 	}
+-	/* Check we keep host level locking here */
+ 	/* Flip back to 33Mhz for PIO */
+ 	if (adev->dma_mode >= XFER_UDMA_2)
+ 		iowrite8(ioread8(clock) & ~sel66, clock);
