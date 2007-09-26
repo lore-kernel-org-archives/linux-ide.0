@@ -1,47 +1,121 @@
-From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Chipset selection for NCQ md RAID
-Date: Wed, 26 Sep 2007 01:03:37 -0400
-Message-ID: <76366b180709252203t6cb790c8lc3d71b4f56670061@mail.gmail.com>
+From: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
+Date: Wed, 26 Sep 2007 07:36:09 +0200
+Message-ID: <46F9EFC9.9030209@dunaweb.hu>
+References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:38467 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752713AbXIZFDi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 01:03:38 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1907349rvb
-        for <linux-ide@vger.kernel.org>; Tue, 25 Sep 2007 22:03:38 -0700 (PDT)
-Content-Disposition: inline
+Received: from linux.dunaweb.hu ([62.77.196.1]:50052 "EHLO linux.dunaweb.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751375AbXIZFgR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 01:36:17 -0400
+In-Reply-To: <46F9D6A8.8010809@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@linux-foundation.org, kluo@nvidia.com, pchen@nvidia.com, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Given the current kernel (2.6.22.8), which SATA chipset would you feel
-most comfortable plugging in to achieve:
+Jeff Garzik =EDrta:
+> Zoltan Boszormenyi wrote:
+>> Hi,
+>>
+>> Jeff Garzik =EDrta:
+>>> akpm@linux-foundation.org wrote:
+>>>> From: Kuan Luo <kluo@nvidia.com>
+>>>>
+>>>> Add the Software NCQ support to sata_nv.c for MCP51/MCP55/MCP61 SA=
+TA
+>>>> controller.  NCQ function is disable by default, you can enable it=
+=20
+>>>> with
+>>>> 'swncq=3D1'.  NCQ will be turned off if the drive is Maxtor on MCP=
+51=20
+>>>> or MCP55
+>>>> rev 0xa2 platform.
+>>>>
+>>>> [akpm@linux-foundation.org: build fix]
+>>>> Signed-off-by: Kuan Luo <kluo@nvidia.com>
+>>>> Signed-off-by: Peer Chen <pchen@nvidia.com>
+>>>> Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>>>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>>>> ---
+>>>>
+>>>>  drivers/ata/sata_nv.c |  860 ++++++++++++++++++++++++++++++++++++=
++++-
+>>>>  1 files changed, 851 insertions(+), 9 deletions(-)
+>>>
+>>> I finally gave this a thorough review.
+>>>
+>>> Overall, good work.  The state transitions all seem solid.  I made=20
+>>> several minor changes and cleanups, and checked it into the=20
+>>> 'nv-swncq' branch of=20
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.gi=
+t
+>>>
+>>> Two hurdles before I'm ready to push upstream:
+>>>
+>>> * someone please verify my minor changes did not break anything; I=20
+>>> don't have real hardware
+>>
+>> After reading the diff between the original and your cleaned up vers=
+ion
+>> it seems both the change from 4 individual flags to a single integer=
+=20
+>> and the
+>> nv_swncq_bmdma_stop() -> __ata_bmdma_stop() transition are obviously=
+=20
+>> correct.
+>> I attached a small cleanup patch which may make one check a bit more=
+=20
+>> readable.
+>>
+>> However, can you explain this chunk below? Why isn't it needed?
+>>
+>> @@ -615,7 +622,6 @@ static const struct ata_port_info nv_por
+>>        {
+>>                .sht            =3D &nv_swncq_sht,
+>>                .flags          =3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGAC=
+Y,
+>> -               .link_flags     =3D ATA_LFLAG_HRST_TO_RESUME,
+>>                .pio_mask       =3D NV_PIO_MASK,
+>>                .mwdma_mask     =3D NV_MWDMA_MASK,
+>>                .udma_mask      =3D NV_UDMA_MASK,
+>
+> that's a bug.  fixed.
+>
+> I also applied your cleanup.
 
-- 16 1TB Hitachi 7K1000 drives
-- NCQ support
-- Kernel md RAID (ie hardware RAID not necessary)
-- Max transfer rate to OS (PCIe should handle 16 drives given their
-current transfer rate?)
+Thanks, but you took the wrong cleanup patch.
+My original, i.e. this chunk below is wrong.
 
-(Assuming the required number of chips of any chipset could be made
-available on the bus.)
-If support for SiI chips is the most robust, would multiple
-SiI3124/SiI3132 chips be most reliable? Or is support for something
-like a Marvell 88SX6081 good enough so that only 2 chips are needed?.
-I have not owned any of these chips, and my impression is that the SiI
-chips have some of the most robust support. The comments at the top of
-sata_mv.c scare me, even if they might be out of date... :)
+@@ -2291,8=20
+<http://git.kernel.org/?p=3Dlinux/kernel/git/jgarzik/libata-dev.git;a=3D=
+blob;f=3Ddrivers/ata/sata_nv.c;h=3D540f218e10e56c8a85a937bc920a5d96434b=
+cc8f;hb=3D41f0f8af3edfccd58b5c9d714928d773a072b693#l2291>=20
++2283,7=20
+<http://git.kernel.org/?p=3Dlinux/kernel/git/jgarzik/libata-dev.git;a=3D=
+blob;f=3Ddrivers/ata/sata_nv.c;h=3Dffd00f5c533d7b58dde67cfef7d2191ca15e=
+a140;hb=3D5a5a9e1890b8260686218a68862d880daee1a817#l2283>=20
+@@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+                 */
+                pp->dhfis_bits |=3D (0x1 << pp->last_issue_tag);
+                pp->ncq_flags |=3D ncq_saw_d2h;
+-               if ((pp->ncq_flags & ncq_saw_sdb) ||
+-                   (pp->ncq_flags & ncq_saw_backout)) {
++               if (pp->ncq_flags & (ncq_saw_sdb || ncq_saw_backout)) {
+                        ata_ehi_push_desc(ehi, "illegal fis transaction=
+");
+                        ehi->err_mask |=3D AC_ERR_HSM;
+                        ehi->action |=3D ATA_EH_HARDRESET;
 
-What about port multiplier support? Do they ever introduce stability
-problems with the drivers?
+It should be a binary OR between the flags. This caused immediate
+NCQ errors upon boot and lead to disabling NCQ.
+My second patch has it corrected.
 
-Is native libata support for high-density Areca cards planned? Does
-anyone know if the manufacturer driver is good enough to rely on for
-the above config to "just work"? I'd personally like to stay within
-libata. (Comments from any Areca Linux users with an ARC-1261ML?
-http://www.areca.com.tw/products/pcie341.htm)
+Best regards,
+Zolt=E1n B=F6sz=F6rm=E9nyi
 
-Thanks in advance, -Andrew
+
