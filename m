@@ -1,44 +1,31 @@
-From: "Berck E. Nash" <flyboy@gmail.com>
-Subject: Re: 2.6.23-rc7-mm1 AHCI ATA errors -- won't boot
-Date: Wed, 26 Sep 2007 08:22:33 -0600
-Message-ID: <46FA6B29.3030807@gmail.com>
-References: <46F7FBCB.4030803@gmail.com> <46F9E2CB.9000002@garzik.org> <46FA2E84.90708@t-online.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Wed, 26 Sep 2007 15:30:28 +0100
+Message-ID: <20070926153028.6fc5b2ce@the-village.bc.nu>
+References: <200709211327569648280@gmail.com>
+	<46F9DA07.4080201@garzik.org>
+	<20070926122332.39351382@the-village.bc.nu>
+	<46FA4587.4070105@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:56991 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760442AbXIZOWl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 10:22:41 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2803236wah
-        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 07:22:41 -0700 (PDT)
-In-Reply-To: <46FA2E84.90708@t-online.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52685 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758443AbXIZOY0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 10:24:26 -0400
+In-Reply-To: <46FA4587.4070105@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernd Schmidt <bernds_cb1@t-online.de>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Bernd Schmidt wrote:
-> One of these appears in my system as well (ASUS P5W-DH Deluxe
-> mainboard).  Here's the hdparm output:
+> > NAK - mmio is an iomap so writel and readl are the wrong things to use
+> 
+> The patch is consistent with the rest of the driver.
+> You are welcome to submit a patch to convert ahci to using ioremap.
 
-Yup, same mainboard here.
+You could just flip the relevant function to use ioread while you are
+tidying it up, instead of spreading new bugs into the code.
 
-> Since about 2.6.17 or 2.6.18, it has been causing long delays while
-> booting:
-> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata2.00: qc timeout (cmd 0xec)
-> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> ata2: port is slow to respond, please be patient (Status 0x80)
-> ata2: COMRESET failed (errno=-16)
-> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata2.00: ATA-6: Config  Disk, RGL10364, max UDMA/133
-> ata2.00: 640 sectors, multi 1: LBA
-> ata2.00: configured for UDMA/133
-
-And yup, same problem with the painful boot delays since 2.6.18.  Tejun
-indicated that a fix would get merged with 2.6.23, but that didn't
-happen.  Here's hoping something makes it into .24!
-
-Berck
+Alan
