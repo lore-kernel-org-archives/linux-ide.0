@@ -1,52 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
-Date: Wed, 26 Sep 2007 12:20:46 -0400
-Message-ID: <46FA86DE.70204@garzik.org>
-References: <200709211327569648280@gmail.com>	<46F9DA07.4080201@garzik.org>	<20070926122332.39351382@the-village.bc.nu>	<46FA4587.4070105@garzik.org>	<20070926153028.6fc5b2ce@the-village.bc.nu>	<46FA6DB8.70508@garzik.org> <20070926171030.6b07fa42@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] Fix HPA handling regression
+Date: Wed, 26 Sep 2007 18:02:22 +0100
+Message-ID: <20070926180222.10a96afe@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41349 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753491AbXIZQUw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Sep 2007 12:20:52 -0400
-In-Reply-To: <20070926171030.6b07fa42@the-village.bc.nu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57237 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754150AbXIZQ4Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 12:56:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
 
-Alan Cox wrote:
-> On Wed, 26 Sep 2007 10:33:28 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
->> Alan Cox wrote:
->>>>> NAK - mmio is an iomap so writel and readl are the wrong things to use
->>>> The patch is consistent with the rest of the driver.
->>>> You are welcome to submit a patch to convert ahci to using ioremap.
->>> You could just flip the relevant function to use ioread while you are
->>> tidying it up, instead of spreading new bugs into the code.
->> No, as I just noted above, the proper fix for this driver is to use 
->> ioremap rather than pci_iomap.
->>
->> Adding support to ahci for legacy PIO is completely pointless.
-> 
-> iomap isn't just for legacy PIO. It allows us to handle future weird
-> mappings in ways ioremap cannot.
+Restore the support for handling drives that report one sector too many
+(ie SCSI not ATA style). This worked before the HPA update but was
+removed in that process
 
-Well, when needs dictate, we can re-evaluate.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-Until some future date arrives where it matters for all these MMIO-only 
-drivers and hardware, it's just a bunch of pointless overhead for ahci 
-and many other drivers.  It's also just not the Linux way to punish 
-everybody for some edge case that so far only exists in email conversations.
-
-The beauty of libata is that you don't have to enforce such a pogrom 
-across all libata drivers.  The libata high level API is completely free 
-from ioread/iowrite junk, leaving each driver to make its own decision.
-
-	Jeff
-
-
-
+diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/drivers/ata/libata-core.c linux-2.6.23rc8-mm1/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.23rc8-mm1/drivers/ata/libata-core.c	2007-09-26 16:46:48.515293608 +0100
++++ linux-2.6.23rc8-mm1/drivers/ata/libata-core.c	2007-09-26 17:02:06.530734048 +0100
+@@ -921,7 +921,8 @@
+ 		*max_sectors = ata_tf_to_lba48(&tf);
+ 	else
+ 		*max_sectors = ata_tf_to_lba(&tf);
+-
++        if (dev->horkage & ATA_HORKAGE_HPA_SIZE)
++		(*max_sectors)--;
+ 	return 0;
+ }
+ 
+@@ -3957,6 +3958,10 @@
+ 	{ "WDC WD2500JD-00HBB0", "WD-WMAL71490727", ATA_HORKAGE_BROKEN_HPA },
+ 	{ "MAXTOR 6L080L4",	"A93.0500",	ATA_HORKAGE_BROKEN_HPA },
+ 
++	/* Devices which report 1 sector over size HPA */
++	{ "ST340823A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
++	{ "ST320413A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
++
+ 	/* End Marker */
+ 	{ }
+ };
+diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h linux-2.6.23rc8-mm1/include/linux/libata.h
+--- linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 16:46:57.844875296 +0100
++++ linux-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 17:11:56.215088400 +0100
+@@ -315,7 +315,8 @@
+ 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+ 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
+ 	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+-	ATA_HORKAGE_DRQ		= (1 << 5),	/* Device forgets to clear DRQ on error */
++	ATA_HORKAGE_HPA_SIZE	= (1 << 5), 	/* Reports native size off by one */
++	ATA_HORKAGE_DRQ		= (1 << 6),	/* Device forgets to clear DRQ on error */
+ 
+ 	/* DMA mask for user DMA control: User visible values do not
+ 	   renumber */
