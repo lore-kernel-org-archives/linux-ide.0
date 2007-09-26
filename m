@@ -1,87 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 26 Sep 2007 00:43:54 -0400
-Message-ID: <20070926044354.GA16633@havoc.gtf.org>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Chipset selection for NCQ md RAID
+Date: Wed, 26 Sep 2007 01:03:37 -0400
+Message-ID: <76366b180709252203t6cb790c8lc3d71b4f56670061@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33646 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751919AbXIZEnz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Sep 2007 00:43:55 -0400
+Received: from rv-out-0910.google.com ([209.85.198.186]:38467 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752713AbXIZFDi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 01:03:38 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1907349rvb
+        for <linux-ide@vger.kernel.org>; Tue, 25 Sep 2007 22:03:38 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+Given the current kernel (2.6.22.8), which SATA chipset would you feel
+most comfortable plugging in to achieve:
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+- 16 1TB Hitachi 7K1000 drives
+- NCQ support
+- Kernel md RAID (ie hardware RAID not necessary)
+- Max transfer rate to OS (PCIe should handle 16 drives given their
+current transfer rate?)
 
-to receive the following updates:
+(Assuming the required number of chips of any chipset could be made
+available on the bus.)
+If support for SiI chips is the most robust, would multiple
+SiI3124/SiI3132 chips be most reliable? Or is support for something
+like a Marvell 88SX6081 good enough so that only 2 chips are needed?.
+I have not owned any of these chips, and my impression is that the SiI
+chips have some of the most robust support. The comments at the top of
+sata_mv.c scare me, even if they might be out of date... :)
 
- drivers/ata/pata_sis.c   |    3 ++-
- drivers/ata/sata_sil24.c |   16 ++++++++++++----
- 2 files changed, 14 insertions(+), 5 deletions(-)
+What about port multiplier support? Do they ever introduce stability
+problems with the drivers?
 
-Tejun Heo (2):
-      sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
-      pata_sis: add missing UDMA5 timing value in sis_66_set_dmamode()
+Is native libata support for high-density Areca cards planned? Does
+anyone know if the manufacturer driver is good enough to rely on for
+the above config to "just work"? I'd personally like to stay within
+libata. (Comments from any Areca Linux users with an ARC-1261ML?
+http://www.areca.com.tw/products/pcie341.htm)
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 2bd7645..cce2834 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -375,8 +375,9 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u16 timing;
- 
-+	/* MWDMA 0-2 and UDMA 0-5 */
- 	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
--	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000};
-+	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000, 0x8000 };
- 
- 	pci_read_config_word(pdev, drive_pci, &timing);
- 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index ef83e6b..233e886 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -888,6 +888,16 @@ static inline void sil24_host_intr(struct ata_port *ap)
- 	u32 slot_stat, qc_active;
- 	int rc;
- 
-+	/* If PCIX_IRQ_WOC, there's an inherent race window between
-+	 * clearing IRQ pending status and reading PORT_SLOT_STAT
-+	 * which may cause spurious interrupts afterwards.  This is
-+	 * unavoidable and much better than losing interrupts which
-+	 * happens if IRQ pending is cleared after reading
-+	 * PORT_SLOT_STAT.
-+	 */
-+	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-+
- 	slot_stat = readl(port + PORT_SLOT_STAT);
- 
- 	if (unlikely(slot_stat & HOST_SSTAT_ATTN)) {
-@@ -895,9 +905,6 @@ static inline void sil24_host_intr(struct ata_port *ap)
- 		return;
- 	}
- 
--	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
--		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
--
- 	qc_active = slot_stat & ~HOST_SSTAT_ATTN;
- 	rc = ata_qc_complete_multiple(ap, qc_active, sil24_finish_qc);
- 	if (rc > 0)
-@@ -910,7 +917,8 @@ static inline void sil24_host_intr(struct ata_port *ap)
- 		return;
- 	}
- 
--	if (ata_ratelimit())
-+	/* spurious interrupts are expected if PCIX_IRQ_WOC */
-+	if (!(ap->flags & SIL24_FLAG_PCIX_IRQ_WOC) && ata_ratelimit())
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
- 			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
- 			slot_stat, ap->active_tag, ap->sactive);
+Thanks in advance, -Andrew
