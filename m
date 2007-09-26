@@ -1,48 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
-Date: Wed, 26 Sep 2007 12:23:32 +0100
-Message-ID: <20070926122332.39351382@the-village.bc.nu>
-References: <200709211327569648280@gmail.com>
-	<46F9DA07.4080201@garzik.org>
+From: Andreas Messer <andreas.messer@stud-mail.uni-wuerzburg.de>
+Subject: [PATCH] libata, ata_piix, add notebook to short cable list
+Date: Wed, 26 Sep 2007 12:52:07 +0200
+Message-ID: <20070926125207.5cd489ef@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40544 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758758AbXIZLRl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 07:17:41 -0400
-In-Reply-To: <46F9DA07.4080201@garzik.org>
+Received: from wrzx28.rz.uni-wuerzburg.de ([132.187.3.28]:52907 "EHLO
+	mailrelay.rz.uni-wuerzburg.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754273AbXIZLVx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 07:21:53 -0400
+Received: from virusscan.mail (localhost [127.0.0.1])
+	by mailrelay.mail (Postfix) with ESMTP id F090AAEEF
+	for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 12:52:09 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by virusscan.mail (Postfix) with ESMTP id E2AE6AFBB
+	for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 12:52:09 +0200 (CEST)
+Received: from localhost (wthp178.physik.uni-wuerzburg.de [132.187.40.178])
+	by mailmaster.uni-wuerzburg.de (Postfix) with ESMTP id C4CD8AEEF
+	for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 12:52:09 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Wed, 26 Sep 2007 00:03:19 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+Hello, 
 
-> Peer Chen wrote:
-> > According to the description of section 5.2.2.1 and 10.1.2 of AHCI =
-specification rev1_1/rev1_2, GHC.HR shall only be set to =C2=A1=C2=AE1=C2=
-=A1=C2=AF
-> > by software when GHC.AE is set to =C2=A1=C2=AE1=C2=A1=C2=AF.
-> >=20
-> > Signed-off-by: Peer Chen <peerchen@gmail.com>
-> > ---
-> > --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.00=
-0000000 -0400
-> > +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.0000000=
-00 -0400
-> > @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
-> >  	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
-> >  	u32 tmp;
-> > =20
-> > +        /* turn on AHCI mode before controller reset*/
-> > +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
-> > +        (void) readl(mmio + HOST_CTL);  /* flush */
->=20
-> applied the attached patch, inspired by yours.
+hopefully the right place for this small patch. My new notebook uses
+a short 40 pin ide-cable, ata_piix therefore disabled UDMA>33. I added
+the chipset ids to the short-cable list and now everything working fine
+with UDMA100.
 
-
-NAK - mmio is an iomap so writel and readl are the wrong things to use
-
+regards
+---
+--- linux-2.6.22/drivers/ata/ata_piix.c	2007-07-09 01:32:17.000000000 +0200
++++ linux/drivers/ata/ata_piix.c	2007-09-13 21:08:07.000000000 +0200
+@@ -578,6 +578,7 @@
+ 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
+ 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
+ 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
++	{ 0x27DF, 0x103C, 0x30A1 },	/* ICH7 on HP Compaq nc2400 */
+ 	{ 0x24CA, 0x1025, 0x0061 },	/* ICH4 on ACER Aspire 2023WLMi */
+ 	/* end marker */
+ 	{ 0, }
