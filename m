@@ -1,87 +1,89 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
-Date: Tue, 25 Sep 2007 23:48:56 -0400
-Message-ID: <46F9D6A8.8010809@garzik.org>
-References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu>
+Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
+Date: Wed, 26 Sep 2007 00:03:19 -0400
+Message-ID: <46F9DA07.4080201@garzik.org>
+References: <200709211327569648280@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------010609090701050103000504"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39368 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41922 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755042AbXIZDtE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Sep 2007 23:49:04 -0400
-In-Reply-To: <46F35C7F.20400@dunaweb.hu>
+	id S1750696AbXIZEDW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Sep 2007 00:03:22 -0400
+In-Reply-To: <200709211327569648280@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zoltan Boszormenyi <zboszor@dunaweb.hu>
-Cc: akpm@linux-foundation.org, kluo@nvidia.com, pchen@nvidia.com, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
+To: Peer Chen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Zoltan Boszormenyi wrote:
-> Hi,
->=20
-> Jeff Garzik =EDrta:
->> akpm@linux-foundation.org wrote:
->>> From: Kuan Luo <kluo@nvidia.com>
->>>
->>> Add the Software NCQ support to sata_nv.c for MCP51/MCP55/MCP61 SAT=
-A
->>> controller.  NCQ function is disable by default, you can enable it =
-with
->>> 'swncq=3D1'.  NCQ will be turned off if the drive is Maxtor on MCP5=
-1 or=20
->>> MCP55
->>> rev 0xa2 platform.
->>>
->>> [akpm@linux-foundation.org: build fix]
->>> Signed-off-by: Kuan Luo <kluo@nvidia.com>
->>> Signed-off-by: Peer Chen <pchen@nvidia.com>
->>> Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>
->>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->>> ---
->>>
->>>  drivers/ata/sata_nv.c |  860 +++++++++++++++++++++++++++++++++++++=
-++-
->>>  1 files changed, 851 insertions(+), 9 deletions(-)
->>
->> I finally gave this a thorough review.
->>
->> Overall, good work.  The state transitions all seem solid.  I made=20
->> several minor changes and cleanups, and checked it into the 'nv-swnc=
-q'=20
->> branch of=20
->> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>
->> Two hurdles before I'm ready to push upstream:
->>
->> * someone please verify my minor changes did not break anything; I=20
->> don't have real hardware
->=20
-> After reading the diff between the original and your cleaned up versi=
-on
-> it seems both the change from 4 individual flags to a single integer =
-and=20
-> the
-> nv_swncq_bmdma_stop() -> __ata_bmdma_stop() transition are obviously=20
-> correct.
-> I attached a small cleanup patch which may make one check a bit more=20
-> readable.
->=20
-> However, can you explain this chunk below? Why isn't it needed?
->=20
-> @@ -615,7 +622,6 @@ static const struct ata_port_info nv_por
->        {
->                .sht            =3D &nv_swncq_sht,
->                .flags          =3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY=
-,
-> -               .link_flags     =3D ATA_LFLAG_HRST_TO_RESUME,
->                .pio_mask       =3D NV_PIO_MASK,
->                .mwdma_mask     =3D NV_MWDMA_MASK,
->                .udma_mask      =3D NV_UDMA_MASK,
+This is a multi-part message in MIME format.
+--------------010609090701050103000504
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-that's a bug.  fixed.
+Peer Chen wrote:
+> According to the description of section 5.2.2.1 and 10.1.2 of AHCI specification rev1_1/rev1_2, GHC.HR shall only be set to ¡®1¡¯
+> by software when GHC.AE is set to ¡®1¡¯.
+> 
+> Signed-off-by: Peer Chen <peerchen@gmail.com>
+> ---
+> --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.000000000 -0400
+> +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.000000000 -0400
+> @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct 
+>  	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
+>  	u32 tmp;
+>  
+> +        /* turn on AHCI mode before controller reset*/
+> +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
+> +        (void) readl(mmio + HOST_CTL);  /* flush */
 
-I also applied your cleanup.
+applied the attached patch, inspired by yours.
 
 
+--------------010609090701050103000504
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+commit 5fca365d6109b51cfeb3515ca660cd2dc6e8822c
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Wed Sep 26 00:02:41 2007 -0400
+
+    [libata] AHCI: enable AHCI mode, before using AHCI reset
+    
+    AHCI spec says host-reset bit may only be set when the ahci-enable bit
+    is also set.
+    
+    Noticed by Peer Chen <peerchen@gmail.com>
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+ drivers/ata/ahci.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+5fca365d6109b51cfeb3515ca660cd2dc6e8822c
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9f3c591..b615390 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -827,8 +827,14 @@ static int ahci_reset_controller(struct ata_host *host)
+ 	void __iomem *mmio = host->iomap[AHCI_PCI_BAR];
+ 	u32 tmp;
+ 
+-	/* global controller reset */
++	/* we must be in AHCI mode, before using anything
++	 * AHCI-specific, such as HOST_RESET.
++	 */
+ 	tmp = readl(mmio + HOST_CTL);
++	if (!(tmp & HOST_AHCI_EN))
++		writel(tmp | HOST_AHCI_EN, mmio + HOST_CTL);
++
++	/* global controller reset */
+ 	if ((tmp & HOST_RESET) == 0) {
+ 		writel(tmp | HOST_RESET, mmio + HOST_CTL);
+ 		readl(mmio + HOST_CTL); /* flush */
+
+--------------010609090701050103000504--
