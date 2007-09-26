@@ -1,88 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_pdc202xx_old
-Date: Wed, 26 Sep 2007 15:23:17 +0100
-Message-ID: <20070926152317.67f4d6fd@the-village.bc.nu>
+From: "Berck E. Nash" <flyboy@gmail.com>
+Subject: Re: 2.6.23-rc7-mm1 AHCI ATA errors -- won't boot
+Date: Wed, 26 Sep 2007 08:19:12 -0600
+Message-ID: <46FA6A60.2000700@gmail.com>
+References: <46F7FBCB.4030803@gmail.com> <46F9E2CB.9000002@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060406000509040009080407"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49545 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753705AbXIZORQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 10:17:16 -0400
+Received: from nz-out-0506.google.com ([64.233.162.236]:10575 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272AbXIZOTU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 10:19:20 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1466095nze
+        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 07:19:19 -0700 (PDT)
+In-Reply-To: <46F9E2CB.9000002@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jeff@garzik.org, akpm@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-I've been doing an audit of this driver to try and find out why we have
-problems with some Clevo boxes that use it. Didn't get anywhere other
-than to discover all the bug reporters I have use vmware, which may or
-may not be chance.
+This is a multi-part message in MIME format.
+--------------060406000509040009080407
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-In the process however I did find out our MWDMA2 performance was a bit
-low and code review showed the MWDMA0/2 timings are reversed due to a
-thinko in the table ordering
+Jeff Garzik wrote:
+> Would it also be possible for you to send along 'hdparm --Istdout'
+> output for your config disk thingy, /dev/sdd ?
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Sure, just don't ask me what it is!  (I've generally assumed that
+writing to it would be a bad idea.)
 
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c linux-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c
---- linux.vanilla-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2007-09-18 15:32:51.000000000 +0100
-+++ linux-2.6.23rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2007-09-26 14:03:33.430372856 +0100
-@@ -9,7 +9,7 @@
-  * First cut with LBA48/ATAPI
-  *
-  * TODO:
-- *	Channel interlock/reset on both required
-+ *	Channel interlock/reset on both required ?
-  */
- 
- #include <linux/kernel.h>
-@@ -22,7 +22,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_pdc202xx_old"
--#define DRV_VERSION "0.4.2"
-+#define DRV_VERSION "0.4.3"
- 
- static int pdc2026x_cable_detect(struct ata_port *ap)
- {
-@@ -106,9 +106,9 @@
- 		{ 0x20, 0x01 }
- 	};
- 	static u8 mdma_timing[3][2] = {
--		{ 0x60, 0x03 },
--		{ 0x60, 0x04 },
- 		{ 0xe0, 0x0f },
-+		{ 0x60, 0x04 },
-+		{ 0x60, 0x03 },
- 	};
- 	u8 r_bp, r_cp;
- 
-@@ -139,6 +139,9 @@
-  *
-  *	In UDMA3 or higher we have to clock switch for the duration of the
-  *	DMA transfer sequence.
-+ *
-+ *	Note: The host lock held by the libata layer protects
-+ *	us from two channels both trying to set DMA bits at once
-  */
- 
- static void pdc2026x_bmdma_start(struct ata_queued_cmd *qc)
-@@ -187,6 +190,9 @@
-  *
-  *	After a DMA completes we need to put the clock back to 33MHz for
-  *	PIO timings.
-+ *
-+ *	Note: The host lock held by the libata layer protects
-+ *	us from two channels both trying to set DMA bits at once
-  */
- 
- static void pdc2026x_bmdma_stop(struct ata_queued_cmd *qc)
-@@ -206,7 +212,6 @@
- 		iowrite32(0, atapi_reg);
- 		iowrite8(ioread8(clock) & ~sel66, clock);
- 	}
--	/* Check we keep host level locking here */
- 	/* Flip back to 33Mhz for PIO */
- 	if (adev->dma_mode >= XFER_UDMA_2)
- 		iowrite8(ioread8(clock) & ~sel66, clock);
+Berck
+
+--------------060406000509040009080407
+Content-Type: text/plain;
+ name="hdparmthingy"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="hdparmthingy"
+
+
+/dev/sdd:
+0040 3fff c837 0010 0000 0000 003f 0000
+0000 0000 3030 3030 3030 315f 5f5f 5f5f
+5f5f 5f5f 5f30 5f45 0003 3e00 0004 5247
+4c31 3033 3634 436f 6e66 6967 2020 4469
+736b 2020 2020 2020 2020 2020 2020 2020
+2020 2020 2020 2020 2020 2020 2020 8001
+0000 2f00 4000 0200 0000 0007 3fff 0010
+003f fc10 00fb 0101 0280 0000 0000 0407
+0003 0078 0078 0078 0078 0000 0000 0000
+0000 0000 0000 0000 0201 0000 0000 0000
+007e 001b 0068 5060 4000 0000 1000 4000
+407f 0000 0000 0000 fffe 0000 c0fe 0000
+0000 0000 0000 0000 0002 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0001 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0017 2040
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 0000
+0000 0000 0000 0000 0000 0000 0000 b4a5
+
+--------------060406000509040009080407--
