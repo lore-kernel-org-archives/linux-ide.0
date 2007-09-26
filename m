@@ -1,57 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ahci: enable GHC.AE bit before set GHC.HR
-Date: Wed, 26 Sep 2007 07:41:59 -0400
-Message-ID: <46FA4587.4070105@garzik.org>
-References: <200709211327569648280@gmail.com>	<46F9DA07.4080201@garzik.org> <20070926122332.39351382@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Wed, 26 Sep 2007 17:41:50 +0900
+Message-ID: <46FA1B4E.8090103@gmail.com>
+References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44967 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750698AbXIZLmG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Sep 2007 07:42:06 -0400
-In-Reply-To: <20070926122332.39351382@the-village.bc.nu>
+Received: from nz-out-0506.google.com ([64.233.162.229]:57242 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743AbXIZNvF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Sep 2007 09:51:05 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so1458353nze
+        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 06:51:03 -0700 (PDT)
+In-Reply-To: <46F9BF3E.5050708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Peer Chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Wed, 26 Sep 2007 00:03:19 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
->=20
->> Peer Chen wrote:
->>> According to the description of section 5.2.2.1 and 10.1.2 of AHCI =
-specification rev1_1/rev1_2, GHC.HR shall only be set to =C2=A1=C2=AE1=C2=
-=A1=C2=AF
->>> by software when GHC.AE is set to =C2=A1=C2=AE1=C2=A1=C2=AF.
->>>
->>> Signed-off-by: Peer Chen <peerchen@gmail.com>
->>> ---
->>> --- linux-2.6.23-rc7/drivers/ata/ahci.c.orig	2007-09-20 11:01:55.00=
-0000000 -0400
->>> +++ linux-2.6.23-rc7/drivers/ata/ahci.c	2007-09-20 11:07:31.0000000=
-00 -0400
->>> @@ -834,6 +834,10 @@ static int ahci_reset_controller(struct=20
->>>  	void __iomem *mmio =3D host->iomap[AHCI_PCI_BAR];
->>>  	u32 tmp;
->>> =20
->>> +        /* turn on AHCI mode before controller reset*/
->>> +        writel(HOST_AHCI_EN, mmio + HOST_CTL);
->>> +        (void) readl(mmio + HOST_CTL);  /* flush */
->> applied the attached patch, inspired by yours.
->=20
->=20
-> NAK - mmio is an iomap so writel and readl are the wrong things to us=
-e
+Jeff Garzik wrote:
+[--snip--]
+> There, even the concept of "port" is fluid, and the libata EH model of
+> freezing and thawing a port (with the desired irq-off result) just
+> doesn't fit the hardware.
 
-The patch is consistent with the rest of the driver.
+Well, the current model was developed while struggling with the first
+generation PMP hardware which had a lot of quirks.  More focus was on
+making the system run and keeping it that way.  Anyways, now that the
+quirks are better understood, I think we can make PMP register access
+irq-driven safely.
 
-You are welcome to submit a patch to convert ahci to using ioremap.
+[--snip--]
+> As such, polling is simply an outmoded concept.  It does not make sense
+> on new hardware, and forcing design decisions down that path only lead
+> to a cascade of similar design decisions -- pmp_read polling being just
+> one example of such a result.
 
-	Jeff
+For pmp read/write, I agree that IRQ driven access would be better but
+even for fairly advanced controllers like ahci or sil24, I think
+resetting-by-polling is a good idea.
 
+> Just like the Linux kernel MM platform API presents 3 levels of page
+> table entries, even when the hardware may only have 2, libata high level
+> API _must_ be implemented as 100% asynchronous event driven API.
 
+Or allow both?
+
+> If the default implementation chooses to use polling -- i.e. all SFF
+> controllers -- that's fine.  But in the new SAS/SATA world its clear
+> that we have far too many polling-related assumptions as it is.
+> 
+> Polling just flat out doesn't make sense on modern SAS/SATA -- and even
+> a couple modern SATA controllers.  On such controllers, we are notified
+> immediately via interrupt even in the event of errors.
+
+For SAS, I don't have any strong opinion.  For SATA, I think we
+definitely need to allow or even prefer polling for host port resets.
+
+Is this NACK on the patchset or can we update PMP access later?
+
+-- 
+tejun
 
