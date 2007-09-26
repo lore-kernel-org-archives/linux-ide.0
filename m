@@ -1,68 +1,87 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.23-rc6-mm1: Build failure on ppc64 drivers/ata/pata_scc.c
-Date: Tue, 25 Sep 2007 23:39:46 -0400
-Message-ID: <46F9D482.8090407@garzik.org>
-References: <20070918011841.2381bd93.akpm@linux-foundation.org> <20070920131315.GE24105@skynet.ie> <20070920150925.0caf3aef@the-village.bc.nu> <alpine.LFD.0.999.0709220816170.14412@enigma.security.iitk.ac.in>
+Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
+Date: Tue, 25 Sep 2007 23:48:56 -0400
+Message-ID: <46F9D6A8.8010809@garzik.org>
+References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55434 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39368 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452AbXIZDj5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Sep 2007 23:39:57 -0400
-In-Reply-To: <alpine.LFD.0.999.0709220816170.14412@enigma.security.iitk.ac.in>
+	id S1755042AbXIZDtE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Sep 2007 23:49:04 -0400
+In-Reply-To: <46F35C7F.20400@dunaweb.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Satyam Sharma <satyam@infradead.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mel Gorman <mel@skynet.ie>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, kamalesh@linux.vnet.ibm.com
+To: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+Cc: akpm@linux-foundation.org, kluo@nvidia.com, pchen@nvidia.com, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Satyam Sharma wrote:
+Zoltan Boszormenyi wrote:
 > Hi,
-> 
-> 
-> On Thu, 20 Sep 2007, Alan Cox wrote:
->> On Thu, 20 Sep 2007 14:13:15 +0100
->> mel@skynet.ie (Mel Gorman) wrote:
->>
->>> PPC64 building allmodconfig fails to compile drivers/ata/pata_scc.c . It
->>> doesn't show up on other arches because this driver is specific to the
->>> architecture.
+>=20
+> Jeff Garzik =EDrta:
+>> akpm@linux-foundation.org wrote:
+>>> From: Kuan Luo <kluo@nvidia.com>
 >>>
->>> drivers/ata/pata_scc.c: In function `scc_bmdma_status'
->> Its not been updated to match the libata core changes. Try something like
->> this. Whoever is maintaining it should also remove the prereset cable handling
->> code and use the proper cable detect method.
-> 
-> It appears you forgot to fix scc_std_softreset() and one of its callsites
-> in scc_bdma_stop(). A complete patch is attempted below -- please review.
-> 
-> 
-> [PATCH -mm] pata_scc: Keep up with libata core API changes
-> 
-> Little fixlets, that the build started erroring / warning about:
-> 
-> drivers/ata/pata_scc.c: In function 'scc_bmdma_status':
-> drivers/ata/pata_scc.c:734: error: structure has no member named 'active_tag'
-> drivers/ata/pata_scc.c: In function 'scc_pata_prereset':
-> drivers/ata/pata_scc.c:866: warning: passing arg 1 of 'ata_std_prereset' from incompatible pointer type
-> drivers/ata/pata_scc.c: In function 'scc_error_handler':
-> drivers/ata/pata_scc.c:908: warning: passing arg 2 of 'ata_bmdma_drive_eh' from incompatible pointer type
-> drivers/ata/pata_scc.c:908: warning: passing arg 3 of 'ata_bmdma_drive_eh' from incompatible pointer type
-> drivers/ata/pata_scc.c:908: warning: passing arg 5 of 'ata_bmdma_drive_eh' from incompatible pointer type
-> make[2]: *** [drivers/ata/pata_scc.o] Error 1
-> 
-> Signed-off-by: Satyam Sharma <satyam@infradead.org>
-> Cc: Alan Cox <alan@redhat.com>
-> Cc: Mel Gorman <mel@skynet.ie>
-> 
-> ---
-> 
-> Andrew, this includes (supercedes) the previous two ones from Mel / Alan.
-> 
->  drivers/ata/pata_scc.c |   21 ++++++++++++---------
->  1 file changed, 12 insertions(+), 9 deletions(-)
+>>> Add the Software NCQ support to sata_nv.c for MCP51/MCP55/MCP61 SAT=
+A
+>>> controller.  NCQ function is disable by default, you can enable it =
+with
+>>> 'swncq=3D1'.  NCQ will be turned off if the drive is Maxtor on MCP5=
+1 or=20
+>>> MCP55
+>>> rev 0xa2 platform.
+>>>
+>>> [akpm@linux-foundation.org: build fix]
+>>> Signed-off-by: Kuan Luo <kluo@nvidia.com>
+>>> Signed-off-by: Peer Chen <pchen@nvidia.com>
+>>> Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>
+>>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>>> ---
+>>>
+>>>  drivers/ata/sata_nv.c |  860 +++++++++++++++++++++++++++++++++++++=
+++-
+>>>  1 files changed, 851 insertions(+), 9 deletions(-)
+>>
+>> I finally gave this a thorough review.
+>>
+>> Overall, good work.  The state transitions all seem solid.  I made=20
+>> several minor changes and cleanups, and checked it into the 'nv-swnc=
+q'=20
+>> branch of=20
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>
+>> Two hurdles before I'm ready to push upstream:
+>>
+>> * someone please verify my minor changes did not break anything; I=20
+>> don't have real hardware
+>=20
+> After reading the diff between the original and your cleaned up versi=
+on
+> it seems both the change from 4 individual flags to a single integer =
+and=20
+> the
+> nv_swncq_bmdma_stop() -> __ata_bmdma_stop() transition are obviously=20
+> correct.
+> I attached a small cleanup patch which may make one check a bit more=20
+> readable.
+>=20
+> However, can you explain this chunk below? Why isn't it needed?
+>=20
+> @@ -615,7 +622,6 @@ static const struct ata_port_info nv_por
+>        {
+>                .sht            =3D &nv_swncq_sht,
+>                .flags          =3D ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY=
+,
+> -               .link_flags     =3D ATA_LFLAG_HRST_TO_RESUME,
+>                .pio_mask       =3D NV_PIO_MASK,
+>                .mwdma_mask     =3D NV_MWDMA_MASK,
+>                .udma_mask      =3D NV_UDMA_MASK,
 
-applied
+that's a bug.  fixed.
+
+I also applied your cleanup.
 
 
