@@ -1,39 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_via: kill SATA_PATA_SHARING register handling
-Date: Tue, 25 Sep 2007 22:27:21 -0400
-Message-ID: <46F9C389.400@garzik.org>
-References: <20070921085544.GE10660@htj.dyndns.org>
+Subject: Re: 2.6.23-rc7-mm1 AHCI ATA errors -- won't boot
+Date: Tue, 25 Sep 2007 22:33:46 -0400
+Message-ID: <46F9C50A.2080009@garzik.org>
+References: <46F7FBCB.4030803@gmail.com> <46F8665A.4000206@garzik.org> <46F9617F.1010508@gmail.com> <46F9B3FE.1060905@garzik.org> <46F9C336.3010005@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52206 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:56266 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754135AbXIZC1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Sep 2007 22:27:23 -0400
-In-Reply-To: <20070921085544.GE10660@htj.dyndns.org>
+	id S1754220AbXIZCdv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Sep 2007 22:33:51 -0400
+In-Reply-To: <46F9C336.3010005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: "Berck E. Nash" <flyboy@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Tejun Heo wrote:
-> The SATA_PATA_SHARING register doesn't have anything to do with the
-> SATA part of the controller.  It indicates whether an extern SATA PHY
-> is attached to the PATA part of the controller and if so how it is
-> wired.  As the PATA part is driven by pata_via, sata_via has no reason
-> to care about that.  Also, pata_via should work fine under all
-> configurations.
+Berck E. Nash wrote:
+> Jeff Garzik wrote:
+>> Does the attached patch change behavior at all?  You should be able to
+>> apply it on top of libata-dev.git#upstream or -mm.
 > 
-> This patch removes unnecessary attach failures.  It seems recent via
-> chipsets are defaulting to different values or are actually connected
-> to SATA PHY triggering this more often.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/sata_via.c |   16 ++--------------
->  1 file changed, 2 insertions(+), 14 deletions(-)
+> Still broken, dmesg with ATA_DEBUG defined, attached.
 
-applied to #upstream
+Great, this will be useful output.  It will probably be a couple days 
+before my next patch.  In the meantime, you can extract the bad commit 
+to a patch
+
+	git-diff-tree -p 268fe6f9f15551be9abedd44a237392675d529d5 > \
+		/tmp/patch
+
+and then revert it locally in your kernel tree
+
+	patch -sp1 -R < /tmp/patch
+
+to temporarily work around this.
+
+I will definitely make sure this is either fixed or reverted before it 
+goes upstream to Linus.
+
+Thanks,
+
+	Jeff
 
 
