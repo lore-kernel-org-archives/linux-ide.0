@@ -1,64 +1,142 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: T61 SATA error in log
-Date: Thu, 27 Sep 2007 17:21:08 +1000
-Message-ID: <1190877668.30275.3.camel@pasglop>
-Reply-To: benh@kernel.crashing.org
+From: "Kuan Luo" <kluo@nvidia.com>
+Subject: RE: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
+Date: Thu, 27 Sep 2007 15:33:43 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1AD@hkemmail01.nvidia.com>
+References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org> <46F9EFC9.9030209@dunaweb.hu> <46F9F05F.40905@garzik.org> <46F9F223.4000406@dunaweb.hu> <15F501D1A78BD343BE8F4D8DB854566B059FE1AB@hkemmail01.nvidia.com> <46FB4B75.9030407@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AC@hkemmail01.nvidia.com> <46FB577D.6000006@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47215 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755654AbXI0HVV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Sep 2007 03:21:21 -0400
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:2477 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702AbXI0HeA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 03:34:00 -0400
+In-Reply-To: <46FB577D.6000006@garzik.org>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, Peer Chen <pchen@nvidia.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
 
-Saw that popping up in my log today on a brand new T61 thinkpad:
+ Jeff Garzik wrote:
+> Kuan Luo wrote:
+> > Jeff Garzik wrote:
+> >> Kuan Luo wrote:
+> >>> hi,
+> >>> i saw the below changes  from
+> >>>
+> >> http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.g
+> >> it;a=commi
+> >>> tdiff;h=5a5a9e1890b8260686218a68862d880daee1a817
+> >>>
+> >>> [libata] sata_nv: Clean up ATA_FLAG_NCQ usage; bit test micro-opt
+> >>>
+> >>>  @@ -622,7 +622,9 @@ static const struct ata_port_info 
+> >> nv_port_info[] =
+> >>> {
+> >>>         /* SWNCQ */
+> >>>         {
+> >>>                 .sht            = &nv_swncq_sht,
+> >>> -               .flags          = ATA_FLAG_SATA | 
+> >> ATA_FLAG_NO_LEGACY,
+> >>> +               .flags          = ATA_FLAG_SATA | 
+> >> ATA_FLAG_NO_LEGACY |
+> >>> +                                 ATA_FLAG_NCQ,
+> >>> +               .link_flags     = ATA_LFLAG_HRST_TO_RESUME,
+> >>>                 .pio_mask       = NV_PIO_MASK,
+> >>>                 .mwdma_mask     = NV_MWDMA_MASK,
+> >>>                 .udma_mask      = NV_UDMA_MASK,
+> >>>
+> >>> If swncq_enabled is set zero by user, nv_swncq_host_init 
+> >> would not be
+> >>> called .
+> >>>  Then ncq should be disabled and the libata shouldn't 
+> send ncq cmd. 
+> >>>  I am not sure whether the  ATA_FLAG_NCQ flag which is in 
+> >> default set
+> >>> makes libata send ncq cmd even when swncq_enable is 0?
+> >>>
+> >>> nv_init_one
+> >>> 	} else if (type == SWNCQ && swncq_enabled) {
+> >>> 		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ
+> >>> mode\n");
+> >>> 		nv_swncq_host_init(host);
+> >> Thanks for watching!  Yes, that looks like a problem.
+> >>
+> >> I still feel the flags usage I removed was problematic.  A better 
+> >> solution, I think, would be to do follow the ADMA example of 
+> >> switching 
+> >> the port_info type during early initialization:
+> >>
+> >> 	if (type >= CK804 && adma_enabled) {
+> >> 		type = ADMA;
+> >>
+> >> which in our case would result in
+> >>
+> >> 	if (type == SWNCQ && !swncq_enabled)
+> >> 		type = GENERIC;
+> >>
+> >> Or, if you prefer, we could take the opposite route, _not_ 
+> >> set SWNCQ in 
+> >> the pci_device_id table, and instead do something like
+> >>
+> >> 	if (type >= MCP65 && swncq_enabled)
+> >> 		type = SWNCQ;
+> >>
+> >> (MCP65 is just a pulled-out-of-thin-air example)
+> >>
+> >> Regards,
+> >>
+> >> 	Jeff
+> >>
+> > 1.The former method "type =GENERIC" cann't support hotplug in
+> > mcp51-55-61.
+> 
+> 'GENERIC' just an example; my apologies for the confusion.
+> 
+> 
+> > 2.As to the latter mehthod, do you mean we may set MCP65 in
+> > pci_device_id table and add the extra variable
+> > static const struct ata_port_operations nv_MCP65_ops ={...}.
+> 
+> Correct.
+> 
+> The main point was to fall back from SWNCQ to <something else>, if 
+> !swncq_enabled, to avoid changing the ap->flags value after 
+> the port has 
+> been allocated and initialized internally.  And that switch 
+> must occur 
+> prior to ata_pci_prepare_sff_host() call in nv_init_one().
+> 
+> Regards,
+> 
+> 	Jeff
+> 
+ I see. Both your methods are perfect.
+Because the nv_swncq_ops and nv_swncq_interrupt can be also used when
+sending non ncq cmd,
+It seems like:
+	/* MCP65 */
+	{
+		.sht		= &nv_sht,
+		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY 
+		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+		.pio_mask	= NV_PIO_MASK,
+		.mwdma_mask	= NV_MWDMA_MASK,
+		.udma_mask	= NV_UDMA_MASK,
+		.port_ops	= &nv_swncq_ops,
+		.irq_handler	= nv_swncq_interrupt,
+	},
 
-[  427.712000] ata1.00: exception Emask 0x2 SAct 0x18 SErr 0x0 action 0x2 frozen
-[  427.712000] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x18 FIS=004040a1:00000024)
-[  427.712000] ata1.00: cmd 61/08:18:f4:74:54/00:00:04:00:00/40 tag 3 cdb 0x0 data 4096 out
-[  427.712000]          res 40/00:28:64:e4:51/00:00:04:00:00/40 Emask 0x2 (HSM violation)
-[  427.712000] ata1.00: cmd 61/08:20:84:10:81/00:00:04:00:00/40 tag 4 cdb 0x0 data 4096 out
-[  427.712000]          res 40/00:28:64:e4:51/00:00:04:00:00/40 Emask 0x2 (HSM violation)
-[  428.024000] ata1: soft resetting port
-[  428.196000] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[  428.204000] ata1.00: configured for UDMA/100
-[  428.204000] ata1: EH complete
-[  428.204000] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
-[  428.204000] sd 0:0:0:0: [sda] Write Protect is off
-[  428.204000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  428.204000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Is it right?
 
-Kernel recovered just fine and things seem smooth so far. Is that something I need
-to worry about ?
+Best regards,
+Kuan Luo
 
-Kernel is ubuntu gutsy's 2.6.22 and controller is:
-
-Cheers,00:1f.2 SATA controller: Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller (rev 03) (prog-if 01 [AHCI 1.0])
-        Subsystem: Lenovo Unknown device 20a7
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-        Latency: 0
-        Interrupt: pin B routed to IRQ 218
-        Region 0: I/O ports at 1c50 [size=8]
-        Region 1: I/O ports at 1c44 [size=4]
-        Region 2: I/O ports at 1c48 [size=8]
-        Region 3: I/O ports at 1c40 [size=4]
-        Region 4: I/O ports at 1c20 [size=32]
-        Region 5: Memory at fe226000 (32-bit, non-prefetchable) [size=2K]
-        Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/2 Enable+
-                Address: fee0300c  Data: 4152
-        Capabilities: [70] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [a8] #12 [0010]
-
-
-Cheers,
-Ben.
-
-
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
