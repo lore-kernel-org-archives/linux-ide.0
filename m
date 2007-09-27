@@ -1,48 +1,77 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Improper disk shutdown with 2.6.22.6?
-Date: Thu, 27 Sep 2007 09:39:54 +0900
-Message-ID: <46FAFBDA.4080509@gmail.com>
-References: <20070919093306.GA2359@robos.org>
+From: Paul Rolland <rol@as2917.net>
+Subject: Re: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
+Date: Thu, 27 Sep 2007 08:05:51 +0200
+Message-ID: <20070927080551.424e90b9@tux.DEF.witbe.net>
+References: <20070924083336.7a08fd61@tux.DEF.witbe.net>
+	<46F7C933.4080003@davidnewall.com>
+	<20070925090057.5778aa2a@tux.DEF.witbe.net>
+	<46FAFF7A.5070208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:19520 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbXI0EYA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 00:24:00 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so2202895rvb
-        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 21:23:58 -0700 (PDT)
-In-Reply-To: <20070919093306.GA2359@robos.org>
+Received: from tag.witbe.net ([81.88.96.48]:52158 "EHLO tag.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751620AbXI0GGE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Sep 2007 02:06:04 -0400
+In-Reply-To: <46FAFF7A.5070208@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert <robert@robos.org>
-Cc: linux-ide@vger.kernel.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: David Newall <david@davidnewall.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rol@witbe.net
 
-[cc'ing Henrique and Jeff]
+Hi Tejun,
 
-Robert wrote:
-> Hello,
-> 
-> When shutting down this system running Linux 2.6.22.6, I get a warning about
-> the possibility that the disks are not properly shut down. When the power is
-> turned off, it sounds like the disks aren't spun down (but I may be mistaken
-> on that point).
-> 
-> http://linux-ata.org/shutdown.html claims that kernels newer than 2.6.21 will
-> always spin down the disks, but is this really the case?
-> The manage_start_stop files exist.
-> 
-> Tell me if you'd like more detailed information about configuration and
-> hardware.
+On Thu, 27 Sep 2007 09:55:22 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-You're on debian, right?  You need to update your shutdown utilities.
+> Paul Rolland wrote:
+> > Hi David,
+> > 
+> > On Mon, 24 Sep 2007 23:56:59 +0930
+> > David Newall <david@davidnewall.com> wrote:
+> > 
+> >> Paul Rolland "(???????) wrote:
+> >>> Hell, IRQ 23 is shared between libata and my modem !!!
+> >>>   
+> >> Tried using the modem?
+> > 
+> Can you change driver load order such that the driver for the modem is
+> loaded first?
 
-Henrique, what information should we put into the faq page to properly
-direct debian users to needed updates?
+As I said, it's not possible, because :
+ - the modem driver is an out-kernel one, so I have to wait the end of the
+   boot process so that it can be loaded,
+ - libata on IRQ23 is the one taking care of my disks, and I suspect it 
+   quite hard to install a modem driver before having the disk driver
+   installed.
 
-Thanks.
+I was thinking of delaying the disabling of the IRQ, which is basically the
+other part of the problem (the first part being that spurious IRQ from the
+modem). If it is possible to do that long enough for the modem driver to be
+loaded, then the "IRQ xx : nobody cared" becomes an informational message
+during the boot process, and then it vanishes, leaving a perfectly working
+machine.
+I suspect something in note_interrupt that would do (totally
+untested, just thinking loudly) :
 
--- 
-tejun
+	/* Allow some delay to complete boot process before
+	 * killing an IRQ. This allow some modules to be
+	 * loaded before we decide the IRQ will not be handled.
+	 */
+	if (jiffies > 120*HZ) {
+		/*
+		 * Now kill the IRQ
+		 */
+		printk(KERN_EMERG "Disabling IRQ #%d\n", irq);
+		desc->status |= IRQ_DISABLED;
+		desc->depth = 1;
+		desc->chip->disable(irq);
+	}
+
+I'll try that this week-end, but if someone has an opinion about it, I'll
+be glad to know :)
+
+Regards,
+Paul
 
