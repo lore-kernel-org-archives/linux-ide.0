@@ -1,35 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Stardom SATA HSM violation
-Date: Thu, 27 Sep 2007 19:37:01 +0100
-Message-ID: <20070927193701.6230d77f@the-village.bc.nu>
-References: <46CFA08E.6090604@arbores.ca>
-	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
-	<46DBCB6C.8080206@gmail.com>
-	<20070905095327.6277d054.akpm@linux-foundation.org>
-	<46DEE617.4050004@rtr.ca>
-	<46E0A253.7060803@gmail.com>
-	<46E154DE.2060602@rtr.ca>
-	<46FB563A.80108@gmail.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug -
+	version 3
+Date: Thu, 27 Sep 2007 17:39:20 -0300
+Message-ID: <20070927203920.GB28510@khazad-dum.debian.net>
+References: <46F32DD9.7010509@gmail.com> <20070921024214.GA6317@srcf.ucam.org> <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <20070927102659.2cacae14.kristen.c.accardi@intel.com> <20070927175505.GA14476@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38498 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753797AbXI0Sbw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 14:31:52 -0400
-In-Reply-To: <46FB563A.80108@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070927175505.GA14476@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-> I think there have been enough cases where this draining was necessary.
->  IIRC, ata_piix was involved in those cases, right?  If so, can you
-> please submit a patch which applies this only to affected controllers?
-> I don't feel too confident about applying this to all SFF controllers.
+On Thu, 27 Sep 2007, Matthew Garrett wrote:
+> The spec seems to imply that even if the drive hotswap bay and the 
+> battery bay are physically the same, they're logically distinct. 10.2.1 
 
-Old IDE does it on all controllers bar a couple. So we have a very good
-knowledge of what does/doesn't work. The one that needs care in old ide
-is an ordering issue where a state machine reset done first causes the
-drain of the I/O to hang.
+That holds true for thinkpads up to the T43, at least.  I don't know about
+the newer ones.
+
+You get bay ejects/inserts notifications from the device node corresponding
+to what was inserted/removed from the multi-purpose bay.
+
+> I /suspect/ that _STA on the bay device won't return true if there's a 
+> battery in there, and so we aren't expected to call the _EJ0 method if 
+
+Correct, on thinkpads up to the T43 at least.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
