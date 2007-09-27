@@ -1,173 +1,46 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug -
- version 3
-Date: Thu, 27 Sep 2007 10:26:59 -0700
-Message-ID: <20070927102659.2cacae14.kristen.c.accardi@intel.com>
-References: <20070915170652.GA25504@srcf.ucam.org>
-	<46F2EE66.9060207@garzik.org>
-	<20070920222138.GA3740@srcf.ucam.org>
-	<46F32DD9.7010509@gmail.com>
-	<20070921024214.GA6317@srcf.ucam.org>
-	<46F3322D.5090407@gmail.com>
-	<20070921025734.GA6434@srcf.ucam.org>
-	<46F33597.1000307@gmail.com>
-	<20070921031245.GA6628@srcf.ucam.org>
-	<46F33824.6000707@gmail.com>
-	<20070924231436.GA32119@srcf.ucam.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version 3
+Date: Thu, 27 Sep 2007 18:55:06 +0100
+Message-ID: <20070927175505.GA14476@srcf.ucam.org>
+References: <20070920222138.GA3740@srcf.ucam.org> <46F32DD9.7010509@gmail.com> <20070921024214.GA6317@srcf.ucam.org> <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <20070927102659.2cacae14.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64908 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753844AbXI0RcL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Sep 2007 13:32:11 -0400
-In-Reply-To: <20070924231436.GA32119@srcf.ucam.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070927102659.2cacae14.kristen.c.accardi@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, 25 Sep 2007 00:14:36 +0100
-Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+On Thu, Sep 27, 2007 at 10:26:59AM -0700, Kristen Carlson Accardi wrote:
 
-> Modern laptops with hotswap bays still tend to utilise a PATA interface 
-> on a SATA bridge, generally with the host controller in some legacy 
-> emulation mode rather than AHCI. This means that the existing hotplug 
-> code in libata is unable to work. The ACPI specification states that 
-> these devices can send notifications when hotswapped, which avoids the 
-> need to obtain notification from the controller. This patch uses the 
-> existing libata-acpi code and simply registers a notification in order 
-> to trigger a rescan whenever the firmware signals an event.
->                                                                                                                                                                                                         
-Hi Matthew,
-While I love the idea of integrating the Bay support with libata, and
-I think this is a good patch, I have 2 concerns which don't seem to be
-addressed here. 
+> 1.  How does it handle things when you have a bay that is located behind
+> a dock and the dock ejects?  In the acpi bay driver, I use the mechanism
+> that the dock driver exports to get undock notifications so that the bay
+> can eject as well.
 
-1.  How does it handle things when you have a bay that is located behind
-a dock and the dock ejects?  In the acpi bay driver, I use the mechanism
-that the dock driver exports to get undock notifications so that the bay
-can eject as well.
+Hm. I'd been working on the assumption that ejecting the doc would 
+trigger the bay notifications as well, but I've got no hardware here 
+with those capabilities so it's kind of hard to check...
 
-2.  What if someone wants to use their bay to charge their battery?  While
-I never bothered to implement this in acpi/bay.c, nothing ever prevented
-anyone from adding that support to the driver, where now it is prevented
-since this driver and another cannot coexist.
+> 2.  What if someone wants to use their bay to charge their battery?  While
+> I never bothered to implement this in acpi/bay.c, nothing ever prevented
+> anyone from adding that support to the driver, where now it is prevented
+> since this driver and another cannot coexist.
 
-The basic problem is that there's no way to have multiple drivers register
-a notifier for the same ACPI event on the same object.  So, my solution
-to this in my acpi drivers was to export ways to share from the driver.
+The spec seems to imply that even if the drive hotswap bay and the 
+battery bay are physically the same, they're logically distinct. 10.2.1 
+specifies that the battery bay should always be considered present, and 
+that any insertion notification will be generated from the battery bay 
+rather than the drive bay (so Notify (BAT1, 0x81) rather than Notify 
+(_SB.MISC.OTHR.BONG.PRIM.SLAV, 0x81)). My code will only grab the 
+latter notification, not the former.
 
-Thanks,
-Kristen
+I /suspect/ that _STA on the bay device won't return true if there's a 
+battery in there, and so we aren't expected to call the _EJ0 method if 
+the user wants to remove a battery. But I'm also lacking hardware to 
+test this one, so it's possible that I'm utterly wrong :)
 
-> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>                        
-> 
-> ---
-> 
-> This makes two changes to the previous patch:
-> 
-> 1) It implements the locking suggested by Tejun
-> 2) It sends a uevent on the device kobject. I've implemented this 
-> because grabbing the notification handler means that the bay driver can 
-> no longer do it, so it's necessary to generate compatible events. If the 
-> event type is 3, it indicates that the user has merely requested an 
-> eject - the drive hasn't gone at this point. Sending the notification 
-> allows userspace to attempt to unmount the filesystems before sending a 
-> command to initiate the eject. 
-> 
-> I'm not especially happy about the chain used to get the scsi device 
-> kobject. Is there a cleaner way to do that? Other than that, I've now 
-> tested this on multiple systems (a 965-based Thinkpad, a 915-era Dell 
-> and even an HP with no SATA whatsoever) without any obvious breakage.
-> 
-> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index c059f78..68bb7fa 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -14,6 +14,7 @@
->  #include <linux/acpi.h>
->  #include <linux/libata.h>
->  #include <linux/pci.h>
-> +#include <scsi/scsi_device.h>
->  #include "libata.h"
->  
->  #include <acpi/acpi_bus.h>
-> @@ -66,6 +67,41 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
->  	}
->  }
->  
-> +static void ata_acpi_notify(acpi_handle handle, u32 event, void *data)
-> +{
-> +	struct ata_port *ap = data;
-> +	struct ata_eh_info *ehi = &ap->eh_info;
-> +	char event_string[12];
-> +	char *envp[] = { event_string, NULL };
-> +	struct kobject *kobj = NULL;
-> +	int i;
-> +
-> +	if (ap->acpi_handle && handle == ap->acpi_handle)
-> +	        kobj = &ap->dev->kobj;
-> +	else {
-> +		for (i = 0; i < ata_port_max_devices(ap); i++) {
-> +			struct ata_device *dev = &ap->device[i];
-> +			if (dev->acpi_handle && handle == dev->acpi_handle) 
-> +			        kobj = &dev->sdev->sdev_gendev.kobj;
-> +		}
-> +	}
-> +
-> +	if (event == 0 || event == 1) {
-> +	       unsigned long flags;
-> +	       spin_lock_irqsave(ap->lock, flags);
-> +	       ata_ehi_clear_desc(ehi);
-> +	       ata_ehi_push_desc(ehi, "ACPI event");
-> +	       ata_ehi_hotplugged(ehi);
-> +	       ata_port_freeze(ap);
-> +	       spin_unlock_irqrestore(ap->lock, flags);
-> +	}
-> +
-> +	if (kobj) {
-> +	        sprintf(event_string, "BAY_EVENT=%d\n", event);
-> +		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
-> +	}
-> +}
-> +
->  /**
->   * ata_acpi_associate - associate ATA host with ACPI objects
->   * @host: target ATA host
-> @@ -81,7 +117,7 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
->   */
->  void ata_acpi_associate(struct ata_host *host)
->  {
-> -	int i;
-> +	int i, j;
->  
->  	if (!is_pci_dev(host->dev) || libata_noacpi)
->  		return;
-> @@ -97,6 +133,22 @@ void ata_acpi_associate(struct ata_host *host)
->  			ata_acpi_associate_sata_port(ap);
->  		else
->  			ata_acpi_associate_ide_port(ap);
-> +
-> +		if (ap->acpi_handle)
-> +			acpi_install_notify_handler (ap->acpi_handle,
-> +						     ACPI_SYSTEM_NOTIFY,
-> +						     ata_acpi_notify,
-> +						     ap);
-> +
-> +		for (j = 0; j < ata_port_max_devices(ap); j++) {
-> +			struct ata_device *dev = &ap->device[j];
-> +
-> +			if (dev->acpi_handle)
-> +				acpi_install_notify_handler (dev->acpi_handle,
-> +							     ACPI_SYSTEM_NOTIFY,
-> +							     ata_acpi_notify,
-> +							     ap);
-> +		}
->  	}
->  }
->  
-> -- 
-> Matthew Garrett | mjg59@srcf.ucam.org
-> 
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
