@@ -1,35 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.22.6 sata_sil device errors & timeouts
-Date: Thu, 27 Sep 2007 16:15:44 +0900
-Message-ID: <46FB58A0.3040109@gmail.com>
-References: <76366b180709170135v6c46f3d6qd3586ea79f9abc2@mail.gmail.com>  <46EE4679.7030600@gmail.com>  <76366b180709170904i7b2f5ab0o8605eb899d20f921@mail.gmail.com>  <46EEB449.8010305@gmail.com>  <76366b180709171205v5783fb9ave52b7e999da96f07@mail.gmail.com>  <76366b180709171226j5a299502q1a13f158d9b704aa@mail.gmail.com>  <Pine.LNX.4.63.0709171433120.28104@trinity.phys.uwm.edu>  <76366b180709171406g61f09f39la8deeb3201ad0e37@mail.gmail.com>  <Pine.LNX.4.63.0709180028270.28104@trinity.phys.uwm.edu> <76366b180709180736h57f956ccld8fba04070f02408@mail.gmail.com> <Pine.LNX.4.63.0709181032270.17786@trinity.phys.uwm.edu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Stardom SATA HSM violation
+Date: Thu, 27 Sep 2007 19:37:01 +0100
+Message-ID: <20070927193701.6230d77f@the-village.bc.nu>
+References: <46CFA08E.6090604@arbores.ca>
+	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
+	<46DBCB6C.8080206@gmail.com>
+	<20070905095327.6277d054.akpm@linux-foundation.org>
+	<46DEE617.4050004@rtr.ca>
+	<46E0A253.7060803@gmail.com>
+	<46E154DE.2060602@rtr.ca>
+	<46FB563A.80108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:46872 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757286AbXI0SRV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 14:17:21 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so3255828wah
-        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2007 11:17:20 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.63.0709181032270.17786@trinity.phys.uwm.edu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38498 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753797AbXI0Sbw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 14:31:52 -0400
+In-Reply-To: <46FB563A.80108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Cc: Andrew Paprocki <andrew.m.paprocki@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Bruce Allen wrote:
-> Andrew: thanks for isolating this problem.
-> 
-> Tejun: any thoughts?  The STRANGE_BUFFER_LENGTH problem is fixed in the
-> code that Andrew is running.  The problem is provoked with '-o on' which
-> goes via a TASKFILE ioctl.
+> I think there have been enough cases where this draining was necessary.
+>  IIRC, ata_piix was involved in those cases, right?  If so, can you
+> please submit a patch which applies this only to affected controllers?
+> I don't feel too confident about applying this to all SFF controllers.
 
-I suppose you mean HDIO_DRIVE_TASK, right?  libata doesn't implement
-HDIO_DRIVE_TASKFILE and it probably never will.  I'll test it next week
-when I get back.  Thanks.
-
--- 
-tejun
-
+Old IDE does it on all controllers bar a couple. So we have a very good
+knowledge of what does/doesn't work. The one that needs care in old ide
+is an ordering issue where a state machine reset done first causes the
+drain of the I/O to hang.
