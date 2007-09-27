@@ -1,46 +1,52 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version 3
-Date: Thu, 27 Sep 2007 18:55:06 +0100
-Message-ID: <20070927175505.GA14476@srcf.ucam.org>
-References: <20070920222138.GA3740@srcf.ucam.org> <46F32DD9.7010509@gmail.com> <20070921024214.GA6317@srcf.ucam.org> <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <20070927102659.2cacae14.kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Maxtor 6L200M0 sata irq timeouts
+Date: Thu, 27 Sep 2007 16:08:31 +0900
+Message-ID: <46FB56EF.8050703@gmail.com>
+References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>	 <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>	 <46E473D2.20907@gmail.com>	 <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>	 <46E5F15A.2090803@gmail.com> <a5d587fb0709110429j6ce52fb2wb1d558281b36f8a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070927102659.2cacae14.kristen.c.accardi@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.191]:24210 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758922AbXI0SQx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 14:16:53 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so2379119rvb
+        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2007 11:16:53 -0700 (PDT)
+In-Reply-To: <a5d587fb0709110429j6ce52fb2wb1d558281b36f8a7@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michal Suchanek <hramrach@centrum.cz>
+Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
 
-On Thu, Sep 27, 2007 at 10:26:59AM -0700, Kristen Carlson Accardi wrote:
+Michal Suchanek wrote:
+> Hello
+> 
+> (please CC me when replying)
+> 
+> On 11/09/2007, Tejun Heo <htejun@gmail.com> wrote:
+>> Michal Suchanek wrote:
+>>>> What does 'smartctl -a /dev/sda' say?
+>>>>
+>>> Attaching output.
+>> Hmmm... How often does the condition occur?  smartlog records only two
+>> occasions.
+>>
+> 
+> Every few minutes when the system is under load, less often when not.
+> 
+> I think the logged drive errors are unrelated, the drive delivers the
+> interrupt, just a bit later than Linux expects. At least that is my
+> impression after looking at the these logs and the logs from the old
+> system (I am not sure I could still find the saved logs but with some
+> combination of irq related kernel options I got spurious interrupt
+> instead of timeout, and the drive got disabled).
 
-> 1.  How does it handle things when you have a bay that is located behind
-> a dock and the dock ejects?  In the acpi bay driver, I use the mechanism
-> that the dock driver exports to get undock notifications so that the bay
-> can eject as well.
+Can you please test the latest rc kernel and see whether this problem is
+still there?
 
-Hm. I'd been working on the assumption that ejecting the doc would 
-trigger the bay notifications as well, but I've got no hardware here 
-with those capabilities so it's kind of hard to check...
-
-> 2.  What if someone wants to use their bay to charge their battery?  While
-> I never bothered to implement this in acpi/bay.c, nothing ever prevented
-> anyone from adding that support to the driver, where now it is prevented
-> since this driver and another cannot coexist.
-
-The spec seems to imply that even if the drive hotswap bay and the 
-battery bay are physically the same, they're logically distinct. 10.2.1 
-specifies that the battery bay should always be considered present, and 
-that any insertion notification will be generated from the battery bay 
-rather than the drive bay (so Notify (BAT1, 0x81) rather than Notify 
-(_SB.MISC.OTHR.BONG.PRIM.SLAV, 0x81)). My code will only grab the 
-latter notification, not the former.
-
-I /suspect/ that _STA on the bay device won't return true if there's a 
-battery in there, and so we aren't expected to call the _EJ0 method if 
-the user wants to remove a battery. But I'm also lacking hardware to 
-test this one, so it's possible that I'm utterly wrong :)
+Thanks.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+tejun
+
