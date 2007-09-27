@@ -1,34 +1,47 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ICH9 2 port SATA controller port map?
-Date: Thu, 27 Sep 2007 10:08:03 +0900
-Message-ID: <46FB0273.60302@gmail.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com>
+Subject: Re: Improper disk shutdown with 2.6.22.6?
+Date: Thu, 27 Sep 2007 09:39:54 +0900
+Message-ID: <46FAFBDA.4080509@gmail.com>
+References: <20070919093306.GA2359@robos.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:13811 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.190]:19520 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753648AbXI0ETn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 00:19:43 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so2202053rvb
-        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 21:19:42 -0700 (PDT)
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com>
+	with ESMTP id S1751322AbXI0EYA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 00:24:00 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so2202895rvb
+        for <linux-ide@vger.kernel.org>; Wed, 26 Sep 2007 21:23:58 -0700 (PDT)
+In-Reply-To: <20070919093306.GA2359@robos.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Robert <robert@robos.org>
+Cc: linux-ide@vger.kernel.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>
 
-Gaston, Jason D wrote:
+[cc'ing Henrique and Jeff]
+
+Robert wrote:
 > Hello,
 > 
-> ICH9 has DeviceID's for 2 port, IDE mode, SATA controllers.  The current
-> port map in ata_piix is setup for the 4 port controllers.  This seems to
-> work ok, but I wonder if a new port map should be defined for the 2 port
-> controllers, where the two ports are PM, SM?  You can refer to the ICH9
-> Datasheet on intel.com for detail.
+> When shutting down this system running Linux 2.6.22.6, I get a warning about
+> the possibility that the disks are not properly shut down. When the power is
+> turned off, it sounds like the disks aren't spun down (but I may be mistaken
+> on that point).
+> 
+> http://linux-ata.org/shutdown.html claims that kernels newer than 2.6.21 will
+> always spin down the disks, but is this really the case?
+> The manage_start_stop files exist.
+> 
+> Tell me if you'd like more detailed information about configuration and
+> hardware.
 
-Yes, please go ahead and define new entry for the controllers.  Thanks.
+You're on debian, right?  You need to update your shutdown utilities.
+
+Henrique, what information should we put into the faq page to properly
+direct debian users to needed updates?
+
+Thanks.
 
 -- 
 tejun
