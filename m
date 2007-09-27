@@ -1,38 +1,62 @@
-From: Paul Rolland <rol@as2917.net>
-Subject: Re: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
-Date: Thu, 27 Sep 2007 10:05:40 +0000
-Message-ID: <20070927100540.67f25cfc@tux.DEF.witbe.net>
-References: <20070924083336.7a08fd61@tux.DEF.witbe.net>
-	<46F7C933.4080003@davidnewall.com>
-	<20070925090057.5778aa2a@tux.DEF.witbe.net>
-	<46FAFF7A.5070208@gmail.com>
-	<20070927080551.424e90b9@tux.DEF.witbe.net>
-	<1190883851.6158.18.camel@pasglop>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [patch] SB700 contains more than one IDE channel
+Date: Thu, 27 Sep 2007 16:18:47 +0400
+Message-ID: <46FB9FA7.7090403@ru.mvista.com>
+References: <5CAB7B5D6F8AB84AA868A46B47A5070544C164@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tag.witbe.net ([81.88.96.48]:60276 "EHLO tag.witbe.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753074AbXI0KFx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Sep 2007 06:05:53 -0400
-In-Reply-To: <1190883851.6158.18.camel@pasglop>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:32550 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751205AbXI0MTG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 08:19:06 -0400
+In-Reply-To: <5CAB7B5D6F8AB84AA868A46B47A5070544C164@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: Tejun Heo <htejun@gmail.com>, David Newall <david@davidnewall.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rol@witbe.net
+To: Shane Huang <Shane.Huang@amd.com>, bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de, "Su, Henry" <Henry.Su@amd.com>
 
-Hello,
+Hello.
 
-On Thu, 27 Sep 2007 19:04:11 +1000
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+Shane Huang wrote:
 
-> Let me guess... this is a T61 or X61 ?
-Bad luck ;)
- 
-This is an Asus P5W-DH Deluxe motherboard, with a Core2 6400 CPU, 
-a bunch of disk (2 IDE, 3 SATA, 1 CDRW and 1 DVDRW-DL), and a damned
-Olitec PCI V92 V2 modem.
+> SB700 supports one physical IDE channel, but SB700 SATA controller
+> supports combined mode. When the SATA combined mode is enabled,
+> two SATA ports(port4 and port5) share one IDE channel from IDE
+> controller, and PATA will share the other IDE channel.
 
-Paul
+> Our previous patch adding SB700 IDE device ID only support one
+> IDE channel, which contains bug. The attached patch fix the bug.
 
+> Signed-off-by: shane.huang@amd.com
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> ----------------------------------------------
+> diff -ruN linux-2.6.23-rc5_orig/drivers/ide/pci/atiixp.c
+> linux-2.6.23-rc5/drivers/ide/pci/atiixp.c
+> --- linux-2.6.23-rc5_orig/drivers/ide/pci/atiixp.c	2007-09-01
+> 14:08:24.000000000 +0800
+> +++ linux-2.6.23-rc5/drivers/ide/pci/atiixp.c	2007-09-28
+> 00:35:55.000000000 +0800
+> @@ -325,7 +325,7 @@
+>  	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_IDE, PCI_ANY_ID,
+> PCI_ANY_ID, 0, 0, 0},
+>  	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_IDE, PCI_ANY_ID,
+> PCI_ANY_ID, 0, 0, 0},
+>  	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_IDE, PCI_ANY_ID,
+> PCI_ANY_ID, 0, 0, 1},
+> -	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_IDE, PCI_ANY_ID,
+> PCI_ANY_ID, 0, 0, 1},
+> +	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_IDE, PCI_ANY_ID,
+> PCI_ANY_ID, 0, 0, 0},
+>  	{ 0, },
+>  };
+>  MODULE_DEVICE_TABLE(pci, atiixp_pci_tbl);
+
+    The inlined patch has suffered from word wrapping, and the attached one 
+luckily didn't; yet the attachment has a wrong MIME type -- patches should be 
+text/plain.
+
+MBR, Sergei
