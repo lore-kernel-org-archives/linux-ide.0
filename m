@@ -1,17 +1,17 @@
 From: "Kuan Luo" <kluo@nvidia.com>
 Subject: RE: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
-Date: Thu, 27 Sep 2007 15:33:43 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1AD@hkemmail01.nvidia.com>
+Date: Thu, 27 Sep 2007 16:54:32 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1AE@hkemmail01.nvidia.com>
 References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org> <46F9EFC9.9030209@dunaweb.hu> <46F9F05F.40905@garzik.org> <46F9F223.4000406@dunaweb.hu> <15F501D1A78BD343BE8F4D8DB854566B059FE1AB@hkemmail01.nvidia.com> <46FB4B75.9030407@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AC@hkemmail01.nvidia.com> <46FB577D.6000006@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:2477 "EHLO
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:17209 "EHLO
 	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbXI0HeA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 03:34:00 -0400
+	with ESMTP id S1753303AbXI0IzL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 04:55:11 -0400
 In-Reply-To: <46FB577D.6000006@garzik.org>
 Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
@@ -113,27 +113,14 @@ Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, Peer Che
 > 
 > 	Jeff
 > 
- I see. Both your methods are perfect.
-Because the nv_swncq_ops and nv_swncq_interrupt can be also used when
-sending non ncq cmd,
-It seems like:
-	/* MCP65 */
-	{
-		.sht		= &nv_sht,
-		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY 
-		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
-		.pio_mask	= NV_PIO_MASK,
-		.mwdma_mask	= NV_MWDMA_MASK,
-		.udma_mask	= NV_UDMA_MASK,
-		.port_ops	= &nv_swncq_ops,
-		.irq_handler	= nv_swncq_interrupt,
-	},
+One idea,  only simply adding 
+	if (!swncq_enabled) 
+		nv_port_info[SWNCQ].flags &= ~ATA_FLAG_NCQ;
+	
+	ppi[0] = &nv_port_info[type];
+	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
 
-Is it right?
-
-Best regards,
-Kuan Luo
-
+I don't know if this is appropriate
 -----------------------------------------------------------------------------------
 This email message is for the sole use of the intended recipient(s) and may contain
 confidential information.  Any unauthorized review, use, disclosure or distribution
