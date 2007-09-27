@@ -1,38 +1,48 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
-Date: Fri, 28 Sep 2007 08:27:58 +1000
-Message-ID: <1190932078.6158.34.camel@pasglop>
-References: <20070924083336.7a08fd61@tux.DEF.witbe.net>
-	 <46F7C933.4080003@davidnewall.com>
-	 <20070925090057.5778aa2a@tux.DEF.witbe.net> <46FAFF7A.5070208@gmail.com>
-	 <20070927080551.424e90b9@tux.DEF.witbe.net>
-	 <1190883851.6158.18.camel@pasglop>
-	 <20070927100540.67f25cfc@tux.DEF.witbe.net>
-Reply-To: benh@kernel.crashing.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: T61 SATA error in log
+Date: Thu, 27 Sep 2007 13:35:06 -0700
+Message-ID: <46FC13FA.3090400@gmail.com>
+References: <1190877668.30275.3.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760331AbXI0W2o@vger.kernel.org>
-In-Reply-To: <20070927100540.67f25cfc@tux.DEF.witbe.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: Tejun Heo <htejun@gmail.com>, David Newall <david@davidnewall.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rol@witbe.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.191]:51053 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759492AbXI0XZW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 19:25:22 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so2444981rvb
+        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2007 16:25:21 -0700 (PDT)
+In-Reply-To: <1190877668.30275.3.camel@pasglop>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-
-On Thu, 2007-09-27 at 10:05 +0000, Paul Rolland wrote:
-> Hello,
+Benjamin Herrenschmidt wrote:
+> Saw that popping up in my log today on a brand new T61 thinkpad:
 > 
-> On Thu, 27 Sep 2007 19:04:11 +1000
-> Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> [  427.712000] ata1.00: exception Emask 0x2 SAct 0x18 SErr 0x0 action 0x2 frozen
+> [  427.712000] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x18 FIS=004040a1:00000024)
+> [  427.712000] ata1.00: cmd 61/08:18:f4:74:54/00:00:04:00:00/40 tag 3 cdb 0x0 data 4096 out
+> [  427.712000]          res 40/00:28:64:e4:51/00:00:04:00:00/40 Emask 0x2 (HSM violation)
+> [  427.712000] ata1.00: cmd 61/08:20:84:10:81/00:00:04:00:00/40 tag 4 cdb 0x0 data 4096 out
+> [  427.712000]          res 40/00:28:64:e4:51/00:00:04:00:00/40 Emask 0x2 (HSM violation)
+> [  428.024000] ata1: soft resetting port
+> [  428.196000] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  428.204000] ata1.00: configured for UDMA/100
+> [  428.204000] ata1: EH complete
+> [  428.204000] sd 0:0:0:0: [sda] 234441648 512-byte hardware sectors (120034 MB)
+> [  428.204000] sd 0:0:0:0: [sda] Write Protect is off
+> [  428.204000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> [  428.204000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 > 
-> > Let me guess... this is a T61 or X61 ?
-> Bad luck ;)
->  
-> This is an Asus P5W-DH Deluxe motherboard, with a Core2 6400 CPU, 
-> a bunch of disk (2 IDE, 3 SATA, 1 CDRW and 1 DVDRW-DL), and a damned
-> Olitec PCI V92 V2 modem.
+> Kernel recovered just fine and things seem smooth so far. Is that something I need
+> to worry about ?
 
-What chipset ? 965gm ?
+Please post the result of 'hdparm -I /dev/sda' and you don't need to
+worry about it too much.
 
-Ben.
+-- 
+tejun
+
