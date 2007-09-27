@@ -1,55 +1,90 @@
-From: robert@robos.org (Robert)
-Subject: Re: Improper disk shutdown with 2.6.22.6?
-Date: Thu, 27 Sep 2007 10:58:18 +0200
-Message-ID: <20070927085818.GA31158@robos.org>
-References: <20070919093306.GA2359@robos.org> <46FAFBDA.4080509@gmail.com>
+From: "Shane Huang" <Shane.Huang@amd.com>
+Subject: [patch] SB700 contains more than one IDE channel
+Date: Thu, 27 Sep 2007 17:04:23 +0800
+Message-ID: <5CAB7B5D6F8AB84AA868A46B47A5070544C164@sshaexmb1.amd.com>
+References: <FFECF24D2A7F6D418B9511AF6F3586020209802C@shacnexch2.atitech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="----_=_NextPart_001_01C800E5.65BAF83A"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from proxy3.bredband.net ([195.54.101.73]:63475 "EHLO
-	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131AbXI0I63 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 04:58:29 -0400
-Content-Disposition: inline
-In-Reply-To: <46FAFBDA.4080509@gmail.com>
+Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:51740 "EHLO
+	outbound4-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753131AbXI0JEg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 05:04:36 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <FFECF24D2A7F6D418B9511AF6F3586020209802C@shacnexch2.atitech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de, "Su, Henry" <Henry.Su@amd.com>, Shane Huang <Shane.Huang@amd.com>
 
-On Thu, Sep 27, 2007 at 09:39:54AM +0900, Tejun Heo wrote:
-> [cc'ing Henrique and Jeff]
-> 
-> Robert wrote:
-> > Hello,
-> > 
-> > When shutting down this system running Linux 2.6.22.6, I get a warning about
-> > the possibility that the disks are not properly shut down. When the power is
-> > turned off, it sounds like the disks aren't spun down (but I may be mistaken
-> > on that point).
-> > 
-> > http://linux-ata.org/shutdown.html claims that kernels newer than 2.6.21 will
-> > always spin down the disks, but is this really the case?
-> > The manage_start_stop files exist.
-> > 
-> > Tell me if you'd like more detailed information about configuration and
-> > hardware.
-> 
-> You're on debian, right?  You need to update your shutdown utilities.
+This is a multi-part message in MIME format.
 
-Thanks for your help.
+------_=_NextPart_001_01C800E5.65BAF83A
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
 
-I'm on Debian, yes, and now I applied the change to /etc/init.d/halt in
-http://lists.alioth.debian.org/pipermail/pkg-sysvinit-commits/2007-June.txt
-and I'm using HDDOWN=NEVER in /etc/default/halt, which seems to work.
+From: shane.huang@amd.com
 
-Robert
+SB700 supports one physical IDE channel, but SB700 SATA controller
+supports combined mode. When the SATA combined mode is enabled,
+two SATA ports(port4 and port5) share one IDE channel from IDE
+controller, and PATA will share the other IDE channel.
 
-> Henrique, what information should we put into the faq page to properly
-> direct debian users to needed updates?
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-> 
+Our previous patch adding SB700 IDE device ID only support one
+IDE channel, which contains bug. The attached patch fix the bug.
+
+
+Signed-off-by: shane.huang@amd.com
+----------------------------------------------
+diff -ruN linux-2.6.23-rc5_orig/drivers/ide/pci/atiixp.c
+linux-2.6.23-rc5/drivers/ide/pci/atiixp.c
+--- linux-2.6.23-rc5_orig/drivers/ide/pci/atiixp.c	2007-09-01
+14:08:24.000000000 +0800
++++ linux-2.6.23-rc5/drivers/ide/pci/atiixp.c	2007-09-28
+00:35:55.000000000 +0800
+@@ -325,7 +325,7 @@
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP300_IDE, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_IDE, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP600_IDE, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 1},
+-	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_IDE, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 1},
++	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP700_IDE, PCI_ANY_ID,
+PCI_ANY_ID, 0, 0, 0},
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, atiixp_pci_tbl);
+
+
+
+
+------_=_NextPart_001_01C800E5.65BAF83A
+Content-Type: application/octet-stream;
+ name=SB700_2_IDE_Channels.patch
+Content-Transfer-Encoding: base64
+Content-Description: SB700_2_IDE_Channels.patch
+Content-Disposition: attachment;
+ filename=SB700_2_IDE_Channels.patch
+
+ZGlmZiAtcnVOIGxpbnV4LTIuNi4yMy1yYzVfb3JpZy9kcml2ZXJzL2lkZS9wY2kvYXRpaXhwLmMg
+bGludXgtMi42LjIzLXJjNS9kcml2ZXJzL2lkZS9wY2kvYXRpaXhwLmMKLS0tIGxpbnV4LTIuNi4y
+My1yYzVfb3JpZy9kcml2ZXJzL2lkZS9wY2kvYXRpaXhwLmMJMjAwNy0wOS0wMSAxNDowODoyNC4w
+MDAwMDAwMDAgKzA4MDAKKysrIGxpbnV4LTIuNi4yMy1yYzUvZHJpdmVycy9pZGUvcGNpL2F0aWl4
+cC5jCTIwMDctMDktMjggMDA6MzU6NTUuMDAwMDAwMDAwICswODAwCkBAIC0zMjUsNyArMzI1LDcg
+QEAKIAl7IFBDSV9WRU5ET1JfSURfQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFAzMDBfSURFLCBQ
+Q0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAwfSwKIAl7IFBDSV9WRU5ET1JfSURfQVRJLCBQ
+Q0lfREVWSUNFX0lEX0FUSV9JWFA0MDBfSURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAw
+LCAwfSwKIAl7IFBDSV9WRU5ET1JfSURfQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA2MDBfSURF
+LCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAxfSwKLQl7IFBDSV9WRU5ET1JfSURfQVRJ
+LCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBfSURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAw
+LCAwLCAxfSwKKwl7IFBDSV9WRU5ET1JfSURfQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9JWFA3MDBf
+SURFLCBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAwfSwKIAl7IDAsIH0sCiB9OwogTU9E
+VUxFX0RFVklDRV9UQUJMRShwY2ksIGF0aWl4cF9wY2lfdGJsKTsK
+
+------_=_NextPart_001_01C800E5.65BAF83A--
+
+
