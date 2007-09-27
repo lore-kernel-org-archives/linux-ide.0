@@ -1,129 +1,55 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
-Date: Thu, 27 Sep 2007 16:54:32 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1AE@hkemmail01.nvidia.com>
-References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org> <46F9EFC9.9030209@dunaweb.hu> <46F9F05F.40905@garzik.org> <46F9F223.4000406@dunaweb.hu> <15F501D1A78BD343BE8F4D8DB854566B059FE1AB@hkemmail01.nvidia.com> <46FB4B75.9030407@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AC@hkemmail01.nvidia.com> <46FB577D.6000006@garzik.org>
+From: robert@robos.org (Robert)
+Subject: Re: Improper disk shutdown with 2.6.22.6?
+Date: Thu, 27 Sep 2007 10:58:18 +0200
+Message-ID: <20070927085818.GA31158@robos.org>
+References: <20070919093306.GA2359@robos.org> <46FAFBDA.4080509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:17209 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbXI0IzL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 04:55:11 -0400
-In-Reply-To: <46FB577D.6000006@garzik.org>
-Content-class: urn:content-classes:message
+Received: from proxy3.bredband.net ([195.54.101.73]:63475 "EHLO
+	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131AbXI0I63 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 04:58:29 -0400
+Content-Disposition: inline
+In-Reply-To: <46FAFBDA.4080509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, Peer Chen <pchen@nvidia.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>
 
- Jeff Garzik wrote:
-> Kuan Luo wrote:
-> > Jeff Garzik wrote:
-> >> Kuan Luo wrote:
-> >>> hi,
-> >>> i saw the below changes  from
-> >>>
-> >> http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.g
-> >> it;a=commi
-> >>> tdiff;h=5a5a9e1890b8260686218a68862d880daee1a817
-> >>>
-> >>> [libata] sata_nv: Clean up ATA_FLAG_NCQ usage; bit test micro-opt
-> >>>
-> >>>  @@ -622,7 +622,9 @@ static const struct ata_port_info 
-> >> nv_port_info[] =
-> >>> {
-> >>>         /* SWNCQ */
-> >>>         {
-> >>>                 .sht            = &nv_swncq_sht,
-> >>> -               .flags          = ATA_FLAG_SATA | 
-> >> ATA_FLAG_NO_LEGACY,
-> >>> +               .flags          = ATA_FLAG_SATA | 
-> >> ATA_FLAG_NO_LEGACY |
-> >>> +                                 ATA_FLAG_NCQ,
-> >>> +               .link_flags     = ATA_LFLAG_HRST_TO_RESUME,
-> >>>                 .pio_mask       = NV_PIO_MASK,
-> >>>                 .mwdma_mask     = NV_MWDMA_MASK,
-> >>>                 .udma_mask      = NV_UDMA_MASK,
-> >>>
-> >>> If swncq_enabled is set zero by user, nv_swncq_host_init 
-> >> would not be
-> >>> called .
-> >>>  Then ncq should be disabled and the libata shouldn't 
-> send ncq cmd. 
-> >>>  I am not sure whether the  ATA_FLAG_NCQ flag which is in 
-> >> default set
-> >>> makes libata send ncq cmd even when swncq_enable is 0?
-> >>>
-> >>> nv_init_one
-> >>> 	} else if (type == SWNCQ && swncq_enabled) {
-> >>> 		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ
-> >>> mode\n");
-> >>> 		nv_swncq_host_init(host);
-> >> Thanks for watching!  Yes, that looks like a problem.
-> >>
-> >> I still feel the flags usage I removed was problematic.  A better 
-> >> solution, I think, would be to do follow the ADMA example of 
-> >> switching 
-> >> the port_info type during early initialization:
-> >>
-> >> 	if (type >= CK804 && adma_enabled) {
-> >> 		type = ADMA;
-> >>
-> >> which in our case would result in
-> >>
-> >> 	if (type == SWNCQ && !swncq_enabled)
-> >> 		type = GENERIC;
-> >>
-> >> Or, if you prefer, we could take the opposite route, _not_ 
-> >> set SWNCQ in 
-> >> the pci_device_id table, and instead do something like
-> >>
-> >> 	if (type >= MCP65 && swncq_enabled)
-> >> 		type = SWNCQ;
-> >>
-> >> (MCP65 is just a pulled-out-of-thin-air example)
-> >>
-> >> Regards,
-> >>
-> >> 	Jeff
-> >>
-> > 1.The former method "type =GENERIC" cann't support hotplug in
-> > mcp51-55-61.
+On Thu, Sep 27, 2007 at 09:39:54AM +0900, Tejun Heo wrote:
+> [cc'ing Henrique and Jeff]
 > 
-> 'GENERIC' just an example; my apologies for the confusion.
+> Robert wrote:
+> > Hello,
+> > 
+> > When shutting down this system running Linux 2.6.22.6, I get a warning about
+> > the possibility that the disks are not properly shut down. When the power is
+> > turned off, it sounds like the disks aren't spun down (but I may be mistaken
+> > on that point).
+> > 
+> > http://linux-ata.org/shutdown.html claims that kernels newer than 2.6.21 will
+> > always spin down the disks, but is this really the case?
+> > The manage_start_stop files exist.
+> > 
+> > Tell me if you'd like more detailed information about configuration and
+> > hardware.
 > 
-> 
-> > 2.As to the latter mehthod, do you mean we may set MCP65 in
-> > pci_device_id table and add the extra variable
-> > static const struct ata_port_operations nv_MCP65_ops ={...}.
-> 
-> Correct.
-> 
-> The main point was to fall back from SWNCQ to <something else>, if 
-> !swncq_enabled, to avoid changing the ap->flags value after 
-> the port has 
-> been allocated and initialized internally.  And that switch 
-> must occur 
-> prior to ata_pci_prepare_sff_host() call in nv_init_one().
-> 
-> Regards,
-> 
-> 	Jeff
-> 
-One idea,  only simply adding 
-	if (!swncq_enabled) 
-		nv_port_info[SWNCQ].flags &= ~ATA_FLAG_NCQ;
-	
-	ppi[0] = &nv_port_info[type];
-	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+> You're on debian, right?  You need to update your shutdown utilities.
 
-I don't know if this is appropriate
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+Thanks for your help.
+
+I'm on Debian, yes, and now I applied the change to /etc/init.d/halt in
+http://lists.alioth.debian.org/pipermail/pkg-sysvinit-commits/2007-June.txt
+and I'm using HDDOWN=NEVER in /etc/default/halt, which seems to work.
+
+Robert
+
+> Henrique, what information should we put into the faq page to properly
+> direct debian users to needed updates?
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+> 
