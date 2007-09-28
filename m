@@ -1,30 +1,35 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Sata Sil3512 bug?
-Date: Fri, 28 Sep 2007 16:51:50 +0100
-Message-ID: <20070928165150.2a93524e@the-village.bc.nu>
-References: <1097480701.20070927155135@zonnet.nl>
-	<46FCF2A1.30204@gmail.com>
-	<1619914792.20070928172536@zonnet.nl>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Fri, 28 Sep 2007 16:55:41 +0100
+Message-ID: <20070928165541.55f68756@the-village.bc.nu>
+References: <1190521193410-git-send-email-htejun@gmail.com>
+	<46F9BF3E.5050708@garzik.org>
+	<46FD0D9E.7040808@rtr.ca>
+	<46FD1F6D.5060805@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50895 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50929 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754118AbXI1PqW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 11:46:22 -0400
-In-Reply-To: <1619914792.20070928172536@zonnet.nl>
+	with ESMTP id S1754417AbXI1PuF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 11:50:05 -0400
+In-Reply-To: <46FD1F6D.5060805@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: MisterE <MisterE2002@zonnet.nl>
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, benh@kernel.crashing.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-> sda1 are corrupted (2 to 4 blocks missing). Copying that data back to
-> Windows and it give the same results in Quickpar. So reading does not
-> have problems. The data written to hda1 is correct.
+> So, there just hasn't been a real need so far.  If interrupt overhead 
+> becomes an issue, my first step would be to start programming the 
+> interrupt coalescing hardware that comes in modern SATA controllers.
 
-We've got a whole pile of reports like this with the 3512 and almost
-always Nvidia chipset, plus reports of BIOS updates fixing it. That you
-see something similar on intel boards is a bit worrying.
+Another factor is queue sizes. You don't get 1024 entry queues on your
+typical disk controller and that makes NAPI type stuff less viable, and
+sensible IRQ colaescing on the card more sane.
 
 Alan
+
+PS: Jeff - if you want stuff from -mm and it's got cross dependancies,
+clashes just ask me for "patch xyz versus libata head" and I'll sort it
+out
