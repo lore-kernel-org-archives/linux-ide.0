@@ -1,33 +1,31 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: [PATCH][resend] PCI: fix IDE legacy mode resources
-Date: Fri, 28 Sep 2007 12:47:54 +0200
-Message-ID: <20070928104754.GA6545@derision.cyrius.com>
-References: <20070824115559.06250ec0.yoichi_yuasa@tripeaks.co.jp> <20070824161442.GB15305@kroah.com> <20070824173713.2bc20bac@the-village.bc.nu> <20070928084840.GA5542@derision.cyrius.com> <20070928111408.119f0631@the-village.bc.nu> <20070928101059.GA13826@deprecation.cyrius.com> <46FCD634.7070309@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/8] amd74xx/via82cxxx: don't initialize drive->dn
+Date: Fri, 28 Sep 2007 16:07:00 +0400
+Message-ID: <46FCEE64.8030003@ru.mvista.com>
+References: <200708271927.21528.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756623AbXI1Ksk@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <46FCD634.7070309@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, greg@kroah.com, akpm@osdl.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:44667 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752736AbXI1MHS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 08:07:18 -0400
+In-Reply-To: <200708271927.21528.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-* Jeff Garzik <jeff@garzik.org> [2007-09-28 06:23]:
->>>> Yoichi's original patch and explanation can be found at
->>>> http://lkml.org/lkml/2007/8/23/411
->>> I've no idea why it hasn't been applied unless nobody is quite sure who
->>> owns it. As a PCI fix I guess Greg does (and drop it into -mm for
->>> testing) ?
->> I was also hoping Jeff would comment on the patch.
->
-> What sort of comment were you seeking?  :)
+Hello.
 
-A comment whether this is the right approach.  You asked for a
-rationale when Yoichi originally submitted the patch in July but then
-never responded to his explanation:
-http://marc.info/?l=linux-kernel&m=118564639820460&w=2
+Bartlomiej Zolnierkiewicz wrote:
 
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+> drive->dn is initialized by ide-probe.c::probe_hwif() so no need to do it
+> in ->init_hwif method.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
