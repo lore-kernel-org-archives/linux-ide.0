@@ -1,49 +1,55 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: 2.6.22.6 sata_sil device errors & timeouts
-Date: Thu, 27 Sep 2007 22:59:11 -0500 (CDT)
-Message-ID: <Pine.LNX.4.63.0709272257330.4057@trinity.phys.uwm.edu>
-References: <76366b180709170135v6c46f3d6qd3586ea79f9abc2@mail.gmail.com>
- <46EE4679.7030600@gmail.com>  <76366b180709170904i7b2f5ab0o8605eb899d20f921@mail.gmail.com>
-  <46EEB449.8010305@gmail.com>  <76366b180709171205v5783fb9ave52b7e999da96f07@mail.gmail.com>
-  <76366b180709171226j5a299502q1a13f158d9b704aa@mail.gmail.com>
- <Pine.LNX.4.63.0709171433120.28104@trinity.phys.uwm.edu>
- <76366b180709171406g61f09f39la8deeb3201ad0e37@mail.gmail.com>
- <Pine.LNX.4.63.0709180028270.28104@trinity.phys.uwm.edu>
- <76366b180709180736h57f956ccld8fba04070f02408@mail.gmail.com>
- <Pine.LNX.4.63.0709181032270.17786@trinity.phys.uwm.edu> <46FB58A0.3040109@gmail.com>
+From: Paul Rolland <rol@as2917.net>
+Subject: Re: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
+Date: Fri, 28 Sep 2007 06:30:39 +0000
+Message-ID: <20070928063039.428bbd02@tux.DEF.witbe.net>
+References: <20070924083336.7a08fd61@tux.DEF.witbe.net>
+	<46F7C933.4080003@davidnewall.com>
+	<20070925090057.5778aa2a@tux.DEF.witbe.net>
+	<46FAFF7A.5070208@gmail.com>
+	<20070927080551.424e90b9@tux.DEF.witbe.net>
+	<1190883851.6158.18.camel@pasglop>
+	<20070927100540.67f25cfc@tux.DEF.witbe.net>
+	<1190932078.6158.34.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.phys.uwm.edu ([129.89.57.159]:39023 "EHLO
-	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753940AbXI1D70 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2007 23:59:26 -0400
-In-Reply-To: <46FB58A0.3040109@gmail.com>
+Received: from tag.witbe.net ([81.88.96.48]:48330 "EHLO tag.witbe.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756596AbXI1Gaw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 02:30:52 -0400
+In-Reply-To: <1190932078.6158.34.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Paprocki <andrew.m.paprocki@gmail.com>, Bruce Allen <bruce.allen@aei.mpg.de>, linux-ide@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: Tejun Heo <htejun@gmail.com>, David Newall <david@davidnewall.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rol@witbe.net
 
-Hi Tejun,
+Hi,
 
-Thanks! Yes I meant HDIO_DRIVE_TASK.  Please let me know what your tests 
-reveal.
+On Fri, 28 Sep 2007 08:27:58 +1000
+Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
 
-Cheers,
- 	Bruce
+> > This is an Asus P5W-DH Deluxe motherboard, with a Core2 6400 CPU, 
+> > a bunch of disk (2 IDE, 3 SATA, 1 CDRW and 1 DVDRW-DL), and a damned
+> > Olitec PCI V92 V2 modem.
+> 
+> What chipset ? 965gm ?
 
+975x
 
-On Thu, 27 Sep 2007, Tejun Heo wrote:
+Paul
 
-> Bruce Allen wrote:
->> Andrew: thanks for isolating this problem.
->>
->> Tejun: any thoughts?  The STRANGE_BUFFER_LENGTH problem is fixed in the
->> code that Andrew is running.  The problem is provoked with '-o on' which
->> goes via a TASKFILE ioctl.
->
-> I suppose you mean HDIO_DRIVE_TASK, right?  libata doesn't implement
-> HDIO_DRIVE_TASKFILE and it probably never will.  I'll test it next week
-> when I get back.  Thanks.
->
->
+-- 
+Paul Rolland                                E-Mail : rol(at)witbe.net
+Witbe.net SA                                Tel. +33 (0)1 47 67 77 77
+Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
+F-92057 Paris La Defense                    RIPE : PR12-RIPE
+
+Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navigateur 
+"Some people dream of success... while others wake up and work hard at it" 
+
+"I worry about my child and the Internet all the time, even though she's too 
+young to have logged on yet. Here's what I worry about. I worry that 10 or 15 
+years from now, she will come to me and say 'Daddy, where were you when they 
+took freedom of the press away from the Internet?'"
+--Mike Godwin, Electronic Frontier Foundation 
