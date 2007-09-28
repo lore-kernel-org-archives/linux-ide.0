@@ -1,52 +1,40 @@
-From: "Jon Chelton" <jchelton@ffpglobal.com>
-Subject: RE: sata_sil24 with port multiplier
-Date: Fri, 28 Sep 2007 12:08:43 -0400
-Message-ID: <FD6311B7ED175B4480F31633F6098B4D911D11@ffpglobal_mail.corp.ffplus.net>
+From: Philip Langdale <philipl@overt.org>
+Subject: [PATCH] Resend: Add Hitachi HTS722020K9A300 to ncq blacklist
+Date: Fri, 28 Sep 2007 12:43:10 -0400
+Message-ID: <3f13d76aa5dae34fededd9a7bf4d51b6@localhost>
+References: <46EC2088.2000407@overt.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:44823
-	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbXI1QHf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 12:07:35 -0400
-content-class: urn:content-classes:message
+Received: from usul.saidi.cx ([204.11.33.34]:44701 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752219AbXI1Qqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 12:46:42 -0400
+Received: from www-data by usul.overt.org with local (Exim 4.63)
+	(envelope-from <philipl@overt.org>)
+	id 1IbIvm-0005GH-AJ
+	for linux-ide@vger.kernel.org; Fri, 28 Sep 2007 12:43:10 -0400
+In-Reply-To: <46EC2088.2000407@overt.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This error occurred when assembling a software raid 5 array using mdadm.
-It also happened when copying large amounts of data from one drive to
-another.  I saw from an earlier post to disable or upgrade smartd.  I
-tried this (disabled) and moved about 50gb between disks and the error
-has not repeated yet.
 
-Jon
+My new Dell XPS m1330 comes with this Hitachi drive. You'd think they'd have
+sorted things out by now but it produces tons of spurious completion errors
+when NCQ is on.
 
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Friday, September 28, 2007 3:24 AM
-To: Jon Chelton
-Cc: linux-ide@vger.kernel.org
-Subject: Re: sata_sil24 with port multiplier
+Signed-off-by: Philip Langdale <philipl@overt.org>
 
-Jon Chelton wrote:
-> After applying the patches you sent, I had not received any additional
-> errors until today.  Below is an output from dmesg.
-> 
-> ata1.15: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata1.15: irq_stat 0x00020002, PMP DMA CS errata
-> ata1.00: exception Emask 0x100 SAct 0x18084200 SErr 0x0 action 0x6
-> frozen
-> ata1.00: cmd 60/00:48:3f:8f:fa/01:00:0a:00:00/40 tag 9 cdb 0x0 data
-> 131072 in
->          res 50/00:3c:3f:ff:67/00:00:00:00:00/40 Emask 0x100 (unknown
-> error)
+--- linux-2.6.22/drivers/ata/libata-core.c	2007-08-24 16:13:37.000000000 -0700
++++ linux-new/drivers/ata/libata-core.c	2007-08-26 16:03:15.215383641 -0700
+@@ -3801,6 +3801,7 @@
+ 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+ 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+ 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
++	{ "Hitachi HTS722020K9A300", "DC4OC54P", ATA_HORKAGE_NONCQ, },
 
-Hmmm... So, when did the above error occur?  Can you reproduce it?
+ 	/* Devices with NCQ limits */
 
--- 
-tejun
 
