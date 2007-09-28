@@ -1,44 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream] libata: update spurious NCQ completion blacklist
-Date: Fri, 28 Sep 2007 06:29:23 -0700
-Message-ID: <46FD01B3.9030700@gmail.com>
+Subject: Re: [PATCH] Fix HPA handling regression
+Date: Fri, 28 Sep 2007 06:31:29 -0700
+Message-ID: <46FD0231.2020002@gmail.com>
+References: <20070926180222.10a96afe@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.227]:65023 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbXI1NbU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 09:31:20 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so2383728wxd
-        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 06:31:19 -0700 (PDT)
+Received: from an-out-0708.google.com ([209.85.132.240]:11905 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753930AbXI1NdR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 09:33:17 -0400
+Received: by an-out-0708.google.com with SMTP id d31so449657and
+        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 06:33:16 -0700 (PDT)
+In-Reply-To: <20070926180222.10a96afe@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
 
-* The firmware version of ST3160812AS is "3.ADJ" no "3.AD".
-* Add several entries from various sources.
+Alan Cox wrote:
+> Restore the support for handling drives that report one sector too many
+> (ie SCSI not ATA style). This worked before the HPA update but was
+> removed in that process
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Acked-by: Tejun Heo <htejun@gmail.com>
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fd4563d..7f424c4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3891,9 +3891,12 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
-+	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
-+	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
- 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
--	{ "ST3160812AS",	"3.AD",		ATA_HORKAGE_NONCQ, },
-+	{ "ST3160812AS",	"3.ADJ",	ATA_HORKAGE_NONCQ, },
-+	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
- 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
- 
- 	/* devices which puke on READ_NATIVE_MAX */
+> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h linux-2.6.23rc8-mm1/include/linux/libata.h
+> --- linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 16:46:57.844875296 +0100
+> +++ linux-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 17:11:56.215088400 +0100
+> @@ -315,7 +315,8 @@
+>  	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+>  	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
+>  	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+> -	ATA_HORKAGE_DRQ		= (1 << 5),	/* Device forgets to clear DRQ on error */
+> +	ATA_HORKAGE_HPA_SIZE	= (1 << 5), 	/* Reports native size off by one */
+> +	ATA_HORKAGE_DRQ		= (1 << 6),	/* Device forgets to clear DRQ on error */
+>  
+>  	/* DMA mask for user DMA control: User visible values do not
+>  	   renumber */
+
+But Jeff might not like adding new constant and shifting the existing
+one at the same time.
+-- 
+tejun
