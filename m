@@ -1,87 +1,31 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
- where old SATA works
-Date: Fri, 28 Sep 2007 02:45:59 -0700
-Message-ID: <46FCCD57.2020507@gmail.com>
-References: <46FC4384.7080607@df.uba.ar>
+Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation
+Date: Fri, 28 Sep 2007 02:48:28 -0700
+Message-ID: <46FCCDEC.20200@gmail.com>
+References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com>	<20070905095327.6277d054.akpm@linux-foundation.org>	<46DEE617.4050004@rtr.ca>	<46E0A253.7060803@gmail.com>	<46E154DE.2060602@rtr.ca>	<46FB563A.80108@gmail.com> <20070927193701.6230d77f@the-village.bc.nu> <46FC3D7D.90009@gmail.com> <46FC3FDD.5060201@pobox.com> <46FC423C.2050206@gmail.com> <46FC7B72.2030103@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <46FC4384.7080607@df.uba.ar>
-Sender: linux-acpi-owner@vger.kernel.org
-To: solari@df.uba.ar, hgsolari@gmail.com
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from an-out-0708.google.com ([209.85.132.244]:24145 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758058AbXI1JuL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 05:50:11 -0400
+Received: by an-out-0708.google.com with SMTP id d31so437573and
+        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 02:50:11 -0700 (PDT)
+In-Reply-To: <46FC7B72.2030103@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-[restoring LKML and cc'ing linux-ide and linux-acpi]
+Mark Lord wrote:
+> Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
+> rather than just getting stuck there forever.
+> 
+> Signed-Off-By:  Mark Lord <mlord@pobox.com>
 
-Hernan Gustavo Solari wrote:
->     I am replying directly to you since, finding that most of the
-> material in the kernel list is well beyond my understanding, I cancelled
-> my subscription.
-> 
->     You can forward as much of my replies to the list as you think it suits
-
-You don't have to be subscribed to the list.  Just keep them cc'd.
-
->> Can you set up netconsole and collect the kernel log from the failing
->> boot and post it here?
-> 
-> Let me first update you on the issue. I installed the kernel 2.6.22.8
-> when it was the latest stable release (today stable release is 2.6.22.9)
-> Trying to reproduce the problem with this kernel I get a crash but
-> different from that in the 2.6.22 kernel.
-> 
-> The kernel is compiled as it comes, with AMD64 generic option set and
-> the small systems option set by me.
-> 
-> With acpi=off it runs.
-> With acpi=on crashes after lines
-> aer: probe of 0000:00:04.0:pcie01 failed with error 2
-> aer: probe of 0000:00:05.0:pcie01 failed with error 2
-> aer: probe of 0000:00:06.0:pcie01 failed with error 2
-> aer: probe of 0000:00:07.0:pcie01 failed with error 2
-> 
-> With acpi=ht runs and complaints saying
-> aerinit_init: AER service init fails - No ACPI _05C support
-> aer: probe of 0000:00:04.0:pcie01 failed with error 1
-> and the same message for the other probes.
-> 
-> The next line is:
-> Real Time clock driver v1.12ac
-> Linux agpgart interface v0.102 (c) Dave Jones
-> Serial: 8250/16550 driver ....
-> 
-> 
-> I have filled a ticket with respect to the ACPI problems, much of them
-> can be avoided disabling part of the ACPI system.
-> 
-> Options: I can compile the 2.6.22 kernel to get the reported problem
->      or try to debug the problem in 2.6.22.8 or something else it
->       fits the kernel-team.
-> 
-> With respect to netconsole, the kernel parameter would be
-> netconsole=[src-port]@[src-ip]/[<dev>],[tgt-port]@<tgt-ip>/[tgt-macaddr]
-> According to
-> http://www.mjmwired.net/kernel/Documentation/networking/netconsole.txt
-> and based on kernel 2.6.22.1
-> 
-> and I cannot figure out what is [tgt-macaddr] "ethernet MAC address for
-> logging agent (broadcast)"
-> is it Internet Hardware address? (here
-> Ethernet  HWaddr 00:0E:A6:5F:13:B2 ) or something else I cannot imagine?
-
-Yes, correct, ethernet hardware address.  Things surrounded by brackets
-are optional, BTW.
-
-> PS: using netconsole may take me a few days since I do not have a
-> network at home, I have to find the network at work available.
-
-I see.  If you have access to a second machine, you can connect the two
-directly.
-
-Thanks.
+Acked-by: Tejun Heo <htejun@gmail.com>
 
 -- 
 tejun
