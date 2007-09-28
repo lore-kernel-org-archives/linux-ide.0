@@ -1,45 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.23-rc7 - _random_ IRQ23 : nobody cared
-Date: Fri, 28 Sep 2007 02:55:32 -0700
-Message-ID: <46FCCF94.9060400@gmail.com>
-References: <20070924083336.7a08fd61@tux.DEF.witbe.net>	<46F7C933.4080003@davidnewall.com>	<20070925090057.5778aa2a@tux.DEF.witbe.net>	<46FAFF7A.5070208@gmail.com> <20070927080551.424e90b9@tux.DEF.witbe.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation
+Date: Fri, 28 Sep 2007 02:56:44 -0700
+Message-ID: <20070928025644.7ee4af0c.akpm@linux-foundation.org>
+References: <46CFA08E.6090604@arbores.ca>
+	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
+	<46DBCB6C.8080206@gmail.com>
+	<20070905095327.6277d054.akpm@linux-foundation.org>
+	<46DEE617.4050004@rtr.ca>
+	<46E0A253.7060803@gmail.com>
+	<46E154DE.2060602@rtr.ca>
+	<46FB563A.80108@gmail.com>
+	<20070927193701.6230d77f@the-village.bc.nu>
+	<46FC3D7D.90009@gmail.com>
+	<46FC3FDD.5060201@pobox.com>
+	<46FC423C.2050206@gmail.com>
+	<46FC7B72.2030103@rtr.ca>
+	<46FCCDEC.20200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:42383 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756323AbXI1J5O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 05:57:14 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1982737nze
-        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 02:57:12 -0700 (PDT)
-In-Reply-To: <20070927080551.424e90b9@tux.DEF.witbe.net>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:49636 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754776AbXI1J52 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 05:57:28 -0400
+In-Reply-To: <46FCCDEC.20200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: David Newall <david@davidnewall.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rol@witbe.net
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Paul Rolland wrote:
->> Can you change driver load order such that the driver for the modem is
->> loaded first?
+On Fri, 28 Sep 2007 02:48:28 -0700 Tejun Heo <htejun@gmail.com> wrote:
+
+> Mark Lord wrote:
+> > Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
+> > rather than just getting stuck there forever.
+> > 
+> > Signed-Off-By:  Mark Lord <mlord@pobox.com>
 > 
-> As I said, it's not possible, because :
->  - the modem driver is an out-kernel one, so I have to wait the end of the
->    boot process so that it can be loaded,
->  - libata on IRQ23 is the one taking care of my disks, and I suspect it 
->    quite hard to install a modem driver before having the disk driver
->    installed.
+> Acked-by: Tejun Heo <htejun@gmail.com>
+> 
 
-You can do both by...
-
-1. Build the modem driver into the kernel.  char drivers are linked in
-before ATA ones, so it will attach first.
-
-2. Using a custom initrd with emergency shell.  initrd is loaded by BIOS
-so no driver is involved.  I don't actually know how to do this tho.
-
-3. Put in an extra disk controller and boot from it with both drivers
-compiled as module.
-
--- 
-tejun
+Nacked-by: scripts/checkpatch.pl
