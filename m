@@ -1,51 +1,53 @@
-From: Xiang Xu <xuxiang_ins@yahoo.com>
-Subject: AHCI module conflict with kexec boot
-Date: Fri, 28 Sep 2007 16:14:37 -0700 (PDT)
-Message-ID: <498184.84089.qm@web32914.mail.mud.yahoo.com>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: ICH9 2 port SATA controller port map?
+Date: Fri, 28 Sep 2007 16:57:08 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701CF2D29@orsmsx420.amr.corp.intel.com>
+References: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com> <46FB0273.60302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web32914.mail.mud.yahoo.com ([209.191.69.114]:36592 "HELO
-	web32914.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753638AbXI1XVT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 19:21:19 -0400
+Received: from mga01.intel.com ([192.55.52.88]:35082 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755060AbXI1X5J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 19:57:09 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <46FB0273.60302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: xuxiang_ins@yahoo.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi Jeff,
+>-----Original Message-----
+>From: Tejun Heo [mailto:htejun@gmail.com]
+>Sent: Wednesday, September 26, 2007 6:08 PM
+>To: Gaston, Jason D
+>Cc: linux-ide@vger.kernel.org
+>Subject: Re: ICH9 2 port SATA controller port map?
+>
+>Gaston, Jason D wrote:
+>> Hello,
+>>
+>> ICH9 has DeviceID's for 2 port, IDE mode, SATA controllers.  The
+current
+>> port map in ata_piix is setup for the 4 port controllers.  This seems
+to
+>> work ok, but I wonder if a new port map should be defined for the 2
+port
+>> controllers, where the two ports are PM, SM?  You can refer to the
+ICH9
+>> Datasheet on intel.com for detail.
+>
+>Yes, please go ahead and define new entry for the controllers.  Thanks.
+>
+>--
+>Tejun
 
-Greetings.
-=20
-I am writing in regarding of an issue I encountered
-for AHCI SATA support (drivers/scsi/ahci.c or
-drivers/ata/ahci.c) with kexec. I am using kexec to do
-chainboot, and kexec works fine with ata_piix driver.
-But it hangs with AHCI driver. I tried linux kernel
-version 2.6.14, 2.6.20, and 2.6.21 and got same
-results. I also tried building AHCI in the kernel or
-as a module (then insmod and rmmod), but still the
-same result. The interesting thing is that kexec
-chainboots fine before insmod AHCI and it hangs after
-insmod, it also hangs after rmmod. This leads me to
-think that maybe AHCI module left something behind
-uncleaned even after rmmod, in other words, ahci
-module left the system in a state that kexec boot
-can=A1=AFt handle.
-
-Then I took a look at the ahci.c code, what I found
-out is that ahci_irq_clear function is not implemented
-yet. Also, there is no .host_stop operation for AHCI
-module. Could one of these be the reason that kexec
-boot failed when AHCI module? Are there other factors
-that might have caused the hang of the kexec boot?
-
-Thank you so much in advance for your time and help in
-this matter. Any pointer will be greatly appreciated.
-I look forward to hearing back from you soon.
+What is the difference between NA and RV?  If the controller only has
+access to 2 ports, does it matter which I set the nonexistent port
+values to in the map?
 
 Thanks,
-Janice Xu
 
+Jason
