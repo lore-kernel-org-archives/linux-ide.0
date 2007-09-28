@@ -1,111 +1,93 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] libata drain fifo on stuck DRQ HSM violation (try#2)
-Date: Fri, 28 Sep 2007 09:41:26 -0400
-Message-ID: <46FD0486.3060405@rtr.ca>
-References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com>	<20070905095327.6277d054.akpm@linux-foundation.org>	<46DEE617.4050004@rtr.ca>	<46E0A253.7060803@gmail.com>	<46E154DE.2060602@rtr.ca>	<46FB563A.80108@gmail.com>	<20070927193701.6230d77f@the-village.bc.nu>	<46FC3D7D.90009@gmail.com>	<46FC3FDD.5060201@pobox.com>	<46FC423C.2050206@gmail.com>	<46FC7B72.2030103@rtr.ca> <20070928112735.264733ad@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Fri, 28 Sep 2007 09:54:39 -0400
+Message-ID: <46FD079F.3010007@garzik.org>
+References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org> <46FA1B4E.8090103@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3139 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:41613 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754279AbXI1Nl1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 09:41:27 -0400
-In-Reply-To: <20070928112735.264733ad@the-village.bc.nu>
+	id S1751670AbXI1Nyq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 09:54:46 -0400
+In-Reply-To: <46FA1B4E.8090103@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-Alan Cox wrote:
->> Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
->> rather than just getting stuck there forever.
-> 
-> Why 512 words ?
-> 
-> 
->>  	ata_altstatus(ap);
->> -	ata_chk_status(ap);
->> +	ata_drain_fifo(ap, qc);
-> 
-> ap->ops->cleanup();
-> 
-> might be wiser
-
-Actually, I belileve we should base it on qc->sect_size instead.
-
-Then, if somebody also would like to submit a patch introducing
-a cleanup() method, then please do so!
-
-As a separate patch, though (seems to be the "libata way").
-* * * *
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
 > Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Alan Cox wrote:
->>>>> I think there have been enough cases where this draining was necessary.
->>>>>  IIRC, ata_piix was involved in those cases, right?  If so, can you
->>>>> please submit a patch which applies this only to affected controllers?
->>>>> I don't feel too confident about applying this to all SFF controllers.
->>>> Old IDE does it on all controllers bar a couple. So we have a very good
->>>> knowledge of what does/doesn't work. The one that needs care in old ide
->>>> is an ordering issue where a state machine reset done first causes the
->>>> drain of the I/O to hang.
->>> Hmmm... So, do we apply draining to all PATA?  Or is ata_piix SATA
->>> affected too?
->> I would think all SFF controllers, since a lot of first gen SATA are
->> really bridged solutions.  If they are flagging DRQ, I say oblige them :)
->
-> Alright, then the posted patch should be good enough.  Mark, can you be
-> bothered to regenerate the patch and post it one more time (again)?  It
-> seems we all agree the update is needed.
+> [--snip--]
+>> There, even the concept of "port" is fluid, and the libata EH model of
+>> freezing and thawing a port (with the desired irq-off result) just
+>> doesn't fit the hardware.
+> 
+> Well, the current model was developed while struggling with the first
+> generation PMP hardware which had a lot of quirks.  More focus was on
+> making the system run and keeping it that way.  Anyways, now that the
+> quirks are better understood, I think we can make PMP register access
+> irq-driven safely.
+> 
+> [--snip--]
+>> As such, polling is simply an outmoded concept.  It does not make sense
+>> on new hardware, and forcing design decisions down that path only lead
+>> to a cascade of similar design decisions -- pmp_read polling being just
+>> one example of such a result.
+> 
+> For pmp read/write, I agree that IRQ driven access would be better but
+> even for fairly advanced controllers like ahci or sil24, I think
+> resetting-by-polling is a good idea.
 
-I think this original patch still applies cleanly on at least 2.6.23-rc7.
+Not for SAS/SATA controllers.  These SAS+SATA controllers allow you set 
+a bit initiating phy reset, and then receive an interrupt when something 
+interesting happens.
 
-Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
-rather than just getting stuck there forever.
+The reason why I (we?) am just finding out about this is:  both 
+drivers/scsi/libsas and drivers/scsi/ipr are still using the old-EH :(
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
+But overall, anything sufficiently "high level" is not friendly to 
+polling -- if a polling model is even possible.
 
---- old/drivers/ata/libata-sff.c	2007-09-28 09:29:22.000000000 -0400
-+++ linux/drivers/ata/libata-sff.c	2007-09-28 09:39:44.000000000 -0400
-@@ -420,6 +420,28 @@
- 	ap->ops->irq_on(ap);
- }
- 
-+static void ata_drain_fifo(struct ata_port *ap, struct ata_queued_cmd *qc)
-+{
-+	u8 stat = ata_chk_status(ap);
-+	/*
-+	 * Try to clear stuck DRQ if necessary,
-+	 * by reading/discarding up to two sectors worth of data.
-+	 */
-+	if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
-+		unsigned int i;
-+		unsigned int limit = qc ? qc->sect_size : ATA_SECT_SIZE;
-+
-+		printk(KERN_WARNING "Draining up to %u words from data FIFO.\n",
-+									limit);
-+		for (i = 0; i < limit ; ++i) {
-+			ioread16(ap->ioaddr.data_addr);
-+			if (!(ata_chk_status(ap) & ATA_DRQ))
-+				break;
-+		}
-+		printk(KERN_WARNING "Drained %u/%u words.\n", i, limit);
-+	}
-+}
-+
- /**
-  *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
-  *	@ap: port to handle error for
-@@ -476,7 +498,7 @@
- 	}
- 
- 	ata_altstatus(ap);
--	ata_chk_status(ap);
-+	ata_drain_fifo(ap, qc);
- 	ap->ops->irq_clear(ap);
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
+
+>> Just like the Linux kernel MM platform API presents 3 levels of page
+>> table entries, even when the hardware may only have 2, libata high level
+>> API _must_ be implemented as 100% asynchronous event driven API.
+> 
+> Or allow both?
+> 
+>> If the default implementation chooses to use polling -- i.e. all SFF
+
+Note the line quoted above, immediately following your response...  such 
+a setup does permit both:  an asynchronous submit/complete API can be 
+implementing under the hood via polling or irq, as the driver chooses.
+
+The main point is to not /require/ polling.
+
+
+>> controllers -- that's fine.  But in the new SAS/SATA world its clear
+>> that we have far too many polling-related assumptions as it is.
+>>
+>> Polling just flat out doesn't make sense on modern SAS/SATA -- and even
+>> a couple modern SATA controllers.  On such controllers, we are notified
+>> immediately via interrupt even in the event of errors.
+> 
+> For SAS, I don't have any strong opinion.  For SATA, I think we
+> definitely need to allow or even prefer polling for host port resets.
+> 
+> Is this NACK on the patchset or can we update PMP access later?
+
+Sorry, yes, it is a NAK:  polling should not be requirement.
+
+I considered making multi-protocol ->qc_issue() a requirement too, but 
+that seemed like it might delay things too much.  But consider this a 
+strong to-do item...  ->pmp_read and ->pmp_write hooks should be folded 
+into ->qc_issue and ata_qc_complete(), because quite often a PMP 
+read/write packet can be delivered just like any other packet.  We want 
+a single "submit packet to hardware" interface, not multiple ones.
+
+	Jeff
+
+
+
