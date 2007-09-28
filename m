@@ -1,35 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Fri, 28 Sep 2007 11:40:33 -0400
-Message-ID: <46FD2071.2070608@garzik.org>
-References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<20070928155703.490d7575@the-village.bc.nu>	<46FD1BAD.8020506@garzik.org> <20070928164312.208b8c56@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Sata Sil3512 bug?
+Date: Fri, 28 Sep 2007 16:51:50 +0100
+Message-ID: <20070928165150.2a93524e@the-village.bc.nu>
+References: <1097480701.20070927155135@zonnet.nl>
+	<46FCF2A1.30204@gmail.com>
+	<1619914792.20070928172536@zonnet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46766 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757312AbXI1Pkf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 11:40:35 -0400
-In-Reply-To: <20070928164312.208b8c56@the-village.bc.nu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50895 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754118AbXI1PqW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 11:46:22 -0400
+In-Reply-To: <1619914792.20070928172536@zonnet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: MisterE <MisterE2002@zonnet.nl>
+Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, benh@kernel.crashing.org
 
-Alan Cox wrote:
->> This doesn't affect Tejun or anyone else really, but going through -mm 
->> tends to gum up the works.  Your patches wind up not applying to 
->> libata#upstream, in which case they get dropped and I assume Andrew or 
->> someone will resend usable versions.
-> 
-> Its the only way to get testing done and get them into distributions in
-> time.
+> sda1 are corrupted (2 to 4 blocks missing). Copying that data back to
+> Windows and it give the same results in Quickpar. So reading does not
+> have problems. The data written to hda1 is correct.
 
-Not true...  libata gets auto-propagated into -mm, and Andrew pulls 
-regularly.
+We've got a whole pile of reports like this with the 3512 and almost
+always Nvidia chipset, plus reports of BIOS updates fixing it. That you
+see something similar on intel boards is a bit worrying.
 
-	Jeff
-
-
-
+Alan
