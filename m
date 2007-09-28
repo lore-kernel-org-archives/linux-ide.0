@@ -1,35 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Fri, 28 Sep 2007 16:55:41 +0100
-Message-ID: <20070928165541.55f68756@the-village.bc.nu>
-References: <1190521193410-git-send-email-htejun@gmail.com>
-	<46F9BF3E.5050708@garzik.org>
-	<46FD0D9E.7040808@rtr.ca>
-	<46FD1F6D.5060805@garzik.org>
+From: "Jon Chelton" <jchelton@ffpglobal.com>
+Subject: RE: sata_sil24 with port multiplier
+Date: Fri, 28 Sep 2007 12:08:43 -0400
+Message-ID: <FD6311B7ED175B4480F31633F6098B4D911D11@ffpglobal_mail.corp.ffplus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50929 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754417AbXI1PuF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 11:50:05 -0400
-In-Reply-To: <46FD1F6D.5060805@garzik.org>
+Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:44823
+	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbXI1QHf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 12:07:35 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> So, there just hasn't been a real need so far.  If interrupt overhead 
-> becomes an issue, my first step would be to start programming the 
-> interrupt coalescing hardware that comes in modern SATA controllers.
+This error occurred when assembling a software raid 5 array using mdadm.
+It also happened when copying large amounts of data from one drive to
+another.  I saw from an earlier post to disable or upgrade smartd.  I
+tried this (disabled) and moved about 50gb between disks and the error
+has not repeated yet.
 
-Another factor is queue sizes. You don't get 1024 entry queues on your
-typical disk controller and that makes NAPI type stuff less viable, and
-sensible IRQ colaescing on the card more sane.
+Jon
 
-Alan
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Friday, September 28, 2007 3:24 AM
+To: Jon Chelton
+Cc: linux-ide@vger.kernel.org
+Subject: Re: sata_sil24 with port multiplier
 
-PS: Jeff - if you want stuff from -mm and it's got cross dependancies,
-clashes just ask me for "patch xyz versus libata head" and I'll sort it
-out
+Jon Chelton wrote:
+> After applying the patches you sent, I had not received any additional
+> errors until today.  Below is an output from dmesg.
+> 
+> ata1.15: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> ata1.15: irq_stat 0x00020002, PMP DMA CS errata
+> ata1.00: exception Emask 0x100 SAct 0x18084200 SErr 0x0 action 0x6
+> frozen
+> ata1.00: cmd 60/00:48:3f:8f:fa/01:00:0a:00:00/40 tag 9 cdb 0x0 data
+> 131072 in
+>          res 50/00:3c:3f:ff:67/00:00:00:00:00/40 Emask 0x100 (unknown
+> error)
+
+Hmmm... So, when did the above error occur?  Can you reproduce it?
+
+-- 
+tejun
+
