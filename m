@@ -1,40 +1,50 @@
-From: Philip Langdale <philipl@overt.org>
-Subject: [PATCH] Resend: Add Hitachi HTS722020K9A300 to ncq blacklist
-Date: Fri, 28 Sep 2007 12:43:10 -0400
-Message-ID: <3f13d76aa5dae34fededd9a7bf4d51b6@localhost>
-References: <46EC2088.2000407@overt.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Fri, 28 Sep 2007 09:48:44 -0700
+Message-ID: <46FD306C.3050205@gmail.com>
+References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org> <46FA1B4E.8090103@gmail.com> <46FD079F.3010007@garzik.org> <46FD0D50.8030602@gmail.com> <46FD1C4A.8010101@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:44701 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752219AbXI1Qqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 12:46:42 -0400
-Received: from www-data by usul.overt.org with local (Exim 4.63)
-	(envelope-from <philipl@overt.org>)
-	id 1IbIvm-0005GH-AJ
-	for linux-ide@vger.kernel.org; Fri, 28 Sep 2007 12:43:10 -0400
-In-Reply-To: <46EC2088.2000407@overt.org>
+Received: from wa-out-1112.google.com ([209.85.146.177]:51291 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbXI1QuY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 12:50:24 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so3598088wah
+        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 09:50:23 -0700 (PDT)
+In-Reply-To: <46FD1C4A.8010101@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
+Jeff Garzik wrote:
+>> Aieee... Another merge delay.  I wish the review process proceeded a bit
+>> swifter.   The patchset has been around literally for years now and
+>> submitted for review six times if I have the take number right.  :-(
+> 
+> Well the vast majority of the patches are in, what five out of six
+> original patchsets?
 
-My new Dell XPS m1330 comes with this Hitachi drive. You'd think they'd have
-sorted things out by now but it produces tons of spurious completion errors
-when NCQ is on.
+Yeah, I'm frustrated mainly because I've been telling people that
+mainline will probably have PMP support when 2.6.24 comes out and it
+seems we'll miss the merge window again.  Oh, well...
 
-Signed-off-by: Philip Langdale <philipl@overt.org>
+> Sorry I didn't catch the polling requirement beforehand, it was not
+> really clear from a quick read.
 
---- linux-2.6.22/drivers/ata/libata-core.c	2007-08-24 16:13:37.000000000 -0700
-+++ linux-new/drivers/ata/libata-core.c	2007-08-26 16:03:15.215383641 -0700
-@@ -3801,6 +3801,7 @@
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
-+	{ "Hitachi HTS722020K9A300", "DC4OC54P", ATA_HORKAGE_NONCQ, },
+->pmp_read/write stuff is something which I've been meaning to change
+anyway.  When developing the PMP code, PMP register access while frozen
+seemed necessary but now I think we can be just as safe without it.  I
+was thinking about changing it after merge because the current code
+received a lot of testing and I didn't want to destabilize it right
+before merging.
 
- 	/* Devices with NCQ limits */
+I'll be back home mid next week.  I'll try to re-test and re-submit the
+changes ASAP.
 
+Thanks.
 
+-- 
+tejun
