@@ -1,40 +1,39 @@
-From: Mark Lord <liml@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Fri, 28 Sep 2007 10:20:14 -0400
-Message-ID: <46FD0D9E.7040808@rtr.ca>
-References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org>
+Date: Fri, 28 Sep 2007 07:18:56 -0700
+Message-ID: <46FD0D50.8030602@gmail.com>
+References: <1190521193410-git-send-email-htejun@gmail.com> <46F9BF3E.5050708@garzik.org> <46FA1B4E.8090103@gmail.com> <46FD079F.3010007@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3596 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756805AbXI1OUP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 10:20:15 -0400
-In-Reply-To: <46F9BF3E.5050708@garzik.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:14290 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760738AbXI1OUj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 10:20:39 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so2523878nfb
+        for <linux-ide@vger.kernel.org>; Fri, 28 Sep 2007 07:20:38 -0700 (PDT)
+In-Reply-To: <46FD079F.3010007@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
-..
-> As such, polling is simply an outmoded concept.  It does not make sense 
-> on new hardware, and forcing design decisions down that path only lead 
-> to a cascade of similar design decisions -- pmp_read polling being just 
-> one example of such a result.
+>> Is this NACK on the patchset or can we update PMP access later?
+> 
+> Sorry, yes, it is a NAK:  polling should not be requirement.
+> 
+> I considered making multi-protocol ->qc_issue() a requirement too, but
+> that seemed like it might delay things too much.  But consider this a
+> strong to-do item...  ->pmp_read and ->pmp_write hooks should be folded
+> into ->qc_issue and ata_qc_complete(), because quite often a PMP
+> read/write packet can be delivered just like any other packet.  We want
+> a single "submit packet to hardware" interface, not multiple ones.
 
-A related tangent here, but I wonder if someday we might consider
-something like NAPI for libata.  Our I/O rates can far exceed those of the
-network stack, and there polling (NAPI) has helped quite a bit.
+Aieee... Another merge delay.  I wish the review process proceeded a bit
+swifter.   The patchset has been around literally for years now and
+submitted for review six times if I have the take number right.  :-(
 
-But our data behaviour is mostly synchronous, whereas network stuff is more
-asynchronous.   But still, with multiple drives all using NCQ on a port,
-a polled interface option might give higher throughput and lower CPU loading.
-
-Just like with the networking code.
-
-Not that this specifically relates to concerns with the current PMP patches,
-but I'm curious where Jeff sees this all going, as he works on both sides.
-
-Cheers
+-- 
+tejun
