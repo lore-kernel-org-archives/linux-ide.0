@@ -1,53 +1,36 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: ICH9 2 port SATA controller port map?
-Date: Fri, 28 Sep 2007 16:57:08 -0700
-Message-ID: <39B20DF628532344BC7A2692CB6AEE0701CF2D29@orsmsx420.amr.corp.intel.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com> <46FB0273.60302@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: ATA driver support for ICH9
+Date: Fri, 28 Sep 2007 21:01:09 -0400
+Message-ID: <46FDA3D5.7070400@garzik.org>
+References: <432010.67065.qm@web43143.mail.sp1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35082 "EHLO mga01.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:46887 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755060AbXI1X5J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2007 19:57:09 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46FB0273.60302@gmail.com>
+	id S1753612AbXI2BBM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 21:01:12 -0400
+In-Reply-To: <432010.67065.qm@web43143.mail.sp1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: May Cheung <ladycheung@yahoo.com>
+Cc: linux-ide@vger.kernel.org, harvey_hao@yahoo.com
 
->-----Original Message-----
->From: Tejun Heo [mailto:htejun@gmail.com]
->Sent: Wednesday, September 26, 2007 6:08 PM
->To: Gaston, Jason D
->Cc: linux-ide@vger.kernel.org
->Subject: Re: ICH9 2 port SATA controller port map?
->
->Gaston, Jason D wrote:
->> Hello,
->>
->> ICH9 has DeviceID's for 2 port, IDE mode, SATA controllers.  The
-current
->> port map in ata_piix is setup for the 4 port controllers.  This seems
-to
->> work ok, but I wonder if a new port map should be defined for the 2
-port
->> controllers, where the two ports are PM, SM?  You can refer to the
-ICH9
->> Datasheet on intel.com for detail.
->
->Yes, please go ahead and define new entry for the controllers.  Thanks.
->
->--
->Tejun
+May Cheung wrote:
+> Hi Jeff,
+> 
+> We're currently using 2.6.10 and tries to bring up an HP box which has ICH9.
+> The earliest libata patch available for ICH9 support seems to be 2.6.19.
+> 
+> The libata directory and file structures between 2.6.10 and 2.6.19 are quite
+> different. 
+> Is there anyway we can add/port the ICH9 support to 2.6.10? 
 
-What is the difference between NA and RV?  If the controller only has
-access to 2 ports, does it matter which I set the nonexistent port
-values to in the map?
+Sorry, that kernel is way too old to care about.  Use something more 
+recent :)
 
-Thanks,
+	Jeff
 
-Jason
+
+
