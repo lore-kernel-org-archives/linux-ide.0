@@ -1,36 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ATA driver support for ICH9
-Date: Fri, 28 Sep 2007 21:01:09 -0400
-Message-ID: <46FDA3D5.7070400@garzik.org>
-References: <432010.67065.qm@web43143.mail.sp1.yahoo.com>
+Subject: Re: [PATCH] Fix HPA handling regression
+Date: Fri, 28 Sep 2007 21:03:29 -0400
+Message-ID: <46FDA461.9080804@garzik.org>
+References: <20070926180222.10a96afe@the-village.bc.nu> <46FD0231.2020002@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46887 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:46913 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753612AbXI2BBM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 21:01:12 -0400
-In-Reply-To: <432010.67065.qm@web43143.mail.sp1.yahoo.com>
+	id S1753943AbXI2BDf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 21:03:35 -0400
+In-Reply-To: <46FD0231.2020002@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: May Cheung <ladycheung@yahoo.com>
-Cc: linux-ide@vger.kernel.org, harvey_hao@yahoo.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-May Cheung wrote:
-> Hi Jeff,
+Tejun Heo wrote:
+> Alan Cox wrote:
+>> Restore the support for handling drives that report one sector too many
+>> (ie SCSI not ATA style). This worked before the HPA update but was
+>> removed in that process
+>>
+>> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> We're currently using 2.6.10 and tries to bring up an HP box which has ICH9.
-> The earliest libata patch available for ICH9 support seems to be 2.6.19.
+> Acked-by: Tejun Heo <htejun@gmail.com>
 > 
-> The libata directory and file structures between 2.6.10 and 2.6.19 are quite
-> different. 
-> Is there anyway we can add/port the ICH9 support to 2.6.10? 
+>> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h linux-2.6.23rc8-mm1/include/linux/libata.h
+>> --- linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 16:46:57.844875296 +0100
+>> +++ linux-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 17:11:56.215088400 +0100
+>> @@ -315,7 +315,8 @@
+>>  	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
+>>  	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
+>>  	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+>> -	ATA_HORKAGE_DRQ		= (1 << 5),	/* Device forgets to clear DRQ on error */
+>> +	ATA_HORKAGE_HPA_SIZE	= (1 << 5), 	/* Reports native size off by one */
+>> +	ATA_HORKAGE_DRQ		= (1 << 6),	/* Device forgets to clear DRQ on error */
+>>  
+>>  	/* DMA mask for user DMA control: User visible values do not
+>>  	   renumber */
+> 
+> But Jeff might not like adding new constant and shifting the existing
+> one at the same time.
 
-Sorry, that kernel is way too old to care about.  Use something more 
-recent :)
+That's definitely annoying and unnecessary patch noise...
 
 	Jeff
-
 
 
