@@ -1,134 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 4/4] hpt366: MWDMA filter for SATA cards (take 2)
-Date: Sun, 30 Sep 2007 00:04:42 +0400
-Message-ID: <200709300004.43335.sshtylyov@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Sat, 29 Sep 2007 21:56:23 +0100
+Message-ID: <20070929215623.030abd66@the-village.bc.nu>
+References: <1190521193410-git-send-email-htejun@gmail.com>
+	<46F9BF3E.5050708@garzik.org>
+	<46FA1B4E.8090103@gmail.com>
+	<46FD079F.3010007@garzik.org>
+	<46FD0D50.8030602@gmail.com>
+	<20070928155703.490d7575@the-village.bc.nu>
+	<46FD1BAD.8020506@garzik.org>
+	<20070928164312.208b8c56@the-village.bc.nu>
+	<46FD2071.2070608@garzik.org>
+	<46FD5D55.4070706@rtr.ca>
+	<46FDC6A8.3000306@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758156AbXI2UFT@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55104 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752748AbXI2Uvj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Sep 2007 16:51:39 -0400
+In-Reply-To: <46FDC6A8.3000306@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-The Marvell bridge chips used on HighPoint SATA cards do not seem to support
-the MWDMA modes (at least that caould be seen in their so-called drivers :-),
-so the driver needs to account for this -- to achieve this:
+ty today, with 3+ month kernel release cycles (ugh!!).
+> 
+> I'm very much interested in hearing suggestions and comments.
 
-- add mdma_filter() method from the original patch by Bartlomiej Zolnierkewicz
-  with his consent, also adding the method callout to ide_rate_filter();
+I think PMP should go in for 2.6.24 and then get revised over time to not
+poll and to go via qc_issue. Which seems to be the consensus of everyone
+but you on this one.
 
-- install the method for all chips to only return empty mask if a SATA drive
-  is detected on HPT372{AN]/374 chips...
+In general I have no big problems with the way its going - need to get
+stuff through -mm into libata faster but thats something I need to sort
+out with you specifically and I can accept your view its more my problem.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+But PMP is a definite candidate for in ASAP
 
----
-This patch is against the current Linus' tree.
-It has not been tested on a real SATA card...
-
- drivers/ide/ide-dma.c    |    9 +++++++--
- drivers/ide/ide.c        |    1 +
- drivers/ide/pci/hpt366.c |   23 +++++++++++++++++++++--
- include/linux/ide.h      |    1 +
- 4 files changed, 30 insertions(+), 4 deletions(-)
-
-Index: linux-2.6/drivers/ide/ide-dma.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-dma.c
-+++ linux-2.6/drivers/ide/ide-dma.c
-@@ -674,8 +674,13 @@ static unsigned int ide_get_mode_mask(id
- 			mask &= 0x07;
- 		break;
- 	case XFER_MW_DMA_0:
--		if (id->field_valid & 2)
--			mask = id->dma_mword & hwif->mwdma_mask;
-+		if ((id->field_valid & 2) == 0)
-+			break;
-+		if (hwif->mdma_filter)
-+			mask = hwif->mdma_filter(drive);
-+		else
-+			mask = hwif->mwdma_mask;
-+		mask &= id->dma_mword;
- 		break;
- 	case XFER_SW_DMA_0:
- 		if (id->field_valid & 2) {
-Index: linux-2.6/drivers/ide/ide.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide.c
-+++ linux-2.6/drivers/ide/ide.c
-@@ -398,6 +398,7 @@ static void ide_hwif_restore(ide_hwif_t 
- 
- 	hwif->tuneproc			= tmp_hwif->tuneproc;
- 	hwif->speedproc			= tmp_hwif->speedproc;
-+	hwif->mdma_filter		= tmp_hwif->mdma_filter;
- 	hwif->udma_filter		= tmp_hwif->udma_filter;
- 	hwif->selectproc		= tmp_hwif->selectproc;
- 	hwif->reset_poll		= tmp_hwif->reset_poll;
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.12	Aug 19, 2007
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.13	Sep 29, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -114,7 +114,7 @@
-  *   unify HPT36x/37x timing setup code and the speedproc handlers by joining
-  *   the register setting lists into the table indexed by the clock selected
-  * - set the correct hwif->ultra_mask for each individual chip
-- * - add UltraDMA mode filtering for the HPT37[24] based SATA cards
-+ * - add Ultra and MW DMA mode filtering for the HPT37[24] based SATA cards
-  *	Sergei Shtylyov, <sshtylyov@ru.mvista.com> or <source@mvista.com>
-  */
- 
-@@ -562,6 +562,24 @@ static u8 hpt3xx_udma_filter(ide_drive_t
- 	return check_in_drive_list(drive, bad_ata33) ? 0x00 : mask;
- }
- 
-+static u8 hpt3xx_mdma_filter(ide_drive_t *drive)
-+{
-+	ide_hwif_t *hwif	= HWIF(drive);
-+	struct hpt_info *info	= pci_get_drvdata(hwif->pci_dev);
-+
-+	switch (info->chip_type) {
-+	case HPT372 :
-+	case HPT372A:
-+	case HPT372N:
-+	case HPT374 :
-+		if (ide_dev_is_sata(drive->id))
-+			return 0x00;
-+		/* Fall thru */
-+	default:
-+		return 0x07;
-+	}
-+}
-+
- static u32 get_speed_setting(u8 speed, struct hpt_info *info)
- {
- 	int i;
-@@ -1257,6 +1275,7 @@ static void __devinit init_hwif_hpt366(i
- 	hwif->busproc		= &hpt3xx_busproc;
- 
- 	hwif->udma_filter	= &hpt3xx_udma_filter;
-+	hwif->mdma_filter	= &hpt3xx_mdma_filter;
- 
- 	/*
- 	 * HPT3xxN chips have some complications:
-Index: linux-2.6/include/linux/ide.h
-===================================================================
---- linux-2.6.orig/include/linux/ide.h
-+++ linux-2.6/include/linux/ide.h
-@@ -723,6 +723,7 @@ typedef struct hwif_s {
- 	/* driver soft-power interface */
- 	int	(*busproc)(ide_drive_t *, int);
- #endif
-+	u8 (*mdma_filter)(ide_drive_t *);
- 	u8 (*udma_filter)(ide_drive_t *);
- 
- 	void (*ata_input_data)(ide_drive_t *, void *, u32);
+Alan
