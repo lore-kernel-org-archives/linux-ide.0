@@ -1,46 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata-core: blacklist HITACHI HDS drives using wildcard
- blacklist matching
-Date: Sat, 29 Sep 2007 02:23:43 -0400
-Message-ID: <46FDEF6F.8000000@garzik.org>
-References: <20070928192906.GA28375@dhcp-210.hsv.redhat.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation (try#2)
+Date: Sat, 29 Sep 2007 02:24:16 -0400
+Message-ID: <46FDEF90.9050702@pobox.com>
+References: <46CFA08E.6090604@arbores.ca> <6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com> <46DBCB6C.8080206@gmail.com> <20070905095327.6277d054.akpm@linux-foundation.org>	<46DEE617.4050004@rtr.ca> <46E0A253.7060803@gmail.com>	<46E154DE.2060602@rtr.ca> <46FB563A.80108@gmail.com>	<20070927193701.6230d77f@the-village.bc.nu> <46FC3D7D.90009@gmail.com>	<46FC3FDD.5060201@pobox.com> <46FC423C.2050206@gmail.com>	<46FC7B72.2030103@rtr.ca> <20070928112735.264733ad@the-village.bc.nu> <46FD0486.3060405@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33966 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58503 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758093AbXI2GXo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Sep 2007 02:23:44 -0400
-In-Reply-To: <20070928192906.GA28375@dhcp-210.hsv.redhat.com>
+	id S1754214AbXI2GYZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Sep 2007 02:24:25 -0400
+In-Reply-To: <46FD0486.3060405@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-David Milburn wrote:
-> Blacklist HITACHI HDS7250SASUN500G and HITACHI HDS7225SBSUN250G
-> drives using wildcard matching.
+Mark Lord wrote:
+> I think this original patch still applies cleanly on at least 2.6.23-rc7.
 > 
-> Signed-off-by David Milburn <dmilburn@redhat.com>
+> Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
+> rather than just getting stuck there forever.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 > ---
 > 
->  libata-core.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> --- old/drivers/ata/libata-sff.c    2007-09-28 09:29:22.000000000 -0400
+> +++ linux/drivers/ata/libata-sff.c    2007-09-28 09:39:44.000000000 -0400
+> @@ -420,6 +420,28 @@
+>     ap->ops->irq_on(ap);
+> }
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index fd4563d..d6319ec 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3878,8 +3878,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	/* NCQ is broken */
->  	{ "Maxtor *",		"BANC*",	ATA_HORKAGE_NONCQ },
->  	{ "Maxtor 7V300F0",	"VA111630",	ATA_HORKAGE_NONCQ },
-> -	{ "HITACHI HDS7250SASUN500G 0621KTAWSD", "K2AOAJ0AHITACHI",
-> -	  ATA_HORKAGE_NONCQ },
-> +	{ "HITACHI HDS7250SASUN500G*", NULL,    ATA_HORKAGE_NONCQ },
-> +	{ "HITACHI HDS7225SBSUN250G*", NULL,    ATA_HORKAGE_NONCQ },
+> +static void ata_drain_fifo(struct ata_port *ap, struct ata_queued_cmd *qc)
+> +{
+> +    u8 stat = ata_chk_status(ap);
+> +    /*
+> +     * Try to clear stuck DRQ if necessary,
+> +     * by reading/discarding up to two sectors worth of data.
+> +     */
+> +    if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
+> +        unsigned int i;
+> +        unsigned int limit = qc ? qc->sect_size : ATA_SECT_SIZE;
+> +
+> +        printk(KERN_WARNING "Draining up to %u words from data FIFO.\n",
+> +                                    limit);
+> +        for (i = 0; i < limit ; ++i) {
+> +            ioread16(ap->ioaddr.data_addr);
+> +            if (!(ata_chk_status(ap) & ATA_DRQ))
+> +                break;
+> +        }
+> +        printk(KERN_WARNING "Drained %u/%u words.\n", i, limit);
+> +    }
+> +}
+> +
+> /**
+>  *    ata_bmdma_drive_eh - Perform EH with given methods for BMDMA 
+> controller
+>  *    @ap: port to handle error for
+> @@ -476,7 +498,7 @@
+>     }
+> 
+>     ata_altstatus(ap);
+> -    ata_chk_status(ap);
+> +    ata_drain_fifo(ap, qc);
+>     ap->ops->irq_clear(ap);
+> 
+>     spin_unlock_irqrestore(ap->lock, flags);
 
-applied
-
+applied, after hand-editing out the top of the message, so that it would 
+not be copied into the kernel changelog
 
