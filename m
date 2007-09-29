@@ -1,73 +1,25 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation (try#2)
-Date: Sat, 29 Sep 2007 02:24:16 -0400
-Message-ID: <46FDEF90.9050702@pobox.com>
-References: <46CFA08E.6090604@arbores.ca> <6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com> <46DBCB6C.8080206@gmail.com> <20070905095327.6277d054.akpm@linux-foundation.org>	<46DEE617.4050004@rtr.ca> <46E0A253.7060803@gmail.com>	<46E154DE.2060602@rtr.ca> <46FB563A.80108@gmail.com>	<20070927193701.6230d77f@the-village.bc.nu> <46FC3D7D.90009@gmail.com>	<46FC3FDD.5060201@pobox.com> <46FC423C.2050206@gmail.com>	<46FC7B72.2030103@rtr.ca> <20070928112735.264733ad@the-village.bc.nu> <46FD0486.3060405@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_ns87415: Initial cut at 87415/87560 IDE support
+Date: Sat, 29 Sep 2007 02:35:30 -0400
+Message-ID: <46FDF232.8080002@garzik.org>
+References: <20070926152731.718a5c74@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58503 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48066 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214AbXI2GYZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Sep 2007 02:24:25 -0400
-In-Reply-To: <46FD0486.3060405@rtr.ca>
+	id S1753439AbXI2Gfe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 29 Sep 2007 02:35:34 -0400
+In-Reply-To: <20070926152731.718a5c74@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> I think this original patch still applies cleanly on at least 2.6.23-rc7.
-> 
-> Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
-> rather than just getting stuck there forever.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> ---
-> 
-> --- old/drivers/ata/libata-sff.c    2007-09-28 09:29:22.000000000 -0400
-> +++ linux/drivers/ata/libata-sff.c    2007-09-28 09:39:44.000000000 -0400
-> @@ -420,6 +420,28 @@
->     ap->ops->irq_on(ap);
-> }
-> 
-> +static void ata_drain_fifo(struct ata_port *ap, struct ata_queued_cmd *qc)
-> +{
-> +    u8 stat = ata_chk_status(ap);
-> +    /*
-> +     * Try to clear stuck DRQ if necessary,
-> +     * by reading/discarding up to two sectors worth of data.
-> +     */
-> +    if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
-> +        unsigned int i;
-> +        unsigned int limit = qc ? qc->sect_size : ATA_SECT_SIZE;
-> +
-> +        printk(KERN_WARNING "Draining up to %u words from data FIFO.\n",
-> +                                    limit);
-> +        for (i = 0; i < limit ; ++i) {
-> +            ioread16(ap->ioaddr.data_addr);
-> +            if (!(ata_chk_status(ap) & ATA_DRQ))
-> +                break;
-> +        }
-> +        printk(KERN_WARNING "Drained %u/%u words.\n", i, limit);
-> +    }
-> +}
-> +
-> /**
->  *    ata_bmdma_drive_eh - Perform EH with given methods for BMDMA 
-> controller
->  *    @ap: port to handle error for
-> @@ -476,7 +498,7 @@
->     }
-> 
->     ata_altstatus(ap);
-> -    ata_chk_status(ap);
-> +    ata_drain_fifo(ap, qc);
->     ap->ops->irq_clear(ap);
-> 
->     spin_unlock_irqrestore(ap->lock, flags);
+Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-applied, after hand-editing out the top of the message, so that it would 
-not be copied into the kernel changelog
+applied to #upstream with kyle's fix and another cleanup
+
 
