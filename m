@@ -1,34 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_pdc202xx_old
-Date: Sat, 29 Sep 2007 02:23:04 -0400
-Message-ID: <46FDEF48.5050806@garzik.org>
-References: <20070926152317.67f4d6fd@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation
+Date: Sat, 29 Sep 2007 07:28:31 +0100
+Message-ID: <20070929072831.2df5f5ed@the-village.bc.nu>
+References: <46CFA08E.6090604@arbores.ca>
+	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>
+	<46DBCB6C.8080206@gmail.com>
+	<20070905095327.6277d054.akpm@linux-foundation.org>
+	<46DEE617.4050004@rtr.ca>
+	<46E0A253.7060803@gmail.com>
+	<46E154DE.2060602@rtr.ca>
+	<46FB563A.80108@gmail.com>
+	<20070927193701.6230d77f@the-village.bc.nu>
+	<46FC3D7D.90009@gmail.com>
+	<46FC3FDD.5060201@pobox.com>
+	<46FC423C.2050206@gmail.com>
+	<46FC7B72.2030103@rtr.ca>
+	<20070928112735.264733ad@the-village.bc.nu>
+	<46FDA4F3.7050205@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33928 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752943AbXI2GXF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Sep 2007 02:23:05 -0400
-In-Reply-To: <20070926152317.67f4d6fd@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757898AbXI2GX3@vger.kernel.org>
+In-Reply-To: <46FDA4F3.7050205@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
 
-Alan Cox wrote:
-> I've been doing an audit of this driver to try and find out why we have
-> problems with some Clevo boxes that use it. Didn't get anywhere other
-> than to discover all the bug reporters I have use vmware, which may or
-> may not be chance.
+> > Why 512 words ?
 > 
-> In the process however I did find out our MWDMA2 performance was a bit
-> low and code review showed the MWDMA0/2 timings are reversed due to a
-> thinko in the table ordering
+> Though I have queued Mark's patch to be applied, my gut feeling would 
+> lean towards a single DRQ block, rather than 512.
+
+Why not just work from the old IDE code.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> >>  	ata_altstatus(ap);
+> >> -	ata_chk_status(ap);
+> >> +	ata_drain_fifo(ap, qc);
+> > 
+> > ap->ops->cleanup();
+> > 
+> > might be wiser
+> 
+> If someone needs that, they can override the error handler with their 
+> own.  No need for a new op.
 
-applied, after fixing Subject to be useful
-
-
+PDC202xx needs
