@@ -1,50 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Fix HPA handling regression
-Date: Fri, 28 Sep 2007 21:03:29 -0400
-Message-ID: <46FDA461.9080804@garzik.org>
-References: <20070926180222.10a96afe@the-village.bc.nu> <46FD0231.2020002@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata drain fifo on stuck DRQ HSM violation
+Date: Fri, 28 Sep 2007 21:05:55 -0400
+Message-ID: <46FDA4F3.7050205@pobox.com>
+References: <46CFA08E.6090604@arbores.ca>	<6bffcb0e0708261610g10d9c59ck5789fac6feca9f42@mail.gmail.com>	<46DBCB6C.8080206@gmail.com>	<20070905095327.6277d054.akpm@linux-foundation.org>	<46DEE617.4050004@rtr.ca>	<46E0A253.7060803@gmail.com>	<46E154DE.2060602@rtr.ca>	<46FB563A.80108@gmail.com>	<20070927193701.6230d77f@the-village.bc.nu>	<46FC3D7D.90009@gmail.com>	<46FC3FDD.5060201@pobox.com>	<46FC423C.2050206@gmail.com>	<46FC7B72.2030103@rtr.ca> <20070928112735.264733ad@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46913 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60795 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753943AbXI2BDf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2007 21:03:35 -0400
-In-Reply-To: <46FD0231.2020002@gmail.com>
+	id S1755698AbXI2BGH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2007 21:06:07 -0400
+In-Reply-To: <20070928112735.264733ad@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, michal.k.k.piotrowski@gmail.com, bryan@arbores.ca, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->> Restore the support for handling drives that report one sector too many
->> (ie SCSI not ATA style). This worked before the HPA update but was
->> removed in that process
->>
->> Signed-off-by: Alan Cox <alan@redhat.com>
+Alan Cox wrote:
+>> Drain up to 512 words from host/bridge FIFO on stuck DRQ HSM violation,
+>> rather than just getting stuck there forever.
 > 
-> Acked-by: Tejun Heo <htejun@gmail.com>
-> 
->> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h linux-2.6.23rc8-mm1/include/linux/libata.h
->> --- linux.vanilla-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 16:46:57.844875296 +0100
->> +++ linux-2.6.23rc8-mm1/include/linux/libata.h	2007-09-26 17:11:56.215088400 +0100
->> @@ -315,7 +315,8 @@
->>  	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
->>  	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
->>  	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
->> -	ATA_HORKAGE_DRQ		= (1 << 5),	/* Device forgets to clear DRQ on error */
->> +	ATA_HORKAGE_HPA_SIZE	= (1 << 5), 	/* Reports native size off by one */
->> +	ATA_HORKAGE_DRQ		= (1 << 6),	/* Device forgets to clear DRQ on error */
->>  
->>  	/* DMA mask for user DMA control: User visible values do not
->>  	   renumber */
-> 
-> But Jeff might not like adding new constant and shifting the existing
-> one at the same time.
+> Why 512 words ?
 
-That's definitely annoying and unnecessary patch noise...
+Though I have queued Mark's patch to be applied, my gut feeling would 
+lean towards a single DRQ block, rather than 512.
+
+
+>>  	ata_altstatus(ap);
+>> -	ata_chk_status(ap);
+>> +	ata_drain_fifo(ap, qc);
+> 
+> ap->ops->cleanup();
+> 
+> might be wiser
+
+If someone needs that, they can override the error handler with their 
+own.  No need for a new op.
 
 	Jeff
 
