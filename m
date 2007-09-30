@@ -1,50 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH] blacklist NCQ on Seagate Barracuda ST380817AS
-Date: Sun, 30 Sep 2007 13:26:50 -0400
-Message-ID: <46FFDC5A.7070509@rtr.ca>
-References: <20070930160548.235be972@localhost>	<20070930152908.1f58d39d@the-village.bc.nu> <20070930164610.20818867@localhost> <46FFBB2D.6060004@garzik.org>
+Date: Sun, 30 Sep 2007 10:29:09 -0700
+Message-ID: <46FFDCE5.4060900@gmail.com>
+References: <20070930160548.235be972@localhost>	<20070930152908.1f58d39d@the-village.bc.nu> <20070930164610.20818867@localhost> <46FFBB2D.6060004@garzik.org> <46FFDC5A.7070509@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4776 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756056AbXI3R0w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Sep 2007 13:26:52 -0400
-In-Reply-To: <46FFBB2D.6060004@garzik.org>
+Received: from nz-out-0506.google.com ([64.233.162.235]:61944 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650AbXI3Raq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Sep 2007 13:30:46 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so2343572nze
+        for <linux-ide@vger.kernel.org>; Sun, 30 Sep 2007 10:30:45 -0700 (PDT)
+In-Reply-To: <46FFDC5A.7070509@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Paolo Ornati <ornati@fastwebnet.it>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Paolo Ornati <ornati@fastwebnet.it>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Paolo Ornati wrote:
->> On Sun, 30 Sep 2007 15:29:08 +0100
->> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> Paolo Ornati wrote:
+>>> I have this problem only with XFS, and even with XFS it goes away
+>>> mounting with "nobarrier"...
 >>
->>>> Seagate Barracuda ST380817AS has troubles with NCQ. For example,
->>>> unpacking a tarball on an XFS filesystem gives this:
->>>>
->>>> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
->>>> ata1.00: cmd 61/40:00:29:a3:98/00:00:00:00:00/40 tag 0 cdb 0x0 data 
->>>> 32768 out
->>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)  
->>> What makes you sure that is an NCQ problem ?
+>> This last is an interesting datapoint.
 >>
->> It goes away with:
->> echo 1 > /sys/block/sda/device/queue_depth
->>
->> I have this problem only with XFS, and even with XFS it goes away
->> mounting with "nobarrier"...
+>> I wonder if libata has a generic problem with NCQ + FLUSH CACHE.
 > 
-> This last is an interesting datapoint.
+> Yeah, that's pretty suspicious.  Prior to issuing a FLUSH_CACHE op,
+> one must first drain all outstanding NCQ commands (and not issue new ones).
 > 
-> I wonder if libata has a generic problem with NCQ + FLUSH CACHE.
+> I'm sure the code must *try* to do that, but perhaps there's a bug in
+> there?
+> Or just another drive bug?
 
-Yeah, that's pretty suspicious.  Prior to issuing a FLUSH_CACHE op,
-one must first drain all outstanding NCQ commands (and not issue new ones).
+If there was such a bug, the aborted commands list should contain both
+FPDMA commands and FLUSH commands.  I don't think command filtering
+itself is broken.  Possibly another quirky firmware but it's strange
+that this is the only Seagate drive showing this problem.
 
-I'm sure the code must *try* to do that, but perhaps there's a bug in there?
-Or just another drive bug?
+Thanks.
 
-??
+-- 
+tejun
