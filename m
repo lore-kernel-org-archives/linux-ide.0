@@ -1,42 +1,39 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: [regression] 2.6.23 sata_mv EH updates broke my 7042 controller
-Date: Mon, 1 Oct 2007 17:04:39 -0500
-Message-ID: <20071001220439.GA15332@lixom.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 12/15] ide: remove ->dma_master field from ide_hwif_t
+Date: Tue, 2 Oct 2007 00:06:35 +0200
+Message-ID: <200710020006.35156.bzolnier@gmail.com>
+References: <200710012339.39304.bzolnier@gmail.com> <47016B33.9010001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757440AbXJAWAz@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.172]:29519 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbXJAWCU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 18:02:20 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1981001ugc
+        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 15:02:17 -0700 (PDT)
+In-Reply-To: <47016B33.9010001@garzik.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
-Cc: linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+On Monday 01 October 2007, Jeff Garzik wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > * Convert cmd64x, hpt366 and pdc202xx_old host drivers to use
+> >   pci_resource_start(hwif->pci_dev, 4) instead of hwif->dma_master.
+> 
+> Before using pci_resource_start(), the code should check 
+> pci_resource_len() to ensure it is the appropriate size.
+> 
+> It would be very wise to ensure that pci_resource_flags()&IORESOURCE_IO 
+> is true, too.
 
-I just pulled out my Marvell 7042 SATA controller here to give it a spin
-and noticed that it no longer worked (i.e. init segvs when loading from
-it), etc. 2.6.22 is fine.
+Sure but since the old code hasn't been doing these checks (old code
+just did pci_resource_start() -> hwif->dma_base -> hwif->dma_master)
+this is a separate issue from what the patch tries to achieve.
 
-Bisecting (just the file drivers/ata/sata_mv.c) resulted in
-bdd4dddee325a7dce3e84cf48201a06aa8508aa4 popping out as the culprit
-(file version 4537deb5e90b717a725b3d74b58b4bb1d28443d0 is fine).
-
-Just for sanity checking: Has anyone else used 7042/6042 with the current
-mainline driver?
-
-Hardware config in my case:
-Highpoint 2310 controller
-PPC (big endian)
-WD Raptor disk
-
-Works fine with the other controller I've been using (SIL24), and works
-fine if I revert the driver.
-
-It also works fine if I disable the IOMMU. This would point towards
-either a stale dma mapping, or a missing setup of one.
-
-Not being much at home in the SATA drivers I could keep digging but I
-figured I'd bring it up first in case it rings a bell for someone.
-
-
--Olof
+Bart
