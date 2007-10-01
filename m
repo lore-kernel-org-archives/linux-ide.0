@@ -1,40 +1,38 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: ICH9 2 port SATA controller port map?
-Date: Mon, 1 Oct 2007 10:33:59 -0700
-Message-ID: <39B20DF628532344BC7A2692CB6AEE0701CF304E@orsmsx420.amr.corp.intel.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701CC0C09@orsmsx420.amr.corp.intel.com> <46FB0273.60302@gmail.com> <39B20DF628532344BC7A2692CB6AEE0701CF2D29@orsmsx420.amr.corp.intel.com> <46FDDFA5.8040209@gmail.com>
+From: Hernan Gustavo Solari <solari@df.uba.ar>
+Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
+ where old SATA works
+Date: Mon, 01 Oct 2007 16:15:12 -0300
+Message-ID: <47014740.5080002@df.uba.ar>
+References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com>
+Reply-To: hgsolari@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52765 "EHLO mga02.intel.com"
+Received: from woody.df.uba.ar ([157.92.11.66]:45850 "EHLO woody.df.uba.ar"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751866AbXJAReB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 13:34:01 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46FDDFA5.8040209@gmail.com>
+	id S1752681AbXJAT6F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 15:58:05 -0400
+In-Reply-To: <46FCCD57.2020507@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
 
->> What is the difference between NA and RV?  If the controller only has
->> access to 2 ports, does it matter which I set the nonexistent port
->> values to in the map?
->
->NA is used for unimplemented ports of a valid configuration while RV is
->used to mark invalid MAP value.  So, NA should be mixed with P[0-3]
->while RV can't be mixed with any other values.
->
->--
->Tejun
+Tejun
 
-When you say "can't be mixed" do you mean I should not have [P0 RV P1
-RV] on the same line?  If that is the case, then I assume my only
-choice, for the 2 port controller (physically ports 5 & 6) would be [P0
-NA P1 NA].
+    netconsole, pritty nice debunging system... but (yes, there is 
+always a but) it does not get to run.
+    the method was well implemented, adding the acpi=off it sends the 
+information to the receiving machine (I can even see passing a 
+netconsole probing message in the machine under testing), but without 
+turning off acpi it does not reach the point of loading and, 
+consequently, it does not send a byte to the receiving machine.
 
-Thanks!
+Hence, result: empty output.
 
-Jason
+Hernan
+
+
+-- 
+Hernan G. Solari (solari@df.uba.ar http://www.df.uba.ar/~solari)
