@@ -1,83 +1,42 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: Promise SATA300 TX4: errors, oops in ext3 code
-Date: Mon, 01 Oct 2007 14:26:28 +0400
-Message-ID: <4700CB54.7000206@lxnt.info>
-References: <47009BF6.5000208@lxnt.info> <4700B966.1030508@anagramm.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Mon, 01 Oct 2007 08:28:18 -0400
+Message-ID: <4700E7E2.4040208@garzik.org>
+References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<20070928155703.490d7575@the-village.bc.nu>	<46FD1BAD.8020506@garzik.org>	<20070928164312.208b8c56@the-village.bc.nu>	<46FD2071.2070608@garzik.org>	<46FD5D55.4070706@rtr.ca>	<46FDC6A8.3000306@garzik.org> <20070929215623.030abd66@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.caravan.ru ([217.23.130.2]:63122 "EHLO mx1.caravan.ru"
+Received: from srv5.dvmed.net ([207.36.208.214]:46089 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314AbXJAKY3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Oct 2007 06:24:29 -0400
-In-Reply-To: <4700B966.1030508@anagramm.de>
+	id S1751320AbXJAM2Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 08:28:25 -0400
+In-Reply-To: <20070929215623.030abd66@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Clemens Koller <clemens.koller@anagramm.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Clemens Koller wrote:
-> Alexander Sabourenkov schrieb:
->  > Hardware:  Athlon64, Asus A8V, Promise SATA300 TX4, 2xSeagate 7200.10
->  > 320G, jumper-limited to SATA150.
->  > Kernel : 2.6.22.9 amd64
->  >
->  > Problem:
->  > Heavy load causes errors and triggers oops.
+Alan Cox wrote:
+> ty today, with 3+ month kernel release cycles (ugh!!).
+>> I'm very much interested in hearing suggestions and comments.
 > 
-> Have you checked your memory already (memtest86)?
+> I think PMP should go in for 2.6.24 and then get revised over time to not
+> poll and to go via qc_issue. Which seems to be the consensus of everyone
+> but you on this one.
 
-Last run was about a year ago.
+It's not an "over time" issue.  SAS drivers that will be ready for 
+2.6.24 (broadsas, mvsas) have both been coded to support PMP 
+transparently -- but the current libata PMP code requires that PMP 
+support in SAS be TURNED OFF, because it is fundamentally incompatible 
+by its design.
 
-This box gets regularly updated (rebuild of all installed software),
-so I'm reasonably certain that memory is ok - gcc being almost as 
-sensitive as memtest.
+This is an issue that has been present and known for many, many months 
+-- as long as drivers/scsi/libsas/sas_ata.c has been in the tree.
 
-Will recheck anyway.
+The more we walk down the polling path, the more incompatible we become 
+with SATA-capable controllers that are in users' hands today.
 
-> 
-> We have several applications with Promise controllers on strange
-> hardware and we never had integrity problems with i.e. not so standard
-> SATA connections over custom vaccum-tight connectors.
-
-Judging from linux and freebsd mailing lists, the TX4 is now quite 
-well-known for
-intermittent problems, which are hard to reproduce on different hardware.
-
-I have two machines with those controllers, one FreeBSD-6.2 on MSI 
-K8Neo2 motherboard (ATI chipset),
-  and this one. FreeBSD box does not exhibit this problem under the 
-little load it gets, but
-6-STABLE and 7-CURRENT branches do have similar symptoms since around 19 
-April 2007,
-with rare occurences (but not unheard of) before.
-
-Thus I am unable to keep machines up to date, and before having to dump 
-$140 worth of hardware,
-I'd like to try to help fix this problem or at least be certain that 
-those controllers are indeed unusable.
-
-
->  > Problems were blamed:
->  >   - SATA300 being too 'hot'  (jumpered the drives)
-> 
-> Is this a common known problem with your harddrives or controller?
-> (ask google) Otherwise, it sounds like a problem with broken hardware.
-
-This is a common problem with at least VIA onboard controllers and 
-Seagate disks,
-and I think with SATA150 controllers and speed negotiation in general.
-
-This step was suggested in some mailing list as a general precaution, but
-actually made no difference to error rate.
-
-I did not unjumper drivers back to SATA300 so that I can easily connect 
-the drives
-to the onboard controller.
-
--- 
-
-./lxnt
+	Jeff
 
 
