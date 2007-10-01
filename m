@@ -1,178 +1,58 @@
-From: Simon Roscic <simon.roscic@chello.at>
-Subject: western digital WD800ADFS ncq problems
-Date: Mon, 1 Oct 2007 22:41:14 +0200
-Message-ID: <200710012241.14512.simon.roscic@chello.at>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: sata_nv in 2.6.23-rc8 only detects one of two controllers
+Date: Mon, 01 Oct 2007 17:39:09 -0400
+Message-ID: <470168FD.8080605@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:47573 "EHLO
-	viefep16-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752261AbXJAUlS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 16:41:18 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([66.187.233.31]:39771 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757072AbXJAVjL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 17:39:11 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l91LdAo9021001
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Mon, 1 Oct 2007 17:39:10 -0400
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l91Ld9Lt007341
+	for <linux-ide@vger.kernel.org>; Mon, 1 Oct 2007 17:39:10 -0400
+Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id l91Ld9TW011909
+	for <linux-ide@vger.kernel.org>; Mon, 1 Oct 2007 17:39:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-(please cc me, as i=B4m not subscribed to linux-kernel/ide - thanks)
+2.6.18:
+libata version 2.00 loaded.
+sata_nv 0000:00:07.0: version 2.0
+ACPI: PCI Interrupt Link [LTID] enabled at IRQ 20
+GSI 18 sharing vector 0xE9 and IRQ 18
+ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LTID] -> GSI 20 (level, low) -> IRQ 233
+PCI: Setting latency timer of device 0000:00:07.0 to 64
+ata1: SATA max UDMA/133 cmd 0xB400 ctl 0xB002 bmdma 0xA400 irq 233
+ata2: SATA max UDMA/133 cmd 0xAC00 ctl 0xA802 bmdma 0xA408 irq 233
+scsi0 : sata_nv
+...
+ACPI: PCI Interrupt Link [LT3D] enabled at IRQ 47
+GSI 19 sharing vector 0x32 and IRQ 19
+ACPI: PCI Interrupt 0000:80:07.0[A] -> Link [LT3D] -> GSI 47 (level, low) -> IRQ 50
+PCI: Setting latency timer of device 0000:80:07.0 to 64
+ata5: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xD400 irq 50
+ata6: SATA max UDMA/133 cmd 0xDC00 ctl 0xD802 bmdma 0xD408 irq 50
 
-hi,
 
-we have some Fujitsu Siemens Celsius M450 workstations (Intel 975X Expr=
-ess chipset)
-running Linux Kernel 2.6.22 (Debian, Ubuntu) on an md raid 1 using two =
-Western Digital
-Raptor drives, it=B4s the WD800ADFS which is an oem version (you will f=
-ind them in
-workstations from HP, IBM, Dell, Fujitsu-Siemens,... and they have diff=
-erent model
-numbers) using ahci and ncq we are experiencing low performace, and man=
-y
-hsm violations, sometimes also timeouts, so i think this drive should b=
-e added
-to the libata ncq blacklist, as the WD740ADFD is already blacklisted an=
-d the
-Raptor series generally seems to have some ncq issues...
+2.6.23-rc8:
+libata version 2.21 loaded.
+sata_nv 0000:00:07.0: version 3.5
+ACPI: PCI Interrupt Link [LTID] enabled at IRQ 22
+ACPI: PCI Interrupt 0000:00:07.0[A] -> Link [LTID] -> GSI 22 (level, low) -> IRQ 22
+sata_nv 0000:00:07.0: Using ADMA mode
+PCI: Setting latency timer of device 0000:00:07.0 to 64
+scsi1 : sata_nv
+...
+[No messages print for the second controller]
 
-kind regards,
-simon.
 
-drive information:
-
-/dev/sda:
-
-ATA device, with non-removable media
-        Model Number:       WDC WD800ADFS-07SLR4
-        Serial Number:      WD-WMANS1******
-        Firmware Revision:  21.07QR4
-Standards:
-        Used: ATA/ATAPI-7 published, ANSI INCITS 397-2005
-        Supported: 7 6 5 4
-Configuration:
-        Logical         max     current
-        cylinders       16383   16383
-        heads           16      16
-        sectors/track   63      63
-        --
-        CHS current addressable sectors:   16514064
-        LBA    user addressable sectors:  156301488
-        LBA48  user addressable sectors:  156301488
-        device size with M =3D 1024*1024:       76319 MBytes
-        device size with M =3D 1000*1000:       80026 MBytes (80 GB)
-Capabilities:
-        LBA, IORDY(can be disabled)
-        Queue depth: 32
-        Standby timer values: spec'd by Standard, with device specific =
-minimum
-        R/W multiple sector transfer: Max =3D 16  Current =3D 16
-        Recommended acoustic management value: 128, current value: 254
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udm=
-a6
-             Cycle time: min=3D120ns recommended=3D120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=3D120ns  IORDY flow control=3D=
-120ns
-Commands/features:
-        Enabled Supported:
-           *    SMART feature set
-                Security Mode feature set
-           *    Power Management feature set
-           *    Write cache
-           *    Look-ahead
-           *    Host Protected Area feature set
-           *    WRITE_BUFFER command
-           *    READ_BUFFER command
-           *    NOP cmd
-           *    DOWNLOAD_MICROCODE
-                Power-Up In Standby feature set
-           *    SET_FEATURES required to spinup after power up
-                SET_MAX security extension
-           *    Automatic Acoustic Management feature set
-           *    48-bit Address feature set
-           *    Device Configuration Overlay feature set
-           *    Mandatory FLUSH_CACHE
-           *    FLUSH_CACHE_EXT
-           *    SMART error logging
-           *    SMART self-test
-           *    General Purpose Logging feature set
-           *    64-bit World wide name
-           *    SATA-I signaling speed (1.5Gb/s)
-           *    SATA-II signaling speed (3.0Gb/s)
-           *    Native Command Queueing (NCQ)
-           *    Host-initiated interface power management
-           *    Phy event counters
-                DMA Setup Auto-Activate optimization
-                Device-initiated interface power management
-           *    Software settings preservation
-           *    SMART Command Transport (SCT) feature set
-           *    SCT Long Sector Access (AC1)
-           *    SCT LBA Segment Access (AC2)
-           *    SCT Error Recovery Control (AC3)
-           *    SCT Features Control (AC4)
-           *    SCT Data Tables (AC5)
-                unknown 206[12]
-Security:
-        Master password revision code =3D 65534
-                supported
-        not     enabled
-        not     locked
-                frozen
-        not     expired: security count
-        not     supported: enhanced erase
-Checksum: correct
-
-some of the kernel messages:
-
-[70747.193717] ata3.00: exception Emask 0x2 SAct 0xfe00 SErr 0x0 action=
- 0x2 frozen
-[70747.193725] ata3.00: (spurious completions during NCQ issue=3D0x0 SA=
-ct=3D0xfe00 FIS=3D004040a1:00000100)
-[70747.193734] ata3.00: cmd 61/20:48:d2:9d:24/00:00:08:00:00/40 tag 9 c=
-db 0x0 data 16384 out
-[70747.193736]          res 40/00:78:42:ae:24/00:00:08:00:00/40 Emask 0=
-x2 (HSM violation)
-=2E..
-[70747.193789] ata3.00: cmd 61/08:78:42:ae:24/00:00:08:00:00/40 tag 15 =
-cdb 0x0 data 4096 out
-[70747.193791]          res 40/00:78:42:ae:24/00:00:08:00:00/40 Emask 0=
-x2 (HSM violation)
-[70747.502219] ata3: soft resetting port
-[70747.673864] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[70747.678834] ata3.00: configured for UDMA/133
-[70747.678853] ata3: EH complete
-
-[143055.609784] ata4.00: exception Emask 0x2 SAct 0xe811 SErr 0x0 actio=
-n 0x2 frozen
-[143055.609800] ata4.00: (spurious completions during NCQ issue=3D0x0 S=
-Act=3D0xe811 FIS=3D004040a1:00000080)
-[143055.609809] ata4.00: cmd 61/10:00:02:68:56/00:00:00:00:00/40 tag 0 =
-cdb 0x0 data 8192 out
-[143055.609811]          res 40/00:78:6a:d7:59/00:00:02:00:00/40 Emask =
-0x2 (HSM violation)
-=2E..
-[143055.609870] ata4.00: cmd 61/08:78:6a:d7:59/00:00:02:00:00/40 tag 15=
- cdb 0x0 data 4096 out
-[143055.609872]          res 40/00:78:6a:d7:59/00:00:02:00:00/40 Emask =
-0x2 (HSM violation)
-[143055.920558] ata4: soft resetting port
-[143056.092224] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[143056.097130] ata4.00: configured for UDMA/133
-[143056.097146] ata4: EH complete
-
-[234300.421373] ata4.00: exception Emask 0x0 SAct 0x7fff SErr 0x0 actio=
-n 0x2 frozen
-[234300.421386] ata4.00: cmd 60/08:00:f2:fc:71/00:00:00:00:00/40 tag 0 =
-cdb 0x0 data 4096 in
-[234300.421388]          res 40/00:48:92:e9:9d/00:00:04:00:00/40 Emask =
-0x4 (timeout)
-=2E..
-[234300.421511] ata4.00: cmd 60/08:70:5a:b0:16/00:00:08:00:00/40 tag 14=
- cdb 0x0 data 4096 in
-[234300.421513]          res 40/00:88:7a:68:56/00:00:00:00:00/40 Emask =
-0x4 (timeout)
-[234300.732730] ata4: soft resetting port
-[234300.904388] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[234300.909120] ata4.00: configured for UDMA/133
-[234300.909149] ata4: EH complete
+https://bugzilla.redhat.com/show_bug.cgi?id=313491
