@@ -1,172 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] pata_hpt3x2n: Clean up DPLL stuff
-Date: Mon, 01 Oct 2007 17:12:03 +0400
-Message-ID: <4700F223.5040408@ru.mvista.com>
-References: <20070926230424.23a302c8@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Mon, 01 Oct 2007 09:31:42 -0400
+Message-ID: <4700F6BE.3060904@garzik.org>
+References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<46FD1C4A.8010101@garzik.org>	<46FD306C.3050205@gmail.com>	<46FD5DE1.8000206@rtr.ca> <20070928220309.7c9ed816@the-village.bc.nu> <46FDADD9.9050007@garzik.org> <46FDE1A7.6030102@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:9861 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754818AbXJANMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Oct 2007 09:12:22 -0400
-In-Reply-To: <20070926230424.23a302c8@the-village.bc.nu>
+Received: from srv5.dvmed.net ([207.36.208.214]:46822 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751736AbXJANbq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 09:31:46 -0400
+In-Reply-To: <46FDE1A7.6030102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Hello.
-
-Alan Cox wrote:
-
-> Nobody commented when I asked for review earlier so it must be ok  8)
-
-    It's not that I've seen this before
-
- > so it must be ok  8)
-
-    Not by me at least, so let me NAK it. 8-)
-
-> Lets stick it in -mm to be sure
-
-    Now let's unstick it. :-)
-
-> Signed-off-by: Alan Cox <alan@redhat.com>
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Polling ALREADY makes the job of fixing SAS/SATA exception handling
+>> difficult.  Expanding polling to something SAS/SATA controllers treat as
+>> fundamentally irq-driven and integrated with the rest of the command
+>> flow is moving in the wrong direction.
+>>
+>> To re-re-re-summarize, polling in PMP is fundamentally broken for an
+>> ENTIRE CLASS OF HARDWARE that we actively support today.  And
+>> jgarzik/misc-2.6.git#sas is adding two more controllers to that list.
 > 
-> diff -u --new-file --exclude-from /usr/src/exclude --recursive linux.vanilla-2.6.23rc8-mm1/drivers/ata/pata_hpt37x.c linux-2.6.23rc8-mm1/drivers/ata/pata_hpt37x.c
-> --- linux.vanilla-2.6.23rc8-mm1/drivers/ata/pata_hpt37x.c	2007-09-26 16:46:48.000000000 +0100
-> +++ linux-2.6.23rc8-mm1/drivers/ata/pata_hpt37x.c	2007-09-18 16:44:32.000000000 +0100
+> As an interim solution, it doesn't make anything worse tho.  Those
+> drivers don't support PMP anyway.  After rc1 merge, polling PMP access
+> can be replaced with new qc_issue (probably ata_exec_internal) based code.
+> 
+> The question here is whether it's worth to include PMP support with
+> polling PMP register access as an interim solution for 2.6.24.  I think
+> it will be beneficial for both user convenience and testing as long as
+> the said change is made soon after -rc1.
 
-    Wait, I thought you're patching pata_hpt3x2n!
+Polling PMP 2.6.24 is completely unacceptable.  It screws the 2.6.24 SAS 
+driver releases out of PMP.
 
-> @@ -844,6 +844,46 @@
->  	/* Never went stable */
->  	return 0;
->  }
-> +
-> +static void *hpt_tune_function(struct pci_dev *dev, int dpll, int clock_slot)
-> +{
-> +	static const int MHz[4] = { 33, 40, 50, 66 };
-> +	/*
-> +	 *	For non UDMA133 capable devices we should
-> +	 *	use a 50MHz DPLL by choice
-> +	 */
-> +	unsigned int f_low, f_high;
-> +	int adjust;
-> +
-> +	f_low = (MHz[clock_slot] * 48) / MHz[dpll];
-> +	f_high = f_low + 2;
-> +	if (clock_slot > 1)
-> +		f_high += 2;
-> +	/* Select the DPLL clock. */
-> +	pci_write_config_byte(dev, 0x5b, 0x21);
-> +	pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
+I pulled your last PMP patchset, and will now endeavor to fix the API 
+prior to 2.6.24 merge window opening.
 
-    Could move the f_low/high writes to hpt37x_calibrate_dpll()...
+Linux high level message-submit / message-complete APIs should never 
+_require_ polling, even if its 100% polling under the hood.  There are 
+far too many cases in the field where you don't have direct access to 
+hardware registers to poll.  Or such polling would interfere with the 
+operation of other ports.  Or any of a myriad of other reasons.
 
-> +	for(adjust = 0; adjust < 8; adjust++) {
-> +		if (hpt37x_calibrate_dpll(dev))
-> +			break;
-> +		/* See if it'll settle at a fractionally different clock */
-> +		if (adjust & 1)
-> +			f_low -= adjust >> 1;
-> +		else
-> +			f_high += adjust >> 1;
-> +		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low | 0x100);
-> +	}
-> +	if (adjust == 8) {
-> +		printk(KERN_WARNING "hpt37x: DPLL did not stabilize.\n");
+	Jeff
 
-    Deserves KERN_ERR. Wait, I remember to have changed it to KERN_ERR.
 
-> +		return NULL;
-> +	}
-> +	printk(KERN_INFO "hpt37x: Bus clock %dMHz, using DPLL.\n", MHz[dpll]);
 
-    That won't do -- it reintroduces the DPLL clock ISO bus clock reporting 
-bug (that I've fixed just recently)!
-
-> @@ -944,7 +984,7 @@
->  	u8 mcr1;
->  	u32 freq;
->  	int prefer_dpll = 1;
-> -
-> +	int hpt374alt = 0;
->  	unsigned long iobase = pci_resource_start(dev, 4);
->  
->  	const struct hpt_chip *chip_table;
-> @@ -1046,16 +1086,28 @@
->  	if (chip_table == &hpt372a)
->  		outb(0x0e, iobase + 0x9c);
->  
-> +	/*
-> +	 * PLL must be done once
-> +	 */
-> +	 
-> +	if (chip_table == &hpt374 && PCI_FUNC(dev->devfn) & 1) {
-> +		/* The HPT374 secondary devfn is tuned to 50MHz when we find
-> +		   the primary */
-
-    Nah, the reason for that is completely different -- BIOS saves no clock 
-data for function 1 but calibrates it for 50 MHz anyway, thus making the 
-driver read already distorted f_CNT...
-Not actually dangerous as the value yields 33 MHz PCI clock after clamping but 
-WTF...
-
-> +		port_info = *port;
-> +		port_info.private_data = hpt37x_timings_50;
-> +	}
-
-    No, this does not seem correct -- the function 1 should be tuned (for the 
-x86 case where there was no BIOS available to tune it beforehand). I don't see 
-where the manual tells that the DPLL circuitry is shared. Contrarywise, I'm 
-seeing it say on p. 3-22:
-
-2. Each function has its own DPLL module, so you need set DPLL clock on every
-    function
-
->  	/* Some devices do not let this value be accessed via PCI space
->  	   according to the old driver */
-> -
->  	freq = inl(iobase + 0x90);
->  	if ((freq >> 12) != 0xABCDE) {
->  		int i;
->  		u8 sr;
->  		u32 total = 0;
-> -
-> +		
->  		printk(KERN_WARNING "pata_hpt37x: BIOS has not set timing clocks.\n");
-> +		if (hpt374alt == 1)
-> +			printk(KERN_ERR "pata_hpt37x: No saved frequency on primary function.\n");
-
-    What's so erratic about this? And where hpt374alt is set to 1?
-
-> +		private_data = hpt_tune_function(dev, dpll, clock_slot);
-> +		/* For the HPT374 tune both channels together from fn 0 */
-> +		if (chip_table == &hpt374 && !(PCI_FUNC(dev->devfn) & 1)) {
-> +			struct pci_dev *pair = pci_get_slot(dev->bus, dev->devfn + 1);
-> +			if (pair != NULL) {
-> +				hpt_tune_function(pair, dpll, clock_slot);
-> +				pci_dev_put(pair);
-> +			}
-
-    Ah, I see it now: you've decided to tune 2 functions of HPT374 at once...
-
->  		}
-> -		if (dpll == 3)
-> -			private_data = (void *)hpt37x_timings_66;
-> -		else
-> -			private_data = (void *)hpt37x_timings_50;
-> -
-> -		printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using %dMHz DPLL.\n",
-> -		       MHz[clock_slot], MHz[dpll]);
-
-    There was no need to undo that.
-
->  	} else {
->  		private_data = (void *)chip_table->clocks[clock_slot];
->  		/*
-
-MBR, Sergei
