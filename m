@@ -1,85 +1,46 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/15] qd65xx: fix deadlock on error handling
-Date: Mon, 1 Oct 2007 23:33:02 +0200
-Message-ID: <200710012333.02643.bzolnier@gmail.com>
+Subject: Re: [patch] SB700 contains more than one IDE channel
+Date: Mon, 1 Oct 2007 23:04:01 +0200
+Message-ID: <200710012304.01744.bzolnier@gmail.com>
+References: <5CAB7B5D6F8AB84AA868A46B47A5070544C164@sshaexmb1.amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:61479 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.172]:61343 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753332AbXJAVjh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 17:39:37 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so1977012ugc
-        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 14:39:37 -0700 (PDT)
+	with ESMTP id S1753332AbXJAVjd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 17:39:33 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so1977009ugc
+        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 14:39:31 -0700 (PDT)
+In-Reply-To: <5CAB7B5D6F8AB84AA868A46B47A5070544C164@sshaexmb1.amd.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Shane Huang <Shane.Huang@amd.com>
+Cc: linux-ide@vger.kernel.org, gregkh@suse.de, "Su, Henry" <Henry.Su@amd.com>
 
+On Thursday 27 September 2007, Shane Huang wrote:
+> From: shane.huang@amd.com
+> 
+> SB700 supports one physical IDE channel, but SB700 SATA controller
+> supports combined mode. When the SATA combined mode is enabled,
+> two SATA ports(port4 and port5) share one IDE channel from IDE
+> controller, and PATA will share the other IDE channel.
+> 
+> Our previous patch adding SB700 IDE device ID only support one
+> IDE channel, which contains bug. The attached patch fix the bug.
+> 
+> 
+> Signed-off-by: shane.huang@amd.com
 
-Stop abusing ide_lock lock (switch to a private locking).
+applied
 
-Fixes same issue as fixed by Alan Cox in atiixp host driver with
-commit 6c5f8cc33eb2e10b6ab788bbe259fc142a068627.
+The inlined patch was word-wrapped and the attached one lacked patch
+description so manual fixing was required anyway.  Not a big problem
+but next time please try to use some known-to-be-good mail client to
+inline patches.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/legacy/qd65xx.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-Index: b/drivers/ide/legacy/qd65xx.c
-===================================================================
---- a/drivers/ide/legacy/qd65xx.c
-+++ b/drivers/ide/legacy/qd65xx.c
-@@ -89,13 +89,15 @@
- 
- static int timings[4]={-1,-1,-1,-1}; /* stores current timing for each timer */
- 
-+static DEFINE_SPINLOCK(qd65xx_lock);
-+
- static void qd_write_reg (u8 content, unsigned long reg)
- {
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&ide_lock, flags);
-+	spin_lock_irqsave(&qd65xx_lock, flags);
- 	outb(content,reg);
--	spin_unlock_irqrestore(&ide_lock, flags);
-+	spin_unlock_irqrestore(&qd65xx_lock, flags);
- }
- 
- static u8 __init qd_read_reg (unsigned long reg)
-@@ -103,9 +105,9 @@ static u8 __init qd_read_reg (unsigned l
- 	unsigned long flags;
- 	u8 read;
- 
--	spin_lock_irqsave(&ide_lock, flags);
-+	spin_lock_irqsave(&qd65xx_lock, flags);
- 	read = inb(reg);
--	spin_unlock_irqrestore(&ide_lock, flags);
-+	spin_unlock_irqrestore(&qd65xx_lock, flags);
- 	return read;
- }
- 
-@@ -301,16 +303,15 @@ static void qd6580_set_pio_mode(ide_driv
- 
- static int __init qd_testreg(int port)
- {
--	u8 savereg;
--	u8 readreg;
- 	unsigned long flags;
-+	u8 savereg, readreg;
- 
--	spin_lock_irqsave(&ide_lock, flags);
-+	spin_lock_irqsave(&qd65xx_lock, flags);
- 	savereg = inb_p(port);
- 	outb_p(QD_TESTVAL, port);	/* safe value */
- 	readreg = inb_p(port);
- 	outb(savereg, port);
--	spin_unlock_irqrestore(&ide_lock, flags);
-+	spin_unlock_irqrestore(&qd65xx_lock, flags);
- 
- 	if (savereg == QD_TESTVAL) {
- 		printk(KERN_ERR "Outch ! the probe for qd65xx isn't reliable !\n");
+Thanks,
+Bart
