@@ -1,75 +1,83 @@
-From: Clemens Koller <clemens.koller@anagramm.de>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
 Subject: Re: Promise SATA300 TX4: errors, oops in ext3 code
-Date: Mon, 01 Oct 2007 11:09:58 +0200
-Message-ID: <4700B966.1030508@anagramm.de>
-References: <47009BF6.5000208@lxnt.info>
+Date: Mon, 01 Oct 2007 14:26:28 +0400
+Message-ID: <4700CB54.7000206@lxnt.info>
+References: <47009BF6.5000208@lxnt.info> <4700B966.1030508@anagramm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:63712 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713AbXJAJK4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 05:10:56 -0400
-In-Reply-To: <47009BF6.5000208@lxnt.info>
+Received: from mx1.caravan.ru ([217.23.130.2]:63122 "EHLO mx1.caravan.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314AbXJAKY3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 06:24:29 -0400
+In-Reply-To: <4700B966.1030508@anagramm.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Sabourenkov <screwdriver@lxnt.info>
+To: Clemens Koller <clemens.koller@anagramm.de>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alexander Sabourenkov schrieb:
- > Hardware:  Athlon64, Asus A8V, Promise SATA300 TX4, 2xSeagate 7200.1=
-0
- > 320G, jumper-limited to SATA150.
- > Kernel : 2.6.22.9 amd64
- >
- > Problem:
- > Heavy load causes errors and triggers oops.
+Clemens Koller wrote:
+> Alexander Sabourenkov schrieb:
+>  > Hardware:  Athlon64, Asus A8V, Promise SATA300 TX4, 2xSeagate 7200.10
+>  > 320G, jumper-limited to SATA150.
+>  > Kernel : 2.6.22.9 amd64
+>  >
+>  > Problem:
+>  > Heavy load causes errors and triggers oops.
+> 
+> Have you checked your memory already (memtest86)?
 
-Have you checked your memory already (memtest86)?
+Last run was about a year ago.
 
-We have several applications with Promise controllers on strange
-hardware and we never had integrity problems with i.e. not so standard
-SATA connections over custom vaccum-tight connectors.
+This box gets regularly updated (rebuild of all installed software),
+so I'm reasonably certain that memory is ok - gcc being almost as 
+sensitive as memtest.
 
- > Problems were blamed:
- >   - SATA300 being too 'hot'  (jumpered the drives)
+Will recheck anyway.
 
-Is this a common known problem with your harddrives or controller?
-(ask google) Otherwise, it sounds like a problem with broken hardware.
+> 
+> We have several applications with Promise controllers on strange
+> hardware and we never had integrity problems with i.e. not so standard
+> SATA connections over custom vaccum-tight connectors.
 
- >   - cables (work perfectly on onboard controller)
- >   - interrupt sharing (found the only slot which does not share
- > interrupt line)
- >   - cooling (3 fans installed, smartctl-reported temperature at max =
-load
- > dropped to 35C)
+Judging from linux and freebsd mailing lists, the TX4 is now quite 
+well-known for
+intermittent problems, which are hard to reproduce on different hardware.
 
-Try to heat up your memory a little (your wife's hair blower).
-If it fails more often, your memory is most likely broken.
+I have two machines with those controllers, one FreeBSD-6.2 on MSI 
+K8Neo2 motherboard (ATI chipset),
+  and this one. FreeBSD box does not exhibit this problem under the 
+little load it gets, but
+6-STABLE and 7-CURRENT branches do have similar symptoms since around 19 
+April 2007,
+with rare occurences (but not unheard of) before.
 
- >   - weak PSU (installed 600W FSP)
- >   - kernel bugs (upgraded to 2.6.22.9)
- >
- > All those measures significantly dropped error rate (from about 20 t=
-o
- > 2-4 per mirror rebuild) but did not eliminate the problem.
+Thus I am unable to keep machines up to date, and before having to dump 
+$140 worth of hardware,
+I'd like to try to help fix this problem or at least be certain that 
+those controllers are indeed unusable.
 
-Again... sounds like bad memory to me.
 
-Juat my $0.05.
-Regards,
+>  > Problems were blamed:
+>  >   - SATA300 being too 'hot'  (jumpered the drives)
+> 
+> Is this a common known problem with your harddrives or controller?
+> (ask google) Otherwise, it sounds like a problem with broken hardware.
 
-Clemens Koller
-__________________________________
-R&D Imaging Devices
-Anagramm GmbH
-Rupert-Mayer-Stra=C3=9Fe 45/1
-Linhof Werksgel=C3=A4nde
-D-81379 M=C3=BCnchen
-Tel.089-741518-50
-=46ax 089-741518-19
-http://www.anagramm-technology.com
+This is a common problem with at least VIA onboard controllers and 
+Seagate disks,
+and I think with SATA150 controllers and speed negotiation in general.
+
+This step was suggested in some mailing list as a general precaution, but
+actually made no difference to error rate.
+
+I did not unjumper drivers back to SATA300 so that I can easily connect 
+the drives
+to the onboard controller.
+
+-- 
+
+./lxnt
 
 
