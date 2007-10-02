@@ -1,40 +1,90 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Tue, 02 Oct 2007 08:56:33 -0400
-Message-ID: <47024001.6090306@garzik.org>
-References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<46FD1C4A.8010101@garzik.org>	<46FD306C.3050205@gmail.com>	<46FD5DE1.8000206@rtr.ca> <20070928220309.7c9ed816@the-village.bc.nu> <46FDADD9.9050007@garzik.org> <46FE45CE.1050007@rtr.ca> <4700EA52.10701@garzik.org> <47018CEC.6060203@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 3/15] qd65xx: fix deadlock on error handling
+Date: Tue, 02 Oct 2007 16:59:40 +0400
+Message-ID: <470240BC.9070707@ru.mvista.com>
+References: <200710012333.02643.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56028 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752545AbXJBM4i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Oct 2007 08:56:38 -0400
-In-Reply-To: <47018CEC.6060203@gmail.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:22363 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756055AbXJBM77 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 08:59:59 -0400
+In-Reply-To: <200710012333.02643.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Mark Lord wrote:
->>> Linux kernel development is supposed to happen incrementally nowadays.
->>> Get a nice working solution in place, and then enhance/tune it.
->> It's not about enhancing and tuning.
->>
->> It's about me (and/or James B) having to __undo__ the current code, just
->> to get things working on an entire class of SATA-capable controllers out
->> in the field.
-> 
-> Hmmm... Simpy not setting ATA_FLAG_PMP isn't enough?
+Bartlomiej Zolnierkiewicz wrote:
 
-The point was that I was going to turn on PMP support for SAS 
-controllers in 2.6.24 to coincide with the merge, but now cannot without 
-fixing things.
+> Stop abusing ide_lock lock (switch to a private locking).
 
-	Jeff
+> Fixes same issue as fixed by Alan Cox in atiixp host driver with
+> commit 6c5f8cc33eb2e10b6ab788bbe259fc142a068627.
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+> Index: b/drivers/ide/legacy/qd65xx.c
+> ===================================================================
+> --- a/drivers/ide/legacy/qd65xx.c
+> +++ b/drivers/ide/legacy/qd65xx.c
+> @@ -89,13 +89,15 @@
+>  
+>  static int timings[4]={-1,-1,-1,-1}; /* stores current timing for each timer */
+>  
+> +static DEFINE_SPINLOCK(qd65xx_lock);
+> +
+>  static void qd_write_reg (u8 content, unsigned long reg)
+>  {
+>  	unsigned long flags;
+>  
+> -	spin_lock_irqsave(&ide_lock, flags);
+> +	spin_lock_irqsave(&qd65xx_lock, flags);
+>  	outb(content,reg);
+> -	spin_unlock_irqrestore(&ide_lock, flags);
+> +	spin_unlock_irqrestore(&qd65xx_lock, flags);
+>  }
+>  
+>  static u8 __init qd_read_reg (unsigned long reg)
+> @@ -103,9 +105,9 @@ static u8 __init qd_read_reg (unsigned l
+>  	unsigned long flags;
+>  	u8 read;
+>  
+> -	spin_lock_irqsave(&ide_lock, flags);
+> +	spin_lock_irqsave(&qd65xx_lock, flags);
+>  	read = inb(reg);
+> -	spin_unlock_irqrestore(&ide_lock, flags);
+> +	spin_unlock_irqrestore(&qd65xx_lock, flags);
+>  	return read;
+>  }
 
+    I don't see why all the locking above is needed at all -- isn't these 
+atomic functions? :-/
+
+> @@ -301,16 +303,15 @@ static void qd6580_set_pio_mode(ide_driv
+>  
+>  static int __init qd_testreg(int port)
+>  {
+> -	u8 savereg;
+> -	u8 readreg;
+>  	unsigned long flags;
+> +	u8 savereg, readreg;
+>  
+> -	spin_lock_irqsave(&ide_lock, flags);
+> +	spin_lock_irqsave(&qd65xx_lock, flags);
+>  	savereg = inb_p(port);
+>  	outb_p(QD_TESTVAL, port);	/* safe value */
+>  	readreg = inb_p(port);
+>  	outb(savereg, port);
+> -	spin_unlock_irqrestore(&ide_lock, flags);
+> +	spin_unlock_irqrestore(&qd65xx_lock, flags);
+>  
+>  	if (savereg == QD_TESTVAL) {
+>  		printk(KERN_ERR "Outch ! the probe for qd65xx isn't reliable !\n");
+
+    Heh, 486 with VLB hardly needed spinlocks at all... although there *were* 
+486 SMP machines -- with external LAPICs.
+
+MBR, Sergei
