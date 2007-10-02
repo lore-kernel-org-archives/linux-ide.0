@@ -1,43 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/15] ali14xx: fix deadlock on error handling
-Date: Tue, 2 Oct 2007 14:47:10 +0100
-Message-ID: <20071002144710.7a3ade9a@the-village.bc.nu>
-References: <200710012331.26965.bzolnier@gmail.com>
-	<47023DA4.1020607@ru.mvista.com>
+From: Paolo Ornati <ornati@fastwebnet.it>
+Subject: Re: [PATCH] blacklist NCQ on Seagate Barracuda ST380817AS
+Date: Tue, 2 Oct 2007 17:40:23 +0200
+Message-ID: <20071002174023.0a70a93e@localhost>
+References: <20070930160548.235be972@localhost>
+	<20070930152908.1f58d39d@the-village.bc.nu>
+	<20070930164610.20818867@localhost>
+	<46FFBB2D.6060004@garzik.org>
+	<46FFDC5A.7070509@rtr.ca>
+	<46FFDCE5.4060900@gmail.com>
+	<46FFE047.7030102@rtr.ca>
+	<46FFE218.5000607@gmail.com>
+	<46FFF0F4.7040809@rtr.ca>
+	<46FFF290.2090005@rtr.ca>
+	<47020D12.5090402@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51872 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752403AbXJBNl6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 09:41:58 -0400
-In-Reply-To: <47023DA4.1020607@ru.mvista.com>
+Received: from aa012msr.fastwebnet.it ([85.18.95.72]:36581 "EHLO
+	aa012msr.fastwebnet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504AbXJBNoh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 09:44:37 -0400
+In-Reply-To: <47020D12.5090402@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, 02 Oct 2007 16:46:28 +0400
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+On Tue, 02 Oct 2007 18:19:14 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Stop abusing ide_lock lock by switching to a private locking.
-> 
-> > Fixes same issue as fixed by Alan Cox in atiixp host driver with
-> 
->     Has been also fixed in the piix driver.
-> 
-> > commit 6c5f8cc33eb2e10b6ab788bbe259fc142a068627.
-> 
->     Heh, I've looked hard at the code trying to understand how this can 
-> happen, and was unable to figure out. Probably was not hard enough...
+> Yeah, "World's first" is a pretty good clue indicating "broken".
+> Blacklisting it seems like a good idea after all.
 
-The old IDE code timer, error handling and interrupt paths all race each
-other. Anything can happen including this.
+OT: I cannot test anything NCQ related for a while because the Intel
+Mobo departed yesterday, so I'm on a different board without NCQ
+support  ;)
 
-The proper fix is to rewrite the error handling but it was easier to port
-the drivers to working error handling instead - hence libata PATA
-
-Alan
+-- 
+	Paolo Ornati
+	Linux 2.6.23-rc8generic-ga64314e6 on x86_64
