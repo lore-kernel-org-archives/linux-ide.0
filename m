@@ -1,223 +1,223 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/10] scsi: expose AN support to user space
-Date: Tue, 02 Oct 2007 13:53:02 -0700
-Message-ID: <200710022053.l92Kr2ka021694@imap1.linux-foundation.org>
+Subject: [patch 02/10] libata: implement ata_wait_after_reset()
+Date: Tue, 02 Oct 2007 13:52:59 -0700
+Message-ID: <200710022053.l92Kr0oX021676@imap1.linux-foundation.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42515 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57790 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752478AbXJBUxQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 16:53:16 -0400
+	by vger.kernel.org with ESMTP id S1753684AbXJBUxI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 16:53:08 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, kristen.c.accardi@intel.com, James.Bottomley@steeleye.com, htejun@gmail.com
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, htejun@gmail.com
 
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+From: Tejun Heo <htejun@gmail.com>
 
-If a scsi_device supports async notification for media change, then let user
-space know this capability exists by creating a new sysfs entry
-"media_change_notify", which will be 1 if it is supported, and 0 if not
-supported.  Create a routine which allows scsi devices to send a uevent when
-media change events occur.
+On certain device/controller combination, 0xff status is asserted
+after reset and doesn't get cleared during 150ms post-reset wait.  As
+0xff status is interpreted as no device (for good reasons), this can
+lead to misdetection on such cases.
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+This patch implements ata_wait_after_reset() which replaces the 150ms
+sleep and waits upto ATA_TMOUT_FF_WAIT if status is 0xff.
+ATA_TMOUT_FF_WAIT is currently 800ms which is enough for
+HHD424020F7SV00 to get detected but not enough for Quantum GoVault
+drive which is known to take upto 2s.
+
+Without parallel probing, spending 2s on 0xff port would incur too
+much delay on ata_piix's which use 0xff to indicate empty port and
+doesn't have SCR register, so GoVault needs to wait till parallel
+probing.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_lib.c    |   83 +++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_scan.c   |    1 
- drivers/scsi/scsi_sysfs.c  |   13 +++++
- include/scsi/scsi_device.h |   15 +++++-
- 4 files changed, 111 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c          |   11 +----
+ drivers/ata/libata-core.c   |   67 +++++++++++++++++++++++++++-------
+ drivers/ata/pata_scc.c      |   13 +-----
+ drivers/ata/sata_inic162x.c |    2 -
+ include/linux/libata.h      |    8 ++++
+ 5 files changed, 67 insertions(+), 34 deletions(-)
 
-diff -puN drivers/scsi/scsi_lib.c~scsi-expose-an-support-to-user-space drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-expose-an-support-to-user-space
-+++ a/drivers/scsi/scsi_lib.c
-@@ -64,6 +64,11 @@ static struct scsi_host_sg_pool scsi_sg_
- }; 	
- #undef SP
+diff -puN drivers/ata/ahci.c~libata-implement-ata_wait_after_reset drivers/ata/ahci.c
+--- a/drivers/ata/ahci.c~libata-implement-ata_wait_after_reset
++++ a/drivers/ata/ahci.c
+@@ -1123,15 +1123,8 @@ static int ahci_do_softreset(struct ata_
+ 	tf.ctl &= ~ATA_SRST;
+ 	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
  
-+/* must match scsi_device_event enum in scsi_device.h */
-+static char * scsi_device_event_strings[] = {
-+	"MEDIA_CHANGE=1",
-+};
-+
- static void scsi_run_queue(struct request_queue *q);
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
  
- /*
-@@ -2007,6 +2012,84 @@ scsi_device_set_state(struct scsi_device
- EXPORT_SYMBOL(scsi_device_set_state);
+ 	rc = ata_wait_ready(ap, deadline);
+ 	/* link occupied, -ENODEV too is an error */
+diff -puN drivers/ata/libata-core.c~libata-implement-ata_wait_after_reset drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c~libata-implement-ata_wait_after_reset
++++ a/drivers/ata/libata-core.c
+@@ -3104,6 +3104,55 @@ int ata_busy_sleep(struct ata_port *ap,
+ }
  
  /**
-+ * 	scsi_device_set_event - Add a new Async event to the event list
-+ *	@sdev: scsi_device event occurred on
-+ *	@event: the scsi device event
++ *	ata_wait_after_reset - wait before checking status after reset
++ *	@ap: port containing status register to be polled
++ *	@deadline: deadline jiffies for the operation
 + *
-+ * 	Add a new scsi_device_event_info struct to the scsi_device_event_list
-+ * 	queue.  This may be called from interrupt context.
++ *	After reset, we need to pause a while before reading status.
++ *	Also, certain combination of controller and device report 0xff
++ *	for some duration (e.g. until SATA PHY is up and running)
++ *	which is interpreted as empty port in ATA world.  This
++ *	function also waits for such devices to get out of 0xff
++ *	status.
 + *
-+ * 	Returns 0 if successful, -ENOMEM otherwise.
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
 + */
-+static int
-+scsi_device_set_event(struct scsi_device *sdev, enum scsi_device_event event)
++void ata_wait_after_reset(struct ata_port *ap, unsigned long deadline)
 +{
-+	struct scsi_device_event_info *scsi_event;
-+	unsigned long flags;
++	unsigned long until = jiffies + ATA_TMOUT_FF_WAIT;
 +
-+	scsi_event = kzalloc(sizeof(*scsi_event), GFP_ATOMIC);
-+	if (!scsi_event)
-+		return -ENOMEM;
-+	INIT_LIST_HEAD(&scsi_event->link);
-+	scsi_event->event = event;
-+	spin_lock_irqsave(&sdev->list_lock, flags);
-+	list_add_tail(&scsi_event->link, &sdev->sdev_event_list);
-+	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	return 0;
-+}
++	if (time_before(until, deadline))
++		deadline = until;
 +
-+/**
-+ * 	scsi_device_event_notify_thread - send a uevent for each scsi event
-+ *	@work: work struct for scsi_device
-+ *
-+ * 	Traverse the queue of scsi device events, dequeue each event and
-+ * 	send a uevent.  Frees event.  May not be called from interrupt.
-+ */
-+static void scsi_event_notify_thread(struct work_struct *work)
-+{
-+	struct scsi_device *sdev;
-+	char *envp[] = { NULL, NULL };
-+	struct list_head *tmp;
-+	struct list_head *next;
-+	struct scsi_device_event_info *sdev_event;
-+	unsigned long flags;
++	/* Spec mandates ">= 2ms" before checking status.  We wait
++	 * 150ms, because that was the magic delay used for ATAPI
++	 * devices in Hale Landis's ATADRVR, for the period of time
++	 * between when the ATA command register is written, and then
++	 * status is checked.  Because waiting for "a while" before
++	 * checking status is fine, post SRST, we perform this magic
++	 * delay here as well.
++	 *
++	 * Old drivers/ide uses the 2mS rule and then waits for ready.
++	 */
++	msleep(150);
 +
-+	sdev = container_of(work, struct scsi_device, ew.work);
-+	list_for_each_safe(tmp, next, &sdev->sdev_event_list) {
-+		sdev_event = list_entry(tmp, struct scsi_device_event_info,
-+					link);
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_del(&sdev_event->link);
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+		envp[0] = scsi_device_event_strings[sdev_event->event-1];
-+		kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
-+		kfree(sdev_event);
++	/* Wait for 0xff to clear.  Some SATA devices take a long time
++	 * to clear 0xff after reset.  For example, HHD424020F7SV00
++	 * iVDR needs >= 800ms while.  Quantum GoVault needs even more
++	 * than that.
++	 */
++	while (1) {
++		u8 status = ata_chk_status(ap);
++
++		if (status != 0xff || time_after(jiffies, deadline))
++			return;
++
++		msleep(50);
 +	}
 +}
 +
 +/**
-+ * 	scsi_device_event_notify - store event info and send an event
-+ *	@sdev: scsi_device event occurred on
-+ *	@event: the scsi device event
-+ *
-+ * 	Store the event information and then switch process context
-+ * 	so that the event may be sent to user space.
-+ * 	This may be called from interrupt context.
-+ *
-+ * 	Returns 0 if successful, -ENOMEM otherwise.
-+ */
-+int scsi_device_event_notify(struct scsi_device *sdev, enum scsi_device_event event)
-+{
-+	int rc;
+  *	ata_wait_ready - sleep until BSY clears, or timeout
+  *	@ap: port containing status register to be polled
+  *	@deadline: deadline jiffies for the operation
+@@ -3219,17 +3268,8 @@ static int ata_bus_softreset(struct ata_
+ 	udelay(20);	/* FIXME: flush */
+ 	iowrite8(ap->ctl, ioaddr->ctl_addr);
+ 
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 *
+-	 * Old drivers/ide uses the 2mS rule and then waits for ready
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	/* Before we perform post reset processing we want to see if
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+@@ -3656,8 +3696,8 @@ int sata_std_hardreset(struct ata_link *
+ 		return 0;
+ 	}
+ 
+-	/* wait a while before checking status, see SRST for more info */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	/* If PMP is supported, we have to do follow-up SRST.  Note
+ 	 * that some PMPs don't send D2H Reg FIS after hardreset at
+@@ -7276,6 +7316,7 @@ EXPORT_SYMBOL_GPL(ata_port_disable);
+ EXPORT_SYMBOL_GPL(ata_ratelimit);
+ EXPORT_SYMBOL_GPL(ata_wait_register);
+ EXPORT_SYMBOL_GPL(ata_busy_sleep);
++EXPORT_SYMBOL_GPL(ata_wait_after_reset);
+ EXPORT_SYMBOL_GPL(ata_wait_ready);
+ EXPORT_SYMBOL_GPL(ata_port_queue_task);
+ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+diff -puN drivers/ata/pata_scc.c~libata-implement-ata_wait_after_reset drivers/ata/pata_scc.c
+--- a/drivers/ata/pata_scc.c~libata-implement-ata_wait_after_reset
++++ a/drivers/ata/pata_scc.c
+@@ -570,17 +570,8 @@ static unsigned int scc_bus_softreset(st
+ 	udelay(20);
+ 	out_be32(ioaddr->ctl_addr, ap->ctl);
+ 
+-	/* spec mandates ">= 2ms" before checking status.
+-	 * We wait 150ms, because that was the magic delay used for
+-	 * ATAPI devices in Hale Landis's ATADRVR, for the period of time
+-	 * between when the ATA command register is written, and then
+-	 * status is checked.  Because waiting for "a while" before
+-	 * checking status is fine, post SRST, we perform this magic
+-	 * delay here as well.
+-	 *
+-	 * Old drivers/ide uses the 2mS rule and then waits for ready
+-	 */
+-	msleep(150);
++	/* wait a while before checking status */
++	ata_wait_after_reset(ap, deadline);
+ 
+ 	/* Before we perform post reset processing we want to see if
+ 	 * the bus shows 0xFF because the odd clown forgets the D7
+diff -puN drivers/ata/sata_inic162x.c~libata-implement-ata_wait_after_reset drivers/ata/sata_inic162x.c
+--- a/drivers/ata/sata_inic162x.c~libata-implement-ata_wait_after_reset
++++ a/drivers/ata/sata_inic162x.c
+@@ -448,7 +448,7 @@ static int inic_hardreset(struct ata_lin
+ 		struct ata_taskfile tf;
+ 
+ 		/* wait a while before checking status */
+-		msleep(150);
++		ata_wait_after_reset(ap, deadline);
+ 
+ 		rc = ata_wait_ready(ap, deadline);
+ 		/* link occupied, -ENODEV too is an error */
+diff -puN include/linux/libata.h~libata-implement-ata_wait_after_reset include/linux/libata.h
+--- a/include/linux/libata.h~libata-implement-ata_wait_after_reset
++++ a/include/linux/libata.h
+@@ -240,6 +240,13 @@ enum {
+ 	ATA_TMOUT_INTERNAL	= 30 * HZ,
+ 	ATA_TMOUT_INTERNAL_QUICK = 5 * HZ,
+ 
++	/* FIXME: GoVault needs 2s but we can't afford that without
++	 * parallel probing.  800ms is enough for iVDR disk
++	 * HHD424020F7SV00.  Increase to 2secs when parallel probing
++	 * is in place.
++	 */
++	ATA_TMOUT_FF_WAIT	= 4 * HZ / 5,
 +
-+	rc = scsi_device_set_event(sdev, event);
-+	if (!rc)
-+		execute_in_process_context(scsi_event_notify_thread, &sdev->ew);
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_event_notify);
-+
-+/**
-  *	scsi_device_quiesce - Block user issued commands.
-  *	@sdev:	scsi device to quiesce.
-  *
-diff -puN drivers/scsi/scsi_scan.c~scsi-expose-an-support-to-user-space drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c~scsi-expose-an-support-to-user-space
-+++ a/drivers/scsi/scsi_scan.c
-@@ -253,6 +253,7 @@ static struct scsi_device *scsi_alloc_sd
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->cmd_list);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
-+	INIT_LIST_HEAD(&sdev->sdev_event_list);
- 	spin_lock_init(&sdev->list_lock);
- 
- 	sdev->sdev_gendev.parent = get_device(&starget->dev);
-diff -puN drivers/scsi/scsi_sysfs.c~scsi-expose-an-support-to-user-space drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c~scsi-expose-an-support-to-user-space
-+++ a/drivers/scsi/scsi_sysfs.c
-@@ -570,6 +570,18 @@ sdev_show_modalias(struct device *dev, s
- }
- static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
- 
-+static ssize_t
-+sdev_show_media_change_notify(struct device *dev, struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	if (sdev->media_change_notify)
-+		return snprintf(buf, 20, "%d\n", 1);
-+	else
-+		return snprintf(buf, 20, "%d\n", 0);
-+}
-+static DEVICE_ATTR(media_change_notify, S_IRUGO, sdev_show_media_change_notify, NULL);
-+
- /* Default template for device attributes.  May NOT be modified */
- static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
- 	&dev_attr_device_blocked,
-@@ -589,6 +601,7 @@ static struct device_attribute *scsi_sys
- 	&dev_attr_iodone_cnt,
- 	&dev_attr_ioerr_cnt,
- 	&dev_attr_modalias,
-+	&dev_attr_media_change_notify,
- 	NULL
- };
- 
-diff -puN include/scsi/scsi_device.h~scsi-expose-an-support-to-user-space include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h~scsi-expose-an-support-to-user-space
-+++ a/include/scsi/scsi_device.h
-@@ -46,6 +46,16 @@ enum scsi_device_state {
- 				 * to the scsi lld. */
- };
- 
-+/* must match scsi_device_event_strings in scsi_lib.c */
-+enum scsi_device_event {
-+	SDEV_MEDIA_CHANGE = 1,	/* media has changed */
-+};
-+
-+struct scsi_device_event_info {
-+	enum scsi_device_event event;
-+	struct list_head link;
-+};
-+
- struct scsi_device {
- 	struct Scsi_Host *host;
- 	struct request_queue *request_queue;
-@@ -126,7 +136,7 @@ struct scsi_device {
- 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
- 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
- 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
--
-+	unsigned media_change_notify:1; /* dev supports async media notify */
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
- 
- 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
-@@ -144,6 +154,7 @@ struct scsi_device {
- 	struct execute_work	ew; /* used to get process context on put */
- 
- 	enum scsi_device_state sdev_state;
-+	struct list_head	sdev_event_list;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
- #define	to_scsi_device(d)	\
-@@ -275,6 +286,8 @@ extern int scsi_test_unit_ready(struct s
- 				int retries);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
-+extern int scsi_device_event_notify(struct scsi_device *sdev,
-+				enum scsi_device_event event);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
- extern void scsi_device_resume(struct scsi_device *sdev);
- extern void scsi_target_quiesce(struct scsi_target *);
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		= 0,
+ 	BUS_DMA			= 1,
+@@ -817,6 +824,7 @@ extern void ata_host_resume(struct ata_h
+ extern int ata_ratelimit(void);
+ extern int ata_busy_sleep(struct ata_port *ap,
+ 			  unsigned long timeout_pat, unsigned long timeout);
++extern void ata_wait_after_reset(struct ata_port *ap, unsigned long deadline);
+ extern int ata_wait_ready(struct ata_port *ap, unsigned long deadline);
+ extern void ata_port_queue_task(struct ata_port *ap, work_func_t fn,
+ 				void *data, unsigned long delay);
 _
