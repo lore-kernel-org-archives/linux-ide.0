@@ -1,36 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
-Date: Tue, 02 Oct 2007 09:12:28 +0900
-Message-ID: <47018CEC.6060203@gmail.com>
-References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<46FD1C4A.8010101@garzik.org>	<46FD306C.3050205@gmail.com>	<46FD5DE1.8000206@rtr.ca> <20070928220309.7c9ed816@the-village.bc.nu> <46FDADD9.9050007@garzik.org> <46FE45CE.1050007@rtr.ca> <4700EA52.10701@garzik.org>
+From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
+Subject: Re: Strange arbitrary port resets on ICH9R with Seagate drives
+Date: Tue, 02 Oct 2007 02:17:38 +0100
+Message-ID: <op.tzjpvoqnxci36i@akima.lan>
+References: <op.tzhs1xqexci36i@akima.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:25113 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752731AbXJBAOF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 20:14:05 -0400
-Received: by py-out-1112.google.com with SMTP id u77so7411724pyb
-        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 17:14:04 -0700 (PDT)
-In-Reply-To: <4700EA52.10701@garzik.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:30356 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbXJBBRd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 21:17:33 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so2009099ugc
+        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 18:17:31 -0700 (PDT)
+In-Reply-To: <op.tzhs1xqexci36i@akima.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> Linux kernel development is supposed to happen incrementally nowadays.
->> Get a nice working solution in place, and then enhance/tune it.
-> 
-> It's not about enhancing and tuning.
-> 
-> It's about me (and/or James B) having to __undo__ the current code, just
-> to get things working on an entire class of SATA-capable controllers out
-> in the field.
+On Mon, 01 Oct 2007 01:30:59 +0100, Jonathan Bell  
+<doggs.lay.eggs@googlemail.com> wrote:
 
-Hmmm... Simpy not setting ATA_FLAG_PMP isn't enough?
+> Hello
+>
+> I've just purchased a brand spanking new G33/ICH9R based system for use  
+> as a home fileserver with 4x ST3750840AS Seagate SATA drives as the main  
+> grunt drives.
+>
+> The problem is that all of the seagate drives keep resetting, as this  
+> dmesg excerpt shows:
 
--- 
-tejun
+Oops. Hardware problem. Insufficient power applied to the hotswap caddy  
+resulted in the drives bugging out when all 4 were accessed, hence cat/dd  
+on an individual drive caused no problems.
+
+Now running these drives quite successfully in raid-5 with NCQ and 3.0Gbps  
+links.
+
+Regards
+Jonathan
