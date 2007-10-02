@@ -1,46 +1,39 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: Re: [regression] 2.6.23 sata_mv EH updates broke my 7042 controller
-Date: Mon, 1 Oct 2007 21:30:01 -0500
-Message-ID: <20071002023000.GA19286@lixom.net>
-References: <20071001220439.GA15332@lixom.net> <470176B8.1000109@pobox.com>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
+Subject: Re: Promise SATA300 TX4: errors, oops in ext3 code
+Date: Tue, 02 Oct 2007 08:35:53 +0400
+Message-ID: <4701CAA9.6070902@lxnt.info>
+References: <47009BF6.5000208@lxnt.info> <4700B966.1030508@anagramm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:52243 "EHLO mail.lixom.net"
+Received: from mx1.caravan.ru ([217.23.130.2]:50377 "EHLO mx1.caravan.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbXJBC0F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Oct 2007 22:26:05 -0400
-Content-Disposition: inline
-In-Reply-To: <470176B8.1000109@pobox.com>
+	id S1750803AbXJBEdq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 00:33:46 -0400
+In-Reply-To: <4700B966.1030508@anagramm.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-On Mon, Oct 01, 2007 at 06:37:44PM -0400, Jeff Garzik wrote:
-> Olof Johansson wrote:
->> Hardware config in my case:
->> Highpoint 2310 controller
->> PPC (big endian)
->> WD Raptor disk
->> Works fine with the other controller I've been using (SIL24), and works
->> fine if I revert the driver.
->> It also works fine if I disable the IOMMU. This would point towards
->> either a stale dma mapping, or a missing setup of one.
->> Not being much at home in the SATA drivers I could keep digging but I
->> figured I'd bring it up first in case it rings a bell for someone.
->
-> The IOMMU data point is certainly interesting.  Nothing jumps out on a 
-> re-review of the patch, so keep digging and let us know ;-)
-
-Looks like it's caused by enabling vmerge (which tends to be on for the
-common PPC defconfigs). If I disable it, things look OK.
-
-Perhaps the Marvell controller doesn't like requests larger than 64K,
-or wrapping some boundary. Do you have access to erratas/docs?
-
-I have verified it on a powermac now as well (had a quick scare that it
-might have been some problem with the PA Semi IOMMU, but no).
+To: Clemens Koller <clemens.koller@anagramm.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
--Olof
+> 
+> Have you checked your memory already (memtest86)?
+> 
+
+[...]
+
+> 
+> 
+> Again... sounds like bad memory to me.
+> 
+
+Nightly memtest86  run : 11 hours, 23 passes, 0 errors.
+
+
+-- 
+
+./lxnt
+
+
