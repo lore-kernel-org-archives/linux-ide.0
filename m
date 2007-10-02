@@ -1,34 +1,50 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: sil24 PMP works with ST3500641AS but not HDS721010KLA330
-Date: Tue, 2 Oct 2007 10:15:01 -0700
-Message-ID: <20071002171501.GC2902@merlins.org>
-References: <20071002170445.GB2902@merlins.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Tue, 2 Oct 2007 13:17:38 -0400
+Message-ID: <20071002171738.GA28493@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:42978 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753022AbXJBRPD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 13:15:03 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:59630 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752852AbXJBRRj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 13:17:39 -0400
 Content-Disposition: inline
-In-Reply-To: <20071002170445.GB2902@merlins.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Oct 02, 2007 at 10:04:45AM -0700, Marc MERLIN wrote:
-> Howdy,
-> 
-> I've had a system with 2.6.22.1 for a while, running 10 drives
-> behind a PMP on a sil24 card with no problems.
 
-I forgot a couple of details:
-the PMP is a sil 3726CB
-the sil24 card is a 3124
+Make another laptop's suspend work.
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/ata_piix.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+Tejun Heo (1):
+      ata_piix: add another TECRA M3 entry to broken suspend list
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 3b8bf18..6996eb5 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -921,6 +921,13 @@ static int piix_broken_suspend(void)
+ {
+ 	static struct dmi_system_id sysids[] = {
+ 		{
++			.ident = "TECRA M3",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M3"),
++			},
++		},
++		{
+ 			.ident = "TECRA M5",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
