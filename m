@@ -1,47 +1,41 @@
-From: Clemens Koller <clemens.koller@anagramm.de>
-Subject: Re: Promise SATA300 TX4: errors, oops in ext3 code
-Date: Tue, 02 Oct 2007 11:08:46 +0200
-Message-ID: <47020A9E.6090602@anagramm.de>
-References: <47009BF6.5000208@lxnt.info> <4700B966.1030508@anagramm.de> <4701CAA9.6070902@lxnt.info>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] blacklist NCQ on Seagate Barracuda ST380817AS
+Date: Tue, 02 Oct 2007 18:19:14 +0900
+Message-ID: <47020D12.5090402@gmail.com>
+References: <20070930160548.235be972@localhost>	<20070930152908.1f58d39d@the-village.bc.nu> <20070930164610.20818867@localhost> <46FFBB2D.6060004@garzik.org> <46FFDC5A.7070509@rtr.ca> <46FFDCE5.4060900@gmail.com> <46FFE047.7030102@rtr.ca> <46FFE218.5000607@gmail.com> <46FFF0F4.7040809@rtr.ca> <46FFF290.2090005@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60602 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbXJBJIs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 05:08:48 -0400
-In-Reply-To: <4701CAA9.6070902@lxnt.info>
+Received: from an-out-0708.google.com ([209.85.132.246]:61259 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbXJBJUu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 05:20:50 -0400
+Received: by an-out-0708.google.com with SMTP id d31so596555and
+        for <linux-ide@vger.kernel.org>; Tue, 02 Oct 2007 02:20:49 -0700 (PDT)
+In-Reply-To: <46FFF290.2090005@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Sabourenkov <screwdriver@lxnt.info>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Paolo Ornati <ornati@fastwebnet.it>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Alexander Sabourenkov schrieb:
- >> Have you checked your memory already (memtest86)?
- > [...]
- >> Again... sounds like bad memory to me.
- > Nightly memtest86  run : 11 hours, 23 passes, 0 errors.
+Hello,
 
-Okay, I have no idea about any bugs there.
-You have several options: Find a 100% working vanilla kernel for your
-problem (minimal configuration, skip i.e. the sound stuff, ...).
-And then git bisect with a known bad kernel.
+Mark Lord wrote:
+> Mmm.. $66 for "open box".  But the drive itself has been discontinued by
+> Seagate,
 
-Same thing in hardware: move components (Controllers + HDD) to/from a w=
-orking
-machine and verify...
+Couldn't find any in SUSE and I don't think I can't find any vendor who
+still carries the drive here.
 
-Regards,
+> and once claimed to be "World's first SATA desktop drive with NCQ.".
+> 
+> Probably buggy firmware after all.
 
-Clemens Koller
-__________________________________
-R&D Imaging Devices
-Anagramm GmbH
-Rupert-Mayer-Stra=C3=9Fe 45/1
-Linhof Werksgel=C3=A4nde
-D-81379 M=C3=BCnchen
-Tel.089-741518-50
-=46ax 089-741518-19
-http://www.anagramm-technology.com
+Yeah, "World's first" is a pretty good clue indicating "broken".
+Blacklisting it seems like a good idea after all.
+
+Thanks.
+
+-- 
+tejun
