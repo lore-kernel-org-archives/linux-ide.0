@@ -1,51 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Asynchronous scan support for libata
-Date: Tue, 02 Oct 2007 10:41:11 -0400
-Message-ID: <47025887.2090006@garzik.org>
-References: <20070906210505.GF27404@parisc-linux.org>
+Subject: Re: [patch] Add more device IDs for supporting ATI SB800 SATA controller
+Date: Tue, 02 Oct 2007 10:44:28 -0400
+Message-ID: <4702594C.3020003@garzik.org>
+References: <c660f0910709302118q7e0e5f65k5d833781cc7e4d26@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38431 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44501 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751989AbXJBOlP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Oct 2007 10:41:15 -0400
-In-Reply-To: <20070906210505.GF27404@parisc-linux.org>
+	id S1752478AbXJBOob (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 10:44:31 -0400
+In-Reply-To: <c660f0910709302118q7e0e5f65k5d833781cc7e4d26@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-ide@vger.kernel.org
+To: su henry <henry.su.ati@gmail.com>
+Cc: gregkh <gregkh@suse.de>, linux-ide <linux-ide@vger.kernel.org>, htejun <htejun@gmail.com>
 
-Matthew Wilcox wrote:
-> Last December, I posted this: http://lwn.net/Articles/213635/
+su henry wrote:
+> From: henry su<henry.su.ati@gmail.com>
 > 
-> Here's an updated version.  It shaves 5 seconds off boot time on my
-> configuration (qla2xxx, emulex, two ata_piix, dual fusion), but could
-> save more or less on other setups.
+> ATI/AMD SB800 shares some device IDs with SB700,
+> and SB800 adds two more device IDs:0x4394,0x4395.
 > 
-> I think I can remove the 'sync' argument and code from
-> ata_scsi_scan_host() now, but wanted to send out this update today.
-> 
-> ---
-> 
-> Some of the drivers (AHCI was mentioned to me as a culprit) take a long
-> time to discover all the devices attached to them.  Even for ones which
-> are relatively quick, if you put a lot of them in a machine, it will
-> take a long time in aggregate.  This can be fixed by adding support for
-> asynchronous scsi scans, which causes the time-consuming portions of
-> initialisation to take place in threads.
-> 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> Signed-off-by:  henry su<henry.su.ati@gmail.com>
 
-Did you look at SATA alone?
+This patch was already applied, on September 20th.
 
-Since SATA does its own scan asynchronously from SCSI itself, doing this 
-seems of little value.  This patch doesn't change AHCI scanning at all, 
-for example.
+It's already "upstream" in the official Linux kernel, too:
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
 
-Quite willing to be convinced otherwise, though...
+Regards,
 
 	Jeff
+
 
 
