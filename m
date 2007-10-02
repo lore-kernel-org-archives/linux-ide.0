@@ -1,49 +1,45 @@
-From: Daniel Schroeder <sec@dschroeder.info>
-Subject: Re: PMP Patchset against 2.6.22.latest 2.6.23.latest
-Date: Tue, 02 Oct 2007 17:58:56 +0200
-Message-ID: <47026AC0.7090304@dschroeder.info>
-References: <4700FDF6.2080605@dschroeder.info> <47010392.1080505@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: Add a drivers/ide style  DMA disable
+Date: Tue, 02 Oct 2007 12:38:48 -0400
+Message-ID: <47027418.1080008@garzik.org>
+References: <20070822233710.415faaf0@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:53515 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbXJBP7K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 11:59:10 -0400
-In-Reply-To: <47010392.1080505@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:56532 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752217AbXJBQiw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 12:38:52 -0400
+In-Reply-To: <20070822233710.415faaf0@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> Daniel Schroeder wrote:
->> i am stuck with 2.6.22.1 because this is the latest version of your PMP
->> patchset...this is perfectly working but i can not apply these set
->> against newer versions of the kernel...could you update your homepage or
->> post a howto/message/link for instructions to get the patchset against
->> 2.6.22.latest and 2.6.23.latest?
+Alan Cox wrote:
+> This is useful when debugging, handling problem systems, or for
+> distributions just to get the system installed so it can be sorted
+> out later.
 > 
-> Once you obtain the 'master' and 'upstream' branches of
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> This is a bit smarter than the old IDE one and lets you do
 > 
-> you may simply do
+> libata.pata_dma=0		Disable all PATA DMA like old IDE
+> libata.pata_dma=1		Disk DMA only
+> libata.pata_dma=2		ATAPI DMA only
+> libata.pata_dma=4		CF DMA only
 > 
->     git diff master..upstream > patch
+> (or combinations thereof - 0,1,3 being the useful ones I suspect)
+> 
+> (I've split CF as it seems to be a seperate case of pain and suffering
+> different to the others and caused by assorted PIO wired adapters etc)
+> 
+> SATA is not affected - for one its not clear it makes sense to disable
+> DMA for SATA if even always possible, for two we've seen no failure 
+> evidence to justify needing to support this kind of hammer on SATA.
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-git-clone
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git master
-git diff  master..origin/upstream > patch
-
-worked for me...
-> 
-> to obtain the diff against current 2.6.23-rcX (what will be 2.6.23
-> release).
-> 
->     Jeff
-thx
-
-Daniel
+applied, after making it work on SATA too
 
 
