@@ -1,44 +1,74 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
- 4
-Date: Tue, 02 Oct 2007 14:55:31 -0400
-Message-ID: <47029423.6030605@garzik.org>
-References: <20070920222138.GA3740@srcf.ucam.org> <46F32DD9.7010509@gmail.com> <20070921024214.GA6317@srcf.ucam.org> <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <47025E09.1030803@garzik.org> <20071002184958.GC31251@srcf.ucam.org>
+From: MisterE <MisterE2002@zonnet.nl>
+Subject: Re[2]: Sata Sil3512 bug?
+Date: Tue, 2 Oct 2007 21:20:23 +0200
+Message-ID: <1128907118.20071002212023@zonnet.nl>
+References: <1097480701.20070927155135@zonnet.nl> <46FCF2A1.30204@gmail.com> <1619914792.20070928172536@zonnet.nl> <20070928165150.2a93524e@the-village.bc.nu> <46FD3213.6050204@gmail.com>
+Reply-To: MisterE <MisterE2002@zonnet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53676 "EHLO mail.dvmed.net"
+Received: from smtp.publishnet.nl ([212.241.49.8]:1268 "EHLO smtp.pn.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754045AbXJBSzg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Oct 2007 14:55:36 -0400
-In-Reply-To: <20071002184958.GC31251@srcf.ucam.org>
+	id S1753198AbXJBTRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 15:17:51 -0400
+Received: from localhost ([84.246.52.165])
+	by smtp.pn.nl (smtp.pn.nl [212.241.49.8])
+	(MDaemon.PRO.v8.1.3.R)
+	with ESMTP id 42-md50000101440.msg
+	for <linux-ide@vger.kernel.org>; Tue, 02 Oct 2007 21:17:46 +0200
+In-Reply-To: <46FD3213.6050204@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kristen.c.accardi@intel.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jgarzik@pobox.com, linux-ide@vger.kernel.org, benh@kernel.crashing.org
 
-Matthew Garrett wrote:
-> Modern laptops with hotswap bays still tend to utilise a PATA interface 
-> on a SATA bridge, generally with the host controller in some legacy 
-> emulation mode rather than AHCI. This means that the existing hotplug 
-> code in libata is unable to work. The ACPI specification states that 
-> these devices can send notifications when hotswapped, which avoids the 
-> need to obtain notification from the controller. This patch uses the 
-> existing libata-acpi code and simply registers a notification in order 
-> to trigger a rescan whenever the firmware signals an event.
->                                                                                                                                                                                                         
-> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>                        
-> 
-> ---
-> 
-> This incorporates Jeff's feedback. sdev is checked for NULL, and 
-> different notifications are registered for ap-level and dev-level 
-> handlers. The core code is split out into a helper function called by 
-> both of these. The other change is the removal of the extraneous newline 
-> from the end of the notification event, to match the upstream change in 
-> the bay driver.
+Hello Tejun,
 
-applied
+I build another setup with almost the same hardware.
+This motherboard had already the latest bios.
+I notice that the computer does almost never find the hard drive
+although the controller is found every time (with lspci). So i get no
+drive (sda) assigned. I don't always see the "bios" screen from the
+controller at startup. And in the past it showed the hard drive.
+So i could not experiment with this motherboard.
+
+After that i installed Windows XP and used the orginal (sweex)
+drivers with the first motherboard. This also makes the data corrupt.
+So it seems not to be an linux problem. So there is something wrong with
+the motherboard or the 3512 controller.
+
+After that i plugged both hard drives (ide with windows and sata disk)
+to the Asus board. No data corruption. So the hard disks are'nt the
+problem either.
+
+I'm thinking of replacing both 3512 controllers with a Promise SATA300
+TX4. Do you know if there are problems with this device?
+
+
+Friday, September 28, 2007, 6:55:47 PM, you wrote:
+
+> Alan Cox wrote:
+>>> sda1 are corrupted (2 to 4 blocks missing). Copying that data back to
+>>> Windows and it give the same results in Quickpar. So reading does not
+>>> have problems. The data written to hda1 is correct.
+>> 
+>> We've got a whole pile of reports like this with the 3512 and almost
+>> always Nvidia chipset, plus reports of BIOS updates fixing it. That you
+>> see something similar on intel boards is a bit worrying.
+
+> Multiple sil3112/3512 + nvidia chipset problem doesn't usually involve
+> device errors or timeouts.  It usually corrupts data silently.  And,
+> yeah, data corruption on intel board is really disturbing.
+
+> MisterE, do you have any processor powersaving mechanism enabled?  If
+> so, can you disable all and see whether that changes anything?
+
+
+
+
+-- 
+Best regards,
+ MisterE                            mailto:MisterE2002@zonnet.nl
 
 
