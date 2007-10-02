@@ -1,41 +1,37 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 4/4] hpt366: MWDMA filter for SATA cards (take 2)
-Date: Tue, 02 Oct 2007 16:21:55 +0400
-Message-ID: <470237E3.2020108@ru.mvista.com>
-References: <200709300004.43335.sshtylyov@ru.mvista.com> <200710012312.45552.bzolnier@gmail.com>
+Subject: Re: [PATCH 1/15] ali14xx: fix deadlock on error handling
+Date: Tue, 02 Oct 2007 16:46:28 +0400
+Message-ID: <47023DA4.1020607@ru.mvista.com>
+References: <200710012331.26965.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:22149 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:22279 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752677AbXJBMWO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 08:22:14 -0400
-In-Reply-To: <200710012312.45552.bzolnier@gmail.com>
+	with ESMTP id S1751213AbXJBMqr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 08:46:47 -0400
+In-Reply-To: <200710012331.26965.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>The Marvell bridge chips used on HighPoint SATA cards do not seem to support
->>the MWDMA modes (at least that caould be seen in their so-called drivers :-),
->>so the driver needs to account for this -- to achieve this:
+> Stop abusing ide_lock lock by switching to a private locking.
 
->>- add mdma_filter() method from the original patch by Bartlomiej Zolnierkewicz
->> with his consent,
+> Fixes same issue as fixed by Alan Cox in atiixp host driver with
 
->> also adding the method callout to ide_rate_filter();
+    Has been also fixed in the piix driver.
 
-    Ugh, forgot to remove this part -- it's no longer true.
+> commit 6c5f8cc33eb2e10b6ab788bbe259fc142a068627.
 
->>- install the method for all chips to only return empty mask if a SATA drive
->>  is detected on HPT372{AN]/374 chips...
+    Heh, I've looked hard at the code trying to understand how this can 
+happen, and was unable to figure out. Probably was not hard enough...
 
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> applied
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Thanks,
-Sergei
+MBR, Sergei
