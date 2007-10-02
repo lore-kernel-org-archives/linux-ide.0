@@ -1,41 +1,46 @@
-From: "Jonathan Bell" <doggs.lay.eggs@googlemail.com>
-Subject: Re: Strange arbitrary port resets on ICH9R with Seagate drives
-Date: Tue, 02 Oct 2007 02:17:38 +0100
-Message-ID: <op.tzjpvoqnxci36i@akima.lan>
-References: <op.tzhs1xqexci36i@akima.lan>
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [regression] 2.6.23 sata_mv EH updates broke my 7042 controller
+Date: Mon, 1 Oct 2007 21:30:01 -0500
+Message-ID: <20071002023000.GA19286@lixom.net>
+References: <20071001220439.GA15332@lixom.net> <470176B8.1000109@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; delsp=yes; charset=iso-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:30356 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbXJBBRd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2007 21:17:33 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so2009099ugc
-        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2007 18:17:31 -0700 (PDT)
-In-Reply-To: <op.tzhs1xqexci36i@akima.lan>
+Received: from lixom.net ([66.141.50.11]:52243 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596AbXJBC0F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Oct 2007 22:26:05 -0400
+Content-Disposition: inline
+In-Reply-To: <470176B8.1000109@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 01 Oct 2007 01:30:59 +0100, Jonathan Bell  
-<doggs.lay.eggs@googlemail.com> wrote:
-
-> Hello
+On Mon, Oct 01, 2007 at 06:37:44PM -0400, Jeff Garzik wrote:
+> Olof Johansson wrote:
+>> Hardware config in my case:
+>> Highpoint 2310 controller
+>> PPC (big endian)
+>> WD Raptor disk
+>> Works fine with the other controller I've been using (SIL24), and works
+>> fine if I revert the driver.
+>> It also works fine if I disable the IOMMU. This would point towards
+>> either a stale dma mapping, or a missing setup of one.
+>> Not being much at home in the SATA drivers I could keep digging but I
+>> figured I'd bring it up first in case it rings a bell for someone.
 >
-> I've just purchased a brand spanking new G33/ICH9R based system for use  
-> as a home fileserver with 4x ST3750840AS Seagate SATA drives as the main  
-> grunt drives.
->
-> The problem is that all of the seagate drives keep resetting, as this  
-> dmesg excerpt shows:
+> The IOMMU data point is certainly interesting.  Nothing jumps out on a 
+> re-review of the patch, so keep digging and let us know ;-)
 
-Oops. Hardware problem. Insufficient power applied to the hotswap caddy  
-resulted in the drives bugging out when all 4 were accessed, hence cat/dd  
-on an individual drive caused no problems.
+Looks like it's caused by enabling vmerge (which tends to be on for the
+common PPC defconfigs). If I disable it, things look OK.
 
-Now running these drives quite successfully in raid-5 with NCQ and 3.0Gbps  
-links.
+Perhaps the Marvell controller doesn't like requests larger than 64K,
+or wrapping some boundary. Do you have access to erratas/docs?
 
-Regards
-Jonathan
+I have verified it on a powermac now as well (had a quick scare that it
+might have been some problem with the PA Semi IOMMU, but no).
+
+
+-Olof
