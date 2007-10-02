@@ -1,24 +1,43 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version 4
-Date: Tue, 2 Oct 2007 21:42:08 +0100
-Message-ID: <20071002204207.GA551@srcf.ucam.org>
-References: <46F3322D.5090407@gmail.com> <20070921025734.GA6434@srcf.ucam.org> <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <47025E09.1030803@garzik.org> <20071002184958.GC31251@srcf.ucam.org> <47029423.6030605@garzik.org> <4702AC3B.2010004@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4702AC3B.2010004@garzik.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kristen.c.accardi@intel.com
+From: akpm@linux-foundation.org
+Subject: [patch 07/10] libata: expose AN to user space
+Date: Tue, 02 Oct 2007 13:53:03 -0700
+Message-ID: <200710022053.l92Kr3wI021697@imap1.linux-foundation.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:34555 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753807AbXJBUxQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 16:53:16 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, kristen.c.accardi@intel.com, James.Bottomley@steeleye.com, htejun@gmail.com
 
-On Tue, Oct 02, 2007 at 04:38:19PM -0400, Jeff Garzik wrote:
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-> Come on, dude!  This doesn't even build:
+If Asynchronous Notification of media change events is supported, pass that
+information up to the SCSI layer.
 
-Crap, sorry, I've pulled that from the wrong tree. I'll grab you a 
-working one now.
+Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+ drivers/ata/libata-scsi.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff -puN drivers/ata/libata-scsi.c~libata-expose-an-to-user-space drivers/ata/libata-scsi.c
+--- a/drivers/ata/libata-scsi.c~libata-expose-an-to-user-space
++++ a/drivers/ata/libata-scsi.c
+@@ -773,6 +773,9 @@ static void ata_scsi_dev_config(struct s
+ 		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
+ 	}
+ 
++	if (dev->flags & ATA_DFLAG_AN)
++		sdev->media_change_notify = 1;
++
+ 	if (dev->flags & ATA_DFLAG_NCQ) {
+ 		int depth;
+ 
+_
