@@ -1,81 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH]
-Date: Tue, 02 Oct 2007 11:33:16 -0400
-Message-ID: <470264BC.5050404@garzik.org>
+Date: Tue, 2 Oct 2007 16:43:06 +0100
+Message-ID: <20071002164306.07e04601@the-village.bc.nu>
 References: <20070822231940.278c02e8@the-village.bc.nu>
+	<470264BC.5050404@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38836 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752959AbXJBPdT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Oct 2007 11:33:19 -0400
-In-Reply-To: <20070822231940.278c02e8@the-village.bc.nu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47642 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755691AbXJBPiB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 11:38:01 -0400
+In-Reply-To: <470264BC.5050404@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Correct handling of SRST reset sequences. After an SRST it is undefined
-> whether the drive has gone back to PIO0. In order to talk safely we should
-> talk slowly and carefully until we know.
+> Should this be queued for 2.6.24?
 > 
-> Thus when we do the reset if the controller has a pio setup method we call
-> it to flip back to PIO 0 and a known state. After the reset completes the
-> identify will then be done at the safe speed and the drive/controller will
-> pick suitable faster modes and reconfigure the controller to these timings.
-> 
-> As a side effect it means we force the controller to PIO 0 as we bring it
-> up which fixes funnies on a few systems where the BIOS firmware leaves us
-> in an interesting choice of modes, or embedded boxes with no firmware which
-> come up in random states.
-> 
-> For smart controllers there is nothing to do - they know about this internally.
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.23rc3-mm1/drivers/ata/libata-core.c linux-2.6.23rc3-mm1/drivers/ata/libata-core.c
-> --- linux.vanilla-2.6.23rc3-mm1/drivers/ata/libata-core.c	2007-08-22 17:23:00.000000000 +0100
-> +++ linux-2.6.23rc3-mm1/drivers/ata/libata-core.c	2007-08-22 18:17:31.321738376 +0100
-> @@ -3163,6 +3191,8 @@
->  			     unsigned long deadline)
->  {
->  	struct ata_ioports *ioaddr = &ap->ioaddr;
-> +	struct ata_device *dev;
-> +	int i = 0;
->  
->  	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
->  
-> @@ -3173,6 +3203,25 @@
->  	udelay(20);	/* FIXME: flush */
->  	iowrite8(ap->ctl, ioaddr->ctl_addr);
->  
-> +	/* If we issued an SRST then an ATA drive (not ATAPI)
-> +	 * may have changed configuration and be in PIO0 timing. If
-> +	 * we did a hard reset (or are coming from power on) this is
-> +	 * true for ATA or ATAPI. Until we've set a suitable controller
-> +	 * mode we should not touch the bus as we may be talking too fast.
-> +	 */
-> +
-> +	ata_link_for_each_dev(dev, &ap->link)
-> +		dev->pio_mode = XFER_PIO_0;
-> +
-> +	/* If the controller has a pio mode setup function then use
-> +	   it to set the chipset to rights. Don't touch the DMA setup
-> +	   as that will be dealt with when revalidating */
-> +	if (ap->ops->set_piomode) {
-> +		ata_link_for_each_dev(dev, &ap->link)
-> +			if (devmask & (1 << i++))
-> +				ap->ops->set_piomode(ap, dev);
-> +	}
-> +
-
-Should this be queued for 2.6.24?
-
-The note I have on this is "low priority, make sure it gets testing in 
--mm first"
+> The note I have on this is "low priority, make sure it gets testing in 
+> -mm first"
 
 
+Its been tested without any reports. There are two things it sorts out
+
+#1 non x86 systems with firmware that doesn't init the chip into PIO0
+(not many as most chips power up in pio0)
+
+#2 A few obscure cases where we error and then can't recover an ATA drive
+as we are talking PIO4 at it and its in PIO0 so we are burbling too fast
+(the other way around is of course ok)
+
+Alan
