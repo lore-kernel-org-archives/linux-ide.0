@@ -1,37 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 1/15] ali14xx: fix deadlock on error handling
-Date: Tue, 02 Oct 2007 16:46:28 +0400
-Message-ID: <47023DA4.1020607@ru.mvista.com>
-References: <200710012331.26965.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Polling (was Re: [PATCHSET 2/2] implement PMP support, take 6)
+Date: Tue, 02 Oct 2007 08:56:33 -0400
+Message-ID: <47024001.6090306@garzik.org>
+References: <1190521193410-git-send-email-htejun@gmail.com>	<46F9BF3E.5050708@garzik.org>	<46FA1B4E.8090103@gmail.com>	<46FD079F.3010007@garzik.org>	<46FD0D50.8030602@gmail.com>	<46FD1C4A.8010101@garzik.org>	<46FD306C.3050205@gmail.com>	<46FD5DE1.8000206@rtr.ca> <20070928220309.7c9ed816@the-village.bc.nu> <46FDADD9.9050007@garzik.org> <46FE45CE.1050007@rtr.ca> <4700EA52.10701@garzik.org> <47018CEC.6060203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:22279 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751213AbXJBMqr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2007 08:46:47 -0400
-In-Reply-To: <200710012331.26965.bzolnier@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56028 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752545AbXJBM4i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2007 08:56:38 -0400
+In-Reply-To: <47018CEC.6060203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Mark Lord wrote:
+>>> Linux kernel development is supposed to happen incrementally nowadays.
+>>> Get a nice working solution in place, and then enhance/tune it.
+>> It's not about enhancing and tuning.
+>>
+>> It's about me (and/or James B) having to __undo__ the current code, just
+>> to get things working on an entire class of SATA-capable controllers out
+>> in the field.
+> 
+> Hmmm... Simpy not setting ATA_FLAG_PMP isn't enough?
 
-> Stop abusing ide_lock lock by switching to a private locking.
+The point was that I was going to turn on PMP support for SAS 
+controllers in 2.6.24 to coincide with the merge, but now cannot without 
+fixing things.
 
-> Fixes same issue as fixed by Alan Cox in atiixp host driver with
+	Jeff
 
-    Has been also fixed in the piix driver.
 
-> commit 6c5f8cc33eb2e10b6ab788bbe259fc142a068627.
 
-    Heh, I've looked hard at the code trying to understand how this can 
-happen, and was unable to figure out. Probably was not hard enough...
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
