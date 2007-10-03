@@ -1,112 +1,34 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Wed, 3 Oct 2007 14:51:58 -0400
-Message-ID: <20071003185158.GA28932@havoc.gtf.org>
+Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
+ 5
+Date: Wed, 03 Oct 2007 16:27:13 -0400
+Message-ID: <4703FB21.2040906@garzik.org>
+References: <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <47025E09.1030803@garzik.org> <20071002184958.GC31251@srcf.ucam.org> <47029423.6030605@garzik.org> <4702AC3B.2010004@garzik.org> <20071002212028.GA967@srcf.ucam.org> <4702B6C5.2070903@garzik.org> <20071003002416.GA3906@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:56477 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751593AbXJCSwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Oct 2007 14:52:00 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20071003002416.GA3906@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kristen.c.accardi@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+Matthew Garrett wrote:
+> Modern laptops with hotswap bays still tend to utilise a PATA interface
+> on a SATA bridge, generally with the host controller in some legacy
+> emulation mode rather than AHCI. This means that the existing hotplug
+> code in libata is unable to work. The ACPI specification states that
+> these devices can send notifications when hotswapped, which avoids the
+> need to obtain notification from the controller. This patch uses the
+> existing libata-acpi code and simply registers a notification in order
+> to trigger a rescan whenever the firmware signals an event.
+> 
+> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
+> 
+> ---
+> 
+> Diffed against #upstream. Fairly sure I've got it right this time...
 
-Fix ugly sata_mv bug, that exists due to lack of IOMMU knowledge about
-device constraints (FUJITA Tomonori's current work should fix this issue
-long term, hopefully).
+indeed you did sir :)  applied, thanks
 
-
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/pata_ixp4xx_cf.c |    3 +++
- drivers/ata/pata_marvell.c   |    4 ++--
- drivers/ata/sata_mv.c        |   26 +++++++++++++++++++-------
- 3 files changed, 24 insertions(+), 9 deletions(-)
-
-Jiri Slaby (1):
-      Ata: pata_marvell, use ioread* for iomap-ped memory
-
-Olof Johansson (1):
-      libata: fix for sata_mv >64KB DMA segments
-
-Scott Thompson (1):
-      drivers/ata/pata_ixp4xx_cf.c: ioremap return code check
-
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 4ca7fd6..5dea358 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -189,6 +189,9 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
- 	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
- 	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
- 
-+	if (!data->cs0 || !data->cs1)
-+		return -ENOMEM;
-+
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq)
- 		set_irq_type(irq, IRQT_RISING);
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index ae206f3..b45506f 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -44,10 +44,10 @@ static int marvell_pre_reset(struct ata_port *ap, unsigned long deadline)
- 		return -ENOMEM;
- 	printk("BAR5:");
- 	for(i = 0; i <= 0x0F; i++)
--		printk("%02X:%02X ", i, readb(barp + i));
-+		printk("%02X:%02X ", i, ioread8(barp + i));
- 	printk("\n");
- 
--	devices = readl(barp + 0x0C);
-+	devices = ioread32(barp + 0x0C);
- 	pci_iounmap(pdev, barp);
- 
- 	if ((pdev->device == 0x6145) && (ap->port_no == 0) &&
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 11bf6c7..1a82e22 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -1139,15 +1139,27 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
- 		dma_addr_t addr = sg_dma_address(sg);
- 		u32 sg_len = sg_dma_len(sg);
- 
--		mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
--		mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
--		mv_sg->flags_size = cpu_to_le32(sg_len & 0xffff);
-+		while (sg_len) {
-+			u32 offset = addr & 0xffff;
-+			u32 len = sg_len;
- 
--		if (ata_sg_is_last(sg, qc))
--			mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
-+			if ((offset + sg_len > 0x10000))
-+				len = 0x10000 - offset;
-+
-+			mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
-+			mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
-+			mv_sg->flags_size = cpu_to_le32(len);
-+
-+			sg_len -= len;
-+			addr += len;
-+
-+			if (!sg_len && ata_sg_is_last(sg, qc))
-+				mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
-+
-+			mv_sg++;
-+			n_sg++;
-+		}
- 
--		mv_sg++;
--		n_sg++;
- 	}
- 
- 	return n_sg;
