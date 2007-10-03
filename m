@@ -1,36 +1,112 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/1] pata_cs5536: ATA driver for Geode companion chip
-Date: Wed, 3 Oct 2007 19:51:33 +0100
-Message-ID: <20071003195133.367b6655@the-village.bc.nu>
-References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
-	<20071003192232.558ec72b@the-village.bc.nu>
-	<yq1tzp8vxzb.fsf@sermon.lab.mkp.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Wed, 3 Oct 2007 14:51:58 -0400
+Message-ID: <20071003185158.GA28932@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51520 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752037AbXJCSqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 14:46:38 -0400
-In-Reply-To: <yq1tzp8vxzb.fsf@sermon.lab.mkp.net>
+Received: from havoc.gtf.org ([69.61.125.42]:56477 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751593AbXJCSwA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 14:52:00 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <mkp@mkp.net>
-Cc: linux-ide@vger.kernel.org, info-linux@geode.amd.com
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, 03 Oct 2007 14:45:12 -0400
-"Martin K. Petersen" <mkp@mkp.net> wrote:
 
-> >>>>> "Alan" == Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
-> 
-> Alan> The older AMD ex NS ex Cyrix chipsets mishandle 64K DMA blocks -
-> Alan> is that the case for the CS5536 or not - does it consider a PRD
-> Alan> entry with zero length as 64K or 0 bytes
-> 
-> The databook says: "The size must be in multiples of 1 WORD (2 bytes)
-> or zero (which means a 64 KB transfer)."
+Fix ugly sata_mv bug, that exists due to lack of IOMMU knowledge about
+device constraints (FUJITA Tomonori's current work should fix this issue
+long term, hopefully).
 
-So does the older databook for the ones that get it wrong 8)
 
-Alan
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/pata_ixp4xx_cf.c |    3 +++
+ drivers/ata/pata_marvell.c   |    4 ++--
+ drivers/ata/sata_mv.c        |   26 +++++++++++++++++++-------
+ 3 files changed, 24 insertions(+), 9 deletions(-)
+
+Jiri Slaby (1):
+      Ata: pata_marvell, use ioread* for iomap-ped memory
+
+Olof Johansson (1):
+      libata: fix for sata_mv >64KB DMA segments
+
+Scott Thompson (1):
+      drivers/ata/pata_ixp4xx_cf.c: ioremap return code check
+
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 4ca7fd6..5dea358 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -189,6 +189,9 @@ static __devinit int ixp4xx_pata_probe(struct platform_device *pdev)
+ 	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
+ 	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
+ 
++	if (!data->cs0 || !data->cs1)
++		return -ENOMEM;
++
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq)
+ 		set_irq_type(irq, IRQT_RISING);
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index ae206f3..b45506f 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -44,10 +44,10 @@ static int marvell_pre_reset(struct ata_port *ap, unsigned long deadline)
+ 		return -ENOMEM;
+ 	printk("BAR5:");
+ 	for(i = 0; i <= 0x0F; i++)
+-		printk("%02X:%02X ", i, readb(barp + i));
++		printk("%02X:%02X ", i, ioread8(barp + i));
+ 	printk("\n");
+ 
+-	devices = readl(barp + 0x0C);
++	devices = ioread32(barp + 0x0C);
+ 	pci_iounmap(pdev, barp);
+ 
+ 	if ((pdev->device == 0x6145) && (ap->port_no == 0) &&
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 11bf6c7..1a82e22 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -1139,15 +1139,27 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
+ 		dma_addr_t addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+ 
+-		mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
+-		mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
+-		mv_sg->flags_size = cpu_to_le32(sg_len & 0xffff);
++		while (sg_len) {
++			u32 offset = addr & 0xffff;
++			u32 len = sg_len;
+ 
+-		if (ata_sg_is_last(sg, qc))
+-			mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
++			if ((offset + sg_len > 0x10000))
++				len = 0x10000 - offset;
++
++			mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
++			mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
++			mv_sg->flags_size = cpu_to_le32(len);
++
++			sg_len -= len;
++			addr += len;
++
++			if (!sg_len && ata_sg_is_last(sg, qc))
++				mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
++
++			mv_sg++;
++			n_sg++;
++		}
+ 
+-		mv_sg++;
+-		n_sg++;
+ 	}
+ 
+ 	return n_sg;
