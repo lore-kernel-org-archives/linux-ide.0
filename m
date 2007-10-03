@@ -1,33 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 05/10] drivers/ata/pata_ixp4xx_cf.c: ioremap return code
- check
-Date: Wed, 03 Oct 2007 14:44:17 -0400
-Message-ID: <4703E301.1030104@garzik.org>
-References: <200710022053.l92Kr2gN021691@imap1.linux-foundation.org>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: [PATCH 1/1] pata_cs5536: ATA driver for Geode companion chip
+Date: Wed, 03 Oct 2007 14:45:12 -0400
+Message-ID: <yq1tzp8vxzb.fsf@sermon.lab.mkp.net>
+References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
+	<20071003192232.558ec72b@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36694 "EHLO mail.dvmed.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:35115 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758261AbXJCSoT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Oct 2007 14:44:19 -0400
-In-Reply-To: <200710022053.l92Kr2gN021691@imap1.linux-foundation.org>
+	id S1750766AbXJCSpN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 14:45:13 -0400
+In-Reply-To: <20071003192232.558ec72b@the-village.bc.nu> (Alan Cox's message of "Wed\, 3 Oct 2007 19\:22\:32 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, postfailathushmaildotcom@yahoo.com, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, info-linux@geode.amd.com
 
-akpm@linux-foundation.org wrote:
-> From: Scott Thompson <postfailathushmaildotcom@yahoo.com>
-> 
-> Add missing ioremap return checks.
-> 
-> Signed-off-by: Scott Thompson <postfail <at> hushmail.com>
-> Acked-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+>>>>> "Alan" == Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
-applied
+Alan> The older AMD ex NS ex Cyrix chipsets mishandle 64K DMA blocks -
+Alan> is that the case for the CS5536 or not - does it consider a PRD
+Alan> entry with zero length as 64K or 0 bytes
+
+The databook says: "The size must be in multiples of 1 WORD (2 bytes)
+or zero (which means a 64 KB transfer)."
 
 
+>> + if ((cfg & IDE_CFG_CHANEN) == 0) { + printk(KERN_ERR "CS5536:
+>> disabled by BIOS\n");
+
+Alan> To save Jeff whining - he'll want that to be DRV_NAME or similar
+Alan> and to call it pata_cs5536
+
+Ok.
+
+-- 
+Martin K. Petersen      http://mkp.net/
