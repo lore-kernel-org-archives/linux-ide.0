@@ -1,49 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/2] libata: change the last state of pio read to HSM_ST_IDLE
-Date: Wed, 03 Oct 2007 14:16:14 -0400
-Message-ID: <4703DC6E.8040204@garzik.org>
-References: <468B5930.3070000@tw.ibm.com> <468B5B3D.6040805@tw.ibm.com> <4702616B.1000402@garzik.org> <470316FE.2000406@tw.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/1] pata_cs5536: ATA driver for Geode companion chip
+Date: Wed, 3 Oct 2007 19:22:32 +0100
+Message-ID: <20071003192232.558ec72b@the-village.bc.nu>
+References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59402 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758220AbXJCSQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Oct 2007 14:16:16 -0400
-In-Reply-To: <470316FE.2000406@tw.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49915 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757699AbXJCSR5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 14:17:57 -0400
+In-Reply-To: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: "Martin K. Petersen" <mkp@mkp.net>
+Cc: linux-ide@vger.kernel.org, info-linux@geode.amd.com
 
-Albert Lee wrote:
-> Jeff Garzik wrote:
->> Albert Lee wrote:
->>
->>> Patch 2/2:
->>>   After reading the last pio data block, the HSM is waiting for device
->>> to be idle, not waiting for the last interrupt.
->>>
->>> This patch changes the state after "PIO data-in" to HSM_ST_IDLE instead
->>> of HSM_ST_LAST for accuracy.
->>>
->>> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
->>
->> Is this still needed?
->>
+> pata_cs5536.c relies on Geode Machine Specific Registers to configure
+> the ATA function and uses the correct PIO timings for the chip.
 > 
-> Not quite needed; it only makes the state transition after reading the
-> last PIO block more accurate.
-> 
-> However, if we want to do part of the irq PIO in the workqueue sometime
-> in the future, this patch will be needed (otherwise the HSM might think
-> it expecting another irq). For the time being, maybe we can just skip
-> this patch until sometime it's really needed.
+> Signed-off-by: Martin K. Petersen <mkp@mkp.net>
 
-OK, thanks.
+I'm basically happy with this but would appreciate some feedback from AMD
+on the subject.
 
-	Jeff
+(cc added therefore : info-linux@geode.amd.com)
 
+> +	.qc_issue	= ata_qc_issue_prot,
 
+The older AMD ex NS ex Cyrix chipsets mishandle 64K DMA blocks - is that
+the case for the CS5536 or not - does it consider a PRD entry with zero
+length as 64K or 0 bytes
+
+> +	if ((cfg & IDE_CFG_CHANEN) == 0) {
+> +		printk(KERN_ERR "CS5536: disabled by BIOS\n");
+
+To save Jeff whining - he'll want that to be DRV_NAME or similar and to
+call it pata_cs5536
 
