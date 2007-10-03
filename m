@@ -1,32 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: fix for sata_mv >64KB DMA segments
-Date: Wed, 03 Oct 2007 14:43:17 -0400
-Message-ID: <4703E2C5.40502@pobox.com>
-References: <20071001220439.GA15332@lixom.net> <470176B8.1000109@pobox.com> <20071002023000.GA19286@lixom.net> <4702D2DE.1050504@pobox.com> <20071003014527.GA6316@lixom.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 04/10] Ata: pata_marvell, use ioread* for iomap-ped memory
+Date: Wed, 03 Oct 2007 14:44:08 -0400
+Message-ID: <4703E2F8.7090007@garzik.org>
+References: <200710022053.l92Kr1GG021682@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36676 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36688 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbXJCSnT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Oct 2007 14:43:19 -0400
-In-Reply-To: <20071003014527.GA6316@lixom.net>
+	id S1754252AbXJCSoO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 14:44:14 -0400
+In-Reply-To: <200710022053.l92Kr1GG021682@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, jirislaby@gmail.com, alan@lxorguk.ukuu.org.uk
 
-Olof Johansson wrote:
-> Fix bug in sata_mv for cases where the IOMMU layer has merged SG entries
-> to larger than 64KB. They need to be split up before being sent to
-> the driver.
+akpm@linux-foundation.org wrote:
+> From: Jiri Slaby <jirislaby@gmail.com>
 > 
-> Just for simplicity's sake, split up at 64K boundary instead of 64K size,
-> since that's what the common code does anyway.
+> pata_marvell, use ioread* for iomap-ped memory
 > 
-> Signed-off-by: Olof Johansson <olof@lixom.net>
+> read* on pci_iomapped memory is incorrect, fix it
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-applied, good catch, thanks!
+applied
 
 
