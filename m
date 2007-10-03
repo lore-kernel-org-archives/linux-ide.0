@@ -1,56 +1,62 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: sil24 PMP works with ST3500641AS but not HDS721010KLA330
-Date: Tue, 2 Oct 2007 23:38:40 -0700
-Message-ID: <20071003063840.GC2533@merlins.org>
-References: <20071002170445.GB2902@merlins.org> <47030CC0.8040601@gmail.com> <20071003055936.GB2533@merlins.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: Re[2]: Sata Sil3512 bug?
+Date: Wed, 3 Oct 2007 09:26:33 +0200 (MEST)
+Message-ID: <200710030726.l937QXuV026661@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:56708 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbXJCGir (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 02:38:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20071003055936.GB2533@merlins.org>
+Received: from aun.it.uu.se ([130.238.12.36]:55232 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752007AbXJCH1G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 03:27:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: MisterE2002@zonnet.nl, htejun@gmail.com
+Cc: alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Tue, Oct 02, 2007 at 10:59:36PM -0700, Marc MERLIN wrote:
-> On Wed, Oct 03, 2007 at 12:30:08PM +0900, Tejun Heo wrote:
-> > 1. Does booting with fewer number of drives (say 5) help?
->  
-> Boot is ok with 10 drives now with your latest code (20070808 instead
-> of 20070803)
+On Tue, 2 Oct 2007 21:20:23 +0200, MisterE wrote:
+> I build another setup with almost the same hardware.
+> This motherboard had already the latest bios.
+> I notice that the computer does almost never find the hard drive
+> although the controller is found every time (with lspci). So i get no
+> drive (sda) assigned. I don't always see the "bios" screen from the
+> controller at startup. And in the past it showed the hard drive.
+> So i could not experiment with this motherboard.
+> 
+> After that i installed Windows XP and used the orginal (sweex)
+> drivers with the first motherboard. This also makes the data corrupt.
+> So it seems not to be an linux problem. So there is something wrong with
+> the motherboard or the 3512 controller.
+> 
+> After that i plugged both hard drives (ide with windows and sata disk)
+> to the Asus board. No data corruption. So the hard disks are'nt the
+> problem either.
+> 
+> I'm thinking of replacing both 3512 controllers with a Promise SATA300
+> TX4. Do you know if there are problems with this device?
 
-Let me correct this.
+(please don't top-post)
 
-Actually 20070803 vs 20070808 doesn't seem to make a difference at boot.
-Sometimes the boot is clean, sometimes it's not.
+There are no known data-corruption issues with Promise SATA cards.
+However, some of them, especially the 2nd generation SATA300 TX4,
+are known to trigger intermittent error interrupts (that are dealt
+with but may cause a speed reduction) in some systems. We're still
+scratching our heads on that issue.
 
-I removed the 5 good drives, moved the 5 "bad" TB ones to the good slots
-(i.e. using another swappable backplane, other cables, and another PMP chip
-(I have two chips: one in port 1 and 2 of my sil3124).
-Unfortunately, moving the drives to all these new things yielded the same 
-unreliable boot detection so far.
+/Mikael
 
-I reseated the drives one more time just to be sure. This time they booted
-ok, but I'm pretty sure it's just the random works/doesn't work thing.
-I'll rebuild the array overnight and let you know in 8-9h if the array
-rebuilt and if it can take a mke2fs without blowing up.
-
-In the meantime, if you have any suggestions for slowing the drive's speed
-down to 1.5Gbps, or other ways to debug those random erros I'm seeing, I'm
-all ears.
-
-Here is a link to the drive specs if that helps:
-http://www.hitachigst.com/portal/site/en/menuitem.8027a91c954924ae4bda9f30eac4f0a0/
-
-Thanks
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+> Friday, September 28, 2007, 6:55:47 PM, you wrote:
+> 
+> > Alan Cox wrote:
+> >>> sda1 are corrupted (2 to 4 blocks missing). Copying that data back to
+> >>> Windows and it give the same results in Quickpar. So reading does not
+> >>> have problems. The data written to hda1 is correct.
+> >> 
+> >> We've got a whole pile of reports like this with the 3512 and almost
+> >> always Nvidia chipset, plus reports of BIOS updates fixing it. That you
+> >> see something similar on intel boards is a bit worrying.
+> 
+> > Multiple sil3112/3512 + nvidia chipset problem doesn't usually involve
+> > device errors or timeouts.  It usually corrupts data silently.  And,
+> > yeah, data corruption on intel board is really disturbing.
+> 
+> > MisterE, do you have any processor powersaving mechanism enabled?  If
+> > so, can you disable all and see whether that changes anything?
