@@ -1,34 +1,56 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Integrate ACPI-based PATA/SATA hotplug - version
- 5
-Date: Wed, 03 Oct 2007 16:27:13 -0400
-Message-ID: <4703FB21.2040906@garzik.org>
-References: <46F33597.1000307@gmail.com> <20070921031245.GA6628@srcf.ucam.org> <46F33824.6000707@gmail.com> <20070924231436.GA32119@srcf.ucam.org> <47025E09.1030803@garzik.org> <20071002184958.GC31251@srcf.ucam.org> <47029423.6030605@garzik.org> <4702AC3B.2010004@garzik.org> <20071002212028.GA967@srcf.ucam.org> <4702B6C5.2070903@garzik.org> <20071003002416.GA3906@srcf.ucam.org>
+Subject: Re: [patch 01/10] pata_acpi: restore driver
+Date: Wed, 03 Oct 2007 16:29:58 -0400
+Message-ID: <4703FBC6.80104@garzik.org>
+References: <200710022052.l92Kqx0w021673@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20071003002416.GA3906@srcf.ucam.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, kristen.c.accardi@intel.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:34204 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758440AbXJCUaB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 16:30:01 -0400
+In-Reply-To: <200710022052.l92Kqx0w021673@imap1.linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: akpm@linux-foundation.org, Alan <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, htejun@gmail.com
 
-Matthew Garrett wrote:
-> Modern laptops with hotswap bays still tend to utilise a PATA interface
-> on a SATA bridge, generally with the host controller in some legacy
-> emulation mode rather than AHCI. This means that the existing hotplug
-> code in libata is unable to work. The ACPI specification states that
-> these devices can send notifications when hotswapped, which avoids the
-> need to obtain notification from the controller. This patch uses the
-> existing libata-acpi code and simply registers a notification in order
-> to trigger a rescan whenever the firmware signals an event.
+akpm@linux-foundation.org wrote:
+> From: Alan Cox <alan@redhat.com>
 > 
-> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
+> This patch assumes the mode filter patches were applied, if not then ping
+> me and I'll send the trivially different patch (extra argument to
+> mode_filter)
 > 
+> Don't assume the BIOS can validate modes or has any sense at all.  Instead use
+> the BIOS timings to deduce the modes.
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
 > 
-> Diffed against #upstream. Fairly sure I've got it right this time...
+>  drivers/ata/Kconfig     |    9 
+>  drivers/ata/Makefile    |    2 
+>  drivers/ata/pata_acpi.c |  403 ++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 414 insertions(+)
 
-indeed you did sir :)  applied, thanks
+Can I get a better email subject and patch description please?
+
+Just reply to this email, and I can hand-edit the patch from there.
+
+"pata_acpi: restore driver" is a bad one-line summary, because nothing 
+was lost (hence nothing to be restored).  it's simply a new driver.
+
+The patch description is also wanting -- it describes work-in-progress, 
+but should really be a summary of what the pata_acpi driver is, why we 
+want it, and how it works.
+
+Email some text, and I shall apply straightaway.
+
+	Jeff
+
+
 
