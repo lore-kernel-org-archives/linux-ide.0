@@ -1,37 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_cs5536: ATA driver for Geode companion chip
-Date: Thu, 4 Oct 2007 17:22:31 +0100
-Message-ID: <20071004172231.17665123@the-village.bc.nu>
-References: <20071003233012.GA8721@cosmic.amd.com>
-	<yq1przva76x.fsf@sermon.lab.mkp.net>
-	<20071004165819.003b86c6@the-village.bc.nu>
-	<20071004160834.GA28667@cosmic.amd.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 5/10] ide: add hwif_register_devices() helper
+Date: Thu, 04 Oct 2007 20:19:33 +0400
+Message-ID: <47051295.3040507@ru.mvista.com>
+References: <200709112338.21389.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41469 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762709AbXJDQRl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 12:17:41 -0400
-In-Reply-To: <20071004160834.GA28667@cosmic.amd.com>
+Received: from homer.mvista.com ([63.81.120.155]:47911 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756545AbXJDQTw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 12:19:52 -0400
+In-Reply-To: <200709112338.21389.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jordan Crouse <jordan.crouse@amd.com>
-Cc: "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> Agreed.  It sounds like there is still breakage in the BIOS - since the
-> reference VSA code accounts for accesses of different alignments, but its
-> probably not worth going back and forth about it.  Like I said, if Alan
-> and Jeff are game, we should go with the 5536 driver, and now that we've
-> debated it extensively, I'm fine with the MSR accesses - I'm satisfied
-> that we at least considered the alternative and dismissed it for technically
-> sound reasons.
+Bartlomiej Zolnierkiewicz wrote:
 
-Even if we use PCI accesses and keep them dword along with the right
-timing it makes sense to have a 5536 driver for this.
-> 
-> Is there anything we can do to make the transition smooth for anybody who
-> may be using pata_amd in 2.6.23?
+> Add hwif_register_devices() helper to fix code duplication between
+> probe_hwif_init_with_fixup() and ideprobe_init().  Also remove stale
+> comment while at it.
 
-We can make pata_amd pick it up if pata_cs5536 is not selected for now
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
