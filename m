@@ -1,50 +1,43 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream] libata: blacklist NCQ on Seagate Barracuda ST380817AS
-Date: Thu, 4 Oct 2007 11:06:56 +0900
-Message-ID: <20071004020656.GA12186@htj.dyndns.org>
+Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
+ where old SATA works
+Date: Thu, 04 Oct 2007 11:14:04 +0900
+Message-ID: <47044C6C.5030905@gmail.com>
+References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com> <47014740.5080002@df.uba.ar> <4701EA71.2000609@gmail.com> <470220FE.2090506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.224]:14063 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047AbXJDCHF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 22:07:05 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so17144nze
-        for <linux-ide@vger.kernel.org>; Wed, 03 Oct 2007 19:07:04 -0700 (PDT)
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.177]:9281 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbXJDCOM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 22:14:12 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so24477wah
+        for <linux-ide@vger.kernel.org>; Wed, 03 Oct 2007 19:14:11 -0700 (PDT)
+In-Reply-To: <470220FE.2090506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, ornati@fastwebnet.it
+To: hgsolari@gmail.com, solari@df.uba.ar
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
 
-From: Paolo Ornati <ornati@fastwebnet.it>
+Hernan G Solari wrote:
+>>>   netconsole, pritty nice debunging system... but (yes, there is always
+>>> a but) it does not get to run.
+>>>   the method was well implemented, adding the acpi=off it sends the
+>>> information to the receiving machine (I can even see passing a
+>>> netconsole probing message in the machine under testing), but without
+>>> turning off acpi it does not reach the point of loading and,
+>>> consequently, it does not send a byte to the receiving machine.
+>>>
+>>> Hence, result: empty output.
+>>>    
+>>>
+>> Hmmm.. Are netconsole support and network driver built into the kernel?
+>>
+> yes, they are
 
-Seagate Barracuda ST380817AS has troubles with NCQ. For example,
-unpacking a tarball on an XFS filesystem gives this:
+If you can set up a serial console, it would be better.  If not, can you
+please take a photo of the crash and post it?
 
-ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
-ata1.00: cmd 61/40:00:29:a3:98/00:00:00:00:00/40 tag 0 cdb 0x0 data 32768 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-
-More info here:
-http://lkml.org/lkml/2007/1/21/76
-    
-Blacklist it!
-
-Signed-off-by: Paolo Ornati <ornati@fastwebnet.it>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index aecbdad..48a62a2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3958,6 +3958,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "Maxtor 7V300F0",	"VA111630",	ATA_HORKAGE_NONCQ },
- 	{ "HITACHI HDS7250SASUN500G*", NULL,    ATA_HORKAGE_NONCQ },
- 	{ "HITACHI HDS7225SBSUN250G*", NULL,    ATA_HORKAGE_NONCQ },
-+	{ "ST380817AS",		"3.42",		ATA_HORKAGE_NONCQ },
- 
- 	/* Blacklist entries taken from Silicon Image 3124/3132
- 	   Windows driver .inf file - also several Linux problem reports */
+-- 
+tejun
