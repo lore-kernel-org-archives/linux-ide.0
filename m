@@ -1,39 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: add HDT722516DLA380 to NCQ blacklist
-Date: Thu, 4 Oct 2007 17:27:59 +0900
-Message-ID: <20071004082759.GB12186@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream] libata: blacklist NCQ on Seagate Barracuda
+ ST380817AS
+Date: Thu, 4 Oct 2007 12:54:36 +0100
+Message-ID: <20071004125436.1ae8dbe8@the-village.bc.nu>
+References: <20071004020656.GA12186@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:28666 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbXJDI2G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 04:28:06 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so119107wah
-        for <linux-ide@vger.kernel.org>; Thu, 04 Oct 2007 01:28:05 -0700 (PDT)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43179 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753719AbXJDLtr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 07:49:47 -0400
+In-Reply-To: <20071004020656.GA12186@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, elendil@planet.nl
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, ornati@fastwebnet.it
 
-HDT722516DLA380 does spurious completion of NCQ commands.  Blacklist
-it.
+On Thu, 4 Oct 2007 11:06:56 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Frans Pop <elendil@planet.nl>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+> From: Paolo Ornati <ornati@fastwebnet.it>
+> 
+> Seagate Barracuda ST380817AS has troubles with NCQ. For example,
+> unpacking a tarball on an XFS filesystem gives this:
+> 
+> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd 61/40:00:29:a3:98/00:00:00:00:00/40 tag 0 cdb 0x0 data 32768 out
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index aecbdad..964a698 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3967,6 +3967,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* Drives which do spurious command completion */
- 	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
- 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
-+	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
+Looking at this and our NCQ code I don't see any provision for drive
+unfairness in our code. If we continue to issue commands to the drive I'm
+not seeing where we guarantee a given command will ever complete rather
+than being deferred forever by a dumb drive - which some SCSI drives also
+will do...
