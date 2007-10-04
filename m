@@ -1,51 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata1.00: spurious completions during NCQ
-Date: Thu, 04 Oct 2007 11:17:26 +0900
-Message-ID: <47044D36.4090708@gmail.com>
-References: <200710011443.05629.elendil@planet.nl>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: pata_cs5536: ATA driver for Geode companion chip
+Date: Wed, 03 Oct 2007 23:29:26 -0400
+Message-ID: <yq1przva76x.fsf@sermon.lab.mkp.net>
+References: <20071003233012.GA8721@cosmic.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:16020 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbXJDCRe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Oct 2007 22:17:34 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so26454wah
-        for <linux-ide@vger.kernel.org>; Wed, 03 Oct 2007 19:17:34 -0700 (PDT)
-In-Reply-To: <200710011443.05629.elendil@planet.nl>
+Received: from jaguar.mkp.net ([192.139.46.146]:39000 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753248AbXJDD31 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Oct 2007 23:29:27 -0400
+In-Reply-To: <20071003233012.GA8721@cosmic.amd.com> (Jordan Crouse's message of "Wed\, 3 Oct 2007 17\:30\:12 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-ide@vger.kernel.org
+To: Jordan Crouse <jordan.crouse@amd.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Frans Pop wrote:
-> Hi,
-> 
-> On 15 August 2007 Tejun Heo wrote:
->> You don't need to worry too much as long as errors are properly,
->> recovered. All commands are retried and you won't lose any data.
->> Please report if the spurious NCQ problem happens again.  Thanks.  
-> 
-> I've just received a logcheck mail with another one. I have not seen any in
-> the time between my initial mail [1] and now, so this is the second
-> occurrence in 1.5 months. The message is slightly different this time.
-> 
-> I'm currently running 2.6.23-rc8 + CFS patchset.
-> 
-> kernel: ata1.00: spurious completions during NCQ issue=0x0 SAct=0x8 FIS=005040a1:00000004
-> kernel: ata1.00: cmd 60/58:18:b3:56:bd/00:00:01:00:00/40 tag 3 cdb 0x0 data 45056 in
-> kernel:          res 50/00:58:b3:56:bd/00:00:01:00:00/40 Emask 0x2 (HSM violation)
-> kernel: ata1: soft resetting port
-> kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> kernel: ata1.00: configured for UDMA/133
-> kernel: ata1: EH complete
-> kernel: sd 0:0:0:0: [sda] 321672960 512-byte hardware sectors (164697 MB)
-> kernel: sd 0:0:0:0: [sda] Write Protect is off
-> kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>>>>> "Jordan" == Jordan Crouse <jordan.crouse@amd.com> writes:
 
-Please post the result of "hdparm -I /dev/sda".  Thanks.
+Jordan> In the standard AMD VSA, writeos to PCI space 0x48 (DTC), 0x49
+Jordan> (CAST) and 0x50 (ETC) should work - and the change should be
+Jordan> immediately reflected in the MSR.  
+
+I know what the problem is.  I just got a BIOS update tonight which
+was supposed to fix the issue.  However, pata_amd.c still failed
+spectacularly at configuring the device whereas pata_cs5536 worked
+fine.  
+
+For kicks I switched my driver over to using PCI config registers
+instead of MSRs.  And it still worked!
+
+When I changed my driver I did a quickie conversion from wrmsr() to
+pci_write_config_dword().  If I use pci_write_config_byte() instead
+(like pata_amd.c), things fail miserably.  A register dump reveals
+that any value I write becomes a 0.  Yay!
 
 -- 
-tejun
+Martin K. Petersen      http://mkp.net/
