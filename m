@@ -1,60 +1,50 @@
-From: idurdanovic@comcast.net (Igor Durdanovic)
-Subject: Re: sata_sil24 and sil-4726
-Date: Thu, 4 Oct 2007 09:49:37 -0400
-Message-ID: <18180.61297.423410.538906@kitty1.shrimp.net>
-References: <18180.26625.216781.626572@kitty1.shrimp.net>
-	<470468EE.909@gmail.com>
-	<18180.30643.554165.292012@kitty1.shrimp.net>
-	<4704790C.7060901@gmail.com>
-	<18180.31651.305092.579581@kitty1.shrimp.net>
-	<470480C9.9030309@gmail.com>
-	<18180.34107.704754.565573@kitty1.shrimp.net>
-	<47048C2B.1060202@gmail.com>
-	<47049344.6010603@gmail.com>
-	<18180.38483.139258.690293@kitty1.shrimp.net>
-	<47049799.3030509@gmail.com>
-	<18180.39323.750969.577889@kitty1.shrimp.net>
-	<47049A74.3080000@gmail.com>
-Reply-To: idurdanovic@comcast.net
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/8] ide: add IDE_HFLAG_NO_LBA48 and IDE_HFLAG_NO_LBA48_DMA
+ host flags
+Date: Thu, 04 Oct 2007 18:53:39 +0400
+Message-ID: <4704FE73.5010602@ru.mvista.com>
+References: <200708271934.18313.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alnrmhc11.comcast.net ([206.18.177.51]:43693 "EHLO
-	alnrmhc11.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667AbXJDNym (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 09:54:42 -0400
-In-Reply-To: <47049A74.3080000@gmail.com>
+Received: from homer.mvista.com ([63.81.120.155]:47259 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756380AbXJDOx7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 10:53:59 -0400
+In-Reply-To: <200708271934.18313.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: idurdanovic@comcast.net, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-There is definitely a problem with hdparm and the 
-SIL-3132 <-> SIL-4726
+Hello.
 
-Now I can not turn the write caching off:
+Bartlomiej Zolnierkiewicz wrote:
 
-pts/1#> hdparm -W 0 /dev/sdb
+> Add IDE_HFLAG_NO_LBA48[_DMA] host flags, use it instead of hwif->no_lba48[_dma]
+> and then remove no longer needed hwif->no_lba48[_dma].  As a side-effect
+> this change fixes hwif->no_lba48_dma not being restored by ide_hwif_restore().
 
-/dev/sdb:
- setting drive write-caching to 0 (off)
-pts/1#> hdparm -i /dev/sdb
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-/dev/sdb:
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
- Model=ST3750640AS                             , FwRev=3.AAE   , SerialNo=            5QD106AK
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
- BuffType=unknown, BuffSize=16384kB, MaxMultSect=16, MultSect=?16?
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4 
- DMA modes:  mdma0 mdma1 mdma2 
- UDMA modes: udma0 udma1 udma2 
- AdvancedPM=no WriteCache=enabled
- Drive conforms to: Unspecified:  ATA/ATAPI-1 ATA/ATAPI-2 ATA/ATAPI-3 ATA/ATAPI-4 ATA/ATAPI-5 ATA/ATAPI-6 ATA/ATAPI-7
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -951,7 +951,8 @@ static int ide_init_queue(ide_drive_t *d
+>  	blk_queue_segment_boundary(q, 0xffff);
+>  
+>  	if (!hwif->rqsize) {
+> -		if (hwif->no_lba48 || hwif->no_lba48_dma)
+> +		if ((hwif->host_flags & IDE_HFLAG_NO_LBA48) ||
+> +		    (hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA))
 
- * signifies the current active mode
+    Could have been:
 
-Igor
+		if (hwif->host_flags &
+		   (IDE_HFLAG_NO_LBA48_DMA | IDE_HFLAG_NO_LBA48_DMA))
+
+MBR, Sergei
