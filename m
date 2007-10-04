@@ -1,30 +1,31 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/10] ide: add hwif_register_devices() helper
-Date: Thu, 04 Oct 2007 20:19:33 +0400
-Message-ID: <47051295.3040507@ru.mvista.com>
-References: <200709112338.21389.bzolnier@gmail.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: pata_cs5536: ATA driver for Geode companion chip
+Date: Thu, 04 Oct 2007 13:00:47 -0400
+Message-ID: <yq13awqak74.fsf@sermon.lab.mkp.net>
+References: <20071003233012.GA8721@cosmic.amd.com>
+	<yq1przva76x.fsf@sermon.lab.mkp.net>
+	<20071004165819.003b86c6@the-village.bc.nu>
+	<20071004160834.GA28667@cosmic.amd.com>
+	<20071004172231.17665123@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:47911 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756545AbXJDQTw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2007 12:19:52 -0400
-In-Reply-To: <200709112338.21389.bzolnier@gmail.com>
+Received: from jaguar.mkp.net ([192.139.46.146]:45169 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755730AbXJDRAs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Oct 2007 13:00:48 -0400
+In-Reply-To: <20071004172231.17665123@the-village.bc.nu> (Alan Cox's message of "Thu\, 4 Oct 2007 17\:22\:31 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jordan Crouse <jordan.crouse@amd.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+>>>>> "Alan" == Alan Cox <alan@lxorguk.ukuu.org.uk> writes:
 
-> Add hwif_register_devices() helper to fix code duplication between
-> probe_hwif_init_with_fixup() and ideprobe_init().  Also remove stale
-> comment while at it.
+Alan> Even if we use PCI accesses and keep them dword along with the
+Alan> right timing it makes sense to have a 5536 driver for this.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Yeah.  Let me polish the PCI version and send that out...
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+-- 
+Martin K. Petersen      http://mkp.net/
