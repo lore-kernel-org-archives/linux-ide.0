@@ -1,129 +1,115 @@
-From: gilberto@sistemafenix.com.br
-Subject: Sata VIA New ID
-Date: Fri, 5 Oct 2007 18:48:38 -0300 (BRT)
-Message-ID: <63379.201.21.145.69.1191620918.squirrel@webmail.sistemafenix.com.br>
+From: kilgota@banach.math.auburn.edu
+Subject: apparent need to blacklist Lexar flash drive in ide-dma.c
+Date: Fri, 5 Oct 2007 16:49:05 -0500 (CDT)
+Message-ID: <Pine.LNX.4.64.0710051600030.29942@banach.math.auburn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from spamproxy.conntrust.com ([200.162.222.11]:35026 "EHLO
-	srv001.conntrust.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751421AbXJEVzW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Oct 2007 17:55:22 -0400
+Received: from banach.math.auburn.edu ([131.204.45.3]:1968 "EHLO
+	banach.math.auburn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754782AbXJEWJy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Oct 2007 18:09:54 -0400
+Received: from banach.math.auburn.edu (localhost [127.0.0.1])
+	by banach.math.auburn.edu (8.13.8/8.13.1) with ESMTP id l95Ln6fA029972
+	for <linux-ide@vger.kernel.org>; Fri, 5 Oct 2007 16:49:06 -0500
+Received: from localhost (kilgota@localhost)
+	by banach.math.auburn.edu (8.13.8/8.13.1/Submit) with ESMTP id l95Ln5BM029969
+	for <linux-ide@vger.kernel.org>; Fri, 5 Oct 2007 16:49:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi, my name is Gilberto I am from of the distribuition linux call FeniX
-Linux in Brazil.
-I need your help, I need put in sata_via.c a new ID for hd sata in my
-kernel 2.6.20.7
-I need only put the new id or I need make more things
+I am trying to set up a rather weird piece of hardware to run Linux. 
+The machine is an old Compaq IA-1 internet appliance, containing 32 meg of 
+RAM and a K6-2-266 CPU, with VIA Apollo chipset on board. The machine has 
+an internal flash drive consisting of a Sandisk SP3B-16 (16 megabytes) 
+which is apparently a chip or chips permanently attached to the board and 
+which contained an installation of WinCE which would do nothing except to 
+boot and to attempt to connect to MSN.
 
-The Gigabyte from Brasil, put for sale a new model call GA-VM900M with
-sata 2, In new kernel 2.6.22-9 its working. But I have some drivers
-compiled for my kernel its impossible change the version of the kernel,
-only because new SATA2
+The machine's BIOS "sees" the SP3B-16 as drive "C" and the default BIOS 
+setting is to boot from it.
 
-And some manufetures of Desktops are with problems because this.
+The  machine also contains an interface into which a CF card can be 
+plugged, and if you put one there it is seen as the "D" drive (/dev/hdc in 
+Linux). The BIOS also allows the possibility to boot from "D". The BIOS 
+also has settings, whiich can be toggled, for
 
+"IDE Drive Translation" (what this was supposed to mean I have no idea 
+and I can see no practical difference if it is enabled or disabled)
 
-static const struct pci_device_id svia_pci_tbl[] = {
-	{ PCI_VDEVICE(VIA, 0x5337), vt6420 },
-	{ PCI_VDEVICE(VIA, 0x0591), vt6420 },
-	{ PCI_VDEVICE(VIA, 0x3149), vt6420 },
-	{ PCI_VDEVICE(VIA, 0x3249), vt6421 },
-	{ PCI_VDEVICE(VIA, 0x5372), vt6420 },    ***** I put this line only ****
+"Enhanced IDE Transfer" (I would assume this means the pio mode can be 
+enhanced)
 
+"Ultra 33/66" (I would assume this means UDMA 33 or 66)
 
-	{ }	/* terminate list */
-};
+So, feeling adventurous, I went and bought a CF card on which is written
 
-What do I need for resolve this problem....
+Lexar 2GB Compact Flash Platinum II 80x
 
-my lspci is
-root@fenix:/usr/src/linux-2.6.22.9/drivers/ata# lspci
-0000:00:00.0 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:00.1 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:00.2 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:00.3 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:00.4 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:00.5 PIC: VIA Technologies, Inc. P4M900 I/O APIC Interrupt Controller
-0000:00:00.6 Host bridge: VIA Technologies, Inc. P4M900 Security Device
-0000:00:00.7 Host bridge: VIA Technologies, Inc. P4M900 Host Bridge
-0000:00:01.0 PCI bridge: VIA Technologies, Inc. VT8237 PCI Bridge
-0000:00:02.0 PCI bridge: VIA Technologies, Inc. P4M900 PCI to PCI Bridge
-Controller (rev 80)
-0000:00:03.0 PCI bridge: VIA Technologies, Inc. P4M900 PCI to PCI Bridge
-Controller (rev 80)
-0000:00:0f.0 IDE interface: VIA Technologies, Inc.: Unknown device 5372
-0000:00:0f.1 IDE interface: VIA Technologies, Inc.
-VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 07)
-0000:00:10.0 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev b0)
-0000:00:10.1 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev b0)
-0000:00:10.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev b0)
-0000:00:10.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-Controller (rev b0)
-0000:00:10.4 USB Controller: VIA Technologies, Inc. USB 2.0 (rev 90)
-0000:00:11.0 ISA bridge: VIA Technologies, Inc. VT8237S PCI to ISA Bridge
-0000:00:11.7 Host bridge: VIA Technologies, Inc. VT8251 Ultra VLINK
-Controller
-0000:00:12.0 Ethernet controller: VIA Technologies, Inc. VT6102 [Rhine-II]
-(rev 7c)
-0000:00:13.0 Host bridge: VIA Technologies, Inc. VT8237A Host Bridge
-0000:00:13.1 PCI bridge: VIA Technologies, Inc. VT8237A PCI to PCI Bridge
-0000:01:00.0 VGA compatible controller: VIA Technologies, Inc. Chrome9 HC
-IGP (rev 01)
-0000:80:01.0 Audio device: VIA Technologies, Inc. VIA High Definition
-Audio Controller (rev 10)
-root@fenix:/usr/src/linux-2.6.22.9/drivers/ata#
+and ran fdisk, creating a large partition re-formatted with Reiserfs on 
+which I did an installation and a small one for swap, installed a 2.6.22.3 
+kernel and LILO, and set the machine's BIOS to boot from "D".
 
-the lspci -n is:
+Aside from some issues which are relevant for some other list (relating to 
+issues with a USB keyboard and mouse), the machine boots. With DMA support 
+for the VIA Apollo chip built in, the kernel while booting sees the SP3B 
+first, of course, gives a couple of access errors, then duly blacklists 
+it, and there are no further problems with that one. However, the Lexar 
+gave repeated DMA errors and tried 3 times during the boot process to set 
+up the DMA for the Lexar CF card and finally gave up and booted with DMA 
+disabled. The only way to stop this rather agonizing and lengthy process 
+was either to use the boot option ide=nodma or, more permanently, to put a 
+line like this
 
-root@fenix:/usr/src/linux-2.6.22.9/drivers/ata# lspci -n
-0000:00:00.0 0600: 1106:0364
-0000:00:00.1 0600: 1106:1364
-0000:00:00.2 0600: 1106:2364
-0000:00:00.3 0600: 1106:3364
-0000:00:00.4 0600: 1106:4364
-0000:00:00.5 0800: 1106:5364
-0000:00:00.6 0600: 1106:6364
-0000:00:00.7 0600: 1106:7364
-0000:00:01.0 0604: 1106:b198
-0000:00:02.0 0604: 1106:a364 (rev 80)
-0000:00:03.0 0604: 1106:c364 (rev 80)
+         {"LEXAR ATA FLASH",             "ALL"},
 
-0000:00:0f.0 0101: 1106:5372
-0000:00:0f.1 0101: 1106:0571 (rev 07)
+into the blacklist in drivers/ide/ide-dma.c (note that "LEXAR ATA FLASH" 
+is the way the drive is seen during the bootup messages).
 
-0000:00:10.0 0c03: 1106:3038 (rev b0)
-0000:00:10.1 0c03: 1106:3038 (rev b0)
-0000:00:10.2 0c03: 1106:3038 (rev b0)
-0000:00:10.3 0c03: 1106:3038 (rev b0)
-0000:00:10.4 0c03: 1106:3104 (rev 90)
-0000:00:11.0 0601: 1106:3372
-0000:00:11.7 0600: 1106:287e
-0000:00:12.0 0200: 1106:3065 (rev 7c)
-0000:00:13.0 0600: 1106:337b
-0000:00:13.1 0604: 1106:337a
-0000:01:00.0 0300: 1106:3371 (rev 01)
-0000:80:01.0 0403: 1106:3288 (rev 10)
+To do this blacklisting essentially stops the problem while booting, but 
+of course the "drive" is then not accessed with any DMA.
 
-PLEASE HELP ME!
+Under the circumstances, I am of course uncertain whether the "ALL" is 
+appropriate or not, but I suspect it is. So perhaps you would like to add 
+this entry to the blacklist.
 
-0000:00:0f.0 0101: 1106:5372
-0000:00:0f.1 0101: 1106:0571 (rev 07)
-I believe the IDS are above.
+I also remain rather puzzled that the BIOS in this machine had EIDE 
+transfer and UDMA 33/66 turned on when I got the machine, and WinCE did 
+not seem to have any big problems with that. Perhaps WinCE simply ignores 
+those settings? I dunno. I do not claim to know much about WinCE.
 
-Gilberto
-FeniX Linux
-www.sistemafenix.com.br
+Finally, when doing research about this problem, I came across a rather 
+long thread on the kernel mailing list which related to the SP3B and its 
+problems with DMA. I recall that this thread pretty much petered out 
+without coming to any firm resolution of whether there is any solution to 
+the problem. It seemed that one of the fundamental problems was the way 
+the device is "seen". Namely, is it some kind of flash device, or is it an 
+ordinary hard drive? And is it possible to use DMA with a flash device or 
+not? Does it make any difference if the device is removable, or not? That 
+kind of thing.
 
+But at any rate, to say again what is seen here:
 
+The BIOS says that the SP3B (which is not removable and is so physically 
+inobtrusive that I could actually not even find it when I took the machine 
+apart!) is the equivalent of /dev/hda, and the booting Linux kernel sees 
+it as such, too.
 
+The BIOS says that the LEXAR (which is obviously removable) is the 
+equivalent of /dev/hdc, and the booting Linux kernel sees it as such, too.
 
+The BIOS seems to think that DMA should work, but it doesn't, at least 
+neither with the SP3B soldered on the board nor with the Lexar flash drive 
+put in the CF slot.
 
+Access to both of these devices is through the Linux IDE interface. I can 
+imagine that it might be somehow superior to access them as flash devices, 
+but it is difficult for me to visualize how to do that if the BIOS thinks 
+they are "ordinary" IDE hard drives.
+
+So you have a possible suggestion for the blacklist, or in the alternative 
+or as well as that, some questions which might possibly be interesting. 
+Frankly, I hope that some of the questions are interesting.
+
+Theodore Kilgore
