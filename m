@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: [PATCH] pata_cs5536: ATA driver for Geode companion chip (PCI)
-Date: Fri, 05 Oct 2007 02:06:48 -0400
-Message-ID: <yq17im2858n.fsf_-_@sermon.lab.mkp.net>
+Subject: [PATCH] pata_cs5536: ATA driver for Geode companion chip (MSR)
+Date: Fri, 05 Oct 2007 02:07:30 -0400
+Message-ID: <yq13awq857h.fsf_-_@sermon.lab.mkp.net>
 References: <20071003233012.GA8721@cosmic.amd.com>
 	<yq1przva76x.fsf@sermon.lab.mkp.net>
 	<20071004165819.003b86c6@the-village.bc.nu>
@@ -9,10 +9,10 @@ References: <20071003233012.GA8721@cosmic.amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:51698 "EHLO jaguar.mkp.net"
+Received: from jaguar.mkp.net ([192.139.46.146]:51702 "EHLO jaguar.mkp.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbXJEGGt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 5 Oct 2007 02:06:49 -0400
+	id S1750811AbXJEGHb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Oct 2007 02:07:31 -0400
 In-Reply-To: <20071004160834.GA28667@cosmic.amd.com> (Jordan Crouse's message of "Thu\, 4 Oct 2007 10\:08\:34 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,9 +22,16 @@ Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-id
 
 This is a driver specifically for the ATA controller on the Geode
 CS5536 companion chip.  The PCI device ID for this device was
-previously claimed by pata_amd.c but the PIO timings were not correct.
-This driver also works around a bug in some BIOSes that emulate
-unaligned access to the PCI config registers poorly.
+previously claimed by pata_amd.c but there were two problems with
+that:
+
+ - Not all Geode platforms emulate the ATA registers in PCI config
+   space
+
+ - CS5536 PIO timings are not identical to AMD74XX/8111
+
+pata_cs5536.c relies on Geode Machine Specific Registers to configure
+the ATA function and uses the correct PIO timings for the chip.
 
 Signed-off-by: Martin K. Petersen <mkp@mkp.net>
 
@@ -32,7 +39,7 @@ Signed-off-by: Martin K. Petersen <mkp@mkp.net>
 
 diff -r de183081194a drivers/ata/Kconfig
 --- a/drivers/ata/Kconfig	Tue Oct 02 18:00:56 2007 +0000
-+++ b/drivers/ata/Kconfig	Fri Oct 05 01:04:49 2007 -0400
++++ b/drivers/ata/Kconfig	Fri Oct 05 01:20:22 2007 -0400
 @@ -254,6 +254,15 @@ config PATA_CS5535
  
  	  If unsure, say N.
@@ -51,7 +58,7 @@ diff -r de183081194a drivers/ata/Kconfig
  	depends on PCI && EXPERIMENTAL
 diff -r de183081194a drivers/ata/Makefile
 --- a/drivers/ata/Makefile	Tue Oct 02 18:00:56 2007 +0000
-+++ b/drivers/ata/Makefile	Fri Oct 05 01:04:49 2007 -0400
++++ b/drivers/ata/Makefile	Fri Oct 05 01:20:22 2007 -0400
 @@ -27,6 +27,7 @@ obj-$(CONFIG_PATA_CS5520)	+= pata_cs5520
  obj-$(CONFIG_PATA_CS5520)	+= pata_cs5520.o
  obj-$(CONFIG_PATA_CS5530)	+= pata_cs5530.o
@@ -62,7 +69,7 @@ diff -r de183081194a drivers/ata/Makefile
  obj-$(CONFIG_PATA_HPT366)	+= pata_hpt366.o
 diff -r de183081194a drivers/ata/pata_amd.c
 --- a/drivers/ata/pata_amd.c	Tue Oct 02 18:00:56 2007 +0000
-+++ b/drivers/ata/pata_amd.c	Fri Oct 05 01:04:49 2007 -0400
++++ b/drivers/ata/pata_amd.c	Fri Oct 05 01:20:22 2007 -0400
 @@ -693,7 +693,9 @@ static const struct pci_device_id amd[] 
  	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP67_IDE),	8 },
  	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
@@ -75,8 +82,8 @@ diff -r de183081194a drivers/ata/pata_amd.c
  };
 diff -r de183081194a drivers/ata/pata_cs5536.c
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ b/drivers/ata/pata_cs5536.c	Fri Oct 05 01:04:49 2007 -0400
-@@ -0,0 +1,295 @@
++++ b/drivers/ata/pata_cs5536.c	Fri Oct 05 01:20:22 2007 -0400
+@@ -0,0 +1,298 @@
 +/*
 + * pata_cs5536.c	- CS5536 PATA for new ATA layer
 + *			  (C) 2007 Martin K. Petersen <mkp@mkp.net>
@@ -97,13 +104,15 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 + * Documentation:
 + *	Available from AMD web site.
 + *
-+ * The IDE timing registers for the CS5536 live in the Geode Machine
-+ * Specific Register file and not PCI config space.  Most BIOSes
-+ * virtualize the PCI registers so the chip looks like a standard IDE
-+ * controller.  Unfortunately not all implementations get this right.
-+ * In particular some have problems with unaligned accesses to the
-+ * virtualized PCI registers.  This driver always does full dword
-+ * writes to work around the issue.
++ * Like its predecessor (CS5535), CS5536 exposes its IDE configuration
++ * registers to the Geode Machine Specific Register file instead of
++ * PCI config space.  The 5536 IDE registers are modeled after the AMD
++ * 74xx PCI IDE controller although some of the timing knobs are
++ * subtly different.  Initially the CS5536 was supported by the
++ * pata_amd.c driver as some Geode platforms emulate the PCI config
++ * register support in firmware.  This driver, however, does not
++ * depend on PCI config emulation and accesses the MSR registers
++ * directly.
 + */
 +
 +#include <linux/kernel.h>
@@ -114,29 +123,33 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +#include <linux/delay.h>
 +#include <linux/libata.h>
 +#include <scsi/scsi_host.h>
++#include <asm/msr.h>
 +
 +#define DRV_NAME	"pata_cs5536"
-+#define DRV_VERSION	"0.0.4"
++#define DRV_VERSION	"0.0.3"
 +
 +enum {
-+	IDE_CFG			= 0x40,
-+	IDE_CFG_CHANEN		= 0x2,
-+	IDE_CFG_CABLE		= 0x42,
++	MSR_IDE_BASE		= 0x51300000,
++
++	MSR_IDE_CFG		= (MSR_IDE_BASE + 0x10),
++	MSR_IDE_DTC		= (MSR_IDE_BASE + 0x12),
++	MSR_IDE_CAST		= (MSR_IDE_BASE + 0x13),
++	MSR_IDE_ETC		= (MSR_IDE_BASE + 0x14),
++
++	IDE_CFG_CHANEN          = 0x2,
++	IDE_CFG_CABLE           = 0x10000,
++	IDE_CFG_CABLE_MASK      = 0x30000,
 +
 +	IDE_D0_SHIFT		= 24,
 +	IDE_D1_SHIFT		= 16,
 +	IDE_DRV_MASK		= 0xff,
 +
-+	IDE_DTC			= 0x48,
-+
-+	IDE_CAST		= 0x4c,
 +	IDE_CAST_D0_SHIFT	= 6,
 +	IDE_CAST_D1_SHIFT	= 4,
 +	IDE_CAST_DRV_MASK	= 0x3,
 +	IDE_CAST_CMD_MASK	= 0xff,
 +	IDE_CAST_CMD_SHIFT	= 24,
 +
-+	IDE_ETC			= 0x50,
 +	IDE_ETC_NODMA		= 0x03,
 +};
 +
@@ -151,12 +164,11 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +
 +static int cs5536_cable_detect(struct ata_port *ap)
 +{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 reg;
++	u32 reg, dummy;
 +
-+	pci_read_config_byte(pdev, IDE_CFG_CABLE, &reg);
++	rdmsr(MSR_IDE_CFG, reg, dummy);
 +
-+	if (reg & (1 << ap->port_no))
++	if (reg & (IDE_CFG_CABLE << ap->port_no))
 +		return ATA_CBL_PATA80;
 +	else
 +		return ATA_CBL_PATA40;
@@ -182,20 +194,19 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +		0x99, 0x92, 0x90, 0x22, 0x20
 +	};
 +
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
 +	struct ata_device *pair = ata_dev_pair(adev);
 +	int mode = adev->pio_mode - XFER_PIO_0;
 +	int cmdmode = mode;
 +	int dshift = ap->port_no ? IDE_D1_SHIFT : IDE_D0_SHIFT;
 +	int cshift = ap->port_no ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
-+	u32 dtc, cast, etc;
++	u32 dtc, cast, etc, dummy;
 +
 +	if (pair)
 +		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
 +
-+	pci_read_config_dword(pdev, IDE_DTC, &dtc);
-+	pci_read_config_dword(pdev, IDE_CAST, &cast);
-+	pci_read_config_dword(pdev, IDE_ETC, &etc);
++	rdmsr(MSR_IDE_DTC, dtc, dummy);
++	rdmsr(MSR_IDE_CAST, cast, dummy);
++	rdmsr(MSR_IDE_ETC, etc, dummy);
 +
 +	dtc &= ~(IDE_DRV_MASK << dshift);
 +	dtc |= drv_timings[mode] << dshift;
@@ -209,9 +220,9 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +	etc &= ~(IDE_DRV_MASK << dshift);
 +	etc |= IDE_ETC_NODMA << dshift;
 +
-+	pci_write_config_dword(pdev, IDE_DTC, dtc);
-+	pci_write_config_dword(pdev, IDE_CAST, cast);
-+	pci_write_config_dword(pdev, IDE_ETC, etc);
++	wrmsr(MSR_IDE_DTC, dtc, dummy);
++	wrmsr(MSR_IDE_CAST, cast, dummy);
++	wrmsr(MSR_IDE_ETC, etc, dummy);
 +}
 +
 +/**
@@ -231,25 +242,24 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +		0x67, 0x21, 0x20
 +	};
 +
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 dtc, etc;
++	u32 dtc, etc, dummy;
 +	int mode = adev->dma_mode;
 +	int dshift = ap->port_no ? IDE_D1_SHIFT  : IDE_D0_SHIFT;
 +
 +	if (mode >= XFER_UDMA_0) {
-+		pci_read_config_dword(pdev, IDE_ETC, &etc);
++		rdmsr(MSR_IDE_ETC, etc, dummy);
 +
 +		etc &= ~(IDE_DRV_MASK << dshift);
 +		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
 +
-+		pci_write_config_dword(pdev, IDE_ETC, etc);
++		wrmsr(MSR_IDE_ETC, etc, dummy);
 +	} else { /* MWDMA */
-+		pci_read_config_dword(pdev, IDE_DTC, &dtc);
++		rdmsr(MSR_IDE_DTC, dtc, dummy);
 +
 +		dtc &= ~(IDE_DRV_MASK << dshift);
 +		dtc |= mwdma_timings[mode] << dshift;
 +
-+		pci_write_config_dword(pdev, IDE_DTC, dtc);
++		wrmsr(MSR_IDE_DTC, dtc, dummy);
 +	}
 +}
 +
@@ -326,11 +336,11 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +	};
 +
 +	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
-+	u8 reg;
++	u32 cfg, dummy;
 +
-+	pci_read_config_byte(dev, IDE_CFG, &reg);
++	rdmsr(MSR_IDE_CFG, cfg, dummy);
 +
-+	if ((reg & IDE_CFG_CHANEN) == 0) {
++	if ((cfg & IDE_CFG_CHANEN) == 0) {
 +		printk(KERN_ERR DRV_NAME ": disabled by BIOS\n");
 +		return -ENODEV;
 +	}
@@ -372,4 +382,3 @@ diff -r de183081194a drivers/ata/pata_cs5536.c
 +
 +module_init(cs5536_init);
 +module_exit(cs5536_exit);
-
