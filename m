@@ -1,48 +1,30 @@
-From: "Marc Roos" <marc@roosit.nl>
-Subject: Promise sata disc sort order
-Date: Sun, 7 Oct 2007 20:08:19 +0200
-Message-ID: <200710071808.l97I8F0s029722@web1.roosit.nl>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Bug #4580: hda: lost interrupt when resuming from S3 - Sony VGN-T1XP
+Date: Sun, 7 Oct 2007 22:17:06 +0200
+Message-ID: <200710072217.07656.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 2122619320.roosit.nl ([212.26.193.20]:42841 "EHLO
-	web1.roosit.nl" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863AbXJGS3T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2007 14:29:19 -0400
+Received: from ogre.sisk.pl ([217.79.144.158]:55032 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755351AbXJGUBy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Oct 2007 16:01:54 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Hi,
 
-Jeff,
+IDE/ATA wizzards are kindly requested to have a look at:
 
-Is there a way to bind the sd dives to the sata ports instead of available
-harddrives? 
+http://bugzilla.kernel.org/show_bug.cgi?id=4580#c21
 
-For instance 
+as I have no idea of what we can do about the "hard drive password vs suspend"
+problem, if anything.
 
-Sda is port0 of sata controler0
-Sdb is port1 of sata controler0
-Sdc is port2 of sata controler0
-Sdd is port3 of sata controler0
-
-If the disk on port2 fails and the system is rebooted. I want the disk on
-port3 still be available under sdd and not changing to sdc.
-
-
-Regards,
-Marc.
-
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -. 
-Roos IT BV
-the Netherlands 
-
-t:  +31 (0)20 - 345 88 04
-f:  +31 (0)20 - 345 88 06
-e:  marc@roosit.eu
-
-
+Greetings,
+Rafael
