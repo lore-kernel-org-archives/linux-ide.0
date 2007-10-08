@@ -1,36 +1,55 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 6/8] ide: remove ->init_setup_dma from ide_pci_device_t
-Date: Mon, 8 Oct 2007 20:47:52 +0100
-Message-ID: <20071008204752.136b6259@the-village.bc.nu>
-References: <200708271933.24566.bzolnier@gmail.com>
-	<470A8383.3070006@ru.mvista.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/12] ide: check ->dma_setup() return value in flagged_taskfile()
+Date: Mon, 8 Oct 2007 23:07:08 +0200
+Message-ID: <200710082307.08468.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60191 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750844AbXJHTm6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2007 15:42:58 -0400
-In-Reply-To: <470A8383.3070006@ru.mvista.com>
+Received: from nf-out-0910.google.com ([64.233.182.190]:59801 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753258AbXJHVjs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2007 17:39:48 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1370193nfb
+        for <linux-ide@vger.kernel.org>; Mon, 08 Oct 2007 14:39:46 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
 
-> >   This fixes PCI bus-mastering and DMA simplex mode not being checked for
-> >   CS5510/CS5520 hosts.
-> 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-taskfile.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Just noticed this patch:
-
-You do realise that the CS5510 and CS5520 aren't IDE class devices so its
-wrong to check the simplex bits on them (Ditto the MPIIX ?)
-
-You really shouldn't be taking the CS5510, CS5520 or MPIIX via the SFF
-IDE setup paths at all. You'll note that libata takes care not to do so.
-Indeed last time I tested the MPIIX support in old IDE didn't actually
-work precisely due to this.
-
-Alan
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -827,9 +827,11 @@ ide_startstop_t flagged_taskfile (ide_dr
+ 		case TASKFILE_OUT_DMA:
+ 		case TASKFILE_IN_DMAQ:
+ 		case TASKFILE_IN_DMA:
+-			hwif->dma_setup(drive);
+-			hwif->dma_exec_cmd(drive, taskfile->command);
+-			hwif->dma_start(drive);
++			if (!hwif->dma_setup(drive)) {
++				hwif->dma_exec_cmd(drive, taskfile->command);
++				hwif->dma_start(drive);
++				return ide_started;
++			}
+ 			break;
+ 
+ 	        default:
+@@ -843,7 +845,8 @@ ide_startstop_t flagged_taskfile (ide_dr
+ 				return task->prehandler(drive, task->rq);
+ 			}
+ 			ide_execute_command(drive, taskfile->command, task->handler, WAIT_WORSTCASE, NULL);
++			return ide_started;
+ 	}
+ 
+-	return ide_started;
++	return ide_stopped;
+ }
