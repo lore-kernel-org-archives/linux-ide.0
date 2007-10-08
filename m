@@ -1,47 +1,37 @@
-From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Re: smartd causing SATA timeouts on sleeping drives
-Date: Mon, 8 Oct 2007 02:32:02 -0400
-Message-ID: <76366b180710072332o159d2364i6fe5e0d5e28c0944@mail.gmail.com>
-References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
-	 <4707ECF0.9030800@gmail.com>
-	 <76366b180710072251i7af01faaqc18776d8f8f31ef9@mail.gmail.com>
-	 <4709C8D6.3020008@gmail.com>
+From: Hernan G Solari <hgsolari@gmail.com>
+Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
+ where old SATA works
+Date: Mon, 08 Oct 2007 07:41:11 -0300
+Message-ID: <470A0947.4060809@gmail.com>
+References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com> <47014740.5080002@df.uba.ar> <4701EA71.2000609@gmail.com> <470220FE.2090506@gmail.com> <47044C6C.5030905@gmail.com> <47083555.2060605@gmail.com> <470981EE.30103@gmail.com> <47099628.2050108@gmail.com> <470997AC.4080600@gmail.com>
+Reply-To: hgsolari@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:10058 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752318AbXJHGcE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2007 02:32:04 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so679882rvb
-        for <linux-ide@vger.kernel.org>; Sun, 07 Oct 2007 23:32:03 -0700 (PDT)
-In-Reply-To: <4709C8D6.3020008@gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <470997AC.4080600@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Yes, the drives were in sleep mode. That is the only case where these
-timeouts/resets occur. It seems like the "-n never" mode of smartd
-should send the SRST if the drive is truly sleeping, otherwise libata
-will soft reset the drive when it sees the timeout. The "-n standby"
-option sounds like a more sane default, but there might be legacy
-reasons why it isn't configured that way.
 
-On 10/8/07, Tejun Heo <htejun@gmail.com> wrote:
-> Andrew Paprocki wrote:
-> > I found out after posting that this is governed by the -n parameter to
-> > smartd. The default behavior is "-n never" which means smartd will
-> > send the cmds regardless of the drive status. The man page indicates
-> > that may cause the drive to spin-up to answer the cmds. It appears for
-> > some drives (?) the cmds just timeout and libata performs a soft
-> > reset. I'm going to change my setup to "-n standby", but it seems
-> > strange to me that "-n never" is the default if it has this drastic of
-> > a result (at least under Linux). Is there any way to know if the drive
-> > will actually spin up as a result of the cmd instead of timing out?
->
-> If in standby mode, the drive would automatically spin up to process
-> command.  If in sleep mode, it needs SRST to spin back up.  Was your
-> drive in sleep mode?
+> Right, sorry about the confusion.  I think the screen capture would b=
+e
+> useful to ACPI developers.  Thanks.
+>  =20
+In any case, I appreciate your williness to help, plus I learned things=
+=20
+I would have not learned otherwise, many thanks to you
+
+Hernan
+
+--=20
+Hern=E1n Gustavo Solari, solari@df.uba.ar, http://www.df.uba.ar/~solari
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
