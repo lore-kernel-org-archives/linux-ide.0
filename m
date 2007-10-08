@@ -1,53 +1,67 @@
-From: idurdanovic@comcast.net (Igor Durdanovic)
-Subject: Re: sata_sil24 and sil-4726
-Date: Sun, 7 Oct 2007 20:27:32 -0400
-Message-ID: <18185.31092.208800.637059@kitty1.shrimp.net>
-References: <18180.26625.216781.626572@kitty1.shrimp.net>
-	<470468EE.909@gmail.com>
-	<18180.30643.554165.292012@kitty1.shrimp.net>
-	<4704790C.7060901@gmail.com>
-	<18180.31651.305092.579581@kitty1.shrimp.net>
-	<470480C9.9030309@gmail.com>
-	<18180.34107.704754.565573@kitty1.shrimp.net>
-	<47048C2B.1060202@gmail.com>
-	<47049344.6010603@gmail.com>
-	<18180.38483.139258.690293@kitty1.shrimp.net>
-	<47049799.3030509@gmail.com>
-	<18180.39323.750969.577889@kitty1.shrimp.net>
-	<47049A74.3080000@gmail.com>
-Reply-To: idurdanovic@comcast.net
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
+ where old SATA works
+Date: Mon, 08 Oct 2007 10:03:42 +0900
+Message-ID: <470981EE.30103@gmail.com>
+References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com> <47014740.5080002@df.uba.ar> <4701EA71.2000609@gmail.com> <470220FE.2090506@gmail.com> <47044C6C.5030905@gmail.com> <47083555.2060605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sccrmhc14.comcast.net ([204.127.200.84]:35377 "EHLO
-	sccrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965AbXJHA1n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2007 20:27:43 -0400
-In-Reply-To: <47049A74.3080000@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:17366 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754844AbXJHBDv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2007 21:03:51 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1480618wah
+        for <linux-ide@vger.kernel.org>; Sun, 07 Oct 2007 18:03:50 -0700 (PDT)
+In-Reply-To: <47083555.2060605@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: idurdanovic@comcast.net, linux-ide@vger.kernel.org
+To: hgsolari@gmail.com
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
 
-Hi Tejun,
+Hello, Hernan.
 
-I have made the following experimental observation on the
-SIL-3132 <-> SIL-4726 writing speed.
+Hernan G Solari wrote:
+> 
+>> If you can set up a serial console, it would be better.  If not, can you
+>> please take a photo of the crash and post it?
+>>   
+> I am running short of elements, no digital camera o movil phone for the
+> case or serial link.
+> However, what it is on the screen when it crashes follows:
+> 
+> KERNEL 2.6.23-rc8
+> -----------------------------------------------------begin screen dump
+> PCI: Bridge: 0000:00:14.4
+>  IO window: a000-afff
+>  MEM window: d0300000-d03fffff
+>  PREFETCH window: 50000000-53ffffff
+> PCI: Enabling device 0000:00:04.0 (0000 -> 0002)
+> PCI: Enabling device 0000:08:01.0 (0000 -> 0003)
+> ACPI: PCI Interrupt 0000:08:01.0[A] -> GSI 23 (level, low) -> IRQ 23
+> NET: Registered protocol family 2
+> IP route cache hash table entries: 32768 (order: 6, 262144 bytes)
+> TCP established hash table entries: 131072 (order: 9, 3145728 bytes)
+> TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+> TCP: Hash tables configured (established 131072 bind 65536)
+> TCP reno registered
+> Simple Boot Flag at 0x36 set to 0x1
+> Total HugeTLB memory allocated, 0
+> Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
+> io scheduler noop registered
+> io scheduler deadline registered
+> io scheduler cfq registered (default)
+> PCI: MSI quirk detected. MSI deactivated.
+> assign_interrupt_mode Found MSI capability
+> assign_interrupt_mode Found MSI capability
+> assign_interrupt_mode Found MSI capability
+> assign_interrupt_mode Found MSI capability
 
-I have 5 Seagate 750GB disks, each running at 3.0 Gbps
-All have write-cache enabled.
+Hmmm... and the kernel freezes after this?  libata driver isn't
+initialized yet.  I don't think libata has anything to do with here.
 
-I can write to 1 disk at 74MB/s
+Thanks.
 
-Writing to 2 disks simultaneously, the speed drops down to 37MB/s
-per disk (sum is still 74MB/s)
-
-Writing to 3 disks simultaneously, the speed drops down to 25MB/s
-per disk, etc.
-
-Any idea why each disk gets only a fraction of the bandwidth when
-accessed simultaneously? The port multiplier ought to sustain 300MB/s
-
-
-Thanks, Igor
+-- 
+tejun
