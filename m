@@ -1,37 +1,66 @@
-From: Hernan G Solari <hgsolari@gmail.com>
-Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
- where old SATA works
-Date: Mon, 08 Oct 2007 07:41:11 -0300
-Message-ID: <470A0947.4060809@gmail.com>
-References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com> <47014740.5080002@df.uba.ar> <4701EA71.2000609@gmail.com> <470220FE.2090506@gmail.com> <47044C6C.5030905@gmail.com> <47083555.2060605@gmail.com> <470981EE.30103@gmail.com> <47099628.2050108@gmail.com> <470997AC.4080600@gmail.com>
-Reply-To: hgsolari@gmail.com
+From: Bernd Schubert <bs@q-leap.de>
+Subject: sil3114 data corruption
+Date: Mon, 8 Oct 2007 17:09:17 +0200
+Message-ID: <200710081709.18253.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <470997AC.4080600@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ns1.q-leap.de ([153.94.51.193]:33839 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752049AbXJHPJV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Oct 2007 11:09:21 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Bernd Schubert <bs@q-leap.de>, linux-scsi@vger.kernel.org
+
+[sorry for sending twice, but after I read the sil sources, I see the mail 
+address had been wrong]
+
+Hi,
+
+somehow the sil3114 causes data corruption with some (newer?) disks. Simply 
+filling the filesystem with zeros and reading the these data will make the 
+kernel to report filesystem corruption. 
+This is definitely not an issue of memory, since the systems (several tested) 
+do have ECC memory and the memory is monitored with EDAC. 
+
+Also not an issue of the filesystem, also several tested. 
 
 
-> Right, sorry about the confusion.  I think the screen capture would b=
-e
-> useful to ACPI developers.  Thanks.
->  =20
-In any case, I appreciate your williness to help, plus I learned things=
-=20
-I would have not learned otherwise, many thanks to you
+[  345.051369]   Vendor: ATA       Model: ST3250820AS       Rev: 3.AA
+[  345.060526]   Type:   Direct-Access                      ANSI SCSI 
+revision: 05
+[  345.069302]   Vendor: ATA       Model: ST3200822AS       Rev: 3.01
+[  345.078551]   Type:   Direct-Access                      ANSI SCSI 
+revision: 05
+[  345.087522] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
+[  345.095381] SCSI device sda: drive cache: write back
+[  345.101314] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
+[  345.109150] SCSI device sda: drive cache: write back
+[  345.115007]  /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
+[  345.134017] sd 0:0:0:0: Attached scsi disk sda
+[  345.139458] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+[  345.147558] SCSI device sdb: drive cache: write back
+[  345.153671] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+[  345.161740] SCSI device sdb: drive cache: write back
+[  345.167725]  /dev/scsi/host1/bus0/target0/lun0: p1 p2 p3
+[  345.187133] sd 1:0:0:0: Attached scsi disk sdb
 
-Hernan
 
---=20
-Hern=E1n Gustavo Solari, solari@df.uba.ar, http://www.df.uba.ar/~solari
+The ST3250820AS data on the ST3250820AS disk will suffer from data corruption, 
+but the data on the older ST3200822AS will *not*.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kernel versions tested: 2.6.15-2.6.20
+
+Any ideas how to proceed?
+
+Thanks,
+Bernd
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
