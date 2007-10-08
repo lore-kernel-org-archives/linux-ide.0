@@ -1,44 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Bug #4580: hda: lost interrupt when resuming from S3 - Sony VGN-T1XP
-Date: Sun, 07 Oct 2007 18:20:19 -0400
-Message-ID: <47095BA3.2020705@garzik.org>
-References: <200710072217.07656.rjw@sisk.pl> <20071007231310.559dbd01@the-village.bc.nu>
+From: idurdanovic@comcast.net (Igor Durdanovic)
+Subject: Re: sata_sil24 and sil-4726
+Date: Sun, 7 Oct 2007 20:27:32 -0400
+Message-ID: <18185.31092.208800.637059@kitty1.shrimp.net>
+References: <18180.26625.216781.626572@kitty1.shrimp.net>
+	<470468EE.909@gmail.com>
+	<18180.30643.554165.292012@kitty1.shrimp.net>
+	<4704790C.7060901@gmail.com>
+	<18180.31651.305092.579581@kitty1.shrimp.net>
+	<470480C9.9030309@gmail.com>
+	<18180.34107.704754.565573@kitty1.shrimp.net>
+	<47048C2B.1060202@gmail.com>
+	<47049344.6010603@gmail.com>
+	<18180.38483.139258.690293@kitty1.shrimp.net>
+	<47049799.3030509@gmail.com>
+	<18180.39323.750969.577889@kitty1.shrimp.net>
+	<47049A74.3080000@gmail.com>
+Reply-To: idurdanovic@comcast.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43857 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756098AbXJGWU3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Oct 2007 18:20:29 -0400
-In-Reply-To: <20071007231310.559dbd01@the-village.bc.nu>
+Received: from sccrmhc14.comcast.net ([204.127.200.84]:35377 "EHLO
+	sccrmhc14.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965AbXJHA1n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2007 20:27:43 -0400
+In-Reply-To: <47049A74.3080000@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: idurdanovic@comcast.net, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Sun, 7 Oct 2007 22:17:06 +0200
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
->> Hi,
->>
->> IDE/ATA wizzards are kindly requested to have a look at:
->>
->> http://bugzilla.kernel.org/show_bug.cgi?id=4580#c21
->>
->> as I have no idea of what we can do about the "hard drive password vs suspend"
->> problem, if anything.
-> 
-> libata supports the acpi interfaces but has them off by default. Turn
-> them on and it ought to just work assuming the BIOS does the right thing
-> and the BIOS knows the password.
+Hi Tejun,
 
-FWIW, ACPI is turned on in libata-dev.git#upstream, and as soon as 
-Andrew does his next update, it should be turned on there too.  (it 
-might even be in his last -mm update, not sure)
+I have made the following experimental observation on the
+SIL-3132 <-> SIL-4726 writing speed.
 
-	Jeff
+I have 5 Seagate 750GB disks, each running at 3.0 Gbps
+All have write-cache enabled.
+
+I can write to 1 disk at 74MB/s
+
+Writing to 2 disks simultaneously, the speed drops down to 37MB/s
+per disk (sum is still 74MB/s)
+
+Writing to 3 disks simultaneously, the speed drops down to 25MB/s
+per disk, etc.
+
+Any idea why each disk gets only a fraction of the bandwidth when
+accessed simultaneously? The port multiplier ought to sustain 300MB/s
 
 
-
+Thanks, Igor
