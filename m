@@ -1,59 +1,36 @@
-From: Hernan G Solari <hgsolari@gmail.com>
-Subject: Re: Serial ATA does not find partitions (Hitachi HD, new? ATI controller)
- where old SATA works
-Date: Sun, 07 Oct 2007 23:30:00 -0300
-Message-ID: <47099628.2050108@gmail.com>
-References: <46FC4384.7080607@df.uba.ar> <46FCCD57.2020507@gmail.com> <47014740.5080002@df.uba.ar> <4701EA71.2000609@gmail.com> <470220FE.2090506@gmail.com> <47044C6C.5030905@gmail.com> <47083555.2060605@gmail.com> <470981EE.30103@gmail.com>
-Reply-To: hgsolari@gmail.com
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Re: smartd causing SATA timeouts on sleeping drives
+Date: Mon, 8 Oct 2007 01:51:21 -0400
+Message-ID: <76366b180710072251i7af01faaqc18776d8f8f31ef9@mail.gmail.com>
+References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
+	 <4707ECF0.9030800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.225]:57740 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753870AbXJHDju (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2007 23:39:50 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so557405wra
-        for <linux-ide@vger.kernel.org>; Sun, 07 Oct 2007 20:28:09 -0700 (PDT)
-In-Reply-To: <470981EE.30103@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:17322 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbXJHFvW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2007 01:51:22 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so673071rvb
+        for <linux-ide@vger.kernel.org>; Sun, 07 Oct 2007 22:51:22 -0700 (PDT)
+In-Reply-To: <4707ECF0.9030800@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
+I found out after posting that this is governed by the -n parameter to
+smartd. The default behavior is "-n never" which means smartd will
+send the cmds regardless of the drive status. The man page indicates
+that may cause the drive to spin-up to answer the cmds. It appears for
+some drives (?) the cmds just timeout and libata performs a soft
+reset. I'm going to change my setup to "-n standby", but it seems
+strange to me that "-n never" is the default if it has this drastic of
+a result (at least under Linux). Is there any way to know if the drive
+will actually spin up as a result of the cmd instead of timing out?
 
-> Hmmm... and the kernel freezes after this?  libata driver isn't
-> initialized yet.  I don't think libata has anything to do with here.
->
->  =20
-as I told you, the ATA problem was with the 2.6.22 version of the kerne=
-l
-and is not longer related to the freeze with kernel 2.6.23-rc8  I asked=
-=20
-whether you wanted to see the ATA problem in that kernel or the present=
-=20
-crash.
-
-> Options: I can compile the 2.6.22 kernel to get the reported problem
->       or try to debug the problem in 2.6.22.8 or something else it
->        fits the kernel-team.
-
-was my offer.
-
-As you did not answer that point (you answered other points) I thought=20
-it was useless to debug a problem that is not longer there. I still=20
-thing that way.
-The booting is apparently allocating port services at the  point of=20
-freezing but not too close of the disk driver, that much I  knew.
-
-regards
-                Hernan
-
-
-
-
---=20
-Hern=E1n Gustavo Solari, solari@df.uba.ar, http://www.df.uba.ar/~solari
-
-
+On 10/6/07, Tejun Heo <htejun@gmail.com> wrote:
+> smartd should probably issue CHECK POWER MODE (0xe5) before issuing
+> other commands.  Bruce?
