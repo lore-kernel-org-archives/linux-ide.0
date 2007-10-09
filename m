@@ -1,42 +1,64 @@
-From: Stian Jordet <liste@jordet.net>
-Subject: Linux, SATA and Port Multiplier
-Date: Tue, 09 Oct 2007 09:53:56 +0200
-Message-ID: <470B3394.5040305@jordet.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] sata_mv: correct S/G table limits
+Date: Tue, 9 Oct 2007 13:51:57 -0400
+Message-ID: <20071009175157.GA27633@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from buick.jordet.net ([193.91.240.190]:52169 "EHLO buick.jordet.net"
+Received: from havoc.gtf.org ([69.61.125.42]:41401 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752507AbXJIIf7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Oct 2007 04:35:59 -0400
-Received: from [82.147.32.178] (port=28799 helo=[32.53.42.95])
-	by buick.jordet.net with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.68)
-	(envelope-from <liste@jordet.net>)
-	id 1If9qq-0003fw-7F
-	for linux-ide@vger.kernel.org; Tue, 09 Oct 2007 09:50:00 +0200
+	id S1752939AbXJIRv7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Oct 2007 13:51:59 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hello,
 
-I'm just trying to be a little proactive. I need to buy a sata card to 
-use with an older Intel SC450NX server. I want to use this cabinet:
+The recent mv_fill_sg() rewrite, to fix a data corruption problem
+related to IOMMU virtual merging, forgot to account for the
+potentially-increased size of the scatter/gather table after its run.
 
-http://www.stardom.com.tw/sohotank%20st6600.htm
+Additionally, the DMA boundary is reduced from 0xffffffff to 0xffff
+to more closely match the needs of mv_fill_sg().
 
-Thus I need port multiplier support. I would also like to have a card 
-with both eSATA og interne SATA connectors. I have looked around, and 
-found this:
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+---
+ drivers/ata/sata_mv.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-http://www.highpoint-tech.com/USA/rr1742.htm
-
-It seems to use the Marvell 88SX6042 chipset. Does this support port 
-multiplier? If not, do you have any recommendations for any PCI 
-sata-controller that supports port multiplier? It doesn't have to have 
-eSATA, but it needs to have internal sata, and eSATA is a plus.
-
-Regards,
-Stian
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 1a82e22..cb7dec9 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -313,7 +313,10 @@ enum {
+ #define IS_GEN_IIE(hpriv) ((hpriv)->hp_flags & MV_HP_GEN_IIE)
+ 
+ enum {
+-	MV_DMA_BOUNDARY		= 0xffffffffU,
++	/* DMA boundary 0xffff is required by the s/g splitting
++	 * we need on /length/ in mv_fill-sg().
++	 */
++	MV_DMA_BOUNDARY		= 0xffffU,
+ 
+ 	/* mask of register bits containing lower 32 bits
+ 	 * of EDMA request queue DMA address
+@@ -448,7 +451,7 @@ static struct scsi_host_template mv5_sht = {
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= MV_MAX_SG_CT,
++	.sg_tablesize		= MV_MAX_SG_CT / 2,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= 1,
+@@ -466,7 +469,7 @@ static struct scsi_host_template mv6_sht = {
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= MV_MAX_SG_CT,
++	.sg_tablesize		= MV_MAX_SG_CT / 2,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= 1,
