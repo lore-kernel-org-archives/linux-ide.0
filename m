@@ -1,45 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: wrap schedule_timeout_uninterruptible() in loop
-Date: Tue, 9 Oct 2007 14:58:33 +0900
-Message-ID: <20071009055833.GH12186@htj.dyndns.org>
+Subject: [PATCH] ahci: kill leftover from enabling NCQ over PMP
+Date: Tue, 9 Oct 2007 14:59:50 +0900
+Message-ID: <20071009055950.GI12186@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:8843 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:12167 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbXJIF6k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Oct 2007 01:58:40 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1917476wah
-        for <linux-ide@vger.kernel.org>; Mon, 08 Oct 2007 22:58:39 -0700 (PDT)
+	with ESMTP id S1751743AbXJIF76 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Oct 2007 01:59:58 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1917875wah
+        for <linux-ide@vger.kernel.org>; Mon, 08 Oct 2007 22:59:57 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Tasks in uninterruptible sleep might be woken up by unrelated events
-and should check whether the condition it was waiting for has actually
-triggered.  Wrap schedule_timeout_uninterruptible() in loop to achieve
-it.
+ahci had problems with NCQ over PMP and NCQ used to be disabled while
+PMP was attached.  After fixing the problem, the temporary NCQ
+disabling code wasn't removed completely.  Kill the remaining piece.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/ata/ahci.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 866ac9d..8aa6140 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2183,7 +2183,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 				"(errno=%d), retrying in %u secs\n",
- 				rc, (jiffies_to_msecs(delta) + 999) / 1000);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 24fb90f..694eabc 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1677,19 +1677,11 @@ static void ahci_pmp_attach(struct ata_port *ap)
+ static void ahci_pmp_detach(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+-	struct ahci_host_priv *hpriv = ap->host->private_data;
+-	unsigned long flags;
+ 	u32 cmd;
  
--			schedule_timeout_uninterruptible(delta);
-+			while (delta)
-+				delta = schedule_timeout_uninterruptible(delta);
- 		}
+ 	cmd = readl(port_mmio + PORT_CMD);
+ 	cmd &= ~PORT_CMD_PMP;
+ 	writel(cmd, port_mmio + PORT_CMD);
+-
+-	if (hpriv->cap & HOST_CAP_NCQ) {
+-		spin_lock_irqsave(ap->lock, flags);
+-		ap->flags |= ATA_FLAG_NCQ;
+-		spin_unlock_irqrestore(ap->lock, flags);
+-	}
+ }
  
- 		if (rc == -EPIPE ||
+ static int ahci_pmp_read(struct ata_device *dev, int pmp, int reg, u32 *r_val)
 -- 
 1.5.0.3
 
