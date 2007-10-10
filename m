@@ -1,96 +1,61 @@
-From: Len Brown <lenb@kernel.org>
-Subject: Re: Invalid PnP ACPI reserved MMIO areas on Supermicro boards
-Date: Wed, 10 Oct 2007 01:10:25 -0400
-Message-ID: <200710100110.25513.lenb@kernel.org>
-References: <470C166C.4030502@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: fix revalidation issuing after configuration commands
+Date: Wed, 10 Oct 2007 15:57:44 +0900
+Message-ID: <20071010065744.GO12186@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <470C166C.4030502@shaw.ca>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.186]:27675 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbXJJG5u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 02:57:50 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so107716rvb
+        for <linux-ide@vger.kernel.org>; Tue, 09 Oct 2007 23:57:50 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Linux-acpi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, idurdanovic@comcast.net
 
-On Tuesday 09 October 2007 20:01, Robert Hancock wrote:
-> Some people with certain Supermicro boards (at least the H8DCE, it 
-> seems) have reported that the sata_nv driver fails to attach to some of 
-> the controllers due to resource conflicts:
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=280641
-> https://bugzilla.redhat.com/show_bug.cgi?id=313491
-> 
-> Essentially since about 2.6.22 or so (before which we apparently didn't 
-> handle PnpACPI reserved MMIO regions?) we get:
+After commands which can change device configuration, EH is scheduled
+to revalidate and reconfigure the device.  Host link was incorrectly
+used unconditionally when scheduling EH action.  This resulted in
+bogus revalidation request and mismatched configuration between device
+and driver.  Fix it.
 
-So if you boot with "pnpacpi=off" then the board is happy?
+This bug was reported by Igor Durdanovic.
 
--Len
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Igor Durdanovic <idurdanovic@comcast.net>
+---
+ drivers/ata/libata-scsi.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> pnp: 00:09: iomem range 0xdfefd000-0xdfefd3ff has been reserved
-> pnp: 00:09: iomem range 0xdfefe000-0xdfefe3ff has been reserved
-> 
-> when the CK804 SATA controllers have as their BIOS-assigned resources:
-> 
-> 80:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
-> (rev f3) (prog-if 85 [Master SecO PriO])
-> 	Subsystem: Super Micro Computer Inc Unknown device 1011
-> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
-> Stepping- SERR- FastB2B-
-> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
-> <MAbort- >SERR- <PERR-
-> 	Interrupt: pin A routed to IRQ 46
-> 	Region 0: I/O ports at e400 [size=8]
-> 	Region 1: I/O ports at e000 [size=4]
-> 	Region 2: I/O ports at dc00 [size=8]
-> 	Region 3: I/O ports at d800 [size=4]
-> 	Region 4: I/O ports at d400 [size=16]
-> 	Region 5: Memory at dfefd000 (32-bit, non-prefetchable)
-> 
-> and
-> 
-> 80:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
-> (rev f3) (prog-if 85 [Master SecO PriO])
-> 	Subsystem: Super Micro Computer Inc Unknown device 1011
-> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
-> Stepping- SERR- FastB2B-
-> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
-> <MAbort- >SERR- <PERR-
-> 	Interrupt: pin A routed to IRQ 45
-> 	Region 0: I/O ports at f800 [size=8]
-> 	Region 1: I/O ports at f400 [size=4]
-> 	Region 2: I/O ports at f000 [size=8]
-> 	Region 3: I/O ports at ec00 [size=4]
-> 	Region 4: I/O ports at e800 [size=16]
-> 	Region 5: Memory at dfefe000 (32-bit, non-prefetchable) [size=4K]
-> 
-> And so of course we get:
-> 
-> sata_nv 0000:80:07.0: Using ADMA mode
-> PCI: Unable to reserve mem region #6:1000@dfefd000 for device 0000:80:07.0
-> ACPI: PCI interrupt for device 0000:80:07.0 disabled
-> sata_nv: probe of 0000:80:07.0 failed with error -16
-> ACPI: PCI Interrupt Link [LT2E] enabled at IRQ 45
-> ACPI: PCI Interrupt 0000:80:08.0[A] -> Link [LT2E] -> GSI 45 (level, 
-> low) -> IRQ 45
-> sata_nv 0000:80:08.0: Using ADMA mode
-> PCI: Unable to reserve mem region #6:1000@dfefe000 for device 0000:80:08.0
-> ACPI: PCI interrupt for device 0000:80:08.0 disabled
-> sata_nv: probe of 0000:80:08.0 failed with error -16
-> 
-> So essentially the BIOS has erroneously reserved the SATA controller's 
-> BARs in the ACPI motherboard resources, preventing the driver from 
-> attaching to the device.
-> 
-> Any ideas on what we can do about this?
-> 
-> -Get Supermicro to fix the BIOS - already tried, it seems
-> -System-specific quirk to ignore these resource reservations?
-> -Try to move the PCI resources if they conflict with the ACPI resource 
-> reservations?
-> 
-> I wonder how Windows deals with this, if it even does on these boards?
-> 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ea53e6a..d63c81e 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1363,6 +1363,7 @@ nothing_to_do:
+ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
++	struct ata_eh_info *ehi = &qc->dev->link->eh_info;
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	u8 *cdb = cmd->cmnd;
+  	int need_sense = (qc->err_mask != 0);
+@@ -1376,14 +1377,14 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 		case ATA_CMD_SET_FEATURES:
+ 			if ((qc->tf.feature == SETFEATURES_WC_ON) ||
+ 			    (qc->tf.feature == SETFEATURES_WC_OFF)) {
+-				ap->link.eh_info.action |= ATA_EH_REVALIDATE;
++				ehi->action |= ATA_EH_REVALIDATE;
+ 				ata_port_schedule_eh(ap);
+ 			}
+ 			break;
+ 
+ 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
+ 		case ATA_CMD_SET_MULTI: /* multi_count changed */
+-			ap->link.eh_info.action |= ATA_EH_REVALIDATE;
++			ehi->action |= ATA_EH_REVALIDATE;
+ 			ata_port_schedule_eh(ap);
+ 			break;
+ 		}
