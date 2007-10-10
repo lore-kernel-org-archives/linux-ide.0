@@ -1,119 +1,108 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: smartd causing SATA timeouts on sleeping drives
-Date: Wed, 10 Oct 2007 14:46:39 -0500 (CDT)
-Message-ID: <Pine.LNX.4.63.0710101443300.4797@trinity.phys.uwm.edu>
-References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
+From: Patrizio Bassi <patrizio.bassi@gmail.com>
+Subject: Re: libata not working for sis5533
+Date: Wed, 10 Oct 2007 22:22:29 +0200
+Message-ID: <470D3485.5040400@gmail.com>
+References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com> <46E85AA8.3080302@redhat.com>
+Reply-To: patrizio.bassi@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.phys.uwm.edu ([129.89.57.159]:43630 "EHLO
-	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756594AbXJJTqm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 15:46:42 -0400
-In-Reply-To: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.171]:20450 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755710AbXJJUWh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 16:22:37 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so344953ugc
+        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 13:22:36 -0700 (PDT)
+In-Reply-To: <46E85AA8.3080302@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew@ishiboo.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Andrew,
+Chuck Ebbert ha scritto:
+> On 08/31/2007 06:20 PM, Patrizio Bassi wrote:
+>   
+>> Patrizio Bassi ha scritto:
+>>     
+>>> Michal Piotrowski ha scritto:
+>>>       
+>>>> Hi,
+>>>>
+>>>> [Adding IDE wizards to CC]
+>>>>
+>>>> On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
+>>>>   
+>>>>         
+>>>>> My sis630 chipset shipped with Asus A1000
+>>>>> doesn't work properly with suspend with ide drivers
+>>>>> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
+>>>>>
+>>>>> i tried to switch to libata but i cannot boot.
+>>>>> I've enabled generic ide and sis specific code, both in-kernel. of
+>>>>> course scsi too.
+>>>>>
+>>>>> when i boot i get: irq #14 nobody cared and stop
+>>>>>
+>>>>> i have to remove battery to reboot pc.
+>>>>> I'm using 2.6.22.5, but i never got any libata kernel working.
+>>>>>
+>>>>> Patrizio
+>>>>>
+>>>>> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
+>>>>> the laptop and could not boot it
+>>>>>
+>>>>> Please CC me.
+>>>>>
+>>>>> lspci:
+>>>>> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
+>>>>> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
+>>>>> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
+>>>>> Bridge)
+>>>>> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
+>>>>> PCI Fast Ethernet (rev 80)
+>>>>> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
+>>>>> Controller (rev 07)
+>>>>> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
+>>>>> Controller (rev 07)
+>>>>> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
+>>>>> SiS PCI Audio Accelerator (rev 01)
+>>>>>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
+>>>>> Controller (rev a0)
+>>>>> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
+>>>>> PCI-to-PCI bridge (AGP)
+>>>>> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+>>>>> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
+>>>>> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
+>>>>> 630/730 PCI/AGP VGA Display Adapter (rev 11)
+>>>>>     
+>>>>>           
+>>>> Regards,
+>>>> Michal
+>>>>
+>>>>   
+>>>>         
+>> i've been out for a week, but found no notice, did i lost any email or
+>> no activity on this issue?
+>>
+>>     
+>
+> I assume you tried the standard workarounds, like
+>
+>   pci=nommconf,nomsi
+>   pci=noacpi
+>   pci=biosirq
+>
+> (one at at time, not all at once.)
+>
+>
+>   
 
-I forgot to say 'thank you' for tracking this down.
+I waited 2.6.23 to be out and tried again, but still no chance to get
+libata working for my notebook.
 
-Thank you!
+Anything i can try?
 
-Cheers,
- 	Bruce
-
-
-On Fri, 5 Oct 2007, Andrew Paprocki wrote:
-
-> Tejun/Bruce,
->
-> I tracked down the source of timeouts I have been frequently getting.
-> It appears smartd is not properly handling drives that are spun down
-> by the BIOS ACPI settings. I have SATA timeouts which occur every half
-> hour (the default -i 1800 in smartd) that do not occur when smartd is
-> not running. The drives smartd is configured to look at have a sleep
-> time configured in the BIOS. When the drives are asleep, I get a soft
-> reset every half hour as smartd attempts to access the drives. While
-> in this state, smartd also reports bad state to syslog (e.g.
-> temperature changes to 200C). Just for comparison, hddtemp knows the
-> drives are sleeping:
->
-> # hddtemp /dev/sda
-> /dev/sda: Hitachi HDS721010KLA330                 : drive is sleeping
-> # ls /storage
-> ... wakes up the drives ...
-> # hddtemp /dev/sda
-> /dev/sda: Hitachi HDS721010KLA330                 :  29 C or  F
->
-> I'm pasting the example cmd / timeout error / soft reset below. Also,
-> I'm pasting the invalid settings which smartd detects when in this
-> state. What needs to change for smartd to recognize drives are
-> sleeping and either not perform its checks, or forcefully wake them up
-> to perform them? (Should that be a configuration parameter in smartd?)
->
-> Thanks,
-> -Andrew
->
-> # uname -a
-> Linux (none) 2.6.22.6 #5 Mon Sep 10 02:15:22 EDT 2007 i586 unknown
-> (Using sata_sil on 3114 chips)
->
-> # smartctl -V
-> smartmontools release 5.38 dated 2006/12/20 at 20:37:59 UTC
-> ...
-> smartctl compile dated Sep 17 2007 at 13:47:25
-> (repository code checked out on Sep 17th)
->
-> # cat /var/run/smartd.conf
-> /dev/sda -d ata -a -S on -s (S/../.././02|L/../../6/03)
-> /dev/sdb -d ata -a -S on -s (S/../.././02|L/../../6/03)
->
-> What happens every 30 minutes when drives are sleeping:
->
-> Oct  6 01:05:48 (none) user.err kernel: ata2.00: exception Emask 0x0
-> SAct 0x0 SErr 0x0 action 0x2 frozen
-> Oct  6 01:05:48 (none) user.err kernel: ata2.00: cmd
-> b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
-> Oct  6 01:05:48 (none) user.warn kernel:          res
-> 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Oct  6 01:05:53 (none) user.warn kernel: ata2: port is slow to
-> respond, please be patient (Status 0xd0)
-> Oct  6 01:05:55 (none) user.info kernel: ata2: soft resetting port
-> Oct  6 01:05:56 (none) user.info kernel: ata2: SATA link up 1.5 Gbps
-> (SStatus 113 SControl 310)
-> Oct  6 01:05:56 (none) user.info kernel: ata2.00: configured for UDMA/100
-> Oct  6 01:05:56 (none) user.info kernel: ata2: EH complete
-> Oct  6 01:05:56 (none) user.notice kernel: sd 1:0:0:0: [sdb]
-> 1953525168 512-byte hardware sectors (1000205 MB)
-> Oct  6 01:05:56 (none) user.notice kernel: sd 1:0:0:0: [sdb] Write
-> Protect is off
-> Oct  6 01:05:56 (none) user.debug kernel: sd 1:0:0:0: [sdb] Mode
-> Sense: 00 3a 00 00
-> Oct  6 01:05:56 (none) user.notice kernel: sd 1:0:0:0: [sdb] Write
-> cache: enabled, read cache: enabled, doesn't support DPO or FUA
->
-> Invalid attribute values:
->
-> Oct  2 22:35:21 (none) daemon.info smartd[585]: Device: /dev/sda,
-> SMART Prefailure Attribute: 7 Seek_Error_Rate changed from 87 to 86
-> Oct  2 23:35:21 (none) daemon.info smartd[585]: Device: /dev/sda,
-> SMART Prefailure Attribute: 7 Seek_Error_Rate changed from 86 to 85
-> Oct  5 20:05:56 (none) daemon.info smartd[585]: Device: /dev/sdb,
-> SMART Prefailure Attribute: 3 Spin_Up_Time changed from 84 to 85
-> Oct  6 01:05:38 (none) daemon.info smartd[585]: Device: /dev/sda,
-> SMART Usage Attribute: 194 Temperature_Celsius changed from 200 to 206
-> Oct  6 01:05:56 (none) daemon.info smartd[585]: Device: /dev/sdb,
-> SMART Usage Attribute: 194 Temperature_Celsius changed from 193 to 200
->
-> Once the drives are started up, those values report:
->
->  3 Spin_Up_Time            0x0007   085   085   024    Pre-fail
-> Always       -       821 (Average 820)
->  7 Seek_Error_Rate         0x000b   100   100   067    Pre-fail
-> Always       -       0
-> 194 Temperature_Celsius     0x0002   193   193   000    Old_age
-> Always       -       31 (Lifetime Min/Max 24/67)
->
+---
+Patrizio Bassi
+www.patriziobassi.it
