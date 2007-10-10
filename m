@@ -1,45 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/3] libata: add @timeout to ata_exec_internal[_sg]()
-Date: Tue, 09 Oct 2007 21:41:38 -0400
-Message-ID: <470C2DD2.70702@garzik.org>
-References: <20071009060544.GL12186@htj.dyndns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/1] pata_cs5536: ATA driver for Geode companion chip
+Date: Wed, 10 Oct 2007 00:33:27 -0400
+Message-ID: <yq1641flhbc.fsf@sermon.lab.mkp.net>
+References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net> <470C2A16.1040606@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41758 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753976AbXJJBlk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Oct 2007 21:41:40 -0400
-In-Reply-To: <20071009060544.GL12186@htj.dyndns.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:44931 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706AbXJJEes (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 00:34:48 -0400
+In-Reply-To: <470C2A16.1040606@garzik.org> (Jeff Garzik's message of "Tue\, 09 Oct 2007 21\:25\:42 -0400")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, jordan.crouse@amd.com
 
-Tejun Heo wrote:
-> Add @timeout argument to ata_exec_internal[_sg]().  If 0, default
-> timeout ata_probe_timeout is used.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> This patchset kills polling PMP register access callbacks ->pmp_read
-> and ->pmp_write and use standard ata_exec_internal() mechanism.  This
-> patchset is generated on top of the following six patches.
-> 
->   http://article.gmane.org/gmane.linux.ide/23464
->   http://article.gmane.org/gmane.linux.ide/23465
->   http://article.gmane.org/gmane.linux.ide/23466
->   http://article.gmane.org/gmane.linux.ide/23467
->   http://article.gmane.org/gmane.linux.ide/23468
->   http://article.gmane.org/gmane.linux.ide/23469
-> 
->  drivers/ata/libata-acpi.c |    2 +-
->  drivers/ata/libata-core.c |   32 ++++++++++++++++++++------------
->  drivers/ata/libata-eh.c   |    4 ++--
->  drivers/ata/libata.h      |    5 +++--
->  4 files changed, 26 insertions(+), 17 deletions(-)
+>>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
 
-applied 1-3, thanks
+Jeff> Just FWIW...  one you guys are happy with things, I'm ready to
+Jeff> merge the driver whenever.
 
+I'm waiting for Jordan to get back to me with feedback on test results
+on other boards as well as preference wrt. MSR or PCI configuration...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
