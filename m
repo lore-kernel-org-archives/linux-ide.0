@@ -1,61 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: fix revalidation issuing after configuration commands
-Date: Wed, 10 Oct 2007 15:57:44 +0900
-Message-ID: <20071010065744.GO12186@htj.dyndns.org>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: sil3114 data corruption
+Date: Wed, 10 Oct 2007 11:12:20 +0200
+Message-ID: <200710101112.20448.bs@q-leap.de>
+References: <200710081709.18253.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:27675 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139AbXJJG5u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 02:57:50 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so107716rvb
-        for <linux-ide@vger.kernel.org>; Tue, 09 Oct 2007 23:57:50 -0700 (PDT)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200710081709.18253.bs@q-leap.de>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, idurdanovic@comcast.net
 
-After commands which can change device configuration, EH is scheduled
-to revalidate and reconfigure the device.  Host link was incorrectly
-used unconditionally when scheduling EH action.  This resulted in
-bogus revalidation request and mismatched configuration between device
-and driver.  Fix it.
 
-This bug was reported by Igor Durdanovic.
+On Monday 08 October 2007 17:09:17 Bernd Schubert wrote:
+> [sorry for sending twice, but after I read the sil sources, I see the mail
+> address had been wrong]
+>
+> Hi,
+>
+> somehow the sil3114 causes data corruption with some (newer?) disks. Simply
+> filling the filesystem with zeros and reading the these data will make the
+> kernel to report filesystem corruption.
+> This is definitely not an issue of memory, since the systems (several
+> tested) do have ECC memory and the memory is monitored with EDAC.
+>
+> kernel versions tested: 2.6.15-2.6.20
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Igor Durdanovic <idurdanovic@comcast.net>
----
- drivers/ata/libata-scsi.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Update: Setting sata_sil.slow_down=1 fill fix the problem, seems there are 
+some drives missing in the quirk table.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ea53e6a..d63c81e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1363,6 +1363,7 @@ nothing_to_do:
- static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-+	struct ata_eh_info *ehi = &qc->dev->link->eh_info;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
-  	int need_sense = (qc->err_mask != 0);
-@@ -1376,14 +1377,14 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 		case ATA_CMD_SET_FEATURES:
- 			if ((qc->tf.feature == SETFEATURES_WC_ON) ||
- 			    (qc->tf.feature == SETFEATURES_WC_OFF)) {
--				ap->link.eh_info.action |= ATA_EH_REVALIDATE;
-+				ehi->action |= ATA_EH_REVALIDATE;
- 				ata_port_schedule_eh(ap);
- 			}
- 			break;
- 
- 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
- 		case ATA_CMD_SET_MULTI: /* multi_count changed */
--			ap->link.eh_info.action |= ATA_EH_REVALIDATE;
-+			ehi->action |= ATA_EH_REVALIDATE;
- 			ata_port_schedule_eh(ap);
- 			break;
- 		}
+Jeff, I found an old patch/workaround from you 
+(http://uwsg.indiana.edu/hypermail/linux/kernel/0403.1/1957.html), can you 
+give me any further information why this never went into the driver?
+
+Thanks,
+Bernd
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
