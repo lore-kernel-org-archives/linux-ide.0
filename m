@@ -1,39 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] pata_cs5536: ATA driver for Geode companion chip
-Date: Tue, 09 Oct 2007 21:25:42 -0400
-Message-ID: <470C2A16.1040606@garzik.org>
-References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH #upstream] libata: blacklist NCQ on Seagate Barracuda
+ ST380817AS
+Date: Tue, 09 Oct 2007 21:32:28 -0400
+Message-ID: <470C2BAC.7020409@garzik.org>
+References: <20071004020656.GA12186@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:48611 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58415 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbXJJBZo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Oct 2007 21:25:44 -0400
-In-Reply-To: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
+	id S1752439AbXJJBcc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:32:32 -0400
+In-Reply-To: <20071004020656.GA12186@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <mkp@mkp.net>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, ornati@fastwebnet.it
 
-Martin K. Petersen wrote:
-> This is a driver specifically for the ATA controller on the Geode
-> CS5536 companion chip.  The PCI device ID for this device was
-> previously claimed by pata_amd.c but there were two problems with
-> that:
+Tejun Heo wrote:
+> From: Paolo Ornati <ornati@fastwebnet.it>
 > 
->  - Not all Geode platforms emulate the ATA registers in PCI config
->    space
+> Seagate Barracuda ST380817AS has troubles with NCQ. For example,
+> unpacking a tarball on an XFS filesystem gives this:
 > 
->  - CS5536 PIO timings are not identical to AMD74XX/8111
+> ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x2 frozen
+> ata1.00: cmd 61/40:00:29:a3:98/00:00:00:00:00/40 tag 0 cdb 0x0 data 32768 out
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
 > 
-> pata_cs5536.c relies on Geode Machine Specific Registers to configure
-> the ATA function and uses the correct PIO timings for the chip.
+> More info here:
+> http://lkml.org/lkml/2007/1/21/76
+>     
+> Blacklist it!
 > 
-> Signed-off-by: Martin K. Petersen <mkp@mkp.net>
+> Signed-off-by: Paolo Ornati <ornati@fastwebnet.it>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-Just FWIW...  one you guys are happy with things, I'm ready to merge the 
-driver whenever.
+applied several of these
 
 
