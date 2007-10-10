@@ -1,52 +1,50 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: [PATCH] drivers/ata: add support to Freescale 3.0Gbps SATA
-	Controller
-Date: Wed, 10 Oct 2007 09:31:23 -0500 (CDT)
-Message-ID: <Pine.LNX.4.64.0710100927120.865@gate.crashing.org>
-References: <1192011083-20220-1-git-send-email-leoli@freescale.com>
+From: "Jordan Crouse" <jordan.crouse@amd.com>
+Subject: Re: pata_cs5536: ATA driver for Geode companion chip
+Date: Wed, 10 Oct 2007 09:20:26 -0600
+Message-ID: <20071010152026.GA1616@cosmic.amd.com>
+References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net>
+ <470C2A16.1040606@garzik.org> <yq1641flhbc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+ charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <1192011083-20220-1-git-send-email-leoli@freescale.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Li Yang <leoli@freescale.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Ashish Kalra <ashish.kalra@freescale.com>, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:47048 "EHLO
+	outbound4-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753983AbXJJPU2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 11:20:28 -0400
+In-Reply-To: <yq1641flhbc.fsf@sermon.lab.mkp.net>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+
+On 10/10/07 00:33 -0400, Martin K. Petersen wrote:
+> >>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
+> 
+> Jeff> Just FWIW...  one you guys are happy with things, I'm ready to
+> Jeff> merge the driver whenever.
+> 
+> I'm waiting for Jordan to get back to me with feedback on test results
+> on other boards as well as preference wrt. MSR or PCI configuration...
+
+I never heard back from anybody - so either nobody is using pata_amd
+(which I suspect), or they didn't have any problems.  Go ahead and merge,
+and I'll do a sanity check on a few boards next week just to make sure.
+
+Thanks,
+Jordan
+
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+> 
+> 
+> 
+
+-- 
+Jordan Crouse
+Systems Software Development Engineer 
+Advanced Micro Devices, Inc.
 
 
-
-On Wed, 10 Oct 2007, Li Yang wrote:
-
-> From: Ashish Kalra <ashish.kalra@freescale.com>
->
-> This patch adds support for Freescale 3.0Gbps SATA Controller supporting
-> Native Command Queueing(NCQ), device hotplug, and ATAPI.  This controller
-> can be found on MPC8315 and MPC8378.
->
-> Signed-off-by: Ashish Kalra <ashish.kalra@freescale.com>
-> Signed-off-by: Li Yang <leoli@freescale.com>
-> ---
->  drivers/ata/Kconfig    |    9 +
->  drivers/ata/Makefile   |    1 +
->  drivers/ata/sata_fsl.c | 1505 ++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/sata_fsl.h |  104 ++++
->  4 files changed, 1619 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/ata/sata_fsl.c
->  create mode 100644 drivers/ata/sata_fsl.h
-
-This patch shouldn't be accepted until we close on the device tree
-definition since it impacts the driver.
-
-Also CONFIG_SATA_FSL_FPGA_PCI should be removed since that was just an
-internal debug thing.
-
-- k
