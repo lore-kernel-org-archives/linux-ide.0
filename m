@@ -1,33 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream] pata_jmicron: match vendor and class code only
-Date: Tue, 09 Oct 2007 21:32:47 -0400
-Message-ID: <470C2BBF.3080109@garzik.org>
-References: <20071006220450.GD12186@htj.dyndns.org>
+Subject: Re: [PATCH] libata: skip suppress reporting if ATA_EHI_QUIET
+Date: Tue, 09 Oct 2007 21:40:58 -0400
+Message-ID: <470C2DAA.4090209@garzik.org>
+References: <20071009055756.GG12186@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58433 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41721 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752449AbXJJBct (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Oct 2007 21:32:49 -0400
-In-Reply-To: <20071006220450.GD12186@htj.dyndns.org>
+	id S1753620AbXJJBk7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Oct 2007 21:40:59 -0400
+In-Reply-To: <20071009055756.GG12186@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, ethanhsiao@jmicron.com, justin@jmicron.com
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> PATA part of all current JMB controllers behave the same way and
-> JMicron confirms that all future ones will stay compatible.  Drop
-> device matching and match only vendor and class.
+> ATA_EHI_NO_AUTOPSY and ATA_EHI_QUIET are used during initial probing
+> to skip exception analysis and reporting.  Usually, there's nothing to
+> report but on some allowed but rare corner cases (e.g. phy status
+> changed interrupt when IRQ is enabled on frozen port - this happens if
+> IRQ pending status isn't cleared in the IRQ router or controller)
+> exception messages get printed.
+> 
+> Skip reporting if ATA_EHI_QUIET is set.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Ethan Hsiao <ethanhsiao@jmicron.com>
-> Cc: Justin Tsai <justin@jmicron.com>
 > ---
->  drivers/ata/pata_jmicron.c |   13 ++-----------
->  1 file changed, 2 insertions(+), 11 deletions(-)
+>  drivers/ata/libata-eh.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
 
 applied
 
