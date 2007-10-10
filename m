@@ -1,69 +1,95 @@
-From: Uwe Koziolek <uwe.koziolek@gmx.net>
-Subject: Re: sata_sis driver may be broken in openSUSE 10.3
-Date: Tue, 09 Oct 2007 22:43:26 +0200
-Message-ID: <470BE7EE.6050601@gmx.net>
-References: <200710082128.00883.njdube@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Invalid PnP ACPI reserved MMIO areas on Supermicro boards
+Date: Tue, 09 Oct 2007 18:01:48 -0600
+Message-ID: <470C166C.4030502@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45065 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753347AbXJIUna (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Oct 2007 16:43:30 -0400
-In-Reply-To: <200710082128.00883.njdube@gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:27710 "EHLO
+	pd4mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbXJJACf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Oct 2007 20:02:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nathaniel Dube <njdube@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-I have checked the 32 Bit Version of openSuSE 10.3 with SiS965 chipset,
-it works.
+Some people with certain Supermicro boards (at least the H8DCE, it 
+seems) have reported that the sata_nv driver fails to attach to some of 
+the controllers due to resource conflicts:
 
-The sata_sis driver tries to load the pata_sis driver. but SuSE 10.3
-tries to load the sis5513 before.
-pata_sis and sis5513 are trying to serve the same hardware. may be this
-affects a conflict.
-please try boot option brokenmodules=sis5513
+https://bugzilla.redhat.com/show_bug.cgi?id=280641
+https://bugzilla.redhat.com/show_bug.cgi?id=313491
 
-You can also try to boot with brokenmodules=sis5513,pata_sis,sata_sis
+Essentially since about 2.6.22 or so (before which we apparently didn't 
+handle PnpACPI reserved MMIO regions?) we get:
 
-Then you must load later the modules pata_sis and sata_sis in this order.
+pnp: 00:09: iomem range 0xdfefd000-0xdfefd3ff has been reserved
+pnp: 00:09: iomem range 0xdfefe000-0xdfefe3ff has been reserved
 
-regards
-Uwe
+when the CK804 SATA controllers have as their BIOS-assigned resources:
 
-Nathaniel Dube wrote:
-> I found your contact information in the file..
->
-> /usr/src/linux-2.6.18.8-0.5/drivers/ata/sata_sis.c
->
-> And figured you might be the one to talk to.  I, as well as many others have 
-> had issus with openSUSE 10.3 not detecting SATA hard drives.  I don't know if 
-> the fault is with the kernel developers or openSUSE.  But I do know the issue 
-> is with the sata_sis driver that's being provided with 10.3.
->
-> I'm not a programer.  I wouldn't know where to begin to fix this issue.
->
-> Here are some links of people having the same problem.
->
-> This is one from the openSUSE mailing list.
-> http://lists.opensuse.org/opensuse/2007-10/msg00496.html
->
-> This is one of the web forums.
-> http://www.suseforums.net/index.php?showtopic=39625
->
-> And here's some from Newsgroups.  To many to post here.  You could look for 
-> them here.
->
-> news://support-forums.novell.com/opensuse.org.suse-linux.support.install-configure-administration
-> news://support-forums.novell.com/opensuse.org.suse-linux.support.general-applications
-> Or on Usenet.
-> news:alt.os.linux.suse
->
-> Search for "sata".
->
-> There's also a Novell bug report here.
-> https://bugzilla.novell.com/show_bug.cgi?id=331610
->   
+80:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
+(rev f3) (prog-if 85 [Master SecO PriO])
+	Subsystem: Super Micro Computer Inc Unknown device 1011
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 46
+	Region 0: I/O ports at e400 [size=8]
+	Region 1: I/O ports at e000 [size=4]
+	Region 2: I/O ports at dc00 [size=8]
+	Region 3: I/O ports at d800 [size=4]
+	Region 4: I/O ports at d400 [size=16]
+	Region 5: Memory at dfefd000 (32-bit, non-prefetchable)
+
+and
+
+80:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
+(rev f3) (prog-if 85 [Master SecO PriO])
+	Subsystem: Super Micro Computer Inc Unknown device 1011
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B-
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 45
+	Region 0: I/O ports at f800 [size=8]
+	Region 1: I/O ports at f400 [size=4]
+	Region 2: I/O ports at f000 [size=8]
+	Region 3: I/O ports at ec00 [size=4]
+	Region 4: I/O ports at e800 [size=16]
+	Region 5: Memory at dfefe000 (32-bit, non-prefetchable) [size=4K]
+
+And so of course we get:
+
+sata_nv 0000:80:07.0: Using ADMA mode
+PCI: Unable to reserve mem region #6:1000@dfefd000 for device 0000:80:07.0
+ACPI: PCI interrupt for device 0000:80:07.0 disabled
+sata_nv: probe of 0000:80:07.0 failed with error -16
+ACPI: PCI Interrupt Link [LT2E] enabled at IRQ 45
+ACPI: PCI Interrupt 0000:80:08.0[A] -> Link [LT2E] -> GSI 45 (level, 
+low) -> IRQ 45
+sata_nv 0000:80:08.0: Using ADMA mode
+PCI: Unable to reserve mem region #6:1000@dfefe000 for device 0000:80:08.0
+ACPI: PCI interrupt for device 0000:80:08.0 disabled
+sata_nv: probe of 0000:80:08.0 failed with error -16
+
+So essentially the BIOS has erroneously reserved the SATA controller's 
+BARs in the ACPI motherboard resources, preventing the driver from 
+attaching to the device.
+
+Any ideas on what we can do about this?
+
+-Get Supermicro to fix the BIOS - already tried, it seems
+-System-specific quirk to ignore these resource reservations?
+-Try to move the PCI resources if they conflict with the ACPI resource 
+reservations?
+
+I wonder how Windows deals with this, if it even does on these boards?
+
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
