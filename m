@@ -1,108 +1,49 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: libata not working for sis5533
-Date: Wed, 10 Oct 2007 22:22:29 +0200
-Message-ID: <470D3485.5040400@gmail.com>
-References: <46D132C5.5000803@gmail.com> <6bffcb0e0708261627s12e5a9acqef92d0261264a40c@mail.gmail.com> <46D8921E.3010304@gmail.com> <46D89429.7080802@gmail.com> <46E85AA8.3080302@redhat.com>
-Reply-To: patrizio.bassi@gmail.com
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Permanent disk shutdown instead of soft/hard reset?
+Date: Wed, 10 Oct 2007 20:12:27 -0400
+Message-ID: <76366b180710101712j177e17beqa244226420722a5a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:20450 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755710AbXJJUWh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 16:22:37 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so344953ugc
-        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 13:22:36 -0700 (PDT)
-In-Reply-To: <46E85AA8.3080302@redhat.com>
+Received: from rv-out-0910.google.com ([209.85.198.186]:2409 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbXJKAM2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 20:12:28 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so333823rvb
+        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 17:12:27 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Kernel," <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@redhat.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-ide@vger.kernel.org
 
-Chuck Ebbert ha scritto:
-> On 08/31/2007 06:20 PM, Patrizio Bassi wrote:
->   
->> Patrizio Bassi ha scritto:
->>     
->>> Michal Piotrowski ha scritto:
->>>       
->>>> Hi,
->>>>
->>>> [Adding IDE wizards to CC]
->>>>
->>>> On 26/08/07, Patrizio Bassi <patrizio.bassi@gmail.com> wrote:
->>>>   
->>>>         
->>>>> My sis630 chipset shipped with Asus A1000
->>>>> doesn't work properly with suspend with ide drivers
->>>>> (http://bugzilla.kernel.org/show_bug.cgi?id=7077)
->>>>>
->>>>> i tried to switch to libata but i cannot boot.
->>>>> I've enabled generic ide and sis specific code, both in-kernel. of
->>>>> course scsi too.
->>>>>
->>>>> when i boot i get: irq #14 nobody cared and stop
->>>>>
->>>>> i have to remove battery to reboot pc.
->>>>> I'm using 2.6.22.5, but i never got any libata kernel working.
->>>>>
->>>>> Patrizio
->>>>>
->>>>> ps. i'm writing from my desktop as i'm doing hardware mainteinance on
->>>>> the laptop and could not boot it
->>>>>
->>>>> Please CC me.
->>>>>
->>>>> lspci:
->>>>> 00:00.0 Host bridge: Silicon Integrated Systems [SiS] 630 Host (rev 11)
->>>>> 00:00.1 IDE interface: Silicon Integrated Systems [SiS] 5513 [IDE] (rev d0)
->>>>> 00:01.0 ISA bridge: Silicon Integrated Systems [SiS] SiS85C503/5513 (LPC
->>>>> Bridge)
->>>>> 00:01.1 Ethernet controller: Silicon Integrated Systems [SiS] SiS900
->>>>> PCI Fast Ethernet (rev 80)
->>>>> 00:01.2 USB Controller: Silicon Integrated Systems [SiS] USB  1.0
->>>>> Controller (rev 07)
->>>>> 00:01.3 USB Controller: Silicon Integrated Systems [SiS] USB 1.0
->>>>> Controller (rev 07)
->>>>> 00:01.4 Multimedia audio controller: Silicon Integrated Systems [SiS]
->>>>> SiS PCI Audio Accelerator (rev 01)
->>>>>  00:01.6 Modem: Silicon Integrated Systems [SiS] AC'97 Modem
->>>>> Controller (rev a0)
->>>>> 00:02.0 PCI bridge: Silicon Integrated Systems [SiS] Virtual
->>>>> PCI-to-PCI bridge (AGP)
->>>>> 00:0a.0 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>>>> 00:0a.1 CardBus bridge: Ricoh Co Ltd RL5c476 II (rev 80)
->>>>> 01:00.0 VGA compatible controller: Silicon Integrated Systems [SiS]
->>>>> 630/730 PCI/AGP VGA Display Adapter (rev 11)
->>>>>     
->>>>>           
->>>> Regards,
->>>> Michal
->>>>
->>>>   
->>>>         
->> i've been out for a week, but found no notice, did i lost any email or
->> no activity on this issue?
->>
->>     
->
-> I assume you tried the standard workarounds, like
->
->   pci=nommconf,nomsi
->   pci=noacpi
->   pci=biosirq
->
-> (one at at time, not all at once.)
->
->
->   
+I'm currently running into a situation where I have 4 SATA drives in a
+striped array where one of the drives is failing (/ has failed). The
+single drive failure manifests itself as ext3 errors and libata SCSI
+media errors which occur non-stop as software attempts to read/write
+to the mounted array. Because libata is seeing media errors, the bad
+drive endlessly soft resets while the software is still running and
+attempting to access the drive. This winds up hanging the entire
+system because the software (consider it a 'find' command running on
+the drive) occurs in the init.d boot scripts. The end result is that a
+login prompt is never reached until the software finishes what it is
+doing and hours of soft resets have occurred.
 
-I waited 2.6.23 to be out and tried again, but still no chance to get
-libata working for my notebook.
+Is there any way that this behavior can be stopped by permanently
+disconnecting the drive after a configurable number of errors that
+would otherwise soft reset? Does the layer allow for the concept of a
+full disk shutdown rather than a reset? I assume this would have to
+forcefully unmount any active mounts which use the drive/array to
+ensure that no subsequent cmds would cause libata to attempt to
+reconnect to the bad drive(s). Is this even possible?
 
-Anything i can try?
+Using smartd is invaluable for detecting failing drives, but when the
+failed drive prevents the system from booting, it is hard to recover
+remotely. It may not be possible to "recover" (e.g. If the failed
+drive is the boot drive), but that should be up to the system
+designer. In my case, I would still want to boot into the system (I do
+not boot from the array), establish network connectivity, and "phone
+home" that a permanent hardware failure has occurred in the array.
 
----
-Patrizio Bassi
-www.patriziobassi.it
+Thanks,
+-Andrew
