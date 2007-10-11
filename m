@@ -1,61 +1,47 @@
 From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Re: smartd causing SATA timeouts on sleeping drives
-Date: Thu, 11 Oct 2007 00:00:20 -0400
-Message-ID: <76366b180710102100t42572966v655d24c6fd7c90c1@mail.gmail.com>
-References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
-	 <4707ECF0.9030800@gmail.com>
-	 <76366b180710072251i7af01faaqc18776d8f8f31ef9@mail.gmail.com>
-	 <4709C8D6.3020008@gmail.com>
-	 <76366b180710072332o159d2364i6fe5e0d5e28c0944@mail.gmail.com>
-	 <Pine.LNX.4.63.0710101435340.4797@trinity.phys.uwm.edu>
-	 <470D843B.3030405@gmail.com>
+Subject: Re: pata_cs5536: ATA driver for Geode companion chip
+Date: Thu, 11 Oct 2007 03:22:19 -0400
+Message-ID: <76366b180710110022s26d1e108vd86745605f8cf54e@mail.gmail.com>
+References: <yq14ph8xg3z.fsf@sermon.lab.mkp.net> <470C2A16.1040606@garzik.org>
+	 <yq1641flhbc.fsf@sermon.lab.mkp.net>
+	 <20071010152026.GA1616@cosmic.amd.com>
+	 <76366b180710101039s344b588ap1e264ef893db87ea@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:44663 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751AbXJKEAW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Oct 2007 00:00:22 -0400
-Received: by py-out-1112.google.com with SMTP id u77so777035pyb
-        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 21:00:21 -0700 (PDT)
-In-Reply-To: <470D843B.3030405@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.184]:42817 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046AbXJKHWU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Oct 2007 03:22:20 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so419981rvb
+        for <linux-ide@vger.kernel.org>; Thu, 11 Oct 2007 00:22:19 -0700 (PDT)
+In-Reply-To: <76366b180710101039s344b588ap1e264ef893db87ea@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Allen <ballen@gravity.phys.uwm.edu>, Tejun Heo <htejun@gmail.com>
-Cc: Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jordan Crouse <jordan.crouse@amd.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Bruce/Tejun,
+Martin,
 
-Just so you both know, even when specifying '-n standby,q' in smartd,
-it still triggers timeouts on my system. The timeouts are no longer
-coming from the default half-hour checks, but from my configured
-self-test times with the '-s' option. It appears smartd overrides the
-'-n' parameter in this case, triggering the libata soft reset. This is
-another case that would be fixed if libata does the SRST
-automatically.
+Just wanted to report that the 2.6.23 libata-dev with the MSR
+pata_cs5536 applied to it is working fine with my LX board. I am using
+the first PATA port as my boot/root drive right now.
 
 Thanks,
 -Andrew
 
-Oct 11 02:16:52 (none) daemon.info smartd[23848]: Device: /dev/sdb,
-STANDBY mode ignored due to scheduled self test (47 checks skipped)
-Oct 11 02:17:03 (none) user.err kernel: ata2.00: exception Emask 0x0
-SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 11 02:17:03 (none) user.err kernel: ata2.00: cmd
-b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
-Oct 11 02:17:03 (none) user.warn kernel:          res
-40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Oct 11 02:17:08 (none) user.warn kernel: ata2: port is slow to
-respond, please be patient (Status 0xd0)
-Oct 11 02:17:10 (none) user.info kernel: ata2: soft resetting port
-Oct 11 02:17:10 (none) user.info kernel: ata2: SATA link up 1.5 Gbps
-(SStatus 113 SControl 310)
-Oct 11 02:17:10 (none) user.info kernel: ata2.00: configured for UDMA/100
-Oct 11 02:17:10 (none) user.info kernel: ata2: EH complete
-
-On 10/10/07, Tejun Heo <htejun@gmail.com> wrote:
-> Maybe what should be done is to track sleep mode in libata and issue
-> SRST automatically if a command is issued to a sleeping drive.  I'll
-> work on it.
+scsi4 : pata_cs5536
+scsi5 : pata_cs5536
+ata5: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ff00 irq 14
+ata6: DUMMY
+ata5.00: ATA-0: , 060729DA, max MWDMA2
+ata5.00: 256000 sectors, multi 1: LBA
+ata5.00: configured for MWDMA2
+scsi 4:0:0:0: Direct-Access     ATA                       0607 PQ: 0 ANSI: 5
+sd 4:0:0:0: [sdc] 256000 512-byte hardware sectors (131 MB)
+sd 4:0:0:0: [sdc] Write Protect is off
+sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdc] Write cache: disabled, read cache: enabled, doesn't
+support DPO or FUA
