@@ -1,49 +1,37 @@
-From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Permanent disk shutdown instead of soft/hard reset?
-Date: Wed, 10 Oct 2007 20:12:27 -0400
-Message-ID: <76366b180710101712j177e17beqa244226420722a5a@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: add ST9160821AS / 3.CCD to NCQ blacklist
+Date: Thu, 11 Oct 2007 10:49:26 +0900
+Message-ID: <20071011014926.GP12186@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:2409 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.187]:10312 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbXJKAM2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 20:12:28 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so333823rvb
-        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 17:12:27 -0700 (PDT)
+	with ESMTP id S1751270AbXJKBtc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 21:49:32 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so351522rvb
+        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 18:49:31 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-I'm currently running into a situation where I have 4 SATA drives in a
-striped array where one of the drives is failing (/ has failed). The
-single drive failure manifests itself as ext3 errors and libata SCSI
-media errors which occur non-stop as software attempts to read/write
-to the mounted array. Because libata is seeing media errors, the bad
-drive endlessly soft resets while the software is still running and
-attempting to access the drive. This winds up hanging the entire
-system because the software (consider it a 'find' command running on
-the drive) occurs in the init.d boot scripts. The end result is that a
-login prompt is never reached until the software finishes what it is
-doing and hours of soft resets have occurred.
+ST9160821AS / 3.CCD does spurious completions too.  Blacklist it.
 
-Is there any way that this behavior can be stopped by permanently
-disconnecting the drive after a configurable number of errors that
-would otherwise soft reset? Does the layer allow for the concept of a
-full disk shutdown rather than a reset? I assume this would have to
-forcefully unmount any active mounts which use the drive/array to
-ensure that no subsequent cmds would cause libata to attempt to
-reconnect to the bad drive(s). Is this even possible?
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Using smartd is invaluable for detecting failing drives, but when the
-failed drive prevents the system from booting, it is hard to recover
-remotely. It may not be possible to "recover" (e.g. If the failed
-drive is the boot drive), but that should be up to the system
-designer. In my case, I would still want to boot into the system (I do
-not boot from the array), establish network connectivity, and "phone
-home" that a permanent hardware failure has occurred in the array.
-
-Thanks,
--Andrew
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ce8ccb4..5402755 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3984,6 +3984,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
++	{ "ST9160821AS",	"3.CCD",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST3160812AS",	"3.ADJ",	ATA_HORKAGE_NONCQ, },
+ 	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
+ 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
