@@ -1,40 +1,41 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [stable] [PATCH -stable] libata: sync NCQ blacklist with	upstream
-Date: Thu, 11 Oct 2007 12:41:46 +0900
-Message-ID: <470D9B7A.10207@gmail.com>
-References: <20071011015515.GQ12186@htj.dyndns.org> <20071011025734.GA30990@kroah.com> <470D96B3.3040405@gmail.com> <20071011033220.GA31225@kroah.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH -stable] libata: sync NCQ blacklist with
+	upstream
+Date: Wed, 10 Oct 2007 20:55:53 -0700
+Message-ID: <20071011035553.GA31615@kroah.com>
+References: <20071011015515.GQ12186@htj.dyndns.org> <20071011025734.GA30990@kroah.com> <470D96B3.3040405@gmail.com> <20071011033220.GA31225@kroah.com> <470D9B7A.10207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:38390 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756244AbXJKDlw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 23:41:52 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so372298rvb
-        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 20:41:51 -0700 (PDT)
-In-Reply-To: <20071011033220.GA31225@kroah.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:45005 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbXJKDzQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 23:55:16 -0400
+Content-Disposition: inline
+In-Reply-To: <470D9B7A.10207@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
 
-Greg KH wrote:
-> On Thu, Oct 11, 2007 at 12:21:23PM +0900, Tejun Heo wrote:
->> Greg KH wrote:
->>> On Thu, Oct 11, 2007 at 10:55:15AM +0900, Tejun Heo wrote:
->>>> Synchronize NCQ blacklist with the current upstream.
->>> Which -stable tree is this for, 2.6.22 or 2.6.23?
->> It's against 2.6.23.
+On Thu, Oct 11, 2007 at 12:41:46PM +0900, Tejun Heo wrote:
+> Greg KH wrote:
+> > On Thu, Oct 11, 2007 at 12:21:23PM +0900, Tejun Heo wrote:
+> >> Greg KH wrote:
+> >>> On Thu, Oct 11, 2007 at 10:55:15AM +0900, Tejun Heo wrote:
+> >>>> Synchronize NCQ blacklist with the current upstream.
+> >>> Which -stable tree is this for, 2.6.22 or 2.6.23?
+> >> It's against 2.6.23.
+> > 
+> > Ok, but things only go into -stable after they are already in Linus's
+> > tree, which hasn't happened yet...
+> > 
+> > So what is considered "upstream" here?  Jeff's tree?
 > 
-> Ok, but things only go into -stable after they are already in Linus's
-> tree, which hasn't happened yet...
-> 
-> So what is considered "upstream" here?  Jeff's tree?
+> Yeah, except for one entry, all others are in libata-dev#upstream which
+> will be pulled when -rc1 opens.  I'll ping you back when they actually
+> get merged.
 
-Yeah, except for one entry, all others are in libata-dev#upstream which
-will be pulled when -rc1 opens.  I'll ping you back when they actually
-get merged.
+Thanks, that would help out a lot.
 
--- 
-tejun
+greg k-h
