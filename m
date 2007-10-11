@@ -1,41 +1,61 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH -stable] libata: sync NCQ blacklist with
-	upstream
-Date: Wed, 10 Oct 2007 20:55:53 -0700
-Message-ID: <20071011035553.GA31615@kroah.com>
-References: <20071011015515.GQ12186@htj.dyndns.org> <20071011025734.GA30990@kroah.com> <470D96B3.3040405@gmail.com> <20071011033220.GA31225@kroah.com> <470D9B7A.10207@gmail.com>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Re: smartd causing SATA timeouts on sleeping drives
+Date: Thu, 11 Oct 2007 00:00:20 -0400
+Message-ID: <76366b180710102100t42572966v655d24c6fd7c90c1@mail.gmail.com>
+References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
+	 <4707ECF0.9030800@gmail.com>
+	 <76366b180710072251i7af01faaqc18776d8f8f31ef9@mail.gmail.com>
+	 <4709C8D6.3020008@gmail.com>
+	 <76366b180710072332o159d2364i6fe5e0d5e28c0944@mail.gmail.com>
+	 <Pine.LNX.4.63.0710101435340.4797@trinity.phys.uwm.edu>
+	 <470D843B.3030405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:45005 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbXJKDzQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2007 23:55:16 -0400
+Received: from py-out-1112.google.com ([64.233.166.177]:44663 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750751AbXJKEAW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Oct 2007 00:00:22 -0400
+Received: by py-out-1112.google.com with SMTP id u77so777035pyb
+        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2007 21:00:21 -0700 (PDT)
+In-Reply-To: <470D843B.3030405@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <470D9B7A.10207@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
+To: Bruce Allen <ballen@gravity.phys.uwm.edu>, Tejun Heo <htejun@gmail.com>
+Cc: Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
 
-On Thu, Oct 11, 2007 at 12:41:46PM +0900, Tejun Heo wrote:
-> Greg KH wrote:
-> > On Thu, Oct 11, 2007 at 12:21:23PM +0900, Tejun Heo wrote:
-> >> Greg KH wrote:
-> >>> On Thu, Oct 11, 2007 at 10:55:15AM +0900, Tejun Heo wrote:
-> >>>> Synchronize NCQ blacklist with the current upstream.
-> >>> Which -stable tree is this for, 2.6.22 or 2.6.23?
-> >> It's against 2.6.23.
-> > 
-> > Ok, but things only go into -stable after they are already in Linus's
-> > tree, which hasn't happened yet...
-> > 
-> > So what is considered "upstream" here?  Jeff's tree?
-> 
-> Yeah, except for one entry, all others are in libata-dev#upstream which
-> will be pulled when -rc1 opens.  I'll ping you back when they actually
-> get merged.
+Bruce/Tejun,
 
-Thanks, that would help out a lot.
+Just so you both know, even when specifying '-n standby,q' in smartd,
+it still triggers timeouts on my system. The timeouts are no longer
+coming from the default half-hour checks, but from my configured
+self-test times with the '-s' option. It appears smartd overrides the
+'-n' parameter in this case, triggering the libata soft reset. This is
+another case that would be fixed if libata does the SRST
+automatically.
 
-greg k-h
+Thanks,
+-Andrew
+
+Oct 11 02:16:52 (none) daemon.info smartd[23848]: Device: /dev/sdb,
+STANDBY mode ignored due to scheduled self test (47 checks skipped)
+Oct 11 02:17:03 (none) user.err kernel: ata2.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x2 frozen
+Oct 11 02:17:03 (none) user.err kernel: ata2.00: cmd
+b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+Oct 11 02:17:03 (none) user.warn kernel:          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Oct 11 02:17:08 (none) user.warn kernel: ata2: port is slow to
+respond, please be patient (Status 0xd0)
+Oct 11 02:17:10 (none) user.info kernel: ata2: soft resetting port
+Oct 11 02:17:10 (none) user.info kernel: ata2: SATA link up 1.5 Gbps
+(SStatus 113 SControl 310)
+Oct 11 02:17:10 (none) user.info kernel: ata2.00: configured for UDMA/100
+Oct 11 02:17:10 (none) user.info kernel: ata2: EH complete
+
+On 10/10/07, Tejun Heo <htejun@gmail.com> wrote:
+> Maybe what should be done is to track sleep mode in libata and issue
+> SRST automatically if a command is issued to a sleeping drive.  I'll
+> work on it.
