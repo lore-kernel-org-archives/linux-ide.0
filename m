@@ -1,40 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
-Date: Fri, 12 Oct 2007 17:17:47 -0400
-Message-ID: <470FE47B.5060505@garzik.org>
-References: <200709251323031982245@gmail.com>
+From: Xiang Xu <xuxiang_ins@yahoo.com>
+Subject: Re: AHCI: using bios after linux
+Date: Fri, 12 Oct 2007 14:55:54 -0700 (PDT)
+Message-ID: <482039.11674.qm@web32910.mail.mud.yahoo.com>
+References: <20071012215734.4b5b4bce@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52265 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757361AbXJLVRt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Oct 2007 17:17:49 -0400
-In-Reply-To: <200709251323031982245@gmail.com>
+Received: from web32910.mail.mud.yahoo.com ([209.191.69.110]:36537 "HELO
+	web32910.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756985AbXJLVzz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 17:55:55 -0400
+In-Reply-To: <20071012215734.4b5b4bce@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peer Chen <peerchen@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, msundius@u1.netgate.com
+Cc: msundius@sundius.com, xuxiang_ins@yahoo.com, linux-ide@vger.kernel.org
 
-Peer Chen wrote:
-> Add the ahci controller legacy mode support to sata_nv.
-> Move the DIDs of legacy mode from ahci.c to sata_nv.c
+> > 3) related to #1 above, we want to be invisable.
+> so we're not looking to
+> > switch from AHCI (to legacy), we are looking to
+> continue in whatever mode
+> > the BIOS started in. Thus we just want BIOS to be
+> able to handle int13 calls
+> > after the Linux AHCI driver has run (this works
+> when BIOS is setup in 
+> > legacy mode initially).
 > 
-> The patch base on kernel 2.6.23-rc8
+> So load the ata_piix driver and not the AHCI one and
+> I think it'll work
+> out ?
 > 
-> Signed-off-by: Peer Chen <peerchen@gmail.com>
 
-Would you mind checking libata-dev.git#upstream, and make sure it has 
-all the NV patches?
+Just want to add some background info here, our
+product will be deployed on thousands of boxes, so
+it's not advisable for our product to require the
+users to change the default setting of BIOS from AHCI
+to Normal mode. I am just thinking wild here so please
+bear with me, but I am wandering if there is a way to
+load the ata_piix driver with BIOS setting to AHCI
+mode? Any pointer will be greatly appreciated.
 
-I'm thinking I should go ahead and push the 'nv-swncq' branch, which 
-contains the sata_nv updates for swncq.  They have been in -mm for a 
-while.  I am leaning towards leaving the default to 'off' for 2.6.24 though.
-
-Comments welcome...
-
-	Jeff
-
-
-
+Xiang
