@@ -1,42 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
-Date: Fri, 12 Oct 2007 17:15:46 -0400
-Message-ID: <470FE402.8080105@garzik.org>
-References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org> <46F9EFC9.9030209@dunaweb.hu> <46F9F05F.40905@garzik.org> <46F9F223.4000406@dunaweb.hu> <15F501D1A78BD343BE8F4D8DB854566B059FE1AB@hkemmail01.nvidia.com> <46FB4B75.9030407@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AC@hkemmail01.nvidia.com> <46FB577D.6000006@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AE@hkemmail01.nvidia.com>
+Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
+Date: Fri, 12 Oct 2007 17:17:47 -0400
+Message-ID: <470FE47B.5060505@garzik.org>
+References: <200709251323031982245@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33043 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:52265 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755032AbXJLVPy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Oct 2007 17:15:54 -0400
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B059FE1AE@hkemmail01.nvidia.com>
+	id S1757361AbXJLVRt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Oct 2007 17:17:49 -0400
+In-Reply-To: <200709251323031982245@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kuan Luo <kluo@nvidia.com>
-Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, Peer Chen <pchen@nvidia.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
+To: Peer Chen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
 
-Kuan Luo wrote:
-> One idea,  only simply adding 
-> 	if (!swncq_enabled) 
-> 		nv_port_info[SWNCQ].flags &= ~ATA_FLAG_NCQ;
-> 	
-> 	ppi[0] = &nv_port_info[type];
-> 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+Peer Chen wrote:
+> Add the ahci controller legacy mode support to sata_nv.
+> Move the DIDs of legacy mode from ahci.c to sata_nv.c
 > 
-> I don't know if this is appropriate
+> The patch base on kernel 2.6.23-rc8
+> 
+> Signed-off-by: Peer Chen <peerchen@gmail.com>
 
+Would you mind checking libata-dev.git#upstream, and make sure it has 
+all the NV patches?
 
-As long as the structure is not read-only ('const'), that is OK.
+I'm thinking I should go ahead and push the 'nv-swncq' branch, which 
+contains the sata_nv updates for swncq.  They have been in -mm for a 
+while.  I am leaning towards leaving the default to 'off' for 2.6.24 though.
 
-And just for future reference, make sure you're aware of the 
-implications of this applying to all sata_nv-aware PCI IDs.  If you 
-present multiple SATA devices on a PCI bus, or have multiple PCI cards 
-(rare in NV's case, I guess) the probe function will be called multiple 
-times.  You might even want to put that code into the module init 
-function, rather than the probe function.
+Comments welcome...
 
 	Jeff
+
 
 
