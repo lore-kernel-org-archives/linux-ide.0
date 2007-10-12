@@ -1,110 +1,143 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Invalid PnP ACPI reserved MMIO areas on Supermicro boards
-Date: Thu, 11 Oct 2007 18:05:17 -0600
-Message-ID: <470EBA3D.10705@shaw.ca>
-References: <470C166C.4030502@shaw.ca> <200710100110.25513.lenb@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata critical fix
+Date: Fri, 12 Oct 2007 00:25:15 -0400
+Message-ID: <20071012042515.GA17066@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:41975 "EHLO
-	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbXJLAFr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Oct 2007 20:05:47 -0400
-In-reply-to: <200710100110.25513.lenb@kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:51150 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752097AbXJLEZQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Oct 2007 00:25:16 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Len Brown <lenb@kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Linux-acpi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, stable@kernel.org
 
-Len Brown wrote:
-> On Tuesday 09 October 2007 20:01, Robert Hancock wrote:
->> Some people with certain Supermicro boards (at least the H8DCE, it 
->> seems) have reported that the sata_nv driver fails to attach to some of 
->> the controllers due to resource conflicts:
->>
->> https://bugzilla.redhat.com/show_bug.cgi?id=280641
->> https://bugzilla.redhat.com/show_bug.cgi?id=313491
->>
->> Essentially since about 2.6.22 or so (before which we apparently didn't 
->> handle PnpACPI reserved MMIO regions?) we get:
-> 
-> So if you boot with "pnpacpi=off" then the board is happy?
-> 
-> -Len
 
-Apparently yes - see new comments in:
+There is a lingering corruption in sata_mv that took me several days to
+narrow down...  the failure to mask off the lower 16 bits of the S/G
+length was leading to corruption, because this stomped on other
+important bits in that S/G entry.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=280641
+This should fix it (stable aka 2.6.23.1 needs this too):
 
-A patch has also been proposed to ignore motherboard resources that 
-overlap PCI BARs here:
+Please pull from 'upstream-fixes' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-fixes
 
-https://bugzilla.redhat.com/show_bug.cgi?id=313491
+to receive the following updates:
 
-> 
->> pnp: 00:09: iomem range 0xdfefd000-0xdfefd3ff has been reserved
->> pnp: 00:09: iomem range 0xdfefe000-0xdfefe3ff has been reserved
->>
->> when the CK804 SATA controllers have as their BIOS-assigned resources:
->>
->> 80:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
->> (rev f3) (prog-if 85 [Master SecO PriO])
->> 	Subsystem: Super Micro Computer Inc Unknown device 1011
->> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B-
->> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
->> <MAbort- >SERR- <PERR-
->> 	Interrupt: pin A routed to IRQ 46
->> 	Region 0: I/O ports at e400 [size=8]
->> 	Region 1: I/O ports at e000 [size=4]
->> 	Region 2: I/O ports at dc00 [size=8]
->> 	Region 3: I/O ports at d800 [size=4]
->> 	Region 4: I/O ports at d400 [size=16]
->> 	Region 5: Memory at dfefd000 (32-bit, non-prefetchable)
->>
->> and
->>
->> 80:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
->> (rev f3) (prog-if 85 [Master SecO PriO])
->> 	Subsystem: Super Micro Computer Inc Unknown device 1011
->> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
->> Stepping- SERR- FastB2B-
->> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
->> <MAbort- >SERR- <PERR-
->> 	Interrupt: pin A routed to IRQ 45
->> 	Region 0: I/O ports at f800 [size=8]
->> 	Region 1: I/O ports at f400 [size=4]
->> 	Region 2: I/O ports at f000 [size=8]
->> 	Region 3: I/O ports at ec00 [size=4]
->> 	Region 4: I/O ports at e800 [size=16]
->> 	Region 5: Memory at dfefe000 (32-bit, non-prefetchable) [size=4K]
->>
->> And so of course we get:
->>
->> sata_nv 0000:80:07.0: Using ADMA mode
->> PCI: Unable to reserve mem region #6:1000@dfefd000 for device 0000:80:07.0
->> ACPI: PCI interrupt for device 0000:80:07.0 disabled
->> sata_nv: probe of 0000:80:07.0 failed with error -16
->> ACPI: PCI Interrupt Link [LT2E] enabled at IRQ 45
->> ACPI: PCI Interrupt 0000:80:08.0[A] -> Link [LT2E] -> GSI 45 (level, 
->> low) -> IRQ 45
->> sata_nv 0000:80:08.0: Using ADMA mode
->> PCI: Unable to reserve mem region #6:1000@dfefe000 for device 0000:80:08.0
->> ACPI: PCI interrupt for device 0000:80:08.0 disabled
->> sata_nv: probe of 0000:80:08.0 failed with error -16
->>
->> So essentially the BIOS has erroneously reserved the SATA controller's 
->> BARs in the ACPI motherboard resources, preventing the driver from 
->> attaching to the device.
->>
->> Any ideas on what we can do about this?
->>
->> -Get Supermicro to fix the BIOS - already tried, it seems
->> -System-specific quirk to ignore these resource reservations?
->> -Try to move the PCI resources if they conflict with the ACPI resource 
->> reservations?
->>
->> I wonder how Windows deals with this, if it even does on these boards?
->>
-> 
+ drivers/ata/sata_mv.c |   27 ++++++++++++++++++---------
+ 1 files changed, 18 insertions(+), 9 deletions(-)
+
+commit 6c08772e49622e90d39903e7ff0be1a0f463ac86
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Fri Oct 12 00:16:23 2007 -0400
+
+    [libata] sata_mv: more S/G fixes
+    
+    * corruption fix: we only want the lower 16 bits of length (0 == 64kb)
+    
+    * ditto: the upper layer sets max-phys-segments to LIBATA_MAX_PRD,
+      so we must reset it to own hw-specific length.
+    
+    * delete unused mv_fill_sg() return value
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index cb7dec9..d9832e2 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -69,10 +69,11 @@
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_mv"
+-#define DRV_VERSION	"1.0"
++#define DRV_VERSION	"1.01"
+ 
+ enum {
+ 	/* BAR's are enumerated in terms of pci_resource_start() terms */
+@@ -420,6 +421,7 @@ static void mv_error_handler(struct ata_port *ap);
+ static void mv_post_int_cmd(struct ata_queued_cmd *qc);
+ static void mv_eh_freeze(struct ata_port *ap);
+ static void mv_eh_thaw(struct ata_port *ap);
++static int mv_slave_config(struct scsi_device *sdev);
+ static int mv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ 
+ static void mv5_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
+@@ -457,7 +459,7 @@ static struct scsi_host_template mv5_sht = {
+ 	.use_clustering		= 1,
+ 	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
++	.slave_configure	= mv_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
+ };
+@@ -475,7 +477,7 @@ static struct scsi_host_template mv6_sht = {
+ 	.use_clustering		= 1,
+ 	.proc_name		= DRV_NAME,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+-	.slave_configure	= ata_scsi_slave_config,
++	.slave_configure	= mv_slave_config,
+ 	.slave_destroy		= ata_scsi_slave_destroy,
+ 	.bios_param		= ata_std_bios_param,
+ };
+@@ -763,6 +765,17 @@ static void mv_irq_clear(struct ata_port *ap)
+ {
+ }
+ 
++static int mv_slave_config(struct scsi_device *sdev)
++{
++	int rc = ata_scsi_slave_config(sdev);
++	if (rc)
++		return rc;
++
++	blk_queue_max_phys_segments(sdev->request_queue, MV_MAX_SG_CT / 2);
++
++	return 0;	/* scsi layer doesn't check return value, sigh */
++}
++
+ static void mv_set_edma_ptrs(void __iomem *port_mmio,
+ 			     struct mv_host_priv *hpriv,
+ 			     struct mv_port_priv *pp)
+@@ -1130,10 +1143,9 @@ static void mv_port_stop(struct ata_port *ap)
+  *      LOCKING:
+  *      Inherited from caller.
+  */
+-static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
++static void mv_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct mv_port_priv *pp = qc->ap->private_data;
+-	unsigned int n_sg = 0;
+ 	struct scatterlist *sg;
+ 	struct mv_sg *mv_sg;
+ 
+@@ -1151,7 +1163,7 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
+ 
+ 			mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
+ 			mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
+-			mv_sg->flags_size = cpu_to_le32(len);
++			mv_sg->flags_size = cpu_to_le32(len & 0xffff);
+ 
+ 			sg_len -= len;
+ 			addr += len;
+@@ -1160,12 +1172,9 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
+ 				mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
+ 
+ 			mv_sg++;
+-			n_sg++;
+ 		}
+ 
+ 	}
+-
+-	return n_sg;
+ }
+ 
+ static inline void mv_crqb_pack_cmd(__le16 *cmdw, u8 data, u8 addr, unsigned last)
