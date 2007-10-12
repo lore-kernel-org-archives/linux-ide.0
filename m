@@ -1,29 +1,53 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: [git patches] IDE updates (part 1)
-Date: Fri, 12 Oct 2007 15:25:58 +0100 (BST)
-Message-ID: <Pine.LNX.4.64N.0710121518030.21684@blysk.ds.pg.gda.pl>
-References: <200710120034.49730.bzolnier@gmail.com>
+From: "Li Yang-r58472" <LeoLi@freescale.com>
+Subject: RE: [PATCH v2] drivers/ata: add support to Freescale 3.0Gbps SATA Controller
+Date: Fri, 12 Oct 2007 22:31:06 +0800
+Message-ID: <989B956029373F45A0B8AF0297081890019B582F@zch01exm26.fsl.freescale.net>
+References: <1192196849-24758-1-git-send-email-leoli@freescale.com> <20071012145522.29dd7413@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757579AbXJLO0Y@vger.kernel.org>
-In-Reply-To: <200710120034.49730.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from de01egw02.freescale.net ([192.88.165.103]:35702 "EHLO
+	de01egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184AbXJLObQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 10:31:16 -0400
+Received: from de01smr02.am.mot.com (de01smr02.freescale.net [10.208.0.151])
+	by de01egw02.freescale.net (8.12.11/de01egw02) with ESMTP id l9CEV8ho006752
+	for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 07:31:08 -0700 (MST)
+Received: from zch01exm26.fsl.freescale.net (zch01exm26.ap.freescale.net [10.192.129.221])
+	by de01smr02.am.mot.com (8.13.1/8.13.0) with ESMTP id l9CEV66Z020816
+	for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 09:31:07 -0500 (CDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <20071012145522.29dd7413@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Kalra Ashish-B00888 <ashish.kalra@freescale.com>
 
-On Fri, 12 Oct 2007, Bartlomiej Zolnierkiewicz wrote:
+> -----Original Message-----
+> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk] 
+> Sent: Friday, October 12, 2007 9:55 PM
+> To: Li Yang-r58472
+> Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org; 
+> linuxppc-dev@ozlabs.org; Kalra Ashish-B00888; Li Yang-r58472
+> Subject: Re: [PATCH v2] drivers/ata: add support to Freescale 
+> 3.0Gbps SATA Controller
+> 
+> > +	cd = pp->cmdentry + tag;
+> > +
+> > +	memcpy(fis, &cd->sfis, 6 * 4);	/* should we use 
+> memcpy_from_io() */
+> 
+> If cd->sfis points at memory over the PCI bus (eg mmio or 
+> memory on the controller card) then you need to use 
+> ioread/_io type functions. If
+> cd->sfis points into host memory where the FIS is delivered 
+> by DMA from
+> the card you will be fine if it was allocated with an 
+> _coherent allocator
 
-> * Kconfig facelift - as a result of this change users have three less
->   config options to worry about (BLK_DEV_IDEPCI, BLK_DEV_IDEDMA_PCI
->   and IDE_CHIPSETS) and can just select host drivers that they need
+Thanks for the clarification.  So the code here is ok, that we use
+command descriptor from dma_alloc_coherent().  :)
 
- Well, it depends on how you look at it.  If you have PCI, an on-board IDE 
-interface and do not want any PCI IDE controllers, then you now have a 
-zillion of options to disable instead of just one.  Have a look at 
-"arch/mips/configs/sb1250-swarm_defconfig" for an example (hmm..., 
-CONFIG_BLK_DEV_IDE_SWARM disabled by default -- that should probably be 
-changed; I'll cook a patch).  I guess it is not possible to make everyone 
-happy at once though, so please do not treat it as a hard objection. :-)
-
-  Maciej
+- Leo
