@@ -1,103 +1,110 @@
-From: Jason Gaston <jason.d.gaston@intel.com>
-Subject: [PATCH 2.6.23]ata_piix: SATA 2port controller port map fix
-Date: Thu, 11 Oct 2007 16:05:15 -0700
-Message-ID: <200710111605.15757.jason.d.gaston@intel.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Invalid PnP ACPI reserved MMIO areas on Supermicro boards
+Date: Thu, 11 Oct 2007 18:05:17 -0600
+Message-ID: <470EBA3D.10705@shaw.ca>
+References: <470C166C.4030502@shaw.ca> <200710100110.25513.lenb@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26230 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752450AbXJKXCo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Oct 2007 19:02:44 -0400
-Content-Disposition: inline
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:41975 "EHLO
+	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbXJLAFr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Oct 2007 20:05:47 -0400
+In-reply-to: <200710100110.25513.lenb@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, jason.d.gaston@intel.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: Len Brown <lenb@kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Linux-acpi@vger.kernel.org
 
-This patch adds a port map for ICH9 and ICH8 SATA controllers that have only 2 ports available in that mode.
+Len Brown wrote:
+> On Tuesday 09 October 2007 20:01, Robert Hancock wrote:
+>> Some people with certain Supermicro boards (at least the H8DCE, it 
+>> seems) have reported that the sata_nv driver fails to attach to some of 
+>> the controllers due to resource conflicts:
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=280641
+>> https://bugzilla.redhat.com/show_bug.cgi?id=313491
+>>
+>> Essentially since about 2.6.22 or so (before which we apparently didn't 
+>> handle PnpACPI reserved MMIO regions?) we get:
+> 
+> So if you boot with "pnpacpi=off" then the board is happy?
+> 
+> -Len
 
-Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
+Apparently yes - see new comments in:
 
---- linux-2.6.23/drivers/ata/ata_piix.c.orig	2007-10-09 13:31:38.000000000 -0700
-+++ linux-2.6.23/drivers/ata/ata_piix.c	2007-10-11 15:55:19.000000000 -0700
-@@ -131,6 +131,7 @@
- 	ich8_sata_ahci		= 9,
- 	piix_pata_mwdma		= 10,	/* PIIX3 MWDMA only */
- 	tolapai_sata_ahci	= 11,
-+	ich9_2port_sata		= 12,
- 
- 	/* constants for mapping table */
- 	P0			= 0,  /* port 0 */
-@@ -239,19 +240,19 @@
- 	/* SATA Controller 1 IDE (ICH8) */
- 	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
- 	/* SATA Controller 2 IDE (ICH8) */
--	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_2port_sata },
- 	/* Mobile SATA Controller IDE (ICH8M) */
- 	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
- 	/* SATA Controller IDE (ICH9) */
- 	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
- 	/* SATA Controller IDE (ICH9) */
--	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_2port_sata },
- 	/* SATA Controller IDE (ICH9) */
--	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
--	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
--	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
-+	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich9_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
- 	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci },
- 	/* SATA Controller IDE (Tolapai) */
-@@ -456,6 +457,18 @@
-         },
- };
- 
-+static const struct piix_map_db ich9_2port_map_db = {
-+        .mask = 0x3,
-+        .port_enable = 0x3,
-+        .map = {
-+                /* PM   PS   SM   SS       MAP */
-+                {  P0,  NA,  P1,  NA }, /* 00b */
-+                {  RV,  RV,  RV,  RV }, /* 01b */
-+                {  RV,  RV,  RV,  RV }, /* 10b */
-+                {  RV,  RV,  RV,  RV },
-+        },
-+};
-+
- static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich5_sata]		= &ich5_map_db,
- 	[ich6_sata]		= &ich6_map_db,
-@@ -463,6 +476,7 @@
- 	[ich6m_sata_ahci]	= &ich6m_map_db,
- 	[ich8_sata_ahci]	= &ich8_map_db,
- 	[tolapai_sata_ahci]	= &tolapai_map_db,
-+	[ich9_2port_sata]	= &ich9_2port_map_db,
- };
- 
- static struct ata_port_info piix_port_info[] = {
-@@ -587,6 +601,17 @@
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &piix_sata_ops,
- 	},
-+
-+	/* ich9_2port_sata: 12: */
-+	{
-+		.sht		= &piix_sht,
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SCR |
-+				  PIIX_FLAG_AHCI,
-+		.pio_mask	= 0x1f,	/* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &piix_sata_ops,
-+	},
- };
- 
- static struct pci_bits piix_enable_bits[] = {
+https://bugzilla.redhat.com/show_bug.cgi?id=280641
+
+A patch has also been proposed to ignore motherboard resources that 
+overlap PCI BARs here:
+
+https://bugzilla.redhat.com/show_bug.cgi?id=313491
+
+> 
+>> pnp: 00:09: iomem range 0xdfefd000-0xdfefd3ff has been reserved
+>> pnp: 00:09: iomem range 0xdfefe000-0xdfefe3ff has been reserved
+>>
+>> when the CK804 SATA controllers have as their BIOS-assigned resources:
+>>
+>> 80:07.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
+>> (rev f3) (prog-if 85 [Master SecO PriO])
+>> 	Subsystem: Super Micro Computer Inc Unknown device 1011
+>> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+>> Stepping- SERR- FastB2B-
+>> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
+>> <MAbort- >SERR- <PERR-
+>> 	Interrupt: pin A routed to IRQ 46
+>> 	Region 0: I/O ports at e400 [size=8]
+>> 	Region 1: I/O ports at e000 [size=4]
+>> 	Region 2: I/O ports at dc00 [size=8]
+>> 	Region 3: I/O ports at d800 [size=4]
+>> 	Region 4: I/O ports at d400 [size=16]
+>> 	Region 5: Memory at dfefd000 (32-bit, non-prefetchable)
+>>
+>> and
+>>
+>> 80:08.0 IDE interface: nVidia Corporation CK804 Serial ATA Controller 
+>> (rev f3) (prog-if 85 [Master SecO PriO])
+>> 	Subsystem: Super Micro Computer Inc Unknown device 1011
+>> 	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+>> Stepping- SERR- FastB2B-
+>> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- 
+>> <MAbort- >SERR- <PERR-
+>> 	Interrupt: pin A routed to IRQ 45
+>> 	Region 0: I/O ports at f800 [size=8]
+>> 	Region 1: I/O ports at f400 [size=4]
+>> 	Region 2: I/O ports at f000 [size=8]
+>> 	Region 3: I/O ports at ec00 [size=4]
+>> 	Region 4: I/O ports at e800 [size=16]
+>> 	Region 5: Memory at dfefe000 (32-bit, non-prefetchable) [size=4K]
+>>
+>> And so of course we get:
+>>
+>> sata_nv 0000:80:07.0: Using ADMA mode
+>> PCI: Unable to reserve mem region #6:1000@dfefd000 for device 0000:80:07.0
+>> ACPI: PCI interrupt for device 0000:80:07.0 disabled
+>> sata_nv: probe of 0000:80:07.0 failed with error -16
+>> ACPI: PCI Interrupt Link [LT2E] enabled at IRQ 45
+>> ACPI: PCI Interrupt 0000:80:08.0[A] -> Link [LT2E] -> GSI 45 (level, 
+>> low) -> IRQ 45
+>> sata_nv 0000:80:08.0: Using ADMA mode
+>> PCI: Unable to reserve mem region #6:1000@dfefe000 for device 0000:80:08.0
+>> ACPI: PCI interrupt for device 0000:80:08.0 disabled
+>> sata_nv: probe of 0000:80:08.0 failed with error -16
+>>
+>> So essentially the BIOS has erroneously reserved the SATA controller's 
+>> BARs in the ACPI motherboard resources, preventing the driver from 
+>> attaching to the device.
+>>
+>> Any ideas on what we can do about this?
+>>
+>> -Get Supermicro to fix the BIOS - already tried, it seems
+>> -System-specific quirk to ignore these resource reservations?
+>> -Try to move the PCI resources if they conflict with the ACPI resource 
+>> reservations?
+>>
+>> I wonder how Windows deals with this, if it even does on these boards?
+>>
+> 
