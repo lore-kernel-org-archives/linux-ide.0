@@ -1,143 +1,216 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata critical fix
-Date: Fri, 12 Oct 2007 00:25:15 -0400
-Message-ID: <20071012042515.GA17066@havoc.gtf.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.23-mm1
+Date: Fri, 12 Oct 2007 01:37:29 -0700
+Message-ID: <20071012013729.ada2127b.akpm@linux-foundation.org>
+References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
+	<20071012140328.f82af8e8.kamezawa.hiroyu@jp.fujitsu.com>
+	<20071011234202.2f15bb76.akpm@linux-foundation.org>
+	<64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:51150 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752097AbXJLEZQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Oct 2007 00:25:16 -0400
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60105 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751406AbXJLIhd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 04:37:33 -0400
+In-Reply-To: <64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, stable@kernel.org
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Fri, 12 Oct 2007 10:31:42 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
 
-There is a lingering corruption in sata_mv that took me several days to
-narrow down...  the failure to mask off the lower 16 bits of the S/G
-length was leading to corruption, because this stomped on other
-important bits in that S/G entry.
+> On 10/12/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> > On Fri, 12 Oct 2007 14:03:28 +0900 KAMEZAWA Hiroyuki <kamezawa.hiroyu@jp.fujitsu.com> wrote:
+> >
+> > > On Thu, 11 Oct 2007 21:31:26 -0700
+> > > Andrew Morton <akpm@linux-foundation.org> wrote:
+> > >
+> > > >
+> > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/
+> > > >
+> > > > - I've been largely avoiding applying anything since rc8-mm2 in an attempt
+> > > >   to stabilise things for the 2.6.23 merge.
+> > > >
+> > > On RHEL5/x86_64 environment,
+> > >
+> > > ==
+> > > [kamezawa@hannibal ref-2.6.23-mm1]$ make menuconfig
+> > > Makefile:456: /home/kamezawa/ref-2.6.23-mm1/arch//Makefile: No such file or directory
+> > > make: *** No rule to make target `/home/kamezawa/ref-2.6.23-mm1/arch//Makefile'.  Stop.
+> > > ==
+> > >
+> > > $(ARCH) cannot be detected automatically...
+> >
+> > So you need to set $ARCH by hand?  I always do that so I didn't notice this.
+> 
+> After setting ARCH by hand, it build and booted  OK for me.
 
-This should fix it (stable aka 2.6.23.1 needs this too):
+OK.
 
-Please pull from 'upstream-fixes' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-fixes
+> But I did add the patch fromhttp://lkml.org/lkml/2007/10/11/48 as my
+> personal hotfix.
 
-to receive the following updates:
+I think Jeff has that in hand?
 
- drivers/ata/sata_mv.c |   27 ++++++++++++++++++---------
- 1 files changed, 18 insertions(+), 9 deletions(-)
+> Two things I noted in my logs:
+> [   16.040000] NET: Registered protocol family 1
+> [   16.050000] NET: Registered protocol family 17
+> [   16.060000] NET: Registered protocol family 15
+> [   16.080000] sysctl table check failed: /sunrpc/transports .7249.14
+> Missing strategy
+> [   16.100000] sysctl table check failed: /sunrpc/transports .7249.14
+> Unknown sysctl binary path
+> [   16.130000] RPC: Registered udp transport module.
+> [   16.140000] RPC: Registered tcp transport module.
+> ... but NFSv4 still works.
 
-commit 6c08772e49622e90d39903e7ff0be1a0f463ac86
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Oct 12 00:16:23 2007 -0400
+Yeah, Bruce will be dropping the relevant patch - when it comes back it
+should use CTL_UNNUMBERED.
 
-    [libata] sata_mv: more S/G fixes
-    
-    * corruption fix: we only want the lower 16 bits of length (0 == 64kb)
-    
-    * ditto: the upper layer sets max-phys-segments to LIBATA_MAX_PRD,
-      so we must reset it to own hw-specific length.
-    
-    * delete unused mv_fill_sg() return value
-    
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> Oct 12 10:23:03 treogen smartd[6091]: Device: /dev/sdc, not found in
+> smartd database.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index cb7dec9..d9832e2 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -69,10 +69,11 @@
- #include <linux/device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
- #include <linux/libata.h>
- 
- #define DRV_NAME	"sata_mv"
--#define DRV_VERSION	"1.0"
-+#define DRV_VERSION	"1.01"
- 
- enum {
- 	/* BAR's are enumerated in terms of pci_resource_start() terms */
-@@ -420,6 +421,7 @@ static void mv_error_handler(struct ata_port *ap);
- static void mv_post_int_cmd(struct ata_queued_cmd *qc);
- static void mv_eh_freeze(struct ata_port *ap);
- static void mv_eh_thaw(struct ata_port *ap);
-+static int mv_slave_config(struct scsi_device *sdev);
- static int mv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- 
- static void mv5_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
-@@ -457,7 +459,7 @@ static struct scsi_host_template mv5_sht = {
- 	.use_clustering		= 1,
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
-+	.slave_configure	= mv_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
-@@ -475,7 +477,7 @@ static struct scsi_host_template mv6_sht = {
- 	.use_clustering		= 1,
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
-+	.slave_configure	= mv_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
-@@ -763,6 +765,17 @@ static void mv_irq_clear(struct ata_port *ap)
- {
- }
- 
-+static int mv_slave_config(struct scsi_device *sdev)
-+{
-+	int rc = ata_scsi_slave_config(sdev);
-+	if (rc)
-+		return rc;
-+
-+	blk_queue_max_phys_segments(sdev->request_queue, MV_MAX_SG_CT / 2);
-+
-+	return 0;	/* scsi layer doesn't check return value, sigh */
-+}
-+
- static void mv_set_edma_ptrs(void __iomem *port_mmio,
- 			     struct mv_host_priv *hpriv,
- 			     struct mv_port_priv *pp)
-@@ -1130,10 +1143,9 @@ static void mv_port_stop(struct ata_port *ap)
-  *      LOCKING:
-  *      Inherited from caller.
-  */
--static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
-+static void mv_fill_sg(struct ata_queued_cmd *qc)
- {
- 	struct mv_port_priv *pp = qc->ap->private_data;
--	unsigned int n_sg = 0;
- 	struct scatterlist *sg;
- 	struct mv_sg *mv_sg;
- 
-@@ -1151,7 +1163,7 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
- 
- 			mv_sg->addr = cpu_to_le32(addr & 0xffffffff);
- 			mv_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
--			mv_sg->flags_size = cpu_to_le32(len);
-+			mv_sg->flags_size = cpu_to_le32(len & 0xffff);
- 
- 			sg_len -= len;
- 			addr += len;
-@@ -1160,12 +1172,9 @@ static unsigned int mv_fill_sg(struct ata_queued_cmd *qc)
- 				mv_sg->flags_size |= cpu_to_le32(EPRD_FLAG_END_OF_TBL);
- 
- 			mv_sg++;
--			n_sg++;
- 		}
- 
- 	}
--
--	return n_sg;
- }
- 
- static inline void mv_crqb_pack_cmd(__le16 *cmdw, u8 data, u8 addr, unsigned last)
+hm.
+
+> Oct 12 10:23:03 treogen [  105.990000] WARNING: at
+> drivers/ata/libata-core.c:5752 ata_qc_issue()
+
+Let's cc linux-ide.
+
+> Oct 12 10:23:03 treogen [  105.990000]
+> Oct 12 10:23:03 treogen [  105.990000] Call Trace:
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804442ef>]
+> ata_qc_issue+0x47f/0x540
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80449c80>]
+> ata_scsi_flush_xlat+0x0/0x30
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8044a6ea>]
+> ata_scsi_translate+0xfa/0x180
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8044d84d>]
+> ata_scsi_queuecmd+0x12d/0x210
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804333d0>]
+> scsi_dispatch_cmd+0x150/0x250
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804391f1>]
+> scsi_request_fn+0x1f1/0x360
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8039b827>]
+> elv_insert+0x167/0x250
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff803a0ac2>]
+> __make_request+0xe2/0x670
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8039d560>]
+> generic_make_request+0x1d0/0x3c0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff802bc1b9>]
+> bio_alloc_bioset+0xb9/0x140
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff802bc061>]
+> __bio_clone+0x91/0xc0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8039d7b6>]
+> submit_bio+0x66/0xf0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804cc06e>]
+> write_page+0x16e/0x2c0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80231b01>]
+> dequeue_task_fair+0x51/0xb0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804c482d>]
+> md_update_sb+0x18d/0x320
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804caa10>] md_thread+0x0/0x100
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804c9065>]
+> md_check_recovery+0x1f5/0x550
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804caa10>] md_thread+0x0/0x100
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804bf1d3>] raid5d+0x23/0x490
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8023eb12>]
+> try_to_del_timer_sync+0x52/0x60
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff805b0057>]
+> schedule_timeout+0x67/0xd0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8023e740>]
+> process_timeout+0x0/0x10
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff805b004a>]
+> schedule_timeout+0x5a/0xd0
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804caa10>] md_thread+0x0/0x100
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804caa40>]
+> md_thread+0x30/0x100
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8024a710>]
+> autoremove_wake_function+0x0/0x30
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804caa10>] md_thread+0x0/0x100
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8024a32b>] kthread+0x4b/0x80
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8020c9d8>] child_rip+0xa/0x12
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8024a2e0>] kthread+0x0/0x80
+> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff8020c9ce>] child_rip+0x0/0x12
+> Oct 12 10:23:03 treogen [  105.990000]
+> Oct 12 10:23:13 treogen [  115.940000] ata3.00: exception Emask 0x0
+> SAct 0x0 SErr 0x0 action 0x2 frozen
+> Oct 12 10:23:13 treogen [  115.940000] ata3.00: cmd
+> b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+> Oct 12 10:23:13 treogen [  115.940000]          res
+> 40/00:00:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Oct 12 10:23:13 treogen [  115.940000] ata3.00: status: { DRDY }
+> Oct 12 10:23:14 treogen [  116.270000] ata3: soft resetting link
+> Oct 12 10:23:14 treogen [  116.430000] ata3: SATA link up 3.0 Gbps
+> (SStatus 123 SControl 300)
+> Oct 12 10:23:14 treogen [  116.740000] ata3.00: configured for UDMA/133
+> Oct 12 10:23:14 treogen [  116.740000] ata3: EH complete
+> Oct 12 10:23:14 treogen [  116.740000] WARNING: at
+> drivers/ata/libata-core.c:5752 ata_qc_issue()
+> Oct 12 10:23:14 treogen [  116.740000]
+> Oct 12 10:23:14 treogen [  116.740000] Call Trace:
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff804442ef>]
+> ata_qc_issue+0x47f/0x540
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80449c80>]
+> ata_scsi_flush_xlat+0x0/0x30
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8044a6ea>]
+> ata_scsi_translate+0xfa/0x180
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8044d84d>]
+> ata_scsi_queuecmd+0x12d/0x210
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff804333d0>]
+> scsi_dispatch_cmd+0x150/0x250
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff804391f1>]
+> scsi_request_fn+0x1f1/0x360
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80436b80>]
+> scsi_error_handler+0x0/0x310
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8039fe73>]
+> blk_run_queue+0x43/0x80
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80438659>]
+> scsi_run_host_queues+0x19/0x40
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80436d54>]
+> scsi_error_handler+0x1d4/0x310
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff80436b80>]
+> scsi_error_handler+0x0/0x310
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8024a32b>] kthread+0x4b/0x80
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8020c9d8>] child_rip+0xa/0x12
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8024a2e0>] kthread+0x0/0x80
+> Oct 12 10:23:14 treogen [  116.740000]  [<ffffffff8020c9ce>] child_rip+0x0/0x12
+> Oct 12 10:23:14 treogen [  116.740000]
+> Oct 12 10:23:14 treogen [  116.770000] sd 2:0:0:0: [sdc] 625142448
+> 512-byte hardware sectors (320073 MB)
+> Oct 12 10:23:14 treogen [  116.770000] sd 2:0:0:0: [sdc] Write Protect is off
+> Oct 12 10:23:14 treogen [  116.770000] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> Oct 12 10:23:14 treogen [  116.770000] sd 2:0:0:0: [sdc] Write cache:
+> enabled, read cache: enabled, doesn't support DPO or FUA
+> Oct 12 10:23:24 treogen [  126.740000] ata3.00: exception Emask 0x0
+> SAct 0x0 SErr 0x0 action 0x2 frozen
+> Oct 12 10:23:24 treogen [  126.740000] ata3.00: cmd
+> b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 0
+> Oct 12 10:23:24 treogen [  126.740000]          res
+> 40/00:00:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Oct 12 10:23:24 treogen [  126.740000] ata3.00: status: { DRDY }
+> Oct 12 10:23:24 treogen [  127.070000] ata3: soft resetting link
+> Oct 12 10:23:25 treogen [  127.230000] ata3: SATA link up 3.0 Gbps
+> (SStatus 123 SControl 300)
+> Oct 12 10:23:25 treogen [  127.370000] ata3.00: configured for UDMA/133
+> Oct 12 10:23:25 treogen [  127.370000] ata3: EH complete
+> Oct 12 10:23:25 treogen [  127.370000] sd 2:0:0:0: [sdc] 625142448
+> 512-byte hardware sectors (320073 MB)
+> Oct 12 10:23:25 treogen [  127.370000] sd 2:0:0:0: [sdc] Write Protect is off
+> Oct 12 10:23:25 treogen [  127.370000] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> Oct 12 10:23:25 treogen [  127.370000] sd 2:0:0:0: [sdc] Write cache:
+> enabled, read cache: enabled, doesn't support DPO or FUA
+> Oct 12 10:23:25 treogen smartd[6091]: Device: /dev/sdc, is SMART
+> capable. Adding to "monitor" list.
+> ... but I can still access the filesystem and the RAID device on that drive.
+> (sdc is MAXTOR STM332082 3.AA sata-drive on a MCP55 using sata_nv with
+> swncq activated)
+> 
+> Torsten
