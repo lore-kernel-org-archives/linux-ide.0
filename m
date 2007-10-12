@@ -1,69 +1,104 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: [smartmontools-devel] smartd causing
- SATA timeouts on sleeping drives
-Date: Fri, 12 Oct 2007 04:15:13 -0500 (CDT)
-Message-ID: <Pine.LNX.4.63.0710120413390.15956@trinity.phys.uwm.edu>
-References: <76366b180710051838h11c63c38o9a4248309ff9ee7d@mail.gmail.com>
-	<4707ECF0.9030800@gmail.com>
-	<76366b180710072251i7af01faaqc18776d8f8f31ef9@mail.gmail.com>
-	<4709C8D6.3020008@gmail.com>
-	<76366b180710072332o159d2364i6fe5e0d5e28c0944@mail.gmail.com>
-	<Pine.LNX.4.63.0710101435340.4797@trinity.phys.uwm.edu>
-	<470D843B.3030405@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream 1/2] libata: move command post processing to __ata_qc_complete()
+Date: Fri, 12 Oct 2007 20:56:31 +0900
+Message-ID: <20071012115631.GA11510@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <smartmontools-support-bounces@lists.sourceforge.net>
-In-Reply-To: <470D843B.3030405@gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=smartmontools-support>
-List-Post: <mailto:smartmontools-support@lists.sourceforge.net>
-List-Help: <mailto:smartmontools-support-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/smartmontools-support>,
-	<mailto:smartmontools-support-request@lists.sourceforge.net?subject=subscribe>
-Sender: smartmontools-support-bounces@lists.sourceforge.net
-Errors-To: smartmontools-support-bounces@lists.sourceforge.net
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Smartmontools Developers List <smartmontools-devel@lists.sourceforge.net>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, Andrew Paprocki <andrew@ishiboo.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.176]:54740 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438AbXJLL4i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 07:56:38 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so966502wah
+        for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 04:56:37 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, ballen@gravity.phys.uwm.edu, andrew@ishiboo.com
 
->> Hmm, it sounds as if smartmontools should send a SRST to spin up the
->> drive, but I do not know enough to be sure.
->
-> Eh... Now that I think about it.  I don't think there's a way to work
-> around this from userland.  smartmontools doesn't know the current power
-> mode (sleeping drive doesn't even respond to CHECK POWER MODE), so it
-> can't determine whether the device needs SRST or not and issuing SRST
-> unconditionally would cause a lot more problems.
+Some commands need post-processing after successful completion.  This
+was done in ata_scsi_qc_complete() till now but command post
+processing doesn't belong to SAT layer.  Move them to
+__ata_qc_complete() and, while at it, restructure a bit to ease adding
+post-processing for other commands.
 
-OK, makes sense.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |   25 +++++++++++++++++++++++++
+ drivers/ata/libata-scsi.c |   23 -----------------------
+ 2 files changed, 25 insertions(+), 23 deletions(-)
 
-> Maybe what should be done is to track sleep mode in libata and issue 
-> SRST automatically if a command is issued to a sleeping drive.  I'll 
-> work on it.
-
-Thank you!
-
->> Could I add you to the developers list and give you CVS write access? 
->> This might make it easier for you to fix the various little 
->> smartmontools problems like this that keep cropping up!  Just fixing 
->> the code might be a lot faster than explaining it and sending 
->> patches...
->>
->> If this is OK with you, please send me your sourceforge username, and 
->> I'll add you to the developers list.
->
-> I'll stay chicken for the time being and only send patches.  :-)
-
-I was really really hoping you would say 'yes'. Oh well...
-
-Cheers,
- 	Bruce
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
+Index: work/drivers/ata/libata-core.c
+===================================================================
+--- work.orig/drivers/ata/libata-core.c
++++ work/drivers/ata/libata-core.c
+@@ -5536,6 +5536,31 @@ void __ata_qc_complete(struct ata_queued
+ 	qc->flags &= ~ATA_QCFLAG_ACTIVE;
+ 	ap->qc_active &= ~(1 << qc->tag);
+ 
++	/* some commands need post-processing after successful completion */
++	if (likely(qc->err_mask == 0)) {
++		unsigned int eh_action = 0;
++
++		switch (qc->tf.command) {
++		case ATA_CMD_SET_FEATURES:
++			/* cache configuration changed? */
++			if (ap->ops->error_handler &&
++			    ((qc->tf.feature == SETFEATURES_WC_ON) ||
++			     (qc->tf.feature == SETFEATURES_WC_OFF)))
++				eh_action |= ATA_EH_REVALIDATE;
++			break;
++
++		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
++		case ATA_CMD_SET_MULTI: /* multi_count changed */
++			eh_action |= ATA_EH_REVALIDATE;
++			break;
++		}
++
++		if (unlikely(eh_action) && ap->ops->error_handler) {
++			link->eh_info.action |= eh_action;
++			ata_port_schedule_eh(ap);
++		}
++	}
++
+ 	/* call completion callback */
+ 	qc->complete_fn(qc);
+ }
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -1363,33 +1363,10 @@ nothing_to_do:
+ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+-	struct ata_eh_info *ehi = &qc->dev->link->eh_info;
+ 	struct scsi_cmnd *cmd = qc->scsicmd;
+ 	u8 *cdb = cmd->cmnd;
+  	int need_sense = (qc->err_mask != 0);
+ 
+-	/* We snoop the SET_FEATURES - Write Cache ON/OFF command, and
+-	 * schedule EH_REVALIDATE operation to update the IDENTIFY DEVICE
+-	 * cache
+-	 */
+-	if (ap->ops->error_handler && !need_sense) {
+-		switch (qc->tf.command) {
+-		case ATA_CMD_SET_FEATURES:
+-			if ((qc->tf.feature == SETFEATURES_WC_ON) ||
+-			    (qc->tf.feature == SETFEATURES_WC_OFF)) {
+-				ehi->action |= ATA_EH_REVALIDATE;
+-				ata_port_schedule_eh(ap);
+-			}
+-			break;
+-
+-		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
+-		case ATA_CMD_SET_MULTI: /* multi_count changed */
+-			ehi->action |= ATA_EH_REVALIDATE;
+-			ata_port_schedule_eh(ap);
+-			break;
+-		}
+-	}
+-
+ 	/* For ATA pass thru (SAT) commands, generate a sense block if
+ 	 * user mandated it or if there's an error.  Note that if we
+ 	 * generate because the user forced us to, a check condition
