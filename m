@@ -1,77 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: 2.6.23-mm1
-Date: Sat, 13 Oct 2007 13:48:48 -0400
-Message-ID: <47110500.8050503@garzik.org>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org>	 <20071011234202.2f15bb76.akpm@linux-foundation.org>	 <64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>	 <20071012013729.ada2127b.akpm@linux-foundation.org>	 <64bb37e0710130101y7fb8e4c0lf214fd821e8305ed@mail.gmail.com>	 <4710A407.3070000@garzik.org>	 <64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>	 <4710B7C5.5050403@garzik.org>	 <64bb37e0710130732p303547e3n54cfa9dac34c53b5@mail.gmail.com>	 <64bb37e0710130740u78613f83wbd4f43d073bbe13d@mail.gmail.com> <64bb37e0710130813le68c48dve36f8473b197b84b@mail.gmail.com>
+Date: Sat, 13 Oct 2007 11:18:53 -0700
+Message-ID: <20071013111853.7e67c6c3.akpm@linux-foundation.org>
+References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
+	<20071012013729.ada2127b.akpm@linux-foundation.org>
+	<64bb37e0710130101y7fb8e4c0lf214fd821e8305ed@mail.gmail.com>
+	<4710A407.3070000@garzik.org>
+	<64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>
+	<4710B7C5.5050403@garzik.org>
+	<64bb37e0710130732p303547e3n54cfa9dac34c53b5@mail.gmail.com>
+	<64bb37e0710130740u78613f83wbd4f43d073bbe13d@mail.gmail.com>
+	<64bb37e0710130813le68c48dve36f8473b197b84b@mail.gmail.com>
+	<47110500.8050503@garzik.org>
+	<64bb37e0710131105m7c64fca0kb71f3955170e8bec@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070805000105090406000304"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60771 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751994AbXJMRsz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 13 Oct 2007 13:48:55 -0400
-In-Reply-To: <64bb37e0710130813le68c48dve36f8473b197b84b@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762873AbXJMSTf@vger.kernel.org>
+In-Reply-To: <64bb37e0710131105m7c64fca0kb71f3955170e8bec@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+List-Id: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070805000105090406000304
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sat, 13 Oct 2007 20:05:19 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
 
-Torsten Kaiser wrote:
-> On 10/13/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
->> Wait!
->>
->> I think I found the bug: Its a evil interaction between the above
->> patch and the swncq patch that is applied later.
->> The qc_defer patch removes the old ata_scmd_need_defer that was always
->> called for all drivers and substitutes it for ata_std_qc_defer and
->> adds it as aops->qc_defer to all drivers that support NCQ *at that
->> point*.
->> Then the swncq patch adds a new NCQ capable driver, but the nobody
->> added the qc_defer-ops to the ops-structure that is added. So swncq
->> will never defer any commands and the first command that would need to
->> be defered (the SMART commands) blows up, if there is still another
->> command in flight.
->>
->> I will only add the qc_defer and try this...
-> 
-> 3 boots, all worked. So I'm very sure that was the bug, but I will now
-> do a little load testing...
-> 
-> The only strange thing about 2.6.23-mm1 is, that it takes ~4 second
-> more to boot.
+> The only thing I noted during load testing (updating Gentoo ==
+> compiling and installing) was, that there seems to be memory leak.
+> After ~2h 2.5 of my 4Gb where gone. But there where to many things
+> going on to pinpoint it... (NFSv4 over eth1394?)
 
-So, you basically applied the attached patch?
+Please send /proc/meminfo and /proc/slabinfo after the leak has been
+happening for a while.
 
-Yeah, absence of qc_defer for an NCQ-capable chip would do it.
+Sometimes `echo m > /proc/sysrq_trigger ; dmesg -s 1000000' will
+provide useful info.
 
-	Jeff
+The page-owner code can pinpoint a leak source.  See
+ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/broken-out/page-owner-tracking-leak-detector.patch
 
-
-
---------------070805000105090406000304
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index cf5c85e..240a892 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -554,6 +554,7 @@ static const struct ata_port_operations nv_swncq_ops = {
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
- 	.bmdma_status		= ata_bmdma_status,
-+	.qc_defer		= ata_std_qc_defer,
- 	.qc_prep		= nv_swncq_qc_prep,
- 	.qc_issue		= nv_swncq_qc_issue,
- 	.freeze			= nv_mcp55_freeze,
-
---------------070805000105090406000304--
+Enable CONFIG_DEBUG_SLAB_LEAK, check out /proc/slab_allocators
