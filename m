@@ -1,85 +1,107 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: 2.6.23-mm1
-Date: Sat, 13 Oct 2007 17:13:00 +0200
-Message-ID: <64bb37e0710130813le68c48dve36f8473b197b84b@mail.gmail.com>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
-	 <20071011234202.2f15bb76.akpm@linux-foundation.org>
-	 <64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>
-	 <20071012013729.ada2127b.akpm@linux-foundation.org>
-	 <64bb37e0710130101y7fb8e4c0lf214fd821e8305ed@mail.gmail.com>
-	 <4710A407.3070000@garzik.org>
-	 <64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>
-	 <4710B7C5.5050403@garzik.org>
-	 <64bb37e0710130732p303547e3n54cfa9dac34c53b5@mail.gmail.com>
-	 <64bb37e0710130740u78613f83wbd4f43d073bbe13d@mail.gmail.com>
+From: Luca <kronos.it@gmail.com>
+Subject: Re: Hitachi disk: spurious completions during NCQ
+Date: Sat, 13 Oct 2007 18:13:01 +0200
+Message-ID: <68676e00710130913g5892e026i32c148b426dbb2cc__31100.1639733606$1192298256$gmane$org@mail.gmail.com>
+References: <20071010190342.GA13843@dreamland.darkstar.lan>
+	 <20071012174637.9b3b517b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:42030 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbXJMPNC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 11:13:02 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2152429pyb
-        for <linux-ide@vger.kernel.org>; Sat, 13 Oct 2007 08:13:01 -0700 (PDT)
-In-Reply-To: <64bb37e0710130740u78613f83wbd4f43d073bbe13d@mail.gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.191]:54056 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753360AbXJMQNC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 12:13:02 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1055545rvb
+        for <linux-ide@vger.kernel.org>; Sat, 13 Oct 2007 09:13:01 -0700 (PDT)
+In-Reply-To: <20071012174637.9b3b517b.akpm@linux-foundation.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/13/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
-> Wait!
+On 10/13/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> On Wed, 10 Oct 2007 21:03:43 +0200
+> Luca Tettamanti <kronos.it@gmail.com> wrote:
 >
-> I think I found the bug: Its a evil interaction between the above
-> patch and the swncq patch that is applied later.
-> The qc_defer patch removes the old ata_scmd_need_defer that was always
-> called for all drivers and substitutes it for ata_std_qc_defer and
-> adds it as aops->qc_defer to all drivers that support NCQ *at that
-> point*.
-> Then the swncq patch adds a new NCQ capable driver, but the nobody
-> added the qc_defer-ops to the ops-structure that is added. So swncq
-> will never defer any commands and the first command that would need to
-> be defered (the SMART commands) blows up, if there is still another
-> command in flight.
+> > Hello,
+> > sometimes kernel complains about spurious completions on my new
+> > notebook:
+> >
+> > ata3.00: exception Emask 0x2 SAct 0x407fd SErr 0x0 action 0x2 frozen
+> > ata3.00: spurious completions during NCQ issue=0x0 SAct=0x407fd FIS=005040a1:00020000
+> > ata3.00: cmd 61/08:00:c7:5a:82/00:00:1b:00:00/40 tag 0 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:10:3f:5b:fa/00:00:18:00:00/40 tag 2 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:18:5f:5b:fa/00:00:18:00:00/40 tag 3 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/18:20:6f:5b:fa/00:00:18:00:00/40 tag 4 cdb 0x0 data 12288 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:28:e7:19:fd/00:00:18:00:00/40 tag 5 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:30:df:59:ae/00:00:1a:00:00/40 tag 6 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:38:3f:5a:ae/00:00:1a:00:00/40 tag 7 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/08:40:6f:62:ae/00:00:1a:00:00/40 tag 8 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/28:48:d7:59:7e/00:00:1b:00:00/40 tag 9 cdb 0x0 data 20480 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/10:50:07:5b:82/00:00:1b:00:00/40 tag 10 cdb 0x0 data 8192 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3.00: cmd 61/30:90:f7:5a:fa/00:00:18:00:00/40 tag 18 cdb 0x0 data 24576 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+> > ata3: soft resetting port
+> > ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> > ata3.00: configured for UDMA/133
+> > ata3: EH complete
+> > sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+> > sd 2:0:0:0: [sda] Write Protect is off
+> > sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> > sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> >
+> > (this is a very recent 2.6.23-git, SMP, x86_64)
 >
-> I will only add the qc_defer and try this...
+> The latest kernel, a serious-looking problem, sent to the correct mailing
+> lists.  After two days nobody has bothered replying.
+>
+> > The disk is:
+> >
+> > ATA device, with non-removable media
+> >         Model Number:       Hitachi HTS542525K9SA00
+> >         Firmware Revision:  BBFOC31P
+> >
+> > The controller is:
+> >
+> > 00:1f.2 SATA controller: Intel Corporation Mobile SATA AHCI Controller (rev 03) (prog-if 01 [AHCI 1.0])
+> >         Subsystem: ASUSTeK Computer Inc. Unknown device 14e7
+> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> >         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+> >         Latency: 0
+> >         Interrupt: pin B routed to IRQ 1272
+> >         Region 0: I/O ports at ec00 [size=8]
+> >         Region 1: I/O ports at e880 [size=4]
+> >         Region 2: I/O ports at e800 [size=8]
+> >         Region 3: I/O ports at e480 [size=4]
+> >         Region 4: I/O ports at e400 [size=32]
+> >         Region 5: Memory at febff800 (32-bit, non-prefetchable) [size=2K]
+> >         Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/2 Enable+
+> >                 Address: fee0300c  Data: 41b9
+> >         Capabilities: [70] Power Management version 3
+> >                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+> >                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> >         Capabilities: [a8] #12 [0010]
+> >
+> > and I'm using AHCI driver.
+> >
+> > I see that similar disks are already blacklisted, probably this one is
+> > bugged too - though the error is pretty rare :(
+> >
+>
+> Does this cause any other symptoms?  ie: does the system otherwise work OK?
 
-3 boots, all worked. So I'm very sure that was the bug, but I will now
-do a little load testing...
+The system is stable, the EH seems to be doing its job.
 
-The only strange thing about 2.6.23-mm1 is, that it takes ~4 second
-more to boot.
-
-2.6.23-rc8-mm1:
-[    3.720000] scsi0 : sata_sil24
-[    3.730000] scsi1 : sata_sil24
-[    3.740000] ata1: SATA max UDMA/100 irq 17
-[    3.750000] ata2: SATA max UDMA/100 irq 17
-[    4.110000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[    4.160000] ata1.00: ATA-7: MAXTOR STM3320820AS, 3.AAE, max UDMA/133
-[    4.180000] ata1.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    4.240000] ata1.00: configured for UDMA/100
-[    4.600000] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[    4.660000] ata2.00: ATA-7: MAXTOR STM3320820AS, 3.AAE, max UDMA/133
-[    4.680000] ata2.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    4.730000] ata2.00: configured for UDMA/100
-
-2.6.23-mm1:
-[    3.650000] scsi0 : sata_sil24
-[    3.660000] scsi1 : sata_sil24
-[    3.660000] ata1: SATA max UDMA/100 host m128@0xefeffc00 port
-0xefef8000 irq 17
-[    3.690000] ata2: SATA max UDMA/100 host m128@0xefeffc00 port
-0xefefa000 irq 17
-[    5.930000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[    5.980000] ata1.00: ATA-7: MAXTOR STM3320820AS, 3.AAE, max UDMA/133
-[    6.000000] ata1.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    6.060000] ata1.00: configured for UDMA/100
-[    8.290000] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[    8.340000] ata2.00: ATA-7: MAXTOR STM3320820AS, 3.AAE, max UDMA/133
-[    8.360000] ata2.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[    8.420000] ata2.00: configured for UDMA/100
-
-Torsten
+Luca
