@@ -1,189 +1,202 @@
-From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Re: [PATCH #upstream 2/2] libata: track SLEEP state and issue SRST to wake it up
-Date: Sat, 13 Oct 2007 00:57:59 -0400
-Message-ID: <76366b180710122157s506fd467m10181ceca7badf6f@mail.gmail.com>
-References: <20071012115631.GA11510@htj.dyndns.org>
-	 <20071012115657.GB11510@htj.dyndns.org>
+From: Steen Eugen Poulsen <sep@lix-world.net>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+Date: Sat, 13 Oct 2007 07:49:07 +0200
+Message-ID: <47105C53.7040603@lix-world.net>
+References: <56020.194.255.108.253.1192004925.squirrel@root.dusted.dk> <20071012174153.69556b32.akpm@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms010800000600050606060709"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760733AbXJMFu2@vger.kernel.org>
+In-Reply-To: <20071012174153.69556b32.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: lists@dusted.dk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+
+This is a cryptographically signed message in MIME format.
+
+--------------ms010800000600050606060709
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:22864 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbXJME6B (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 00:58:01 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so969823rvb
-        for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 21:58:00 -0700 (PDT)
-In-Reply-To: <20071012115657.GB11510@htj.dyndns.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
-Tejun,
+Andrew Morton skrev:
+> On Wed, 10 Oct 2007 10:28:45 +0200 (CEST)
+> lists@dusted.dk wrote:
+> 
+>> I get this on brand new hardware, 2xHitachi Deathstar 320gb SATA2
+>> (sata_via driver)
 
-I'm able to break my system using this patch. I had a hunch this might
-be possible.. :) In short, if you issue a sleep command while the
-drive is already sleeping, it puts libata into an infinite loop
-resetting the port. I've illustrated the working test and the evil
-hunch below. The sleep command itself will need a short-circuit out of
-this logic in order to prevent this loop.
+Sep 28 04:32:40 locker ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+action 0x2 frozen
+Sep 28 04:32:40 locker ata1.00: cmd b0/d2:f1:00:4f:c2/00:00:00:00:00/00
+tag 0 cdb 0x0 data 123392 in
+Sep 28 04:32:40 locker res 50/00:f1:00:4f:c2/00:00:00:00:00/00 Emask
+0x202 (HSM violation)
+Sep 28 04:32:41 locker  current size: 625140335 sectors
 
-Also, in the working case below the hddtemp command actually blocked
-until the drive was spun up before returning a valid temp. While
-testing, I was able to get hddtemp to trigger the drive wake-up when
-it was sleeping, but hddtemp then returned stating the drive was
-sleeping. Re-running hddtemp until the drive was fully spun up
-(another 5 seconds) kept returning that it was sleeping. I'll see if I
-can reproduce this reliably. Am I correct in assuming the process
-which triggers the wake-up should block?
+Sep 28 04:32:41 locker  native size: 625142448 sectors
 
--Andrew
+Sep 28 04:32:41 locker  current size: 625140335 sectors
 
-Working case:
+Sep 28 04:32:41 locker  native size: 625142448 sectors
 
-# hddtemp /dev/sdb
-/dev/sdb: Hitachi HDS721010KLA330                 : 35 C
-# hdparm -Y /dev/sdb
+Another machine:
 
-/dev/sdb:
- issuing sleep command
-# time hddtemp /dev/sdb
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-ata2.00: waking up from sleep
-ata2: soft resetting link
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-/dev/sdb: Hitachi HDS721010KLA330                 : 34 C
-real    0m 10.89s
-user    0m 0.00s
-sys     0m 0.00s
-# time hddtemp /dev/sdb
-/dev/sdb: Hitachi HDS721010KLA330                 : 34 C
-real    0m 0.26s
-user    0m 0.00s
-sys     0m 0.00s
+Sep 28 03:47:55 dragonslair ata1.00: exception Emask 0x0 SAct 0x0 SErr
+0x0 action 0x2 frozen
+Sep 28 03:47:55 dragonslair ata1.00: cmd
+b0/db:f8:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 126976 in
 
-Evil DoS case:
+Sep 28 03:47:55 dragonslair res 50/00:f8:00:4f:c2/00:00:00:00:00/00
+Emask 0x202 (HSM violation)
+Sep 28 03:47:55 dragonslair ata1: soft resetting port
 
-# hddtemp /dev/sdb
-/dev/sdb: Hitachi HDS721010KLA330                 : 35 C
-# hdparm -Y /dev/sdb
+Sep 28 03:47:55 dragonslair ata1.00: configured for UDMA/133
 
-/dev/sdb:
- issuing sleep command
-# hdparm -Y /dev/sdb
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-ata2.00: waking up from sleep
-ata2: soft resetting link
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-ata2.00: waking up from sleep
-ata2: soft resetting link
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata2.00: configured for UDMA/100
-ata2: EH complete
-....
-to infinity
+Sep 28 03:47:55 dragonslair ata1: EH complete
 
-On 10/12/07, Tejun Heo <htejun@gmail.com> wrote:
-> ATA devices in SLEEP mode don't respond to any commands.  SRST is
-> necessary to wake it up.  Till now, when a command is issued to a
-> device in SLEEP mode, the command times out, which makes EH reset the
-> device and retry the command after that, causing a long delay.
->
-> This patch makes libata track SLEEP state and issue SRST automatically
-> if a command is about to be issued to a device in SLEEP.
->
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>
-> Cc: Andrew Paprocki <andrew@ishiboo.com>
-> ---
->  drivers/ata/libata-core.c |   12 ++++++++++++
->  drivers/ata/libata-eh.c   |    4 +++-
->  include/linux/ata.h       |    1 +
->  include/linux/libata.h    |    1 +
->  4 files changed, 17 insertions(+), 1 deletion(-)
->
-> Index: work/include/linux/ata.h
-> ===================================================================
-> --- work.orig/include/linux/ata.h
-> +++ work/include/linux/ata.h
-> @@ -179,6 +179,7 @@ enum {
->         ATA_CMD_VERIFY          = 0x40,
->         ATA_CMD_VERIFY_EXT      = 0x42,
->         ATA_CMD_STANDBYNOW1     = 0xE0,
-> +       ATA_CMD_SLEEP           = 0xE6,
->         ATA_CMD_IDLEIMMEDIATE   = 0xE1,
->         ATA_CMD_INIT_DEV_PARAMS = 0x91,
->         ATA_CMD_READ_NATIVE_MAX = 0xF8,
-> Index: work/include/linux/libata.h
-> ===================================================================
-> --- work.orig/include/linux/libata.h
-> +++ work/include/linux/libata.h
-> @@ -145,6 +145,7 @@ enum {
->         ATA_DFLAG_PIO           = (1 << 12), /* device limited to PIO mode */
->         ATA_DFLAG_NCQ_OFF       = (1 << 13), /* device limited to non-NCQ mode */
->         ATA_DFLAG_SPUNDOWN      = (1 << 14), /* XXX: for spindown_compat */
-> +       ATA_DFLAG_SLEEPING      = (1 << 15), /* device is sleeping */
->         ATA_DFLAG_INIT_MASK     = (1 << 16) - 1,
->
->         ATA_DFLAG_DETACH        = (1 << 16),
-> Index: work/drivers/ata/libata-core.c
-> ===================================================================
-> --- work.orig/drivers/ata/libata-core.c
-> +++ work/drivers/ata/libata-core.c
-> @@ -5553,6 +5553,10 @@ void __ata_qc_complete(struct ata_queued
->                 case ATA_CMD_SET_MULTI: /* multi_count changed */
->                         eh_action |= ATA_EH_REVALIDATE;
->                         break;
-> +
-> +               case ATA_CMD_SLEEP:
-> +                       qc->dev->flags |= ATA_DFLAG_SLEEPING;
-> +                       break;
->                 }
->
->                 if (unlikely(eh_action) && ap->ops->error_handler) {
-> @@ -5757,6 +5761,14 @@ void ata_qc_issue(struct ata_queued_cmd
->                 qc->flags &= ~ATA_QCFLAG_DMAMAP;
->         }
->
-> +       /* if device is sleeping, schedule softreset and abort the link */
-> +       if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-> +               link->eh_info.action |= ATA_EH_SOFTRESET;
-> +               ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
-> +               ata_link_abort(link);
-> +               return;
-> +       }
-> +
->         ap->ops->qc_prep(qc);
->
->         qc->err_mask |= ap->ops->qc_issue(qc);
-> Index: work/drivers/ata/libata-eh.c
-> ===================================================================
-> --- work.orig/drivers/ata/libata-eh.c
-> +++ work/drivers/ata/libata-eh.c
-> @@ -2207,9 +2207,11 @@ int ata_eh_reset(struct ata_link *link,
->                 ata_link_for_each_dev(dev, link) {
->                         /* After the reset, the device state is PIO 0
->                          * and the controller state is undefined.
-> -                        * Record the mode.
-> +                        * Reset also wakes up drives from sleeping
-> +                        * mode.
->                          */
->                         dev->pio_mode = XFER_PIO_0;
-> +                       dev->flags &= ~ATA_DFLAG_SLEEPING;
->
->                         if (ata_link_offline(link))
->                                 continue;
->
->
+Sep 28 03:47:55 dragonslair sd 0:0:0:0: [sda] Write cache: enabled, read
+cache: enabled, doesn't support DPO or FUA
+Sep 28 03:47:55 dragonslair sd 0:0:0:0: [sda] 156250000 512-byte
+hardware sectors (80000 MB)
+Sep 28 03:47:55 dragonslair sd 0:0:0:0: [sda] Write Protect is off
+
+Sep 28 03:47:55 dragonslair sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+
+Sep 28 03:47:55 dragonslair sd 0:0:0:0: [sda] Write cache: enabled, read
+cache: enabled, doesn't support DPO or FUA
+
+And yet another:
+
+Sep 28 04:33:52 liferaft kernel: ata1.00: exception Emask 0x0 SAct 0x0
+SErr 0x0 action 0x2 frozen
+Sep 28 04:33:55 liferaft kernel: ata1.00: cmd
+b0/d2:f1:00:4f:c2/00:00:00:00:00/00 tag 0 cdb 0x0 data 123392 in
+Sep 28 04:33:55 liferaft kernel:          res
+50/00:f1:00:4f:c2/00:00:00:00:00/00 Emask 0x202 (HSM violation)
+Sep 28 04:33:55 liferaft kernel: ata1: soft resetting port
+Sep 28 04:33:55 liferaft kernel: ata1: SATA link up 3.0 Gbps (SStatus
+123 SControl 300)
+Sep 28 04:33:55 liferaft kernel: ata1.00: configured for UDMA/133
+Sep 28 04:33:55 liferaft kernel: ata1: EH complete
+
+
+
+Another few cases, taken from semi random locations from my log to get
+the many different data, maybe some of it can help out.
+
+Weirdness 1: I have 3 machines, that decide to spew this garbage within
+the same second? (smartd running at it is around the hour that smartd
+would run, but it's just this one day Sep 28 that horrible bad)
+
+Note 1: Bad/failing hardware creates these type of errors.
+
+Note 2: The hardware didn't freeze for me and I believe the freeze is do
+to swap breaking due to the errors.
+
+Note 3: dragonslair's harddisk actually crashed, kernel didn't die, it
+just remounted read only. Reboot and the disk was missing, more reboot
+and the machine started with all disks running again, been stable since
+the 28th Sep. (knock on wood)
+
+Note 4: I've changed hardware and kernel in a non controled manner, so I
+was waiting for another case of these errors where I would be able to
+write down kernel config.
+
+I'm not sure, but I do believe that a keyword with this stuff is SMP and
+2.6.22, older kernels doesn't seem to trigger this and non SMP seems to
+avoid it with 2.6.22, but I can't trigger the error, so there is no way
+of knowing if the conclusion can be trusted.
+
+Dragonslair:
+P4 x2 3.0 Ghz
+Chips Intel 865GV & ICH5
+32bit SMP kernel (2.6.22)
+2 SATA disks WDC WD800JD-75MSA3
+(I'm guessing this one has a physical bad disk, since it's the only one
+the disk has physically failed and the only one with a worrying SMART
+error: 1 Raw_Read_Error_Rate 0x000f 200 200 051 Pre-fail Always - 5)
+
+Locker:
+AMD 64x2
+Chips Nvidia 570
+32bit SMP kernel (2.6.22)
+6 SATA disks 2xWD3200YS-01PGB0 4xWD3200AAKS-00TMA0
+
+Liferaft:
+AMD 64x2
+Chips Nvidia 590
+32bit SMP kernel (vserver 2.6.22 based)
+1 SATA disk WD2500KS-00MJB0
+
+
+--------------ms010800000600050606060709
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIK7DCC
+BXIwggRaoAMCAQICBEOGqWgwDQYJKoZIhvcNAQEFBQAwMTELMAkGA1UEBhMCREsxDDAKBgNV
+BAoTA1REQzEUMBIGA1UEAxMLVERDIE9DRVMgQ0EwHhcNMDYwNzI2MTMyNTM1WhcNMDgwNzI2
+MTM1NTM1WjB7MQswCQYDVQQGEwJESzEpMCcGA1UEChMgSW5nZW4gb3JnYW5pc2F0b3Jpc2sg
+dGlsa255dG5pbmcxQTAaBgNVBAMTE1N0ZWVuIEV1Z2VuIFBvdWxzZW4wIwYDVQQFExxQSUQ6
+OTIwOC0yMDAyLTItMzE3NjE3NjE4MTQ5MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDl
+v74PjpJrPTPfGCsZVhVK+ihTc1gLzPApQLuuAwFkU1YlotH5E92uO6YAGBh0u7Nu89N/N5Ad
+JV4v6Hsmr8CZRAm6K/Nib3QsIByUi8VdgCcfD/MPheu8nne/YYQ6Edws3M1vBvY22NHW7Hkd
+dtjYNiD2biGQ36eNoLbCTeMClwIDAQABo4ICyjCCAsYwDgYDVR0PAQH/BAQDAgP4MCsGA1Ud
+EAQkMCKADzIwMDYwNzI2MTMyNTM1WoEPMjAwODA3MjYxMzU1MzVaMIIBNwYDVR0gBIIBLjCC
+ASowggEmBgoqgVCBKQEBAQEDMIIBFjAvBggrBgEFBQcCARYjaHR0cDovL3d3dy5jZXJ0aWZp
+a2F0LmRrL3JlcG9zaXRvcnkwgeIGCCsGAQUFBwICMIHVMAoWA1REQzADAgEBGoHGRm9yIGFu
+dmVuZGVsc2UgYWYgY2VydGlmaWthdGV0IGfmbGRlciBPQ0VTIHZpbGvlciwgQ1BTIG9nIE9D
+RVMgQ1AsIGRlciBrYW4gaGVudGVzIGZyYSB3d3cuY2VydGlmaWthdC5kay9yZXBvc2l0b3J5
+LiBCZW3mcmssIGF0IFREQyBlZnRlciB2aWxr5XJlbmUgaGFyIGV0IGJlZ3LmbnNldCBhbnN2
+YXIgaWZ0LiBwcm9mZXNzaW9uZWxsZSBwYXJ0ZXIuMEEGCCsGAQUFBwEBBDUwMzAxBggrBgEF
+BQcwAYYlaHR0cDovL29jc3AuY2VydGlmaWthdC5kay9vY3NwL3N0YXR1czAcBgNVHREEFTAT
+gRFzZXBAbGl4LXdvcmxkLm5ldDCBhAYDVR0fBH0wezBLoEmgR6RFMEMxCzAJBgNVBAYTAkRL
+MQwwCgYDVQQKEwNUREMxFDASBgNVBAMTC1REQyBPQ0VTIENBMRAwDgYDVQQDEwdDUkwxNDAz
+MCygKqAohiZodHRwOi8vY3JsLm9jZXMuY2VydGlmaWthdC5kay9vY2VzLmNybDAfBgNVHSME
+GDAWgBRgtYXsVmR+EhknZx1QFUtzrjv5EjAdBgNVHQ4EFgQUGnA0kYplEvpmQTxbkQMwljvV
+XMcwCQYDVR0TBAIwADAZBgkqhkiG9n0HQQAEDDAKGwRWNy4xAwIDqDANBgkqhkiG9w0BAQUF
+AAOCAQEAT5wZtMDaWA31Y7uOj4Z1YXx70TbIreJe1IdVGmQCb0X5LCapVCRHtnP0LEOOPZlJ
+WuR89jSRz8Ojxi+bR/maVu2bIlP900p+S18TksLsR1k7eiEPDYta8/rz7s5EHwuG00Ts9AiO
+4nySH3ra/fqBh3HgUUQCbhLLPAB9YhvHGgxJpdzICzw2g9KzzCLsXqWaGCwb64K46CE9klOX
+UIFoQJ82HeJmjzsMy9ULY5c1JwKPbn8AzbxSOrQi3ssGOiuZQ51zqFfXckXGy9GPQigT/IWk
+5sqzgVFmD1znzEl9+YITBfBSALKUdHxfkXu+UvOx+CjkWow4eSk/0QiF9DCZejCCBXIwggRa
+oAMCAQICBEOGqWgwDQYJKoZIhvcNAQEFBQAwMTELMAkGA1UEBhMCREsxDDAKBgNVBAoTA1RE
+QzEUMBIGA1UEAxMLVERDIE9DRVMgQ0EwHhcNMDYwNzI2MTMyNTM1WhcNMDgwNzI2MTM1NTM1
+WjB7MQswCQYDVQQGEwJESzEpMCcGA1UEChMgSW5nZW4gb3JnYW5pc2F0b3Jpc2sgdGlsa255
+dG5pbmcxQTAaBgNVBAMTE1N0ZWVuIEV1Z2VuIFBvdWxzZW4wIwYDVQQFExxQSUQ6OTIwOC0y
+MDAyLTItMzE3NjE3NjE4MTQ5MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDlv74PjpJr
+PTPfGCsZVhVK+ihTc1gLzPApQLuuAwFkU1YlotH5E92uO6YAGBh0u7Nu89N/N5AdJV4v6Hsm
+r8CZRAm6K/Nib3QsIByUi8VdgCcfD/MPheu8nne/YYQ6Edws3M1vBvY22NHW7HkddtjYNiD2
+biGQ36eNoLbCTeMClwIDAQABo4ICyjCCAsYwDgYDVR0PAQH/BAQDAgP4MCsGA1UdEAQkMCKA
+DzIwMDYwNzI2MTMyNTM1WoEPMjAwODA3MjYxMzU1MzVaMIIBNwYDVR0gBIIBLjCCASowggEm
+BgoqgVCBKQEBAQEDMIIBFjAvBggrBgEFBQcCARYjaHR0cDovL3d3dy5jZXJ0aWZpa2F0LmRr
+L3JlcG9zaXRvcnkwgeIGCCsGAQUFBwICMIHVMAoWA1REQzADAgEBGoHGRm9yIGFudmVuZGVs
+c2UgYWYgY2VydGlmaWthdGV0IGfmbGRlciBPQ0VTIHZpbGvlciwgQ1BTIG9nIE9DRVMgQ1As
+IGRlciBrYW4gaGVudGVzIGZyYSB3d3cuY2VydGlmaWthdC5kay9yZXBvc2l0b3J5LiBCZW3m
+cmssIGF0IFREQyBlZnRlciB2aWxr5XJlbmUgaGFyIGV0IGJlZ3LmbnNldCBhbnN2YXIgaWZ0
+LiBwcm9mZXNzaW9uZWxsZSBwYXJ0ZXIuMEEGCCsGAQUFBwEBBDUwMzAxBggrBgEFBQcwAYYl
+aHR0cDovL29jc3AuY2VydGlmaWthdC5kay9vY3NwL3N0YXR1czAcBgNVHREEFTATgRFzZXBA
+bGl4LXdvcmxkLm5ldDCBhAYDVR0fBH0wezBLoEmgR6RFMEMxCzAJBgNVBAYTAkRLMQwwCgYD
+VQQKEwNUREMxFDASBgNVBAMTC1REQyBPQ0VTIENBMRAwDgYDVQQDEwdDUkwxNDAzMCygKqAo
+hiZodHRwOi8vY3JsLm9jZXMuY2VydGlmaWthdC5kay9vY2VzLmNybDAfBgNVHSMEGDAWgBRg
+tYXsVmR+EhknZx1QFUtzrjv5EjAdBgNVHQ4EFgQUGnA0kYplEvpmQTxbkQMwljvVXMcwCQYD
+VR0TBAIwADAZBgkqhkiG9n0HQQAEDDAKGwRWNy4xAwIDqDANBgkqhkiG9w0BAQUFAAOCAQEA
+T5wZtMDaWA31Y7uOj4Z1YXx70TbIreJe1IdVGmQCb0X5LCapVCRHtnP0LEOOPZlJWuR89jSR
+z8Ojxi+bR/maVu2bIlP900p+S18TksLsR1k7eiEPDYta8/rz7s5EHwuG00Ts9AiO4nySH3ra
+/fqBh3HgUUQCbhLLPAB9YhvHGgxJpdzICzw2g9KzzCLsXqWaGCwb64K46CE9klOXUIFoQJ82
+HeJmjzsMy9ULY5c1JwKPbn8AzbxSOrQi3ssGOiuZQ51zqFfXckXGy9GPQigT/IWk5sqzgVFm
+D1znzEl9+YITBfBSALKUdHxfkXu+UvOx+CjkWow4eSk/0QiF9DCZejGCAiowggImAgEBMDkw
+MTELMAkGA1UEBhMCREsxDDAKBgNVBAoTA1REQzEUMBIGA1UEAxMLVERDIE9DRVMgQ0ECBEOG
+qWgwCQYFKw4DAhoFAKCCAUcwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMDcxMDEzMDU0OTA3WjAjBgkqhkiG9w0BCQQxFgQUE7CXUveAgjRRhCvPAf17frYN
+V2swSAYJKwYBBAGCNxAEMTswOTAxMQswCQYDVQQGEwJESzEMMAoGA1UEChMDVERDMRQwEgYD
+VQQDEwtUREMgT0NFUyBDQQIEQ4apaDBKBgsqhkiG9w0BCRACCzE7oDkwMTELMAkGA1UEBhMC
+REsxDDAKBgNVBAoTA1REQzEUMBIGA1UEAxMLVERDIE9DRVMgQ0ECBEOGqWgwUgYJKoZIhvcN
+AQkPMUUwQzAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYF
+Kw4DAgcwDQYIKoZIhvcNAwICASgwDQYJKoZIhvcNAQEBBQAEgYCC+n3e+QWjahFfyyUZDqun
+K0beiGn9oGppFJXnk00m5IJI4BSQsshTTN3czly8/vK8IJlRxqkdgzkOUwsOQyFFHK9pTkg9
+sk9ekNULsbN3MHHoLg9zrsTr6Ys3wo5lFd7zEZSL1+qJ594foRGCHJJ0qakNtJWfgaXcO0cE
+QEjOhwAAAAAAAA==
+--------------ms010800000600050606060709--
