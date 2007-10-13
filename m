@@ -1,85 +1,112 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.23-mm1
-Date: Sat, 13 Oct 2007 14:03:28 +0200
-Message-ID: <64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
-	 <20071012140328.f82af8e8.kamezawa.hiroyu@jp.fujitsu.com>
-	 <20071011234202.2f15bb76.akpm@linux-foundation.org>
-	 <64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>
-	 <20071012013729.ada2127b.akpm@linux-foundation.org>
-	 <64bb37e0710130101y7fb8e4c0lf214fd821e8305ed@mail.gmail.com>
-	 <4710A407.3070000@garzik.org>
+Date: Sat, 13 Oct 2007 08:19:17 -0400
+Message-ID: <4710B7C5.5050403@garzik.org>
+References: <20071011213126.cf92efb7.akpm@linux-foundation.org>	 <20071012140328.f82af8e8.kamezawa.hiroyu@jp.fujitsu.com>	 <20071011234202.2f15bb76.akpm@linux-foundation.org>	 <64bb37e0710120131y6b939951y74c50bd596b1d938@mail.gmail.com>	 <20071012013729.ada2127b.akpm@linux-foundation.org>	 <64bb37e0710130101y7fb8e4c0lf214fd821e8305ed@mail.gmail.com>	 <4710A407.3070000@garzik.org> <64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:13859 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762247AbXJMMD3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 08:03:29 -0400
-Received: by py-out-1112.google.com with SMTP id u77so2094043pyb
-        for <linux-ide@vger.kernel.org>; Sat, 13 Oct 2007 05:03:29 -0700 (PDT)
-In-Reply-To: <4710A407.3070000@garzik.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:53708 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750913AbXJMMTY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 13 Oct 2007 08:19:24 -0400
+In-Reply-To: <64bb37e0710130503haa66d6eu93e75ecdc78ac866@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-On 10/13/07, Jeff Garzik <jeff@garzik.org> wrote:
-> Torsten Kaiser wrote:
-> > On 10/12/07, Andrew Morton <akpm@linux-foundation.org> wrote:
-> >> On Fri, 12 Oct 2007 10:31:42 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
-> >>> Oct 12 10:23:03 treogen smartd[6091]: Device: /dev/sdc, not found in
-> >>> smartd database.
-> >> hm.
-> >>
-> >>> Oct 12 10:23:03 treogen [  105.990000] WARNING: at
-> >>> drivers/ata/libata-core.c:5752 ata_qc_issue()
-> >> Let's cc linux-ide.
-> >>
-> >>> Oct 12 10:23:03 treogen [  105.990000]
-> >>> Oct 12 10:23:03 treogen [  105.990000] Call Trace:
-> >>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804442ef>]
-> >>> ata_qc_issue+0x47f/0x540
-> >>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
-> >>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80449c80>]
-> >>> ata_scsi_flush_xlat+0x0/0x30
->
-> > Oct 13 07:46:48 treogen [   99.850000]
-> > Oct 13 07:46:48 treogen [   99.850000] ata3: EH in SWNCQ
-> > mode,QC:qc_active 0x3 sactive 0x1
-> > Oct 13 07:46:48 treogen [   99.850000] ata3: SWNCQ:qc_active 0x1
-> > defer_bits 0x0 last_issue_tag 0x0
->
-> The WARNING indicates that there is a SWNCQ bug in sata_nv.  Given that
-> the problem appears when SYNCHRONIZE CACHE is being issued, I would
+Torsten Kaiser wrote:
+> On 10/13/07, Jeff Garzik <jeff@garzik.org> wrote:
+>> Torsten Kaiser wrote:
+>>> On 10/12/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+>>>> On Fri, 12 Oct 2007 10:31:42 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
+>>>>> Oct 12 10:23:03 treogen smartd[6091]: Device: /dev/sdc, not found in
+>>>>> smartd database.
+>>>> hm.
+>>>>
+>>>>> Oct 12 10:23:03 treogen [  105.990000] WARNING: at
+>>>>> drivers/ata/libata-core.c:5752 ata_qc_issue()
+>>>> Let's cc linux-ide.
+>>>>
+>>>>> Oct 12 10:23:03 treogen [  105.990000]
+>>>>> Oct 12 10:23:03 treogen [  105.990000] Call Trace:
+>>>>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff804442ef>]
+>>>>> ata_qc_issue+0x47f/0x540
+>>>>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80432e60>] scsi_done+0x0/0x20
+>>>>> Oct 12 10:23:03 treogen [  105.990000]  [<ffffffff80449c80>]
+>>>>> ata_scsi_flush_xlat+0x0/0x30
+>>> Oct 13 07:46:48 treogen [   99.850000]
+>>> Oct 13 07:46:48 treogen [   99.850000] ata3: EH in SWNCQ
+>>> mode,QC:qc_active 0x3 sactive 0x1
+>>> Oct 13 07:46:48 treogen [   99.850000] ata3: SWNCQ:qc_active 0x1
+>>> defer_bits 0x0 last_issue_tag 0x0
+>> The WARNING indicates that there is a SWNCQ bug in sata_nv.  Given that
+>> the problem appears when SYNCHRONIZE CACHE is being issued, I would
+> 
+> I can't follow you on SYNCHRONIZE CACHE.
+> The only command written to the syslog in the errors where
+> 0x60==ATA_CMD_FPDMA_READ and 0xB0 (which is not in
+> include/linux/ata.h, but ATA-6 says that this is SMART related. That
+> makes sense, as smartd is failing).
 
-I can't follow you on SYNCHRONIZE CACHE.
-The only command written to the syslog in the errors where
-0x60==ATA_CMD_FPDMA_READ and 0xB0 (which is not in
-include/linux/ata.h, but ATA-6 says that this is SMART related. That
-makes sense, as smartd is failing).
+In the traceback you have "ata_scsi_flush_xlat", which is the function 
+that translates a SCSI sync-cache command into an ATA flush-cache command.
 
-> guess that sata_nv is not properly handling non-queued commands.
+The "WARNING: at drivers/ata/libata-core.c:5752 ata_qc_issue()" also 
+guides us to the code comment
 
-But that still seems correct, as I would not expect that SMART
-commands get queued. (Thats just a guess, as I did not try to find the
-code that does this distinction)
+         /* Make sure only one non-NCQ command is outstanding.  The
+          * check is skipped for old EH because it reuses active qc to
+          * request ATAPI sense.
+          */
 
-> This is a patch from libata-dev.git#nv-swncq (via #ALL).
+which is a check related to NCQ->off and off->NCQ edge cases.
 
-Comparing sata_nv.c from 2.6.23-rc8-mm1 and 2.6.23-mm1 I see two
-changes, that look suspicious:
+So those are the two bits of information I found interesting.
 
-http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=commitdiff;h=31cc23b34913bc173680bdc87af79e551bf8cc0d
 
-The comment says: "ahci and sata_sil24 are converted to use ata_std_qc_defer()."
-But the patch also adds ".qc_defer = ata_std_qc_defer," to sata_nv.c
+>> guess that sata_nv is not properly handling non-queued commands.
+> 
+> But that still seems correct, as I would not expect that SMART
+> commands get queued. (Thats just a guess, as I did not try to find the
+> code that does this distinction)
+> 
+>> This is a patch from libata-dev.git#nv-swncq (via #ALL).
+> 
+> Comparing sata_nv.c from 2.6.23-rc8-mm1 and 2.6.23-mm1 I see two
+> changes, that look suspicious:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=commitdiff;h=31cc23b34913bc173680bdc87af79e551bf8cc0d
+> 
+> The comment says: "ahci and sata_sil24 are converted to use ata_std_qc_defer()."
+> But the patch also adds ".qc_defer = ata_std_qc_defer," to sata_nv.c
+> 
+> The second change is the removal of the 'lock' spinlock from sata_nv.c
+> that was used in nv_swncq_qc_issue and nv_swncq_host_interrupt.
+> 
+> Should I try to revert one or both of these changes?
 
-The second change is the removal of the 'lock' spinlock from sata_nv.c
-that was used in nv_swncq_qc_issue and nv_swncq_host_interrupt.
+If you are git-capable, IMO the next steps in problem elimination should be
 
-Should I try to revert one or both of these changes?
+* download latest linux-2.6.git (currently 
+752097cec53eea111d087c545179b421e2bde98a)
+* build and test linux-2.6.git, to establish a new baseline
+* download latest libata-dev.git#nv-swncq (currently 
+3cb664c2d319a4fde5028c3c5dab6221fe70bd2d)
+* build and test, with sata_nv module option swncq=0
+* build and test, with sata_nv module option swncq=1
 
-Torsten
+That will get -mm out of the picture, use the same baseline kernel for 
+all three tests (nv-swncq is based off of 
+752097cec53eea111d087c545179b421e2bde98a) and narrow things down to the 
+precise changes that went upstream (or are on the 'nv-swncq' branch, 
+waiting to go upstream).
+
+My gut feeling is that there is a lingering bug in sata_nv SWNCQ somewhere.
+
+	Jeff
+
+
+
