@@ -1,100 +1,125 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Hitachi disk: spurious completions during NCQ
-Date: Fri, 12 Oct 2007 17:46:37 -0700
-Message-ID: <20071012174637.9b3b517b.akpm@linux-foundation.org>
-References: <20071010190342.GA13843@dreamland.darkstar.lan>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+Date: Fri, 12 Oct 2007 17:54:12 -0700
+Message-ID: <20071012175412.ba4931fd.akpm@linux-foundation.org>
+References: <29a863790710101217g607b5425g6a3374c2be1d75a5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:48392 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45549 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756045AbXJMArM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 20:47:12 -0400
-In-Reply-To: <20071010190342.GA13843@dreamland.darkstar.lan>
+	by vger.kernel.org with ESMTP id S1754667AbXJMAys (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 20:54:48 -0400
+In-Reply-To: <29a863790710101217g607b5425g6a3374c2be1d75a5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Luca Tettamanti <kronos.it@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Greg Cormier <gcormier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 10 Oct 2007 21:03:43 +0200
-Luca Tettamanti <kronos.it@gmail.com> wrote:
+On Wed, 10 Oct 2007 15:17:19 -0400
+"Greg Cormier" <gcormier@gmail.com> wrote:
 
-> Hello,
-> sometimes kernel complains about spurious completions on my new
-> notebook:
-> 
-> ata3.00: exception Emask 0x2 SAct 0x407fd SErr 0x0 action 0x2 frozen
-> ata3.00: spurious completions during NCQ issue=0x0 SAct=0x407fd FIS=005040a1:00020000
-> ata3.00: cmd 61/08:00:c7:5a:82/00:00:1b:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:10:3f:5b:fa/00:00:18:00:00/40 tag 2 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:18:5f:5b:fa/00:00:18:00:00/40 tag 3 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/18:20:6f:5b:fa/00:00:18:00:00/40 tag 4 cdb 0x0 data 12288 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:28:e7:19:fd/00:00:18:00:00/40 tag 5 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:30:df:59:ae/00:00:1a:00:00/40 tag 6 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:38:3f:5a:ae/00:00:1a:00:00/40 tag 7 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/08:40:6f:62:ae/00:00:1a:00:00/40 tag 8 cdb 0x0 data 4096 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/28:48:d7:59:7e/00:00:1b:00:00/40 tag 9 cdb 0x0 data 20480 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/10:50:07:5b:82/00:00:1b:00:00/40 tag 10 cdb 0x0 data 8192 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3.00: cmd 61/30:90:f7:5a:fa/00:00:18:00:00/40 tag 18 cdb 0x0 data 24576 out
->          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
-> ata3: soft resetting port
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata3.00: configured for UDMA/133
-> ata3: EH complete
-> sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
-> sd 2:0:0:0: [sda] Write Protect is off
-> sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> 
-> (this is a very recent 2.6.23-git, SMP, x86_64)
+> I'd like to hop in on this, and add my similar problem. This is my
+> first post so please excuse me if I'm doing something wrong.
 
-The latest kernel, a serious-looking problem, sent to the correct mailing
-lists.  After two days nobody has bothered replying.
+Please cc linux-ide@vger.kernel.org on ide, sata and pata reports.
 
-> The disk is:
-> 
-> ATA device, with non-removable media
->         Model Number:       Hitachi HTS542525K9SA00
->         Firmware Revision:  BBFOC31P
-> 
-> The controller is: 
-> 
-> 00:1f.2 SATA controller: Intel Corporation Mobile SATA AHCI Controller (rev 03) (prog-if 01 [AHCI 1.0])
->         Subsystem: ASUSTeK Computer Inc. Unknown device 14e7
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
->         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->         Latency: 0
->         Interrupt: pin B routed to IRQ 1272
->         Region 0: I/O ports at ec00 [size=8]
->         Region 1: I/O ports at e880 [size=4]
->         Region 2: I/O ports at e800 [size=8]
->         Region 3: I/O ports at e480 [size=4]
->         Region 4: I/O ports at e400 [size=32]
->         Region 5: Memory at febff800 (32-bit, non-prefetchable) [size=2K]
->         Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/2 Enable+
->                 Address: fee0300c  Data: 41b9
->         Capabilities: [70] Power Management version 3
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
->                 Status: D0 PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [a8] #12 [0010]
-> 
-> and I'm using AHCI driver.
-> 
-> I see that similar disks are already blacklisted, probably this one is
-> bugged too - though the error is pretty rare :(
-> 
+A "hard freeze" is fairly serious.
 
-Does this cause any other symptoms?  ie: does the system otherwise work OK?
-
-
+> I've been having issues recently (couple of weeks?) with my server. I
+> have three WD5000YS (500gb) drives in RAID5, on an Asus A8N
+> motherboard which is nForce 4. I've even RMA'd one of the drives, but
+> now I'm thinking the drives are fine.
+> 
+> The drive seems to have issues under heavy to moderate IO. I unmounted
+> my raid, and forced an e2fsck. e2fsck didn't even print anything out,
+> I got this.
+> 
+> Oct 10 14:50:40 zeus kernel: ata3: EH in ADMA mode, notifier 0x0
+> notifier_error 0x0 gen_ctl 0x1501000 status 0x400 next cpb count 0x0
+> next cpb idx 0x0
+> Oct 10 14:50:40 zeus kernel: ata3: CPB 0: ctl_flags 0x1f, resp_flags 0x2
+> Oct 10 14:50:40 zeus kernel: ata3: timeout waiting for ADMA IDLE, stat=0x400
+> Oct 10 14:50:40 zeus kernel: ata3: timeout waiting for ADMA LEGACY, stat=0x400
+> Oct 10 14:50:40 zeus kernel: ata3.00: exception Emask 0x0 SAct 0x1
+> SErr 0x1c00000 action 0x2 frozen
+> Oct 10 14:50:40 zeus kernel: ata3.00: cmd
+> 61/08:00:bf:4b:38/00:00:3a:00:00/40 tag 0 cdb 0x0 data 4096 out
+> Oct 10 14:50:40 zeus kernel:          res
+> 40/00:f2:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Oct 10 14:50:40 zeus kernel: ata3: soft resetting port
+> Oct 10 14:50:40 zeus kernel: ata3: SATA link up 3.0 Gbps (SStatus 123
+> SControl 300)
+> Oct 10 14:50:40 zeus kernel: ata3.00: configured for UDMA/133
+> Oct 10 14:50:40 zeus kernel: ata3: EH complete
+> Oct 10 14:50:40 zeus kernel: sd 2:0:0:0: [sdb] 976773168 512-byte
+> hardware sectors (500108 MB)
+> Oct 10 14:50:40 zeus kernel: sd 2:0:0:0: [sdb] Write Protect is off
+> Oct 10 14:50:40 zeus kernel: sd 2:0:0:0: [sdb] Write cache: enabled,
+> read cache: enabled, doesn't support DPO or FUA
+> Oct 10 14:51:40 zeus kernel: ata3: EH in ADMA mode, notifier 0x0
+> notifier_error 0x0 gen_ctl 0x1501000 status 0x400 next cpb count 0x0
+> next cpb idx 0x0
+> Oct 10 14:51:40 zeus kernel: ata3: CPB 0: ctl_flags 0x1f, resp_flags 0x2
+> Oct 10 14:51:40 zeus kernel: ata3: timeout waiting for ADMA IDLE, stat=0x400
+> Oct 10 14:51:40 zeus kernel: ata3: timeout waiting for ADMA LEGACY, stat=0x400
+> Oct 10 14:51:40 zeus kernel: ata3.00: exception Emask 0x0 SAct 0x1
+> SErr 0x400000 action 0x2 frozen
+> Oct 10 14:51:40 zeus kernel: ata3.00: cmd
+> 61/08:00:bf:4b:38/00:00:3a:00:00/40 tag 0 cdb 0x0 data 4096 out
+> Oct 10 14:51:40 zeus kernel:          res
+> 40/00:f2:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Oct 10 14:51:41 zeus kernel: ata3: soft resetting port
+> Oct 10 14:51:41 zeus kernel: ata3: SATA link up 3.0 Gbps (SStatus 123
+> SControl 300)
+> Oct 10 14:51:41 zeus kernel: ata3.00: configured for UDMA/133
+> Oct 10 14:51:41 zeus kernel: ata3: EH complete
+> Oct 10 14:51:41 zeus kernel: sd 2:0:0:0: [sdb] 976773168 512-byte
+> hardware sectors (500108 MB)
+> Oct 10 14:51:41 zeus kernel: sd 2:0:0:0: [sdb] Write Protect is off
+> Oct 10 14:51:41 zeus kernel: sd 2:0:0:0: [sdb] Write cache: enabled,
+> read cache: enabled, doesn't support DPO or FUA
+> Oct 10 14:52:19 zeus kernel: device eth0 left promiscuous mode
+> Oct 10 14:52:41 zeus kernel: ata3: EH in ADMA mode, notifier 0x0
+> notifier_error 0x0 gen_ctl 0x1501000 status 0x400 next cpb count 0x0
+> next cpb idx 0x0
+> Oct 10 14:52:41 zeus kernel: ata3: CPB 0: ctl_flags 0x1f, resp_flags 0x2
+> Oct 10 14:52:41 zeus kernel: ata3: timeout waiting for ADMA IDLE, stat=0x400
+> Oct 10 14:52:41 zeus kernel: ata3: timeout waiting for ADMA LEGACY, stat=0x400
+> Oct 10 14:52:41 zeus kernel: ata3.00: exception Emask 0x0 SAct 0x1
+> SErr 0x400000 action 0x2 frozen
+> Oct 10 14:52:41 zeus kernel: ata3.00: cmd
+> 61/08:00:bf:4b:38/00:00:3a:00:00/40 tag 0 cdb 0x0 data 4096 out
+> Oct 10 14:52:41 zeus kernel:          res
+> 40/00:f2:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Oct 10 14:52:41 zeus kernel: ata3: soft resetting port
+> Oct 10 14:52:42 zeus kernel: ata3: SATA link up 3.0 Gbps (SStatus 123
+> SControl 300)
+> Oct 10 14:52:42 zeus kernel: ata3.00: configured for UDMA/133
+> Oct 10 14:52:42 zeus kernel: ata3: EH complete
+> Oct 10 14:52:42 zeus kernel: sd 2:0:0:0: [sdb] 976773168 512-byte
+> hardware sectors (500108 MB)
+> Oct 10 14:52:42 zeus kernel: sd 2:0:0:0: [sdb] Write Protect is off
+> Oct 10 14:52:42 zeus kernel: sd 2:0:0:0: [sdb] Write cache: enabled,
+> read cache: enabled, doesn't support DPO or FUA
+> 
+> These errors have been happening on various .22 kernels, and this
+> message is from the hot-off-the-press .23 kernel. This message is
+> followed by a hard freeze.
+> 
+> I'm in the process of figuring out why netconsole isn't quite working,
+> so hopefully I can provide more information soon. The server is
+> currently frozen, when I get home I can perhaps provide more
+> information? lspci?
+> 
+> Looks like another rebuild of the array when I get home.
+> 
+> 
+> Thanks,
+> Greg
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
