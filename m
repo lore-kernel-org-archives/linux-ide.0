@@ -1,206 +1,189 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patches] libata update
-Date: Sat, 13 Oct 2007 03:42:22 +0200
-Message-ID: <200710130342.22217.bzolnier@gmail.com>
-References: <20071012194002.GA1545@havoc.gtf.org>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: Re: [PATCH #upstream 2/2] libata: track SLEEP state and issue SRST to wake it up
+Date: Sat, 13 Oct 2007 00:57:59 -0400
+Message-ID: <76366b180710122157s506fd467m10181ceca7badf6f@mail.gmail.com>
+References: <20071012115631.GA11510@htj.dyndns.org>
+	 <20071012115657.GB11510@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:24615 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbXJMBkA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2007 21:40:00 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so897837nfb
-        for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 18:39:58 -0700 (PDT)
-In-Reply-To: <20071012194002.GA1545@havoc.gtf.org>
+Received: from rv-out-0910.google.com ([209.85.198.190]:22864 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbXJME6B (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 00:58:01 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so969823rvb
+        for <linux-ide@vger.kernel.org>; Fri, 12 Oct 2007 21:58:00 -0700 (PDT)
+In-Reply-To: <20071012115657.GB11510@htj.dyndns.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>, Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
 
+Tejun,
 
-On Friday 12 October 2007, Jeff Garzik wrote:
-> 
-> [ I just sent this upstream to Andrew and Linus ]
-> 
-> Now that I have nailed down the corruption problem, I can attend to
-> this...  Fun stuff:
-> 
-> * port multiplier support (like an ethernet hub, only dumber)
+I'm able to break my system using this patch. I had a hunch this might
+be possible.. :) In short, if you issue a sleep command while the
+drive is already sleeping, it puts libata into an infinite loop
+resetting the port. I've illustrated the working test and the evil
+hunch below. The sleep command itself will need a short-circuit out of
+this logic in order to prevent this loop.
 
-Great to see this here.
+Also, in the working case below the hddtemp command actually blocked
+until the drive was spun up before returning a valid temp. While
+testing, I was able to get hddtemp to trigger the drive wake-up when
+it was sleeping, but hddtemp then returned stating the drive was
+sleeping. Re-running hddtemp until the drive was fully spun up
+(another 5 seconds) kept returning that it was sleeping. I'll see if I
+can reproduce this reliably. Am I correct in assuming the process
+which triggers the wake-up should block?
 
-> * Asynchronous notification -- finally userspace CD-ROM polling can go away!
+-Andrew
 
-Is this AHCI specific or could be used by some other SATA hosts?
+Working case:
 
->   (NOTE: waiting on James B to apply the piece that actually makes this
->   work...)
-> 
-> * Alan continues to hammer out edge cases in generic ATA support.  An
->   amazing amount of ancient and/or obscure hardware works with libata   thanks to him :)
+# hddtemp /dev/sdb
+/dev/sdb: Hitachi HDS721010KLA330                 : 35 C
+# hdparm -Y /dev/sdb
 
-Worth to mention that this update also contains two new drivers from Alan,
-pata_acpi and pata_ns87415. :)
+/dev/sdb:
+ issuing sleep command
+# time hddtemp /dev/sdb
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata2.00: waking up from sleep
+ata2: soft resetting link
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+/dev/sdb: Hitachi HDS721010KLA330                 : 34 C
+real    0m 10.89s
+user    0m 0.00s
+sys     0m 0.00s
+# time hddtemp /dev/sdb
+/dev/sdb: Hitachi HDS721010KLA330                 : 34 C
+real    0m 0.26s
+user    0m 0.00s
+sys     0m 0.00s
 
-> * Turn on ACPI by default (watch for bug reports!).  This should make
->   suspend/resume work a lot better.
-> 
-> * New drivers for embedded ATA chips.
+Evil DoS case:
 
-Unfortunately both are broken ATM, details below.
+# hddtemp /dev/sdb
+/dev/sdb: Hitachi HDS721010KLA330                 : 35 C
+# hdparm -Y /dev/sdb
 
-[ added Sonic Zhang and Kristoffer Nyborg Gregertsen to cc: ]
+/dev/sdb:
+ issuing sleep command
+# hdparm -Y /dev/sdb
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata2.00: waking up from sleep
+ata2: soft resetting link
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+ata2.00: waking up from sleep
+ata2: soft resetting link
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.00: configured for UDMA/100
+ata2: EH complete
+....
+to infinity
 
-> Please pull from 'upstream-linus' branch of
-> master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-[ ... ]
-
-> Alan Cox (22):
->       pata_cmd64x: Set up MWDMA modes properly
-
-two minor things:
-
-a.
-
-@@ -88,14 +88,15 @@ static int cmd648_cable_detect(struct ata_port *ap)
- }
- 
- /**
-- *     cmd64x_set_piomode      -       set initial PIO mode data
-+ *     cmd64x_set_piomode      -       set PIO and MWDMA timing
-  *     @ap: ATA interface
-  *     @adev: ATA device
-+ *     @mode: mode
-  *
-- *     Called to do the PIO mode setup.
-+ *     Called to do the PIO and MWDMA mode setup.
-  */
- 
--static void cmd64x_set_piomode(struct ata_port *ap, struct ata_device *adev)
-+static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 mode)
- {
-        struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-        struct ata_timing t;
-
-function name in the documentation needs fixing
-
-b.
-
-regD fiddling in cmd64x_set_dmamode() could be removed completly
-
->       libata: correct handling of SRST reset sequences
-
-This potentially adds a regression for nVidia boxes (but ACPI cable
-detection should compensate for it):
-
-pata_amd's ->cable_detect checks UDMA timings to get the cable type
-(cable detection is done before the SRST) but pata_amd's ->set_piomode
-messes with UDMA timings.  It seems that both methods need fixing.
-
-> Jeff Garzik (14):
-
->       [libata] Turn on ACPI by default
-
--MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in suspend/resume when set");
-+MODULE_PARM_DESC(noacpi, "Disables the use of ACPI in probe/suspend/resume when set");
-
-Would be nice to have Documentation/kernel-parameters.txt updated as well.
-
-> Kristoffer Nyborg Gregertsen (1):
->       AVR32 PATA driver
-
-Won't build because this libata update removes ->irq_ack and ->port_disable
-methods from struct ata_port.
-
-> Sonic Zhang (1):
->       libata driver for bf548 on chip ATAPI controller.
-
-Won't build, same problem as with AVR32 PATA driver + needs update to
-accomodate for libata-link patches.
-
-There are some other problems:
-
-a.
-
-+config PATA_BF54X_DMA
-+       bool "DMA mode"
-+       depends on PATA_BF54X
-+       default y
-+       help
-+         Enable DMA mode for Blackfin ATAPI controller.
-
-The preferred solution would be to use module parameter.
-
-If this option is on by default it may be even possible to remove it
-completly since this libata update also contains patch from Alan allowing
-DMA disable per different classes of ATA devices.
-
-b.
-
-+static struct ata_port_info bfin_port_info[] = {
-+       {
-+               .sht            = &bfin_sht,
-+               .flags          = ATA_FLAG_SLAVE_POSS
-+                               | ATA_FLAG_MMIO
-+                               | ATA_FLAG_NO_LEGACY,
-+               .pio_mask       = 0x1f, /* pio0-4 */
-+               .mwdma_mask     = 0,
-+#ifdef CONFIG_PATA_BF54X_DMA
-+               .udma_mask      = ATA_UDMA5,
-+#else
-+               .udma_mask      = 0,
-+#endif
-+               .port_ops       = &bfin_pata_ops,
-+       },
-+};
-
-MWDMA is never enabled (even if CONFIG_PATA_BF54X_DMA=y) but the driver
-contains MWDMA support...
-
-c.
-
-+/**
-+ *
-+ *    Function:       wait_complete
-+ *
-+ *    Description:    Waits the interrupt from device
-+ *
-+ */
-+static inline void wait_complete(void __iomem *base, unsigned short mask)
-+{
-+       unsigned short status;
-+       unsigned int i = 0;
-+
-+#define PATA_BF54X_WAIT_TIMEOUT                10000
-+
-+       for (i = 0; i < PATA_BF54X_WAIT_TIMEOUT; i++) {
-+               status = ATAPI_GET_INT_STATUS(base) & mask;
-+               if (status)
-+                       break;
-+       }
-+
-+       ATAPI_SET_INT_STATUS(base, mask);
-+}
-
-udelay() between retries?
-
-d.
-
-* write_atapi_register()
-* read_atapi_register()
-* write_atapi_data()
-* read_atapi_data()
-
-and
-
-* wait_complete()
-
-need a proper documentation (DocBook-ized etc).
-
-Thanks,
-Bart
+On 10/12/07, Tejun Heo <htejun@gmail.com> wrote:
+> ATA devices in SLEEP mode don't respond to any commands.  SRST is
+> necessary to wake it up.  Till now, when a command is issued to a
+> device in SLEEP mode, the command times out, which makes EH reset the
+> device and retry the command after that, causing a long delay.
+>
+> This patch makes libata track SLEEP state and issue SRST automatically
+> if a command is about to be issued to a device in SLEEP.
+>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>
+> Cc: Andrew Paprocki <andrew@ishiboo.com>
+> ---
+>  drivers/ata/libata-core.c |   12 ++++++++++++
+>  drivers/ata/libata-eh.c   |    4 +++-
+>  include/linux/ata.h       |    1 +
+>  include/linux/libata.h    |    1 +
+>  4 files changed, 17 insertions(+), 1 deletion(-)
+>
+> Index: work/include/linux/ata.h
+> ===================================================================
+> --- work.orig/include/linux/ata.h
+> +++ work/include/linux/ata.h
+> @@ -179,6 +179,7 @@ enum {
+>         ATA_CMD_VERIFY          = 0x40,
+>         ATA_CMD_VERIFY_EXT      = 0x42,
+>         ATA_CMD_STANDBYNOW1     = 0xE0,
+> +       ATA_CMD_SLEEP           = 0xE6,
+>         ATA_CMD_IDLEIMMEDIATE   = 0xE1,
+>         ATA_CMD_INIT_DEV_PARAMS = 0x91,
+>         ATA_CMD_READ_NATIVE_MAX = 0xF8,
+> Index: work/include/linux/libata.h
+> ===================================================================
+> --- work.orig/include/linux/libata.h
+> +++ work/include/linux/libata.h
+> @@ -145,6 +145,7 @@ enum {
+>         ATA_DFLAG_PIO           = (1 << 12), /* device limited to PIO mode */
+>         ATA_DFLAG_NCQ_OFF       = (1 << 13), /* device limited to non-NCQ mode */
+>         ATA_DFLAG_SPUNDOWN      = (1 << 14), /* XXX: for spindown_compat */
+> +       ATA_DFLAG_SLEEPING      = (1 << 15), /* device is sleeping */
+>         ATA_DFLAG_INIT_MASK     = (1 << 16) - 1,
+>
+>         ATA_DFLAG_DETACH        = (1 << 16),
+> Index: work/drivers/ata/libata-core.c
+> ===================================================================
+> --- work.orig/drivers/ata/libata-core.c
+> +++ work/drivers/ata/libata-core.c
+> @@ -5553,6 +5553,10 @@ void __ata_qc_complete(struct ata_queued
+>                 case ATA_CMD_SET_MULTI: /* multi_count changed */
+>                         eh_action |= ATA_EH_REVALIDATE;
+>                         break;
+> +
+> +               case ATA_CMD_SLEEP:
+> +                       qc->dev->flags |= ATA_DFLAG_SLEEPING;
+> +                       break;
+>                 }
+>
+>                 if (unlikely(eh_action) && ap->ops->error_handler) {
+> @@ -5757,6 +5761,14 @@ void ata_qc_issue(struct ata_queued_cmd
+>                 qc->flags &= ~ATA_QCFLAG_DMAMAP;
+>         }
+>
+> +       /* if device is sleeping, schedule softreset and abort the link */
+> +       if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
+> +               link->eh_info.action |= ATA_EH_SOFTRESET;
+> +               ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
+> +               ata_link_abort(link);
+> +               return;
+> +       }
+> +
+>         ap->ops->qc_prep(qc);
+>
+>         qc->err_mask |= ap->ops->qc_issue(qc);
+> Index: work/drivers/ata/libata-eh.c
+> ===================================================================
+> --- work.orig/drivers/ata/libata-eh.c
+> +++ work/drivers/ata/libata-eh.c
+> @@ -2207,9 +2207,11 @@ int ata_eh_reset(struct ata_link *link,
+>                 ata_link_for_each_dev(dev, link) {
+>                         /* After the reset, the device state is PIO 0
+>                          * and the controller state is undefined.
+> -                        * Record the mode.
+> +                        * Reset also wakes up drives from sleeping
+> +                        * mode.
+>                          */
+>                         dev->pio_mode = XFER_PIO_0;
+> +                       dev->flags &= ~ATA_DFLAG_SLEEPING;
+>
+>                         if (ata_link_offline(link))
+>                                 continue;
+>
+>
