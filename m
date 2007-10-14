@@ -1,73 +1,57 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: [patch 05/25] ata: add the SW NCQ support to sata_nv for MCP51/MCP55/MCP61
-Date: Sun, 14 Oct 2007 20:29:50 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1C5@hkemmail01.nvidia.com>
-References: <200708102059.l7AKxYVQ008581@imap1.linux-foundation.org> <46F2F6E5.3010406@garzik.org> <46F35C7F.20400@dunaweb.hu> <46F9D6A8.8010809@garzik.org> <46F9EFC9.9030209@dunaweb.hu> <46F9F05F.40905@garzik.org> <46F9F223.4000406@dunaweb.hu> <15F501D1A78BD343BE8F4D8DB854566B059FE1AB@hkemmail01.nvidia.com> <46FB4B75.9030407@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AC@hkemmail01.nvidia.com> <46FB577D.6000006@garzik.org> <15F501D1A78BD343BE8F4D8DB854566B059FE1AE@hkemmail01.nvidia.com> <470FE402.8080105@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git patches] IDE updates (part 1)
+Date: Sun, 14 Oct 2007 17:38:39 +0200
+Message-ID: <200710141738.39838.bzolnier@gmail.com>
+References: <200710120034.49730.bzolnier@gmail.com> <Pine.LNX.4.64N.0710121518030.21684@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:3510 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731AbXJNMaD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 08:30:03 -0400
-In-Reply-To: <470FE402.8080105@garzik.org>
-Content-class: urn:content-classes:message
+Received: from nf-out-0910.google.com ([64.233.182.186]:26712 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756629AbXJNQQZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 12:16:25 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1073003nfb
+        for <linux-ide@vger.kernel.org>; Sun, 14 Oct 2007 09:16:23 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64N.0710121518030.21684@blysk.ds.pg.gda.pl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Zoltan Boszormenyi <zboszor@dunaweb.hu>, akpm@linux-foundation.org, Peer Chen <pchen@nvidia.com>, Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jeff wrote:
-> Kuan Luo wrote:
-> > One idea,  only simply adding 
-> > 	if (!swncq_enabled) 
-> > 		nv_port_info[SWNCQ].flags &= ~ATA_FLAG_NCQ;
-> > 	
-> > 	ppi[0] = &nv_port_info[type];
-> > 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
-> > 
-> > I don't know if this is appropriate
+On Friday 12 October 2007, Maciej W. Rozycki wrote:
+> On Fri, 12 Oct 2007, Bartlomiej Zolnierkiewicz wrote:
 > 
+> > * Kconfig facelift - as a result of this change users have three less
+> >   config options to worry about (BLK_DEV_IDEPCI, BLK_DEV_IDEDMA_PCI
+> >   and IDE_CHIPSETS) and can just select host drivers that they need
 > 
-> As long as the structure is not read-only ('const'), that is OK.
-> 
-> And just for future reference, make sure you're aware of the 
-> implications of this applying to all sata_nv-aware PCI IDs.  If you 
-> present multiple SATA devices on a PCI bus, or have multiple 
-> PCI cards 
-> (rare in NV's case, I guess) the probe function will be 
-> called multiple 
-> times.  You might even want to put that code into the module init 
-> function, rather than the probe function.
-> 
-> 	Jeff
-> 
-> 
-My idea is not comprehensive.
-Your analysis are reasonable.
-Then you may apply either method in previous mail.
+>  Well, it depends on how you look at it.  If you have PCI, an on-board IDE 
+> interface and do not want any PCI IDE controllers, then you now have a 
+> zillion of options to disable instead of just one.  Have a look at 
+> "arch/mips/configs/sb1250-swarm_defconfig" for an example (hmm..., 
 
-Jeff wrote
->	if (type == SWNCQ && !swncq_enabled)
->		type = GENERIC;
->
->Or, if you prefer, we could take the opposite route, _not_ set SWNCQ in
+I see, having suddenly zillion options to go through and disable may be
+problem.  Fortunately not in this particular case because none of IDE PCI
+host drivers is enabled by default in drivers/ide/Kconfig.
 
->the pci_device_id table, and instead do something like
->
->	if (type >= MCP65 && swncq_enabled)
->		type = SWNCQ;
->
->(MCP65 is just a pulled-out-of-thin-air example)
->
->Regards,
->
->	Jeff
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+To be sure I've just checked it with:
+
+ARCH=mips make sb1250-swarm_defconfig menuconfig
+
+and it looks fine (all IDE PCI host drivers are disabled).
+
+However big thanks for raising this point.  I was unaware of such side-effect
+while working on the above change but from now on I'll keep this in mind. :)
+
+> CONFIG_BLK_DEV_IDE_SWARM disabled by default -- that should probably be 
+> changed; I'll cook a patch).  I guess it is not possible to make everyone 
+> happy at once though, so please do not treat it as a hard objection. :-)
+
+Hmm, it also seems that CONFIG_IDE_GENERIC=y may be removed now because
+IDE SWARM host driver does the probing itself?
+
+Thanks,
+Bart
