@@ -1,39 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_cs5536: ATA driver for Geode companion chip
-Date: Sun, 14 Oct 2007 20:51:03 +0100
-Message-ID: <20071014205103.177bd08d@the-village.bc.nu>
-References: <yq1y7eahzis.fsf@sermon.lab.mkp.net>
-	<20071011112021.3be68418@the-village.bc.nu>
-	<76366b180710132149i7dabb3dcv21abaafd5814a923@mail.gmail.com>
-	<76366b180710141242w5ff89d9ej9cfdc1a5904639e@mail.gmail.com>
+From: "Andrew Paprocki" <andrew@ishiboo.com>
+Subject: [PATCH] libata: prevent devices with blank model names from being DMA blacklisted
+Date: Sun, 14 Oct 2007 16:53:38 -0400
+Message-ID: <76366b180710141353q781a4928t4a7282976c9c3329@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38791 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754514AbXJNTrP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 15:47:15 -0400
-In-Reply-To: <76366b180710141242w5ff89d9ej9cfdc1a5904639e@mail.gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.189]:20377 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435AbXJNUxi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 16:53:38 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1268718rvb
+        for <linux-ide@vger.kernel.org>; Sun, 14 Oct 2007 13:53:38 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Paprocki <andrew.m.paprocki@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, jordan.crouse@amd.com
+To: linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-On Sun, 14 Oct 2007 15:42:19 -0400
-"Andrew Paprocki" <andrew.m.paprocki@gmail.com> wrote:
+The strn_pattern_cmp routine does not handle a blank name parameter
+properly. The only patterns which should match a blank name are "*"
+and an explicit "". If the function is passed a blank name in current
+code, it will always match against the patt parameter. The bug manifests
+itself as the device with the empty model name always matching the first
+device in the DMA blacklist, forcing it to revert to PIO mode.
 
-> Just noticed something.. I'm not sure if this is due to a libata-dev
-> change or me switching to pata_cs5536, but my 128MB DOM on the PATA
-> port is hitting the ata_dma_blacklisted() case and it was not
-> previously. This did not happen under 2.6.22.6 using pata_amd. The
-> system is noticeably slower when forced to use PIO4 (as you would
-> expect).
-> 
-> Is this expected in the newer code, or is it a bug?
+Signed-off-by: Andrew Paprocki <andrew@ishiboo.com>
+---
+ drivers/ata/libata-core.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Sounds like someone added it wrongly to the blacklist. Remove the
-blacklist entry, test again and if DMA is working we need to get that
-fixed ASAP in .2 and 2.6.24.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4e11e39..e73b7b4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4013,8 +4013,19 @@ int strn_pattern_cmp(const char *patt, const
+char *name, int wildchar)
+        p = strchr(patt, wildchar);
+        if (p && ((*(p + 1)) == 0))
+                len = p - patt;
+-       else
++       else {
+                len = strlen(name);
++               /* If the model name parameter is empty, it should not match
++                * against anything other than "*" or "".
++                */
++               if (unlikely(len == 0)) {
++                       /* In the rare case your pattern is "". */
++                       if (strlen(patt) == 0)
++                               return 0;
++                       else
++                               return -1;
++               }
++       }
 
-Alan
+        return strncmp(patt, name, len);
+ }
+--
+1.5.3.4.g58ba4
