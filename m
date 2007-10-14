@@ -1,156 +1,85 @@
-From: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-Subject: [PATCH] : IDE-CS Add additional id string (corsair, 1GB)
-Date: Sun, 14 Oct 2007 21:04:03 -0700
-Message-ID: <20071014210403.13d6f560.Kristoffer.Ericson@Gmail.com>
+From: "Andrew Paprocki" <andrew.m.paprocki@gmail.com>
+Subject: Re: [PATCH] pata_cs5536: ATA driver for Geode companion chip
+Date: Sun, 14 Oct 2007 15:42:19 -0400
+Message-ID: <76366b180710141242w5ff89d9ej9cfdc1a5904639e@mail.gmail.com>
+References: <yq1y7eahzis.fsf@sermon.lab.mkp.net>
+	 <20071011112021.3be68418@the-village.bc.nu>
+	 <76366b180710132149i7dabb3dcv21abaafd5814a923@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart=_Sun__14_Oct_2007_21_04_03_-0700_TzOrW4B3XH0_h21r"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:13435 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758598AbXJNS4A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 14:56:00 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1316624fkz
-        for <linux-ide@vger.kernel.org>; Sun, 14 Oct 2007 11:55:58 -0700 (PDT)
+Received: from rv-out-0910.google.com ([209.85.198.184]:52275 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752993AbXJNTmU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 15:42:20 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1257118rvb
+        for <linux-ide@vger.kernel.org>; Sun, 14 Oct 2007 12:42:19 -0700 (PDT)
+In-Reply-To: <76366b180710132149i7dabb3dcv21abaafd5814a923@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, jordan.crouse@amd.com
 
-This is a multi-part message in MIME format.
+Just noticed something.. I'm not sure if this is due to a libata-dev
+change or me switching to pata_cs5536, but my 128MB DOM on the PATA
+port is hitting the ata_dma_blacklisted() case and it was not
+previously. This did not happen under 2.6.22.6 using pata_amd. The
+system is noticeably slower when forced to use PIO4 (as you would
+expect).
 
---Multipart=_Sun__14_Oct_2007_21_04_03_-0700_TzOrW4B3XH0_h21r
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Is this expected in the newer code, or is it a bug?
 
-Greetings,
+Previous 2.6.22.6 kernel using pata_amd:
 
-The manf string looks weird (0x0 + 0x0), but I assume its correct. Also, whitespaces seems almost intentional, so am I missing something?
+pata_amd 0000:00:0f.2: version 0.3.8
+scsi4 : pata_amd
+scsi5 : pata_amd
+ata5: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ff00 irq 14
+ata6: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ff08 irq 15
+ata5.00: ATA-0: , 060729DA, max MWDMA2
+ata5.00: 256000 sectors, multi 1: LBA
+ata5.00: configured for MWDMA2
+ata6: port disabled. ignoring.
 
-Shortlog:
-This patch adds id strings for Corsair 1GB (identified as Hyperstone Model1) inside legacy/ide-cs.c
-It also includes some minor whitespace cleanups.
+Up-to-date libata-dev using pata_cs5536:
 
-Signed-off-by: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+scsi4 : pata_cs5536
+scsi5 : pata_cs5536
+ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
+ata6: DUMMY
+ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00 irq 14
+ata5.00: ATA-0: , 060729DA, max MWDMA2
+ata5.00: 256000 sectors, multi 1: LBA
+ata5.00: device is on DMA blacklist, disabling DMA
+ata5.00: configured for PIO4
+ata5.00: device is on DMA blacklist, disabling DMA
+ata5.00: configured for PIO4
+ata5: EH complete
 
-diff --git a/drivers/ide/legacy/ide-cs.c b/drivers/ide/legacy/ide-cs.c
-index 4cdb519..e8e360c 100644
---- a/drivers/ide/legacy/ide-cs.c
-+++ b/drivers/ide/legacy/ide-cs.c
-@@ -28,7 +28,7 @@
-     and other provisions required by the GPL.  If you do not delete
-     the provisions above, a recipient may use your version of this
-     file under either the MPL or the GPL.
--    
-+
- ======================================================================*/
- 
- #include <linux/module.h>
-@@ -327,13 +327,13 @@ failed:
-     After a card is removed, ide_release() will unregister the net
-     device, and release the PCMCIA configuration.  If the device is
-     still open, this will be postponed until it is closed.
--    
-+
- ======================================================================*/
- 
- void ide_release(struct pcmcia_device *link)
- {
-     ide_info_t *info = link->priv;
--    
-+
-     DEBUG(0, "ide_release(0x%p)\n", link);
- 
-     if (info->ndev) {
-@@ -353,11 +353,12 @@ void ide_release(struct pcmcia_device *link)
-     stuff to run after an event is received.  A CARD_REMOVAL event
-     also sets some flags to discourage the ide drivers from
-     talking to the ports.
--    
-+
- ======================================================================*/
- 
- static struct pcmcia_device_id ide_ids[] = {
- 	PCMCIA_DEVICE_FUNC_ID(4),
-+	PCMCIA_DEVICE_MANF_CARD(0x0000, 0x0000),	/* Corsair */
- 	PCMCIA_DEVICE_MANF_CARD(0x0007, 0x0000),	/* Hitachi */
- 	PCMCIA_DEVICE_MANF_CARD(0x000a, 0x0000),	/* I-O Data CFA */
- 	PCMCIA_DEVICE_MANF_CARD(0x001c, 0x0001),	/* Mitsubishi CFA */
-@@ -366,7 +367,7 @@ static struct pcmcia_device_id ide_ids[] = {
- 	PCMCIA_DEVICE_MANF_CARD(0x0098, 0x0000),	/* Toshiba */
- 	PCMCIA_DEVICE_MANF_CARD(0x00a4, 0x002d),
- 	PCMCIA_DEVICE_MANF_CARD(0x00ce, 0x0000),	/* Samsung */
-- 	PCMCIA_DEVICE_MANF_CARD(0x0319, 0x0000),	/* Hitachi */
-+	PCMCIA_DEVICE_MANF_CARD(0x0319, 0x0000),	/* Hitachi */
- 	PCMCIA_DEVICE_MANF_CARD(0x2080, 0x0001),
- 	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0100),	/* Viking CFA */
- 	PCMCIA_DEVICE_MANF_CARD(0x4e01, 0x0200),	/* Lexar, Viking CFA */
-@@ -384,6 +385,7 @@ static struct pcmcia_device_id ide_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID12("FREECOM", "PCCARD-IDE", 0x5714cbf7, 0x48e0ab8e),
- 	PCMCIA_DEVICE_PROD_ID12("HITACHI", "FLASH", 0xf4f43949, 0x9eb86aae),
- 	PCMCIA_DEVICE_PROD_ID12("HITACHI", "microdrive", 0xf4f43949, 0xa6d76178),
-+	PCMCIA_DEVICE_PROD_ID12("Hyperstone", "Model1", 0x3d5b9ef5, 0xca6ab420),
- 	PCMCIA_DEVICE_PROD_ID12("IBM", "microdrive", 0xb569a6e5, 0xa6d76178),
- 	PCMCIA_DEVICE_PROD_ID12("IBM", "IBM17JSSFP20", 0xb569a6e5, 0xf2508753),
- 	PCMCIA_DEVICE_PROD_ID12("KINGSTON", "CF8GB", 0x2e6d1829, 0xacbe682e),
+Thanks,
+-Andrew
 
-
-
--- 
-Kristoffer Ericson <Kristoffer.Ericson@Gmail.com>
-
---Multipart=_Sun__14_Oct_2007_21_04_03_-0700_TzOrW4B3XH0_h21r
-Content-Type: application/octet-stream;
- name="ide-cs.c-add-corsair-cf.patch"
-Content-Disposition: attachment;
- filename="ide-cs.c-add-corsair-cf.patch"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvaWRlL2xlZ2FjeS9pZGUtY3MuYyBiL2RyaXZlcnMvaWRlL2xl
-Z2FjeS9pZGUtY3MuYwppbmRleCA0Y2RiNTE5Li5lOGUzNjBjIDEwMDY0NAotLS0gYS9kcml2ZXJz
-L2lkZS9sZWdhY3kvaWRlLWNzLmMKKysrIGIvZHJpdmVycy9pZGUvbGVnYWN5L2lkZS1jcy5jCkBA
-IC0yOCw3ICsyOCw3IEBACiAgICAgYW5kIG90aGVyIHByb3Zpc2lvbnMgcmVxdWlyZWQgYnkgdGhl
-IEdQTC4gIElmIHlvdSBkbyBub3QgZGVsZXRlCiAgICAgdGhlIHByb3Zpc2lvbnMgYWJvdmUsIGEg
-cmVjaXBpZW50IG1heSB1c2UgeW91ciB2ZXJzaW9uIG9mIHRoaXMKICAgICBmaWxlIHVuZGVyIGVp
-dGhlciB0aGUgTVBMIG9yIHRoZSBHUEwuCi0gICAgCisKID09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0qLwogCiAjaW5j
-bHVkZSA8bGludXgvbW9kdWxlLmg+CkBAIC0zMjcsMTMgKzMyNywxMyBAQCBmYWlsZWQ6CiAgICAg
-QWZ0ZXIgYSBjYXJkIGlzIHJlbW92ZWQsIGlkZV9yZWxlYXNlKCkgd2lsbCB1bnJlZ2lzdGVyIHRo
-ZSBuZXQKICAgICBkZXZpY2UsIGFuZCByZWxlYXNlIHRoZSBQQ01DSUEgY29uZmlndXJhdGlvbi4g
-IElmIHRoZSBkZXZpY2UgaXMKICAgICBzdGlsbCBvcGVuLCB0aGlzIHdpbGwgYmUgcG9zdHBvbmVk
-IHVudGlsIGl0IGlzIGNsb3NlZC4KLSAgICAKKwogPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PSovCiAKIHZvaWQgaWRl
-X3JlbGVhc2Uoc3RydWN0IHBjbWNpYV9kZXZpY2UgKmxpbmspCiB7CiAgICAgaWRlX2luZm9fdCAq
-aW5mbyA9IGxpbmstPnByaXY7Ci0gICAgCisKICAgICBERUJVRygwLCAiaWRlX3JlbGVhc2UoMHgl
-cClcbiIsIGxpbmspOwogCiAgICAgaWYgKGluZm8tPm5kZXYpIHsKQEAgLTM1MywxMSArMzUzLDEy
-IEBAIHZvaWQgaWRlX3JlbGVhc2Uoc3RydWN0IHBjbWNpYV9kZXZpY2UgKmxpbmspCiAgICAgc3R1
-ZmYgdG8gcnVuIGFmdGVyIGFuIGV2ZW50IGlzIHJlY2VpdmVkLiAgQSBDQVJEX1JFTU9WQUwgZXZl
-bnQKICAgICBhbHNvIHNldHMgc29tZSBmbGFncyB0byBkaXNjb3VyYWdlIHRoZSBpZGUgZHJpdmVy
-cyBmcm9tCiAgICAgdGFsa2luZyB0byB0aGUgcG9ydHMuCi0gICAgCisKID09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0q
-LwogCiBzdGF0aWMgc3RydWN0IHBjbWNpYV9kZXZpY2VfaWQgaWRlX2lkc1tdID0gewogCVBDTUNJ
-QV9ERVZJQ0VfRlVOQ19JRCg0KSwKKwlQQ01DSUFfREVWSUNFX01BTkZfQ0FSRCgweDAwMDAsIDB4
-MDAwMCksCS8qIENvcnNhaXIgKi8KIAlQQ01DSUFfREVWSUNFX01BTkZfQ0FSRCgweDAwMDcsIDB4
-MDAwMCksCS8qIEhpdGFjaGkgKi8KIAlQQ01DSUFfREVWSUNFX01BTkZfQ0FSRCgweDAwMGEsIDB4
-MDAwMCksCS8qIEktTyBEYXRhIENGQSAqLwogCVBDTUNJQV9ERVZJQ0VfTUFORl9DQVJEKDB4MDAx
-YywgMHgwMDAxKSwJLyogTWl0c3ViaXNoaSBDRkEgKi8KQEAgLTM2Niw3ICszNjcsNyBAQCBzdGF0
-aWMgc3RydWN0IHBjbWNpYV9kZXZpY2VfaWQgaWRlX2lkc1tdID0gewogCVBDTUNJQV9ERVZJQ0Vf
-TUFORl9DQVJEKDB4MDA5OCwgMHgwMDAwKSwJLyogVG9zaGliYSAqLwogCVBDTUNJQV9ERVZJQ0Vf
-TUFORl9DQVJEKDB4MDBhNCwgMHgwMDJkKSwKIAlQQ01DSUFfREVWSUNFX01BTkZfQ0FSRCgweDAw
-Y2UsIDB4MDAwMCksCS8qIFNhbXN1bmcgKi8KLSAJUENNQ0lBX0RFVklDRV9NQU5GX0NBUkQoMHgw
-MzE5LCAweDAwMDApLAkvKiBIaXRhY2hpICovCisJUENNQ0lBX0RFVklDRV9NQU5GX0NBUkQoMHgw
-MzE5LCAweDAwMDApLAkvKiBIaXRhY2hpICovCiAJUENNQ0lBX0RFVklDRV9NQU5GX0NBUkQoMHgy
-MDgwLCAweDAwMDEpLAogCVBDTUNJQV9ERVZJQ0VfTUFORl9DQVJEKDB4NGUwMSwgMHgwMTAwKSwJ
-LyogVmlraW5nIENGQSAqLwogCVBDTUNJQV9ERVZJQ0VfTUFORl9DQVJEKDB4NGUwMSwgMHgwMjAw
-KSwJLyogTGV4YXIsIFZpa2luZyBDRkEgKi8KQEAgLTM4NCw2ICszODUsNyBAQCBzdGF0aWMgc3Ry
-dWN0IHBjbWNpYV9kZXZpY2VfaWQgaWRlX2lkc1tdID0gewogCVBDTUNJQV9ERVZJQ0VfUFJPRF9J
-RDEyKCJGUkVFQ09NIiwgIlBDQ0FSRC1JREUiLCAweDU3MTRjYmY3LCAweDQ4ZTBhYjhlKSwKIAlQ
-Q01DSUFfREVWSUNFX1BST0RfSUQxMigiSElUQUNISSIsICJGTEFTSCIsIDB4ZjRmNDM5NDksIDB4
-OWViODZhYWUpLAogCVBDTUNJQV9ERVZJQ0VfUFJPRF9JRDEyKCJISVRBQ0hJIiwgIm1pY3JvZHJp
-dmUiLCAweGY0ZjQzOTQ5LCAweGE2ZDc2MTc4KSwKKwlQQ01DSUFfREVWSUNFX1BST0RfSUQxMigi
-SHlwZXJzdG9uZSIsICJNb2RlbDEiLCAweDNkNWI5ZWY1LCAweGNhNmFiNDIwKSwKIAlQQ01DSUFf
-REVWSUNFX1BST0RfSUQxMigiSUJNIiwgIm1pY3JvZHJpdmUiLCAweGI1NjlhNmU1LCAweGE2ZDc2
-MTc4KSwKIAlQQ01DSUFfREVWSUNFX1BST0RfSUQxMigiSUJNIiwgIklCTTE3SlNTRlAyMCIsIDB4
-YjU2OWE2ZTUsIDB4ZjI1MDg3NTMpLAogCVBDTUNJQV9ERVZJQ0VfUFJPRF9JRDEyKCJLSU5HU1RP
-TiIsICJDRjhHQiIsIDB4MmU2ZDE4MjksIDB4YWNiZTY4MmUpLAo=
-
---Multipart=_Sun__14_Oct_2007_21_04_03_-0700_TzOrW4B3XH0_h21r--
+On 10/14/07, Andrew Paprocki <andrew@ishiboo.com> wrote:
+> On 10/11/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > On Thu, 11 Oct 2007 03:38:19 -0400
+> > "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+> >
+> > >
+> > > This is a driver for the ATA controller on the Geode CS5536 companion
+> > > chip.  The PCI device ID for this device was previously claimed by
+> > > pata_amd.c but the PIO timings were not correct.  This driver also
+> > > works around a bug in some BIOSes that handle unaligned access to the
+> > > PCI config registers poorly.  Finally, the driver allows fallback to
+> > > using MSR registers for configuration on BIOSes that are truly
+> > > broken.
+> > >
+> > > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> >
+> > Acked-by: Alan Cox <alan@redhat.com>
+>
+> I've been using the driver (boot drive on the port) since Martin's
+> post and haven't experienced any problems.
+>
+> Tested-by: Andrew Paprocki <andrew@ishiboo.com>
