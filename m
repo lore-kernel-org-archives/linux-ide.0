@@ -1,58 +1,44 @@
 From: "Andrew Paprocki" <andrew@ishiboo.com>
-Subject: Re: [PATCH #upstream 2/2] libata: track SLEEP state and issue SRST to wake it up
-Date: Sat, 13 Oct 2007 21:02:09 -0400
-Message-ID: <76366b180710131802s2f4e8b58g68fc5d15cd20d507@mail.gmail.com>
-References: <20071012115631.GA11510@htj.dyndns.org>
-	 <20071012115657.GB11510@htj.dyndns.org>
-	 <76366b180710122157s506fd467m10181ceca7badf6f@mail.gmail.com>
-	 <4710CE58.9060903@gmail.com>
+Subject: Re: [PATCH] pata_cs5536: ATA driver for Geode companion chip
+Date: Sun, 14 Oct 2007 00:49:16 -0400
+Message-ID: <76366b180710132149i7dabb3dcv21abaafd5814a923@mail.gmail.com>
+References: <yq1y7eahzis.fsf@sermon.lab.mkp.net>
+	 <20071011112021.3be68418@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:52273 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.188]:27912 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753306AbXJNBCK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Oct 2007 21:02:10 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1125339rvb
-        for <linux-ide@vger.kernel.org>; Sat, 13 Oct 2007 18:02:10 -0700 (PDT)
-In-Reply-To: <4710CE58.9060903@gmail.com>
+	with ESMTP id S1751100AbXJNEtQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2007 00:49:16 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1147465rvb
+        for <linux-ide@vger.kernel.org>; Sat, 13 Oct 2007 21:49:16 -0700 (PDT)
+In-Reply-To: <20071011112021.3be68418@the-village.bc.nu>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Bruce Allen <ballen@gravity.phys.uwm.edu>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, jordan.crouse@amd.com
 
-Tejun,
+On 10/11/07, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Thu, 11 Oct 2007 03:38:19 -0400
+> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+>
+> >
+> > This is a driver for the ATA controller on the Geode CS5536 companion
+> > chip.  The PCI device ID for this device was previously claimed by
+> > pata_amd.c but the PIO timings were not correct.  This driver also
+> > works around a bug in some BIOSes that handle unaligned access to the
+> > PCI config registers poorly.  Finally, the driver allows fallback to
+> > using MSR registers for configuration on BIOSes that are truly
+> > broken.
+> >
+> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+>
+> Acked-by: Alan Cox <alan@redhat.com>
 
-This patch applied on top of your set works for me. It clears the
-error mask and completes any ATA_CMD_SLEEP when the drive is already
-sleeping. I tried `hdparm -Y` twice and it didn't loop like before.
+I've been using the driver (boot drive on the port) since Martin's
+post and haven't experienced any problems.
 
-Thanks,
--Andrew
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 45b781b..7e0627f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5763,6 +5763,16 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
-
-        /* if device is sleeping, schedule softreset and abort the link */
-        if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-+               if (unlikely(qc->tf.command == ATA_CMD_SLEEP)) {
-+                       /* to prevent a loop, do not wake up if sleeping
-+                        * and a sleep cmd is sent. instead, simply clear
-+                        * the error mask and complete as if it was
-+                        * successful.
-+                        */
-+                       qc->err_mask = 0;
-+                       ata_qc_complete(qc);
-+                       return;
-+               }
-                link->eh_info.action |= ATA_EH_SOFTRESET;
-                ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
-                ata_link_abort(link);
-
-On 10/13/07, Tejun Heo <htejun@gmail.com> wrote:
-> Jeff, please forget about this patchset.  I'll re-post updated version.
+Tested-by: Andrew Paprocki <andrew@ishiboo.com>
