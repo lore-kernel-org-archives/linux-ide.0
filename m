@@ -1,30 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] dtc2278: note on docs
-Date: Mon, 15 Oct 2007 20:47:44 +0100
-Message-ID: <20071015204744.3e973b08@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] pata_pcmcia: Add support for dumb 8bit IDE emulations
+Date: Mon, 15 Oct 2007 15:45:29 -0400
+Message-ID: <4713C359.10405@garzik.org>
+References: <20071015204411.52d5d956@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42792 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755998AbXJOTnn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 15:43:43 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:33124 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758287AbXJOTpc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Oct 2007 15:45:32 -0400
+In-Reply-To: <20071015204411.52d5d956@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ide/legacy/dtc2278.c linux-2.6.23-mm1/drivers/ide/legacy/dtc2278.c
---- linux.vanilla-2.6.23-mm1/drivers/ide/legacy/dtc2278.c	2007-10-15 15:03:27.000000000 +0100
-+++ linux-2.6.23-mm1/drivers/ide/legacy/dtc2278.c	2007-10-15 15:18:56.000000000 +0100
-@@ -83,6 +83,8 @@
- 		spin_unlock_irqrestore(&dtc2278_lock, flags);
- 	} else {
- 		/* we don't know how to set it back again.. */
-+		/* Actually we do - there is a data sheet available for the
-+		   Winbond but does anyone actually care */
- 	}
- 
- 	/*
+should I be adding this to libata-dev.git#for-testing, to reduce 
+Andrew's libata patching headaches?
+
+
