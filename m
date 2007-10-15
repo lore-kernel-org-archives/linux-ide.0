@@ -1,58 +1,36 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: Sata Sil3512 bug?
-Date: Mon, 15 Oct 2007 12:44:01 +0400
-Message-ID: <47132851.5050409@lxnt.info>
-References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <1398538486.20071014140703@zonnet.nl>
+From: Luca <kronos.it@gmail.com>
+Subject: Re: Hitachi disk: spurious completions during NCQ
+Date: Mon, 15 Oct 2007 11:47:20 +0200
+Message-ID: <68676e00710150247s23d06db2sdb17af6fafdc4b77@mail.gmail.com>
+References: <9cP6K-6rV-29@gated-at.bofh.it> <87zlyksyfc.fsf@meer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:59921 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753564AbXJOJTy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Oct 2007 05:19:54 -0400
-In-Reply-To: <1398538486.20071014140703@zonnet.nl>
+Received: from nz-out-0506.google.com ([64.233.162.226]:42277 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757198AbXJOJrX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 05:47:23 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so851501nze
+        for <linux-ide@vger.kernel.org>; Mon, 15 Oct 2007 02:47:22 -0700 (PDT)
+In-Reply-To: <87zlyksyfc.fsf@meer.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: MisterE <MisterE2002@zonnet.nl>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Don Mullis <dwm@meer.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-MisterE wrote:
-> Hello,
-> 
-> Alexander, does these problems with the Promise SATA300 TX4 happen to
-> everyone?
-> 
+On 10/15/07, Don Mullis <dwm@meer.net> wrote:
+>
+> > ata3.00: spurious completions during NCQ issue=0x0 SAct=0x407fd FIS=005040a1:00020000
+> > ata3.00: cmd 61/08:00:c7:5a:82/00:00:1b:00:00/40 tag 0 cdb 0x0 data 4096 out
+> >          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
+>
+>
+> This has been seen with several Hitachi drives.  There's speculation
+> that it's due to a bug in the drive firmware:
 
-Most probably not, as I think it would have been fixed much faster then.
+Yes, I'm aware of this. That's why I was suggesting to blacklist this drive.
 
-I was waiting for a) release of 2.6.23, and b) me completing the move to 
-another flat
-to retest all the latest developments in mainline and libata-dev.
-
-With a) done and b) almost done, I'll retest and report any issues quite 
-soon.
-
-Besides, there is a report of TX4 and 2.6.23 not showing problems that 
-were there with 2.6.22,
-( see "Bug is fixed in 2.6.23.1: sata_promise: port is slow to respond, 
-reset failed" thread).
-
-
-> The only alternatives are
-> using soft-raid products as normal controllers. Does anyone have experiences
-> with the following products?
-> * Highpoint RocketRAID 1640 (150 MB/s)
-> * Highpoint RocketRAID 1740 (300 MB/s)
-> * Adaptec 1210SA
-> 
-
-For any kind of non-hobby task I'd skip trying to build a disk array to 
-buying a SATA-SCSI/SATA-iSCSI box.
-While I had many mind-boggling issues with various combinations of SATA 
-HDDs, onboard and standalone
-controllers, Promise and Infortrend disk arrays worked quite reliably.
-
--- 
-
-./lxnt
+thanks,
+Luca
