@@ -1,60 +1,32 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata-core: Don't have screaming fits over DF/ERR combinations
-Date: Mon, 15 Oct 2007 23:53:45 +0400
-Message-ID: <4713C549.6010704@ru.mvista.com>
-References: <20071015192313.5892ed42@the-village.bc.nu>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [git patches] IDE updates (part 2)
+Date: Mon, 15 Oct 2007 20:58:07 +0100
+Message-ID: <20071015195807.GF8759@flint.arm.linux.org.uk>
+References: <200710131825.24768.bzolnier@gmail.com> <20071014001238.GP8181@ftp.linux.org.uk> <4713C568.2060708@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:11576 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758823AbXJOTxc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 15:53:32 -0400
-In-Reply-To: <20071015192313.5892ed42@the-village.bc.nu>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:43701 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933697AbXJOUDW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 16:03:22 -0400
+Content-Disposition: inline
+In-Reply-To: <4713C568.2060708@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, akpm@osdl.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Al Viro <viro@ftp.linux.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-
-> Some hardware seems to get this wrong in a non-harmful way, and there are
-> some devices that seem to do it deliberately for various reasons.
-
-> Just take it as a device error not a catastrophic state machine
-> explosion. 
-
-> Signed-off-by: Alan Cox <alan@redhat.com>
+On Mon, Oct 15, 2007 at 03:54:16PM -0400, Jeff Garzik wrote:
+> Al Viro wrote:
+> >Proposed addition to icside part, provided that ARM folks ACK it - gets
+> >icside to build and AFAICS it's correct:
 > 
-> diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c linux-2.6.23-mm1/drivers/ata/libata-core.c
-> --- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:03:26.000000000 +0100
-> +++ linux-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:13:49.000000000 +0100
-> @@ -5258,7 +5319,15 @@
->  		if (unlikely(status & (ATA_ERR | ATA_DF))) {
->  			ata_port_printk(ap, KERN_WARNING, "DRQ=1 with device "
->  					"error, dev_stat 0x%X\n", status);
-> -			qc->err_mask |= AC_ERR_HSM;
-> +			/* Some devices muck this up. Some follow an ATA
-> +			   non-standard that permits the damaged sector to
-> +			   be retrieved at this point. The ATA spec says
-> +			   we should jump up and down on DRQ + ERR, reality
+> ACK from me too...  ARM folks?
 
-    I've always thought that setting both DRQ and ERR is perfectly valid 
-(well, maybe it's become invalid since ATAPI-4 where all these state 
-transition flow charts have made its first appearance, to be quickly replaced 
-by the state diagrams :-) -- I'm too lazy to check now... :-)
+Will test tomorrow/Wednesday.
 
-> +			   says we should be a little more relaxed.
-> +
-> +			   Rather than an HSM error, take it as a device
-> +			   error */
-
-    I'm not sure it's an error in the first place.
-
-> +			qc->err_mask |= AC_ERR_DEV;
->  			ap->hsm_task_state = HSM_ST_ERR;
->  			goto fsm_start;
->  		}
-
-MBR, Sergei
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
