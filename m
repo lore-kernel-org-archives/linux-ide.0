@@ -1,35 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] IDE updates (part 2)
-Date: Mon, 15 Oct 2007 16:07:47 -0400
-Message-ID: <4713C893.3050200@garzik.org>
-References: <200710131825.24768.bzolnier@gmail.com> <20071014001238.GP8181@ftp.linux.org.uk> <4713C568.2060708@garzik.org> <20071015195807.GF8759@flint.arm.linux.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata-core: Don't have screaming fits over DF/ERR combinations
+Date: Mon, 15 Oct 2007 16:09:52 -0400
+Message-ID: <4713C910.1070909@pobox.com>
+References: <20071015192313.5892ed42@the-village.bc.nu> <4713C549.6010704@ru.mvista.com> <4713C74F.3020205@pobox.com> <4713C821.6090303@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36860 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36887 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758094AbXJOUHy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Oct 2007 16:07:54 -0400
-In-Reply-To: <20071015195807.GF8759@flint.arm.linux.org.uk>
+	id S934449AbXJOUJz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Oct 2007 16:09:55 -0400
+In-Reply-To: <4713C821.6090303@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Al Viro <viro@ftp.linux.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, akpm@osdl.org
 
-Russell King wrote:
-> On Mon, Oct 15, 2007 at 03:54:16PM -0400, Jeff Garzik wrote:
->> Al Viro wrote:
->>> Proposed addition to icside part, provided that ARM folks ACK it - gets
->>> icside to build and AFAICS it's correct:
->> ACK from me too...  ARM folks?
+Sergei Shtylyov wrote:
+> Jeff Garzik wrote:
 > 
-> Will test tomorrow/Wednesday.
+>>>> Some hardware seems to get this wrong in a non-harmful way, and 
+>>>> there are
+>>>> some devices that seem to do it deliberately for various reasons.
+> 
+>>>> Just take it as a device error not a catastrophic state machine
+>>>> explosion. 
+> 
+>>>> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+>>>> diff -u --exclude-from /usr/src/exclude --new-file --recursive 
+>>>> linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c 
+>>>> linux-2.6.23-mm1/drivers/ata/libata-core.c
+>>>> --- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c    2007-10-15 
+>>>> 15:03:26.000000000 +0100
+>>>> +++ linux-2.6.23-mm1/drivers/ata/libata-core.c    2007-10-15 
+>>>> 15:13:49.000000000 +0100
+>>>> @@ -5258,7 +5319,15 @@
+>>>>          if (unlikely(status & (ATA_ERR | ATA_DF))) {
+>>>>              ata_port_printk(ap, KERN_WARNING, "DRQ=1 with device "
+>>>>                      "error, dev_stat 0x%X\n", status);
+>>>> -            qc->err_mask |= AC_ERR_HSM;
+>>>> +            /* Some devices muck this up. Some follow an ATA
+>>>> +               non-standard that permits the damaged sector to
+>>>> +               be retrieved at this point. The ATA spec says
+>>>> +               we should jump up and down on DRQ + ERR, reality
+> 
+>>>    I've always thought that setting both DRQ and ERR is perfectly 
+>>> valid (well, maybe it's become invalid since ATAPI-4 where all these 
+>>> state transition flow charts have made its first appearance, to be 
+>>> quickly replaced by the state diagrams :-) -- I'm too lazy to check 
+>>> now... :-)
+> 
+>> DRQ+ERR is valid, and SRST (or hard reset) is defined as the method of 
+>> kicking the device out of that state.
+> 
+>    Well, in the times of old, reading a sector (or group of them for 
+> multiple mode) was valid for that purpose, wasn't it?
 
-Thanks.  Sorry about missing your CC on the libata-wide ata_link 
-changes.  We should have poked the maintainers on that, for the drivers 
-we cannot build ourselves.
+Yes, hence the recent FIFO drain patches.
 
+But that doesn't make sense for SATA devices, where the FIFO is really 
+emulated, and it works on older PATA devices.
+
+	Jeff
 
 
 
