@@ -1,43 +1,58 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Bug is fixed in 2.6.23.1: sata_promise: port is slow to respond, reset failed
-Date: Mon, 15 Oct 2007 10:21:17 +0200 (MEST)
-Message-ID: <200710150821.l9F8LHdS025458@harpo.it.uu.se>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
+Subject: Re: Sata Sil3512 bug?
+Date: Mon, 15 Oct 2007 12:44:01 +0400
+Message-ID: <47132851.5050409@lxnt.info>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <1398538486.20071014140703@zonnet.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:45273 "EHLO aun.it.uu.se"
+Received: from mail.lxnt.info ([217.23.143.142]:59921 "EHLO mail.lxnt.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752060AbXJOIVX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Oct 2007 04:21:23 -0400
+	id S1753564AbXJOJTy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Oct 2007 05:19:54 -0400
+In-Reply-To: <1398538486.20071014140703@zonnet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@how.dk, linux-ide@vger.kernel.org
+To: MisterE <MisterE2002@zonnet.nl>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Sun, 14 Oct 2007 11:21:13 +0200, Peter Favrholdt wrote:
-> The problem is solved in 2.6.23.1 regarding the "port slow to respond" 
-> issue.
+MisterE wrote:
+> Hello,
 > 
-> I'm using sata_promise on Promise Technology, Inc. PDC40718 (SATA 300 
-> TX4) (rev 02) and 4 Seagate 500GB ES drives.
+> Alexander, does these problems with the Promise SATA300 TX4 happen to
+> everyone?
 > 
-> Using 2.6.23.1 it is possible to run
+
+Most probably not, as I think it would have been fixed much faster then.
+
+I was waiting for a) release of 2.6.23, and b) me completing the move to 
+another flat
+to retest all the latest developments in mainline and libata-dev.
+
+With a) done and b) almost done, I'll retest and report any issues quite 
+soon.
+
+Besides, there is a report of TX4 and 2.6.23 not showing problems that 
+were there with 2.6.22,
+( see "Bug is fixed in 2.6.23.1: sata_promise: port is slow to respond, 
+reset failed" thread).
+
+
+> The only alternatives are
+> using soft-raid products as normal controllers. Does anyone have experiences
+> with the following products?
+> * Highpoint RocketRAID 1640 (150 MB/s)
+> * Highpoint RocketRAID 1740 (300 MB/s)
+> * Adaptec 1210SA
 > 
-> dd if=/dev/sda of=/dev/null bs=1M &
-> dd if=/dev/sdb of=/dev/null bs=1M &
-> dd if=/dev/sdc of=/dev/null bs=1M &
-> dd if=/dev/sdd of=/dev/null bs=1M &
-> 
-> And it just runs perfectly to the end with no hickups :-)
 
-That's very good to hear.
+For any kind of non-hobby task I'd skip trying to build a disk array to 
+buying a SATA-SCSI/SATA-iSCSI box.
+While I had many mind-boggling issues with various combinations of SATA 
+HDDs, onboard and standalone
+controllers, Promise and Infortrend disk arrays worked quite reliably.
 
-However, I don't see how the sata_promise changes from 2.6.22 to 2.6.23
-can explain this. The only functional changes there are a critical fix
-for FastTrack TX4200 (not your card), and support for SATA hotplugging
-(not happening here).
+-- 
 
-So I'm suspecting something in libata core might have changed to fix this.
-
-Just to make sure, what's the numerical PCI IDs for your card?
-
-(No big deal, but I'd like to know what the error was.)
-
-/Mikael
+./lxnt
