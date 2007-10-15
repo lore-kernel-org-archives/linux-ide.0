@@ -1,46 +1,49 @@
-From: Peter Favrholdt <linux-ide@how.dk>
-Subject: Re: Bug is fixed in 2.6.23.1: sata_promise: port is slow to respond,
- reset failed
-Date: Mon, 15 Oct 2007 19:55:29 +0200
-Message-ID: <4713A991.3030308@how.dk>
-References: <200710150821.l9F8LHdS025458@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] libata-core: Be a bit more relaxed about early DMA zero
+ devices
+Date: Mon, 15 Oct 2007 19:18:27 +0100
+Message-ID: <20071015191827.26a3a76b@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:43095 "EHLO
-	pfepa.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755538AbXJORzd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 13:55:33 -0400
-In-Reply-To: <200710150821.l9F8LHdS025458@harpo.it.uu.se>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59926 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752989AbXJOSPt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 14:15:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi
+I guess Windows didn't care about the command so neither did they
 
-Mikael Pettersson wrote:
-> However, I don't see how the sata_promise changes from 2.6.22 to 2.6.23
-> can explain this. The only functional changes there are a critical fix
-> for FastTrack TX4200 (not your card), and support for SATA hotplugging
-> (not happening here).
-> 
-> So I'm suspecting something in libata core might have changed to fix this.
-> 
-> Just to make sure, what's the numerical PCI IDs for your card?
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-01:08.0 0180: 105a:3d17 (rev 02)
-         Subsystem: 105a:3d17
-         Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 19
-         I/O ports at a400 [size=128]
-         I/O ports at a800 [size=256]
-         Memory at e9024000 (32-bit, non-prefetchable) [size=4K]
-         Memory at e9000000 (32-bit, non-prefetchable) [size=128K]
-         [virtual] Expansion ROM at 300a0000 [disabled] [size=32K]
-         Capabilities: [60] Power Management version 2
-
-
-Best regards,
-
-Peter
+diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c linux-2.6.23-mm1/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:03:26.000000000 +0100
++++ linux-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:13:49.000000000 +0100
+@@ -2884,6 +2894,14 @@
+ 	if (dev->xfer_shift == ATA_SHIFT_PIO && !ata_id_has_iordy(dev->id) &&
+ 			dev->pio_mode <= XFER_PIO_2)
+ 		err_mask &= ~AC_ERR_DEV;
++
++	/* Early MWDMA devices do DMA but don't allow DMA mode setting.
++	   Don't fail an MWDMA0 set IFF the device indicates it is in MWDMA0 */
++	if (dev->xfer_shift == ATA_SHIFT_MWDMA && 
++	    dev->dma_mode == XFER_MW_DMA_0 &&
++	    (dev->id[63] >> 8) & 1)
++		err_mask &= ~AC_ERR_DEV;
++
+ 	if (err_mask) {
+ 		ata_dev_printk(dev, KERN_ERR, "failed to set xfermode "
+ 			       "(err_mask=0x%x)\n", err_mask);
+@@ -3985,9 +4003,6 @@
+ 	{ "_NEC DV5800A", 	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "SAMSUNG CD-ROM SN-124","N001",	ATA_HORKAGE_NODMA },
+ 	{ "Seagate STT20000A", NULL,		ATA_HORKAGE_NODMA },
+-	{ "IOMEGA  ZIP 250       ATAPI", NULL,	ATA_HORKAGE_NODMA }, /* temporary fix */
+-	{ "IOMEGA  ZIP 250       ATAPI       Floppy",
+-				NULL,		ATA_HORKAGE_NODMA },
+ 	/* Odd clown on sil3726/4726 PMPs */
+ 	{ "Config  Disk",	NULL,		ATA_HORKAGE_NODMA |
+ 						ATA_HORKAGE_SKIP_PM },
