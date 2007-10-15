@@ -1,322 +1,165 @@
-From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Add a global ide=off switch for drivers/ide
-Date: Mon, 15 Oct 2007 12:43:48 +0200
-Message-ID: <200710151243.48577.ak@suse.de>
+From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
+Subject: RE: [PATCH v2] drivers/ata: add support to Freescale 3.0Gbps SATA Controller
+Date: Mon, 15 Oct 2007 17:00:01 +0530
+Message-ID: <2A6F278C5B66C4459AF4013E77A40CD3FCBB59@zin33exm20.fsl.freescale.net>
+References: <200710121621.50649.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:59052 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758870AbXJOKny (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Oct 2007 06:43:54 -0400
-Content-Disposition: inline
+Received: from az33egw01.freescale.net ([192.88.158.102]:53378 "EHLO
+	az33egw01.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754802AbXJOLaJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Oct 2007 07:30:09 -0400
+Received: from az33smr01.freescale.net (az33smr01.freescale.net [10.64.34.199])
+	by az33egw01.freescale.net (8.12.11/az33egw01) with ESMTP id l9FBU5MQ025722
+	for <linux-ide@vger.kernel.org>; Mon, 15 Oct 2007 04:30:06 -0700 (MST)
+Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
+	by az33smr01.freescale.net (8.13.1/8.13.0) with ESMTP id l9FBU4r7024522
+	for <linux-ide@vger.kernel.org>; Mon, 15 Oct 2007 06:30:05 -0500 (CDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <200710121621.50649.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: bzolnier@gmail.com
+To: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org
+Cc: Li Yang-r58472 <LeoLi@freescale.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Kalra Ashish-B00888 <ashish.kalra@freescale.com>
 
+Hello Arnd,
 
-Had a situation where drivers/ide was compiled in, but I wanted to turn 
-it off to let the drivers/ata drivers take over. I ended up using ide*=noprobe,
-but that was somewhat clumpsy because I wasn't sure how many IDE interfaces
-the machine really had.
+Thanks for your comments and feedback.
 
-Add a global ide=off switch to handle this situation better.
+Actually, for PowerPC platforms iowrite32/ioread32 internally call
+writel/readl, which are again mapped to out_le32/in_le32,
+therefore we will modify our code to use of_iomap() to combine
+functionalities of both of_address_to_resource() & ioremap().
 
-The patch is a little bigger because I tried to cover all modules.
+We will also incorporate your other suggestions and then resubmit the
+patch.
 
-I'm also not 100% sure ENODEV is the right error return for this 
-case, but I didn't come up with a better one.
+Ashish
 
-The ARM/MIPS part is uncompiled.
+-----Original Message-----
+From: Arnd Bergmann [mailto:arnd@arndb.de] 
+Sent: Friday, October 12, 2007 7:52 PM
+To: linuxppc-dev@ozlabs.org
+Cc: Li Yang-r58472; jgarzik@pobox.com; linux-ide@vger.kernel.org; Kalra
+Ashish-B00888
+Subject: Re: [PATCH v2] drivers/ata: add support to Freescale 3.0Gbps
+SATA Controller
 
-Signed-off-by: Andi Kleen <ak@suse.de>
+On Friday 12 October 2007, Li Yang wrote:
+> This patch adds support for Freescale 3.0Gbps SATA Controller 
+> supporting Native Command Queueing(NCQ), device hotplug, and ATAPI.  
+> This controller can be found on MPC8315 and MPC8378.
 
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide.c
-@@ -91,6 +91,9 @@ static const u8 ide_hwif_to_major[] = { 
- static int idebus_parameter;	/* holds the "idebus=" parameter */
- static int system_bus_speed;	/* holds what we think is VESA/PCI bus speed */
- 
-+int ide_off;
-+EXPORT_SYMBOL(ide_off);
-+
- DEFINE_MUTEX(ide_cfg_mtx);
-  __cacheline_aligned_in_smp DEFINE_SPINLOCK(ide_lock);
- 
-@@ -1249,6 +1252,13 @@ static int __init ide_setup(char *s)
- 		return 0;
- 
- 	printk(KERN_INFO "ide_setup: %s", s);
-+
-+	if (!strcmp(s, "ide=off")) {
-+		printk(" : IDE disabled\n");
-+		ide_off = 1;
-+		return 1;
-+	}
-+
- 	init_ide_data ();
- 
- #ifdef CONFIG_BLK_DEV_IDEDOUBLER
-@@ -1717,6 +1727,9 @@ static int __init ide_init(void)
- {
- 	int ret;
- 
-+	if (ide_off)
-+		return -ENODEV;
-+
- 	printk(KERN_INFO "Uniform Multi-Platform E-IDE driver " REVISION "\n");
- 	system_bus_speed = ide_system_bus_speed();
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/setup-pci.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/setup-pci.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/setup-pci.c
-@@ -793,6 +793,8 @@ static LIST_HEAD(ide_pci_drivers);
- int __ide_pci_register_driver(struct pci_driver *driver, struct module *module,
- 			      const char *mod_name)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	if(!pre_init)
- 		return __pci_register_driver(driver, module, mod_name);
- 	driver->driver.owner = module;
-Index: linux-2.6.23-rc8-misc/include/linux/ide.h
-===================================================================
---- linux-2.6.23-rc8-misc.orig/include/linux/ide.h
-+++ linux-2.6.23-rc8-misc/include/linux/ide.h
-@@ -871,6 +871,8 @@ typedef struct ide_driver_s ide_driver_t
- 
- extern struct mutex ide_setting_mtx;
- 
-+extern int ide_off;
-+
- int set_io_32bit(ide_drive_t *, int);
- int set_pio_mode(ide_drive_t *, int);
- int set_using_dma(ide_drive_t *, int);
-Index: linux-2.6.23-rc8-misc/drivers/ide/arm/bast-ide.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/arm/bast-ide.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/arm/bast-ide.c
-@@ -52,6 +52,9 @@ bastide_register(unsigned int base, unsi
- 
- static int __init bastide_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
-+
- 	/* we can treat the VR1000 and the BAST the same */
- 
- 	if (!(machine_is_bast() || machine_is_vr1000()))
-Index: linux-2.6.23-rc8-misc/drivers/ide/arm/icside.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/arm/icside.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/arm/icside.c
-@@ -824,6 +824,8 @@ static struct ecard_driver icside_driver
- 
- static int __init icside_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	return ecard_register_driver(&icside_driver);
- }
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/arm/rapide.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/arm/rapide.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/arm/rapide.c
-@@ -113,6 +113,8 @@ static struct ecard_driver rapide_driver
- 
- static int __init rapide_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	return ecard_register_driver(&rapide_driver);
- }
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide-cd.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide-cd.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide-cd.c
-@@ -3568,6 +3568,8 @@ static void __exit ide_cdrom_exit(void)
- 
- static int __init ide_cdrom_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	return driver_register(&ide_cdrom_driver.gen_driver);
- }
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide-disk.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide-disk.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide-disk.c
-@@ -1329,6 +1329,8 @@ static void __exit idedisk_exit (void)
- 
- static int __init idedisk_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	return driver_register(&idedisk_driver.gen_driver);
- }
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide-floppy.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide-floppy.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide-floppy.c
-@@ -2215,6 +2215,8 @@ static void __exit idefloppy_exit (void)
- 
- static int __init idefloppy_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	printk("ide-floppy driver " IDEFLOPPY_VERSION "\n");
- 	return driver_register(&idefloppy_driver.gen_driver);
- }
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide-generic.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide-generic.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide-generic.c
-@@ -14,6 +14,8 @@
- 
- static int __init ide_generic_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	if (ide_hwifs[0].io_ports[IDE_DATA_OFFSET])
- 		ide_get_lock(NULL, NULL); /* for atari only */
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/ide-tape.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/ide-tape.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/ide-tape.c
-@@ -4914,6 +4914,8 @@ static void __exit idetape_exit (void)
- static int __init idetape_init(void)
- {
- 	int error = 1;
-+	if (ide_off)
-+		return -ENODEV;
- 	idetape_sysfs_class = class_create(THIS_MODULE, "ide_tape");
- 	if (IS_ERR(idetape_sysfs_class)) {
- 		idetape_sysfs_class = NULL;
-Index: linux-2.6.23-rc8-misc/drivers/ide/legacy/ali14xx.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/legacy/ali14xx.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/legacy/ali14xx.c
-@@ -238,7 +238,7 @@ MODULE_PARM_DESC(probe, "probe for ALI M
- /* Can be called directly from ide.c. */
- int __init ali14xx_init(void)
- {
--	if (probe_ali14xx == 0)
-+	if (probe_ali14xx == 0 || ide_off)
- 		goto out;
- 
- 	/* auto-detect IDE controller port */
-Index: linux-2.6.23-rc8-misc/drivers/ide/legacy/dtc2278.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/legacy/dtc2278.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/legacy/dtc2278.c
-@@ -153,7 +153,7 @@ MODULE_PARM_DESC(probe, "probe for DTC22
- /* Can be called directly from ide.c. */
- int __init dtc2278_init(void)
- {
--	if (probe_dtc2278 == 0)
-+	if (probe_dtc2278 == 0 || ide_off)
- 		return -ENODEV;
- 
- 	if (dtc2278_probe()) {
-Index: linux-2.6.23-rc8-misc/drivers/ide/legacy/ht6560b.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/legacy/ht6560b.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/legacy/ht6560b.c
-@@ -314,7 +314,7 @@ int __init ht6560b_init(void)
- 	ide_hwif_t *hwif, *mate;
- 	int t;
- 
--	if (probe_ht6560b == 0)
-+	if (probe_ht6560b == 0 || ide_off)
- 		return -ENODEV;
- 
- 	hwif = &ide_hwifs[0];
-Index: linux-2.6.23-rc8-misc/drivers/ide/legacy/qd65xx.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/legacy/qd65xx.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/legacy/qd65xx.c
-@@ -497,7 +497,7 @@ MODULE_PARM_DESC(probe, "probe for QD65x
- /* Can be called directly from ide.c. */
- int __init qd65xx_init(void)
- {
--	if (probe_qd65xx == 0)
-+	if (probe_qd65xx == 0 || ide_off)
- 		return -ENODEV;
- 
- 	if (qd_probe(0x30))
-Index: linux-2.6.23-rc8-misc/drivers/ide/legacy/umc8672.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/legacy/umc8672.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/legacy/umc8672.c
-@@ -176,7 +176,7 @@ MODULE_PARM_DESC(probe, "probe for UMC86
- /* Can be called directly from ide.c. */
- int __init umc8672_init(void)
- {
--	if (probe_umc8672 == 0)
-+	if (probe_umc8672 == 0 || ide_off)
- 		goto out;
- 
- 	if (umc8672_probe() == 0)
-Index: linux-2.6.23-rc8-misc/drivers/ide/mips/au1xxx-ide.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/mips/au1xxx-ide.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/mips/au1xxx-ide.c
-@@ -793,6 +793,8 @@ static struct device_driver au1200_ide_d
- 
- static int __init au_ide_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	return driver_register(&au1200_ide_driver);
- }
- 
-Index: linux-2.6.23-rc8-misc/drivers/ide/mips/swarm.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/mips/swarm.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/mips/swarm.c
-@@ -157,6 +157,8 @@ static int __devinit swarm_ide_init_modu
- 	struct platform_device *pldev;
- 	int err;
- 
-+	if (ide_off)
-+		return -ENODEV;
- 	printk(KERN_INFO "SWARM IDE driver\n");
- 
- 	if (driver_register(&swarm_ide_driver)) {
-Index: linux-2.6.23-rc8-misc/drivers/ide/pci/piix.c
-===================================================================
---- linux-2.6.23-rc8-misc.orig/drivers/ide/pci/piix.c
-+++ linux-2.6.23-rc8-misc/drivers/ide/pci/piix.c
-@@ -629,6 +629,8 @@ static struct pci_driver driver = {
- 
- static int __init piix_ide_init(void)
- {
-+	if (ide_off)
-+		return -ENODEV;
- 	piix_check_450nx();
- 	return ide_pci_register_driver(&driver);
- }
-Index: linux-2.6.23-rc8-misc/Documentation/ide.txt
-===================================================================
---- linux-2.6.23-rc8-misc.orig/Documentation/ide.txt
-+++ linux-2.6.23-rc8-misc/Documentation/ide.txt
-@@ -290,6 +290,8 @@ Summary of ide driver parameters for ker
- 
-  "ide=nodma"		: disable DMA globally for the IDE subsystem.
- 
-+ "ide=off"		: Disable the IDE subsystem completely
-+
- The following are valid ONLY on ide0, which usually corresponds
- to the first ATA interface found on the particular host, and the defaults for
- the base,ctl ports must not be altered.
+Most of the driver looks really good, but here are a few things that
+stick out:
+
+> +static int sata_fsl_probe(struct of_device *ofdev,
+> +			const struct of_device_id *match)
+> +{
+> +	int retval = 0;
+> +	void __iomem *hcr_base = NULL;
+> +	void __iomem *ssr_base = NULL;
+> +	void __iomem *csr_base = NULL;
+> +	struct sata_fsl_host_priv *host_priv = NULL;
+> +	struct resource *r;
+> +	int irq;
+> +	struct ata_host *host;
+> +
+> +	struct ata_port_info pi = sata_fsl_port_info[0];
+> +	const struct ata_port_info *ppi[] = { &pi, NULL };
+> +
+> +	dev_printk(KERN_INFO, &ofdev->dev,
+> +		   "Sata FSL Platform/CSB Driver init\n");
+> +
+> +	r = kmalloc(sizeof(struct resource), GFP_KERNEL);
+> +	retval = of_address_to_resource(ofdev->node, 0, r);
+> +	if (retval)
+> +		return -EINVAL;
+> +
+> +	DPRINTK("start i/o @0x%x\n", r->start);
+> +
+> +	hcr_base = ioremap(r->start, r->end - r->start + 1);
+> +	if (!hcr_base)
+> +		goto error_exit_with_cleanup;
+
+Hmm, I think we should redefine of_iomap to do the right thing for you.
+currently, it is the combination of of_address_to_resource and ioremap,
+which you do as well, so your code can be simplified to do that.
+However, ioremap is meant to be used with readl/writel or
+in_le32/out_le32 and similar functions, not with ioread32/iowrite32
+which you are using.
+
+I had planned to do a patch to get that right for some time so you can
+use of_iomap with ioread in all cases, but I guess you should start
+using of_iomap even now.
+
+> +
+> +error_exit_with_cleanup:
+> +
+> +	if (hcr_base)
+> +		iounmap(hcr_base);
+> +	if (host_priv)
+> +		kfree(host_priv);
+> +
+> +	return retval;
+> +}
+
+Once of_iomap start using devres, we would no longer need to iounmap
+here.
+
+> +static int sata_fsl_remove(struct of_device *ofdev) {
+> +	struct ata_host *host = dev_get_drvdata(&ofdev->dev);
+> +	struct sata_fsl_host_priv *host_priv = host->private_data;
+> +
+> +	dev_set_drvdata(&ofdev->dev, NULL);
+> +
+> +	iounmap(host_priv->hcr_base);
+> +	kfree(host_priv);
+> +
+> +	return 0;
+> +}
+
+Should you also free the irq mapping here?
+
+> --- /dev/null
+> +++ b/drivers/ata/sata_fsl.h
+> @@ -0,0 +1,92 @@
+> +/*
+> + * drivers/ata/sata_fsl.h
+> + *
+> + * Freescale 3.0Gbps SATA device driver
+
+The header file is entirely pointless, since all definitions in here are
+only used in a single file. Please merge the header into the
+implementation.
+
+> +static int sata_fsl_probe(struct of_device *ofdev,
+> +			const struct of_device_id *match); static int 
+> +sata_fsl_remove(struct of_device *ofdev); static int 
+> +sata_fsl_scr_read(struct ata_port *, unsigned int, u32 *); static int
+
+> +sata_fsl_scr_write(struct ata_port *, unsigned int, u32); static 
+> +unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *); static 
+> +irqreturn_t sata_fsl_interrupt(int, void *); static void 
+> +sata_fsl_irq_clear(struct ata_port *); static int 
+> +sata_fsl_port_start(struct ata_port *); static void 
+> +sata_fsl_port_stop(struct ata_port *); static void 
+> +sata_fsl_tf_read(struct ata_port *, struct ata_taskfile *); static 
+> +void sata_fsl_qc_prep(struct ata_queued_cmd *); static u8 
+> +sata_fsl_check_status(struct ata_port *); static void 
+> +sata_fsl_freeze(struct ata_port *); static void sata_fsl_thaw(struct 
+> +ata_port *); static void sata_fsl_error_handler(struct ata_port *); 
+> +static void sata_fsl_post_internal_cmd(struct ata_queued_cmd *);
+> +
+> +static inline unsigned int sata_fsl_tag(unsigned int, void __iomem 
+> +*);
+
+In particular, get rid of the forward declarations for static functions.
+All functions in a simple driver should be ordered in a way that you
+always reference only code that was previously defined. This helps avoid
+accidental recursions and makes it easier to review.
+
+	Arnd <><
