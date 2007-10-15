@@ -1,44 +1,41 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [git patches] IDE updates (part 2)
-Date: Mon, 15 Oct 2007 07:15:00 +1000
-Message-ID: <1192396500.6188.4.camel@pasglop>
-References: <200710131825.24768.bzolnier@gmail.com>
-	 <200710140041.25152.bzolnier@gmail.com> <1192320489.22054.40.camel@pasglop>
-	 <200710141807.24295.bzolnier@gmail.com>
-Reply-To: benh@kernel.crashing.org
+From: Don Mullis <dwm@meer.net>
+Subject: Re: Hitachi disk: spurious completions during NCQ
+Date: Sun, 14 Oct 2007 23:07:51 -0700
+Message-ID: <87zlyksyfc.fsf@meer.net>
+References: <9cP6K-6rV-29@gated-at.bofh.it>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:40299 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759534AbXJNVPL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Oct 2007 17:15:11 -0400
-In-Reply-To: <200710141807.24295.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760279AbXJOGIY@vger.kernel.org>
+In-Reply-To: <9cP6K-6rV-29@gated-at.bofh.it> (Luca Tettamanti's message of "Wed\, 10 Oct 2007 21\:10\:22 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luca Tettamanti <kronos.it@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> How's about this patch?
-> 
-> [PATCH] ide-pmac: fix pmac_ide_init_hwif_ports()
-> 
-> * pmac_ide_init_hwif_ports() can be called by ide_init_hwif_ports()
->   (through ppc_ide_md.ide_init_hwif hook) for non IDE PMAC interfaces.
->   If this is the case the hw->io_ports[] should be already setup by
->   ide_init_hwif_ports()->ide_std_init_ports() so remove redundant code
->   from pmac_ide_init_hwif_ports().
-> 
->   As side-effect this change fixes ctl_addr == 0 special handling in
->   ide_init_hwif_ports().
-> 
-> * Fix misleading comment while at it.
-
-I would have to try it. Problem is, I don't actually have any powermac
-with a PCI IDE controller at hand.. ouch. I'll see what I can find.
-
-Ben.
+> ata3.00: spurious completions during NCQ issue=0x0 SAct=0x407fd FIS=005040a1:00020000
+> ata3.00: cmd 61/08:00:c7:5a:82/00:00:1b:00:00/40 tag 0 cdb 0x0 data 4096 out
+>          res 50/00:10:07:5b:82/00:00:1b:00:00/40 Emask 0x2 (HSM violation)
 
 
+This has been seen with several Hitachi drives.  There's speculation
+that it's due to a bug in the drive firmware:
+
+http://groups.google.it/group/linux.kernel/browse_thread/thread/a4bd3c19565a2009/389817602f0cd551?hl=it&lnk=st&q=hitachi+hsm+violation&rnum=3#389817602f0cd551
+https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/137470
+
+
+A workaround:
+
+Index: /etc/rc.local
+===================================================================
+--- .orig/etc/rc.local  2007-10-13 14:57:10.000000000 -0700
++++ /etc/rc.local       2007-10-13 14:59:21.000000000 -0700
+@@ -11,4 +11,7 @@
+ #
+ # By default this script does nothing.
+
++# See https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/137470/
++echo 1 > /sys/block/sda/device/queue_depth
++
+ exit 0
