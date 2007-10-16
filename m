@@ -1,71 +1,117 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
-Date: Tue, 16 Oct 2007 16:59:39 +0400
-Message-ID: <4714B5BB.7030103@ru.mvista.com>
-References: <200710142211.03382.marogge@onlinehome.de> <4713A010.3080504@ru.mvista.com> <200710152339.33718.marogge@onlinehome.de> <4714A625.8040306@ru.mvista.com> <4714B1E6.9070308@rtr.ca>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [git patches] IDE updates (part 2)
+Date: Tue, 16 Oct 2007 16:55:07 +0100
+Message-ID: <20071016155507.GB32551@flint.arm.linux.org.uk>
+References: <200710131825.24768.bzolnier@gmail.com> <20071014001238.GP8181@ftp.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:20546 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754827AbXJPM72 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 08:59:28 -0400
-In-Reply-To: <4714B1E6.9070308@rtr.ca>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:55123 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934028AbXJPQAa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 12:00:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20071014001238.GP8181@ftp.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Martin Rogge <marogge@onlinehome.de>, bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Sun, Oct 14, 2007 at 01:12:39AM +0100, Al Viro wrote:
+> Proposed addition to icside part, provided that ARM folks ACK it - gets
+> icside to build and AFAICS it's correct:
 
-Mark Lord wrote:
+Booted and tested as working.
 
->>>>    Could you git-bisect this?
->>>>    Although I have a couple of patch suspects (dealing with 
->>>> interrupts),
->>>> all worked fine with PCI-649 just fine. PCI-648 is not really much
->>>> different from 649 according to specs...
+Whatever-tag-that-is: Russell King <rmk+kernel@arm.linux.org.uk>
 
->>> Yes, I found the same when I managed to send the CMD 648 into 
->>> UDMA-100 mode years ago (by treating it like a 649).
+> diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+> index be30923..842fe08 100644
+> --- a/drivers/ata/pata_icside.c
+> +++ b/drivers/ata/pata_icside.c
+> @@ -332,12 +332,13 @@ static void ata_dummy_noret(struct ata_port *port)
+>  {
+>  }
+>  
+> -static void pata_icside_postreset(struct ata_port *ap, unsigned int *classes)
+> +static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
+>  {
+> +	struct ata_port *ap = link->ap;
+>  	struct pata_icside_state *state = ap->host->private_data;
+>  
+>  	if (classes[0] != ATA_DEV_NONE || classes[1] != ATA_DEV_NONE)
+> -		return ata_std_postreset(ap, classes);
+> +		return ata_std_postreset(link, classes);
+>  
+>  	state->port[ap->port_no].disabled = 1;
+>  
+> @@ -395,29 +396,30 @@ static struct ata_port_operations pata_icside_port_ops = {
+>  
+>  static void __devinit
+>  pata_icside_setup_ioaddr(struct ata_port *ap, void __iomem *base,
+> -			 const struct portinfo *info)
+> +			 struct pata_icside_info *info,
+> +			 const struct portinfo *port)
+>  {
+>  	struct ata_ioports *ioaddr = &ap->ioaddr;
+> -	void __iomem *cmd = base + info->dataoffset;
+> +	void __iomem *cmd = base + port->dataoffset;
+>  
+>  	ioaddr->cmd_addr	= cmd;
+> -	ioaddr->data_addr	= cmd + (ATA_REG_DATA    << info->stepping);
+> -	ioaddr->error_addr	= cmd + (ATA_REG_ERR     << info->stepping);
+> -	ioaddr->feature_addr	= cmd + (ATA_REG_FEATURE << info->stepping);
+> -	ioaddr->nsect_addr	= cmd + (ATA_REG_NSECT   << info->stepping);
+> -	ioaddr->lbal_addr	= cmd + (ATA_REG_LBAL    << info->stepping);
+> -	ioaddr->lbam_addr	= cmd + (ATA_REG_LBAM    << info->stepping);
+> -	ioaddr->lbah_addr	= cmd + (ATA_REG_LBAH    << info->stepping);
+> -	ioaddr->device_addr	= cmd + (ATA_REG_DEVICE  << info->stepping);
+> -	ioaddr->status_addr	= cmd + (ATA_REG_STATUS  << info->stepping);
+> -	ioaddr->command_addr	= cmd + (ATA_REG_CMD     << info->stepping);
+> -
+> -	ioaddr->ctl_addr	= base + info->ctrloffset;
+> +	ioaddr->data_addr	= cmd + (ATA_REG_DATA    << port->stepping);
+> +	ioaddr->error_addr	= cmd + (ATA_REG_ERR     << port->stepping);
+> +	ioaddr->feature_addr	= cmd + (ATA_REG_FEATURE << port->stepping);
+> +	ioaddr->nsect_addr	= cmd + (ATA_REG_NSECT   << port->stepping);
+> +	ioaddr->lbal_addr	= cmd + (ATA_REG_LBAL    << port->stepping);
+> +	ioaddr->lbam_addr	= cmd + (ATA_REG_LBAM    << port->stepping);
+> +	ioaddr->lbah_addr	= cmd + (ATA_REG_LBAH    << port->stepping);
+> +	ioaddr->device_addr	= cmd + (ATA_REG_DEVICE  << port->stepping);
+> +	ioaddr->status_addr	= cmd + (ATA_REG_STATUS  << port->stepping);
+> +	ioaddr->command_addr	= cmd + (ATA_REG_CMD     << port->stepping);
+> +
+> +	ioaddr->ctl_addr	= base + port->ctrloffset;
+>  	ioaddr->altstatus_addr	= ioaddr->ctl_addr;
+>  
+>  	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
+> -		      info->raw_base + info->dataoffset,
+> -		      info->raw_base + info->ctrloffset);
+> +		      info->raw_base + port->dataoffset,
+> +		      info->raw_base + port->ctrloffset);
+>  
+>  	if (info->raw_ioc_base)
+>  		ata_port_desc(ap, "iocbase 0x%lx", info->raw_ioc_base);
+> @@ -441,7 +443,7 @@ static int __devinit pata_icside_register_v5(struct pata_icside_info *info)
+>  	info->nr_ports = 1;
+>  	info->port[0] = &pata_icside_portinfo_v5;
+>  
+> -	info->raw_base = ecard_resource_start(ec, ECARD_RES_MEMC);
+> +	info->raw_base = ecard_resource_start(info->ec, ECARD_RES_MEMC);
+>  
+>  	return 0;
+>  }
+> @@ -522,7 +524,7 @@ static int __devinit pata_icside_add_ports(struct pata_icside_info *info)
+>  		ap->flags |= ATA_FLAG_SLAVE_POSS;
+>  		ap->ops = &pata_icside_port_ops;
+>  
+> -		pata_icside_setup_ioaddr(ap, info->base, info->port[i]);
+> +		pata_icside_setup_ioaddr(ap, info->base, info, info->port[i]);
+>  	}
+>  
+>  	return ata_host_activate(host, ec->irq, ata_interrupt, 0,
 
->>> Anyway, I found the git patches on kernel.org and bisected away. For 
->>> completeness, this is the table containing all my results.
-
->>> Kernel         System reaction
->>> ============================================================================ 
->>>
->>> 2.6.21         CMD 648 working fine
->>> 2.6.21-git4    CMD 648 working fine
->>> 2.6.21-git5    CMD 648 working fine
->>> 2.6.21-git6    irg 15: nobody cared [...] Disabling IRQ #15 etc.
->>> 2.6.21-git8    irg 15: nobody cared [...] Disabling IRQ #15 etc.
->>> 2.6.22-rc1     irg 15: nobody cared [...] Disabling IRQ #15 etc.
->>> 2.6.22         irg 15: nobody cared [...] Disabling IRQ #15 etc.
->>> 2.6.23         irg 15: nobody cared [...] Disabling IRQ #15 etc.
-
->>> Well, most likely the CMD related patches in git6 are the culprit. 
-
->>    Erm... usually bisection leaves you with one patch startting from 
->> which kernel was broken.  It seems you've done sort iof manual 
->> bisecting. Thanks anyway. :-)
-
-> He's certainly provided way more than enough information here to find/fix
-> the bug.  The onus for hours of slaving away here is really on the person
-> who *broke* it, not the innocent reporter!
-
-> In this case, there are two very likely commits:
-
-> 7670df73fba373d19471a2ebedb3302ea0607be0 ide: mode limiting fixes for 
-> user requested speed changes
-> 26bcb879c03254545a19c6700fe5bcef6f21e7b1 ide: add ide_set{_max}_pio() 
-> (take 4)
-
-    Hm, why do you think that these two are very likely, if there was 5 
-patches commiited exclusively to the cmd64x driver (two of them being 
-interrupt related)?..
-
-> Cheers
-
-MBR, Sergei
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
