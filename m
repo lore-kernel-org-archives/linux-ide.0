@@ -1,55 +1,220 @@
-From: "peer chen" <peerchen@gmail.com>
-Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
-Date: Tue, 16 Oct 2007 16:08:22 +0800
-Message-ID: <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
-References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org>
+From: Sonic Zhang <sonic.adi@gmail.com>
+Subject: [PATCH] Update libata driver for bf548 atapi controller against
+	the 2.6.24 tree.
+Date: Tue, 16 Oct 2007 16:43:27 +0800
+Message-ID: <1192524207.11166.1.camel@sevens.analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:27969 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754646AbXJPIIZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 04:08:25 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so2488048mue
-        for <linux-ide@vger.kernel.org>; Tue, 16 Oct 2007 01:08:23 -0700 (PDT)
-In-Reply-To: <470FE47B.5060505@garzik.org>
-Content-Disposition: inline
+Received: from nwd2mail10.analog.com ([137.71.25.55]:12417 "EHLO
+	nwd2mail10.analog.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759512AbXJPIuE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 04:50:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
+To: Linux Kernel <linux-kernel@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: bzolnier@gmail.com
 
-I hope one of the following patches can be merged to 2.6.24.
-==========================
-http://lkml.org/lkml/2007/10/8/93
-http://lkml.org/lkml/2007/9/25/20
+Changes:
+1. Remove irq_ack() and port_disable() methods
+2. Acocomodate for the libata-link patches
+3. Change Kconfig ATAPI mode option into a module param.
+4. Add supported WMDMA mode.
 
-Yes, I agree to set the 'swncq' as default for 2.6.24, after all, for
-our server customers, stability is far more important than the new
-feature no matter the problem is caused by drive or controller.
+Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+---
+ drivers/ata/Kconfig      |    7 ----
+ drivers/ata/pata_bf54x.c |   77 ++++++++++++++++++++++------------------------
+ 2 files changed, 37 insertions(+), 47 deletions(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 33f5eb0..c0ea83d 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -641,11 +641,4 @@ config PATA_BF54X
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_BF54X_DMA
+-	bool "DMA mode"
+-	depends on PATA_BF54X
+-	default y
+-	help
+-	  Enable DMA mode for Blackfin ATAPI controller.
+-
+ endif # ATA
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index 747549e..b5e3842 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1092,14 +1092,15 @@ static unsigned int bfin_bus_softreset(struct ata_port *ap,
+  *	Note: Original code is ata_std_softreset().
+  */
+ 
+-static int bfin_std_softreset(struct ata_port *ap, unsigned int *classes,
++static int bfin_std_softreset(struct ata_link *link, unsigned int *classes,
+ 		unsigned long deadline)
+ {
++	struct ata_port *ap = link->ap;
+ 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
+ 	unsigned int devmask = 0, err_mask;
+ 	u8 err;
+ 
+-	if (ata_port_offline(ap)) {
++	if (ata_link_offline(link)) {
+ 		classes[0] = ATA_DEV_NONE;
+ 		goto out;
+ 	}
+@@ -1122,9 +1123,11 @@ static int bfin_std_softreset(struct ata_port *ap, unsigned int *classes,
+ 	}
+ 
+ 	/* determine by signature whether we have ATA or ATAPI devices */
+-	classes[0] = ata_dev_try_classify(ap, 0, &err);
++	classes[0] = ata_dev_try_classify(&ap->link.device[0],
++				devmask & (1 << 0), &err);
+ 	if (slave_possible && err != 0x81)
+-		classes[1] = ata_dev_try_classify(ap, 1, &err);
++		classes[1] = ata_dev_try_classify(&ap->link.device[1],
++					devmask & (1 << 1), &err);
+ 
+  out:
+ 	return 0;
+@@ -1167,7 +1170,7 @@ static unsigned char bfin_bmdma_status(struct ata_port *ap)
+ static void bfin_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 			   unsigned int buflen, int write_data)
+ {
+-	struct ata_port *ap = adev->ap;
++	struct ata_port *ap = adev->link->ap;
+ 	unsigned int words = buflen >> 1;
+ 	unsigned short *buf16 = (u16 *) buf;
+ 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+@@ -1206,7 +1209,10 @@ static void bfin_irq_clear(struct ata_port *ap)
+ 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+ 
+ 	pr_debug("in atapi irq clear\n");
+-	ATAPI_SET_INT_STATUS(base, 0x1FF);
++
++	ATAPI_SET_INT_STATUS(base, ATAPI_GET_INT_STATUS(base)|ATAPI_DEV_INT
++		| MULTI_DONE_INT | UDMAIN_DONE_INT | UDMAOUT_DONE_INT
++		| MULTI_TERM_INT | UDMAIN_TERM_INT | UDMAOUT_TERM_INT);
+ }
+ 
+ /**
+@@ -1234,33 +1240,6 @@ static unsigned char bfin_irq_on(struct ata_port *ap)
+ }
+ 
+ /**
+- *	bfin_irq_ack - Acknowledge a device interrupt.
+- *	@ap: Port on which interrupts are enabled.
+- *
+- *	Note: Original code is ata_irq_ack().
+- */
+-
+-static unsigned char bfin_irq_ack(struct ata_port *ap, unsigned int chk_drq)
+-{
+-	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+-	unsigned int bits = chk_drq ? ATA_BUSY | ATA_DRQ : ATA_BUSY;
+-	unsigned char status;
+-
+-	pr_debug("in atapi irq ack\n");
+-	status = ata_busy_wait(ap, bits, 1000);
+-	if (status & bits)
+-		if (ata_msg_err(ap))
+-			dev_err(ap->dev, "abnormal status 0x%X\n", status);
+-
+-	/* get controller status; clear intr, err bits */
+-	ATAPI_SET_INT_STATUS(base, ATAPI_GET_INT_STATUS(base)|ATAPI_DEV_INT
+-		| MULTI_DONE_INT | UDMAIN_DONE_INT | UDMAOUT_DONE_INT
+-		| MULTI_TERM_INT | UDMAIN_TERM_INT | UDMAOUT_TERM_INT);
+-
+-	return bfin_bmdma_status(ap);
+-}
+-
+-/**
+  *	bfin_bmdma_freeze - Freeze DMA controller port
+  *	@ap: port to freeze
+  *
+@@ -1308,8 +1287,9 @@ void bfin_bmdma_thaw(struct ata_port *ap)
+  *	Note: Original code is ata_std_postreset().
+  */
+ 
+-static void bfin_std_postreset(struct ata_port *ap, unsigned int *classes)
++static void bfin_std_postreset(struct ata_link *link, unsigned int *classes)
+ {
++	struct ata_port *ap = link->ap;
+ 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+ 
+ 	/* re-enable interrupts */
+@@ -1395,7 +1375,6 @@ static struct scsi_host_template bfin_sht = {
+ };
+ 
+ static const struct ata_port_operations bfin_pata_ops = {
+-	.port_disable		= ata_port_disable,
+ 	.set_piomode		= bfin_set_piomode,
+ 	.set_dmamode		= bfin_set_dmamode,
+ 
+@@ -1423,7 +1402,6 @@ static const struct ata_port_operations bfin_pata_ops = {
+ 	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= bfin_irq_clear,
+ 	.irq_on			= bfin_irq_on,
+-	.irq_ack		= bfin_irq_ack,
+ 
+ 	.port_start		= bfin_port_start,
+ 	.port_stop		= bfin_port_stop,
+@@ -1437,11 +1415,7 @@ static struct ata_port_info bfin_port_info[] = {
+ 				| ATA_FLAG_NO_LEGACY,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0,
+-#ifdef CONFIG_PATA_BF54X_DMA
+-		.udma_mask	= ATA_UDMA5,
+-#else
+ 		.udma_mask	= 0,
+-#endif
+ 		.port_ops	= &bfin_pata_ops,
+ 	},
+ };
+@@ -1607,9 +1581,25 @@ static struct platform_driver bfin_atapi_driver = {
+ 	},
+ };
+ 
++#define ATAPI_MODE_SIZE		10
++static char bfin_atapi_mode[ATAPI_MODE_SIZE];
++
+ static int __init bfin_atapi_init(void)
+ {
+ 	pr_info("register bfin atapi driver\n");
++
++	switch(bfin_atapi_mode[0]) {
++	case 'p':
++	case 'P':
++		break;
++	case 'm':
++	case 'M':
++		bfin_port_info[0].mwdma_mask = ATA_MWDMA2;
++		break;
++	default:
++		bfin_port_info[0].udma_mask = ATA_UDMA5;
++	};
++
+ 	return platform_driver_register(&bfin_atapi_driver);
+ }
+ 
+@@ -1620,6 +1610,13 @@ static void __exit bfin_atapi_exit(void)
+ 
+ module_init(bfin_atapi_init);
+ module_exit(bfin_atapi_exit);
++/*
++ * ATAPI mode:
++ * pio/PIO
++ * udma/UDMA (default)
++ * mwdma/MWDMA
++ */
++module_param_string(bfin_atapi_mode, bfin_atapi_mode, ATAPI_MODE_SIZE, 0);
+ 
+ MODULE_AUTHOR("Sonic Zhang <sonic.zhang@analog.com>");
+ MODULE_DESCRIPTION("PATA driver for blackfin 54x ATAPI controller");
+-- 
+1.5.1.3
 
 
-2007/10/13, Jeff Garzik <jeff@garzik.org>:
-> Peer Chen wrote:
-> > Add the ahci controller legacy mode support to sata_nv.
-> > Move the DIDs of legacy mode from ahci.c to sata_nv.c
-> >
-> > The patch base on kernel 2.6.23-rc8
-> >
-> > Signed-off-by: Peer Chen <peerchen@gmail.com>
->
-> Would you mind checking libata-dev.git#upstream, and make sure it has
-> all the NV patches?
->
-> I'm thinking I should go ahead and push the 'nv-swncq' branch, which
-> contains the sata_nv updates for swncq.  They have been in -mm for a
-> while.  I am leaning towards leaving the default to 'off' for 2.6.24 though.
->
-> Comments welcome...
->
->        Jeff
->
->
->
->
