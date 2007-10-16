@@ -1,42 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata update
-Date: Mon, 15 Oct 2007 18:31:53 -0400
-Message-ID: <4713EA59.30409@garzik.org>
-References: <20071012194002.GA1545@havoc.gtf.org> <200710130342.22217.bzolnier@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH 2/4] docbook: fix libata content
+Date: Mon, 15 Oct 2007 17:29:46 -0700
+Message-ID: <20071015172946.ff34b548.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <200710130342.22217.bzolnier@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>, Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755602AbXJPAaj@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>, jgarzik <jgarzik@pobox.com>
+Cc: torvalds <torvalds@linux-foundation.org>, akpm <akpm@linux-foundation.org>, ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
-> On Friday 12 October 2007, Jeff Garzik wrote:
->> [ I just sent this upstream to Andrew and Linus ]
->>
->> Now that I have nailed down the corruption problem, I can attend to
->> this...  Fun stuff:
->>
->> * port multiplier support (like an ethernet hub, only dumber)
-> 
-> Great to see this here.
-> 
->> * Asynchronous notification -- finally userspace CD-ROM polling can go away!
-> 
-> Is this AHCI specific or could be used by some other SATA hosts?
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Can be used by any controller that supports SNotification (or is able to 
-capture and parse the raw FIS's).
+Fix libata docbook warnings.
 
-And FWIW, Tejun's PMP work also uses a few bits of same async-notify stuff.
+Warning(linux-2.6.23-git8//drivers/ata/libata-scsi.c:3251): No description found for parameter 'dev'
 
-I agree with your review items, and will look at those if others don't 
-beat me to it.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ata/libata-scsi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Jeff
-
-
-
+--- linux-2.6.23-git8.orig/drivers/ata/libata-scsi.c
++++ linux-2.6.23-git8/drivers/ata/libata-scsi.c
+@@ -3239,7 +3239,7 @@ static void ata_scsi_handle_link_detach(
+ 
+ /**
+  *	ata_scsi_media_change_notify - send media change event
+- *	@atadev: Pointer to the disk device with media change event
++ *	@dev: Pointer to the disk device with media change event
+  *
+  *	Tell the block layer to send a media change notification
+  *	event.
