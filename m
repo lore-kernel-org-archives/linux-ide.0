@@ -1,101 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: remove blk_queue_max_phys_segments in libata
-Date: Tue, 16 Oct 2007 22:29:50 +0200
-Message-ID: <20071016202950.GG9942@kernel.dk>
-References: <200710161809.l9GI9YTS008023@hera.kernel.org> <47151BF3.4080208@garzik.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] ide: fix serverworks.c UDMA regression
+Date: Tue, 16 Oct 2007 21:25:41 +0200
+Message-ID: <200710162125.41987.bzolnier@gmail.com>
+References: <4713B9FA.8050803@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:29634 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764269AbXJPU34 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Oct 2007 16:29:56 -0400
+Received: from ug-out-1314.google.com ([66.249.92.170]:40084 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936033AbXJPUtm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 16:49:42 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so159272ugc
+        for <linux-ide@vger.kernel.org>; Tue, 16 Oct 2007 13:49:40 -0700 (PDT)
+In-Reply-To: <4713B9FA.8050803@cybernetics.com>
 Content-Disposition: inline
-In-Reply-To: <47151BF3.4080208@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: linux-ide@vger.kernel.org, stable@kernel.org
 
-On Tue, Oct 16 2007, Jeff Garzik wrote:
-> Linux Kernel Mailing List wrote:
-> >Gitweb:     
-> >http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8889e3c129780cdbe15fed3c366ba3aa3026684d
-> >Commit:     8889e3c129780cdbe15fed3c366ba3aa3026684d
-> >Parent:     fd820f405574a30aacf9a859886e173d641f080b
-> >Author:     FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >AuthorDate: Tue Sep 18 12:16:45 2007 +0200
-> >Committer:  Jens Axboe <jens.axboe@oracle.com>
-> >CommitDate: Tue Oct 16 11:24:44 2007 +0200
-> >
-> >    remove blk_queue_max_phys_segments in libata
-> >    
-> >    LIBATA_MAX_PRD is the maximum number of DMA scatter/gather elements
-> >    permitted by the HBA's DMA engine. It's properly set to
-> >    q->max_hw_segments via the sg_tablesize parameter.
-> >    
-> >    libata shouldn't call blk_queue_max_phys_segments. Now LIBATA_MAX_PRD
-> >    is equal to SCSI_MAX_PHYS_SEGMENTS by default (both is 128), so
-> >    everything is fine. But if they are changed, some code (like the scsi
-> >    mid layer, sg chaining, etc) might not work properly.
-> >    
-> >    (Addition from Jens) The basic issue is that the physical segment
-> >    setting is purely a driver issue. And since SCSI is managing the 
-> >    sglist,
-> >    libata has no business changing the setting. All libata should care
-> >    about is the hw segment setting.
-> >    
-> >    Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> >---
-> > drivers/ata/libata-scsi.c |    2 --
-> > 1 files changed, 0 insertions(+), 2 deletions(-)
-> >
-> >diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> >index d63c81e..ba62d53 100644
-> >--- a/drivers/ata/libata-scsi.c
-> >+++ b/drivers/ata/libata-scsi.c
-> >@@ -801,8 +801,6 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
-> > 
-> > 	ata_scsi_sdev_config(sdev);
-> > 
-> >-	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
-> >-
-> > 	sdev->manage_start_stop = 1;
+On Monday 15 October 2007, Tony Battersby wrote:
+> The patch described by the following excerpt from ChangeLog-2.6.22 makes
+> it impossible to use UDMA on a Tyan S2707 motherboard (SvrWks CSB5):
 > 
-> As I noted when this first patch was posted...   this line of code 
-> existed because the difference between hw-segments and phys-segments was 
-> incredibly difficult to discern.  The names say basically the same thing 
-> to me, and I could find no documentation explaining the difference?
+> commit 2d5eaa6dd744a641e75503232a01f52d0768884c
+> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date:   Thu May 10 00:01:08 2007 +0200
+> 
+>     ide: rework the code for selecting the best DMA transfer mode (v3)
+> 
+>     ...
+> 
+> This one-line patch against 2.6.23 fixes the problem.
 
-We discussed this change to death afair, so I'm a little surprised you
-say that. The commit message itself has good reasoning as well.
+Thanks!! (and sorry for the bug)
 
-> Does such documentation exist?  If not, can you please explain the 
-> difference?
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 
-OK, I can give a brief summary. The driver can set two restrictions -
-hardware and physical. I'm not sure who originally came up with the
-naming (I think it's prety terrible), but essentially the 'hardware'
-restriction is what the hardware can support (OK that name works) and
-the 'physical' restriction is imposed by the driver. Typically that last
-restriction has to do with structure limitations, like allocating stuff
-on the stack or limiting the size of the sgtable you have to allocate.
+applied
 
-> Finally, some notification and coordination would have been helpful. 
+Greg/Chris: this is a perfect candidate for 2.6.23.2
 
-Confused, as I mentioned, we discussed this at quite some length a few
-months ago.
-
-> Commit 6c08772e49622e90d39903e7ff0be1a0f463ac86 appears to have been 
-> missed, at the very least... or is it actually correct?
-
-Depends on what you think it does. The number of hardware segments will
-never be larger than the physical segments. But it looks like you want
-to set the hw seg value there. As mentioned in the commit above, since
-libata doesn't allocate its own sg tables, letting it fiddle with the
-physical segment limit is dodgy at best.
-
--- 
-Jens Axboe
-
+> ---
+> --- linux-2.6.23/drivers/ide/pci/serverworks.c.orig	2007-10-15 12:15:01.000000000 -0400
+> +++ linux-2.6.23/drivers/ide/pci/serverworks.c	2007-10-15 13:47:29.000000000 -0400
+> @@ -97,6 +97,7 @@ static u8 svwks_udma_filter(ide_drive_t 
+>  			mode = 2;
+>  
+>  		switch(mode) {
+> +		case 3:	 mask = 0x3f; break;
+>  		case 2:	 mask = 0x1f; break;
+>  		case 1:	 mask = 0x07; break;
+>  		default: mask = 0x00; break;
