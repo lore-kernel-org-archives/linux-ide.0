@@ -1,117 +1,79 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [git patches] IDE updates (part 2)
-Date: Tue, 16 Oct 2007 16:55:07 +0100
-Message-ID: <20071016155507.GB32551@flint.arm.linux.org.uk>
-References: <200710131825.24768.bzolnier@gmail.com> <20071014001238.GP8181@ftp.linux.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: remove blk_queue_max_phys_segments in libata
+Date: Tue, 16 Oct 2007 16:15:47 -0400
+Message-ID: <47151BF3.4080208@garzik.org>
+References: <200710161809.l9GI9YTS008023@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:55123 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934028AbXJPQAa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2007 12:00:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20071014001238.GP8181@ftp.linux.org.uk>
+Received: from srv5.dvmed.net ([207.36.208.214]:42089 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965482AbXJPUPy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Oct 2007 16:15:54 -0400
+In-Reply-To: <200710161809.l9GI9YTS008023@hera.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Sun, Oct 14, 2007 at 01:12:39AM +0100, Al Viro wrote:
-> Proposed addition to icside part, provided that ARM folks ACK it - gets
-> icside to build and AFAICS it's correct:
-
-Booted and tested as working.
-
-Whatever-tag-that-is: Russell King <rmk+kernel@arm.linux.org.uk>
-
-> diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-> index be30923..842fe08 100644
-> --- a/drivers/ata/pata_icside.c
-> +++ b/drivers/ata/pata_icside.c
-> @@ -332,12 +332,13 @@ static void ata_dummy_noret(struct ata_port *port)
->  {
->  }
+Linux Kernel Mailing List wrote:
+> Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8889e3c129780cdbe15fed3c366ba3aa3026684d
+> Commit:     8889e3c129780cdbe15fed3c366ba3aa3026684d
+> Parent:     fd820f405574a30aacf9a859886e173d641f080b
+> Author:     FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> AuthorDate: Tue Sep 18 12:16:45 2007 +0200
+> Committer:  Jens Axboe <jens.axboe@oracle.com>
+> CommitDate: Tue Oct 16 11:24:44 2007 +0200
+> 
+>     remove blk_queue_max_phys_segments in libata
+>     
+>     LIBATA_MAX_PRD is the maximum number of DMA scatter/gather elements
+>     permitted by the HBA's DMA engine. It's properly set to
+>     q->max_hw_segments via the sg_tablesize parameter.
+>     
+>     libata shouldn't call blk_queue_max_phys_segments. Now LIBATA_MAX_PRD
+>     is equal to SCSI_MAX_PHYS_SEGMENTS by default (both is 128), so
+>     everything is fine. But if they are changed, some code (like the scsi
+>     mid layer, sg chaining, etc) might not work properly.
+>     
+>     (Addition from Jens) The basic issue is that the physical segment
+>     setting is purely a driver issue. And since SCSI is managing the sglist,
+>     libata has no business changing the setting. All libata should care
+>     about is the hw segment setting.
+>     
+>     Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+>  drivers/ata/libata-scsi.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d63c81e..ba62d53 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -801,8 +801,6 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
 >  
-> -static void pata_icside_postreset(struct ata_port *ap, unsigned int *classes)
-> +static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
->  {
-> +	struct ata_port *ap = link->ap;
->  	struct pata_icside_state *state = ap->host->private_data;
+>  	ata_scsi_sdev_config(sdev);
 >  
->  	if (classes[0] != ATA_DEV_NONE || classes[1] != ATA_DEV_NONE)
-> -		return ata_std_postreset(ap, classes);
-> +		return ata_std_postreset(link, classes);
->  
->  	state->port[ap->port_no].disabled = 1;
->  
-> @@ -395,29 +396,30 @@ static struct ata_port_operations pata_icside_port_ops = {
->  
->  static void __devinit
->  pata_icside_setup_ioaddr(struct ata_port *ap, void __iomem *base,
-> -			 const struct portinfo *info)
-> +			 struct pata_icside_info *info,
-> +			 const struct portinfo *port)
->  {
->  	struct ata_ioports *ioaddr = &ap->ioaddr;
-> -	void __iomem *cmd = base + info->dataoffset;
-> +	void __iomem *cmd = base + port->dataoffset;
->  
->  	ioaddr->cmd_addr	= cmd;
-> -	ioaddr->data_addr	= cmd + (ATA_REG_DATA    << info->stepping);
-> -	ioaddr->error_addr	= cmd + (ATA_REG_ERR     << info->stepping);
-> -	ioaddr->feature_addr	= cmd + (ATA_REG_FEATURE << info->stepping);
-> -	ioaddr->nsect_addr	= cmd + (ATA_REG_NSECT   << info->stepping);
-> -	ioaddr->lbal_addr	= cmd + (ATA_REG_LBAL    << info->stepping);
-> -	ioaddr->lbam_addr	= cmd + (ATA_REG_LBAM    << info->stepping);
-> -	ioaddr->lbah_addr	= cmd + (ATA_REG_LBAH    << info->stepping);
-> -	ioaddr->device_addr	= cmd + (ATA_REG_DEVICE  << info->stepping);
-> -	ioaddr->status_addr	= cmd + (ATA_REG_STATUS  << info->stepping);
-> -	ioaddr->command_addr	= cmd + (ATA_REG_CMD     << info->stepping);
+> -	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
 > -
-> -	ioaddr->ctl_addr	= base + info->ctrloffset;
-> +	ioaddr->data_addr	= cmd + (ATA_REG_DATA    << port->stepping);
-> +	ioaddr->error_addr	= cmd + (ATA_REG_ERR     << port->stepping);
-> +	ioaddr->feature_addr	= cmd + (ATA_REG_FEATURE << port->stepping);
-> +	ioaddr->nsect_addr	= cmd + (ATA_REG_NSECT   << port->stepping);
-> +	ioaddr->lbal_addr	= cmd + (ATA_REG_LBAL    << port->stepping);
-> +	ioaddr->lbam_addr	= cmd + (ATA_REG_LBAM    << port->stepping);
-> +	ioaddr->lbah_addr	= cmd + (ATA_REG_LBAH    << port->stepping);
-> +	ioaddr->device_addr	= cmd + (ATA_REG_DEVICE  << port->stepping);
-> +	ioaddr->status_addr	= cmd + (ATA_REG_STATUS  << port->stepping);
-> +	ioaddr->command_addr	= cmd + (ATA_REG_CMD     << port->stepping);
-> +
-> +	ioaddr->ctl_addr	= base + port->ctrloffset;
->  	ioaddr->altstatus_addr	= ioaddr->ctl_addr;
->  
->  	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
-> -		      info->raw_base + info->dataoffset,
-> -		      info->raw_base + info->ctrloffset);
-> +		      info->raw_base + port->dataoffset,
-> +		      info->raw_base + port->ctrloffset);
->  
->  	if (info->raw_ioc_base)
->  		ata_port_desc(ap, "iocbase 0x%lx", info->raw_ioc_base);
-> @@ -441,7 +443,7 @@ static int __devinit pata_icside_register_v5(struct pata_icside_info *info)
->  	info->nr_ports = 1;
->  	info->port[0] = &pata_icside_portinfo_v5;
->  
-> -	info->raw_base = ecard_resource_start(ec, ECARD_RES_MEMC);
-> +	info->raw_base = ecard_resource_start(info->ec, ECARD_RES_MEMC);
->  
->  	return 0;
->  }
-> @@ -522,7 +524,7 @@ static int __devinit pata_icside_add_ports(struct pata_icside_info *info)
->  		ap->flags |= ATA_FLAG_SLAVE_POSS;
->  		ap->ops = &pata_icside_port_ops;
->  
-> -		pata_icside_setup_ioaddr(ap, info->base, info->port[i]);
-> +		pata_icside_setup_ioaddr(ap, info->base, info, info->port[i]);
->  	}
->  
->  	return ata_host_activate(host, ec->irq, ata_interrupt, 0,
+>  	sdev->manage_start_stop = 1;
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+As I noted when this first patch was posted...   this line of code 
+existed because the difference between hw-segments and phys-segments was 
+incredibly difficult to discern.  The names say basically the same thing 
+to me, and I could find no documentation explaining the difference?
+
+Does such documentation exist?  If not, can you please explain the 
+difference?
+
+Finally, some notification and coordination would have been helpful. 
+Commit 6c08772e49622e90d39903e7ff0be1a0f463ac86 appears to have been 
+missed, at the very least... or is it actually correct?
+
+Inquiring minds want to know, since I wasn't CC'd or kept in the loop :)
+
+	Jeff
+
+
