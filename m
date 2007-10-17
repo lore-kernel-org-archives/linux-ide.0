@@ -1,86 +1,69 @@
-From: MisterE <MisterE2002@zonnet.nl>
-Subject: Re[2]: Sata Sil3512 bug?;  Promise SATA300 TX4
-Date: Wed, 17 Oct 2007 14:39:29 +0200
-Message-ID: <135469746.20071017143929@zonnet.nl>
-References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info>
-Reply-To: MisterE <MisterE2002@zonnet.nl>
+From: Marcin Juszkiewicz <openembedded@haerwu.biz>
+Subject: Re-enabling Serial ATA ports possible?
+Date: Wed, 17 Oct 2007 14:38:04 +0200
+Message-ID: <200710171438.07058.openembedded@haerwu.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.publishnet.nl ([212.241.49.8]:1854 "EHLO smtp.pn.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754205AbXJQMf4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Oct 2007 08:35:56 -0400
-In-Reply-To: <47035355.2040405@lxnt.info>
+Received: from v813.rev.tld.pl ([195.149.226.213]:42353 "EHLO
+	smtp.host4.kei.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbXJQMpJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 08:45:09 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Sabourenkov <screwdriver@lxnt.info>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, jeff@garzik.orglinux-ide@vger.kernel.org
-
-Hello,
-
-Wednesday, October 3, 2007, 10:31:17 AM, you wrote:
-
-> Mikael Pettersson wrote:
-
->>>
->>> I'm thinking of replacing both 3512 controllers with a Promise SATA300
->>> TX4. Do you know if there are problems with this device?
->> 
->> (please don't top-post)
->> 
->> There are no known data-corruption issues with Promise SATA cards.
->> However, some of them, especially the 2nd generation SATA300 TX4,
->> are known to trigger intermittent error interrupts (that are dealt
->> with but may cause a speed reduction) in some systems. We're still
->> scratching our heads on that issue.
->> 
-
-> But see this thread:
-
-> http://marc.info/?l=linux-ide&m=119122463403033&w=2
-> http://www.spinics.net/lists/linux-ide/msg14868.html
-
-> Personally I would not recommend Promise SATA300 TX4 at the moment.
+To: linux-ide@vger.kernel.org
 
 
-After all the problems i had with the sweex 3512 cards i returned them
-to the shop and decided to buy a Sata300 TX4 (because the shop nearby
-had one. Unfortunately the shops in the region don't have Highpoints)
+Hi
 
-Things looked promising when i inserted the card in both Intel D815EEA
-motherboards. No problems detecting the hard drives (unlike with the 3512 cards).
-With the 3512 i had LOTS of error messages and corrupt data when writing to it.
-Using a separate videocard, instead of the onboard one, seemed to reduce the amount of errors.
+On my system (2.6.23-rc9) I have Serial-ATA DVD/RW drive connected 
+to sata_sil controller. Sometimes when there is a problem with CD
+or DVD disk controller shutdowns drive:
 
-But after some heavy reading/writing with the promise i got 2 errors. (see log file).
-But i did'nt find any corrupt files. I can not reproduce the error.
-I'm not sure if these are the "intermittent error interrupts" Mikael
-Pettersson mentioned?
+[53560.095573] cdrom: sr0: mrw address space DMA selected
+[53561.001946] ISO 9660 Extensions: Microsoft Joliet Level 3
+[53561.002777] ISOFS: changing to secondary root
+[53621.380238] ata6.00: exception Emask 0x10 SAct 0x0 SErr 0x90000 action 0x2
+[53621.380249] ata6.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+[53621.380252]          res 51/60:03:00:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
+[53621.380263] ata6: hard resetting port
+[53623.783961] ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[53642.595278] ata6.00: qc timeout (cmd 0xa1)
+[53642.595285] ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[53642.595288] ata6.00: revalidation failed (errno=-5)
+[53642.595292] ata6: failed to recover some devices, retrying in 5 secs
+[53645.092046] ata6: hard resetting port
+[53646.193870] ata6: SATA link down (SStatus 1 SControl 310)
+[53646.193881] ata6.00: limiting speed to UDMA/25:PIO3
+[53646.193884] ata6: failed to recover some devices, retrying in 5 secs
+[53648.690501] ata6: hard resetting port
+[53649.792323] ata6: SATA link down (SStatus 1 SControl 310)
+[53649.792333] ata6.00: disabled
+[53650.042442] ata6: EH pending after completion, repeating EH (cnt=4)
+[53650.042459] ata6: EH complete
+[53650.042512] sr 6:0:0:0: rejecting I/O to offline device
+[53650.042518] sr 6:0:0:0: rejecting I/O to offline device
+[53650.042522] sr 6:0:0:0: rejecting I/O to offline device
+[53650.042536] sr 6:0:0:0: rejecting I/O to offline device
+[53650.042632] ata6.00: detaching (SCSI 6:0:0:0)
 
-ps: as you can i see i got at the boot some errors from the boot disk
-(hda). I not sure what is wrong with it. Sometimes it produce these
-errors. Used a non-destructive read-write test with badblocks but no
-bad sectors found. I don't know if this could influence the sata controller.
+Is there a way to re-enable ata6.00 in other way then power down/power up
+whole machine? Looks like reboot is not a way to get it working again.
 
-Alexander Sabourenkov can you please tell me where i can find the
-"Bug is fixed in 2.6.23.1: sata_promise: port is slow to respond,
-reset failed" thread you mentioned?
-
-I also see that the driver is now at version 2.10. Is there something
-really critical changed? I've tried testing with Debian stable
-(2.6.18-4-686; sata_promise: 1.04) and with Debian Unstable
-(2.6.22-2-686; sata_promise: 2.07). 2.6.23 is not in the repositories
-yet.
-
-So basically the question is this. Can i trust the SATA300 TX4 or
-should i buy a Highpoint RocketRAID 1640/1740?. I can order such device
-online but i need to be sure that it works correctly :(
-
+Drive is found as:
+ 
+[   96.858283] ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   97.012480] ata6.00: ATAPI: TSSTcorpCD/DVDW SH-S183A, SB02, max UDMA/33
+[   97.012482] ata6.00: applying bridge limits
+[   97.169126] ata6.00: configured for UDMA/33
 
 -- 
-Best regards,
- MisterE                            mailto:MisterE2002@zonnet.nl
+JID: hrw-jabber.org
+OpenEmbedded developer/consultant
+
+         You can close your eyes to reality, but not to memories.
 
 
