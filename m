@@ -1,46 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_via refuses to detect one drive
-Date: Wed, 17 Oct 2007 21:31:55 +0100
-Message-ID: <20071017213155.2589bf8f@the-village.bc.nu>
-References: <47161F09.3040003@msgid.tls.msk.ru>
-	<20071017165007.77471e8d@the-village.bc.nu>
-	<471653C4.9090709@msgid.tls.msk.ru>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
+Date: Thu, 18 Oct 2007 00:40:21 +0400
+Message-ID: <47167335.1020903@ru.mvista.com>
+References: <200710142211.03382.marogge@onlinehome.de> <4714B1E6.9070308@rtr.ca> <200710170014.28037.bzolnier@gmail.com> <200710172115.13068.marogge@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56917 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760084AbXJQU31 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 16:29:27 -0400
-In-Reply-To: <471653C4.9090709@msgid.tls.msk.ru>
+Received: from h155.mvista.com ([63.81.120.155]:34856 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755448AbXJQUkJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Oct 2007 16:40:09 -0400
+In-Reply-To: <200710172115.13068.marogge@onlinehome.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-ide@vger.kernel.org
+To: Martin Rogge <marogge@onlinehome.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-> > This looks like both drives end up trying to be the slave ? Its certainly
-> > very vey confused at this point. Interesting it works with the BIOS doing
-> > the reset, wonder what the difference is.
+Hello.
+
+Martin Rogge wrote:
+
+>>Martin, could you run git-bisect (http://kerneltrap.org/node/11753 - sorry
+>>for not explaining the procudure myself but Linus did it really well)
+>>starting with:
+
+>>	git bisect good 688a87d145e04f6761c63e7f2e19fd9b3e4ca060
+>>	git bisect bad 826a1b6502d0d1d67fc41043fc831e90f2ef5835
+
+>>The "good" one is the last commit before cmd64x changes and the "bad" one
+>>is the first commit after them.  Since there is only 5 commits in between
+>>it should be really quick find the bad one (worst-case: 3
+>>recompiles/reboots).
 > 
-> Not only it works with BIOS, it also works with via82cxxx just fine.
-
-The via82cxxx driver doesn't go off and reset everything unless it gets
-bad error cases.
- 
-> > How are the drives jumpered and does it work with just one of the two
-> > present ?
 > 
-> That's an interesting question.  The machine is remote, and there's
-> no one on site who's able to check it.  I'll try to get reach of it,
-> hopefully it will be soon enough.  In any case, it looks like the
-> jumpers are OK, or else it shouldnt work with IDE module as well.
+> I'll do my best. I appear to have git 1.5.2.2 on my machine, but I've never 
+> used it. In the old days we used not to have such luxury!
 
-Maybe. But its useful to know and it helps narrow down the fault. I've no
-idea whether the problem is hardware or software. What I am sure of
-though is if the BIOS and old driver work we should be able to make the
-new one work. My first guess is still a driver bug, and second some kind
-of probing interaction. BIOSen usually use Hal's code so we've got a fair
-idea of what the BIOS will do.
+> Give me a few days. I shall report back. 
 
-Alan
+    BTW, can you try adding #define DEBUG to the driver meanwhile?..
+
+> cu Martin
+
+WBR, Sergei
