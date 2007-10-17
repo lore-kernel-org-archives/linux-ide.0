@@ -1,54 +1,53 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Anyone else out there have an ExpressCard to try?
-Date: Wed, 17 Oct 2007 12:04:14 -0400
-Message-ID: <4716327E.40903@rtr.ca>
+From: "Ip, Clarence" <CIP@harris.com>
+Subject: FW: LIBATA issue with SATA drive
+Date: Wed, 17 Oct 2007 12:13:17 -0400
+Message-ID: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2539 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935071AbXJQQER (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Oct 2007 12:04:17 -0400
+Received: from mlbe2k1.cs.myharris.net ([137.237.90.88]:16538 "EHLO
+	mlbe2k1.cs.myharris.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760069AbXJQQfk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 12:35:40 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: htejun@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-I have a Dell Inspiron 9400 with an external ExpressCard slot.
-I've also got a "Bytecc" 2-port eSATA ExpressCard-34 that identifies as:
+Hello Tejun,
 
- Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+I've CC'd the mailing list, but couldn't find Torsten's e-mail. Do you
+have any suggestions on where I should look for this problem? Did the
+boot-up log suggest anything to you?
 
-To get it to work with Linux on my Dell notebook,
-the pcihp_force=1 parameter is necessary for the pciehp module.
+- Clarence
 
-After that, it works great with libata and NCQ, of course,
-with R/W performance in the 40-60 Mbyte/sec range (depends upon the drive).
-Much better than with USB2 (28-30 Mbyte/sec).
 
-The problems are with PCIe hotplug.
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Wednesday, October 17, 2007 4:32 AM
+To: Ip, Clarence
+Subject: Re: LIBATA issue with SATA drive
 
-If the card is inserted prior to loading pci_hotplug + pciehp modules,
-then it is not detected upon modprobe of those modules.
-Removing and reinserting the card cures that.
+Ip, Clarence wrote:
+> Hello Tejun,
+> 
+> I'm using the 2.6.22 sources with a Sii3132 SATA controller and a
+> Seagate HDD. What I've noticed is that it often fails to boot with
+this
+> configuration. Warm boots appear to always fail while cold boots
+> (power-cycles) fail maybe 20%-50% of the time. Here's a log from my
+last
+> attempt:
 
-After a suspend/resume (RAM) cycle, card insertion/removal is no longer
-detected by pciehp, until doing:   rmmod pciehp; modprobe pciehp
-
-Apparently many (all?) Dell notebooks have this problem,
-because the ACPI BIOS lacks info/whatever for the ExpressCard slot.
-I'm wondering if other brands (or other Dells, even) have similar issues.
-
-So.. if you have one and ExpressCard slot and an ExpressCard,
-could you please try testing the above scenarios, and post a reply?
-
-In the reply, describe what works, what doesn't,
-and whether or not the pciehp=force parameter was required.
-
-On LKML, there is a patchset to fix the above issues,
-and if you have those problems then please try the patches
-and report back on that as well.
-
-   http://lkml.org/lkml/2007/10/16/465
+Hmmm... We had a similar report against -mm kernel but that case seemed
+like newly introduced with recent -mm changes.  Do you mind cc'ing the
+other reporter and linux-ide@vger.kernel.org mailing list?
 
 Thanks.
+
+-- 
+tejun
