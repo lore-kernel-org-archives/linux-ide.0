@@ -1,53 +1,39 @@
-From: "Ip, Clarence" <CIP@harris.com>
-Subject: FW: LIBATA issue with SATA drive
-Date: Wed, 17 Oct 2007 12:13:17 -0400
-Message-ID: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_via(?): cdrom is recognized as hard drive
+Date: Wed, 17 Oct 2007 17:58:25 +0100
+Message-ID: <20071017175825.1b0e0ecb@the-village.bc.nu>
+References: <47162BD8.1010109@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mlbe2k1.cs.myharris.net ([137.237.90.88]:16538 "EHLO
-	mlbe2k1.cs.myharris.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760069AbXJQQfk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 12:35:40 -0400
-Content-class: urn:content-classes:message
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51279 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754621AbXJQQzv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 12:55:51 -0400
+In-Reply-To: <47162BD8.1010109@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: linux-ide@vger.kernel.org
 
-Hello Tejun,
+On Wed, 17 Oct 2007 19:35:52 +0400
+Michael Tokarev <mjt@tls.msk.ru> wrote:
 
-I've CC'd the mailing list, but couldn't find Torsten's e-mail. Do you
-have any suggestions on where I should look for this problem? Did the
-boot-up log suggest anything to you?
-
-- Clarence
-
-
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Wednesday, October 17, 2007 4:32 AM
-To: Ip, Clarence
-Subject: Re: LIBATA issue with SATA drive
-
-Ip, Clarence wrote:
-> Hello Tejun,
+> And one more issue with my attempt to switch
+> from via82cxxx to pata_via.
 > 
-> I'm using the 2.6.22 sources with a Sii3132 SATA controller and a
-> Seagate HDD. What I've noticed is that it often fails to boot with
-this
-> configuration. Warm boots appear to always fail while cold boots
-> (power-cycles) fail maybe 20%-50% of the time. Here's a log from my
-last
-> attempt:
+> I noticied that on all machines I tried to convert,
+> CD-Rom devices are recognized as hard disks.
 
-Hmmm... We had a similar report against -mm kernel but that case seemed
-like newly introduced with recent -mm changes.  Do you mind cc'ing the
-other reporter and linux-ide@vger.kernel.org mailing list?
+Thats deeply weird.
 
-Thanks.
+> But with pata_via and 2.6.23, it's handled by sd_mod:
 
--- 
-tejun
+CD's are handled by sr_mod. I suspect this is actually arising out of the
+fact both devices seem to be falling over each other after the SRST.
+
+Can you stick all this in a bugzilla and assign it to me so it doesn't
+get lost.
+
+Alan
