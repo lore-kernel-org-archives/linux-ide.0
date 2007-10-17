@@ -1,72 +1,39 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: pata_via(?): cdrom is recognized as hard drive
-Date: Wed, 17 Oct 2007 19:35:52 +0400
-Message-ID: <47162BD8.1010109@msgid.tls.msk.ru>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_via refuses to detect one drive
+Date: Wed, 17 Oct 2007 16:50:07 +0100
+Message-ID: <20071017165007.77471e8d@the-village.bc.nu>
+References: <47161F09.3040003@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:24886 "EHLO hobbit.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759956AbXJQPfy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Oct 2007 11:35:54 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55947 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762452AbXJQPsG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 11:48:06 -0400
+In-Reply-To: <47161F09.3040003@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-ide@vger.kernel.org
 
-And one more issue with my attempt to switch
-from via82cxxx to pata_via.
+> Oct 17 18:30:59 linux kernel: ata2: port is slow to respond, please be patient (Status 0x80)
+> Oct 17 18:30:59 linux kernel: ata2: SRST failed (errno=-16)
 
-I noticied that on all machines I tried to convert,
-CD-Rom devices are recognized as hard disks.
+So it failed to reset and come back to sanity.
 
-With via82cxxx and ide-cd, it was like
-hdc: IDE cdrom model=FX4830T s/n=4JV6F7Q4 fw=8.01 udma5
+> Oct 17 18:30:59 linux kernel: ata2.01: ATAPI: FX4830T, R02E, max UDMA/33
+> Oct 17 18:30:59 linux kernel: ata2.01: configured for UDMA/33
+> Oct 17 18:30:59 linux kernel: scsi 0:0:0:0: Direct-Access     ATA      Hitachi HDS72168 P21O PQ: 0 ANSI: 5
+> Oct 17 18:30:59 linux kernel: ata2.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+> Oct 17 18:30:59 linux kernel: ata2.01: cmd a0/00:00:00:00:20/00:00:00:00:00/b0 tag 0 cdb 0x12 data 36 in
+> Oct 17 18:30:59 linux kernel:          res 00/00:00:00:00:00/00:00:00:00:00/00 Emask 0x2 (HSM violation)
 
-But with pata_via and 2.6.23, it's handled by sd_mod:
+This looks like both drives end up trying to be the slave ? Its certainly
+very vey confused at this point. Interesting it works with the BIOS doing
+the reset, wonder what the difference is.
 
-# ls /sys/block
-sda/  sdb/  sdc/  sdd/
-# cat /sys/block/sdc/removable
-0
-# cat /sys/block/sdc/device/type
-0
-# echo "'$(cat /sys/block/sdc/device/model)'"
- '                '
-# echo "'$(cat /sys/block/sdc/device/vendor)'"
-'        '
+How are the drives jumpered and does it work with just one of the two
+present ?
 
-# hdparm -i /dev/sdc
-
-/dev/sdc:
-
- Model=FX4830T                                 , FwRev=R02E    , SerialNo=
- Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
- RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
- BuffType=unknown, BuffSize=128kB, MaxMultSect=0
- (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4
- DMA modes:  sdma0 sdma1 sdma2 mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 *udma2
- AdvancedPM=no
-
- * signifies the current active mode
-
-
-Is it how the things supposed to be, or is something wrong with
-the detection?  Note that this happens on several machines,
-however all of them so far has via82cxxx controller:
-
-0000:00:11.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
-(VT8633 chipset)
-
-(I use pata_via driver on a home machine for a long time, with another
-controller (CN700/VN800/P4M800CE/Pro chipset)), and everything there
-works as expected, since early pata days).
-
-2.6.20, 2.6.22, 2.6.23 behaves the same.
-
-Thanks.
-
-/mjt
+Alan
