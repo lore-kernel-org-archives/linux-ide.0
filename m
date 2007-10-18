@@ -1,38 +1,76 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] pata_cs5536.c: fix array overrun
-Date: Thu, 18 Oct 2007 12:51:32 +0200
-Message-ID: <20071018105132.GI3778@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Inquiry data and emulated SG devices
+Date: Thu, 18 Oct 2007 06:57:35 -0400
+Message-ID: <1192705055.13229.3.camel@localhost.localdomain>
+References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
+	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:44751 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764462AbXJRKvE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 06:51:04 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4716B786.80804@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Mathieu Fluhr <mfluhr@nero.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fixes an obvious array overrun spotted by the Coverity 
-checker.
+On Wed, 2007-10-17 at 21:31 -0400, Jeff Garzik wrote:
+> Robert Hancock wrote:
+> > This doesn't seem a very reliable way to identify an IDE device, as all
+> > that 0 means is that the device does not claim conformance to any
+> > standard. I would think it would be legitimate for an IDE device to put
+> > a value like 5 in there as well, if it complies with SPC-4..
+> 
+> Via the this-doesnt-really-matter-but-it-should-be-noted department:
+> 
+> According to the latest on t10.org, MMC retroactively permitted SCSI 
+> version to be zero, for MMC-compliant USB and ATAPI devices.
+> 
+> 
+> > In the case of libata though, that appears to be due to this code in
+> > drivers/ata/libata-scsi.c:
+> > 
+> >     /* ATAPI devices typically report zero for their SCSI version,
+> >      * and sometimes deviate from the spec WRT response data
+> >      * format.  If SCSI version is reported as zero like normal,
+> >      * then we make the following fixups:  1) Fake MMC-5 version,
+> >      * to indicate to the Linux scsi midlayer this is a modern
+> >      * device.  2) Ensure response data format / ATAPI information
+> >      * are always correct.
+> >      */
+> >             if (buf[2] == 0) {
+> >                 buf[2] = 0x5;
+> >                 buf[3] = 0x32;
+> >             }
+> > 
+> > This technically seems to go against what the SCSI/ATA Translation (SAT)
+> > spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
+> > ATA PACKET Command feature set to pass all INQUIRY commands and
+> > parameter data to the ATAPI device without altering the INQUIRY
+> > commands or the parameter data." However, it might realistically be
+> > needed if the SCSI layer in the kernel has problems with a device
+> > indicating it supports no SCSI version..
+> 
+> The above tweak is entirely software->software communication...  as the 
+> comment you quoted notes, it's just a signal to the SCSI midlayer.
+> 
+> At the moment, the SCSI midlayer assumes any device that reports scsi 
+> version as less than 2 is forced to SCSI version 2.  Ultimately that's 
+> incorrect behavior for all ATAPI devices (and later MMC revisions).
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Actually, no we don't.  SCSI level 0 means "no compliant standard
+specified".  We're quite careful if we see this not to do anything that
+might upset the device ... SCSI level 0 is a fairly usual thing to see
+on USB devices, which is why we process it differently.
 
----
-9101f2e2691094244bd147a05225f6c84bdf7404 
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 53070f6..00039a1 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -214,7 +214,7 @@ static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 		cs5536_read(pdev, DTC, &dtc);
- 
- 		dtc &= ~(IDE_DRV_MASK << dshift);
--		dtc |= mwdma_timings[mode] << dshift;
-+		dtc |= mwdma_timings[mode - XFER_MW_DMA_0] << dshift;
- 
- 		cs5536_write(pdev, DTC, dtc);
- 	}
+> At the time, libata simply worked around this SCSI buglet in its own 
+> code, since that was easier than auditing all SCSI code paths to ensure 
+> new ATAPI/USB MMC logic does not break ancient devices.
+> 
+> But if someone is motivated enough to revisit this...
+
+Like I said, it should all be fixed ... if you try it.
+
+James
+
 
