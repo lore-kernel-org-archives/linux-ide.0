@@ -1,76 +1,110 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Thu, 18 Oct 2007 06:57:35 -0400
-Message-ID: <1192705055.13229.3.camel@localhost.localdomain>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
-	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: ATA_PIIX - soft resetting port, port is slow to respond, machine
+ "freezes" for a few seconds
+Date: Thu, 18 Oct 2007 12:57:36 +0200
+Message-ID: <47173C20.5050606@wpkg.org>
+References: <46D94BBB.9080403@wpkg.org> <6b9952490709010500q2a93156cq399434a3a44a2d25@mail.gmail.com> <46D95A6F.6060808@wpkg.org> <46E0B4D2.4030600@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4716B786.80804@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, Mathieu Fluhr <mfluhr@nero.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.syneticon.net ([213.239.212.131]:43199 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761710AbXJRK5q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 06:57:46 -0400
+In-Reply-To: <46E0B4D2.4030600@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Joris <joris@v5.be>, Linux IDE <linux-ide@vger.kernel.org>
 
-On Wed, 2007-10-17 at 21:31 -0400, Jeff Garzik wrote:
-> Robert Hancock wrote:
-> > This doesn't seem a very reliable way to identify an IDE device, as all
-> > that 0 means is that the device does not claim conformance to any
-> > standard. I would think it would be legitimate for an IDE device to put
-> > a value like 5 in there as well, if it complies with SPC-4..
+Tejun Heo schrieb:
+> Tomasz Chmielewski wrote:
+>> Joris schrieb:
+>>> Hello Tomasz,
+>>>
+>>>
+>>> This appears remarkably simelar to what I'm experiencing, altough I'm
+>>> getting that on sata ports.
+>>> I'm currently at a loss on what caused this, but if there's two of
+>>> us... ;-)
+>>> See: http://marc.info/?l=linux-ide&m=118812690407577&w=2
+>>>
+>>> What kind of hardware are you running?
+>> It's a dual core Xeon.
+>>
+>> Root filesystem starts off a 2 GB Transcend IDE flash disk, and there is
+>> a 4-disk RAID-10 array behind a hardware RAID, with LVM on it.
+>>
+>> I noticed it doesn't soft reset anymore once the kernel said:
+>>
+>> ata1.00: limiting speed to MWDMA1:PIO4
 > 
-> Via the this-doesnt-really-matter-but-it-should-be-noted department:
-> 
-> According to the latest on t10.org, MMC retroactively permitted SCSI 
-> version to be zero, for MMC-compliant USB and ATAPI devices.
-> 
-> 
-> > In the case of libata though, that appears to be due to this code in
-> > drivers/ata/libata-scsi.c:
-> > 
-> >     /* ATAPI devices typically report zero for their SCSI version,
-> >      * and sometimes deviate from the spec WRT response data
-> >      * format.  If SCSI version is reported as zero like normal,
-> >      * then we make the following fixups:  1) Fake MMC-5 version,
-> >      * to indicate to the Linux scsi midlayer this is a modern
-> >      * device.  2) Ensure response data format / ATAPI information
-> >      * are always correct.
-> >      */
-> >             if (buf[2] == 0) {
-> >                 buf[2] = 0x5;
-> >                 buf[3] = 0x32;
-> >             }
-> > 
-> > This technically seems to go against what the SCSI/ATA Translation (SAT)
-> > spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
-> > ATA PACKET Command feature set to pass all INQUIRY commands and
-> > parameter data to the ATAPI device without altering the INQUIRY
-> > commands or the parameter data." However, it might realistically be
-> > needed if the SCSI layer in the kernel has problems with a device
-> > indicating it supports no SCSI version..
-> 
-> The above tweak is entirely software->software communication...  as the 
-> comment you quoted notes, it's just a signal to the SCSI midlayer.
-> 
-> At the moment, the SCSI midlayer assumes any device that reports scsi 
-> version as less than 2 is forced to SCSI version 2.  Ultimately that's 
-> incorrect behavior for all ATAPI devices (and later MMC revisions).
+> Aieee... MWDMA2 brokenness again.  cc'ing Jeff and Alan for the record.
 
-Actually, no we don't.  SCSI level 0 means "no compliant standard
-specified".  We're quite careful if we see this not to do anything that
-might upset the device ... SCSI level 0 is a fairly usual thing to see
-on USB devices, which is why we process it differently.
+BTW, is there a way to force such a device to work in MWDMA1? So that I 
+could add it to the startup scripts?
 
-> At the time, libata simply worked around this SCSI buglet in its own 
-> code, since that was easier than auditing all SCSI code paths to ensure 
-> new ATAPI/USB MMC logic does not break ancient devices.
-> 
-> But if someone is motivated enough to revisit this...
+It's the -X option to hdparm, right? However, I can't get it to work.
 
-Like I said, it should all be fixed ... if you try it.
+This is a part of my hdparm -I output:
 
-James
+Capabilities:
+         LBA, IORDY(can be disabled)
+         Buffer size: 2.0kB      bytes avail on r/w long: 4
+         Standby timer values: spec'd by Vendor
+         R/W multiple sector transfer: Max = 1   Current = 1
+         DMA: not supported
+         PIO: pio0 pio1 pio2 pio3 pio4
+              Cycle time: no flow control=120ns  IORDY flow control=120ns
 
 
+And this is a part of dmesg output when the machine seems to freeze as 
+it resets the device:
+
+(...)
+ata1: soft resetting port
+ata1.00: configured for MWDMA2
+ata1: EH complete
+sd 0:0:0:0: [sda] 3985632 512-byte hardware sectors (2041 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+ata1.00: limiting speed to MWDMA1:PIO4
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: cmd ca/00:00:87:21:1a/00:00:00:00:00/e0 tag 0 cdb 0x0 data 
+131072 out
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1: port is slow to respond, please be patient (Status 0xd0)
+ata1: device not ready (errno=-16), forcing hardreset
+ata1: soft resetting port
+ata1.00: configured for MWDMA1
+ata1: EH complete
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
+support DPO or FUA
+sd 0:0:0:0: [sda] 3985632 512-byte hardware sectors (2041 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
+support DPO or FUA
+
+
+However:
+
+# hdparm -X mdma1 /dev/sda
+
+/dev/sda:
+  setting xfermode to 33 (multiword DMA mode1)
+  HDIO_DRIVE_CMD(setxfermode) failed: Input/output error
+
+
+# hdparm -X 12 /dev/sda
+
+/dev/sda:
+  setting xfermode to 12 (PIO flow control mode4)
+  HDIO_DRIVE_CMD(setxfermode) failed: Input/output error
+
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
