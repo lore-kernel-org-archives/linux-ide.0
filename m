@@ -1,63 +1,126 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: timeouts with SiI 4726/3531
-Date: Thu, 18 Oct 2007 16:13:41 +0900
-Message-ID: <471707A5.1000004@gmail.com>
-References: <87lkaf3moh.fsf@wyrd.be> <87lkadsab5.fsf@wyrd.be>	<470D93B2.9000603@gmail.com> <87bqb5wh29.fsf@wyrd.be>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: seagate disks on sil3114 - slow?
+Date: Thu, 18 Oct 2007 08:52:26 +0000
+Message-ID: <1192697546.5720.51.camel@localhost>
+References: <1192683290.5720.38.camel@localhost>
+	 <4716EA25.7060205@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:7704 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbXJRHNt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 03:13:49 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so80663rvb
-        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 00:13:49 -0700 (PDT)
-In-Reply-To: <87bqb5wh29.fsf@wyrd.be>
+Received: from nn7.de ([85.214.94.156]:39201 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932814AbXJRJB4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Oct 2007 05:01:56 -0400
+In-Reply-To: <4716EA25.7060205@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lieven Marchand <mal@wyrd.be>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
-
-Lieven Marchand wrote:
-> I have an external enclosure based on the SiI 4726 connected to the
-> 3531 controller. It mostly works on a Debian 2.6.22 kernel patched
-> with libata-tj-2.6.22.1-20070808. But occasionally under high load
-> there are timeouts. Usually, the system recovers without a problem but
-> once a disk wasn't found after the reset. It took a power off/power on
-> of the device.
+On Thu, 2007-10-18 at 01:07 -0400, Jeff Garzik wrote:
+> Soeren Sonnenburg wrote:
+> > Dear all,
+> > 
+> > I just now realize that all disk i.o. on my machine is quite slow
+> > compared with the pata disks I had before. Furthermore I recognized that
+> > I only have seagates (ST3400832AS,ST3400620AS,ST3750640AS,ST3750640AS)
+> > connected to a sil3114 controller.
+> > 
+> > Being on kernel 2.6.23.1 and stumbling across
+> > http://home-tj.org/wiki/index.php/Sil_m15w I am now wondering if this
+> > patch made it already in kernel (or when it will make it if it is not
+> > yet in/why never).
 > 
-> Another weird problem is that the SiI 4726 software doesn't find its
-> controller, although the config disk is found by the system. I was
-> going to use the device in JBOD mode anyway so this isn't a big deal.
+> Are you sure you have a 3114?  the mod15write isn't applied to that chip.
+> Does your dmesg say "applying Seagate errata fix (mod15write workaround)" ?
 
-It doesn't work (yet).  The config disk is very quirky and the 4726
-manager program needs some changes to work with libata-pmp support.
+At least lspci / dmesg indicates I have a 3114 ... but maybe the problem
+is something else. Is there a raw device speed, readonly benchmark to
+check whether things are as expected?
 
-> Thanks for a great job. It's amazing how well this works already. I
-> see on the SiI site they distribute a kernel module for Suse/Redhat
-> for the 3531. Is the source available for it and does it work better
-> with it?
+Soeren
 
-That driver is closed source and I don't know whether it works well or
-not.  Never tried it.
+- lspci
 
-> I haven't tested the disks out of the enclosure so I don't know if
-> they work well with NCQ without PMP. I can't move other disks to the
-> enclosure to test because all of the disks internal in the machine are
-> in an LVM needed to boot.
-> 
-> Most of the time there's just the timeout which is bad for performance
-> but occasionally one of the disks doesn't come up and then I have to
-> rebuild the array.
+00:0e.0 RAID bus controller: Silicon Image, Inc. SiI 3114
+[SATALink/SATARaid] Serial ATA Controller (rev 02)
 
-Can you please take the drive out of the enclosure and connect directly
-to the board and put it under stress test?  We need to determine whether
-we need to blacklist NCQ for the drive or not.
+00:0e.0 0104: 1095:3114 (rev 02)
 
-Thanks.
-
--- 
-tejun
+- dmesg
+sata_sil 0000:00:0e.0: version 2.3
+ACPI: PCI Interrupt 0000:00:0e.0[A] -> GSI 17 (level, low) -> IRQ 17
+sata_sil 0000:00:0e.0: Applying R_ERR on DMA activate FIS errata fix
+scsi3 : sata_sil
+scsi4 : sata_sil
+scsi5 : sata_sil
+scsi6 : sata_sil
+ata4: SATA max UDMA/100 cmd 0xf882e080 ctl 0xf882e08a bmdma 0xf882e000 irq 17
+ata5: SATA max UDMA/100 cmd 0xf882e0c0 ctl 0xf882e0ca bmdma 0xf882e008 irq 17
+ata6: SATA max UDMA/100 cmd 0xf882e280 ctl 0xf882e28a bmdma 0xf882e200 irq 17
+ata7: SATA max UDMA/100 cmd 0xf882e2c0 ctl 0xf882e2ca bmdma 0xf882e208 irq 17
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata4.00: ATA-7: ST3400832AS, 3.01, max UDMA/133
+ata4.00: 781422768 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata4.00: configured for UDMA/100
+ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata5.00: ATA-7: ST3400620AS, 3.AAE, max UDMA/133
+ata5.00: 781422768 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata5.00: configured for UDMA/100
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: ATA-7: ST3750640AS, 3.AAE, max UDMA/133
+ata6.00: 1465149168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata6.00: configured for UDMA/100
+ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata7.00: ATA-7: ST3750640AS, 3.AAC, max UDMA/133
+ata7.00: 1465149168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata7.00: configured for UDMA/100
+scsi 3:0:0:0: Direct-Access     ATA      ST3400832AS      3.01 PQ: 0 ANSI: 5
+sd 3:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+sd 3:0:0:0: [sda] Write Protect is off
+sd 3:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 3:0:0:0: [sda] 781422768 512-byte hardware sectors (400088 MB)
+sd 3:0:0:0: [sda] Write Protect is off
+sd 3:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 3:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sda: unknown partition table
+sd 3:0:0:0: [sda] Attached SCSI disk
+sd 3:0:0:0: Attached scsi generic sg0 type 0
+scsi 4:0:0:0: Direct-Access     ATA      ST3400620AS      3.AA PQ: 0 ANSI: 5
+sd 4:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 4:0:0:0: [sdb] Write Protect is off
+sd 4:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 4:0:0:0: [sdb] 781422768 512-byte hardware sectors (400088 MB)
+sd 4:0:0:0: [sdb] Write Protect is off
+sd 4:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: unknown partition table
+sd 4:0:0:0: [sdb] Attached SCSI disk
+sd 4:0:0:0: Attached scsi generic sg1 type 0
+scsi 5:0:0:0: Direct-Access     ATA      ST3750640AS      3.AA PQ: 0 ANSI: 5
+sd 5:0:0:0: [sdc] 1465149168 512-byte hardware sectors (750156 MB)
+sd 5:0:0:0: [sdc] Write Protect is off
+sd 5:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 5:0:0:0: [sdc] 1465149168 512-byte hardware sectors (750156 MB)
+sd 5:0:0:0: [sdc] Write Protect is off
+sd 5:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdc: unknown partition table
+sd 5:0:0:0: [sdc] Attached SCSI disk
+sd 5:0:0:0: Attached scsi generic sg2 type 0
+scsi 6:0:0:0: Direct-Access     ATA      ST3750640AS      3.AA PQ: 0 ANSI: 5
+sd 6:0:0:0: [sdd] 1465149168 512-byte hardware sectors (750156 MB)
+sd 6:0:0:0: [sdd] Write Protect is off
+sd 6:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 6:0:0:0: [sdd] 1465149168 512-byte hardware sectors (750156 MB)
+sd 6:0:0:0: [sdd] Write Protect is off
+sd 6:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+sd 6:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdd: unknown partition table
+sd 6:0:0:0: [sdd] Attached SCSI disk
+sd 6:0:0:0: Attached scsi generic sg3 type 0
