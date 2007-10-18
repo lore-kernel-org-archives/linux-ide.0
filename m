@@ -1,43 +1,73 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 2/3] ide: Fix siimage driver accessing beyond array
-	boundary
-Date: Thu, 18 Oct 2007 22:16:04 +1000
-Message-ID: <1192709764.12879.66.camel@pasglop>
-References: <20071018005623.153C7DDEBD@ozlabs.org>
-	 <47174B4A.3000006@ru.mvista.com>
-Reply-To: benh@kernel.crashing.org
+From: Mathieu Fluhr <mfluhr@nero.com>
+Subject: Re: Inquiry data and emulated SG devices
+Date: Thu, 18 Oct 2007 14:44:48 +0200
+Message-ID: <1192711488.3254.11.camel@de-c-l-110.nero-de.internal>
+References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
+	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
+	 <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
+	 <4717302D.4050107@garzik.org>
+	 <1192708650.3266.38.camel@de-c-l-110.nero-de.internal>
+	 <1192709602.13229.27.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33548 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755952AbXJRMQV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Oct 2007 08:16:21 -0400
-In-Reply-To: <47174B4A.3000006@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1192709602.13229.27.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-
-On Thu, 2007-10-18 at 16:02 +0400, Sergei Shtylyov wrote:
-> Benjamin Herrenschmidt wrote:
+On Thu, 2007-10-18 at 08:13 -0400, James Bottomley wrote:
+> On Thu, 2007-10-18 at 13:57 +0200, Mathieu Fluhr wrote:
+> > On Thu, 2007-10-18 at 06:06 -0400, Jeff Garzik wrote:
+> > 
+> > > The SCSI midlayer makes a lot of "if scsi version <= 2" choices.  In the 
+> > > case of ATAPI, we do not want to force ATAPI down the path of ancient 
+> > > SCSI devices, as this disables some MMC features that modern ATAPI 
+> > > devices support.
+> > 
+> > If I fully understand your point, if this faking code wasn't present,
+> > and if the inquiry data was left as it is, all modern ATAPI devices
+> > would be considered as really old SCSI devices. Am I right?
 > 
-> > The siimage use an incorrect construct to access the other drive
-> > of a pair, causing it to access beyond an array boundary on non-0
-> > interfaces. This fixes it by using the new ide_get_paired_drive()
-> > hepler instead.
+> Not really.  Firstly, a lot of ATAPI devices report the correct
+> compliance level and secondly, the consequence of reporting no
+> compliance (level 0) is that the mid layer will be very careful to use
+> the most minimal command set it can (the usual consequence of sending a
+> USB device a command it doesn't understand is to have it crash).
 > 
-> > Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+
+Ok, then, what about what the standard is saying regarding the ANSI
+version field? Quoting to the latest MtFuji draft (Section 17.7.1):
+ "The ANSI Version field shall contain a non-zero value to comply with 
+  this version of the Specification for a SCSI logical unit or zero for
+  an ATAPI logical unit."
+
+and this is exactly how we see that the logical unit is a real SCSI one
+or an ATAPI one.
+
+> However, this will have no effect for at least CDs:  The sr driver is
+> only interested in the MMC compliance level not the SCSI compliance
+> level.
+
+We are not using the sr driver to perform our SCSI commands, as it is
+filtering which CDB is allowed and which isn't. As we have some
+vendor-specific SCSI commands (like the one for changing booktype), we
+are using the sg driver to be able to use them.
+
+
+
+> > As far as I saw in libata-scsi.c there a SCSI-to-ATAPI and ATAPI-to-SCSI
+> > translator that automatically transform the command sent... Am I also
+> > right on this point?
 > 
->     Please update the driver version in the driver's heading comment. Otherwise
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> The former only, I believe.
 
-I don't believe much in driver versions in tree... the kernel version is
-what matter... Bart, what's your stance there ?
+Absolutly... but if the inquiry data buffer gets modified by the
+midlayer, after that I am not able anymore to setup correctly the
+commands for the _real_ interface. (once again, the blank command
+example).
 
-Ben.
-
+Mathieu
 
