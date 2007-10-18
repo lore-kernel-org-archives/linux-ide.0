@@ -1,70 +1,60 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: FW: LIBATA issue with SATA drive
-Date: Thu, 18 Oct 2007 13:09:33 +0900
-Message-ID: <4716DC7D.6050007@gmail.com>
-References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: [PATCH #upstream 1/2] libata: move command post processing to
+ __ata_qc_complete()
+Date: Wed, 17 Oct 2007 22:55:02 -0500 (CDT)
+Message-ID: <Pine.LNX.4.63.0710172253210.2168@butters.phys.uwm.edu>
+References: <20071012115631.GA11510@htj.dyndns.org> <470F64D7.9040604@garzik.org>
+ <4710C39E.7060503@gmail.com> <4716B579.7070005@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:64149 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755768AbXJREJk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 00:09:40 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so44379rvb
-        for <linux-ide@vger.kernel.org>; Wed, 17 Oct 2007 21:09:40 -0700 (PDT)
-In-Reply-To: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
+Received: from butters.phys.uwm.edu ([129.89.61.125]:54191 "EHLO
+	butters.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752291AbXJREv6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 00:51:58 -0400
+In-Reply-To: <4716B579.7070005@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Ip, Clarence" <CIP@harris.com>
-Cc: linux-ide@vger.kernel.org, just.for.lkml@googlemail.com, jens.axboe@oracle.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, andrew@ishiboo.com
 
-Hello, all.
+>>> BTW, while doing the TEST UNIT READY emulation patch for ATA (recently
+>>> withdrawn from libata-dev.git#upstream), I found a problem with the
+>>> interface that was difficult to get around:  TEST UNIT READY simulation
+>>> code really wants to look at the result TF of CHECK POWER MODE, even if
+>>> ATA_ERR is asserted, before determining whether or not to call that
+>>> command an error.
+>>> 
+>>> Maybe the EH scheduling could be moved until after ->complete_fn, to
+>>> permit ->complete_fn users to manipulate qc->err_mask etc.?
+>> 
+>> Yeah, right.  Device error is a special case.  In many cases, devices
+>> can operate without any problem after asserting error and for some
+>> commands error is used to signal certain conditions.  I think the least
+>> intrusive way would be a qc flag - ATA_QCFLAG_ALLOW_DEVERR, maybe.
+>> Also, I'm not sure whether EH should kick in when passthru commands fail
+>> with a device error.  Maybe libata should just report the error to the
+>> issuer and continue operation?
+>
+> Good point and agreed -- I definitely think passthru commands want device 
+> errors immediately.
+>
+> That vastly increases the utility of passthru to be used in test suites 
+> and stuff, where you know a lot of operations should fail, by design. 
+> (i.e. intentionally submitting an invalid command, to test that 'command 
+> aborted' is returned)
 
-Torsten, Clarence is reporting similar problem on 2.6.22.  The original
-message follows.
+Absolutely!  Speaking as an 'application programmer', much of the utility 
+of passthru is lost if the device errors are not immediately returned to 
+the caller.
 
-> I'm using the 2.6.22 sources with a Sii3132 SATA controller and a Seagate HDD.
-> What I've noticed is that it often fails to boot with this configuration.
-> Warm boots appear to always fail while cold boots (power-cycles) fail maybe
-> 20%-50% of the time. Here's a log from my last attempt:
-> 
-> Loading iSCSI transport class v2.0-724.
-> PCI: Enabling device 0000:01:00.0 (0000 -> 0003)
-> scsi0 : sata_sil24
-> scsi1 : sata_sil24
-> ata1: SATA max UDMA/100 cmd 0xe1258000 ctl 0x00000000 bmdma 0x00000000 irq 0
-> ata2: SATA max UDMA/100 cmd 0xe125a000 ctl 0x00000000 bmdma 0x00000000 irq 0
-> ata1: SATA link down (SStatus 0 SControl 0)
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-> ata2.00: qc timeout (cmd 0xec)
-> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata2: failed to recover some devices, retrying in 5 secs
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 0)
-> ata2.00: qc timeout (cmd 0xec)
-> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata2: limiting SATA link speed to 1.5 Gbps
-> ata2.00: limiting speed to UDMA7:PIO5
-> ata2: failed to recover some devices, retrying in 5 secs
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-> ata2.00: qc timeout (cmd 0xec)
-> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> ata2: failed to recover some devices, retrying in 5 secs
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-> ata2: EH pending after completion, repeating EH (cnt=4)
-> i2c /dev entries driver
-> IBM IIC driver v2.1
-> 
-> If the boot succeeds, I have no further problems with HDD access.
-> I also did not see this problem with the 2.6.17 kernel. Do you have
-> any ideas as to what may be happening? We're running on a PPC440SPE
-> processor.
-> 
-> Thanks in advance, 
+Cheers,
+ 	Bruce
 
-The symptom seems very similar to yours but the kernel is 2.6.22 which
-doesn't have the SG change which you found out to be broken.  Can you
-update us on how the testing of patched kernel went?
 
--- 
-tejun
+
+
+>
+> 	Jeff
+>
+>
