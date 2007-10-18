@@ -1,73 +1,131 @@
-From: Mathieu Fluhr <mfluhr@nero.com>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Thu, 18 Oct 2007 14:44:48 +0200
-Message-ID: <1192711488.3254.11.camel@de-c-l-110.nero-de.internal>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
-	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
-	 <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
-	 <4717302D.4050107@garzik.org>
-	 <1192708650.3266.38.camel@de-c-l-110.nero-de.internal>
-	 <1192709602.13229.27.camel@localhost.localdomain>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/12] ide-disk: merge LBA28 and LBA48 Host Protected Area
+ support code
+Date: Thu, 18 Oct 2007 16:59:19 +0400
+Message-ID: <471758A7.90402@ru.mvista.com>
+References: <200710082313.39894.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1192709602.13229.27.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:43019 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1762954AbXJRM7I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Oct 2007 08:59:08 -0400
+In-Reply-To: <200710082313.39894.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 2007-10-18 at 08:13 -0400, James Bottomley wrote:
-> On Thu, 2007-10-18 at 13:57 +0200, Mathieu Fluhr wrote:
-> > On Thu, 2007-10-18 at 06:06 -0400, Jeff Garzik wrote:
-> > 
-> > > The SCSI midlayer makes a lot of "if scsi version <= 2" choices.  In the 
-> > > case of ATAPI, we do not want to force ATAPI down the path of ancient 
-> > > SCSI devices, as this disables some MMC features that modern ATAPI 
-> > > devices support.
-> > 
-> > If I fully understand your point, if this faking code wasn't present,
-> > and if the inquiry data was left as it is, all modern ATAPI devices
-> > would be considered as really old SCSI devices. Am I right?
-> 
-> Not really.  Firstly, a lot of ATAPI devices report the correct
-> compliance level and secondly, the consequence of reporting no
-> compliance (level 0) is that the mid layer will be very careful to use
-> the most minimal command set it can (the usual consequence of sending a
-> USB device a command it doesn't understand is to have it crash).
-> 
+Hello.
 
-Ok, then, what about what the standard is saying regarding the ANSI
-version field? Quoting to the latest MtFuji draft (Section 17.7.1):
- "The ANSI Version field shall contain a non-zero value to comply with 
-  this version of the Specification for a SCSI logical unit or zero for
-  an ATAPI logical unit."
+Bartlomiej Zolnierkiewicz wrote:
 
-and this is exactly how we see that the logical unit is a real SCSI one
-or an ATAPI one.
+> * Merge idedisk_{read_native,set}_max_address_ext() into
+>   idedisk_{read_native,set}_max_address().
 
-> However, this will have no effect for at least CDs:  The sr driver is
-> only interested in the MMC compliance level not the SCSI compliance
-> level.
+> There should be no functionality changes caused by this patch.
 
-We are not using the sr driver to perform our SCSI commands, as it is
-filtering which CDB is allowed and which isn't. As we have some
-vendor-specific SCSI commands (like the one for changing booktype), we
-are using the sg driver to be able to use them.
+    This is unfortunately not achieved...
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+    No cookie this time. :-)
 
-> > As far as I saw in libata-scsi.c there a SCSI-to-ATAPI and ATAPI-to-SCSI
-> > translator that automatically transform the command sent... Am I also
-> > right on this point?
-> 
-> The former only, I believe.
+> Index: b/drivers/ide/ide-disk.c
+> ===================================================================
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+[...]
+> @@ -350,31 +353,12 @@ static unsigned long idedisk_read_native
+>  
+>  	/* if OK, compute maximum address value */
+>  	if ((tf->command & 0x01) == 0) {
+> -		addr = ((tf->device & 0xf) << 24) |
+> -		       (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+> -		addr++;	/* since the return value is (maxlba - 1), we add 1 */
 
-Absolutly... but if the inquiry data buffer gets modified by the
-midlayer, after that I am not able anymore to setup correctly the
-commands for the _real_ interface. (once again, the blank command
-example).
+    Actually, the return value is just maxlba (which is *not* the same as 
+capacity).
 
-Mathieu
+> -	}
+> -	return addr;
+> -}
+> -
+> -static unsigned long long idedisk_read_native_max_address_ext(ide_drive_t *drive)
+> -{
+> -	ide_task_t args;
+> -	struct ide_taskfile *tf = &args.tf;
+> -	unsigned long long addr = 0;
+> -
+> -	/* Create IDE/ATA command request structure */
+> -	memset(&args, 0, sizeof(ide_task_t));
+> -	tf->device  = ATA_LBA;
+> -	tf->command = WIN_READ_NATIVE_MAX_EXT;
+> -	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+> -	args.handler				= &task_no_data_intr;
+> -        /* submit command request */
+> -        ide_raw_taskfile(drive, &args, NULL);
+> -
+> -	/* if OK, compute maximum address value */
+> -	if ((tf->command & 0x01) == 0) {
+>  		u32 high, low;
+
+    No newline after declaration block.  Well, I see that it's been this way 
+before the patch but it doesn't have to when this code has been already touched...
+
+> +		if (lba48)
+> +			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+> +				tf->hob_lbal;
+> +		else
+> +			high = tf->device & 0xf;
+>  		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
+
+    Wait, you've just properly calculated 'high'!  And now LBA28 variant is 
+borken. :-|
+
+>  		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+>  		addr = ((__u64)high << 24) | low;
+> @@ -387,38 +371,11 @@ static unsigned long long idedisk_read_n
+
+[...]
+
+> @@ -438,7 +400,11 @@ static unsigned long long idedisk_set_ma
+>  	/* if OK, compute maximum address value */
+>  	if ((tf->command & 0x01) == 0) {
+>  		u32 high, low;
+
+   Again no newline after declaration...
+
+> -		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
+> +		if (lba48)
+> +			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+> +				tf->hob_lbal;
+> +		else
+> +			high = tf->device & 0xf;
+>  		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+>  		addr_set = ((__u64)high << 24) | low;
+>  		addr_set++;
+
+    BTW, haven't you noticed that LBA readback code is duplicate? It just asks 
+to be put into a separate function, like:
+
+static u64 ide_read_lba(struct ide_taskfile *tf)
+{
+	if (!(tf->command & 0x01)) {
+		u32 high, low;
+
+		if (lba48)
+			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+				tf->hob_lbal;
+		else
+			high = tf->device & 0xf;
+		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+		return (((__u64)high << 24) | low) + 1;
+	} else
+		return 0;
+}
+
+MBR, Sergei
 
