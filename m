@@ -1,67 +1,73 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Wed, 17 Oct 2007 21:31:50 -0400
-Message-ID: <4716B786.80804@garzik.org>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no> <4716B56A.1090501@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sata_sis: fix SCR read breakage
+Date: Thu, 18 Oct 2007 11:53:39 +0900
+Message-ID: <20071018025339.GB18322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4716B56A.1090501@shaw.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mathieu Fluhr <mfluhr@nero.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.176]:19183 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760087AbXJRCxs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 22:53:48 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so34582wah
+        for <linux-ide@vger.kernel.org>; Wed, 17 Oct 2007 19:53:47 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> This doesn't seem a very reliable way to identify an IDE device, as all
-> that 0 means is that the device does not claim conformance to any
-> standard. I would think it would be legitimate for an IDE device to put
-> a value like 5 in there as well, if it complies with SPC-4..
+SCR read for controllers which uses PCI configuration space for SCR
+access got broken while adding @val argument to SCR accessors.  Fix
+it.
 
-Via the this-doesnt-really-matter-but-it-should-be-noted department:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/sata_sis.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-According to the latest on t10.org, MMC retroactively permitted SCSI 
-version to be zero, for MMC-compliant USB and ATAPI devices.
-
-
-> In the case of libata though, that appears to be due to this code in
-> drivers/ata/libata-scsi.c:
-> 
->     /* ATAPI devices typically report zero for their SCSI version,
->      * and sometimes deviate from the spec WRT response data
->      * format.  If SCSI version is reported as zero like normal,
->      * then we make the following fixups:  1) Fake MMC-5 version,
->      * to indicate to the Linux scsi midlayer this is a modern
->      * device.  2) Ensure response data format / ATAPI information
->      * are always correct.
->      */
->             if (buf[2] == 0) {
->                 buf[2] = 0x5;
->                 buf[3] = 0x32;
->             }
-> 
-> This technically seems to go against what the SCSI/ATA Translation (SAT)
-> spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
-> ATA PACKET Command feature set to pass all INQUIRY commands and
-> parameter data to the ATAPI device without altering the INQUIRY
-> commands or the parameter data." However, it might realistically be
-> needed if the SCSI layer in the kernel has problems with a device
-> indicating it supports no SCSI version..
-
-The above tweak is entirely software->software communication...  as the 
-comment you quoted notes, it's just a signal to the SCSI midlayer.
-
-At the moment, the SCSI midlayer assumes any device that reports scsi 
-version as less than 2 is forced to SCSI version 2.  Ultimately that's 
-incorrect behavior for all ATAPI devices (and later MMC revisions).
-
-At the time, libata simply worked around this SCSI buglet in its own 
-code, since that was easier than auditing all SCSI code paths to ensure 
-new ATAPI/USB MMC logic does not break ancient devices.
-
-But if someone is motivated enough to revisit this...
-
-	Jeff
-
-
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index 8d98a9f..dc8e5c0 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -166,11 +166,11 @@ static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
+ 	return addr;
+ }
+ 
+-static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
++static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
+-	u32 val, val2 = 0;
++	u32 val2 = 0;
+ 	u8 pmr;
+ 
+ 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
+@@ -178,13 +178,16 @@ static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
+ 
+ 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+ 
+-	pci_read_config_dword(pdev, cfg_addr, &val);
++	pci_read_config_dword(pdev, cfg_addr, val);
+ 
+ 	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
+ 	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
+ 		pci_read_config_dword(pdev, cfg_addr+0x10, &val2);
+ 
+-	return (val|val2) &  0xfffffffb; /* avoid problems with powerdowned ports */
++	*val |= val2;
++	*val &= 0xfffffffb;	/* avoid problems with powerdowned ports */
++
++	return 0;
+ }
+ 
+ static void sis_scr_cfg_write (struct ata_port *ap, unsigned int sc_reg, u32 val)
+@@ -214,7 +217,7 @@ static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ 		return -EINVAL;
+ 
+ 	if (ap->flags & SIS_FLAG_CFGSCR)
+-		return sis_scr_cfg_read(ap, sc_reg);
++		return sis_scr_cfg_read(ap, sc_reg, val);
+ 
+ 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
+ 
