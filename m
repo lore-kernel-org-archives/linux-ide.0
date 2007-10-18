@@ -1,67 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Thu, 18 Oct 2007 06:06:37 -0400
-Message-ID: <4717302D.4050107@garzik.org>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org> <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] pata_cs5536.c: fix array overrun
+Date: Thu, 18 Oct 2007 12:51:32 +0200
+Message-ID: <20071018105132.GI3778@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55039 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756120AbXJRKGk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Oct 2007 06:06:40 -0400
-In-Reply-To: <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:44751 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1764462AbXJRKvE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 06:51:04 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mathieu Fluhr <mfluhr@nero.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mathieu Fluhr wrote:
-> On Wed, 2007-10-17 at 21:31 -0400, Jeff Garzik wrote:
->> Robert Hancock wrote:
->>> This doesn't seem a very reliable way to identify an IDE device, as all
->>> that 0 means is that the device does not claim conformance to any
->>> standard. I would think it would be legitimate for an IDE device to put
->>> a value like 5 in there as well, if it complies with SPC-4..
->> Via the this-doesnt-really-matter-but-it-should-be-noted department:
->>
->> According to the latest on t10.org, MMC retroactively permitted SCSI 
->> version to be zero, for MMC-compliant USB and ATAPI devices.
->>
-> 
-> Quoting to the latest MtFuji draft (Section 17.7.1):
->  "The ANSI Version field shall contain a non-zero value to comply with 
->   this version of the Specification for a SCSI logical unit or zero for
->   an ATAPI logical unit."
-> 
-> 
->>> In the case of libata though, that appears to be due to this code in
->>> drivers/ata/libata-scsi.c:
->>>
->>>     /* ATAPI devices typically report zero for their SCSI version,
->>>      * and sometimes deviate from the spec WRT response data
->>>      * format.  If SCSI version is reported as zero like normal,
->>>      * then we make the following fixups:  1) Fake MMC-5 version,
->>>      * to indicate to the Linux scsi midlayer this is a modern
->>>      * device.  2) Ensure response data format / ATAPI information
->>>      * are always correct.
->>>      */
->>>             if (buf[2] == 0) {
->>>                 buf[2] = 0x5;
->>>                 buf[3] = 0x32;
->>>             }
->>>
-> 
-> This explain a lot... But (Sorry I am not a scsi mid-layer expert) why
-> faking what the device outputs?
+This patch fixes an obvious array overrun spotted by the Coverity 
+checker.
 
-The SCSI midlayer makes a lot of "if scsi version <= 2" choices.  In the 
-case of ATAPI, we do not want to force ATAPI down the path of ancient 
-SCSI devices, as this disables some MMC features that modern ATAPI 
-devices support.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-	Jeff
-
-
+---
+9101f2e2691094244bd147a05225f6c84bdf7404 
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index 53070f6..00039a1 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -214,7 +214,7 @@ static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ 		cs5536_read(pdev, DTC, &dtc);
+ 
+ 		dtc &= ~(IDE_DRV_MASK << dshift);
+-		dtc |= mwdma_timings[mode] << dshift;
++		dtc |= mwdma_timings[mode - XFER_MW_DMA_0] << dshift;
+ 
+ 		cs5536_write(pdev, DTC, dtc);
+ 	}
 
