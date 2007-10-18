@@ -1,110 +1,45 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: ATA_PIIX - soft resetting port, port is slow to respond, machine
- "freezes" for a few seconds
-Date: Thu, 18 Oct 2007 12:57:36 +0200
-Message-ID: <47173C20.5050606@wpkg.org>
-References: <46D94BBB.9080403@wpkg.org> <6b9952490709010500q2a93156cq399434a3a44a2d25@mail.gmail.com> <46D95A6F.6060808@wpkg.org> <46E0B4D2.4030600@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 0/3] ide: Fix use of paired device
+Date: Thu, 18 Oct 2007 15:54:59 +0400
+Message-ID: <47174993.4010108@ru.mvista.com>
+References: <1192668978.21882.719539599813.qpush@grosgo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:43199 "EHLO
-	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761710AbXJRK5q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 06:57:46 -0400
-In-Reply-To: <46E0B4D2.4030600@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:42634 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755726AbXJRLyu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Oct 2007 07:54:50 -0400
+In-Reply-To: <1192668978.21882.719539599813.qpush@grosgo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Joris <joris@v5.be>, Linux IDE <linux-ide@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linux IDE <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Tejun Heo schrieb:
-> Tomasz Chmielewski wrote:
->> Joris schrieb:
->>> Hello Tomasz,
->>>
->>>
->>> This appears remarkably simelar to what I'm experiencing, altough I'm
->>> getting that on sata ports.
->>> I'm currently at a loss on what caused this, but if there's two of
->>> us... ;-)
->>> See: http://marc.info/?l=linux-ide&m=118812690407577&w=2
->>>
->>> What kind of hardware are you running?
->> It's a dual core Xeon.
->>
->> Root filesystem starts off a 2 GB Transcend IDE flash disk, and there is
->> a 4-disk RAID-10 array behind a hardware RAID, with LVM on it.
->>
->> I noticed it doesn't soft reset anymore once the kernel said:
->>
->> ata1.00: limiting speed to MWDMA1:PIO4
-> 
-> Aieee... MWDMA2 brokenness again.  cc'ing Jeff and Alan for the record.
+Hello.
 
-BTW, is there a way to force such a device to work in MWDMA1? So that I 
-could add it to the startup scripts?
+Benjamin Herrenschmidt wrote:
 
-It's the -X option to hdparm, right? However, I can't get it to work.
+> At least 2 drivers (siimage and cs5535) have a bug where they use
+> the construct:
 
-This is a part of my hdparm -I output:
+> 	ide_drive_t *pair	= &hwif->drives[drive->dn ^ 1];
 
-Capabilities:
-         LBA, IORDY(can be disabled)
-         Buffer size: 2.0kB      bytes avail on r/w long: 4
-         Standby timer values: spec'd by Vendor
-         R/W multiple sector transfer: Max = 1   Current = 1
-         DMA: not supported
-         PIO: pio0 pio1 pio2 pio3 pio4
-              Cycle time: no flow control=120ns  IORDY flow control=120ns
+> To access the other drive in a master/slave pair. This is bogus
+> because drive->dn is not the unit number, but the global drive
+> number, thus can be 2 & 3 for ide1, 4 & 5 for ide2 etc...
 
+    Huh? With drive->dn calculated as:
 
-And this is a part of dmesg output when the machine seems to freeze as 
-it resets the device:
+         for (unit = 0; unit < MAX_DRIVES; ++unit) {
+                 ide_drive_t *drive = &hwif->drives[unit];
+                 drive->dn = (hwif->channel ? 2 : 0) + unit;
 
-(...)
-ata1: soft resetting port
-ata1.00: configured for MWDMA2
-ata1: EH complete
-sd 0:0:0:0: [sda] 3985632 512-byte hardware sectors (2041 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-ata1.00: limiting speed to MWDMA1:PIO4
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata1.00: cmd ca/00:00:87:21:1a/00:00:00:00:00/e0 tag 0 cdb 0x0 data 
-131072 out
-          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata1: port is slow to respond, please be patient (Status 0xd0)
-ata1: device not ready (errno=-16), forcing hardreset
-ata1: soft resetting port
-ata1.00: configured for MWDMA1
-ata1: EH complete
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 0:0:0:0: [sda] 3985632 512-byte hardware sectors (2041 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't 
-support DPO or FUA
+(with MAX_DRIVES always being 2) how comes it may be 4 or 5?!
 
+> Please apply to 2.6.24 if no objection.
 
-However:
+    I object. :-)
 
-# hdparm -X mdma1 /dev/sda
-
-/dev/sda:
-  setting xfermode to 33 (multiword DMA mode1)
-  HDIO_DRIVE_CMD(setxfermode) failed: Input/output error
-
-
-# hdparm -X 12 /dev/sda
-
-/dev/sda:
-  setting xfermode to 12 (PIO flow control mode4)
-  HDIO_DRIVE_CMD(setxfermode) failed: Input/output error
-
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+MBR, Sergei
