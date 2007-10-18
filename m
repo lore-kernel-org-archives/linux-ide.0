@@ -1,58 +1,66 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream 1/2] libata: move command post processing to
- __ata_qc_complete()
-Date: Wed, 17 Oct 2007 21:23:05 -0400
-Message-ID: <4716B579.7070005@garzik.org>
-References: <20071012115631.GA11510@htj.dyndns.org> <470F64D7.9040604@garzik.org> <4710C39E.7060503@gmail.com>
+Subject: Re: Inquiry data and emulated SG devices
+Date: Wed, 17 Oct 2007 21:31:50 -0400
+Message-ID: <4716B786.80804@garzik.org>
+References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no> <4716B56A.1090501@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43047 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761598AbXJRBXH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Oct 2007 21:23:07 -0400
-In-Reply-To: <4710C39E.7060503@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4716B56A.1090501@shaw.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Mathieu Fluhr <mfluhr@nero.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, ballen@gravity.phys.uwm.edu, andrew@ishiboo.com
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Some commands need post-processing after successful completion.  This
->>> was done in ata_scsi_qc_complete() till now but command post
->>> processing doesn't belong to SAT layer.  Move them to
->>> __ata_qc_complete() and, while at it, restructure a bit to ease adding
->>> post-processing for other commands.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> BTW, while doing the TEST UNIT READY emulation patch for ATA (recently
->> withdrawn from libata-dev.git#upstream), I found a problem with the
->> interface that was difficult to get around:  TEST UNIT READY simulation
->> code really wants to look at the result TF of CHECK POWER MODE, even if
->> ATA_ERR is asserted, before determining whether or not to call that
->> command an error.
->>
->> Maybe the EH scheduling could be moved until after ->complete_fn, to
->> permit ->complete_fn users to manipulate qc->err_mask etc.?
+Robert Hancock wrote:
+> This doesn't seem a very reliable way to identify an IDE device, as all
+> that 0 means is that the device does not claim conformance to any
+> standard. I would think it would be legitimate for an IDE device to put
+> a value like 5 in there as well, if it complies with SPC-4..
+
+Via the this-doesnt-really-matter-but-it-should-be-noted department:
+
+According to the latest on t10.org, MMC retroactively permitted SCSI 
+version to be zero, for MMC-compliant USB and ATAPI devices.
+
+
+> In the case of libata though, that appears to be due to this code in
+> drivers/ata/libata-scsi.c:
 > 
-> Yeah, right.  Device error is a special case.  In many cases, devices
-> can operate without any problem after asserting error and for some
-> commands error is used to signal certain conditions.  I think the least
-> intrusive way would be a qc flag - ATA_QCFLAG_ALLOW_DEVERR, maybe.
-> Also, I'm not sure whether EH should kick in when passthru commands fail
-> with a device error.  Maybe libata should just report the error to the
-> issuer and continue operation?
+>     /* ATAPI devices typically report zero for their SCSI version,
+>      * and sometimes deviate from the spec WRT response data
+>      * format.  If SCSI version is reported as zero like normal,
+>      * then we make the following fixups:  1) Fake MMC-5 version,
+>      * to indicate to the Linux scsi midlayer this is a modern
+>      * device.  2) Ensure response data format / ATAPI information
+>      * are always correct.
+>      */
+>             if (buf[2] == 0) {
+>                 buf[2] = 0x5;
+>                 buf[3] = 0x32;
+>             }
+> 
+> This technically seems to go against what the SCSI/ATA Translation (SAT)
+> spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
+> ATA PACKET Command feature set to pass all INQUIRY commands and
+> parameter data to the ATAPI device without altering the INQUIRY
+> commands or the parameter data." However, it might realistically be
+> needed if the SCSI layer in the kernel has problems with a device
+> indicating it supports no SCSI version..
 
-Good point and agreed -- I definitely think passthru commands want 
-device errors immediately.
+The above tweak is entirely software->software communication...  as the 
+comment you quoted notes, it's just a signal to the SCSI midlayer.
 
-That vastly increases the utility of passthru to be used in test suites 
-and stuff, where you know a lot of operations should fail, by design. 
-(i.e. intentionally submitting an invalid command, to test that 'command 
-aborted' is returned)
+At the moment, the SCSI midlayer assumes any device that reports scsi 
+version as less than 2 is forced to SCSI version 2.  Ultimately that's 
+incorrect behavior for all ATAPI devices (and later MMC revisions).
+
+At the time, libata simply worked around this SCSI buglet in its own 
+code, since that was easier than auditing all SCSI code paths to ensure 
+new ATAPI/USB MMC logic does not break ancient devices.
+
+But if someone is motivated enough to revisit this...
 
 	Jeff
 
