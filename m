@@ -1,141 +1,100 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: Sata Sil3512 bug?;  Promise SATA300 TX4
-Date: Fri, 19 Oct 2007 01:07:28 +0400
-Message-ID: <4717CB10.3080509@lxnt.info>
-References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl>
+From: Martin Rogge <marogge@onlinehome.de>
+Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
+Date: Fri, 19 Oct 2007 00:39:10 +0200
+Message-ID: <200710190039.10568.marogge@onlinehome.de>
+References: <200710142211.03382.marogge@onlinehome.de> <200710170014.28037.bzolnier@gmail.com> <200710172115.13068.marogge@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_OC+FHBr+xUvIJdY"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:54452 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759889AbXJRVQ4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Oct 2007 17:16:56 -0400
-In-Reply-To: <1785297944.20071017170444@zonnet.nl>
+Received: from moutng.kundenserver.de ([212.227.126.179]:62809 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758110AbXJRWjT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 18:39:19 -0400
+In-Reply-To: <200710172115.13068.marogge@onlinehome.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: MisterE <MisterE2002@zonnet.nl>, Mikael Pettersson <mikpe@it.uu.se>, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, jeff@garzik.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-Hello.
+--Boundary-00=_OC+FHBr+xUvIJdY
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+On Wednesday 17 October 2007 21:15:12 Martin Rogge wrote:
+> On Wednesday 17 October 2007 00:14:26 Bartlomiej Zolnierkiewicz wrote:
+> > Martin, could you run git-bisect (http://kerneltrap.org/node/11753 -
+> > sorry for not explaining the procudure myself but Linus did it really
+> > well) starting with:
+> >
+> > 	git bisect good 688a87d145e04f6761c63e7f2e19fd9b3e4ca060
+> > 	git bisect bad 826a1b6502d0d1d67fc41043fc831e90f2ef5835
+> >
+> > The "good" one is the last commit before cmd64x changes and the "bad" one
+> > is the first commit after them.  Since there is only 5 commits in between
+> > it should be really quick find the bad one (worst-case: 3
+> > recompiles/reboots).
+>
+> I'll do my best. I appear to have git 1.5.2.2 on my machine, but I've never
+> used it. In the old days we used not to have such luxury!
+>
+> Give me a few days. I shall report back.
+>
+> cu Martin
+
+OK, the jury is in. This is the result of git bisecting:
+
+66602c83dcb6a5d82772d88ae7a32cd4a1213528 is first bad commit
+commit 66602c83dcb6a5d82772d88ae7a32cd4a1213528
+Author: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Date:   Sat May 5 22:03:50 2007 +0200
+
+    cmd64x: use interrupt status from MRDMODE register (take 2)
+
+    Fold the parts of the ide_dma_end() methods identical to __ide_dma_end() 
+into a
+    mere call to it.
+    Start using faster versions of the ide_dma_end() and ide_dma_test_irq() 
+methods
+    for the PCI0646U and newer chips that have the duplicate interrupt status 
+bits
+    in the I/O mapped MRDMODE register, determing what methods to use at the 
+driver
+    load time. Do some cleanup/renaming in the "old" ide_dma_test_irq() method 
+too.
+
+    Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+    Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+:040000 040000 e9596b9ff362a0bec73601baac84025f106846f9 
+531d19102f9ff54ff870618c742ad81d930af533 M      drivers
+
+I shall also attach the file BISECT_LOG. Hope this gives you some valuable 
+input.
+
+cu Martin
 
 
-I have done some quick tests with 2.6.23/amd64 and unfortunately, the
-very same problem persists.
+--Boundary-00=_OC+FHBr+xUvIJdY
+Content-Type: text/plain;
+  charset="iso-8859-1";
+  name="BISECT_LOG"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="BISECT_LOG"
 
-By the way, 8 in (port_status 0x20080000) stands for
-        PDC_OVERRUN_ERR         = (1 << 19), /* S/G byte count larger
-than HD requires */
+git-bisect start
+# good: [688a87d145e04f6761c63e7f2e19fd9b3e4ca060] sl82c105: DMA support code cleanup (take 4)
+git-bisect good 688a87d145e04f6761c63e7f2e19fd9b3e4ca060
+# bad: [826a1b6502d0d1d67fc41043fc831e90f2ef5835] aec62xx: fix PIO/DMA setup issues
+git-bisect bad 826a1b6502d0d1d67fc41043fc831e90f2ef5835
+# good: [7accbffdb8163a59c7bdd3e4eb9a391198979522] cmd64x: add/fix enablebits (take 2)
+git-bisect good 7accbffdb8163a59c7bdd3e4eb9a391198979522
+# bad: [66602c83dcb6a5d82772d88ae7a32cd4a1213528] cmd64x: use interrupt status from MRDMODE register (take 2)
+git-bisect bad 66602c83dcb6a5d82772d88ae7a32cd4a1213528
+# good: [5826b318aa02e81575c352ca26f00773c999795b] cmd64x: procfs code fixes/cleanups (take 2)
+git-bisect good 5826b318aa02e81575c352ca26f00773c999795b
 
-
-Does by any chance 'S/G' here somehow relate to 'sg in the 'sg-chaining
-work' there is so much talk about on the -kernel mailing list?
-
-
-
-In a somewhat parallel development, write errors caused my (other) md
-RAID-1 to lose one drive while copying data under 2.6.22
-from TX4-attached drives to onboard-VIA-attached ones.
-
-Device: VIA VT6420
-00:0f.0 0104: 1106:3149 (rev 80)
-
-Boot:
-
-Oct 17 21:28:25 host sata_via 0000:00:0f.0: version 2.2
-Oct 17 21:28:25 host ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20
-(level, low) -> IRQ 17
-Oct 17 21:28:25 host sata_via 0000:00:0f.0: routed to hard irq line 10
-Oct 17 21:28:25 host scsi4 : sata_via
-Oct 17 21:28:25 host scsi5 : sata_via
-
-Oct 17 21:28:25 host ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-Oct 17 21:28:25 host ata6.00: ATA-7: ST3200827AS, 3.AAH, max UDMA/133
-Oct 17 21:28:25 host ata6.00: 390721968 sectors, multi 0: LBA48 NCQ
-(depth 0/32)
-Oct 17 21:28:25 host ata6.00: configured for UDMA/133
-
-... the first two port resets:
-
-Oct 17 23:10:50 host ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-action 0x2
-Oct 17 23:10:50 host ata6.00: (BMDMA stat 0x4)
-Oct 17 23:10:50 host ata6.00: cmd ca/00:08:e7:30:00/00:00:00:00:00/e0
-tag 0 cdb 0x0 data 4096 out
-Oct 17 23:10:50 host res 51/84:08:e7:30:00/00:00:00:00:00/e0 Emask 0x10
-(ATA bus error)
-Oct 17 23:10:50 host ata6: soft resetting port
-Oct 17 23:10:50 host ata6.00: configured for UDMA/133
-Oct 17 23:10:50 host ata6: EH complete
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] 390721968 512-byte hardware
-sectors (200050 MB)
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Write Protect is off
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-Oct 17 23:10:50 host ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-action 0x2
-Oct 17 23:10:50 host ata6.00: (BMDMA stat 0x5)
-Oct 17 23:10:50 host ata6.00: cmd ca/00:f8:4f:31:00/00:00:00:00:00/e0
-tag 0 cdb 0x0 data 126976 out
-Oct 17 23:10:50 host res 51/84:f8:4f:31:00/00:00:00:00:00/e0 Emask 0x10
-(ATA bus error)
-Oct 17 23:10:50 host ata6: soft resetting port
-Oct 17 23:10:50 host ata6.00: configured for UDMA/133
-Oct 17 23:10:50 host ata6: EH complete
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] 390721968 512-byte hardware
-sectors (200050 MB)
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Write Protect is off
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-Oct 17 23:10:50 host sd 5:0:0:0: [sdd] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-
-... and multiple unsuccessful port resets follow:
-
-Oct 17 23:11:57 host ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-action 0x2 frozen
-Oct 17 23:11:57 host ata6.00: cmd 25/00:08:7f:bf:28/00:00:16:00:00/e0
-tag 0 cdb 0x0 data 4096 in
-Oct 17 23:11:57 host res 40/00:f8:4f:31:00/00:00:00:00:00/e0 Emask 0x4
-(timeout)
-Oct 17 23:12:02 host ata6: port is slow to respond, please be patient
-(Status 0xd0)
-Oct 17 23:12:07 host ata6: soft resetting port
-Oct 17 23:12:37 host ata6.00: qc timeout (cmd 0xec)
-Oct 17 23:12:37 host ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Oct 17 23:12:37 host ata6.00: revalidation failed (errno=-5)
-Oct 17 23:12:37 host ata6: failed to recover some devices, retrying in 5
-secs
-Oct 17 23:12:47 host ata6: port is slow to respond, please be patient
-(Status 0xd0)
-Oct 17 23:12:52 host ata6: soft resetting port
-Oct 17 23:13:22 host ata6.00: qc timeout (cmd 0xec)
-Oct 17 23:13:22 host ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Oct 17 23:13:22 host ata6.00: revalidation failed (errno=-5)
-Oct 17 23:13:22 host ata6.00: limiting speed to UDMA/133:PIO3
-Oct 17 23:13:22 host ata6: failed to recover some devices, retrying in 5
-secs
-Oct 17 23:13:32 host ata6: port is slow to respond, please be patient
-(Status 0xd0)
-Oct 17 23:13:37 host ata6: soft resetting port
-Oct 17 23:14:08 host ata6.00: qc timeout (cmd 0xec)
-Oct 17 23:14:08 host ata6.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-Oct 17 23:14:08 host ata6.00: revalidation failed (errno=-5)
-Oct 17 23:14:08 host ata6.00: disabled
-Oct 17 23:14:08 host ata6: EH complete
-Oct 17 23:14:08 host sd 5:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-Oct 17 23:14:08 host end_request: I/O error, dev sdd, sector 371769215
-Oct 17 23:14:08 host raid1: sdd1: rescheduling sector 371769152
-Oct 17 23:14:08 host sd 5:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-Oct 17 23:14:08 host end_request: I/O error, dev sdd, sector 390379327
-Oct 17 23:14:08 host md: super_written gets error=-5, uptodate=0
-Oct 17 23:14:08 host raid1: Disk failure on sdd1, disabling device.
-
-I'm unable to reproduce this on 2.6.23, so this is of historic interest
-only.
-
--- 
-
-./lxnt
+--Boundary-00=_OC+FHBr+xUvIJdY--
