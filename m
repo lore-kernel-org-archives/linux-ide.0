@@ -1,33 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] pata_acpi: fix build breakage if !CONFIG_PM
-Date: Wed, 17 Oct 2007 20:57:39 -0400
-Message-ID: <4716AF83.30607@garzik.org>
-References: <20071017062416.GA18322@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH v3] drivers/ata: add support to Freescale 3.0Gbps SATA
+ Controller
+Date: Wed, 17 Oct 2007 20:57:50 -0400
+Message-ID: <4716AF8E.5030509@pobox.com>
+References: <1192539518-6642-1-git-send-email-leoli@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33958 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33971 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932522AbXJRA5m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Oct 2007 20:57:42 -0400
-In-Reply-To: <20071017062416.GA18322@htj.dyndns.org>
+	id S933260AbXJRA5x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Oct 2007 20:57:53 -0400
+In-Reply-To: <1192539518-6642-1-git-send-email-leoli@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Avuton Olrich <avuton@gmail.com>
+To: Li Yang <leoli@freescale.com>
+Cc: linux-ide@vger.kernel.org, arnd@arndb.de, Ashish Kalra <ashish.kalra@freescale.com>
 
-Tejun Heo wrote:
-> There are configurations where CONFIG_ACPI but !CONFIG_PM.  In this
-> case, pata_acpi can be selected but won't build.  Fix it.
+Li Yang wrote:
+> This patch adds support for Freescale 3.0Gbps SATA Controller supporting
+> Native Command Queueing(NCQ), device hotplug, and ATAPI.  This controller
+> can be found on MPC8315 and MPC8378.
 > 
-> Reported by Avuton Olrich.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Avuton Olrich <avuton@gmail.com>
+> Signed-off-by: Ashish Kalra <ashish.kalra@freescale.com>
+> Signed-off-by: Li Yang <leoli@freescale.com>
 > ---
->  drivers/ata/pata_acpi.c |    2 ++
->  1 file changed, 2 insertions(+)
+> Address comments from Arnd Bergmann.
+> 
+>  drivers/ata/Kconfig    |    9 +
+>  drivers/ata/Makefile   |    1 +
+>  drivers/ata/sata_fsl.c | 1490 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 1500 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_fsl.c
 
 applied
 
