@@ -1,89 +1,59 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Wed, 17 Oct 2007 19:22:50 -0600
-Message-ID: <4716B56A.1090501@shaw.ca>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream 1/2] libata: move command post processing to
+ __ata_qc_complete()
+Date: Wed, 17 Oct 2007 21:23:05 -0400
+Message-ID: <4716B579.7070005@garzik.org>
+References: <20071012115631.GA11510@htj.dyndns.org> <470F64D7.9040604@garzik.org> <4710C39E.7060503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:9521 "EHLO
-	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754358AbXJRBW7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2007 21:22:59 -0400
-In-reply-to: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
+Received: from srv5.dvmed.net ([207.36.208.214]:43047 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761598AbXJRBXH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Oct 2007 21:23:07 -0400
+In-Reply-To: <4710C39E.7060503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mathieu Fluhr <mfluhr@nero.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, ballen@gravity.phys.uwm.edu, andrew@ishiboo.com
 
-(cc-ing linux-ide)
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> Tejun Heo wrote:
+>>> Some commands need post-processing after successful completion.  This
+>>> was done in ata_scsi_qc_complete() till now but command post
+>>> processing doesn't belong to SAT layer.  Move them to
+>>> __ata_qc_complete() and, while at it, restructure a bit to ease adding
+>>> post-processing for other commands.
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> BTW, while doing the TEST UNIT READY emulation patch for ATA (recently
+>> withdrawn from libata-dev.git#upstream), I found a problem with the
+>> interface that was difficult to get around:  TEST UNIT READY simulation
+>> code really wants to look at the result TF of CHECK POWER MODE, even if
+>> ATA_ERR is asserted, before determining whether or not to call that
+>> command an error.
+>>
+>> Maybe the EH scheduling could be moved until after ->complete_fn, to
+>> permit ->complete_fn users to manipulate qc->err_mask etc.?
+> 
+> Yeah, right.  Device error is a special case.  In many cases, devices
+> can operate without any problem after asserting error and for some
+> commands error is used to signal certain conditions.  I think the least
+> intrusive way would be a qc flag - ATA_QCFLAG_ALLOW_DEVERR, maybe.
+> Also, I'm not sure whether EH should kick in when passthru commands fail
+> with a device error.  Maybe libata should just report the error to the
+> issuer and continue operation?
 
-Mathieu Fluhr wrote:
-> Hello all,
-> 
-> 
-> First of all, let me introduce myself a little bit. I am the responsable
-> for the development of the Nero Linux burning application. So I have
-> access to all the source code of the application.
-> 
-> 
-> Now let's go with the story: It seems that there is a slight problem in
-> the libata (and also the new pata_xxx) interfaces with the data returned
-> by the INQUIRY cmd since every S-ATA or IDE device is assumed to be a
-> SCSI dev.
-> 
-> Normally, the IDE devices (physical type) can be differentied with the
-> format field of the inquiry data, i.e. the last bytes (ANSI version) are
-> set to 0 -> This is done and works great with USB external devices for
-> example.
-> 
-> 
-> The thing is that with S-ATA/IDE devices when using the libata/pata
-> driver, the version field is (always?) set to 5, as any _real_ SCSI
-> device, and thus the physical device type cannot be checked anymore.
+Good point and agreed -- I definitely think passthru commands want 
+device errors immediately.
 
-This doesn't seem a very reliable way to identify an IDE device, as all
-that 0 means is that the device does not claim conformance to any
-standard. I would think it would be legitimate for an IDE device to put
-a value like 5 in there as well, if it complies with SPC-4..
+That vastly increases the utility of passthru to be used in test suites 
+and stuff, where you know a lot of operations should fail, by design. 
+(i.e. intentionally submitting an invalid command, to test that 'command 
+aborted' is returned)
 
-In the case of libata though, that appears to be due to this code in
-drivers/ata/libata-scsi.c:
-
-	/* ATAPI devices typically report zero for their SCSI version,
-	 * and sometimes deviate from the spec WRT response data
-	 * format.  If SCSI version is reported as zero like normal,
-	 * then we make the following fixups:  1) Fake MMC-5 version,
-	 * to indicate to the Linux scsi midlayer this is a modern
-	 * device.  2) Ensure response data format / ATAPI information
-	 * are always correct.
-	 */
-			if (buf[2] == 0) {
-				buf[2] = 0x5;
-				buf[3] = 0x32;
-			}
-
-This technically seems to go against what the SCSI/ATA Translation (SAT)
-spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
-ATA PACKET Command feature set to pass all INQUIRY commands and
-parameter data to the ATAPI device without altering the INQUIRY
-commands or the parameter data." However, it might realistically be
-needed if the SCSI layer in the kernel has problems with a device
-indicating it supports no SCSI version..
-
-> 
-> I cannot go so deep in details, but our burn engine is differentiating
-> IDE and read-good-old-SCSI devices and handles them sometimes in a
-> different way, so this differenciation is really important for us.
-> 
->    -> How can I detect the real physical device type now?
-
-I don't have a great answer off the top of my head..
-
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+	Jeff
 
 
