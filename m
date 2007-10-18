@@ -1,35 +1,33 @@
-From: Vlad Codrea <vladc6@yahoo.com>
-Subject: Re: Please help. ICH6 chipset: dvd drive dies after a short time
-Date: Thu, 18 Oct 2007 11:48:03 -0700 (PDT)
-Message-ID: <619868.86645.qm@web54407.mail.yahoo.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Bug?  2.6.23-git13 + Jens's latest sg_next fixes:   DRDY?
+Date: Thu, 18 Oct 2007 15:14:02 -0400
+Message-ID: <4717B07A.2090300@garzik.org>
+References: <47177863.1080500@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web54407.mail.yahoo.com ([206.190.49.137]:38302 "HELO
-	web54407.mail.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757857AbXJRSyp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 14:54:45 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:44712 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755029AbXJRTOQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Oct 2007 15:14:16 -0400
+In-Reply-To: <47177863.1080500@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: h292@ied.com
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi,
+Mark Lord wrote:
+> 
+> Something weird in libata with latest -git13 + Jens's patch.
+> Jeff, did I miss a libata fix somewhere?
 
-I would suggest doing the following things:
+Yes, you need
 
-1) Download the latest kernel (2.6.23 or later).
-2) Enable libata and disable ide in the kernel's .config file before
-compiling.
-3) Attach the dmesg to a new bug report in the kernel bugzilla
-(http://bugzilla.kernel.org).
-4) Send a link to the bug report as a followup to this message.
+[PATCH] Re: [bug] ata subsystem related crash with latest -git
 
-Hope this helps,
-Vlad
+from me.
+
+	Jeff
 
 
-      ____________________________________________________________________________________
-Check out the hottest 2008 models today at Yahoo! Autos.
-http://autos.yahoo.com/new_cars.html
