@@ -1,46 +1,42 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Fri, 19 Oct 2007 14:57:49 -0500
-Message-ID: <20071019195749.GK29903@austin.ibm.com>
-References: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
+From: Martin Rogge <marogge@onlinehome.de>
+Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
+Date: Fri, 19 Oct 2007 21:58:03 +0200
+Message-ID: <200710192158.03836.marogge@onlinehome.de>
+References: <200710142211.03382.marogge@onlinehome.de> <200710172115.13068.marogge@onlinehome.de> <47167335.1020903@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:43874 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753761AbXJST6B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 15:58:01 -0400
+Received: from moutng.kundenserver.de ([212.227.126.186]:57134 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935898AbXJST6H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 15:58:07 -0400
+In-Reply-To: <47167335.1020903@ru.mvista.com>
 Content-Disposition: inline
-In-Reply-To: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <chunhao.huang@hotmail.com>
-Cc: davem@davemloft.net, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Fri, Oct 19, 2007 at 09:17:23PM +0800, Shane Huang wrote:
-> Since we have little experience on PCI and MSI here, we had to try to
+On Wednesday 17 October 2007 22:40:21 Sergei Shtylyov wrote:
+>     BTW, can you try adding #define DEBUG to the driver meanwhile?..
 
-As someone else pointed out, AMD should have *lots* of people with
-pci and msi experience on the payroll.  (Folks here buy AMD-designed 
-pci chips ...)
+Yoda said: Try not. Do or do not. There is no try.
 
-> ONLY
-> comment out the pci_intx() call in drivers/ata/ahci.c
-> My system can boot up too with MSI enabled!
-> 
-> So does it mean that the root cause is our SB700 SATA controller
-> has a hardware bug where setting INTX_DISABLE in the PCI COMMAND
-> register masks MSI interrupts too? 
+So I did it. To be precise, I #defined both DEBUG and CMD_DEBUG. However, I am 
+not sure the result is conclusive.
 
-That's what it sounds like, to me.
+On a good kernel I get a lot of lines of the type
 
-> And what is the software solution or workaround?
+hda: dma_stat: 0x24 irq_stat: 0x44 mask: 0x04
+hdc: dma_stat: 0x24 irq_stat: 0x5c mask: 0x10
 
-Not sure. Sounds like the device driver needs a quirk for this part.
+and variations thereof. On a broken kernel the middle part changes to
 
-The over-worked Jeff Garzik is the maintainer for that driver.
+hda: dma_stat: 0x24 mrdmode: 0x00 mask: 0x04
 
-You should probably provide the pci device id for this beast.
+Hope this is of any help,
 
---linas
+cu Martin
 
