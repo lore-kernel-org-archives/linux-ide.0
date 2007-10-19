@@ -1,68 +1,64 @@
-From: Nick Warne <nick@ukfsn.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
 Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Fri, 19 Oct 2007 23:04:23 +0100
-Message-ID: <200710192304.23749.nick@ukfsn.org>
-References: <200710181832.42906.nick@ukfsn.org> <200710192212.30533.nick@ukfsn.org> <200710192344.27312.bzolnier@gmail.com>
-Reply-To: nick@ukfsn.org
+Date: Fri, 19 Oct 2007 18:12:57 -0400
+Message-ID: <20071019221257.GV4000@csclub.uwaterloo.ca>
+References: <200710181832.42906.nick@ukfsn.org> <200710192212.30533.nick@ukfsn.org> <200710192344.27312.bzolnier@gmail.com> <200710192304.23749.nick@ukfsn.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:41904 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755751AbXJSWE3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 18:04:29 -0400
-In-Reply-To: <200710192344.27312.bzolnier@gmail.com>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:35576 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966646AbXJSWM6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 18:12:58 -0400
 Content-Disposition: inline
+In-Reply-To: <200710192304.23749.nick@ukfsn.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Nick Warne <nick@ukfsn.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Friday 19 October 2007 22:44:27 Bartlomiej Zolnierkiewicz wrote:
->
-> Ah, so the patch won't help (sorry, I didn't pay enough attention).
->
-> Len's advices are worth the try, also please send the output
-> of hdparm -I /dev/hdd.
->
-> Thanks,
-> Bart
+On Fri, Oct 19, 2007 at 11:04:23PM +0100, Nick Warne wrote:
+> Yes, Len's advice has me wondering now.  Do I have a dodgy cable? I will have 
+> to change that tomorrow.
+> 
+> But more info.  The old drive played DVD movies etc. OK, but slowly it became 
+> worse until I couldn't read any one of them 9 times out of 10.  CD play 
+> back/burning was OK 100% all the time though - so I guessed the dvd laser 
+> (whatever it does) was dead - hence why I bought a new one. 
+> 
+> The new drive works perfectly, but for the udma33 issue.  If it was the cable, 
+> why would it read/burn CD OK, but not DVD sometimes on the old drive?
 
-Yes, Len's advice has me wondering now.  Do I have a dodgy cable? I will have 
-to change that tomorrow.
+Well older DVD drives often only did udma33 so they would even care if
+you had an 80 wire cable or not.  Newer once often require more than
+udma33 for full operation.  I got a new drive about a year ago, and
+burning dvd+rw at 4x worked great, but all dvd-r at 8x failed.
+Eventually I realized I had to change the 40wire cable to an 80 wire,
+and all problems disappeared.  The drive works fine in udma4 mode
+(whatever speed that is).  My previous DVD-ROM drive had no problems
+reading using a 40wire cable.
 
-But more info.  The old drive played DVD movies etc. OK, but slowly it became 
-worse until I couldn't read any one of them 9 times out of 10.  CD play 
-back/burning was OK 100% all the time though - so I guessed the dvd laser 
-(whatever it does) was dead - hence why I bought a new one. 
+> hdparm -I
+> 
+> /dev/hdd:
+> 
+> ATAPI CD-ROM, with removable media
+>         Model Number:       TSSTcorp CDDVDW SH-S202J
+>         Serial Number:
+>         Firmware Revision:  SB00
+> Standards:
+>         Supported: CD-ROM ATAPI-3 -4 -5 -6 -7
+> Configuration:
+>         DRQ response: 50us.
+>         Packet size: 12 bytes
+> Capabilities:
+>         LBA, IORDY(cannot be disabled)
+>         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
+>              Cycle time: min=120ns recommended=120ns
+>         PIO: pio0 pio1 pio2 pio3 pio4
+>              Cycle time: no flow control=383ns  IORDY flow control=120ns
+> 
+> BTW, thanks for help all.
 
-The new drive works perfectly, but for the udma33 issue.  If it was the cable, 
-why would it read/burn CD OK, but not DVD sometimes on the old drive?
-
-hdparm -I
-
-/dev/hdd:
-
-ATAPI CD-ROM, with removable media
-        Model Number:       TSSTcorp CDDVDW SH-S202J
-        Serial Number:
-        Firmware Revision:  SB00
-Standards:
-        Supported: CD-ROM ATAPI-3 -4 -5 -6 -7
-Configuration:
-        DRQ response: 50us.
-        Packet size: 12 bytes
-Capabilities:
-        LBA, IORDY(cannot be disabled)
-        DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
-             Cycle time: min=120ns recommended=120ns
-        PIO: pio0 pio1 pio2 pio3 pio4
-             Cycle time: no flow control=383ns  IORDY flow control=120ns
-
-BTW, thanks for help all.
-
-Nick
--- 
-Free Software Foundation Associate Member 5508
+--
+Len Sorensen
