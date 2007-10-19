@@ -1,47 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: FW: LIBATA issue with SATA drive
-Date: Fri, 19 Oct 2007 14:05:53 +0900
-Message-ID: <47183B31.4080002@gmail.com>
-References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>	 <4716DC7D.6050007@gmail.com>	 <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com>	 <471804CA.9040103@gmail.com> <64bb37e0710182151j6992cde3u4f9ae60aa70e22eb@mail.gmail.com>
+From: "peer chen" <peerchen@gmail.com>
+Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
+Date: Fri, 19 Oct 2007 14:58:19 +0800
+Message-ID: <cfaab6210710182358t4de355f9wd6d605a7b8076ace@mail.gmail.com>
+References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org>
+	 <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
+	 <47181CE1.4000802@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:56137 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181AbXJSFGN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 01:06:13 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so361692rvb
-        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 22:06:13 -0700 (PDT)
-In-Reply-To: <64bb37e0710182151j6992cde3u4f9ae60aa70e22eb@mail.gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.184]:46157 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbXJSG6V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 02:58:21 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so642305mue
+        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 23:58:19 -0700 (PDT)
+In-Reply-To: <47181CE1.4000802@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Torsten Kaiser <just.for.lkml@googlemail.com>
-Cc: "Ip, Clarence" <CIP@harris.com>, linux-ide@vger.kernel.org, jens.axboe@oracle.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
 
-Torsten Kaiser wrote:
-> On 10/19/07, Tejun Heo <htejun@gmail.com> wrote:
->> Torsten Kaiser wrote:
->>> I'm currently using 2.6.23-mm1 and 16 boots where all good.
->>> (Apart from the unrelated failure with sata_nv and swncq...)
->> I see, a different issue then.  It's just weird to see similar issues
->> popping up now after allterm the time sata_sil24 has been around.
-> 
-> Just remebered another thing about sata_sil24 that popped up with 2.6.23-mm1.
-> With this kernel version (comparing to 2.6.23-rc8-mm1) the port
-> probing time goes up from ~0.5 seconds per port/drive to ~2 seconds.
-> Also the SControl changed:
-> 
-> 2.6.23-rc8-mm1:
-> [    4.110000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> 2.6.23-mm1:
-> [    5.930000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> 
-> But except for increased delay during boot no errors can seen, the
-> drives work normally.
+Ok,I agree to use AHCI driver for our AHCI controllers no matter their
+class codes are IDE/RAID/AHCI. But for those new or upcoming AHCI
+controller which DIDs are not included in ahci.c and also IDE/RAID
+mode being set in BIOS, no driver will be loaded currently, so I hope
+the first patch http://lkml.org/lkml/2007/10/8/93 can be appied for
+this case. Any comments?
 
-Yeah, PARTIAL / SLUMBER mode restriction is lifted.  Dunno whether 
-that's related to the increased delay tho.  Will investigate.
-
--- 
-tejun
+2007/10/19, Jeff Garzik <jeff@garzik.org>:
+> peer chen wrote:
+> > I hope one of the following patches can be merged to 2.6.24.
+> > ==========================
+> > http://lkml.org/lkml/2007/10/8/93
+> > http://lkml.org/lkml/2007/9/25/20
+>
+> Unfortunately I do not feel like this is the right course of action.
+>
+> Experience from Intel platforms tells us that our users get very unhappy
+> when their silicon supports AHCI mode, but they are forced into using a
+> less-performant mode.  A popular example is an <unnamed> OEM whose BIOS
+> had no method whatsoever for enabling AHCI -- didn't even program the
+> PCI BAR -- even though tests showed the AHCI mode worked just fine when
+> manually programmed.
+>
+> AHCI is more likely to provide a /stable/ Serial ATA experience, because
+> the silicon deals primarily with sending and receiving FIS's, and not
+> much else.  In constrast, experience has shown the legacy IDE interface
+> to be a less reliable method of SATA support.  And certainly AHCI is
+> much, much faster with less per-command overhead.
+>
+> Given that AHCI is both faster and more stable, I feel it is the best
+> policy to enable AHCI when the hardware supports it, regardless of PCI
+> class code (IDE, SATA, or RAID).
+>
+>
+> > Yes, I agree to set the 'swncq' as default for 2.6.24, after all, for
+> > our server customers, stability is far more important than the new
+> > feature no matter the problem is caused by drive or controller.
+>
+> Agreed.  Done!
+>
+>        Jeff
+>
+>
+>
+>
+>
