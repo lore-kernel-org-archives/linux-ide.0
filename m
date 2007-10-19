@@ -1,57 +1,44 @@
-From: Nick Warne <nick@ukfsn.org>
-Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Fri, 19 Oct 2007 22:12:30 +0100
-Message-ID: <200710192212.30533.nick@ukfsn.org>
-References: <200710181832.42906.nick@ukfsn.org> <200710192203.09835.nick@ukfsn.org> <20071019210743.GI4003@csclub.uwaterloo.ca>
-Reply-To: nick@ukfsn.org
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
+Subject: Re: Sata Sil3512 bug?;  Promise SATA300 TX4
+Date: Sat, 20 Oct 2007 01:06:02 +0400
+Message-ID: <47191C3A.5040909@lxnt.info>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl> <4717CB10.3080509@lxnt.info> <471807DF.8010100@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:53193 "EHLO mail.ukfsn.org"
+Received: from mail.lxnt.info ([217.23.143.142]:52372 "EHLO mail.lxnt.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762273AbXJSVMc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 17:12:32 -0400
-In-Reply-To: <20071019210743.GI4003@csclub.uwaterloo.ca>
-Content-Disposition: inline
+	id S1765029AbXJSVPb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Oct 2007 17:15:31 -0400
+In-Reply-To: <471807DF.8010100@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, MisterE <MisterE2002@zonnet.nl>, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, jeff@garzik.org
 
-On Friday 19 October 2007 22:07:43 Lennart Sorensen wrote:
-> On Fri, Oct 19, 2007 at 10:03:09PM +0100, Nick Warne wrote:
-> > No change:
-> >
-> > ide_setup: hdd=ide-cd
-> >     ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:DMA, hdd:DMA
-> > hdd: TSSTcorp CDDVDW SH-S202J, ATAPI CD/DVD-ROM drive
-> > hdd: drive side 80-wire cable detection failed, limiting max speed to
-> > UDMA33 hdd: selected mode 0x42
-> > hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
->
-> Did you try another cable?  DId you try using both the old IDE drivers
-> and the new PATA libata drivers?  What is the hdd=ide-cd supposed to
-> do?  Do you have a device present as hdc and if not, then why not?
-> (Hint: ATA spec requires a master before you can have a slave, even
-> though it frequently does work with just a slave.  Of course cable
-> select seems even nicer since then the device at the end of an 80 wire
-> cable is automatically master, and any additional device added to the
-> middle connector on the cable becomes slave, and you should not connect
-> a device to the middle connector without one on the end).
->
-> Also make sure the right end of the cable is connected to the mainboard,
-> just in case that matters.
+Hello.
 
-I have (since 2.6.15 at least) hda, hdb, hdc, and hdd.
+> 
+> So, my bet for your second report is your hardware went through
+> something similar as above.
+> 
 
-hda and hdb are mounted at boot.  hdc is not mounted, as I leave that drive 
-for backups and mount as needed.
+Thanks for the insight. Let's dismiss it then.
 
-All I done was replace a duff cd/dvd drive (hdd) with a new one.
+Back to the TX4, I tried libata-dev.git cloned at about 20:00 UTC 19.10,
+  no perceived difference - parallel read from two drives causes a lot
+of  errors.
 
-Nick
+dmesgs  with boot and errors are at http://lxnt.info/linux/libata-dev/
+
+I don't know what to try next. Any ideas?
 
 -- 
-Free Software Foundation Associate Member 5508
+
+./lxnt
+
+
+
+
+
