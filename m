@@ -1,72 +1,44 @@
-From: Nick Warne <nick@ukfsn.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
 Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Fri, 19 Oct 2007 22:03:09 +0100
-Message-ID: <200710192203.09835.nick@ukfsn.org>
-References: <200710181832.42906.nick@ukfsn.org> <200710192049.07877.nick@ukfsn.org> <200710192228.43655.bzolnier@gmail.com>
-Reply-To: nick@ukfsn.org
+Date: Fri, 19 Oct 2007 17:07:43 -0400
+Message-ID: <20071019210743.GI4003@csclub.uwaterloo.ca>
+References: <200710181832.42906.nick@ukfsn.org> <200710192049.07877.nick@ukfsn.org> <200710192228.43655.bzolnier@gmail.com> <200710192203.09835.nick@ukfsn.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:36801 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935933AbXJSVDP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 17:03:15 -0400
-In-Reply-To: <200710192228.43655.bzolnier@gmail.com>
+Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:53147 "EHLO
+	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1765034AbXJSVHo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 17:07:44 -0400
 Content-Disposition: inline
+In-Reply-To: <200710192203.09835.nick@ukfsn.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Nick Warne <nick@ukfsn.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Bart,
+On Fri, Oct 19, 2007 at 10:03:09PM +0100, Nick Warne wrote:
+> No change:
+> 
+> ide_setup: hdd=ide-cd
+>     ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:DMA, hdd:DMA
+> hdd: TSSTcorp CDDVDW SH-S202J, ATAPI CD/DVD-ROM drive
+> hdd: drive side 80-wire cable detection failed, limiting max speed to UDMA33
+> hdd: selected mode 0x42
+> hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
 
-Thanks for assistance.
+Did you try another cable?  DId you try using both the old IDE drivers
+and the new PATA libata drivers?  What is the hdd=ide-cd supposed to
+do?  Do you have a device present as hdc and if not, then why not?
+(Hint: ATA spec requires a master before you can have a slave, even
+though it frequently does work with just a slave.  Of course cable
+select seems even nicer since then the device at the end of an 80 wire
+cable is automatically master, and any additional device added to the
+middle connector on the cable becomes slave, and you should not connect
+a device to the middle connector without one on the end).
 
-On Friday 19 October 2007 21:28:43 Bartlomiej Zolnierkiewicz wrote:
+Also make sure the right end of the cable is connected to the mainboard,
+just in case that matters.
 
-> > No help anyone?  Did I buy a taboo drive?
-> >
-> > nick@linuxamd:nick$ /usr/sbin/hdparm -i /dev/hdd
-> >
-> > /dev/hdd:
-> >
-> >  Model=TSSTcorp CDDVDW SH-S202J, FwRev=SB00, SerialNo=
-> >  Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
-> >  RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
-> >  BuffType=unknown, BuffSize=0kB, MaxMultSect=0
-> >  (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
-> >  IORDY=yes, tPIO={min:383,w/IORDY:120}, tDMA={min:120,rec:120}
-> >  PIO modes:  pio0 pio1 pio2 pio3 pio4
-> >  DMA modes:  mdma0 mdma1 mdma2
-> >  UDMA modes: udma0 udma1 *udma2 udma3 udma4
-> >  AdvancedPM=no
-> >  Drive conforms to: unknown:
-> >
-> >  * signifies the current active mode
-> >
-> >
-> > Any help to get this fixed (by me) would be welcome.  I cannot find any
-> > information on why this happens (or rather why the 'drive side') refuses
-> > to see 80-wire ide cable.
->
-> Please try:
->
-> http://kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm
->1/broken-out/ide-ide-change-master-slave-identify-order.patch
-
-No change:
-
-ide_setup: hdd=ide-cd
-    ide1: BM-DMA at 0xd008-0xd00f, BIOS settings: hdc:DMA, hdd:DMA
-hdd: TSSTcorp CDDVDW SH-S202J, ATAPI CD/DVD-ROM drive
-hdd: drive side 80-wire cable detection failed, limiting max speed to UDMA33
-hdd: selected mode 0x42
-hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
-
-
-
-Nick
--- 
-Free Software Foundation Associate Member 5508
+--
+Len Sorensen
