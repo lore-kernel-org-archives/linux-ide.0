@@ -1,83 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/12] ide: add struct ide_taskfile
-Date: Fri, 19 Oct 2007 20:47:22 +0400
-Message-ID: <4718DF9A.8010605@ru.mvista.com>
-References: <200710082311.10925.bzolnier@gmail.com>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
+Date: Fri, 19 Oct 2007 14:57:49 -0500
+Message-ID: <20071019195749.GK29903@austin.ibm.com>
+References: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:54879 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760526AbXJSQrN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 12:47:13 -0400
-In-Reply-To: <200710082311.10925.bzolnier@gmail.com>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:43874 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753761AbXJST6B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Oct 2007 15:58:01 -0400
+Content-Disposition: inline
+In-Reply-To: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Shane Huang <chunhao.huang@hotmail.com>
+Cc: davem@davemloft.net, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello.
+On Fri, Oct 19, 2007 at 09:17:23PM +0800, Shane Huang wrote:
+> Since we have little experience on PCI and MSI here, we had to try to
 
-Bartlomiej Zolnierkiewicz wrote:
+As someone else pointed out, AMD should have *lots* of people with
+pci and msi experience on the payroll.  (Folks here buy AMD-designed 
+pci chips ...)
 
-> * Don't set write-only ide_task_t.hobRegister[6] and ide_task_t.hobRegister[7]
->   in idedisk_set_max_address_ext().
+> ONLY
+> comment out the pci_intx() call in drivers/ata/ahci.c
+> My system can boot up too with MSI enabled!
+> 
+> So does it mean that the root cause is our SB700 SATA controller
+> has a hardware bug where setting INTX_DISABLE in the PCI COMMAND
+> register masks MSI interrupts too? 
 
-> * Add struct ide_taskfile and use it in ide_task_t instead of tfRegister[]
->   and hobRegister[].
+That's what it sounds like, to me.
 
-> * Remove no longer needed IDE_CONTROL_OFFSET_HOB define.
+> And what is the software solution or workaround?
 
-> * Add #ifndef/#endif __KERNEL__ around definitions of {task,hob}_struct_t.
+Not sure. Sounds like the device driver needs a quirk for this part.
 
-> While at it:
+The over-worked Jeff Garzik is the maintainer for that driver.
 
-> * Use ATA_LBA define for LBA bit (0x40) as suggested by Tejun Heo.
+You should probably provide the pci device id for this beast.
 
-> There should be no functionality changes caused by this patch.
+--linas
 
-    There's some idea too...
-
-> Index: b/include/linux/ide.h
-> ===================================================================
-> --- a/include/linux/ide.h
-> +++ b/include/linux/ide.h
-[...]
-> @@ -1072,15 +1070,33 @@ extern void ide_end_drive_cmd(ide_drive_
->   */
->  extern int ide_wait_cmd(ide_drive_t *, u8, u8, u8, u8, u8 *);
->  
-> +struct ide_taskfile {
-> +	u8	hob_data;	/*  0: high data byte (for TASKFILE IOCTL) */
-> +
-> +	u8	hob_feature;	/*  1-5: additional data to support LBA48 */
-> +	u8	hob_nsect;
-> +	u8	hob_lbal;
-> +	u8	hob_lbam;
-> +	u8	hob_lbah;
-> +
-> +	u8	data;		/*  6: low data byte (for TASKFILE IOCTL) */
-> +
-> +	u8	feature;
-
-    Why not use unnamed union like this:
-
-	union {				/*  7: feature */
-		u8	error;		/*  read: error   */
-		u8	feature;	/* write: feature */
-	};
-
-> +	u8	command;	/* 13: command */
-
-	union {				/* 13 */
-		u8	status;		/*  read: status  */
-		u8	command;	/* write: command */
-	};
-
-    This should qualify some places where you have to check for command 
-register for the ERR bit, etc...
-
-> +};
-
-MBR, Sergei
