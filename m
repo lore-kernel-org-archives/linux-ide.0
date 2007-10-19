@@ -1,51 +1,83 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: FW: LIBATA issue with SATA drive
-Date: Fri, 19 Oct 2007 18:21:53 +0200
-Message-ID: <64bb37e0710190921w66efe89dl1136d08328123629@mail.gmail.com>
-References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
-	 <4716DC7D.6050007@gmail.com>
-	 <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com>
-	 <471804CA.9040103@gmail.com>
-	 <64bb37e0710182151j6992cde3u4f9ae60aa70e22eb@mail.gmail.com>
-	 <47183B31.4080002@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 6/12] ide: add struct ide_taskfile
+Date: Fri, 19 Oct 2007 20:47:22 +0400
+Message-ID: <4718DF9A.8010605@ru.mvista.com>
+References: <200710082311.10925.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:20957 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754818AbXJSQVy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 12:21:54 -0400
-Received: by py-out-1112.google.com with SMTP id u77so1052971pyb
-        for <linux-ide@vger.kernel.org>; Fri, 19 Oct 2007 09:21:54 -0700 (PDT)
-In-Reply-To: <47183B31.4080002@gmail.com>
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:54879 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760526AbXJSQrN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 12:47:13 -0400
+In-Reply-To: <200710082311.10925.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On 10/19/07, Tejun Heo <htejun@gmail.com> wrote:
-> Torsten Kaiser wrote:
-> > Just remebered another thing about sata_sil24 that popped up with 2.6.23-mm1.
-> > With this kernel version (comparing to 2.6.23-rc8-mm1) the port
-> > probing time goes up from ~0.5 seconds per port/drive to ~2 seconds.
-> > Also the SControl changed:
-> >
-> > 2.6.23-rc8-mm1:
-> > [    4.110000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > 2.6.23-mm1:
-> > [    5.930000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> >
-> > But except for increased delay during boot no errors can seen, the
-> > drives work normally.
->
-> Yeah, PARTIAL / SLUMBER mode restriction is lifted.  Dunno whether
-> that's related to the increased delay tho.  Will investigate.
+Hello.
 
-But don't invest too much time into this.
-That the delay is part of the broken ACPI of this board/bios seems
-very likely to me.
-(And apart from that delay there seems to be no other changes.)
+Bartlomiej Zolnierkiewicz wrote:
 
-Torsten
+> * Don't set write-only ide_task_t.hobRegister[6] and ide_task_t.hobRegister[7]
+>   in idedisk_set_max_address_ext().
+
+> * Add struct ide_taskfile and use it in ide_task_t instead of tfRegister[]
+>   and hobRegister[].
+
+> * Remove no longer needed IDE_CONTROL_OFFSET_HOB define.
+
+> * Add #ifndef/#endif __KERNEL__ around definitions of {task,hob}_struct_t.
+
+> While at it:
+
+> * Use ATA_LBA define for LBA bit (0x40) as suggested by Tejun Heo.
+
+> There should be no functionality changes caused by this patch.
+
+    There's some idea too...
+
+> Index: b/include/linux/ide.h
+> ===================================================================
+> --- a/include/linux/ide.h
+> +++ b/include/linux/ide.h
+[...]
+> @@ -1072,15 +1070,33 @@ extern void ide_end_drive_cmd(ide_drive_
+>   */
+>  extern int ide_wait_cmd(ide_drive_t *, u8, u8, u8, u8, u8 *);
+>  
+> +struct ide_taskfile {
+> +	u8	hob_data;	/*  0: high data byte (for TASKFILE IOCTL) */
+> +
+> +	u8	hob_feature;	/*  1-5: additional data to support LBA48 */
+> +	u8	hob_nsect;
+> +	u8	hob_lbal;
+> +	u8	hob_lbam;
+> +	u8	hob_lbah;
+> +
+> +	u8	data;		/*  6: low data byte (for TASKFILE IOCTL) */
+> +
+> +	u8	feature;
+
+    Why not use unnamed union like this:
+
+	union {				/*  7: feature */
+		u8	error;		/*  read: error   */
+		u8	feature;	/* write: feature */
+	};
+
+> +	u8	command;	/* 13: command */
+
+	union {				/* 13 */
+		u8	status;		/*  read: status  */
+		u8	command;	/* write: command */
+	};
+
+    This should qualify some places where you have to check for command 
+register for the ERR bit, etc...
+
+> +};
+
+MBR, Sergei
