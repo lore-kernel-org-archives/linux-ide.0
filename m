@@ -1,46 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [stable] [PATCH -stable] libata: sync NCQ blacklist with	upstream
-Date: Fri, 19 Oct 2007 11:33:57 +0900
-Message-ID: <47181795.8030705@gmail.com>
-References: <20071011015515.GQ12186@htj.dyndns.org> <20071011025734.GA30990@kroah.com> <470D96B3.3040405@gmail.com> <20071011033220.GA31225@kroah.com> <470D9B7A.10207@gmail.com> <20071011035553.GA31615@kroah.com>
+Subject: Re: FW: LIBATA issue with SATA drive
+Date: Fri, 19 Oct 2007 11:36:27 +0900
+Message-ID: <4718182B.9040802@gmail.com>
+References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>	 <4716DC7D.6050007@gmail.com> <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com> <471804CA.9040103@gmail.com> <47180928.3020104@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:30282 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763534AbXJSCeI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 22:34:08 -0400
-Received: by wr-out-0506.google.com with SMTP id 36so321779wra
-        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 19:34:08 -0700 (PDT)
-In-Reply-To: <20071011035553.GA31615@kroah.com>
+Received: from wa-out-1112.google.com ([209.85.146.180]:24427 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761597AbXJSCgf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 22:36:35 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so421199wah
+        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 19:36:35 -0700 (PDT)
+In-Reply-To: <47180928.3020104@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, stable@kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Torsten Kaiser <just.for.lkml@googlemail.com>, "Ip, Clarence" <CIP@harris.com>, linux-ide@vger.kernel.org, jens.axboe@oracle.com
 
-Greg KH wrote:
-> On Thu, Oct 11, 2007 at 12:41:46PM +0900, Tejun Heo wrote:
->> Greg KH wrote:
->>> On Thu, Oct 11, 2007 at 12:21:23PM +0900, Tejun Heo wrote:
->>>> Greg KH wrote:
->>>>> On Thu, Oct 11, 2007 at 10:55:15AM +0900, Tejun Heo wrote:
->>>>>> Synchronize NCQ blacklist with the current upstream.
->>>>> Which -stable tree is this for, 2.6.22 or 2.6.23?
->>>> It's against 2.6.23.
->>> Ok, but things only go into -stable after they are already in Linus's
->>> tree, which hasn't happened yet...
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Hello,
+>>
+>> Torsten Kaiser wrote:
+>>>> The symptom seems very similar to yours but the kernel is 2.6.22 which
+>>>> doesn't have the SG change which you found out to be broken.  Can you
+>>>> update us on how the testing of patched kernel went?
 >>>
->>> So what is considered "upstream" here?  Jeff's tree?
->> Yeah, except for one entry, all others are in libata-dev#upstream which
->> will be pulled when -rc1 opens.  I'll ping you back when they actually
->> get merged.
+>>> Sorry I didn't realize that you where still waiting for a 'confirm
+>>> good'. I intended only to mail, if I got the error again, as the debug
+>>> output about SGE_TRM confirmed, that this fix changes the behavior of
+>>> sata_sil24 and there was no really 200% sure method of detecting that
+>>> this bug was gone.
+>>>
+>>> Anyway, after fixing ata_sg_is_last() by adding the +1 I did not had a
+>>> single failure.
+>>>
+>>> I'm currently using 2.6.23-mm1 and 16 boots where all good.
+>>> (Apart from the unrelated failure with sata_nv and swncq...)
+>>
+>> I see, a different issue then.  It's just weird to see similar issues 
+>> popping up now after allterm the time sata_sil24 has been around.
 > 
-> Thanks, that would help out a lot.
+> What kernel version are we talking about?  If it includes sg-chaining 
+> via a git tree somewhere, sata_sil24 has a bug that was just fixed (by 
+> removing ata_sg_is_last).
 
-Alright, those changes are in Linus's tree now.
-
-Thanks.
+Yeah, that was what I thought and the reason why I cc'd Torsten but the 
+kernel version in question here is 2.6.22.  :-(
 
 -- 
 tejun
