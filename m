@@ -1,56 +1,48 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
-Date: Thu, 18 Oct 2007 22:56:33 -0400
-Message-ID: <47181CE1.4000802@garzik.org>
-References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org> <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [2.6.22.5] irq X: nobody cared but X is successfully used by
+ libata
+Date: Fri, 19 Oct 2007 12:23:15 +0900
+Message-ID: <47182323.10706@gmail.com>
+References: <20070826203513.4fa35f68@tux.DEF.witbe.net> <6bffcb0e0708261637s3369dd6fl1f833461e41c4daa@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44206 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754472AbXJSC4g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Oct 2007 22:56:36 -0400
-In-Reply-To: <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.229]:52746 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757991AbXJSDX0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 23:23:26 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so330736wra
+        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 20:23:26 -0700 (PDT)
+In-Reply-To: <6bffcb0e0708261637s3369dd6fl1f833461e41c4daa@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: peer chen <peerchen@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Paul Rolland <rol@as2917.net>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-peer chen wrote:
-> I hope one of the following patches can be merged to 2.6.24.
-> ==========================
-> http://lkml.org/lkml/2007/10/8/93
-> http://lkml.org/lkml/2007/9/25/20
+> On 26/08/07, Paul Rolland <rol@as2917.net> wrote:
+>> My machine (an ASUS P5W-DH-Deluxe, Core2, 4Go RAM, 3 SATA and 2IDE) is
+>> reporting a :
+>> irq 23: nobody cared (try booting with the "irqpoll" option)
+>> together with a Call Trace, but :
+>>  - irqpoll is present on the command line,
+>>  - the irq is reported to be used by libata,
+>>  - the irqpoll option is mandatory if I want _some_ of my SATA disks to be
+>>    accessible.
+>>
+>> I've attached a file with :
+>>  - dmesg,
+>>  - cat /proc/interrupts
+>>  - lspci
+>>  - lspci -vvv
+>>  - my .config
+>>
+>> I've tried mounting and accessing all the disks, and it works.
+>> The last weird thing : though reported as used by libata, the irq 23 counter
+>> seems to be fixed at 200001, though I've mounted and accessed all the
+>> disks !
 
-Unfortunately I do not feel like this is the right course of action.
+Does this still happen with 2.6.23?  If so, please post boot log.  Thanks.
 
-Experience from Intel platforms tells us that our users get very unhappy 
-when their silicon supports AHCI mode, but they are forced into using a 
-less-performant mode.  A popular example is an <unnamed> OEM whose BIOS 
-had no method whatsoever for enabling AHCI -- didn't even program the 
-PCI BAR -- even though tests showed the AHCI mode worked just fine when 
-manually programmed.
-
-AHCI is more likely to provide a /stable/ Serial ATA experience, because 
-the silicon deals primarily with sending and receiving FIS's, and not 
-much else.  In constrast, experience has shown the legacy IDE interface 
-to be a less reliable method of SATA support.  And certainly AHCI is 
-much, much faster with less per-command overhead.
-
-Given that AHCI is both faster and more stable, I feel it is the best 
-policy to enable AHCI when the hardware supports it, regardless of PCI 
-class code (IDE, SATA, or RAID).
-
-
-> Yes, I agree to set the 'swncq' as default for 2.6.24, after all, for
-> our server customers, stability is far more important than the new
-> feature no matter the problem is caused by drive or controller.
-
-Agreed.  Done!
-
-	Jeff
-
-
-
-
+-- 
+tejun
