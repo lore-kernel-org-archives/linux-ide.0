@@ -1,40 +1,51 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] ide/pci/sis5513.c: add missing "else"
-Date: Fri, 19 Oct 2007 16:04:19 +0200
-Message-ID: <20071019140419.GC3778@stusta.de>
+From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+Subject: Re: FW: LIBATA issue with SATA drive
+Date: Fri, 19 Oct 2007 18:21:53 +0200
+Message-ID: <64bb37e0710190921w66efe89dl1136d08328123629@mail.gmail.com>
+References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>
+	 <4716DC7D.6050007@gmail.com>
+	 <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com>
+	 <471804CA.9040103@gmail.com>
+	 <64bb37e0710182151j6992cde3u4f9ae60aa70e22eb@mail.gmail.com>
+	 <47183B31.4080002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:47630 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758008AbXJSODv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 10:03:51 -0400
+Received: from py-out-1112.google.com ([64.233.166.176]:20957 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754818AbXJSQVy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 12:21:54 -0400
+Received: by py-out-1112.google.com with SMTP id u77so1052971pyb
+        for <linux-ide@vger.kernel.org>; Fri, 19 Oct 2007 09:21:54 -0700 (PDT)
+In-Reply-To: <47183B31.4080002@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-This patch adds a missing "else" that was missing in
-commit c77a89cd98d99819f23a4a08e5e17ee1f13f6e4d.
+On 10/19/07, Tejun Heo <htejun@gmail.com> wrote:
+> Torsten Kaiser wrote:
+> > Just remebered another thing about sata_sil24 that popped up with 2.6.23-mm1.
+> > With this kernel version (comparing to 2.6.23-rc8-mm1) the port
+> > probing time goes up from ~0.5 seconds per port/drive to ~2 seconds.
+> > Also the SControl changed:
+> >
+> > 2.6.23-rc8-mm1:
+> > [    4.110000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > 2.6.23-mm1:
+> > [    5.930000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> >
+> > But except for increased delay during boot no errors can seen, the
+> > drives work normally.
+>
+> Yeah, PARTIAL / SLUMBER mode restriction is lifted.  Dunno whether
+> that's related to the increased delay tho.  Will investigate.
 
-Spotted by the Coverity checker.
+But don't invest too much time into this.
+That the delay is part of the broken ACPI of this board/bios seems
+very likely to me.
+(And apart from that delay there seems to be no other changes.)
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
----
-2e4b8d4f58ea45e55c87ba5563b0d0e135cac2b4 
-diff --git a/drivers/ide/pci/sis5513.c b/drivers/ide/pci/sis5513.c
-index c1d280b..1680926 100644
---- a/drivers/ide/pci/sis5513.c
-+++ b/drivers/ide/pci/sis5513.c
-@@ -264,7 +264,7 @@ static void sis_ata133_program_timings(ide_drive_t *drive, const u8 mode)
- 	if (mode >= XFER_MW_DMA_0) {
- 		t1 &= ~0x04;	/* disable UDMA */
- 		idx = mode - XFER_MW_DMA_0 + 5;
--	}
-+	} else
- 		idx = mode - XFER_PIO_0;
- 	t1 |= ini_time_value[clk][idx] << 12;
- 	t1 |= act_time_value[clk][idx] << 16;
-
+Torsten
