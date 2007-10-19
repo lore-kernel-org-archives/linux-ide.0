@@ -1,64 +1,37 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Fri, 19 Oct 2007 18:12:57 -0400
-Message-ID: <20071019221257.GV4000@csclub.uwaterloo.ca>
-References: <200710181832.42906.nick@ukfsn.org> <200710192212.30533.nick@ukfsn.org> <200710192344.27312.bzolnier@gmail.com> <200710192304.23749.nick@ukfsn.org>
+Date: Sat, 20 Oct 2007 00:28:21 +0200
+Message-ID: <200710200028.21860.bzolnier@gmail.com>
+References: <200710181832.42906.nick@ukfsn.org> <200710192344.27312.bzolnier@gmail.com> <200710192304.23749.nick@ukfsn.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:35576 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966646AbXJSWM6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 18:12:58 -0400
-Content-Disposition: inline
+Received: from fk-out-0910.google.com ([209.85.128.189]:42751 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765311AbXJSWWq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 18:22:46 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so564009fkz
+        for <linux-ide@vger.kernel.org>; Fri, 19 Oct 2007 15:22:45 -0700 (PDT)
 In-Reply-To: <200710192304.23749.nick@ukfsn.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nick Warne <nick@ukfsn.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: nick@ukfsn.org
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Oct 19, 2007 at 11:04:23PM +0100, Nick Warne wrote:
-> Yes, Len's advice has me wondering now.  Do I have a dodgy cable? I will have 
-> to change that tomorrow.
-> 
-> But more info.  The old drive played DVD movies etc. OK, but slowly it became 
-> worse until I couldn't read any one of them 9 times out of 10.  CD play 
-> back/burning was OK 100% all the time though - so I guessed the dvd laser 
-> (whatever it does) was dead - hence why I bought a new one. 
-> 
-> The new drive works perfectly, but for the udma33 issue.  If it was the cable, 
-> why would it read/burn CD OK, but not DVD sometimes on the old drive?
-
-Well older DVD drives often only did udma33 so they would even care if
-you had an 80 wire cable or not.  Newer once often require more than
-udma33 for full operation.  I got a new drive about a year ago, and
-burning dvd+rw at 4x worked great, but all dvd-r at 8x failed.
-Eventually I realized I had to change the 40wire cable to an 80 wire,
-and all problems disappeared.  The drive works fine in udma4 mode
-(whatever speed that is).  My previous DVD-ROM drive had no problems
-reading using a 40wire cable.
+On Saturday 20 October 2007, Nick Warne wrote:
+> On Friday 19 October 2007 22:44:27 Bartlomiej Zolnierkiewicz wrote:
 
 > hdparm -I
-> 
-> /dev/hdd:
-> 
-> ATAPI CD-ROM, with removable media
->         Model Number:       TSSTcorp CDDVDW SH-S202J
->         Serial Number:
->         Firmware Revision:  SB00
-> Standards:
->         Supported: CD-ROM ATAPI-3 -4 -5 -6 -7
-> Configuration:
->         DRQ response: 50us.
->         Packet size: 12 bytes
-> Capabilities:
->         LBA, IORDY(cannot be disabled)
->         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
->              Cycle time: min=120ns recommended=120ns
->         PIO: pio0 pio1 pio2 pio3 pio4
->              Cycle time: no flow control=383ns  IORDY flow control=120ns
-> 
-> BTW, thanks for help all.
 
---
-Len Sorensen
+It should have been hdparm --Istdout (sorry, once again).
+
+[ It is definitevely not my day, or rather trying to debug the problem
+  while preparing the next IDE pull request is not a such good idea... ]
+
+>From identify data we should be able to deduce whether this is a kernel
+problem or rather a hardware/configuration one.
+
+Thanks,
+Bart
