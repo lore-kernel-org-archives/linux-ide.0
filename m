@@ -1,53 +1,103 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Fri, 19 Oct 2007 16:21:18 -0400
-Message-ID: <471911BE.2000405@garzik.org>
-References: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl> <20071019195749.GK29903@austin.ibm.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: New CD/DVD drive - 80-wire cable detection failure
+Date: Fri, 19 Oct 2007 22:28:43 +0200
+Message-ID: <200710192228.43655.bzolnier@gmail.com>
+References: <200710181832.42906.nick@ukfsn.org> <200710192049.07877.nick@ukfsn.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38260 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759478AbXJSUVa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 16:21:30 -0400
-In-Reply-To: <20071019195749.GK29903@austin.ibm.com>
+Received: from mu-out-0910.google.com ([209.85.134.190]:45133 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757907AbXJSUXI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 16:23:08 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so945958mue
+        for <linux-ide@vger.kernel.org>; Fri, 19 Oct 2007 13:23:06 -0700 (PDT)
+In-Reply-To: <200710192049.07877.nick@ukfsn.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: Shane Huang <chunhao.huang@hotmail.com>, davem@davemloft.net, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, Brice Goglin <brice@myri.com>
+To: nick@ukfsn.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Linas Vepstas wrote:
-> On Fri, Oct 19, 2007 at 09:17:23PM +0800, Shane Huang wrote:
->> Since we have little experience on PCI and MSI here, we had to try to
+
+Hi,
+
+On Friday 19 October 2007, Nick Warne wrote:
+> On Thursday 18 October 2007 18:32:42 Nick Warne wrote:
+> > Hi all,
+> >
+> > Please CC, not subscribed.
+> >
+> > kernel 2.6.23
+> >
+> > My DVD/CDrom stopped reading DVD's, so I purchased a new one today.
+> >
+> > Old:
+> > Oct 10 21:01:01 linuxamd kernel:     ide0: BM-DMA at 0xd000-0xd007, BIOS
+> > settings: hda:DMA, hdb:DMA
+> > Oct 10 21:01:01 linuxamd kernel:     ide1: BM-DMA at 0xd008-0xd00f, BIOS
+> > settings: hdc:DMA, hdd:DMA
+> >
+> > Oct 10 21:01:01 linuxamd kernel: hdd: ATAPI 48X DVD-ROM DVD-R CD-R/RW
+> > drive, 2048kB Cache, UDMA(66)
+> > Oct 10 21:01:01 linuxamd kernel: Uniform CD-ROM driver Revision: 3.20
+> >
+> > New:
+> > Oct 18 17:32:20 linuxamd kernel:     ide0: BM-DMA at 0xd000-0xd007, BIOS
+> > settings: hda:DMA, hdb:DMA
+> > Oct 18 17:32:20 linuxamd kernel:     ide1: BM-DMA at 0xd008-0xd00f, BIOS
+> > settings: hdc:DMA, hdd:DMA
+> >
+> > Oct 18 17:32:20 linuxamd kernel: hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW
+> > drive, 2048kB Cache, UDMA(33)
+> > Oct 18 17:32:20 linuxamd kernel: Uniform CD-ROM driver Revision: 3.20
+> >
+> > For some reason the new drive produces:
+> >
+> > hdd: TSSTcorp CDDVDW SH-S202J, ATAPI CD/DVD-ROM drive
+> > hdd: drive side 80-wire cable detection failed, limiting max speed to
+> > UDMA33
+> >
+> > I boot with hdd=ide-cd
+> >
+> > How to debug this to find out what is going on?
+> >
+> > Thanks,
+> >
+> > Nick
 > 
-> As someone else pointed out, AMD should have *lots* of people with
-> pci and msi experience on the payroll.  (Folks here buy AMD-designed 
-> pci chips ...)
+> No help anyone?  Did I buy a taboo drive?  
 > 
->> ONLY
->> comment out the pci_intx() call in drivers/ata/ahci.c
->> My system can boot up too with MSI enabled!
->>
->> So does it mean that the root cause is our SB700 SATA controller
->> has a hardware bug where setting INTX_DISABLE in the PCI COMMAND
->> register masks MSI interrupts too? 
+> nick@linuxamd:nick$ /usr/sbin/hdparm -i /dev/hdd
 > 
-> That's what it sounds like, to me.
+> /dev/hdd:
 > 
->> And what is the software solution or workaround?
+>  Model=TSSTcorp CDDVDW SH-S202J, FwRev=SB00, SerialNo=
+>  Config={ Fixed Removeable DTR<=5Mbs DTR>10Mbs nonMagnetic }
+>  RawCHS=0/0/0, TrkSize=0, SectSize=0, ECCbytes=0
+>  BuffType=unknown, BuffSize=0kB, MaxMultSect=0
+>  (maybe): CurCHS=0/0/0, CurSects=0, LBA=yes, LBAsects=0
+>  IORDY=yes, tPIO={min:383,w/IORDY:120}, tDMA={min:120,rec:120}
+>  PIO modes:  pio0 pio1 pio2 pio3 pio4
+>  DMA modes:  mdma0 mdma1 mdma2
+>  UDMA modes: udma0 udma1 *udma2 udma3 udma4
+>  AdvancedPM=no
+>  Drive conforms to: unknown:
 > 
-> Not sure. Sounds like the device driver needs a quirk for this part.
+>  * signifies the current active mode
+> 
+> 
+> Any help to get this fixed (by me) would be welcome.  I cannot find any 
+> information on why this happens (or rather why the 'drive side') refuses to 
+> see 80-wire ide cable.
 
+Please try:
 
-Take a look at tg3.c net driver change 
-2fbe43f6f631dd7ce19fb1499d6164a5bdb34568 which is a similar situation.
+http://kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/broken-out/ide-ide-change-master-slave-identify-order.patch
 
-However, it may turn out that removing the pci_intx() stuff as a general 
-rule is easier than quirking these devices, if enough of them turn out 
-to have this hardware bug.
+or the latest kernel snapshot from kernel.org.
 
-The tg3.c change should illustrate how to fix immediately, though.
-
-	Jeff
-
+Thanks,
+Bart
