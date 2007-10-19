@@ -1,37 +1,59 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Sat, 20 Oct 2007 00:28:21 +0200
-Message-ID: <200710200028.21860.bzolnier@gmail.com>
-References: <200710181832.42906.nick@ukfsn.org> <200710192344.27312.bzolnier@gmail.com> <200710192304.23749.nick@ukfsn.org>
+From: MisterE <MisterE2002@zonnet.nl>
+Subject: Re[2]: Sata Sil3512 bug?;  Promise SATA300 TX4
+Date: Sat, 20 Oct 2007 00:58:02 +0200
+Message-ID: <15110336662.20071020005802@zonnet.nl>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl> <4717CB10.3080509@lxnt.info> <471807DF.8010100@gmail.com> <47191C3A.5040909@lxnt.info>
+Reply-To: MisterE <MisterE2002@zonnet.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:42751 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765311AbXJSWWq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Oct 2007 18:22:46 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so564009fkz
-        for <linux-ide@vger.kernel.org>; Fri, 19 Oct 2007 15:22:45 -0700 (PDT)
-In-Reply-To: <200710192304.23749.nick@ukfsn.org>
-Content-Disposition: inline
+Received: from smtp.publishnet.nl ([212.241.49.8]:1750 "EHLO smtp.pn.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757833AbXJSWy1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Oct 2007 18:54:27 -0400
+Received: from localhost ([84.246.52.165])
+	by smtp.pn.nl (smtp.pn.nl [212.241.49.8])
+	(MDaemon.PRO.v8.1.3.R)
+	with ESMTP id 41-md50000106072.msg
+	for <linux-ide@vger.kernel.org>; Sat, 20 Oct 2007 00:54:16 +0200
+In-Reply-To: <47191C3A.5040909@lxnt.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: nick@ukfsn.org
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alexander Sabourenkov <screwdriver@lxnt.info>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, benh@kernel.crashing.org, jgarzik@pobox.com, jeff@garzik.org
 
-On Saturday 20 October 2007, Nick Warne wrote:
-> On Friday 19 October 2007 22:44:27 Bartlomiej Zolnierkiewicz wrote:
+Hello Alexander,
 
-> hdparm -I
+Friday, October 19, 2007, 11:06:02 PM, you wrote:
 
-It should have been hdparm --Istdout (sorry, once again).
 
-[ It is definitevely not my day, or rather trying to debug the problem
-  while preparing the next IDE pull request is not a such good idea... ]
+> I don't know what to try next. Any ideas?
 
->From identify data we should be able to deduce whether this is a kernel
-problem or rather a hardware/configuration one.
+I'm no kernel hacker, so i'll take a shot.
+I assume you have done most already...
 
-Thanks,
-Bart
+* hardware (Tested/without/or used another: motherboard, videocard, memory,
+hard drives, power supply, all other hardware)
+
+* tried a more n00b-proof distribution. As far as i know you have all
+those flags with gentoo. A mistake is easily made.
+
+* Tested with the latest official drivers (redhat) from the Promise site. And
+installing that OS on a disk. I assume they made working drivers, so
+it should work with it...
+
+* Does it work correctly with Windows?
+
+This would be the steps i would take to determine the cause of the
+problem.
+
+Finally, my 2.6.23 kernel is done. I'm going try to install it now.
+Tomorrow the results :)
+
+
+-- 
+Best regards,
+ MisterE                            mailto:MisterE2002@zonnet.nl
+
+
