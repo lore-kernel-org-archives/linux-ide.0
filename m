@@ -1,54 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: FW: LIBATA issue with SATA drive
-Date: Fri, 19 Oct 2007 11:36:27 +0900
-Message-ID: <4718182B.9040802@gmail.com>
-References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>	 <4716DC7D.6050007@gmail.com> <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com> <471804CA.9040103@gmail.com> <47180928.3020104@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
+Date: Thu, 18 Oct 2007 22:56:33 -0400
+Message-ID: <47181CE1.4000802@garzik.org>
+References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org> <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:24427 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761597AbXJSCgf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Oct 2007 22:36:35 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so421199wah
-        for <linux-ide@vger.kernel.org>; Thu, 18 Oct 2007 19:36:35 -0700 (PDT)
-In-Reply-To: <47180928.3020104@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:44206 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754472AbXJSC4g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Oct 2007 22:56:36 -0400
+In-Reply-To: <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Torsten Kaiser <just.for.lkml@googlemail.com>, "Ip, Clarence" <CIP@harris.com>, linux-ide@vger.kernel.org, jens.axboe@oracle.com
+To: peer chen <peerchen@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> Hello,
->>
->> Torsten Kaiser wrote:
->>>> The symptom seems very similar to yours but the kernel is 2.6.22 which
->>>> doesn't have the SG change which you found out to be broken.  Can you
->>>> update us on how the testing of patched kernel went?
->>>
->>> Sorry I didn't realize that you where still waiting for a 'confirm
->>> good'. I intended only to mail, if I got the error again, as the debug
->>> output about SGE_TRM confirmed, that this fix changes the behavior of
->>> sata_sil24 and there was no really 200% sure method of detecting that
->>> this bug was gone.
->>>
->>> Anyway, after fixing ata_sg_is_last() by adding the +1 I did not had a
->>> single failure.
->>>
->>> I'm currently using 2.6.23-mm1 and 16 boots where all good.
->>> (Apart from the unrelated failure with sata_nv and swncq...)
->>
->> I see, a different issue then.  It's just weird to see similar issues 
->> popping up now after allterm the time sata_sil24 has been around.
-> 
-> What kernel version are we talking about?  If it includes sg-chaining 
-> via a git tree somewhere, sata_sil24 has a bug that was just fixed (by 
-> removing ata_sg_is_last).
+peer chen wrote:
+> I hope one of the following patches can be merged to 2.6.24.
+> ==========================
+> http://lkml.org/lkml/2007/10/8/93
+> http://lkml.org/lkml/2007/9/25/20
 
-Yeah, that was what I thought and the reason why I cc'd Torsten but the 
-kernel version in question here is 2.6.22.  :-(
+Unfortunately I do not feel like this is the right course of action.
 
--- 
-tejun
+Experience from Intel platforms tells us that our users get very unhappy 
+when their silicon supports AHCI mode, but they are forced into using a 
+less-performant mode.  A popular example is an <unnamed> OEM whose BIOS 
+had no method whatsoever for enabling AHCI -- didn't even program the 
+PCI BAR -- even though tests showed the AHCI mode worked just fine when 
+manually programmed.
+
+AHCI is more likely to provide a /stable/ Serial ATA experience, because 
+the silicon deals primarily with sending and receiving FIS's, and not 
+much else.  In constrast, experience has shown the legacy IDE interface 
+to be a less reliable method of SATA support.  And certainly AHCI is 
+much, much faster with less per-command overhead.
+
+Given that AHCI is both faster and more stable, I feel it is the best 
+policy to enable AHCI when the hardware supports it, regardless of PCI 
+class code (IDE, SATA, or RAID).
+
+
+> Yes, I agree to set the 'swncq' as default for 2.6.24, after all, for
+> our server customers, stability is far more important than the new
+> feature no matter the problem is caused by drive or controller.
+
+Agreed.  Done!
+
+	Jeff
+
+
+
+
