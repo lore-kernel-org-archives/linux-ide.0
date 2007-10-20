@@ -1,31 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_sis: fix SCR read breakage
-Date: Fri, 19 Oct 2007 22:57:23 -0400
-Message-ID: <47196E93.8090901@garzik.org>
-References: <20071018025339.GB18322@htj.dyndns.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix kernel-doc param name
+Date: Fri, 19 Oct 2007 22:57:30 -0400
+Message-ID: <47196E9A.2050705@pobox.com>
+References: <20071018141226.9923ff99.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58419 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58431 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757289AbXJTC5Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 22:57:25 -0400
-In-Reply-To: <20071018025339.GB18322@htj.dyndns.org>
+	id S966917AbXJTC5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Oct 2007 22:57:34 -0400
+In-Reply-To: <20071018141226.9923ff99.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, torvalds <torvalds@linux-foundation.org>
 
-Tejun Heo wrote:
-> SCR read for controllers which uses PCI configuration space for SCR
-> access got broken while adding @val argument to SCR accessors.  Fix
-> it.
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Fix libata kernel-doc parameter name.
+> 
+> Warning(linux-2.6.23-git13//drivers/ata/libata-core.c:1415): No description found for parameter 'sgl'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 > ---
->  drivers/ata/sata_sis.c |   13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
+>  drivers/ata/libata-core.c |    2 +-
 
 applied
 
