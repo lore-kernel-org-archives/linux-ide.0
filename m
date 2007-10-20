@@ -1,130 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Fri, 19 Oct 2007 23:08:20 -0400
-Message-ID: <20071020030820.GA20260@havoc.gtf.org>
+From: listmail <listmail@triad.rr.com>
+Subject: debian shutdown info
+Date: Sat, 20 Oct 2007 02:18:16 -0400
+Message-ID: <47199DA8.6000605@triad.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:49691 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755245AbXJTDIV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Oct 2007 23:08:21 -0400
-Content-Disposition: inline
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:36458 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753598AbXJTGd4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Oct 2007 02:33:56 -0400
+Received: from linserv ([65.188.228.203]) by hrndva-omta01.mail.rr.com
+          with ESMTP
+          id <20071020061757.OPVA4050.hrndva-omta01.mail.rr.com@linserv>
+          for <linux-ide@vger.kernel.org>; Sat, 20 Oct 2007 06:17:57 +0000
+Received: from gamehub.localnet
+	([192.168.0.124] helo=[127.0.0.1] ident=HydraIRC)
+	by linserv with esmtp (Exim 4.67)
+	(envelope-from <listmail@triad.rr.com>)
+	id 1Ij7em-00018Q-Nm
+	for linux-ide@vger.kernel.org; Sat, 20 Oct 2007 02:17:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
+I was still getting this message on Debian sid w/kernel 2.6.22.6 and I 
+could hear my drive spin back up before the PC went completely off.  
+This was the fix
+which was a small edit on the /etc/init.d/halt script.  It worked on two 
+boxes.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
-
-to receive the following updates:
-
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/pata_cs5536.c |    4 ++--
- drivers/ata/sata_sis.c    |   15 +++++++++------
- 3 files changed, 12 insertions(+), 9 deletions(-)
-
-Bartlomiej Zolnierkiewicz (1):
-      pata_cs5536: MWDMA fix
-
-Jeff Garzik (1):
-      [libata] sata_sis: use correct S/G table size
-
-Randy Dunlap (1):
-      libata: fix kernel-doc param name
-
-Tejun Heo (1):
-      sata_sis: fix SCR read breakage
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index bbaa545..629eadb 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1392,7 +1392,7 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
-  *	@tf: Taskfile registers for the command and the result
-  *	@cdb: CDB for packet command
-  *	@dma_dir: Data tranfer direction of the command
-- *	@sg: sg list for the data buffer of the command
-+ *	@sgl: sg list for the data buffer of the command
-  *	@n_elem: Number of sg entries
-  *	@timeout: Timeout in msecs (0 for default)
-  *
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 53070f6..d753e56 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -40,7 +40,7 @@
- #include <asm/msr.h>
- 
- #define DRV_NAME	"pata_cs5536"
--#define DRV_VERSION	"0.0.5"
-+#define DRV_VERSION	"0.0.6"
- 
- enum {
- 	CFG			= 0,
-@@ -214,7 +214,7 @@ static void cs5536_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 		cs5536_read(pdev, DTC, &dtc);
- 
- 		dtc &= ~(IDE_DRV_MASK << dshift);
--		dtc |= mwdma_timings[mode] << dshift;
-+		dtc |= mwdma_timings[mode - XFER_MW_DMA_0] << dshift;
- 
- 		cs5536_write(pdev, DTC, dtc);
- 	}
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index 8d98a9f..f147dc7 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -92,7 +92,7 @@ static struct scsi_host_template sis_sht = {
- 	.queuecommand		= ata_scsi_queuecmd,
- 	.can_queue		= ATA_DEF_QUEUE,
- 	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= ATA_MAX_PRD,
-+	.sg_tablesize		= LIBATA_MAX_PRD,
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
- 	.emulated		= ATA_SHT_EMULATED,
- 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-@@ -166,11 +166,11 @@ static unsigned int get_scr_cfg_addr(struct ata_port *ap, unsigned int sc_reg)
- 	return addr;
- }
- 
--static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
-+static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg, u32 *val)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	unsigned int cfg_addr = get_scr_cfg_addr(ap, sc_reg);
--	u32 val, val2 = 0;
-+	u32 val2 = 0;
- 	u8 pmr;
- 
- 	if (sc_reg == SCR_ERROR) /* doesn't exist in PCI cfg space */
-@@ -178,13 +178,16 @@ static u32 sis_scr_cfg_read (struct ata_port *ap, unsigned int sc_reg)
- 
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
- 
--	pci_read_config_dword(pdev, cfg_addr, &val);
-+	pci_read_config_dword(pdev, cfg_addr, val);
- 
- 	if ((pdev->device == 0x0182) || (pdev->device == 0x0183) ||
- 	    (pdev->device == 0x1182) || (pmr & SIS_PMR_COMBINED))
- 		pci_read_config_dword(pdev, cfg_addr+0x10, &val2);
- 
--	return (val|val2) &  0xfffffffb; /* avoid problems with powerdowned ports */
-+	*val |= val2;
-+	*val &= 0xfffffffb;	/* avoid problems with powerdowned ports */
-+
-+	return 0;
- }
- 
- static void sis_scr_cfg_write (struct ata_port *ap, unsigned int sc_reg, u32 val)
-@@ -214,7 +217,7 @@ static int sis_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
- 		return -EINVAL;
- 
- 	if (ap->flags & SIS_FLAG_CFGSCR)
--		return sis_scr_cfg_read(ap, sc_reg);
-+		return sis_scr_cfg_read(ap, sc_reg, val);
- 
- 	pci_read_config_byte(pdev, SIS_PMR, &pmr);
- 
+http://www.linuxquestions.org/questions/debian-26/disk-might-not-be-spun-down-properly.-update-shutdown-utility-583307/
