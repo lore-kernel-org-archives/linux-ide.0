@@ -1,74 +1,74 @@
-From: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
-Subject: [PATCH] drivers/ide/Kconfig IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE
-Date: Sat, 20 Oct 2007 23:46:47 -0700 (PDT)
-Message-ID: <604640.68715.qm@web52004.mail.re2.yahoo.com>
+From: Paul Rolland <rol@as2917.net>
+Subject: Re: [2.6.22.5] irq X: nobody cared but X is successfully used by
+ libata
+Date: Sun, 21 Oct 2007 09:11:59 +0000
+Message-ID: <20071021091159.08c75158@tux.DEF.witbe.net>
+References: <20070826203513.4fa35f68@tux.DEF.witbe.net>
+	<6bffcb0e0708261637s3369dd6fl1f833461e41c4daa@mail.gmail.com>
+	<47182323.10706@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web52004.mail.re2.yahoo.com ([206.190.49.251]:28715 "HELO
-	web52004.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750857AbXJUGx3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Oct 2007 02:53:29 -0400
+Received: from tag.witbe.net ([81.88.96.48]:55341 "EHLO tag.witbe.net"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751309AbXJUJMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 21 Oct 2007 05:12:07 -0400
+In-Reply-To: <47182323.10706@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-From: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
+Hello,
 
-Correct IDEPCI_SHARE_IRQ description to keeping interrupts enabled
-when calling the PCI IDE action handler.
-Add IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE help text from hdparm
-manual page.
+On Fri, 19 Oct 2007 12:23:15 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Signed-off-by: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
----
+> > On 26/08/07, Paul Rolland <rol@as2917.net> wrote:
+> >> My machine (an ASUS P5W-DH-Deluxe, Core2, 4Go RAM, 3 SATA and 2IDE) is
+> >> reporting a :
+> >> irq 23: nobody cared (try booting with the "irqpoll" option)
+> >> together with a Call Trace, but :
+> >>  - irqpoll is present on the command line,
+> >>  - the irq is reported to be used by libata,
+> >>  - the irqpoll option is mandatory if I want _some_ of my SATA disks to
+> >> be accessible.
+> >>
+> >> I've attached a file with :
+> >>  - dmesg,
+> >>  - cat /proc/interrupts
+> >>  - lspci
+> >>  - lspci -vvv
+> >>  - my .config
+> >>
+> >> I've tried mounting and accessing all the disks, and it works.
+> >> The last weird thing : though reported as used by libata, the irq 23
+> >> counter seems to be fixed at 200001, though I've mounted and accessed
+> >> all the disks !
+> 
+> Does this still happen with 2.6.23?  If so, please post boot log.  Thanks.
+> 
 
---- a/drivers/ide/Kconfig	2007-10-21 08:53:11.826349500 +0300
-+++ b/drivers/ide/Kconfig	2007-10-21 09:21:48.295590000 +0300
-@@ -154,6 +154,18 @@ config BLK_DEV_IDEDISK
- config IDEDISK_MULTI_MODE
- 	bool "Use multi-mode by default"
- 	help
-+	  Multiple sector mode is a feature of most modern IDE hard
-+ 	  drives, permitting the transfer of multiple sectors per I/O
-+	  interrupt, rather than the usual one sector per interrupt.
-+	  When this feature is enabled, it typically reduces operating
-+	  system overhead for disk I/O by 30-50%. On many systems, it
-+	  also provides increased data throughput of anywhere from 5%
-+	  to 50%. Some drives, however (most notably the WD Caviar
-+	  series), seem to run slower with multiple mode enabled. Some
-+	  drives claim to support multiple mode, but lose data at some
-+	  settings. Under rare circumstances, such failures can result
-+	  in massive filesystem corruption.
-+
- 	  If you get this error, try to say Y here:
- 
- 	  hda: set_multmode: status=0x51 { DriveReady SeekComplete Error }
-@@ -367,11 +379,16 @@ config BLK_DEV_IDEPCI
- 	bool
- 
- config IDEPCI_SHARE_IRQ
--	bool "Sharing PCI IDE interrupts support"
-+	bool "Keeping interrupts enabled when calling the PCI IDE action handler support"
- 	depends on BLK_DEV_IDEPCI
- 	help
--	  Some ATA/IDE chipsets have hardware support which allows for
--	  sharing a single IRQ with other cards. To enable support for
-+	  A setting of Y permits the driver to unmask other interrupts
-+	  during processing of a disk interrupt, which greatly improves
-+ 	  Linux's responsiveness and eliminates "serial port overrun"
-+	  errors. Use this feature with caution: some drive/controller
-+	  combinations do not tolerate the increased I/O latencies
-+	  possible when this feature is enabled, resulting in massive
-+	  filesystem corruption. To enable support for
- 	  this in the ATA/IDE driver, say Y here.
- 
- 	  It is safe to say Y to this question, in most cases.
+Built and booted already twice, and so far, no problem anymore.
+I'll continue to watch this carefully, and will report any problem that could
+be related to this.
+
+Regards,
+Paul
 
 
+-- 
+Paul Rolland                                E-Mail : rol(at)witbe.net
+Witbe.net SA                                Tel. +33 (0)1 47 67 77 77
+Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
+F-92057 Paris La Defense                    RIPE : PR12-RIPE
 
+Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navigateur 
+"Some people dream of success... while others wake up and work hard at it" 
 
-        __________________________________  Ihr erstes Baby? Holen Sie sich Tipps von anderen Eltern.  www.yahoo.de/clever
+"I worry about my child and the Internet all the time, even though she's too 
+young to have logged on yet. Here's what I worry about. I worry that 10 or 15 
+years from now, she will come to me and say 'Daddy, where were you when they 
+took freedom of the press away from the Internet?'"
+--Mike Godwin, Electronic Frontier Foundation 
