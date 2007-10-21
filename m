@@ -1,74 +1,35 @@
-From: Paul Rolland <rol@as2917.net>
-Subject: Re: [2.6.22.5] irq X: nobody cared but X is successfully used by
- libata
-Date: Sun, 21 Oct 2007 09:11:59 +0000
-Message-ID: <20071021091159.08c75158@tux.DEF.witbe.net>
-References: <20070826203513.4fa35f68@tux.DEF.witbe.net>
-	<6bffcb0e0708261637s3369dd6fl1f833461e41c4daa@mail.gmail.com>
-	<47182323.10706@gmail.com>
+From: Martin Rogge <marogge@onlinehome.de>
+Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
+Date: Sun, 21 Oct 2007 22:55:49 +0200
+Message-ID: <200710212255.50123.marogge@onlinehome.de>
+References: <200710142211.03382.marogge@onlinehome.de> <200710200109.58872.marogge@onlinehome.de> <471A36DC.4040509@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tag.witbe.net ([81.88.96.48]:55341 "EHLO tag.witbe.net"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751309AbXJUJMH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 21 Oct 2007 05:12:07 -0400
-In-Reply-To: <47182323.10706@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.177]:65106 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbXJUU4c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2007 16:56:32 -0400
+In-Reply-To: <471A36DC.4040509@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-Hello,
+On Saturday 20 October 2007 19:11:56 Sergei Shtylyov wrote:
+>     What I don't like is that both PIIX4 and PCI-648 are sharing IRQ15
+> (PIIX4 is in legacy mode, so it uses edge-triggered IRQ15 which is not
+> shareable). You don't have drives connected to PIIX4, do you?  However, it
+> doesn't look like a glitch on IRQ15, it looks like MRDMODE reg. doesn't
+> work as documented...
 
-On Fri, 19 Oct 2007 12:23:15 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+Well, don't worry too much about the PIIX device. I have disabled it in the 
+BIOS, and I haven't compiled the driver into the kernel. The IRQ sharing 
+hasn't troubled any linux version yet, nor any OS from the other side.
 
-> > On 26/08/07, Paul Rolland <rol@as2917.net> wrote:
-> >> My machine (an ASUS P5W-DH-Deluxe, Core2, 4Go RAM, 3 SATA and 2IDE) is
-> >> reporting a :
-> >> irq 23: nobody cared (try booting with the "irqpoll" option)
-> >> together with a Call Trace, but :
-> >>  - irqpoll is present on the command line,
-> >>  - the irq is reported to be used by libata,
-> >>  - the irqpoll option is mandatory if I want _some_ of my SATA disks to
-> >> be accessible.
-> >>
-> >> I've attached a file with :
-> >>  - dmesg,
-> >>  - cat /proc/interrupts
-> >>  - lspci
-> >>  - lspci -vvv
-> >>  - my .config
-> >>
-> >> I've tried mounting and accessing all the disks, and it works.
-> >> The last weird thing : though reported as used by libata, the irq 23
-> >> counter seems to be fixed at 200001, though I've mounted and accessed
-> >> all the disks !
-> 
-> Does this still happen with 2.6.23?  If so, please post boot log.  Thanks.
-> 
+MOst likely you're on the right track with the mrdmode register.
 
-Built and booted already twice, and so far, no problem anymore.
-I'll continue to watch this carefully, and will report any problem that could
-be related to this.
-
-Regards,
-Paul
-
-
--- 
-Paul Rolland                                E-Mail : rol(at)witbe.net
-Witbe.net SA                                Tel. +33 (0)1 47 67 77 77
-Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
-F-92057 Paris La Defense                    RIPE : PR12-RIPE
-
-Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navigateur 
-"Some people dream of success... while others wake up and work hard at it" 
-
-"I worry about my child and the Internet all the time, even though she's too 
-young to have logged on yet. Here's what I worry about. I worry that 10 or 15 
-years from now, she will come to me and say 'Daddy, where were you when they 
-took freedom of the press away from the Internet?'"
---Mike Godwin, Electronic Frontier Foundation 
+cu Martin
