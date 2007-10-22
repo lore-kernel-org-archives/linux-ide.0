@@ -1,100 +1,31 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Mon, 22 Oct 2007 17:31:04 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710221700120.32497@iabervon.org>
-References: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
- <20071019195749.GK29903@austin.ibm.com> <471911BE.2000405@garzik.org>
- <Pine.LNX.4.64.0710221555190.32497@iabervon.org> <471D0ADC.7000005@garzik.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: ATA tape drive STT3401A needs DRQ HSM workaround too
+Date: Mon, 22 Oct 2007 18:36:00 -0400
+Message-ID: <471D25D0.9020702@rtr.ca>
+References: <471C6C44.2030607@gmail.com> <471CEDD4.5040201@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:43188 "EHLO iabervon.org"
+Received: from rtr.ca ([76.10.145.34]:4558 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751166AbXJVVbF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2007 17:31:05 -0400
-In-Reply-To: <471D0ADC.7000005@garzik.org>
+	id S1751245AbXJVWgD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2007 18:36:03 -0400
+In-Reply-To: <471CEDD4.5040201@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Linas Vepstas <linas@austin.ibm.com>, Shane Huang <chunhao.huang@hotmail.com>, davem@davemloft.net, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, Brice Goglin <brice@myri.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>
 
-On Mon, 22 Oct 2007, Jeff Garzik wrote:
+Man.. somebody needs to teach hald the difference between optical drives
+and tape drives..   It seems to just sit in a tight loop issuing the same
+failed commands over and over and over to the tape unit after boot.
 
-> Daniel Barkalow wrote:
-> > On Fri, 19 Oct 2007, Jeff Garzik wrote:
-> > 
-> > > Linas Vepstas wrote:
-> > > > On Fri, Oct 19, 2007 at 09:17:23PM +0800, Shane Huang wrote:
-> > > > > Since we have little experience on PCI and MSI here, we had to try to
-> > > > As someone else pointed out, AMD should have *lots* of people with
-> > > > pci and msi experience on the payroll.  (Folks here buy AMD-designed pci
-> > > > chips ...)
-> > > >
-> > > > > ONLY
-> > > > > comment out the pci_intx() call in drivers/ata/ahci.c
-> > > > > My system can boot up too with MSI enabled!
-> > > > >
-> > > > > So does it mean that the root cause is our SB700 SATA controller
-> > > > > has a hardware bug where setting INTX_DISABLE in the PCI COMMAND
-> > > > > register masks MSI interrupts too? 
-> > > > That's what it sounds like, to me.
-> > > >
-> > > > > And what is the software solution or workaround?
-> > > > Not sure. Sounds like the device driver needs a quirk for this part.
-> > >
-> > > Take a look at tg3.c net driver change
-> > > 2fbe43f6f631dd7ce19fb1499d6164a5bdb34568 which is a similar situation.
-> > >
-> > > However, it may turn out that removing the pci_intx() stuff as a general
-> > > rule
-> > > is easier than quirking these devices, if enough of them turn out to have
-> > > this
-> > > hardware bug.
-> > 
-> > At a first approximation, ATI/AMD devices don't send any interrupts if intx
-> > is disabled, nVidia devices send legacy interrupts in addition to MSI ones
-> > if intx isn't disabled, and Intel devices actually work correctly. So we
-> > need at least one kind of device quirk for intx and msi. (And doing it in
-> > the drivers doesn't work, since everybody is making things driven by
-> > snd_hda_intel and would like msi, afaict)
-> 
-> Note that INTX_DISABLE is a recent addition to PCI.  Older PCI devices support
-> neither MSI nor INTX-disable, so make sure such devices don't creep into your
-> sample.
+I had to kill it off to gain control of Fedora so I could actually *do*
+anything on the system.
 
-I have a device that supports MSI and INTX-disable, and, with MSI on (and 
-delivering interrupts successfully) also sends legacy interrupts (on 
-the IRQ that is no longer associated with the device) unless INTX is 
-disabled. Without the intx_disable(), the kernel disables the IRQ 
-entirely and breaks a random other device in my system.
+Weird.
 
-It's:
+Any, Albert Lee has claimed the drive.
 
-00:07.0 Bridge: nVidia Corporation MCP61 Ethernet (rev a2)
-
-I haven't tried MSI with the other devices in the system, but I expect 
-that this:
-
-00:05.0 Audio device: nVidia Corporation MCP61 High Definition Audio (rev a2)
-
-will have the same issue, and use a multi-vendor driver.
-
-> In general it is documented that INTX_DISABLE should apply only to INTx# so
-> devices that disable MSI based on that bit are out of spec.  But unfortunately
-> that is rather irrelevant, since we see these out-of-spec devices in the field
-> today.
-
-It's likewise documented (although maybe arguable in wording) that the 
-device shouldn't send legacy interrupts if MSI is in use, regardless of 
-INTX_DISABLE, but this also happens in the field.
-
-I think that the current Linux behavior with respect to INTX_DISABLE is 
-simply due to which hardware bug was present in the device whose driver 
-first got Linux support, but one or the other or both needs a quirk, since 
-there's no behavior that works with everything. And it's still impossible 
-to tell which bug is more common, since MSI isn't used most of the time, 
-even if the hardware supports it, so it's pretty arbitrary which way Linux 
-goes in the non-quirk case.
-
-	-Daniel
-*This .sig left intentionally blank*
+Cheers
