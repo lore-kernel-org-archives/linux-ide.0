@@ -1,62 +1,41 @@
-From: Soeren Sonnenburg <kernel@nn7.de>
-Subject: Re: sata sil3114 vs. certain seagate drives results in filesystem
-	corruptions
-Date: Mon, 22 Oct 2007 10:36:32 +0000
-Message-ID: <1193049392.10246.29.camel@localhost>
-References: <1192863324.5720.162.camel@localhost>
-	 <471C071C.2010202@gmail.com>  <200710221148.08809.bs@q-leap.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata-sff: Correct use of check_status()
+Date: Mon, 22 Oct 2007 11:40:56 +0100
+Message-ID: <20071022114056.78bafbf1@the-village.bc.nu>
+References: <20071015192529.2365b636@the-village.bc.nu>
+	<4716AFCA.4080509@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nn7.de ([85.214.94.156]:34110 "EHLO nn7.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751563AbXJVKgf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2007 06:36:35 -0400
-In-Reply-To: <200710221148.08809.bs@q-leap.de>
+Received: from [81.2.110.250] ([81.2.110.250]:60000 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751742AbXJVKhz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2007 06:37:55 -0400
+In-Reply-To: <4716AFCA.4080509@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, akpm@osdl.org
 
-On Mon, 2007-10-22 at 11:48 +0200, Bernd Schubert wrote:
-> Hello,
+> > +	tf->command = ata_chk_status(ap);
+> >  	tf->feature = ioread8(ioaddr->error_addr);
+> >  	tf->nsect = ioread8(ioaddr->nsect_addr);
+> >  	tf->lbal = ioread8(ioaddr->lbal_addr);
 > 
-> On Monday 22 October 2007 04:12:44 Tejun Heo wrote:
-> > Helo,
-> > [...]
-> > > Now when I write large files of zeros to root(sda&sdb) and read the file
-> > > back in it contains a few nonzero entries:
-> > >
-> > > # dd if=/dev/zero of=/foo bs=1M count=2000
-> > > # hexdump /foo
-> > > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> > > *
-> > > <after >1GB random parts, within large blocks of zeroes>
-> > >
-> > > I can reliably trigger this on the md0 / devmapper-root setup when I
-> > > write about 2GB of data (note that this machine has 1.5G of memory - and
-> > > still 1GB is often enough to see this problem). Here it does not matter
-> > > where in the filesystem I do these writes.
-> 
-> Thats almost the same test as I'm always doing. Only I do not write only 2GB, 
+> applied, with a sigh:  it's in SFF, so I saw nothing wrong with 
+> ata_check_status().  I checked -- no SFF driver overrides it according 
+> to my audit, therefore the previous version was faster while still correct.
 
-Well when I read your mail I thought that I could be seeing exactly the
-same bug... it still may be. However ``my'' problem does not go away
-with the mod15fix ...
+I hit it with the NS87415 where ata_check_status() doesn't do the right
+thing. Later on it turned out that there were enough other bugs when
+enabling DMA that it needed its own tf read method anyway.
 
-> but as much as it fits onto the disk. On reading back this file, the 
-> filesystem will report errors somewhere between 50GB and 230GB (disk size is 
-> 250GB).
+Alternative is to go through and clear up chk_atatus v check_status
+(rename one sff_ to be clear), and explicitly document the assumption in
+tf_read. That way it'll be obvious to whoever hits it in future and they
+can supply their own tf_read method.
 
-Wow, I really see lots of corruptions (well every 1-2 GB a couple of
-bytes are corrupted). Are you getting similiarly many in the 50G - 230G
-region?
+Preferences ?
 
-> > Thanks.  I'll try to reproduce the problem here.  What's your motherboard?
-> 
-> All tested S2882 boards here.
-
-I assume all equipped with lots of memory and mostly empty pci slots?
-
-Soeren
+Alan
