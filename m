@@ -1,40 +1,81 @@
-From: Soeren Sonnenburg <kernel@nn7.de>
-Subject: Re: sata sil3114 vs. certain seagate drives results in filesystem
-	corruptions
-Date: Mon, 22 Oct 2007 12:56:17 +0000
-Message-ID: <1193057777.10246.37.camel@localhost>
-References: <1192863324.5720.162.camel@localhost>
-	 <200710221148.08809.bs@q-leap.de> <1193049392.10246.29.camel@localhost>
-	 <200710221302.12229.bs@q-leap.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] drivers/ide/Kconfig IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE
+Date: Mon, 22 Oct 2007 17:23:44 +0400
+Message-ID: <471CA460.5040107@ru.mvista.com>
+References: <604640.68715.qm@web52004.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nn7.de ([85.214.94.156]:37360 "EHLO nn7.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017AbXJVM4U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2007 08:56:20 -0400
-In-Reply-To: <200710221302.12229.bs@q-leap.de>
+Received: from h155.mvista.com ([63.81.120.155]:8891 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750937AbXJVNXf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2007 09:23:35 -0400
+In-Reply-To: <604640.68715.qm@web52004.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-On Mon, 2007-10-22 at 13:02 +0200, Bernd Schubert wrote:
-> On Monday 22 October 2007 12:36:32 Soeren Sonnenburg wrote:
-> > > but as much as it fits onto the disk. On reading back this file, the
-> > > filesystem will report errors somewhere between 50GB and 230GB (disk size
-> > > is 250GB).
-> >
-> > Wow, I really see lots of corruptions (well every 1-2 GB a couple of
-> > bytes are corrupted). Are you getting similiarly many in the 50G - 230G
-> > region?
-> 
-> I never tested what is corrupted. Well, a diff over 250GB would take quite a 
-> lot of time...
+Matti Linnanvuori wrote:
 
-Actually hexdump does not display duplicate lines, so if your file is
-really all zeros it will only display a single line + the count, however
-I think it is not so optimized...
+> Correct IDEPCI_SHARE_IRQ description to keeping interrupts enabled
+> when calling the PCI IDE action handler.
+> Add IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE help text from hdparm
+> manual page.
 
-Soeren
+> Signed-off-by: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
+
+    NAK.
+
+> @@ -154,6 +154,18 @@ config BLK_DEV_IDEDISK
+>  config IDEDISK_MULTI_MODE
+>  	bool "Use multi-mode by default"
+>  	help
+> +	  Multiple sector mode is a feature of most modern IDE hard
+> + 	  drives, permitting the transfer of multiple sectors per I/O
+> +	  interrupt, rather than the usual one sector per interrupt.
+> +	  When this feature is enabled, it typically reduces operating
+> +	  system overhead for disk I/O by 30-50%. On many systems, it
+> +	  also provides increased data throughput of anywhere from 5%
+> +	  to 50%. Some drives, however (most notably the WD Caviar
+> +	  series), seem to run slower with multiple mode enabled. Some
+> +	  drives claim to support multiple mode, but lose data at some
+> +	  settings. Under rare circumstances, such failures can result
+
+    The speed increase data provided here are largely useless, since multiple 
+mode only applies to PIO transfers. At least, the comment should make this 
+clear...
+
+> +	  in massive filesystem corruption.
+> +
+>  	  If you get this error, try to say Y here:
+>  
+>  	  hda: set_multmode: status=0x51 { DriveReady SeekComplete Error }
+> @@ -367,11 +379,16 @@ config BLK_DEV_IDEPCI
+>  	bool
+>  
+>  config IDEPCI_SHARE_IRQ
+> -	bool "Sharing PCI IDE interrupts support"
+> +	bool "Keeping interrupts enabled when calling the PCI IDE action handler support"
+
+    Keeping IRQ enabled is only a side effect of IRQ sharing...
+
+>  	depends on BLK_DEV_IDEPCI
+>  	help
+> -	  Some ATA/IDE chipsets have hardware support which allows for
+> -	  sharing a single IRQ with other cards. To enable support for
+> +	  A setting of Y permits the driver to unmask other interrupts
+> +	  during processing of a disk interrupt, which greatly improves
+> + 	  Linux's responsiveness and eliminates "serial port overrun"
+> +	  errors. Use this feature with caution: some drive/controller
+> +	  combinations do not tolerate the increased I/O latencies
+> +	  possible when this feature is enabled, resulting in massive
+> +	  filesystem corruption. To enable support for
+>  	  this in the ATA/IDE driver, say Y here.
+
+    Comments do not really describe the IRQ sharing option anymore.
+
+>  	  It is safe to say Y to this question, in most cases.
+
+MBR, Sergei
