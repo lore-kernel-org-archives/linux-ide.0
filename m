@@ -1,32 +1,71 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: AHCI with ATA/IDE Drives
-Date: Mon, 22 Oct 2007 18:34:57 +0900
-Message-ID: <471C6EC1.6000703@gmail.com>
-References: <a14fb1800710200440hbcb0438sf2b0ee627e6e8209@mail.gmail.com> <471A09B8.2040708@rtr.ca>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: sata sil3114 vs. certain seagate drives results in filesystem corruptions
+Date: Mon, 22 Oct 2007 11:48:08 +0200
+Message-ID: <200710221148.08809.bs@q-leap.de>
+References: <1192863324.5720.162.camel@localhost> <471C071C.2010202@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:6996 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbXJVJfF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Oct 2007 05:35:05 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1238741wah
-        for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2007 02:35:04 -0700 (PDT)
-In-Reply-To: <471A09B8.2040708@rtr.ca>
+Received: from ns1.q-leap.de ([153.94.51.193]:33639 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751250AbXJVJsM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2007 05:48:12 -0400
+In-Reply-To: <471C071C.2010202@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Girish Shirasat <girish.shirasat@googlemail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Soeren Sonnenburg <kernel@nn7.de>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-Mark Lord wrote:
-> Alan / Tejun,
-> 
-> Another case of MDMA2 not working through a SATA->PATA bridge.
-> Do we have an easy way yet, for Girish to force non-MDMA2 modes?
+Hello,
 
-libata.dma=1 should do the trick for 2.6.24-rcX.  For 2.6.23, there
-isn't any.  :-(
+On Monday 22 October 2007 04:12:44 Tejun Heo wrote:
+> Helo,
+>
+> Soeren Sonnenburg wrote:
+> > I finally managed to find a *reproducible* setup and way to trigger
+> > random corruptions using a sata sil 3114 controller connected to 4
+> > seagate drives
+> >
+> > port 1: ST3400832AS sda
+> > port 2: ST3400620AS sdb
+> > port 3: ST3750640AS sdc
+> > port 4: ST3750640AS sdd
+> >
+> > sda & sdb form md0 via a raid1 setup followed by an additional
+> > devicemapper layer ( root ). sdc and sdb are separate and also have an
+> > additional device mapper layer ( public ) and ( backups ).
+> >
+> > Now when I write large files of zeros to root(sda&sdb) and read the file
+> > back in it contains a few nonzero entries:
+> >
+> > # dd if=/dev/zero of=/foo bs=1M count=2000
+> > # hexdump /foo
+> > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > *
+> > <after >1GB random parts, within large blocks of zeroes>
+> >
+> > I can reliably trigger this on the md0 / devmapper-root setup when I
+> > write about 2GB of data (note that this machine has 1.5G of memory - and
+> > still 1GB is often enough to see this problem). Here it does not matter
+> > where in the filesystem I do these writes.
+
+Thats almost the same test as I'm always doing. Only I do not write only 2GB, 
+but as much as it fits onto the disk. On reading back this file, the 
+filesystem will report errors somewhere between 50GB and 230GB (disk size is 
+250GB).
+
+>
+> Thanks.  I'll try to reproduce the problem here.  What's your motherboard?
+
+All tested S2882 boards here.
+
+
+Cheers,
+Bernd
 
 -- 
-tejun
+Bernd Schubert
+Q-Leap Networks GmbH
