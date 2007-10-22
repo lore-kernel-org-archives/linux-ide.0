@@ -1,41 +1,84 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata-sff: Correct use of check_status()
-Date: Mon, 22 Oct 2007 11:40:56 +0100
-Message-ID: <20071022114056.78bafbf1@the-village.bc.nu>
-References: <20071015192529.2365b636@the-village.bc.nu>
-	<4716AFCA.4080509@garzik.org>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: sata sil3114 vs. certain seagate drives results in filesystem corruptions
+Date: Mon, 22 Oct 2007 12:59:27 +0200
+Message-ID: <200710221259.27989.bs@q-leap.de>
+References: <1192863324.5720.162.camel@localhost> <200710221148.08809.bs@q-leap.de> <1193049392.10246.29.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:60000 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751742AbXJVKhz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2007 06:37:55 -0400
-In-Reply-To: <4716AFCA.4080509@garzik.org>
+Received: from ns1.q-leap.de ([153.94.51.193]:34592 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752055AbXJVK7b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2007 06:59:31 -0400
+In-Reply-To: <1193049392.10246.29.camel@localhost>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, akpm@osdl.org
+To: Soeren Sonnenburg <kernel@nn7.de>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-> > +	tf->command = ata_chk_status(ap);
-> >  	tf->feature = ioread8(ioaddr->error_addr);
-> >  	tf->nsect = ioread8(ioaddr->nsect_addr);
-> >  	tf->lbal = ioread8(ioaddr->lbal_addr);
-> 
-> applied, with a sigh:  it's in SFF, so I saw nothing wrong with 
-> ata_check_status().  I checked -- no SFF driver overrides it according 
-> to my audit, therefore the previous version was faster while still correct.
+On Monday 22 October 2007 12:36:32 Soeren Sonnenburg wrote:
+> On Mon, 2007-10-22 at 11:48 +0200, Bernd Schubert wrote:
+> > Hello,
+> >
+> > On Monday 22 October 2007 04:12:44 Tejun Heo wrote:
+> > > Helo,
+> > > [...]
+> > >
+> > > > Now when I write large files of zeros to root(sda&sdb) and read the
+> > > > file back in it contains a few nonzero entries:
+> > > >
+> > > > # dd if=/dev/zero of=/foo bs=1M count=2000
+> > > > # hexdump /foo
+> > > > 0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > > > *
+> > > > <after >1GB random parts, within large blocks of zeroes>
+> > > >
+> > > > I can reliably trigger this on the md0 / devmapper-root setup when I
+> > > > write about 2GB of data (note that this machine has 1.5G of memory -
+> > > > and still 1GB is often enough to see this problem). Here it does not
+> > > > matter where in the filesystem I do these writes.
+> >
+> > Thats almost the same test as I'm always doing. Only I do not write only
+> > 2GB,
+>
+> Well when I read your mail I thought that I could be seeing exactly the
+> same bug... it still may be. However ``my'' problem does not go away
+> with the mod15fix ...
 
-I hit it with the NS87415 where ata_check_status() doesn't do the right
-thing. Later on it turned out that there were enough other bugs when
-enabling DMA that it needed its own tf read method anyway.
+Yeah, pity it did not fix it :( I will try to port Tejuns patch 
+(http://home-tj.org/wiki/index.php/Sil_m15w#Patches) to 2.6.23 today or 
+tomorrow. If you are testing anyway, could you then also try this?
 
-Alternative is to go through and clear up chk_atatus v check_status
-(rename one sff_ to be clear), and explicitly document the assumption in
-tf_read. That way it'll be obvious to whoever hits it in future and they
-can supply their own tf_read method.
+>
+> > but as much as it fits onto the disk. On reading back this file, the
+> > filesystem will report errors somewhere between 50GB and 230GB (disk size
+> > is 250GB).
+>
+> Wow, I really see lots of corruptions (well every 1-2 GB a couple of
+> bytes are corrupted). Are you getting similiarly many in the 50G - 230G
+> region?
+>
+> > > Thanks.  I'll try to reproduce the problem here.  What's your
+> > > motherboard?
+> >
+> > All tested S2882 boards here.
+>
+> I assume all equipped with lots of memory and mostly empty pci slots?
 
-Preferences ?
+Yes, all pci-slots are free and the systems to have between 4 and 16GB memory 
+(ecc, monitored with edac). Well, those are cluster systems (actually tyan 
+names those B2882).
+Do you think the configuration is related? Here it also happens with odirect, 
+we tested this to minimize memory effects.
 
-Alan
+
+Cheers,
+Bernd
+
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
