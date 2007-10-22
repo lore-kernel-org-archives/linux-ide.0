@@ -1,32 +1,50 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Tue, 23 Oct 2007 01:48:54 +0200
-Message-ID: <m3abqau2vt.fsf@maximus.localdomain>
-References: <BLU112-W5125F6D8BEB3DF6359D53E29F0@phx.gbl>
-	<20071019195749.GK29903@austin.ibm.com> <471911BE.2000405@garzik.org>
-	<Pine.LNX.4.64.0710221555190.32497@iabervon.org>
+Date: Mon, 22 Oct 2007 16:58:22 -0700 (PDT)
+Message-ID: <20071022.165822.126577184.davem@davemloft.net>
+References: <Pine.LNX.4.64.0710221555190.32497@iabervon.org>
 	<471D0ADC.7000005@garzik.org>
-	<Pine.LNX.4.64.0710221700120.32497@iabervon.org>
+	<m3ejfmu3a5.fsf@maximus.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:34964 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbXJVXs5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2007 19:48:57 -0400
-In-Reply-To: <Pine.LNX.4.64.0710221700120.32497@iabervon.org> (Daniel Barkalow's message of "Mon, 22 Oct 2007 17:31:04 -0400 (EDT)")
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59658
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751115AbXJVX6A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Oct 2007 19:58:00 -0400
+In-Reply-To: <m3ejfmu3a5.fsf@maximus.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Barkalow <barkalow@iabervon.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Linas Vepstas <linas@austin.ibm.com>, Shane Huang <chunhao.huang@hotmail.com>, davem@davemloft.net, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, Brice Goglin <brice@myri.com>
+To: khc@pm.waw.pl
+Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
 
-Daniel Barkalow <barkalow@iabervon.org> writes:
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Tue, 23 Oct 2007 01:40:18 +0200
 
-> 00:05.0 Audio device: nVidia Corporation MCP61 High Definition Audio (rev a2)
->
-> will have the same issue, and use a multi-vendor driver.
+> Jeff Garzik <jeff@garzik.org> writes:
+> 
+> > In general it is documented that INTX_DISABLE should apply only to
+> > INTx# so devices that disable MSI based on that bit are out of spec.
+> 
+> The wording is:
+> 10: This bit disables the device from asserting INTx#. A value of 0
+> enables the assertion of its INTx# signal. A value of 1 disables the
+> assertion of its INTx# signal. This bit's state after RST# is 0. Refer
+> to Section 6.8.1.3 for control of MSI.
+> 
+> So strictly speaking it mandates disabling/enabling INTx but says
+> nothing about other things (e.g. MSI). Some common sense dictates
+> it shouldn't disable MSI, I guess.
 
-I think MCP55 HDA did not have such problem, though I may be wrong
-(AFAIR it worked with shared IRQ and with MSI).
--- 
-Krzysztof Halasa
+Right, and every vendor I've spoken to who had the INTX_DISABLE
+bug clearly acknowledged that it was a bug in their RTL design
+and that they considered the spec to be clear on this matter
+in that INTX_DISABLE should not influence MSI in any way.
+
+> The "MSI Enable" description doesn't leave any doubt:
+> 0: MSI Enable: If 1, the function is permitted to use MSI to request
+> service and is prohibited from using its INTx# pin [...]
+
+Things get more complicated with PCI-Express because INTx# isn't an
+out-of-band "pin", but rather a message sent over the bus :-)
