@@ -1,38 +1,87 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ADS3GX4R5-E IO problem?
-Date: Mon, 22 Oct 2007 11:01:17 +0900
-Message-ID: <471C046D.8050503@gmail.com>
-References: <B22C35D0-A23F-4FBD-9984-0FEC338055DB@illianced.com>
+From: Gerhard Dirschl <gd@spherenet.de>
+Subject: BUG: sata_nv swncq cannot be disabled
+Date: Mon, 22 Oct 2007 04:06:23 +0200
+Message-ID: <200710220406.23790.gd@spherenet.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:11876 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164AbXJVCBZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2007 22:01:25 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1037295rvb
-        for <linux-ide@vger.kernel.org>; Sun, 21 Oct 2007 19:01:24 -0700 (PDT)
-In-Reply-To: <B22C35D0-A23F-4FBD-9984-0FEC338055DB@illianced.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:61732 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbXJVCGd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2007 22:06:33 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Didde Brockman <didde.brockman@illianced.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-Didde Brockman wrote:
-> Oct 20 13:49:00 infra kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
-> Oct 20 13:49:00 infra kernel: md: using 128k window, over a total of 244195904 blocks.
-> Oct 20 13:50:37 infra kernel:          res 41/40:00:2e:1c:a1/9d:01:00:00:00/40 Emask 0x409 (media error) <F>
-> Oct 20 13:50:37 infra kernel: ata4.00: configured for UDMA/100
-> Oct 20 13:50:37 infra kernel: ata4: EH complete
+I stumbled over a bug in the sata_nv swncq code of the current
+2.6.23-git kernel. ata_port_info.flags is always initialised with the
+ATA_FLAG_NCQ flag set, but nv_swncq_host_init(...) is only called
+if "swncq=1" is passed to the driver (default is swncq=0).
+I can can observe ata link resets under high load if I don't pass
+sata_nv.swncq=1 to my kernel.
 
-Error messages from libata are truncated there should be more lines
-before the line starts with "res".  Please post full dmesg.  From the
-above, it seems like a bad drive tho.  Media error indicates that the
-drive reported the media (platter) is bad and can't be read or
-written.
+Former versions of the SWNCQ patch didn't have this problem as
+ATA_FLAG_NCQ was set in nv_swncq_host_init(...). The appended patch
+restores this behaviour (or was it changed for a good reason?)
+We could also simply drop the option to enable/disable swncq.
 
--- 
-tejun
+I'm not subscribed to the list so please CC me on replies.
+
+   Gerhard
+---
+
+--- linux-2.6/drivers/ata/sata_nv.c	2007-10-22 00:07:40.000000000 +0200
++++ linux-2.4.24/drivers/ata/sata_nv.c	2007-10-22 03:40:06.132619662 +0200
+@@ -622,8 +622,7 @@ static const struct ata_port_info nv_por
+ 	/* SWNCQ */
+ 	{
+ 		.sht		= &nv_swncq_sht,
+-		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_NCQ,
++		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY,
+ 		.link_flags	= ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+@@ -1831,6 +1830,9 @@ static int nv_swncq_port_suspend(struct 
+ 	/* clear irq */
+ 	writel(~0, mmio + NV_INT_STATUS_MCP55);
+ 
++	if (!(ap->flags & ATA_FLAG_NCQ))
++		return 0;
++
+ 	/* disable irq */
+ 	writel(0, mmio + NV_INT_ENABLE_MCP55);
+ 
+@@ -1850,6 +1852,9 @@ static int nv_swncq_port_resume(struct a
+ 	/* clear irq */
+ 	writel(~0, mmio + NV_INT_STATUS_MCP55);
+ 
++	if (!(ap->flags & ATA_FLAG_NCQ))
++		return 0;
++
+ 	/* enable irq */
+ 	writel(0x00fd00fd, mmio + NV_INT_ENABLE_MCP55);
+ 
+@@ -1867,6 +1872,7 @@ static void nv_swncq_host_init(struct at
+ 	void __iomem *mmio = host->iomap[NV_MMIO_BAR];
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	u8 regval;
++	int i;
+ 
+ 	/* disable  ECO 398 */
+ 	pci_read_config_byte(pdev, 0x7f, &regval);
+@@ -1878,6 +1884,9 @@ static void nv_swncq_host_init(struct at
+ 	VPRINTK("HOST_CTL:0x%X\n", tmp);
+ 	writel(tmp | NV_CTL_PRI_SWNCQ | NV_CTL_SEC_SWNCQ, mmio + NV_CTL_MCP55);
+ 
++	for (i = 0; i < host->n_ports; i++)
++		host->ports[i]->flags |= ATA_FLAG_NCQ;
++
+ 	/* enable irq intr */
+ 	tmp = readl(mmio + NV_INT_ENABLE_MCP55);
+ 	VPRINTK("HOST_ENABLE:0x%X\n", tmp);
