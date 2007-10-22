@@ -1,143 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problems with "frozen drives" on sil3124 + sil3726
-Date: Mon, 22 Oct 2007 10:44:27 +0900
-Message-ID: <471C007B.30006@gmail.com>
-References: <471A0070.2080403@jogback.se>
+From: "peer chen" <peerchen@gmail.com>
+Subject: Re: [PATCH] sata_nv,ahci: add the ahci legacy mode support to sata_nv
+Date: Mon, 22 Oct 2007 09:55:58 +0800
+Message-ID: <cfaab6210710211855q7a2de35co13d3017b2a07d4cc@mail.gmail.com>
+References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org>
+	 <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com>
+	 <47181CE1.4000802@garzik.org>
+	 <cfaab6210710182358t4de355f9wd6d605a7b8076ace@mail.gmail.com>
+	 <47185BFD.2010909@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090604000705040509030004"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:63659 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032AbXJVBoe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2007 21:44:34 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1132831wah
-        for <linux-ide@vger.kernel.org>; Sun, 21 Oct 2007 18:44:34 -0700 (PDT)
-In-Reply-To: <471A0070.2080403@jogback.se>
+Received: from nf-out-0910.google.com ([64.233.182.188]:57631 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbXJVB4A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2007 21:56:00 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so887933nfb
+        for <linux-ide@vger.kernel.org>; Sun, 21 Oct 2007 18:55:58 -0700 (PDT)
+In-Reply-To: <47185BFD.2010909@garzik.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Lars_Michael_Jogb=E4ck?= <lm@jogback.se>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Kuan Luo <kluo@nvidia.com>
 
-This is a multi-part message in MIME format.
---------------090604000705040509030004
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Yes, link - http://lkml.org/lkml/2007/10/8/93 add the AHCI legacy
+support to sata_nv when IDE/RAID mode been set in SBIOS and Device IDs
+are not in ahci.c at this moment. To do so, when a new chipset come
+out and DIDs haven't been submited to LKML,user still can use ahci
+driver to handle it when setting AHCI mode in BIOS, using sata_nv when
+setting RAID/IDE in BIOS.
+For example, ahci driver in Fedora 7 doesn't include the DIDs of
+MCP78, so if you set the IDE/RAID mode in BIOS, os installation onto
+SATA drive will fail. But if Fedora 7 include this patch, installation
+will be successful.
 
-Lars Michael Jogbäck wrote:
-> Hi Tejun et. al.
-> 
-> I'm running a server with Linux 2.6.18.1+Debian's Xen-patches and the
-> sata+pmp-patches from
-> http://home-tj.org/files/libata-tj-stable/libata-tj-2.6.18.1-20061020.tar.bz2
-> 
-> Unfortunately I can't upgrade to anything newer than 2.6.18 since there
-> is no Xen Dom0-patches that I'm aware of to anything newer.
-> 
-> I have successfully for a long time together, but a couple of weeks ago
-> my motherboard gave in, and I installed a new one (along with new
-> processor/memory).
-> I'm running the very same kernel, the same sil3124-controller and the
-> same sil3726-PMP-board. The only difference is that instead of a
-> Supermicro P4SC8 w/ Intel P4 (and PCI-X slot of 66MHz) I'm currently
-> using Supermicro PDSME+ w/ E6600 (and PCI-X slot of 133MHz)
-
-There was a bug in PCI-X irq loss quirk code which went unnoticed for
-quite some time bug was fixed recently.  Patch attached.  Patch might
-not apply directly.  Just hand edit and move WOC clearing before
-SLOT_STAT reading.
-
--- 
-tejun
-
---------------090604000705040509030004
-Content-Type: text/x-patch;
- name="0001-sata_sil24-fix-IRQ-clearing-race-when-PCIX_IRQ_WOC.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename*0="0001-sata_sil24-fix-IRQ-clearing-race-when-PCIX_IRQ_WOC.patc";
- filename*1="h"
-
->From 228f47b959a0cf2e24c9696757c7e6510334e499 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <htejun@gmail.com>
-Date: Sun, 23 Sep 2007 12:37:05 +0900
-Subject: [PATCH] sata_sil24: fix IRQ clearing race when PCIX_IRQ_WOC is used
-
-When PCIX_IRQ_WOC is used, sil24 has an inherent race condition
-between clearing IRQ pending and reading IRQ status.  If IRQ pending
-is cleared after reading IRQ status, there's possibility of lost IRQ.
-If IRQ pending is cleared before reading IRQ status, spurious IRQs
-will occur.
-
-sata_sil24 till now cleared IRQ pending after reading IRQ status thus
-losing IRQs on machines where PCIX_IRQ_WOC was used.  Reverse the
-order and ignore spurious IRQs if PCIX_IRQ_WOC.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index ef83e6b..233e886 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -881,43 +881,51 @@ static void sil24_finish_qc(struct ata_queued_cmd *qc)
- 	if (qc->flags & ATA_QCFLAG_RESULT_TF)
- 		sil24_read_tf(ap, qc->tag, &pp->tf);
- }
- 
- static inline void sil24_host_intr(struct ata_port *ap)
- {
- 	void __iomem *port = ap->ioaddr.cmd_addr;
- 	u32 slot_stat, qc_active;
- 	int rc;
- 
-+	/* If PCIX_IRQ_WOC, there's an inherent race window between
-+	 * clearing IRQ pending status and reading PORT_SLOT_STAT
-+	 * which may cause spurious interrupts afterwards.  This is
-+	 * unavoidable and much better than losing interrupts which
-+	 * happens if IRQ pending is cleared after reading
-+	 * PORT_SLOT_STAT.
-+	 */
-+	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
-+		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
-+
- 	slot_stat = readl(port + PORT_SLOT_STAT);
- 
- 	if (unlikely(slot_stat & HOST_SSTAT_ATTN)) {
- 		sil24_error_intr(ap);
- 		return;
- 	}
- 
--	if (ap->flags & SIL24_FLAG_PCIX_IRQ_WOC)
--		writel(PORT_IRQ_COMPLETE, port + PORT_IRQ_STAT);
--
- 	qc_active = slot_stat & ~HOST_SSTAT_ATTN;
- 	rc = ata_qc_complete_multiple(ap, qc_active, sil24_finish_qc);
- 	if (rc > 0)
- 		return;
- 	if (rc < 0) {
- 		struct ata_eh_info *ehi = &ap->eh_info;
- 		ehi->err_mask |= AC_ERR_HSM;
- 		ehi->action |= ATA_EH_SOFTRESET;
- 		ata_port_freeze(ap);
- 		return;
- 	}
- 
--	if (ata_ratelimit())
-+	/* spurious interrupts are expected if PCIX_IRQ_WOC */
-+	if (!(ap->flags & SIL24_FLAG_PCIX_IRQ_WOC) && ata_ratelimit())
- 		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
- 			"(slot_stat 0x%x active_tag %d sactive 0x%x)\n",
- 			slot_stat, ap->active_tag, ap->sactive);
- }
- 
- static irqreturn_t sil24_interrupt(int irq, void *dev_instance)
- {
- 	struct ata_host *host = dev_instance;
- 	void __iomem *host_base = host->iomap[SIL24_HOST_BAR];
- 	unsigned handled = 0;
--- 
-1.5.2.4
-
-
---------------090604000705040509030004--
+2007/10/19, Jeff Garzik <jeff@garzik.org>:
+> peer chen wrote:
+> > Ok,I agree to use AHCI driver for our AHCI controllers no matter their
+> > class codes are IDE/RAID/AHCI. But for those new or upcoming AHCI
+> > controller which DIDs are not included in ahci.c and also IDE/RAID
+> > mode being set in BIOS, no driver will be loaded currently, so I hope
+> > the first patch http://lkml.org/lkml/2007/10/8/93 can be appied for
+> > this case. Any comments?
+>
+> hmmm is that the correct URL?  That one updates sata_nv to support AHCI
+> controllers?.
+>
+> I would think you would want to add the RAID class code to ahci.c
+> instead?  And just some regular PCI IDs?
+>
+>        Jeff
+>
+>
+>
