@@ -1,48 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
-Date: Tue, 23 Oct 2007 17:00:28 +0900
-Message-ID: <471DAA1C.4070608@gmail.com>
-References: <47099C24.3010504@mandic.com.br>
+Subject: Re: [PATCH 3/3] faster workaround
+Date: Tue, 23 Oct 2007 17:08:01 +0900
+Message-ID: <471DABE1.40301@gmail.com>
+References: <200710081709.18253.bs@q-leap.de>	<200710101112.20448.bs@q-leap.de>	<200710111409.56210.bs@q-leap.de>	<200710111433.23833.bs@q-leap.de>	<20071011142628.48272a4a@the-village.bc.nu>	<470E30F9.5060705@garzik.org> <20071011155024.46007973@the-village.bc.nu> <470E3A35.4000104@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:59806 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbXJWIAf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 04:00:35 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1418200rvb
-        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 01:00:35 -0700 (PDT)
-In-Reply-To: <47099C24.3010504@mandic.com.br>
+Received: from wa-out-1112.google.com ([209.85.146.180]:31197 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655AbXJWIIJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 04:08:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1644301wah
+        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 01:08:09 -0700 (PDT)
+In-Reply-To: <470E3A35.4000104@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Renato S. Yamane" <renatoyamane@mandic.com.br>
-Cc: linux-ide@vger.kernel.org, miquels@cistron.nl
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bernd Schubert <bs@q-leap.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Renato S. Yamane wrote:
-> Hi for all,
-> I use Kernel 2.6.22.9 with CFS-v22 patch under Debian Etch.
+Jeff Garzik wrote:
+> Alan Cox wrote:
+>>> 2) Once we identified, over time, the set of drives affected by this
+>>> 3112 quirk (aka drives that didn't fully comply to SATA spec), the
+>>> debugging of corruption cases largely shifted to the standard
+>>> routine: update the BIOS, replace the
+>>> cables/RAM/power/mainboard/slot/etc. to be certain of problem location.
+>>
+>> Except for the continued series of later SI + Nvidia chipset (mostly)
+>> pattern which seems unanswered but also being later chips I assume
+>> unrelated to this problem.
 > 
-> I cc Miquel because he is commented in man page of shutdown utilitie.
-> 
-> When I shutdown my laptop, I see some warnings after "Will be halt now".
-> This message is something about "Spindown error" (this message is very
-> fast and I can't read all warnings, and don't found it on logs).
-> 
-> I read in www.linux-ata.org/shutdown.html that is about shutdown utilitie.
-> 
-> So, my questions is:
-> - This is dangerous? Can damage something?
+> The SIL_FLAG_MOD15WRITE flag is set in sil_port_info[] is set according
+> to the best info we have from SiI, which indicates that 3114 and 3512 do
+> not have the same problem as the 3112.
 
-If your drive sounds funny on shutdown, it could.  Your drive is
-supposed to sound the same way it sounds when you execute "hdparm -y
-/dev/sdX".
+I don't think this data corruption problem w/ sil3114 is related to
+m15w.  m15w workaround slows down things quite a bit and is likely to
+hide problems on PCI bus side.  There are reports of data corruption
+with 3114 on nvidia (most common), via and now amd chipsets.  There's
+one on intel too but IIRC wasn't too definite.
 
-> - How can I help to fix this warning?
+According to a user, freebsd didn't have data corruption problem on the
+same hardware.  I copied PCI FIFO setup code (ours is broken BTW) but it
+didn't fix the problem.
 
-I believe there's already update out but you can edit some configuration
-file (can't remember which ATM) such that "-h" option is not passed to
-halt.  Google should be able to tell you which file it is.
+I'll try to reproduce the problem locally and hunt it down.
+
+Thanks.
 
 -- 
 tejun
