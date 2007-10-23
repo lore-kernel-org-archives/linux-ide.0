@@ -1,43 +1,63 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Tue, 23 Oct 2007 06:01:17 -0400
-Message-ID: <471DC66D.6000909@garzik.org>
-References: <Pine.LNX.4.64.0710221555190.32497@iabervon.org>	<471D0ADC.7000005@garzik.org>	<Pine.LNX.4.64.0710221700120.32497@iabervon.org> <20071022.171318.104036671.davem@davemloft.net>
+From: "Renato S. Yamane" <renatoyamane@mandic.com.br>
+Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
+Date: Tue, 23 Oct 2007 08:04:24 -0200
+Message-ID: <471DC728.60705@mandic.com.br>
+References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040602060308090001040001"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55479 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751949AbXJWKB1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2007 06:01:27 -0400
-In-Reply-To: <20071022.171318.104036671.davem@davemloft.net>
+Received: from smtp-01.mandic.com.br ([200.225.81.132]:54433 "EHLO
+	smtp-01.mandic.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbXJWKEj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 06:04:39 -0400
+In-Reply-To: <471DAA1C.4070608@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, miquels@cistron.nl
 
-David Miller wrote:
-> My suggestion is:
+This is a multi-part message in MIME format.
+--------------040602060308090001040001
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Tejun Heo wrote:
+> Renato S. Yamane wrote:
+>> So, my questions is:
+>> - This is dangerous? Can damage something?
 > 
-> 1) Leave the pci_intx() twiddling code in drivers/pci/msi.c
+> If your drive sounds funny on shutdown, it could.  Your drive is
+> supposed to sound the same way it sounds when you execute "hdparm -y
+> /dev/sdX".
+
+No strange sounds :-)
+
+>> - How can I help to fix this warning?
 > 
-> 2) Add quirks for "INTX_DISABLE turns off MSI too", this sets
->    a flag in the pci_dev.
-> 
-> 3) The pci_intx() calls in drivers/pci/msi.c are skipped if this
->    flag from #2 is set.
-> 
-> 4) Add quirk entries for drivers/net/tg3.c chips and these SATA
->    devices we are learning about here, as well as any others we
->    are aware of right now.
-> 
-> 5) Remove the pci_intx() workaround code from drivers/net/tg3.c
->    and elsewhere.
+> I believe there's already update out but you can edit some configuration
+> file (can't remember which ATM) such that "-h" option is not passed to
+> halt.
 
+Fixed. Patch is attached. Thanks!
 
-Sounds good to me also.
+--------------040602060308090001040001
+Content-Type: text/x-diff;
+ name="halt_debian_etch.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="halt_debian_etch.patch"
 
-	Jeff
+--- /etc/init.d/halt	2007-10-23 07:51:40.000000000 -0200
++++ /etc/init.d/halt_b	2007-10-23 07:50:52.000000000 -0200
+@@ -44,7 +44,7 @@ do_stop () {
+ 	hddown=""
+ 	if grep -qs '^md.*active' /proc/mdstat
+ 	then
+-		hddown="-h"
++		hddown=""
+ 	fi
+ 
+ 	# If INIT_HALT=HALT don't poweroff.
 
-
+--------------040602060308090001040001--
