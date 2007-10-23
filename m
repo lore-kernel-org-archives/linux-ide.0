@@ -1,46 +1,53 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Tue, 23 Oct 2007 01:52:44 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0710230049550.32497@iabervon.org>
-References: <Pine.LNX.4.64.0710221555190.32497@iabervon.org>
- <471D0ADC.7000005@garzik.org> <Pine.LNX.4.64.0710221700120.32497@iabervon.org>
- <20071022.171318.104036671.davem@davemloft.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] jmicron: update quirk for JMB361/3/5/6
+Date: Tue, 23 Oct 2007 15:27:31 +0900
+Message-ID: <20071023062731.GC18322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:40368 "EHLO iabervon.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579AbXJWFwr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2007 01:52:47 -0400
-In-Reply-To: <20071022.171318.104036671.davem@davemloft.net>
+Received: from rv-out-0910.google.com ([209.85.198.185]:55301 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbXJWG1i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 02:27:38 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1402633rvb
+        for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2007 23:27:37 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: jeff@garzik.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, ethanhsiao@jmicron.com
 
-On Mon, 22 Oct 2007, David Miller wrote:
+Set bits 0, 4, 5 and 7 of PCI configuration register 0x40 in the
+quirk.  This has the following effects and is recommended by the
+vendor.
 
-> My suggestion is:
-> 
-> 1) Leave the pci_intx() twiddling code in drivers/pci/msi.c
-> 
-> 2) Add quirks for "INTX_DISABLE turns off MSI too", this sets
->    a flag in the pci_dev.
-> 
-> 3) The pci_intx() calls in drivers/pci/msi.c are skipped if this
->    flag from #2 is set.
-> 
-> 4) Add quirk entries for drivers/net/tg3.c chips and these SATA
->    devices we are learning about here, as well as any others we
->    are aware of right now.
-> 
-> 5) Remove the pci_intx() workaround code from drivers/net/tg3.c
->    and elsewhere.
+* Force enable of IDE channels (used to be left alone as BIOS
+  configured)
 
-Seems right to me, and pretty straightforward, except that I don't really 
-understand the pm-related logic in there to know how that should work and 
-whether intx will need to be enabled somewhere in addition to not 
-disabling it in the msi enable code.
+* Change initial phase behavior of PIO cycle such that the host pulls
+  down the bus instead of tristating it.  Vendor recommends this
+  setting.
 
-	-Daniel
-*This .sig left intentionally blank*
+The above settings are better for the current generation of
+controllers and needed for the upcoming next generation.
+
+Tested on JMB363.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Ethan Hsiao <ethanhsiao@jmicron.com>
+---
+ drivers/pci/quirks.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: work/drivers/pci/quirks.c
+===================================================================
+--- work.orig/drivers/pci/quirks.c
++++ work/drivers/pci/quirks.c
+@@ -1230,7 +1230,7 @@ static void quirk_jmicron_ata(struct pci
+ 	case PCI_DEVICE_ID_JMICRON_JMB363:
+ 		/* Enable dual function mode, AHCI on fn 0, IDE fn1 */
+ 		/* Set the class codes correctly and then direct IDE 0 */
+-		conf1 |= 0x00C2A102; /* Set 1, 8, 13, 15, 17, 22, 23 */
++		conf1 |= 0x00C2A1B3; /* Set 0, 1, 4, 5, 7, 8, 13, 15, 17, 22, 23 */
+ 		break;
+ 
+ 	case PCI_DEVICE_ID_JMICRON_JMB368:
