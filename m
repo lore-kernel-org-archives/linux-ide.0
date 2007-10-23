@@ -1,31 +1,39 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Tue, 23 Oct 2007 03:06:22 -0700 (PDT)
-Message-ID: <20071023.030622.74744677.davem@davemloft.net>
-References: <Pine.LNX.4.64.0710221700120.32497@iabervon.org>
-	<20071022.171318.104036671.davem@davemloft.net>
-	<471DC66D.6000909@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: add HTS542525K9SA00 to NCQ blacklist
+Date: Tue, 23 Oct 2007 19:07:49 +0900
+Message-ID: <20071023100749.GD18322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57710
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751684AbXJWKF5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 06:05:57 -0400
-In-Reply-To: <471DC66D.6000909@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.186]:51207 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754355AbXJWKIA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 06:08:00 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1438822rvb
+        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 03:07:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Cc: Luca Tettamanti <kronos.it@gmail.com>
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Tue, 23 Oct 2007 06:01:17 -0400
+Another one doing spurious NCQ completions.  Blacklist it.
 
-> David Miller wrote:
-> > My suggestion is:
- ...
-> Sounds good to me also.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Luca Tettamanti <kronos.it@gmail.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Ok, it seems I've sort-of self-nominated myself to implement
-this so I'll try to work on it tomorrow :-)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 908613d..be872fa 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3981,6 +3981,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+ 	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
+ 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
++	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
+ 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+ 	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
+ 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
