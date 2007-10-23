@@ -1,116 +1,58 @@
-From: richard kennedy <richard@rsk.demon.co.uk>
-Subject: Re: pata_via cd/dvd timeout problems
-Date: Tue, 23 Oct 2007 10:24:07 +0100
-Message-ID: <1193131447.3061.17.camel@castor.rsk.org>
-References: <124748.3608.qm@web54408.mail.yahoo.com>
-	 <1188982210.3075.9.camel@castor.rsk.org>
-	 <20070906013347.1f588dc4@the-village.bc.nu>
-	 <1190364785.3121.10.camel@castor.rsk.org>
-	 <20070921162414.7ac2606a@the-village.bc.nu>
+From: "Shane Huang" <Shane.Huang@amd.com>
+Subject: RE: [patch] PCI: disable MSI on more ATI NorthBridges
+Date: Tue, 23 Oct 2007 17:39:22 +0800
+Message-ID: <5CAB7B5D6F8AB84AA868A46B47A507055D91AE@sshaexmb1.amd.com>
+References: <Pine.LNX.4.64.0710221555190.32497@iabervon.org>
+ <471D0ADC.7000005@garzik.org>
+ <Pine.LNX.4.64.0710221700120.32497@iabervon.org>
+ <20071022.171318.104036671.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anchor-post-30.mail.demon.net ([194.217.242.88]:4181 "EHLO
-	anchor-post-30.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751462AbXJWJYM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 05:24:12 -0400
-In-Reply-To: <20070921162414.7ac2606a@the-village.bc.nu>
+Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:39316 "EHLO
+	outbound2-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751574AbXJWJsL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Oct 2007 05:48:11 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071022.171318.104036671.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>, barkalow@iabervon.org
+Cc: jeff@garzik.org, linas@austin.ibm.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, brice@myri.com, Shane Huang <Shane.Huang@amd.com>
 
-On Fri, 2007-09-21 at 16:24 +0100, Alan Cox wrote:
-> On Fri, 21 Sep 2007 09:53:05 +0100
-> richard kennedy <richard@rsk.demon.co.uk> wrote:
+Hi David:
+
+> I think this pretty much sums up the situation accurately.
 > 
-> > On Thu, 2007-09-06 at 01:33 +0100, Alan Cox wrote:
-> > 
-> > > Probably. If you can file a bug in bugzilla and assign it to me I'll take
-> > > a look at this after the kernel summit. There are one or two reports with
-> > > pata_via and ATAPI (ie CD) that look similar.
-> > 
-> > Hi Alan,
-> > your [PATCH] libata: Set transfer sizes properly for ATAPI fixes this
-> > for me.
+> My suggestion is:
 > 
-> Yay - thanks for letting me know and for testing it.
+> 1) Leave the pci_intx() twiddling code in drivers/pci/msi.c
 > 
-> Alan
-Hi Alan,
-I've just been testing the git head v2.6.23-6636-g557ebb7 and there's
-still a problem with this.
+> 2) Add quirks for "INTX_DISABLE turns off MSI too", this sets
+>    a flag in the pci_dev.
+> 
+> 3) The pci_intx() calls in drivers/pci/msi.c are skipped if this
+>    flag from #2 is set.
+> 
+> 4) Add quirk entries for drivers/net/tg3.c chips and these SATA
+>    devices we are learning about here, as well as any others we
+>    are aware of right now.
+> 
+> 5) Remove the pci_intx() workaround code from drivers/net/tg3.c
+>    and elsewhere.
 
-if I don't mount a disk I start getting timeout messages approximately 1
-hour after boot :-
-...
-Oct 22 15:08:31 castor kernel: pata_via 0000:00:0f.1: version 0.3.2
-Oct 22 15:08:31 castor kernel: scsi2 : pata_via
-Oct 22 15:08:31 castor kernel: scsi3 : pata_via
-...
-Oct 22 15:08:31 castor kernel: ata4.00: ATAPI: _NEC DVD_RW ND-3520A, 1.04, max UDMA/33
-Oct 22 15:08:31 castor kernel: ata4.01: ATAPI: TSSTcorpDVD-ROM TS-H352A, TS03, max UDMA/33
-Oct 22 15:08:32 castor kernel: ata4.00: configured for UDMA/33
-Oct 22 15:08:32 castor kernel: ata4.01: configured for UDMA/33
-...
-Oct 22 15:59:10 castor kernel: ata4.01: qc timeout (cmd 0xa0)
-Oct 22 15:59:10 castor kernel: ata4.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 22 15:59:10 castor kernel: ata4.01: cmd a0/00:00:00:08:00/00:00:00:00:00/b0 tag 0 cdb 0x25 data 8 in
-Oct 22 15:59:10 castor kernel:          res 51/20:03:00:00:00/00:00:00:00:00/b0 Emask 0x5 (timeout)
-Oct 22 15:59:10 castor kernel: ata4.01: status: { DRDY ERR }
-Oct 22 15:59:10 castor kernel: ata4: soft resetting link
-Oct 22 15:59:11 castor kernel: ata4.00: configured for UDMA/33
-Oct 22 15:59:11 castor kernel: ata4.01: configured for UDMA/33
-Oct 22 15:59:11 castor kernel: ata4: EH complete
+This quirk seems good to me. Waiting for your final decision....
 
-then repeats 
-
-Oct 22 16:09:57 castor kernel: ata4.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 22 16:09:57 castor kernel: ata4.01: cmd a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0 cdb 0x0 data 0 
-Oct 22 16:09:57 castor kernel:          res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-Oct 22 16:09:57 castor kernel: ata4.01: status: { DRDY }
-Oct 22 16:09:57 castor kernel: ata4: soft resetting link
-Oct 22 16:09:57 castor kernel: ata4.00: configured for UDMA/33
-Oct 22 16:09:58 castor kernel: ata4.01: configured for UDMA/33
-Oct 22 16:09:58 castor kernel: ata4: EH complete
-
-and keeps on getting reset trying different speeds
-
-Oct 22 17:37:57 castor kernel: ata4.00: limiting speed to PIO0
-Oct 22 17:37:57 castor kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 22 17:37:57 castor kernel: ata4.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
-Oct 22 17:37:57 castor kernel:          res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
-Oct 22 17:37:57 castor kernel: ata4.00: status: { DRDY }
-Oct 22 17:37:57 castor kernel: ata4: soft resetting link
-Oct 22 17:37:57 castor kernel: ata4.00: configured for PIO0
-Oct 22 17:37:57 castor kernel: ata4.01: configured for UDMA/25
-Oct 22 17:37:57 castor kernel: ata4: EH complete
-
-On a fresh boot if I mount a cd access it then unmount it, the timeouts
-start within about 5 minutes of the unmount
-
-Oct 23 09:11:46 castor hald: unmounted /dev/scd0 from '/media/Disgo' on behalf of uid 500
-Oct 23 09:16:52 castor kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 23 09:16:52 castor kernel: ata4.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
-Oct 23 09:16:52 castor kernel:          res 40/00:03:00:00:00/00:00:00:00:00/b0 Emask 0x4 (timeout)
-Oct 23 09:16:52 castor kernel: ata4.00: status: { DRDY }
-Oct 23 09:16:52 castor kernel: ata4: soft resetting link
-Oct 23 09:16:53 castor kernel: ata4.00: configured for UDMA/33
-Oct 23 09:16:53 castor kernel: ata4.01: configured for UDMA/33
-Oct 23 09:16:53 castor kernel: ata4: EH complete
-Oct 23 09:19:38 castor kernel: ata4.00: qc timeout (cmd 0xa0)
-Oct 23 09:19:39 castor kernel: ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Oct 23 09:19:39 castor kernel: ata4.00: cmd a0/00:00:00:0c:00/00:00:00:00:00/a0 tag 0 cdb 0x43 data 12 in
-Oct 23 09:19:39 castor kernel:          res 51/24:03:00:0c:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
-Oct 23 09:19:39 castor kernel: ata4.00: status: { DRDY ERR }
-Oct 23 09:19:39 castor kernel: ata4: soft resetting link
-Oct 23 09:19:39 castor kernel: ata4.00: configured for UDMA/33
-Oct 23 09:19:39 castor kernel: ata4.01: configured for UDMA/33
-Oct 23 09:19:39 castor kernel: ata4: EH complete
-etc
+This SB700 SATA controller MSI/INTx problem has been reported to our
+hardware team. I will forward the update information or response to
+you when I get any from HW team.
 
 
-Richard
+Thanks
+Shane
+
 
 
