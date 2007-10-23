@@ -1,38 +1,71 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata-core: auditting chk_status v check_status
-Date: Tue, 23 Oct 2007 16:50:02 +0100
-Message-ID: <20071023165002.15a7b09e@the-village.bc.nu>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: [PATCH 3/3] faster workaround
+Date: Tue, 23 Oct 2007 19:28:49 +0200
+Message-ID: <200710231928.50207.bs@q-leap.de>
+References: <200710081709.18253.bs@q-leap.de> <470E3A35.4000104@garzik.org> <471DABE1.40301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44518 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753361AbXJWPrI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 11:47:08 -0400
+Received: from ns1.q-leap.de ([153.94.51.193]:54313 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752199AbXJWR2y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Oct 2007 13:28:54 -0400
+In-Reply-To: <471DABE1.40301@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Soeren Sonnenburg <kernel@nn7.de>
 
-Did a complete audit of these and found we have another error case.
+Hello Tejun,
 
-ata_bus_softreset calls ata_check_status which means that it tries to do
-an ioread8 on the port blindly and check versus 0xFF for an error.
+On Tuesday 23 October 2007 10:08:01 Tejun Heo wrote:
+> Jeff Garzik wrote:
+> > Alan Cox wrote:
+> >>> 2) Once we identified, over time, the set of drives affected by this
+> >>> 3112 quirk (aka drives that didn't fully comply to SATA spec), the
+> >>> debugging of corruption cases largely shifted to the standard
+> >>> routine: update the BIOS, replace the
+> >>> cables/RAM/power/mainboard/slot/etc. to be certain of problem location.
+> >>
+> >> Except for the continued series of later SI + Nvidia chipset (mostly)
+> >> pattern which seems unanswered but also being later chips I assume
+> >> unrelated to this problem.
+> >
+> > The SIL_FLAG_MOD15WRITE flag is set in sil_port_info[] is set according
+> > to the best info we have from SiI, which indicates that 3114 and 3512 do
+> > not have the same problem as the 3112.
+>
+> I don't think this data corruption problem w/ sil3114 is related to
+> m15w.  m15w workaround slows down things quite a bit and is likely to
+> hide problems on PCI bus side.  There are reports of data corruption
+> with 3114 on nvidia (most common), via and now amd chipsets.  There's
+> one on intel too but IIRC wasn't too definite.
+>
+> According to a user, freebsd didn't have data corruption problem on the
+> same hardware.  I copied PCI FIFO setup code (ours is broken BTW) but it
+> didn't fix the problem.
+>
+> I'll try to reproduce the problem locally and hunt it down.
 
-It should of course be using the ap->ops method for this via chk_status,
-and this bug causes a wrog status call on the NS87415 at least.
+thanks for your help and please tell me, if I can do anything. We have this 
+problem on a production system, but the node in question will be rebooted in 
+Thursday (ups needs to be replaced). If there are some tests/reboots/whatever 
+I could do, it would be best to do it shortly after the scheduled reboot.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Actually I now would have attempted to port your mod15 patch 
+(http://home-tj.org/wiki/index.php/Sil_m15w#Patches) to 2.6.23, hoping it 
+would solve Soerens problem and ours as well (ours magically already went 
+away using the mod15 fix). Well, maybe I port it anyway to 2.6.23 to see if 
+it also solves our problem.
 
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c linux-2.6.23-mm1/drivers/ata/libata-core.c
---- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:03:26.000000000 +0100
-+++ linux-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-23 13:39:25.861931504 +0100
-@@ -3305,7 +3323,7 @@
- 	 * the bus shows 0xFF because the odd clown forgets the D7
- 	 * pulldown resistor.
- 	 */
--	if (ata_check_status(ap) == 0xFF)
-+	if (ata_chk_status(ap) == 0xFF)
- 		return -ENODEV;
- 
- 	return ata_bus_post_reset(ap, devmask, deadline);
+
+Thanks,
+Bernd
+
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
