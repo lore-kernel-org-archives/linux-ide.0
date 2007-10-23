@@ -1,39 +1,46 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: add HTS542525K9SA00 to NCQ blacklist
-Date: Tue, 23 Oct 2007 19:07:49 +0900
-Message-ID: <20071023100749.GD18322@htj.dyndns.org>
+Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
+Date: Tue, 23 Oct 2007 19:12:01 +0900
+Message-ID: <471DC8F1.9090501@gmail.com>
+References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com> <471DC728.60705@mandic.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:51207 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754355AbXJWKIA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 06:08:00 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so1438822rvb
-        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 03:07:56 -0700 (PDT)
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.177]:32907 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbXJWKML (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2007 06:12:11 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1672805wah
+        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 03:12:10 -0700 (PDT)
+In-Reply-To: <471DC728.60705@mandic.com.br>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
-Cc: Luca Tettamanti <kronos.it@gmail.com>
+To: "Renato S. Yamane" <renatoyamane@mandic.com.br>
+Cc: linux-ide@vger.kernel.org, miquels@cistron.nl
 
-Another one doing spurious NCQ completions.  Blacklist it.
+Renato S. Yamane wrote:
+> Tejun Heo wrote:
+>> Renato S. Yamane wrote:
+>>> So, my questions is:
+>>> - This is dangerous? Can damage something?
+>>
+>> If your drive sounds funny on shutdown, it could.  Your drive is
+>> supposed to sound the same way it sounds when you execute "hdparm -y
+>> /dev/sdX".
+> 
+> No strange sounds :-)
+> 
+>>> - How can I help to fix this warning?
+>>
+>> I believe there's already update out but you can edit some configuration
+>> file (can't remember which ATM) such that "-h" option is not passed to
+>> halt.
+> 
+> Fixed. Patch is attached. Thanks!
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Luca Tettamanti <kronos.it@gmail.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+Can you write up something for other debian users so that it can be
+included in the linux-ata page && cc Jeff Garzik?
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 908613d..be872fa 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3981,6 +3981,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
- 	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
- 	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
-+	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
- 	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
- 	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+-- 
+tejun
