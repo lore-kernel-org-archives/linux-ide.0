@@ -1,54 +1,54 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [patch] PCI: disable MSI on more ATI NorthBridges
-Date: Mon, 22 Oct 2007 17:13:18 -0700 (PDT)
-Message-ID: <20071022.171318.104036671.davem@davemloft.net>
-References: <Pine.LNX.4.64.0710221555190.32497@iabervon.org>
-	<471D0ADC.7000005@garzik.org>
-	<Pine.LNX.4.64.0710221700120.32497@iabervon.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: FW: LIBATA issue with SATA drive
+Date: Tue, 23 Oct 2007 11:58:22 +0900
+Message-ID: <471D634E.9080300@gmail.com>
+References: <AF1760336DB49F43983B755855C2A46702AF744B@troe2k1.cs.myharris.net>	 <4716DC7D.6050007@gmail.com>	 <64bb37e0710181152j7d070258w9b9eeb59cf1f0a1d@mail.gmail.com>	 <471804CA.9040103@gmail.com>	 <64bb37e0710182151j6992cde3u4f9ae60aa70e22eb@mail.gmail.com>	 <47183B31.4080002@gmail.com> <64bb37e0710190921w66efe89dl1136d08328123629@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33192
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751062AbXJWAM5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Oct 2007 20:12:57 -0400
-In-Reply-To: <Pine.LNX.4.64.0710221700120.32497@iabervon.org>
+Received: from rv-out-0910.google.com ([209.85.198.189]:34469 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbXJWC6b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Oct 2007 22:58:31 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1369547rvb
+        for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2007 19:58:31 -0700 (PDT)
+In-Reply-To: <64bb37e0710190921w66efe89dl1136d08328123629@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: barkalow@iabervon.org
-Cc: jeff@garzik.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: linux-ide@vger.kernel.org
 
-From: Daniel Barkalow <barkalow@iabervon.org>
-Date: Mon, 22 Oct 2007 17:31:04 -0400 (EDT)
-
-> It's likewise documented (although maybe arguable in wording) that the 
-> device shouldn't send legacy interrupts if MSI is in use, regardless of 
-> INTX_DISABLE, but this also happens in the field.
+Torsten Kaiser wrote:
+> On 10/19/07, Tejun Heo <htejun@gmail.com> wrote:
+>> Torsten Kaiser wrote:
+>>> Just remebered another thing about sata_sil24 that popped up with 2.6.23-mm1.
+>>> With this kernel version (comparing to 2.6.23-rc8-mm1) the port
+>>> probing time goes up from ~0.5 seconds per port/drive to ~2 seconds.
+>>> Also the SControl changed:
+>>>
+>>> 2.6.23-rc8-mm1:
+>>> [    4.110000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> 2.6.23-mm1:
+>>> [    5.930000] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+>>>
+>>> But except for increased delay during boot no errors can seen, the
+>>> drives work normally.
+>> Yeah, PARTIAL / SLUMBER mode restriction is lifted.  Dunno whether
+>> that's related to the increased delay tho.  Will investigate.
 > 
-> I think that the current Linux behavior with respect to INTX_DISABLE is 
-> simply due to which hardware bug was present in the device whose driver 
-> first got Linux support, but one or the other or both needs a quirk, since 
-> there's no behavior that works with everything. And it's still impossible 
-> to tell which bug is more common, since MSI isn't used most of the time, 
-> even if the hardware supports it, so it's pretty arbitrary which way Linux 
-> goes in the non-quirk case.
+> But don't invest too much time into this.
+> That the delay is part of the broken ACPI of this board/bios seems
+> very likely to me.
+> (And apart from that delay there seems to be no other changes.)
 
-I think this pretty much sums up the situation accurately.
+Alright, found it.  Its because sata_sil24 now uses hardreset during
+probing.  This behavior has changed because sil24 now supports PMP and
+some PMPs don't work with only SRST.  HRST uses longer timing values to
+make sure PHY gets stable before proceeding and that's where the extra
+wait is coming from.
 
-My suggestion is:
+Thanks.
 
-1) Leave the pci_intx() twiddling code in drivers/pci/msi.c
-
-2) Add quirks for "INTX_DISABLE turns off MSI too", this sets
-   a flag in the pci_dev.
-
-3) The pci_intx() calls in drivers/pci/msi.c are skipped if this
-   flag from #2 is set.
-
-4) Add quirk entries for drivers/net/tg3.c chips and these SATA
-   devices we are learning about here, as well as any others we
-   are aware of right now.
-
-5) Remove the pci_intx() workaround code from drivers/net/tg3.c
-   and elsewhere.
+-- 
+tejun
