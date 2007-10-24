@@ -1,29 +1,52 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 3/4]: [PCI]: Add quirk for devices which disable MSI
- when INTX_DISABLE is set.
-Date: Tue, 23 Oct 2007 22:33:15 -0700 (PDT)
-Message-ID: <20071023.223315.10295721.davem@davemloft.net>
-References: <20071023.195310.131105752.davem@davemloft.net>
-	<1193203821.8788.4.camel@concordia>
+From: Tejun Heo <htejun@gmail.com>
+Subject: (unknown)
+Date: Wed, 24 Oct 2007 15:00:10 +0900
+Message-ID: <20071024060010.GB11853@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34887
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754851AbXJXFdb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 01:33:31 -0400
-In-Reply-To: <1193203821.8788.4.camel@concordia>
+Received: from rv-out-0910.google.com ([209.85.198.187]:44450 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbXJXGAV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 02:00:21 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so83558rvb
+        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 23:00:20 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: michael@ellerman.id.au
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-From: Michael Ellerman <michael@ellerman.id.au>
-Date: Wed, 24 Oct 2007 15:30:21 +1000
+Local variable @action in ata_eh_reset() is used only once after
+assignment and as all other operations are done on ehc->i.action
+directly, it can be a bit confusing.  Kill it.
 
-> That looks like 6 hunks doing exactly the same thing? What about
-> creating a pci_intx_quirked() (or something) that checks the flag and
-> then does/or does not call pci_intx().
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-eh.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Good idea, I'll add that to the patch.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 93e2b54..5e3f66c 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2071,7 +2071,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	int try = 0;
+ 	struct ata_device *dev;
+ 	unsigned long deadline;
+-	unsigned int action;
+ 	ata_reset_fn_t reset;
+ 	unsigned long flags;
+ 	int rc;
+@@ -2086,11 +2085,10 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	/* Determine which reset to use and record in ehc->i.action.
+ 	 * prereset() may examine and modify it.
+ 	 */
+-	action = ehc->i.action;
+ 	ehc->i.action &= ~ATA_EH_RESET_MASK;
+ 	if (softreset && (!hardreset || (!(link->flags & ATA_LFLAG_NO_SRST) &&
+ 					 !sata_set_spd_needed(link) &&
+-					 !(action & ATA_EH_HARDRESET))))
++					 !(ehc->i.action & ATA_EH_HARDRESET))))
+ 		ehc->i.action |= ATA_EH_SOFTRESET;
+ 	else
+ 		ehc->i.action |= ATA_EH_HARDRESET;
