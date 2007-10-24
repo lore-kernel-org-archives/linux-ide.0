@@ -1,31 +1,43 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
-Date: Tue, 23 Oct 2007 19:47:32 -0400
-Message-ID: <20071023234732.GA23598@jim.sh>
-References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com> <471DC728.60705@mandic.com.br> <471DC8F1.9090501@gmail.com> <471DCA74.503@mandic.com.br> <471DCB33.5070108@gmail.com> <471DD288.7010902@mandic.com.br> <471DE866.7040908@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: add HTS542525K9SA00 to NCQ blacklist
+Date: Tue, 23 Oct 2007 21:25:33 -0400
+Message-ID: <471E9F0D.9020606@garzik.org>
+References: <20071023100749.GD18322@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <bounce-debian-devel=debian-devel=m.gmane.org@lists.debian.org>
-Content-Disposition: inline
-In-Reply-To: <471DE866.7040908@gmail.com>
-Sender: jim@jim.sh
-Resent-Message-ID: <Hz2WCC.A.PxC.UvoHHB@murphy>
-List-Post: <mailto:debian-devel@lists.debian.org>
-List-Help: <mailto:debian-devel-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-devel-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-devel-request@lists.debian.org?subject=unsubscribe>
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Renato S. Yamane" <renatoyamane@mandic.com.br>, Jeff Garzik <jeff@garzik.org>, debian-devel@lists.debian.org, linux-ide@vger.kernel.org, miquels@cistron.nl
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:38319 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753144AbXJXBZe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Oct 2007 21:25:34 -0400
+In-Reply-To: <20071023100749.GD18322@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, Luca Tettamanti <kronos.it@gmail.com>
 
 Tejun Heo wrote:
-> Ehh... I meant something along the line of...
+> Another one doing spurious NCQ completions.  Blacklist it.
 > 
-> "Info for Debian VERSION users : if you see this warning there are
-> several solutions... blah blah".
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Luca Tettamanti <kronos.it@gmail.com>
+> ---
+>  drivers/ata/libata-core.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 908613d..be872fa 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3981,6 +3981,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>  	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+>  	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
+>  	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+> +	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
+>  	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+>  	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
 
-For Debian, I don't think there are any complete solutions yet.
-The related bug is 
-  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=426224
+applied
 
--jim
+
