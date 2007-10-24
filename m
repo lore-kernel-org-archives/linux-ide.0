@@ -1,16 +1,17 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: (unknown)
-Date: Wed, 24 Oct 2007 15:00:10 +0900
-Message-ID: <20071024060010.GB11853@htj.dyndns.org>
+Subject: [PATCH RESEND] libata: kill confusing @action local variable from
+	ata_eh_reset()
+Date: Wed, 24 Oct 2007 15:01:38 +0900
+Message-ID: <20071024060138.GC11853@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:44450 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.190]:45006 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbXJXGAV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 02:00:21 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so83558rvb
-        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 23:00:20 -0700 (PDT)
+	with ESMTP id S1753076AbXJXGBq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 02:01:46 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so83780rvb
+        for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2007 23:01:45 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,6 +23,8 @@ directly, it can be a bit confusing.  Kill it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
+Forgot subject in the first posting, re-posting.  Sorry.
+
  drivers/ata/libata-eh.c |    4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
