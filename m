@@ -1,99 +1,49 @@
-From: Nick Warne <nick@ukfsn.org>
-Subject: Re: New CD/DVD drive - 80-wire cable detection failure
-Date: Wed, 24 Oct 2007 18:03:03 +0100
-Message-ID: <200710241803.03955.nick@ukfsn.org>
-References: <200710181832.42906.nick@ukfsn.org> <200710201322.57178.nick@ukfsn.org> <200710240133.08425.bzolnier@gmail.com>
-Reply-To: nick@ukfsn.org
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 11/15] ide: PCI BMDMA initialization fixes
+Date: Wed, 24 Oct 2007 21:37:44 +0400
+Message-ID: <471F82E8.2010907@ru.mvista.com>
+References: <200710012338.31404.bzolnier@gmail.com> <47039571.20907@ru.mvista.com> <200710032359.32630.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s2.ukfsn.org ([217.158.120.143]:33025 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765877AbXJXRDH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Oct 2007 13:03:07 -0400
-In-Reply-To: <200710240133.08425.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:33775 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756898AbXJXRhg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Oct 2007 13:37:36 -0400
+In-Reply-To: <200710032359.32630.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hi Bart,
+Hello.
 
-On Wednesday 24 October 2007 00:33:08 Bartlomiej Zolnierkiewicz wrote:
-> Hi,
->
-> > > hdparm --Istdout /dev/hdd
->
-> Thanks, the identify block looks quite "interesting".
-[...]
-> word 93 is 0x2000
->
-> bit 0x4000 is not set despite the fact that ATA spec (>= ATA-5) requires
-> it to be set (the device claims ATA/ATAPI-3/4/5/6/7 compatiblity, a bit too
-> optimistic since it looks like the firmware was based on ATA/ATAPI-4 spec)
->
-> bit 0x2000 is set which would indicate that the 80-wires cable is
-> correctly detected by the device
->
-> => the device/firmware pair is a good candidate for ivb_list[]
+Bartlomiej Zolnierkiewicz wrote:
 
-Interesting, I fully understand.
+> [PATCH] ide: PCI BMDMA initialization fixes (take 2)
 
-> There seems to be a new firmware (SB01) for this device:
-> http://www.samsungodd.com/Lib/popup/Download.asp?path=FW_FWDownload&fname=2
->00710011656260232_SH-S202J_%20SB01.exe
-> It would be useful to know whether it has the same problem...
+> * Set hwif->dma_base only if allocation of extra ports succeeds.
 
-I cannot use this - I haven't used windows at home for a few years, and have 
-no way to flash the device up.  It would be interesting though if this does 
-make it conform.
+> While at it:
 
-> Could you try this patch?
->
-> [PATCH] ide: add SH-S202J to ivb_list[]
+> * Move setting of hwif->dma_{base,master} from ide_{mapped_mmio,iomio}_dma()
+>   to ide_setup_dma().
 
-Thank you!  This works very well!
+> * Rename 'dma_base' argument to 'base' in ide_setup_dma() (to make the code
+>   obey 80-columns limit and increase its readability).
 
+> * Remove stale ide_setup_dma() comment.
 
-hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd: skipping 
-word 93 validity check
-, UDMA(66)
+> v2:
+> * Change to allocate hwif->dmatable_cpu before reserving I/O ports missed
+>   teardown code (spotted by Sergei).  On the second thought this change is
+>   actually unnecessary so revert it in v2.
 
+> * Make ide_release_dma_engine() void and remove needless comment.
 
-Many thanks indeed!
-
-Nick
-
-> From the report by Nick Warne.
->
-> Cc: Nick Warne <nick@ukfsn.org>
-> Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ide-iops.c |    3 +++
->  1 file changed, 3 insertions(+)
->
-> Index: b/drivers/ide/ide-iops.c
-> ===================================================================
-> --- a/drivers/ide/ide-iops.c
-> +++ b/drivers/ide/ide-iops.c
-> @@ -582,9 +582,12 @@ EXPORT_SYMBOL_GPL(ide_in_drive_list);
->  /*
->   * Early UDMA66 devices don't set bit14 to 1, only bit13 is valid.
->   * We list them here and depend on the device side cable detection for
-> them. + *
-> + * Some optical devices with the buggy firmwares have the same problem.
->   */
->  static const struct drive_list_entry ivb_list[] = {
->  	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
-> +	{ "TSSTcorp CDDVDW SH-S202J"	, "SB00"	},
->  	{ NULL				, NULL		}
->  };
 
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-
--- 
-Free Software Foundation Associate Member 5508
+MBR, Sergei
