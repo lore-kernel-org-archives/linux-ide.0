@@ -1,49 +1,131 @@
-From: David Miller <davem@davemloft.net>
+From: Michael Ellerman <michael@ellerman.id.au>
 Subject: Re: [PATCH 3/4]: [PCI]: Add quirk for devices which disable MSI
- when INTX_DISABLE is set.
-Date: Tue, 23 Oct 2007 22:06:56 -0700 (PDT)
-Message-ID: <20071023.220656.55724970.davem@davemloft.net>
+	when INTX_DISABLE is set.
+Date: Wed, 24 Oct 2007 15:30:21 +1000
+Message-ID: <1193203821.8788.4.camel@concordia>
 References: <20071023.195310.131105752.davem@davemloft.net>
-	<1551EAE59135BE47B544934E30FC4FC002AABB0A@nt-irva-0751.brcm.ad.broadcom.com>
+Reply-To: michael@ellerman.id.au
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47051
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754056AbXJXFHM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 01:07:12 -0400
-In-Reply-To: <1551EAE59135BE47B544934E30FC4FC002AABB0A@nt-irva-0751.brcm.ad.broadcom.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dAihurO9v4m3IUXAOARf"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756906AbXJXFah@vger.kernel.org>
+In-Reply-To: <20071023.195310.131105752.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 List-Id: linux-ide@vger.kernel.org
-To: mchan@broadcom.com
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
 
-From: "Michael Chan" <mchan@broadcom.com>
-Date: Tue, 23 Oct 2007 21:59:39 -0700
 
-> David Miller wrote:
-> 
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> > +			PCI_DEVICE_ID_TIGON3_5780,
-> > +			quirk_msi_intx_disable_bug);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> > +			PCI_DEVICE_ID_TIGON3_5780S,
-> > +			quirk_msi_intx_disable_bug);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> > +			PCI_DEVICE_ID_TIGON3_5714,
-> > +			quirk_msi_intx_disable_bug);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> > +			PCI_DEVICE_ID_TIGON3_5714S,
-> > +			quirk_msi_intx_disable_bug);
-> > +
-> 
-> Please add PCI_DEVICE_ID_TIGON3_5715 and
-> PCI_DEVICE_ID_TIGON3_5715S as well.
+--=-dAihurO9v4m3IUXAOARf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I will.
+On Tue, 2007-10-23 at 19:53 -0700, David Miller wrote:
+> A reasonably common problem with some devices is that they will
+> disable MSI generation when the INTX_DISABLE bit is set in the
+> PCI_COMMAND register.
+>=20
+> Quirk this explicitly, guarding the pci_intx() calls in msi.c with
+> this quirk indication.
+>=20
+> The first entries for this quirk are for 5714 and 5780 Tigon3 chips,
+> and thus we can remove the workaround code from the tg3.c driver.
+>=20
+> Signed-off-by: David S. Miller <davem@davemloft.net>
 
-> Other than that,
-> Acked-by: Michael Chan <mchan@broadcom.com>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 87e0161..a8dd18c 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -237,7 +237,8 @@ static void __pci_restore_msi_state(struct pci_dev *d=
+ev)
+>  	entry =3D get_irq_msi(dev->irq);
+>  	pos =3D entry->msi_attrib.pos;
+> =20
+> -	pci_intx(dev, 0);		/* disable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 0); /* disable intx */
+>  	msi_set_enable(dev, 0);
+>  	write_msi_msg(dev->irq, &entry->msg);
+>  	if (entry->msi_attrib.maskbit)
+> @@ -260,7 +261,8 @@ static void __pci_restore_msix_state(struct pci_dev *=
+dev)
+>  		return;
+> =20
+>  	/* route the table */
+> -	pci_intx(dev, 0);		/* disable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 0); /* disable intx */
+>  	msix_set_enable(dev, 0);
+> =20
+>  	list_for_each_entry(entry, &dev->msi_list, list) {
+> @@ -343,7 +345,8 @@ static int msi_capability_init(struct pci_dev *dev)
+>  	}
+> =20
+>  	/* Set MSI enabled bits	 */
+> -	pci_intx(dev, 0);		/* disable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 0); /* disable intx */
+>  	msi_set_enable(dev, 1);
+>  	dev->msi_enabled =3D 1;
+> =20
+> @@ -433,7 +436,8 @@ static int msix_capability_init(struct pci_dev *dev,
+>  		i++;
+>  	}
+>  	/* Set MSI-X enabled bits */
+> -	pci_intx(dev, 0);		/* disable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 0); /* disable intx */
+>  	msix_set_enable(dev, 1);
+>  	dev->msix_enabled =3D 1;
+> =20
+> @@ -528,7 +532,8 @@ void pci_disable_msi(struct pci_dev* dev)
+>  		return;
+> =20
+>  	msi_set_enable(dev, 0);
+> -	pci_intx(dev, 1);		/* enable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 1); /* enable intx */
+>  	dev->msi_enabled =3D 0;
+> =20
+>  	BUG_ON(list_empty(&dev->msi_list));
+> @@ -640,7 +645,8 @@ void pci_disable_msix(struct pci_dev* dev)
+>  		return;
+> =20
+>  	msix_set_enable(dev, 0);
+> -	pci_intx(dev, 1);		/* enable intx */
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
+> +		pci_intx(dev, 1); /* enable intx */
+>  	dev->msix_enabled =3D 0;
+> =20
+>  	msix_free_all_irqs(dev);
 
-Thanks for reviewing.
+
+That looks like 6 hunks doing exactly the same thing? What about
+creating a pci_intx_quirked() (or something) that checks the flag and
+then does/or does not call pci_intx().
+
+cheers
+
+--=20
+Michael Ellerman
+OzLabs, IBM Australia Development Lab
+
+wwweb: http://michael.ellerman.id.au
+phone: +61 2 6212 1183 (tie line 70 21183)
+
+We do not inherit the earth from our ancestors,
+we borrow it from our children. - S.M.A.R.T Person
+
+--=-dAihurO9v4m3IUXAOARf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBHHthtdSjSd0sB4dIRAqAbAJwMiU3PtXhwdWjID2d4cVuAmKL1TgCgpGc5
+58LPkL8tnd7Feg1rwjlmGCo=
+=iWQQ
+-----END PGP SIGNATURE-----
+
+--=-dAihurO9v4m3IUXAOARf--
