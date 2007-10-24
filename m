@@ -1,93 +1,45 @@
-From: "Shane Huang" <Shane.Huang@amd.com>
-Subject: RE: [PATCH 4/4]: [PCI]: Add MSI INTX_DISABLE quirks for ATI
- SB700/800 SATA and IXP SB400 USB
-Date: Wed, 24 Oct 2007 14:43:21 +0800
-Message-ID: <5CAB7B5D6F8AB84AA868A46B47A507055D936C@sshaexmb1.amd.com>
-References: <20071023.195343.35661973.davem@davemloft.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [2.6.23-rc3] Regression: "spurious completions during NCQ"
+Date: Wed, 24 Oct 2007 06:18:20 -0400
+Message-ID: <471F1BEC.2060701@gmail.com>
+References: <20070922131104.GG32509@server.c-otto.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-blu.frontbridge.com ([65.55.251.16]:40253 "EHLO
-	outbound5-blu-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754147AbXJXGqB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Oct 2007 02:46:01 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20071023.195343.35661973.davem@davemloft.net>
+Received: from rv-out-0910.google.com ([209.85.198.184]:18678 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315AbXJXKS2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 06:18:28 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so126439rvb
+        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 03:18:27 -0700 (PDT)
+In-Reply-To: <20070922131104.GG32509@server.c-otto.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org
-Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com, Shane Huang <Shane.Huang@amd.com>
+To: Carsten Otto <c-otto@gmx.de>
+Cc: linux-ide@vger.kernel.org
 
-This patch and the third one seems can make my SB700 SATA controller
-work under MSI(simply tested on 2.6.23-rc5). 
-
-So you may withdraw the RS690/RD580/RX790 MSI disablement patches
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-t;h=4be8f906435a6af241821ab5b94b2b12cb7d57d8
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-t;h=aea6a433f50cd89b9cbd10850fd0b32f961f9883
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-t;h=f122392f679ebed39db08074f935d770504623eb
-after the commit of these MSI/INTx quirks.
-
-Thanks
-Shane
-
-> -----Original Message-----
-> From: David Miller [mailto:davem@davemloft.net]
-> Sent: Wednesday, October 24, 2007 10:54 AM
-> To: linux-kernel@vger.kernel.org
-> Cc: jeff@garzik.org; barkalow@iabervon.org; linas@austin.ibm.com;
-chunhao.huang@hotmail.com; gregkh@suse.de; htejun@gmail.com;
-> brice.goglin@gmail.com; david.gaarenstroom@gmail.com;
-linux-pci@atrey.karlin.mff.cuni.cz; Shane Huang;
-linux-ide@vger.kernel.org;
-> brice@myri.com; mchan@broadcom.com
-> Subject: [PATCH 4/4]: [PCI]: Add MSI INTX_DISABLE quirks for ATI
-SB700/800 SATA and IXP SB400 USB
+Carsten Otto wrote:
+> kern.log:Sep 20 00:42:23 server kernel: ata2.00: NCQ disabled due to excessive errors
 > 
+> Please tell me how I can help resolving the issue (if it is a bug) or,
+> if possible, tell me how to fix it myself.
 > 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
->  drivers/pci/quirks.c |   20 ++++++++++++++++++++
->  1 files changed, 20 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 591eaa4..5795a3d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1725,4 +1725,24 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
->  			PCI_DEVICE_ID_TIGON3_5714S,
->  			quirk_msi_intx_disable_bug);
-> 
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4390,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4391,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4392,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4393,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4394,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4395,
-> +			quirk_msi_intx_disable_bug);
-> +
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4373,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4374,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
-> +			quirk_msi_intx_disable_bug);
-> +
->  #endif /* CONFIG_PCI_MSI */
-> --
-> 1.5.3.4
-> 
-> 
+> Information about my system:
+> - 4x Maxtor 7V300F0 (MaxLine III, 300GB, 7200rpm, 16MB cache, SATA2),
+>   firmware VA111900
+> - 1x Samsung 2SP2014N (SpinPoint P, 200GB, 7200rpm, 8MB cache, PATA),
+>   firmware VC100-33
+> - 4 software RAIDs on the SATA disks, 1x RAID1, 3x RAID5
+> - heavy usage of the RAIDs
+> - ICH7R
+> - 2.6.22.6
+> - Pentium D 805, 2GB RAM
 
+Please post dmesg including full boot log and error messages and the 
+result of 'hdparm -I /dev/sdX' where sdX are drives which cause such errors.
 
+Thanks.
 
+-- 
+tejun
