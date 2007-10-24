@@ -1,50 +1,63 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
-Date: Wed, 24 Oct 2007 22:39:29 +0900
-Message-ID: <471F4B11.9030206@gmail.com>
-References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com> <471DC728.60705@mandic.com.br> <471DC8F1.9090501@gmail.com> <471DCA74.503@mandic.com.br> <471DCB33.5070108@gmail.com> <471DD288.7010902@mandic.com.br> <471DE866.7040908@gmail.com> <20071023234732.GA23598@jim.sh> <471F493C.8050804@mandic.com.br>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: [PATCH 3/3] faster workaround
+Date: Wed, 24 Oct 2007 15:39:28 +0200
+Message-ID: <1193233168.5427.5.camel@localhost>
+References: <200710081709.18253.bs@q-leap.de>
+	 <200710101112.20448.bs@q-leap.de>	<200710111409.56210.bs@q-leap.de>
+	 <200710111433.23833.bs@q-leap.de>
+	 <20071011142628.48272a4a@the-village.bc.nu>	<470E30F9.5060705@garzik.org>
+	 <20071011155024.46007973@the-village.bc.nu> <470E3A35.4000104@garzik.org>
+	 <471DABE1.40301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:63733 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758090AbXJXNjh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 09:39:37 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so226638wah
-        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 06:39:37 -0700 (PDT)
-In-Reply-To: <471F493C.8050804@mandic.com.br>
+Received: from nn7.de ([85.214.94.156]:52446 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756323AbXJXNld (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Oct 2007 09:41:33 -0400
+In-Reply-To: <471DABE1.40301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Renato S. Yamane" <renatoyamane@mandic.com.br>
-Cc: Jim Paris <jim@jtan.com>, Jeff Garzik <jeff@garzik.org>, debian-devel@lists.debian.org, linux-ide@vger.kernel.org, miquels@cistron.nl
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bernd Schubert <bs@q-leap.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Renato S. Yamane wrote:
-> Jim Paris escreveu:
->> Tejun Heo wrote:
->>> Ehh... I meant something along the line of...
->>>
->>> "Info for Debian VERSION users : if you see this warning there are
->>> several solutions... blah blah".
->>
->> For Debian, I don't think there are any complete solutions yet.
->> The related bug is  =20
->> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D426224
->=20
-> I think that we can fix this if someone can answer this:
->=20
-> $ man halt
-> "-h flag: This is important for IDE drives, since the kernel doesn=92=
-t=20
-> flush the write cache itself before power-off.."
->=20
-> How can I know if kernel write cache itself? :-)
+On Tue, 2007-10-23 at 17:08 +0900, Tejun Heo wrote:
+> Jeff Garzik wrote:
+> > Alan Cox wrote:
+> >>> 2) Once we identified, over time, the set of drives affected by this
+> >>> 3112 quirk (aka drives that didn't fully comply to SATA spec), the
+> >>> debugging of corruption cases largely shifted to the standard
+> >>> routine: update the BIOS, replace the
+> >>> cables/RAM/power/mainboard/slot/etc. to be certain of problem location.
+> >>
+> >> Except for the continued series of later SI + Nvidia chipset (mostly)
+> >> pattern which seems unanswered but also being later chips I assume
+> >> unrelated to this problem.
+> > 
+> > The SIL_FLAG_MOD15WRITE flag is set in sil_port_info[] is set according
+> > to the best info we have from SiI, which indicates that 3114 and 3512 do
+> > not have the same problem as the 3112.
+> 
+> I don't think this data corruption problem w/ sil3114 is related to
+> m15w.  m15w workaround slows down things quite a bit and is likely to
+> hide problems on PCI bus side.  There are reports of data corruption
+> with 3114 on nvidia (most common), via and now amd chipsets.  There's
+> one on intel too but IIRC wasn't too definite.
 
-Kernel has been flushing write cache for many many years now.  Man page=
-=20
-needs update.  Also, flushing cache from halt is okay.  What's hurting=20
-is spinning down the drive from halt.
+err wait, the motherboard I am having is also via based. however the
+m15w workaround just slowed down everything but the problem still
+appeared.
 
---=20
-tejun
+also to be sure that it is really some problem related to the particular
+seagate drive vs. sil3114 I created a 200G file of zeros on one of the
+known to work seagates. and indeed it was all zeros... 
+
+> According to a user, freebsd didn't have data corruption problem on the
+> same hardware.  I copied PCI FIFO setup code (ours is broken BTW) but it
+> didn't fix the problem.
+> 
+> I'll try to reproduce the problem locally and hunt it down.
+
+Thanks in advance...
+Soeren
