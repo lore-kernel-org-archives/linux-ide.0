@@ -1,43 +1,56 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata-core: auditting chk_status v check_status
-Date: Tue, 23 Oct 2007 21:25:27 -0400
-Message-ID: <471E9F07.3070802@garzik.org>
-References: <20071023165002.15a7b09e@the-village.bc.nu>
+Subject: Re: [PATCH] jmicron: update quirk for JMB361/3/5/6
+Date: Tue, 23 Oct 2007 21:25:39 -0400
+Message-ID: <471E9F13.2040600@garzik.org>
+References: <20071023062731.GC18322@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38321 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:38329 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753159AbXJXBZg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2007 21:25:36 -0400
-In-Reply-To: <20071023165002.15a7b09e@the-village.bc.nu>
+	id S1753393AbXJXBZl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Oct 2007 21:25:41 -0400
+In-Reply-To: <20071023062731.GC18322@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, ethanhsiao@jmicron.com
 
-Alan Cox wrote:
-> Did a complete audit of these and found we have another error case.
+Tejun Heo wrote:
+> Set bits 0, 4, 5 and 7 of PCI configuration register 0x40 in the
+> quirk.  This has the following effects and is recommended by the
+> vendor.
 > 
-> ata_bus_softreset calls ata_check_status which means that it tries to do
-> an ioread8 on the port blindly and check versus 0xFF for an error.
+> * Force enable of IDE channels (used to be left alone as BIOS
+>   configured)
 > 
-> It should of course be using the ap->ops method for this via chk_status,
-> and this bug causes a wrog status call on the NS87415 at least.
+> * Change initial phase behavior of PIO cycle such that the host pulls
+>   down the bus instead of tristating it.  Vendor recommends this
+>   setting.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> The above settings are better for the current generation of
+> controllers and needed for the upcoming next generation.
 > 
-> diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c linux-2.6.23-mm1/drivers/ata/libata-core.c
-> --- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:03:26.000000000 +0100
-> +++ linux-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-23 13:39:25.861931504 +0100
-> @@ -3305,7 +3323,7 @@
->  	 * the bus shows 0xFF because the odd clown forgets the D7
->  	 * pulldown resistor.
->  	 */
-> -	if (ata_check_status(ap) == 0xFF)
-> +	if (ata_chk_status(ap) == 0xFF)
->  		return -ENODEV;
+> Tested on JMB363.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Ethan Hsiao <ethanhsiao@jmicron.com>
+> ---
+>  drivers/pci/quirks.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: work/drivers/pci/quirks.c
+> ===================================================================
+> --- work.orig/drivers/pci/quirks.c
+> +++ work/drivers/pci/quirks.c
+> @@ -1230,7 +1230,7 @@ static void quirk_jmicron_ata(struct pci
+>  	case PCI_DEVICE_ID_JMICRON_JMB363:
+>  		/* Enable dual function mode, AHCI on fn 0, IDE fn1 */
+>  		/* Set the class codes correctly and then direct IDE 0 */
+> -		conf1 |= 0x00C2A102; /* Set 1, 8, 13, 15, 17, 22, 23 */
+> +		conf1 |= 0x00C2A1B3; /* Set 0, 1, 4, 5, 7, 8, 13, 15, 17, 22, 23 */
+>  		break;
 
 applied
 
