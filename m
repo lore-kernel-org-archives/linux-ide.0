@@ -1,44 +1,40 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [PATCH 3/4]: [PCI]: Add quirk for devices which disable MSI
- when INTX_DISABLE is set.
-Date: Tue, 23 Oct 2007 21:59:39 -0700
-Message-ID: <1551EAE59135BE47B544934E30FC4FC002AABB0A@nt-irva-0751.brcm.ad.broadcom.com>
-References: <20071023.195310.131105752.davem@davemloft.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 0/4]: Resolve MSI vs. INTX_DISABLE quirks.
+Date: Tue, 23 Oct 2007 22:06:22 -0700 (PDT)
+Message-ID: <20071023.220622.68038077.davem@davemloft.net>
+References: <20071023.195108.69018458.davem@davemloft.net>
+	<Pine.LNX.4.64.0710240046220.32497@iabervon.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1538 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754124AbXJXE75 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 00:59:57 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20071023.195310.131105752.davem@davemloft.net>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47041
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753956AbXJXFGi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 01:06:38 -0400
+In-Reply-To: <Pine.LNX.4.64.0710240046220.32497@iabervon.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org
-Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com
+To: barkalow@iabervon.org
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
-David Miller wrote:
+From: Daniel Barkalow <barkalow@iabervon.org>
+Date: Wed, 24 Oct 2007 00:58:45 -0400 (EDT)
 
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> +			PCI_DEVICE_ID_TIGON3_5780,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> +			PCI_DEVICE_ID_TIGON3_5780S,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> +			PCI_DEVICE_ID_TIGON3_5714,
-> +			quirk_msi_intx_disable_bug);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> +			PCI_DEVICE_ID_TIGON3_5714S,
-> +			quirk_msi_intx_disable_bug);
-> +
+> I'm not sure all of the pci_intx() calls in msi.c should be skipped when 
+> the quirk applies; I think some of them might be there so that the legacy 
+> interrupt won't be delivered while MSI is turned off (since the handler 
+> isn't listening for the legacy interrupts). I'd guess this would cause 
+> people to have their MSI-capable device kill their non-MSI-capable device 
+> when they restore their laptop (and the shared interrupt fires and gets 
+> stuck at just the wrong time). No idea if this is a real concern, but I'm 
+> pretty sure that not all of those calls are recent.
 
-Please add PCI_DEVICE_ID_TIGON3_5715 and
-PCI_DEVICE_ID_TIGON3_5715S as well.
+I don't think it's a real concern.
 
-Other than that,
-Acked-by: Michael Chan <mchan@broadcom.com>
+> There's a couple of ATA drivers that look like they might be trying to 
+> work around the same bug, but it's a bit hard to tell. It might be good to 
+> have them use the quirk (or set the flag) because it's cleaner.
 
+I noticed these cases as well, and I would hope that Jeff would help
+out here using the infrastructure my patches created.
