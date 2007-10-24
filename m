@@ -1,51 +1,58 @@
-From: David Miller <davem@davemloft.net>
-Subject: [PATCH 4/4]: [PCI]: Add MSI INTX_DISABLE quirks for ATI SB700/800
- SATA and IXP SB400 USB
-Date: Tue, 23 Oct 2007 19:53:43 -0700 (PDT)
-Message-ID: <20071023.195343.35661973.davem@davemloft.net>
+From: Daniel Barkalow <barkalow@iabervon.org>
+Subject: Re: [PATCH 0/4]: Resolve MSI vs. INTX_DISABLE quirks.
+Date: Wed, 24 Oct 2007 00:58:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0710240046220.32497@iabervon.org>
+References: <20071023.195108.69018458.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756848AbXJXCx2@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from iabervon.org ([66.92.72.58]:55066 "EHLO iabervon.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750733AbXJXE6q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Oct 2007 00:58:46 -0400
+In-Reply-To: <20071023.195108.69018458.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
+On Tue, 23 Oct 2007, David Miller wrote:
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/pci/quirks.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+> 
+> The forthcoming patches are also available from:
+> 
+> 	kernel.org:/pub/scm/linux/kernel/git/davem/msiquirk-2.6.git
+> 
+> and clean up the handling of the common quirk wherein setting
+> INTX_DISABLE will mistakedly disable MSI generation for some
+> devices.
+> 
+> For devices without that problem, we want to keep the pci_intx() calls
+> in drivers/pci/msi.c because those help protect against devices
+> with the opposite problem.  Such devices always generate INTX
+> interrupts even when MSI is enabled, unless INTX_DISABLE is set.
+> 
+> Michael, please pay special attention to patch #3.  I think I
+> picked the correct PCI device IDs to match for the quirk
+> (5714* and 5780*) but it's possible we might need more elaborate
+> checks here.  It at least worked properly for the chips in my
+> Niagara system.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 591eaa4..5795a3d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1725,4 +1725,24 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
- 			PCI_DEVICE_ID_TIGON3_5714S,
- 			quirk_msi_intx_disable_bug);
- 
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4390,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4391,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4392,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4393,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4394,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4395,
-+			quirk_msi_intx_disable_bug);
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4373,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4374,
-+			quirk_msi_intx_disable_bug);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x4375,
-+			quirk_msi_intx_disable_bug);
-+
- #endif /* CONFIG_PCI_MSI */
--- 
-1.5.3.4
+I'm not sure all of the pci_intx() calls in msi.c should be skipped when 
+the quirk applies; I think some of them might be there so that the legacy 
+interrupt won't be delivered while MSI is turned off (since the handler 
+isn't listening for the legacy interrupts). I'd guess this would cause 
+people to have their MSI-capable device kill their non-MSI-capable device 
+when they restore their laptop (and the shared interrupt fires and gets 
+stuck at just the wrong time). No idea if this is a real concern, but I'm 
+pretty sure that not all of those calls are recent.
+
+> In addition to the Tigon3 cases, I added quirk entries for the
+> SB700/800 SATA chips and the IXP SB400 USB controllers.
+
+There's a couple of ATA drivers that look like they might be trying to 
+work around the same bug, but it's a bit hard to tell. It might be good to 
+have them use the quirk (or set the flag) because it's cleaner.
+
+	-Daniel
+*This .sig left intentionally blank*
