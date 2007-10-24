@@ -1,50 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] IDE updates (part 2)
-Date: Wed, 24 Oct 2007 09:20:18 -0400
-Message-ID: <471F4692.1080309@garzik.org>
-References: <200710131825.24768.bzolnier@gmail.com> <20071014001238.GP8181@ftp.linux.org.uk> <4713C568.2060708@garzik.org> <20071015195807.GF8759@flint.arm.linux.org.uk> <4713C893.3050200@garzik.org> <20071024123851.GB32333@flint.arm.linux.org.uk> <471F4035.4030507@garzik.org> <20071024131243.GC32333@flint.arm.linux.org.uk>
+From: "Renato S. Yamane" <renatoyamane@mandic.com.br>
+Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
+Date: Wed, 24 Oct 2007 11:31:40 -0200
+Message-ID: <471F493C.8050804@mandic.com.br>
+References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com> <471DC728.60705@mandic.com.br> <471DC8F1.9090501@gmail.com> <471DCA74.503@mandic.com.br> <471DCB33.5070108@gmail.com> <471DD288.7010902@mandic.com.br> <471DE866.7040908@gmail.com> <20071023234732.GA23598@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51391 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751237AbXJXNU1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Oct 2007 09:20:27 -0400
-In-Reply-To: <20071024131243.GC32333@flint.arm.linux.org.uk>
+Received: from smtp-02.mandic.com.br ([200.225.81.133]:52277 "EHLO
+	smtp-02.mandic.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752624AbXJXNb6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 09:31:58 -0400
+In-Reply-To: <20071023234732.GA23598@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: Al Viro <viro@ftp.linux.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jim Paris <jim@jtan.com>
+Cc: Tejun Heo <htejun@gmail.com>, "Renato S. Yamane" <renatoyamane@mandic.com.br>, Jeff Garzik <jeff@garzik.org>, debian-devel@lists.debian.org, linux-ide@vger.kernel.org, miquels@cistron.nl
 
-Russell King wrote:
-> On Wed, Oct 24, 2007 at 08:53:09AM -0400, Jeff Garzik wrote:
->> Russell King wrote:
->>> On Mon, Oct 15, 2007 at 04:07:47PM -0400, Jeff Garzik wrote:
->>>> Russell King wrote:
->>>>> On Mon, Oct 15, 2007 at 03:54:16PM -0400, Jeff Garzik wrote:
->>>>>> Al Viro wrote:
->>>>>>> Proposed addition to icside part, provided that ARM folks ACK it - gets
->>>>>>> icside to build and AFAICS it's correct:
->>>>>> ACK from me too...  ARM folks?
->>>>> Will test tomorrow/Wednesday.
->>>> Thanks.  Sorry about missing your CC on the libata-wide ata_link 
->>>> changes.  We should have poked the maintainers on that, for the drivers 
->>>> we cannot build ourselves.
->>> I think Viro's patch got an ack from everyone.  Who's dealing with getting
->>> this regression fix into mainline?  It seems at the moment the patch is in
->>> limbo.
->> I was waiting on you, who last said "Will test tomorrow/Wednesday" (with 
->> presumably an ACK forthcoming after test results)
+Jim Paris escreveu:
+> Tejun Heo wrote:
+>> Ehh... I meant something along the line of...
 >>
->> If it now has your ACK, it's ready and waiting in my mbox queue to be 
->> merged upstream.
-> 
-> Looks like it got my ack more than a week ago:
+>> "Info for Debian VERSION users : if you see this warning there are
+>> several solutions... blah blah".
+>=20
+> For Debian, I don't think there are any complete solutions yet.
+> The related bug is=20
+>   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D426224
 
-Groovy.
+I think that we can fix this if someone can answer this:
 
-	Jeff
+$ man halt
+"-h flag: This is important for IDE drives, since the kernel doesn=92t=20
+flush the write cache itself before power-off.."
 
+How can I know if kernel write cache itself? :-)
 
+Regards,
+Renato
 
