@@ -1,387 +1,306 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 12/15] ide: remove ->dma_master field from ide_hwif_t
-Date: Wed, 24 Oct 2007 23:24:52 +0200
-Message-ID: <200710242324.53080.bzolnier@gmail.com>
-References: <200710012339.39304.bzolnier@gmail.com> <200710082303.58761.bzolnier@gmail.com> <47179309.1090906@ru.mvista.com>
+Subject: Re: [PATCH 7/12] ide-disk: merge LBA28 and LBA48 Host Protected Area support code
+Date: Thu, 25 Oct 2007 01:14:53 +0200
+Message-ID: <200710250114.53414.bzolnier@gmail.com>
+References: <200710082313.39894.bzolnier@gmail.com> <471758A7.90402@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:14891 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.189]:15191 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206AbXJXXce (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 19:32:34 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so325232nfb
-        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 16:32:32 -0700 (PDT)
-In-Reply-To: <47179309.1090906@ru.mvista.com>
+	with ESMTP id S1754693AbXJXXci (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 19:32:38 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so325235nfb
+        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 16:32:37 -0700 (PDT)
+In-Reply-To: <471758A7.90402@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
-
-
-Hi,
+Cc: linux-ide@vger.kernel.org
 
 On Thursday 18 October 2007, Sergei Shtylyov wrote:
 > Hello.
 > 
 > Bartlomiej Zolnierkiewicz wrote:
 > 
-> >>>>Index: b/drivers/ide/pci/hpt366.c
-> >>>>===================================================================
-> >>>>--- a/drivers/ide/pci/hpt366.c
-> >>>>+++ b/drivers/ide/pci/hpt366.c
-> >>>>@@ -845,32 +845,33 @@ static int hpt374_ide_dma_end(ide_drive_
+> > * Merge idedisk_{read_native,set}_max_address_ext() into
+> >   idedisk_{read_native,set}_max_address().
 > 
-> >>>   This just asks to be:
+> > There should be no functionality changes caused by this patch.
 > 
-> >>    No, it doesn't cause that way one would only break it.
-> 
-> >>>> static void hpt3xxn_set_clock(ide_hwif_t *hwif, u8 mode)
-> >>>> {
-> 
-> >>>    unsigned long base = hwif->extra_base;
-> 
-> >>    Sorry for a thinko. All offsets below shoud be really 0x6x, not 0x5x...
-> 
-> > Here we go again... :)
-> 
-> > [PATCH] ide: remove ->dma_master field from ide_hwif_t (take 4)
-> 
-> > * Convert cmd64x, hpt366 and pdc202xx_old host drivers to use
-> >   pci_resource_start(hwif->pci_dev, 4) instead of hwif->dma_master.
-> 
-> > * Remove no longer needed ->dma_master field from ide_hwif_t.
-> 
-> > v2:
-> > * Use the more readable 'hwif->dma_base - (hwif->channel * 8)' instead of
-> >   pci_resource_start(hwif->pci_dev, 4).
-> 
-> > v3:
-> > * Use hwif->extra_base in hpt366/pdc20xx_old + some cosmetic fixups over v2
-> >   (suggested by Sergei).
-> 
->     Huh? I don't see where you're using extra_base in hpt366.c
-
-Doh, somebody hand me brown paper bag, please...
-
-> > v4:
-> > * Correct offsets in hpt3xxn_set_clock().
+>     This is unfortunately not achieved...
 > 
 > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > 
->     Unfortunately, I have to NAK the patch... :-/
-> 
-> > Index: b/drivers/ide/pci/hpt366.c
+>     No cookie this time. :-)
+
+"Oh, cookie cookie cookie starts with C!" :)
+
+> > Index: b/drivers/ide/ide-disk.c
 > > ===================================================================
-> > --- a/drivers/ide/pci/hpt366.c
-> > +++ b/drivers/ide/pci/hpt366.c
-> > @@ -845,32 +845,33 @@ static int hpt374_ide_dma_end(ide_drive_
+> > --- a/drivers/ide/ide-disk.c
+> > +++ b/drivers/ide/ide-disk.c
+> [...]
+> > @@ -350,31 +353,12 @@ static unsigned long idedisk_read_native
 > >  
-> >  static void hpt3xxn_set_clock(ide_hwif_t *hwif, u8 mode)
-> >  {
-> > -	u8 scr2 = inb(hwif->dma_master + 0x7b);
-> > +	unsigned long base = hwif->dma_base - (hwif->channel * 8);
+> >  	/* if OK, compute maximum address value */
+> >  	if ((tf->command & 0x01) == 0) {
+> > -		addr = ((tf->device & 0xf) << 24) |
+> > -		       (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+> > -		addr++;	/* since the return value is (maxlba - 1), we add 1 */
 > 
->     Should be hwif->extra_base - 0x10 or else the following code will touch 
-> all the wrong/reserved registers; one also can use hwif->extra_base ISO 'base' 
-> and change all the offsets to 0x6x...
+>     Actually, the return value is just maxlba (which is *not* the same as 
+> capacity).
 
-Well, I updated all offsets but I somehow forgot about updating 'base'. :)
+Indeed, moreover idedisk_{read_native,set}_max_address() comments look
+also incorrect, ditto for the function names.
 
-> > +	u8 scr2 = inb(base + 0x6b);
-> >  
-> >  	if ((scr2 & 0x7f) == mode)
-> >  		return;
-> >  
-> >  	/* Tristate the bus */
-> > -	outb(0x80, hwif->dma_master + 0x73);
-> > -	outb(0x80, hwif->dma_master + 0x77);
-> > +	outb(0x80, base + 0x63);
-> > +	outb(0x80, base + 0x67);
+Probably if we handle 'addr++'/'addr_req--'/'addr_set++' in
+idedisk_check_hpa() all issues will fix themselves.
+
+Care to look into it? 
+
+[...]
+
+> > +		if (lba48)
+> > +			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+> > +				tf->hob_lbal;
+> > +		else
+> > +			high = tf->device & 0xf;
+> >  		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
 > 
-> >  	/* Switch clock and reset channels */
-> > -	outb(mode, hwif->dma_master + 0x7b);
-> > -	outb(0xc0, hwif->dma_master + 0x79);
-> > +	outb(mode, base + 0x6b);
-> > +	outb(0xc0, base + 0x69);
-> >  
-> >  	/*
-> >  	 * Reset the state machines.
-> >  	 * NOTE: avoid accidentally enabling the disabled channels.
-> >  	 */
-> > -	outb(inb(hwif->dma_master + 0x70) | 0x32, hwif->dma_master + 0x70);
-> > -	outb(inb(hwif->dma_master + 0x74) | 0x32, hwif->dma_master + 0x74);
-> > +	outb(inb(base + 0x60) | 0x32, base + 0x60);
-> > +	outb(inb(base + 0x64) | 0x32, base + 0x64);
-> >  
-> >  	/* Complete reset */
-> > -	outb(0x00, hwif->dma_master + 0x79);
-> > +	outb(0x00, base + 0x69);
-> >  
-> >  	/* Reconnect channels to bus */
-> > -	outb(0x00, hwif->dma_master + 0x73);
-> > -	outb(0x00, hwif->dma_master + 0x77);
-> > +	outb(0x00, base + 0x63);
-> > +	outb(0x00, base + 0x67);
-> >  }
+>     Wait, you've just properly calculated 'high'!  And now LBA28 variant is 
+> borken. :-|
+
+I can swear that it was OK but I remember that I few times needed fix the
+rejects in this patch because other patches in the series were changed or
+reordered...
+
+just another brown paper bag bug...
+
+> > -		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
+> > +		if (lba48)
+> > +			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+> > +				tf->hob_lbal;
+> > +		else
+> > +			high = tf->device & 0xf;
+> >  		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+> >  		addr_set = ((__u64)high << 24) | low;
+> >  		addr_set++;
 > 
->     Huh? That's wrong -- if you're setting base to the value of the former 
-> value of hwof->dma_master, the register offsets shouldn't change!
+>     BTW, haven't you noticed that LBA readback code is duplicate? It just asks 
+> to be put into a separate function, like:
 > 
-> > Index: b/drivers/ide/pci/pdc202xx_old.c
-> > ===================================================================
-> > --- a/drivers/ide/pci/pdc202xx_old.c
-> > +++ b/drivers/ide/pci/pdc202xx_old.c
-> > @@ -193,7 +193,7 @@ static void pdc202xx_old_ide_dma_start(i
-> >  	if (drive->media != ide_disk || drive->addressing == 1) {
-> >  		struct request *rq	= HWGROUP(drive)->rq;
-> >  		ide_hwif_t *hwif	= HWIF(drive);
-> > -		unsigned long high_16   = hwif->dma_master;
-> > +		unsigned long high_16	= hwif->extra_base - 16;
-> >  		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+> static u64 ide_read_lba(struct ide_taskfile *tf)
+> {
+> 	if (!(tf->command & 0x01)) {
+> 		u32 high, low;
 > 
->     That 'high_16' is *not* a good name in this case -- it would've been if we 
-> didn't subtract 16. So, I'd wrote:
-> 
->   		unsigned long atapi_reg	= hwif->extra_base +
-> 					 (hwif->channel ? 0x14 : 0x10);
+> 		if (lba48)
+> 			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
+> 				tf->hob_lbal;
+> 		else
+> 			high = tf->device & 0xf;
+> 		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+> 		return (((__u64)high << 24) | low) + 1;
+> 	} else
+> 		return 0;
+> }
 
-'high_16' is used for more than 'atapi_reg' (same is true for other places
-defining 'high_16' local variable).  With five revisions of this patch
-needed to hopefully, finally get it right I prefer to defer futher cleanups
-to the incremental patches (*hint*).
+"back in the days" I even had a patch doing something similar but since
+it is still lost somewhere in the TODO folder + requires update for the
+recent changes (which makes it useless a starting point) it would be
+great if you could cook a patch adding the above helper.
 
 
-[PATCH] ide: remove ->dma_master field from ide_hwif_t (take 5)
+Thanks for review (especially for catching problem with 'high' variable),
+revised patch:
 
-* Convert cmd64x, hpt366 and pdc202xx_old host drivers to use
-  pci_resource_start(hwif->pci_dev, 4) instead of hwif->dma_master.
+[PATCH] ide-disk: merge LBA28 and LBA48 Host Protected Area support code (take 2)
 
-* Remove no longer needed ->dma_master field from ide_hwif_t.
+* Merge idedisk_{read_native,set}_max_address_ext() into
+  idedisk_{read_native,set}_max_address().
 
 v2:
-* Use the more readable 'hwif->dma_base - (hwif->channel * 8)' instead of
-  pci_resource_start(hwif->pci_dev, 4).
+* Remove LBA48 code leftover from idedisk_read_native_max_address()
+  ('high' variable initialization).  (Noticed by Sergei).
 
-v3:
-* Use hwif->extra_base in hpt366/pdc20xx_old + some cosmetic fixups over v2
-  (suggested by Sergei).
-
-v4:
-* Correct offsets in hpt3xxn_set_clock().
-
-v5:
-* Use hwif->extra_base in hpt366 for _real_ this time. (Noticed by Sergei)
+There should be no functionality changes caused by this patch.
 
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-dma.c          |    7 -------
- drivers/ide/ide.c              |    2 --
- drivers/ide/pci/cmd64x.c       |    8 +++++---
- drivers/ide/pci/hpt366.c       |   21 +++++++++++----------
- drivers/ide/pci/pdc202xx_old.c |   12 ++++++------
- include/linux/ide.h            |    1 -
- 6 files changed, 22 insertions(+), 29 deletions(-)
+ drivers/ide/ide-disk.c |  103 +++++++++++++++----------------------------------
+ 1 file changed, 32 insertions(+), 71 deletions(-)
 
-Index: b/drivers/ide/ide-dma.c
+Index: b/drivers/ide/ide-disk.c
 ===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -1002,11 +1002,6 @@ void ide_setup_dma(ide_hwif_t *hwif, uns
- 
- 	hwif->dma_base = base;
- 
--	if (hwif->mate)
--		hwif->dma_master = hwif->channel ? hwif->mate->dma_base : base;
--	else
--		hwif->dma_master = base;
--
- 	if (!(hwif->dma_command))
- 		hwif->dma_command	= hwif->dma_base;
- 	if (!(hwif->dma_vendor1))
-@@ -1048,8 +1043,6 @@ void ide_setup_dma(ide_hwif_t *hwif, uns
- 		       hwif->drives[1].name, (dma_stat & 0x40) ? "DMA" : "pio");
- 	}
- 	printk("\n");
--
--	BUG_ON(!hwif->dma_master);
- }
- 
- EXPORT_SYMBOL_GPL(ide_setup_dma);
-Index: b/drivers/ide/ide.c
-===================================================================
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -468,7 +468,6 @@ static void ide_hwif_restore(ide_hwif_t 
- #endif
- 
- 	hwif->dma_base			= tmp_hwif->dma_base;
--	hwif->dma_master		= tmp_hwif->dma_master;
- 	hwif->dma_command		= tmp_hwif->dma_command;
- 	hwif->dma_vendor1		= tmp_hwif->dma_vendor1;
- 	hwif->dma_status		= tmp_hwif->dma_status;
-@@ -602,7 +601,6 @@ void ide_unregister(unsigned int index)
- 		(void) ide_release_dma(hwif);
- 
- 		hwif->dma_base = 0;
--		hwif->dma_master = 0;
- 		hwif->dma_command = 0;
- 		hwif->dma_vendor1 = 0;
- 		hwif->dma_status = 0;
-Index: b/drivers/ide/pci/cmd64x.c
-===================================================================
---- a/drivers/ide/pci/cmd64x.c
-+++ b/drivers/ide/pci/cmd64x.c
-@@ -333,13 +333,14 @@ static void cmd64x_set_dma_mode(ide_driv
- static int cmd648_ide_dma_end (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
-+	unsigned long base	= hwif->dma_base - (hwif->channel * 8);
- 	int err			= __ide_dma_end(drive);
- 	u8  irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
- 						  MRDMODE_INTR_CH0;
--	u8  mrdmode		= inb(hwif->dma_master + 0x01);
-+	u8  mrdmode		= inb(base + 1);
- 
- 	/* clear the interrupt bit */
--	outb(mrdmode | irq_mask, hwif->dma_master + 0x01);
-+	outb(mrdmode | irq_mask, base + 1);
- 
- 	return err;
- }
-@@ -364,10 +365,11 @@ static int cmd64x_ide_dma_end (ide_drive
- static int cmd648_ide_dma_test_irq (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
-+	unsigned long base	= hwif->dma_base - (hwif->channel * 8);
- 	u8 irq_mask		= hwif->channel ? MRDMODE_INTR_CH1 :
- 						  MRDMODE_INTR_CH0;
- 	u8 dma_stat		= inb(hwif->dma_status);
--	u8 mrdmode		= inb(hwif->dma_master + 0x01);
-+	u8 mrdmode		= inb(base + 1);
- 
- #ifdef DEBUG
- 	printk("%s: dma_stat: 0x%02x mrdmode: 0x%02x irq_mask: 0x%02x\n",
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -845,32 +845,33 @@ static int hpt374_ide_dma_end(ide_drive_
- 
- static void hpt3xxn_set_clock(ide_hwif_t *hwif, u8 mode)
- {
--	u8 scr2 = inb(hwif->dma_master + 0x7b);
-+	unsigned long base = hwif->extra_base;
-+	u8 scr2 = inb(base + 0x6b);
- 
- 	if ((scr2 & 0x7f) == mode)
- 		return;
- 
- 	/* Tristate the bus */
--	outb(0x80, hwif->dma_master + 0x73);
--	outb(0x80, hwif->dma_master + 0x77);
-+	outb(0x80, base + 0x63);
-+	outb(0x80, base + 0x67);
- 
- 	/* Switch clock and reset channels */
--	outb(mode, hwif->dma_master + 0x7b);
--	outb(0xc0, hwif->dma_master + 0x79);
-+	outb(mode, base + 0x6b);
-+	outb(0xc0, base + 0x69);
- 
- 	/*
- 	 * Reset the state machines.
- 	 * NOTE: avoid accidentally enabling the disabled channels.
- 	 */
--	outb(inb(hwif->dma_master + 0x70) | 0x32, hwif->dma_master + 0x70);
--	outb(inb(hwif->dma_master + 0x74) | 0x32, hwif->dma_master + 0x74);
-+	outb(inb(base + 0x60) | 0x32, base + 0x60);
-+	outb(inb(base + 0x64) | 0x32, base + 0x64);
- 
- 	/* Complete reset */
--	outb(0x00, hwif->dma_master + 0x79);
-+	outb(0x00, base + 0x69);
- 
- 	/* Reconnect channels to bus */
--	outb(0x00, hwif->dma_master + 0x73);
--	outb(0x00, hwif->dma_master + 0x77);
-+	outb(0x00, base + 0x63);
-+	outb(0x00, base + 0x67);
- }
- 
- /**
-Index: b/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -162,7 +162,7 @@ static u8 pdc202xx_old_cable_detect (ide
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -333,16 +333,19 @@ static ide_startstop_t ide_do_rw_disk (i
+  * Queries for true maximum capacity of the drive.
+  * Returns maximum LBA address (> 0) of the drive, 0 if failed.
   */
- static void pdc_old_enable_66MHz_clock(ide_hwif_t *hwif)
+-static unsigned long idedisk_read_native_max_address(ide_drive_t *drive)
++static u64 idedisk_read_native_max_address(ide_drive_t *drive, int lba48)
  {
--	unsigned long clock_reg = hwif->dma_master + 0x11;
-+	unsigned long clock_reg = hwif->extra_base + 0x01;
- 	u8 clock = inb(clock_reg);
+ 	ide_task_t args;
+ 	struct ide_taskfile *tf = &args.tf;
+-	unsigned long addr = 0;
++	u64 addr = 0;
  
- 	outb(clock | (hwif->channel ? 0x08 : 0x02), clock_reg);
-@@ -170,7 +170,7 @@ static void pdc_old_enable_66MHz_clock(i
+ 	/* Create IDE/ATA command request structure */
+ 	memset(&args, 0, sizeof(ide_task_t));
++	if (lba48)
++		tf->command = WIN_READ_NATIVE_MAX_EXT;
++	else
++		tf->command = WIN_READ_NATIVE_MAX;
+ 	tf->device  = ATA_LBA;
+-	tf->command = WIN_READ_NATIVE_MAX;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	/* submit command request */
+@@ -350,33 +353,13 @@ static unsigned long idedisk_read_native
  
- static void pdc_old_disable_66MHz_clock(ide_hwif_t *hwif)
+ 	/* if OK, compute maximum address value */
+ 	if ((tf->status & 0x01) == 0) {
+-		addr = ((tf->device & 0xf) << 24) |
+-		       (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+-		addr++;	/* since the return value is (maxlba - 1), we add 1 */
+-	}
+-	return addr;
+-}
+-
+-static unsigned long long idedisk_read_native_max_address_ext(ide_drive_t *drive)
+-{
+-	ide_task_t args;
+-	struct ide_taskfile *tf = &args.tf;
+-	unsigned long long addr = 0;
+-
+-	/* Create IDE/ATA command request structure */
+-	memset(&args, 0, sizeof(ide_task_t));
+-	tf->device  = ATA_LBA;
+-	tf->command = WIN_READ_NATIVE_MAX_EXT;
+-	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+-	args.handler				= &task_no_data_intr;
+-        /* submit command request */
+-        ide_raw_taskfile(drive, &args, NULL);
+-
+-	/* if OK, compute maximum address value */
+-	if ((tf->status & 0x01) == 0) {
+ 		u32 high, low;
+ 
+-		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
++		if (lba48)
++			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
++				tf->hob_lbal;
++		else
++			high = tf->device & 0xf;
+ 		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+ 		addr = ((__u64)high << 24) | low;
+ 		addr++;	/* since the return value is (maxlba - 1), we add 1 */
+@@ -388,38 +371,11 @@ static unsigned long long idedisk_read_n
+  * Sets maximum virtual LBA address of the drive.
+  * Returns new maximum virtual LBA address (> 0) or 0 on failure.
+  */
+-static unsigned long idedisk_set_max_address(ide_drive_t *drive, unsigned long addr_req)
++static u64 idedisk_set_max_address(ide_drive_t *drive, u64 addr_req, int lba48)
  {
--	unsigned long clock_reg = hwif->dma_master + 0x11;
-+	unsigned long clock_reg = hwif->extra_base + 0x01;
- 	u8 clock = inb(clock_reg);
+ 	ide_task_t args;
+ 	struct ide_taskfile *tf = &args.tf;
+-	unsigned long addr_set = 0;
+-	
+-	addr_req--;
+-	/* Create IDE/ATA command request structure */
+-	memset(&args, 0, sizeof(ide_task_t));
+-	tf->lbal    =  (addr_req >>  0) & 0xff;
+-	tf->lbam    =  (addr_req >>  8) & 0xff;
+-	tf->lbah    =  (addr_req >> 16) & 0xff;
+-	tf->device  = ((addr_req >> 24) & 0x0f) | ATA_LBA;
+-	tf->command = WIN_SET_MAX;
+-	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+-	args.handler				= &task_no_data_intr;
+-	/* submit command request */
+-	ide_raw_taskfile(drive, &args, NULL);
+-	/* if OK, read new maximum address value */
+-	if ((tf->status & 0x01) == 0) {
+-		addr_set = ((tf->device & 0xf) << 24) |
+-			   (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+-		addr_set++;
+-	}
+-	return addr_set;
+-}
+-
+-static unsigned long long idedisk_set_max_address_ext(ide_drive_t *drive, unsigned long long addr_req)
+-{
+-	ide_task_t args;
+-	struct ide_taskfile *tf = &args.tf;
+-	unsigned long long addr_set = 0;
++	u64 addr_set = 0;
  
- 	outb(clock & ~(hwif->channel ? 0x08 : 0x02), clock_reg);
-@@ -193,7 +193,7 @@ static void pdc202xx_old_ide_dma_start(i
- 	if (drive->media != ide_disk || drive->addressing == 1) {
- 		struct request *rq	= HWGROUP(drive)->rq;
- 		ide_hwif_t *hwif	= HWIF(drive);
--		unsigned long high_16   = hwif->dma_master;
-+		unsigned long high_16	= hwif->extra_base - 16;
- 		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
- 		u32 word_count	= 0;
- 		u8 clock = inb(high_16 + 0x11);
-@@ -212,7 +212,7 @@ static int pdc202xx_old_ide_dma_end(ide_
- {
- 	if (drive->media != ide_disk || drive->addressing == 1) {
- 		ide_hwif_t *hwif	= HWIF(drive);
--		unsigned long high_16	= hwif->dma_master;
-+		unsigned long high_16	= hwif->extra_base - 16;
- 		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
- 		u8 clock		= 0;
+ 	addr_req--;
+ 	/* Create IDE/ATA command request structure */
+@@ -427,11 +383,16 @@ static unsigned long long idedisk_set_ma
+ 	tf->lbal     = (addr_req >>  0) & 0xff;
+ 	tf->lbam     = (addr_req >>= 8) & 0xff;
+ 	tf->lbah     = (addr_req >>= 8) & 0xff;
+-	tf->device   = ATA_LBA;
+-	tf->command  = WIN_SET_MAX_EXT;
+-	tf->hob_lbal = (addr_req >>= 8) & 0xff;
+-	tf->hob_lbam = (addr_req >>= 8) & 0xff;
+-	tf->hob_lbah = (addr_req >>= 8) & 0xff;
++	if (lba48) {
++		tf->hob_lbal = (addr_req >>= 8) & 0xff;
++		tf->hob_lbam = (addr_req >>= 8) & 0xff;
++		tf->hob_lbah = (addr_req >>= 8) & 0xff;
++		tf->command  = WIN_SET_MAX_EXT;
++	} else {
++		tf->device   = (addr_req >>= 8) & 0x0f;
++		tf->command  = WIN_SET_MAX;
++	}
++	tf->device |= ATA_LBA;
+ 	args.command_type			= IDE_DRIVE_TASK_NO_DATA;
+ 	args.handler				= &task_no_data_intr;
+ 	/* submit command request */
+@@ -440,7 +401,11 @@ static unsigned long long idedisk_set_ma
+ 	if ((tf->status & 0x01) == 0) {
+ 		u32 high, low;
  
-@@ -228,7 +228,7 @@ static int pdc202xx_old_ide_dma_end(ide_
- static int pdc202xx_old_ide_dma_test_irq(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif	= HWIF(drive);
--	unsigned long high_16	= hwif->dma_master;
-+	unsigned long high_16	= hwif->extra_base - 16;
- 	u8 dma_stat		= inb(hwif->dma_status);
- 	u8 sc1d			= inb(high_16 + 0x001d);
+-		high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) | tf->hob_lbal;
++		if (lba48)
++			high = (tf->hob_lbah << 16) | (tf->hob_lbam << 8) |
++				tf->hob_lbal;
++		else
++			high = tf->device & 0xf;
+ 		low  = (tf->lbah << 16) | (tf->lbam << 8) | tf->lbal;
+ 		addr_set = ((__u64)high << 24) | low;
+ 		addr_set++;
+@@ -490,10 +455,8 @@ static void idedisk_check_hpa(ide_drive_
+ 	int lba48 = idedisk_supports_lba48(drive->id);
  
-@@ -271,7 +271,7 @@ static void pdc202xx_dma_timeout(ide_dri
+ 	capacity = drive->capacity64;
+-	if (lba48)
+-		set_max = idedisk_read_native_max_address_ext(drive);
+-	else
+-		set_max = idedisk_read_native_max_address(drive);
++
++	set_max = idedisk_read_native_max_address(drive, lba48);
  
- static void pdc202xx_reset_host (ide_hwif_t *hwif)
- {
--	unsigned long high_16	= hwif->dma_master;
-+	unsigned long high_16	= hwif->extra_base - 16;
- 	u8 udma_speed_flag	= inb(high_16 | 0x001f);
+ 	if (ide_in_drive_list(drive->id, hpa_list)) {
+ 		/*
+@@ -514,10 +477,8 @@ static void idedisk_check_hpa(ide_drive_
+ 			 capacity, sectors_to_MB(capacity),
+ 			 set_max, sectors_to_MB(set_max));
  
- 	outb(udma_speed_flag | 0x10, high_16 | 0x001f);
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -766,7 +766,6 @@ typedef struct hwif_s {
- 	int		rqsize;		/* max sectors per request */
- 	int		irq;		/* our irq number */
- 
--	unsigned long	dma_master;	/* reference base addr dmabase */
- 	unsigned long	dma_base;	/* base addr for dma ports */
- 	unsigned long	dma_command;	/* dma command register */
- 	unsigned long	dma_vendor1;	/* dma vendor 1 register */
+-	if (lba48)
+-		set_max = idedisk_set_max_address_ext(drive, set_max);
+-	else
+-		set_max = idedisk_set_max_address(drive, set_max);
++	set_max = idedisk_set_max_address(drive, set_max, lba48);
++
+ 	if (set_max) {
+ 		drive->capacity64 = set_max;
+ 		printk(KERN_INFO "%s: Host Protected Area disabled.\n",
