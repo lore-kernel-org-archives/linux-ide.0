@@ -1,42 +1,43 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: add HTS542525K9SA00 to NCQ blacklist
-Date: Tue, 23 Oct 2007 21:25:33 -0400
-Message-ID: <471E9F0D.9020606@garzik.org>
-References: <20071023100749.GD18322@htj.dyndns.org>
+Subject: Re: [PATCH] libata-core: auditting chk_status v check_status
+Date: Tue, 23 Oct 2007 21:25:27 -0400
+Message-ID: <471E9F07.3070802@garzik.org>
+References: <20071023165002.15a7b09e@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38319 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:38321 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753144AbXJXBZe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2007 21:25:34 -0400
-In-Reply-To: <20071023100749.GD18322@htj.dyndns.org>
+	id S1753159AbXJXBZg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Oct 2007 21:25:36 -0400
+In-Reply-To: <20071023165002.15a7b09e@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Luca Tettamanti <kronos.it@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Another one doing spurious NCQ completions.  Blacklist it.
+Alan Cox wrote:
+> Did a complete audit of these and found we have another error case.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Luca Tettamanti <kronos.it@gmail.com>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  1 file changed, 1 insertion(+)
+> ata_bus_softreset calls ata_check_status which means that it tries to do
+> an ioread8 on the port blindly and check versus 0xFF for an error.
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 908613d..be872fa 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3981,6 +3981,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
->  	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
->  	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
-> +	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
->  	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
->  	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
+> It should of course be using the ap->ops method for this via chk_status,
+> and this bug causes a wrog status call on the NS87415 at least.
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> 
+> diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c linux-2.6.23-mm1/drivers/ata/libata-core.c
+> --- linux.vanilla-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-15 15:03:26.000000000 +0100
+> +++ linux-2.6.23-mm1/drivers/ata/libata-core.c	2007-10-23 13:39:25.861931504 +0100
+> @@ -3305,7 +3323,7 @@
+>  	 * the bus shows 0xFF because the odd clown forgets the D7
+>  	 * pulldown resistor.
+>  	 */
+> -	if (ata_check_status(ap) == 0xFF)
+> +	if (ata_chk_status(ap) == 0xFF)
+>  		return -ENODEV;
 
 applied
 
