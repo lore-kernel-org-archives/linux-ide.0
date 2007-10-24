@@ -1,107 +1,96 @@
-From: Jens =?iso-8859-1?q?Pr=FCfer?= <jens.pruefer@gmx.de>
-Subject: Possible NCQ problem with Seagate ST3250620NS/nForce 4
-Date: Wed, 24 Oct 2007 20:33:53 +0200
-Message-ID: <200710242033.53485.jens.pruefer@gmx.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 12/12] ide: use do_rw_taskfile() in flagged_taskfile()
+Date: Thu, 25 Oct 2007 00:03:57 +0400
+Message-ID: <471FA52D.3080506@ru.mvista.com>
+References: <200710082320.31069.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47560 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755290AbXJXSeC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 14:34:02 -0400
-Content-Disposition: inline
+Received: from h155.mvista.com ([63.81.120.155]:34852 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755139AbXJXUDs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Oct 2007 16:03:48 -0400
+In-Reply-To: <200710082320.31069.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Hi,
+Bartlomiej Zolnierkiewicz wrote:
 
-I am experiencing reproducible timeout problems when using NCQ-enabled=20
-kernels (tried various Debian and Ubuntu kernels as well as vanilla=20
-2.6.23.1. It runs ok for a few minutes, but the first time there is any=
-=20
-real load on the drive, it freezes (heaps of timeouts) until NCQ gets=20
-switched off.
+> Based on the earlier work by Tejun Heo.
 
---- snip ---
+> * Move setting IDE_TFLAG_LBA48 taskfile flag from do_rw_taskfile()
+>   function to the callers.
 
-[  202.616000] ata1: EH in ADMA mode, notifier 0x0 notifier_error 0x0=20
-gen_ctl 0x1501000 status 0x400 next cpb count 0x4 next cpb idx 0x0
-[  202.616000] ata1: CPB 0: ctl_flags 0x1f, resp_flags 0x0
-[  202.616000] ata1: CPB 1: ctl_flags 0x1f, resp_flags 0x0
-[  202.616000] ata1: CPB 2: ctl_flags 0x1f, resp_flags 0x0
-[  202.616000] ata1: CPB 3: ctl_flags 0x1f, resp_flags 0x0
-[  202.616000] ata1: CPB 4: ctl_flags 0x1f, resp_flags 0x0
-[  202.616000] ata1: timeout waiting for ADMA IDLE, stat=3D0x400
-[  202.616000] ata1: timeout waiting for ADMA LEGACY, stat=3D0x400
-[  202.616000] ata1.00: exception Emask 0x0 SAct 0x1f SErr 0x0 action 0=
-x2=20
-frozen
-[  202.616000] ata1.00: cmd 61/00:00:b5:d1:28/02:00:17:00:00/40 tag 0 c=
-db=20
-0x0 data 262144 out
-[  202.616000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0=
-x4=20
-(timeout)
-[  202.616000] ata1.00: cmd 61/78:08:b5:d3:28/01:00:17:00:00/40 tag 1 c=
-db=20
-0x0 data 192512 out
-[  202.616000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0=
-x4=20
-(timeout)
-[  202.616000] ata1.00: cmd 61/08:10:a5:45:27/00:00:17:00:00/40 tag 2 c=
-db=20
-0x0 data 4096 out
-[  202.616000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0=
-x4=20
-(timeout)
-[  202.616000] ata1.00: cmd 60/10:18:15:4e:b9/00:00:1a:00:00/40 tag 3 c=
-db=20
-0x0 data 8192 in
-[  202.616000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0=
-x4=20
-(timeout)
-[  202.616000] ata1.00: cmd 60/08:20:25:4a:df/00:00:1a:00:00/40 tag 4 c=
-db=20
-0x0 data 4096 in
-[  202.616000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0=
-x4=20
-(timeout)
-[  202.932000] ata1: soft resetting port
-[  203.088000] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[  203.248000] ata1.00: configured for UDMA/133
-[  203.248000] ata1: EH complete
-[  203.248000] sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (2=
-50059=20
-MB)
-[  203.248000] sd 0:0:0:0: [sda] Write Protect is off
-[  203.248000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  203.252000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enab=
-led,=20
-doesn't support DPO or FUA
-[  233.248000] ata1: EH in ADMA mode, notifier 0x0 notifier_error 0x0=20
-gen_ctl 0x1501000 status 0x400 next cpb count 0x4 next cpb idx 0x0
-[  233.248000] ata1: CPB 0: ctl_flags 0x1f, resp_flags 0x0
-[  233.248000] ata1: CPB 1: ctl_flags 0x1f, resp_flags 0x0
-[  233.248000] ata1: CPB 2: ctl_flags 0x1f, resp_flags 0x0
-[  233.248000] ata1: CPB 3: ctl_flags 0x1f, resp_flags 0x0
-[  233.248000] ata1: CPB 4: ctl_flags 0x1f, resp_flags 0x0
-[  233.248000] ata1: timeout waiting for ADMA IDLE, stat=3D0x400
-[  233.248000] ata1: timeout waiting for ADMA LEGACY, stat=3D0x400
-[  233.248000] ata1.00: NCQ disabled due to excessive errors
+> * Add IDE_TFLAG_FLAGGED taskfile flag for flagged taskfiles coming
+>   from ide_taskfile_ioctl().  Check it instead of ->tf_out_flags.all.
 
---- snap ---
+> * Add IDE_TFLAG_OUT_DATA taskfile flag to indicate the need to load
+>   IDE data register in ide_tf_load().
 
-The device is a Seagate ST3250620NS. Maybe it should be blacklisted as =
-well?
+> * Add IDE_TFLAG_OUT_* taskfile flags to indicate the need to load
+>   particular IDE taskfile registers in ide_tf_load().
 
-Anyhow, I cannot find any boot parameter to switch off NCQ and circumve=
-nt=20
-the freezing of the drive. Something like the "noacpi" option (maybe=20
-noncq?) would be nice. Or am I missing something?
+   These two last paragraphs seem like being kind of duplication. Doesn't the 
+latter include the former one?
 
-Cheers,
+> * Update do_rw_taskfile() and ide_tf_load() users to set respective
+>   IDE_TFLAG_OUT_* taksfile flags.
 
-Jens Pr=FCfer
+> * Add task_dma_ok() helper.
+
+> * Use IDE_TFLAG_FLAGGED taskfile flag to select HIHI mask in ide_tf_load().
+
+> * Use do_rw_taskfile() in flagged_taskfile().
+
+> * Remove no longer needed 'tf_out_flags' field from ide_task_t.
+
+> There should be no functionality changes caused by this patch.
+
+[...]
+
+> Index: b/drivers/ide/ide-taskfile.c
+> ===================================================================
+> --- a/drivers/ide/ide-taskfile.c
+> +++ b/drivers/ide/ide-taskfile.c
+> @@ -68,25 +68,39 @@ void ide_tf_load(ide_drive_t *drive, ide
+>  	struct ide_taskfile *tf = &task->tf;
+>  	u8 HIHI = (task->tf_flags & IDE_TFLAG_LBA48) ? 0xE0 : 0xEF;
+>  
+> +	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+> +		HIHI = 0xFF;
+
+    Hm, what that's for?
+
+>  	if (IDE_CONTROL_REG)
+>  		hwif->OUTB(drive->ctl, IDE_CONTROL_REG); /* clear nIEN */
+
+    Does this set the HOB bit?
+
+>  
+>  	if ((task->tf_flags & IDE_TFLAG_NO_SELECT_MASK) == 0)
+>  		SELECT_MASK(drive, 0);
+>  
+> -	if (task->tf_flags & IDE_TFLAG_LBA48) {
+> +	if (task->tf_flags & IDE_TFLAG_OUT_DATA)
+> +		hwif->OUTW((tf->hob_data << 8) | tf->data, IDE_DATA_REG);
+
+    I wonder which commands could require a single data register write...
+
+> +	if (task->tf_flags & IDE_TFLAG_OUT_HOB_FEATURE)
+>  		hwif->OUTB(tf->hob_feature, IDE_FEATURE_REG);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_HOB_NSECT)
+>  		hwif->OUTB(tf->hob_nsect, IDE_NSECTOR_REG);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_HOB_LBAL)
+>  		hwif->OUTB(tf->hob_lbal, IDE_SECTOR_REG);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_HOB_LBAM)
+>  		hwif->OUTB(tf->hob_lbam, IDE_LCYL_REG);
+> +	if (task->tf_flags & IDE_TFLAG_OUT_HOB_LBAH)
+>  		hwif->OUTB(tf->hob_lbah, IDE_HCYL_REG);
+> -	}
+
+    I'm not sure we're in HOB mode now... :-|
+
+MBR, Sergei
