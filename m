@@ -1,51 +1,67 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/4]: Resolve MSI vs. INTX_DISABLE quirks.
-Date: Thu, 25 Oct 2007 01:37:47 -0400
-Message-ID: <47202BAB.2040709@garzik.org>
-References: <20071023.195108.69018458.davem@davemloft.net>
+Subject: Re: [PATCH] ata: ahci: Enable enclosure management via LED (resend)
+Date: Thu, 25 Oct 2007 01:58:11 -0400
+Message-ID: <47203073.7090809@garzik.org>
+References: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49546 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:54141 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823AbXJYFhz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Oct 2007 01:37:55 -0400
-In-Reply-To: <20071023.195108.69018458.davem@davemloft.net>
+	id S1753056AbXJYF6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 01:58:13 -0400
+In-Reply-To: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-David Miller wrote:
-> The forthcoming patches are also available from:
+Kristen Carlson Accardi wrote:
+> Enable enclosure management via LED
 > 
-> 	kernel.org:/pub/scm/linux/kernel/git/davem/msiquirk-2.6.git
+> As described in the AHCI spec, some AHCI controllers may support 
+> Enclosure management via a variety of protocols.  This patch
+> adds support for the LED message type that is specified in 
+> AHCI 1.1 and higher.
 > 
-> and clean up the handling of the common quirk wherein setting
-> INTX_DISABLE will mistakedly disable MSI generation for some
-> devices.
+> Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > 
-> For devices without that problem, we want to keep the pci_intx() calls
-> in drivers/pci/msi.c because those help protect against devices
-> with the opposite problem.  Such devices always generate INTX
-> interrupts even when MSI is enabled, unless INTX_DISABLE is set.
-> 
-> Michael, please pay special attention to patch #3.  I think I
-> picked the correct PCI device IDs to match for the quirk
-> (5714* and 5780*) but it's possible we might need more elaborate
-> checks here.  It at least worked properly for the chips in my
-> Niagara system.
-> 
-> In addition to the Tigon3 cases, I added quirk entries for the
-> SB700/800 SATA chips and the IXP SB400 USB controllers.
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
+> ---
+>  drivers/ata/ahci.c        |  153 +++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/ata/libata-scsi.c |    5 -
+>  include/linux/libata.h    |    3 
+>  3 files changed, 157 insertions(+), 4 deletions(-)
 
-I'm happy with this patch series.  A quirk is better than a 
-sledgehammer, and MSI-mode SATA is better than INTX-mode SATA :)
+Comments:
 
-	Jeff
+1) it seems a bit questionable that the attributes are globally 
+writeable, even by unpriveleged heathens?
 
+2) ahci_led_locate_store() and ahci_led_fault()_store are the same, save 
+for a single constant
+
+3) Don't document ahci_em_messages values (like SGPIO) which are not 
+actually supported in the code.  Feel free to put these in a comment to 
+make sure others follow your lead, however
+
+4) ahci_transmit_led_message() is issued completely without any locking. 
+   that does not look safe in the face of libata-eh doing a reset?
+
+5) please run through scripts/checkpatch in 2.6.24-rc1, there are 
+several "use tabs not spaces" type errors and some other minor style nits
+
+6) ATA_FLAG_EM is added but never used
+
+7) Is it valid to check capabilities bit 6 (EMS) on AHCI 1.0?  I would 
+tend to shy away from assuming that all silicon gives us sane 'reserved' 
+bits :)
+
+8) when is this actually used?  do you have a sample user in userspace? 
+  does a userspace daemon watch disk activity and manage LEDs somehow? 
+I'm a bit cloudy on the usage need of this.
+
+9) overall, sans the above comments, the overall goal seems OK to me, 
+and the patch seems pretty good.
 
 
