@@ -1,49 +1,51 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: [IDE] Fix build bug
-Date: Thu, 25 Oct 2007 14:53:34 +0100
-Message-ID: <20071025135334.GA23272@linux-mips.org>
+From: "Bartlomiej Zolnierkiewicz" <bzolnier@gmail.com>
+Subject: Re: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
+Date: Thu, 25 Oct 2007 16:03:41 +0200
+Message-ID: <58cb370e0710250703y341da713x33afa3d82f24fbd2@mail.gmail.com>
+References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net>
+	 <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net>
+	 <200710251406.05804.bzolnier@gmail.com>
+	 <200710251411.42546.bzolnier@gmail.com> <47208DAC.1000207@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:57176 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754977AbXJYNxw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 09:53:52 -0400
-Received: from localhost.localdomain ([127.0.0.1]:50085 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S20022619AbXJYNxv (ORCPT <rfc822;linux-ide@vger.kernel.org>
-	+ 1 other); Thu, 25 Oct 2007 14:53:51 +0100
+Received: from nf-out-0910.google.com ([64.233.182.189]:42128 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326AbXJYODn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 10:03:43 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so491849nfb
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 07:03:42 -0700 (PDT)
+In-Reply-To: <47208DAC.1000207@garzik.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew <andrew@nelless.net>, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
 
-  CC      drivers/ide/pci/generic.o
-drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
-+section type conflict
+On 10/25/07, Jeff Garzik <jeff@garzik.org> wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > @@ -2379,9 +2379,13 @@ static int nv_init_one (struct pci_dev *
+> >       if (type == CK804 && adma_enabled) {
+> >               dev_printk(KERN_NOTICE, &pdev->dev, "Using ADMA mode\n");
+> >               type = ADMA;
+> > +     } else if (type == GENERIC && swncq_enabled) {
+> > +             dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
+> > +             type = SWNCQ;
+> >       }
+> >
+>
+>
+> If we want to start putting PCI_ANY_ID entries in the pci_device_id
+> table (as other NVIDIA patches have proposed), I don't think it's safe
+> to assume that all devices marked GENERIC can do SWNCQ, while it should
+> be safe to fall back from SWNCQ to GENERIC.  GENERIC is the selection
+> being considered for use as being compatible with future chips.
 
-This sort of build error is becoming a regular issue.  Either all or non
-of the elements that go into a particular section of a compilation unit
-need to be const.  Or an error may result such as in this case if
-CONFIG_HOTPLUG is unset.
+This is up to nVidia people and may as well be dealt with in the future
+patches.  The only goal of this patch was to fix "a showstopper bug".
 
-Maybe worth a check in checkpatch.pl - but certainly gcc's interolerance
-is also being less than helpful here.
+> But overall both patches look straightforward...
 
----
- drivers/ide/pci/generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
-index f44d708..0047684 100644
---- a/drivers/ide/pci/generic.c
-+++ b/drivers/ide/pci/generic.c
-@@ -67,7 +67,7 @@ MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE st
- 		.udma_mask	= ATA_UDMA6, \
- 	}
- 
--static const struct ide_port_info generic_chipsets[] __devinitdata = {
-+static struct ide_port_info generic_chipsets[] __devinitdata = {
- 	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",	0),
- 
- 	{	/* 1 */
+Thanks,
+Bart
