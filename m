@@ -1,39 +1,41 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 4/4]: [PCI]: Add MSI INTX_DISABLE quirks for ATI
- SB700/800 SATA and IXP SB400 USB
-Date: Thu, 25 Oct 2007 00:59:38 -0700 (PDT)
-Message-ID: <20071025.005938.104394521.davem@davemloft.net>
-References: <20071023.195343.35661973.davem@davemloft.net>
-	<5CAB7B5D6F8AB84AA868A46B47A507055D936C@sshaexmb1.amd.com>
+Subject: [PATCH 0/4]: Resolve MSI vs. INTX_DISABLE quirks, V2.
+Date: Thu, 25 Oct 2007 01:14:45 -0700 (PDT)
+Message-ID: <20071025.011445.80152909.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43272
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33886
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753459AbXJYH7g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 03:59:36 -0400
-In-Reply-To: <5CAB7B5D6F8AB84AA868A46B47A507055D936C@sshaexmb1.amd.com>
+	by vger.kernel.org with ESMTP id S1751505AbXJYIOo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 04:14:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane.Huang@amd.com
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
+To: linux-kernel@vger.kernel.org
+Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
-From: "Shane Huang" <Shane.Huang@amd.com>
-Date: Wed, 24 Oct 2007 14:43:21 +0800
 
-> This patch and the third one seems can make my SB700 SATA controller
-> work under MSI(simply tested on 2.6.23-rc5). 
-> 
-> So you may withdraw the RS690/RD580/RX790 MSI disablement patches
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-> t;h=4be8f906435a6af241821ab5b94b2b12cb7d57d8
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-> t;h=aea6a433f50cd89b9cbd10850fd0b32f961f9883
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-> t;h=f122392f679ebed39db08074f935d770504623eb
-> after the commit of these MSI/INTx quirks.
+Ok, I've respun the patches including all of the feedback I've
+obtained.  Again, it's at:
 
-Thank you for testing!
+	kernel.org:/pub/scm/linux/kernel/git/davem/msiquirk-2.6.git
 
-I will add this change to my patch set.
+Greg, I think this stuff is ready to go so if you would pull
+them in I would really appreciate it.
+
+These changes clean up the handling of the common quirk wherein
+setting INTX_DISABLE will mistakedly disable MSI generation for some
+devices.
+
+For devices without that problem, we want to keep the pci_intx() calls
+in drivers/pci/msi.c because those help protect against devices with
+the opposite problem.  Such devices always generate INTX interrupts
+even when MSI is enabled, unless INTX_DISABLE is set.
+
+In addition to the Tigon3 cases, I added quirk entries for the
+SB700/800 SATA chips and the IXP SB400 USB controllers.  And as
+a result of the latter we can remove several AMD full-chipset
+MSI disable quirks which are no longer necessary.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
