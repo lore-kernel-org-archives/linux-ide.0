@@ -1,68 +1,48 @@
-From: David Miller <davem@davemloft.net>
-Subject: [PATCH 5/5]: [PCI]: Remove 3 incorrect MSI quirks.
-Date: Thu, 25 Oct 2007 01:17:16 -0700 (PDT)
-Message-ID: <20071025.011716.123998434.davem@davemloft.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/5]: Resolve MSI vs. INTX_DISABLE quirks, V2.
+Date: Thu, 25 Oct 2007 04:24:33 -0400
+Message-ID: <472052C1.2050302@garzik.org>
+References: <20071025.011445.80152909.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57878
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1760409AbXJYIRP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 04:17:15 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:60498 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752115AbXJYIYh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 04:24:37 -0400
+In-Reply-To: <20071025.011445.80152909.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
+David Miller wrote:
+> Ok, I've respun the patches including all of the feedback I've
+> obtained.  Again, it's at:
+> 
+> 	kernel.org:/pub/scm/linux/kernel/git/davem/msiquirk-2.6.git
+> 
+> Greg, I think this stuff is ready to go so if you would pull
+> them in I would really appreciate it.
+> 
+> These changes clean up the handling of the common quirk wherein
+> setting INTX_DISABLE will mistakedly disable MSI generation for some
+> devices.
+> 
+> For devices without that problem, we want to keep the pci_intx() calls
+> in drivers/pci/msi.c because those help protect against devices with
+> the opposite problem.  Such devices always generate INTX interrupts
+> even when MSI is enabled, unless INTX_DISABLE is set.
+> 
+> In addition to the Tigon3 cases, I added quirk entries for the
+> SB700/800 SATA chips and the IXP SB400 USB controllers.  And as
+> a result of the latter we can remove several AMD full-chipset
+> MSI disable quirks which are no longer necessary.
+> 
+> Signed-off-by: David S. Miller <davem@davemloft.net>
 
-Now that we have dealt with the real issue, in that some ATI SATA and
-USB controllers needed the INTX_DISABLE quirk, we can remove these AMD
-chipset global MSI disabling quirks.
+[corrected subject line s/4/5/.  the actual patches are OK]
 
-This reverts three changesets:
-
-4be8f906435a6af241821ab5b94b2b12cb7d57d8 (PCI: disable MSI on RS690)
-aea6a433f50cd89b9cbd10850fd0b32f961f9883 (PCI: disable MSI on RD580)
-f122392f679ebed39db08074f935d770504623eb (PCI: disable MSI on RX790)
-
-This is based upon testing and feedback from
-Shane Huang <Shane.Huang@amd.com>.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/pci/quirks.c    |    3 ---
- include/linux/pci_ids.h |    3 ---
- 2 files changed, 0 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d8f2d89..26cc4dc 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1623,9 +1623,6 @@ static void __init quirk_disable_all_msi(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_GCNB_LE, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, quirk_disable_all_msi);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RD580, quirk_disable_all_msi);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RX790, quirk_disable_all_msi);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS690, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
- 
- /* Disable MSI on chipsets that are known to not support it */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c64bb89..e66af5d 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -360,9 +360,6 @@
- #define PCI_DEVICE_ID_ATI_RS400_166     0x5a32
- #define PCI_DEVICE_ID_ATI_RS400_200     0x5a33
- #define PCI_DEVICE_ID_ATI_RS480         0x5950
--#define PCI_DEVICE_ID_ATI_RD580		0x5952
--#define PCI_DEVICE_ID_ATI_RX790		0x5957
--#define PCI_DEVICE_ID_ATI_RS690		0x7910
- /* ATI IXP Chipset */
- #define PCI_DEVICE_ID_ATI_IXP200_IDE	0x4349
- #define PCI_DEVICE_ID_ATI_IXP200_SMBUS	0x4353
--- 
-1.5.2.5
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
