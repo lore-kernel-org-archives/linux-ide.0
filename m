@@ -1,164 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
-Date: Thu, 25 Oct 2007 14:11:42 +0200
-Message-ID: <200710251411.42546.bzolnier@gmail.com>
-References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net> <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net> <200710251406.05804.bzolnier@gmail.com>
+Date: Thu, 25 Oct 2007 08:35:56 -0400
+Message-ID: <47208DAC.1000207@garzik.org>
+References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net> <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net> <200710251406.05804.bzolnier@gmail.com> <200710251411.42546.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:27456 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785AbXJYMFd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 08:05:33 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so456960fkz
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 05:05:30 -0700 (PDT)
-In-Reply-To: <200710251406.05804.bzolnier@gmail.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:41178 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751001AbXJYMf7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 08:35:59 -0400
+In-Reply-To: <200710251411.42546.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew <andrew@nelless.net>
-Cc: linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Jeff Garzik <jeff@garzik.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Andrew <andrew@nelless.net>, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>
 
-On Thursday 25 October 2007, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ adding Kuan and Jeff back to cc: ]
-> 
-> On Thursday 25 October 2007, Andrew wrote:
-> > On Thu, October 25, 2007 12:43, Bartlomiej Zolnierkiewicz wrote:
-> > >
-> > >
-> > > From the quick look:
-> > >
-> > >
-> > > static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent) ...
-> > > ppi[0] = &nv_port_info[type]; ...
-> > > if (type == ADMA) { rc = nv_adma_host_init(host); if (rc) return rc; } else if (type ==
-> > SWNCQ &&
-> > > swncq_enabled) {
-> > >
-> > > --> this is the only place when swncq_enabled is read
-> > >
-> > >
-> > > dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n"); nv_swncq_host_init(host);
-> > >
-> > > --> nw_swncq_host_init() controls only _hardware_ side of SWNCQ enable
-> > > }
-> > >
-> > >
-> > > pci_set_master(pdev); return ata_host_activate(host, pdev->irq, ppi[0]->irq_handler,
-> > > IRQF_SHARED, ppi[0]->sht);
-> > >
-> > >
-> > > --> since ppi[0] _always_ points nv_port_info[SWNCQ], it could happen
-> > > that if SWNCQ has already been enabled by BIOS/firmware swncq_enabled setting will be ignored
-> 
-> Update: BIOS/firmware doesn't matter -> SWNCQ methods will be used anyway
-> 
-> > > ...
-> > >
-> > >
-> > > If this is the case the obvious fix will be to s/SWNCQ/GENERIC/ in
-> > > nv_pci_tbl[] and assign ppi[0] to nv_port_info[SWNCQ] in nv_init_one() only if (type == GENERIC
-> > > && swncq_enabled).
-> > >
-> > >
-> > > Thanks,
-> > > Bart
-> > >
-> > >
-> > 
-> > Hi,
-> > 
-> > I think my netconsole log will confirm your analysis.
-> > 
-> > It's available here:
-> > http://andotnet.nfshost.com/linux/2.6.24-rc1-swncq.txt
-> > 
-> > Notice that "Using SWNCQ mode" is not printed.
-> 
-> Thanks, could you try this patch?
+Bartlomiej Zolnierkiewicz wrote:
+> @@ -2379,9 +2379,13 @@ static int nv_init_one (struct pci_dev *
+>  	if (type == CK804 && adma_enabled) {
+>  		dev_printk(KERN_NOTICE, &pdev->dev, "Using ADMA mode\n");
+>  		type = ADMA;
+> +	} else if (type == GENERIC && swncq_enabled) {
+> +		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
+> +		type = SWNCQ;
+>  	}
+>  
 
-[ ... ]
 
-a better version
+If we want to start putting PCI_ANY_ID entries in the pci_device_id 
+table (as other NVIDIA patches have proposed), I don't think it's safe 
+to assume that all devices marked GENERIC can do SWNCQ, while it should 
+be safe to fall back from SWNCQ to GENERIC.  GENERIC is the selection 
+being considered for use as being compatible with future chips.
 
-[PATCH] sata_nv: respect swncq_enabled setting
+But overall both patches look straightforward...
 
-SWNCQ is always used despite swncq_enabled setting (which is disabled by
-default).  Fix it by using GENERIC nv_port_info[] entry for SWNCQ controllers
-if swncq_enabled is not enabled.
+	Jeff
 
-Thanks to Andrew for bisecting the problem to commit
-f140f0f12fc8dc7264d2f97cbe663564e7d24f6d.
 
-Cc: Kuan Luo <kluo@nvidia.com>
-Cc: Andrew <andrew@nelless.net>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-
- drivers/ata/sata_nv.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
-
-Index: b/drivers/ata/sata_nv.c
-===================================================================
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -49,7 +49,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME			"sata_nv"
--#define DRV_VERSION			"3.5"
-+#define DRV_VERSION			"3.6"
- 
- #define NV_ADMA_DMA_BOUNDARY		0xffffffffUL
- 
-@@ -361,13 +361,13 @@ static const struct pci_device_id nv_pci
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_CK804_SATA2), CK804 },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA), CK804 },
- 	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP04_SATA2), CK804 },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), SWNCQ },
--	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), SWNCQ },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2), GENERIC },
-+	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3), GENERIC },
- 
- 	{ } /* terminate list */
- };
-@@ -2379,9 +2379,13 @@ static int nv_init_one (struct pci_dev *
- 	if (type == CK804 && adma_enabled) {
- 		dev_printk(KERN_NOTICE, &pdev->dev, "Using ADMA mode\n");
- 		type = ADMA;
-+	} else if (type == GENERIC && swncq_enabled) {
-+		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
-+		type = SWNCQ;
- 	}
- 
- 	ppi[0] = &nv_port_info[type];
-+
- 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
-@@ -2422,10 +2426,8 @@ static int nv_init_one (struct pci_dev *
- 		rc = nv_adma_host_init(host);
- 		if (rc)
- 			return rc;
--	} else if (type == SWNCQ && swncq_enabled) {
--		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
-+	} else if (type == SWNCQ)
- 		nv_swncq_host_init(host);
--	}
- 
- 	pci_set_master(pdev);
- 	return ata_host_activate(host, pdev->irq, ppi[0]->irq_handler,
