@@ -1,37 +1,41 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] libata/pata_it821x: Improve handling of poorly
- compatible emulations
-Date: Thu, 25 Oct 2007 13:11:05 -0700
-Message-ID: <20071025131105.ca992a64.akpm@linux-foundation.org>
-References: <20071025142116.7e38ee86@the-village.bc.nu>
+From: "Andrew" <andrew@nelless.net>
+Subject: Re: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
+Date: Thu, 25 Oct 2007 21:58:56 +0100 (BST)
+Message-ID: <32932.86.7.220.119.1193345936.squirrel@wmbeta.mxes.net>
+References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net>
+    <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net>
+    <200710251406.05804.bzolnier@gmail.com>
+    <200710251411.42546.bzolnier@gmail.com>
+Reply-To: "Andrew" <andrew@nelless.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:35772 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752563AbXJYULY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 16:11:24 -0400
-In-Reply-To: <20071025142116.7e38ee86@the-village.bc.nu>
+Received: from mxout-04.mxes.net ([216.86.168.179]:2323 "EHLO
+	mxout-04.mxes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbXJYU66 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 16:58:58 -0400
+In-Reply-To: <200710251411.42546.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, kluo@nvidia.com, jeff@garzik.org
 
-On Thu, 25 Oct 2007 14:21:16 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+On Thu, October 25, 2007 13:11, Bartlomiej Zolnierkiewicz wrote:
+>
+>
+> a better version
+>
+> [PATCH] sata_nv: respect swncq_enabled setting
+>
+>
+> SWNCQ is always used despite swncq_enabled setting (which is disabled by
+> default).  Fix it by using GENERIC nv_port_info[] entry for SWNCQ controllers if swncq_enabled
+> is not enabled.
+>
 
-> +                if (print_info) {
-> +			ata_dev_printk(dev, KERN_WARNING,
-> +"Drive reports diagnostics failure. This may indicate a drive\n");
-> +			ata_dev_printk(dev, KERN_WARNING,
-> +"fault or invalid emulation. Contact drive vendor for information.\n");
-> +		}
+This patch worked a treat, thanks.
 
-eww, my eyes.
+-
+Andrew
 
-It would be better to remove the first \n and use KERN_CONT in the second
-printk.  Maybe.  Even better would be to do it all in one printk so that
-it is atomic in the printk buffer.
-
-But you probably have more important things to be thinking about ;)
