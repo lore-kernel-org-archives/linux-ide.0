@@ -1,115 +1,28 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: fix Kconfig IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE
-Date: Fri, 26 Oct 2007 01:33:02 +0200
-Message-ID: <200710260133.03792.bzolnier@gmail.com>
-References: <573412.17797.qm@web52001.mail.re2.yahoo.com>
+Subject: [PATCH 1/3] ide: remove IRQF_DISABLED from IRQ flags for IDE IRQ handler
+Date: Fri, 26 Oct 2007 01:35:32 +0200
+Message-ID: <200710260135.32345.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:1958 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.186]:3232 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758642AbXJYXdl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 19:33:41 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so631752nfb
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 16:33:40 -0700 (PDT)
-In-Reply-To: <573412.17797.qm@web52001.mail.re2.yahoo.com>
+	with ESMTP id S1758651AbXJYXdm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 19:33:42 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so631757nfb
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 16:33:41 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
-Cc: sshtylyov@ru.mvista.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
-Hi,
-
-On Monday 22 October 2007, Matti Linnanvuori wrote:
-> From: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
-> 
-> Correct IDEPCI_SHARE_IRQ description to keeping interrupts enabled
-> when calling the PCI IDE action handler. CONFIG_IDEPCI_SHARE_IRQ does not
-> affect the setting of IRQF_SHARED for PCI chipsets in function init_irq, 
-> file drivers/ide/ide-probe.c but only the setting of IRQF_DISABLED.
-> Add IDEPCI_SHARE_IRQ and IDEDISK_MULTI_MODE help text from hdparm
-> manual page.
-> 
-> Signed-off-by: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
-> ---
-> 
-> Changing mention of multi-mode to affecting only some systems. Improving text.
-> 
-> --- a/drivers/ide/Kconfig	2007-10-21 08:53:11.826349500 +0300
-> +++ b/drivers/ide/Kconfig	2007-10-22 18:45:58.715425500 +0300
-> @@ -154,7 +154,19 @@ config BLK_DEV_IDEDISK
->  config IDEDISK_MULTI_MODE
->  	bool "Use multi-mode by default"
-
-Would be nice to update this to something more meaningful while at it,
-i.e. "Use multiple-sector PIO mode by default"
-
->  	help
-> -	  If you get this error, try to say Y here:
-> +	  Multiple sector mode is a feature of most modern
-
-This still doesn't emphasize the fact the this settings affects _only_
-PIO transfers.  If DMA is used this setting should have no effect.
-
-> +	  IDE drives, permitting the transfer of multiple sectors per I/O
-> +	  interrupt, rather than the usual one sector per interrupt.
-> +	  When this feature is enabled, it can reduce operating
-> +	  system overhead for disk I/O by 30 - 50%. On some systems, it
-> +	  also provides increased data throughput of anywhere from 5%
-> +	  to 50%. Some drives, however (most notably the WD Caviar
-
-The hdparm text help is years old, I'm don't think that the comment
-about WD Caviar disks holds for the later models.
-
-> +	  series), seem to run slower with multiple mode enabled. Some
-> +	  drives claim to support multiple mode, but lose data at some
-
-drives -> very old drives
-
-> +	  settings. Under rare circumstances, such failures can result
-> +	  in massive filesystem corruption.
-> +
-> +	  If you get the following error, try to say Y here:
->  
->  	  hda: set_multmode: status=0x51 { DriveReady SeekComplete Error }
->  	  hda: set_multmode: error=0x04 { DriveStatusError }
-> @@ -367,11 +379,16 @@ config BLK_DEV_IDEPCI
->  	bool
->  
->  config IDEPCI_SHARE_IRQ
-> -	bool "Sharing PCI IDE interrupts support"
-> +	bool "Keeping interrupts enabled when calling the PCI IDE action handler"
->  	depends on BLK_DEV_IDEPCI
->  	help
-> -	  Some ATA/IDE chipsets have hardware support which allows for
-> -	  sharing a single IRQ with other cards. To enable support for
-> +	  A setting of Y permits the driver to enable other interrupts
-> +	  during processing of a disk interrupt, which greatly improves
-> + 	  Linux's responsiveness and eliminates "serial port overrun"
-> +	  and buffer errors. Use this feature with caution: some
-> +	  drive/controller combinations do not tolerate the increased I/O
-> +	  latencies possible when this feature is enabled, resulting in massive
-> +	  filesystem corruption. To enable support for
->  	  this in the ATA/IDE driver, say Y here.
->  
->  	  It is safe to say Y to this question, in most cases.
-
-CONFIG_IDEPCI_SHARE_IRQ has no real effect on IRQ unmasking because the first
-thing that ide_intr() (IDE IRQ handler) does is calling spin_lock_irqsave()
-(which disables local IRQs).
-
-drivers/ide/ide-probe.c:
-
-static int init_irq (ide_hwif_t *hwif)
-...
-#ifndef CONFIG_IDEPCI_SHARE_IRQ
-			sa |= IRQF_DISABLED;
-#endif /* CONFIG_IDEPCI_SHARE_IRQ */
-...
+IRQF_DISABLED is not needed because the first thing that ide_intr()
+(IDE IRQ handler) does is calling spin_lock_irqsave() which disables
+local IRQs (IRQ unmasking is later handled by drive->unmask).
 
 kernel/irq/handle.c:
 
@@ -139,15 +52,44 @@ irqreturn_t ide_intr (int irq, void *dev_id)
 		local_irq_enable_in_hardirq();
 ...
 
-Thanks for raising this question though, we see now that we may remove
-IRQF_DISABLE flag completely from IRQ flags for IDE IRQ handler.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-probe.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-It is also a good time to kill IDEPCI_SHARE_IRQ config option
-(fixing a bug alongside).
-
-[ patches posted in separate mails ]
-
-Coming back to this patch: please recast it dropping IDEPCI_SHARE_IRQ part.
-
-Thanks,
-Bart
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -974,11 +974,6 @@ static int ide_init_queue(ide_drive_t *d
+  * Much of the code is for correctly detecting/handling irq sharing
+  * and irq serialization situations.  This is somewhat complex because
+  * it handles static as well as dynamic (PCMCIA) IDE interfaces.
+- *
+- * The IRQF_DISABLED in sa_flags means ide_intr() is always entered with
+- * interrupts completely disabled.  This can be bad for interrupt latency,
+- * but anything else has led to problems on some machines.  We re-enable
+- * interrupts as much as we can safely do in most places.
+  */
+ static int init_irq (ide_hwif_t *hwif)
+ {
+@@ -1061,17 +1056,13 @@ static int init_irq (ide_hwif_t *hwif)
+ 	 * Allocate the irq, if not already obtained for another hwif
+ 	 */
+ 	if (!match || match->irq != hwif->irq) {
+-		int sa = IRQF_DISABLED;
++		int sa = 0;
+ #if defined(__mc68000__) || defined(CONFIG_APUS)
+ 		sa = IRQF_SHARED;
+ #endif /* __mc68000__ || CONFIG_APUS */
+ 
+-		if (IDE_CHIPSET_IS_PCI(hwif->chipset)) {
++		if (IDE_CHIPSET_IS_PCI(hwif->chipset))
+ 			sa = IRQF_SHARED;
+-#ifndef CONFIG_IDEPCI_SHARE_IRQ
+-			sa |= IRQF_DISABLED;
+-#endif /* CONFIG_IDEPCI_SHARE_IRQ */
+-		}
+ 
+ 		if (hwif->io_ports[IDE_CONTROL_OFFSET])
+ 			/* clear nIEN */
