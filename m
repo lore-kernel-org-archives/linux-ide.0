@@ -1,99 +1,55 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [IDE] Fix build bug
-Date: Thu, 25 Oct 2007 23:41:38 +0200
-Message-ID: <200710252341.38902.bzolnier@gmail.com>
-References: <20071025135334.GA23272@linux-mips.org>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [PATCH] ata: ahci: Enable enclosure management via LED (resend)
+Date: Thu, 25 Oct 2007 14:50:47 -0700
+Message-ID: <20071025145047.1c5e96f3.kristen.c.accardi@intel.com>
+References: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
+	<200710252335.12975.ioe-lkml@rameria.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:56119 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836AbXJYVql (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 17:46:41 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so609597nfb
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 14:46:39 -0700 (PDT)
-In-Reply-To: <20071025135334.GA23272@linux-mips.org>
-Content-Disposition: inline
+Received: from mga03.intel.com ([143.182.124.21]:61216 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751650AbXJYVvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 17:51:07 -0400
+In-Reply-To: <200710252335.12975.ioe-lkml@rameria.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
+To: Ingo Oeser <ioe-lkml@rameria.de>
+Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Richard Purdie <rpurdie@openedhand.com>
 
+On Thu, 25 Oct 2007 23:35:11 +0200
+Ingo Oeser <ioe-lkml@rameria.de> wrote:
 
-Hi,
-
-On Thursday 25 October 2007, Ralf Baechle wrote:
->   CC      drivers/ide/pci/generic.o
-> drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
-> +section type conflict
+> Hi Kristen,
 > 
-> This sort of build error is becoming a regular issue.  Either all or non
-> of the elements that go into a particular section of a compilation unit
-> need to be const.  Or an error may result such as in this case if
-> CONFIG_HOTPLUG is unset.
+> On Thursday 25 October 2007, Kristen Carlson Accardi wrote:
+> > Enable enclosure management via LED
+> > 
+> > As described in the AHCI spec, some AHCI controllers may support 
+> > Enclosure management via a variety of protocols.  This patch
+> > adds support for the LED message type that is specified in 
+> > AHCI 1.1 and higher.
 > 
-> Maybe worth a check in checkpatch.pl - but certainly gcc's interolerance
-> is also being less than helpful here.
+> Linux has a LED subsystem for that. May I suggest, that you just register
+> these leds and let userspace handle them via that via the LED API?
 > 
-> ---
->  drivers/ide/pci/generic.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The LED userspace API is described in Documentation/leds-class.txt
+> and the headers for registering LEDs is linux/leds.h under include/
 > 
-> diff --git a/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
-> index f44d708..0047684 100644
-> --- a/drivers/ide/pci/generic.c
-> +++ b/drivers/ide/pci/generic.c
-> @@ -67,7 +67,7 @@ MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE st
->  		.udma_mask	= ATA_UDMA6, \
->  	}
->  
-> -static const struct ide_port_info generic_chipsets[] __devinitdata = {
-> +static struct ide_port_info generic_chipsets[] __devinitdata = {
->  	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",	0),
->  
->  	{	/* 1 */
+> Since you explicitly WANT user space to control these, that should
+> be the right API. 
+> 
+> Richard, what do YOU think?
+> 
+> 
+> Best Regards
+> 
+> Ingo Oeser
+> 
 
-I would prefer to not remove const from generic_chipsets[] so:
-
-[PATCH] drivers/ide/pci/generic: fix build for CONFIG_HOTPLUG=n
-
-It turns out that const and __{dev}initdata cannot be mixed currently
-and that generic IDE PCI host driver is also affected by the same issue:
-
-On Thursday 25 October 2007, Ralf Baechle wrote:
->   CC      drivers/ide/pci/generic.o
-> drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
-> +section type conflict
-
-[ Also reported by Martijn Uffing <mp3project@sarijopen.student.utwente.nl>. ]
-
-This patch workarounds the problem in a bit hackish way but without
-removing const from generic_chipsets[] (it adds const to __setup() so
-__setup_str_ide_generic_all becomes const).
-
-Now all __{dev}initdata data in generic IDE PCI host driver are read-only
-so it builds again (driver's .init.data section gets marked as READONLY).
-
-Cc: Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/pci/generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: b/drivers/ide/pci/generic.c
-===================================================================
---- a/drivers/ide/pci/generic.c
-+++ b/drivers/ide/pci/generic.c
-@@ -49,7 +49,7 @@ static int __init ide_generic_all_on(cha
- 	printk(KERN_INFO "IDE generic will claim all unknown PCI IDE storage controllers.\n");
- 	return 1;
- }
--__setup("all-generic-ide", ide_generic_all_on);
-+const __setup("all-generic-ide", ide_generic_all_on);
- #endif
- module_param_named(all_generic_ide, ide_generic_all, bool, 0444);
- MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE storage controllers.");
+I did look into using the LED class for this, but it didn't appropriate
+as I wanted the leds to be associated with a particular disk, and not
+with the platform as a whole.  It seemed to me that the led_class was 
+a bit of overkill for what we needed to do here, since we just need 
+on/off and nothing else.
