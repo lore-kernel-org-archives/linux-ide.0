@@ -1,54 +1,72 @@
-From: "Renato S. Yamane" <renatoyamane@mandic.com.br>
-Subject: Re: Warnings on shutdown (Debian Etch and Kernel 2.6.22.9)
-Date: Thu, 25 Oct 2007 09:43:00 -0200
-Message-ID: <47208144.9080602@mandic.com.br>
-References: <47099C24.3010504@mandic.com.br> <471DAA1C.4070608@gmail.com> <471DC728.60705@mandic.com.br> <471DC8F1.9090501@gmail.com> <471DCA74.503@mandic.com.br> <471DCB33.5070108@gmail.com> <471DD288.7010902@mandic.com.br> <471DE866.7040908@gmail.com> <20071023234732.GA23598@jim.sh> <471F493C.8050804@mandic.com.br> <471F4B11.9030206@gmail.com>
+From: "Andrew" <andrew@nelless.net>
+Subject: Re: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
+Date: Thu, 25 Oct 2007 12:47:42 +0100 (BST)
+Message-ID: <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net>
+References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net>
+    <47207466.6030507@garzik.org> <200710251343.50743.bzolnier@gmail.com>
+Reply-To: "Andrew" <andrew@nelless.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-02.mandic.com.br ([200.225.81.133]:37221 "EHLO
-	smtp-02.mandic.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755151AbXJYLnM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 07:43:12 -0400
-In-Reply-To: <471F4B11.9030206@gmail.com>
+Received: from mxout-04.mxes.net ([216.86.168.179]:4743 "EHLO
+	mxout-04.mxes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755467AbXJYLrn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 07:47:43 -0400
+In-Reply-To: <200710251343.50743.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jim Paris <jim@jtan.com>, Jeff Garzik <jeff@garzik.org>, debian-devel@lists.debian.org, linux-ide@vger.kernel.org, miquels@cistron.nl
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Renato S. Yamane wrote:
->> Jim Paris wrote:
->>> For Debian, I don't think there are any complete solutions yet.
->>> The related bug is  =20
->>> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D426224
->>
->> I think that we can fix this if someone can answer this:
->>
->> $ man halt
->> "-h flag: This is important for IDE drives, since the kernel doesn=92=
-t=20
->> flush the write cache itself before power-off.."
->>
->> How can I know if kernel write cache itself? :-)
->=20
-> Kernel has been flushing write cache for many many years now.  Man pa=
-ge=20
-> needs update.  Also, flushing cache from halt is okay.  What's hurtin=
-g=20
-> is spinning down the drive from halt.
+On Thu, October 25, 2007 12:43, Bartlomiej Zolnierkiewicz wrote:
+>
+>
+> From the quick look:
+>
+>
+> static int nv_init_one (struct pci_dev *pdev, const struct pci_device_id *ent) ...
+> ppi[0] = &nv_port_info[type]; ...
+> if (type == ADMA) { rc = nv_adma_host_init(host); if (rc) return rc; } else if (type ==
+SWNCQ &&
+> swncq_enabled) {
+>
+> --> this is the only place when swncq_enabled is read
+>
+>
+> dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n"); nv_swncq_host_init(host);
+>
+> --> nw_swncq_host_init() controls only _hardware_ side of SWNCQ enable
+> }
+>
+>
+> pci_set_master(pdev); return ata_host_activate(host, pdev->irq, ppi[0]->irq_handler,
+> IRQF_SHARED, ppi[0]->sht);
+>
+>
+> --> since ppi[0] _always_ points nv_port_info[SWNCQ], it could happen
+> that if SWNCQ has already been enabled by BIOS/firmware swncq_enabled setting will be ignored
+> ...
+>
+>
+> If this is the case the obvious fix will be to s/SWNCQ/GENERIC/ in
+> nv_pci_tbl[] and assign ppi[0] to nv_port_info[SWNCQ] in nv_init_one() only if (type == GENERIC
+> && swncq_enabled).
+>
+>
+> Thanks,
+> Bart
+>
+>
 
-So, I think that halt script need know:
+Hi,
 
-- How many and who is IDE drives and SCSI/SATA drives.
-- Devices with manage_start_stop as "0" or without manage_start_stop=20
-need "halt -h".
-- Devices with manage_start_stop as "1" need only "halt".
+I think my netconsole log will confirm your analysis.
 
-This is correct?
+It's available here:
+http://andotnet.nfshost.com/linux/2.6.24-rc1-swncq.txt
 
-Regards,
-Renato
+Notice that "Using SWNCQ mode" is not printed.
+
+Andrew.
 
