@@ -1,57 +1,75 @@
 From: David Miller <davem@davemloft.net>
-Subject: [PATCH 1/5]: Revert "PCI: disable MSI by default on systems with
- Serverworks HT1000 chips"
-Date: Thu, 25 Oct 2007 01:15:24 -0700 (PDT)
-Message-ID: <20071025.011524.133219141.davem@davemloft.net>
+Subject: [PATCH 2/5]: [PCI]: Add MSI quirk for ServerWorks HT1000 PCIX
+ bridge.
+Date: Thu, 25 Oct 2007 01:15:53 -0700 (PDT)
+Message-ID: <20071025.011553.88769579.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33903
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33915
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758426AbXJYIPW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 04:15:22 -0400
+	by vger.kernel.org with ESMTP id S1758983AbXJYIPw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 04:15:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, david.gaarenstroom@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, shane.huang@amd.com, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
 
-This reverts commit e3008dedff4bdc96a5f67224cd3d8d12237082a0.
+This is the fix for the following problem:
 
-The real bug was an INTX issue in the tg3 ethernet chip, and
-cured by commit c129d962a66c76964954a98b38586ada82cf9381
+https://bugzilla.redhat.com/show_bug.cgi?id=227657
 
+The bnx2 device 5706 complains about MSI not working behind a
+ServerWorks HT1000 PCIX bridge. An earlier commit to fix the problem:
+
+e3008dedff4bdc96a5f67224cd3d8d12237082a0:
+
+"PCI: disable MSI by default on systems with Serverworks HT1000 chips"
+
+was not entirely correct, and has been reverted.
+
+MSI does not work on the PCIX bus because the BIOS did not set the
+HT_MSI_FLAGS_ENABLE bit in the HyperTransport MSI capability on the
+bridge.  We use the existing quirk_msi_ht_cap() to detect the problem
+and disable MSI in all buses behind it.
+
+Signed-off-by: Michael Chan <mchan@broadcom.com>
+Cc: Anantha Subramanyam <ananth@broadcom.com>
+Cc: Naren Sankar <nsankar@broadcom.com>
 Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/pci/quirks.c    |    1 -
- include/linux/pci_ids.h |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c    |    3 +++
+ include/linux/pci_ids.h |    1 +
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d0bb5b9..f5999f5 100644
+index f5999f5..f975f7f 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -1621,7 +1621,6 @@ static void __init quirk_disable_all_msi(struct pci_dev *dev)
- 	printk(KERN_WARNING "PCI: MSI quirk detected. MSI deactivated.\n");
+@@ -1677,6 +1677,9 @@ static void __devinit quirk_msi_ht_cap(struct pci_dev *dev)
  }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_GCNB_LE, quirk_disable_all_msi);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT1000_PCIX, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS400_200, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RS480, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_RD580, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT2000_PCIE,
+ 			quirk_msi_ht_cap);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS,
++			PCI_DEVICE_ID_SERVERWORKS_HT1000_PXB,
++			quirk_msi_ht_cap);
+ 
+ /* The nVidia CK804 chipset may have 2 HT MSI mappings.
+  * MSI are supported if the MSI capability set in any of these mappings.
 diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 4e10a07..0571d6a 100644
+index 0571d6a..c64bb89 100644
 --- a/include/linux/pci_ids.h
 +++ b/include/linux/pci_ids.h
-@@ -1433,7 +1433,6 @@
+@@ -1432,6 +1432,7 @@
+ #define PCI_DEVICE_ID_SERVERWORKS_HE	  0x0008
  #define PCI_DEVICE_ID_SERVERWORKS_LE	  0x0009
  #define PCI_DEVICE_ID_SERVERWORKS_GCNB_LE 0x0017
++#define PCI_DEVICE_ID_SERVERWORKS_HT1000_PXB	0x0036
  #define PCI_DEVICE_ID_SERVERWORKS_EPB	  0x0103
--#define PCI_DEVICE_ID_SERVERWORKS_HT1000_PCIX	0x0104
  #define PCI_DEVICE_ID_SERVERWORKS_HT2000_PCIE	0x0132
  #define PCI_DEVICE_ID_SERVERWORKS_OSB4	  0x0200
- #define PCI_DEVICE_ID_SERVERWORKS_CSB5	  0x0201
 -- 
 1.5.2.5
 
