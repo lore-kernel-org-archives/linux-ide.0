@@ -1,105 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 4/4] libata: expose AN to user space
-Date: Thu, 25 Oct 2007 03:21:32 -0400
-Message-ID: <472043FC.5090800@garzik.org>
-References: <200710162121.l9GLLQJ2017814@imap1.linux-foundation.org>
+Subject: Re: [PATCH 1/2] libata: backport ATA_FLAG_NO_SRST and	ATA_FLAG_ASSUME_ATA
+Date: Thu, 25 Oct 2007 03:22:46 -0400
+Message-ID: <47204446.7070609@garzik.org>
+References: <20071025065157.GH11853@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090303080102070907020702"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42356 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754652AbXJYHVf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Oct 2007 03:21:35 -0400
-In-Reply-To: <200710162121.l9GLLQJ2017814@imap1.linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com, James.Bottomley@steeleye.com, htejun@gmail.com
-
-This is a multi-part message in MIME format.
---------------090303080102070907020702
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:42369 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754992AbXJYHWt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 03:22:49 -0400
+In-Reply-To: <20071025065157.GH11853@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: stable@kernel.org, linux-ide@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Tejun Heo wrote:
+> Backport ATA_FLAG_NO_SRST and ATA_FLAG_ASSUME_ATA.  These are
+> originally link flags (ATA_LFLAG_*) but link abstraction doesn't exist
+> on 2.6.23, so make it port flags.
 > 
-> If Asynchronous Notification of media change events is supported, pass that
-> information up to the SCSI layer.
+> This is for the following workaround for ASUS P5W DH Deluxe.
 > 
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> These new flags don't introduce any behavior change unless set and
+> nobody sets them yet.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
+> This and the next patch are a bit large for -stable but they don't
+> change anything for machines other than P5W DH and P5W DH users have
+> been suffering long enough, so I think it'll be nice to include these
+> patches in the next -stable release.  However, feel free to NACK if
+> you can see some danger in these patches.
 > 
->  drivers/ata/libata-scsi.c |    3 +++
->  1 file changed, 3 insertions(+)
+> Jeff, what do you think?
 > 
-> diff -puN drivers/ata/libata-scsi.c~libata-expose-an-to-user-space drivers/ata/libata-scsi.c
-> --- a/drivers/ata/libata-scsi.c~libata-expose-an-to-user-space
-> +++ a/drivers/ata/libata-scsi.c
-> @@ -773,6 +773,9 @@ static void ata_scsi_dev_config(struct s
->  		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
->  	}
->  
-> +	if (dev->flags & ATA_DFLAG_AN)
-> +		sdev->media_change_notify = 1;
-> +
+>  drivers/ata/libata-eh.c |   32 ++++++++++++++++++++++++--------
+>  include/linux/libata.h  |    2 ++
+>  2 files changed, 26 insertions(+), 8 deletions(-)
 
-Methinks this wasn't tested, as you missed removal of the crucial 
-OTHER_AN_PATCHES_HAVE_BEEN_APPLIED ifdef-ery... :)
+ACK from me, though I wonder if we shouldn't wait and get feedback once 
+this hits upstream (my next push to Andrew and Linus), before applying 
+to stable.  No special reason, just being conservative...
 
-Anyway, I updated the patch for the media_event thingy in the last 
-email, and applied the attached patch
+	Jeff
 
 
---------------090303080102070907020702
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
 
-commit 6ba2326c804e2d449c2f40a63ba0a9ea650bef47
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Thu Oct 25 03:20:05 2007 -0400
-
-    [libata] Utilize new SCSI media event infrastructure
-    
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-
- drivers/ata/libata-scsi.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-6ba2326c804e2d449c2f40a63ba0a9ea650bef47
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f5d5420..65b6153 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -773,6 +773,9 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
- 	}
- 
-+	if (dev->flags & ATA_DFLAG_AN)
-+		sdev->media_events = 1;
-+
- 	if (dev->flags & ATA_DFLAG_NCQ) {
- 		int depth;
- 
-@@ -3248,10 +3251,8 @@ static void ata_scsi_handle_link_detach(struct ata_link *link)
-  */
- void ata_scsi_media_change_notify(struct ata_device *dev)
- {
--#ifdef OTHER_AN_PATCHES_HAVE_BEEN_APPLIED
- 	if (dev->sdev)
--		scsi_device_event_notify(dev->sdev, SDEV_MEDIA_CHANGE);
--#endif
-+		scsi_device_event_notify(dev->sdev, 1UL << SDEV_MEDIA_CHANGE);
- }
- 
- /**
-
---------------090303080102070907020702--
