@@ -1,96 +1,147 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/2] ahci: rename ahci_vt8251_hardreset() to
+Subject: [PATCH 2/2] ahci: implement workaround for ASUS P5W-DH Deluxe
 	ahci_broken_hardreset()
-Date: Thu, 25 Oct 2007 12:02:24 +0900
-Message-ID: <20071025030224.GE11853@htj.dyndns.org>
+Date: Thu, 25 Oct 2007 12:28:45 +0900
+Message-ID: <20071025032845.GF11853@htj.dyndns.org>
+References: <20071025030224.GE11853@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:51842 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.184]:24087 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759750AbXJYDCd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 23:02:33 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so351991rvb
-        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 20:02:32 -0700 (PDT)
+	with ESMTP id S1756155AbXJYD2x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 23:28:53 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so356758rvb
+        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 20:28:52 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20071025030224.GE11853@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Rename ahci_vt8251_hardreset() to ahci_broken_hardreset() and rename
-related names accordingly.  This is preparation for ASUS P5W-DH Deluxe
-workaround.
+P5W-DH Deluxe has ICH9 which doesn't have PMP support but SIMG 4726
+hardwired to the second port of AHCI controller at PCI device 1f.2.
+The 4726 doesn't work as PMP but as a storage processor which can do
+hardware RAID on downstream ports.
+
+When no device is attached to the downstream port of the 4726, pseudo
+ATA device for configuration appears.  Unfortunately, ATA emulation on
+the device is very lousy and causes long hang during boot.
+
+This patch implements workaround for the board.  If the mainboard is
+P5W-DH Deluxe (matched using DMI), only hardreset is used on the
+second port of AHCI controller @ 1f.2 and the hardreset doesn't wait
+for the first FIS and just proceed to IDENTIFY.
+
+This workaround has been verified in bugzilla report 8923.
+
+  http://bugzilla.kernel.org/show_bug.cgi?id=8923
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/ahci.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/ata/ahci.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 61 insertions(+), 3 deletions(-)
 
 Index: work/drivers/ata/ahci.c
 ===================================================================
 --- work.orig/drivers/ata/ahci.c
 +++ work/drivers/ata/ahci.c
-@@ -240,7 +240,7 @@ static void ahci_thaw(struct ata_port *a
- static void ahci_pmp_attach(struct ata_port *ap);
- static void ahci_pmp_detach(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
--static void ahci_vt8251_error_handler(struct ata_port *ap);
-+static void ahci_broken_hrst_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static int ahci_port_resume(struct ata_port *ap);
- static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
-@@ -305,7 +305,7 @@ static const struct ata_port_operations 
- 	.port_stop		= ahci_port_stop,
- };
+@@ -41,6 +41,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/device.h>
++#include <linux/dmi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+@@ -1199,7 +1200,10 @@ static int ahci_broken_hardreset(struct 
+ 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
+ 				 deadline);
  
--static const struct ata_port_operations ahci_vt8251_ops = {
-+static const struct ata_port_operations ahci_broken_hrst_ops = {
- 	.check_status		= ahci_check_status,
- 	.check_altstatus	= ahci_check_status,
- 	.dev_select		= ata_noop_dev_select,
-@@ -324,7 +324,7 @@ static const struct ata_port_operations 
- 	.freeze			= ahci_freeze,
- 	.thaw			= ahci_thaw,
+-	/* vt8251 needs SError cleared for the port to operate */
++	/* vt8251 needs SError cleared for the port to operate.  ICH8
++	 * on ASUS P5W-DH Deluxe doesn't need this but it doesn't hurt
++	 * either.
++	 */
+ 	ahci_scr_read(ap, SCR_ERROR, &serror);
+ 	ahci_scr_write(ap, SCR_ERROR, serror);
  
--	.error_handler		= ahci_vt8251_error_handler,
-+	.error_handler		= ahci_broken_hrst_error_handler,
- 	.post_internal_cmd	= ahci_post_internal_cmd,
+@@ -1207,8 +1211,15 @@ static int ahci_broken_hardreset(struct 
  
- 	.pmp_attach		= ahci_pmp_attach,
-@@ -357,7 +357,7 @@ static const struct ata_port_info ahci_p
- 		.link_flags	= AHCI_LFLAG_COMMON | ATA_LFLAG_HRST_TO_RESUME,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_vt8251_ops,
-+		.port_ops	= &ahci_broken_hrst_ops,
- 	},
- 	/* board_ahci_ign_iferr */
- 	{
-@@ -1185,7 +1185,7 @@ static int ahci_hardreset(struct ata_lin
- 	return rc;
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+ 
+-	/* vt8251 doesn't clear BSY on signature FIS reception,
+-	 * request follow-up softreset.
++	/* vt8251 doesn't clear BSY on signature FIS reception and
++	 * thus follow-up softreset is required.
++	 *
++	 * The pseudo configuration device on SIMG4726 attached to
++	 * ASUS P5W-DH Deluxe doesn't send signature FIS after
++	 * hardreset if no device is attached to the first downstream
++	 * port && the pseudo device locks up on SRST w/ PMP==0.  To
++	 * work around this, ATA_LFLAG_NO_SRST and ASSUME_ATA are set
++	 * for the link.  Return.
+ 	 */
+ 	return rc ?: -EAGAIN;
+ }
+@@ -1955,6 +1966,50 @@ static void ahci_print_info(struct ata_h
+ 		);
  }
  
--static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
-+static int ahci_broken_hardreset(struct ata_link *link, unsigned int *class,
- 				 unsigned long deadline)
++/* On ASUS P5W DH Deluxe, the second port of PCI device 00:1f.2 is
++ * hardwired to on-board SIMG 4726.  The chipset is ICH8 and doesn't
++ * support PMP and the 4726 either directly exports the device
++ * attached to the first downstream port or acts as a hardware storage
++ * controller and emulate a single ATA device (can be RAID 0/1 or some
++ * other configuration).
++ *
++ * When there's no device attached to the first downstream port of the
++ * 4726, "Config Disk" appears, which is a pseudo ATA device to
++ * configure the 4726.  However, ATA emulation of the device is very
++ * lame.  It doesn't send signature D2H Reg FIS after the initial
++ * hardreset, pukes on SRST w/ PMP==0 and has bunch of other issues.
++ *
++ * The following function works around the problem by always using
++ * hardreset on the port without waiting for signature FIS afterward
++ * and just assuming ATA class without follow-up softreset.
++ */
++static void ahci_p5wdh_workaround(struct ata_host *host)
++{
++	static struct dmi_system_id sysids[] = {
++		{
++			.ident = "P5W DH Deluxe",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR,
++					  "ASUSTEK COMPUTER INC"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "P5W DH Deluxe"),
++			},
++		},
++		{ }
++	};
++	struct pci_dev *pdev = to_pci_dev(host->dev);
++
++	if (pdev->bus->number == 0 && pdev->devfn == PCI_DEVFN(0x1f, 2) &&
++	    dmi_check_system(sysids)) {
++		struct ata_port *ap = host->ports[1];
++
++		dev_printk(KERN_INFO, &pdev->dev, "enabling ASUS P5W DH "
++			   "Deluxe on-board SIMG4726 workaround\n");
++
++		ap->ops = &ahci_broken_hrst_ops;
++		ap->link.flags |= ATA_LFLAG_NO_SRST | ATA_LFLAG_ASSUME_ATA;
++	}
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
- 	struct ata_port *ap = link->ap;
-@@ -1657,7 +1657,7 @@ static void ahci_error_handler(struct at
- 		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
- }
- 
--static void ahci_vt8251_error_handler(struct ata_port *ap)
-+static void ahci_broken_hrst_error_handler(struct ata_port *ap)
- {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
- 		/* restart engine */
-@@ -1666,7 +1666,7 @@ static void ahci_vt8251_error_handler(st
+ 	static int printed_version;
+@@ -2024,6 +2079,9 @@ static int ahci_init_one(struct pci_dev 
+ 			ap->ops = &ata_dummy_port_ops;
  	}
  
- 	/* perform recovery */
--	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_vt8251_hardreset,
-+	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_broken_hardreset,
- 		  ahci_postreset);
- }
- 
-
++	/* apply workaround for ASUS P5W DH Deluxe mainboard */
++	ahci_p5wdh_workaround(host);
++
+ 	/* initialize adapter */
+ 	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
+ 	if (rc)
