@@ -1,44 +1,57 @@
-From: David =?iso-8859-1?Q?H=E4rdeman?= <david@hardeman.nu>
-Subject: Re: [PATCH] ata: ahci: Enable enclosure management via LED (resend)
-Date: Thu, 25 Oct 2007 09:35:14 +0200 (CEST)
-Message-ID: <29046.145.64.134.222.1193297714.squirrel@www.hardeman.nu>
-References: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
-    <47203073.7090809@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] libata: backport ATA_FLAG_NO_SRST and	ATA_FLAG_ASSUME_ATA
+Date: Thu, 25 Oct 2007 16:36:01 +0900
+Message-ID: <47204761.3030500@gmail.com>
+References: <20071025065157.GH11853@htj.dyndns.org> <47204446.7070609@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761934AbXJYHff@vger.kernel.org>
-In-Reply-To: <47203073.7090809@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.181]:9674 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757449AbXJYHgM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 03:36:12 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so529851wah
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 00:36:11 -0700 (PDT)
+In-Reply-To: <47204446.7070609@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: stable@kernel.org, linux-ide@vger.kernel.org
 
-On Thu, October 25, 2007 07:58, Jeff Garzik wrote:
-> Kristen Carlson Accardi wrote:
->> Enable enclosure management via LED
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> Backport ATA_FLAG_NO_SRST and ATA_FLAG_ASSUME_ATA.  These are
+>> originally link flags (ATA_LFLAG_*) but link abstraction doesn't exist
+>> on 2.6.23, so make it port flags.
 >>
->> As described in the AHCI spec, some AHCI controllers may support
->> Enclosure management via a variety of protocols.  This patch
->> adds support for the LED message type that is specified in
->> AHCI 1.1 and higher.
->
-> Comments:
-=2E..
-> 8) when is this actually used?  do you have a sample user in userspac=
-e?
->   does a userspace daemon watch disk activity and manage LEDs somehow=
-?
-> I'm a bit cloudy on the usage need of this.
+>> This is for the following workaround for ASUS P5W DH Deluxe.
+>>
+>> These new flags don't introduce any behavior change unless set and
+>> nobody sets them yet.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>> This and the next patch are a bit large for -stable but they don't
+>> change anything for machines other than P5W DH and P5W DH users have
+>> been suffering long enough, so I think it'll be nice to include these
+>> patches in the next -stable release.  However, feel free to NACK if
+>> you can see some danger in these patches.
+>>
+>> Jeff, what do you think?
+>>
+>>  drivers/ata/libata-eh.c |   32 ++++++++++++++++++++++++--------
+>>  include/linux/libata.h  |    2 ++
+>>  2 files changed, 26 insertions(+), 8 deletions(-)
+> 
+> ACK from me, though I wonder if we shouldn't wait and get feedback once 
+> this hits upstream (my next push to Andrew and Linus), before applying 
+> to stable.  No special reason, just being conservative...
 
-I think the idea is that if mdadm (for example) kicks out a faulty disk
-from an array, it could also activate a LED (usually a different LED th=
-an
-the "disk activity" LED) on the corresponding enclosure so that the adm=
-in
-knows when standing in front of the storage server which disk to pull o=
-ut
-and replace.
+Agreed.  Let's give the upstream changes a few weeks before updating 
+-stable.  I'll ping this thread after a few weeks.
 
---=20
-David H=E4rdeman
+Thanks.
+
+-- 
+tejun
