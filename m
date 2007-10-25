@@ -1,80 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 12/15] ide: remove ->dma_master field from ide_hwif_t
-Date: Thu, 25 Oct 2007 19:01:12 +0400
-Message-ID: <4720AFB8.2050804@ru.mvista.com>
-References: <200710012339.39304.bzolnier@gmail.com> <200710082303.58761.bzolnier@gmail.com> <47179309.1090906@ru.mvista.com> <200710242324.53080.bzolnier@gmail.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [IDE] Fix build bug
+Date: Thu, 25 Oct 2007 17:05:29 +0100
+Message-ID: <20071025160529.GB24621@linux-mips.org>
+References: <20071025135334.GA23272@linux-mips.org> <20071025141305.GA11698@uranus.ravnborg.org> <Pine.LNX.4.64N.0710251545300.24086@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:45838 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754662AbXJYPBD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 11:01:03 -0400
-In-Reply-To: <200710242324.53080.bzolnier@gmail.com>
+Received: from ftp.linux-mips.org ([194.74.144.162]:43103 "EHLO
+	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbXJYQFo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 12:05:44 -0400
+Received: from localhost.localdomain ([127.0.0.1]:57746 "EHLO
+	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
+	id S20022911AbXJYQFm (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Thu, 25 Oct 2007 17:05:42 +0100
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64N.0710251545300.24086@blysk.ds.pg.gda.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-Hello.
+On Thu, Oct 25, 2007 at 03:47:16PM +0100, Maciej W. Rozycki wrote:
 
-Bartlomiej Zolnierkiewicz wrote:
+> > So we can avoid this if we invent a __constinitdata tag that uses
+> > a new section?
+> 
+>  That would do.
+> 
+> > I ask mainly to understand this error - not that I am that found
+> > of the idea.
+> 
+>  Somebody wants to mix up read-only and read/write data in the same 
+> section and GCC quite legitimately complains about it.  You cannot have 
+> both at a time.
 
->>>Index: b/drivers/ide/pci/pdc202xx_old.c
->>>===================================================================
->>>--- a/drivers/ide/pci/pdc202xx_old.c
->>>+++ b/drivers/ide/pci/pdc202xx_old.c
->>>@@ -193,7 +193,7 @@ static void pdc202xx_old_ide_dma_start(i
->>> 	if (drive->media != ide_disk || drive->addressing == 1) {
->>> 		struct request *rq	= HWGROUP(drive)->rq;
->>> 		ide_hwif_t *hwif	= HWIF(drive);
->>>-		unsigned long high_16   = hwif->dma_master;
->>>+		unsigned long high_16	= hwif->extra_base - 16;
->>> 		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+My interpretation is that it would be perfectly ok for a C compiler to
+do minimal handling of const by only throwing errors for attempted
+assignments to const objects but otherwise treating them as if they
+were non-const, that is for example putting them into an r/w section.
 
->>    That 'high_16' is *not* a good name in this case --
-
-    It's not a good name in any case, because there's more than 16 extra 
-registers.
-
->> it would've been if we 
->>didn't subtract 16. So, I'd wrote:
-
->>  		unsigned long atapi_reg	= hwif->extra_base +
->>					 (hwif->channel ? 0x14 : 0x10);
-
-> 'high_16' is used for more than 'atapi_reg' (same is true for other places
-> defining 'high_16' local variable).  With five revisions of this patch
-> needed to hopefully, finally get it right I prefer to defer futher cleanups
-> to the incremental patches (*hint*).
-
-    Hint gotten. I'm still neck deep in other stuff but the IDE cleanups can 
-wait anyway.
-
-> [PATCH] ide: remove ->dma_master field from ide_hwif_t (take 5)
-
-> * Convert cmd64x, hpt366 and pdc202xx_old host drivers to use
->   pci_resource_start(hwif->pci_dev, 4) instead of hwif->dma_master.
-
-> * Remove no longer needed ->dma_master field from ide_hwif_t.
-
-> v2:
-> * Use the more readable 'hwif->dma_base - (hwif->channel * 8)' instead of
->   pci_resource_start(hwif->pci_dev, 4).
-
-> v3:
-> * Use hwif->extra_base in hpt366/pdc20xx_old + some cosmetic fixups over v2
->   (suggested by Sergei).
-
-> v4:
-> * Correct offsets in hpt3xxn_set_clock().
-
-> v5:
-> * Use hwif->extra_base in hpt366 for _real_ this time. (Noticed by Sergei)
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+  Ralf
