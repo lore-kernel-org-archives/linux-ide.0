@@ -1,91 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 6/12] ide: add struct ide_taskfile
-Date: Thu, 25 Oct 2007 20:37:33 +0400
-Message-ID: <4720C64D.3000902@ru.mvista.com>
-References: <200710082311.10925.bzolnier@gmail.com> <47164894.9080007@ru.mvista.com> <200710250016.29315.bzolnier@gmail.com>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [IDE] Fix build bug
+Date: Thu, 25 Oct 2007 18:12:34 +0100 (BST)
+Message-ID: <Pine.LNX.4.64N.0710251809070.24086@blysk.ds.pg.gda.pl>
+References: <20071025135334.GA23272@linux-mips.org> <20071025141305.GA11698@uranus.ravnborg.org>
+ <Pine.LNX.4.64N.0710251545300.24086@blysk.ds.pg.gda.pl>
+ <20071025160529.GB24621@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:46439 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755786AbXJYQhZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 12:37:25 -0400
-In-Reply-To: <200710250016.29315.bzolnier@gmail.com>
+Received: from cerber.ds.pg.gda.pl ([153.19.208.18]:43405 "EHLO
+	cerber.ds.pg.gda.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980AbXJYRMq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 13:12:46 -0400
+In-Reply-To: <20071025160529.GB24621@linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Sam Ravnborg <sam@ravnborg.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Thu, 25 Oct 2007, Ralf Baechle wrote:
 
->>>Index: b/drivers/ide/ide-disk.c
->>>===================================================================
->>>--- a/drivers/ide/ide-disk.c
->>>+++ b/drivers/ide/ide-disk.c
+> >  Somebody wants to mix up read-only and read/write data in the same 
+> > section and GCC quite legitimately complains about it.  You cannot have 
+> > both at a time.
+> 
+> My interpretation is that it would be perfectly ok for a C compiler to
+> do minimal handling of const by only throwing errors for attempted
+> assignments to const objects but otherwise treating them as if they
+> were non-const, that is for example putting them into an r/w section.
 
->>[...]
+ That would probably be valid (any C standard expert please correct me if 
+I am wrong), but the approach looks like: since we have the capability in 
+the hardware and the OS, then why not actually enforce the rule at the run 
+time as well?
 
->>>+	if ((tf->command & 0x01) == 0) {
->>>+		u32 high, low;
-
->>    Isn't newline needed after declarations?
-
-> Well, it is not stricly needed, this code should compile and work without it.
-
-> ;)
-
-> fixed (FWIW the original code also lacked newline)
-
-    Yeah, I saw but that's hardly worth imitating. :-)
-
-[...]
-
-> New revision of the patch (it also uses the suggestion about using unnamed
-> unions for error/feature and status/command, thanks!):
-
-> [PATCH] ide: add struct ide_taskfile (take 2)
-
-> * Don't set write-only ide_task_t.hobRegister[6] and ide_task_t.hobRegister[7]
->   in idedisk_set_max_address_ext().
-
-> * Add struct ide_taskfile and use it in ide_task_t instead of tfRegister[]
->   and hobRegister[].
-
-> * Remove no longer needed IDE_CONTROL_OFFSET_HOB define.
-
-> * Add #ifndef/#endif __KERNEL__ around definitions of {task,hob}_struct_t.
-
-> While at it:
-
-> * Use ATA_LBA define for LBA bit (0x40) as suggested by Tejun Heo.
-
-> v2:
-> * Add missing newlines. (Noticed by Sergei)
-
-> * Use ~ATA_LBA instead of 0xBF. (Noticed by Sergei)
-
-> * Use unnamed unions for error/feature and status/command.
->   (Suggested by Sergei).
-
-> There should be no functionality changes caused by this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> ---
->  drivers/ide/ide-disk.c     |  156 ++++++++++++++++++++++++---------------------
->  drivers/ide/ide-io.c       |   80 +++++++++++++----------
->  drivers/ide/ide-iops.c     |   12 +--
->  drivers/ide/ide-lib.c      |    3
->  drivers/ide/ide-acpi.c     |    8 ---
->  drivers/ide/ide-disk.c     |  120 +++++++++++++++++++++------------------------
->  drivers/ide/ide-io.c       |   61 ++++++++++++----------
->  drivers/ide/ide-iops.c     |   12 ++--
->  drivers/ide/ide-lib.c      |    3 -
-
-    Don't know how but ide-disk.c, ide-io[ps].c and ide-lib.c appear twice in 
-the diffstat output... 8-)
-
-MBR, Sergei
+  Maciej
