@@ -1,45 +1,77 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata/pata_it821x: Improve handling of poorly
- compatible emulations
-Date: Thu, 25 Oct 2007 23:34:15 +0100
-Message-ID: <20071025233415.15e677bf@the-village.bc.nu>
-References: <20071025142116.7e38ee86@the-village.bc.nu>
-	<20071025131105.ca992a64.akpm@linux-foundation.org>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH] Add a global ide=off switch for drivers/ide
+Date: Fri, 26 Oct 2007 01:22:02 +0200
+Message-ID: <200710260122.02663.ak@suse.de>
+References: <200710151243.48577.ak@suse.de> <200710252307.23323.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58009 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754304AbXJYWbk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 18:31:40 -0400
-In-Reply-To: <20071025131105.ca992a64.akpm@linux-foundation.org>
+Received: from cantor2.suse.de ([195.135.220.15]:44620 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752227AbXJYXWG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 19:22:06 -0400
+In-Reply-To: <200710252307.23323.bzolnier@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, 25 Oct 2007 13:11:05 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On Thursday 25 October 2007 23:07:23 Bartlomiej Zolnierkiewicz wrote:
 
-> On Thu, 25 Oct 2007 14:21:16 +0100
-> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> On Monday 15 October 2007, Andi Kleen wrote:
+> > 
+> > Had a situation where drivers/ide was compiled in, but I wanted to turn 
+> > it off to let the drivers/ata drivers take over. I ended up using ide*=noprobe,
+> > but that was somewhat clumpsy because I wasn't sure how many IDE interfaces
+> > the machine really had.
+> > 
+> > Add a global ide=off switch to handle this situation better.
 > 
-> > +                if (print_info) {
-> > +			ata_dev_printk(dev, KERN_WARNING,
-> > +"Drive reports diagnostics failure. This may indicate a drive\n");
-> > +			ata_dev_printk(dev, KERN_WARNING,
-> > +"fault or invalid emulation. Contact drive vendor for information.\n");
-> > +		}
-> 
-> eww, my eyes.
-> 
-> It would be better to remove the first \n and use KERN_CONT in the second
-> printk.  Maybe.  Even better would be to do it all in one printk so that
-> it is atomic in the printk buffer.
+> Overall looks OK but I think we should limit it to IDE built-in case
+> (when IDE is modular it is all up to the user-space anyway).
 
-One printk goes all wonky as ata_dev_printk does lots of lead in which
-does look best on both lines (having tried it both ways when first doing
-this)
+Disagree. It's useful for the modular case too e.g. if you
+have the ide modules in your initrd and you want to not load
+them for some reason (e.g. debugging) 
 
-ALan
+Besides adding so many ifdefs would be ugly in my opinion.
+> 
+> > The patch is a little bigger because I tried to cover all modules.
+> 
+> A few still needs to be covered:
+> - drivers/scsi/ide-scsi.c (other directory)
+> - drivers/ide/legacy/ide_platform.c (new driver)
+> - drivers/ide/legacy/ide-cs.c (late_initcall)
+> - drivers/ide/pci/sgiioc4.c (ditto, not a SFF-PCI driver)
+
+Thanks I'll fix those.
+
+> > I'm also not 100% sure ENODEV is the right error return for this 
+> > case, but I didn't come up with a better one.
+> 
+> -EPERM?  IMO it would be more appropriate (and easy to distinguish
+> from the "real" -ENODEV).
+
+Ok.
+
+ 
+> > +int ide_off;
+> > +EXPORT_SYMBOL(ide_off);
+> > +
+> 
+> _GPL?
+> 
+> Please cover it with #ifdef/#endif CONFIG_BLK_DEV_IDE as it should be
+> valid only when IDE is built-in.
+
+
+> 
+> This way we don't pollute device/host drivers with CONFIG_BLK_DEV_IDE #ifdefs.
+
+What CONFIG_BLK_DEV_IDE ifdefs? I added the check only to code that is already
+conditional to this I believe and there were no additional ifdefs at all.
+
+-Andi
