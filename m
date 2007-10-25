@@ -1,59 +1,96 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 3/3] drivers/ide/pci/sc1200.c: fix suspend/resume buglets and warnings
-Date: Wed, 24 Oct 2007 19:48:25 -0400 (EDT)
-Message-ID: <20071024234825.829191F81A2@havoc.gtf.org>
-References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/2] ahci: rename ahci_vt8251_hardreset() to
+	ahci_broken_hardreset()
+Date: Thu, 25 Oct 2007 12:02:24 +0900
+Message-ID: <20071025030224.GE11853@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:42940 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756516AbXJXXs0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Oct 2007 19:48:26 -0400
+Received: from rv-out-0910.google.com ([209.85.198.189]:51842 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759750AbXJYDCd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2007 23:02:33 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so351991rvb
+        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 20:02:32 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
-Cc: akpm@linux-foundation.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-* We shouldn't bother with dev->current_state, the PCI API functions we
-  call manage this for us (and do a far better job at it too).
+Rename ahci_vt8251_hardreset() to ahci_broken_hardreset() and rename
+related names accordingly.  This is preparation for ASUS P5W-DH Deluxe
+workaround.
 
-* Remove pci_set_power_state(dev, PCI_D0) call in resume, as
-  pci_enable_device() does the same thing.
-
-* Check pci_enable_device() return value.  If it failed, fail
-  the entire resume and avoid programming timings into the [potentially
-  dead/asleep] chip.
-
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ide/pci/sc1200.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/ahci.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ide/pci/sc1200.c b/drivers/ide/pci/sc1200.c
-index 17e58d6..10c79a5 100644
---- a/drivers/ide/pci/sc1200.c
-+++ b/drivers/ide/pci/sc1200.c
-@@ -332,7 +332,6 @@ static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+Index: work/drivers/ata/ahci.c
+===================================================================
+--- work.orig/drivers/ata/ahci.c
++++ work/drivers/ata/ahci.c
+@@ -240,7 +240,7 @@ static void ahci_thaw(struct ata_port *a
+ static void ahci_pmp_attach(struct ata_port *ap);
+ static void ahci_pmp_detach(struct ata_port *ap);
+ static void ahci_error_handler(struct ata_port *ap);
+-static void ahci_vt8251_error_handler(struct ata_port *ap);
++static void ahci_broken_hrst_error_handler(struct ata_port *ap);
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
+ static int ahci_port_resume(struct ata_port *ap);
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
+@@ -305,7 +305,7 @@ static const struct ata_port_operations 
+ 	.port_stop		= ahci_port_stop,
+ };
  
- 	pci_disable_device(dev);
- 	pci_set_power_state(dev, pci_choose_state(dev, state));
--	dev->current_state = state.event;
- 	return 0;
+-static const struct ata_port_operations ahci_vt8251_ops = {
++static const struct ata_port_operations ahci_broken_hrst_ops = {
+ 	.check_status		= ahci_check_status,
+ 	.check_altstatus	= ahci_check_status,
+ 	.dev_select		= ata_noop_dev_select,
+@@ -324,7 +324,7 @@ static const struct ata_port_operations 
+ 	.freeze			= ahci_freeze,
+ 	.thaw			= ahci_thaw,
+ 
+-	.error_handler		= ahci_vt8251_error_handler,
++	.error_handler		= ahci_broken_hrst_error_handler,
+ 	.post_internal_cmd	= ahci_post_internal_cmd,
+ 
+ 	.pmp_attach		= ahci_pmp_attach,
+@@ -357,7 +357,7 @@ static const struct ata_port_info ahci_p
+ 		.link_flags	= AHCI_LFLAG_COMMON | ATA_LFLAG_HRST_TO_RESUME,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_vt8251_ops,
++		.port_ops	= &ahci_broken_hrst_ops,
+ 	},
+ 	/* board_ahci_ign_iferr */
+ 	{
+@@ -1185,7 +1185,7 @@ static int ahci_hardreset(struct ata_lin
+ 	return rc;
  }
  
-@@ -341,9 +340,10 @@ static int sc1200_resume (struct pci_dev *dev)
- 	ide_hwif_t		*hwif;
- 	int			i;
+-static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
++static int ahci_broken_hardreset(struct ata_link *link, unsigned int *class,
+ 				 unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+@@ -1657,7 +1657,7 @@ static void ahci_error_handler(struct at
+ 		       sata_pmp_std_hardreset, sata_pmp_std_postreset);
+ }
  
--	pci_set_power_state(dev, PCI_D0);	// bring chip back from sleep state
--	dev->current_state = PM_EVENT_ON;
--	pci_enable_device(dev);
-+	i = pci_enable_device(dev);
-+	if (i)
-+		return i;
-+
- 	//
- 	// loop over all interfaces that are part of this pci device:
- 	//
--- 
-1.5.2.4
+-static void ahci_vt8251_error_handler(struct ata_port *ap)
++static void ahci_broken_hrst_error_handler(struct ata_port *ap)
+ {
+ 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+ 		/* restart engine */
+@@ -1666,7 +1666,7 @@ static void ahci_vt8251_error_handler(st
+ 	}
+ 
+ 	/* perform recovery */
+-	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_vt8251_hardreset,
++	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_broken_hardreset,
+ 		  ahci_postreset);
+ }
+ 
 
