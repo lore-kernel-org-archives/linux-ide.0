@@ -1,240 +1,222 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/2 -stable] libata: backport ATA_FLAG_NO_SRST and
-	ATA_FLAG_ASSUME_ATA
-Date: Thu, 25 Oct 2007 15:53:19 +0900
-Message-ID: <20071025065319.GI11853@htj.dyndns.org>
-References: <20071025065157.GH11853@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 3/4] scsi: expose AN support to user space
+Date: Thu, 25 Oct 2007 03:15:05 -0400
+Message-ID: <47204279.9010901@garzik.org>
+References: <200710162121.l9GLLPKo017811@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080901060003050807040904"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:50022 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754350AbXJYGx1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 02:53:27 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so520084wah
-        for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2007 23:53:27 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20071025065157.GH11853@htj.dyndns.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:46364 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753670AbXJYHPL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 03:15:11 -0400
+In-Reply-To: <200710162121.l9GLLPKo017811@imap1.linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stable@kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: akpm@linux-foundation.org
+Cc: linux-ide@vger.kernel.org, kristen.c.accardi@intel.com, James.Bottomley@steeleye.com, htejun@gmail.com
 
-P5W-DH Deluxe has ICH7R which doesn't have PMP support but SIMG 4726
-hardwired to the second port of AHCI controller at PCI device 1f.2.
-The 4726 doesn't work as PMP but as a storage processor which can do
-hardware RAID on downstream ports.
+This is a multi-part message in MIME format.
+--------------080901060003050807040904
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-When no device is attached to the downstream port of the 4726, pseudo
-ATA device for configuration appears.  Unfortunately, ATA emulation on
-the device is very lousy and causes long hang during boot.
+akpm@linux-foundation.org wrote:
+> From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> If a scsi_device supports async notification for media change, then let user
+> space know this capability exists by creating a new sysfs entry
+> "media_change_notify", which will be 1 if it is supported, and 0 if not
+> supported.  Create a routine which allows scsi devices to send a uevent when
+> media change events occur.
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> Acked-by: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/scsi_lib.c    |   83 +++++++++++++++++++++++++++++++++++
+>  drivers/scsi/scsi_scan.c   |    1 
+>  drivers/scsi/scsi_sysfs.c  |   13 +++++
+>  include/scsi/scsi_device.h |   15 +++++-
+>  4 files changed, 111 insertions(+), 1 deletion(-)
 
-This patch implements workaround for the board.  If the mainboard is
-P5W-DH Deluxe (matched using DMI), only hardreset is used on the
-second port of AHCI controller @ 1f.2 and the hardreset doesn't depend
-on receiving the first FIS and just proceed to IDENTIFY.
+committed to libata-dev.git#an as the attached patch
 
-This workaround fixes bugzilla #8923.
+I changed the interface such that it takes a mask of events.  We only 
+have one event right now, but it is now trivial to add more events 
+within the same interface.
 
-  http://bugzilla.kernel.org/show_bug.cgi?id=8923
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/ahci.c |  143 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 143 insertions(+)
+--------------080901060003050807040904
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-Index: tree0/drivers/ata/ahci.c
-===================================================================
---- tree0.orig/drivers/ata/ahci.c
-+++ tree0/drivers/ata/ahci.c
-@@ -41,6 +41,7 @@
- #include <linux/interrupt.h>
- #include <linux/dma-mapping.h>
- #include <linux/device.h>
-+#include <linux/dmi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-@@ -231,6 +232,7 @@ static void ahci_freeze(struct ata_port 
- static void ahci_thaw(struct ata_port *ap);
- static void ahci_error_handler(struct ata_port *ap);
- static void ahci_vt8251_error_handler(struct ata_port *ap);
-+static void ahci_p5wdh_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static int ahci_port_resume(struct ata_port *ap);
- static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl);
-@@ -329,6 +331,40 @@ static const struct ata_port_operations 
- 	.port_stop		= ahci_port_stop,
+commit 4e0af19e75e40d71181c4e515009e81f19a0fc04
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Thu Oct 25 03:13:46 2007 -0400
+
+    [SCSI] Emit asynchronous media events
+    
+    Based originally on a patch by
+    Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+ drivers/scsi/scsi_lib.c    |   58 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  |   13 ++++++++++
+ include/scsi/scsi_device.h |   13 +++++++++-
+ 3 files changed, 83 insertions(+), 1 deletion(-)
+
+4e0af19e75e40d71181c4e515009e81f19a0fc04
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 61fdaf0..46a7f50 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2115,6 +2115,64 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ EXPORT_SYMBOL(scsi_device_set_state);
+ 
+ /**
++ * 	scsi_device_event_notify_thread - send a uevent for each scsi event
++ *	@work: work struct for scsi_device
++ *
++ *	Emit all queued media events as environment variables
++ *	sent during a uevent.
++ */
++static void scsi_event_notify_thread(struct work_struct *work)
++{
++	struct scsi_device *sdev;
++	char *envp[3];
++	unsigned long flags, mask;
++	int i, idx;
++
++	/* must match scsi_device_event enum in scsi_device.h */
++	static char *scsi_device_event_strings[] = {
++		[SDEV_MEDIA_CHANGE] = "SDEV_MEDIA_CHANGE=1",
++	};
++
++	sdev = container_of(work, struct scsi_device, ew.work);
++
++	spin_lock_irqsave(&sdev->list_lock, flags);
++	mask = sdev->event_mask;
++	sdev->event_mask = 0;
++	spin_unlock_irqrestore(&sdev->list_lock, flags);
++
++	idx = 0;
++	for (i = 0; i < SDEV_MEDIA_LAST; i++)
++		if (mask & (1UL << i))
++			envp[idx++] = scsi_device_event_strings[i];
++	envp[idx++] = NULL;
++
++	kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
++}
++
++/**
++ * 	scsi_device_event_notify - store event info and send an event
++ *	@sdev: scsi_device event occurred on
++ *	@mask: the scsi device event mask
++ *
++ * 	Store the event information and then switch process context
++ * 	so that the event may be sent to user space.
++ * 	This may be called from interrupt context.
++ *
++ * 	Returns 0 if successful, -ENOMEM otherwise.
++ */
++void scsi_device_event_notify(struct scsi_device *sdev, unsigned long mask)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&sdev->list_lock, flags);
++	sdev->event_mask |= mask;
++	spin_unlock_irqrestore(&sdev->list_lock, flags);
++
++	execute_in_process_context(scsi_event_notify_thread, &sdev->ew);
++}
++EXPORT_SYMBOL_GPL(scsi_device_event_notify);
++
++/**
+  *	scsi_device_quiesce - Block user issued commands.
+  *	@sdev:	scsi device to quiesce.
+  *
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index d531cee..d6e765c 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -614,6 +614,18 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
+ 
++static ssize_t
++sdev_show_media_events(struct device *dev, struct device_attribute *attr,
++				char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	if (sdev->media_events)
++		return snprintf(buf, 20, "%d\n", 1);
++	else
++		return snprintf(buf, 20, "%d\n", 0);
++}
++static DEVICE_ATTR(media_events, S_IRUGO, sdev_show_media_events, NULL);
++
+ /* Default template for device attributes.  May NOT be modified */
+ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_device_blocked.attr,
+@@ -631,6 +643,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_iodone_cnt.attr,
+ 	&dev_attr_ioerr_cnt.attr,
+ 	&dev_attr_modalias.attr,
++	&dev_attr_media_events.attr,
+ 	NULL
  };
  
-+static const struct ata_port_operations ahci_p5wdh_ops = {
-+	.port_disable		= ata_port_disable,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d5057bc..ca208f8 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -46,6 +46,13 @@ enum scsi_device_state {
+ 				 * to the scsi lld. */
+ };
+ 
++/* must match scsi_device_event_strings in scsi_lib.c */
++enum scsi_device_event {
++	SDEV_MEDIA_CHANGE	= 1,	/* media has changed */
 +
-+	.check_status		= ahci_check_status,
-+	.check_altstatus	= ahci_check_status,
-+	.dev_select		= ata_noop_dev_select,
-+
-+	.tf_read		= ahci_tf_read,
-+
-+	.qc_prep		= ahci_qc_prep,
-+	.qc_issue		= ahci_qc_issue,
-+
-+	.irq_clear		= ahci_irq_clear,
-+	.irq_on			= ata_dummy_irq_on,
-+	.irq_ack		= ata_dummy_irq_ack,
-+
-+	.scr_read		= ahci_scr_read,
-+	.scr_write		= ahci_scr_write,
-+
-+	.freeze			= ahci_freeze,
-+	.thaw			= ahci_thaw,
-+
-+	.error_handler		= ahci_p5wdh_error_handler,
-+	.post_internal_cmd	= ahci_post_internal_cmd,
-+
-+#ifdef CONFIG_PM
-+	.port_suspend		= ahci_port_suspend,
-+	.port_resume		= ahci_port_resume,
-+#endif
-+
-+	.port_start		= ahci_port_start,
-+	.port_stop		= ahci_port_stop,
++	SDEV_MEDIA_LAST		= SDEV_MEDIA_CHANGE,
 +};
 +
- static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci */
- 	{
-@@ -1176,6 +1212,52 @@ static int ahci_vt8251_hardreset(struct 
- 	return rc ?: -EAGAIN;
- }
+ struct scsi_device {
+ 	struct Scsi_Host *host;
+ 	struct request_queue *request_queue;
+@@ -126,12 +133,14 @@ struct scsi_device {
+ 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
+ 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+-
++	unsigned media_events:1;	/* dev supports async media events */
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
  
-+static int ahci_p5wdh_hardreset(struct ata_port *ap, unsigned int *class,
-+				unsigned long deadline)
-+{
-+	struct ahci_port_priv *pp = ap->private_data;
-+	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
-+	struct ata_taskfile tf;
-+	int rc;
-+
-+	ahci_stop_engine(ap);
-+
-+	/* clear D2H reception area to properly wait for D2H FIS */
-+	ata_tf_init(ap->device, &tf);
-+	tf.command = 0x80;
-+	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-+
-+	rc = sata_port_hardreset(ap, sata_ehc_deb_timing(&ap->eh_context),
-+				 deadline);
-+
-+	ahci_start_engine(ap);
-+
-+	if (rc || ata_port_offline(ap))
-+		return rc;
-+
-+	/* spec mandates ">= 2ms" before checking status */
-+	msleep(150);
-+
-+	/* The pseudo configuration device on SIMG4726 attached to
-+	 * ASUS P5W-DH Deluxe doesn't send signature FIS after
-+	 * hardreset if no device is attached to the first downstream
-+	 * port && the pseudo device locks up on SRST w/ PMP==0.  To
-+	 * work around this, wait for !BSY only briefly.  If BSY isn't
-+	 * cleared, perform CLO and proceed to IDENTIFY (achieved by
-+	 * ATA_LFLAG_NO_SRST and ATA_LFLAG_ASSUME_ATA).
-+	 *
-+	 * Wait for two seconds.  Devices attached to downstream port
-+	 * which can't process the following IDENTIFY after this will
-+	 * have to be reset again.  For most cases, this should
-+	 * suffice while making probing snappish enough.
-+	 */
-+	rc = ata_wait_ready(ap, jiffies + 2 * HZ);
-+	if (rc)
-+		ahci_kick_engine(ap, 0);
-+
-+	return 0;
-+}
-+
- static void ahci_postreset(struct ata_port *ap, unsigned int *class)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -1556,6 +1638,19 @@ static void ahci_vt8251_error_handler(st
- 		  ahci_postreset);
- }
+ 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
+ #define SCSI_DEFAULT_DEVICE_BLOCKED	3
  
-+static void ahci_p5wdh_error_handler(struct ata_port *ap)
-+{
-+	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
-+		/* restart engine */
-+		ahci_stop_engine(ap);
-+		ahci_start_engine(ap);
-+	}
++	unsigned long event_mask;	/* SDEV_MEDIA_xxx (1<<x for mask) */
 +
-+	/* perform recovery */
-+	ata_do_eh(ap, ata_std_prereset, ahci_softreset, ahci_p5wdh_hardreset,
-+		  ahci_postreset);
-+}
-+
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-@@ -1802,6 +1897,51 @@ static void ahci_print_info(struct ata_h
- 		);
- }
- 
-+/* On ASUS P5W DH Deluxe, the second port of PCI device 00:1f.2 is
-+ * hardwired to on-board SIMG 4726.  The chipset is ICH8 and doesn't
-+ * support PMP and the 4726 either directly exports the device
-+ * attached to the first downstream port or acts as a hardware storage
-+ * controller and emulate a single ATA device (can be RAID 0/1 or some
-+ * other configuration).
-+ *
-+ * When there's no device attached to the first downstream port of the
-+ * 4726, "Config Disk" appears, which is a pseudo ATA device to
-+ * configure the 4726.  However, ATA emulation of the device is very
-+ * lame.  It doesn't send signature D2H Reg FIS after the initial
-+ * hardreset, pukes on SRST w/ PMP==0 and has bunch of other issues.
-+ *
-+ * The following function works around the problem by always using
-+ * hardreset on the port and not depending on receiving signature FIS
-+ * afterward.  If signature FIS isn't received soon, ATA class is
-+ * assumed without follow-up softreset.
-+ */
-+static void ahci_p5wdh_workaround(struct ata_host *host)
-+{
-+	static struct dmi_system_id sysids[] = {
-+		{
-+			.ident = "P5W DH Deluxe",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR,
-+					  "ASUSTEK COMPUTER INC"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "P5W DH Deluxe"),
-+			},
-+		},
-+		{ }
-+	};
-+	struct pci_dev *pdev = to_pci_dev(host->dev);
-+
-+	if (pdev->bus->number == 0 && pdev->devfn == PCI_DEVFN(0x1f, 2) &&
-+	    dmi_check_system(sysids)) {
-+		struct ata_port *ap = host->ports[1];
-+
-+		dev_printk(KERN_INFO, &pdev->dev, "enabling ASUS P5W DH "
-+			   "Deluxe on-board SIMG4726 workaround\n");
-+
-+		ap->ops = &ahci_p5wdh_ops;
-+		ap->flags |= ATA_FLAG_NO_SRST | ATA_FLAG_ASSUME_ATA;
-+	}
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -1863,6 +2003,9 @@ static int ahci_init_one(struct pci_dev 
- 			ap->ops = &ata_dummy_port_ops;
- 	}
- 
-+	/* apply workaround for ASUS P5W DH Deluxe mainboard */
-+	ahci_p5wdh_workaround(host);
-+
- 	/* initialize adapter */
- 	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
- 	if (rc)
+ 	atomic_t iorequest_cnt;
+ 	atomic_t iodone_cnt;
+ 	atomic_t ioerr_cnt;
+@@ -275,6 +284,8 @@ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+ 				int retries);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
+ 				 enum scsi_device_state state);
++extern void scsi_device_event_notify(struct scsi_device *sdev,
++				     unsigned long event_mask);
+ extern int scsi_device_quiesce(struct scsi_device *sdev);
+ extern void scsi_device_resume(struct scsi_device *sdev);
+ extern void scsi_target_quiesce(struct scsi_target *);
+
+--------------080901060003050807040904--
