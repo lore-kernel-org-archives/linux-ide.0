@@ -1,42 +1,41 @@
-From: Ingo Oeser <ioe-lkml@rameria.de>
-Subject: Re: [PATCH] ata: ahci: Enable enclosure management via LED (resend)
-Date: Thu, 25 Oct 2007 23:35:11 +0200
-Message-ID: <200710252335.12975.ioe-lkml@rameria.de>
-References: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [IDE] Fix build bug
+Date: Thu, 25 Oct 2007 23:52:31 +0200
+Message-ID: <200710252352.32141.bzolnier@gmail.com>
+References: <20071025135334.GA23272@linux-mips.org> <20071025141305.GA11698@uranus.ravnborg.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757705AbXJYVdB@vger.kernel.org>
-In-Reply-To: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20071025141305.GA11698@uranus.ravnborg.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Richard Purdie <rpurdie@openedhand.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Kristen,
+On Thursday 25 October 2007, Sam Ravnborg wrote:
+> On Thu, Oct 25, 2007 at 02:53:34PM +0100, Ralf Baechle wrote:
+> >   CC      drivers/ide/pci/generic.o
+> > drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
+> > +section type conflict
+> > 
+> > This sort of build error is becoming a regular issue.  Either all or non
+> > of the elements that go into a particular section of a compilation unit
+> > need to be const.  Or an error may result such as in this case if
+> > CONFIG_HOTPLUG is unset.
+> So we can avoid this if we invent a __constinitdata tag that uses
+> a new section?
 
-On Thursday 25 October 2007, Kristen Carlson Accardi wrote:
-> Enable enclosure management via LED
-> 
-> As described in the AHCI spec, some AHCI controllers may support 
-> Enclosure management via a variety of protocols.  This patch
-> adds support for the LED message type that is specified in 
-> AHCI 1.1 and higher.
+I asked similar question on LKML few days ago together with the list of
+potentially problematic places:
 
-Linux has a LED subsystem for that. May I suggest, that you just register
-these leds and let userspace handle them via that via the LED API?
+	http://article.gmane.org/gmane.linux.kernel/594427
 
-The LED userspace API is described in Documentation/leds-class.txt
-and the headers for registering LEDs is linux/leds.h under include/
+Now I see that the list is only partially complete since __initdata and co.
+may be also hidden in things like __setup() etc.
 
-Since you explicitly WANT user space to control these, that should
-be the right API. 
-
-Richard, what do YOU think?
-
-
-Best Regards
-
-Ingo Oeser
+Thanks,
+Bart
