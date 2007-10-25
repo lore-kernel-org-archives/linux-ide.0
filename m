@@ -1,28 +1,24 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+From: Richard Purdie <rpurdie@openedhand.com>
 Subject: Re: [PATCH] ata: ahci: Enable enclosure management via LED (resend)
-Date: Thu, 25 Oct 2007 14:50:47 -0700
-Message-ID: <20071025145047.1c5e96f3.kristen.c.accardi@intel.com>
+Date: Thu, 25 Oct 2007 22:47:25 +0100
+Message-ID: <1193348845.5697.25.camel@localhost.localdomain>
 References: <20071024155845.5129d6a4.kristen.c.accardi@intel.com>
-	<200710252335.12975.ioe-lkml@rameria.de>
+	 <200710252335.12975.ioe-lkml@rameria.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:61216 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751650AbXJYVvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Oct 2007 17:51:07 -0400
+Received: from 3a.49.1343.static.theplanet.com ([67.19.73.58]:46537 "EHLO
+	pug.o-hand.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751848AbXJYWHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 18:07:08 -0400
 In-Reply-To: <200710252335.12975.ioe-lkml@rameria.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Ingo Oeser <ioe-lkml@rameria.de>
-Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Richard Purdie <rpurdie@openedhand.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, akpm@linux-foundation.org, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 25 Oct 2007 23:35:11 +0200
-Ingo Oeser <ioe-lkml@rameria.de> wrote:
-
-> Hi Kristen,
-> 
+On Thu, 2007-10-25 at 23:35 +0200, Ingo Oeser wrote:
 > On Thursday 25 October 2007, Kristen Carlson Accardi wrote:
 > > Enable enclosure management via LED
 > > 
@@ -41,15 +37,13 @@ Ingo Oeser <ioe-lkml@rameria.de> wrote:
 > be the right API. 
 > 
 > Richard, what do YOU think?
-> 
-> 
-> Best Regards
-> 
-> Ingo Oeser
-> 
 
-I did look into using the LED class for this, but it didn't appropriate
-as I wanted the leds to be associated with a particular disk, and not
-with the platform as a whole.  It seemed to me that the led_class was 
-a bit of overkill for what we needed to do here, since we just need 
-on/off and nothing else.
+If you're exporting LEDs to userspace, the LED API was designed to do
+just that...
+
+Cheers,
+
+Richard
+
+
+
