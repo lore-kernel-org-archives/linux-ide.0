@@ -1,72 +1,59 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
-Date: Fri, 26 Oct 2007 13:18:41 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B059FE1DA@hkemmail01.nvidia.com>
-References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net>    <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net>    <200710251406.05804.bzolnier@gmail.com>    <200710251411.42546.bzolnier@gmail.com> <32932.86.7.220.119.1193345936.squirrel@wmbeta.mxes.net>
+From: Soeren Sonnenburg <kernel@nn7.de>
+Subject: Re: seagate disks on sil3114 - slow?
+Date: Fri, 26 Oct 2007 07:49:37 +0200
+Message-ID: <1193377777.5984.13.camel@localhost>
+References: <1192683290.5720.38.camel@localhost>
+	 <4716EA25.7060205@garzik.org> <1192697546.5720.51.camel@localhost>
+	 <472151D3.6060403@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:17276 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbXJZFSq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 01:18:46 -0400
-In-Reply-To: <32932.86.7.220.119.1193345936.squirrel@wmbeta.mxes.net>
-Content-class: urn:content-classes:message
+Received: from nn7.de ([85.214.94.156]:58581 "EHLO nn7.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752110AbXJZFwW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Oct 2007 01:52:22 -0400
+In-Reply-To: <472151D3.6060403@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, Andrew <andrew@nelless.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Andrew wrote:
-> 
-> On Thu, October 25, 2007 13:11, Bartlomiej Zolnierkiewicz wrote:
-> >
-> >
-> > a better version
-> >
-> > [PATCH] sata_nv: respect swncq_enabled setting
-> >
-> >
-> > SWNCQ is always used despite swncq_enabled setting (which 
-> is disabled by
-> > default).  Fix it by using GENERIC nv_port_info[] entry for 
-> SWNCQ controllers if swncq_enabled
-> > is not enabled.
-> >
-> 
-> This patch worked a treat, thanks.
-> 
-> -
-> Andrew
-> 
->
-I just reviewed your mails and  simply analysed the message from
-http://andotnet.nfshost.com/linux/2.6.24-rc1-swncq.txt.
+On Fri, 2007-10-26 at 11:32 +0900, Tejun Heo wrote:
+> Soeren Sonnenburg wrote:
+> > On Thu, 2007-10-18 at 01:07 -0400, Jeff Garzik wrote:
+> >> Soeren Sonnenburg wrote:
+> >>> Dear all,
+> >>>
+> >>> I just now realize that all disk i.o. on my machine is quite slow
+> >>> compared with the pata disks I had before. Furthermore I recognized that
+> >>> I only have seagates (ST3400832AS,ST3400620AS,ST3750640AS,ST3750640AS)
+> >>> connected to a sil3114 controller.
+> >>>
+> >>> Being on kernel 2.6.23.1 and stumbling across
+> >>> http://home-tj.org/wiki/index.php/Sil_m15w I am now wondering if this
+> >>> patch made it already in kernel (or when it will make it if it is not
+> >>> yet in/why never).
+> >> Are you sure you have a 3114?  the mod15write isn't applied to that chip.
+> >> Does your dmesg say "applying Seagate errata fix (mod15write workaround)" ?
+> > 
+> > At least lspci / dmesg indicates I have a 3114 ... but maybe the problem
+> > is something else. Is there a raw device speed, readonly benchmark to
+> > check whether things are as expected?
 
-I saw that the "Using SWNCQ mode" didn't appear, so the swncq should be
-equal to 0 and nv_swncq_host_init  wasnt' called.
->From the message "ata1.00: 976773168 sectors, multi 16: LBA48 NCQ (depth
-31/32) "
-, i know the libata layer should use ncq protocol. Because the
-nv_port_info set ATA_FLAG_NCQ flag and the sata support ncq,
-ata_dev_config_ncq  will set dev->flags |= ATA_DFLAG_NCQ and print
-(depth 31/32);
+looks like I did not fully reply to this one: yes I have a 3114 and
+based on Bernds patch to enable m15w support for sil3114 I added the
+first two drives to the blacklist and yes I saw the applying mod15write
+workaround messages for these disks afterwards. These disks attached to
+the internal promise seems to work stably now (uptime is a week now),
+with the occasional error that thanks to the new EH is successfully
+recovered from - good job!!
 
-When a ncq command is transferred to sata_nv, sata_nv with mcp51 in
-SWNCQ will handle it using ncq software flow  whatever value the swncq
-is.
-The error maybe happens  if sata_nv does ncq , but the
-nv_swncq_host_init isn't called and bios either doesn't initialize the
-ncq register. 
+> "dd if=/dev/sdX of=/dev/null bs=1M"?  Also, does changing IO scheduler
+> to deadline make any difference?
 
-Best regards,
-Kuan Luo
-  
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+OK I knew that one... about 50-60M/s - sounds reasonable, but if I
+understand the m15w problem correctly it can only be triggered on
+writes...
+
+Soeren
