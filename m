@@ -1,56 +1,46 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: marvell 88SX6081 and linux 2.6.23.1
-Date: Fri, 26 Oct 2007 11:04:48 +0900
-Message-ID: <47214B40.5020408@gmail.com>
-References: <S1756649AbXJMTC2/20071013190228Z+1695@xvger.kernel.org>
+Subject: Re: ata_piix: ICH7 "invalid MAP value 0" msg at boot
+Date: Fri, 26 Oct 2007 11:10:21 +0900
+Message-ID: <47214C8D.9000706@gmail.com>
+References: <20071015171444.GA9512@vaio>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:9344 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753001AbXJZCE5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 22:04:57 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so649495rvb
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 19:04:57 -0700 (PDT)
-In-Reply-To: <S1756649AbXJMTC2/20071013190228Z+1695@xvger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.176]:50573 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757705AbXJZCK3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 22:10:29 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so844507wah
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 19:10:28 -0700 (PDT)
+In-Reply-To: <20071015171444.GA9512@vaio>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeffunit <jeff@jeffunit.com>
+To: Guilherme Amadio <guilherme.amadio@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-jeffunit wrote:
-> I built a kernel, 2.6.23.1 today.
-> My motherboard is an intel stl2, dual pentium 933 motherboard, with
-> about 3gb of ram.
-> I also have a promise tx100 controller with an ata hard drive for the
-> os, and a sony dvdrw drive.
-> There is an intel gigabit ethernet card, and an ati pci video card.
+Guilherme Amadio wrote:
+>  Hello,
 > 
-> I have an 8 port supermicro sata II controller with the marvell
-> 888SX6081 chipset.
-> I have four 500gb sata II maxtor hard drives attached to it.
+>  I have a Sony laptop SZ series and I get the message
+>  
+>  ata_piix 0000:00:1f.2: invalid MAP value 0
 > 
-> All except /dev/sda1 seem to work fine.
-> When I copy/modify files on /dev/sda1, I get the following dmesg errors:
+>  even with 'quiet' in the boot command line. I think it's because of a controller
+>  with no disk attached, but I am a total newb, so I went to #kernelnewbies and 
+>  I was told to post this here. The code that prints the message is here
+>  drivers/ata/ata_piix.c +973. 
+>  
+>  I'm using this kernel:
+>  Linux vaio 2.6.22-gentoo-r8 #1 SMP PREEMPT Sun Sep 30 13:19:56 BRT 2007
+>  i686 Genuine Intel(R) CPU T2400 @ 1.83GHz GenuineIntel GNU/Linux
 > 
-> The machine is designed to be a fileserver, but I am happy to help debug
-> this issue to the best
-> of my abilities.
-> 
-> When I boot windows xp, xp sees all 4 of the sata drives, and they work
-> without any problems.
-> 
-> Please advise,
-> jeff
-> 
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata1.00: edma_err 0x00000084, EDMA self-disable
-> ata1.00: cmd c8/00:08:37:02:90/00:00:00:00:00/e5 tag 0 cdb 0x0 data 4096 in
->          res 51/40:00:37:02:90/00:00:00:00:00/e5 Emask 0x9 (media error)
+>  Below are the outputs that may be relevant for tracing the problem.
+>  If anything else is needed, I can provide, but please CC me, because I'm
+>  not subscribed to the list.
 
-Media errors which is usually localized to certain area of disk.
-Replace disk.
+Please try 2.6.23.  It should have been fixed.  The message can be
+safely ignored BTW.
 
 -- 
 tejun
