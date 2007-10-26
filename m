@@ -1,50 +1,41 @@
-From: "Andrew" <andrew@nelless.net>
-Subject: RE: 2.6.24-rc1, sata_nv: MCP51 is boned with SWNCQ too
-Date: Fri, 26 Oct 2007 14:26:27 +0100 (BST)
-Message-ID: <36009.86.7.220.119.1193405187.squirrel@wmbeta.mxes.net>
-References: <34545.86.7.220.119.1193306052.squirrel@wmbeta.mxes.net>   
-    <35163.86.7.220.119.1193312862.squirrel@wmbeta.mxes.net>   
-    <200710251406.05804.bzolnier@gmail.com>   
-    <200710251411.42546.bzolnier@gmail.com>
-    <32932.86.7.220.119.1193345936.squirrel@wmbeta.mxes.net>
-    <15F501D1A78BD343BE8F4D8DB854566B059FE1DA@hkemmail01.nvidia.com>
-Reply-To: "Andrew" <andrew@nelless.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
+Date: Fri, 26 Oct 2007 19:38:19 +0400
+Message-ID: <472209EB.4020103@ru.mvista.com>
+References: <200710142211.03382.marogge@onlinehome.de> <200710200109.58872.marogge@onlinehome.de> <471A36DC.4040509@ru.mvista.com> <200710212255.50123.marogge@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxout-04.mxes.net ([216.86.168.179]:1134 "EHLO
-	mxout-04.mxes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbXJZN03 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 09:26:29 -0400
-In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B059FE1DA@hkemmail01.nvidia.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:58285 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752752AbXJZPiM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 11:38:12 -0400
+In-Reply-To: <200710212255.50123.marogge@onlinehome.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kuan Luo <kluo@nvidia.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, bzolnier@gmail.com
+To: Martin Rogge <marogge@onlinehome.de>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Fri, October 26, 2007 06:18, Kuan Luo wrote:
->
->
-> When a ncq command is transferred to sata_nv, sata_nv with mcp51 in
-> SWNCQ will handle it using ncq software flow  whatever value the swncq
-> is. The error maybe happens  if sata_nv does ncq , but the
-> nv_swncq_host_init isn't called and bios either doesn't initialize the ncq register.
->
-> Best regards,
-> Kuan Luo
->
+Hello.
 
-Kuan,
+Martin Rogge wrote:
 
-Following your email I checked to see whether it would now work
-with sata_nv.swncq=1 passed to the kernel, now that Bartlomiej
-Zolnierkiewicz's patch, is applied...and it does, of course.
+>>    What I don't like is that both PIIX4 and PCI-648 are sharing IRQ15
+>>(PIIX4 is in legacy mode, so it uses edge-triggered IRQ15 which is not
+>>shareable). You don't have drives connected to PIIX4, do you?  However, it
+>>doesn't look like a glitch on IRQ15, it looks like MRDMODE reg. doesn't
+>>work as documented...
 
-Thank you all.
+> Well, don't worry too much about the PIIX device. I have disabled it in the 
+> BIOS, and I haven't compiled the driver into the kernel.
 
---
-Andrew
+    You can't disable IRQ14/15 it uses this way.
 
+> MOst likely you're on the right track with the mrdmode register.
 
+    Yet I want to make sure the manual is lying...
 
+> cu Martin
+
+MBR, Sergei
