@@ -1,41 +1,46 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Fwd: CMD 64x regression from 2.6.21 to 2.6.22 and 2.6.23?
-Date: Fri, 26 Oct 2007 19:38:19 +0400
-Message-ID: <472209EB.4020103@ru.mvista.com>
-References: <200710142211.03382.marogge@onlinehome.de> <200710200109.58872.marogge@onlinehome.de> <471A36DC.4040509@ru.mvista.com> <200710212255.50123.marogge@onlinehome.de>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Regression: commit "ide: constify struct ide_port_info" causes breakage
+Date: Fri, 26 Oct 2007 16:56:48 +0100
+Message-ID: <20071026155648.GB4321@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:58285 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752752AbXJZPiM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 11:38:12 -0400
-In-Reply-To: <200710212255.50123.marogge@onlinehome.de>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:35449 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763808AbXJZQCX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 12:02:23 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Rogge <marogge@onlinehome.de>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Hello.
+commit 8562043606430185cad26d085d46adcc7ad67fd1 is broken, causing:
 
-Martin Rogge wrote:
+  CC      drivers/ide/pci/cmd64x.o
+  CC      drivers/ide/pci/hpt366.o
+drivers/ide/pci/hpt366.c:1428: error: hpt366_chipsets causes a section type conflict
 
->>    What I don't like is that both PIIX4 and PCI-648 are sharing IRQ15
->>(PIIX4 is in legacy mode, so it uses edge-triggered IRQ15 which is not
->>shareable). You don't have drives connected to PIIX4, do you?  However, it
->>doesn't look like a glitch on IRQ15, it looks like MRDMODE reg. doesn't
->>work as documented...
+and therefore should be reverted.
 
-> Well, don't worry too much about the PIIX device. I have disabled it in the 
-> BIOS, and I haven't compiled the driver into the kernel.
+The problem arises because hpt366 has other data marked with __devinitdata,
+so the compiler tries to define the initdata section with read-write
+attributes at one point, and read-only attributes when encountering the
+const-but-devinitdata declaration:
 
-    You can't disable IRQ14/15 it uses this way.
+static struct hpt_info hpt36x __devinitdata = {
+static struct hpt_info hpt370 __devinitdata = {
+static struct hpt_info hpt370a __devinitdata = {
+...
+static const struct ide_port_info hpt366_chipsets[] __devinitdata = {
 
-> MOst likely you're on the right track with the mrdmode register.
+If we want ide_port_info to be read-only initdata, then we need
+__devroinitdata and __roinitdata tags.
 
-    Yet I want to make sure the manual is lying...
+Note: it doesn't show up in cmd64x.c because that file contains no other
+data marked as initdata or devinitdata.
 
-> cu Martin
-
-MBR, Sergei
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
