@@ -1,44 +1,63 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: Regression: commit "ide: constify struct ide_port_info" causes
- breakage
-Date: Fri, 26 Oct 2007 20:38:15 +0400
-Message-ID: <472217F7.6060501@ru.mvista.com>
-References: <20071026155648.GB4321@flint.arm.linux.org.uk> <47221164.10200@ru.mvista.com> <alpine.LFD.0.999.0710260929290.30120@woody.linux-foundation.org>
+From: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
+Subject: [PATCH] ide: add IDEDISK_MULTI_MODE text adapted from hdparm manual page
+Date: Fri, 26 Oct 2007 09:58:04 -0700 (PDT)
+Message-ID: <474753.23820.qm@web52006.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:58856 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752133AbXJZQiI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 12:38:08 -0400
-In-Reply-To: <alpine.LFD.0.999.0710260929290.30120@woody.linux-foundation.org>
+Received: from web52006.mail.re2.yahoo.com ([206.190.49.253]:42741 "HELO
+	web52006.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753771AbXJZQ6G convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Oct 2007 12:58:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Russell King <rmk@arm.linux.org.uk>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linux Kernel List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+=46rom: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
 
-Linus Torvalds wrote:
+Add IDEDISK_MULTI_MODE text adapted from hdparm manual page.
 
->>   We can just convert cariables declared as 'struct hpt_info' to const too -- 
->>they are read-only templates.
+Signed-off-by: Matti Linnanvuori <mattilinnanvuori@yahoo.com>
+---
 
-> Generally "__devinitdata" is better than "const", since it means that the 
-> data may be thrown away.
+--- a/drivers/ide/Kconfig	2007-10-26 19:21:15.017817500 +0300
++++ b/drivers/ide/Kconfig	2007-10-26 19:42:56.759696000 +0300
+@@ -152,9 +152,22 @@ config BLK_DEV_IDEDISK
+ 	  If unsure, say Y.
+=20
+ config IDEDISK_MULTI_MODE
+-	bool "Use multi-mode by default"
++	bool "Use multiple sector mode for Programmed Input/Output by default=
+"
+ 	help
+-	  If you get this error, try to say Y here:
++	  This setting is irrelevant for most IDE disks, with direct memory
++	  access, to which multiple sector mode does not apply. Multiple sect=
+or
++	  mode is a feature of most modern IDE hard drives, permitting the
++	  transfer of multiple sectors per Programmed Input/Output interrupt,
++	  rather than the usual one sector per interrupt. When this feature i=
+s
++	  enabled, it can reduce operating system overhead for disk Programme=
+d
++	  Input/Output. On some systems, it also can increase the data
++	  throughput of Programmed Input/Output. Some drives, however, seemed
++	  to run slower with multiple sector mode enabled. Some drives claime=
+d
++	  to support multiple sector mode, but lost data at some settings.
++	  Under rare circumstances, such failures could result in massive
++	  filesystem corruption.
++
++	  If you get the following error, try to say Y here:
+=20
+ 	  hda: set_multmode: status=3D0x51 { DriveReady SeekComplete Error }
+ 	  hda: set_multmode: error=3D0x04 { DriveStatusError }
 
-    Agreed.
 
-> So if you drop one over the other,
 
-    No, just add 'const' to already __devinitdata data to make gcc happy again.
 
-> it's generally the "const" that should be dropped ;/
-
-    Well, this may break when/if we need to add __devinitdata that is actually 
-r/w -- not likely with this driver but still...
-
-> 		Linus
-
-WBR, Sergei
+      Heute schon einen Blick in die Zukunft von E-Mails wagen? Versuch=
+en Sie=B4s mit dem neuen Yahoo! Mail. www.yahoo.de/mail
