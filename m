@@ -1,273 +1,86 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Fri, 26 Oct 2007 20:34:10 +0200
-Message-ID: <200710262034.11054.bzolnier@gmail.com>
+Subject: Re: [PATCH]ata: sata_nv fix mcp51 timeout with SWNCQ
+Date: Fri, 26 Oct 2007 20:58:36 +0200
+Message-ID: <200710262058.36553.bzolnier@gmail.com>
+References: <15F501D1A78BD343BE8F4D8DB854566B059FE1DB@hkemmail01.nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:56300 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757244AbXJZS2g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 14:28:36 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so842682fkz
-        for <linux-ide@vger.kernel.org>; Fri, 26 Oct 2007 11:28:33 -0700 (PDT)
+Received: from nf-out-0910.google.com ([64.233.182.188]:56918 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbXJZSxA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2007 14:53:00 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so863547nfb
+        for <linux-ide@vger.kernel.org>; Fri, 26 Oct 2007 11:52:59 -0700 (PDT)
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B059FE1DB@hkemmail01.nvidia.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Kuan Luo <kluo@nvidia.com>
+Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>, Andrew <andrew@nelless.net>
 
 
-Please pull from:
+[ added Andrew to cc: ]
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
+Hi,
 
-to receive the following updates:
+On Friday 26 October 2007, Kuan Luo wrote:
+> From Kuan Luo <kluo@nvidia.com>
+> 
+> The patch will avoid ncq function use of sata_nv when swncq is zero by
+> default.
 
- drivers/ide/ide-iops.c     |    3 +++
- drivers/ide/pci/cy82c693.c |    6 +++---
- drivers/ide/pci/generic.c  |    2 +-
- drivers/ide/pci/hpt366.c   |   32 ++++++++++++++++----------------
- drivers/ide/pci/sc1200.c   |    9 +++++----
- 5 files changed, 28 insertions(+), 24 deletions(-)
+It also completely removes SWNCQ support for MPC61 (something
+like that should be mentioned in the patch description).
 
+Otherwise patch looks fine and mine can be dumped.
 
-Bartlomiej Zolnierkiewicz (4):
-      cy82c693: fix build for CONFIG_HOTPLUG=n
-      hpt366: fix build for CONFIG_HOTPLUG=n
-      drivers/ide/pci/generic: fix build for CONFIG_HOTPLUG=n
-      ide: add SH-S202J to ivb_list[]
+PS Please always at least Cc: people involved in the debugging
+of the problem (crediting them in the patch description would be
+even nicer :).
 
-Jeff Garzik (1):
-      drivers/ide/pci/sc1200.c: fix suspend/resume buglets and warnings
-
-
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 9516883..dcda0f1 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -582,9 +582,12 @@ EXPORT_SYMBOL_GPL(ide_in_drive_list);
- /*
-  * Early UDMA66 devices don't set bit14 to 1, only bit13 is valid.
-  * We list them here and depend on the device side cable detection for them.
-+ *
-+ * Some optical devices with the buggy firmwares have the same problem.
-  */
- static const struct drive_list_entry ivb_list[] = {
- 	{ "QUANTUM FIREBALLlct10 05"	, "A03.0900"	},
-+	{ "TSSTcorp CDDVDW SH-S202J"	, "SB00"	},
- 	{ NULL				, NULL		}
- };
- 
-diff --git a/drivers/ide/pci/cy82c693.c b/drivers/ide/pci/cy82c693.c
-index 3ef4fc1..1cd4e9c 100644
---- a/drivers/ide/pci/cy82c693.c
-+++ b/drivers/ide/pci/cy82c693.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/cy82c693.c		Version 0.41	Aug 27, 2007
-+ * linux/drivers/ide/pci/cy82c693.c		Version 0.42	Oct 23, 2007
-  *
-  *  Copyright (C) 1998-2000 Andreas S. Krebs (akrebs@altavista.net), Maintainer
-  *  Copyright (C) 1998-2002 Andre Hedrick <andre@linux-ide.org>, Integrator
-@@ -436,10 +436,10 @@ static void __devinit init_hwif_cy82c693(ide_hwif_t *hwif)
- 	hwif->ide_dma_on = &cy82c693_ide_dma_on;
- }
- 
--static __devinitdata ide_hwif_t *primary;
--
- static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
- {
-+	static ide_hwif_t *primary;
-+
- 	if (PCI_FUNC(hwif->pci_dev->devfn) == 1)
- 		primary = hwif;
- 	else {
-diff --git a/drivers/ide/pci/generic.c b/drivers/ide/pci/generic.c
-index f44d708..0688569 100644
---- a/drivers/ide/pci/generic.c
-+++ b/drivers/ide/pci/generic.c
-@@ -49,7 +49,7 @@ static int __init ide_generic_all_on(char *unused)
- 	printk(KERN_INFO "IDE generic will claim all unknown PCI IDE storage controllers.\n");
- 	return 1;
- }
--__setup("all-generic-ide", ide_generic_all_on);
-+const __setup("all-generic-ide", ide_generic_all_on);
- #endif
- module_param_named(all_generic_ide, ide_generic_all, bool, 0444);
- MODULE_PARM_DESC(all_generic_ide, "IDE generic will claim all unknown PCI IDE storage controllers.");
-diff --git a/drivers/ide/pci/hpt366.c b/drivers/ide/pci/hpt366.c
-index 612b795..5682895 100644
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.20	Oct 1, 2007
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.21	Oct 23, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -433,7 +433,7 @@ static u32 *hpt37x_settings[NUM_ATA_CLOCKS] = {
- 	sixty_six_base_hpt37x
- };
- 
--static struct hpt_info hpt36x __devinitdata = {
-+static const struct hpt_info hpt36x __devinitdata = {
- 	.chip_name	= "HPT36x",
- 	.chip_type	= HPT36x,
- 	.udma_mask	= HPT366_ALLOW_ATA66_3 ? (HPT366_ALLOW_ATA66_4 ? ATA_UDMA4 : ATA_UDMA3) : ATA_UDMA2,
-@@ -441,7 +441,7 @@ static struct hpt_info hpt36x __devinitdata = {
- 	.settings	= hpt36x_settings
- };
- 
--static struct hpt_info hpt370 __devinitdata = {
-+static const struct hpt_info hpt370 __devinitdata = {
- 	.chip_name	= "HPT370",
- 	.chip_type	= HPT370,
- 	.udma_mask	= HPT370_ALLOW_ATA100_5 ? ATA_UDMA5 : ATA_UDMA4,
-@@ -449,7 +449,7 @@ static struct hpt_info hpt370 __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt370a __devinitdata = {
-+static const struct hpt_info hpt370a __devinitdata = {
- 	.chip_name	= "HPT370A",
- 	.chip_type	= HPT370A,
- 	.udma_mask	= HPT370_ALLOW_ATA100_5 ? ATA_UDMA5 : ATA_UDMA4,
-@@ -457,7 +457,7 @@ static struct hpt_info hpt370a __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt374 __devinitdata = {
-+static const struct hpt_info hpt374 __devinitdata = {
- 	.chip_name	= "HPT374",
- 	.chip_type	= HPT374,
- 	.udma_mask	= ATA_UDMA5,
-@@ -465,7 +465,7 @@ static struct hpt_info hpt374 __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt372 __devinitdata = {
-+static const struct hpt_info hpt372 __devinitdata = {
- 	.chip_name	= "HPT372",
- 	.chip_type	= HPT372,
- 	.udma_mask	= HPT372_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -473,7 +473,7 @@ static struct hpt_info hpt372 __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt372a __devinitdata = {
-+static const struct hpt_info hpt372a __devinitdata = {
- 	.chip_name	= "HPT372A",
- 	.chip_type	= HPT372A,
- 	.udma_mask	= HPT372_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -481,7 +481,7 @@ static struct hpt_info hpt372a __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt302 __devinitdata = {
-+static const struct hpt_info hpt302 __devinitdata = {
- 	.chip_name	= "HPT302",
- 	.chip_type	= HPT302,
- 	.udma_mask	= HPT302_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -489,7 +489,7 @@ static struct hpt_info hpt302 __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt371 __devinitdata = {
-+static const struct hpt_info hpt371 __devinitdata = {
- 	.chip_name	= "HPT371",
- 	.chip_type	= HPT371,
- 	.udma_mask	= HPT371_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -497,7 +497,7 @@ static struct hpt_info hpt371 __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt372n __devinitdata = {
-+static const struct hpt_info hpt372n __devinitdata = {
- 	.chip_name	= "HPT372N",
- 	.chip_type	= HPT372N,
- 	.udma_mask	= HPT372_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -505,7 +505,7 @@ static struct hpt_info hpt372n __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt302n __devinitdata = {
-+static const struct hpt_info hpt302n __devinitdata = {
- 	.chip_name	= "HPT302N",
- 	.chip_type	= HPT302N,
- 	.udma_mask	= HPT302_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -513,7 +513,7 @@ static struct hpt_info hpt302n __devinitdata = {
- 	.settings	= hpt37x_settings
- };
- 
--static struct hpt_info hpt371n __devinitdata = {
-+static const struct hpt_info hpt371n __devinitdata = {
- 	.chip_name	= "HPT371N",
- 	.chip_type	= HPT371N,
- 	.udma_mask	= HPT371_ALLOW_ATA133_6 ? ATA_UDMA6 : ATA_UDMA5,
-@@ -1508,7 +1508,7 @@ static const struct ide_port_info hpt366_chipsets[] __devinitdata = {
-  */
- static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
--	struct hpt_info *info = NULL;
-+	const struct hpt_info *info = NULL;
- 	struct pci_dev *dev2 = NULL;
- 	struct ide_port_info d;
- 	u8 idx = id->driver_data;
-@@ -1522,7 +1522,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 		if (rev < 3)
- 			info = &hpt36x;
- 		else {
--			static struct hpt_info *hpt37x_info[] =
-+			static const struct hpt_info *hpt37x_info[] =
- 				{ &hpt370, &hpt370a, &hpt372, &hpt372n };
- 
- 			info = hpt37x_info[min_t(u8, rev, 6) - 3];
-@@ -1552,7 +1552,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 	d.name = info->chip_name;
- 	d.udma_mask = info->udma_mask;
- 
--	pci_set_drvdata(dev, info);
-+	pci_set_drvdata(dev, (void *)info);
- 
- 	if (info == &hpt36x || info == &hpt374)
- 		dev2 = pci_get_slot(dev->bus, dev->devfn + 1);
-@@ -1560,7 +1560,7 @@ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_devic
- 	if (dev2) {
- 		int ret;
- 
--		pci_set_drvdata(dev2, info);
-+		pci_set_drvdata(dev2, (void *)info);
- 
- 		if (info == &hpt374)
- 			hpt374_init(dev, dev2);
-diff --git a/drivers/ide/pci/sc1200.c b/drivers/ide/pci/sc1200.c
-index d2c8b55..0a7b320 100644
---- a/drivers/ide/pci/sc1200.c
-+++ b/drivers/ide/pci/sc1200.c
-@@ -324,17 +324,18 @@ static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
- 
- 	pci_disable_device(dev);
- 	pci_set_power_state(dev, pci_choose_state(dev, state));
--	dev->current_state = state.event;
- 	return 0;
- }
- 
- static int sc1200_resume (struct pci_dev *dev)
- {
- 	ide_hwif_t	*hwif = NULL;
-+	int		i;
-+
-+	i = pci_enable_device(dev);
-+	if (i)
-+		return i;
- 
--	pci_set_power_state(dev, PCI_D0);	// bring chip back from sleep state
--	dev->current_state = PM_EVENT_ON;
--	pci_enable_device(dev);
- 	//
- 	// loop over all interfaces that are part of this pci device:
- 	//
+> signed-off-by: Kuan Luo <kluo@nvidia.com>
+> ---
+> 
+>  sata_nv.c |    9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index 240a892..e6b6455 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -365,9 +365,9 @@ static const struct pci_device_id nv_pci_tbl[] = {
+>  	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2),
+> SWNCQ },
+>  	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA),
+> SWNCQ },
+>  	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2),
+> SWNCQ },
+> -	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA),
+> SWNCQ },
+> -	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2),
+> SWNCQ },
+> -	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3),
+> SWNCQ },
+> +	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA),
+> GENERIC },
+> +	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA2),
+> GENERIC },
+> +	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP61_SATA3),
+> GENERIC },
+>  
+>  	{ } /* terminate list */
+>  };
+> @@ -2383,6 +2383,9 @@ static int nv_init_one (struct pci_dev *pdev,
+> const struct pci_device_id *ent)
+>  		type = ADMA;
+>  	}
+>  
+> +	if (type == SWNCQ && !swncq_enabled)
+> +		type = GENERIC;
+> +
+>  	ppi[0] = &nv_port_info[type];
+>  	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+>  	if (rc)
