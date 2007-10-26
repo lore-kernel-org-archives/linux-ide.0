@@ -1,62 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: PMP device port link speed issues
-Date: Fri, 26 Oct 2007 11:45:51 +0900
-Message-ID: <472154DF.9050304@gmail.com>
-References: <2A6F278C5B66C4459AF4013E77A40CD301003114@zin33exm20.fsl.freescale.net> <47206F2F.4020206@garzik.org>
+Subject: Re: Questions about SATA hotplug in linux 2.6
+Date: Fri, 26 Oct 2007 11:56:27 +0900
+Message-ID: <4721575B.70706@gmail.com>
+References: <20071025.011445.80152909.davem@davemloft.net> <472052C1.2050302@garzik.org> <5CAB7B5D6F8AB84AA868A46B47A50705622EAB@sshaexmb1.amd.com> <472153D3.2020102@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:3595 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762950AbXJZCqA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 22:46:00 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so656929rvb
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 19:45:59 -0700 (PDT)
-In-Reply-To: <47206F2F.4020206@garzik.org>
+Received: from wa-out-1112.google.com ([209.85.146.180]:13603 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbXJZC4o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 22:56:44 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so854908wah
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 19:56:43 -0700 (PDT)
+In-Reply-To: <472153D3.2020102@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Kalra Ashish-B00888 <ashish.kalra@freescale.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Shane Huang <Shane.Huang@amd.com>, linux-ide@vger.kernel.org
 
 Jeff Garzik wrote:
-> Kalra Ashish-B00888 wrote:
->> While testing the "sata_fsl" driver with a Sil3726 based PMP, we had a
->> specific configuration where the host port to PMP link speed was
->> 1.5Gbps, while the PMP has configured it's device port(s) link speed to
->> 3Gbps. This configuration causes NCQ hangs on certain Seagate drives,
->> probably because of the link speed difference between host and PMP
->> device & PMP device ports and drives.
->>  
->> Does it makes sense to limit the PMP device port link speeds to the host
->> port link speed ?  
->> I believe currently sata_pmp_attach() is calling sata_link_init_spd()
->> for each PMP device port and thus causing PMP device port link speeds
->> being configured independent of host port link speed. Probably the PMP
->> device port links should be limited to the host link speed. 
+> Shane Huang wrote:
+>> 1. If users unplug one SATA HDD(no-root partition) or SATA ODD when
+>> the system is running, then plug it back to the same SATA port,
+>> Should the system and SATA HDD/ODD still work well?
 > 
-> Interesting question.  I'm sure Tejun will chime in, but I'm wondering
-> if there is any real use -- even theoretical -- for running downstream
-> links faster than the host<->PMP link?
+> Yes.
 
-[chiming in]
+To add a bit, libata hotplug has grace time of at least 15secs.  If the
+same device is plugged out and then plugged in in that time, libata
+considers that the device and/or connection has suffered transient
+failure and assumes it's the same device and there's no modification to
+its content.
 
-Probably not but it should also be okay.  The PMP chip is responsible
-for matching link speed difference and it's pretty simple to do in SATA.
+This means that if you disconnect a harddrive, write to it and then
+connect it back in the grace period corruption will occur.  It will be
+fun to have some sort of competition to actually do this.  :-)
 
-Kalra, does the following patch fix your NCQ problem?
+>> These questions come up when our QA test our SB700 SATA drivers,
+>> but I don't know the SATA hotplug support in linux 2.6.
+>> Is there any guy who can give some official confirmation? :-)
+> 
+> The main thing of note with regards to hotplug is that the associated
+> device (/dev/sdb, /dev/scd0, etc.) may change between plug and unplug.
+> For example, if you unplug a SATA HDD then plug it back in, the user
+> might see /dev/sdb disappear, and /dev/sdd appear -- even if it is the
+> exact same HDD, on the exact same port.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8ee56e5..6db2d1e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6517,6 +6517,7 @@ int sata_link_init_spd(struct ata_link *link)
-        spd = (scontrol >> 4) & 0xf;
-        if (spd)
-                link->hw_sata_spd_limit &= (1 << spd) - 1;
-+       link->hw_sata_spd_limit = 1;
-
-        link->sata_spd_limit = link->hw_sata_spd_limit;
+Yeah, using LABEL and/or UUID is a good idea.  In the future, it will be
+nice to have persistent block device name as netdevices do.
 
 -- 
 tejun
