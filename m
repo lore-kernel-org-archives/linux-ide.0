@@ -1,35 +1,150 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/3] ide: fix drive_is_ready() for non-PCI hosts and CONFIG_IDEPCI_SHARE_IRQ=y
-Date: Thu, 25 Oct 2007 20:42:16 -0400
-Message-ID: <472137E8.9020109@garzik.org>
-References: <200710260136.37333.bzolnier@gmail.com> <20071026010515.260672b4@the-village.bc.nu>
+Subject: Re: [PATCH 2/3] drivers/ide/pci/sc1200.c: remove pointless hwif lookup
+ loop
+Date: Thu, 25 Oct 2007 21:25:55 -0400
+Message-ID: <47214223.40909@garzik.org>
+References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org> <20071024234823.6D1461F819D@havoc.gtf.org> <200710252201.59039.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43296 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58786 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752830AbXJZAmU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Oct 2007 20:42:20 -0400
-In-Reply-To: <20071026010515.260672b4@the-village.bc.nu>
+	id S1752633AbXJZBZ7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 21:25:59 -0400
+In-Reply-To: <200710252201.59039.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, akpm@linux-foundation.org
 
-Alan Cox wrote:
-> On Fri, 26 Oct 2007 01:36:37 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+Bartlomiej Zolnierkiewicz wrote:
+> On Thursday 25 October 2007, Jeff Garzik wrote:
+>> Store our hwif indices at probe time, in order to eliminate a needless
+>> and ugly loop across all hwifs, searching for our pci device.
 > 
->> Need to check if the host is a PCI one before reading IDE_ALTSTATUS_REG.
+> It seems that we can simplify it even further and remove knowledge about
+> hwifs altogether from suspend/resume methods.
+> 
+>> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+>> ---
+>>  drivers/ide/pci/sc1200.c |   76 +++++++++++++++++++++++++++++++---------------
+>>  1 files changed, 51 insertions(+), 25 deletions(-)
 >>
->> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> diff --git a/drivers/ide/pci/sc1200.c b/drivers/ide/pci/sc1200.c
+>> index d2c8b55..17e58d6 100644
+>> --- a/drivers/ide/pci/sc1200.c
+>> +++ b/drivers/ide/pci/sc1200.c
+>> @@ -41,6 +41,8 @@
+>>  #define PCI_CLK_66	0x02
+>>  #define PCI_CLK_33A	0x03
+>>  
+>> +#define SC1200_IFS	4
+>> +
+>>  static unsigned short sc1200_get_pci_clock (void)
+>>  {
+>>  	unsigned char chip_id, silicon_revision;
+>> @@ -261,31 +263,32 @@ static void sc1200_set_pio_mode(ide_drive_t *drive, const u8 pio)
+>>  }
+>>  
+>>  #ifdef CONFIG_PM
+>> -static ide_hwif_t *lookup_pci_dev (ide_hwif_t *prev, struct pci_dev *dev)
+>> -{
+>> -	int	h;
+>> -
+>> -	for (h = 0; h < MAX_HWIFS; h++) {
+>> -		ide_hwif_t *hwif = &ide_hwifs[h];
+>> -		if (prev) {
+>> -			if (hwif == prev)
+>> -				prev = NULL;	// found previous, now look for next match
+>> -		} else {
+>> -			if (hwif && hwif->pci_dev == dev)
+>> -				return hwif;	// found next match
+>> -		}
+>> -	}
+>> -	return NULL;	// not found
+>> -}
+>> -
+>>  typedef struct sc1200_saved_state_s {
+>>  	__u32		regs[4];
+>>  } sc1200_saved_state_t;
+>>  
+>> +static unsigned int pack_hwif_idx(u8 *idx)
+>> +{
+>> +	return	(((unsigned int) idx[0]) << 0) |
+>> +		(((unsigned int) idx[1]) << 8) |
+>> +		(((unsigned int) idx[2]) << 16) |
+>> +		(((unsigned int) idx[3]) << 24);
+>> +}
+>> +
+>> +static ide_hwif_t *sc1200_hwif(struct pci_dev *pdev, unsigned int iface)
+>> +{
+>> +	unsigned int packed_hwifs, idx;
+>> +
+>> +	packed_hwifs = (unsigned long) pci_get_drvdata(pdev);
+>> +	idx = (packed_hwifs >> (iface * 8)) & 0xff;
+>> +
+>> +	return (idx == 0xff) ? NULL : &ide_hwifs[idx];
+>> +}
+>>  
+>>  static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+>>  {
+>> -	ide_hwif_t		*hwif = NULL;
+>> +	ide_hwif_t		*hwif;
+>> +	int			i;
+>>  
+>>  	printk("SC1200: suspend(%u)\n", state.event);
+>>  
+>> @@ -295,9 +298,14 @@ static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+>>  		//
+>>  		// Loop over all interfaces that are part of this PCI device:
+>>  		//
+>> -		while ((hwif = lookup_pci_dev(hwif, dev)) != NULL) {
+>> +		for (i = 0; i < SC1200_IFS; i++) {
+>>  			sc1200_saved_state_t	*ss;
+>>  			unsigned int		basereg, r;
+>> +
+>> +			hwif = sc1200_hwif(dev, i);
+>> +			if (!hwif)
+>> +				continue;
+>> +
+>>  			//
+>>  			// allocate a permanent save area, if not already allocated
+>>  			//
+>> @@ -310,7 +318,7 @@ static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+>>  			}
+>>  			ss = (sc1200_saved_state_t *)hwif->config_data;
+>>  			//
+>> -			// Save timing registers:  this may be unnecessary if 
+>> +			// Save timing registers:  this may be unnecessary if
+>>  			// BIOS also does it
+>>  			//
+>>  			basereg = hwif->channel ? 0x50 : 0x40;
 > 
-> Umm why ? The altstatus register goes back to ST-506 and the original IBM
-> XT hard disk controller card ?
+> Please take a close look at the line above and the next three lines:
+> 
+> for (r = 0; r < 4; ++r) {
+> 	pci_read_config_dword (hwif->pci_dev, basereg + (r<<2), &ss->regs[r]);
+> }
+> 
+> It is highly obfuscated but the sc1200_suspend() reads 16 bytes from
+> the offset 0x40 (for the primary port) and puts them in the corresponding
+> struct sc1200_saved_state_s buffer, then it reads another 16 bytes from the
+> offset 0x50 (for the secondary port) and puts it in the another buffer.
+> 
+> In summary sc1200_suspend() reads 32 continuous bytes from offset 0x40
+> and the exactly reverse operation happens in sc1200_resume().
+> 
+> Given that and the fact that struct sc1200_save_state_s buffers are used
+> _only_ by sc1200_{suspend,resume}() we may safely convert the code to use
+> one buffer for both ports (the whole PCI device).  We just need to bump
+> the size of struct sc1200_saved_state_s (from 4 to 8 double-words) and use
+> pci_{get,set}_drvdata() instead of hwif->config_data.  Then we can remove
+> looping over interfaces completely from sc1200_{suspend,resume}()! :)
 
-I'm pretty sure there are at least a few controllers out there where the 
-AltStatus/Control register block is simply non-existent.
+May I assume you'll handle that task?  :)  It sounds like you have a far 
+better idea than mine, and my main goal -- fixing bugs and warning -- is 
+accomplished anyway with the merging of patch #3.
 
 	Jeff
 
