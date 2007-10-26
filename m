@@ -1,47 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: seagate disks on sil3114 - slow?
-Date: Fri, 26 Oct 2007 11:32:51 +0900
-Message-ID: <472151D3.6060403@gmail.com>
-References: <1192683290.5720.38.camel@localhost>	 <4716EA25.7060205@garzik.org> <1192697546.5720.51.camel@localhost>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Questions about SATA hotplug in linux 2.6
+Date: Thu, 25 Oct 2007 22:41:23 -0400
+Message-ID: <472153D3.2020102@garzik.org>
+References: <20071025.011445.80152909.davem@davemloft.net> <472052C1.2050302@garzik.org> <5CAB7B5D6F8AB84AA868A46B47A50705622EAB@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:49953 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727AbXJZCdA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2007 22:33:00 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so654502rvb
-        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2007 19:33:00 -0700 (PDT)
-In-Reply-To: <1192697546.5720.51.camel@localhost>
+Received: from srv5.dvmed.net ([207.36.208.214]:55837 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752846AbXJZClZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Oct 2007 22:41:25 -0400
+In-Reply-To: <5CAB7B5D6F8AB84AA868A46B47A50705622EAB@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Soeren Sonnenburg <kernel@nn7.de>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Shane Huang <Shane.Huang@amd.com>
+Cc: linux-ide@vger.kernel.org
 
-Soeren Sonnenburg wrote:
-> On Thu, 2007-10-18 at 01:07 -0400, Jeff Garzik wrote:
->> Soeren Sonnenburg wrote:
->>> Dear all,
->>>
->>> I just now realize that all disk i.o. on my machine is quite slow
->>> compared with the pata disks I had before. Furthermore I recognized that
->>> I only have seagates (ST3400832AS,ST3400620AS,ST3750640AS,ST3750640AS)
->>> connected to a sil3114 controller.
->>>
->>> Being on kernel 2.6.23.1 and stumbling across
->>> http://home-tj.org/wiki/index.php/Sil_m15w I am now wondering if this
->>> patch made it already in kernel (or when it will make it if it is not
->>> yet in/why never).
->> Are you sure you have a 3114?  the mod15write isn't applied to that chip.
->> Does your dmesg say "applying Seagate errata fix (mod15write workaround)" ?
-> 
-> At least lspci / dmesg indicates I have a 3114 ... but maybe the problem
-> is something else. Is there a raw device speed, readonly benchmark to
-> check whether things are as expected?
+Shane Huang wrote:
+> 1. If users unplug one SATA HDD(no-root partition) or SATA ODD when
+> the system is running, then plug it back to the same SATA port,
+> Should the system and SATA HDD/ODD still work well?
 
-"dd if=/dev/sdX of=/dev/null bs=1M"?  Also, does changing IO scheduler
-to deadline make any difference?
+Yes.
 
--- 
-tejun
+> 2. How about users plug the SATA HDD/ODD in a different SATA port?
+> Should it still work?
+
+Yes.
+
+For all hotplug-aware libata drivers, you should be able to unplug a 
+SATA device _while_ it is actively reading or writing data, with no ill 
+effects to the kernel.
+
+You might lose cached and in-flight data of course, and userspace 
+applications may or may not handle the disappearance of their underlying 
+filesystem with grace and aplomb :)
+
+But device hotplug should be reliable from a kernel standpoint [assuming 
+driver support].
+
+
+> These questions come up when our QA test our SB700 SATA drivers,
+> but I don't know the SATA hotplug support in linux 2.6.
+> Is there any guy who can give some official confirmation? :-)
+
+The main thing of note with regards to hotplug is that the associated 
+device (/dev/sdb, /dev/scd0, etc.) may change between plug and unplug. 
+For example, if you unplug a SATA HDD then plug it back in, the user 
+might see /dev/sdb disappear, and /dev/sdd appear -- even if it is the 
+exact same HDD, on the exact same port.
+
+	Jeff
+
+
