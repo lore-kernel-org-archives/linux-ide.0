@@ -1,42 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 8/9] ide: replace ide_pci_device_t by struct ide_port_info
-Date: Sat, 27 Oct 2007 21:05:36 +0400
-Message-ID: <47236FE0.6020606@ru.mvista.com>
-References: <200709242247.27459.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 2/15] ide: clear HOB bit for REQ_TYPE_ATA_TASK requests in ide_end_drive_cmd()
+Date: Sat, 27 Oct 2007 19:45:50 +0200
+Message-ID: <200710271945.50655.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:2397 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755463AbXJ0RF1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Oct 2007 13:05:27 -0400
-In-Reply-To: <200709242247.27459.bzolnier@gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:48557 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755452AbXJ0Rqj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Oct 2007 13:46:39 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1026724nfb
+        for <linux-ide@vger.kernel.org>; Sat, 27 Oct 2007 10:46:37 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> * Rename struct ide_pci_device_s to struct ide_port_info.
+ide_dump_ata_status() may set HOB bit before ide_end_drive_cmd() is called.
 
-    I'm not sure that ide_port_info name fits the data indeed, as those are 
-not applicable only to the ports but to a chip as a whole, so ide_chip_info 
-would seem a better name... but well, it's too late anyway.
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-io.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> * Remove ide_pci_device_t typedef.
-
-> While at it:
-
-> * Fix __ide_pci_register_driver() comment.
-
-> * Fix aec62xx_init_one() comment.
-
-> * Remove unused 'cds' field from ide_hwgroup_t.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-    Well, it's too late for ACK. :-)
-
-MBR, Sergei
+Index: b/drivers/ide/ide-io.c
+===================================================================
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -342,6 +342,8 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ 		if (args) {
+ 			args[0] = stat;
+ 			args[1] = err;
++			/* be sure we're looking at the low order bits */
++			hwif->OUTB(drive->ctl & ~0x80, IDE_CONTROL_REG);
+ 			args[2] = hwif->INB(IDE_NSECTOR_REG);
+ 			args[3] = hwif->INB(IDE_SECTOR_REG);
+ 			args[4] = hwif->INB(IDE_LCYL_REG);
