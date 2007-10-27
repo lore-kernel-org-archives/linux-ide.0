@@ -1,38 +1,41 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] unexport ide_fix_driveid
-Date: Sat, 27 Oct 2007 16:18:33 +0200
-Message-ID: <20071027141833.GT30533@stusta.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH-RFC] (was: Re: Sata Sil3512 bug?;  Promise SATA300 TX4)
+Date: Sat, 27 Oct 2007 16:53:27 +0200 (MEST)
+Message-ID: <200710271453.l9RErRj9020770@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:56331 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750702AbXJ0OSN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Oct 2007 10:18:13 -0400
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:58513 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750737AbXJ0Oxy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Oct 2007 10:53:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>, bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org, screwdriver@lxnt.info
+Cc: MisterE2002@zonnet.nl, benh@kernel.crashing.org, htejun@gmail.com, jeff@garzik.org, jgarzik@pobox.com
 
-ide_fix_driveid can now be unexported.
+On Sat, 27 Oct 2007 17:24:32 +0400, Alexander Sabourenkov wrote:
+> There appears to be a hardware bug in that it chokes on scatterlist
+> if the last item is larger than 164 bytes.
+> 
+> The patch that follows fixes my problem on 2.6.22.
+> 
+> I can't think of a way to avoid second pass over scatterlist without
+> duplicating code (ata_qc_prep() and ata_fill_sg() from libata-core.c).
+> 
+> 
+> --- a/drivers/ata/sata_promise.c	2007-07-09 03:32:17.000000000 +0400
+> +++ b/drivers/ata/sata_promise.c	2007-10-27 17:20:03.000000000 +0400
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Interesting, but can you please give more background information?
+I.e., how did you determine the existence of this bug?
 
----
-627c730e21e5010a5bdb1f4f9968cfd5e0b4df2a 
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index 9516883..d3c5672 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -403,9 +403,6 @@ void ide_fix_driveid (struct hd_driveid *id)
- #endif
- }
- 
--/* FIXME: exported for use by the USB storage (isd200.c) code only */
--EXPORT_SYMBOL(ide_fix_driveid);
--
- void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
- {
- 	u8 *p = s, *end = &s[bytecount & ~1]; /* bytecount must be even */
+And please cc: the sata_promise maintainer on sata_promise patches.
+(Hint: that's me)
 
+And please choose a Subject: that makes it absolutely clear what
+the post is about. "Sata Sil3512 bug" doesn't exactly sound like
+something the sata_promise maintainer needs to look at.
+
+Meanwhile I'll check the Promise driver(s) to see if there's
+something about SG table formatting restrictions there.
+
+/Mikael
