@@ -1,41 +1,38 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH-RFC] (was: Re: Sata Sil3512 bug?;  Promise SATA300 TX4)
-Date: Sat, 27 Oct 2007 16:53:27 +0200 (MEST)
-Message-ID: <200710271453.l9RErRj9020770@harpo.it.uu.se>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
+Subject: Re: [PATCH-RFC]
+Date: Sat, 27 Oct 2007 19:09:28 +0400
+Message-ID: <472354A8.1030704@lxnt.info>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl> <4717CB10.3080509@lxnt.info> <471807DF.8010100@gmail.com> <47191C3A.5040909@lxnt.info> <47194497.3040101@gmail.com> <471A783E.9060607@lxnt.info> <47233C10.4020100@lxnt.info> <472340D3.7090507@lxnt.info> <1222455525.20071027160854@zonnet.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:58513 "EHLO aun.it.uu.se"
+Received: from mail.lxnt.info ([217.23.143.142]:64160 "EHLO mail.lxnt.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750737AbXJ0Oxy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Oct 2007 10:53:54 -0400
+	id S1751313AbXJ0PTG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Oct 2007 11:19:06 -0400
+In-Reply-To: <1222455525.20071027160854@zonnet.nl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, screwdriver@lxnt.info
-Cc: MisterE2002@zonnet.nl, benh@kernel.crashing.org, htejun@gmail.com, jeff@garzik.org, jgarzik@pobox.com
+To: MisterE <MisterE2002@zonnet.nl>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 27 Oct 2007 17:24:32 +0400, Alexander Sabourenkov wrote:
-> There appears to be a hardware bug in that it chokes on scatterlist
-> if the last item is larger than 164 bytes.
+MisterE wrote:
 > 
-> The patch that follows fixes my problem on 2.6.22.
-> 
-> I can't think of a way to avoid second pass over scatterlist without
-> duplicating code (ata_qc_prep() and ata_fill_sg() from libata-core.c).
-> 
-> 
-> --- a/drivers/ata/sata_promise.c	2007-07-09 03:32:17.000000000 +0400
-> +++ b/drivers/ata/sata_promise.c	2007-10-27 17:20:03.000000000 +0400
+> Can you confirm that this only will happen when running at 300Gb mode?
 
-Interesting, but can you please give more background information?
-I.e., how did you determine the existence of this bug?
+I confirm that without this patch errors happen on both 150 and 300
+modes, on both jumpered and unjumpered drives. It seems that errors are
+highly hardware/configuration dependent.
 
-And please cc: the sata_promise maintainer on sata_promise patches.
-(Hint: that's me)
+> I'm willing to try your patch but i'm not a experienced linux guru ;)
 
-And please choose a Subject: that makes it absolutely clear what
-the post is about. "Sata Sil3512 bug" doesn't exactly sound like
-something the sata_promise maintainer needs to look at.
+I would not advise trying this patch now if you do not experience
+problems, and certainly not with any valuable data behind the controller.
 
-Meanwhile I'll check the Promise driver(s) to see if there's
-something about SG table formatting restrictions there.
+-- 
 
-/Mikael
+./lxnt
+
+
+
