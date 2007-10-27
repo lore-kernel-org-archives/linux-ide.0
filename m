@@ -1,59 +1,29 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: [PATCH-RFC] Promise SATA300 TX4
-Date: Sat, 27 Oct 2007 19:32:25 +0400
-Message-ID: <47235A09.7090409@lxnt.info>
-References: <200710271453.l9RErRj9020770@harpo.it.uu.se>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [2.6 patch] unexport ide_fix_driveid
+Date: Sat, 27 Oct 2007 17:58:05 +0200
+Message-ID: <200710271758.06427.bzolnier@gmail.com>
+References: <20071027141833.GT30533@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:65259 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752300AbXJ0PmD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Oct 2007 11:42:03 -0400
-In-Reply-To: <200710271453.l9RErRj9020770@harpo.it.uu.se>
+Received: from fk-out-0910.google.com ([209.85.128.188]:59792 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493AbXJ0Pyy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Oct 2007 11:54:54 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1084550fkz
+        for <linux-ide@vger.kernel.org>; Sat, 27 Oct 2007 08:54:53 -0700 (PDT)
+In-Reply-To: <20071027141833.GT30533@stusta.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com, jeff@garzik.org, jgarzik@pobox.com
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Alan Cox <alan@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Saturday 27 October 2007, Adrian Bunk wrote:
+> ide_fix_driveid can now be unexported.
+> 
+> Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-> Interesting, but can you please give more background information?
-> I.e., how did you determine the existence of this bug?
-
-I was experiencing read/write errors, with data corruption.
-Dmesgs and lspcis are at http://lxnt.info/linux/
-
-I downloaded driver from the promise.com, put up 2.6.11 and compiled it.
-It worked ok.
-
-I then unsuccessfully tried to port the driver to 2.6.22.
-While I failed, this gave me enough insights into ATA workings, that I
-could read the CAM module that comes with the driver.
-
-Looking through it I found the SG_COUNT_ASIC_BUG constant and
-corresponding code. I decided to try and implement the workaround in
-sata_promise.c - and this fixed the problem.
-
-> And please cc: the sata_promise maintainer on sata_promise patches.
-> (Hint: that's me)
-
-Hmm. sata_promise.c says:
-
-*  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
-
-> Meanwhile I'll check the Promise driver(s) to see if there's
-> something about SG table formatting restrictions there.
-
-Take a look at:
-
-cam_ata.c:6190
-cam_ata.c:6259
-
-The fix is also conditioned on sg segment length == 0, which I did not
-implement. Is this at all possible in libata ?
-
--- 
-
-./lxnt
+applied
