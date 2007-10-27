@@ -1,79 +1,123 @@
-From: Prakash Punnoor <prakash@punnoor.de>
-Subject: 2.6.24-rc1-gec3b67c1 broken reg. libata-sata_nv in non NCQ mode
-Date: Sat, 27 Oct 2007 10:11:49 +0200
-Message-ID: <200710271011.53372.prakash@punnoor.de>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
+Subject: [PATCH-RFC] (was: Re: Sata Sil3512 bug?;  Promise SATA300 TX4)
+Date: Sat, 27 Oct 2007 17:24:32 +0400
+Message-ID: <47233C10.4020100@lxnt.info>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl> <4717CB10.3080509@lxnt.info> <471807DF.8010100@gmail.com> <47191C3A.5040909@lxnt.info> <47194497.3040101@gmail.com> <471A783E.9060607@lxnt.info>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1546748.JL1cdgJCjB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753464AbXJ0IM2@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.lxnt.info ([217.23.143.142]:50260 "EHLO mail.lxnt.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752282AbXJ0NeP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Oct 2007 09:34:15 -0400
+In-Reply-To: <471A783E.9060607@lxnt.info>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>, MisterE <MisterE2002@zonnet.nl>, benh@kernel.crashing.org, jgarzik@pobox.com, jeff@garzik.org
 
---nextPart1546748.JL1cdgJCjB
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hello.
 
-Hi,
+There appears to be a hardware bug in that it chokes on scatterlist
+if the last item is larger than 164 bytes.
 
-I cannot boot above kernel when I *disable* swncq support which got added i=
-n=20
-sata_nv. Problem seems that some component thinks driver is in ncq mode whi=
-le=20
-it is not, as I see a queue depth of 31 instead of 0 on boot., ie I see=20
-something like this:
+The patch that follows fixes my problem on 2.6.22.
 
-ata1.00: 625142448 sectors, multi 1: LBA48 NCQ (depth 31/32)
+I can't think of a way to avoid second pass over scatterlist without
+duplicating code (ata_qc_prep() and ata_fill_sg() from libata-core.c).
 
-though I disabled ncq.And then boot "hangs" at
 
-sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't suppor=
-t=20
-DPO or FUA
- sda
+--- a/drivers/ata/sata_promise.c	2007-07-09 03:32:17.000000000 +0400
++++ b/drivers/ata/sata_promise.c	2007-10-27 17:20:03.000000000 +0400
+@@ -531,6 +531,80 @@
+ 	memcpy(buf+31, cdb, cdb_len);
+ }
 
-while detecting partitions I guess. (Note, the boot messages are from ncq=20
-enabled kernel, but look alike, at least regarding queue depth...) The kern=
-el=20
-doesn't really hang but tries detecting something while spitting out some=20
-errors. I simply wasn't patient enough.
++/**
++ *	pdc_qc_prep - Fill PCI IDE PRD table
++ *	@qc: Metadata associated with taskfile to be transferred
++ *
++ *	Fill PCI IDE PRD (scatter-gather) table with segments
++ *	associated with the current disk command.
++ *	Make sure hardware does not choke on it.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ */
++static void pdc_qc_prep(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct scatterlist *sg;
++	unsigned int idx;
++	const u32 SG_COUNT_ASIC_BUG = 41*4;
++
++	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
++		return;
++	
++	WARN_ON(qc->__sg == NULL);
++	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
++
++	idx = 0;
++	ata_for_each_sg(sg, qc) {
++		u32 addr, offset;
++		u32 sg_len, len;
++
++		/* determine if physical DMA addr spans 64K boundary.
++		 * Note h/w doesn't support 64-bit, so we unconditionally
++		 * truncate dma_addr_t to u32.
++		 */
++		addr = (u32) sg_dma_address(sg);
++		sg_len = sg_dma_len(sg);
++
++		while (sg_len) {
++			offset = addr & 0xffff;
++			len = sg_len;
++			if ((offset + sg_len) > 0x10000)
++				len = 0x10000 - offset;
++
++			ap->prd[idx].addr = cpu_to_le32(addr);
++			ap->prd[idx].flags_len = cpu_to_le32(len & 0xffff);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++
++			idx++;
++			sg_len -= len;
++			addr += len;
++		}
++	}
++
++	if (idx) {
++		u32 len = ap->prd[idx - 1].flags_len;
++		if (len > SG_COUNT_ASIC_BUG) {
++			u32 addr, len;
++
++			VPRINTK("Last PRD split\n");
++			
++			len = le32_to_cpu(ap->prd[idx - 1].flags_len) - SG_COUNT_ASIC_BUG;
++			addr = le32_to_cpu(ap->prd[idx - 1].addr);
++			ap->prd[idx - 1].flags_len = cpu_to_le32(len);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++			
++			ap->prd[idx].flags_len = cpu_to_le32(SG_COUNT_ASIC_BUG);
++			ap->prd[idx].addr = cpu_to_le32(addr + len);
++			idx++;
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr + len, SG_COUNT_ASIC_BUG);
++		}
++		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++	}
++}
++
+ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+ {
+ 	struct pdc_port_priv *pp = qc->ap->private_data;
+@@ -540,7 +614,7 @@
 
-Anyway, I tried 2.6.23 with swncq patch on top, and here I don't have any=20
-problems with swncq or w/o it. (NCQ depth also gets correctly reported). I=
-=20
-diffed the 2.6.23 patched driver with git one and they are nearly identical=
-=20
-excpet some ID changes, whcih don't affect me, es I have a MCP51 chipset. S=
-o=20
-something in libata changed and got broken or sata_nv wasn't adopted for th=
-at=20
-change.
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		ata_qc_prep(qc);
++		pdc_qc_prep(qc);
+ 		/* fall through */
 
-HTH,
-=2D-=20
-(=C2=B0=3D                 =3D=C2=B0)
-//\ Prakash Punnoor /\\
-V_/                 \_V
+ 	case ATA_PROT_NODATA:
 
---nextPart1546748.JL1cdgJCjB
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQBHIvLJxU2n/+9+t5gRArzhAKC81v43c/V420XOlrdkwhU6EWRkvwCg+7sg
-oWgJ/zebZOUQzkMhD8x0zSo=
-=eTGs
------END PGP SIGNATURE-----
-
---nextPart1546748.JL1cdgJCjB--
