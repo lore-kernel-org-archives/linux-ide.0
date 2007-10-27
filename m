@@ -1,17 +1,17 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: remove stale ide.h "configuration options"
-Date: Sat, 27 Oct 2007 20:50:55 +0400
-Message-ID: <47236C6F.8010203@ru.mvista.com>
-References: <200710262329.17605.bzolnier@gmail.com>
+Subject: Re: [PATCH 8/9] ide: replace ide_pci_device_t by struct ide_port_info
+Date: Sat, 27 Oct 2007 21:05:36 +0400
+Message-ID: <47236FE0.6020606@ru.mvista.com>
+References: <200709242247.27459.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:2354 "EHLO imap.sh.mvista.com"
+Received: from homer.mvista.com ([63.81.120.155]:2397 "EHLO imap.sh.mvista.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754254AbXJ0Qur (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Oct 2007 12:50:47 -0400
-In-Reply-To: <200710262329.17605.bzolnier@gmail.com>
+	id S1755463AbXJ0RF1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Oct 2007 13:05:27 -0400
+In-Reply-To: <200709242247.27459.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -19,23 +19,24 @@ Cc: linux-ide@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> Remove stale ide.h "configuration options":
+> * Rename struct ide_pci_device_s to struct ide_port_info.
 
-> * INITIAL_MULT_COUNT - always defined to 0
+    I'm not sure that ide_port_info name fits the data indeed, as those are 
+not applicable only to the ports but to a chip as a whole, so ide_chip_info 
+would seem a better name... but well, it's too late anyway.
 
-> * SUPPORT_SLOW_DATA_PORTS - unused
+> * Remove ide_pci_device_t typedef.
 
-> * OK_TO_RESET_CONTROLLER - always defined to 0
+> While at it:
 
-> * DISABLE_IRQ_NOSYNC - always defined to 0
+> * Fix __ide_pci_register_driver() comment.
 
-> Leave SUPPORT_VLB_SYNC (defined to 0 for CRIS and FRV, otherwise to 1)
-> for now but disallow overriding it by <asm/ide.h>.
+> * Fix aec62xx_init_one() comment.
 
-> There should be no functionality changes caused by this patch.
+> * Remove unused 'cds' field from ide_hwgroup_t.
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+    Well, it's too late for ACK. :-)
 
 MBR, Sergei
