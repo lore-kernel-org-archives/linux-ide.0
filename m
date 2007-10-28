@@ -1,86 +1,55 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH-RFC] Promise TX4 implement hw-bug workaround
-Date: Sun, 28 Oct 2007 12:03:16 +0100 (MET)
-Message-ID: <200710281103.l9SB3GrP026842@harpo.it.uu.se>
+Date: Sun, 28 Oct 2007 07:10:37 -0400
+Message-ID: <47246E2D.9010801@garzik.org>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se> <47035355.2040405@lxnt.info> <135469746.20071017143929@zonnet.nl> <47160601.80506@lxnt.info> <1785297944.20071017170444@zonnet.nl> <4717CB10.3080509@lxnt.info> <471807DF.8010100@gmail.com> <47191C3A.5040909@lxnt.info> <47194497.3040101@gmail.com> <471A783E.9060607@lxnt.info> <47233C10.4020100@lxnt.info> <472340D3.7090507@lxnt.info> <47235646.6050202@lxnt.info> <4724648C.9080409@garzik.org> <472477FE.3000701@lxnt.info>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:34318 "EHLO aun.it.uu.se"
+Received: from srv5.dvmed.net ([207.36.208.214]:59569 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751247AbXJ1LDo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Oct 2007 07:03:44 -0400
+	id S1751121AbXJ1LKm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Oct 2007 07:10:42 -0400
+In-Reply-To: <472477FE.3000701@lxnt.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, screwdriver@lxnt.info
-Cc: MisterE2002@zonnet.nl, benh@kernel.crashing.org, htejun@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Alexander Sabourenkov <screwdriver@lxnt.info>, Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, MisterE <MisterE2002@zonnet.nl>, benh@kernel.crashing.org
 
-On Sun, 28 Oct 2007 06:29:32 -0400, Jeff Garzik wrote:
-> BTW, looking at the Promise code I see
+Alexander Sabourenkov wrote:
+> Jeff Garzik wrote:
+>> BTW, looking at the Promise code I see
+>>
+>>> cam_con.h:
+>>> /* for ASIC bug, limit the last element of SG byteCount must < 32
+>>> Dword */
+>>> #define SG_COUNT_ASIC_BUG       32
+>>> //#define SG_COUNT_ASIC_BUG     128
+>>     and in the code itself
+>>
+>>> /* check PRD table, last element <= (32 Dword), fix ASIC bug */
+>> (though the code obviously uses SG_COUNT_ASIC_BUG==32, as the first
+>> paste indicates)
+>>
+>> so it seems like Promise first used 128 (32 dwords), but then backed
+>> down to 32 (8 dwords).
+>>
 > 
-> > cam_con.h:
-> > /* for ASIC bug, limit the last element of SG byteCount must < 32 Dword */
-> > #define SG_COUNT_ASIC_BUG       32
-> > //#define SG_COUNT_ASIC_BUG     128
+> Which version is this define from?
 > 
-> 	and in the code itself
-> 
-> > /* check PRD table, last element <= (32 Dword), fix ASIC bug */
-> 
-> (though the code obviously uses SG_COUNT_ASIC_BUG==32, as the first 
-> paste indicates)
-> 
-> so it seems like Promise first used 128 (32 dwords), but then backed 
-> down to 32 (8 dwords).
-> 
-> Either way, we definitely have an ASIC bug to work around, it seems...
+> Both versions that are available now from their website define it at 41*4:
 
-You're looking at the old pdc-ultra2 driver. The newer unified
-sataii150-300 driver (v1.01.0.23) upped the value to 41*4.
+Mikael Pettersson wrote:
+> You're looking at the old pdc-ultra2 driver. The newer unified
+> sataii150-300 driver (v1.01.0.23) upped the value to 41*4.
 
-I've reviewed Alexander's patch, and I'm currently testing it
-with the add-on patch below (fix sg_tablesize, code formatting
-stuff, fix uninitialised 'addr' in a VPRINTK).
 
-/Mikael
+I was looking at pdc-ulsata2_1.00.0.15.tgz, which was the latest driver 
+that Promise's website gave me to when I listed "SATA300 TX4" as my product.
 
---- linux-2.6.24-rc1/drivers/ata/sata_promise.c.~1~	2007-10-28 11:58:01.000000000 +0100
-+++ linux-2.6.24-rc1/drivers/ata/sata_promise.c	2007-10-28 12:20:53.000000000 +0100
-@@ -155,7 +155,7 @@ static struct scsi_host_template pdc_ata
- 	.queuecommand		= ata_scsi_queuecmd,
- 	.can_queue		= ATA_DEF_QUEUE,
- 	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
-+	.sg_tablesize		= LIBATA_MAX_PRD-1,
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
- 	.emulated		= ATA_SHT_EMULATED,
- 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-@@ -542,7 +542,7 @@ static void pdc_fill_sg(struct ata_queue
- 
- 	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
- 		return;
--	
-+
- 	WARN_ON(qc->__sg == NULL);
- 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
- 
-@@ -579,18 +579,15 @@ static void pdc_fill_sg(struct ata_queue
- 
- 		if (len > SG_COUNT_ASIC_BUG) {
- 			u32 addr;
--			/* if len < 2*SG_COUNT_ASIC_BUG then last
--			   segment will be larger than next-to-last.
--			   Somewhat ugly :(
--			*/
- 
- 			VPRINTK("Splitting last PRD.\n");
- 
-+			addr = le32_to_cpu(ap->prd[idx - 1].addr);
- 			ap->prd[idx - 1].flags_len -= cpu_to_le32(SG_COUNT_ASIC_BUG);
- 			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
--			
--			addr = le32_to_cpu(ap->prd[idx - 1].addr) + len - SG_COUNT_ASIC_BUG;
--			len  = SG_COUNT_ASIC_BUG;
-+
-+			addr = addr + len - SG_COUNT_ASIC_BUG;
-+			len = SG_COUNT_ASIC_BUG;
- 			ap->prd[idx].addr = cpu_to_le32(addr);
- 			ap->prd[idx].flags_len = cpu_to_le32(len);
- 			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
+Sounds like that is outdated information, thanks for the correction!
+
+	Jeff
+
+
