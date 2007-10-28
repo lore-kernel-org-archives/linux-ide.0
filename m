@@ -1,44 +1,36 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: [PATCH-RFC] Promise TX4 implement hw-bug workaround
-Date: Sun, 28 Oct 2007 23:03:37 +0300
-Message-ID: <4724EB19.6030009@lxnt.info>
-References: <200710030726.l937QXuV026661@harpo.it.uu.se>	<47035355.2040405@lxnt.info>	<135469746.20071017143929@zonnet.nl>	<47160601.80506@lxnt.info>	<1785297944.20071017170444@zonnet.nl>	<4717CB10.3080509@lxnt.info>	<471807DF.8010100@gmail.com>	<47191C3A.5040909@lxnt.info>	<47194497.3040101@gmail.com>	<471A783E.9060607@lxnt.info>	<47233C10.4020100@lxnt.info>	<472340D3.7090507@lxnt.info>	<47235646.6050202@lxnt.info> <20071027190916.5687fcaa@the-village.bc.nu> <47238104.4000601@lxnt.info> <47244677.6030909@garzik.org>
+From: "David Gaarenstroom" <david.gaarenstroom@gmail.com>
+Subject: Re: [PATCH 5/5]: [PCI]: Remove 3 incorrect MSI quirks.
+Date: Sun, 28 Oct 2007 21:11:13 +0100
+Message-ID: <9783dadb0710281311o619a6bd4r2f7b1c4cbaa325e9@mail.gmail.com>
+References: <20071025.011716.123998434.davem@davemloft.net>
+	 <9783dadb0710260356g4ef94e3dvadf69d4d263c2361@mail.gmail.com>
+	 <20071026.043833.88113848.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:50670 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751653AbXJ1TNa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Oct 2007 15:13:30 -0400
-In-Reply-To: <47244677.6030909@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.185]:62793 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753521AbXJ1ULO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Oct 2007 16:11:14 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so1360076rvb
+        for <linux-ide@vger.kernel.org>; Sun, 28 Oct 2007 13:11:13 -0700 (PDT)
+In-Reply-To: <20071026.043833.88113848.davem@davemloft.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, MisterE <MisterE2002@zonnet.nl>, benh@kernel.crashing.org, jgarzik@pobox.com
+To: David Miller <davem@davemloft.net>, shane.huang@amd.com
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, chunhao.huang@hotmail.com, gregkh@suse.de, htejun@gmail.com, brice.goglin@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com
 
-Jeff Garzik wrote:
-> 
-> Alan's point was that the existing code will give you up to
-> LIBATA_MAX_PRD entries.  After the post-virtual-merge splitting code in
-> ata_fill_sg() executes, the worst case result is ATA_MAX_PRD entries.
-> 
-> Thus, since your code has the potential to increase the number of s/g
-> entries above that, it can potentially corrupt memory, lock up the
-> machine, all the wonderful things that can happen when you run off the
-> end of the s/g list.
-> 
-> The fix is to decrease .sg_tablesize (LIBATA_MAX_PRD - 2 perhaps?) so
-> that you guarantee this worst case never occurs, by guaranteeing that
-> the system never sends you enough s/g entries to cause your code to go
-> out of bounds.
-> 
+> I would like those to be removed, but to be conservative we should
+> first get some testing feedback that confirms this just like those
+> provided to me from the AMD folks for the RS690, RX790 and RD580
+> cases.
 
-Ah, now I understand. Thanks for the explanation.
+The patch works fine for my laptop with the RS480 chipset (with a
+SB400 southbridge).
+But it would be nice if AMD tested it as well...
 
-I take it something guarantees that s/g entry size can not exceed 128K.
-
-
--- 
-
-./lxnt
+BTW, here you can see that the SB400 USB controller was the only real
+problem for the RS480 chipset in the first place:
+http://lkml.org/lkml/2006/12/21/47
