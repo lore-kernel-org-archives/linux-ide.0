@@ -1,73 +1,67 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: 2.6.24-rc1 IDE regression on PMAC?
-Date: Sat, 27 Oct 2007 21:19:42 +0200
-Message-ID: <200710272119.42791.bzolnier@gmail.com>
-References: <200710271756.l9RHuKub021729@harpo.it.uu.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH-RFC] Promise TX4 implement hw-bug workaround
+Date: Sun, 28 Oct 2007 04:21:11 -0400
+Message-ID: <47244677.6030909@garzik.org>
+References: <200710030726.l937QXuV026661@harpo.it.uu.se>	<47035355.2040405@lxnt.info>	<135469746.20071017143929@zonnet.nl>	<47160601.80506@lxnt.info>	<1785297944.20071017170444@zonnet.nl>	<4717CB10.3080509@lxnt.info>	<471807DF.8010100@gmail.com>	<47191C3A.5040909@lxnt.info>	<47194497.3040101@gmail.com>	<471A783E.9060607@lxnt.info>	<47233C10.4020100@lxnt.info>	<472340D3.7090507@lxnt.info>	<47235646.6050202@lxnt.info> <20071027190916.5687fcaa@the-village.bc.nu> <47238104.4000601@lxnt.info>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:52781 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbXJ0TOL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Oct 2007 15:14:11 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1969010mue
-        for <linux-ide@vger.kernel.org>; Sat, 27 Oct 2007 12:14:10 -0700 (PDT)
-In-Reply-To: <200710271756.l9RHuKub021729@harpo.it.uu.se>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:47196 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750997AbXJ1IVW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Oct 2007 04:21:22 -0400
+In-Reply-To: <47238104.4000601@lxnt.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: Alexander Sabourenkov <screwdriver@lxnt.info>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, MisterE <MisterE2002@zonnet.nl>, benh@kernel.crashing.org, jgarzik@pobox.com
 
-On Saturday 27 October 2007, Mikael Pettersson wrote:
-> As shown by this dmesg diff between 2.6.23 and 2.6.24-rc1,
-> IDE's PMAC driver now decides to downgrade itself to PIO2
-> on this box. Is this intensional or a bug?
+Alexander Sabourenkov wrote:
+> Alan Cox wrote:
+>>> I can't think of a way to avoid second pass over scatterlist without
+>>> duplicating code (ata_qc_prep() and ata_fill_sg() from libata-core.c).
+>> This appears to be incomplete:
+>>
+> 
+> [...]
+> 
+>> What guarantees you have enough PRD entries to do this without changing
+>> the limit in the structures ?
+>>
+>> Otherwise looks good
+> 
+> PRD entries count is 256
+> include/linux/ata.h:
+> 	ATA_MAX_PRD		= 256,
+> 	ATA_PRD_TBL_SZ          = (ATA_MAX_PRD * ATA_PRD_SZ),
+> 
+> drivers/ata/libata-core.c:
+>  ap->prd = dmam_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma,
+> 
+> sata_promise Scsi_Host declares support for half of that:
+> 
+> include/linux/libata.h:
+> LIBATA_MAX_PRD		= ATA_MAX_PRD / 2,
+> 
+> drivers/ata/sata_promise.c
+>     .sg_tablesize           = LIBATA_MAX_PRD,
 
-This drive still uses MWDMA1 according to the dmesg diff
-(only the debug message from IDE PMAC is gone) but since we
-have enabled PIO autotuning PIO is also tuned.
+Alan's point was that the existing code will give you up to 
+LIBATA_MAX_PRD entries.  After the post-virtual-merge splitting code in 
+ata_fill_sg() executes, the worst case result is ATA_MAX_PRD entries.
 
-PIO downgrade is kind of expected for drives that doesn't
-support PIO4 (this drive's max is PIO3).
+Thus, since your code has the potential to increase the number of s/g 
+entries above that, it can potentially corrupt memory, lock up the 
+machine, all the wonderful things that can happen when you run off the 
+end of the s/g list.
 
-The guilty code is in ide_get_best_pio_mode():
+The fix is to decrease .sg_tablesize (LIBATA_MAX_PRD - 2 perhaps?) so 
+that you guarantee this worst case never occurs, by guaranteeing that 
+the system never sends you enough s/g entries to cause your code to go 
+out of bounds.
 
-		/*
-		 * Conservative "downgrade" for all pre-ATA2 drives
-		 */
-		if ((drive->hwif->host_flags & IDE_HFLAG_PIO_NO_DOWNGRADE) == 0 &&
-			pio_mode && pio_mode < 4) {
-			pio_mode--;
-			printk(KERN_INFO "%s: applying conservative "
-					 "PIO \"downgrade\"\n", drive->name);
-		}
+	Jeff
 
-and is/was? probably needed only for CMD640 host driver so you
-may try adding IDE_HFLAG_PIO_NO_DOWNGRADE to IDE PMAC driver
-and see what happens. :)
 
-> --- dmesg-2.6.23
-> +++ dmesg-2.6.24-rc1
-> @@ -84,8 +89,9 @@
->  ide0: Found Apple Heathrow ATA controller, bus ID 0, irq 28
->  Probing IDE interface ide0...
->  hda: MATSHITA CR-585, ATAPI CD/DVD-ROM drive
-> +hda: applying conservative PIO "downgrade"
-> +hda: host max PIO4 wanted PIO255(auto-tune) selected PIO2
->  hda: selected mode 0x21
 
-0x21 == MWDMA1
-
-Yeah, needs fixing to call ide_xfer_verbose() which prints something
-human-readable.  I'll look into this, unless somebody beats me to it.
-
-> -hda: Enabling MultiWord DMA 1
->  ide0 at 0xf1008000-0xf1008007,0xf1008160 on irq 28
->  ide1: Found Apple Heathrow ATA controller, bus ID 1, irq 30
->  Probing IDE interface ide1...
-
-Thanks,
-Bart
