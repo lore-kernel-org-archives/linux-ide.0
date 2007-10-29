@@ -1,37 +1,48 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Re-enabling Serial ATA ports possible?
-Date: Mon, 29 Oct 2007 12:22:01 +0900
-Message-ID: <472551D9.8050908@gmail.com>
-References: <200710171251.l9HCpCv7021811@harpo.it.uu.se> <200710261118.47736.openembedded@haerwu.biz> <4721B7EB.7010209@gmail.com> <200710261451.17154.openembedded@haerwu.biz>
+Subject: Re: [PATCH 3/3] sata_inic162x: finally, driver for initio 162x SATA
+ controllers
+Date: Mon, 29 Oct 2007 12:24:30 +0900
+Message-ID: <4725526E.2020008@gmail.com>
+References: <6403454.272891193414331004.JavaMail.nabble@isper.nabble.com> <47225535.2040404@gmail.com> <4724630B.9090405@edpnet.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:7988 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.180]:12569 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbXJ2DWL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Oct 2007 23:22:11 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1934869wah
-        for <linux-ide@vger.kernel.org>; Sun, 28 Oct 2007 20:22:10 -0700 (PDT)
-In-Reply-To: <200710261451.17154.openembedded@haerwu.biz>
+	with ESMTP id S1754124AbXJ2DYi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Oct 2007 23:24:38 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so1935386wah
+        for <linux-ide@vger.kernel.org>; Sun, 28 Oct 2007 20:24:37 -0700 (PDT)
+In-Reply-To: <4724630B.9090405@edpnet.be>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marcin Juszkiewicz <openembedded@haerwu.biz>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Jo Lodewyckx <jo.lodewyckx@edpnet.be>
+Cc: linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
 
-Marcin Juszkiewicz wrote:
-> This time it worked (log below). Should I check power supply and replace
-> it if needed?
+Jo Lodewyckx wrote:
+> Tejun Heo,
 > 
-> [ 6760.345046] ata6: exception Emask 0x10 SAct 0x0 SErr 0x90000 action 0xb
-> [ 6760.345053] ata6: SError: { PHYRdyChg 10B8B }
+> Here's the output of lspci -nnvvv:
+> 
+> 03:00.0 SATA controller [0106]: Initio Corporation Unknown device
+> [1101:1622] (rev 02) (prog-if 00 [Vendor specific])
+>        Subsystem: Initio Corporation Unknown device [1101:1626]
+>        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+> ParErr- Stepping- SERR- FastB2B-
+>        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR-
+>        Interrupt: pin A routed to IRQ 10
+>        Region 0: I/O ports at 4000 [size=256]
+>        Region 1: Memory at 40000000 (32-bit, non-prefetchable) [size=4K]
+>        [virtual] Expansion ROM at 30000000 [disabled] [size=128K]
+>        Capabilities: [dc] Power Management version 2
+>                Flags: PMEClk+ DSI- D1+ D2+ AuxCurrent=0mA
+> PME(D0-,D1+,D2+,D3hot+,D3cold-)
+>                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-Okay, this is PHYRDY changed w/o any command pending.  Things like this
-happening autonomously indicates something is off with your hardware.  I
-can't tell which.  It could be PSU, the controller or the drive itself.
- The only way to find out is trying different hardware configurations
-and examining how the symptom changes.  ie. connecting the drive to
-another port or controller, trying different power supply, etc...
+Thanks, please also post the result of "cat /proc/ioports" and "cat
+/proc/iomem".
 
 -- 
 tejun
