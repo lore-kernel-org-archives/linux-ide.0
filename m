@@ -1,45 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: PMP device port link speed issues
-Date: Tue, 30 Oct 2007 08:20:56 +0900
-Message-ID: <47266AD8.4060505@gmail.com>
-References: <2A6F278C5B66C4459AF4013E77A40CD301003529@zin33exm20.fsl.freescale.net>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: ATAPI devices in AHCI mode not working
+Date: Mon, 29 Oct 2007 16:40:13 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701EA70F4@orsmsx420.amr.corp.intel.com>
+References: <39B20DF628532344BC7A2692CB6AEE0701EA6E7D@orsmsx420.amr.corp.intel.com><20071029203028.35645f26@the-village.bc.nu><39B20DF628532344BC7A2692CB6AEE0701EA6FBF@orsmsx420.amr.corp.intel.com> <20071029221332.1c9525a9@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:2523 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752933AbXJ2XVK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2007 19:21:10 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so1296324nze
-        for <linux-ide@vger.kernel.org>; Mon, 29 Oct 2007 16:21:09 -0700 (PDT)
-In-Reply-To: <2A6F278C5B66C4459AF4013E77A40CD301003529@zin33exm20.fsl.freescale.net>
+Received: from mga03.intel.com ([143.182.124.21]:10929 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbXJ2Xmm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2007 19:42:42 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071029221332.1c9525a9@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kalra Ashish-B00888 <ashish.kalra@freescale.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Kalra Ashish-B00888 wrote:
-> Hello Tejun,
-> 
-> This patch will surely fix my problem, but won't it be better to set
-> each PMP device port link speed directly to
-> the host<->PMP link speed, during SATA PMP device configuration in
-> sata_pmp_attach(), instead of calling 
-> sata_link_init_spd() for each link. 
-> 
-> The PMP chip should be responsible for matching link speed difference,
-> but probably there could be issues with
-> certain PMP chips, as it looks like in our case, where NCQ hangs are
-> probably caused due to link speed difference.
-> It should be simpler to handle it in S/W, by limiting PMP device port
-> link speeds to host<->PMP link speed.
+>-----Original Message-----
+>From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
+>Sent: Monday, October 29, 2007 3:14 PM
+>To: Gaston, Jason D
+>Cc: linux-ide@vger.kernel.org
+>Subject: Re: ATAPI devices in AHCI mode not working
+>
+>> ata1: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101100 irq 216
+>> ata2: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101180 irq 216
+>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata1.00: ATAPI: ATAPI   DVD D  DH16D2S, EP52, max UDMA/100
+>> ata1.00: configured for UDMA/100
+>
+>Much better - no misdetected link type, no device claiming to be PATA
+>when its SATA.
+>
+>
+>Right that eliminates all the obvious goings on being caused by broken
+>devices which is a start. Doesn't shed any light on the rest of it.
+What
+>happens if you boot with irqpoll enabled ? (wondering if the timeouts
+are
+>ACPI or IRQ routing stuff)
 
-Yeah, I agree.  There's nearly nothing to be gained by driving
-downstream PHYs faster than the upstream PHY.  I'll submit a patch to
-limit downstream port speed by upstream speed.
+I rebuilt the kernel; the DVD and USB devices are functional now. I'm
+not sure what the problem was before.  On a side note: In 2.6.24.rc1 the
+DVD starts working right away, but on a SLES10_SP1 kernel, it takes some
+time for it to step down to a PIO mode before the DVD can be mounted.
+Oh well.
 
-Thanks.
+Thanks!
 
--- 
-tejun
+Jason
