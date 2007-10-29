@@ -1,48 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3/3] sata_inic162x: finally, driver for initio 162x SATA
- controllers
-Date: Mon, 29 Oct 2007 12:24:30 +0900
-Message-ID: <4725526E.2020008@gmail.com>
-References: <6403454.272891193414331004.JavaMail.nabble@isper.nabble.com> <47225535.2040404@gmail.com> <4724630B.9090405@edpnet.be>
+From: "Shane Huang" <Shane.Huang@amd.com>
+Subject: RE: [PATCH 5/5]: [PCI]: Remove 3 incorrect MSI quirks.
+Date: Mon, 29 Oct 2007 14:06:16 +0800
+Message-ID: <5CAB7B5D6F8AB84AA868A46B47A50705623160@sshaexmb1.amd.com>
+References: <20071025.011716.123998434.davem@davemloft.net>
+ <9783dadb0710260356g4ef94e3dvadf69d4d263c2361@mail.gmail.com>
+ <20071026.043833.88113848.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:12569 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754124AbXJ2DYi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Oct 2007 23:24:38 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1935386wah
-        for <linux-ide@vger.kernel.org>; Sun, 28 Oct 2007 20:24:37 -0700 (PDT)
-In-Reply-To: <4724630B.9090405@edpnet.be>
+Received: from outbound-dub.frontbridge.com ([213.199.154.16]:20335 "EHLO
+	outbound7-dub-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750994AbXJ2GGh convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Oct 2007 02:06:37 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071026.043833.88113848.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jo Lodewyckx <jo.lodewyckx@edpnet.be>
-Cc: linux-ide@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: David Miller <davem@davemloft.net>, david.gaarenstroom@gmail.com, htejun@gmail.com
+Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, barkalow@iabervon.org, linas@austin.ibm.com, gregkh@suse.de, brice.goglin@gmail.com, linux-pci@atrey.karlin.mff.cuni.cz, linux-ide@vger.kernel.org, brice@myri.com, mchan@broadcom.com, Shane Huang <Shane.Huang@amd.com>
 
-Jo Lodewyckx wrote:
-> Tejun Heo,
+
+> I would like those to be removed, but to be conservative we should
+> first get some testing feedback that confirms this just like those
+> provided to me from the AMD folks for the RS690, RX790 and RD580
+> cases.
 > 
-> Here's the output of lspci -nnvvv:
-> 
-> 03:00.0 SATA controller [0106]: Initio Corporation Unknown device
-> [1101:1622] (rev 02) (prog-if 00 [Vendor specific])
->        Subsystem: Initio Corporation Unknown device [1101:1626]
->        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B-
->        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR-
->        Interrupt: pin A routed to IRQ 10
->        Region 0: I/O ports at 4000 [size=256]
->        Region 1: Memory at 40000000 (32-bit, non-prefetchable) [size=4K]
->        [virtual] Expansion ROM at 30000000 [disabled] [size=128K]
->        Capabilities: [dc] Power Management version 2
->                Flags: PMEClk+ DSI- D1+ D2+ AuxCurrent=0mA
-> PME(D0-,D1+,D2+,D3hot+,D3cold-)
->                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> Otherwise the risk to break people's systems is very real.
 
-Thanks, please also post the result of "cat /proc/ioports" and "cat
-/proc/iomem".
+In fact, our team only has boards with RS690+SB700 and RX790+SB700,
+I don't know why the RD580 MSI is disabled too by the patch
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
+t;h=aea6a433f50cd89b9cbd10850fd0b32f961f9883
+Maybe Tejun can give us more information on this case,
+I think the cause should be same as RS690 and RX790.
 
--- 
-tejun
+If you need some small test on USB issue related with RS480 or
+something else, you may tell me, I can try to ask the help from our
+SW QA or test by myself, if we can find out such test platform.
+
+Thanks
+Shane
+
+
+
