@@ -1,97 +1,158 @@
-From: "Kalra Ashish-B00888" <ashish.kalra@freescale.com>
-Subject: RE: PMP device port link speed issues
-Date: Mon, 29 Oct 2007 19:29:48 +0530
-Message-ID: <2A6F278C5B66C4459AF4013E77A40CD301003529@zin33exm20.fsl.freescale.net>
-References: <472154DF.9050304@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.24-rc1] sata_promise: ASIC PRD table bug workaround
+Date: Mon, 29 Oct 2007 16:50:38 +0100 (MET)
+Message-ID: <200710291550.l9TFocYf018050@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:38339 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbXJ2N76 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2007 09:59:58 -0400
-Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
-	by az33egw02.freescale.net (8.12.11/az33egw02) with ESMTP id l9TDxtwH017066
-	for <linux-ide@vger.kernel.org>; Mon, 29 Oct 2007 06:59:55 -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net [10.232.192.5])
-	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id l9TDxrX1004212
-	for <linux-ide@vger.kernel.org>; Mon, 29 Oct 2007 08:59:54 -0500 (CDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <472154DF.9050304@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:49794 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755448AbXJ2PvK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Oct 2007 11:51:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Kalra Ashish-B00888 <ashish.kalra@freescale.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
 
-Hello Tejun,
+Second-generation Promise SATA controllers have an ASIC bug
+which can trigger if the last PRD entry is larger than 164 bytes,
+resulting in intermittent errors and possible data corruption.
 
-This patch will surely fix my problem, but won't it be better to set
-each PMP device port link speed directly to
-the host<->PMP link speed, during SATA PMP device configuration in
-sata_pmp_attach(), instead of calling 
-sata_link_init_spd() for each link. 
+Work around this by replacing calls to ata_qc_prep() with a
+private version that fills the PRD, checks the size of the
+last entry, and if necessary splits it to avoid the bug.
+Also reduce sg_tablesize by 1 to accommodate the new entry.
 
-The PMP chip should be responsible for matching link speed difference,
-but probably there could be issues with
-certain PMP chips, as it looks like in our case, where NCQ hangs are
-probably caused due to link speed difference.
-It should be simpler to handle it in S/W, by limiting PMP device port
-link speeds to host<->PMP link speed.
+Tested on the second-generation SATA300 TX4 and SATA300 TX2plus,
+and the first-generation PDC20378.
 
-Thanks,
-Ashish
+Thanks to Alexander Sabourenkov for verifying the bug by
+studying the vendor driver, and for writing the initial patch
+upon which this one is based.
 
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] 
-Sent: Friday, October 26, 2007 8:16 AM
-To: Jeff Garzik
-Cc: Kalra Ashish-B00888; IDE/ATA development list
-Subject: Re: PMP device port link speed issues
-
-Jeff Garzik wrote:
-> Kalra Ashish-B00888 wrote:
->> While testing the "sata_fsl" driver with a Sil3726 based PMP, we had 
->> a specific configuration where the host port to PMP link speed was 
->> 1.5Gbps, while the PMP has configured it's device port(s) link speed 
->> to 3Gbps. This configuration causes NCQ hangs on certain Seagate 
->> drives, probably because of the link speed difference between host 
->> and PMP device & PMP device ports and drives.
->>  
->> Does it makes sense to limit the PMP device port link speeds to the 
->> host port link speed ?
->> I believe currently sata_pmp_attach() is calling sata_link_init_spd()
-
->> for each PMP device port and thus causing PMP device port link speeds
-
->> being configured independent of host port link speed. Probably the 
->> PMP device port links should be limited to the host link speed.
-> 
-> Interesting question.  I'm sure Tejun will chime in, but I'm wondering
-
-> if there is any real use -- even theoretical -- for running downstream
-
-> links faster than the host<->PMP link?
-
-[chiming in]
-
-Probably not but it should also be okay.  The PMP chip is responsible
-for matching link speed difference and it's pretty simple to do in SATA.
-
-Kalra, does the following patch fix your NCQ problem?
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c index
-8ee56e5..6db2d1e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6517,6 +6517,7 @@ int sata_link_init_spd(struct ata_link *link)
-        spd = (scontrol >> 4) & 0xf;
-        if (spd)
-                link->hw_sata_spd_limit &= (1 << spd) - 1;
-+       link->hw_sata_spd_limit = 1;
-
-        link->sata_spd_limit = link->hw_sata_spd_limit;
-
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
 --
-tejun
+This patch is prepared against 2.6.24-rc1 but applies with
+harmless minor offsets against current #upstream-fixes.
+
+ drivers/ata/sata_promise.c |   86 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 82 insertions(+), 4 deletions(-)
+
+diff -rupN linux-2.6.24-rc1/drivers/ata/sata_promise.c linux-2.6.24-rc1.sata_promise-asic-sg-bug-fix/drivers/ata/sata_promise.c
+--- linux-2.6.24-rc1/drivers/ata/sata_promise.c	2007-10-24 23:22:55.000000000 +0200
++++ linux-2.6.24-rc1.sata_promise-asic-sg-bug-fix/drivers/ata/sata_promise.c	2007-10-29 15:54:58.000000000 +0100
+@@ -155,7 +155,7 @@ static struct scsi_host_template pdc_ata
+ 	.queuecommand		= ata_scsi_queuecmd,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
++	.sg_tablesize		= LIBATA_MAX_PRD-1,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+@@ -521,6 +521,84 @@ static void pdc_atapi_pkt(struct ata_que
+ 	memcpy(buf+31, cdb, cdb_len);
+ }
+ 
++/**
++ *	pdc_fill_sg - Fill PCI IDE PRD table
++ *	@qc: Metadata associated with taskfile to be transferred
++ *
++ *	Fill PCI IDE PRD (scatter-gather) table with segments
++ *	associated with the current disk command.
++ *	Make sure hardware does not choke on it.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ */
++static void pdc_fill_sg(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct scatterlist *sg;
++	unsigned int idx;
++	const u32 SG_COUNT_ASIC_BUG = 41*4;
++
++	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
++		return;
++
++	WARN_ON(qc->__sg == NULL);
++	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
++
++	idx = 0;
++	ata_for_each_sg(sg, qc) {
++		u32 addr, offset;
++		u32 sg_len, len;
++
++		/* determine if physical DMA addr spans 64K boundary.
++		 * Note h/w doesn't support 64-bit, so we unconditionally
++		 * truncate dma_addr_t to u32.
++		 */
++		addr = (u32) sg_dma_address(sg);
++		sg_len = sg_dma_len(sg);
++
++		while (sg_len) {
++			offset = addr & 0xffff;
++			len = sg_len;
++			if ((offset + sg_len) > 0x10000)
++				len = 0x10000 - offset;
++
++			ap->prd[idx].addr = cpu_to_le32(addr);
++			ap->prd[idx].flags_len = cpu_to_le32(len & 0xffff);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++
++			idx++;
++			sg_len -= len;
++			addr += len;
++		}
++	}
++
++	if (idx) {
++		u32 len = le32_to_cpu(ap->prd[idx - 1].flags_len);
++
++		if (len > SG_COUNT_ASIC_BUG) {
++			u32 addr;
++
++			VPRINTK("Splitting last PRD.\n");
++
++			addr = le32_to_cpu(ap->prd[idx - 1].addr);
++			ap->prd[idx - 1].flags_len -= cpu_to_le32(SG_COUNT_ASIC_BUG);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
++
++			addr = addr + len - SG_COUNT_ASIC_BUG;
++			len = SG_COUNT_ASIC_BUG;
++			ap->prd[idx].addr = cpu_to_le32(addr);
++			ap->prd[idx].flags_len = cpu_to_le32(len);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++
++			idx++;
++		}
++
++		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++	}
++}
++
+ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+ {
+ 	struct pdc_port_priv *pp = qc->ap->private_data;
+@@ -530,7 +608,7 @@ static void pdc_qc_prep(struct ata_queue
+ 
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+-		ata_qc_prep(qc);
++		pdc_fill_sg(qc);
+ 		/* fall through */
+ 
+ 	case ATA_PROT_NODATA:
+@@ -546,11 +624,11 @@ static void pdc_qc_prep(struct ata_queue
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI:
+-		ata_qc_prep(qc);
++		pdc_fill_sg(qc);
+ 		break;
+ 
+ 	case ATA_PROT_ATAPI_DMA:
+-		ata_qc_prep(qc);
++		pdc_fill_sg(qc);
+ 		/*FALLTHROUGH*/
+ 	case ATA_PROT_ATAPI_NODATA:
+ 		pdc_atapi_pkt(qc);
