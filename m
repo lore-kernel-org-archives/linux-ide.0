@@ -1,63 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.24-rc1] sata_promise: ASIC PRD table bug workaround
-Date: Mon, 29 Oct 2007 15:07:06 -0400
-Message-ID: <47262F5A.8070804@garzik.org>
-References: <200710291550.l9TFocYf018050@harpo.it.uu.se>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
+Date: Mon, 29 Oct 2007 15:16:06 -0500
+Message-ID: <47263F85.70908@linux.vnet.ibm.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56133 "EHLO mail.dvmed.net"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:46410 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754822AbXJ2THJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Oct 2007 15:07:09 -0400
-In-Reply-To: <200710291550.l9TFocYf018050@harpo.it.uu.se>
+	id S1751511AbXJ2UQI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Oct 2007 16:16:08 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Mikael Pettersson wrote:
-> @@ -155,7 +155,7 @@ static struct scsi_host_template pdc_ata
->  	.queuecommand		= ata_scsi_queuecmd,
->  	.can_queue		= ATA_DEF_QUEUE,
->  	.this_id		= ATA_SHT_THIS_ID,
-> -	.sg_tablesize		= LIBATA_MAX_PRD,
-> +	.sg_tablesize		= LIBATA_MAX_PRD-1,
->  	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
->  	.emulated		= ATA_SHT_EMULATED,
->  	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+The following three patches convert ipr to use the new libata EH APIs.
+In the process of doing this, I first looked into implementing this
+in a similar manner to how libata SAS is done today, which is hooking
+into target_alloc/target_destroy to allocate/delete sata ports. While
+I was able to get this working after writing my own eh_strategy_handler,
+I was doubtful this was the best long term solution. One problem with this
+implementation I didn't solve was the fact that libata now invokes EH
+for each and every error received. For some devices, such as optical
+devices, each not ready response received during a media reload would
+result in all the attached SAS devices getting quiesced as well.
 
-IMO, this will be difficult for human eyes to see, many months from now.
+My second approach is the attached patch set. In this series I have
+created a new libata API which can be used by SAS LLDDs. It introduces
+an ata_sas_rphy device object which is created/destroyed by the following API:
 
-I would prefer a 'PDC_MAX_PRD' constant, defined to this value.
+ata_sas_rphy_alloc
+ata_sas_rphy_add
+ata_sas_rphy_delete
 
+When using this API in ipr, I made ipr's scsi_host the parent device of the
+SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
+means that each SATA rphy in the SAS topology will have its own scsi_host, making
+SAS *much* more like all the SATA LLDDs in how it uses libata.
 
-> @@ -530,7 +608,7 @@ static void pdc_qc_prep(struct ata_queue
->  
->  	switch (qc->tf.protocol) {
->  	case ATA_PROT_DMA:
-> -		ata_qc_prep(qc);
-> +		pdc_fill_sg(qc);
->  		/* fall through */
->  
->  	case ATA_PROT_NODATA:
-> @@ -546,11 +624,11 @@ static void pdc_qc_prep(struct ata_queue
->  		break;
->  
->  	case ATA_PROT_ATAPI:
-> -		ata_qc_prep(qc);
-> +		pdc_fill_sg(qc);
->  		break;
->  
->  	case ATA_PROT_ATAPI_DMA:
-> -		ata_qc_prep(qc);
-> +		pdc_fill_sg(qc);
->  		/*FALLTHROUGH*/
+The only issue I ran into with this implementation is that since each SATA
+port has its own scsi_host, the adapter cannot rely on scsi core to manage
+any LLDD or adapter imposed queue depth. To solve this I added some code to
+ipr. Longer term, block layer queue groups might be another way to do this.
 
-Note that this is not exactly an equivalent change -- you are removing 
-the test in ata_qc_prep() that occurs prior to ata_fill_sg() call.
+I'm still polishing this up, but it is up and running and seems to work with
+what testing I've done so far.
 
-	Jeff
+-Brian
 
-
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
