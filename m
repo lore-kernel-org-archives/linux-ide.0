@@ -1,158 +1,114 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.24-rc1] sata_promise: ASIC PRD table bug workaround
-Date: Mon, 29 Oct 2007 16:50:38 +0100 (MET)
-Message-ID: <200710291550.l9TFocYf018050@harpo.it.uu.se>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: ATAPI devices in AHCI mode not working
+Date: Mon, 29 Oct 2007 11:14:13 -0700
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0701EA6E7D@orsmsx420.amr.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:49794 "EHLO aun.it.uu.se"
+Received: from mga03.intel.com ([143.182.124.21]:36771 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755448AbXJ2PvK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Oct 2007 11:51:10 -0400
+	id S1752696AbXJ2SU5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2007 14:20:57 -0400
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
+To: linux-ide@vger.kernel.org
 
-Second-generation Promise SATA controllers have an ASIC bug
-which can trigger if the last PRD entry is larger than 164 bytes,
-resulting in intermittent errors and possible data corruption.
+Hello,
 
-Work around this by replacing calls to ata_qc_prep() with a
-private version that fills the PRD, checks the size of the
-last entry, and if necessary splits it to avoid the bug.
-Also reduce sg_tablesize by 1 to accommodate the new entry.
+On a Tolapai 2 port SATA controller, I am not able to mount ATAPI
+drives.  The device shows up in /sys/block, but does not show up in
+/proc/sxx. I am getting the following messages in dmesg.  ata1 is the
+DVD drive.
 
-Tested on the second-generation SATA300 TX4 and SATA300 TX2plus,
-and the first-generation PDC20378.
+Any ideas what the problem is?
 
-Thanks to Alexander Sabourenkov for verifying the bug by
-studying the vendor driver, and for writing the initial patch
-upon which this one is based.
+Thanks,
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
---
-This patch is prepared against 2.6.24-rc1 but applies with
-harmless minor offsets against current #upstream-fixes.
+Jason
 
- drivers/ata/sata_promise.c |   86 ++++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 82 insertions(+), 4 deletions(-)
 
-diff -rupN linux-2.6.24-rc1/drivers/ata/sata_promise.c linux-2.6.24-rc1.sata_promise-asic-sg-bug-fix/drivers/ata/sata_promise.c
---- linux-2.6.24-rc1/drivers/ata/sata_promise.c	2007-10-24 23:22:55.000000000 +0200
-+++ linux-2.6.24-rc1.sata_promise-asic-sg-bug-fix/drivers/ata/sata_promise.c	2007-10-29 15:54:58.000000000 +0100
-@@ -155,7 +155,7 @@ static struct scsi_host_template pdc_ata
- 	.queuecommand		= ata_scsi_queuecmd,
- 	.can_queue		= ATA_DEF_QUEUE,
- 	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= LIBATA_MAX_PRD,
-+	.sg_tablesize		= LIBATA_MAX_PRD-1,
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
- 	.emulated		= ATA_SHT_EMULATED,
- 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-@@ -521,6 +521,84 @@ static void pdc_atapi_pkt(struct ata_que
- 	memcpy(buf+31, cdb, cdb_len);
- }
- 
-+/**
-+ *	pdc_fill_sg - Fill PCI IDE PRD table
-+ *	@qc: Metadata associated with taskfile to be transferred
-+ *
-+ *	Fill PCI IDE PRD (scatter-gather) table with segments
-+ *	associated with the current disk command.
-+ *	Make sure hardware does not choke on it.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ */
-+static void pdc_fill_sg(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct scatterlist *sg;
-+	unsigned int idx;
-+	const u32 SG_COUNT_ASIC_BUG = 41*4;
-+
-+	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
-+		return;
-+
-+	WARN_ON(qc->__sg == NULL);
-+	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
-+
-+	idx = 0;
-+	ata_for_each_sg(sg, qc) {
-+		u32 addr, offset;
-+		u32 sg_len, len;
-+
-+		/* determine if physical DMA addr spans 64K boundary.
-+		 * Note h/w doesn't support 64-bit, so we unconditionally
-+		 * truncate dma_addr_t to u32.
-+		 */
-+		addr = (u32) sg_dma_address(sg);
-+		sg_len = sg_dma_len(sg);
-+
-+		while (sg_len) {
-+			offset = addr & 0xffff;
-+			len = sg_len;
-+			if ((offset + sg_len) > 0x10000)
-+				len = 0x10000 - offset;
-+
-+			ap->prd[idx].addr = cpu_to_le32(addr);
-+			ap->prd[idx].flags_len = cpu_to_le32(len & 0xffff);
-+			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
-+
-+			idx++;
-+			sg_len -= len;
-+			addr += len;
-+		}
-+	}
-+
-+	if (idx) {
-+		u32 len = le32_to_cpu(ap->prd[idx - 1].flags_len);
-+
-+		if (len > SG_COUNT_ASIC_BUG) {
-+			u32 addr;
-+
-+			VPRINTK("Splitting last PRD.\n");
-+
-+			addr = le32_to_cpu(ap->prd[idx - 1].addr);
-+			ap->prd[idx - 1].flags_len -= cpu_to_le32(SG_COUNT_ASIC_BUG);
-+			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
-+
-+			addr = addr + len - SG_COUNT_ASIC_BUG;
-+			len = SG_COUNT_ASIC_BUG;
-+			ap->prd[idx].addr = cpu_to_le32(addr);
-+			ap->prd[idx].flags_len = cpu_to_le32(len);
-+			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
-+
-+			idx++;
-+		}
-+
-+		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
-+	}
-+}
-+
- static void pdc_qc_prep(struct ata_queued_cmd *qc)
- {
- 	struct pdc_port_priv *pp = qc->ap->private_data;
-@@ -530,7 +608,7 @@ static void pdc_qc_prep(struct ata_queue
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
--		ata_qc_prep(qc);
-+		pdc_fill_sg(qc);
- 		/* fall through */
- 
- 	case ATA_PROT_NODATA:
-@@ -546,11 +624,11 @@ static void pdc_qc_prep(struct ata_queue
- 		break;
- 
- 	case ATA_PROT_ATAPI:
--		ata_qc_prep(qc);
-+		pdc_fill_sg(qc);
- 		break;
- 
- 	case ATA_PROT_ATAPI_DMA:
--		ata_qc_prep(qc);
-+		pdc_fill_sg(qc);
- 		/*FALLTHROUGH*/
- 	case ATA_PROT_ATAPI_NODATA:
- 		pdc_atapi_pkt(qc);
+...
+libata version 3.00 loaded.
+ahci 0000:00:1f.2: version 3.0
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 19 (level, low) -> IRQ 19
+ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 2 ports 3 Gbps 0x3 impl SATA
+mode
+ahci 0000:00:1f.2: flags: 64bit ncq sntf ilck stag pm led clo pio slum
+part 
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+scsi0 : ahci
+scsi1 : ahci
+ata1: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101100 irq 216
+ata2: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101180 irq 216
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ATAPI: TSSTcorpCD/DVDW SH-S183L, SB01, max UDMA/33, ATAPI AN
+ata1.00: applying bridge limits
+ata1.00: configured for UDMA/33
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: ATA-7: WDC WD1600JS-61MHB1, 10.02E01, max UDMA/133
+ata2.00: 312581808 sectors, multi 0: LBA48 
+ata2.00: configured for UDMA/133
+scsi 0:0:0:0: CD-ROM            TSSTcorp CD/DVDW SH-S183L SB01 PQ: 0
+ANSI: 5
+scsi 1:0:0:0: Direct-Access     ATA      WDC WD1600JS-61M 10.0 PQ: 0
+ANSI: 5
+sd 1:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+sd 1:0:0:0: [sda] Write Protect is off
+sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+sd 1:0:0:0: [sda] Write Protect is off
+sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sda: sda1 sda2
+sd 1:0:0:0: [sda] Attached SCSI disk
+sr 0:0:0:0: Attached scsi generic sg0 type 5
+sd 1:0:0:0: Attached scsi generic sg1 type 0
+ACPI: Processor [CPU1] (supports 8 throttling states)
+BIOS EDD facility v0.16 2004-Jun-25, 6 devices found
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
+         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1: soft resetting link
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/33
+ata1: EH complete
+sr0: scsi3-mmc drive: 32x/40x writer dvd-ram cd/rw xa/form2 cdda tray
+Uniform CD-ROM driver Revision: 3.20
+sr 0:0:0:0: Attached scsi CD-ROM sr0
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata1.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0 
+         res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1: soft resetting link
+ata1: SATA link down (SStatus 11 SControl 300)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: hard resetting link
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1: limiting SATA link speed to 1.5 Gbps
+ata1.00: limiting speed to UDMA/33:PIO3
+ata1: failed to recover some devices, retrying in 5 secs
+ReiserFS: sda2: found reiserfs format "3.6" with standard journal
+ReiserFS: sda2: using ordered data mode
+ReiserFS: sda2: journal params: device sda2, size 8192, journal first
+block 18, max trans len 1024, max batch 900, max commit age 30, max
+trans age 30
+ReiserFS: sda2: checking transaction log (sda2)
+ReiserFS: sda2: Using r5 hash to sort names
+ata1: hard resetting link
+ata1: SATA link down (SStatus 0 SControl 310)
+ata1.00: disabled
+ata1: EH complete
+sr 0:0:0:0: rejecting I/O to offline device
+sr 0:0:0:0: rejecting I/O to offline device
+ata1.00: detaching (SCSI 0:0:0:0)
+Adding 2104472k swap on
+/dev/disk/by-id/scsi-SATA_WDC_WD1600JS-61_WD-WCANMC345198-part1.
+Priority:-1 extents:1 across:2104472k
+...
