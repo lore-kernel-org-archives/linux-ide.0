@@ -1,57 +1,118 @@
-From: Declan Moriarty <declan.moriarty@iol.ie>
-Subject: Re: IDE Problem with old Gateway laptop (1998 solo 2300)
-Date: Mon, 29 Oct 2007 10:53:22 +0000
-Message-ID: <1193655202.2506.27.camel@localhost.localdomain>
-References: <949545.3641.qm@web54410.mail.yahoo.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH]ata: sata_nv fix mcp51 timeout with SWNCQ
+Date: Mon, 29 Oct 2007 06:55:46 -0400
+Message-ID: <4725BC32.8070207@garzik.org>
+References: <15F501D1A78BD343BE8F4D8DB854566B059FE1DB@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070402090104020806080106"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.mail.iol.ie ([193.120.142.151]:39401 "EHLO
-	mail1.mail.iol.ie" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbXJ2KxY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2007 06:53:24 -0400
-In-Reply-To: <949545.3641.qm@web54410.mail.yahoo.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:35295 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752454AbXJ2Kzv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Oct 2007 06:55:51 -0400
+In-Reply-To: <15F501D1A78BD343BE8F4D8DB854566B059FE1DB@hkemmail01.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vlad Codrea <vladc6@yahoo.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: Kuan Luo <kluo@nvidia.com>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, Peer Chen <pchen@nvidia.com>
 
-On Sun, 2007-10-28 at 20:13 -0700, Vlad Codrea wrote:
-> Hi,
-> 
-> Have you tried compiling only libata in the kernel? Libata, being
-> newer, might work on your laptop even if the old drivers/ide does not.
+This is a multi-part message in MIME format.
+--------------070402090104020806080106
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-One of the kernels has that compiled in, along with drivers. It's a
-one-size-fits-all kernel, tested on many machines.
-I really doubt if libata alone would do much for me, as the disk and
-bios doesn't really want to know about ata at all. We're 1998 here,
-remember. ATA has to be disabled for this to read the disk at all.
+Kuan Luo wrote:
+> @@ -2383,6 +2383,9 @@ static int nv_init_one (struct pci_dev *pdev,
+> const struct pci_device_id *ent)
+>  		type = ADMA;
+>  	}
+>  
+> +	if (type == SWNCQ && !swncq_enabled)
+> +		type = GENERIC;
+> +
+>  	ppi[0] = &nv_port_info[type];
+>  	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+>  	if (rc)
 
-I did chase for an old 2.4.18 kernel from my last laptop, and that halts
-at the same place with a complaint about devices, (Can't open an initial
-console) so I'm tarring the 2.4 /dev directory (7.5MB) bzipping it
-(86k!!) and sending it over and I'll try that next. I'll probably go
-down in flames later in the boot, but we'll see...
+I applied the attached patch.
 
-Nearly identical IDE messages - all the lines about PIIX4 as before,
-then
-hda: 6332256 sectors (3242MB) w/128Kib Cache, CHS=6282/16/63, DMA
-Partition check:
- hda: [PIBL] [785/128/63] hda1 hda2 hda3 hda4 (That's right - there's
-more of them now.)
+If PCI ID revisions are still needed (please look carefully, I changed 
+the sense of the test a bit), please send them as a separate patch.
 
-Well, I got rid of the 'initial console' error. I still get to
-EXT3-fs mounted root (ext3 filesystem) readonly
-Freeing unused kernel memory: 220k freed
-__WE HALT HERE__
-No initial console error (it evidently was opened) and then ???
-http://www.redhat.com/docs/manuals/linux/RHL-9-Manual/ref-guide/s1-boot-init-shutdown-process.html
-end of section 1.2.3
+Also, Kuan, your patch was corrupted by your email client:
 
-Evidently some failure to launch init.
+> @@ -365,9 +365,9 @@ static const struct pci_device_id nv_pci_tbl[] =3D {
+> =20	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP51_SATA2),
+> SWNCQ },
+> =20	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA),
+> SWNCQ },
+> =20	{ PCI_VDEVICE(NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP55_SATA2),
+> SWNCQ },
+
+and so it not apply-able by Linus's git tools that everybody uses.
+
+
+Please make sure you get a reliable email setup, it is /critical/ for 
+Linux development.  We use email for everything...  Email is a tool in 
+our workflow almost as important as the compiler itself.
+
+	Jeff
+
+
+
+
+--------------070402090104020806080106
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+commit 360737a982b1ae09e1659e0bb27085c03f02f404
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Mon Oct 29 06:49:24 2007 -0400
+
+    [libata] sata_nv: fix SWNCQ enabling
+    
+    Adapted from patches by Kuan Lou @ NVIDIA and Bartlomiej Zolnierkiewicz.
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+
+ drivers/ata/sata_nv.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+360737a982b1ae09e1659e0bb27085c03f02f404
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index fea8d8d..35b2df2 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -2385,6 +2385,14 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		type = ADMA;
+ 	}
  
--- 
-Declan Moriarty <declan.moriarty@iol.ie>
++	if (type == SWNCQ) {
++		if (swncq_enabled)
++			dev_printk(KERN_NOTICE, &pdev->dev,
++				   "Using SWNCQ mode\n");
++		else
++			type = GENERIC;
++	}
++
+ 	ppi[0] = &nv_port_info[type];
+ 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+ 	if (rc)
+@@ -2426,10 +2434,8 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		rc = nv_adma_host_init(host);
+ 		if (rc)
+ 			return rc;
+-	} else if (type == SWNCQ && swncq_enabled) {
+-		dev_printk(KERN_NOTICE, &pdev->dev, "Using SWNCQ mode\n");
++	} else if (type == SWNCQ)
+ 		nv_swncq_host_init(host);
+-	}
+ 
+ 	pci_set_master(pdev);
+ 	return ata_host_activate(host, pdev->irq, ppi[0]->irq_handler,
 
+--------------070402090104020806080106--
