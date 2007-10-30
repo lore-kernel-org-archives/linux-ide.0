@@ -1,37 +1,58 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] make ata_scsi_lpm_get() static
-Date: Wed, 31 Oct 2007 00:50:23 +0100
-Message-ID: <20071030235023.GT7227@stusta.de>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: sata_nv and dynamically changing DMA mask?
+Date: Tue, 30 Oct 2007 17:59:52 -0600
+Message-ID: <4727C578.80900@shaw.ca>
+References: <4726B064.3000906@shaw.ca>
+ <20071030100542.3efe01ee@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:35810 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752914AbXJ3XuZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 19:50:25 -0400
-Content-Disposition: inline
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:52957 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183AbXJ3X5x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 19:57:53 -0400
+In-reply-to: <20071030100542.3efe01ee@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Jeff Garzik <jgarzik@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-ata_scsi_lpm_get() can become static.
+Alan Cox wrote:
+> On Mon, 29 Oct 2007 22:17:40 -0600
+> Robert Hancock <hancockr@shaw.ca> wrote:
+> 
+>> In the sata_nv driver, when running in ADMA mode, we can do 64-bit DMA. 
+>> However, when an ATAPI device like a DVD drive is connected, we can't 
+>> use ADMA mode, and so we have to abide by the restrictions of a normal 
+>> SFF ATA controller and can only do 32-bit DMA. We detect this and try to 
+>> set the blk_queue_bounce_limit, blk_queue_segment_boundary and 
+>> blk_queue_max_hw_segments to the values corresponding to a normal SFF 
+>> controller.
+> 
+> What about the DMA padding buffer from nv_adma_port_start and internal
+> buffers for commands like request sense that don't come via the request
+> queue directly.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Indeed we do call ata_port_start from nv_adma_port_start, which calls 
+dmam_alloc_coherent to allocate the SFF PRD table. Since the DMA mask is 
+64-bit, this could indeed be allocated above 4GB which would be bad.
 
----
-380046f657271be470566bb5c762c1599569bac6 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 93bd36c..c4f0c6c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -120,7 +120,7 @@ static const struct {
- 	{ MEDIUM_POWER, "medium_power" },
- };
- 
--const char *ata_scsi_lpm_get(enum link_pm policy)
-+static const char *ata_scsi_lpm_get(enum link_pm policy)
- {
- 	int i;
- 
+I suppose what we could do is just not call ata_port_start there, but 
+move it into nv_adma_slave_config and call it when going into non-ADMA 
+mode. We'd have to drop the DMA mask down to 32-bit first as well as 
+setting blk_queue_bounce_limit though, which is one of my questions, is 
+this OK to do?
 
+> Also it seems nv_adma_use_reg_mode() can decide to send other commands
+> via the non ADMA interface even for ATA devices. Are we 100% certain it
+> never decides to let through a command with DMA via the register
+> interface in this case - what do you see if you instrument the function ?
+
+The only cases where that could happen are for polling DMA commands 
+(which I presume we never do) or where result taskfile is requested. The 
+latter could be a problem for ATA passthrough commands using DMA, I 
+suppose.. Question is what we can do about it.. We have to switch out of 
+ADMA mode to read a result taskfile. I guess that's not really a problem 
+unless somebody starts issuing NCQ commands via ATA pass-through. Do we 
+allow that?
