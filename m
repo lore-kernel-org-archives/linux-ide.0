@@ -1,51 +1,59 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Deal with ATA8-ACS proposed Trusted/Treacherous
- Computing features
-Date: Tue, 30 Oct 2007 09:58:01 -0400
-Message-ID: <47273869.50508@garzik.org>
-References: <20071012173918.3f6d2760@the-village.bc.nu>
+Subject: Re: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
+Date: Tue, 30 Oct 2007 10:04:49 -0400
+Message-ID: <47273A01.6010604@garzik.org>
+References: <47263F85.70908@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57973 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753391AbXJ3N6E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 09:58:04 -0400
-In-Reply-To: <20071012173918.3f6d2760@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <47263F85.70908@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> Historically word 48 in the identify data was used to mean 32bit I/O was
-> supported for VLB IDE etc. ATA8 reassigns this word to the Trusted
-> Computing Group, where it is used for TCG features. This means that an
-> ATA8 TCG drive is going to trigger 32bit I/O on some systems which will
-> be funny. Perhaps thats why T13 gave them the word.
+Brian King wrote:
+> The following three patches convert ipr to use the new libata EH APIs.
+> In the process of doing this, I first looked into implementing this
+> in a similar manner to how libata SAS is done today, which is hooking
+> into target_alloc/target_destroy to allocate/delete sata ports. While
+> I was able to get this working after writing my own eh_strategy_handler,
+> I was doubtful this was the best long term solution. One problem with this
+> implementation I didn't solve was the fact that libata now invokes EH
+> for each and every error received. For some devices, such as optical
+> devices, each not ready response received during a media reload would
+> result in all the attached SAS devices getting quiesced as well.
 > 
-> Anyway we need to sort this out ready for ATA8 so:
-> - Reorder the ata.h header a bit so the ata_version function occurs early
-> in it
-> - Make dword_io check the ATA version
-> - Add an ATA8 version checking TCG presence test
+> My second approach is the attached patch set. In this series I have
+> created a new libata API which can be used by SAS LLDDs. It introduces
+> an ata_sas_rphy device object which is created/destroyed by the following API:
 > 
-> While we are at it the current drafts have a flaw where it may not be
-> possible to disable TCG features at boot (and opt out of the trusted
-> model) as TCG intends because it relies on presence of a different
-> optional feature (DCS). Handle this in software by refusing the TCG
-> commands if libata.allow_tpm is not set. (We must make it possible as
-> some environments such as proprietary VDR devices will doubtless want to
-> use it to lock up content)
+> ata_sas_rphy_alloc
+> ata_sas_rphy_add
+> ata_sas_rphy_delete
 > 
-> Finally as with CPRM print a warning so that the user knows they may not
-> be able to full access and use the device.
+> When using this API in ipr, I made ipr's scsi_host the parent device of the
+> SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
+> means that each SATA rphy in the SAS topology will have its own scsi_host, making
+> SAS *much* more like all the SATA LLDDs in how it uses libata.
 > 
-> Alan
+> The only issue I ran into with this implementation is that since each SATA
+> port has its own scsi_host, the adapter cannot rely on scsi core to manage
+> any LLDD or adapter imposed queue depth. To solve this I added some code to
+> ipr. Longer term, block layer queue groups might be another way to do this.
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+> I'm still polishing this up, but it is up and running and seems to work with
+> what testing I've done so far.
 
-would you rediff against latest torvalds/linux-2.6.git pretty please?
+Like I said on IRC... thanks for taking care of this!  After this we are 
+down to three old-EH users:  libsas, sata_qstor (patch exists, waiting 
+on testing) and sata_sx4 (patch exists, waiting on testing).
+
+I'll take a good look in the next day or so.  Overall the coupling 
+between SAS (ipr and libsas) and libata definitely needs some thought.
+
+	Jeff
+
 
 
