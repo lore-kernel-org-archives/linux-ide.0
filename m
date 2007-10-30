@@ -1,40 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: sata_nv and dynamically changing DMA mask?
-Date: Tue, 30 Oct 2007 10:05:42 +0000
-Message-ID: <20071030100542.3efe01ee@the-village.bc.nu>
-References: <4726B064.3000906@shaw.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Should be Acard ATP8620 2SATA / 1 IDE  driver
+Date: Tue, 30 Oct 2007 06:24:22 -0400
+Message-ID: <47270656.7080205@garzik.org>
+References: <00b501c81ace$ece895f0$6200a8c0@jameshsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37835 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753236AbXJ3KDv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 06:03:51 -0400
-In-Reply-To: <4726B064.3000906@shaw.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <00b501c81ace$ece895f0$6200a8c0@jameshsu>
+Sender: linux-scsi-owner@vger.kernel.org
+To: jameshsu <jameshsu@acard.com>
+Cc: linux-scsi@vger.kernel.org, 'David Miller' <davem@davemloft.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matti Aarnio <postmaster@vger.kernel.org>, tytso@us.ibm.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-On Mon, 29 Oct 2007 22:17:40 -0600
-Robert Hancock <hancockr@shaw.ca> wrote:
+jameshsu wrote:
+> Should be in TEXT/PLAIN mode. --- resend
+> 
+> ************************
+> Hello,
+> 
+> This driver has nothing changed since last time submit.
+> However recently we download 2.6.23.1 kernel and found Acard ATP8620 SATA
+> driver is still not there.
+> Resend this message to submit the same driver again.
+> Please help Acard to build in this SATA driver with latest Linux kernel.
+> If any reason not able to add in, please let us know.
 
-> In the sata_nv driver, when running in ADMA mode, we can do 64-bit DMA. 
-> However, when an ATAPI device like a DVD drive is connected, we can't 
-> use ADMA mode, and so we have to abide by the restrictions of a normal 
-> SFF ATA controller and can only do 32-bit DMA. We detect this and try to 
-> set the blk_queue_bounce_limit, blk_queue_segment_boundary and 
-> blk_queue_max_hw_segments to the values corresponding to a normal SFF 
-> controller.
+We would be glad to help!
 
-What about the DMA padding buffer from nv_adma_port_start and internal
-buffers for commands like request sense that don't come via the request
-queue directly.
+This driver is an ATA driver, which duplicates the existing SCSI<->ATA 
+translation code we already have.  It also fails to work around the 
+problems ("quirks") found in a large number of ATA devices.
 
-Also it seems nv_adma_use_reg_mode() can decide to send other commands
-via the non ADMA interface even for ATA devices. Are we 100% certain it
-never decides to let through a command with DMA via the register
-interface in this case - what do you see if you instrument the function ?
+As such, it would be preferred that this ATA hardware use the existing 
+ATA driver API.
 
-Alan
+You can see example drivers for advanced controllers such a 
+drivers/ata/ahci.c and drivers/ata/sata_sil24.c, which are both 
+FIS-based controllers with full NCQ support, hotplug support, port 
+multiplier support, and many others.
+
+It is important in Linux that we do not duplicate effort by merging 
+drivers that duplicate the existing SCSI<->ATA translation layer, or 
+fail to use our existing ATA API.
+
+Overall, we wish to avoid adding another ATA driver inside the SCSI 
+layer, without using the existing ATA<->SCSI code.
+
+Is your hardware documentation public?  I can help provide a sample 
+driver for your hardware, or help guide your engineers in this effort.
+
+Regards,
+
+	Jeff, the Linux ATA maintainer
+
+
