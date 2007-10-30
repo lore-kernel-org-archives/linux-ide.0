@@ -1,34 +1,53 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Tue, 30 Oct 2007 19:21:29 +0000
-Message-ID: <47278439.4030801@gentoo.org>
-References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org> <20071030190153.373c9347@the-village.bc.nu>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata fixes
+Date: Tue, 30 Oct 2007 12:31:47 -0700 (PDT)
+Message-ID: <alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
+References: <20071030184502.GA27246@havoc.gtf.org>
+ <alpine.LFD.0.999.0710301151000.30120@woody.linux-foundation.org>
+ <47278206.2080601@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:47048 "EHLO
-	smtp121.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757626AbXJ3TVl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 15:21:41 -0400
-In-Reply-To: <20071030190153.373c9347@the-village.bc.nu>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40377 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760072AbXJ3Tb7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 15:31:59 -0400
+In-Reply-To: <47278206.2080601@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Alan Cox wrote:
-> I would guess Brasero is issuing a command with the length of data
-> wrongly set. In the old code that might well just produce errors of the
-> "Umm wtf is this data left over for ?", with the new code the drive is
-> likely to change state as it knows the transfer size and that will
-> *correctly* cause an HSM error and what follows.
+
+
+On Tue, 30 Oct 2007, Jeff Garzik wrote:
 > 
-> Now the question is who gets the length wrong - Brasero or the ata
-> translation code in libata
+> Can we change git-am to accept two dashes as well as three?  :)
+> 
+> It seems pretty common, not just with Mikael but several others who send
+> patches to me.
 
-Brasero does exactly the same as my test app which I attached to my last 
-mail. Is my test app wrong?
+Well, git-am actually used to be a lot less strict about the dashes, and 
+we've made it *more* strict rather than less, because the more of these 
+breaks we accept, the more likely it is that something that was intended 
+to be part of the message gets thrown out.. So I'll say that I'm a bit 
+nervous about extending it again.
 
-Daniel
+The reason for the three dashes is actually that that is what a *diff* 
+starts with. So if you look at what "closes" a description as far as 
+git-am is concerned, they are currently all things that are likely to 
+start a patch: "Index: " or "diff -" or "--- <filename>", and that last 
+case was then extended to be "manual break" even without the filename 
+information.
 
+See git/builtin-mailinfo.c: patchbreak().
+
+But you could try to sell it to Junio. He's the maintainer, and while I 
+care about some other things and will argue violently against them, when 
+it comes to something like this, Junio is the guy to go to.
+
+That said, I really think you could just try to educate the people you 
+work with. Maybe they just never even realized that "three dashes" is what 
+you're supposed to use!
+
+		Linus
