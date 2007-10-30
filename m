@@ -1,95 +1,43 @@
-From: Ben Court <ben.r.court@googlemail.com>
-Subject: Slow hard drives
-Date: Tue, 30 Oct 2007 22:44:54 +0000
-Message-ID: <1193784294.5955.2.camel@jimin-desktop>
+From: Junio C Hamano <junio@pobox.com>
+Subject: Re: [git patches] libata fixes
+Date: Tue, 30 Oct 2007 15:45:42 -0700
+Message-ID: <7v1wbckyqx.fsf@gitster.siamese.dyndns.org>
+References: <20071030184502.GA27246@havoc.gtf.org>
+	<alpine.LFD.0.999.0710301151000.30120@woody.linux-foundation.org>
+	<47278206.2080601@garzik.org>
+	<alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
+	<Pine.LNX.4.64.0710302045310.31325@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:23507 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753400AbXJ3Wp2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 18:45:28 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so214858ugc
-        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 15:45:26 -0700 (PDT)
+Received: from sceptre.pobox.com ([207.106.133.20]:37182 "EHLO
+	sceptre.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbXJ3Wpx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 18:45:53 -0400
+In-Reply-To: <Pine.LNX.4.64.0710302045310.31325@fbirervta.pbzchgretzou.qr>
+	(Jan Engelhardt's message of "Tue, 30 Oct 2007 20:46:25 +0100 (CET)")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-I've had this problem since edgy, the whole system seems to be really
-slow and i think it's the hard drives causing it, everything slows down
-even more when doing certain tasks (such as checking a torrent file or
-amarok updating my music collection).
-In system log whenever i boot up i get the following messages in
-"kern.log" "messages" and "syslog"
+Jan Engelhardt <jengelh@computergmbh.de> writes:
 
-Oct 30 20:45:26 jimin-desktop kernel: [ 55.312000] hda: dma_intr: bad
-DMA status (dma_stat=76) 
+> On Oct 30 2007 12:31, Linus Torvalds wrote:
+>>On Tue, 30 Oct 2007, Jeff Garzik wrote:
+>>> 
+>>> Can we change git-am to accept two dashes as well as three?  :)
+>>
+>>Well, git-am actually used to be a lot less strict about the dashes, and 
+>>we've made it *more* strict rather than less, because the more of these 
+>>breaks we accept, the more likely it is that something that was intended 
+>>to be part of the message gets thrown out.. So I'll say that I'm a bit 
+>>nervous about extending it again.
+>
+> I would not add --. It is already used ("-- " is) in the mail world as a
+> signature separator. Let's stay with ---, which is also what quilt generates.
 
-Oct 30 20:45:26 jimin-desktop kernel: [ 55.312000] hda: dma_intr:
-status=0x50 { DriveReady SeekComplete } 
+Thanks for the input about what quilt does.
 
-Oct 30 20:45:26 jimin-desktop kernel: [ 55.312000] ide: failed opcode
-was: unknown 
-
-The same comes up for hdb (i have two hard drives installed) and those 3
-messages repeat for a while and then this comes up
-
-Oct 30 20:45:41 jimin-desktop kernel: [ 69.256000] hda: DMA disabled 
-
-Oct 30 20:45:41 jimin-desktop kernel: [ 69.592000] ide0: reset: success 
-
-Here is some information about my hard drives:
-
-
-jimin@jimin-desktop:~$ hdparm -i /dev/hda
-/dev/hda:
-
- Model=ST3160021A, FwRev=8.01, SerialNo=5MT25XGH
- Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs RotSpdTol>.5% }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
- BuffType=unknown, BuffSize=2048kB, MaxMultSect=16, MultSect=off
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
- IORDY=on/off, tPIO={min:240,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4 
- DMA modes:  mdma0 mdma1 mdma2 
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
- AdvancedPM=no WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 2:  ATA/ATAPI-1,2,3,4,5,6
-
- * signifies the current active mode
-
-jimin@jimin-desktop:~$ sudo hdparm -Tt /dev/hda
-
-/dev/hda:
- Timing cached reads:   1622 MB in  2.00 seconds = 811.74 MB/sec
- Timing buffered disk reads:    4 MB in  3.82 seconds =   1.05 MB/sec
-Code:
-jimin@jimin-desktop:~$ sudo hdparm -i /dev/hdb
-
-/dev/hdb:
-
- Model=Maxtor 4D080H4, FwRev=DAH017K0, SerialNo=D41VKJ3E
- Config={ Fixed }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=57
- BuffType=DualPortCache, BuffSize=2048kB, MaxMultSect=16, MultSect=off
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=160086528
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio1 pio2 pio3 pio4 
- DMA modes:  mdma0 mdma1 mdma2 
- UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
- AdvancedPM=yes: disabled (255) WriteCache=enabled
- Drive conforms to: ATA/ATAPI-6 T13 1410D revision 0:  ATA/ATAPI-1,2,3,4,5,6
-
- * signifies the current active mode
-
-jimin@jimin-desktop:~$ sudo hdparm -Tt /dev/hdb
-
-/dev/hdb:
- Timing cached reads:   1592 MB in  2.00 seconds = 795.73 MB/sec
- Timing buffered disk reads:    4 MB in  3.76 seconds =   1.06 MB/sec
-
-Does anyone know what could be causing this? If you need more information please let me know.
-Also could i be CC'ed on this please. Thanks
-
-
+So the way to proceed is to have no change to mailinfo, and have
+a bit of user education.
