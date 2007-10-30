@@ -1,149 +1,47 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Tue, 30 Oct 2007 17:45:46 +0000
-Message-ID: <47276DCA.1000808@gentoo.org>
-References: <47274A5F.6070409@gentoo.org> <20071030153417.59b9182c@the-village.bc.nu>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [IDE] Fix build bug
+Date: Tue, 30 Oct 2007 11:34:29 +0000
+Message-ID: <200710301134.30087.vda.linux@googlemail.com>
+References: <20071025135334.GA23272@linux-mips.org> <200710252341.38902.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010809090001080805050404"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:37471 "EHLO
-	smtp121.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756916AbXJ3RqD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 13:46:03 -0400
-In-Reply-To: <20071030153417.59b9182c@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------010809090001080805050404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Alan Cox wrote:
-> Not immediately - but if you've got wrong transfer lengths its a
-> candidate for this.
-> 
-> Ok lets start with the basics
-> 
-> If you mount a CD and use it does it work
-
-Yep.
-
-> If you use cdrecord does it work ?
-
-Yep (tested with wodim from debburn, effectively the same thing)
-
-> What vendor drive and does it seem to be a specific box/drive that
-> triggers this ?
-
-Device type    : Removable CD-ROM
-Version        : 5
-Response Format: 2
-Capabilities   :
-Vendor_info    : 'PHILIPS '
-Identification : 'DVD+-RW SDVD8820'
-Revision       : 'AD15'
-Device seems to be: Generic mmc2 DVD-R/DVD-RW.
-Using generic SCSI-3/mmc   CD-R/CD-RW driver (mmc_cdr).
-Driver flags   : MMC-3 SWABAUDIO BURNFREE
-Supported modes: TAO PACKET SAO SAO/R96P SAO/R96R RAW/R16 RAW/R96P RAW/R96R
-
-This is on my laptop (Dell Inspiron 640m). I won't have access to 
-another system to test this there until next week.
-
-The nutty app I was using for burning is Brasero, a GNOME app which does 
-some SG_IO directly with the drive. (I guess it has some bad error 
-handling and doesn't realise when some I/O path has failed)
-
-I have narrowed down the exact command submission which causes those 
-nasty messages in dmesg. The function which submits this is named 
-"brasero_medium_get_page_2A_write_speed_desc".
-
-The test program that I've attached can now reproduce this error every 
-time it is run. The output is:
-
-	result 0
-	check sense data:
-	72 0b 47 00 00 00 00 0e 09 0c 00 00 00 02 00 00 00 0a 00
-
-I get the same output and dmesg errors even when there is no media in 
-the drive.
-
-I have had a quick look at the SCSI command being submitted there, and 
-don't see anything wrong.
-
-What next?
-
-Daniel
-
---------------010809090001080805050404
 Content-Type: text/plain;
- name="testsg.c"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="testsg.c"
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <200710252341.38902.bzolnier@gmail.com>
+Content-Disposition: inline
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
+List-Id: linux-ide@vger.kernel.org
 
-#include <stdio.h>
-#include <scsi/sg.h>
-#include <scsi/scsi.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+On Thursday 25 October 2007 22:41, Bartlomiej Zolnierkiewicz wrote:
+> > -static const struct ide_port_info generic_chipsets[] __devinitdata = {
+> > +static struct ide_port_info generic_chipsets[] __devinitdata = {
+> >  	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",	0),
+> >  
+> >  	{	/* 1 */
+> 
+> I would prefer to not remove const from generic_chipsets[] so:
+> 
+> [PATCH] drivers/ide/pci/generic: fix build for CONFIG_HOTPLUG=n
+> 
+> It turns out that const and __{dev}initdata cannot be mixed currently
+> and that generic IDE PCI host driver is also affected by the same issue:
+> 
+> On Thursday 25 October 2007, Ralf Baechle wrote:
+> >   CC      drivers/ide/pci/generic.o
+> > drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
+> > +section type conflict
+> 
+> [ Also reported by Martijn Uffing <mp3project@sarijopen.student.utwente.nl>. ]
+> 
+> This patch workarounds the problem in a bit hackish way but without
+> removing const from generic_chipsets[] (it adds const to __setup() so
+> __setup_str_ide_generic_all becomes const).
 
-int main(void)
-{
-	struct sg_io_hdr transport;
-	unsigned char cmd[] = {
-		0x5a, //opcode -- mode sense(10)
-		0x08, //dbd, llbaa -- dbd=1
-		0x2a, //page code -- BRASERO_SPC_PAGE_STATUS
-		      // spc-3 says thats "CD capabilities and mechanical status"
-			  //
-		0x00, //brasero says reserved, spc3 says subpage code
-		0x00, //reserved
-		0x00, //reserved
-		0x00, //alloc len
-		0x0a, //alloc len
-		0x00, //ctl
-	};
-	unsigned char buffer[10];
-	unsigned char sense_data[19];
-	int r;
-	int i;
-	int fd = open("/dev/sr0", O_RDONLY|O_NONBLOCK);
-	if (fd < 0) {
-		printf("open failed\n");
-		exit(1);
-	}
-
-	memset(&transport, 0, sizeof(transport));
-	memset(buffer, 0, sizeof(buffer));
-	memset(sense_data, 0, sizeof(sense_data));
-
-	transport.interface_id = 'S';
-	transport.cmdp = cmd;
-	transport.cmd_len = sizeof(cmd);
-	transport.dxferp = buffer;
-	transport.dxfer_len = sizeof(buffer);
-	transport.sbp = sense_data;
-	transport.mx_sb_len = sizeof(sense_data);
-	transport.dxfer_direction = SG_DXFER_FROM_DEV;
-
-	r = ioctl(fd, SG_IO, &transport);
-	printf("result %d\n", r);
-	if ((transport.masked_status & CHECK_CONDITION) && transport.sb_len_wr) {
-		printf("check sense data:\n");
-		for (i = 0; i < sizeof(sense_data); i++)
-			printf("%02x ", sense_data[i]);
-		printf("\n");
-	}
-}
-
---------------010809090001080805050404--
+You wouldn't believe how much const data is not marked as const because
+we don't have __constinitdata etc. Literally megabytes.
+--
+vda
