@@ -1,75 +1,59 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: [PATCH] libata: increase 128 KB / cmd limit for ATAPI tape drives
-Date: Tue, 30 Oct 2007 11:44:35 -0400
-Message-ID: <47275163.9020809@cybernetics.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Tue, 30 Oct 2007 15:14:39 +0000
+Message-ID: <47274A5F.6070409@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host06.cybernetics.com ([206.246.200.22]:2352 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1756538AbXJ3Pof (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 11:44:35 -0400
+Received: from smtp131.iad.emailsrvr.com ([207.97.245.131]:47042 "EHLO
+	smtp131.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751001AbXJ3PyE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 11:54:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Commands sent to ATAPI tape drives via the SCSI generic (sg) driver are
-limited in the amount of data that they can transfer by the max_sectors
-value.  The max_sectors value is currently calculated according to the
-command set for disk drives, which doesn't apply to tape drives.  The
-default max_sectors value of 256 limits ATAPI tape drive commands to
-128 KB.  This patch against 2.6.24-rc1 increases the max_sectors value
-for tape drives to 65535, which permits tape drive commands to transfer
-just under 32 MB.
+Hi Alan,
 
-Tested with a SuperMicro PDSME motherboard, AHCI, and a Sony SDX-570V
-SATA tape drive.
+In 2.6.23 and previous, CD writing works fine on my system. I'm using 
+ata_piix on:
 
-Note that some of the chipset drivers also set their own max_sectors
-value, which may override the value set in libata-core.  I don't have
-any of these chipsets to test, so I didn't go messing with them.  Also,
-ATAPI devices other than tape drives may benefit from similar changes,
-but I have only tape drives and disk drives to test.
+00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) SATA 
+IDE Controller (rev 01)
 
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
----
-diff -urpN linux-2.6.24-rc1-vanilla/drivers/ata/libata-core.c linux-2.6.24-rc1/drivers/ata/libata-core.c
---- linux-2.6.24-rc1-vanilla/drivers/ata/libata-core.c	2007-10-30 09:21:38.000000000 -0400
-+++ linux-2.6.24-rc1/drivers/ata/libata-core.c	2007-10-30 11:35:57.000000000 -0400
-@@ -2126,6 +2126,10 @@ int ata_dev_configure(struct ata_device 
- 		dev->max_sectors = ATA_MAX_SECTORS;
- 	}
- 
-+	if ((dev->class == ATA_DEV_ATAPI) &&
-+	    (atapi_command_packet_set(id) == TYPE_TAPE))
-+		dev->max_sectors = ATA_MAX_SECTORS_TAPE;
-+
- 	if (dev->horkage & ATA_HORKAGE_MAX_SEC_128)
- 		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
- 					 dev->max_sectors);
-diff -urpN linux-2.6.24-rc1-vanilla/include/linux/ata.h linux-2.6.24-rc1/include/linux/ata.h
---- linux-2.6.24-rc1-vanilla/include/linux/ata.h	2007-10-30 09:21:54.000000000 -0400
-+++ linux-2.6.24-rc1/include/linux/ata.h	2007-10-30 10:30:59.000000000 -0400
-@@ -43,6 +43,7 @@ enum {
- 	ATA_MAX_SECTORS_128	= 128,
- 	ATA_MAX_SECTORS		= 256,
- 	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
-+	ATA_MAX_SECTORS_TAPE	= 65535,
- 
- 	ATA_ID_WORDS		= 256,
- 	ATA_ID_SERNO		= 10,
-@@ -522,6 +523,11 @@ static inline int atapi_cdb_len(const u1
- 	}
- }
- 
-+static inline int atapi_command_packet_set(const u16 *dev_id)
-+{
-+	return (dev_id[0] >> 8) & 0x1f;
-+}
-+
- static inline int is_atapi_taskfile(const struct ata_taskfile *tf)
- {
- 	return (tf->protocol == ATA_PROT_ATAPI) ||
+When I'm running CD writing utilities, I sometimes see this message in 
+the kernel logs:
+	ata2.00: 66 bytes trailing data
+Things do work fine though.
 
+With 2.6.24-rc1, I can't write CDs. Instead of the above message, I get:
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata2.00: cmd a0/00:00:00:0a:00/00:00:00:00:00/a0 tag 0 cdb 0x5a data 10 in
+          res 58/00:02:00:0a:00/00:00:00:00:00/a0 Emask 0x2 (HSM violation)
+ata2.00: status: { DRDY DRQ }
+ata2: soft resetting link
+ata2.00: configured for UDMA/33
+ata2: EH complete
 
+and the software acts oddly - for example Brasero tells me that the 
+blank CD I have inserted has a capacity of 17,179,869,184gb and it 
+doesn't let me write CDs as it says the medium is not writable.
+
+git bisect lead me to commit 2db78dd302d26d242d3e8e5c4c5024b6c3ea93c2 as 
+the culprit.
+
+Author: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Date:   Tue Oct 2 13:53:04 2007 -0700
+
+     libata_scsi: Fix ATAPI transfer lengths
+
+     Some controller variants snoop the ATAPI length value for Packet
+     transfers to do state machine and FIFO management. Thus we want to
+     set it properly, even for cases where it is otherwise meaningless.
+
+Any ideas?
+
+Thanks!
+Daniel
