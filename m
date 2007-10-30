@@ -1,335 +1,166 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/15] ide: remove ata_status_t and atapi_status_t
-Date: Wed, 31 Oct 2007 00:25:04 +0100
-Message-ID: <200710310025.04369.bzolnier@gmail.com>
+Subject: [PATCH 5/15] ide: remove atapi_feature_t
+Date: Wed, 31 Oct 2007 00:26:44 +0100
+Message-ID: <200710310026.44486.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:45663 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.190]:45723 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752196AbXJ3XuU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 19:50:20 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so1788122nfb
-        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 16:50:18 -0700 (PDT)
+	with ESMTP id S1752415AbXJ3XuW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 19:50:22 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1788117nfb
+        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 16:50:21 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 
-Remove ata_status_t (unused) and atapi_status_t.
+Remove atapi_feature_t.
 
 While at it:
-* replace 'HWIF(drive)' by 'drive->hwif' (or just 'hwif' where possible)
+* replace 'HWIF(drive)' by 'hwif'
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-floppy.c |   14 +++++++-------
- drivers/ide/ide-lib.c    |   21 +++++++++------------
- drivers/ide/ide-tape.c   |   34 +++++++++++++++++-----------------
- drivers/scsi/ide-scsi.c  |    9 ++++-----
- include/linux/ide.h      |   44 --------------------------------------------
- 5 files changed, 37 insertions(+), 85 deletions(-)
+ drivers/ide/ide-floppy.c |   10 +++++-----
+ drivers/scsi/ide-scsi.c  |   11 ++++-------
+ include/linux/ide.h      |   27 ---------------------------
+ 3 files changed, 9 insertions(+), 39 deletions(-)
 
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -788,12 +788,12 @@ static void idefloppy_retry_pc (ide_driv
- static ide_startstop_t idefloppy_pc_intr (ide_drive_t *drive)
+@@ -1019,9 +1019,9 @@ static ide_startstop_t idefloppy_issue_p
  {
  	idefloppy_floppy_t *floppy = drive->driver_data;
--	atapi_status_t status;
- 	atapi_bcount_t bcount;
- 	atapi_ireason_t ireason;
- 	idefloppy_pc_t *pc = floppy->pc;
- 	struct request *rq = pc->rq;
- 	unsigned int temp;
-+	u8 stat;
- 
- 	debug_log(KERN_INFO "ide-floppy: Reached %s interrupt handler\n",
- 		__FUNCTION__);
-@@ -809,16 +809,16 @@ static ide_startstop_t idefloppy_pc_intr
- 	}
- 
- 	/* Clear the interrupt */
--	status.all = HWIF(drive)->INB(IDE_STATUS_REG);
-+	stat = drive->hwif->INB(IDE_STATUS_REG);
- 
--	if (!status.b.drq) {			/* No more interrupts */
-+	if ((stat & DRQ_STAT) == 0) {		/* No more interrupts */
- 		debug_log(KERN_INFO "Packet command completed, %d bytes "
- 			"transferred\n", pc->actually_transferred);
- 		clear_bit(PC_DMA_IN_PROGRESS, &pc->flags);
- 
- 		local_irq_enable_in_hardirq();
- 
--		if (status.b.check || test_bit(PC_DMA_ERROR, &pc->flags)) {
-+		if ((stat & ERR_STAT) || test_bit(PC_DMA_ERROR, &pc->flags)) {
- 			/* Error detected */
- 			debug_log(KERN_INFO "ide-floppy: %s: I/O error\n",
- 				drive->name);
-@@ -1632,14 +1632,14 @@ static int idefloppy_get_format_progress
- 		/* Else assume format_unit has finished, and we're
- 		** at 0x10000 */
- 	} else {
--		atapi_status_t status;
- 		unsigned long flags;
-+		u8 stat;
- 
- 		local_irq_save(flags);
--		status.all = HWIF(drive)->INB(IDE_STATUS_REG);
-+		stat = drive->hwif->INB(IDE_STATUS_REG);
- 		local_irq_restore(flags);
- 
--		progress_indication = !status.b.dsc ? 0 : 0x10000;
-+		progress_indication = ((stat & SEEK_STAT) == 0) ? 0 : 0x10000;
- 	}
- 	if (put_user(progress_indication, arg))
- 		return (-EFAULT);
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -558,27 +558,24 @@ static u8 ide_dump_ata_status(ide_drive_
- static u8 ide_dump_atapi_status(ide_drive_t *drive, const char *msg, u8 stat)
- {
- 	unsigned long flags;
--
--	atapi_status_t status;
- 	atapi_error_t error;
- 
--	status.all = stat;
- 	error.all = 0;
- 	local_irq_save(flags);
- 	printk("%s: %s: status=0x%02x { ", drive->name, msg, stat);
--	if (status.b.bsy)
-+	if (stat & BUSY_STAT)
- 		printk("Busy ");
- 	else {
--		if (status.b.drdy)	printk("DriveReady ");
--		if (status.b.df)	printk("DeviceFault ");
--		if (status.b.dsc)	printk("SeekComplete ");
--		if (status.b.drq)	printk("DataRequest ");
--		if (status.b.corr)	printk("CorrectedError ");
--		if (status.b.idx)	printk("Index ");
--		if (status.b.check)	printk("Error ");
-+		if (stat & READY_STAT)	printk("DriveReady ");
-+		if (stat & WRERR_STAT)	printk("DeviceFault ");
-+		if (stat & SEEK_STAT)	printk("SeekComplete ");
-+		if (stat & DRQ_STAT)	printk("DataRequest ");
-+		if (stat & ECC_STAT)	printk("CorrectedError ");
-+		if (stat & INDEX_STAT)	printk("Index ");
-+		if (stat & ERR_STAT)	printk("Error ");
- 	}
- 	printk("}\n");
--	if (status.b.check && !status.b.bsy) {
-+	if ((stat & (BUSY_STAT|ERR_STAT)) == ERR_STAT) {
- 		error.all = HWIF(drive)->INB(IDE_ERROR_REG);
- 		printk("%s: %s: error=0x%02x { ", drive->name, msg, error.all);
- 		if (error.b.ili)	printk("IllegalLengthIndication ");
-Index: b/drivers/ide/ide-tape.c
-===================================================================
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1848,15 +1848,14 @@ static ide_startstop_t idetape_pc_intr (
- {
  	ide_hwif_t *hwif = drive->hwif;
- 	idetape_tape_t *tape = drive->driver_data;
--	atapi_status_t status;
+-	atapi_feature_t feature;
  	atapi_bcount_t bcount;
- 	atapi_ireason_t ireason;
- 	idetape_pc_t *pc = tape->pc;
--
- 	unsigned int temp;
- #if SIMULATE_ERRORS
- 	static int error_sim_count = 0;
- #endif
-+	u8 stat;
+ 	ide_handler_t *pkt_xfer_routine;
++	u8 dma;
  
- #if IDETAPE_DEBUG_LOG
- 	if (tape->debug_level >= 4)
-@@ -1865,10 +1864,10 @@ static ide_startstop_t idetape_pc_intr (
- #endif /* IDETAPE_DEBUG_LOG */	
+ 	if (floppy->failed_pc == NULL &&
+ 	    pc->c[0] != IDEFLOPPY_REQUEST_SENSE_CMD)
+@@ -1064,20 +1064,20 @@ static ide_startstop_t idefloppy_issue_p
+ 	if (test_and_clear_bit(PC_DMA_ERROR, &pc->flags))
+ 		ide_dma_off(drive);
  
- 	/* Clear the interrupt */
--	status.all = HWIF(drive)->INB(IDE_STATUS_REG);
-+	stat = hwif->INB(IDE_STATUS_REG);
+-	feature.all = 0;
++	dma = 0;
  
- 	if (test_bit(PC_DMA_IN_PROGRESS, &pc->flags)) {
--		if (HWIF(drive)->ide_dma_end(drive) || status.b.check) {
-+		if (hwif->ide_dma_end(drive) || (stat & ERR_STAT)) {
- 			/*
- 			 * A DMA error is sometimes expected. For example,
- 			 * if the tape is crossing a filemark during a
-@@ -1902,7 +1901,7 @@ static ide_startstop_t idetape_pc_intr (
+ 	if (test_bit(PC_DMA_RECOMMENDED, &pc->flags) && drive->using_dma)
+-		feature.b.dma = !hwif->dma_setup(drive);
++		dma = !hwif->dma_setup(drive);
+ 
+ 	if (IDE_CONTROL_REG)
+ 		HWIF(drive)->OUTB(drive->ctl, IDE_CONTROL_REG);
+ 	/* Use PIO/DMA */
+-	HWIF(drive)->OUTB(feature.all, IDE_FEATURE_REG);
++	hwif->OUTB(dma, IDE_FEATURE_REG);
+ 	HWIF(drive)->OUTB(bcount.b.high, IDE_BCOUNTH_REG);
+ 	HWIF(drive)->OUTB(bcount.b.low, IDE_BCOUNTL_REG);
+ 	HWIF(drive)->OUTB(drive->select.all, IDE_SELECT_REG);
+ 
+-	if (feature.b.dma) {	/* Begin DMA, if necessary */
++	if (dma) {	/* Begin DMA, if necessary */
+ 		set_bit(PC_DMA_IN_PROGRESS, &pc->flags);
+ 		hwif->dma_start(drive);
  	}
- 
- 	/* No more interrupts */
--	if (!status.b.drq) {
-+	if ((stat & DRQ_STAT) == 0) {
- #if IDETAPE_DEBUG_LOG
- 		if (tape->debug_level >= 2)
- 			printk(KERN_INFO "ide-tape: Packet command completed, %d bytes transferred\n", pc->actually_transferred);
-@@ -1917,12 +1916,13 @@ static ide_startstop_t idetape_pc_intr (
- 		    (++error_sim_count % 100) == 0) {
- 			printk(KERN_INFO "ide-tape: %s: simulating error\n",
- 				tape->name);
--			status.b.check = 1;
-+			stat |= ERR_STAT;
- 		}
- #endif
--		if (status.b.check && pc->c[0] == IDETAPE_REQUEST_SENSE_CMD)
--			status.b.check = 0;
--		if (status.b.check || test_bit(PC_DMA_ERROR, &pc->flags)) {	/* Error detected */
-+		if ((stat & ERR_STAT) && pc->c[0] == IDETAPE_REQUEST_SENSE_CMD)
-+			stat &= ~ERR_STAT;
-+		if ((stat & ERR_STAT) || test_bit(PC_DMA_ERROR, &pc->flags)) {
-+			/* Error detected */
- #if IDETAPE_DEBUG_LOG
- 			if (tape->debug_level >= 1)
- 				printk(KERN_INFO "ide-tape: %s: I/O error\n",
-@@ -1941,7 +1941,7 @@ static ide_startstop_t idetape_pc_intr (
- 		}
- 		pc->error = 0;
- 		if (test_bit(PC_WAIT_FOR_DSC, &pc->flags) &&
--		    !status.b.dsc) {
-+		    (stat & SEEK_STAT) == 0) {
- 			/* Media access command */
- 			tape->dsc_polling_start = jiffies;
- 			tape->dsc_polling_frequency = IDETAPE_DSC_MA_FAST;
-@@ -2285,11 +2285,11 @@ static ide_startstop_t idetape_media_acc
- {
- 	idetape_tape_t *tape = drive->driver_data;
- 	idetape_pc_t *pc = tape->pc;
--	atapi_status_t status;
-+	u8 stat;
- 
--	status.all = HWIF(drive)->INB(IDE_STATUS_REG);
--	if (status.b.dsc) {
--		if (status.b.check) {
-+	stat = drive->hwif->INB(IDE_STATUS_REG);
-+	if (stat & SEEK_STAT) {
-+		if (stat & ERR_STAT) {
- 			/* Error detected */
- 			if (pc->c[0] != IDETAPE_TEST_UNIT_READY_CMD)
- 				printk(KERN_ERR "ide-tape: %s: I/O error, ",
-@@ -2407,7 +2407,7 @@ static ide_startstop_t idetape_do_reques
- 	idetape_tape_t *tape = drive->driver_data;
- 	idetape_pc_t *pc = NULL;
- 	struct request *postponed_rq = tape->postponed_rq;
--	atapi_status_t status;
-+	u8 stat;
- 
- #if IDETAPE_DEBUG_LOG
- #if 0
-@@ -2455,7 +2455,7 @@ static ide_startstop_t idetape_do_reques
- 	 * If the tape is still busy, postpone our request and service
- 	 * the other device meanwhile.
- 	 */
--	status.all = HWIF(drive)->INB(IDE_STATUS_REG);
-+	stat = drive->hwif->INB(IDE_STATUS_REG);
- 
- 	if (!drive->dsc_overlap && !(rq->cmd[0] & REQ_IDETAPE_PC2))
- 		set_bit(IDETAPE_IGNORE_DSC, &tape->flags);
-@@ -2471,7 +2471,7 @@ static ide_startstop_t idetape_do_reques
- 		tape->insert_speed = tape->insert_size / 1024 * HZ / (jiffies - tape->insert_time);
- 	calculate_speeds(drive);
- 	if (!test_and_clear_bit(IDETAPE_IGNORE_DSC, &tape->flags) &&
--	    !status.b.dsc) {
-+	    (stat & SEEK_STAT) == 0) {
- 		if (postponed_rq == NULL) {
- 			tape->dsc_polling_start = jiffies;
- 			tape->dsc_polling_frequency = tape->best_dsc_rw_frequency;
 Index: b/drivers/scsi/ide-scsi.c
 ===================================================================
 --- a/drivers/scsi/ide-scsi.c
 +++ b/drivers/scsi/ide-scsi.c
-@@ -403,11 +403,10 @@ static ide_startstop_t idescsi_pc_intr (
- 	idescsi_pc_t *pc=scsi->pc;
+@@ -404,7 +404,6 @@ static ide_startstop_t idescsi_pc_intr (
  	struct request *rq = pc->rq;
  	atapi_bcount_t bcount;
--	atapi_status_t status;
  	atapi_ireason_t ireason;
- 	atapi_feature_t feature;
--
+-	atapi_feature_t feature;
  	unsigned int temp;
-+	u8 stat;
+ 	u8 stat;
  
- #if IDESCSI_DEBUG_LOG
- 	printk (KERN_INFO "ide-scsi: Reached idescsi_pc_intr interrupt handler\n");
-@@ -432,14 +431,14 @@ static ide_startstop_t idescsi_pc_intr (
+@@ -429,7 +428,6 @@ static ide_startstop_t idescsi_pc_intr (
+ 		(void) HWIF(drive)->ide_dma_end(drive);
+ 	}
  
- 	feature.all = 0;
+-	feature.all = 0;
  	/* Clear the interrupt */
--	status.all = HWIF(drive)->INB(IDE_STATUS_REG);
-+	stat = drive->hwif->INB(IDE_STATUS_REG);
+ 	stat = drive->hwif->INB(IDE_STATUS_REG);
  
--	if (!status.b.drq) {
-+	if ((stat & DRQ_STAT) == 0) {
- 		/* No more interrupts */
- 		if (test_bit(IDESCSI_LOG_CMD, &scsi->log))
- 			printk (KERN_INFO "Packet command completed, %d bytes transferred\n", pc->actually_transferred);
- 		local_irq_enable_in_hardirq();
--		if (status.b.check)
-+		if (stat & ERR_STAT)
- 			rq->errors++;
- 		idescsi_end_request (drive, 1, 0);
- 		return ide_stopped;
+@@ -577,18 +575,17 @@ static ide_startstop_t idescsi_issue_pc 
+ {
+ 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
+ 	ide_hwif_t *hwif = drive->hwif;
+-	atapi_feature_t feature;
+ 	atapi_bcount_t bcount;
++	u8 dma = 0;
+ 
+ 	scsi->pc=pc;							/* Set the current packet command */
+ 	pc->actually_transferred=0;					/* We haven't transferred any data yet */
+ 	pc->current_position=pc->buffer;
+ 	bcount.all = min(pc->request_transfer, 63 * 1024);		/* Request to transfer the entire buffer at once */
+ 
+-	feature.all = 0;
+ 	if (drive->using_dma && !idescsi_map_sg(drive, pc)) {
+ 		hwif->sg_mapped = 1;
+-		feature.b.dma = !hwif->dma_setup(drive);
++		dma = !hwif->dma_setup(drive);
+ 		hwif->sg_mapped = 0;
+ 	}
+ 
+@@ -596,11 +593,11 @@ static ide_startstop_t idescsi_issue_pc 
+ 	if (IDE_CONTROL_REG)
+ 		HWIF(drive)->OUTB(drive->ctl, IDE_CONTROL_REG);
+ 
+-	HWIF(drive)->OUTB(feature.all, IDE_FEATURE_REG);
++	hwif->OUTB(dma, IDE_FEATURE_REG);
+ 	HWIF(drive)->OUTB(bcount.b.high, IDE_BCOUNTH_REG);
+ 	HWIF(drive)->OUTB(bcount.b.low, IDE_BCOUNTL_REG);
+ 
+-	if (feature.b.dma)
++	if (dma)
+ 		set_bit(PC_DMA_OK, &pc->flags);
+ 
+ 	if (test_bit(IDESCSI_DRQ_INTERRUPT, &scsi->flags)) {
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -366,50 +366,6 @@ typedef union {
+@@ -366,33 +366,6 @@ typedef union {
  } select_t, ata_select_t;
  
  /*
-- * The ATA-IDE Status Register.
-- * The ATAPI Status Register.
+- * ATAPI Feature Register
 - *
-- * check	: Error occurred
-- * idx		: Index Error
-- * corr		: Correctable error occurred
-- * drq		: Data is request by the device
-- * dsc		: Disk Seek Complete			: ata
-- *		: Media access command finished		: atapi
-- * df		: Device Fault				: ata
-- *		: Reserved				: atapi
-- * drdy		: Ready, Command Mode Capable		: ata
-- *		: Ignored for ATAPI commands		: atapi
-- * bsy		: Disk is Busy
-- *		: The device has access to the command block
+- * dma		: Using DMA or PIO
+- * reserved321	: Reserved
+- * reserved654	: Reserved (Tag Type)
+- * reserved7	: Reserved
 - */
 -typedef union {
 -	unsigned all			:8;
 -	struct {
 -#if defined(__LITTLE_ENDIAN_BITFIELD)
--		unsigned check		:1;
--		unsigned idx		:1;
--		unsigned corr		:1;
--		unsigned drq		:1;
--		unsigned dsc		:1;
--		unsigned df		:1;
--		unsigned drdy		:1;
--		unsigned bsy		:1;
+-		unsigned dma		:1;
+-		unsigned reserved321	:3;
+-		unsigned reserved654	:3;
+-		unsigned reserved7	:1;
 -#elif defined(__BIG_ENDIAN_BITFIELD)
--		unsigned bsy		:1;
--		unsigned drdy		:1;
--		unsigned df		:1;
--		unsigned dsc		:1;
--		unsigned drq		:1;
--		unsigned corr           :1;
--		unsigned idx		:1;
--		unsigned check		:1;
+-		unsigned reserved7	:1;
+-		unsigned reserved654	:3;
+-		unsigned reserved321	:3;
+-		unsigned dma		:1;
 -#else
 -#error "Please fix <asm/byteorder.h>"
 -#endif
 -	} b;
--} ata_status_t, atapi_status_t;
+-} atapi_feature_t;
 -
 -/*
-  * ATAPI Feature Register
+  * ATAPI Interrupt Reason Register.
   *
-  * dma		: Using DMA or PIO
+  * cod		: Information transferred is command (1) or data (0)
