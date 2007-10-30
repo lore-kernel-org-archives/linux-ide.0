@@ -1,59 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
-Date: Tue, 30 Oct 2007 10:04:49 -0400
-Message-ID: <47273A01.6010604@garzik.org>
-References: <47263F85.70908@linux.vnet.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Tue, 30 Oct 2007 15:34:17 +0000
+Message-ID: <20071030153417.59b9182c@the-village.bc.nu>
+References: <47274A5F.6070409@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <47263F85.70908@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54037 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756505AbXJ3Pcx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 11:32:53 -0400
+In-Reply-To: <47274A5F.6070409@gentoo.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>
+Cc: linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Brian King wrote:
-> The following three patches convert ipr to use the new libata EH APIs.
-> In the process of doing this, I first looked into implementing this
-> in a similar manner to how libata SAS is done today, which is hooking
-> into target_alloc/target_destroy to allocate/delete sata ports. While
-> I was able to get this working after writing my own eh_strategy_handler,
-> I was doubtful this was the best long term solution. One problem with this
-> implementation I didn't solve was the fact that libata now invokes EH
-> for each and every error received. For some devices, such as optical
-> devices, each not ready response received during a media reload would
-> result in all the attached SAS devices getting quiesced as well.
+On Tue, 30 Oct 2007 15:14:39 +0000
+Daniel Drake <dsd@gentoo.org> wrote:
+
+> Hi Alan,
 > 
-> My second approach is the attached patch set. In this series I have
-> created a new libata API which can be used by SAS LLDDs. It introduces
-> an ata_sas_rphy device object which is created/destroyed by the following API:
+> In 2.6.23 and previous, CD writing works fine on my system. I'm using 
+> ata_piix on:
 > 
-> ata_sas_rphy_alloc
-> ata_sas_rphy_add
-> ata_sas_rphy_delete
+> 00:1f.2 IDE interface: Intel Corporation 82801GBM/GHM (ICH7 Family) SATA 
+> IDE Controller (rev 01)
 > 
-> When using this API in ipr, I made ipr's scsi_host the parent device of the
-> SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
-> means that each SATA rphy in the SAS topology will have its own scsi_host, making
-> SAS *much* more like all the SATA LLDDs in how it uses libata.
+> When I'm running CD writing utilities, I sometimes see this message in 
+> the kernel logs:
+> 	ata2.00: 66 bytes trailing data
+> Things do work fine though.
+
+By luck in part I suspect. That shouldn't be happening and indicates
+something is very wrong. With the fifo buffers set right that may well
+get worse.
+
+> git bisect lead me to commit 2db78dd302d26d242d3e8e5c4c5024b6c3ea93c2 as 
+> the culprit.
 > 
-> The only issue I ran into with this implementation is that since each SATA
-> port has its own scsi_host, the adapter cannot rely on scsi core to manage
-> any LLDD or adapter imposed queue depth. To solve this I added some code to
-> ipr. Longer term, block layer queue groups might be another way to do this.
+> Author: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Date:   Tue Oct 2 13:53:04 2007 -0700
 > 
-> I'm still polishing this up, but it is up and running and seems to work with
-> what testing I've done so far.
+>      libata_scsi: Fix ATAPI transfer lengths
+> 
+>      Some controller variants snoop the ATAPI length value for Packet
+>      transfers to do state machine and FIFO management. Thus we want to
+>      set it properly, even for cases where it is otherwise meaningless.
+> 
+> Any ideas?
 
-Like I said on IRC... thanks for taking care of this!  After this we are 
-down to three old-EH users:  libsas, sata_qstor (patch exists, waiting 
-on testing) and sata_sx4 (patch exists, waiting on testing).
+Not immediately - but if you've got wrong transfer lengths its a
+candidate for this.
 
-I'll take a good look in the next day or so.  Overall the coupling 
-between SAS (ipr and libsas) and libata definitely needs some thought.
+Ok lets start with the basics
 
-	Jeff
+If you mount a CD and use it does it work
+If you use cdrecord does it work ?
 
+What vendor drive and does it seem to be a specific box/drive that
+triggers this ?
 
-
+Alan
