@@ -1,43 +1,58 @@
-From: Junio C Hamano <junio@pobox.com>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 30 Oct 2007 15:45:42 -0700
-Message-ID: <7v1wbckyqx.fsf@gitster.siamese.dyndns.org>
-References: <20071030184502.GA27246@havoc.gtf.org>
-	<alpine.LFD.0.999.0710301151000.30120@woody.linux-foundation.org>
-	<47278206.2080601@garzik.org>
-	<alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
-	<Pine.LNX.4.64.0710302045310.31325@fbirervta.pbzchgretzou.qr>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: SATA_SIL
+Date: Tue, 30 Oct 2007 18:58:04 -0400
+Message-ID: <87f94c370710301558u126bb86p526b19004ccadabe@mail.gmail.com>
+References: <1193781389.26314.9.camel@ws1.fransdb.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sceptre.pobox.com ([207.106.133.20]:37182 "EHLO
-	sceptre.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbXJ3Wpx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 18:45:53 -0400
-In-Reply-To: <Pine.LNX.4.64.0710302045310.31325@fbirervta.pbzchgretzou.qr>
-	(Jan Engelhardt's message of "Tue, 30 Oct 2007 20:46:25 +0100 (CET)")
+Received: from wr-out-0506.google.com ([64.233.184.230]:33094 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752415AbXJ3W6H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 18:58:07 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so1232930wra
+        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 15:58:04 -0700 (PDT)
+In-Reply-To: <1193781389.26314.9.camel@ws1.fransdb.nl>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Engelhardt <jengelh@computergmbh.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Frans de Boer <frans@fransdb.nl>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jan Engelhardt <jengelh@computergmbh.de> writes:
-
-> On Oct 30 2007 12:31, Linus Torvalds wrote:
->>On Tue, 30 Oct 2007, Jeff Garzik wrote:
->>> 
->>> Can we change git-am to accept two dashes as well as three?  :)
->>
->>Well, git-am actually used to be a lot less strict about the dashes, and 
->>we've made it *more* strict rather than less, because the more of these 
->>breaks we accept, the more likely it is that something that was intended 
->>to be part of the message gets thrown out.. So I'll say that I'm a bit 
->>nervous about extending it again.
+On 10/30/07, Frans de Boer <frans@fransdb.nl> wrote:
+> Dear Sir,
 >
-> I would not add --. It is already used ("-- " is) in the mail world as a
-> signature separator. Let's stay with ---, which is also what quilt generates.
+> I know, I am not the only one to find out that we can't upgrade to a
+> newer kernel when using SUSE 10.3. It seems that in 2.6.23 the sil
+> modules have been updated (newer versions) and thus render the current
+> system mostly unuseable. I noticed that in the sata_sil24.c source there
+> where a significant number of chances, which are probally not easy to
+> change. Overwriting the newer versions with the versions from 2.6.22.9
+> might work, but for how long.
+>
+> Is this a problem SUSE introduced, you forgot to take legacy into
+> account or is it a "feature".
+> Is this problem adjusted in 2.6.24-rc1?
+>
+> Kind regards,
+> Frans de Boer.
 
-Thanks for the input about what quilt does.
+Did you try a SUSE factory kernel or a kotd (kernel of the day,
+2.6.23.1 based currently)
 
-So the way to proceed is to have no change to mailinfo, and have
-a bit of user education.
+You can find the kotd kernels on thier mirrors.
+
+ie. ftp://suse.mirrors.tds.net/pub/projects/kernel/kotd/HEAD is in the US.
+
+I don't know if they have released 2.6.23 factory kernels yet.
+
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
