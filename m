@@ -1,43 +1,28 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Frans Pop <elendil@planet.nl>
 Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Tue, 30 Oct 2007 16:10:37 +0000
-Message-ID: <20071030161037.54c41fff@the-village.bc.nu>
-References: <47274A5F.6070409@gentoo.org>
-	<472755A1.5080703@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41792 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751011AbXJ3QJI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 12:09:08 -0400
-In-Reply-To: <472755A1.5080703@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Date: Tue, 30 Oct 2007 19:26:40 +0100
+Message-ID: <E1ImvnU-0002Uq-Kh@faramir.fjphome.nl>
+References: <47274A5F.6070409@gentoo.org> <20071030153417.59b9182c@the-village.bc.nu> <47276DCA.1000808@gentoo.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755832AbXJ3S0x@vger.kernel.org>
+In-reply-To: <47276DCA.1000808@gentoo.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>
+Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Daniel Drake <dsd@gentoo.org>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-> > Any ideas?
-> 
-> hrm
-> 
-> we may need to make that controller-specific, given that the code prior 
-> to 2db78dd302d26d242d3e8e5c4c5024b6c3ea93c2 was working for most...
+Daniel Drake wrote:
+> I have narrowed down the exact command submission which causes those
+> nasty messages in dmesg. The function which submits this is named
+> "brasero_medium_get_page_2A_write_speed_desc".
 
-Removing it breaks some devices on any controller.
+Just as an extra data point...
 
-I don't think this one is a simple compatibility issue - its a behaviour
-we have done for ten years on PIIX/ICH chipsets without problems in the
-old IDE. Also those logs of 66 bytes overrun are worrying - the app is
-either issuing incorrectly sized commands, the drive is providing
-incorrectly sized answers or something really evil is going on in the
-midlayer translations.
+I've compiled the test program an ran it on my ICH7/Pentium D box running
+2.6.24-rc1-192-gef49c32 (x86_64), but it does not give the error and
+nothing in dmesg. I just get:
+result 0
 
-And the ICH7 is in fact the chipset I did the original testing on ...
-
-Need to work out if this is some nutty gentoo app, a quirky device we need
-to dig into or something else. I've asked Daniel for some first test
-points to try and eliminate the obvious.
-
-Alan
+My SATA DVD-RW drive is:
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: Optiarc  Model: DVD RW AD-7170S  Rev: 1.00
+  Type:   CD-ROM                           ANSI  SCSI revision: 05
