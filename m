@@ -1,53 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata/pata_it821x: Improve handling of poorly compatible
- emulations
-Date: Tue, 30 Oct 2007 09:27:04 -0400
-Message-ID: <47273128.4090406@garzik.org>
-References: <20071025142116.7e38ee86@the-village.bc.nu>
+Subject: Re: [PATCH] libata: Deal with ATA8-ACS proposed Trusted/Treacherous
+ Computing features
+Date: Tue, 30 Oct 2007 09:27:39 -0400
+Message-ID: <4727314B.1090801@garzik.org>
+References: <20071012173918.3f6d2760@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34302 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34315 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751122AbXJ3N1J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 09:27:09 -0400
-In-Reply-To: <20071025142116.7e38ee86@the-village.bc.nu>
+	id S1752249AbXJ3N1l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Oct 2007 09:27:41 -0400
+In-Reply-To: <20071012173918.3f6d2760@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Alan Cox wrote:
-> Some it821x RAID firmwares return 0 for the err return off both devices.
-> A similar issue occurs with the slave returning 0 not 1 if you plug a
-> gigabyte sata ramdisk into a controller that fakes two SATA ports as
-> master/slave on an SFF channel.
+> Historically word 48 in the identify data was used to mean 32bit I/O was
+> supported for VLB IDE etc. ATA8 reassigns this word to the Trusted
+> Computing Group, where it is used for TCG features. This means that an
+> ATA8 TCG drive is going to trigger 32bit I/O on some systems which will
+> be funny. Perhaps thats why T13 gave them the word.
 > 
-> The patch does the following
+> Anyway we need to sort this out ready for ATA8 so:
+> - Reorder the ata.h header a bit so the ata_version function occurs early
+> in it
+> - Make dword_io check the ATA version
+> - Add an ATA8 version checking TCG presence test
 > 
-> - Allow the 'failed diagnostics' case on both master and slave
-> - Move the HORKAGE_DIAGNOSTIC check after ->dev_config
+> While we are at it the current drafts have a flaw where it may not be
+> possible to disable TCG features at boot (and opt out of the trusted
+> model) as TCG intends because it relies on presence of a different
+> optional feature (DCS). Handle this in software by refusing the TCG
+> commands if libata.allow_tpm is not set. (We must make it possible as
+> some environments such as proprietary VDR devices will doubtless want to
+> use it to lock up content)
 > 
-> This second change also allows IT821x to fix up a problem where we report
-> drive diagnostic failures when in fact the drive is fine but the
-> microcontroller firmware doesn't appear to get it right. IT821x clears
-> the flag again to avoid giving the user bogus warnings about their disk.
+> Finally as with CPRM print a warning so that the user knows they may not
+> be able to full access and use the device.
 > 
-> The other IT821x change is a bit ugly, we slightly abuse the cable type
-> hook to fiddle with the identify data for the devices. We could add a new
-> hook for this but as we have only one offender and no more seeming likely
-> it seems better to keep libata-core clean.
-> 
-> Please let this sit in -mm briefly, just in case the relaxed checking
-> breaks some other emulated interface.
+> Alan
 > 
 > Signed-off-by: Alan Cox <alan@redhat.com>
 
-Two questions:
-
-1) should I queue for 2.6.24-rc?
-
-2) why is ->dev_config() insufficient?
+seems fairly reasonable... 2.6.24-rc?
 
 
