@@ -1,63 +1,78 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 30 Oct 2007 20:46:25 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0710302045310.31325@fbirervta.pbzchgretzou.qr>
-References: <20071030184502.GA27246@havoc.gtf.org>
- <alpine.LFD.0.999.0710301151000.30120@woody.linux-foundation.org>
- <47278206.2080601@garzik.org> <alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [IDE] Fix build bug
+Date: Tue, 30 Oct 2007 21:30:55 +0100
+Message-ID: <200710302130.55225.bzolnier@gmail.com>
+References: <20071025135334.GA23272@linux-mips.org> <200710301134.30087.vda.linux@googlemail.com> <20071030124155.GA7582@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sovereign.computergmbh.de ([85.214.69.204]:38047 "EHLO
-	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753797AbXJ3Tq0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 15:46:26 -0400
-In-Reply-To: <alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
+Received: from nf-out-0910.google.com ([64.233.182.184]:12135 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758963AbXJ3UYl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 16:24:41 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1739912nfb
+        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 13:24:39 -0700 (PDT)
+In-Reply-To: <20071030124155.GA7582@linux-mips.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Mikael Pettersson <mikpe@it.uu.se>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Denys Vlasenko <vda.linux@googlemail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
 
 
-On Oct 30 2007 12:31, Linus Torvalds wrote:
->On Tue, 30 Oct 2007, Jeff Garzik wrote:
->> 
->> Can we change git-am to accept two dashes as well as three?  :)
->> 
->> It seems pretty common, not just with Mikael but several others who send
->> patches to me.
->
->Well, git-am actually used to be a lot less strict about the dashes, and 
->we've made it *more* strict rather than less, because the more of these 
->breaks we accept, the more likely it is that something that was intended 
->to be part of the message gets thrown out.. So I'll say that I'm a bit 
->nervous about extending it again.
+On Tuesday 30 October 2007, Ralf Baechle wrote:
+> On Tue, Oct 30, 2007 at 11:34:29AM +0000, Denys Vlasenko wrote:
+> 
+> > On Thursday 25 October 2007 22:41, Bartlomiej Zolnierkiewicz wrote:
+> > > > -static const struct ide_port_info generic_chipsets[] __devinitdata = {
+> > > > +static struct ide_port_info generic_chipsets[] __devinitdata = {
+> > > >  	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",	0),
+> > > >  
+> > > >  	{	/* 1 */
+> > > 
+> > > I would prefer to not remove const from generic_chipsets[] so:
+> > > 
+> > > [PATCH] drivers/ide/pci/generic: fix build for CONFIG_HOTPLUG=n
+> > > 
+> > > It turns out that const and __{dev}initdata cannot be mixed currently
+> > > and that generic IDE PCI host driver is also affected by the same issue:
+> > > 
+> > > On Thursday 25 October 2007, Ralf Baechle wrote:
+> > > >   CC      drivers/ide/pci/generic.o
+> > > > drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
+> > > > +section type conflict
+> > > 
+> > > [ Also reported by Martijn Uffing <mp3project@sarijopen.student.utwente.nl>. ]
+> > > 
+> > > This patch workarounds the problem in a bit hackish way but without
+> > > removing const from generic_chipsets[] (it adds const to __setup() so
+> > > __setup_str_ide_generic_all becomes const).
+> > 
+> > You wouldn't believe how much const data is not marked as const because
+> > we don't have __constinitdata etc. Literally megabytes.
+> 
+> The gain from marking it const is very little and once any non-const
+> __initdata object is added to a compilation unit all other const declarations
+> will have to be removed.  Bad tradeoff.
 
-I would not add --. It is already used ("-- " is) in the mail world as a
-signature separator. Let's stay with ---, which is also what quilt generates.
->
->The reason for the three dashes is actually that that is what a *diff* 
->starts with. So if you look at what "closes" a description as far as 
->git-am is concerned, they are currently all things that are likely to 
->start a patch: "Index: " or "diff -" or "--- <filename>", and that last 
->case was then extended to be "manual break" even without the filename 
->information.
->
->See git/builtin-mailinfo.c: patchbreak().
->
->But you could try to sell it to Junio. He's the maintainer, and while I 
->care about some other things and will argue violently against them, when 
->it comes to something like this, Junio is the guy to go to.
->
->That said, I really think you could just try to educate the people you 
->work with. Maybe they just never even realized that "three dashes" is what 
->you're supposed to use!
->
->		Linus
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
->
+In this case (struct ide_port_info) and probably few others having const
+is important (maybe even more important than having __{dev}initdata since
+majority of people use CONFIG_HOTPLUG=y) because it allows developers to
+catch subtle yet hard to find bugs very early in the development process.
 
+We had a few such cases in IDE - struct ide_port_info _template_ was being
+modified because some quirk was needed for one version of the hardware which
+was of course incorrect if another version of the hardware was also present
+in the system.
+
+Some other potential gains of using const like the better optimized code
+or the protection of read-only kernel data are only an extra bonuses. :)
+
+I agree that we need __const{dev}initdata but until then the workaround
+that all __{dev}initdata must be const is an acceptable temporary solution
+for IDE host drivers.
+
+Thanks,
+Bart
