@@ -1,53 +1,42 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 30 Oct 2007 12:31:47 -0700 (PDT)
-Message-ID: <alpine.LFD.0.999.0710301225370.30120@woody.linux-foundation.org>
-References: <20071030184502.GA27246@havoc.gtf.org>
- <alpine.LFD.0.999.0710301151000.30120@woody.linux-foundation.org>
- <47278206.2080601@garzik.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: AHCI + ST3160023AS + NCQ problems
+Date: Tue, 30 Oct 2007 22:41:40 +0300
+Message-ID: <472788F4.60300@msgid.tls.msk.ru>
+References: <305c16960710291713v22875d26v8ccfc76daab102bd@mail.gmail.com>	 <47270CE9.4060501@msgid.tls.msk.ru> <311601c90710300615j33bf0959l51b1b2505e9b2048@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40377 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760072AbXJ3Tb7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 15:31:59 -0400
-In-Reply-To: <47278206.2080601@garzik.org>
+Received: from hobbit.corpit.ru ([81.13.94.6]:21183 "EHLO hobbit.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757484AbXJ3Tlm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Oct 2007 15:41:42 -0400
+In-Reply-To: <311601c90710300615j33bf0959l51b1b2505e9b2048@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Eric D. Mudama" <edmudama@gmail.com>
+Cc: Matheus Izvekov <mizvekov@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-
-
-On Tue, 30 Oct 2007, Jeff Garzik wrote:
+Eric D. Mudama wrote:
+> On 10/30/07, Michael Tokarev <mjt@tls.msk.ru> wrote:
+>> By the way, did you forget to remove a jumper on the drive
+>> (the only jumper installed by default) that limits drive
+>> usage to SATAI?
+> ...
+>> ..etc.   Try again without the jumper?  Note that NCQ is NOT supported
+>> in SATAI mode, or there were some pre-standard implementations of it.
+>> In SATAII, NCQ is standard (well... more or less anyway ;)
 > 
-> Can we change git-am to accept two dashes as well as three?  :)
+> Huh?
 > 
-> It seems pretty common, not just with Mikael but several others who send
-> patches to me.
+> To my knowledge, the jumper should only limit the bus rate to
+> 1.5Gbit/s, for compatibility with one or more chipsets.  It shouldn't
+> affect the command set supported by the device.
 
-Well, git-am actually used to be a lot less strict about the dashes, and 
-we've made it *more* strict rather than less, because the more of these 
-breaks we accept, the more likely it is that something that was intended 
-to be part of the message gets thrown out.. So I'll say that I'm a bit 
-nervous about extending it again.
+The thing is that I don't know.  I had some other probs with seagate
+sata drives when the jumper was there.  So I learned a lesson -
+always remove the jumper before using their drives.  I don't want
+to test which other restrictions this and other drive families
+apply when jumpered... ;)
 
-The reason for the three dashes is actually that that is what a *diff* 
-starts with. So if you look at what "closes" a description as far as 
-git-am is concerned, they are currently all things that are likely to 
-start a patch: "Index: " or "diff -" or "--- <filename>", and that last 
-case was then extended to be "manual break" even without the filename 
-information.
-
-See git/builtin-mailinfo.c: patchbreak().
-
-But you could try to sell it to Junio. He's the maintainer, and while I 
-care about some other things and will argue violently against them, when 
-it comes to something like this, Junio is the guy to go to.
-
-That said, I really think you could just try to educate the people you 
-work with. Maybe they just never even realized that "three dashes" is what 
-you're supposed to use!
-
-		Linus
+/mjt
