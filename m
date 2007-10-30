@@ -1,51 +1,48 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: Deal with ATA8-ACS proposed Trusted/Treacherous
- Computing features
-Date: Tue, 30 Oct 2007 09:27:39 -0400
-Message-ID: <4727314B.1090801@garzik.org>
-References: <20071012173918.3f6d2760@the-village.bc.nu>
+Subject: Re: [PATCH 2.6.24-rc1 1/2] sata_promise: ASIC PRD table bug workaround,
+ take 2
+Date: Tue, 30 Oct 2007 09:28:12 -0400
+Message-ID: <4727316C.8060004@garzik.org>
+References: <200710301320.l9UDKndW028161@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34315 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:34323 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752249AbXJ3N1l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 09:27:41 -0400
-In-Reply-To: <20071012173918.3f6d2760@the-village.bc.nu>
+	id S1752808AbXJ3N2O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Oct 2007 09:28:14 -0400
+In-Reply-To: <200710301320.l9UDKndW028161@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
 
-Alan Cox wrote:
-> Historically word 48 in the identify data was used to mean 32bit I/O was
-> supported for VLB IDE etc. ATA8 reassigns this word to the Trusted
-> Computing Group, where it is used for TCG features. This means that an
-> ATA8 TCG drive is going to trigger 32bit I/O on some systems which will
-> be funny. Perhaps thats why T13 gave them the word.
+Mikael Pettersson wrote:
+> Second-generation Promise SATA controllers have an ASIC bug
+> which can trigger if the last PRD entry is larger than 164 bytes,
+> resulting in intermittent errors and possible data corruption.
 > 
-> Anyway we need to sort this out ready for ATA8 so:
-> - Reorder the ata.h header a bit so the ata_version function occurs early
-> in it
-> - Make dword_io check the ATA version
-> - Add an ATA8 version checking TCG presence test
+> Work around this by replacing calls to ata_qc_prep() with a
+> private version that fills the PRD, checks the size of the
+> last entry, and if necessary splits it to avoid the bug.
+> Also reduce sg_tablesize by 1 to accommodate the new entry.
 > 
-> While we are at it the current drafts have a flaw where it may not be
-> possible to disable TCG features at boot (and opt out of the trusted
-> model) as TCG intends because it relies on presence of a different
-> optional feature (DCS). Handle this in software by refusing the TCG
-> commands if libata.allow_tpm is not set. (We must make it possible as
-> some environments such as proprietary VDR devices will doubtless want to
-> use it to lock up content)
+> Tested on the second-generation SATA300 TX4 and SATA300 TX2plus,
+> and the first-generation PDC20378.
 > 
-> Finally as with CPRM print a warning so that the user knows they may not
-> be able to full access and use the device.
+> Thanks to Alexander Sabourenkov for verifying the bug by
+> studying the vendor driver, and for writing the initial patch
+> upon which this one is based.
 > 
-> Alan
+> Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+> --
+> Changes since previous version:
+> * use new PDC_MAX_PRD constant to initialise sg_tablesize
 > 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+>  drivers/ata/sata_promise.c |   87 ++++++++++++++++++++++++++++++++++++++++++---
+>  1 files changed, 83 insertions(+), 4 deletions(-)
 
-seems fairly reasonable... 2.6.24-rc?
+applies 1-2 to #upstream-fixes
 
 
