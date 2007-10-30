@@ -1,65 +1,38 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
+From: Alexander Sabourenkov <screwdriver@lxnt.info>
 Subject: Re: [PATCH 2.6.24-rc1] sata_promise: ASIC PRD table bug workaround
-Date: Tue, 30 Oct 2007 10:07:40 +0100 (MET)
-Message-ID: <200710300907.l9U97eW8024996@harpo.it.uu.se>
+Date: Tue, 30 Oct 2007 12:22:16 +0300
+Message-ID: <4726F7C8.3010901@lxnt.info>
+References: <200710300907.l9U97eW8024996@harpo.it.uu.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:57157 "EHLO aun.it.uu.se"
+Received: from mail.lxnt.info ([217.23.143.142]:65453 "EHLO mail.lxnt.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342AbXJ3JH6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 05:07:58 -0400
+	id S1756662AbXJ3JWH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Oct 2007 05:22:07 -0400
+In-Reply-To: <200710300907.l9U97eW8024996@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, mikpe@it.uu.se
-Cc: linux-ide@vger.kernel.org, screwdriver@lxnt.info
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Mon, 29 Oct 2007 15:07:06 -0400, Jeff Garzik wrote:
-> Mikael Pettersson wrote:
-> > @@ -155,7 +155,7 @@ static struct scsi_host_template pdc_ata
-> >  	.queuecommand		= ata_scsi_queuecmd,
-> >  	.can_queue		= ATA_DEF_QUEUE,
-> >  	.this_id		= ATA_SHT_THIS_ID,
-> > -	.sg_tablesize		= LIBATA_MAX_PRD,
-> > +	.sg_tablesize		= LIBATA_MAX_PRD-1,
-> >  	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-> >  	.emulated		= ATA_SHT_EMULATED,
-> >  	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+Mikael Pettersson wrote:
 > 
-> IMO, this will be difficult for human eyes to see, many months from now.
+> Unfortunately the name pdc_qc_prep() is already taken
+> [it switches on qc->tf.protocol], so that leaves either pdc_fill_sg()
+> [slightly imprecise as you noted], or uglies like __pdc_qc_prep(),
+> pdc_qc_prep2(), or pdc_qc_prep_and_fill_sg() as names for the new
+> procedure. I welcome suggestions for a better name.
 > 
-> I would prefer a 'PDC_MAX_PRD' constant, defined to this value.
 
-Agreed. I'll do this change.
+pdc_qc_prep_backend() ?
 
-> > @@ -530,7 +608,7 @@ static void pdc_qc_prep(struct ata_queue
-> >  
-> >  	switch (qc->tf.protocol) {
-> >  	case ATA_PROT_DMA:
-> > -		ata_qc_prep(qc);
-> > +		pdc_fill_sg(qc);
-> >  		/* fall through */
-> >  
-> >  	case ATA_PROT_NODATA:
-> > @@ -546,11 +624,11 @@ static void pdc_qc_prep(struct ata_queue
-> >  		break;
-> >  
-> >  	case ATA_PROT_ATAPI:
-> > -		ata_qc_prep(qc);
-> > +		pdc_fill_sg(qc);
-> >  		break;
-> >  
-> >  	case ATA_PROT_ATAPI_DMA:
-> > -		ata_qc_prep(qc);
-> > +		pdc_fill_sg(qc);
-> >  		/*FALLTHROUGH*/
-> 
-> Note that this is not exactly an equivalent change -- you are removing 
-> the test in ata_qc_prep() that occurs prior to ata_fill_sg() call.
 
-As Alexander replied, pdc_fill_sg() does include ata_qc_prep()'s
-initial test. Unfortunately the name pdc_qc_prep() is already taken
-[it switches on qc->tf.protocol], so that leaves either pdc_fill_sg()
-[slightly imprecise as you noted], or uglies like __pdc_qc_prep(),
-pdc_qc_prep2(), or pdc_qc_prep_and_fill_sg() as names for the new
-procedure. I welcome suggestions for a better name.
+ps:
+I almost stuck on naming the function while writing the patch,
+put there first that came to mind just to not delay testing.
 
-/Mikael
+-- 
+
+./lxnt
