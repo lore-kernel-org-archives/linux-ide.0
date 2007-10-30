@@ -1,38 +1,40 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Re: [PATCH 2.6.24-rc1] sata_promise: ASIC PRD table bug workaround
-Date: Tue, 30 Oct 2007 12:22:16 +0300
-Message-ID: <4726F7C8.3010901@lxnt.info>
-References: <200710300907.l9U97eW8024996@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: sata_nv and dynamically changing DMA mask?
+Date: Tue, 30 Oct 2007 10:05:42 +0000
+Message-ID: <20071030100542.3efe01ee@the-village.bc.nu>
+References: <4726B064.3000906@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:65453 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756662AbXJ3JWH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 05:22:07 -0400
-In-Reply-To: <200710300907.l9U97eW8024996@harpo.it.uu.se>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37835 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753236AbXJ3KDv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 06:03:51 -0400
+In-Reply-To: <4726B064.3000906@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-Mikael Pettersson wrote:
-> 
-> Unfortunately the name pdc_qc_prep() is already taken
-> [it switches on qc->tf.protocol], so that leaves either pdc_fill_sg()
-> [slightly imprecise as you noted], or uglies like __pdc_qc_prep(),
-> pdc_qc_prep2(), or pdc_qc_prep_and_fill_sg() as names for the new
-> procedure. I welcome suggestions for a better name.
-> 
+On Mon, 29 Oct 2007 22:17:40 -0600
+Robert Hancock <hancockr@shaw.ca> wrote:
 
-pdc_qc_prep_backend() ?
+> In the sata_nv driver, when running in ADMA mode, we can do 64-bit DMA. 
+> However, when an ATAPI device like a DVD drive is connected, we can't 
+> use ADMA mode, and so we have to abide by the restrictions of a normal 
+> SFF ATA controller and can only do 32-bit DMA. We detect this and try to 
+> set the blk_queue_bounce_limit, blk_queue_segment_boundary and 
+> blk_queue_max_hw_segments to the values corresponding to a normal SFF 
+> controller.
 
+What about the DMA padding buffer from nv_adma_port_start and internal
+buffers for commands like request sense that don't come via the request
+queue directly.
 
-ps:
-I almost stuck on naming the function while writing the patch,
-put there first that came to mind just to not delay testing.
+Also it seems nv_adma_use_reg_mode() can decide to send other commands
+via the non ADMA interface even for ATA devices. Are we 100% certain it
+never decides to let through a command with DMA via the register
+interface in this case - what do you see if you instrument the function ?
 
--- 
-
-./lxnt
+Alan
