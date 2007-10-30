@@ -1,67 +1,77 @@
-From: Kuckuck Kuckuck <gentoopower@yahoo.de>
-Subject: AW: AW: Possible NCQ problem with Seagate ST3250620NS/nForce 4
-Date: Tue, 30 Oct 2007 23:35:59 +0000 (GMT)
-Message-ID: <956026.32373.qm@web26014.mail.ukl.yahoo.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/15] ide-floppy: remove dead code
+Date: Wed, 31 Oct 2007 00:23:49 +0100
+Message-ID: <200710310023.49858.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web26014.mail.ukl.yahoo.com ([217.12.10.88]:47297 "HELO
-	web26014.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752993AbXJ3XgB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Oct 2007 19:36:01 -0400
+Received: from nf-out-0910.google.com ([64.233.182.189]:45624 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbXJ3XuS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2007 19:50:18 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so1788114nfb
+        for <linux-ide@vger.kernel.org>; Tue, 30 Oct 2007 16:50:16 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-1?Q?Jens_Pr=FCfer?= <jens.pruefer@gmx.de>
-Cc: linux-ide@vger.kernel.org
-
-Hi Jens
-I just noticed, that my problem wasn't fixed by the new psu but by the =
-blacklist entry in libata in my currently installed kernel 2.6.23.
-I guess besides me a few other people reported the freeze with the Sams=
-ung HD401LJ and therefore they added my drive to the blacklist,=20
-of course now my machine doesn't lock up anymore:-)
-
-Darn, did I fell for this one:-)
+To: linux-ide@vger.kernel.org
 
 
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide-floppy.c |   33 ---------------------------------
+ 1 file changed, 33 deletions(-)
 
->Hi Kuckuck,
-
->sorry for the late reply, but I have been on the road the last few
- days.
-
->> Someone from the list mentioned that a bad/weak PSU may be
- responsible
->> for the trouble. It was hard for me to believe that this was the
- case,
->> since my system only uses 130W at full load and my former 350W PSU
- had
->> 170W output power.=20
-
->I am also using very high quality compontents. ASUS A8N-SLI Premium=20
-
-I gut the A8N-E, great Board.
-So just use the sata_nv.adma=3D0 switch right now to disable ncq and wa=
-it for the drive to be blacklisted
-which will eventually happen if some more people got the problem.
-
->mainboards in both cases (see blelow), SeaSonic PSU 450 W, passively
- cooled=20
->low-end GPU (NVidia 8500GT), no frills, nothing to bring down either
- power=20
->line (5 V or 12 V) of the PSU.=20
-
->However, I am running into the same problems on a different machine
- with a
->SAMSUNG SP2504C SATA drive.
-
-
-
-
-
-
-
-       __________________________________  Ihre erste Baustelle? Wissen=
-swertes f=FCr Bastler und Hobby Handwerker. www.yahoo.de/clever
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -369,27 +369,6 @@ typedef struct ide_floppy_obj {
+ #define	IDEFLOPPY_IOCTL_FORMAT_START		0x4602
+ #define IDEFLOPPY_IOCTL_FORMAT_GET_PROGRESS	0x4603
+ 
+-#if 0
+-/*
+- *	Special requests for our block device strategy routine.
+- */
+-#define	IDEFLOPPY_FIRST_RQ	90
+-
+-/*
+- * 	IDEFLOPPY_PC_RQ is used to queue a packet command in the request queue.
+- */
+-#define	IDEFLOPPY_PC_RQ		90
+-
+-#define IDEFLOPPY_LAST_RQ	90
+-
+-/*
+- *	A macro which can be used to check if a given request command
+- *	originated in the driver or in the buffer cache layer.
+- */
+-#define IDEFLOPPY_RQ_CMD(cmd) 	((cmd >= IDEFLOPPY_FIRST_RQ) && (cmd <= IDEFLOPPY_LAST_RQ))
+-
+-#endif
+-
+ /*
+  *	Error codes which are returned in rq->errors to the higher part
+  *	of the driver.
+@@ -1045,18 +1024,6 @@ static ide_startstop_t idefloppy_issue_p
+ 	atapi_bcount_t bcount;
+ 	ide_handler_t *pkt_xfer_routine;
+ 
+-#if 0 /* Accessing floppy->pc is not valid here, the previous pc may be gone
+-         and have lived on another thread's stack; that stack may have become
+-         unmapped meanwhile (CONFIG_DEBUG_PAGEALLOC). */
+-#if IDEFLOPPY_DEBUG_BUGS
+-	if (floppy->pc->c[0] == IDEFLOPPY_REQUEST_SENSE_CMD &&
+-	    pc->c[0] == IDEFLOPPY_REQUEST_SENSE_CMD) {
+-		printk(KERN_ERR "ide-floppy: possible ide-floppy.c bug - "
+-			"Two request sense in serial were issued\n");
+-	}
+-#endif /* IDEFLOPPY_DEBUG_BUGS */
+-#endif
+-
+ 	if (floppy->failed_pc == NULL &&
+ 	    pc->c[0] != IDEFLOPPY_REQUEST_SENSE_CMD)
+ 		floppy->failed_pc = pc;
