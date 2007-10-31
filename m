@@ -1,46 +1,46 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Wed, 31 Oct 2007 12:57:54 +0100
-Message-ID: <20071031115754.GK5059@kernel.dk>
-References: <47274A5F.6070409@gentoo.org> <20071030153417.59b9182c@the-village.bc.nu> <47276DCA.1000808@gentoo.org> <20071030190153.373c9347@the-village.bc.nu> <47278439.4030801@gentoo.org> <20071031114958.210bd7cc@the-village.bc.nu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: [PATCH 2.6.24-rc1] sata_promise: fix endianess bug in ASIC PRD bug workaround
+Date: Wed, 31 Oct 2007 13:21:29 +0100 (MET)
+Message-ID: <200710311221.l9VCLTiG008243@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:22507 "EHLO kernel.dk"
+Received: from aun.it.uu.se ([130.238.12.36]:38655 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755014AbXJaMAg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 08:00:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20071031114958.210bd7cc@the-village.bc.nu>
+	id S1755308AbXJaMVo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Oct 2007 08:21:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Daniel Drake <dsd@gentoo.org>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
 
-On Wed, Oct 31 2007, Alan Cox wrote:
-> On Tue, 30 Oct 2007 19:21:29 +0000
-> Daniel Drake <dsd@gentoo.org> wrote:
-> 
-> > Alan Cox wrote:
-> > > I would guess Brasero is issuing a command with the length of data
-> > > wrongly set. In the old code that might well just produce errors of the
-> > > "Umm wtf is this data left over for ?", with the new code the drive is
-> > > likely to change state as it knows the transfer size and that will
-> > > *correctly* cause an HSM error and what follows.
-> > > 
-> > > Now the question is who gets the length wrong - Brasero or the ata
-> > > translation code in libata
-> > 
-> > Brasero does exactly the same as my test app which I attached to my last 
-> > mail. Is my test app wrong?
-> 
-> Would need to double check the SCSI specificatons to be sure but I think
-> you are asking for less data than the drive wishes to provide. You
-> aren't allowed to do that with ATA.
+The original workaround for the Promise ASIC PRD bug
+contained an endianess bug which I failed to detect:
+the adjustment of the last PRD entry's length field
+applied host arithmetic to little-endian data, which
+is incorrect on big-endian machines.
 
-ide-cd handles this by throwing the excess away, which I think is the
-sane way to do this.
+We have the length available in host-endian format, so
+do the adjustment on host-endian data and then convert
+and store it in the PRD entry's little-endian data field.
 
--- 
-Jens Axboe
+Thanks to an anonymous reviewer for detecting this bug.
 
+Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+---
+Jeff: please include this fix in any backport(s) of the
+ASIC PRD bug workaround.
+
+ drivers/ata/sata_promise.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff -rupN linux-2.6.24-rc1/drivers/ata/sata_promise.c linux-2.6.24-rc1.sata_promise-endianess-fix/drivers/ata/sata_promise.c
+--- linux-2.6.24-rc1/drivers/ata/sata_promise.c	2007-10-31 11:47:13.000000000 +0100
++++ linux-2.6.24-rc1.sata_promise-endianess-fix/drivers/ata/sata_promise.c	2007-10-31 11:47:25.000000000 +0100
+@@ -585,7 +585,7 @@ static void pdc_fill_sg(struct ata_queue
+ 			VPRINTK("Splitting last PRD.\n");
+ 
+ 			addr = le32_to_cpu(ap->prd[idx - 1].addr);
+-			ap->prd[idx - 1].flags_len -= cpu_to_le32(SG_COUNT_ASIC_BUG);
++			ap->prd[idx - 1].flags_len = cpu_to_le32(len - SG_COUNT_ASIC_BUG);
+ 			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
+ 
+ 			addr = addr + len - SG_COUNT_ASIC_BUG;
