@@ -1,71 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] "killing" sg_last(), and discussion
-Date: Wed, 31 Oct 2007 06:29:53 -0400
-Message-ID: <47285921.9070105@garzik.org>
-References: <20071031084920.GA25202@havoc.gtf.org> <4728569D.9080502@panasas.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Slow hard drives
+Date: Wed, 31 Oct 2007 10:38:43 +0000
+Message-ID: <20071031103843.3a3dd374@the-village.bc.nu>
+References: <1193784294.5955.2.camel@jimin-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55119 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751024AbXJaKaV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 06:30:21 -0400
-In-Reply-To: <4728569D.9080502@panasas.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49013 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753802AbXJaKhC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 06:37:02 -0400
+In-Reply-To: <1193784294.5955.2.camel@jimin-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Ben Court <ben.r.court@googlemail.com>
+Cc: linux-ide@vger.kernel.org
 
-Boaz Harrosh wrote:
-> On Wed, Oct 31 2007 at 10:49 +0200, Jeff Garzik <jeff@garzik.org> wrote:
->> I looked into killing sg_last(), but really, this is the best its gonna
->> get (moving sg_last to libata-core.c).
->>
->> You could maybe kill one use with caching, but in the other sg_last()
->> callsites there isn't another s/g loop we can stick a "last_sg = sg;"
->> into.
->>
->> libata is stuck because we undertake the highly unusual operation of
->> fiddling with the final S/G element, to enforce 32-bit alignment.
->>
->> Of course we could eliminate all that nasty fiddling/padding
->> completely, including sg_last(), if other areas of the kernel would
->> guarantee ahead of time that buffer lengths are always a multiple
->> of 4........
->>
->> 	Jeff
->>
-> OK Now I'm confused. I thought that ULD's can give you SG's 
-> that are actually longer than bufflen and that, at the end, the 
-> bufflen should govern the transfer length.
+> The same comes up for hdb (i have two hard drives installed) and those 3
+> messages repeat for a while and then this comes up
 > 
-> Now FS_PC commands are sector aligned so you do not have
-> problems with that.
+> Oct 30 20:45:41 jimin-desktop kernel: [ 69.256000] hda: DMA disabled 
 > 
-> The BLOCK_PC commands have 2 main sources that I know of
-> one is sg && bsg from user mode that can easily enforce
-> 4 bytes alignment. The second is kernel services which 80%
-> of these are done by scsi_execute(). All These can be found
-> and fixed. Starting with scsi_execute(). Another place can be
-> blk_rq_map_sg(), since all IO's are bio based. It can enforce 
-> alignment too.
-> 
-> I would start by sticking a WARN_ON(qc->pad_len) and
-> see if it triggers, what are the sources of that.
+> Oct 30 20:45:41 jimin-desktop kernel: [ 69.592000] ide0: reset: success 
 
-The whole qc->pad_len etc. machinery was added because it solved 
-problems in the field with ATAPI devices.  So sr or some userland 
-application is sending lengths that are not padded to 32-bit boundary, 
-probably because plenty of trivial commands can send or return odd 
-amounts of data.
-
-This used to be irrelevant, but now with SATA, even PIO data xfer 
-(normally what is used for non-READ/WRITE CDBs) must be 32-bit aligned 
-because both SATA DMA and SATA PIO are converted into dword-based SATA 
-FIS's on the wire.
-
-	Jeff
+The kernel switches from DMA to PIO (slow) when it finds that the DMA
+isn't working properly - its attempting to keep the box running rather
+than just dying
 
 
 
+What controller ?
