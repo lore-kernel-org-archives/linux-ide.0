@@ -1,60 +1,78 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: Update (Now a False Alarm) RE: Other Problems with Marvell Driver - 7042 (2.6.23)...
-Date: Wed, 31 Oct 2007 14:14:18 -0400
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010A825872@EMPBEDEX.empirix.com>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org>
+From: Vlad Codrea <vladc6@yahoo.com>
+Subject: Re: IDE Problem with old Gateway laptop (1998 solo 2300)
+Date: Wed, 31 Oct 2007 11:21:08 -0700 (PDT)
+Message-ID: <415840.96752.qm@web54405.mail.yahoo.com>
+References: <1193830965.2347.66.camel@turtle-25895.iol.ie>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from empbedex1.empirix.com ([12.38.203.54]:52748 "EHLO
-	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825AbXJaSO2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 14:14:28 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4728A816.8020608@garzik.org>
+Received: from web54405.mail.yahoo.com ([206.190.49.135]:21124 "HELO
+	web54405.mail.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751852AbXJaSVJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 14:21:09 -0400
+In-Reply-To: <1193830965.2347.66.camel@turtle-25895.iol.ie>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kumar Gala <galak@kernel.crashing.org>
+To: Declan Moriarty <declan.moriarty@iol.ie>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide <linux-ide@vger.kernel.org>
 
-Jeff / all -
+--- Declan Moriarty <declan.moriarty@iol.ie> wrote:
+> piix_init
+> 	scsi0: ata_piix
+> 	scsi1: ata_piix
+> 	ata1: PATA max udma/33 cmd 0x000101f0 ctl 0x000103f6 bmdma
+> 0x0001fcd0
+> irq 14
+> 	ata2: PATA max udma/33 cmd 0x00010170 ctl 0x00010376 bmdma
+> 0x0001fcd8
+> irq 15
+> 	ATA1.00: ATA-3 HITATCHI_DK226A-32 00T0A0A0 max MWDMA2
+> 	ATA1.00: 6332256 sectors multi 16: LBA
+> 	ATA1.00: configured for MWDMA2
+> 	scsi 0:0:0:0 Direct Access ATA Hitatchi_DK226A-3 00T0 PQ: 0 ANSI 5
+> 	sd 0:0:0:0 [sda] 6332256 512-byte hardware sectors (3242MB)
+> 	sd 0:0:0:0 [sda] Write Protect is off
+> 	sd 0:0:0:0 [sda] Write cache: disabled, read cache: enabled doesn't
+> support DPO or FUA
+> 	sda: sda1 sda2 sda3 ssda4
+> 	sd 0:0:0:0 [sda] Attached scsi disk
+> 	sd 0:0:0:0 [sda] Attached scsi generic sg0 type 0
+> (piix_init returned 0 ran for 383 msec. The following ones ran for 0
+> msec)
+>=20
+> I'm hoping just for a diagnosis - "X is wrong"
 
-Jeff is (again) 100% correct with comments - the sata_mv.c I used 
-from Kumar's 2.6.23 Powerpc tree is very *close*, but not exactly 
-the same as the sata_mv.c in the 'official' 2.6.23.1 tree.
+I agree that the problem is in userspace. I can think of two
+diagnoses:
 
-I have verified that I now can access my disks behind the 7042 chip
-with the 'mainline' 2.6.23.1 (and my bsp)...
+1) The userspace components of the distro you=92re using are
+mis-configured. To eliminate this possibility, boot the computer from
+Debian installation floppies:
+=20
+http://http.us.debian.org/debian/dists/unstable/main/installer-i386/cur=
+rent/images/floppy/
 
-Sorry for the false alarm - thank you Jeff for pointing me in the right
-direction with this!
+See installation instructions below:
+http://www.debian.org/releases/stable/i386/apas02.html.en#howto-getting=
+-images-floppy
 
-Sincerely,
+At one point during the Debian installation, you=92ll be able to press
+=93Alt-Ctrl-F2=94 and get a console. From here you can manually mount t=
+he
+various partitions. If you can mount and read the partitions, then
+everything is fine and you can go ahead and install Debian or another
+distro. If any step fails, try to capture the output of the =91dmesg=92
+command from the console and email it to the list.
 
-Tom Morrison
+2) If mounting fails, your drives might be formatted with a
+proprietary Disk Drive Overlay (DDO). You would have to either a)
+remove the DDO using the same proprietary software that installed it;
+or b) reformat the disk.
 
+Vlad
 
------Original Message-----
-From: Jeff Garzik [mailto:jeff@garzik.org] 
-Sent: Wednesday, October 31, 2007 12:07 PM
-To: Morrison, Tom
-Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; Kumar Gala
-Subject: Re: Other Problems with Marvell Driver - 7042 (2.6.23)...
-
-Morrison, Tom wrote:
-
-
-<snip description of problem>
-
-==========Jeff writes=====
-
-First you need to try 2.6.23.1 rather than 2.6.23, because it contains a
-
-critical sata_mv fix.
-
-	Jeff
-
-
-
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around=20
+http://mail.yahoo.com=20
