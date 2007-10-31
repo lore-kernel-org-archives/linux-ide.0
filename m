@@ -1,7 +1,7 @@
 From: Li Yang <leoli@freescale.com>
-Subject: [PATCH 10/12] ata/sata_fsl: Move MPC8315DS link speed limit workaround to specific ifdef
-Date: Wed, 31 Oct 2007 19:28:02 +0800
-Message-ID: <1193830084-22298-10-git-send-email-leoli@freescale.com>
+Subject: [PATCH 12/12] ata/sata_fsl: Remove ata_scsi_suspend/resume callbacks
+Date: Wed, 31 Oct 2007 19:28:04 +0800
+Message-ID: <1193830084-22298-12-git-send-email-leoli@freescale.com>
 References: <1193830084-22298-1-git-send-email-leoli@freescale.com>
  <1193830084-22298-2-git-send-email-leoli@freescale.com>
  <1193830084-22298-3-git-send-email-leoli@freescale.com>
@@ -11,18 +11,20 @@ References: <1193830084-22298-1-git-send-email-leoli@freescale.com>
  <1193830084-22298-7-git-send-email-leoli@freescale.com>
  <1193830084-22298-8-git-send-email-leoli@freescale.com>
  <1193830084-22298-9-git-send-email-leoli@freescale.com>
+ <1193830084-22298-10-git-send-email-leoli@freescale.com>
+ <1193830084-22298-11-git-send-email-leoli@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from de01egw02.freescale.net ([192.88.165.103]:44094 "EHLO
+Received: from de01egw02.freescale.net ([192.88.165.103]:44122 "EHLO
 	de01egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756762AbXJaLR6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 07:17:58 -0400
+	with ESMTP id S1756782AbXJaLSB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 07:18:01 -0400
 Received: from de01smr01.freescale.net (de01smr01.freescale.net [10.208.0.31])
-	by de01egw02.freescale.net (8.12.11/de01egw02) with ESMTP id l9VBHuTZ007358
-	for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 04:17:56 -0700 (MST)
+	by de01egw02.freescale.net (8.12.11/de01egw02) with ESMTP id l9VBHxM8007387
+	for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 04:17:59 -0700 (MST)
 Received: from zch01exm26.fsl.freescale.net (zch01exm26.ap.freescale.net [10.192.129.221])
-	by de01smr01.freescale.net (8.13.1/8.13.0) with ESMTP id l9VBHdHN005583
-	for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 06:17:55 -0500 (CDT)
-In-Reply-To: <1193830084-22298-9-git-send-email-leoli@freescale.com>
+	by de01smr01.freescale.net (8.13.1/8.13.0) with ESMTP id l9VBHdHR005583
+	for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 06:17:58 -0500 (CDT)
+In-Reply-To: <1193830084-22298-11-git-send-email-leoli@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org
@@ -33,29 +35,24 @@ From: ashish kalra <ashish.kalra@freescale.com>
 Signed-off-by: ashish kalra <ashish.kalra@freescale.com>
 Signed-off-by: Li Yang <leoli@freescale.com>
 ---
- drivers/ata/sata_fsl.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/ata/sata_fsl.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 5892472..e076e1f 100644
+index c3b0360..d015b4a 100644
 --- a/drivers/ata/sata_fsl.c
 +++ b/drivers/ata/sata_fsl.c
-@@ -652,6 +652,7 @@ static int sata_fsl_port_start(struct ata_port *ap)
- 	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
- 	VPRINTK("CHBA  = 0x%x\n", ioread32(hcr_base + CHBA));
+@@ -1223,10 +1223,6 @@ static struct scsi_host_template sata_fsl_sht = {
+ 	.slave_configure = ata_scsi_slave_config,
+ 	.slave_destroy = ata_scsi_slave_destroy,
+ 	.bios_param = ata_std_bios_param,
+-#ifdef CONFIG_PM
+-	.suspend = ata_scsi_device_suspend,
+-	.resume = ata_scsi_device_resume,
+-#endif
+ };
  
-+#ifdef CONFIG_MPC8315_DS
- 	/*
- 	 * Workaround for 8315DS board 3gbps link-up issue,
- 	 * currently limit SATA port to GEN1 speed
-@@ -664,6 +665,7 @@ static int sata_fsl_port_start(struct ata_port *ap)
- 	sata_fsl_scr_read(ap, SCR_CONTROL, &temp);
- 	dev_printk(KERN_WARNING, dev, "scr_control, speed limited to %x\n",
- 			temp);
-+#endif
- 
- 	return 0;
- }
+ static const struct ata_port_operations sata_fsl_ops = {
 -- 
 1.5.3.2.104.g41ef
 
