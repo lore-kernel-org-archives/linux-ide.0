@@ -1,33 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: IDE Problem with old Gateway laptop (1998 solo 2300)
-Date: Wed, 31 Oct 2007 17:58:12 +0000
-Message-ID: <20071031175812.7dc9cc8f@the-village.bc.nu>
-References: <884696.96067.qm@web54404.mail.yahoo.com>
-	<1193830965.2347.66.camel@turtle-25895.iol.ie>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: Update (Now a False Alarm) RE: Other Problems with Marvell Driver - 7042 (2.6.23)...
+Date: Wed, 31 Oct 2007 14:14:18 -0400
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010A825872@EMPBEDEX.empirix.com>
+References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:46033 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752528AbXJaR4e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 13:56:34 -0400
-In-Reply-To: <1193830965.2347.66.camel@turtle-25895.iol.ie>
+Received: from empbedex1.empirix.com ([12.38.203.54]:52748 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbXJaSO2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 14:14:28 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4728A816.8020608@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Declan Moriarty <declan.moriarty@iol.ie>
-Cc: Vlad Codrea <vladc6@yahoo.com>, linux-ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kumar Gala <galak@kernel.crashing.org>
 
-> 	kjournald starting Commit interval 5 seconds
-> 	VFS: Mounted root (ext3 filesystem) readonly
-> 	Freeing unused kernel memory: 168k freed
-> (keyboard still echoed onscreen, disk parked)
-> 
-> Adding init=/bin/bash is no better.
+Jeff / all -
 
-So its the user space which is broken. Make sure the user space has the
-right /dev etc - and is for the right CPU - a 200MHz pentium means you
-need i386 or i586 binaries. i686/athlon binaries would produce the effect
-you report.
+Jeff is (again) 100% correct with comments - the sata_mv.c I used 
+from Kumar's 2.6.23 Powerpc tree is very *close*, but not exactly 
+the same as the sata_mv.c in the 'official' 2.6.23.1 tree.
 
-Alan
+I have verified that I now can access my disks behind the 7042 chip
+with the 'mainline' 2.6.23.1 (and my bsp)...
+
+Sorry for the false alarm - thank you Jeff for pointing me in the right
+direction with this!
+
+Sincerely,
+
+Tom Morrison
+
+
+-----Original Message-----
+From: Jeff Garzik [mailto:jeff@garzik.org] 
+Sent: Wednesday, October 31, 2007 12:07 PM
+To: Morrison, Tom
+Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; Kumar Gala
+Subject: Re: Other Problems with Marvell Driver - 7042 (2.6.23)...
+
+Morrison, Tom wrote:
+
+
+<snip description of problem>
+
+==========Jeff writes=====
+
+First you need to try 2.6.23.1 rather than 2.6.23, because it contains a
+
+critical sata_mv fix.
+
+	Jeff
+
+
+
