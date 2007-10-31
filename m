@@ -1,53 +1,179 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Wed, 31 Oct 2007 13:26:39 +0100
-Message-ID: <20071031122639.GN5059@kernel.dk>
-References: <47274A5F.6070409@gentoo.org> <20071030153417.59b9182c@the-village.bc.nu> <47276DCA.1000808@gentoo.org> <20071030190153.373c9347@the-village.bc.nu> <47278439.4030801@gentoo.org> <20071031114958.210bd7cc@the-village.bc.nu> <20071031115754.GK5059@kernel.dk> <472872F6.70802@garzik.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
+Date: Wed, 31 Oct 2007 14:26:24 +0100
+Message-ID: <200710311426.25099.rjw@sisk.pl>
+References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com> <1190341023.16930.5.camel@sli10-conroe.sh.intel.com> <200710302227.40310.lenb@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:15021 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756088AbXJaMvw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 08:51:52 -0400
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <200710302227.40310.lenb@kernel.org>
 Content-Disposition: inline
-In-Reply-To: <472872F6.70802@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
+To: Len Brown <lenb@kernel.org>
+Cc: Shaohua Li <shaohua.li@intel.com>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel Drake <dsd@gentoo.org>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Wed, Oct 31 2007, Jeff Garzik wrote:
-> Jens Axboe wrote:
->> On Wed, Oct 31 2007, Alan Cox wrote:
->>> On Tue, 30 Oct 2007 19:21:29 +0000
->>> Daniel Drake <dsd@gentoo.org> wrote:
->>>
->>>> Alan Cox wrote:
->>>>> I would guess Brasero is issuing a command with the length of data
->>>>> wrongly set. In the old code that might well just produce errors of the
->>>>> "Umm wtf is this data left over for ?", with the new code the drive is
->>>>> likely to change state as it knows the transfer size and that will
->>>>> *correctly* cause an HSM error and what follows.
->>>>>
->>>>> Now the question is who gets the length wrong - Brasero or the ata
->>>>> translation code in libata
->>>> Brasero does exactly the same as my test app which I attached to my last 
->>>> mail. Is my test app wrong?
->>> Would need to double check the SCSI specificatons to be sure but I think
->>> you are asking for less data than the drive wishes to provide. You
->>> aren't allowed to do that with ATA.
->> ide-cd handles this by throwing the excess away, which I think is the
->> sane way to do this.
->
-> That's easy for the PIO case.  But CD writing is normally DMA, which means 
-> you will get a DMA engine exception if the device wants to give you more 
-> data than the scatter/gather entries permit.
+On Wednesday, 31 October 2007 03:27, Len Brown wrote:
+> It would be interseting if any of the folks having power consumption
+> problems when suspended see an improvement with this patch.
+> 
+> Are there plans to refresh this patch and get it upstream?
+> 
+> Acked-by: Len Brown <len.brown@intel.com>
 
-Right, that's of course problematic... There has to be a way to recover
-that situation though, or you can't export any user command issue
-facility.
+There was a discussion regarding this patch, IIRC, and it was argued that
+_PSx are only applicable to IDE/PATA devices.
+
+I wonder if this has been addressed.
+
+Greetings,
+Rafael
+
+
+> On Thursday 20 September 2007 22:17, Shaohua Li wrote:
+> > On Fri, 2007-09-21 at 11:20 +0900, Tejun Heo wrote:
+> > > Hello,
+> > > 
+> > > Shaohua Li wrote:
+> > > > +	/* channel first and then drives for power on and verse versa for power off */
+> > > > +	if (state.event == PM_EVENT_ON)
+> > > > +		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D0);
+> > > > +
+> > > > +	if (ap->flags & ATA_FLAG_SLAVE_POSS)
+> > > > +		max_devices++;
+> > > 
+> > > ata_port_max_devices()?
+> > ok, fixed.
+> > > 
+> > > > Index: linux/drivers/ata/libata-eh.c
+> > > > ===================================================================
+> > > > --- linux.orig/drivers/ata/libata-eh.c	2007-09-14 10:28:25.000000000 +0800
+> > > > +++ linux/drivers/ata/libata-eh.c	2007-09-21 08:56:40.000000000 +0800
+> > > > @@ -2349,6 +2349,7 @@ static void ata_eh_handle_port_suspend(s
+> > > >  	if (ap->ops->port_suspend)
+> > > >  		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
+> > > >  
+> > > > +	ata_acpi_set_state(ap, PMSG_SUSPEND);
+> > > >   out:
+> > > >  	/* report result */
+> > > >  	spin_lock_irqsave(ap->lock, flags);
+> > > > @@ -2394,6 +2395,8 @@ static void ata_eh_handle_port_resume(st
+> > > >  
+> > > >  	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
+> > > >  
+> > > > +	ata_acpi_set_state(ap, PMSG_ON);
+> > > > +
+> > > >  	if (ap->ops->port_resume)
+> > > >  		rc = ap->ops->port_resume(ap);
+> > > 
+> > > Can these be moved into ata_acpi_on_suspend() and ata_acpi_on_resume()?
+> > >  Or do they have to be placed on the other side of ->port_suspend/resume
+> > > callbacks?
+> > I suppose _PSx will shutdown ports. So I want to do PS3 as later as
+> > possible in suspend, and vice versa in resume.
+> > 
+> > Thanks,
+> > Shaohua
+> > 
+> > 
+> > ---
+> >  drivers/ata/libata-acpi.c |   34 ++++++++++++++++++++++++++++++++++
+> >  drivers/ata/libata-eh.c   |    3 +++
+> >  drivers/ata/libata.h      |    2 ++
+> >  3 files changed, 39 insertions(+)
+> > 
+> > Index: linux/drivers/ata/libata-acpi.c
+> > ===================================================================
+> > --- linux.orig/drivers/ata/libata-acpi.c	2007-09-21 09:23:13.000000000 +0800
+> > +++ linux/drivers/ata/libata-acpi.c	2007-09-21 10:13:32.000000000 +0800
+> > @@ -523,6 +523,39 @@ void ata_acpi_on_resume(struct ata_port 
+> >  }
+> >  
+> >  /**
+> > + * ata_acpi_set_state - set the port power state
+> > + * @ap: target ATA port
+> > + * @state: state, on/off
+> > + *
+> > + * This function executes the _PS0/_PS3 ACPI method to set the power state.
+> > + * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
+> > + */
+> > +void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+> > +{
+> > +	int max_devices, i;
+> > +
+> > +	if (!ap->acpi_handle || (ap->flags & ATA_FLAG_ACPI_SATA))
+> > +		return;
+> > +
+> > +	/* channel first and then drives for power on and verse versa for power off */
+> > +	if (state.event == PM_EVENT_ON)
+> > +		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D0);
+> > +
+> > +	max_devices = ata_port_max_devices(ap);
+> > +
+> > +	for (i = 0; i < max_devices; ++i) {
+> > +		struct ata_device *dev = &ap->device[i];
+> > +
+> > +		if (dev->acpi_handle)
+> > +			acpi_bus_set_power(dev->acpi_handle,
+> > +				state.event == PM_EVENT_ON ?
+> > +				ACPI_STATE_D0: ACPI_STATE_D3);
+> > +	}
+> > +	if (state.event != PM_EVENT_ON)
+> > +		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D3);
+> > +}
+> > +
+> > +/**
+> >   * ata_acpi_on_devcfg - ATA ACPI hook called on device donfiguration
+> >   * @dev: target ATA device
+> >   *
+> > Index: linux/drivers/ata/libata-eh.c
+> > ===================================================================
+> > --- linux.orig/drivers/ata/libata-eh.c	2007-09-21 09:23:13.000000000 +0800
+> > +++ linux/drivers/ata/libata-eh.c	2007-09-21 10:09:10.000000000 +0800
+> > @@ -2349,6 +2349,7 @@ static void ata_eh_handle_port_suspend(s
+> >  	if (ap->ops->port_suspend)
+> >  		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
+> >  
+> > +	ata_acpi_set_state(ap, PMSG_SUSPEND);
+> >   out:
+> >  	/* report result */
+> >  	spin_lock_irqsave(ap->lock, flags);
+> > @@ -2394,6 +2395,8 @@ static void ata_eh_handle_port_resume(st
+> >  
+> >  	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
+> >  
+> > +	ata_acpi_set_state(ap, PMSG_ON);
+> > +
+> >  	if (ap->ops->port_resume)
+> >  		rc = ap->ops->port_resume(ap);
+> >  
+> > Index: linux/drivers/ata/libata.h
+> > ===================================================================
+> > --- linux.orig/drivers/ata/libata.h	2007-09-21 09:23:13.000000000 +0800
+> > +++ linux/drivers/ata/libata.h	2007-09-21 10:09:10.000000000 +0800
+> > @@ -102,11 +102,13 @@ extern void ata_acpi_associate(struct at
+> >  extern int ata_acpi_on_suspend(struct ata_port *ap);
+> >  extern void ata_acpi_on_resume(struct ata_port *ap);
+> >  extern int ata_acpi_on_devcfg(struct ata_device *adev);
+> > +extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
+> >  #else
+> >  static inline void ata_acpi_associate(struct ata_host *host) { }
+> >  static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
+> >  static inline void ata_acpi_on_resume(struct ata_port *ap) { }
+> >  static inline int ata_acpi_on_devcfg(struct ata_device *adev) { return 0; }
+> > +static inline void ata_acpi_set_state(struct ata_port *ap, pm_message_t state) { }
+> >  #endif
+> >  
+> >  /* libata-scsi.c */
+> > 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
 -- 
-Jens Axboe
-
+"Premature optimization is the root of all evil." - Donald Knuth
