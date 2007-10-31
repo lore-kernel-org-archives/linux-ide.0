@@ -1,46 +1,36 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: [PATCH 2.6.24-rc1] sata_promise: fix endianess bug in ASIC PRD bug workaround
-Date: Wed, 31 Oct 2007 13:21:29 +0100 (MET)
-Message-ID: <200710311221.l9VCLTiG008243@harpo.it.uu.se>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: increase 128 KB / cmd limit for ATAPI tape
+ drives
+Date: Wed, 31 Oct 2007 12:50:01 +0000
+Message-ID: <20071031125001.4570f207@the-village.bc.nu>
+References: <47275163.9020809@cybernetics.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:38655 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755308AbXJaMVo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 08:21:44 -0400
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40529 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755020AbXJaMss (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 08:48:48 -0400
+In-Reply-To: <47275163.9020809@cybernetics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Alexander Sabourenkov <screwdriver@lxnt.info>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-The original workaround for the Promise ASIC PRD bug
-contained an endianess bug which I failed to detect:
-the adjustment of the last PRD entry's length field
-applied host arithmetic to little-endian data, which
-is incorrect on big-endian machines.
+On Tue, 30 Oct 2007 11:44:35 -0400
+Tony Battersby <tonyb@cybernetics.com> wrote:
 
-We have the length available in host-endian format, so
-do the adjustment on host-endian data and then convert
-and store it in the PRD entry's little-endian data field.
+> Commands sent to ATAPI tape drives via the SCSI generic (sg) driver are
+> limited in the amount of data that they can transfer by the max_sectors
+> value.  The max_sectors value is currently calculated according to the
+> command set for disk drives, which doesn't apply to tape drives.  The
+> default max_sectors value of 256 limits ATAPI tape drive commands to
+> 128 KB.  This patch against 2.6.24-rc1 increases the max_sectors value
+> for tape drives to 65535, which permits tape drive commands to transfer
+> just under 32 MB.
 
-Thanks to an anonymous reviewer for detecting this bug.
+Seems reasonable to me and is valid for all ATAPI devices as far as I can
+see since we use READ_10/WRITE_10 commands.
 
-Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
----
-Jeff: please include this fix in any backport(s) of the
-ASIC PRD bug workaround.
-
- drivers/ata/sata_promise.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -rupN linux-2.6.24-rc1/drivers/ata/sata_promise.c linux-2.6.24-rc1.sata_promise-endianess-fix/drivers/ata/sata_promise.c
---- linux-2.6.24-rc1/drivers/ata/sata_promise.c	2007-10-31 11:47:13.000000000 +0100
-+++ linux-2.6.24-rc1.sata_promise-endianess-fix/drivers/ata/sata_promise.c	2007-10-31 11:47:25.000000000 +0100
-@@ -585,7 +585,7 @@ static void pdc_fill_sg(struct ata_queue
- 			VPRINTK("Splitting last PRD.\n");
- 
- 			addr = le32_to_cpu(ap->prd[idx - 1].addr);
--			ap->prd[idx - 1].flags_len -= cpu_to_le32(SG_COUNT_ASIC_BUG);
-+			ap->prd[idx - 1].flags_len = cpu_to_le32(len - SG_COUNT_ASIC_BUG);
- 			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
- 
- 			addr = addr + len - SG_COUNT_ASIC_BUG;
+Alan
