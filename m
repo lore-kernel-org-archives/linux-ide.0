@@ -1,163 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] "killing" sg_last(), and discussion
-Date: Wed, 31 Oct 2007 04:49:20 -0400
-Message-ID: <20071031084920.GA25202@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [git patches] libata fixes
+Date: Wed, 31 Oct 2007 10:38:14 +0100 (MET)
+Message-ID: <200710310938.l9V9cEUM006861@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:58615 "EHLO havoc.gtf.org"
+Received: from aun.it.uu.se ([130.238.12.36]:37240 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753574AbXJaItV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 04:49:21 -0400
-Content-Disposition: inline
+	id S1751571AbXJaJid (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Oct 2007 05:38:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: jeff@garzik.org, mikpe@it.uu.se, torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I looked into killing sg_last(), but really, this is the best its gonna
-get (moving sg_last to libata-core.c).
+On Tue, 30 Oct 2007 11:54:01 -0700 (PDT), Linus Torvalds wrote:
+> On Tue, 30 Oct 2007, Jeff Garzik wrote:
+> > 
+> > Mikael Pettersson (2):
+> >       sata_promise: ASIC PRD table bug workaround, take 2
+> >       sata_promise: cleanups
+> 
+> You and Mikael need to sort out the way you send/accept patches. 
+> 
+> Both of these commits had stuff like this:
+> 
+>     Signed-off-by: Mikael Pettersson <mikpe@it.uu.se>
+>     --
+>     Changes since previous version:
+>     * use new PDC_MAX_PRD constant to initialise sg_tablesize
+>     
+>      drivers/ata/sata_promise.c |   87 ++++++++++++++++++++++++++++++++++++++++++---
+>      1 files changed, 83 insertions(+), 4 deletions(-)
+>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> 
+> which seems to be because Mikael uses two dashes instead of three to 
+> separate his "real message" from the stuff you have.
+> 
+> So either you need to teach Mikael to use the proper separators
 
-You could maybe kill one use with caching, but in the other sg_last()
-callsites there isn't another s/g loop we can stick a "last_sg = sg;"
-into.
+That's my fault for misremembering the rule about the
+number of dashes before the other comments part :-(
+I'll remember better in the future.
 
-libata is stuck because we undertake the highly unusual operation of
-fiddling with the final S/G element, to enforce 32-bit alignment.
-
-Of course we could eliminate all that nasty fiddling/padding
-completely, including sg_last(), if other areas of the kernel would
-guarantee ahead of time that buffer lengths are always a multiple
-of 4........
-
-	Jeff
-
-
-
-
-
-[the obvious patch follows, moving sg_last()...]
-
- drivers/ata/libata-core.c   |   24 ++++++++++++++++++++++++
- drivers/ata/sata_nv.c       |    1 -
- drivers/ata/sata_promise.c  |    1 -
- drivers/ata/sata_qstor.c    |    1 -
- include/linux/scatterlist.h |   34 ----------------------------------
- 5 files changed, 24 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 63035d7..4f0acc5 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4480,6 +4480,30 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
- }
- 
- /**
-+ * sg_last - return the last scatterlist entry in a list
-+ * @sgl:	First entry in the scatterlist
-+ * @nents:	Number of entries in the scatterlist
-+ *
-+ * Description:
-+ *   Should only be used casually, it (currently) scan the entire list
-+ *   to get the last entry.
-+ *
-+ *   Note that the @sgl@ pointer passed in need not be the first one,
-+ *   the important bit is that @nents@ denotes the number of entries that
-+ *   exist from @sgl@.
-+ *
-+ **/
-+static inline struct scatterlist *sg_last(struct scatterlist *sgl,
-+					  unsigned int nents)
-+{
-+	struct scatterlist *sg, *ret = NULL;
-+	unsigned int i;
-+
-+	for_each_sg(sgl, sg, nents, i)
-+		ret = sg;
-+}
-+
-+/**
-  *	ata_sg_clean - Unmap DMA memory associated with command
-  *	@qc: Command containing DMA memory to be released
-  *
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 35b2df2..6546913 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1985,7 +1985,6 @@ static void nv_swncq_fill_sg(struct ata_queued_cmd *qc)
- 	struct nv_swncq_port_priv *pp = ap->private_data;
- 	struct ata_prd *prd;
- 
--	WARN_ON(qc->__sg == NULL);
- 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
- 
- 	prd = pp->prd + ATA_MAX_PRD * qc->tag;
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 825e717..1fba9d4 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -547,7 +547,6 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
- 	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
- 		return;
- 
--	WARN_ON(qc->__sg == NULL);
- 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
- 
- 	idx = 0;
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 6d43ba7..664e3f7 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -276,7 +276,6 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
- 	unsigned int nelem;
- 	u8 *prd = pp->pkt + QS_CPB_BYTES;
- 
--	WARN_ON(qc->__sg == NULL);
- 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
- 
- 	nelem = 0;
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 32326c2..ab94464 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -130,40 +130,6 @@ static inline struct scatterlist *sg_next(struct scatterlist *sg)
- 	for (__i = 0, sg = (sglist); __i < (nr); __i++, sg = sg_next(sg))
- 
- /**
-- * sg_last - return the last scatterlist entry in a list
-- * @sgl:	First entry in the scatterlist
-- * @nents:	Number of entries in the scatterlist
-- *
-- * Description:
-- *   Should only be used casually, it (currently) scan the entire list
-- *   to get the last entry.
-- *
-- *   Note that the @sgl@ pointer passed in need not be the first one,
-- *   the important bit is that @nents@ denotes the number of entries that
-- *   exist from @sgl@.
-- *
-- **/
--static inline struct scatterlist *sg_last(struct scatterlist *sgl,
--					  unsigned int nents)
--{
--#ifndef ARCH_HAS_SG_CHAIN
--	struct scatterlist *ret = &sgl[nents - 1];
--#else
--	struct scatterlist *sg, *ret = NULL;
--	unsigned int i;
--
--	for_each_sg(sgl, sg, nents, i)
--		ret = sg;
--
--#endif
--#ifdef CONFIG_DEBUG_SG
--	BUG_ON(sgl[0].sg_magic != SG_MAGIC);
--	BUG_ON(!sg_is_last(ret));
--#endif
--	return ret;
--}
--
--/**
-  * sg_chain - Chain two sglists together
-  * @prv:	First scatterlist
-  * @prv_nents:	Number of entries in prv
+/Mikael
