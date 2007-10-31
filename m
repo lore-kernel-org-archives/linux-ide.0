@@ -1,30 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 31 Oct 2007 05:40:26 -0400
-Message-ID: <47284D8A.2030806@garzik.org>
-References: <200710310938.l9V9cEUM006861@harpo.it.uu.se>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] "killing" sg_last(), and discussion
+Date: Wed, 31 Oct 2007 12:19:09 +0200
+Message-ID: <4728569D.9080502@panasas.com>
+References: <20071031084920.GA25202@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53208 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756782AbXJaJkd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 05:40:33 -0400
-In-Reply-To: <200710310938.l9V9cEUM006861@harpo.it.uu.se>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:8001 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754164AbXJaKT3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 06:19:29 -0400
+In-Reply-To: <20071031084920.GA25202@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Mikael Pettersson wrote:
-> That's my fault for misremembering the rule about the
-> number of dashes before the other comments part :-(
-> I'll remember better in the future.
+On Wed, Oct 31 2007 at 10:49 +0200, Jeff Garzik <jeff@garzik.org> wrote:
+> I looked into killing sg_last(), but really, this is the best its gonna
+> get (moving sg_last to libata-core.c).
+> 
+> You could maybe kill one use with caching, but in the other sg_last()
+> callsites there isn't another s/g loop we can stick a "last_sg = sg;"
+> into.
+> 
+> libata is stuck because we undertake the highly unusual operation of
+> fiddling with the final S/G element, to enforce 32-bit alignment.
+> 
+> Of course we could eliminate all that nasty fiddling/padding
+> completely, including sg_last(), if other areas of the kernel would
+> guarantee ahead of time that buffer lengths are always a multiple
+> of 4........
+> 
+> 	Jeff
+> 
+OK Now I'm confused. I thought that ULD's can give you SG's 
+that are actually longer than bufflen and that, at the end, the 
+bufflen should govern the transfer length.
 
+Now FS_PC commands are sector aligned so you do not have
+problems with that.
 
-Well, I should have caught it and hand-edited it on my side too...
+The BLOCK_PC commands have 2 main sources that I know of
+one is sg && bsg from user mode that can easily enforce
+4 bytes alignment. The second is kernel services which 80%
+of these are done by scsi_execute(). All These can be found
+and fixed. Starting with scsi_execute(). Another place can be
+blk_rq_map_sg(), since all IO's are bio based. It can enforce 
+alignment too.
 
-	Jeff
+I would start by sticking a WARN_ON(qc->pad_len) and
+see if it triggers, what are the sources of that.
 
+Please note that the code already has a 4 bytes alignment
+assumption about the start of the transfer, other wise
+the first SG can also have a none aligned length, which
+is not checked for.
 
+Boaz
