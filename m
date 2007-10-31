@@ -1,96 +1,163 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ATAPI devices in AHCI mode not working
-Date: Wed, 31 Oct 2007 17:07:16 +0900
-Message-ID: <472837B4.3000109@gmail.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701EA6E7D@orsmsx420.amr.corp.intel.com><20071029203028.35645f26@the-village.bc.nu><39B20DF628532344BC7A2692CB6AEE0701EA6FBF@orsmsx420.amr.corp.intel.com> <20071029221332.1c9525a9@the-village.bc.nu> <39B20DF628532344BC7A2692CB6AEE0701EA70F4@orsmsx420.amr.corp.intel.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] "killing" sg_last(), and discussion
+Date: Wed, 31 Oct 2007 04:49:20 -0400
+Message-ID: <20071031084920.GA25202@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070405050305050407050600"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:6575 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbXJaIHY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 04:07:24 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so61780rvb
-        for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 01:07:23 -0700 (PDT)
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701EA70F4@orsmsx420.amr.corp.intel.com>
+Received: from havoc.gtf.org ([69.61.125.42]:58615 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753574AbXJaItV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Oct 2007 04:49:21 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070405050305050407050600
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I looked into killing sg_last(), but really, this is the best its gonna
+get (moving sg_last to libata-core.c).
 
-Gaston, Jason D wrote:
->> -----Original Message-----
->> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
->> Sent: Monday, October 29, 2007 3:14 PM
->> To: Gaston, Jason D
->> Cc: linux-ide@vger.kernel.org
->> Subject: Re: ATAPI devices in AHCI mode not working
->>
->>> ata1: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101100 irq 216
->>> ata2: SATA max UDMA/133 abar m1024@0xd9101000 port 0xd9101180 irq 216
->>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> ata1.00: ATAPI: ATAPI   DVD D  DH16D2S, EP52, max UDMA/100
->>> ata1.00: configured for UDMA/100
->> Much better - no misdetected link type, no device claiming to be PATA
->> when its SATA.
->>
->>
->> Right that eliminates all the obvious goings on being caused by broken
->> devices which is a start. Doesn't shed any light on the rest of it.
-> What
->> happens if you boot with irqpoll enabled ? (wondering if the timeouts
-> are
->> ACPI or IRQ routing stuff)
-> 
-> I rebuilt the kernel; the DVD and USB devices are functional now. I'm
-> not sure what the problem was before.  On a side note: In 2.6.24.rc1 the
-> DVD starts working right away, but on a SLES10_SP1 kernel, it takes some
-> time for it to step down to a PIO mode before the DVD can be mounted.
-> Oh well.
+You could maybe kill one use with caching, but in the other sg_last()
+callsites there isn't another s/g loop we can stick a "last_sg = sg;"
+into.
 
-Yeah, there has been quite some update in libata between SLES10_SP1 and
-2.6.24-rc1.  The controller being ahci, I wonder whether this is caused
-by the different in check_atapi_dma().
+libata is stuck because we undertake the highly unusual operation of
+fiddling with the final S/G element, to enforce 32-bit alignment.
 
-1. Does other optical drives have the same problem?  If not, please post
-the result of "hdparm -I /dev/sr0" with the problematic one attached.
+Of course we could eliminate all that nasty fiddling/padding
+completely, including sg_last(), if other areas of the kernel would
+guarantee ahead of time that buffer lengths are always a multiple
+of 4........
 
-2. If you apply the attached patch to 2.6.24-rc1, does it behave the
-same as the SLES10SP1 kernel?
+	Jeff
 
--- 
-tejun
 
---------------070405050305050407050600
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+
+
+
+[the obvious patch follows, moving sg_last()...]
+
+ drivers/ata/libata-core.c   |   24 ++++++++++++++++++++++++
+ drivers/ata/sata_nv.c       |    1 -
+ drivers/ata/sata_promise.c  |    1 -
+ drivers/ata/sata_qstor.c    |    1 -
+ include/linux/scatterlist.h |   34 ----------------------------------
+ 5 files changed, 24 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8ee56e5..5d9b193 100644
+index 63035d7..4f0acc5 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4491,11 +4491,13 @@ int ata_check_atapi_dma(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
+@@ -4480,6 +4480,30 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ }
  
-+#if 0
- 	/* Don't allow DMA if it isn't multiple of 16 bytes.  Quite a
- 	 * few ATAPI devices choke on such DMA requests.
- 	 */
- 	if (unlikely(qc->nbytes & 15))
- 		return 1;
-+#endif
+ /**
++ * sg_last - return the last scatterlist entry in a list
++ * @sgl:	First entry in the scatterlist
++ * @nents:	Number of entries in the scatterlist
++ *
++ * Description:
++ *   Should only be used casually, it (currently) scan the entire list
++ *   to get the last entry.
++ *
++ *   Note that the @sgl@ pointer passed in need not be the first one,
++ *   the important bit is that @nents@ denotes the number of entries that
++ *   exist from @sgl@.
++ *
++ **/
++static inline struct scatterlist *sg_last(struct scatterlist *sgl,
++					  unsigned int nents)
++{
++	struct scatterlist *sg, *ret = NULL;
++	unsigned int i;
++
++	for_each_sg(sgl, sg, nents, i)
++		ret = sg;
++}
++
++/**
+  *	ata_sg_clean - Unmap DMA memory associated with command
+  *	@qc: Command containing DMA memory to be released
+  *
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 35b2df2..6546913 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1985,7 +1985,6 @@ static void nv_swncq_fill_sg(struct ata_queued_cmd *qc)
+ 	struct nv_swncq_port_priv *pp = ap->private_data;
+ 	struct ata_prd *prd;
  
- 	if (ap->ops->check_atapi_dma)
- 		return ap->ops->check_atapi_dma(qc);
-
---------------070405050305050407050600--
+-	WARN_ON(qc->__sg == NULL);
+ 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+ 
+ 	prd = pp->prd + ATA_MAX_PRD * qc->tag;
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 825e717..1fba9d4 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -547,7 +547,6 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
+ 	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+ 		return;
+ 
+-	WARN_ON(qc->__sg == NULL);
+ 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+ 
+ 	idx = 0;
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index 6d43ba7..664e3f7 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -276,7 +276,6 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
+ 	unsigned int nelem;
+ 	u8 *prd = pp->pkt + QS_CPB_BYTES;
+ 
+-	WARN_ON(qc->__sg == NULL);
+ 	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+ 
+ 	nelem = 0;
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index 32326c2..ab94464 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -130,40 +130,6 @@ static inline struct scatterlist *sg_next(struct scatterlist *sg)
+ 	for (__i = 0, sg = (sglist); __i < (nr); __i++, sg = sg_next(sg))
+ 
+ /**
+- * sg_last - return the last scatterlist entry in a list
+- * @sgl:	First entry in the scatterlist
+- * @nents:	Number of entries in the scatterlist
+- *
+- * Description:
+- *   Should only be used casually, it (currently) scan the entire list
+- *   to get the last entry.
+- *
+- *   Note that the @sgl@ pointer passed in need not be the first one,
+- *   the important bit is that @nents@ denotes the number of entries that
+- *   exist from @sgl@.
+- *
+- **/
+-static inline struct scatterlist *sg_last(struct scatterlist *sgl,
+-					  unsigned int nents)
+-{
+-#ifndef ARCH_HAS_SG_CHAIN
+-	struct scatterlist *ret = &sgl[nents - 1];
+-#else
+-	struct scatterlist *sg, *ret = NULL;
+-	unsigned int i;
+-
+-	for_each_sg(sgl, sg, nents, i)
+-		ret = sg;
+-
+-#endif
+-#ifdef CONFIG_DEBUG_SG
+-	BUG_ON(sgl[0].sg_magic != SG_MAGIC);
+-	BUG_ON(!sg_is_last(ret));
+-#endif
+-	return ret;
+-}
+-
+-/**
+  * sg_chain - Chain two sglists together
+  * @prv:	First scatterlist
+  * @prv_nents:	Number of entries in prv
