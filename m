@@ -1,96 +1,60 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Suspend to ram regression (2.6.24-rc1-git)
-Date: Thu, 1 Nov 2007 13:01:41 +0100
-Message-ID: <20071101120141.GF5037@kernel.dk>
-References: <20071031201308.GK11514@kernel.dk> <20071101084145.GA5037@kernel.dk> <20071101092155.GB5037@kernel.dk> <4729B670.7090403@garzik.org> <20071101112419.GE5037@kernel.dk> <4729BEB5.5080504@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Thu, 1 Nov 2007 14:15:01 +0000
+Message-ID: <20071101141501.3746cec2@the-village.bc.nu>
+References: <47274A5F.6070409@gentoo.org>
+	<20071030153417.59b9182c@the-village.bc.nu>
+	<47276DCA.1000808@gentoo.org>
+	<20071030190153.373c9347@the-village.bc.nu>
+	<47278439.4030801@gentoo.org>
+	<20071031114958.210bd7cc@the-village.bc.nu>
+	<20071031115754.GK5059@kernel.dk>
+	<4729A0DF.20800@garzik.org>
+	<20071101105335.1f20bab3@the-village.bc.nu>
+	<4729B3EA.6040707@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:2115 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754472AbXKAMEc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Nov 2007 08:04:32 -0400
-Content-Disposition: inline
-In-Reply-To: <4729BEB5.5080504@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42837 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753044AbXKAOPP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2007 10:15:15 -0400
+In-Reply-To: <4729B3EA.6040707@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, kristen.c.accardi@intel.com, linux-ide@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>, Daniel Drake <dsd@gentoo.org>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
 
-On Thu, Nov 01 2007, Jeff Garzik wrote:
-> Jens Axboe wrote:
->> On Thu, Nov 01 2007, Jeff Garzik wrote:
->>> Jens Axboe wrote:
->>>> Reverting just the default AHCI flags makes it work again. IOW, with the
->>>> below patch I can suspend properly with current -git.
->>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>> index ed9b407..77f7631 100644
->>>> --- a/drivers/ata/ahci.c
->>>> +++ b/drivers/ata/ahci.c
->>>> @@ -190,8 +190,7 @@ enum {
->>>>   	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->>>>  					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
->>>> -					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
->>>> -					  ATA_FLAG_IPM,
->>>> +					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
->>>>  	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
->>>
->>> sounds like the easy thing to do, in light of this breakage, might be to 
->>> default it to off, add a module parameter turning it on by setting that 
->>> flag.
->> Wouldn't it be better to just get this bug fixed? IOW, is there a reason
->> for disabling ALPM if it's Bug Free?
->> I'd suggest committing the patch disabling IPM, then Kristen can debug
->> the thing in piece in quiet. Once confident it works with ahci again, we
->> can revert that commit.
->
-> Right -- if you are going to commit a patch "disabling" it, it is best to 
-> do so via a simple module option, which allows users to easily try the 
-> feature in parallel with Intel's debugging.
+> We are both half-right.  I reverted my version of that completely, 
+> applied your version verbatim, and pushed it upstream.  The result: 
+> atapi_xlat _did_ start programming lbam/lbah for DMA (another behavior 
+> change), but request-sense DMA path was not changed to program lba[mh] 
+> for DMA.
 
-OK, so you just want the option to be temporary? In that case I think a
-config option is better, since you don't risk breaking peoples setups
-later when removing the option. That can be quite annoying. Ala the
-below.
+I didn't realise we ever issued reques sense by DMA ?
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ba63619..e276ab6 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -48,6 +48,14 @@ config SATA_AHCI
- 
- 	  If unsure, say N.
- 
-+config SATA_AHCI_IPM
-+	bool "AHCI power management"
-+	depends on EXPERIMENTAL && SATA_AHCI
-+	help
-+	  This option adds support for AHCI power management. It current
-+	  breaks suspend on some laptops. This option is temporary and will
-+	  go away once those issues are fully resolved.
-+
- config SATA_SVW
- 	tristate "ServerWorks Frodo / Apple K2 SATA support"
- 	depends on PCI
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ed9b407..37266ce 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -190,8 +190,11 @@ enum {
- 
- 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
--					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
--					  ATA_FLAG_IPM,
-+					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN
-+#ifdef CONFIG_SATA_AHCI_IPM
-+					  | ATA_FLAG_IPM
-+#endif
-+					,
- 	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
- };
- 
+> > Only if your transfer is actually 8K or more.
+> 
+> No, that's precisely the problem cause for what Daniel is reporting.  We 
+> are setting blimit=xfer_len(==10), when the device wants to return more 
+> than 10 bytes.  When set to the old limit (8k), the problem didn't occur.
 
--- 
-Jens Axboe
+Lots of *other* problems occur instead. Daniel is reporting that if he
+makes a stupid request to a buggy drive he gets a reset and the system
+continues happily. Even that reset being a reset not a new command issue
+is actually us being excessively paranoid.
 
+Prior to these changes people were reporting things like "I cannot
+use my CD-ROM".
+
+So given we have ten years of experience of the method I put in taken
+from the old IDE layer versus a good way to make one buggy request work
+and break everything else - I *know* which I consider to be the right
+path.
+
+And PIO drains of DMA controllers do not work for most controllers, some
+will simply hang solid if you touch the data register as part of a DMA
+sequence (eg promise 2026x)
+
+Alan
