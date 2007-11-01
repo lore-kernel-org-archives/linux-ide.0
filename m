@@ -1,68 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Suspend to ram regression (2.6.24-rc1-git)
-Date: Thu, 1 Nov 2007 10:25:00 +0100
-Message-ID: <20071101092500.GC5037@kernel.dk>
-References: <20071031201308.GK11514@kernel.dk> <20071101084145.GA5037@kernel.dk> <20071101092155.GB5037@kernel.dk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata ATAPI transfer size cleanups
+Date: Thu, 1 Nov 2007 09:43:44 +0000
+Message-ID: <20071101094344.6eb9d8bc@the-village.bc.nu>
+References: <20071101090733.GA9258@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:11276 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753611AbXKAJ1u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Nov 2007 05:27:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20071101092155.GB5037@kernel.dk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:44029 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753598AbXKAJmS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2007 05:42:18 -0400
+In-Reply-To: <20071101090733.GA9258@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: jeff@garzik.org, kristen.c.accardi@intel.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Nov 01 2007, Jens Axboe wrote:
-> On Thu, Nov 01 2007, Jens Axboe wrote:
-> > On Wed, Oct 31 2007, Jens Axboe wrote:
-> > > Hi,
-> > > 
-> > > My x60 stopped suspending about two days ago. It just freezes after
-> > > printing
-> > > 
-> > > Suspending console(s)
-> > > 
-> > > where it would normally turn everything off and the 'moon' light would
-> > > go on. Posting this message in case somebody else knows what is up, if
-> > > not I'll do a bisect on it tomorrow.
-> > 
-> > Did the bisect, it points to this commit:
-> > 
-> > 1556594f913fa81d008cecfe46d7211c919a853 is first bad commit
-> > commit 31556594f913fa81d008cecfe46d7211c919a853
-> > Author: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> > Date:   Thu Oct 25 01:33:26 2007 -0400
-> > 
-> >     [libata] AHCI: add hw link power management support
-> > 
-> > Booting any kernel after this commit fails suspending to ram, it just
-> > sits there forever.
+On Thu, 1 Nov 2007 05:07:33 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
 > 
-> Reverting just the default AHCI flags makes it work again. IOW, with the
-> below patch I can suspend properly with current -git.
+> This is purely for comment and testing, not for merging (yet?).
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index ed9b407..77f7631 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -190,8 +190,7 @@ enum {
->  
->  	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
->  					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
-> -					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
-> -					  ATA_FLAG_IPM,
-> +					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
->  	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
->  };
+> A common recipe in several vendor drivers (either GPL'd, or I have NDA'd
+> access to use them as a documentation-like reference) for ATAPI was
+> slightly different from ours.  This recipe can be found in
+> atapi_tf_xfer_size(), and it's slightly different from Alan's.
 
-I should also mention that just stubbing out ahci_enable_alpm() and
-ahci_disable_alpm() in ahci.c is NOT enough to make it work.
+Looks mostly good. Might cause breakage on one or two controllers by
+setting lbam/lbah to 0 for DMA but we can test that and find out.
 
--- 
-Jens Axboe
+Note however - the scheme in use now has been tested for over ten years
+in drivers/ide. The scheme below has not...
 
+Having an ata_tf_xfer_size method is definitely a good idea whatever
+methods we eventually decide on.
