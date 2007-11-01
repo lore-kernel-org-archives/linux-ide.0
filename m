@@ -1,46 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata ATAPI transfer size cleanups
-Date: Thu, 01 Nov 2007 05:54:06 -0400
-Message-ID: <4729A23E.7000601@garzik.org>
-References: <20071101090733.GA9258@havoc.gtf.org> <20071101094344.6eb9d8bc@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
+Date: Thu, 1 Nov 2007 10:04:35 +0000
+Message-ID: <20071101100435.7c80785e@the-village.bc.nu>
+References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
+	<1190341023.16930.5.camel@sli10-conroe.sh.intel.com>
+	<200710302227.40310.lenb@kernel.org>
+	<200710311426.25099.rjw@sisk.pl>
+	<1193885429.6872.2.camel@sli10-conroe.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34436 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756648AbXKAJyI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Nov 2007 05:54:08 -0400
-In-Reply-To: <20071101094344.6eb9d8bc@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1193885429.6872.2.camel@sli10-conroe.sh.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-
-Alan Cox wrote:
-> On Thu, 1 Nov 2007 05:07:33 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
-> 
->> This is purely for comment and testing, not for merging (yet?).
->>
->> A common recipe in several vendor drivers (either GPL'd, or I have NDA'd
->> access to use them as a documentation-like reference) for ATAPI was
->> slightly different from ours.  This recipe can be found in
->> atapi_tf_xfer_size(), and it's slightly different from Alan's.
-> 
-> Looks mostly good. Might cause breakage on one or two controllers by
-> setting lbam/lbah to 0 for DMA but we can test that and find out.
-
-DMA always zeroed lbam/lbah thanks to memset(), my patch merely made it 
-explicit.
 
 
-> Note however - the scheme in use now has been tested for over ten years
-> in drivers/ide. The scheme below has not...
+> +	max_devices = ata_link_max_devices(&ap->link);
+> +
+> +	for (i = 0; i < max_devices; ++i) {
+> +		struct ata_device *dev = &ap->link.device[i];
 
-See my other email just posted, differences and errata abound :)
+Better to use:
 
-	Jeff
+	ata_link_for_each_dev(dev, &ap->link) {		
 
+> +
+> +		if (dev->acpi_handle)
+> +			acpi_bus_set_power(dev->acpi_handle,
+> +				state.event == PM_EVENT_ON ?
+> +				ACPI_STATE_D0: ACPI_STATE_D3);
+> +	}
 
+Also should you not check ata_dev_enabled(dev) ?
 
+Alan
