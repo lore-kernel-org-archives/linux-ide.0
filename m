@@ -1,12 +1,12 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/8] libata: add protocol data transfer tests
-Date: Fri,  2 Nov 2007 00:51:38 +0900
-Message-ID: <11939323043230-git-send-email-htejun@gmail.com>
+Subject: [PATCH 1/8] libata: rearrange ATA_DFLAG_*
+Date: Fri,  2 Nov 2007 00:51:37 +0900
+Message-ID: <11939323041557-git-send-email-htejun@gmail.com>
 References: <11939323042554-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.235.223.38] ([222.235.223.38]:20823 "EHLO htj.dyndns.org"
+Received: from [222.235.223.38] ([222.235.223.38]:20821 "EHLO htj.dyndns.org"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753582AbXKAPvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1754039AbXKAPvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 1 Nov 2007 11:51:47 -0400
 In-Reply-To: <11939323042554-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,45 +14,32 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add protocol data transfer tests.
+Area for DFLAGs which are cleared on INIT is full.  Extend it by 8
+bits.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/ata.h |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+ include/linux/libata.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index e21c002..fd73b69 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -321,6 +321,27 @@ enum ata_tf_protocols {
- 	ATA_PROT_ATAPI_DMA,	/* packet command with special DMA sauce */
- };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 439d40f..e62cdf0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -139,10 +139,10 @@ enum {
+ 	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
+ 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+-	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
++	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
  
-+static inline int ata_is_nodata(u8 prot)
-+{
-+	return prot == ATA_PROT_NODATA || prot == ATA_PROT_ATAPI_NODATA;
-+}
-+
-+static inline int ata_is_pio_data(u8 prot)
-+{
-+	return prot == ATA_PROT_PIO || prot == ATA_PROT_ATAPI;
-+}
-+
-+static inline int ata_is_dma_data(u8 prot)
-+{
-+	return prot == ATA_PROT_DMA || prot == ATA_PROT_NCQ ||
-+		prot == ATA_PROT_ATAPI_DMA;
-+}
-+
-+static inline int ata_is_data(u8 prot)
-+{
-+	return ata_is_pio_data(prot) || ata_is_dma_data(prot);
-+}
-+
- enum ata_ioctls {
- 	ATA_IOC_GET_IO32	= 0x309,
- 	ATA_IOC_SET_IO32	= 0x324,
+-	ATA_DFLAG_DETACH	= (1 << 16),
+-	ATA_DFLAG_DETACHED	= (1 << 17),
++	ATA_DFLAG_DETACH	= (1 << 24),
++	ATA_DFLAG_DETACHED	= (1 << 25),
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
 -- 
 1.5.2.4
 
