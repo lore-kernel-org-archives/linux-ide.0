@@ -1,12 +1,12 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 7/8] libata: implement ATA_DFLAG_DUBIOUS_XFER
-Date: Fri,  2 Nov 2007 00:51:43 +0900
-Message-ID: <11939323061665-git-send-email-htejun@gmail.com>
+Subject: [PATCH 8/8] libata: implement fast speed down for unverified data transfer mode
+Date: Fri,  2 Nov 2007 00:51:44 +0900
+Message-ID: <11939323062399-git-send-email-htejun@gmail.com>
 References: <11939323042554-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.235.223.38] ([222.235.223.38]:20834 "EHLO htj.dyndns.org"
+Received: from [222.235.223.38] ([222.235.223.38]:20835 "EHLO htj.dyndns.org"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754359AbXKAPvt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1754588AbXKAPvt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Thu, 1 Nov 2007 11:51:49 -0400
 In-Reply-To: <11939323042554-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,142 +14,242 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ATA_DFLAG_DUBIOUS_XFER is set whenever data transfer speed or method
-changes and gets cleared when data transfer command succeeds in the
-newly configured transfer mode.
+It's very likely that the configured data transfer mode is the wrong
+one if device fails data transfers right after initial data transfer
+mode configuration (including NCQ on/off and xfermode).  libata EH
+needs to speed down fast before upper layers give up on probing.
 
-This will be used to improve speed down logic.
+This patch implement fast speed down rules to handle such cases
+better.  Error occured while data transfer hasn't been verified
+trigger fast back-to-back speed down actions until data transfer
+works.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com<
+This change will make cable mis-detection and other initial
+configuration problems corrected before partition scanning code gives
+up.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |   20 ++++++++++++++++++++
- drivers/ata/libata-eh.c   |   33 +++++++++++++++++++++++++++++++--
- include/linux/libata.h    |    3 +++
- 3 files changed, 54 insertions(+), 2 deletions(-)
+ drivers/ata/libata-eh.c |   97 ++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 83 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ec2cb60..0527b1e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5590,6 +5590,23 @@ static void fill_result_tf(struct ata_queued_cmd *qc)
- 	ap->ops->tf_read(ap, &qc->result_tf);
- }
- 
-+static void ata_verify_xfer(struct ata_queued_cmd *qc)
-+{
-+	struct ata_device *dev = qc->dev;
-+
-+	if (ata_tag_internal(qc->tag))
-+		return;
-+
-+	if (ata_is_nodata(qc->tf.protocol))
-+		return;
-+
-+	if ((dev->mwdma_mask || dev->udma_mask) &&
-+	    ata_is_pio_data(qc->tf.protocol))
-+		return;
-+
-+	dev->flags &= ~ATA_DFLAG_DUBIOUS_XFER;
-+}
-+
- /**
-  *	ata_qc_complete - Complete an active ATA command
-  *	@qc: Command to complete
-@@ -5661,6 +5678,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 			break;
- 		}
- 
-+		if (unlikely(dev->flags & ATA_DFLAG_DUBIOUS_XFER))
-+			ata_verify_xfer(qc);
-+
- 		__ata_qc_complete(qc);
- 	} else {
- 		if (qc->flags & ATA_QCFLAG_EH_SCHEDULED)
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index b5c5388..e635100 100644
+index e635100..79bda92 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -456,9 +456,20 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		spin_lock_irqsave(ap->lock, flags);
+@@ -50,16 +50,23 @@ enum {
+ 	ATA_EH_SPDN_NCQ_OFF		= (1 << 0),
+ 	ATA_EH_SPDN_SPEED_DOWN		= (1 << 1),
+ 	ATA_EH_SPDN_FALLBACK_TO_PIO	= (1 << 2),
++	ATA_EH_SPDN_KEEP_ERRORS		= (1 << 3),
  
- 		__ata_port_for_each_link(link, ap) {
-+			struct ata_eh_context *ehc = &link->eh_context;
-+			struct ata_device *dev;
-+
- 			memset(&link->eh_context, 0, sizeof(link->eh_context));
- 			link->eh_context.i = link->eh_info;
- 			memset(&link->eh_info, 0, sizeof(link->eh_info));
-+
-+			ata_link_for_each_dev(dev, link) {
-+				int devno = dev->devno;
-+
-+				ehc->saved_xfer_mode[devno] = dev->xfer_mode;
-+				if (ata_ncq_enabled(dev))
-+					ehc->saved_ncq_enabled |= 1 << devno;
-+			}
- 		}
+ 	/* error flags */
+ 	ATA_EFLAG_IS_IO			= (1 << 0),
++	ATA_EFLAG_DUBIOUS_XFER		= (1 << 1),
  
- 		ap->pflags |= ATA_PFLAG_EH_IN_PROGRESS;
-@@ -2419,11 +2430,27 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
- {
- 	struct ata_port *ap = link->ap;
-+	struct ata_device *dev;
-+	int rc;
- 
- 	/* has private set_mode? */
- 	if (ap->ops->set_mode)
--		return ap->ops->set_mode(link, r_failed_dev);
--	return ata_do_set_mode(link, r_failed_dev);
-+		rc = ap->ops->set_mode(link, r_failed_dev);
-+	else
-+		rc = ata_do_set_mode(link, r_failed_dev);
+ 	/* error categories */
+ 	ATA_ECAT_NONE			= 0,
+ 	ATA_ECAT_ATA_BUS		= 1,
+ 	ATA_ECAT_TOUT_HSM		= 2,
+ 	ATA_ECAT_UNK_DEV		= 3,
+-	ATA_ECAT_NR			= 4,
++	ATA_ECAT_DUBIOUS_ATA_BUS	= 4,
++	ATA_ECAT_DUBIOUS_TOUT_HSM	= 5,
++	ATA_ECAT_DUBIOUS_UNK_DEV	= 6,
++	ATA_ECAT_NR			= 7,
 +
-+	/* if transfer mode has changed, set DUBIOUS_XFER on device */
-+	ata_link_for_each_dev(dev, link) {
-+		struct ata_eh_context *ehc = &link->eh_context;
-+		u8 saved_xfer_mode = ehc->saved_xfer_mode[dev->devno];
-+		u8 saved_ncq = !!(ehc->saved_ncq_enabled & (1 << dev->devno));
-+
-+		if (dev->xfer_mode != saved_xfer_mode ||
-+		    ata_ncq_enabled(dev) != saved_ncq)
-+			dev->flags |= ATA_DFLAG_DUBIOUS_XFER;
-+	}
-+
-+	return rc;
- }
- 
- static int ata_link_nr_enabled(struct ata_link *link)
-@@ -2484,6 +2511,8 @@ static int ata_eh_schedule_probe(struct ata_device *dev)
- 	ata_dev_init(dev);
- 	ehc->did_probe_mask |= (1 << dev->devno);
- 	ehc->i.action |= ATA_EH_SOFTRESET;
-+	ehc->saved_xfer_mode[dev->devno] = 0;
-+	ehc->saved_ncq_enabled &= ~(1 << dev->devno);
- 
- 	return 1;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2e4648b..6ac3710 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -139,6 +139,7 @@ enum {
- 	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
- 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
- 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
-+	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -537,6 +538,8 @@ struct ata_eh_context {
- 	int			tries[ATA_MAX_DEVICES];
- 	unsigned int		classes[ATA_MAX_DEVICES];
- 	unsigned int		did_probe_mask;
-+	unsigned int		saved_ncq_enabled;
-+	u8			saved_xfer_mode[ATA_MAX_DEVICES];
++	ATA_ECAT_DUBIOUS_BASE		= ATA_ECAT_DUBIOUS_ATA_BUS,
  };
  
- struct ata_acpi_drive
+ /* Waiting in ->prereset can never be reliable.  It's sometimes nice
+@@ -245,6 +252,15 @@ static void ata_ering_record(struct ata_ering *ering, unsigned int eflags,
+ 	ent->timestamp = get_jiffies_64();
+ }
+ 
++static struct ata_ering_entry *ata_ering_top(struct ata_ering *ering)
++{
++	struct ata_ering_entry *ent = &ering->ring[ering->cursor];
++
++	if (ent->err_mask)
++		return ent;
++	return NULL;
++}
++
+ static void ata_ering_clear(struct ata_ering *ering)
+ {
+ 	memset(ering, 0, sizeof(*ering));
+@@ -1568,20 +1584,29 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 	return action;
+ }
+ 
+-static int ata_eh_categorize_error(unsigned int eflags, unsigned int err_mask)
++static int ata_eh_categorize_error(unsigned int eflags, unsigned int err_mask,
++				   int *xfer_ok)
+ {
++	int base = 0;
++
++	if (!(eflags & ATA_EFLAG_DUBIOUS_XFER))
++		*xfer_ok = 1;
++
++	if (!*xfer_ok)
++		base = ATA_ECAT_DUBIOUS_BASE;
++
+ 	if (err_mask & AC_ERR_ATA_BUS)
+-		return ATA_ECAT_ATA_BUS;
++		return base + ATA_ECAT_ATA_BUS;
+ 
+ 	if (err_mask & AC_ERR_TIMEOUT)
+-		return ATA_ECAT_TOUT_HSM;
++		return base + ATA_ECAT_TOUT_HSM;
+ 
+ 	if (eflags & ATA_EFLAG_IS_IO) {
+ 		if (err_mask & AC_ERR_HSM)
+-			return ATA_ECAT_TOUT_HSM;
++			return base + ATA_ECAT_TOUT_HSM;
+ 		if ((err_mask &
+ 		     (AC_ERR_DEV|AC_ERR_MEDIA|AC_ERR_INVALID)) == AC_ERR_DEV)
+-			return ATA_ECAT_UNK_DEV;
++			return base + ATA_ECAT_UNK_DEV;
+ 	}
+ 
+ 	return 0;
+@@ -1589,18 +1614,22 @@ static int ata_eh_categorize_error(unsigned int eflags, unsigned int err_mask)
+ 
+ struct speed_down_verdict_arg {
+ 	u64 since;
++	int xfer_ok;
+ 	int nr_errors[ATA_ECAT_NR];
+ };
+ 
+ static int speed_down_verdict_cb(struct ata_ering_entry *ent, void *void_arg)
+ {
+ 	struct speed_down_verdict_arg *arg = void_arg;
+-	int cat = ata_eh_categorize_error(ent->eflags, ent->err_mask);
++	int cat;
+ 
+ 	if (ent->timestamp < arg->since)
+ 		return -1;
+ 
++	cat = ata_eh_categorize_error(ent->eflags, ent->err_mask,
++				      &arg->xfer_ok);
+ 	arg->nr_errors[cat]++;
++
+ 	return 0;
+ }
+ 
+@@ -1619,6 +1648,9 @@ static int speed_down_verdict_cb(struct ata_ering_entry *ent, void *void_arg)
+  *
+  *	ECAT_UNK_DEV	: Unknown DEV error for IO commands
+  *
++ *	ECAT_DUBIOUS_*	: Identical to above three but occurred while
++ *			  data transfer hasn't been verified.
++ *
+  *	Verdicts are
+  *
+  *	NCQ_OFF		: Turn off NCQ.
+@@ -1629,15 +1661,27 @@ static int speed_down_verdict_cb(struct ata_ering_entry *ent, void *void_arg)
+  *	FALLBACK_TO_PIO	: Fall back to PIO.
+  *
+  *	Even if multiple verdicts are returned, only one action is
+- *	taken per error.  ering is cleared after an action is taken.
++ *	taken per error.  An action triggered by non-DUBIOUS errors
++ *	clears ering, while one triggered by DUBIOUS_* errors doesn't.
++ *	This is to expedite speed down decisions right after device is
++ *	initially configured.
++ *
++ *	The followings are speed down rules.  #1 and #2 deal with
++ *	DUBIOUS errors.
+  *
+- *	1. If more than 6 ATA_BUS, TOUT_HSM or UNK_DEV errors
++ *	1. If more than one DUBIOUS_ATA_BUS or DUBIOUS_TOUT_HSM errors
++ *	   occurred during last 5 mins, SPEED_DOWN and FALLBACK_TO_PIO.
++ *
++ *	2. If more than one DUBIOUS_TOUT_HSM or DUBIOUS_UNK_DEV errors
++ *	   occurred during last 5 mins, NCQ_OFF.
++ *
++ *	3. If more than 8 ATA_BUS, TOUT_HSM or UNK_DEV errors
+  *	   ocurred during last 5 mins, FALLBACK_TO_PIO
+  *
+- *	2. If more than 3 TOUT_HSM or UNK_DEV errors occurred
++ *	4. If more than 3 TOUT_HSM or UNK_DEV errors occurred
+  *	   during last 10 mins, NCQ_OFF.
+  *
+- *	3. If more than 3 ATA_BUS or TOUT_HSM errors, or more than 6
++ *	5. If more than 3 ATA_BUS or TOUT_HSM errors, or more than 6
+  *	   UNK_DEV errors occurred during last 10 mins, SPEED_DOWN.
+  *
+  *	LOCKING:
+@@ -1658,6 +1702,15 @@ static unsigned int ata_eh_speed_down_verdict(struct ata_device *dev)
+ 	arg.since = j64 - min(j64, j5mins);
+ 	ata_ering_map(&dev->ering, speed_down_verdict_cb, &arg);
+ 
++	if (arg.nr_errors[ATA_ECAT_DUBIOUS_ATA_BUS] +
++	    arg.nr_errors[ATA_ECAT_DUBIOUS_TOUT_HSM] > 1)
++		verdict |= ATA_EH_SPDN_SPEED_DOWN |
++			ATA_EH_SPDN_FALLBACK_TO_PIO | ATA_EH_SPDN_KEEP_ERRORS;
++
++	if (arg.nr_errors[ATA_ECAT_DUBIOUS_TOUT_HSM] +
++	    arg.nr_errors[ATA_ECAT_DUBIOUS_UNK_DEV] > 1)
++		verdict |= ATA_EH_SPDN_NCQ_OFF | ATA_EH_SPDN_KEEP_ERRORS;
++
+ 	if (arg.nr_errors[ATA_ECAT_ATA_BUS] +
+ 	    arg.nr_errors[ATA_ECAT_TOUT_HSM] +
+ 	    arg.nr_errors[ATA_ECAT_UNK_DEV] > 6)
+@@ -1701,11 +1754,12 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
+ 				unsigned int eflags, unsigned int err_mask)
+ {
+ 	struct ata_link *link = dev->link;
++	int xfer_ok = 0;
+ 	unsigned int verdict;
+ 	unsigned int action = 0;
+ 
+ 	/* don't bother if Cat-0 error */
+-	if (ata_eh_categorize_error(eflags, err_mask) == 0)
++	if (ata_eh_categorize_error(eflags, err_mask, &xfer_ok) == 0)
+ 		return 0;
+ 
+ 	/* record error and determine whether speed down is necessary */
+@@ -1768,7 +1822,8 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
+ 	return 0;
+  done:
+ 	/* device has been slowed down, blow error history */
+-	ata_ering_clear(&dev->ering);
++	if (!(verdict & ATA_EH_SPDN_KEEP_ERRORS))
++		ata_ering_clear(&dev->ering);
+ 	return action;
+ }
+ 
+@@ -1875,8 +1930,11 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 	    ata_dev_enabled(link->device))
+ 		dev = link->device;
+ 
+-	if (dev)
++	if (dev) {
++		if (dev->flags & ATA_DFLAG_DUBIOUS_XFER)
++			eflags |= ATA_EFLAG_DUBIOUS_XFER;
+ 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
++	}
+ 
+ 	DPRINTK("EXIT\n");
+ }
+@@ -2433,6 +2491,17 @@ int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
+ 	struct ata_device *dev;
+ 	int rc;
+ 
++	/* if data transfer is verified, clear DUBIOUS_XFER on ering top */
++	ata_link_for_each_dev(dev, link) {
++		if (!(dev->flags & ATA_DFLAG_DUBIOUS_XFER)) {
++			struct ata_ering_entry *ent;
++
++			ent = ata_ering_top(&dev->ering);
++			if (ent)
++				ent->eflags &= ~ATA_EFLAG_DUBIOUS_XFER;
++		}
++	}
++
+ 	/* has private set_mode? */
+ 	if (ap->ops->set_mode)
+ 		rc = ap->ops->set_mode(link, r_failed_dev);
 -- 
 1.5.2.4
 
