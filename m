@@ -1,119 +1,58 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: ATAPI devices in AHCI mode not working
-Date: Wed, 31 Oct 2007 16:42:00 -0700
-Message-ID: <39B20DF628532344BC7A2692CB6AEE0701EE3C42@orsmsx420.amr.corp.intel.com>
-References: <39B20DF628532344BC7A2692CB6AEE0701EA6E7D@orsmsx420.amr.corp.intel.com><20071029203028.35645f26@the-village.bc.nu><39B20DF628532344BC7A2692CB6AEE0701EA6FBF@orsmsx420.amr.corp.intel.com> <20071029221332.1c9525a9@the-village.bc.nu> <39B20DF628532344BC7A2692CB6AEE0701EA70F4@orsmsx420.amr.corp.intel.com> <472837B4.3000109@gmail.com> <39B20DF628532344BC7A2692CB6AEE0701EE38E6@orsmsx420.amr.corp.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Thu, 01 Nov 2007 09:40:58 +0900
+Message-ID: <4729209A.50809@gmail.com>
+References: <47274A5F.6070409@gentoo.org> <20071030153417.59b9182c@the-village.bc.nu> <47276DCA.1000808@gentoo.org> <20071030190153.373c9347@the-village.bc.nu> <47278439.4030801@gentoo.org> <20071031114958.210bd7cc@the-village.bc.nu> <20071031115754.GK5059@kernel.dk> <472872F6.70802@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C81C17.A278311E"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11554 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753935AbXJaXma (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Oct 2007 19:42:30 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE0701EE38E6@orsmsx420.amr.corp.intel.com>
+Received: from rv-out-0910.google.com ([209.85.198.188]:61852 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219AbXKAAlG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2007 20:41:06 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so294240rvb
+        for <linux-ide@vger.kernel.org>; Wed, 31 Oct 2007 17:41:05 -0700 (PDT)
+In-Reply-To: <472872F6.70802@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>, Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel Drake <dsd@gentoo.org>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hello, Jeff.
 
-------_=_NextPart_001_01C81C17.A278311E
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Jeff Garzik wrote:
+> That's easy for the PIO case.  But CD writing is normally DMA, which
+> means you will get a DMA engine exception if the device wants to give
+> you more data than the scatter/gather entries permit.
 
->>Yeah, there has been quite some update in libata between SLES10_SP1
-and
->>2.6.24-rc1.  The controller being ahci, I wonder whether this is
-caused
->>by the different in check_atapi_dma().
->>
->>1. Does other optical drives have the same problem?  If not, please
->post
->>the result of "hdparm -I /dev/sr0" with the problematic one attached.
->>
->>2. If you apply the attached patch to 2.6.24-rc1, does it behave the
->>same as the SLES10SP1 kernel?
->>
->>--
->>Tejun
->
->All of the ATAPI drives seem to have the issue of taking a while to
-slow
->down and start working.  I will try the patch and see what happens.  I
->will also get the hdparm info from all of the drives I am using to see
->if something stands out.
->
->Thanks,
->
->Jason
+For sense data and mode pages, the standard-sanctioned way to know the
+transfer size is to issue command with short buffer size just enough to
+contain the fixed size header part, determine actual transfer size from
+it and issue the command again with the correct buffer size.  This
+doesn't happen for READ/WRITE commands.  Transfer sizes are
+pre-determined for those commands and WRITE's to optical devices often
+can't be retried w/o side effect.
 
-Tejun,
+I've just went through the ATA spec and this basically means we can't
+use DMA for these variable-transfer-length commands.  Some DMA engines
+have "throw away what's left over bit" in its command structure or SG
+entry but not all do and none of drivers we currently has such feature
+enabled.
 
-Attached are the hdparm -I /dev/cdrom results for the three other drives
-I am using.  These do not include the original drive that had the major
-issues on, TSSTcorpCD/DVDW SH-S183L.
+Hmmm.... reading ide-cd.c::cdrom_pc_intr().  OIC, ide-cd is dealing with
+this problem by draining PIO after BMDMA engine is done.  This is
+possible for BMDMA engines as they simply step out when the SG entries
+are exhausted; then, the interrupt handler kicks in and drains the
+left-over using PIO.  This just isn't possible with more modern DMA engines.
 
-Applying the patch to the 2.6.24-rc kernel did not cause the same
-behavior, which I am seeing with older kernels.  Instead, everything
-seemed to be fine until I tried to automount the drive, which said that
-there was no media.  I was however, able to manually mount the drive.
+This really makes me think libata should do these commands via PIO
+unless we're gonna enable leftover draining for each DMA engine
+implementation or blacklist the ones which can't drain individually.
+Then again, nobody really knows how well those features would work as
+probably none has actually used them.
 
-Thanks,
+Thanks.
 
-Jason
-
-
-------_=_NextPart_001_01C81C17.A278311E
-Content-Type: application/octet-stream;
-	name="hdparm_cdrom"
-Content-Transfer-Encoding: base64
-Content-Description: hdparm_cdrom
-Content-Disposition: attachment;
-	filename="hdparm_cdrom"
-
-Ci9kZXYvY2Ryb206CgpBVEFQSSBDRC1ST00sIHdpdGggcmVtb3ZhYmxlIG1lZGlhCglNb2RlbCBO
-dW1iZXI6ICAgICAgIEFUQVBJICAgRFZEIEQgIERIMTZEMlMgICAgICAgICAgICAgICAgICAKCVNl
-cmlhbCBOdW1iZXI6ICAgICAgCglGaXJtd2FyZSBSZXZpc2lvbjogIEVQNTIgICAgClN0YW5kYXJk
-czoKCVVzZWQ6IEFUQVBJIGZvciBDRC1ST01zLCBTRkYtODAyMGksIHIyLjUKCVN1cHBvcnRlZDog
-Q0QtUk9NIEFUQVBJLTMgLTQgLTUgLTYgCkNvbmZpZ3VyYXRpb246CglEUlEgcmVzcG9uc2U6IDUw
-dXMuCglQYWNrZXQgc2l6ZTogMTIgYnl0ZXMKQ2FwYWJpbGl0aWVzOgoJTEJBLCBJT1JEWShjYW4g
-YmUgZGlzYWJsZWQpCglETUE6IG1kbWEwIG1kbWExIG1kbWEyIHVkbWEwIHVkbWExIHVkbWEyIHVk
-bWEzIHVkbWE0ICp1ZG1hNSAKCSAgICAgQ3ljbGUgdGltZTogbWluPTEyMG5zIHJlY29tbWVuZGVk
-PTEyMG5zCglQSU86IHBpbzAgcGlvMSBwaW8yIHBpbzMgcGlvNCAKCSAgICAgQ3ljbGUgdGltZTog
-bm8gZmxvdyBjb250cm9sPTM4M25zICBJT1JEWSBmbG93IGNvbnRyb2w9MTIwbnMKQ29tbWFuZHMv
-ZmVhdHVyZXM6CglFbmFibGVkCVN1cHBvcnRlZDoKCSAgICAJUEFDS0VUIGNvbW1hbmQgZmVhdHVy
-ZSBzZXQKCSAgICAJREVWSUNFX1JFU0VUIGNvbW1hbmQKCSAgICoJTWFuZGF0b3J5IEZMVVNIX0NB
-Q0hFCgkgICAqCVNBVEEtSSBzaWduYWxpbmcgc3BlZWQgKDEuNUdiL3MpCgkgICAqCVNvZnR3YXJl
-IHNldHRpbmdzIHByZXNlcnZhdGlvbgoKL2Rldi9jZHJvbToKCkFUQVBJIENELVJPTSwgd2l0aCBy
-ZW1vdmFibGUgbWVkaWEKCU1vZGVsIE51bWJlcjogICAgICAgTElURS1PTiBEVkRSVyBMSC0yMEEx
-UyAgICAgICAgICAgICAgICAgIAoJU2VyaWFsIE51bWJlcjogICAgICAKCUZpcm13YXJlIFJldmlz
-aW9uOiAgOUwwOCAgICAKU3RhbmRhcmRzOgoJVXNlZDogQVRBUEkgZm9yIENELVJPTXMsIFNGRi04
-MDIwaSwgcjIuNQoJU3VwcG9ydGVkOiBDRC1ST00gQVRBUEktMiAKQ29uZmlndXJhdGlvbjoKCURS
-USByZXNwb25zZTogNTB1cy4KCVBhY2tldCBzaXplOiAxMiBieXRlcwpDYXBhYmlsaXRpZXM6CglM
-QkEsIElPUkRZKGNhbiBiZSBkaXNhYmxlZCkKCURNQTogKnNkbWEwICpzZG1hMSAqc2RtYTIgc2Rt
-YTMgc2RtYTQgc2RtYTcgbWRtYTAgbWRtYTEgbWRtYTIgdWRtYTAgdWRtYTEgdWRtYTIgdWRtYTMg
-dWRtYTQgKnVkbWE1ICg/KQoJICAgICBDeWNsZSB0aW1lOiBtaW49MTIwbnMgcmVjb21tZW5kZWQ9
-MTIwbnMKCVBJTzogcGlvMCBwaW8xIHBpbzIgcGlvMyBwaW80IAoJICAgICBDeWNsZSB0aW1lOiBu
-byBmbG93IGNvbnRyb2w9MTIwbnMgIElPUkRZIGZsb3cgY29udHJvbD0xMjBucwpDb21tYW5kcy9m
-ZWF0dXJlczoKCUVuYWJsZWQJU3VwcG9ydGVkOgoJICAgKglQQUNLRVQgY29tbWFuZCBmZWF0dXJl
-IHNldAoJICAgKglERVZJQ0VfUkVTRVQgY29tbWFuZAoJICAgKglNYW5kYXRvcnkgRkxVU0hfQ0FD
-SEUKCSAgICoJU0FUQS1JIHNpZ25hbGluZyBzcGVlZCAoMS41R2IvcykKCSAgICoJSG9zdC1pbml0
-aWF0ZWQgaW50ZXJmYWNlIHBvd2VyIG1hbmFnZW1lbnQKCSAgICoJUGh5IGV2ZW50IGNvdW50ZXJz
-CgkgICAgCURldmljZS1pbml0aWF0ZWQgaW50ZXJmYWNlIHBvd2VyIG1hbmFnZW1lbnQKCSAgICoJ
-dW5rbm93biA3OFs1XQoJICAgKglTb2Z0d2FyZSBzZXR0aW5ncyBwcmVzZXJ2YXRpb24KCi9kZXYv
-Y2Ryb206CgpBVEFQSSBDRC1ST00sIHdpdGggcmVtb3ZhYmxlIG1lZGlhCglNb2RlbCBOdW1iZXI6
-ICAgICAgIFBMRVhUT1IgRFZEUiAgIFBYLTcxNkEgICAgICAgICAgICAgICAgICAKCVNlcmlhbCBO
-dW1iZXI6ICAgICAgMTcxOTU2CglGaXJtd2FyZSBSZXZpc2lvbjogIDEuMDggICAgClN0YW5kYXJk
-czoKCUxpa2VseSB1c2VkIENELVJPTSBBVEFQSS0xCkNvbmZpZ3VyYXRpb246CglEUlEgcmVzcG9u
-c2U6IDUwdXMuCglQYWNrZXQgc2l6ZTogMTIgYnl0ZXMKQ2FwYWJpbGl0aWVzOgoJTEJBLCBJT1JE
-WShjYW4gYmUgZGlzYWJsZWQpCglETUE6IG1kbWEwIG1kbWExIG1kbWEyIHVkbWEwIHVkbWExIHVk
-bWEyICp1ZG1hMyB1ZG1hNCAKCSAgICAgQ3ljbGUgdGltZTogbWluPTEyMG5zIHJlY29tbWVuZGVk
-PTEyMG5zCglQSU86IHBpbzAgcGlvMSBwaW8yIHBpbzMgcGlvNCAKCSAgICAgQ3ljbGUgdGltZTog
-bm8gZmxvdyBjb250cm9sPTEyMG5zICBJT1JEWSBmbG93IGNvbnRyb2w9MTIwbnMKSFcgcmVzZXQg
-cmVzdWx0czoKCUNCTElELSBiZWxvdyBWaWgKCURldmljZSBudW0gPSAwCg==
-
-------_=_NextPart_001_01C81C17.A278311E--
+-- 
+tejun
