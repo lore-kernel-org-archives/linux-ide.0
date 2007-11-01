@@ -1,46 +1,91 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Thu, 01 Nov 2007 15:33:15 +0000
-Message-ID: <4729F1BB.20306@gentoo.org>
-References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 3/8] libata: factor out ata_eh_schedule_probe()
+Date: Fri,  2 Nov 2007 00:51:39 +0900
+Message-ID: <11939323054018-git-send-email-htejun@gmail.com>
+References: <11939323042554-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp121.iad.emailsrvr.com ([207.97.245.121]:39927 "EHLO
-	smtp121.iad.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711AbXKAPd3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2007 11:33:29 -0400
-In-Reply-To: <20071101141501.3746cec2@the-village.bc.nu>
+Received: from [222.235.223.38] ([222.235.223.38]:20825 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752920AbXKAPvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Nov 2007 11:51:47 -0400
+In-Reply-To: <11939323042554-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Alan Cox wrote:
-> Lots of *other* problems occur instead. Daniel is reporting that if he
-> makes a stupid request to a buggy drive he gets a reset and the system
-> continues happily. Even that reset being a reset not a new command issue
-> is actually us being excessively paranoid.
+Factor out ata_eh_schedule_probe() from ata_eh_handle_dev_fail() and
+ata_eh_recover().  This is to improve maintainability and make future
+changes easier.
 
-Sorry if I'm sprouting nonsense here -- I don't have the knowledge that 
-you all do. However, just wanted to point out that I looked up the info 
-about that mode page in the MMC specs.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-eh.c |   37 ++++++++++++++++++++-----------------
+ 1 files changed, 20 insertions(+), 17 deletions(-)
 
-http://www.t10.org/ftp/t10/drafts/mmc4/mmc4r05a.pdf page 513.
-"E.3.3 MM Capabilities and Mechanical Status Page (Page Code 2Ah)"
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index ded44bd..6280eae 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2418,6 +2418,22 @@ static int ata_eh_skip_recovery(struct ata_link *link)
+ 	return 1;
+ }
+ 
++static int ata_eh_schedule_probe(struct ata_device *dev)
++{
++	struct ata_eh_context *ehc = &dev->link->eh_context;
++
++	if (!(ehc->i.probe_mask & (1 << dev->devno)) ||
++	    (ehc->did_probe_mask & (1 << dev->devno)))
++		return 0;
++
++	ata_eh_detach_dev(dev);
++	ata_dev_init(dev);
++	ehc->did_probe_mask |= (1 << dev->devno);
++	ehc->i.action |= ATA_EH_SOFTRESET;
++
++	return 1;
++}
++
+ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
+ {
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
+@@ -2449,16 +2465,9 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
+ 		if (ata_link_offline(dev->link))
+ 			ata_eh_detach_dev(dev);
+ 
+-		/* probe if requested */
+-		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
+-		    !(ehc->did_probe_mask & (1 << dev->devno))) {
+-			ata_eh_detach_dev(dev);
+-			ata_dev_init(dev);
+-
++		/* schedule probe if necessary */
++		if (ata_eh_schedule_probe(dev))
+ 			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
+-			ehc->did_probe_mask |= (1 << dev->devno);
+-			ehc->i.action |= ATA_EH_SOFTRESET;
+-		}
+ 
+ 		return 1;
+ 	} else {
+@@ -2535,14 +2544,8 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			if (dev->flags & ATA_DFLAG_DETACH)
+ 				ata_eh_detach_dev(dev);
+ 
+-			if (!ata_dev_enabled(dev) &&
+-			    ((ehc->i.probe_mask & (1 << dev->devno)) &&
+-			     !(ehc->did_probe_mask & (1 << dev->devno)))) {
+-				ata_eh_detach_dev(dev);
+-				ata_dev_init(dev);
+-				ehc->did_probe_mask |= (1 << dev->devno);
+-				ehc->i.action |= ATA_EH_SOFTRESET;
+-			}
++			/* schedule probe if necessary */
++			ata_eh_schedule_probe(dev);
+ 		}
+ 	}
+ 
+-- 
+1.5.2.4
 
-The length of this mode page varies from drive to drive, so there is no 
-"one size" that you can supply to the SG_IO command (unless you want to 
-use a stupidly large buffer) to retrieve all the data at once. Instead, 
-as Tejun describes, you put a short read request in first, look at byte 
-1 of the page which tells you the length, and then read the whole lot.
-
-Again, ignore me if I'm not contributing anything useful, but I'm 
-increasingly thinking that the SG_IO command block in question is 
-perfectly valid, and doing a short read of the mode page in question 
-(and probably others too) is in fact required before you can know its 
-true size to do a full read anyway.
-
-Thanks,
-Daniel
