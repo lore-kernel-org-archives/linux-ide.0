@@ -1,122 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 4/8] libata: move ata_set_mode() to libata-eh.c
-Date: Fri,  2 Nov 2007 00:51:40 +0900
-Message-ID: <1193932305604-git-send-email-htejun@gmail.com>
-References: <11939323042554-git-send-email-htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Thu, 1 Nov 2007 15:57:14 +0000
+Message-ID: <20071101155714.5d1f3b41@the-village.bc.nu>
+References: <47274A5F.6070409@gentoo.org>
+	<20071030153417.59b9182c@the-village.bc.nu>
+	<47276DCA.1000808@gentoo.org>
+	<20071030190153.373c9347@the-village.bc.nu>
+	<47278439.4030801@gentoo.org>
+	<20071031114958.210bd7cc@the-village.bc.nu>
+	<20071031115754.GK5059@kernel.dk>
+	<4729A0DF.20800@garzik.org>
+	<20071101105335.1f20bab3@the-village.bc.nu>
+	<4729B3EA.6040707@garzik.org>
+	<20071101141501.3746cec2@the-village.bc.nu>
+	<4729F1BB.20306@gentoo.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.235.223.38] ([222.235.223.38]:20824 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752700AbXKAPvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Nov 2007 11:51:47 -0400
-In-Reply-To: <11939323042554-git-send-email-htejun@gmail.com>
+Received: from [81.2.110.250] ([81.2.110.250]:58011 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751389AbXKAP51 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Nov 2007 11:57:27 -0400
+In-Reply-To: <4729F1BB.20306@gentoo.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Daniel Drake <dsd@gentoo.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
 
-Move ata_set_mode() to libata-eh.c.  ata_set_mode() is surely an EH
-action and will be more tightly coupled with the rest of error
-handling.  Move it to libata-eh.c.
+> "one size" that you can supply to the SG_IO command (unless you want to 
+> use a stupidly large buffer) to retrieve all the data at once. Instead, 
+> as Tejun describes, you put a short read request in first, look at byte 
+> 1 of the page which tells you the length, and then read the whole lot.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |   25 -------------------------
- drivers/ata/libata-eh.c   |   25 +++++++++++++++++++++++++
- drivers/ata/libata.h      |    2 +-
- 3 files changed, 26 insertions(+), 26 deletions(-)
+ATAPI effectively requires you supply a stupidly large buffer. In theory
+you set the transfer size in the lba registers and it all works. In
+practice some drives ignore this and there isn't a nice reliable way to
+clean up.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9b6e7b8..ec2cb60 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3028,31 +3028,6 @@ int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
- }
- 
- /**
-- *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-- *	@link: link on which timings will be programmed
-- *	@r_failed_dev: out paramter for failed device
-- *
-- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-- *	ata_set_mode() fails, pointer to the failing device is
-- *	returned in @r_failed_dev.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *
-- *	RETURNS:
-- *	0 on success, negative errno otherwise
-- */
--int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
--{
--	struct ata_port *ap = link->ap;
--
--	/* has private set_mode? */
--	if (ap->ops->set_mode)
--		return ap->ops->set_mode(link, r_failed_dev);
--	return ata_do_set_mode(link, r_failed_dev);
--}
--
--/**
-  *	ata_tf_to_host - issue ATA taskfile to host controller
-  *	@ap: port to which command is being issued
-  *	@tf: ATA taskfile register set
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6280eae..c909022 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2372,6 +2372,31 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 	return rc;
- }
- 
-+/**
-+ *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-+ *	@link: link on which timings will be programmed
-+ *	@r_failed_dev: out paramter for failed device
-+ *
-+ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-+ *	ata_set_mode() fails, pointer to the failing device is
-+ *	returned in @r_failed_dev.
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno otherwise
-+ */
-+int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
-+{
-+	struct ata_port *ap = link->ap;
-+
-+	/* has private set_mode? */
-+	if (ap->ops->set_mode)
-+		return ap->ops->set_mode(link, r_failed_dev);
-+	return ata_do_set_mode(link, r_failed_dev);
-+}
-+
- static int ata_link_nr_enabled(struct ata_link *link)
- {
- 	struct ata_device *dev;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 90df58a..45c8a7e 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -85,7 +85,6 @@ extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_link *link);
- extern int sata_set_spd_needed(struct ata_link *link);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
--extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
-@@ -177,6 +176,7 @@ extern void ata_eh_report(struct ata_port *ap);
- extern int ata_eh_reset(struct ata_link *link, int classify,
- 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
- 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset);
-+extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			  ata_postreset_fn_t postreset,
--- 
-1.5.2.4
+Old IDE tries to pio the extra out but that won't work on all controllers
+so the wrong combination will still blow up on you.
 
+> Again, ignore me if I'm not contributing anything useful, but I'm 
+> increasingly thinking that the SG_IO command block in question is 
+> perfectly valid, and doing a short read of the mode page in question 
+> (and probably others too) is in fact required before you can know its 
+> true size to do a full read anyway.
+
+Welcome to the wonderful world of IDE, where the spec sucks and the
+drives manage to do even worse things.
+
+We can try and clean up better in these cases at least for PIO transfers
+by trying to drain the data beyond this point, on the controllers that
+cope with this but really - fix the app to reflect reality: ATAPI is SCSI
+as spoken by yokels
+
+Alan
