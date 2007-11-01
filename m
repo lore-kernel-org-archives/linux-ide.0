@@ -1,55 +1,63 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: Suspend to ram regression (2.6.24-rc1-git)
-Date: Thu, 1 Nov 2007 09:58:24 -0700
-Message-ID: <20071101095824.2f53e6d9.kristen.c.accardi@intel.com>
-References: <20071031201308.GK11514@kernel.dk>
-	<20071101084145.GA5037@kernel.dk>
-	<20071101092155.GB5037@kernel.dk>
-	<4729B670.7090403@garzik.org>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [IDE] Fix build bug
+Date: Thu, 1 Nov 2007 18:43:16 +0000
+Message-ID: <200711011843.16894.vda.linux@googlemail.com>
+References: <20071025135334.GA23272@linux-mips.org> <200710301134.30087.vda.linux@googlemail.com> <20071030124155.GA7582@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:65459 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752825AbXKAQ7V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Nov 2007 12:59:21 -0400
-In-Reply-To: <4729B670.7090403@garzik.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:61235 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbXKASn1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2007 14:43:27 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so609822nfb
+        for <linux-ide@vger.kernel.org>; Thu, 01 Nov 2007 11:43:26 -0700 (PDT)
+In-Reply-To: <20071030124155.GA7582@linux-mips.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
 
-On Thu, 01 Nov 2007 07:20:16 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> Jens Axboe wrote:
-> > Reverting just the default AHCI flags makes it work again. IOW, with the
-> > below patch I can suspend properly with current -git.
+On Tuesday 30 October 2007 12:41, Ralf Baechle wrote:
+> On Tue, Oct 30, 2007 at 11:34:29AM +0000, Denys Vlasenko wrote:
+> 
+> > On Thursday 25 October 2007 22:41, Bartlomiej Zolnierkiewicz wrote:
+> > > > -static const struct ide_port_info generic_chipsets[] __devinitdata = {
+> > > > +static struct ide_port_info generic_chipsets[] __devinitdata = {
+> > > >  	/*  0 */ DECLARE_GENERIC_PCI_DEV("Unknown",	0),
+> > > >  
+> > > >  	{	/* 1 */
+> > > 
+> > > I would prefer to not remove const from generic_chipsets[] so:
+> > > 
+> > > [PATCH] drivers/ide/pci/generic: fix build for CONFIG_HOTPLUG=n
+> > > 
+> > > It turns out that const and __{dev}initdata cannot be mixed currently
+> > > and that generic IDE PCI host driver is also affected by the same issue:
+> > > 
+> > > On Thursday 25 October 2007, Ralf Baechle wrote:
+> > > >   CC      drivers/ide/pci/generic.o
+> > > > drivers/ide/pci/generic.c:52: error: __setup_str_ide_generic_all_on causes a
+> > > > +section type conflict
+> > > 
+> > > [ Also reported by Martijn Uffing <mp3project@sarijopen.student.utwente.nl>. ]
+> > > 
+> > > This patch workarounds the problem in a bit hackish way but without
+> > > removing const from generic_chipsets[] (it adds const to __setup() so
+> > > __setup_str_ide_generic_all becomes const).
 > > 
-> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> > index ed9b407..77f7631 100644
-> > --- a/drivers/ata/ahci.c
-> > +++ b/drivers/ata/ahci.c
-> > @@ -190,8 +190,7 @@ enum {
-> >  
-> >  	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
-> >  					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
-> > -					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
-> > -					  ATA_FLAG_IPM,
-> > +					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
-> >  	AHCI_LFLAG_COMMON		= ATA_LFLAG_SKIP_D2H_BSY,
+> > You wouldn't believe how much const data is not marked as const because
+> > we don't have __constinitdata etc. Literally megabytes.
 > 
-> 
-> sounds like the easy thing to do, in light of this breakage, might be to 
-> default it to off, add a module parameter turning it on by setting that 
-> flag.
-> 
+> The gain from marking it const is very little and once any non-const
+> __initdata object is added to a compilation unit all other const declarations
+> will have to be removed.  Bad tradeoff.
 
-Can you give me a day to fix it first?  I had a similar problem earlier
-on in the development, and the fix was not that bad.  The issue was 
-related to not bringing the link back up to active before doing suspend/resume,
-and the fix was really straight forward.  I'll take a look at this today,
-and if I can't come up with a pretty fast fix I'll let you know.
-
-Kristen
+We can intrduce new, ro sections or teach gcc that combining const objects into
+non-ro sections is not a crime. I wonder why it currently disallows that.
+(And it does it only _somethimes_, const pointers happily go into rw sections!)
+--
+vda
