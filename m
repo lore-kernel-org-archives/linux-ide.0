@@ -1,30 +1,43 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/3] libata: implement dev->acpi_init_gtm
-Date: Fri, 2 Nov 2007 15:44:43 +0000
-Message-ID: <20071102154443.487bf550@the-village.bc.nu>
-References: <472B402A.4030009@gmail.com>
+Subject: Re: pata_serverworks hangs
+Date: Fri, 2 Nov 2007 16:44:08 +0000
+Message-ID: <20071102164408.5529f6c8@the-village.bc.nu>
+References: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35981 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758618AbXKBPn1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 11:43:27 -0400
-In-Reply-To: <472B402A.4030009@gmail.com>
+Received: from [81.2.110.250] ([81.2.110.250]:55391 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752930AbXKBQnE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Nov 2007 12:43:04 -0400
+In-Reply-To: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Krzysztof Oledzki <olel@ans.pl>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 03 Nov 2007 00:20:10 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+On Fri, 2 Nov 2007 14:29:17 +0100 (CET)
+Krzysztof Oledzki <olel@ans.pl> wrote:
 
-> Add dev->acpi_init_gtm and store initial GTM values on host
-> initialization.  If the field is valid, ATA_PFLAG_INIT_GTM_VALID flag
-> is set.  This is to remember BIOS/firmware programmed initial timing
-> for later use before reset and mode configuration modify it.
+> Hello,
+> 
+> I just tried to switch from old IDE to libata but unfortunately kernel 
+> (2.6.22.10) hangs during boot:
+> 
+> ata1: PATA max UDMA/66 cmd 0x000101e8 ctl 0x000103ee bmdma 0x00012c40 irq 11
+> ata2: DUMMY
+> ata1.00: ATAPI: HL-DT-ST CD-ROM GCR-8482B, 1.00, max MWDMA2
+> ara1.01: ATAPI: LITE-ON LTR-62327S, QS75, max UDMA/33
+> ata1.00: configured for MWDMA2
+> ata1.00: configured for UDMA/33
+> scsi 2:0:0:0: CDROM             HL-DT-ST CDROM GCR-8482B 1.00 PQ: 0 ANSI 5
+> (kernel hangs)
+> 
+> Attaching lspci and dmesg from working system, with pata_serverworks 
+> disabled.
 
-Don't you need to clear this on a hotplug event ?
 
-Alan
+Interesting. Serverworks has been fairly well behaved. You seem to have a
+fairly standard CSB6 setup. Whats the motherboard and is the CSB6 one of
+the RAID card options or just motherboard mounted ?
