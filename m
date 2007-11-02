@@ -1,7 +1,7 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [smartmontools-support] Bug/Issue
-Date: Fri, 02 Nov 2007 21:11:17 +0900
-Message-ID: <472B13E5.2070401@gmail.com>
+Date: Fri, 02 Nov 2007 21:09:44 +0900
+Message-ID: <472B1388.2060208@gmail.com>
 References: <474362.56402.qm@web51305.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -9,10 +9,10 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from rv-out-0910.google.com ([209.85.198.185]:55428 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705AbXKBML3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 08:11:29 -0400
+	with ESMTP id S1753107AbXKBMLq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 08:11:46 -0400
 Received: by rv-out-0910.google.com with SMTP id k20so786132rvb
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 05:11:28 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 05:11:46 -0700 (PDT)
 In-Reply-To: <474362.56402.qm@web51305.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
