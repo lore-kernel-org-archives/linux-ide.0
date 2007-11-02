@@ -1,49 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [smartmontools-support] Bug/Issue
-Date: Fri, 02 Nov 2007 21:09:44 +0900
-Message-ID: <472B1388.2060208@gmail.com>
-References: <474362.56402.qm@web51305.mail.re2.yahoo.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [IDE] Fix build bug
+Date: Fri, 2 Nov 2007 12:34:30 +0000
+Message-ID: <20071102123428.GA14106@linux-mips.org>
+References: <20071025135334.GA23272@linux-mips.org> <200710301134.30087.vda.linux@googlemail.com> <20071030124155.GA7582@linux-mips.org> <200711011843.16894.vda.linux@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:55428 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbXKBMLq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 08:11:46 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so786132rvb
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 05:11:46 -0700 (PDT)
-In-Reply-To: <474362.56402.qm@web51305.mail.re2.yahoo.com>
+Received: from ftp.linux-mips.org ([194.74.144.162]:48315 "EHLO
+	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247AbXKBMfH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 08:35:07 -0400
+Received: from localhost.localdomain ([127.0.0.1]:15555 "EHLO
+	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
+	id S20030388AbXKBMfF (ORCPT <rfc822;linux-ide@vger.kernel.org>
+	+ 1 other); Fri, 2 Nov 2007 12:35:05 +0000
+Content-Disposition: inline
+In-Reply-To: <200711011843.16894.vda.linux@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: Bruce Allen <ballen@gravity.phys.uwm.edu>, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
 
-Hello, Jon.
+On Thu, Nov 01, 2007 at 06:43:16PM +0000, Denys Vlasenko wrote:
 
-Please don't top-post.
+> We can intrduce new, ro sections or teach gcc that combining const objects into
+> non-ro sections is not a crime. I wonder why it currently disallows that.
+> (And it does it only _somethimes_, const pointers happily go into rw sections!)
 
-Jon Hardcastle wrote:
-> Looking at the logs there is seconds(as in 2~5)
-> literally between when the smartd kicks in on the sata
-> and when it decides the drive isn't capable. I can
-> tell you now it takes at least 10~15 seconds for the
-> drive to spin up.. probably longer. I also know that
-> when i run the test manually using smartctl it seems
-> to work, and that when the scheduled test is run when
-> the drives HAVENT spun down it also works.
+The pattern seems to be that const-ness of the first object placed into
+a particular section determines the writability of that section.  If that
+conflicts with the requirements for a later object such as a non-const
+object into a section r/o gcc doesn't consider making the section r/w
+but throws an error instead.
 
-Okay, please do the following.
-
-1. Post /var/log/boot.msg or dmesg result right after boot.
-2. Post the result of "lspci -nnv"
-3. Post the results of "hdparm -I /dev/sdX" where sdX is one of th
-problematic drives.
-4. Run "hdparm -y /dev/sdX" to spin it down then issue SMART short test
-manually.  If it fails the same way, post what smartd/smartctl says and
-the result of dmesg after the failure.
-
-Thanks.
-
--- 
-tejun
+  Ralf
