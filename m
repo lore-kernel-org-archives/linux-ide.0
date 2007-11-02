@@ -1,231 +1,310 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/15] ide: remove atapi_error_t
-Date: Fri, 2 Nov 2007 21:04:16 +0100
-Message-ID: <200711022104.16206.bzolnier@gmail.com>
-References: <200710310025.55983.bzolnier@gmail.com> <472A1F30.805@ru.mvista.com>
+Subject: Re: [PATCH 7/15] ide: remove atapi_ireason_t
+Date: Fri, 2 Nov 2007 21:21:24 +0100
+Message-ID: <200711022121.24688.bzolnier@gmail.com>
+References: <200710310028.27935.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:61145 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:59724 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846AbXKBWIP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 18:08:15 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so940287nfb
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 15:08:14 -0700 (PDT)
-In-Reply-To: <472A1F30.805@ru.mvista.com>
+	with ESMTP id S1754590AbXKBWIR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 18:08:17 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so940294nfb
+        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 15:08:16 -0700 (PDT)
+In-Reply-To: <200710310028.27935.bzolnier@gmail.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+On Wednesday 31 October 2007, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Remove atapi_ireason_t.
+> 
+> While at it:
+> * replace 'HWIF(drive)' by 'drive->hwif' (or just 'hwif' where possible)
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Hi,
+[...]
 
-On Thursday 01 November 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Remove atapi_error_t.
-> 
-> > While at it:
-> > * replace 'HWIF(drive)' by 'drive->hwif'
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > ---
-> >  drivers/ide/ide-floppy.c |    3 +--
-> >  drivers/ide/ide-lib.c    |   21 ++++++++++-----------
-> >  drivers/ide/ide-tape.c   |    3 +--
-> >  include/linux/ide.h      |   30 ------------------------------
-> >  4 files changed, 12 insertions(+), 45 deletions(-)
-> 
-> > Index: b/drivers/ide/ide-lib.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-lib.c
-> > +++ b/drivers/ide/ide-lib.c
-> [...]
-> > @@ -576,19 +575,19 @@ static u8 ide_dump_atapi_status(ide_driv
-> >  	}
-> >  	printk("}\n");
-> >  	if ((stat & (BUSY_STAT|ERR_STAT)) == ERR_STAT) {
-> > -		error.all = HWIF(drive)->INB(IDE_ERROR_REG);
-> > -		printk("%s: %s: error=0x%02x { ", drive->name, msg, error.all);
-> > -		if (error.b.ili)	printk("IllegalLengthIndication ");
-> > -		if (error.b.eom)	printk("EndOfMedia ");
-> > -		if (error.b.abrt)	printk("AbortedCommand ");
-> > -		if (error.b.mcr)	printk("MediaChangeRequested ");
-> > -		if (error.b.sense_key)	printk("LastFailedSense=0x%02x ",
-> > -						error.b.sense_key);
-> > +		err = drive->hwif->INB(IDE_ERROR_REG);
-> > +		printk("%s: %s: error=0x%02x { ", drive->name, msg, err);
-> > +		if (err & MARK_ERR)	printk("IllegalLengthIndication ");
-> > +		if (err & TRK0_ERR)	printk("EndOfMedia ");
-> > +		if (err & ABRT_ERR)	printk("AbortedCommand ");
-> > +		if (err & MCR_ERR)	printk("MediaChangeRequested ");
-> > +		if (err & 0xf0)		printk("LastFailedSense=0x%02x ",
-> > +						(err & 0xf0) >> 4);
-> 
->     I'd rather prefer that the ATAPI bit definitions be added to 
-> <linux/hdreg.h> -- the ATAPI sector count register fields definitions are 
-> already there...
+[PATCH] ide: remove atapi_ireason_t (take 2)
 
-Yeah, that should do it:
-
-[PATCH] ide: remove atapi_error_t (take 2)
-
-Remove atapi_error_t.
+Remove atapi_ireason_t.
 
 While at it:
-* replace 'HWIF(drive)' by 'drive->hwif'
+* replace 'HWIF(drive)' by 'drive->hwif' (or just 'hwif' where possible)
 
 v2:
-* Add {ILI,EOM,LFS}_ERR defines to <linux/hdreg.h>.
+* v1 had CD and IO bits reversed in many places.
+
+* Use CD and IO defines from <linux/hdreg.h>.
 
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-floppy.c |    3 +--
- drivers/ide/ide-lib.c    |   21 ++++++++++-----------
- drivers/ide/ide-tape.c   |    3 +--
- include/linux/hdreg.h    |    3 +++
- include/linux/ide.h      |   30 ------------------------------
- 5 files changed, 15 insertions(+), 45 deletions(-)
+ drivers/ide/ide-floppy.c |   25 ++++++++++++-------------
+ drivers/ide/ide-tape.c   |   27 +++++++++++++--------------
+ drivers/scsi/ide-scsi.c  |   17 ++++++++---------
+ include/linux/ide.h      |   24 ------------------------
+ 4 files changed, 33 insertions(+), 60 deletions(-)
 
 Index: b/drivers/ide/ide-floppy.c
 ===================================================================
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -772,9 +772,8 @@ static void idefloppy_retry_pc (ide_driv
+@@ -788,12 +788,11 @@ static ide_startstop_t idefloppy_pc_intr
  {
- 	idefloppy_pc_t *pc;
- 	struct request *rq;
--	atapi_error_t error;
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+ 	ide_hwif_t *hwif = drive->hwif;
+-	atapi_ireason_t ireason;
+ 	idefloppy_pc_t *pc = floppy->pc;
+ 	struct request *rq = pc->rq;
+ 	unsigned int temp;
+ 	u16 bcount;
+-	u8 stat;
++	u8 stat, ireason;
  
--	error.all = HWIF(drive)->INB(IDE_ERROR_REG);
-+	(void)drive->hwif->INB(IDE_ERROR_REG);
- 	pc = idefloppy_next_pc_storage(drive);
- 	rq = idefloppy_next_rq_storage(drive);
- 	idefloppy_create_request_sense_cmd(pc);
-Index: b/drivers/ide/ide-lib.c
-===================================================================
---- a/drivers/ide/ide-lib.c
-+++ b/drivers/ide/ide-lib.c
-@@ -558,9 +558,8 @@ static u8 ide_dump_ata_status(ide_drive_
- static u8 ide_dump_atapi_status(ide_drive_t *drive, const char *msg, u8 stat)
+ 	debug_log(KERN_INFO "ide-floppy: Reached %s interrupt handler\n",
+ 		__FUNCTION__);
+@@ -852,18 +851,18 @@ static ide_startstop_t idefloppy_pc_intr
+ 	bcount = (hwif->INB(IDE_BCOUNTH_REG) << 8) |
+ 		  hwif->INB(IDE_BCOUNTL_REG);
+ 	/* on this interrupt */
+-	ireason.all = HWIF(drive)->INB(IDE_IREASON_REG);
++	ireason = hwif->INB(IDE_IREASON_REG);
+ 
+-	if (ireason.b.cod) {
++	if (ireason & CD) {
+ 		printk(KERN_ERR "ide-floppy: CoD != 0 in idefloppy_pc_intr\n");
+ 		return ide_do_reset(drive);
+ 	}
+-	if (ireason.b.io == test_bit(PC_WRITING, &pc->flags)) {
++	if ((ireason & IO) == test_bit(PC_WRITING, &pc->flags)) {
+ 		/* Hopefully, we will never get here */
+ 		printk(KERN_ERR "ide-floppy: We wanted to %s, ",
+-			ireason.b.io ? "Write":"Read");
++				(ireason & IO) ? "Write" : "Read");
+ 		printk(KERN_ERR "but the floppy wants us to %s !\n",
+-			ireason.b.io ? "Read":"Write");
++				(ireason & IO) ? "Read" : "Write");
+ 		return ide_do_reset(drive);
+ 	}
+ 	if (!test_bit(PC_WRITING, &pc->flags)) {
+@@ -920,15 +919,15 @@ static ide_startstop_t idefloppy_transfe
  {
- 	unsigned long flags;
--	atapi_error_t error;
-+	u8 err = 0;
+ 	ide_startstop_t startstop;
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+-	atapi_ireason_t ireason;
++	u8 ireason;
  
--	error.all = 0;
- 	local_irq_save(flags);
- 	printk("%s: %s: status=0x%02x { ", drive->name, msg, stat);
- 	if (stat & BUSY_STAT)
-@@ -576,19 +575,19 @@ static u8 ide_dump_atapi_status(ide_driv
+ 	if (ide_wait_stat(&startstop, drive, DRQ_STAT, BUSY_STAT, WAIT_READY)) {
+ 		printk(KERN_ERR "ide-floppy: Strange, packet command "
+ 				"initiated yet DRQ isn't asserted\n");
+ 		return startstop;
  	}
- 	printk("}\n");
- 	if ((stat & (BUSY_STAT|ERR_STAT)) == ERR_STAT) {
--		error.all = HWIF(drive)->INB(IDE_ERROR_REG);
--		printk("%s: %s: error=0x%02x { ", drive->name, msg, error.all);
--		if (error.b.ili)	printk("IllegalLengthIndication ");
--		if (error.b.eom)	printk("EndOfMedia ");
--		if (error.b.abrt)	printk("AbortedCommand ");
--		if (error.b.mcr)	printk("MediaChangeRequested ");
--		if (error.b.sense_key)	printk("LastFailedSense=0x%02x ",
--						error.b.sense_key);
-+		err = drive->hwif->INB(IDE_ERROR_REG);
-+		printk("%s: %s: error=0x%02x { ", drive->name, msg, err);
-+		if (err & ILI_ERR)	printk("IllegalLengthIndication ");
-+		if (err & EOM_ERR)	printk("EndOfMedia ");
-+		if (err & ABRT_ERR)	printk("AbortedCommand ");
-+		if (err & MCR_ERR)	printk("MediaChangeRequested ");
-+		if (err & LFS_ERR)	printk("LastFailedSense=0x%02x ",
-+						(err & LFS_ERR) >> 4);
- 		printk("}\n");
- 	}
- 	ide_dump_opcode(drive);
- 	local_irq_restore(flags);
--	return error.all;
-+	return err;
- }
+-	ireason.all = HWIF(drive)->INB(IDE_IREASON_REG);
+-	if (!ireason.b.cod || ireason.b.io) {
++	ireason = drive->hwif->INB(IDE_IREASON_REG);
++	if ((ireason & CD) == 0 || (ireason & IO)) {
+ 		printk(KERN_ERR "ide-floppy: (IO,CoD) != (0,1) while "
+ 				"issuing a packet command\n");
+ 		return ide_do_reset(drive);
+@@ -968,15 +967,15 @@ static ide_startstop_t idefloppy_transfe
+ {
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+ 	ide_startstop_t startstop;
+-	atapi_ireason_t ireason;
++	u8 ireason;
  
- /**
+ 	if (ide_wait_stat(&startstop, drive, DRQ_STAT, BUSY_STAT, WAIT_READY)) {
+ 		printk(KERN_ERR "ide-floppy: Strange, packet command "
+ 				"initiated yet DRQ isn't asserted\n");
+ 		return startstop;
+ 	}
+-	ireason.all = HWIF(drive)->INB(IDE_IREASON_REG);
+-	if (!ireason.b.cod || ireason.b.io) {
++	ireason = drive->hwif->INB(IDE_IREASON_REG);
++	if ((ireason & CD) == 0 || (ireason & IO)) {
+ 		printk(KERN_ERR "ide-floppy: (IO,CoD) != (0,1) "
+ 				"while issuing a packet command\n");
+ 		return ide_do_reset(drive);
 Index: b/drivers/ide/ide-tape.c
 ===================================================================
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1808,9 +1808,8 @@ static ide_startstop_t idetape_retry_pc 
+@@ -1847,14 +1847,13 @@ static ide_startstop_t idetape_pc_intr (
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
  	idetape_tape_t *tape = drive->driver_data;
- 	idetape_pc_t *pc;
- 	struct request *rq;
--	atapi_error_t error;
+-	atapi_ireason_t ireason;
+ 	idetape_pc_t *pc = tape->pc;
+ 	unsigned int temp;
+ #if SIMULATE_ERRORS
+ 	static int error_sim_count = 0;
+ #endif
+ 	u16 bcount;
+-	u8 stat;
++	u8 stat, ireason;
  
--	error.all = HWIF(drive)->INB(IDE_ERROR_REG);
-+	(void)drive->hwif->INB(IDE_ERROR_REG);
- 	pc = idetape_next_pc_storage(drive);
- 	rq = idetape_next_rq_storage(drive);
- 	idetape_create_request_sense_cmd(pc);
-Index: b/include/linux/hdreg.h
+ #if IDETAPE_DEBUG_LOG
+ 	if (tape->debug_level >= 4)
+@@ -1965,18 +1964,18 @@ static ide_startstop_t idetape_pc_intr (
+ 	bcount = (hwif->INB(IDE_BCOUNTH_REG) << 8) |
+ 		  hwif->INB(IDE_BCOUNTL_REG);
+ 
+-	ireason.all = hwif->INB(IDE_IREASON_REG);
++	ireason = hwif->INB(IDE_IREASON_REG);
+ 
+-	if (ireason.b.cod) {
++	if (ireason & CD) {
+ 		printk(KERN_ERR "ide-tape: CoD != 0 in idetape_pc_intr\n");
+ 		return ide_do_reset(drive);
+ 	}
+-	if (ireason.b.io == test_bit(PC_WRITING, &pc->flags)) {
++	if ((ireason & IO) == test_bit(PC_WRITING, &pc->flags)) {
+ 		/* Hopefully, we will never get here */
+ 		printk(KERN_ERR "ide-tape: We wanted to %s, ",
+-			ireason.b.io ? "Write":"Read");
++				(ireason & IO) ? "Write" : "Read");
+ 		printk(KERN_ERR "ide-tape: but the tape wants us to %s !\n",
+-			ireason.b.io ? "Read":"Write");
++				(ireason & IO) ? "Read" : "Write");
+ 		return ide_do_reset(drive);
+ 	}
+ 	if (!test_bit(PC_WRITING, &pc->flags)) {
+@@ -2070,28 +2069,28 @@ static ide_startstop_t idetape_transfer_
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	idetape_pc_t *pc = tape->pc;
+-	atapi_ireason_t ireason;
+ 	int retries = 100;
+ 	ide_startstop_t startstop;
++	u8 ireason;
+ 
+ 	if (ide_wait_stat(&startstop,drive,DRQ_STAT,BUSY_STAT,WAIT_READY)) {
+ 		printk(KERN_ERR "ide-tape: Strange, packet command initiated yet DRQ isn't asserted\n");
+ 		return startstop;
+ 	}
+-	ireason.all = hwif->INB(IDE_IREASON_REG);
+-	while (retries-- && (!ireason.b.cod || ireason.b.io)) {
++	ireason = hwif->INB(IDE_IREASON_REG);
++	while (retries-- && ((ireason & CD) == 0 || (ireason & IO))) {
+ 		printk(KERN_ERR "ide-tape: (IO,CoD != (0,1) while issuing "
+ 				"a packet command, retrying\n");
+ 		udelay(100);
+-		ireason.all = hwif->INB(IDE_IREASON_REG);
++		ireason = hwif->INB(IDE_IREASON_REG);
+ 		if (retries == 0) {
+ 			printk(KERN_ERR "ide-tape: (IO,CoD != (0,1) while "
+ 					"issuing a packet command, ignoring\n");
+-			ireason.b.cod = 1;
+-			ireason.b.io = 0;
++			ireason |= CD;
++			ireason &= ~IO;
+ 		}
+ 	}
+-	if (!ireason.b.cod || ireason.b.io) {
++	if ((ireason & CD) == 0 || (ireason & IO)) {
+ 		printk(KERN_ERR "ide-tape: (IO,CoD) != (0,1) while issuing "
+ 				"a packet command\n");
+ 		return ide_do_reset(drive);
+Index: b/drivers/scsi/ide-scsi.c
 ===================================================================
---- a/include/linux/hdreg.h
-+++ b/include/linux/hdreg.h
-@@ -44,7 +44,9 @@
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -403,10 +403,9 @@ static ide_startstop_t idescsi_pc_intr (
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	idescsi_pc_t *pc = scsi->pc;
+ 	struct request *rq = pc->rq;
+-	atapi_ireason_t ireason;
+ 	unsigned int temp;
+ 	u16 bcount;
+-	u8 stat;
++	u8 stat, ireason;
  
- /* Bits for HD_ERROR */
- #define MARK_ERR		0x01	/* Bad address mark */
-+#define ILI_ERR			0x01	/* Illegal Length Indication (ATAPI) */
- #define TRK0_ERR		0x02	/* couldn't find track 0 */
-+#define EOM_ERR			0x02	/* End Of Media (ATAPI) */
- #define ABRT_ERR		0x04	/* Command aborted */
- #define MCR_ERR			0x08	/* media change request */
- #define ID_ERR			0x10	/* ID field not found */
-@@ -52,6 +54,7 @@
- #define ECC_ERR			0x40	/* Uncorrectable ECC error */
- #define BBD_ERR			0x80	/* pre-EIDE meaning:  block marked bad */
- #define ICRC_ERR		0x80	/* new meaning:  CRC error during transfer */
-+#define LFS_ERR			0xf0	/* Last Failed Sense (ATAPI) */
+ #if IDESCSI_DEBUG_LOG
+ 	printk (KERN_INFO "ide-scsi: Reached idescsi_pc_intr interrupt handler\n");
+@@ -444,13 +443,13 @@ static ide_startstop_t idescsi_pc_intr (
+ 	}
+ 	bcount = (hwif->INB(IDE_BCOUNTH_REG) << 8) |
+ 		  hwif->INB(IDE_BCOUNTL_REG);
+-	ireason.all	= HWIF(drive)->INB(IDE_IREASON_REG);
++	ireason = hwif->INB(IDE_IREASON_REG);
  
- /* Bits of HD_NSECTOR */
- #define CD			0x01
+-	if (ireason.b.cod) {
++	if (ireason & CD) {
+ 		printk(KERN_ERR "ide-scsi: CoD != 0 in idescsi_pc_intr\n");
+ 		return ide_do_reset (drive);
+ 	}
+-	if (ireason.b.io) {
++	if (ireason & IO) {
+ 		temp = pc->actually_transferred + bcount;
+ 		if (temp > pc->request_transfer) {
+ 			if (temp > pc->buffer_size) {
+@@ -479,7 +478,7 @@ static ide_startstop_t idescsi_pc_intr (
+ #endif /* IDESCSI_DEBUG_LOG */
+ 		}
+ 	}
+-	if (ireason.b.io) {
++	if (ireason & IO) {
+ 		clear_bit(PC_WRITING, &pc->flags);
+ 		if (pc->sg)
+ 			idescsi_input_buffers(drive, pc, bcount);
+@@ -508,16 +507,16 @@ static ide_startstop_t idescsi_transfer_
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
+ 	idescsi_pc_t *pc = scsi->pc;
+-	atapi_ireason_t ireason;
+ 	ide_startstop_t startstop;
++	u8 ireason;
+ 
+ 	if (ide_wait_stat(&startstop,drive,DRQ_STAT,BUSY_STAT,WAIT_READY)) {
+ 		printk(KERN_ERR "ide-scsi: Strange, packet command "
+ 			"initiated yet DRQ isn't asserted\n");
+ 		return startstop;
+ 	}
+-	ireason.all	= HWIF(drive)->INB(IDE_IREASON_REG);
+-	if (!ireason.b.cod || ireason.b.io) {
++	ireason = hwif->INB(IDE_IREASON_REG);
++	if ((ireason & CD) == 0 || (ireason & IO)) {
+ 		printk(KERN_ERR "ide-scsi: (IO,CoD) != (0,1) while "
+ 				"issuing a packet command\n");
+ 		return ide_do_reset (drive);
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -417,36 +417,6 @@ typedef union {
- } atapi_ireason_t;
+@@ -346,30 +346,6 @@ typedef union {
+ } select_t, ata_select_t;
  
  /*
-- * The ATAPI error register.
+- * ATAPI Interrupt Reason Register.
 - *
-- * ili		: Illegal Length Indication
-- * eom		: End Of Media Detected
-- * abrt		: Aborted command - As defined by ATA
-- * mcr		: Media Change Requested - As defined by ATA
-- * sense_key	: Sense key of the last failed packet command
+- * cod		: Information transferred is command (1) or data (0)
+- * io		: The device requests us to read (1) or write (0)
+- * reserved	: Reserved
 - */
 -typedef union {
 -	unsigned all			:8;
 -	struct {
 -#if defined(__LITTLE_ENDIAN_BITFIELD)
--		unsigned ili		:1;
--		unsigned eom		:1;
--		unsigned abrt		:1;
--		unsigned mcr		:1;
--		unsigned sense_key	:4;
+-		unsigned cod		:1;
+-		unsigned io		:1;
+-		unsigned reserved	:6;
 -#elif defined(__BIG_ENDIAN_BITFIELD)
--		unsigned sense_key	:4;
--		unsigned mcr		:1;
--		unsigned abrt		:1;
--		unsigned eom		:1;
--		unsigned ili		:1;
+-		unsigned reserved	:6;
+-		unsigned io		:1;
+-		unsigned cod		:1;
 -#else
 -#error "Please fix <asm/byteorder.h>"
 -#endif
 -	} b;
--} atapi_error_t;
+-} atapi_ireason_t;
 -
 -/*
   * Status returned from various ide_ functions
