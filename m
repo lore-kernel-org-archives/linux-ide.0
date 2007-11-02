@@ -1,78 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_serverworks hangs
-Date: Fri, 2 Nov 2007 17:41:48 +0000
-Message-ID: <20071102174148.49358f7e@the-village.bc.nu>
-References: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Fri, 02 Nov 2007 13:58:02 -0400
+Message-ID: <472B652A.5000900@garzik.org>
+References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu> <4729F1BB.20306@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53060 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753015AbXKBRkm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 13:40:42 -0400
-In-Reply-To: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
+Received: from srv5.dvmed.net ([207.36.208.214]:41894 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756789AbXKBR6S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Nov 2007 13:58:18 -0400
+In-Reply-To: <4729F1BB.20306@gentoo.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Krzysztof Oledzki <olel@ans.pl>
-Cc: linux-ide@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
 
-On Fri, 2 Nov 2007 14:29:17 +0100 (CET)
-Krzysztof Oledzki <olel@ans.pl> wrote:
-
-> Hello,
-> 
-> I just tried to switch from old IDE to libata but unfortunately kernel 
-> (2.6.22.10) hangs during boot:
-> 
-> ata1: PATA max UDMA/66 cmd 0x000101e8 ctl 0x000103ee bmdma 0x00012c40 irq 11
-> ata2: DUMMY
-> ata1.00: ATAPI: HL-DT-ST CD-ROM GCR-8482B, 1.00, max MWDMA2
-> ara1.01: ATAPI: LITE-ON LTR-62327S, QS75, max UDMA/33
-> ata1.00: configured for MWDMA2
-> ata1.00: configured for UDMA/33
-> scsi 2:0:0:0: CDROM             HL-DT-ST CDROM GCR-8482B 1.00 PQ: 0 ANSI 5
-> (kernel hangs)
-> 
-> Attaching lspci and dmesg from working system, with pata_serverworks 
-> disabled.
-
-Try the following patch and let me know if it helps:
+Daniel Drake wrote:
+> Again, ignore me if I'm not contributing anything useful, but I'm 
+> increasingly thinking that the SG_IO command block in question is 
+> perfectly valid, and doing a short read of the mode page in question 
+> (and probably others too) is in fact required before you can know its 
+> true size to do a full read anyway.
 
 
---- drivers/ata/pata_serverworks.c~	2007-11-02 17:25:41.078936752 +0000
-+++ drivers/ata/pata_serverworks.c	2007-11-02 17:25:41.078936752 +0000
-@@ -274,28 +274,27 @@
- {
- 	static const u8 dma_mode[] = { 0x77, 0x21, 0x20 };
- 	int offset = 1 + 2 * ap->port_no - adev->devno;
--	int devbits = (2 * ap->port_no + adev->devno);
-+	int devbits = 2 * ap->port_no + adev->devno;
- 	u8 ultra;
- 	u8 ultra_cfg;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
- 	pci_read_config_byte(pdev, 0x54, &ultra_cfg);
-+	pci_read_config_byte(pdev, 0x56 + ap->port_no, &ultra);
-+	ultra &= ~(0x0F << (adev->devno * 4));
- 
- 	if (adev->dma_mode >= XFER_UDMA_0) {
- 		pci_write_config_byte(pdev, 0x44 + offset,  0x20);
- 
--		pci_read_config_byte(pdev, 0x56 + ap->port_no, &ultra);
--		ultra &= ~(0x0F << (ap->port_no * 4));
- 		ultra |= (adev->dma_mode - XFER_UDMA_0)
--					<< (ap->port_no * 4);
--		pci_write_config_byte(pdev, 0x56 + ap->port_no, ultra);
--
-+					<< (adev->devno * 4);
- 		ultra_cfg |=  (1 << devbits);
- 	} else {
- 		pci_write_config_byte(pdev, 0x44 + offset,
- 			dma_mode[adev->dma_mode - XFER_MW_DMA_0]);
- 		ultra_cfg &= ~(1 << devbits);
- 	}
-+	pci_write_config_byte(pdev, 0x56 + ap->port_no, ultra);
- 	pci_write_config_byte(pdev, 0x54, ultra_cfg);
- }
- 
+Correct -- I do not see anything wrong with the SCSI command being 
+passed to the device.
+
+It is quite normal to request an allocation length less than the amount 
+of data to be returned -- often this is even a requirement, in order for 
+the SCSI client to see how much data buffer is must allocate for the 
+returned data.
+
+This technique is used all over SCSI, both in userland and in the 
+kernel.  Nothing wrong with the test app AFAICS.
+
+This behavior can be adequated summarized as a drive firmware bug, where 
+the device will puke when both SCSI allocation length and ATA byte count 
+limit are below the amount of data it wishes to return.
+
+At this point I think we're interested to see the output from Tejun's 
+debugging patch, posted in this thread.
+
+	Jeff
+
+
