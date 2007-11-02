@@ -1,42 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/3] libata: extend ata_acpi_cbl_80wire() and fix cable
- detection in pata_via and pata_amd
-Date: Fri, 2 Nov 2007 23:45:45 +0000
-Message-ID: <20071102234545.61353ce1@the-village.bc.nu>
-References: <472B402A.4030009@gmail.com>
-	<472B4078.90009@gmail.com>
-	<20071102154215.1a93249c@the-village.bc.nu>
-	<472BA249.6000107@gmail.com>
+From: Martin Rogge <marogge@onlinehome.de>
+Subject: Re: [Bug 9274] segfault after upgrade from 2.6.19.4 to 2.6.23.1
+Date: Sat, 3 Nov 2007 00:54:56 +0100
+Message-ID: <200711030054.56892.marogge@onlinehome.de>
+References: <20071102174440.53BE210807D@picon.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57465 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752602AbXKBXoj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 19:44:39 -0400
-In-Reply-To: <472BA249.6000107@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:64345 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754794AbXKBXzJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 19:55:09 -0400
+In-Reply-To: <20071102174440.53BE210807D@picon.linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-> GTM results do change whether you call STM or not.  GTM in many cases is
-> implemented as reading the current configuration value from the
-> controller so if you configure PIO0, it will return PIO0 timings.  And,
-> yeah, on ASUS A8N-E, if you configure PIO0, GTM answer says DMA is off.
+On Friday 02 November 2007 18:44:40 you wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=9274
+>
+>
+> sshtylyov@ru.mvista.com changed:
+>
+>            What    |Removed                     |Added
+> ---------------------------------------------------------------------------
+>- CC|                            |marogge@onlinehome.de
+>
+>
+>
+>
+> ------- Comment #4 from sshtylyov@ru.mvista.com  2007-11-02 10:44 -------
+> (In reply to comment #3)
+>
+> > Created an attachment (id=13381)
+>
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=13381&action=view)
+> [details]
+>
+> > Do not use MRDMODE for interrupt status on PCI-64[89]
+> >
+> > This is not a final patch at this point, but the one that should show us
+> > whether  MRDMODE is not usable for the interrupt status despite what the
+> > chip specs say...
+>
+> Martin, this bug looks like your report too. Please try the patch attached
+> and report the result. Sorry for a long delay -- I've been busy with other
+> stuff.
 
-Oh fun - ok then we do need to cache it.
+Hi,
 
-> What the function answers is not actually cable type but "according to
-> the current configuration, using this cable type won't violate BIOS
-> configuration" kind of answer.  How the caller is to use that is the
-> caller's responsibility.
+I am not sure I can reply directly to bugzilla.kernel.org...
 
-How does the caller make use of it ? The only way I can think of to use
-it is that if either drive says UDMA > 33 then we know its 80 wire.
-Otherwise we can't really prove anything. And if neither drive says > 80
-wire we have to go on what other info we have, which for NVidia appears
-to be "guess 40".
+Anyway, I applied the patch to 2.6.23 (had to transcribe the last chunk 
+manually). The resulting code is not pretty, but it fixes the problem. 
 
-I'm not sure therefore we gain anything ?
+The debugging output shows a lot of lines ending in 
+
+irq_stat: 0x04 mrdmode: 0x04
+
+cu Martin
+
