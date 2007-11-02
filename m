@@ -1,100 +1,42 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: Suspend to ram regression (2.6.24-rc1-git)
-Date: Fri, 2 Nov 2007 16:37:08 -0700
-Message-ID: <20071102163708.15304989.kristen.c.accardi@intel.com>
-References: <20071031201308.GK11514@kernel.dk>
-	<20071101084145.GA5037@kernel.dk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/3] libata: extend ata_acpi_cbl_80wire() and fix cable
+ detection in pata_via and pata_amd
+Date: Fri, 2 Nov 2007 23:45:45 +0000
+Message-ID: <20071102234545.61353ce1@the-village.bc.nu>
+References: <472B402A.4030009@gmail.com>
+	<472B4078.90009@gmail.com>
+	<20071102154215.1a93249c@the-village.bc.nu>
+	<472BA249.6000107@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13581 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755225AbXKBXiT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Nov 2007 19:38:19 -0400
-In-Reply-To: <20071101084145.GA5037@kernel.dk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57465 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752602AbXKBXoj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 19:44:39 -0400
+In-Reply-To: <472BA249.6000107@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, 1 Nov 2007 09:41:46 +0100
-Jens Axboe <jens.axboe@oracle.com> wrote:
+> GTM results do change whether you call STM or not.  GTM in many cases is
+> implemented as reading the current configuration value from the
+> controller so if you configure PIO0, it will return PIO0 timings.  And,
+> yeah, on ASUS A8N-E, if you configure PIO0, GTM answer says DMA is off.
 
-> On Wed, Oct 31 2007, Jens Axboe wrote:
-> > Hi,
-> > 
-> > My x60 stopped suspending about two days ago. It just freezes after
-> > printing
-> > 
-> > Suspending console(s)
-> > 
-> > where it would normally turn everything off and the 'moon' light would
-> > go on. Posting this message in case somebody else knows what is up, if
-> > not I'll do a bisect on it tomorrow.
-> 
-> Did the bisect, it points to this commit:
-> 
-> 1556594f913fa81d008cecfe46d7211c919a853 is first bad commit
-> commit 31556594f913fa81d008cecfe46d7211c919a853
-> Author: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> Date:   Thu Oct 25 01:33:26 2007 -0400
-> 
->     [libata] AHCI: add hw link power management support
-> 
-> Booting any kernel after this commit fails suspending to ram, it just
-> sits there forever.
-> 
-> -- 
-> Jens Axboe
-> 
+Oh fun - ok then we do need to cache it.
 
-Does this patch fix your problem?  It seems to get hung up while disabling
-DIPM, and after thinking about this a bit, I don't think we really need
-to do this anyway.
+> What the function answers is not actually cable type but "according to
+> the current configuration, using this cable type won't violate BIOS
+> configuration" kind of answer.  How the caller is to use that is the
+> caller's responsibility.
 
+How does the caller make use of it ? The only way I can think of to use
+it is that if either drive says UDMA > 33 then we know its 80 wire.
+Otherwise we can't really prove anything. And if neither drive says > 80
+wire we have to go on what other info we have, which for NVidia appears
+to be "guess 40".
 
-Don't disable dipm with SET FEATURES
-
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-
----
- drivers/ata/libata-core.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
-Index: 2.6-git/drivers/ata/libata-core.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-core.c	2007-11-01 09:59:17.000000000 -0700
-+++ 2.6-git/drivers/ata/libata-core.c	2007-11-02 16:35:13.000000000 -0700
-@@ -676,10 +676,11 @@ static int ata_dev_set_dipm(struct ata_d
- 		if (rc)
- 			return rc;
- 
--		/* disable DIPM */
--		if (ata_dev_enabled(dev) && (dev->flags & ATA_DFLAG_DIPM))
--			err_mask = ata_dev_set_feature(dev,
--					SETFEATURES_SATA_DISABLE, SATA_DIPM);
-+		/*
-+		 * we don't have to disable DIPM since IPM flags
-+		 * disallow transitions to SLUMBER, which effectively
-+		 * disable DIPM if it does not support PARTIAL
-+		 */
- 		break;
- 	case NOT_AVAILABLE:
- 	case MAX_PERFORMANCE:
-@@ -689,10 +690,11 @@ static int ata_dev_set_dipm(struct ata_d
- 		if (rc)
- 			return rc;
- 
--		/* disable DIPM */
--		if (ata_dev_enabled(dev) && (dev->flags & ATA_DFLAG_DIPM))
--			err_mask = ata_dev_set_feature(dev,
--					SETFEATURES_SATA_DISABLE, SATA_DIPM);
-+		/*
-+		 * we don't have to disable DIPM since IPM flags
-+		 * disallow all transitions which effectively
-+		 * disable DIPM anyway.
-+		 */
- 		break;
- 	}
- 
+I'm not sure therefore we gain anything ?
