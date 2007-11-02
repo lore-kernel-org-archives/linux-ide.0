@@ -1,58 +1,36 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2/3] libata: extend ata_acpi_cbl_80wire() and fix cable
- detection in pata_via and pata_amd
-Date: Fri, 2 Nov 2007 15:42:15 +0000
-Message-ID: <20071102154215.1a93249c@the-village.bc.nu>
+Subject: Re: [PATCH 3/3] pata_amd: fix and improve cable detection
+Date: Fri, 2 Nov 2007 15:44:06 +0000
+Message-ID: <20071102154406.7596b384@the-village.bc.nu>
 References: <472B402A.4030009@gmail.com>
 	<472B4078.90009@gmail.com>
+	<472B40B0.6010702@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35973 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35977 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756005AbXKBPlG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 11:41:06 -0400
-In-Reply-To: <472B4078.90009@gmail.com>
+	with ESMTP id S1755760AbXKBPmw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 11:42:52 -0400
+In-Reply-To: <472B40B0.6010702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> Using the initial GTM value is the right thing to do because both are
-> trying to check firmware setting and by the time ->cable_detect runs
-> the controller is already forced into PIO0 by reset.
+On Sat, 03 Nov 2007 00:22:24 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-As we only look at the DMA bits that doesn't matter but I agree it would
-be cleaner if we were more careful. Also our mode setting outside
-pata_acpi doesn't touch the ACPI settings so its ok for that reason too.
+> Cable detection on Nvidia PATA hosts is pathetic.  The current
+> nv_cable_detect() assumes that the native cable detection only
+> mistakes 80c as 40c but this isn't true.  On ASUS A8N-E, cable
+> register almost always says 80c is attached and it also manages to
+> trick the drive that the cable is 80c.
 
-> + * Determine cable type from UDMA configuration in @gtm.  If UDMA is
-> + * disabled, it returns ATA_CBL_PATA_UNK.  If UDMA is enabled and
-> + * faster than 33, PATA_80; otherwise, PATA_40.
-
-NAK
-
-Consider the case of a UDMA 33 capable device on an 80 wire cable. We
-simply can't use the cable detect methods to prove it is 40 wire this way.
-
-What we actually know is
-
-	If UDMA > 33 selected		-> UDMA > 33 works
-					80 wire
-					Short
-					or SATA
-
-	If UDMA > 33 not selected	Unknown
-					40 wire
-					80 + Drive limit
-					80 + Controller limit
-					80 + BIOS is set to PIO
-					etc
-
-The only case I can see you could reasonably suggest 40 wire would be
-IFF the drive is capable of UDMA > 33 _and_ the ACPI mode is UDMA 33.
-
-
+According to the last Nvidia comments on Nvidia there is no cable detect
+bit. I've just never gotten around to implementing it because due to lack
+of documentation Nvidia PATA is very very low priority compared to
+problems with documented chipsets from helpful vendors.
 
 Alan
