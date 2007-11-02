@@ -1,38 +1,39 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/9] ide-disk: guarantee 400ns delay after writing command register
-Date: Fri, 2 Nov 2007 22:59:44 +0100
-Message-ID: <200711022259.44214.bzolnier@gmail.com>
+Subject: Re: question on patch: ide: do_identify() string termination fix [PATCH 2.6.11-rc2 08/29]
+Date: Fri, 2 Nov 2007 20:44:21 +0100
+Message-ID: <200711022044.21474.bzolnier@gmail.com>
+References: <987926.65237.qm@web55214.mail.re4.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:61145 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.191]:59724 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbXKBWIS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 18:08:18 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so940287nfb
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 15:08:17 -0700 (PDT)
+	with ESMTP id S1754824AbXKBWIO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 18:08:14 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so940294nfb
+        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 15:08:12 -0700 (PDT)
+In-Reply-To: <987926.65237.qm@web55214.mail.re4.yahoo.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Yanping Du <ypdu2001@yahoo.com>
+Cc: linux-ide@vger.kernel.org
 
+On Tuesday 30 October 2007, Yanping Du wrote:
+> Hi,
+> 
+>   We hit an NMI watchdog on cpu lockup (trace below)
+> and I suspect it might be related to following string
+> termination bug. However I wonder why this bug fix is
+> not incorporated in latest mainline kernel (2.6.23.1
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-disk.c |    1 +
- 1 file changed, 1 insertion(+)
+it must have slipped through the cracks...
 
-Index: b/drivers/ide/ide-disk.c
-===================================================================
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -274,6 +274,7 @@ static ide_startstop_t __ide_do_rw_disk(
- 		}
- 
- 		hwif->OUTBSYNC(drive, command, IDE_COMMAND_REG);
-+		ndelay(400);	/* FIXME */
- 
- 		return pre_task_out_intr(drive, rq);
- 	}
+> as I checked). The bug fix seems straightforward to
+> me. Did I miss anything ? Our kernel is 2.6.12.
+> 
+> http://osdir.com/ml/ide/2005-02/msg00038.html
+
+applied
