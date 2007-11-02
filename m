@@ -1,133 +1,42 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
-Date: Fri, 02 Nov 2007 09:32:38 +0800
-Message-ID: <1193967158.13603.4.camel@sli10-conroe.sh.intel.com>
-References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
-	 <1190341023.16930.5.camel@sli10-conroe.sh.intel.com>
-	 <200710302227.40310.lenb@kernel.org> <200710311426.25099.rjw@sisk.pl>
-	 <1193885429.6872.2.camel@sli10-conroe.sh.intel.com>
-	 <20071101100435.7c80785e@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata ATAPI transfer size cleanups
+Date: Fri, 02 Nov 2007 01:16:29 -0400
+Message-ID: <472AB2AD.3040709@garzik.org>
+References: <20071101090733.GA9258@havoc.gtf.org> <64bb37e0711011251w255746c7x6947f85431d4f4fe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20071101100435.7c80785e@the-village.bc.nu>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:41175 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752197AbXKBFQb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Nov 2007 01:16:31 -0400
+In-Reply-To: <64bb37e0711011251w255746c7x6947f85431d4f4fe@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, 2007-11-01 at 10:04 +0000, Alan Cox wrote:
-> > +	max_devices = ata_link_max_devices(&ap->link);
-> > +
-> > +	for (i = 0; i < max_devices; ++i) {
-> > +		struct ata_device *dev = &ap->link.device[i];
+Torsten Kaiser wrote:
+> On 11/1/07, Jeff Garzik <jeff@garzik.org> wrote:
+>> +       lo = tf->lbam;
+>> +       hi = tf->lbam;
+>> +       ibyte = (hi << 8) | lo;
+>> +
+>> +       lo = result_tf->lbam;
+>> +       hi = result_tf->lbam;
 > 
-> Better to use:
-ok.
-> 	ata_link_for_each_dev(dev, &ap->link) {		
+> That doesn't look right.
+> I suspect this was intended:
 > 
-> > +
-> > +		if (dev->acpi_handle)
-> > +			acpi_bus_set_power(dev->acpi_handle,
-> > +				state.event == PM_EVENT_ON ?
-> > +				ACPI_STATE_D0: ACPI_STATE_D3);
-> > +	}
-> 
-> Also should you not check ata_dev_enabled(dev) ?
-Not sure, this is just to call a BIOS routine, but a check should be
-safer. Thanks!
+> lo = tf->lbam;
+> hi = tf->lbah;
 
-ACPI spec (ver 3.0a, p289) requires IDE power on/off executes ACPI _PSx
-methods. As recently most PATA drivers use libata, this patch adds _PSx
-method support in libata. ACPI spec doesn't mention if SATA requires the
-same _PSx method.
+Agreed, will correct.
 
-Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-Acked-by: Len Brown <len.brown@intel.com>
----
- drivers/ata/libata-acpi.c |   29 +++++++++++++++++++++++++++++
- drivers/ata/libata-eh.c   |    3 +++
- drivers/ata/libata.h      |    2 ++
- 3 files changed, 34 insertions(+)
+Thanks,
 
-Index: linux/drivers/ata/libata-acpi.c
-===================================================================
---- linux.orig/drivers/ata/libata-acpi.c	2007-11-01 10:54:25.000000000 +0800
-+++ linux/drivers/ata/libata-acpi.c	2007-11-02 09:14:12.000000000 +0800
-@@ -652,6 +652,35 @@ void ata_acpi_on_resume(struct ata_port 
- }
- 
- /**
-+ * ata_acpi_set_state - set the port power state
-+ * @ap: target ATA port
-+ * @state: state, on/off
-+ *
-+ * This function executes the _PS0/_PS3 ACPI method to set the power state.
-+ * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
-+ */
-+void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
-+{
-+	struct ata_device *dev;
-+
-+	if (!ap->acpi_handle || (ap->flags & ATA_FLAG_ACPI_SATA))
-+		return;
-+
-+	/* channel first and then drives for power on and verse versa for power off */
-+	if (state.event == PM_EVENT_ON)
-+		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D0);
-+
-+	ata_link_for_each_dev(dev, &ap->link) {
-+		if (dev->acpi_handle && ata_dev_enabled(dev))
-+			acpi_bus_set_power(dev->acpi_handle,
-+				state.event == PM_EVENT_ON ?
-+				ACPI_STATE_D0: ACPI_STATE_D3);
-+	}
-+	if (state.event != PM_EVENT_ON)
-+		acpi_bus_set_power(ap->acpi_handle, ACPI_STATE_D3);
-+}
-+
-+/**
-  * ata_acpi_on_devcfg - ATA ACPI hook called on device donfiguration
-  * @dev: target ATA device
-  *
-Index: linux/drivers/ata/libata-eh.c
-===================================================================
---- linux.orig/drivers/ata/libata-eh.c	2007-11-01 10:54:25.000000000 +0800
-+++ linux/drivers/ata/libata-eh.c	2007-11-02 09:01:41.000000000 +0800
-@@ -2796,6 +2796,7 @@ static void ata_eh_handle_port_suspend(s
- 	if (ap->ops->port_suspend)
- 		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
- 
-+	ata_acpi_set_state(ap, PMSG_SUSPEND);
-  out:
- 	/* report result */
- 	spin_lock_irqsave(ap->lock, flags);
-@@ -2841,6 +2842,8 @@ static void ata_eh_handle_port_resume(st
- 
- 	WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
- 
-+	ata_acpi_set_state(ap, PMSG_ON);
-+
- 	if (ap->ops->port_resume)
- 		rc = ap->ops->port_resume(ap);
- 
-Index: linux/drivers/ata/libata.h
-===================================================================
---- linux.orig/drivers/ata/libata.h	2007-11-01 10:54:25.000000000 +0800
-+++ linux/drivers/ata/libata.h	2007-11-02 09:01:41.000000000 +0800
-@@ -111,12 +111,14 @@ extern void ata_acpi_associate(struct at
- extern int ata_acpi_on_suspend(struct ata_port *ap);
- extern void ata_acpi_on_resume(struct ata_port *ap);
- extern int ata_acpi_on_devcfg(struct ata_device *adev);
-+extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- #else
- static inline void ata_acpi_associate_sata_port(struct ata_port *ap) { }
- static inline void ata_acpi_associate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
- static inline void ata_acpi_on_resume(struct ata_port *ap) { }
- static inline int ata_acpi_on_devcfg(struct ata_device *adev) { return 0; }
-+static inline void ata_acpi_set_state(struct ata_port *ap, pm_message_t state) { }
- #endif
- 
- /* libata-scsi.c */
+	Jeff
+
+
+
