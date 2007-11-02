@@ -1,56 +1,50 @@
-From: "Amit Shah" <shahamit@gmail.com>
-Subject: Re: sata_nv: ata2 errors
-Date: Fri, 2 Nov 2007 14:06:01 +0530
-Message-ID: <877aabc40711020136g1bc5b602p7423c8472da38273@mail.gmail.com>
-References: <877aabc40710250048m41675163x81671097f44bba7f@mail.gmail.com>
-	 <20071101133102.1121bc28.akpm@linux-foundation.org>
-	 <472A3EBF.1080403@garzik.org>
+From: Frans de Boer <frans@fransdb.nl>
+Subject: Re: SATA_SIL
+Date: Fri, 02 Nov 2007 11:23:45 +0100
+Message-ID: <1193999025.32531.7.camel@ws1.fransdb.nl>
+References: <1193781389.26314.9.camel@ws1.fransdb.nl>
+	 <4729126F.1000108@gmail.com> <1193955948.17609.31.camel@ws1.fransdb.nl>
+	 <472A7928.2060702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:10487 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358AbXKBIgC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 04:36:02 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so874738wah
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 01:36:01 -0700 (PDT)
-In-Reply-To: <472A3EBF.1080403@garzik.org>
-Content-Disposition: inline
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:43014 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753219AbXKBKXt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 06:23:49 -0400
+In-Reply-To: <472A7928.2060702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 11/2/07, Jeff Garzik <jeff@garzik.org> wrote:
-> Andrew Morton wrote:
-> > On Thu, 25 Oct 2007 13:18:50 +0530
-> > "Amit Shah" <shahamit@gmail.com> wrote:
-> >
-> >> On 2.6.24-rc1 (AMD Opteron 1216), my sata_nv driver produces this
-> >> output on bootup:
-> >>
-> >> ata2: EH in SWNCQ mode,QC:qc_active 0x1 sactive 0x1
-> >> ata2: SWNCQ:qc_active 0x1 defer_bits 0x0 last_issue_tag 0x0
-> >> ata2: ATA_REG 0x40 ERR_REG 0x0
-> >> ata2: tag : dhfis dmafis sdbfis sacitve
-> >> ata2: tag 0x0: 0 1 0 0
-> >> ata2.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
-> >> ...
-> >> ata2.00: status: { DRDY }
-> >>
-> >
-> > Are any other problems observeable?
->
->
-> 2.6.24-rc1 is missing the fix for this that is upstream,
-> 360737a982b1ae09e1659e0bb27085c03f02f404
+Both sil and sil24 are not the same compared to the stock 2.6.22.9
+kernel.
 
-Yes, that commit fixed this for me.
+On Fri, 2007-11-02 at 10:11 +0900, Tejun Heo wrote:
+> [restoring linux-ide, please don't drop cc]
+> 
+> Frans de Boer wrote:
+> > Hello sir,
+> > 
+> > I just checked: the SuSE 2.6.22.9-0.4 source for sata_sil.c (among
+> > others) is NOT the same as the stock 2.6.22.9. Looking at your reply, I
+> > quess that I have to skip 2.6.23 and use the next 2.6.24 release?
+> 
+> Is it sata_sil or sata_sil24?  You were talking about sil24 in the
+> original message.
+> 
+> > On a more modern system, - without the sil chips - SuSE 10.3 with the
+> > newer 2.6.23.1 kernel is working just fine.
+> > 
+> > Do you  still like to recieve my report as suggested by you?
+> 
+> Yeah, it should just work.  Thanks.
+> 
+Uh, your reacte on which part? The part of just wait for the 2.6.24
+release or that you recieve the boot.msg and hwinfo output?
 
-Thanks,
-Amit.
+KR,
+Frans.
 
--- 
-Amit Shah
-http://www.amitshah.net/
