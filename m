@@ -1,38 +1,43 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Bart's efforts?
-Date: Sat, 3 Nov 2007 19:23:22 +0100 (MET)
-Message-ID: <200711031823.lA3INMCe007081@harpo.it.uu.se>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:44232 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756259AbXKCSXg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Nov 2007 14:23:36 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Sat, 03 Nov 2007 20:02:59 +0000
+Message-ID: <472CD3F3.7050701@gentoo.org>
+References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu> <4729F1BB.20306@gentoo.org> <4729F8F1.4040103@gmail.com> <472B946F.4030004@gentoo.org> <472BCC18.7070503@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761834AbXKCUD0@vger.kernel.org>
+In-Reply-To: <472BCC18.7070503@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk, greg.freemyer@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> 2) pata_pdc202xx_old can't do UDMA on my 440BX PIII box
->
->Bug # ?
+Tejun Heo wrote:
+>> <4>ata2.00: HSM violation: eh_analyze_tf: BUSY|DRQ
+>> <3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>> <3>ata2.00: cmd a0/00:00:00:0a:00/00:00:00:00:00/a0 tag 0 cdb 0x5a data
+>> 10 in
+>> <4>         res 58/00:02:00:0a:00/00:00:00:00:00/a0 Emask 0x2 (HSM
+>> violation)
+>> <3>ata2.00: status: { DRDY DRQ }
+>> <6>ata2: soft resetting link
+>> <6>ata2.00: configured for UDMA/33
+>> <6>ata2: EH complete
+> 
+> Does this patch fix the problem?
 
-No bz # yet, but you and I had a private email conversation about
-this on March 13 and 15 this year.
+That fixes it, thanks! There is no more ugly error in dmesg, the test
+prog doesn't print any sense data, and brasero works OK too. However,
+these messages appear in the kernel log every time I run the test app
+(or when brasero does its thing):
 
-There's been a couple of recent reports to linux-ide with identical
-(as far as I can see) issues as I get:
-<http://marc.info/?l=linux-ide&m=119152811824641&w=2>
-<http://marc.info/?l=linux-ide&m=118890476223188&w=2>
-<http://marc.info/?l=linux-ide&m=118855473322630&w=2>
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 10 bytes trailing data
+<4>ata2.00: 6 bytes trailing data
 
-I'll add a bugzilla entry for this next week so it doesn't get lost.
-
->> 3) pata_legacy doesn't release io/irq combinations for failed
->>    probes, causing conflicts with drivers loaded later on
->
->In my tree it does but I'm still testing some bits.
-
-Good news.
-
-/Mikael
+Daniel
