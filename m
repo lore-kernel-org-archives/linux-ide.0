@@ -1,30 +1,35 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Bart's efforts?
-Date: Sat, 3 Nov 2007 16:19:04 +0000
-Message-ID: <20071103161904.668c8ba7@the-village.bc.nu>
-References: <87f94c370711030535r73846d45y2ef08a14ad94a78b@mail.gmail.com>
-	<20071103141022.7a6c0209@the-village.bc.nu>
-	<472C9624.104@ij.net>
+Date: Sat, 3 Nov 2007 16:22:03 +0000
+Message-ID: <20071103162203.5388a37f@the-village.bc.nu>
+References: <200711031541.lA3FfJ6h006120@harpo.it.uu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34519 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53368 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754008AbXKCQSA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 12:18:00 -0400
-In-Reply-To: <472C9624.104@ij.net>
+	with ESMTP id S1754211AbXKCQU6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 12:20:58 -0400
+In-Reply-To: <200711031541.lA3FfJ6h006120@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Felix Miata <mrmazda@ij.net>
-Cc: linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: greg.freemyer@gmail.com, linux-ide@vger.kernel.org
 
-> > I don't think there is anything useful in old IDE that isn't in the new.
-> 
-> You mean besides being able to access all existing disk partitions? Google
+> 1) there's no libata replacement for the IDE pmac driver
 
-Al Viro vetoed this support in the SCSI core. Take it up with him. The
-libata layer is happy with lots of partitions but it needs a change for
-sparse minors, or your distribution to use device mapper to do the work.
+This is true currently. David Woodhouse loaned me a Pmac to fix that but
+it died so thats waiting for the PPC people to do something about it.
 
-Alan
+> 2) pata_pdc202xx_old can't do UDMA on my 440BX PIII box
+
+Bug # ?
+
+> 3) pata_legacy doesn't release io/irq combinations for failed
+>    probes, causing conflicts with drivers loaded later on
+
+In my tree it does but I'm still testing some bits. I've been rewriting
+the legacy driver to make it a lot cleaner and easy to plug other ISA/VLB
+device handlers into it.
+
