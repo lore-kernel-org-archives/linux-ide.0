@@ -1,31 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Sat, 03 Nov 2007 08:34:41 -0400
-Message-ID: <472C6AE1.30104@garzik.org>
-References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu> <4729F1BB.20306@gentoo.org> <4729F8F1.4040103@gmail.com> <472B946F.4030004@gentoo.org> <472BCC18.7070503@gmail.com>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Bart's efforts?
+Date: Sat, 3 Nov 2007 08:35:40 -0400
+Message-ID: <87f94c370711030535r73846d45y2ef08a14ad94a78b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40340 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753459AbXKCMev (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Nov 2007 08:34:51 -0400
-In-Reply-To: <472BCC18.7070503@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.226]:52529 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603AbXKCMfl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 08:35:41 -0400
+Received: by wx-out-0506.google.com with SMTP id h31so1174631wxd
+        for <linux-ide@vger.kernel.org>; Sat, 03 Nov 2007 05:35:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Daniel Drake <dsd@gentoo.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Does this patch fix the problem?
-[snip]
+Jeff / Alan,
 
-I hope it does...  that patch removes a call to sg_last() and in general 
-cleans up the function a bit, which is nice.
+I mostly lurk here, but I know there is a long term effort/ToDo to
+move libata away from the SCSI infrastructure.
 
-	Jeff
+I've also seen that Bart has been making a large number of
+improvements to drivers/ide over the last little while.  From my
+limited perspective, many changes appear to be to the core
+infrastructure.
 
+My question is if the drivers/ide infrastructure is slowly moving in
+the direction of being leverageable by libata when/if it moves out of
+scsi.  Or does the drivers/ide code simply have the wrong kind of
+plumbing for libata to ever use.
 
+Thanks
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
 
-
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
