@@ -1,112 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: new errors with sata_sil24 with port multiplier
-Date: Sat, 03 Nov 2007 16:25:28 +0900
-Message-ID: <472C2268.1000004@gmail.com>
-References: <FD6311B7ED175B4480F31633F6098B4DA0EB24@ffpglobal_mail.corp.ffplus.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/3] libata: implement dev->acpi_init_gtm
+Date: Sat, 03 Nov 2007 08:33:04 -0400
+Message-ID: <472C6A80.3030206@garzik.org>
+References: <472B402A.4030009@gmail.com> <472B43E6.2020402@garzik.org> <472BA0D6.3050607@gmail.com> <472C1ED0.5080407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:41839 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756488AbXKCHZg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 03:25:36 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1207819wah
-        for <linux-ide@vger.kernel.org>; Sat, 03 Nov 2007 00:25:35 -0700 (PDT)
-In-Reply-To: <FD6311B7ED175B4480F31633F6098B4DA0EB24@ffpglobal_mail.corp.ffplus.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:59462 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752279AbXKCMdJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Nov 2007 08:33:09 -0400
+In-Reply-To: <472C1ED0.5080407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jon Chelton <jchelton@ffpglobal.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Jon Chelton wrote:
-> ata2.02: irq_stat 0x02020002, device error via SDB FIS
-> ata2.02: cmd 60/50:00:6f:5b:02/00:00:00:00:00/40 tag 0 cdb 0x0 data
-> 40960 in
->          res 50/00:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device
-> error)
+Tejun Heo wrote:
+> Tejun Heo wrote:
+>> Jeff Garzik wrote:
+>>> Tejun Heo wrote:
+>>>> Add dev->acpi_init_gtm and store initial GTM values on host
+>>>> initialization.  If the field is valid, ATA_PFLAG_INIT_GTM_VALID flag
+>>>> is set.  This is to remember BIOS/firmware programmed initial timing
+>>>> for later use before reset and mode configuration modify it.
+>>>>
+>>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>>> It sounds like pata_via and pata_amd need a foo_save_initial_config()
+>>> much like AHCI, during which they would fill ppriv->init_gtm rather than
+>>> ap->init_gtm.  Thoughts?  Both drivers are calling ata_acpi_cbl()
+>>> themselves, permitting the possibility of ppriv->init_gtm.
+>>>
+>>> This avoids forcing everyone else to bear the memory cost in ata_port
+>>> for just these two drivers.
+>> The memory overhead is pretty small and more importantly there isn't a
+>> good place to load initial GTM.  ACPI is associated with the host during
+>> host registration after all private host initialization is complete.
+>> When the EH gets invoked, the first thing which is done is forcing PIO0
+>> before initial reset.
+>>
+>> Unless we add another hook, the only place to put this is in private
+>> ->error_handler().  A driver can check whether it's being called for the
+>> first time and record it in private structure, which isn't too pretty,
+>> so I thought doing it this way was fair tradeoff.
+> 
+> Jeff, do you agree or still think it's better done in LLDs?  I'm okay
+> either way.
 
-Hmmm... Status register value is weird here.  It's reporting device
-error via SDB FIS but ERR bit is not set in the status register.
+I trust your judgement...  My reply was more of a "gut feeling" sort of 
+thing.
 
-> ata2.03: exception Emask 0x0 SAct 0x10 SErr 0x0 action 0x2 frozen
+In general, I want to keep libata as close as possible to the "LLD 
+call-out model" as possible:  LLD registers itself with system services 
+[perhaps using generic helpers to do so].  LLD fills in its own scsi 
+host template and ata_port_operations [perhaps using generic helpers to 
+do so].  LLD implements specific helpers that control LLD-specific 
+behavior, calling out to libata helpers as need arises.
 
-This is collateral damage.
+So I tend to prefer adding direct LLD control points to ATA_FLAG_xxx 
+control points or other solutions, if the situation permits me to choose.
 
-> ata2.15: hard resetting link
-> ata2: controller in dubious state, performing PORT_RST
+If you have to ask...  I will always prefer "it" (for some value of...) 
+to be done in the LLD.  ;-)
 
-Ah, okay.  Receiving SDB FIS confused the controller.  This is a erratum
-of the controller.  If error occurs while commands are in flight to more
-than on device, the controller gets completely f***ed up.  This is
-probably why the status and error registers are not updated correctly above.
+	Jeff
 
-[EH kicks in and cleans up]
 
-> ata2.00: exception Emask 0x0 SAct 0x20 SErr 0x0 action 0x0
-> ata2.02: exception Emask 0x0 SAct 0x8 SErr 0x380000 action 0x2
-> ata2.02: irq_stat 0x02020002, device error via SDB FIS
-> ata2.02: cmd 60/78:18:47:6f:76/00:00:00:00:00/40 tag 3 cdb 0x0 data
-> 61440 in
->          res 41/84:07:b8:6f:76/00:00:00:00:00/40 Emask 0x410 (ATA bus
-> error) <F>
 
-Okay, again, the same device reporting device error and commands only to
-the device were in flight so the controller updated status and error
-correctly.  The device is reporting ATA bus error.
-
-[again, EH cleans up]
-
-> ata2.02: exception Emask 0x0 SAct 0x80 SErr 0x380000 action 0x2
-> ata2.02: irq_stat 0x02020002, device error via SDB FIS
-> ata2.02: cmd 60/80:38:3f:78:77/00:00:00:00:00/40 tag 7 cdb 0x0 data
-> 65536 in
->          res 41/84:6f:50:78:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
-> error) <F>
-> ata2.02: soft resetting link
-> ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-
-And the same thing one more time.  Note that link is still 3Gbps.
-
-> ata2.02: exception Emask 0x0 SAct 0x77060000 SErr 0x380000 action 0x2
-> ata2.02: irq_stat 0x02020002, device error via SDB FIS
-> ata2.02: cmd 60/08:e0:7f:05:77/00:00:00:00:00/40 tag 28 cdb 0x0 data
-> 4096 in
->          res 41/84:00:86:05:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
-> error) <F>
-> ata2.02: soft resetting link
-> ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-
-Ditto.
-
-> ata2.02: limiting SATA link speed to 1.5 Gbps
-> ata2.02: exception Emask 0x0 SAct 0x6 SErr 0x380000 action 0x6
-> ata2.02: irq_stat 0x02020002, device error via SDB FIS
-> ata2.02: cmd 60/80:10:bf:54:79/00:00:00:00:00/40 tag 2 cdb 0x0 data
-> 65536 in
->          res 41/84:0f:30:55:79/0c:00:00:00:00/40 Emask 0x410 (ATA bus
-> error) <F>
-
-One more time.  EH had enough and limited link speed to 1.5Gbps.  Did
-error repeat after this?
-
-Possibilities...
-
-1. The disk or the connector on that slot is faulty.  You can find out
-by swapping disk positions and see where the error follows.
-
-2. The specific disk model and the PMP don't like each other at 3Gbps?
-
-Solutions...
-
-1. If the disk is faulty, exchange.
-
-2. If the slot is faulty, exchange.
-
-3. If the disk has dip switch to limit PHY speed to 1.5Gbps, put it on.
- You will hardly lose anything.
-
-Thanks.
-
--- 
-tejun
