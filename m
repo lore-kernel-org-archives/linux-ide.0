@@ -1,114 +1,226 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Sat, 03 Nov 2007 10:17:12 +0900
-Message-ID: <472BCC18.7070503@gmail.com>
-References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu> <4729F1BB.20306@gentoo.org> <4729F8F1.4040103@gmail.com> <472B946F.4030004@gentoo.org>
+From: "Jon Chelton" <jchelton@ffpglobal.com>
+Subject: new errors with sata_sil24 with port multiplier
+Date: Fri, 2 Nov 2007 21:22:40 -0400
+Message-ID: <FD6311B7ED175B4480F31633F6098B4DA0EB24@ffpglobal_mail.corp.ffplus.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030406010007080403040101"
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:21005 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755509AbXKCBRX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 21:17:23 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1129715wah
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2007 18:17:23 -0700 (PDT)
-In-Reply-To: <472B946F.4030004@gentoo.org>
+Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:59432
+	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755125AbXKCBU6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2007 21:20:58 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030406010007080403040101
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Tejun,
 
-Daniel Drake wrote:
-> Tejun Heo wrote:
->> Yeap, the SG command is fine.  The drive is being weird tho.  The
->> allocation length field says 10 bytes, so it should just have
->> transferred 10 bytes without causing HSM violation.
->>
->> Can you please apply the attached patch and report what the kernel says
->> after triggering the error condition?
-> 
-> Thanks for looking at this, the kernel now says:
-> 
-> <4>ata2.00: HSM violation: eh_analyze_tf: BUSY|DRQ
-> <3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> <3>ata2.00: cmd a0/00:00:00:0a:00/00:00:00:00:00/a0 tag 0 cdb 0x5a data
-> 10 in
-> <4>         res 58/00:02:00:0a:00/00:00:00:00:00/a0 Emask 0x2 (HSM
-> violation)
-> <3>ata2.00: status: { DRDY DRQ }
-> <6>ata2: soft resetting link
-> <6>ata2.00: configured for UDMA/33
-> <6>ata2: EH complete
+I've been having good success using your patches from late September
+with a sil3124 pcix sata controller connected to 4 drives.  Ive added
+another PM and 4 more drives and connected to port 2 on the card.
+However on these 4 additional drives I consistently get these errors
+when doing any disk IO (reading or write) (no errors on the first 4
+drives of which all 8 part of a single software raid array).  Ive tried
+2 new eSATA cables, reseated the drives, etc, with no luck.  Any ideas?
 
-Does this patch fix the problem?
+Thanks,
+Jon
 
--- 
-tejun
+ata2.15: exception Emask 0x100 SAct 0x0 SErr 0x200000 action 0x6 frozen
+ata2.15: irq_stat 0x02020002, PMP DMA CS errata
+ata2.00: exception Emask 0x0 SAct 0x48 SErr 0x0 action 0x2 frozen
+ata2.01: exception Emask 0x0 SAct 0x20 SErr 0x0 action 0x2 frozen
+ata2.02: exception Emask 0x1 SAct 0x1 SErr 0x0 action 0x2 frozen
+ata2.02: irq_stat 0x02020002, device error via SDB FIS
+ata2.02: cmd 60/50:00:6f:5b:02/00:00:00:00:00/40 tag 0 cdb 0x0 data
+40960 in
+         res 50/00:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device
+error)
+ata2.03: exception Emask 0x0 SAct 0x10 SErr 0x0 action 0x2 frozen
+ata2.15: hard resetting link
+ata2: controller in dubious state, performing PORT_RST
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata2.00: hard resetting link
+ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.01: hard resetting link
+ata2.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.02: hard resetting link
+ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.03: hard resetting link
+ata2.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.04: hard resetting link
+ata2.04: SATA link down (SStatus 0 SControl 300)
+ata2.05: hard resetting link
+ata2.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2.00: configured for UDMA/100
+ata2.01: configured for UDMA/100
+ata2.02: configured for UDMA/100
+ata2.03: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ata2.00: exception Emask 0x0 SAct 0x20 SErr 0x0 action 0x0
+ata2.02: exception Emask 0x0 SAct 0x8 SErr 0x380000 action 0x2
+ata2.02: irq_stat 0x02020002, device error via SDB FIS
+ata2.02: cmd 60/78:18:47:6f:76/00:00:00:00:00/40 tag 3 cdb 0x0 data
+61440 in
+         res 41/84:07:b8:6f:76/00:00:00:00:00/40 Emask 0x410 (ATA bus
+error) <F>
+ata2.02: soft resetting link
+ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.02: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ata2.02: exception Emask 0x0 SAct 0x80 SErr 0x380000 action 0x2
+ata2.02: irq_stat 0x02020002, device error via SDB FIS
+ata2.02: cmd 60/80:38:3f:78:77/00:00:00:00:00/40 tag 7 cdb 0x0 data
+65536 in
+         res 41/84:6f:50:78:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
+error) <F>
+ata2.02: soft resetting link
+ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.02: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ata2.02: exception Emask 0x0 SAct 0x77060000 SErr 0x380000 action 0x2
+ata2.02: irq_stat 0x02020002, device error via SDB FIS
+ata2.02: cmd 60/08:e0:7f:05:77/00:00:00:00:00/40 tag 28 cdb 0x0 data
+4096 in
+         res 41/84:00:86:05:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
+error) <F>
+ata2.02: soft resetting link
+ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.02: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ata2.02: limiting SATA link speed to 1.5 Gbps
+ata2.02: exception Emask 0x0 SAct 0x6 SErr 0x380000 action 0x6
+ata2.02: irq_stat 0x02020002, device error via SDB FIS
+ata2.02: cmd 60/80:10:bf:54:79/00:00:00:00:00/40 tag 2 cdb 0x0 data
+65536 in
+         res 41/84:0f:30:55:79/0c:00:00:00:00/40 Emask 0x410 (ATA bus
+error) <F>
+ata2.02: hard resetting link
+ata2.02: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata2.02: configured for UDMA/100
+ata2: EH complete
+sd 1:0:0:0: [sde] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:0:0:0: [sde] Write Protect is off
+sd 1:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 1:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:1:0:0: [sdf] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:1:0:0: [sdf] Write Protect is off
+sd 1:1:0:0: [sdf] Mode Sense: 00 3a 00 00
+sd 1:1:0:0: [sdf] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:2:0:0: [sdg] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:2:0:0: [sdg] Write Protect is off
+sd 1:2:0:0: [sdg] Mode Sense: 00 3a 00 00
+sd 1:2:0:0: [sdg] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+sd 1:3:0:0: [sdh] 976773168 512-byte hardware sectors (500108 MB)
+sd 1:3:0:0: [sdh] Write Protect is off
+sd 1:3:0:0: [sdh] Mode Sense: 00 3a 00 00
+sd 1:3:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
 
---------------030406010007080403040101
-Content-Type: text/x-patch;
- name="drain.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="drain.patch"
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8ee56e5..5488637 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4994,19 +4994,15 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
- static void __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
- {
- 	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
--	struct scatterlist *sg = qc->__sg;
--	struct scatterlist *lsg = sg_last(qc->__sg, qc->n_elem);
- 	struct ata_port *ap = qc->ap;
-+	struct scatterlist *sg;
- 	struct page *page;
- 	unsigned char *buf;
- 	unsigned int offset, count;
--	int no_more_sg = 0;
- 
--	if (qc->curbytes + bytes >= qc->nbytes)
--		ap->hsm_task_state = HSM_ST_LAST;
--
--next_sg:
--	if (unlikely(no_more_sg)) {
-+ next_sg:
-+	sg = qc->cursg;
-+	if (unlikely(!sg)) {
- 		/*
- 		 * The end of qc->sg is reached and the device expects
- 		 * more data to transfer. In order not to overrun qc->sg
-@@ -5024,13 +5020,9 @@ next_sg:
- 
- 		for (i = 0; i < words; i++)
- 			ap->ops->data_xfer(qc->dev, (unsigned char *)pad_buf, 2, do_write);
--
--		ap->hsm_task_state = HSM_ST_LAST;
- 		return;
- 	}
- 
--	sg = qc->cursg;
--
- 	page = sg_page(sg);
- 	offset = sg->offset + qc->cursg_ofs;
- 
-@@ -5068,9 +5060,6 @@ next_sg:
- 	qc->cursg_ofs += count;
- 
- 	if (qc->cursg_ofs == sg->length) {
--		if (qc->cursg == lsg)
--			no_more_sg = 1;
--
- 		qc->cursg = sg_next(qc->cursg);
- 		qc->cursg_ofs = 0;
- 	}
-
---------------030406010007080403040101--
