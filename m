@@ -1,49 +1,43 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 2/18] ide-pmac: skip conservative PIO "downgrade"
-Date: Mon, 05 Nov 2007 10:35:43 +1100
-Message-ID: <1194219343.6511.19.camel@pasglop>
-References: <200711050017.04599.bzolnier@gmail.com>
-Reply-To: benh@kernel.crashing.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Sun, 4 Nov 2007 23:42:05 +0000
+Message-ID: <20071104234205.7627d007@the-village.bc.nu>
+References: <47274A5F.6070409@gentoo.org>
+	<20071030153417.59b9182c@the-village.bc.nu>
+	<47276DCA.1000808@gentoo.org>
+	<20071030190153.373c9347@the-village.bc.nu>
+	<47278439.4030801@gentoo.org>
+	<20071031114958.210bd7cc@the-village.bc.nu>
+	<20071031115754.GK5059@kernel.dk>
+	<4729A0DF.20800@garzik.org>
+	<20071101105335.1f20bab3@the-village.bc.nu>
+	<4729B3EA.6040707@garzik.org>
+	<20071101141501.3746cec2@the-village.bc.nu>
+	<4729F1BB.20306@gentoo.org>
+	<4729F8F1.4040103@gmail.com>
+	<472B946F.4030004@gentoo.org>
+	<472BCC18.7070503@gmail.com>
+	<472CD3F3.7050701@gentoo.org>
+	<472D0D4A.70404@gmail.com>
+	<472D445B.1080005@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:42212 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752959AbXKDXgE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Nov 2007 18:36:04 -0500
-In-Reply-To: <200711050017.04599.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47672 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753110AbXKDXmM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Nov 2007 18:42:12 -0500
+In-Reply-To: <472D445B.1080005@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
+To: albertl@mail.com
+Cc: albertcc@tw.ibm.com, Tejun Heo <htejun@gmail.com>, Daniel Drake <dsd@gentoo.org>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
+> Maybe we could set a limit here. If the ATAPI device keeps DRQ=1 and
+> exceeds the limit, we consider it as HSM violation and have EH handle it.
 
-On Mon, 2007-11-05 at 00:17 +0100, Bartlomiej Zolnierkiewicz wrote:
-> 
-> We can skip conservative PIO "downgrade" (PIO3 becomes PIO2 etc.) on PMAC.
-> 
-> Problem reported by Mikael.
-> 
-> Cc: Mikael Pettersson <mikpe@it.uu.se>
-
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ide/ppc/pmac.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Index: b/drivers/ide/ppc/pmac.c
-> ===================================================================
-> --- a/drivers/ide/ppc/pmac.c
-> +++ b/drivers/ide/ppc/pmac.c
-> @@ -1133,6 +1133,7 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
->  	hwif->drives[0].autotune = IDE_TUNE_AUTO;
->  	hwif->drives[1].autotune = IDE_TUNE_AUTO;
->  	hwif->host_flags = IDE_HFLAG_SET_PIO_MODE_KEEP_DMA |
-> +			   IDE_HFLAG_PIO_NO_DOWNGRADE |
->  			   IDE_HFLAG_POST_SET_MODE;
->  	hwif->pio_mask = ATA_PIO4;
->  	hwif->set_pio_mode = pmac_ide_set_pio_mode;
-
+On a DMA transfer its basically out of our control (and a PIO drain will
+lock some controllers solid until power cycle), but on PIO we know we
+never set a chunk size over 64K, so if we exceed 64K its time to apply a
+larger hammer
