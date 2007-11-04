@@ -1,81 +1,125 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Sun, 04 Nov 2007 09:07:38 +0900
-Message-ID: <472D0D4A.70404@gmail.com>
-References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org> <20071101141501.3746cec2@the-village.bc.nu> <4729F1BB.20306@gentoo.org> <4729F8F1.4040103@gmail.com> <472B946F.4030004@gentoo.org> <472BCC18.7070503@gmail.com> <472CD3F3.7050701@gentoo.org>
+From: "Jon Chelton" <jchelton@ffpglobal.com>
+Subject: RE: new errors with sata_sil24 with port multiplier
+Date: Sat, 3 Nov 2007 22:37:22 -0400
+Message-ID: <FD6311B7ED175B4480F31633F6098B4DA0EB31@ffpglobal_mail.corp.ffplus.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:30902 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699AbXKDAHv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 20:07:51 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so1439320wah
-        for <linux-ide@vger.kernel.org>; Sat, 03 Nov 2007 17:07:50 -0700 (PDT)
-In-Reply-To: <472CD3F3.7050701@gentoo.org>
+Received: from 66-189-16-56.static.oxfr.ma.charter.com ([66.189.16.56]:28605
+	"EHLO mail.ffpglobal.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755622AbXKDCfs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Nov 2007 22:35:48 -0400
+content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Daniel Drake wrote:
-> Tejun Heo wrote:
->>> <4>ata2.00: HSM violation: eh_analyze_tf: BUSY|DRQ
->>> <3>ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
->>> <3>ata2.00: cmd a0/00:00:00:0a:00/00:00:00:00:00/a0 tag 0 cdb 0x5a data
->>> 10 in
->>> <4>         res 58/00:02:00:0a:00/00:00:00:00:00/a0 Emask 0x2 (HSM
->>> violation)
->>> <3>ata2.00: status: { DRDY DRQ }
->>> <6>ata2: soft resetting link
->>> <6>ata2.00: configured for UDMA/33
->>> <6>ata2: EH complete
->>
->> Does this patch fix the problem?
-> 
-> That fixes it, thanks! There is no more ugly error in dmesg, the test
-> prog doesn't print any sense data, and brasero works OK too. However,
-> these messages appear in the kernel log every time I run the test app
-> (or when brasero does its thing):
-> 
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 10 bytes trailing data
-> <4>ata2.00: 6 bytes trailing data
+Now that the speed of this drive has been at 1.5gbs, the error has not
+returned under moderate disk load for 20 or so hours.  This is odd
+because 7 other drives on the same controller are working at 3.0gbs.
 
-Yeah, that's expected.  What's going on here is that your drive sends
-full mode sense data (76bytes) regardless of allocation size in CDB but
-it does honor transfer chunk set in the PACKET TF, which is set to the
-same value as allocation size by Alan's patch.  So, now the drive sends
-the 76 bytes in 8 chunks.  The first chunk is transferred into the sg
-buffer and the following chunks are thrown away.
+Jon
 
-Previously, transfer chunk was set to 8k, so the drive claims to
-transfer 76 bytes from the buegging, libata transfers leading 10 bytes
-got transferred into the user buffer and throws away what's remaining.
-The change caused problem because libata HSM always switches to
-HSM_ST_LAST (command sequence completion) after filling the command
-buffer completely.  So, throwing away is activated iff the extra data to
-throw away is transfered together with the last chunk of useful data.
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] 
+Sent: Saturday, November 03, 2007 12:25 AM
+To: Jon Chelton
+Cc: linux-ide@vger.kernel.org
+Subject: Re: new errors with sata_sil24 with port multiplier
 
-With the chunk size reduced to allocation size, the initial chunk fills
-the data buffer completely and all the extra bytes are transfered in
-separate chunks.  However, libata HSM expects command sequence to
-complete after the initial chunk but the drive asserts DRQ for the next
-chunk on the following interrupt, so HSM violation is triggered.
+Jon Chelton wrote:
+> ata2.02: irq_stat 0x02020002, device error via SDB FIS
+> ata2.02: cmd 60/50:00:6f:5b:02/00:00:00:00:00/40 tag 0 cdb 0x0 data
+> 40960 in
+>          res 50/00:00:00:00:00/00:00:00:00:00/00 Emask 0x1 (device
+> error)
 
-The patch modifies HSM such that it keeps throwing away extra data as
-long as the drive asserts DRQ which is how IDE driver does it.
+Hmmm... Status register value is weird here.  It's reporting device
+error via SDB FIS but ERR bit is not set in the status register.
 
-However, there's still remaining issues.  What does happen if you raise
-allocation length and buffersize of the test program to 16?  ie. Change
-0x0a in cmd[] to 0x10 and increase buffer[10] to buffer[16].
+> ata2.03: exception Emask 0x0 SAct 0x10 SErr 0x0 action 0x2 frozen
+
+This is collateral damage.
+
+> ata2.15: hard resetting link
+> ata2: controller in dubious state, performing PORT_RST
+
+Ah, okay.  Receiving SDB FIS confused the controller.  This is a erratum
+of the controller.  If error occurs while commands are in flight to more
+than on device, the controller gets completely f***ed up.  This is
+probably why the status and error registers are not updated correctly
+above.
+
+[EH kicks in and cleans up]
+
+> ata2.00: exception Emask 0x0 SAct 0x20 SErr 0x0 action 0x0
+> ata2.02: exception Emask 0x0 SAct 0x8 SErr 0x380000 action 0x2
+> ata2.02: irq_stat 0x02020002, device error via SDB FIS
+> ata2.02: cmd 60/78:18:47:6f:76/00:00:00:00:00/40 tag 3 cdb 0x0 data
+> 61440 in
+>          res 41/84:07:b8:6f:76/00:00:00:00:00/40 Emask 0x410 (ATA bus
+> error) <F>
+
+Okay, again, the same device reporting device error and commands only to
+the device were in flight so the controller updated status and error
+correctly.  The device is reporting ATA bus error.
+
+[again, EH cleans up]
+
+> ata2.02: exception Emask 0x0 SAct 0x80 SErr 0x380000 action 0x2
+> ata2.02: irq_stat 0x02020002, device error via SDB FIS
+> ata2.02: cmd 60/80:38:3f:78:77/00:00:00:00:00/40 tag 7 cdb 0x0 data
+> 65536 in
+>          res 41/84:6f:50:78:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
+> error) <F>
+> ata2.02: soft resetting link
+> ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+
+And the same thing one more time.  Note that link is still 3Gbps.
+
+> ata2.02: exception Emask 0x0 SAct 0x77060000 SErr 0x380000 action 0x2
+> ata2.02: irq_stat 0x02020002, device error via SDB FIS
+> ata2.02: cmd 60/08:e0:7f:05:77/00:00:00:00:00/40 tag 28 cdb 0x0 data
+> 4096 in
+>          res 41/84:00:86:05:77/00:00:00:00:00/40 Emask 0x410 (ATA bus
+> error) <F>
+> ata2.02: soft resetting link
+> ata2.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+
+Ditto.
+
+> ata2.02: limiting SATA link speed to 1.5 Gbps
+> ata2.02: exception Emask 0x0 SAct 0x6 SErr 0x380000 action 0x6
+> ata2.02: irq_stat 0x02020002, device error via SDB FIS
+> ata2.02: cmd 60/80:10:bf:54:79/00:00:00:00:00/40 tag 2 cdb 0x0 data
+> 65536 in
+>          res 41/84:0f:30:55:79/0c:00:00:00:00/40 Emask 0x410 (ATA bus
+> error) <F>
+
+One more time.  EH had enough and limited link speed to 1.5Gbps.  Did
+error repeat after this?
+
+Possibilities...
+
+1. The disk or the connector on that slot is faulty.  You can find out
+by swapping disk positions and see where the error follows.
+
+2. The specific disk model and the PMP don't like each other at 3Gbps?
+
+Solutions...
+
+1. If the disk is faulty, exchange.
+
+2. If the slot is faulty, exchange.
+
+3. If the disk has dip switch to limit PHY speed to 1.5Gbps, put it on.
+ You will hardly lose anything.
 
 Thanks.
 
 -- 
 tejun
+
