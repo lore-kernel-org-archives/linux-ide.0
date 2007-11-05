@@ -1,248 +1,132 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [git patches] IDE fixes
-Date: Mon, 5 Nov 2007 21:49:04 +0100
-Message-ID: <200711052149.05414.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_hpt37x: Fix outstanding bug reports on the HPT374 and
+ 37x cable detect
+Date: Mon, 5 Nov 2007 22:53:38 +0000
+Message-ID: <20071105225338.20ef476f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:61777 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbXKEUnj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 15:43:39 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so1702642mue
-        for <linux-ide@vger.kernel.org>; Mon, 05 Nov 2007 12:43:38 -0800 (PST)
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48613 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754149AbXKEWxA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 17:53:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
+- Read frequency correctly
+- Correct cable detect handling
+- Fix wrong filter test
 
-Please pull from:
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-master.kernel.org:/pub/scm/linux/kernel/git/bart/ide-2.6.git/
-
-to receive the following updates:
-
- drivers/ide/Kconfig        |   22 ++++++++++++++++++----
- drivers/ide/ide-dma.c      |    5 +++--
- drivers/ide/ide-io.c       |    5 ++++-
- drivers/ide/ide-iops.c     |    8 ++++++--
- drivers/ide/ide-probe.c    |    5 +++--
- drivers/ide/ide-taskfile.c |    3 +++
- drivers/ide/pci/piix.c     |    1 +
- include/linux/ide.h        |    9 +--------
- 8 files changed, 39 insertions(+), 19 deletions(-)
-
-
-Adrian Bunk (1):
-      ide: unexport ide_fix_driveid
-
-Bartlomiej Zolnierkiewicz (8):
-      ide/Kconfig: fix BLK_DEV_OFFBOARD dependencies
-      ide: check rq->cmd_type in drive_cmd_intr()
-      ide: clear HOB bit for REQ_TYPE_ATA_TASK requests in ide_end_drive_cmd()
-      ide: add missing rq.ref_count initialization to ide_diag_taskfile()
-      ide: fix ide_find_dma_mode() to print human-readable info
-      ide: add missing #ifdef/#endif CONFIG_IDE_TASK_IOCTL
-      ide: move ide_fixstring() documentation to ide-iops.c from ide.h
-      ide: fix IDE_HFLAG_NO_ATAPI_DMA handling in config_drive_for_dma()
-
-Matti Linnanvuori (1):
-      ide/Kconfig: add IDEDISK_MULTI_MODE text adapted from hdparm manual page
-
-Tejun Heo (1):
-      ide: do_identify() string termination fix
-
-sebdeg@ngi.it (1):
-      piix: add support for ICH7 on Acer 5602aWLMi
-
-
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 6eaece9..d1e8df1 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -152,9 +152,22 @@ config BLK_DEV_IDEDISK
- 	  If unsure, say Y.
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c
+--- linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-01 11:41:54.000000000 +0000
++++ linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-05 22:21:31.000000000 +0000
+@@ -295,7 +295,7 @@
  
- config IDEDISK_MULTI_MODE
--	bool "Use multi-mode by default"
--	help
--	  If you get this error, try to say Y here:
-+	bool "Use multiple sector mode for Programmed Input/Output by default"
-+	help
-+	  This setting is irrelevant for most IDE disks, with direct memory
-+	  access, to which multiple sector mode does not apply. Multiple sector
-+	  mode is a feature of most modern IDE hard drives, permitting the
-+	  transfer of multiple sectors per Programmed Input/Output interrupt,
-+	  rather than the usual one sector per interrupt. When this feature is
-+	  enabled, it can reduce operating system overhead for disk Programmed
-+	  Input/Output. On some systems, it also can increase the data
-+	  throughput of Programmed Input/Output. Some drives, however, seemed
-+	  to run slower with multiple sector mode enabled. Some drives claimed
-+	  to support multiple sector mode, but lost data at some settings.
-+	  Under rare circumstances, such failures could result in massive
-+	  filesystem corruption.
+ static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
+ {
+-	if (adev->class != ATA_DEV_ATA) {
++	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+ 			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
+ 	}
+@@ -359,28 +359,25 @@
+ 		{ 0x50, 1, 0x04, 0x04 },
+ 		{ 0x54, 1, 0x04, 0x04 }
+ 	};
+-	u16 mcr3, mcr6;
++	u16 mcr3;
+ 	u8 ata66;
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	unsigned int mcrbase = 0x50 + 4 * ap->port_no;
+ 
+ 	if (!pci_test_config_bits(pdev, &hpt37x_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+ 
+ 	/* Do the extra channel work */
+-	pci_read_config_word(pdev, 0x52, &mcr3);
+-	pci_read_config_word(pdev, 0x56, &mcr6);
++	pci_read_config_word(pdev, mcrbase + 2, &mcr3);
+ 	/* Set bit 15 of 0x52 to enable TCBLID as input
+-	   Set bit 15 of 0x56 to enable FCBLID as input
+ 	 */
+-	pci_write_config_word(pdev, 0x52, mcr3 | 0x8000);
+-	pci_write_config_word(pdev, 0x56, mcr6 | 0x8000);
++	pci_write_config_word(pdev, mcrbase + 2, mcr3 | 0x8000);
+ 	pci_read_config_byte(pdev, 0x5A, &ata66);
+ 	/* Reset TCBLID/FCBLID to output */
+ 	pci_write_config_word(pdev, 0x52, mcr3);
+-	pci_write_config_word(pdev, 0x56, mcr6);
+ 
+-	if (ata66 & (1 << ap->port_no))
++	if (ata66 & (2 >> ap->port_no))
+ 		ap->cbl = ATA_CBL_PATA40;
+ 	else
+ 		ap->cbl = ATA_CBL_PATA80;
+@@ -844,6 +841,25 @@
+ 	/* Never went stable */
+ 	return 0;
+ }
 +
-+	  If you get the following error, try to say Y here:
- 
- 	  hda: set_multmode: status=0x51 { DriveReady SeekComplete Error }
- 	  hda: set_multmode: error=0x04 { DriveStatusError }
-@@ -380,9 +393,10 @@ config IDEPCI_SHARE_IRQ
- config IDEPCI_PCIBUS_ORDER
- 	def_bool BLK_DEV_IDE=y && BLK_DEV_IDEPCI
- 
-+# TODO: split it on per host driver config options (or module parameters)
- config BLK_DEV_OFFBOARD
- 	bool "Boot off-board chipsets first support"
--	depends on BLK_DEV_IDEPCI
-+	depends on BLK_DEV_IDEPCI && (BLK_DEV_AEC62XX || BLK_DEV_GENERIC || BLK_DEV_HPT34X || BLK_DEV_HPT366 || BLK_DEV_PDC202XX_NEW || BLK_DEV_PDC202XX_OLD || BLK_DEV_TC86C001)
- 	help
- 	  Normally, IDE controllers built into the motherboard (on-board
- 	  controllers) are assigned to ide0 and ide1 while those on add-in PCI
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index 428f7a8..e3add70 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -340,7 +340,7 @@ static int config_drive_for_dma (ide_drive_t *drive)
- 
- 	if (drive->media != ide_disk) {
- 		if (hwif->host_flags & IDE_HFLAG_NO_ATAPI_DMA)
--			return -1;
++static u32 hpt374_read_freq(struct pci_dev *pdev)
++{
++	u32 freq;
++	unsigned long io_base = pci_resource_start(pdev, 4);
++	if (PCI_FUNC(pdev->devfn) & 1) {
++		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
++		/* Someone hot plugged the controller on us ? */
++		if (pdev_0 == NULL)
 +			return 0;
- 	}
- 
- 	/*
-@@ -752,7 +752,8 @@ u8 ide_find_dma_mode(ide_drive_t *drive, u8 req_mode)
- 			mode = XFER_MW_DMA_1;
- 	}
- 
--	printk(KERN_DEBUG "%s: selected mode 0x%x\n", drive->name, mode);
-+	printk(KERN_DEBUG "%s: %s mode selected\n", drive->name,
-+			  mode ? ide_xfer_verbose(mode) : "no DMA");
- 
- 	return min(mode, req_mode);
- }
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index c89f0d3..7550118 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -340,6 +340,8 @@ void ide_end_drive_cmd (ide_drive_t *drive, u8 stat, u8 err)
- 		if (args) {
- 			args[0] = stat;
- 			args[1] = err;
-+			/* be sure we're looking at the low order bits */
-+			hwif->OUTB(drive->ctl & ~0x80, IDE_CONTROL_REG);
- 			args[2] = hwif->INB(IDE_NSECTOR_REG);
- 			args[3] = hwif->INB(IDE_SECTOR_REG);
- 			args[4] = hwif->INB(IDE_LCYL_REG);
-@@ -654,7 +656,8 @@ static ide_startstop_t drive_cmd_intr (ide_drive_t *drive)
- 	int retries = 10;
- 
- 	local_irq_enable_in_hardirq();
--	if ((stat & DRQ_STAT) && args && args[3]) {
-+	if (rq->cmd_type == REQ_TYPE_ATA_CMD &&
-+	    (stat & DRQ_STAT) && args && args[3]) {
- 		u8 io_32bit = drive->io_32bit;
- 		drive->io_32bit = 0;
- 		hwif->ata_input_data(drive, &args[4], args[3] * SECTOR_WORDS);
-diff --git a/drivers/ide/ide-iops.c b/drivers/ide/ide-iops.c
-index dcda0f1..e17a9ee 100644
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -403,8 +403,12 @@ void ide_fix_driveid (struct hd_driveid *id)
- #endif
- }
- 
--/* FIXME: exported for use by the USB storage (isd200.c) code only */
--EXPORT_SYMBOL(ide_fix_driveid);
-+/*
-+ * ide_fixstring() cleans up and (optionally) byte-swaps a text string,
-+ * removing leading/trailing blanks and compressing internal blanks.
-+ * It is primarily used to tidy up the model name/number fields as
-+ * returned by the WIN_[P]IDENTIFY commands.
-+ */
- 
- void ide_fixstring (u8 *s, const int bytecount, const int byteswap)
- {
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 6a6f2e0..56fb0b8 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -172,11 +172,12 @@ static inline void do_identify (ide_drive_t *drive, u8 cmd)
- 	ide_fixstring(id->fw_rev,    sizeof(id->fw_rev),    bswap);
- 	ide_fixstring(id->serial_no, sizeof(id->serial_no), bswap);
- 
-+	/* we depend on this a lot! */
-+	id->model[sizeof(id->model)-1] = '\0';
++		io_base = pci_resource_start(pdev_0, 4);
++		freq = inl(io_base + 0x90);
++		pci_dev_put(pdev_0);
++	}
++	else
++		freq = inl(io_base + 0x90);
++	return freq;
++}
 +
- 	if (strstr(id->model, "E X A B Y T E N E S T"))
- 		goto err_misc;
+ /**
+  *	hpt37x_init_one		-	Initialise an HPT37X/302
+  *	@dev: PCI device
+@@ -902,7 +918,7 @@
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x0f,
++		.udma_mask = ATA_UDMA5,
+ 		.port_ops = &hpt370_port_ops
+ 	};
+ 	/* HPT370A - UDMA100 */
+@@ -911,7 +927,7 @@
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = 0x1f,
+ 		.mwdma_mask = 0x07,
+-		.udma_mask = 0x0f,
++		.udma_mask = ATA_UDMA5,
+ 		.port_ops = &hpt370a_port_ops
+ 	};
+ 	/* HPT371, 372 and friends - UDMA133 */
+@@ -1047,9 +1063,16 @@
+ 		outb(0x0e, iobase + 0x9c);
  
--	/* we depend on this a lot! */
--	id->model[sizeof(id->model)-1] = '\0';
- 	printk("%s: %s, ", drive->name, id->model);
- 	drive->present = 1;
- 	drive->dead = 0;
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index d066546..2b60f1b 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -471,6 +471,7 @@ static int ide_diag_taskfile(ide_drive_t *drive, ide_task_t *args, unsigned long
- 	struct request rq;
- 
- 	memset(&rq, 0, sizeof(rq));
-+	rq.ref_count = 1;
- 	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
- 	rq.buffer = buf;
- 
-@@ -511,6 +512,7 @@ int ide_raw_taskfile (ide_drive_t *drive, ide_task_t *args, u8 *buf)
- 
- EXPORT_SYMBOL(ide_raw_taskfile);
- 
-+#ifdef CONFIG_IDE_TASK_IOCTL
- int ide_taskfile_ioctl (ide_drive_t *drive, unsigned int cmd, unsigned long arg)
- {
- 	ide_task_request_t	*req_task;
-@@ -660,6 +662,7 @@ abort:
- 
- 	return err;
- }
-+#endif
- 
- int ide_wait_cmd (ide_drive_t *drive, u8 cmd, u8 nsect, u8 feature, u8 sectors, u8 *buf)
- {
-diff --git a/drivers/ide/pci/piix.c b/drivers/ide/pci/piix.c
-index 9329d4a..63625a0 100644
---- a/drivers/ide/pci/piix.c
-+++ b/drivers/ide/pci/piix.c
-@@ -302,6 +302,7 @@ struct ich_laptop {
- 
- static const struct ich_laptop ich_laptop[] = {
- 	/* devid, subvendor, subdev */
-+	{ 0x27DF, 0x1025, 0x0102 },	/* ICH7 on Acer 5602aWLMi */
- 	{ 0x27DF, 0x0005, 0x0280 },	/* ICH7 on Acer 5602WLMi */
- 	{ 0x27DF, 0x1025, 0x0110 },	/* ICH7 on Acer 3682WLMi */
- 	{ 0x27DF, 0x1043, 0x1267 },	/* ICH7 on Asus W5F */
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 4ed4777..dc75ccb 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1031,14 +1031,7 @@ ide_startstop_t __ide_abort(ide_drive_t *, struct request *);
- extern ide_startstop_t ide_abort(ide_drive_t *, const char *);
- 
- extern void ide_fix_driveid(struct hd_driveid *);
--/*
-- * ide_fixstring() cleans up and (optionally) byte-swaps a text string,
-- * removing leading/trailing blanks and compressing internal blanks.
-- * It is primarily used to tidy up the model name/number fields as
-- * returned by the WIN_[P]IDENTIFY commands.
-- *
-- * (s, bytecount, byteswap)
-- */
+ 	/* Some devices do not let this value be accessed via PCI space
+-	   according to the old driver */
++	   according to the old driver. In addition we must use the value
++	   from FN 0 on the HPT374 */
 +
- extern void ide_fixstring(u8 *, const int, const int);
++	if (chip_table == &hpt374) {
++		freq = hpt374_read_freq(dev);
++		if (freq == 0)
++			return -ENODEV;
++	} else
++		freq = inl(iobase + 0x90);
  
- int ide_wait_stat(ide_startstop_t *, ide_drive_t *, u8, u8, unsigned long);
+-	freq = inl(iobase + 0x90);
+ 	if ((freq >> 12) != 0xABCDE) {
+ 		int i;
+ 		u8 sr;
