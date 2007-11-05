@@ -1,54 +1,47 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [PATCH]libata-acpi: add ACPI _PSx method
-Date: Mon, 05 Nov 2007 09:26:12 +0800
-Message-ID: <1194225972.32766.6.camel@sli10-conroe.sh.intel.com>
-References: <1189737938.6330.7.camel@sli10-conroe.sh.intel.com>
-	 <20071101100435.7c80785e@the-village.bc.nu>
-	 <1193967158.13603.4.camel@sli10-conroe.sh.intel.com>
-	 <200711021216.03088.rjw@sisk.pl>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] Add and use media change notification
+Date: Sun, 4 Nov 2007 18:00:15 -0800 (PST)
+Message-ID: <alpine.LFD.0.999.0711041755120.15101@woody.linux-foundation.org>
+References: <20071104150711.GA29087@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4211 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753168AbXKEBcq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 4 Nov 2007 20:32:46 -0500
-In-Reply-To: <200711021216.03088.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20071104150711.GA29087@havoc.gtf.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Len Brown <lenb@kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, linux acpi <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri, 2007-11-02 at 12:16 +0100, Rafael J. Wysocki wrote:
-> > 
-> > Index: linux/drivers/ata/libata-acpi.c
-> > ===================================================================
-> > --- linux.orig/drivers/ata/libata-acpi.c	2007-11-01 10:54:25.000000000 +0800
-> > +++ linux/drivers/ata/libata-acpi.c	2007-11-02 09:14:12.000000000 +0800
-> > @@ -652,6 +652,35 @@ void ata_acpi_on_resume(struct ata_port 
-> >  }
-> >  
-> >  /**
-> > + * ata_acpi_set_state - set the port power state
-> > + * @ap: target ATA port
-> > + * @state: state, on/off
-> > + *
-> > + * This function executes the _PS0/_PS3 ACPI method to set the power state.
-> > + * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
-> > + */
-> > +void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
-> 
-> I wouldn't use pm_message_t here.
-> 
-> We're seriously considering removing it in the future and the caller passes
-> constants explicitly anyway.
-> 
-> IMO, it might be cleaner to define two separate functions, one for switching
-> to D0 and one for switching to D3, and call them as appropriate.  Then, you
-> could get rid of some conditionals below.
-It doesn't make sense to add a new one just for ata_acpi and we don't
-misuse pm_message_t here. If you will remove it, lets clean up it then.
 
-Thanks,
-Shaohua
+
+On Sun, 4 Nov 2007, Jeff Garzik wrote:
+> 
+> The end to CD-ROM polling...  newer SATA ATAPI hardware will emit
+> 'asynchronous notification' events when media is changed.  This adds
+> support.
+
+I *really* didn't want to pull this.
+
+Not only is it after the -rc1 period, but I also think you pushed this ina 
+really offensive manner, and I don't like how you and James have made this 
+whole thing personal. You guys need to sort it out, and there is no way 
+you can blame James for all your troubles, since I've heard the same kind 
+of complaints about every single maintainer out there (including you) 
+about some driver or other infrastructure issue.
+
+So I'm unhappy about pulling this.
+
+That said, I did finally decide to just pull it. Partly because the 
+concept apparently has been in -mm for a while anyway (even if the final 
+patch has not - but the patch itself isn't that large, I'd worry more 
+about thngs like certain hardware simply not doing things right), but 
+mostly because I hate it when others hold up driver features, and I 
+decided that in this case this really is something that is better done 
+earlier rather than later, to get exposure as soon as possible.
+
+But I really think you need to lay off James, and help him rather than 
+make every single complaint a big flame-war!
+
+Please, Jeff?
+
+		Linus
