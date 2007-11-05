@@ -1,132 +1,101 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_hpt37x: Fix outstanding bug reports on the HPT374 and
- 37x cable detect
-Date: Mon, 5 Nov 2007 22:53:38 +0000
-Message-ID: <20071105225338.20ef476f@the-village.bc.nu>
+Subject: [PATCH] libata: handle broken cable reporting
+Date: Mon, 5 Nov 2007 22:58:58 +0000
+Message-ID: <20071105225858.6c9d11eb@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48613 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49089 "EHLO
 	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754149AbXKEWxA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 17:53:00 -0500
+	with ESMTP id S1752028AbXKEW6U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 17:58:20 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
-- Read frequency correctly
-- Correct cable detect handling
-- Fix wrong filter test
+One or two ancient drives predated the cable spec and didn't sent the
+valid bits for the field. I had hoped to leave this out of libata as a
+piece of historical annoyance but a recent CD drive shows the same bug so
+we have to import support for it. 
+
+Same concept as Bartlomiej's changes old IDE except that as we have
+centralised blacklists we can avoid keeping another private table of stuff
 
 Signed-off-by: Alan Cox <alan@redhat.com>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c
---- linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-01 11:41:54.000000000 +0000
-+++ linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-05 22:21:31.000000000 +0000
-@@ -295,7 +295,7 @@
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/drivers/ata/libata-core.c linux-2.6.24-rc1/drivers/ata/libata-core.c
+--- linux.vanilla-2.6.24-rc1/drivers/ata/libata-core.c	2007-11-01 11:41:54.000000000 +0000
++++ linux-2.6.24-rc1/drivers/ata/libata-core.c	2007-11-05 22:26:24.523526768 +0000
+@@ -4003,6 +4014,10 @@
+ 	{ "ST340823A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
+ 	{ "ST320413A",		NULL,		ATA_HORKAGE_HPA_SIZE, },
  
- static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
- {
--	if (adev->class != ATA_DEV_ATA) {
-+	if (adev->class == ATA_DEV_ATA) {
- 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
- 			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
- 	}
-@@ -359,28 +359,25 @@
- 		{ 0x50, 1, 0x04, 0x04 },
- 		{ 0x54, 1, 0x04, 0x04 }
- 	};
--	u16 mcr3, mcr6;
-+	u16 mcr3;
- 	u8 ata66;
- 	struct ata_port *ap = link->ap;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	unsigned int mcrbase = 0x50 + 4 * ap->port_no;
- 
- 	if (!pci_test_config_bits(pdev, &hpt37x_enable_bits[ap->port_no]))
- 		return -ENOENT;
- 
- 	/* Do the extra channel work */
--	pci_read_config_word(pdev, 0x52, &mcr3);
--	pci_read_config_word(pdev, 0x56, &mcr6);
-+	pci_read_config_word(pdev, mcrbase + 2, &mcr3);
- 	/* Set bit 15 of 0x52 to enable TCBLID as input
--	   Set bit 15 of 0x56 to enable FCBLID as input
- 	 */
--	pci_write_config_word(pdev, 0x52, mcr3 | 0x8000);
--	pci_write_config_word(pdev, 0x56, mcr6 | 0x8000);
-+	pci_write_config_word(pdev, mcrbase + 2, mcr3 | 0x8000);
- 	pci_read_config_byte(pdev, 0x5A, &ata66);
- 	/* Reset TCBLID/FCBLID to output */
- 	pci_write_config_word(pdev, 0x52, mcr3);
--	pci_write_config_word(pdev, 0x56, mcr6);
- 
--	if (ata66 & (1 << ap->port_no))
-+	if (ata66 & (2 >> ap->port_no))
- 		ap->cbl = ATA_CBL_PATA40;
- 	else
- 		ap->cbl = ATA_CBL_PATA80;
-@@ -844,6 +841,25 @@
- 	/* Never went stable */
- 	return 0;
- }
++	/* Devices which get the IVB wrong */
++	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
++	{ "TSSTcorp CDDVDW SH-S202J", "SB00",	  ATA_HORKAGE_IVB, },
 +
-+static u32 hpt374_read_freq(struct pci_dev *pdev)
+ 	/* End Marker */
+ 	{ }
+ };
+@@ -4064,6 +4079,21 @@
+ }
+ 
+ /**
++ *	ata_is_40wire		-	check drive side detection
++ *	@dev: device
++ *
++ *	Perform drive side detection decoding, allowing for device vendors
++ *	who can't follow the documentation.
++ */
++
++static int ata_is_40wire(struct ata_device *dev)
 +{
-+	u32 freq;
-+	unsigned long io_base = pci_resource_start(pdev, 4);
-+	if (PCI_FUNC(pdev->devfn) & 1) {
-+		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
-+		/* Someone hot plugged the controller on us ? */
-+		if (pdev_0 == NULL)
-+			return 0;
-+		io_base = pci_resource_start(pdev_0, 4);
-+		freq = inl(io_base + 0x90);
-+		pci_dev_put(pdev_0);
-+	}
-+	else
-+		freq = inl(io_base + 0x90);
-+	return freq;
++	if (dev->horkage & ATA_HORKAGE_IVB)
++		return ata_drive_40wire_relaxed(dev->id);
++	return ata_drive_40wire(dev->id);
 +}
 +
- /**
-  *	hpt37x_init_one		-	Initialise an HPT37X/302
-  *	@dev: PCI device
-@@ -902,7 +918,7 @@
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
--		.udma_mask = 0x0f,
-+		.udma_mask = ATA_UDMA5,
- 		.port_ops = &hpt370_port_ops
- 	};
- 	/* HPT370A - UDMA100 */
-@@ -911,7 +927,7 @@
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = 0x1f,
- 		.mwdma_mask = 0x07,
--		.udma_mask = 0x0f,
-+		.udma_mask = ATA_UDMA5,
- 		.port_ops = &hpt370a_port_ops
- 	};
- 	/* HPT371, 372 and friends - UDMA133 */
-@@ -1047,9 +1063,16 @@
- 		outb(0x0e, iobase + 0x9c);
++/**
+  *	ata_dev_xfermask - Compute supported xfermask of the given device
+  *	@dev: Device to compute xfermask for
+  *
+@@ -4132,7 +4162,7 @@
+ 	if (xfer_mask & (0xF8 << ATA_SHIFT_UDMA))
+ 		/* UDMA/44 or higher would be available */
+ 		if ((ap->cbl == ATA_CBL_PATA40) ||
+-		    (ata_drive_40wire(dev->id) &&
++   		    (ata_is_40wire(dev) &&
+ 		    (ap->cbl == ATA_CBL_PATA_UNK ||
+ 		     ap->cbl == ATA_CBL_PATA80))) {
+ 			ata_dev_printk(dev, KERN_WARNING,
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/include/linux/ata.h linux-2.6.24-rc1/include/linux/ata.h
+--- linux.vanilla-2.6.24-rc1/include/linux/ata.h	2007-11-01 11:42:08.000000000 +0000
++++ linux-2.6.24-rc1/include/linux/ata.h	2007-11-05 22:25:33.822234536 +0000
+@@ -512,6 +532,15 @@
+ 	return 1;
+ }
  
- 	/* Some devices do not let this value be accessed via PCI space
--	   according to the old driver */
-+	   according to the old driver. In addition we must use the value
-+	   from FN 0 on the HPT374 */
++static inline int ata_drive_40wire_relaxed(const u16 *dev_id)
++{
++	if (ata_id_is_sata(dev_id))
++		return 0;	/* SATA */
++	if ((dev_id[93] & 0x2000) == 0x2000)
++		return 0;	/* 80 wire */
++	return 1;
++}
 +
-+	if (chip_table == &hpt374) {
-+		freq = hpt374_read_freq(dev);
-+		if (freq == 0)
-+			return -ENODEV;
-+	} else
-+		freq = inl(iobase + 0x90);
+ static inline int atapi_cdb_len(const u16 *dev_id)
+ {
+ 	u16 tmp = dev_id[0] & 0x3;
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/include/linux/libata.h linux-2.6.24-rc1/include/linux/libata.h
+--- linux.vanilla-2.6.24-rc1/include/linux/libata.h	2007-11-01 11:42:08.000000000 +0000
++++ linux-2.6.24-rc1/include/linux/libata.h	2007-11-05 22:25:33.830233320 +0000
+@@ -325,6 +325,7 @@
+ 	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
+ 	ATA_HORKAGE_SKIP_PM	= (1 << 5),	/* Skip PM operations */
+ 	ATA_HORKAGE_HPA_SIZE	= (1 << 6),	/* native size off by one */
++	ATA_HORKAGE_IVB		= ( 1<< 7),	/* validity bit bugs on cable detect */
  
--	freq = inl(iobase + 0x90);
- 	if ((freq >> 12) != 0xABCDE) {
- 		int i;
- 		u8 sr;
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
