@@ -1,47 +1,45 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] Add and use media change notification
-Date: Sun, 4 Nov 2007 18:00:15 -0800 (PST)
-Message-ID: <alpine.LFD.0.999.0711041755120.15101@woody.linux-foundation.org>
-References: <20071104150711.GA29087@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20071104150711.GA29087@havoc.gtf.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/8] libata: rearrange ATA_DFLAG_*
+Date: Mon,  5 Nov 2007 14:45:08 +0900
+Message-ID: <11942415161257-git-send-email-htejun@gmail.com>
+References: <1194241515653-git-send-email-htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [222.235.223.38] ([222.235.223.38]:23586 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751079AbXKEFpU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Nov 2007 00:45:20 -0500
+In-Reply-To: <1194241515653-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
+Area for DFLAGs which are cleared on INIT is full.  Extend it by 8
+bits.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ include/linux/libata.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-On Sun, 4 Nov 2007, Jeff Garzik wrote:
-> 
-> The end to CD-ROM polling...  newer SATA ATAPI hardware will emit
-> 'asynchronous notification' events when media is changed.  This adds
-> support.
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1e27785..65274d5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -141,10 +141,10 @@ enum {
+ 	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
+ 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+-	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
++	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
+ 
+-	ATA_DFLAG_DETACH	= (1 << 16),
+-	ATA_DFLAG_DETACHED	= (1 << 17),
++	ATA_DFLAG_DETACH	= (1 << 24),
++	ATA_DFLAG_DETACHED	= (1 << 25),
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+-- 
+1.5.2.4
 
-I *really* didn't want to pull this.
-
-Not only is it after the -rc1 period, but I also think you pushed this ina 
-really offensive manner, and I don't like how you and James have made this 
-whole thing personal. You guys need to sort it out, and there is no way 
-you can blame James for all your troubles, since I've heard the same kind 
-of complaints about every single maintainer out there (including you) 
-about some driver or other infrastructure issue.
-
-So I'm unhappy about pulling this.
-
-That said, I did finally decide to just pull it. Partly because the 
-concept apparently has been in -mm for a while anyway (even if the final 
-patch has not - but the patch itself isn't that large, I'd worry more 
-about thngs like certain hardware simply not doing things right), but 
-mostly because I hate it when others hold up driver features, and I 
-decided that in this case this really is something that is better done 
-earlier rather than later, to get exposure as soon as possible.
-
-But I really think you need to lay off James, and help him rather than 
-make every single complaint a big flame-war!
-
-Please, Jeff?
-
-		Linus
