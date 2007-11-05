@@ -1,59 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_serverworks: Fix problem with some drive combinations
-Date: Mon, 5 Nov 2007 15:04:40 +0000
-Message-ID: <20071105150440.0469be7e@the-village.bc.nu>
+From: Declan Moriarty <declan.moriarty@iol.ie>
+Subject: Re: IDE Problem with old Gateway laptop -SOLVED
+Date: Mon, 05 Nov 2007 15:23:10 +0000
+Message-ID: <1194276190.2633.137.camel@localhost.localdomain>
+References: <884696.96067.qm@web54404.mail.yahoo.com>
+	 <1193830965.2347.66.camel@turtle-25895.iol.ie>
+	 <20071031175812.7dc9cc8f@the-village.bc.nu>
+Reply-To: declan.moriarty@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37048 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751269AbXKEPEE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 10:04:04 -0500
+Received: from mail2.mail.iol.ie ([193.95.141.54]:37193 "EHLO
+	mail2.mail.iol.ie" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbXKEPX3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 10:23:29 -0500
+In-Reply-To: <20071031175812.7dc9cc8f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Kevin Day <thekevinday@gmail.com>
+Cc: Vlad Codrea <vladc6@yahoo.com>, linux-ide <linux-ide@vger.kernel.org>
 
-The driver used the channel not the device number for deciding where to
-load some timing parameters. Also change so that we clear the UDMA field
-as the old driver did. Not believed neccessary but does no harm.
+On Wed, 2007-10-31 at 17:58 +0000, Alan Cox wrote:
+> > 	kjournald starting Commit interval 5 seconds
+> > 	VFS: Mounted root (ext3 filesystem) readonly
+> > 	Freeing unused kernel memory: 168k freed
+> > (keyboard still echoed onscreen, disk parked)
+> > 
+> > Adding init=/bin/bash is no better.
+> 
+> So its the user space which is broken. Make sure the user space has the
+> right /dev etc - and is for the right CPU - a 200MHz pentium means you
+> need i386 or i586 binaries. i686/athlon binaries would produce the effect
+> you report.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Remember this? The problem appears to have been uClibc-0.9.29.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/drivers/ata/pata_serverworks.c linux-2.6.24-rc1/drivers/ata/pata_serverworks.c
---- linux.vanilla-2.6.24-rc1/drivers/ata/pata_serverworks.c	2007-11-01 11:41:54.000000000 +0000
-+++ linux-2.6.24-rc1/drivers/ata/pata_serverworks.c	2007-11-02 17:25:41.000000000 +0000
-@@ -274,28 +274,27 @@
- {
- 	static const u8 dma_mode[] = { 0x77, 0x21, 0x20 };
- 	int offset = 1 + 2 * ap->port_no - adev->devno;
--	int devbits = (2 * ap->port_no + adev->devno);
-+	int devbits = 2 * ap->port_no + adev->devno;
- 	u8 ultra;
- 	u8 ultra_cfg;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
- 	pci_read_config_byte(pdev, 0x54, &ultra_cfg);
-+	pci_read_config_byte(pdev, 0x56 + ap->port_no, &ultra);
-+	ultra &= ~(0x0F << (adev->devno * 4));
- 
- 	if (adev->dma_mode >= XFER_UDMA_0) {
- 		pci_write_config_byte(pdev, 0x44 + offset,  0x20);
- 
--		pci_read_config_byte(pdev, 0x56 + ap->port_no, &ultra);
--		ultra &= ~(0x0F << (ap->port_no * 4));
- 		ultra |= (adev->dma_mode - XFER_UDMA_0)
--					<< (ap->port_no * 4);
--		pci_write_config_byte(pdev, 0x56 + ap->port_no, ultra);
--
-+					<< (adev->devno * 4);
- 		ultra_cfg |=  (1 << devbits);
- 	} else {
- 		pci_write_config_byte(pdev, 0x44 + offset,
- 			dma_mode[adev->dma_mode - XFER_MW_DMA_0]);
- 		ultra_cfg &= ~(1 << devbits);
- 	}
-+	pci_write_config_byte(pdev, 0x56 + ap->port_no, ultra);
- 	pci_write_config_byte(pdev, 0x54, ultra_cfg);
- }
- 
+Dropping the system to uClibc-0.9.28.3 and building the minimum as a
+proof of concept, I'm running with init=/bin/bash. This is using the
+same 2 kernels, one compiled under uClibc-0.9.29, and one under glibc
+(not installed there) which seems to indicate that the kernel is fairly
+libc independent. I have both systems on that laptop currently.
+Hda3(with uClibc-0.9.28.3) boots whereas the same system on hda4
+(uClibc-0.9.29)does not.
+
+It's actually quite audible whether it works or not, as you barely hear
+the hard disk on the dodgy one at all, while the good one gives it a
+thrashing before coming up with. It's either that libc or some i686 code
+sneaked through to the old pentium. If I knew a handy way to check that,
+I'd do for it.
+
+
+-- 
+        With Best Regards,
+
+        Declan Moriarty
+
