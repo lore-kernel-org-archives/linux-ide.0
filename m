@@ -1,33 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_hpt37x: Fix outstanding bug reports on the HPT374
- and 37x cable detect
-Date: Tue, 6 Nov 2007 14:59:35 +0000
-Message-ID: <20071106145935.154b9335@the-village.bc.nu>
-References: <20071105225338.20ef476f@the-village.bc.nu>
-	<47307DEE.3050700@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 11/18] pdc202xx_new: move PIO programming code to pdcnew_set_pio_mode()
+Date: Tue, 06 Nov 2007 18:13:35 +0300
+Message-ID: <4730849F.4050901@ru.mvista.com>
+References: <200711050025.47116.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55191 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751938AbXKFO73 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 09:59:29 -0500
-In-Reply-To: <47307DEE.3050700@ru.mvista.com>
+Received: from homer.mvista.com ([63.81.120.155]:32133 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755506AbXKFPNW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 10:13:22 -0500
+In-Reply-To: <200711050025.47116.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> > +	if (chip_table == &hpt374) {
-> > +		freq = hpt374_read_freq(dev);
-> > +		if (freq == 0)
-> > +			return -ENODEV;
-> 
->     Not sure whether this check is necessary...
+Bartlomiej Zolnierkiewicz wrote:
 
-If the device is hot unplugged we can get a zero return error case. It
-seems cleaner to catch the error case rather than attempt to prove it
-does no harm later.
+> * Move PIO programming code from pdcnew_set_mode() to pdcnew_set_pio_mode().
 
-pre_reset one fixed in my tree and will check and push.
+> * Rename pdcnew_set_mode() to pdcnew_set_dma_mode().
+
+> There should be no functionality changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
