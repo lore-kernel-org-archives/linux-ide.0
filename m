@@ -1,36 +1,42 @@
-From: Bruce Allen <ballen@gravity.phys.uwm.edu>
-Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Date: Tue, 6 Nov 2007 03:49:13 -0600 (CST)
-Message-ID: <Pine.LNX.4.63.0711060348290.22998@trinity.phys.uwm.edu>
-References: <56020.194.255.108.253.1192004925.squirrel@root.dusted.dk>
- <20071012174153.69556b32.akpm@linux-foundation.org> <47105C53.7040603@lix-world.net>
- <471DC52B.20802@gmail.com> <471F2647.4030304@lix-world.net> <47214593.1080102@gmail.com>
- <20071026040226.GA26960@jim.sh>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
+Date: Tue, 06 Nov 2007 19:18:31 +0900
+Message-ID: <47303F77.9080502@gmail.com>
+References: <47274A5F.6070409@gentoo.org>	<20071030153417.59b9182c@the-village.bc.nu>	<47276DCA.1000808@gentoo.org>	<20071030190153.373c9347@the-village.bc.nu>	<47278439.4030801@gentoo.org>	<20071031114958.210bd7cc@the-village.bc.nu>	<20071031115754.GK5059@kernel.dk>	<4729A0DF.20800@garzik.org>	<20071101105335.1f20bab3@the-village.bc.nu>	<4729B3EA.6040707@garzik.org>	<20071101141501.3746cec2@the-village.bc.nu>	<4729F1BB.20306@gentoo.org>	<4729F8F1.4040103@gmail.com>	<472B946F.4030004@gentoo.org>	<472BCC18.7070503@gmail.com>	<472CD3F3.7050701@gentoo.org>	<472D0D4A.70404@gmail.com>	<472D445B.1080005@tw.ibm.com>	<20071104234205.7627d007@the-village.bc.nu>	<472E5E5C.8040308@gmail.com> <20071105130330.06a22f7a@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.phys.uwm.edu ([129.89.57.159]:34129 "EHLO
-	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753773AbXKFJyn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 04:54:43 -0500
-In-Reply-To: <20071026040226.GA26960@jim.sh>
+Received: from nz-out-0506.google.com ([64.233.162.232]:23156 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802AbXKFKSn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 05:18:43 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1305112nze
+        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 02:18:40 -0800 (PST)
+In-Reply-To: <20071105130330.06a22f7a@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: Tejun Heo <htejun@gmail.com>, Steen Eugen Poulsen <sep@lix-world.net>, Andrew Morton <akpm@linux-foundation.org>, lists@dusted.dk, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, bruce.allen@aei.mpg.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: albertl@mail.com, albertcc@tw.ibm.com, Daniel Drake <dsd@gentoo.org>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
->>>> All these are caused by smartd.  Updating should fix the problem.
->>>
->>> Okay, but there is no newer smartd than what I'm using. (5.37)
->>
->> Bruce?  Original thread can be read from...
->>
->> http://thread.gmane.org/gmane.linux.kernel/588972
->
-> The fixes were added in smartmontools CVS, but there hasn't been a
-> release since then.
+Alan Cox wrote:
+> On Mon, 05 Nov 2007 09:05:48 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> Alan Cox wrote:
+>>>> Maybe we could set a limit here. If the ATAPI device keeps DRQ=1 and
+>>>> exceeds the limit, we consider it as HSM violation and have EH handle it.
+>>> On a DMA transfer its basically out of our control (and a PIO drain will
+>>> lock some controllers solid until power cycle),
+>> Do such controllers lock up on PIO draining after PIO transfers too?
+>> Can you tell which are those controllers?
+> 
+> Promise PDC202xx will lock on a PIO drain of a DMA transfer or (if you
+> reset it before you drain) on a PIO drain of a PIO transfer.
 
-I think we'll do a new smartmontools release fairly soon.
+Just to make sure I'm not misunderstanding it.  So, PDC202xx will lock
+up if you transfer allocation size, reset and then try to drain, but
+it's okay to keep draining as part of continued PIO transfer, right?
 
-Cheers,
- 	Bruce
+-- 
+tejun
