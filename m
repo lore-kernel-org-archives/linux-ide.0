@@ -1,98 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/8 UPDATED] libata: factor out ata_eh_schedule_probe()
-Date: Tue, 06 Nov 2007 13:53:19 +0900
-Message-ID: <472FF33F.1090109@gmail.com>
-References: <1194241515653-git-send-email-htejun@gmail.com> <11942415162701-git-send-email-htejun@gmail.com> <200711051136.57793.bzolnier@gmail.com> <472F0CA5.7010800@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 01/12] ata_generic: unindent loop in generic_set_mode()
+Date: Tue,  6 Nov 2007 14:38:59 +0900
+Message-ID: <11943275502487-git-send-email-htejun@gmail.com>
+References: <1194327550227-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:20716 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755166AbXKFEx3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 23:53:29 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2270835wah
-        for <linux-ide@vger.kernel.org>; Mon, 05 Nov 2007 20:53:28 -0800 (PST)
-In-Reply-To: <472F0CA5.7010800@gmail.com>
+Received: from [222.235.223.38] ([222.235.223.38]:7419 "EHLO htj.dyndns.org"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752179AbXKFFjN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Nov 2007 00:39:13 -0500
+In-Reply-To: <1194327550227-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Factor out ata_eh_schedule_probe() from ata_eh_handle_dev_fail() and
-ata_eh_recover().  This is to improve maintainability and make future
-changes easier.
-
-In the previous revision, ata_dev_enabled() test was accidentally
-dropped while factoring out.  This problem was spotted by Bartlomiej.
+Unindent loop body in generic_set_mode().  This is to ease future
+change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/libata-eh.c |   38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
+ drivers/ata/ata_generic.c |   31 ++++++++++++++++---------------
+ 1 files changed, 16 insertions(+), 15 deletions(-)
 
-Index: work/drivers/ata/libata-eh.c
-===================================================================
---- work.orig/drivers/ata/libata-eh.c
-+++ work/drivers/ata/libata-eh.c
-@@ -2438,6 +2438,22 @@ static int ata_eh_skip_recovery(struct a
- 	return 1;
- }
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 9032998..fb5434c 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -54,21 +54,22 @@ static int generic_set_mode(struct ata_link *link, struct ata_device **unused)
+ 		dma_enabled = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
  
-+static int ata_eh_schedule_probe(struct ata_device *dev)
-+{
-+	struct ata_eh_context *ehc = &dev->link->eh_context;
-+
-+	if (!(ehc->i.probe_mask & (1 << dev->devno)) ||
-+	    (ehc->did_probe_mask & (1 << dev->devno)))
-+		return 0;
-+
-+	ata_eh_detach_dev(dev);
-+	ata_dev_init(dev);
-+	ehc->did_probe_mask |= (1 << dev->devno);
-+	ehc->i.action |= ATA_EH_SOFTRESET;
-+
-+	return 1;
-+}
-+
- static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
- {
- 	struct ata_eh_context *ehc = &dev->link->eh_context;
-@@ -2469,16 +2485,9 @@ static int ata_eh_handle_dev_fail(struct
- 		if (ata_link_offline(dev->link))
- 			ata_eh_detach_dev(dev);
- 
--		/* probe if requested */
--		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
--		    !(ehc->did_probe_mask & (1 << dev->devno))) {
--			ata_eh_detach_dev(dev);
--			ata_dev_init(dev);
--
-+		/* schedule probe if necessary */
-+		if (ata_eh_schedule_probe(dev))
- 			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
--			ehc->did_probe_mask |= (1 << dev->devno);
--			ehc->i.action |= ATA_EH_SOFTRESET;
--		}
- 
- 		return 1;
- 	} else {
-@@ -2555,14 +2564,9 @@ int ata_eh_recover(struct ata_port *ap, 
- 			if (dev->flags & ATA_DFLAG_DETACH)
- 				ata_eh_detach_dev(dev);
- 
--			if (!ata_dev_enabled(dev) &&
--			    ((ehc->i.probe_mask & (1 << dev->devno)) &&
--			     !(ehc->did_probe_mask & (1 << dev->devno)))) {
--				ata_eh_detach_dev(dev);
--				ata_dev_init(dev);
--				ehc->did_probe_mask |= (1 << dev->devno);
--				ehc->i.action |= ATA_EH_SOFTRESET;
+ 	ata_link_for_each_dev(dev, link) {
+-		if (ata_dev_enabled(dev)) {
+-			/* We don't really care */
+-			dev->pio_mode = XFER_PIO_0;
+-			dev->dma_mode = XFER_MW_DMA_0;
+-			/* We do need the right mode information for DMA or PIO
+-			   and this comes from the current configuration flags */
+-			if (dma_enabled & (1 << (5 + dev->devno))) {
+-				ata_id_to_dma_mode(dev, XFER_MW_DMA_0);
+-				dev->flags &= ~ATA_DFLAG_PIO;
+-			} else {
+-				ata_dev_printk(dev, KERN_INFO, "configured for PIO\n");
+-				dev->xfer_mode = XFER_PIO_0;
+-				dev->xfer_shift = ATA_SHIFT_PIO;
+-				dev->flags |= ATA_DFLAG_PIO;
 -			}
-+			/* schedule probe if necessary */
-+			if (!ata_dev_enabled(dev))
-+				ata_eh_schedule_probe(dev);
++		if (!ata_dev_enabled(dev))
++			continue;
++
++		/* We don't really care */
++		dev->pio_mode = XFER_PIO_0;
++		dev->dma_mode = XFER_MW_DMA_0;
++		/* We do need the right mode information for DMA or PIO
++		   and this comes from the current configuration flags */
++		if (dma_enabled & (1 << (5 + dev->devno))) {
++			ata_id_to_dma_mode(dev, XFER_MW_DMA_0);
++			dev->flags &= ~ATA_DFLAG_PIO;
++		} else {
++			ata_dev_printk(dev, KERN_INFO, "configured for PIO\n");
++			dev->xfer_mode = XFER_PIO_0;
++			dev->xfer_shift = ATA_SHIFT_PIO;
++			dev->flags |= ATA_DFLAG_PIO;
  		}
  	}
- 
+ 	return 0;
+-- 
+1.5.2.4
+
