@@ -1,59 +1,152 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: "Fix ATAPI transfer lengths" causes CD writing regression
-Date: Tue, 6 Nov 2007 12:48:21 +0000
-Message-ID: <20071106124821.3c7a5ca5@the-village.bc.nu>
-References: <47274A5F.6070409@gentoo.org>
-	<20071030153417.59b9182c@the-village.bc.nu>
-	<47276DCA.1000808@gentoo.org>
-	<20071030190153.373c9347@the-village.bc.nu>
-	<47278439.4030801@gentoo.org>
-	<20071031114958.210bd7cc@the-village.bc.nu>
-	<20071031115754.GK5059@kernel.dk>
-	<4729A0DF.20800@garzik.org>
-	<20071101105335.1f20bab3@the-village.bc.nu>
-	<4729B3EA.6040707@garzik.org>
-	<20071101141501.3746cec2@the-village.bc.nu>
-	<4729F1BB.20306@gentoo.org>
-	<4729F8F1.4040103@gmail.com>
-	<472B946F.4030004@gentoo.org>
-	<472BCC18.7070503@gmail.com>
-	<472CD3F3.7050701@gentoo.org>
-	<472D0D4A.70404@gmail.com>
-	<472D445B.1080005@tw.ibm.com>
-	<20071104234205.7627d007@the-village.bc.nu>
-	<472E5E5C.8040308@gmail.com>
-	<20071105130330.06a22f7a@the-village.bc.nu>
-	<47303F77.9080502@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] pata_hpt37x: Fix outstanding bug reports on the HPT374
+ and 37x cable detect
+Date: Tue, 06 Nov 2007 17:45:02 +0300
+Message-ID: <47307DEE.3050700@ru.mvista.com>
+References: <20071105225338.20ef476f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55595 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751019AbXKFMuB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 07:50:01 -0500
-In-Reply-To: <47303F77.9080502@gmail.com>
+Received: from homer.mvista.com ([63.81.120.155]:31960 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752416AbXKFOou (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 09:44:50 -0500
+In-Reply-To: <20071105225338.20ef476f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: albertl@mail.com, albertcc@tw.ibm.com, Daniel Drake <dsd@gentoo.org>, Jeff Garzik <jeff@garzik.org>, Jens Axboe <jens.axboe@oracle.com>, linux list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
-> Just to make sure I'm not misunderstanding it.  So, PDC202xx will lock
-> up if you transfer allocation size, reset and then try to drain, but
-> it's okay to keep draining as part of continued PIO transfer, right?
+Alan Cox wrote:
 
-The following hang mine:
+> - Read frequency correctly
+> - Correct cable detect handling
 
-	PIO transfer
-	Reset state machine
-	Read data register
+    I'm still not sure it's correct...
 
+> - Fix wrong filter test
 
-	DMA transfer in progress
-	Read data register
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-And this does not
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c
+> --- linux.vanilla-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-01 11:41:54.000000000 +0000
+> +++ linux-2.6.24-rc1/drivers/ata/pata_hpt37x.c	2007-11-05 22:21:31.000000000 +0000
+> @@ -295,7 +295,7 @@
+>  
+>  static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
+>  {
+> -	if (adev->class != ATA_DEV_ATA) {
+> +	if (adev->class == ATA_DEV_ATA) {
+>  		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+>  			mask &= ~ (0x1F << ATA_SHIFT_UDMA);
+>  	}
+> @@ -359,28 +359,25 @@
+>  		{ 0x50, 1, 0x04, 0x04 },
+>  		{ 0x54, 1, 0x04, 0x04 }
+>  	};
+> -	u16 mcr3, mcr6;
+> +	u16 mcr3;
+>  	u8 ata66;
+>  	struct ata_port *ap = link->ap;
+>  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+> +	unsigned int mcrbase = 0x50 + 4 * ap->port_no;
+>  
+>  	if (!pci_test_config_bits(pdev, &hpt37x_enable_bits[ap->port_no]))
+>  		return -ENOENT;
+>  
+>  	/* Do the extra channel work */
+> -	pci_read_config_word(pdev, 0x52, &mcr3);
+> -	pci_read_config_word(pdev, 0x56, &mcr6);
+> +	pci_read_config_word(pdev, mcrbase + 2, &mcr3);
+>  	/* Set bit 15 of 0x52 to enable TCBLID as input
+> -	   Set bit 15 of 0x56 to enable FCBLID as input
+>  	 */
+> -	pci_write_config_word(pdev, 0x52, mcr3 | 0x8000);
+> -	pci_write_config_word(pdev, 0x56, mcr6 | 0x8000);
+> +	pci_write_config_word(pdev, mcrbase + 2, mcr3 | 0x8000);
+>  	pci_read_config_byte(pdev, 0x5A, &ata66);
+>  	/* Reset TCBLID/FCBLID to output */
+>  	pci_write_config_word(pdev, 0x52, mcr3);
+> -	pci_write_config_word(pdev, 0x56, mcr6);
+>  
+> -	if (ata66 & (1 << ap->port_no))
+> +	if (ata66 & (2 >> ap->port_no))
 
-	PIO transfer
-	Keep reading data register while checking DRQ
+    But has the same issue with hpt37x_pre_reset() been corrected?  I don't 
+see this in the current driver.
 
+>  		ap->cbl = ATA_CBL_PATA40;
+>  	else
+>  		ap->cbl = ATA_CBL_PATA80;
+> @@ -844,6 +841,25 @@
+>  	/* Never went stable */
+>  	return 0;
+>  }
+> +
+> +static u32 hpt374_read_freq(struct pci_dev *pdev)
+> +{
+> +	u32 freq;
+> +	unsigned long io_base = pci_resource_start(pdev, 4);
+
+    No new line after declaration block...
+
+> +	if (PCI_FUNC(pdev->devfn) & 1) {
+> +		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
+> +		/* Someone hot plugged the controller on us ? */
+> +		if (pdev_0 == NULL)
+> +			return 0;
+> +		io_base = pci_resource_start(pdev_0, 4);
+> +		freq = inl(io_base + 0x90);
+> +		pci_dev_put(pdev_0);
+> +	}
+> +	else
+> +		freq = inl(io_base + 0x90);
+> +	return freq;
+> +}
+> +
+>  /**
+>   *	hpt37x_init_one		-	Initialise an HPT37X/302
+>   *	@dev: PCI device
+> @@ -902,7 +918,7 @@
+>  		.flags = ATA_FLAG_SLAVE_POSS,
+>  		.pio_mask = 0x1f,
+>  		.mwdma_mask = 0x07,
+> -		.udma_mask = 0x0f,
+> +		.udma_mask = ATA_UDMA5,
+>  		.port_ops = &hpt370_port_ops
+>  	};
+>  	/* HPT370A - UDMA100 */
+> @@ -911,7 +927,7 @@
+>  		.flags = ATA_FLAG_SLAVE_POSS,
+>  		.pio_mask = 0x1f,
+>  		.mwdma_mask = 0x07,
+> -		.udma_mask = 0x0f,
+> +		.udma_mask = ATA_UDMA5,
+>  		.port_ops = &hpt370a_port_ops
+>  	};
+>  	/* HPT371, 372 and friends - UDMA133 */
+> @@ -1047,9 +1063,16 @@
+>  		outb(0x0e, iobase + 0x9c);
+>  
+>  	/* Some devices do not let this value be accessed via PCI space
+> -	   according to the old driver */
+> +	   according to the old driver. In addition we must use the value
+> +	   from FN 0 on the HPT374 */
+> +
+> +	if (chip_table == &hpt374) {
+> +		freq = hpt374_read_freq(dev);
+> +		if (freq == 0)
+> +			return -ENODEV;
+
+    Not sure whether this check is necessary...
+
+> +	} else
+> +		freq = inl(iobase + 0x90);
+>  
+> -	freq = inl(iobase + 0x90);
+>  	if ((freq >> 12) != 0xABCDE) {
+>  		int i;
+>  		u8 sr;
+
+MBR, Sergei
