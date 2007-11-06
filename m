@@ -1,69 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 05/12] libata: xfer_mask is unsigned int not unsigned
- long
-Date: Tue, 06 Nov 2007 12:53:14 -0500
-Message-ID: <4730AA0A.4090904@garzik.org>
-References: <1194327550227-git-send-email-htejun@gmail.com>	<11943275501285-git-send-email-htejun@gmail.com> <20071106105151.2e3d15b8@the-village.bc.nu> <473048F7.2050004@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/15] ide: remove atapi_ireason_t
+Date: Tue, 06 Nov 2007 21:01:58 +0300
+Message-ID: <4730AC16.2040401@ru.mvista.com>
+References: <200710310028.27935.bzolnier@gmail.com> <200711022121.24688.bzolnier@gmail.com> <472DDDD6.8030806@ru.mvista.com> <200711052124.57782.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43056 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754503AbXKFRxU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Nov 2007 12:53:20 -0500
-In-Reply-To: <473048F7.2050004@gmail.com>
+Received: from h155.mvista.com ([63.81.120.155]:33493 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754704AbXKFSBr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Nov 2007 13:01:47 -0500
+In-Reply-To: <200711052124.57782.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> Alan Cox wrote:
->> On Tue,  6 Nov 2007 14:39:03 +0900
->> Tejun Heo <htejun@gmail.com> wrote:
->>
->>> xfer_mask is unsigned int not unsigned long.  Change ->mode_filter to
->>> take and return unsigned int.
->>>
->>> While at it, rename @adev of ata_pci_default_filter() to @dev for
->>> consistency.
->>>
->>> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> The filter type was purposefully unsigned long to allow for expansion (eg
->> for SWDMA) without breaking drivers. No problem with it changing but I'd
->> say "unsigned int" was the worst possible choice - its now shorter (no
->> room for expansion) and size dependant on arch. u32 would be shorter and
->> consistent across all platforms, ulong would have more room for expansion.
-> 
-> I agree it should be one of u* types and am happy to convert.  This
-> patch is primarily for consistency as in libata-core, xfer_mask is
-> unsigned int.  My first proposal was u32 too but Jeff vetoed it.  IIRC,
-> Jeff has affection for machine-independent integral types.  :-)
-> 
-> Anyways, I think ulong is worse than uint because ulong differs in size
-> between 32 and 64 archs.  What's the good of extra 32bits in flags space
-> if it's not there on 32bit archs?  Also, we currently only use 20bits of
-> xfermask, 12 extra bits seem enough for the time, especially as
-> everything is moving over to SATA where xfermode doesn't really matter, no?
-> 
-> Jeff, are you okay with u32 or 64?
+Bartlomiej Zolnierkiewicz wrote:
 
-unsigned long is IMO the best choice for bitmaps.
+> Thanks!
 
-* it is a machine int on all(?) architectures
+> [ Heh, after "take 2" I had a feeling that something still may be not right
+>   so I deferred committing of this patch series to the official tree... :) ]
 
-* it is 32-bit on 32-bit architectures
+> [PATCH] ide: remove atapi_ireason_t (take 3)
 
-* it is consistent with test_bit(), set_bit() and lib/bitmap.c interfaces
+> Remove atapi_ireason_t.
 
-* conversion to test_bit() and lib/bitmap.c interfaces as a future step 
-is trivial
+> While at it:
+> * replace 'HWIF(drive)' by 'drive->hwif' (or just 'hwif' where possible)
 
-* your structs inflate on 64-bit due to pointers anyway, so I see little 
-real consequence to using the lower 32 bits of an unsigned long as a 
-portable meme.
+> v2:
+> * v1 had CD and IO bits reversed in many places.
 
-	Jeff
+> * Use CD and IO defines from <linux/hdreg.h>.
 
+> v3:
+> * Fix incorrect "(ireason & IO) == test_bit()". (Noticed by Sergei)
 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
