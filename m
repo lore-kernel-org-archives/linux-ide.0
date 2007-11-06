@@ -1,46 +1,69 @@
-From: "Michal Suchanek" <hramrach@centrum.cz>
-Subject: Re: Maxtor 6L200M0 sata irq timeouts
-Date: Tue, 6 Nov 2007 18:29:49 +0100
-Message-ID: <a5d587fb0711060929s2ae7d406s6f6c2c2909406a93@mail.gmail.com>
-References: <a5d587fb0709090234x1942e987u4187bf0dbe977a06@mail.gmail.com>
-	 <6b9952490709090740t188d5b71x26b90421bfe948bf@mail.gmail.com>
-	 <a5d587fb0709090920y1241a528x4f5a1141026256a7@mail.gmail.com>
-	 <46E473D2.20907@gmail.com>
-	 <a5d587fb0709100711s16a6df24i8fac5693c5cc8952@mail.gmail.com>
-	 <46E5F15A.2090803@gmail.com>
-	 <a5d587fb0709110429j6ce52fb2wb1d558281b36f8a7@mail.gmail.com>
-	 <46FB56EF.8050703@gmail.com>
-	 <a5d587fb0710011321w6ac7506cm81e917fcfa1fb7ca@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 05/12] libata: xfer_mask is unsigned int not unsigned
+ long
+Date: Tue, 06 Nov 2007 12:53:14 -0500
+Message-ID: <4730AA0A.4090904@garzik.org>
+References: <1194327550227-git-send-email-htejun@gmail.com>	<11943275501285-git-send-email-htejun@gmail.com> <20071106105151.2e3d15b8@the-village.bc.nu> <473048F7.2050004@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:3097 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140AbXKFR3v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 12:29:51 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1143859ugc
-        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 09:29:49 -0800 (PST)
-In-Reply-To: <a5d587fb0710011321w6ac7506cm81e917fcfa1fb7ca@mail.gmail.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:43056 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754503AbXKFRxU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Nov 2007 12:53:20 -0500
+In-Reply-To: <473048F7.2050004@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Joris <joris@v5.be>, linux-ide@vger.kernel.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-On 01/10/2007, Michal Suchanek <hramrach@centrum.cz> wrote:
-> Hello
->
-> (please CC me when replying)
->
->
+Tejun Heo wrote:
+> Alan Cox wrote:
+>> On Tue,  6 Nov 2007 14:39:03 +0900
+>> Tejun Heo <htejun@gmail.com> wrote:
+>>
+>>> xfer_mask is unsigned int not unsigned long.  Change ->mode_filter to
+>>> take and return unsigned int.
+>>>
+>>> While at it, rename @adev of ata_pci_default_filter() to @dev for
+>>> consistency.
+>>>
+>>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> The filter type was purposefully unsigned long to allow for expansion (eg
+>> for SWDMA) without breaking drivers. No problem with it changing but I'd
+>> say "unsigned int" was the worst possible choice - its now shorter (no
+>> room for expansion) and size dependant on arch. u32 would be shorter and
+>> consistent across all platforms, ulong would have more room for expansion.
+> 
+> I agree it should be one of u* types and am happy to convert.  This
+> patch is primarily for consistency as in libata-core, xfer_mask is
+> unsigned int.  My first proposal was u32 too but Jeff vetoed it.  IIRC,
+> Jeff has affection for machine-independent integral types.  :-)
+> 
+> Anyways, I think ulong is worse than uint because ulong differs in size
+> between 32 and 64 archs.  What's the good of extra 32bits in flags space
+> if it's not there on 32bit archs?  Also, we currently only use 20bits of
+> xfermask, 12 extra bits seem enough for the time, especially as
+> everything is moving over to SATA where xfermode doesn't really matter, no?
+> 
+> Jeff, are you okay with u32 or 64?
 
-I got a replacement drive which is also a 6L200M0 but the fw rev is
-now BACE1G10.
+unsigned long is IMO the best choice for bitmaps.
 
-Both the irq errors and the smart checksum errors are gone. I guess
-these were cause by old and buggy drive firmware in my case.
+* it is a machine int on all(?) architectures
 
-Thanks
+* it is 32-bit on 32-bit architectures
 
-Michal
+* it is consistent with test_bit(), set_bit() and lib/bitmap.c interfaces
+
+* conversion to test_bit() and lib/bitmap.c interfaces as a future step 
+is trivial
+
+* your structs inflate on 64-bit due to pointers anyway, so I see little 
+real consequence to using the lower 32 bits of an unsigned long as a 
+portable meme.
+
+	Jeff
+
+
