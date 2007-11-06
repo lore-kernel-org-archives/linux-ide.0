@@ -1,249 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/12] pata_amd: update mode selection for NV PATAs
-Date: Tue,  6 Nov 2007 14:39:10 +0900
-Message-ID: <11943275522651-git-send-email-htejun@gmail.com>
-References: <1194327550227-git-send-email-htejun@gmail.com>
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+Date: Tue, 6 Nov 2007 03:49:13 -0600 (CST)
+Message-ID: <Pine.LNX.4.63.0711060348290.22998@trinity.phys.uwm.edu>
+References: <56020.194.255.108.253.1192004925.squirrel@root.dusted.dk>
+ <20071012174153.69556b32.akpm@linux-foundation.org> <47105C53.7040603@lix-world.net>
+ <471DC52B.20802@gmail.com> <471F2647.4030304@lix-world.net> <47214593.1080102@gmail.com>
+ <20071026040226.GA26960@jim.sh>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.235.223.38] ([222.235.223.38]:7442 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752969AbXKFFjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Nov 2007 00:39:16 -0500
-In-Reply-To: <1194327550227-git-send-email-htejun@gmail.com>
+Received: from trinity.phys.uwm.edu ([129.89.57.159]:34129 "EHLO
+	trinity.phys.uwm.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773AbXKFJyn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 04:54:43 -0500
+In-Reply-To: <20071026040226.GA26960@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jim Paris <jim@jtan.com>
+Cc: Tejun Heo <htejun@gmail.com>, Steen Eugen Poulsen <sep@lix-world.net>, Andrew Morton <akpm@linux-foundation.org>, lists@dusted.dk, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, bruce.allen@aei.mpg.de
 
-Cable detection on NV PATA hosts isn't implemented and the CBLID-
-cable isn't wired according to the sepc either, so both host-side and
-generic drive-side cable detections are broken.  Till now,
-nv_cable_detect() relied on peeking BIOS and ACPI configurations to
-upgrade to 80C but this often results in misdetection of 40C cable as
-80C.  Also, the original implementation was broken in that by the time
-BIOS configuration is read it has already been cleared by programming
-PIO0 during reset.
+>>>> All these are caused by smartd.  Updating should fix the problem.
+>>>
+>>> Okay, but there is no newer smartd than what I'm using. (5.37)
+>>
+>> Bruce?  Original thread can be read from...
+>>
+>> http://thread.gmane.org/gmane.linux.kernel/588972
+>
+> The fixes were added in smartmontools CVS, but there hasn't been a
+> release since then.
 
-This patch reimplements NV mode selection such that...
+I think we'll do a new smartmontools release fairly soon.
 
-* BIOS configuration value is stored during driver attach and restored
-  on detach.
-
-* Cable type is fixed to ATA_CBL_PATA_IGN and mode selection is soley
-  done by nv_mode_filter() which peeks both BIOS and ACPI
-  configurations and filter accordingly.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
----
- drivers/ata/pata_amd.c |  129 ++++++++++++++++++++++++++++++++++-------------
- 1 files changed, 93 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index f65fa6c..711e8bb 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -219,6 +219,62 @@ static void amd133_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 	timing_setup(ap, adev, 0x40, adev->dma_mode, 4);
- }
- 
-+/* Both host-side and drive-side detection results are worthless on NV
-+ * PATAs.  Ignore them and just follow what BIOS configured.  Both the
-+ * current configuration in PCI config reg and ACPI GTM result are
-+ * cached during driver attach and are consulted to select transfer
-+ * mode.
-+ */
-+static unsigned int nv_mode_filter(struct ata_device *dev,
-+				   unsigned int xfer_mask)
-+{
-+	static const unsigned int udma_mask_map[] =
-+		{ ATA_UDMA2, ATA_UDMA1, ATA_UDMA0, 0,
-+		  ATA_UDMA3, ATA_UDMA4, ATA_UDMA5, ATA_UDMA6 };
-+	struct ata_port *ap = dev->link->ap;
-+	char acpi_str[32] = "";
-+	u32 saved_udma, udma;
-+	const struct ata_acpi_gtm *gtm;
-+	unsigned int bios_limit = 0, acpi_limit = 0, limit;
-+
-+	/* find out what BIOS configured */
-+	udma = saved_udma = (unsigned long)ap->host->private_data;
-+
-+	if (ap->port_no == 0)
-+		udma >>= 16;
-+	if (dev->devno == 0)
-+		udma >>= 8;
-+
-+	if ((udma & 0xc0) == 0xc0)
-+		bios_limit = ata_pack_xfermask(0, 0, udma_mask_map[udma & 0x7]);
-+
-+	/* consult ACPI GTM too */
-+	gtm = ata_acpi_init_gtm(ap);
-+	if (gtm) {
-+		acpi_limit = ata_acpi_gtm_xfermask(dev, gtm);
-+
-+		snprintf(acpi_str, sizeof(acpi_str), " (%u:%u:0x%x)",
-+			 gtm->drive[0].dma, gtm->drive[1].dma, gtm->flags);
-+	}
-+
-+	/* be optimistic, EH can take care of things if something goes wrong */
-+	limit = bios_limit | acpi_limit;
-+
-+	/* If PIO or DMA isn't configured at all, don't limit.  Let EH
-+	 * handle it.
-+	 */
-+	if (!(limit & ATA_MASK_PIO))
-+		limit |= ATA_MASK_PIO;
-+	if (!(limit & (ATA_MASK_MWDMA | ATA_MASK_UDMA)))
-+		limit |= ATA_MASK_MWDMA | ATA_MASK_UDMA;
-+
-+	ata_port_printk(ap, KERN_DEBUG, "nv_mode_filter: 0x%x&0x%x->0x%x, "
-+			"BIOS=0x%x (0x%x) ACPI=0x%x%s\n",
-+			xfer_mask, limit, xfer_mask & limit, bios_limit,
-+			saved_udma, acpi_limit, acpi_str);
-+
-+	return xfer_mask & limit;
-+}
- 
- /**
-  *	nv_probe_init	-	cable detection
-@@ -251,32 +307,6 @@ static void nv_error_handler(struct ata_port *ap)
- 			       ata_std_postreset);
- }
- 
--static int nv_cable_detect(struct ata_port *ap)
--{
--	static const u8 bitmask[2] = {0x03, 0x0C};
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 ata66;
--	u16 udma;
--	int cbl;
--
--	pci_read_config_byte(pdev, 0x52, &ata66);
--	if (ata66 & bitmask[ap->port_no])
--		cbl = ATA_CBL_PATA80;
--	else
--		cbl = ATA_CBL_PATA40;
--
-- 	/* We now have to double check because the Nvidia boxes BIOS
-- 	   doesn't always set the cable bits but does set mode bits */
-- 	pci_read_config_word(pdev, 0x62 - 2 * ap->port_no, &udma);
-- 	if ((udma & 0xC4) == 0xC4 || (udma & 0xC400) == 0xC400)
--		cbl = ATA_CBL_PATA80;
--	/* And a triple check across suspend/resume with ACPI around */
--	if (ata_acpi_init_gtm(ap) &&
--	    ata_acpi_cbl_80wire(ap, ata_acpi_init_gtm(ap)))
--		cbl = ATA_CBL_PATA80;
--	return cbl;
--}
--
- /**
-  *	nv100_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-@@ -314,6 +344,14 @@ static void nv133_set_dmamode(struct ata_port *ap, struct ata_device *adev)
- 	timing_setup(ap, adev, 0x50, adev->dma_mode, 4);
- }
- 
-+static void nv_host_stop(struct ata_host *host)
-+{
-+	u32 udma = (unsigned long)host->private_data;
-+
-+	/* restore PCI config register 0x60 */
-+	pci_write_config_dword(to_pci_dev(host->dev), 0x60, udma);
-+}
-+
- static struct scsi_host_template amd_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -478,7 +516,8 @@ static struct ata_port_operations nv100_port_ops = {
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= nv_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= nv_cable_detect,
-+	.cable_detect	= ata_cable_ignore,
-+	.mode_filter	= nv_mode_filter,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -495,6 +534,7 @@ static struct ata_port_operations nv100_port_ops = {
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-+	.host_stop	= nv_host_stop,
- };
- 
- static struct ata_port_operations nv133_port_ops = {
-@@ -511,7 +551,8 @@ static struct ata_port_operations nv133_port_ops = {
- 	.thaw		= ata_bmdma_thaw,
- 	.error_handler	= nv_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
--	.cable_detect	= nv_cable_detect,
-+	.cable_detect	= ata_cable_ignore,
-+	.mode_filter	= nv_mode_filter,
- 
- 	.bmdma_setup 	= ata_bmdma_setup,
- 	.bmdma_start 	= ata_bmdma_start,
-@@ -528,6 +569,7 @@ static struct ata_port_operations nv133_port_ops = {
- 	.irq_on		= ata_irq_on,
- 
- 	.port_start	= ata_sff_port_start,
-+	.host_stop	= nv_host_stop,
- };
- 
- static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
-@@ -614,7 +656,8 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.port_ops = &amd100_port_ops
- 		}
- 	};
--	const struct ata_port_info *ppi[] = { NULL, NULL };
-+	struct ata_port_info pi;
-+	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	static int printed_version;
- 	int type = id->driver_data;
- 	u8 fifo;
-@@ -628,6 +671,19 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (type == 1 && pdev->revision > 0x7)
- 		type = 2;
- 
-+	/* Serenade ? */
-+	if (type == 5 && pdev->subsystem_vendor == PCI_VENDOR_ID_AMD &&
-+			 pdev->subsystem_device == PCI_DEVICE_ID_AMD_SERENADE)
-+		type = 6;	/* UDMA 100 only */
-+
-+	/*
-+	 * Okay, type is determined now.  Apply type-specific workarounds.
-+	 */
-+	pi = info[type];
-+
-+	if (type < 3)
-+		ata_pci_clear_simplex(pdev);
-+
- 	/* Check for AMD7411 */
- 	if (type == 3)
- 		/* FIFO is broken */
-@@ -635,16 +691,17 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	else
- 		pci_write_config_byte(pdev, 0x41, fifo | 0xF0);
- 
--	/* Serenade ? */
--	if (type == 5 && pdev->subsystem_vendor == PCI_VENDOR_ID_AMD &&
--			 pdev->subsystem_device == PCI_DEVICE_ID_AMD_SERENADE)
--		type = 6;	/* UDMA 100 only */
-+	/* Cable detection on Nvidia chips doesn't work too well,
-+	 * cache BIOS programmed UDMA mode.
-+	 */
-+	if (type == 7 || type == 8) {
-+		u32 udma;
- 
--	if (type < 3)
--		ata_pci_clear_simplex(pdev);
-+		pci_read_config_dword(pdev, 0x60, &udma);
-+		pi.private_data = (void *)(unsigned long)udma;
-+	}
- 
- 	/* And fire it up */
--	ppi[0] = &info[type];
- 	return ata_pci_init_one(pdev, ppi);
- }
- 
--- 
-1.5.2.4
-
+Cheers,
+ 	Bruce
