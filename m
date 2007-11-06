@@ -1,36 +1,42 @@
-From: Simos Xenitellis <simos.lists@googlemail.com>
-Subject: Adding SATA disk with broken NCQ
-Date: Tue, 06 Nov 2007 01:50:43 +0000
-Message-ID: <1194313843.6277.8.camel@user-computer>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] pata_hpt37x: Fix outstanding bug reports on the HPT374
+ and 37x cable detect
+Date: Mon, 5 Nov 2007 18:42:45 -0800
+Message-ID: <20071105184245.e45bc3b9.akpm@linux-foundation.org>
+References: <20071105225338.20ef476f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:29427 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbXKFBus (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 20:50:48 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1027778ugc
-        for <linux-ide@vger.kernel.org>; Mon, 05 Nov 2007 17:50:46 -0800 (PST)
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:43008 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754535AbXKFCnE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2007 21:43:04 -0500
+In-Reply-To: <20071105225338.20ef476f@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Hi,
-I'ld like to add another disk in the blacklist regarding NCQ
-(libata-core.c).
+On Mon, 5 Nov 2007 22:53:38 +0000 Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-It is the disk model "HITACHI HTS541616J9SA00" with rev "SB4IC7UP".
+> +static u32 hpt374_read_freq(struct pci_dev *pdev)
+> +{
+> +	u32 freq;
+> +	unsigned long io_base = pci_resource_start(pdev, 4);
+> +	if (PCI_FUNC(pdev->devfn) & 1) {
+> +		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
+> +		/* Someone hot plugged the controller on us ? */
+> +		if (pdev_0 == NULL)
+> +			return 0;
+> +		io_base = pci_resource_start(pdev_0, 4);
+> +		freq = inl(io_base + 0x90);
+> +		pci_dev_put(pdev_0);
+> +	}
+> +	else
+> +		freq = inl(io_base + 0x90);
+> +	return freq;
+> +}
 
-Currently there is a similar description,
-         { "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
-Notice the difference between SB4IC7UP and SB4OC70P.
-
-I have verified that the model name and rev are "HITACHI
-HTS541616J9SA00" and "SB4IC7UP" by adding printks in the kernel. The
-word HITACHI is all caps.
-Blacklisting does eliminate NCQ-related disk errors.
-
-Simos
-
-
+hm, pci_resource_start() returns a resource_size_t and I guess this (and a
+heck of a lot of other) code is bust on (whatever machine we added that for).
