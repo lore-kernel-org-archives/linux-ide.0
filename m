@@ -1,46 +1,52 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 08/12] libata: implement ata_timing_cycle2mode() and use
- it in libata-acpi and pata_acpi
-Date: Tue, 06 Nov 2007 20:09:06 +0900
-Message-ID: <47304B52.3010807@gmail.com>
-References: <1194327550227-git-send-email-htejun@gmail.com>	<11943275513901-git-send-email-htejun@gmail.com> <20071106105912.1526c770@the-village.bc.nu>
+Subject: Re: [PATCH 04/12] libata: kill ata_id_to_dma_mode()
+Date: Tue, 06 Nov 2007 20:21:45 +0900
+Message-ID: <47304E49.5020902@gmail.com>
+References: <1194327550227-git-send-email-htejun@gmail.com>	<11943275502226-git-send-email-htejun@gmail.com> <20071106104959.726d51d5@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:55606 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756185AbXKFLJO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 06:09:14 -0500
-Received: by py-out-1112.google.com with SMTP id u77so3653189pyb
-        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 03:09:13 -0800 (PST)
-In-Reply-To: <20071106105912.1526c770@the-village.bc.nu>
+Received: from nz-out-0506.google.com ([64.233.162.232]:57898 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754984AbXKFLVz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 06:21:55 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1317415nze
+        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 03:21:54 -0800 (PST)
+In-Reply-To: <20071106104959.726d51d5@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
 Alan Cox wrote:
->> +	/* PIO */
->> +	mode = ata_timing_cycle2mode(ATA_SHIFT_PIO, gtm->drive[unit].pio);
->> +	xfer_mask |= ata_xfer_mode2mask(mode);
+> On Tue,  6 Nov 2007 14:39:02 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> No check v 0xFF
+>> ata_id_to_dma_mode() isn't quite generic.  The function is basically
+>> privately implemented ata_id_xfermask() combined with hardcoded mode
+>> printing and configuration which are specific to ata_generic.
 > 
->> + *	ata_timing_cycle2mode - find xfer mode for the specified cycle duration
->> + *	@xfer_shift: ATA_SHIFT_* value for transfer type to examine.
->> + *	@cycle: cycle duration in ns
->> + *
->> + *	Return matching xfer mode for @cycle.  The returned mode is of
->> + *	the transfer type specified by @xfer_shift.  If @cycle is too
->> + *	slow for @xfer_shift, 0xff is returned.  If @cycle is faster
->> + *	than the fastest known mode, the fasted m
-> 
-> Can return 0xFF
+> I anticpiated other users. This seems a backward move - we end up
+> exporting lots of low level detail into the drivers which should be none
+> of their business.
 
-The check is implicit in ata_xfer_mode2mask(), 0xff translates to
-xfermask 0, vice-versa.  0xff is internally a valid value indicating no
-mode.
+Those functions need to be exported anyway for pata_amd and I think it's
+natural to export them as xfer mode and mask handling is pretty
+fundamental and having those helpers around is handy when implementing
+LLD-specific mode selection.
+
+ata_id_to_dma_mode() just seemed a bit too specific to me.  Sans
+ata_id_xfermask() part, printing configured mode and using "DMA" when
+there's no applicable DMA mode don't seem too useful as generic xfer
+mode/mask helper.  I agree that the latter part of the function can be
+factored tho (setting xfer_mode, shift and clearing PIO flag according
+to determined xfer_mask).  But since ata_generic() is currently the only
+user, factoring that part out seems an overkill.
+
+Well, I guess this is a matter of taste after all.  How about letting
+Jeff determine it?  I'm okay as long as generic ata_id_xfermask() is
+used there.
 
 Thanks.
 
