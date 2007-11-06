@@ -1,263 +1,199 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/12] libata: implement ata_timing_cycle2mode() and use it in libata-acpi and pata_acpi
-Date: Tue,  6 Nov 2007 14:39:06 +0900
-Message-ID: <11943275513901-git-send-email-htejun@gmail.com>
+Subject: [PATCH 05/12] libata: xfer_mask is unsigned int not unsigned long
+Date: Tue,  6 Nov 2007 14:39:03 +0900
+Message-ID: <11943275501285-git-send-email-htejun@gmail.com>
 References: <1194327550227-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [222.235.223.38] ([222.235.223.38]:7438 "EHLO htj.dyndns.org"
+Received: from [222.235.223.38] ([222.235.223.38]:7430 "EHLO htj.dyndns.org"
 	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752867AbXKFFjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1752778AbXKFFjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Tue, 6 Nov 2007 00:39:16 -0500
 In-Reply-To: <1194327550227-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: jeff@garzik.org, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-libata-acpi is using separate timing tables for transfer modes
-although libata-core has the complete ata_timing table.  Implement
-ata_timing_cycle2mode() to look for matching mode given transfer type
-and cycle duration and use it in libata-acpi and pata_acpi to replace
-private timing tables.
+xfer_mask is unsigned int not unsigned long.  Change ->mode_filter to
+take and return unsigned int.
+
+While at it, rename @adev of ata_pci_default_filter() to @dev for
+consistency.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 ---
- drivers/ata/libata-acpi.c |   62 +++++++++++----------------------------------
- drivers/ata/libata-core.c |   52 +++++++++++++++++++++++++++++++++++++
- drivers/ata/pata_acpi.c   |   13 +++++----
- include/linux/libata.h    |    5 +---
- 4 files changed, 75 insertions(+), 57 deletions(-)
+ drivers/ata/libata-sff.c       |    5 +++--
+ drivers/ata/pata_acpi.c        |    2 +-
+ drivers/ata/pata_ali.c         |    2 +-
+ drivers/ata/pata_hpt366.c      |    2 +-
+ drivers/ata/pata_hpt37x.c      |    4 ++--
+ drivers/ata/pata_pdc2027x.c    |    4 ++--
+ drivers/ata/pata_scc.c         |    2 +-
+ drivers/ata/pata_serverworks.c |    4 ++--
+ include/linux/libata.h         |    5 +++--
+ 9 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 06d9961..7d982c2 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -424,22 +424,6 @@ int ata_acpi_cbl_80wire(struct ata_port *ap)
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 48acc09..2f2ca3d 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -877,12 +877,13 @@ int ata_pci_clear_simplex(struct pci_dev *pdev)
+ 	return 0;
+ }
  
- EXPORT_SYMBOL_GPL(ata_acpi_cbl_80wire);
- 
--/* Welcome to ACPI, bring a bucket */
--const unsigned int ata_acpi_pio_cycle[7] = {
--	600, 383, 240, 180, 120, 100, 80
--};
--EXPORT_SYMBOL_GPL(ata_acpi_pio_cycle);
--
--const unsigned int ata_acpi_mwdma_cycle[5] = {
--	480, 150, 120, 100, 80
--};
--EXPORT_SYMBOL_GPL(ata_acpi_mwdma_cycle);
--
--const unsigned int ata_acpi_udma_cycle[7] = {
--	120, 80, 60, 45, 30, 20, 15
--};
--EXPORT_SYMBOL_GPL(ata_acpi_udma_cycle);
--
- /**
-  * ata_acpi_gtm_xfermode - determine xfermode from GTM parameter
-  * @dev: target device
-@@ -456,49 +440,33 @@ EXPORT_SYMBOL_GPL(ata_acpi_udma_cycle);
- unsigned int ata_acpi_gtm_xfermask(struct ata_device *dev,
- 				   const struct ata_acpi_gtm *gtm)
+-unsigned long ata_pci_default_filter(struct ata_device *adev, unsigned long xfer_mask)
++unsigned int ata_pci_default_filter(struct ata_device *dev,
++				    unsigned int xfer_mask)
  {
--	unsigned int pio_mask = 0, mwdma_mask = 0, udma_mask = 0;
--	int unit, i;
--	u32 t;
-+	unsigned int xfer_mask = 0;
-+	unsigned int type;
-+	int unit;
-+	u8 mode;
+ 	/* Filter out DMA modes if the device has been configured by
+ 	   the BIOS as PIO only */
  
- 	/* we always use the 0 slot for crap hardware */
- 	unit = dev->devno;
- 	if (!(gtm->flags & 0x10))
- 		unit = 0;
- 
--	/* Values larger than the longest cycle results in 0 mask
--	 * while values equal to smaller than the shortest cycle
--	 * results in mask which includes all supported modes.
--	 * Disabled transfer method has the value of 0xffffffff which
--	 * will always result in 0 mask.
--	 */
--
--	/* start by scanning for PIO modes */
--	t = gtm->drive[unit].pio;
--	for (i = 0; i < ARRAY_SIZE(ata_acpi_pio_cycle); i++)
--		if (t > ata_acpi_pio_cycle[i])
--			break;
--	pio_mask = (1 << i) - 1;
-+	/* PIO */
-+	mode = ata_timing_cycle2mode(ATA_SHIFT_PIO, gtm->drive[unit].pio);
-+	xfer_mask |= ata_xfer_mode2mask(mode);
- 
- 	/* See if we have MWDMA or UDMA data. We don't bother with
- 	 * MWDMA if UDMA is available as this means the BIOS set UDMA
- 	 * and our error changedown if it works is UDMA to PIO anyway.
- 	 */
--	t = gtm->drive[unit].dma;
--	if (!(gtm->flags & (1 << (2 * unit)))) {
--		/* MWDMA */
--		for (i = 0; i < ARRAY_SIZE(ata_acpi_mwdma_cycle); i++)
--			if (t > ata_acpi_mwdma_cycle[i])
--				break;
--		mwdma_mask = (1 << i) - 1;
--	} else {
--		/* UDMA */
--		for (i = 0; i < ARRAY_SIZE(ata_acpi_udma_cycle); i++)
--			if (t > ata_acpi_udma_cycle[i])
--				break;
--		udma_mask = (1 << i) - 1;
--	}
-+	if (!(gtm->flags & (1 << (2 * unit))))
-+		type = ATA_SHIFT_MWDMA;
-+	else
-+		type = ATA_SHIFT_UDMA;
-+
-+	mode = ata_timing_cycle2mode(type, gtm->drive[unit].dma);
-+	xfer_mask |= ata_xfer_mode2mask(mode);
- 
--	return ata_pack_xfermask(pio_mask, mwdma_mask, udma_mask);
-+	return xfer_mask;
+-	if (adev->link->ap->ioaddr.bmdma_addr == NULL)
++	if (dev->link->ap->ioaddr.bmdma_addr == NULL)
+ 		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+ 	return xfer_mask;
  }
- EXPORT_SYMBOL_GPL(ata_acpi_gtm_xfermask);
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0eae1c6..4372099 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2943,6 +2943,57 @@ int ata_timing_compute(struct ata_device *adev, unsigned short speed,
- }
- 
- /**
-+ *	ata_timing_cycle2mode - find xfer mode for the specified cycle duration
-+ *	@xfer_shift: ATA_SHIFT_* value for transfer type to examine.
-+ *	@cycle: cycle duration in ns
-+ *
-+ *	Return matching xfer mode for @cycle.  The returned mode is of
-+ *	the transfer type specified by @xfer_shift.  If @cycle is too
-+ *	slow for @xfer_shift, 0xff is returned.  If @cycle is faster
-+ *	than the fastest known mode, the fasted mode is returned.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	Matching xfer_mode, 0xff if no match found.
-+ */
-+u8 ata_timing_cycle2mode(unsigned int xfer_shift, int cycle)
-+{
-+	u8 base_mode = 0xff, last_mode = 0xff;
-+	const struct ata_xfer_ent *ent;
-+	const struct ata_timing *t;
-+
-+	for (ent = ata_xfer_tbl; ent->shift >= 0; ent++)
-+		if (ent->shift == xfer_shift)
-+			base_mode = ent->base;
-+
-+	for (t = ata_timing_find_mode(base_mode);
-+	     t && ata_xfer_mode2shift(t->mode) == xfer_shift; t++) {
-+		unsigned short this_cycle;
-+
-+		switch (xfer_shift) {
-+		case ATA_SHIFT_PIO:
-+		case ATA_SHIFT_MWDMA:
-+			this_cycle = t->cycle;
-+			break;
-+		case ATA_SHIFT_UDMA:
-+			this_cycle = t->udma;
-+			break;
-+		default:
-+			return 0xff;
-+		}
-+
-+		if (cycle > this_cycle)
-+			break;
-+
-+		last_mode = t->mode;
-+	}
-+
-+	return last_mode;
-+}
-+
-+/**
-  *	ata_down_xfermask_limit - adjust dev xfer masks downward
-  *	@dev: Device to adjust xfer masks
-  *	@sel: ATA_DNXFER_* selector
-@@ -7607,6 +7658,7 @@ EXPORT_SYMBOL_GPL(ata_pio_need_iordy);
- EXPORT_SYMBOL_GPL(ata_timing_find_mode);
- EXPORT_SYMBOL_GPL(ata_timing_compute);
- EXPORT_SYMBOL_GPL(ata_timing_merge);
-+EXPORT_SYMBOL_GPL(ata_timing_cycle2mode);
- 
- #ifdef CONFIG_PCI
- EXPORT_SYMBOL_GPL(pci_test_config_bits);
 diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index fc6e3a5..8059259 100644
+index e4542ab..2323646 100644
 --- a/drivers/ata/pata_acpi.c
 +++ b/drivers/ata/pata_acpi.c
-@@ -133,13 +133,14 @@ static void pacpi_set_piomode(struct ata_port *ap, struct ata_device *adev)
+@@ -164,7 +164,7 @@ static unsigned long pacpi_discover_modes(struct ata_port *ap, struct ata_device
+  *	this case the list of discovered valid modes obtained by ACPI probing
+  */
+ 
+-static unsigned long pacpi_mode_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int pacpi_mode_filter(struct ata_device *adev, unsigned int mask)
  {
- 	int unit = adev->devno;
- 	struct pata_acpi *acpi = ap->private_data;
-+	const struct ata_timing *t;
+ 	struct pata_acpi *acpi = adev->link->ap->private_data;
+ 	return ata_pci_default_filter(adev, mask & acpi->mask[adev->devno]);
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 364534e..aae8a44 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -105,7 +105,7 @@ static int ali_c2_cable_detect(struct ata_port *ap)
+  *	fix that later on. Also ensure we do not do UDMA on WDC drives
+  */
  
- 	if (!(acpi->gtm.flags & 0x10))
- 		unit = 0;
- 
- 	/* Now stuff the nS values into the structure */
--	acpi->gtm.drive[unit].pio =
--		ata_acpi_pio_cycle[adev->pio_mode - XFER_PIO_0];
-+	t = ata_timing_find_mode(adev->pio_mode);
-+	acpi->gtm.drive[unit].pio = t->cycle;
- 	ata_acpi_stm(ap, &acpi->gtm);
- 	/* See what mode we actually got */
- 	ata_acpi_gtm(ap, &acpi->gtm);
-@@ -155,18 +156,18 @@ static void pacpi_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-static unsigned long ali_20_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int ali_20_filter(struct ata_device *adev, unsigned int mask)
  {
- 	int unit = adev->devno;
- 	struct pata_acpi *acpi = ap->private_data;
-+	const struct ata_timing *t;
+ 	char model_num[ATA_ID_PROD_LEN + 1];
+ 	/* No DMA on anything but a disk for now */
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index 0713872..1f277d5 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -174,7 +174,7 @@ static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr, cons
+  *	Block UDMA on devices that cause trouble with this controller.
+  */
  
- 	if (!(acpi->gtm.flags & 0x10))
- 		unit = 0;
+-static unsigned long hpt366_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int hpt366_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA",  bad_ata33))
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 3816b86..37f327e 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -275,7 +275,7 @@ static const char *bad_ata100_5[] = {
+  *	Block UDMA on devices that cause trouble with this controller.
+  */
  
- 	/* Now stuff the nS values into the structure */
-+	t = ata_timing_find_mode(adev->dma_mode);
- 	if (adev->dma_mode >= XFER_UDMA_0) {
--		acpi->gtm.drive[unit].dma =
--			ata_acpi_udma_cycle[adev->dma_mode - XFER_UDMA_0];
-+		acpi->gtm.drive[unit].dma = t->udma;
- 		acpi->gtm.flags |= (1 << (2 * unit));
- 	} else {
--		acpi->gtm.drive[unit].dma =
--			ata_acpi_mwdma_cycle[adev->dma_mode - XFER_MW_DMA_0];
-+		acpi->gtm.drive[unit].dma = t->cycle;
- 		acpi->gtm.flags &= ~(1 << (2 * unit));
- 	}
- 	ata_acpi_stm(ap, &acpi->gtm);
+-static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int hpt370_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
+@@ -293,7 +293,7 @@ static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
+  *	Block UDMA on devices that cause trouble with this controller.
+  */
+ 
+-static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int hpt370a_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	if (adev->class == ATA_DEV_ATA) {
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index 2622577..dd20239 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -67,7 +67,7 @@ static void pdc2027x_error_handler(struct ata_port *ap);
+ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev);
+ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+ static int pdc2027x_check_atapi_dma(struct ata_queued_cmd *qc);
+-static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long mask);
++static unsigned int pdc2027x_mode_filter(struct ata_device *adev, unsigned int mask);
+ static int pdc2027x_cable_detect(struct ata_port *ap);
+ static int pdc2027x_set_mode(struct ata_link *link, struct ata_device **r_failed);
+ 
+@@ -336,7 +336,7 @@ static void pdc2027x_error_handler(struct ata_port *ap)
+  *	Block UDMA on devices that cause trouble with this controller.
+  */
+ 
+-static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int pdc2027x_mode_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
+ 	struct ata_device *pair = ata_dev_pair(adev);
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index ea2ef9f..0edcdf7 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -258,7 +258,7 @@ static void scc_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 		 JCTSStbl[offset][idx] << 16 | JCENVTtbl[offset][idx]);
+ }
+ 
+-unsigned long scc_mode_filter(struct ata_device *adev, unsigned long mask)
++unsigned int scc_mode_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	/* errata A308 workaround: limit ATAPI UDMA mode to UDMA4 */
+ 	if (adev->class == ATA_DEV_ATAPI &&
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 8bed888..708c789 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -195,7 +195,7 @@ static u8 serverworks_is_csb(struct pci_dev *pdev)
+  *	bug we hit.
+  */
+ 
+-static unsigned long serverworks_osb4_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int serverworks_osb4_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	if (adev->class == ATA_DEV_ATA)
+ 		mask &= ~ATA_MASK_UDMA;
+@@ -211,7 +211,7 @@ static unsigned long serverworks_osb4_filter(struct ata_device *adev, unsigned l
+  *	Check the blacklist and disable UDMA5 if matched
+  */
+ 
+-static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned long mask)
++static unsigned int serverworks_csb_filter(struct ata_device *adev, unsigned int mask)
+ {
+ 	const char *p;
+ 	char model_num[ATA_ID_PROD_LEN + 1];
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e626137..3b9cebe 100644
+index f84106a..80c711a 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -935,6 +935,7 @@ extern int ata_timing_compute(struct ata_device *, unsigned short,
- extern void ata_timing_merge(const struct ata_timing *,
- 			     const struct ata_timing *, struct ata_timing *,
- 			     unsigned int);
-+extern u8 ata_timing_cycle2mode(unsigned int xfer_shift, int cycle);
+@@ -668,7 +668,7 @@ struct ata_port_operations {
  
- enum {
- 	ATA_TIMING_SETUP	= (1 << 0),
-@@ -955,10 +956,6 @@ enum {
+ 	void (*set_piomode) (struct ata_port *, struct ata_device *);
+ 	void (*set_dmamode) (struct ata_port *, struct ata_device *);
+-	unsigned long (*mode_filter) (struct ata_device *, unsigned long);
++	unsigned int (*mode_filter) (struct ata_device *, unsigned int);
  
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
--extern const unsigned int ata_acpi_pio_cycle[7];
--extern const unsigned int ata_acpi_mwdma_cycle[5];
--extern const unsigned int ata_acpi_udma_cycle[7];
--
- extern int ata_acpi_cbl_80wire(struct ata_port *ap);
- int ata_acpi_stm(const struct ata_port *ap, struct ata_acpi_gtm *stm);
- int ata_acpi_gtm(const struct ata_port *ap, struct ata_acpi_gtm *stm);
+ 	void (*tf_load) (struct ata_port *ap, const struct ata_taskfile *tf);
+ 	void (*tf_read) (struct ata_port *ap, struct ata_taskfile *tf);
+@@ -989,7 +989,8 @@ extern int ata_pci_prepare_sff_host(struct pci_dev *pdev,
+ 				    const struct ata_port_info * const * ppi,
+ 				    struct ata_host **r_host);
+ extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
+-extern unsigned long ata_pci_default_filter(struct ata_device *, unsigned long);
++extern unsigned int ata_pci_default_filter(struct ata_device *dev,
++					   unsigned int xfer_mask);
+ #endif /* CONFIG_PCI */
+ 
+ /*
 -- 
 1.5.2.4
 
