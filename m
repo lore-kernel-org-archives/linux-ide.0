@@ -1,180 +1,225 @@
-From: Greg Hennessy <greg.hennessy@navy.mil>
-Subject: only one drive in a port multiplier system is being recognized
-Date: Tue, 06 Nov 2007 16:56:34 -0500
-Message-ID: <4730E312.3090900@navy.mil>
-Reply-To: gsh@usno.navy.mil
+From: Simos Xenitellis <simos.lists@googlemail.com>
+Subject: Hitachi SATA HSM violation (Was: Re: Adding SATA disk with broken
+	NCQ)
+Date: Tue, 06 Nov 2007 22:49:26 +0000
+Message-ID: <1194389366.11273.5.camel@user-computer>
+References: <1194313843.6277.8.camel@user-computer>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020003070308070806070404"
+Content-Type: multipart/mixed; boundary="=-CgEyMBGCNQ0HGHbadnWX"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from beatrix.usno.navy.mil ([198.116.61.254]:42048 "EHLO
-	ad.usno.navy.mil" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754759AbXKFWgI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 17:36:08 -0500
-Received: from [10.1.6.21] (libra.usno.navy.mil [10.1.6.21])
-	(authenticated bits=0)
-	by ad.usno.navy.mil (8.13.8/8.13.8) with ESMTP id lA6LuYdH021386
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Tue, 6 Nov 2007 16:56:34 -0500
+Received: from ug-out-1314.google.com ([66.249.92.175]:16117 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754205AbXKFWtc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 17:49:32 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so34970ugc
+        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 14:49:30 -0800 (PST)
+In-Reply-To: <1194313843.6277.8.camel@user-computer>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020003070308070806070404
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+
+--=-CgEyMBGCNQ0HGHbadnWX
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-I have a LYCeSATA-4x pci card that is port multiplier compatible (it works fine
-under win xp) that is only showing one of 5 attached drives when attached to
-a Redhat 5 computer, with both  2.6.18-8.1.15.el5 and 2.6.23.1. 
 
-The SATA link shows as up for the one recognized drive, the other four
-drives show the link down. 
+Reading other similar reports on this issue, I attach a dmesg that shows
+the HSM violations/NCQ being disabled.
 
-Any sugguestions as to what may be the problem?
+In addition,
 
-A subset of what I consider the relavant portion of dmesg 
-for the
-  2.6.18-8.1.15.el5 kernel is:
-ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x2f impl SATA mode
-ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pmp pio slum part 
-ata1: SATA max UDMA/133 cmd 0xF882C100 ctl 0x0 bmdma 0x0 irq 233
-ata2: SATA max UDMA/133 cmd 0xF882C180 ctl 0x0 bmdma 0x0 irq 233
-ata3: SATA max UDMA/133 cmd 0xF882C200 ctl 0x0 bmdma 0x0 irq 233
-ata4: SATA max UDMA/133 cmd 0xF882C280 ctl 0x0 bmdma 0x0 irq 233
-ata5: SATA max UDMA/133 cmd 0xF882C300 ctl 0x0 bmdma 0x0 irq 233
-ata6: SATA max UDMA/133 cmd 0xF882C380 ctl 0x0 bmdma 0x0 irq 233
-scsi0 : ahci
-usb 1-1: new low speed USB device using uhci_hcd and address 3
-usb 1-1: configuration #1 chosen from 1 choice
-input: Dell Dell USB Mouse as /class/input/input1
-input: USB HID v1.10 Mouse [Dell Dell USB Mouse] on usb-0000:00:1a.0-1
-usb 1-2: new full speed USB device using uhci_hcd and address 4
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: ATA-7, max UDMA/133, 488281250 sectors: LBA48 NCQ (depth 31/32)
-ata1.00: ata1: dev 0 multi count 0
-ata1.00: configured for UDMA/133
-scsi1 : ahci
-usb 1-2: configuration #1 chosen from 1 choice
-input: Dell Dell Smart Card Reader Keyboard as /class/input/input2
-input: USB HID v1.11 Keyboard [Dell Dell Smart Card Reader Keyboard] on usb-0000:00:1a.0-2
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: ATA-7, max UDMA/133, 488281250 sectors: LBA48 NCQ (depth 31/32)
-ata2.00: ata2: dev 0 multi count 0
-ata2.00: configured for UDMA/133
-scsi2 : ahci
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: ATAPI, max UDMA/100
-ata3.00: configured for UDMA/100
-scsi3 : ahci
-ata4: SATA link down (SStatus 4 SControl 300)
-scsi4 : ahci
-ata5: SATA link down (SStatus 0 SControl 0)
-scsi5 : ahci
-ata6: SATA link down (SStatus 4 SControl 300)
-  Vendor: ATA       Model: Hitachi HDT72502  Rev: V5DO
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sda: 488281250 512-byte hdwr sectors (250000 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
-SCSI device sda: 488281250 512-byte hdwr sectors (250000 MB)
-sda: Write Protect is off
-sda: Mode Sense: 00 3a 00 00
-SCSI device sda: drive cache: write back
- sda: sda1
-sd 0:0:0:0: Attached scsi disk sda
-  Vendor: ATA       Model: Hitachi HDT72502  Rev: V5DO
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdb: 488281250 512-byte hdwr sectors (250000 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 488281250 512-byte hdwr sectors (250000 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: 00 3a 00 00
-SCSI device sdb: drive cache: write back
- sdb: sdb1
-sd 1:0:0:0: Attached scsi disk sdb
-  Vendor: PBDS      Model: DVD+-RW DH-16W1S  Rev: 2D14
-  Type:   CD-ROM                             ANSI SCSI revision: 05
-sata_sil24 0000:03:02.0: version 0.3
-ACPI: PCI Interrupt 0000:03:02.0[A] -> GSI 18 (level, low) -> IRQ 217
-ata7: SATA max UDMA/100 cmd 0xF8840000 ctl 0x0 bmdma 0x0 irq 217
-ata8: SATA max UDMA/100 cmd 0xF8842000 ctl 0x0 bmdma 0x0 irq 217
-ata9: SATA max UDMA/100 cmd 0xF8844000 ctl 0x0 bmdma 0x0 irq 217
-ata10: SATA max UDMA/100 cmd 0xF8846000 ctl 0x0 bmdma 0x0 irq 217
-scsi6 : sata_sil24
-ata7: SATA link down (SStatus 0 SControl 300)
-scsi7 : sata_sil24
-ata8: SATA link down (SStatus 0 SControl 300)
-scsi8 : sata_sil24
-ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.00: ATA-7, max UDMA/133, 1953525168 sectors: LBA48 NCQ (depth 31/32)
-ata9.00: ata9: dev 0 multi count 16
-ata9.00: configured for UDMA/100
-scsi9 : sata_sil24
-ata10: SATA link down (SStatus 0 SControl 300)
-  Vendor: ATA       Model: Hitachi HDS72101  Rev: GKAO
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-SCSI device sdc: 1953525168 512-byte hdwr sectors (1000205 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 1953525168 512-byte hdwr sectors (1000205 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 00 3a 00 00
-SCSI device sdc: drive cache: write back
- sdc: sdc1
-sd 8:0:0:0: Attached scsi disk sdc
+# hdparm -i /dev/sda
 
-[root@localhost ~]# fdisk -l
+/dev/sda:
 
-Disk /dev/sda: 250.0 GB, 250000000000 bytes
-255 heads, 63 sectors/track, 30394 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+ Model=HITACHI HTS541616J9SA00                 , FwRev=SB4IC7UP,
+SerialNo=...
+ Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=4
+ BuffType=DualPortCache, BuffSize=7516kB, MaxMultSect=16, MultSect=?16?
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes:  pio0 pio1 pio2 pio3 pio4 
+ DMA modes:  mdma0 mdma1 mdma2 
+ UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5 
+ AdvancedPM=yes: disabled (255) WriteCache=enabled
+ Drive conforms to: ATA/ATAPI-7 T13 1532D revision 1:
+ATA/ATAPI-2,3,4,5,6,7
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1       30394   244139773+  83  Linux
+ * signifies the current active mode
 
-Disk /dev/sdb: 250.0 GB, 250000000000 bytes
-255 heads, 63 sectors/track, 30394 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Simos
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1       30394   244139773+  83  Linux
+On Tue, 2007-11-06 at 01:50 +0000, Simos Xenitellis wrote:
+> Hi,
+> I'ld like to add another disk in the blacklist regarding NCQ
+> (libata-core.c).
+> 
+> It is the disk model "HITACHI HTS541616J9SA00" with rev "SB4IC7UP".
+> 
+> Currently there is a similar description,
+>          { "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+> Notice the difference between SB4IC7UP and SB4OC70P.
+> 
+> I have verified that the model name and rev are "HITACHI
+> HTS541616J9SA00" and "SB4IC7UP" by adding printks in the kernel. The
+> word HITACHI is all caps.
+> Blacklisting does eliminate NCQ-related disk errors.
+> 
+> Simos
+> 
 
-WARNING: GPT (GUID Partition Table) detected on '/dev/sdc'! The util fdisk doesn 't support GPT. Use GNU Parted.
-
-
-Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
-256 heads, 63 sectors/track, 121126 cylinders
-Units = cylinders of 16128 * 512 = 8257536 bytes
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1      121126   976760032+  83  Linux
-
-
---------------020003070308070806070404
-Content-Type: text/x-vcard; charset=utf-8;
- name="greg.hennessy.vcf"
+--=-CgEyMBGCNQ0HGHbadnWX
+Content-Disposition: attachment; filename=hsm-violation.txt
+Content-Type: text/plain; name=hsm-violation.txt; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="greg.hennessy.vcf"
 
-begin:vcard
-fn:Greg Hennessy
-n:Hennessy;Greg
-org:USNO;Astrometry Department
-adr:;;3450 Mass. Ave. NW;Washington;DC;20392;USA
-email;internet:gsh@usno.navy.mil
-title:Astronomer
-tel;work:(202) 762-1523
-tel;fax:(202) 762-1514
-url:http://ad.usno.navy.mil/~gsh
-version:2.1
-end:vcard
+[   51.294197] ata1.00: exception Emask 0x2 SAct 0x785 SErr 0x0 action 0x2 frozen
+[   51.294208] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x785 FIS=005040a1:00000010)
+[   51.294219] ata1.00: cmd 60/08:00:49:64:9f/00:00:06:00:00/40 tag 0 cdb 0x0 data 4096 in
+[   51.294222]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.294232] ata1.00: cmd 60/08:10:f9:5b:5a/00:00:06:00:00/40 tag 2 cdb 0x0 data 4096 in
+[   51.294235]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.294244] ata1.00: cmd 60/08:38:51:64:9f/00:00:06:00:00/40 tag 7 cdb 0x0 data 4096 in
+[   51.294247]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.294256] ata1.00: cmd 60/08:40:59:64:9f/00:00:06:00:00/40 tag 8 cdb 0x0 data 4096 in
+[   51.294259]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.294268] ata1.00: cmd 60/08:48:a9:2a:56/00:00:06:00:00/40 tag 9 cdb 0x0 data 4096 in
+[   51.294271]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.294281] ata1.00: cmd 60/08:50:61:64:9f/00:00:06:00:00/40 tag 10 cdb 0x0 data 4096 in
+[   51.294283]          res 50/00:08:f9:5b:5a/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[   51.325202] ata1: soft resetting port
+[   51.330258] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   51.331248] ata1.00: configured for UDMA/100
+[   51.331279] ata1: EH complete
+[   51.331463] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[   51.331494] sd 0:0:0:0: [sda] Write Protect is off
+[   51.331498] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   51.331575] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[23679.735640] ata1.00: exception Emask 0x2 SAct 0x3fc SErr 0x0 action 0x2 frozen
+[23679.735651] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x3fc FIS=005040a1:00000002)
+[23679.735662] ata1.00: cmd 61/30:10:cc:be:5e/00:00:0a:00:00/40 tag 2 cdb 0x0 data 24576 out
+[23679.735665]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735676] ata1.00: cmd 61/08:18:64:c3:5e/00:00:0a:00:00/40 tag 3 cdb 0x0 data 4096 out
+[23679.735679]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735689] ata1.00: cmd 61/10:20:fc:55:5f/00:00:0a:00:00/40 tag 4 cdb 0x0 data 8192 out
+[23679.735692]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735701] ata1.00: cmd 61/08:28:fc:56:5f/00:00:0a:00:00/40 tag 5 cdb 0x0 data 4096 out
+[23679.735704]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735714] ata1.00: cmd 61/48:30:0c:57:5f/00:00:0a:00:00/40 tag 6 cdb 0x0 data 36864 out
+[23679.735717]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735727] ata1.00: cmd 61/08:38:74:57:5f/00:00:0a:00:00/40 tag 7 cdb 0x0 data 4096 out
+[23679.735730]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735740] ata1.00: cmd 61/10:40:7c:57:5f/00:00:0a:00:00/40 tag 8 cdb 0x0 data 8192 out
+[23679.735743]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.735752] ata1.00: cmd 61/08:48:bc:bf:61/00:00:0a:00:00/40 tag 9 cdb 0x0 data 4096 out
+[23679.735755]          res 50/00:08:bc:bf:61/00:00:0a:00:00/40 Emask 0x2 (HSM violation)
+[23679.833152] ata1: soft resetting port
+[23679.883781] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[23679.884583] ata1.00: configured for UDMA/100
+[23679.884619] ata1: EH complete
+[23679.884704] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[23679.884722] sd 0:0:0:0: [sda] Write Protect is off
+[23679.884727] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[23679.884752] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[23978.150065] ata1.00: exception Emask 0x2 SAct 0x1fff9 SErr 0x0 action 0x2 frozen
+[23978.150076] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x1fff9 FIS=005040a1:00000004)
+[23978.150087] ata1.00: cmd 61/08:00:9c:5d:65/00:00:0b:00:00/40 tag 0 cdb 0x0 data 4096 out
+[23978.150090]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150101] ata1.00: cmd 61/08:18:34:7e:82/00:00:0a:00:00/40 tag 3 cdb 0x0 data 4096 out
+[23978.150104]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150114] ata1.00: cmd 61/08:20:f4:53:85/00:00:0a:00:00/40 tag 4 cdb 0x0 data 4096 out
+[23978.150117]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150126] ata1.00: cmd 61/08:28:9c:5d:85/00:00:0a:00:00/40 tag 5 cdb 0x0 data 4096 out
+[23978.150130]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150139] ata1.00: cmd 61/08:30:9c:5d:99/00:00:0a:00:00/40 tag 6 cdb 0x0 data 4096 out
+[23978.150142]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150152] ata1.00: cmd 61/08:38:9c:5d:a5/00:00:0a:00:00/40 tag 7 cdb 0x0 data 4096 out
+[23978.150155]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150165] ata1.00: cmd 61/08:40:9c:5d:a9/00:00:0a:00:00/40 tag 8 cdb 0x0 data 4096 out
+[23978.150168]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150178] ata1.00: cmd 61/08:48:9c:5d:ad/00:00:0a:00:00/40 tag 9 cdb 0x0 data 4096 out
+[23978.150181]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150191] ata1.00: cmd 61/08:50:9c:5d:ed/00:00:0a:00:00/40 tag 10 cdb 0x0 data 4096 out
+[23978.150194]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150204] ata1.00: cmd 61/08:58:bc:5d:ed/00:00:0a:00:00/40 tag 11 cdb 0x0 data 4096 out
+[23978.150207]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150217] ata1.00: cmd 61/08:60:14:61:ed/00:00:0a:00:00/40 tag 12 cdb 0x0 data 4096 out
+[23978.150220]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150230] ata1.00: cmd 61/08:68:14:14:ef/00:00:0a:00:00/40 tag 13 cdb 0x0 data 4096 out
+[23978.150233]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150243] ata1.00: cmd 61/08:70:bc:15:ef/00:00:0a:00:00/40 tag 14 cdb 0x0 data 4096 out
+[23978.150246]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150256] ata1.00: cmd 61/08:78:84:25:ef/00:00:0a:00:00/40 tag 15 cdb 0x0 data 4096 out
+[23978.150259]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.150269] ata1.00: cmd 61/08:80:9c:5d:89/00:00:0b:00:00/40 tag 16 cdb 0x0 data 4096 out
+[23978.150272]          res 50/00:08:9c:5d:89/00:00:0b:00:00/40 Emask 0x2 (HSM violation)
+[23978.211938] ata1: soft resetting port
+[23978.220125] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[23978.221123] ata1.00: configured for UDMA/100
+[23978.221172] ata1: EH complete
+[23978.221645] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[23978.221692] sd 0:0:0:0: [sda] Write Protect is off
+[23978.221697] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[23978.221747] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[23996.045029] ata1.00: exception Emask 0x2 SAct 0x4 SErr 0x0 action 0x2 frozen
+[23996.045038] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x4 FIS=005040a1:00000002)
+[23996.045050] ata1.00: cmd 60/08:10:09:8e:08/00:00:08:00:00/40 tag 2 cdb 0x0 data 4096 in
+[23996.045053]          res 50/00:08:09:8e:08/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23996.078435] ata1: soft resetting port
+[23996.109689] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[23996.111110] ata1.00: configured for UDMA/100
+[23996.111131] ata1: EH complete
+[23996.111252] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[23996.111288] sd 0:0:0:0: [sda] Write Protect is off
+[23996.111293] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[23996.111369] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[23997.163991] ata1.00: exception Emask 0x2 SAct 0xaf SErr 0x0 action 0x2 frozen
+[23997.164003] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0xaf FIS=005040a1:00000100)
+[23997.164014] ata1.00: cmd 60/08:00:f1:29:12/00:00:08:00:00/40 tag 0 cdb 0x0 data 4096 in
+[23997.164017]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.164027] ata1.00: cmd 60/28:08:c1:e6:06/00:00:08:00:00/40 tag 1 cdb 0x0 data 20480 in
+[23997.164030]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.164040] ata1.00: cmd 60/60:10:c1:62:66/00:00:06:00:00/40 tag 2 cdb 0x0 data 49152 in
+[23997.164043]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.164053] ata1.00: cmd 60/08:18:f1:38:06/00:00:08:00:00/40 tag 3 cdb 0x0 data 4096 in
+[23997.164056]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.164066] ata1.00: cmd 60/08:28:19:2a:12/00:00:08:00:00/40 tag 5 cdb 0x0 data 4096 in
+[23997.164069]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.164079] ata1.00: cmd 60/18:38:e9:5b:5a/00:00:06:00:00/40 tag 7 cdb 0x0 data 12288 in
+[23997.164082]          res 50/00:60:c1:62:66/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+[23997.193299] ata1: soft resetting port
+[23997.201220] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[23997.202832] ata1.00: configured for UDMA/100
+[23997.202863] ata1: EH complete
+[23997.203030] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[23997.203051] sd 0:0:0:0: [sda] Write Protect is off
+[23997.203056] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[23997.203082] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[23998.308088] ata1.00: NCQ disabled due to excessive errors
+[23998.308099] ata1.00: exception Emask 0x2 SAct 0x80ac SErr 0x0 action 0x2 frozen
+[23998.308106] ata1.00: (spurious completions during NCQ issue=0x0 SAct=0x80ac FIS=005040a1:00000040)
+[23998.308117] ata1.00: cmd 60/08:10:ec:dd:5a/00:00:0a:00:00/40 tag 2 cdb 0x0 data 4096 in
+[23998.308121]          res 50/00:40:e9:72:0d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23998.308131] ata1.00: cmd 60/20:18:09:11:07/00:00:08:00:00/40 tag 3 cdb 0x0 data 16384 in
+[23998.308134]          res 50/00:40:e9:72:0d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23998.308144] ata1.00: cmd 60/08:28:71:17:07/00:00:08:00:00/40 tag 5 cdb 0x0 data 4096 in
+[23998.308147]          res 50/00:40:e9:72:0d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23998.308157] ata1.00: cmd 60/40:38:e9:72:0d/00:00:08:00:00/40 tag 7 cdb 0x0 data 32768 in
+[23998.308160]          res 50/00:40:e9:72:0d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23998.308170] ata1.00: cmd 60/08:78:01:11:07/00:00:08:00:00/40 tag 15 cdb 0x0 data 4096 in
+[23998.308173]          res 50/00:40:e9:72:0d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+[23998.333828] ata1: soft resetting port
+[23998.343242] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[23998.344371] ata1.00: configured for UDMA/100
+[23998.344400] ata1: EH complete
+[23998.368986] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
+[23998.387550] sd 0:0:0:0: [sda] Write Protect is off
+[23998.387558] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[23998.396175] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
 
---------------020003070308070806070404--
+
+--=-CgEyMBGCNQ0HGHbadnWX--
+
