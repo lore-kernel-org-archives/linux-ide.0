@@ -1,50 +1,55 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 08/12] libata: implement ata_timing_cycle2mode() and use
- it in libata-acpi and pata_acpi
-Date: Tue, 6 Nov 2007 10:59:12 +0000
-Message-ID: <20071106105912.1526c770@the-village.bc.nu>
-References: <1194327550227-git-send-email-htejun@gmail.com>
-	<11943275513901-git-send-email-htejun@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 05/12] libata: xfer_mask is unsigned int not unsigned
+ long
+Date: Tue, 06 Nov 2007 19:59:03 +0900
+Message-ID: <473048F7.2050004@gmail.com>
+References: <1194327550227-git-send-email-htejun@gmail.com>	<11943275501285-git-send-email-htejun@gmail.com> <20071106105151.2e3d15b8@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54608 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752201AbXKFK6g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 05:58:36 -0500
-In-Reply-To: <11943275513901-git-send-email-htejun@gmail.com>
+Received: from nz-out-0506.google.com ([64.233.162.237]:45156 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755912AbXKFK7M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Nov 2007 05:59:12 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1312750nze
+        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 02:59:11 -0800 (PST)
+In-Reply-To: <20071106105151.2e3d15b8@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Tue,  6 Nov 2007 14:39:06 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+Alan Cox wrote:
+> On Tue,  6 Nov 2007 14:39:03 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> xfer_mask is unsigned int not unsigned long.  Change ->mode_filter to
+>> take and return unsigned int.
+>>
+>> While at it, rename @adev of ata_pci_default_filter() to @dev for
+>> consistency.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> The filter type was purposefully unsigned long to allow for expansion (eg
+> for SWDMA) without breaking drivers. No problem with it changing but I'd
+> say "unsigned int" was the worst possible choice - its now shorter (no
+> room for expansion) and size dependant on arch. u32 would be shorter and
+> consistent across all platforms, ulong would have more room for expansion.
 
-> libata-acpi is using separate timing tables for transfer modes
-> although libata-core has the complete ata_timing table.  Implement
-> ata_timing_cycle2mode() to look for matching mode given transfer type
-> and cycle duration and use it in libata-acpi and pata_acpi to replace
-> private timing tables.
+I agree it should be one of u* types and am happy to convert.  This
+patch is primarily for consistency as in libata-core, xfer_mask is
+unsigned int.  My first proposal was u32 too but Jeff vetoed it.  IIRC,
+Jeff has affection for machine-independent integral types.  :-)
 
-Ok that makes sense having now seen the second chunk of patches. Just one
-problem:
+Anyways, I think ulong is worse than uint because ulong differs in size
+between 32 and 64 archs.  What's the good of extra 32bits in flags space
+if it's not there on 32bit archs?  Also, we currently only use 20bits of
+xfermask, 12 extra bits seem enough for the time, especially as
+everything is moving over to SATA where xfermode doesn't really matter, no?
 
+Jeff, are you okay with u32 or 64?
 
-> +	/* PIO */
-> +	mode = ata_timing_cycle2mode(ATA_SHIFT_PIO, gtm->drive[unit].pio);
-> +	xfer_mask |= ata_xfer_mode2mask(mode);
-
-No check v 0xFF
-
-> + *	ata_timing_cycle2mode - find xfer mode for the specified cycle duration
-> + *	@xfer_shift: ATA_SHIFT_* value for transfer type to examine.
-> + *	@cycle: cycle duration in ns
-> + *
-> + *	Return matching xfer mode for @cycle.  The returned mode is of
-> + *	the transfer type specified by @xfer_shift.  If @cycle is too
-> + *	slow for @xfer_shift, 0xff is returned.  If @cycle is faster
-> + *	than the fastest known mode, the fasted m
-
-Can return 0xFF
-
+-- 
+tejun
