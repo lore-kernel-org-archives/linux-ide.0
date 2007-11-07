@@ -1,145 +1,55 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: [PATCH 2/2] libata: pata_platform: Support polling-mode configuration.
-Date: Wed, 7 Nov 2007 17:11:19 +0900
-Message-ID: <20071107081119.GB25913@linux-sh.org>
-References: <20071107081052.GA25913@linux-sh.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata NCQ blacklist entry
+Date: Wed, 07 Nov 2007 21:55:57 +0900
+Message-ID: <4731B5DD.1060203@gmail.com>
+References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <20071107081052.GA25913@linux-sh.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
-List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
-List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
-Sender: linuxsh-dev-bounces@lists.sourceforge.net
-Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linuxsh-dev@lists.sourceforge.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:2863 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753574AbXKGM4E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 07:56:04 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2042374rvb
+        for <linux-ide@vger.kernel.org>; Wed, 07 Nov 2007 04:56:03 -0800 (PST)
+In-Reply-To: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: htejun@gmail.com, jeff@garzik.org, linux-kernel@vger.kernel.org
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Some SH boards (old R2D-1 boards) have generally not had working CF
-under libata, due to both buswidth issues (handled by Aoi Shinkai
-in 43f4b8c7578b928892b6f01d374346ae14e5eb70), and buggy interrupt
-controllers. For these sorts of boards simply disabling the IRQ and
-polling ends up working fine.
+Florian La Roche wrote:
+> Hello all,
+> 
+> I've taking email addresses from the last NCQ blacklist changes going
+> into the kernel.
+> This Fujitsu drive also gives me spurious command completions. Detailed
+> output also available at https://bugzilla.redhat.com/show_bug.cgi?id=366181.
+> 
+> Let me know if you need more info or anything else.
+> 
+> --- drivers/ata/libata-core.c
+> +++ drivers/ata/libata-core.c
+> @@ -4222,6 +4222,7 @@
+>  	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+>  	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
+>  	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+> +	{ "FUJITSU MHW2160BJ G2",       NULL,           ATA_HORKAGE_NONCQ },
+>  	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+>  	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+>  	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
 
-This conditionalizes the IRQ resource for pata_platform and lets
-platforms that want to use polling mode simply omit the resource
-entirely.
+Thanks.  We're currently trying to find out what's actually going on
+with all these drives.  At first, drives which got blacklisted aren't
+many and made sense (had other problems with NCQ, etc..) but with new
+generation drives from many vendors showing the same symptom, we aren't
+too sure now.
 
-Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+I'll keep your email in my todo list and add the drive to the blacklist
+once the problem is verified.
 
----
+Thanks.
 
- drivers/ata/pata_platform.c |   33 ++++++++++++++++++++++++++-------
- 1 file changed, 26 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index fc72a96..6b2d731 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -1,7 +1,7 @@
- /*
-  * Generic platform device PATA driver
-  *
-- * Copyright (C) 2006  Paul Mundt
-+ * Copyright (C) 2006 - 2007  Paul Mundt
-  *
-  * Based on pata_pcmcia:
-  *
-@@ -22,7 +22,7 @@
- #include <linux/pata_platform.h>
- 
- #define DRV_NAME "pata_platform"
--#define DRV_VERSION "1.1"
-+#define DRV_VERSION "1.2"
- 
- static int pio_mask = 1;
- 
-@@ -120,15 +120,20 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  *	Register a platform bus IDE interface. Such interfaces are PIO and we
-  *	assume do not support IRQ sharing.
-  *
-- *	Platform devices are expected to contain 3 resources per port:
-+ *	Platform devices are expected to contain at least 2 resources per port:
-  *
-  *		- I/O Base (IORESOURCE_IO or IORESOURCE_MEM)
-  *		- CTL Base (IORESOURCE_IO or IORESOURCE_MEM)
-+ *
-+ *	and optionally:
-+ *
-  *		- IRQ	   (IORESOURCE_IRQ)
-  *
-  *	If the base resources are both mem types, the ioremap() is handled
-  *	here. For IORESOURCE_IO, it's assumed that there's no remapping
-  *	necessary.
-+ *
-+ *	If no IRQ resource is present, PIO polling mode is used instead.
-  */
- static int __devinit pata_platform_probe(struct platform_device *pdev)
- {
-@@ -137,11 +142,12 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 	struct ata_port *ap;
- 	struct pata_platform_info *pp_info;
- 	unsigned int mmio;
-+	int irq;
- 
- 	/*
- 	 * Simple resource validation ..
- 	 */
--	if (unlikely(pdev->num_resources != 3)) {
-+	if ((pdev->num_resources != 3) && (pdev->num_resources != 2)) {
- 		dev_err(&pdev->dev, "invalid number of resources\n");
- 		return -EINVAL;
- 	}
-@@ -173,6 +179,11 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 		(ctl_res->flags == IORESOURCE_MEM));
- 
- 	/*
-+	 * And the IRQ
-+	 */
-+	irq = platform_get_irq(pdev, 0);
-+
-+	/*
- 	 * Now that that's out of the way, wire up the port..
- 	 */
- 	host = ata_host_alloc(&pdev->dev, 1);
-@@ -185,6 +196,14 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 	ap->flags |= ATA_FLAG_SLAVE_POSS;
- 
- 	/*
-+	 * Use polling mode if there's no IRQ
-+	 */
-+	if (irq < 0) {
-+		ap->flags |= ATA_FLAG_PIO_POLLING;
-+		ata_port_desc(ap, "no IRQ, using PIO polling");
-+	}
-+
-+	/*
- 	 * Handle the MMIO case
- 	 */
- 	if (mmio) {
-@@ -213,9 +232,9 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 		      (unsigned long long)ctl_res->start);
- 
- 	/* activate */
--	return ata_host_activate(host, platform_get_irq(pdev, 0),
--				 ata_interrupt, pp_info ? pp_info->irq_flags
--				 : 0, &pata_platform_sht);
-+	return ata_host_activate(host, irq, ata_interrupt,
-+				 pp_info ? pp_info->irq_flags : 0,
-+				 &pata_platform_sht);
- }
- 
- /**
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
+-- 
+tejun
