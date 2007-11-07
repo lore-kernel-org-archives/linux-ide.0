@@ -1,61 +1,70 @@
-From: "Matheus Izvekov" <mizvekov@gmail.com>
-Subject: Re: AHCI + ST3160023AS + NCQ problems
-Date: Wed, 7 Nov 2007 04:21:42 -0200
-Message-ID: <305c16960711062221u69e8eb37p1367b18343d0e2a5@mail.gmail.com>
-References: <305c16960710291713v22875d26v8ccfc76daab102bd@mail.gmail.com>
-	 <47270CE9.4060501@msgid.tls.msk.ru>
-	 <311601c90710300615j33bf0959l51b1b2505e9b2048@mail.gmail.com>
-	 <472788F4.60300@msgid.tls.msk.ru>
-	 <305c16960710301728j557689a5rbec52a11ec606963@mail.gmail.com>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: [PATCH 1/2] libata: Support PIO polling-only hosts.
+Date: Wed, 7 Nov 2007 17:10:52 +0900
+Message-ID: <20071107081052.GA25913@linux-sh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:25260 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821AbXKGGVo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 01:21:44 -0500
-Received: by py-out-1112.google.com with SMTP id u77so4188861pyb
-        for <linux-ide@vger.kernel.org>; Tue, 06 Nov 2007 22:21:43 -0800 (PST)
-In-Reply-To: <305c16960710301728j557689a5rbec52a11ec606963@mail.gmail.com>
+Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
+	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
+List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
+List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
+	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
+Sender: linuxsh-dev-bounces@lists.sourceforge.net
+Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linuxsh-dev@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: "Eric D. Mudama" <edmudama@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On 10/30/07, Matheus Izvekov <mizvekov@gmail.com> wrote:
-> On 10/30/07, Michael Tokarev <mjt@tls.msk.ru> wrote:
-> > Eric D. Mudama wrote:
-> > > On 10/30/07, Michael Tokarev <mjt@tls.msk.ru> wrote:
-> > >> By the way, did you forget to remove a jumper on the drive
-> > >> (the only jumper installed by default) that limits drive
-> > >> usage to SATAI?
-> > > ...
-> > >> ..etc.   Try again without the jumper?  Note that NCQ is NOT supported
-> > >> in SATAI mode, or there were some pre-standard implementations of it.
-> > >> In SATAII, NCQ is standard (well... more or less anyway ;)
-> > >
-> > > Huh?
-> > >
-> > > To my knowledge, the jumper should only limit the bus rate to
-> > > 1.5Gbit/s, for compatibility with one or more chipsets.  It shouldn't
-> > > affect the command set supported by the device.
-> >
-> > The thing is that I don't know.  I had some other probs with seagate
-> > sata drives when the jumper was there.  So I learned a lesson -
-> > always remove the jumper before using their drives.  I don't want
-> > to test which other restrictions this and other drive families
-> > apply when jumpered... ;)
-> >
-> > /mjt
-> >
->
-> Indeed removing the jumper of sdb made it be recognised as SATA2. But
-> sdc, what the problem is really about, is neither SATA2, not has any
-> jumper whatsoever. but both the manufacturer and libata claim it
-> supports NCQ.
->
+By default ata_host_activate() expects a valid IRQ in order to
+successfully register the host. This patch enables a special case
+for registering polling-only hosts that either don't have IRQs
+or have buggy IRQ generation (either in terms of handling or
+sensing), which otherwise work fine.
 
-Anything i could do to help debug this? or perhaps it makes more sense
-to just blacklist NCQ for this particular drive?
+Hosts that want to use polling mode can simply set ATA_FLAG_PIO_POLLING
+and pass in a NULL IRQ handler or invalid (< 0) IRQ.
+
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+
+---
+
+ drivers/ata/libata-core.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ec3ce12..a0cd6bb 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -7178,6 +7178,9 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+  *	request IRQ and register it.  This helper takes necessasry
+  *	arguments and performs the three steps in one go.
+  *
++ *	A NULL @irq_handler or invalid IRQ skips the IRQ registration
++ *	and expects the host to have set polling mode on the port.
++ *
+  *	LOCKING:
+  *	Inherited from calling layer (may sleep).
+  *
+@@ -7194,6 +7197,10 @@ int ata_host_activate(struct ata_host *host, int irq,
+ 	if (rc)
+ 		return rc;
+ 
++	/* Special case for polling mode */
++	if (!irq_handler || irq < 0)
++		return ata_host_register(host, sht);
++
+ 	rc = devm_request_irq(host->dev, irq, irq_handler, irq_flags,
+ 			      dev_driver_string(host->dev), host);
+ 	if (rc)
+
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >> http://get.splunk.com/
