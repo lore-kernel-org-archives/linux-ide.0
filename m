@@ -1,35 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Should be Acard ATP8620 2SATA / 1 IDE  driver
-Date: Wed, 7 Nov 2007 17:16:09 -0500
-Message-ID: <20071107221609.GA25799@havoc.gtf.org>
-References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [Bugme-new] [Bug 9320] New: PATA scan: ACPI Exception AE_AML_PACKAGE_LIMIT... is beyond end of object
+Date: Wed, 7 Nov 2007 22:24:24 +0000
+Message-ID: <20071107222423.GA22731@srcf.ucam.org>
+References: <bug-9320-10286@http.bugzilla.kernel.org/> <20071107140754.becad267.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:41666 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754498AbXKGWQK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Nov 2007 17:16:10 -0500
+Received: from cavan.codon.org.uk ([78.32.9.130]:56785 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414AbXKGWYj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 17:24:39 -0500
 Content-Disposition: inline
-In-Reply-To: <20071107221355.GB15784@havoc.gtf.org>
+In-Reply-To: <20071107140754.becad267.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jameshsu <jameshsu@acard.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, 'David Miller' <davem@davemloft.net>, Daniel Weng <dweng@acard.com>, Jason Wu <jason_wu@acard.com>, laurence@mail.acard.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bruinjm@xs4all.nl, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Wed, Nov 07, 2007 at 05:13:55PM -0500, Jeff Garzik wrote:
-> On Tue, Nov 06, 2007 at 07:25:46PM +0800, jameshsu wrote:
-> > Please help Acard to add this chip spec on the web site in your earlier
-> > conveniance.
-> > http://gkernel.sourceforge.net/specs/
+On Wed, Nov 07, 2007 at 02:07:54PM -0800, Andrew Morton wrote:
 
-BTW, I put the doc in 
+> Seems to be another post-2.6.23 regression.  Is it an acpi thing or an ata
+> thing, of just something which the new acpi+ata stuff exposed??
 
-	http://gkernel.sourceforge.net/specs/acard/
+I suspect that this is just because acpi is enabled by default on ata 
+now. Is it actually causing any problems?
 
-Regards,
-
-	Jeff
-
-
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
