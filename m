@@ -1,55 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata NCQ blacklist entry
-Date: Wed, 07 Nov 2007 21:55:57 +0900
-Message-ID: <4731B5DD.1060203@gmail.com>
-References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] libata: Support PIO polling-only hosts.
+Date: Wed, 7 Nov 2007 13:09:40 +0000
+Message-ID: <20071107130940.16b5ea86@the-village.bc.nu>
+References: <20071107081052.GA25913@linux-sh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:2863 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753574AbXKGM4E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 07:56:04 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2042374rvb
-        for <linux-ide@vger.kernel.org>; Wed, 07 Nov 2007 04:56:03 -0800 (PST)
-In-Reply-To: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50430 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750830AbXKGNJt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 08:09:49 -0500
+In-Reply-To: <20071107081052.GA25913@linux-sh.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, jeff@garzik.org, linux-kernel@vger.kernel.org
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Paul Mundt <lethal@linux-sh.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxsh-dev@lists.sourceforge.net
 
-Florian La Roche wrote:
-> Hello all,
+On Wed, 7 Nov 2007 17:10:52 +0900
+Paul Mundt <lethal@linux-sh.org> wrote:
+
+> By default ata_host_activate() expects a valid IRQ in order to
+> successfully register the host. This patch enables a special case
+> for registering polling-only hosts that either don't have IRQs
+> or have buggy IRQ generation (either in terms of handling or
+> sensing), which otherwise work fine.
 > 
-> I've taking email addresses from the last NCQ blacklist changes going
-> into the kernel.
-> This Fujitsu drive also gives me spurious command completions. Detailed
-> output also available at https://bugzilla.redhat.com/show_bug.cgi?id=366181.
-> 
-> Let me know if you need more info or anything else.
-> 
-> --- drivers/ata/libata-core.c
-> +++ drivers/ata/libata-core.c
-> @@ -4222,6 +4222,7 @@
->  	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
->  	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
->  	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
-> +	{ "FUJITSU MHW2160BJ G2",       NULL,           ATA_HORKAGE_NONCQ },
->  	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
->  	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
->  	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
+> Hosts that want to use polling mode can simply set ATA_FLAG_PIO_POLLING
+> and pass in a NULL IRQ handler or invalid (< 0) IRQ.
 
-Thanks.  We're currently trying to find out what's actually going on
-with all these drives.  At first, drives which got blacklisted aren't
-many and made sense (had other problems with NCQ, etc..) but with new
-generation drives from many vendors showing the same symptom, we aren't
-too sure now.
+NAK
 
-I'll keep your email in my todo list and add the drive to the blacklist
-once the problem is verified.
+Zero is "no IRQ", please use that for polling not "< 0"
 
-Thanks.
+> + *	A NULL @irq_handler or invalid IRQ skips the IRQ registration
+> + *	and expects the host to have set polling mode on the port.
+> + *
 
--- 
-tejun
+There is no need to llow NULL irq_handler as a different case here. Any
+caller can provide (NULL, 0). If anything you might want to warn if they
+provide IRQ 0, and a handler
+
