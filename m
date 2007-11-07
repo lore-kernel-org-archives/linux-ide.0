@@ -1,41 +1,55 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/2] libata: Support PIO polling-only hosts.
-Date: Wed, 7 Nov 2007 15:28:29 +0000
-Message-ID: <20071107152829.244afe30@the-village.bc.nu>
-References: <20071107081052.GA25913@linux-sh.org>
-	<20071107130940.16b5ea86@the-village.bc.nu>
-	<20071107132702.GA27488@linux-sh.org> <4731C71A.4000406@rtr.ca>
-	<20071107145326.GA27752@linux-sh.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 1/4] libata sata_qstor fix oops on rmmod
+Date: Wed, 07 Nov 2007 10:51:34 -0500
+Message-ID: <4731DF06.3050202@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
-In-Reply-To: <20071107145326.GA27752@linux-sh.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
-List-Post: <mailto:linuxsh-dev@lists.sourceforge.net>
-List-Help: <mailto:linuxsh-dev-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
-	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=subscribe>
-Sender: linuxsh-dev-bounces@lists.sourceforge.net
-Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, linuxsh-dev@lists.sourceforge.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:4397 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753216AbXKGPvg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Nov 2007 10:51:36 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> So I'll change the check to IRQ#0 == invalid, but if that's to be
-> enforced kernel-wide, then all of the existing NO_IRQ cases should be
-> ripped out and set to 0. This way at least people are getting screwed
-> consistently, rather than just in particular subsystems.
+sata_qstor fix oops on rmmod.
 
-Thats been gradually happening. Its now pretty clean except for powerpc
-and odd bits of ARM stuff
+sata_qstor likes to disable the chip on module unload,
+so it provides a libata "host_stop" method to do this.
+But in recent kernels, this routine is now called too late,
+after the PCI mmio resources have already been released.
+Which produces an oops.
 
-Alan
+This really needs to be fixed higher up.
+For an interim workaround, we disable this function for now.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >> http://get.splunk.com/
+This belongs in 2.6.24.
+
+Signed-off-by:  Mark Lord <mlord@pobox.com>
+---
+
+--- old/drivers/ata/sata_qstor.c	2007-10-12 12:43:44.000000000 -0400
++++ linux/drivers/ata/sata_qstor.c	2007-11-06 22:32:34.000000000 -0500
+@@ -523,10 +523,20 @@
+ 
+ static void qs_host_stop(struct ata_host *host)
+ {
++#if 0
++	/*
++	 * This code used to work, but now segfaults
++	 * because we get called *after* our mmio resources
++	 * have already been unmapped.  That's probably a bug
++	 * in an upper layer somewhere, so this code has been
++	 * disabled (but left in place) until it gets tracked
++	 * down properly.
++	 */
+ 	void __iomem *mmio_base = qs_mmio_base(host);
+ 
+ 	writeb(0, mmio_base + QS_HCT_CTRL); /* disable host interrupts */
+ 	writeb(QS_CNFG3_GSRST, mmio_base + QS_HCF_CNFG3); /* global reset */
++#endif
+ }
+ 
+ static void qs_host_init(struct ata_host *host, unsigned int chip_id)
