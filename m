@@ -1,165 +1,189 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 4/4] libata sata_qstor conversion to new error handling (EH).
-Date: Wed, 07 Nov 2007 10:54:15 -0500
-Message-ID: <4731DFA7.8010202@rtr.ca>
-References: <4731DF06.3050202@rtr.ca>
+From: James Andrewartha <jamesa@daa.com.au>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Thu, 08 Nov 2007 00:23:10 +0900
+Message-ID: <4731D85E.70201@daa.com.au>
+References: <20071101213013.M54162@visp.net.lb> <20071106221521.4f64a066.akpm@linux-foundation.org> <20071107132630.M65286@visp.net.lb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1586 "EHLO mail.rtr.ca"
+Received: from quoll.daa.com.au ([203.17.251.1]:52459 "EHLO quoll.daa.com.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753765AbXKGPyQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Nov 2007 10:54:16 -0500
-In-Reply-To: <4731DF06.3050202@rtr.ca>
+	id S1754060AbXKGP4M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Nov 2007 10:56:12 -0500
+In-Reply-To: <20071107132630.M65286@visp.net.lb>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
 
-sata_qstor conversion to new error handling (EH).
+Denys Fedoryshchenko wrote:
+> On Tue, 6 Nov 2007 22:15:21 -0800, Andrew Morton wrote
+>>> On Thu, 1 Nov 2007 23:30:13 +0200 "Denys" <denys@visp.net.lb> wrote:
+>>> Finally i got full DMESG with 1GB card till end. Seems not readable too.
+>>> scsi0 : sc1200
+>>> scsi1 : sc1200
+>>> ata1: PATA max UDMA/33 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
+>>> ata2: DUMMY
+>>> ata1.00: CFA: SanDisk SDCFH-1024, HDX 3.07, max MWDMA2
+>>> ata1.00: 2001888 sectors, multi 0: LBA
+>>> ata1.00: configured for MWDMA2
+>>> scsi 0:0:0:0: Direct-Access     ATA      SanDisk SDCFH-10 HDX  PQ: 0 
+> ANSI: 5
+>>> sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
+>>> sd 0:0:0:0: [sda] Write Protect is off
+>>> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
+> support 
+>>> DPO or FUA
+>>> sd 0:0:0:0: [sda] 2001888 512-byte hardware sectors (1025 MB)
+>>> sd 0:0:0:0: [sda] Write Protect is off
+>>> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't 
+> support 
+>>> DPO or FUA
+>>>  sda:<4>Clocksource tsc unstable (delta = -334501841 ns)
+>>> Time: pit clocksource has been installed.
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA2
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA2
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA2
+>>> ata1: EH complete
+>>> ata1.00: limiting speed to MWDMA1:PIO4
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+>>> sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+>>> Descriptor sense data with sense descriptors (in hex):
+>>>         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+>>>         00 00 00 00
+>>> sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+>>> end_request: I/O error, dev sda, sector 0
+>>> Buffer I/O error on device sda, logical block 0
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> ata1: EH complete
+>>> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+>>> ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+> in
+>>>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>>> ata1.00: status: { DRDY }
+>>> ata1: soft resetting link
+>>> ata1.00: configured for MWDMA1
+>>> sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+>>> sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+>>> Descriptor sense data with sense descriptors (in hex):
+>>>         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+>>>         00 00 00 00
+>>> sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+>>> end_request: I/O error, dev sda, sector 0
+>>> Buffer I/O error on device sda, logical block 0
+>>> ata1: EH complete
+>>>  unable to read partition table
+>>> sd 0:0:0:0: [sda] Attached SCSI removable disk
+>>> scx200_wdt: timer margin 60 seconds
+>>> cpuidle: using governor ladder
+>>> enabling scx200 high-res timer (1 MHz +0 ppm)
+>>> TCP cubic registered
+>>> Time: scx200_hrt clocksource has been installed.
+>>> NET: Registered protocol family 1
+>>> NET: Registered protocol family 17
+>>> Using IPI Shortcut mode
+>>> VFS: Cannot open root device "<NULL>" or unknown-block(8,18)
+>>> Please append a correct "root=" boot option; here are the available 
+>>> partitions:
+>>> 0800    1000944 sda driver: sd
+>>> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-
+>>> block(8,18)
+>>>
+>> (+linux-ide)
+(+alan, tejun)
+>> So this has never worked on any known kernel?
+> 
+> It is working now on old ide code (not libata).
 
-Convert sata_qstor to use the newer libata EH mechanisms.
-Based on earlier work by Jeff Garzik.
+Can you post the dmesg and hdparm -I of a working boot using the old ide
+code? The thing that stuck out to me (as just a reader of linux-ide) was
+that the problem involves MWDMA and CF, which have had problems (although
+not the same as this one) in the past:
+http://thread.gmane.org/gmane.linux.ide/22058 and
+http://thread.gmane.org/gmane.linux.ide/22400
 
-This belongs in 2.6.24.
-
-Signed-off-by:  Mark Lord <mlord@pobox.com>
----
-
---- old/drivers/ata/sata_qstor.c	2007-11-07 09:17:41.000000000 -0500
-+++ linux/drivers/ata/sata_qstor.c	2007-11-07 10:28:08.000000000 -0500
-@@ -116,14 +116,15 @@
- static int qs_ata_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static int qs_port_start(struct ata_port *ap);
- static void qs_host_stop(struct ata_host *host);
--static void qs_phy_reset(struct ata_port *ap);
- static void qs_qc_prep(struct ata_queued_cmd *qc);
- static unsigned int qs_qc_issue(struct ata_queued_cmd *qc);
- static int qs_check_atapi_dma(struct ata_queued_cmd *qc);
- static void qs_bmdma_stop(struct ata_queued_cmd *qc);
- static u8 qs_bmdma_status(struct ata_port *ap);
- static void qs_irq_clear(struct ata_port *ap);
--static void qs_eng_timeout(struct ata_port *ap);
-+static void qs_freeze(struct ata_port *ap);
-+static void qs_thaw(struct ata_port *ap);
-+static void qs_error_handler(struct ata_port *ap);
- 
- static struct scsi_host_template qs_ata_sht = {
- 	.module			= THIS_MODULE,
-@@ -150,11 +151,12 @@
- 	.check_atapi_dma	= qs_check_atapi_dma,
- 	.exec_command		= ata_exec_command,
- 	.dev_select		= ata_std_dev_select,
--	.phy_reset		= qs_phy_reset,
- 	.qc_prep		= qs_qc_prep,
- 	.qc_issue		= qs_qc_issue,
- 	.data_xfer		= ata_data_xfer,
--	.eng_timeout		= qs_eng_timeout,
-+	.freeze			= qs_freeze,
-+	.thaw			= qs_thaw,
-+	.error_handler		= qs_error_handler,
- 	.irq_clear		= qs_irq_clear,
- 	.irq_on			= ata_irq_on,
- 	.scr_read		= qs_scr_read,
-@@ -169,8 +171,6 @@
- 	/* board_2068_idx */
- 	{
- 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_SATA_RESET |
--				  //FIXME ATA_FLAG_SRST |
- 				  ATA_FLAG_MMIO | ATA_FLAG_PIO_POLLING,
- 		.pio_mask	= 0x10, /* pio4 */
- 		.udma_mask	= ATA_UDMA6,
-@@ -235,16 +235,28 @@
- 	qs_enter_reg_mode(ap);
- }
- 
--static void qs_phy_reset(struct ata_port *ap)
-+static void qs_freeze(struct ata_port *ap)
- {
--	qs_reset_channel_logic(ap);
--	sata_phy_reset(ap);
-+	u8 __iomem *mmio_base = qs_mmio_base(ap->host);
-+
-+	writeb(0, mmio_base + QS_HCT_CTRL); /* disable host interrupts */
-+	qs_enter_reg_mode(ap);
- }
- 
--static void qs_eng_timeout(struct ata_port *ap)
-+static void qs_thaw(struct ata_port *ap)
- {
-+	u8 __iomem *mmio_base = qs_mmio_base(ap->host);
-+
-+	qs_enter_reg_mode(ap);
-+	writeb(1, mmio_base + QS_HCT_CTRL); /* enable host interrupts */
-+}
-+
-+static int qs_prereset(struct ata_link *link, unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+
- 	qs_reset_channel_logic(ap);
--	ata_eng_timeout(ap);
-+	return ata_std_prereset(link, deadline);
- }
- 
- static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
-@@ -255,6 +267,13 @@
- 	return 0;
- }
- 
-+static void qs_error_handler(struct ata_port *ap)
-+{
-+	qs_enter_reg_mode(ap);
-+	ata_do_eh(ap, qs_prereset, ata_std_softreset, NULL,
-+		  ata_std_postreset);
-+}
-+
- static int qs_scr_write(struct ata_port *ap, unsigned int sc_reg, u32 val)
- {
- 	if (sc_reg > SCR_CONTROL)
-@@ -353,7 +372,6 @@
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
--
- 		pp->state = qs_state_pkt;
- 		qs_packet_start(qc);
- 		return 0;
-@@ -370,6 +388,26 @@
- 	return ata_qc_issue_prot(qc);
- }
- 
-+static void qs_do_or_die(struct ata_queued_cmd *qc, u8 status)
-+{
-+	qc->err_mask |= ac_err_mask(status);
-+
-+	if (!qc->err_mask) {
-+		ata_qc_complete(qc);
-+	} else {
-+		struct ata_port    *ap  = qc->ap;
-+		struct ata_eh_info *ehi = &ap->link.eh_info;
-+
-+		ata_ehi_clear_desc(ehi);
-+		ata_ehi_push_desc(ehi, "status 0x%02X", status);
-+
-+		if (qc->err_mask == AC_ERR_DEV)
-+			ata_port_abort(ap);
-+		else
-+			ata_port_freeze(ap);
-+	}
-+}
-+
- static inline unsigned int qs_intr_pkt(struct ata_host *host)
- {
- 	unsigned int handled = 0;
-@@ -402,8 +440,7 @@
- 					case 0: /* successful CPB */
- 					case 3: /* device error */
- 						qs_enter_reg_mode(qc->ap);
--						qc->err_mask |= ac_err_mask(sDST);
--						ata_qc_complete(qc);
-+						qs_do_or_die(qc, sDST);
- 						break;
- 					default:
- 						break;
+-- 
+James Andrewartha
