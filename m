@@ -1,15 +1,16 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 1/2] libata: Support PIO polling-only hosts.
-Date: Wed, 7 Nov 2007 15:18:37 +0000
-Message-ID: <20071107151837.3cbe3a67@the-village.bc.nu>
+Date: Wed, 7 Nov 2007 15:28:29 +0000
+Message-ID: <20071107152829.244afe30@the-village.bc.nu>
 References: <20071107081052.GA25913@linux-sh.org>
 	<20071107130940.16b5ea86@the-village.bc.nu>
-	<20071107132702.GA27488@linux-sh.org>
+	<20071107132702.GA27488@linux-sh.org> <4731C71A.4000406@rtr.ca>
+	<20071107145326.GA27752@linux-sh.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linuxsh-dev-bounces@lists.sourceforge.net>
-In-Reply-To: <20071107132702.GA27488@linux-sh.org>
+In-Reply-To: <20071107145326.GA27752@linux-sh.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
 	<mailto:linuxsh-dev-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linuxsh-dev>
@@ -20,39 +21,16 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linuxsh-dev>,
 Sender: linuxsh-dev-bounces@lists.sourceforge.net
 Errors-To: linuxsh-dev-bounces@lists.sourceforge.net
 To: Paul Mundt <lethal@linux-sh.org>
-Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linuxsh-dev@lists.sourceforge.net, linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, linuxsh-dev@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
 
-> > Zero is "no IRQ", please use that for polling not "< 0"
-> > 
-> However, platform_get_irq() will happily return IRQ#0, and it's a valid
-> vector on plenty of machines. NO_IRQ is also < 0 on at least FR-V, ARM,
-> blackin, PA-RISC, some PowerPC, and even IDE.
+> So I'll change the check to IRQ#0 == invalid, but if that's to be
+> enforced kernel-wide, then all of the existing NO_IRQ cases should be
+> ripped out and set to 0. This way at least people are getting screwed
+> consistently, rather than just in particular subsystems.
 
-No it is not. The platform IRQ code is responsible for ensuring that 0 is
-not a real IRQ and doing any neccessary remapping.
-
-Large parts of the kernel assume that
-	-	IRQ 0 is "no IRQ assigned" (serial, pci, ide etc )
-	-	IRQ is *unsigned*
-
-> We do have some devices that are physically on IRQ#0 that otherwise work
-> fine, they aren't ATA devices mind you, but to claim that IRQ#0 isn't a
-> valid vector is not in line with what hardware actually does, whether
-> it's a good idea or not. In our case the IRQ vector maps to an exception
-> offset, which we bump down to zero. We could force an off-by-1 there so
-> that the math that indexes IRQ#0 is bumped up one, but that entails
-> fixing up every one of our IRQ numbers for no obvious gain.
-> 
-> I don't really see any value in purposely crippling the range of
-> allowable vectors for these machines. Though I don't mind switching to a
-> NO_IRQ comparison instead of the < 0 case, so both can be handled.
-
-NO_IRQ is an obsolete old-IDE hack.
-
-http://www.uwsg.indiana.edu/hypermail/linux/kernel/0511.2/2197.html
-
-http://www.uwsg.indiana.edu/hypermail/linux/kernel/0511.2/1789.html
+Thats been gradually happening. Its now pretty clean except for powerpc
+and odd bits of ARM stuff
 
 Alan
 
