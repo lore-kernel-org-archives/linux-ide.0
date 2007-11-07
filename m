@@ -1,48 +1,65 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] Re: Should be Acard ATP8620 2SATA / 1 IDE  driver
-Date: Wed, 7 Nov 2007 17:30:31 -0500
-Message-ID: <20071107223031.GB25799@havoc.gtf.org>
-References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Wed, 07 Nov 2007 17:31:11 -0500
+Message-ID: <47323CAF.2030102@rtr.ca>
+References: <20071101213013.M54162@visp.net.lb> <20071106221521.4f64a066.akpm@linux-foundation.org> <20071107132630.M65286@visp.net.lb> <4731D85E.70201@daa.com.au> <20071107160426.M31617@visp.net.lb> <47320E37.8010106@rtr.ca> <20071107211932.M35475@visp.net.lb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:47407 "EHLO havoc.gtf.org"
+Received: from rtr.ca ([76.10.145.34]:1316 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754898AbXKGWac (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Nov 2007 17:30:32 -0500
-Content-Disposition: inline
-In-Reply-To: <025001c82067$d76c04c0$6200a8c0@jameshsu>
+	id S1756221AbXKGWbM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Nov 2007 17:31:12 -0500
+In-Reply-To: <20071107211932.M35475@visp.net.lb>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jameshsu <jameshsu@acard.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, 'David Miller' <davem@davemloft.net>, Daniel Weng <dweng@acard.com>, Jason Wu <jason_wu@acard.com>, laurence@mail.acard.com
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
 
-On Tue, Nov 06, 2007 at 07:25:46PM +0800, jameshsu wrote:
-> By the way, once you complete the SATA sample driver , please inform us , so
-> we could modify, test and submit in the near future.
-> If any chip info still missing or need us to involve, please let me know.
+Denys Fedoryshchenko wrote:
+> On Wed, 07 Nov 2007 14:12:55 -0500, Mark Lord wrote
+>>> WRAP ~ #./hdparm -I /dev/hda
+>>>
+>>> /dev/hda:
+>>>
+>>> ATAPI Write-once device, with non-removable media
+>>>         Model Number:       SanDisk SDP3B-16
+>>>         Serial Number:      24313671615
+>>>         Firmware Revision:  vdd 1.00
+>>> Standards:
+>>>         Likely used: 3
+>>> Configuration:
+>>>         DRQ response: 50us.
+>>>         Packet size: Unknown
+>>> Capabilities:
+>>>         LBA, IORDY(may be)(cannot be disabled)
+>>>         Buffer size: 1.0kB      bytes avail on r/w long: 4
+>>>         DMA: not supported
+>>>         PIO: pio0 pio1
+>> "ATAPI Write-once device"  ???
+>>
+>> That cannot be correct (??).  Is this with hdparm-7.7 (latest 
+>> sourceforge) ?? Can you show us the "hdparm --Istdout" output as 
+>> well, please.
+>>
+>> thanks.
+> Yes latest hdparm-7.7.
+...
 
-Any chance the patch below works?
+> WRAP ~ #./hdparm --Istdout /dev/hda
+> 
+> /dev/hda:
+> 844a 01ea 0000 0002 0000 0240 0020 0000
+..
 
-	Jeff
+CFA spec requires 848a in word[0], not 844a, which explains
+why hdparm thought it might be ATAPI.  I've updated my hdparm
+source to detect this for hdparm-7.8 (unreleased).
+That card (16MB) is definitely buggy.
+But your other (1GB) card looks fine.
+
+Thanks.  Somebody else may help with the libata issue.
 
 
- drivers/ata/ahci.c |    5 +++++
- 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ed9b407..7a42b4e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -553,6 +553,11 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Marvell */
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
- 
-+	/* Acard */
-+	{ PCI_VDEVICE(ARTOP, 0x000D), board_ahci },
-+	{ PCI_VDEVICE(ARTOP, 0x000E), board_ahci },
-+	{ PCI_VDEVICE(ARTOP, 0x000F), board_ahci },
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
