@@ -1,78 +1,143 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: [PATCH] Don't fail ata device revalidation for bad _GTF methods
-Date: Thu, 8 Nov 2007 18:37:07 +0000
-Message-ID: <20071108183707.GA3008@srcf.ucam.org>
-References: <4731C86B.1040704@infracomspa.it> <20071107121355.5eaf4496.akpm@linux-foundation.org> <47333CCF.1050403@infracomspa.it> <20071108094958.5c9b1b22.akpm@linux-foundation.org> <20071108180256.GB3491@havoc.gtf.org> <20071108101341.6c4f88d4.akpm@linux-foundation.org> <20071108182217.GA2685@srcf.ucam.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: libata: cdrw/dvdrom disabed after s2ram (2.6.24-rc2)
+Date: Thu, 8 Nov 2007 11:02:40 -0800
+Message-ID: <20071108110240.df3214e7.akpm@linux-foundation.org>
+References: <4731C86B.1040704@infracomspa.it>
+	<20071107121355.5eaf4496.akpm@linux-foundation.org>
+	<47333CCF.1050403@infracomspa.it>
+	<20071108094958.5c9b1b22.akpm@linux-foundation.org>
+	<20071108180256.GB3491@havoc.gtf.org>
+	<20071108101341.6c4f88d4.akpm@linux-foundation.org>
+	<20071108181905.GA4895@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([78.32.9.130]:53609 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756322AbXKHShj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 13:37:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20071108182217.GA2685@srcf.ucam.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53809 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761889AbXKHTDc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 14:03:32 -0500
+In-Reply-To: <20071108181905.GA4895@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, roppedisano@infracomspa.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: roppedisano@infracomspa.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org
 
-Experience suggests that the _GTF method may be bad. We currently fail 
-device revalidation in that case, which seems excessive.
+> On Thu, 8 Nov 2007 13:19:05 -0500 Jeff Garzik <jeff@garzik.org> wrote:
+> On Thu, Nov 08, 2007 at 10:13:41AM -0800, Andrew Morton wrote:
+> > > On Thu, 8 Nov 2007 13:02:56 -0500 Jeff Garzik <jeff@garzik.org> wrote:
+> > > On Thu, Nov 08, 2007 at 09:49:58AM -0800, Andrew Morton wrote:
+> > > > > On Thu, 08 Nov 2007 17:43:59 +0100 Roberto Oppedisano <roppedisano@infracomspa.it> wrote:
+> > > > > Andrew Morton wrote, On 11/07/2007 09:13 PM:
+> > > > > >> On Wed, 07 Nov 2007 15:15:07 +0100 Roberto Oppedisano <roppedisano@infracomspa.it> wrote:
+> > > > > >> Hello.
+> > > > > >> I noticed that after suspending to ram the DVD-ROM/CDRW
+> > > > > >> drive in no more recognized on my laptop. Looking at dmesg
+> > > > > >> after suspend i found:
+> > > > > >>
+> > > > > >> [    5.313446] ata2.00: _GTF unexpected object type 0x1
+> > > > > >> [    5.313453] ata2.00: ACPI on devcfg failed the second time, disabling 
+> > > > > >> (errno=-22)
+> > > > > >> [    5.313457] ata2.00: revalidation failed (errno=1)
+> > > > > >> [    5.313459] ata2.00: disabled
+> > > > > >>
+> > > > > >>
+> > > > > >> Not sure when the bug was introduced or if it has been always been there
+> > > > > >> (but I can investigate if needed).
+> > > > > >>
+> > > > > >> More details on request.
+> > > > > >>
+> > > > > >> Following dmesg pre and after suspend.
+> > > > > > Yes, it would be useful if you could work ot whether this worked OK in an
+> > > > > > earlier kernel, thanks.
+> > > > > Hello Andrew.
+> > > > > The bug has been recently added.
+> > > > > 
+> > > > > I did a git-bisect, but the result is probably not completely useful,
+> > > > > because many kernel did non build with my config, and I marked them as bad.
+> > > > 
+> > > > Those build errors are bad.  Please report them.  They directly prevented
+> > > > you from finding the commit which caused this regression.
+> > > > 
+> > > > The only way in which we'll stop people doing crap like this is to rub
+> > > > their noses (and the person who committed its nose) in it.
+> > > > 
+> > > > > Anyway here's the output of git-bisect:
+> > > > > 
+> > > > > rao@infra-bb:/usr/src/linux-2.6$ git bisect bad
+> > > > > 99874d50481c093adfe74e796436024d88b6a48c is first bad commit
+> > > > > commit 99874d50481c093adfe74e796436024d88b6a48c
+> > > > > Author: Jens Axboe <jens.axboe@oracle.com>
+> > > > > Date:   Fri Oct 12 12:50:41 2007 +0200
+> > > > > 
+> > > > >     [BLOCK] Only include the compat ioctl code if CONFIG_BLOCK is set
+> > > > > 
+> > > > >     Add an extra CONFIG_BLOCK_COMPAT that we can use in the Makefile
+> > > > > 
+> > > > >     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> > > > > 
+> > > > > :040000 040000 f88b7b0e496edb8fbdd4bc74abd1a742a6a1d6d9
+> > > > > 32ead3bd57b52a664cc8ccb662195041868d7632 M      block
+> > > > > 
+> > > > > ...
+> > > > > 
+> > > > > If needed I can do further investigation, changing the assumption of
+> > > > > efefc6eb38d43b8e5daef482f575d767b002004e to good and see if the bisect
+> > > > > points to a different commit.
+> > > > 
+> > > > Yes, it'll be some other commit.  Sorry.
+> > > > 
+> > > > It would help you (and me) if an ata developer could pay some attention.
+> > > > 
+> > > > Rafael, please track this as an ata regression.
+> > > 
+> > > We unfortunately need to bounce this ACPI people.
+> > > 
+> > > We recently turned on ACPI by default in libata, which INTRODUCES the
+> > > ability of the BIOS to pass random, unknown-quality ATA commands to the
+> > > device.
+> > > 
+> > > I highly expect some breakage related to this...  if ACPI folks
+> > > determine it is not an ACPI bug, then its a firmware bug and we will
+> > > have to avoid that firmware on that platform.
+> > > 
+> > > Set module option "noacpi" to 1, to disable ACPI and see if that fixes
+> > > the problem.
+> > > 
+> > > This will be a common diagnosis and workaround, FWIW...
+> > > 
+> > 
+> > I suspect it wold be best to disable the feature for the 2.6.24 release,
+> > then reenable it afterwards and keep doing this until the code is
+> > sufficiently stable.
+> 
+> Re-read my message :)
+> 
+> The code is stable.  Behavior _by definition_ will vary by BIOS.
+> 
+> This feature (a) enables suspend/resume, but (b) now sends random
+> unvalidated shite to the device that we hope will work.
+> 
+> Look at all the messages where turning on ACPI in libata _fixed_
+> suspend/resume (because its obviously required for many, including
+> laptops).
 
-Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
+We fixed a somewhat-known number of machines and broke an unknown number. 
+Linus will come after you with a pointy stick if he finds out.
 
----
+Fixing previously-broken machines is nice, but breaking previously-working
+ones gets people a lot more upset.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 08a52dd..545ea86 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -312,7 +312,7 @@ EXPORT_SYMBOL_GPL(ata_acpi_stm);
-  *
-  * RETURNS:
-  * Number of taskfiles on success, 0 if _GTF doesn't exist or doesn't
-- * contain valid data.  -errno on other errors.
-+ * contain valid data.
-  */
- static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 			   void **ptr_to_free)
-@@ -339,7 +339,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 			ata_dev_printk(dev, KERN_WARNING,
- 				       "_GTF evaluation failed (AE 0x%x)\n",
- 				       status);
--			rc = -EIO;
- 		}
- 		goto out_free;
- 	}
-@@ -359,7 +358,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "_GTF unexpected object type 0x%x\n",
- 			       out_obj->type);
--		rc = -EINVAL;
- 		goto out_free;
- 	}
- 
-@@ -367,7 +365,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "unexpected _GTF length (%d)\n",
- 			       out_obj->buffer.length);
--		rc = -EINVAL;
- 		goto out_free;
- 	}
- 
-@@ -511,10 +508,7 @@ static int ata_acpi_exec_tfs(struct ata_device *dev)
- 	int gtf_count, i, rc;
- 
- 	/* get taskfiles */
--	rc = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
--	if (rc < 0)
--		return rc;
--	gtf_count = rc;
-+	gtf_count = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
- 
- 	/* execute them */
- 	for (i = 0, rc = 0; i < gtf_count; i++) {
+> So it's not an easy "turn it off" answer, you break shitloads of
+> suspend/resume that way, that we just fixed.
+> 
+> The message "_GTF unexpected object type" indicates a broken BIOS, so
+> IMO we should proceed in that direction, blacklisting that platform.
+> 
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Suggest that the feature be disabled until we have most of these
+blacklistings in place.
+
+We have a tremendous number of regressions in 2.6.24 (and they're just the
+ones which we know of) and the regression reports for 2.6.23 are still
+coming in.  At some stage we'll need to get seriosu about this.
