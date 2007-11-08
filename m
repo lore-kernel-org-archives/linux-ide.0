@@ -1,37 +1,27 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 17/18] ide: cleanup ide_set_dma()
-Date: Thu, 08 Nov 2007 16:36:51 +0300
-Message-ID: <473310F3.4040200@ru.mvista.com>
-References: <200711050033.58423.bzolnier@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH #upstream-fixes] libata: skip 0xff polling for PATA controllers
+Date: Thu, 08 Nov 2007 08:39:46 -0500
+Message-ID: <473311A2.9080005@rtr.ca>
+References: <47327262.9020004@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:53907 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753214AbXKHNgj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 08:36:39 -0500
-In-Reply-To: <200711050033.58423.bzolnier@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:4796 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753541AbXKHNjs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 08:39:48 -0500
+In-Reply-To: <47327262.9020004@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Luca Tettamanti <kronos.it@gmail.com>
 
-Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo wrote:
+> In a presentation of true workmanship, pata_ali asserts IRQ
+> permanantly if the TF status register is read more than once when
+> there's no device attached to the port.
+..
 
-> * ->dma_off_quietly is always called before ide_set_dma()
->   so the call can be moved inside ide_set_dma().
-
-> * ide_dma_check() doesn't touch hardware so ->dma_off_quietly
->   call for 'rc == -1' case is redundant, remove it.
-
-> * '0' and '-1' are the only values returned by ide_dma_check()
->   so remove dead code for other cases.
-
-> There should be no functionality changes caused by this patch.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+Is using the altstatus reg (rather than status reg), when possible,
+a better idea here?
