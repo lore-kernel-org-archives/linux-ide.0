@@ -1,55 +1,124 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
-Date: Thu, 8 Nov 2007 11:22:29 -0500
-Message-ID: <20071108162229.GB31492@havoc.gtf.org>
-References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu>
+From: Roberto Oppedisano <roppedisano@infracomspa.it>
+Subject: Re: libata: cdrw/dvdrom disabed after s2ram (2.6.24-rc2)
+Date: Thu, 08 Nov 2007 17:43:59 +0100
+Message-ID: <47333CCF.1050403@infracomspa.it>
+References: <4731C86B.1040704@infracomspa.it> <20071107121355.5eaf4496.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:40007 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759187AbXKHQWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 11:22:30 -0500
-Content-Disposition: inline
-In-Reply-To: <005e01c821fb$502be120$6200a8c0@jameshsu>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761785AbXKHQoU@vger.kernel.org>
+In-Reply-To: <20071107121355.5eaf4496.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jameshsu <jameshsu@acard.com>
-Cc: Jason Wu <jason_wu@acard.com>, DerweiChen =?utf-8?B?KOmZs+W+t+WogSk=?= <derwei@acard.com>, LaurenceWu <laurence@acard.com>, Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Daniel Weng <dweng@acard.com>
 
-On Thu, Nov 08, 2007 at 07:34:22PM +0800, jameshsu wrote:
-> From: LaurenceWu
+Andrew Morton wrote, On 11/07/2007 09:13 PM:
+>> On Wed, 07 Nov 2007 15:15:07 +0100 Roberto Oppedisano <roppedisano@infracomspa.it> wrote:
+>> Hello.
+>> I noticed that after suspending to ram the DVD-ROM/CDRW
+>> drive in no more recognized on my laptop. Looking at dmesg
+>> after suspend i found:
+>>
+>> [    5.313446] ata2.00: _GTF unexpected object type 0x1
+>> [    5.313453] ata2.00: ACPI on devcfg failed the second time, disabling 
+>> (errno=-22)
+>> [    5.313457] ata2.00: revalidation failed (errno=1)
+>> [    5.313459] ata2.00: disabled
+>>
+>>
+>> Not sure when the bug was introduced or if it has been always been there
+>> (but I can investigate if needed).
+>>
+>> More details on request.
+>>
+>> Following dmesg pre and after suspend.
+> Yes, it would be useful if you could work ot whether this worked OK in an
+> earlier kernel, thanks.
+Hello Andrew.
+The bug has been recently added.
 
-> We didn't study about ata/ahci.c, but it should be based on AHCI1.0 or 1.1
-> spec. That is, NO P.M. FIS base switching, but supports both non-NCQ and NCQ
-> protocols.
-> 
-> For NCQ or nonNCQ, 8620 is very AHCI-like, although not fully compatible,
-> programmer can easily modify standard ahci.c
-> for 8620. The main differences between 8620 and AHCI are :
-> 
-> 1. PRD table format changed, (please compare AHCI 1.x section 4.2.3.3 and
-> 8620 datasheet section 7.3), 'I' bit in 8620 is defined as 'EOT' and NO
-> PRDTL value are available in the
->     Command List Structure.
-> 
-> 2. For NCQ transfer, PxIS bit 3(SDBS) is changed. ATP8620 add the Reg_144h
-> to accumulate 32 Sactive bits in each SDB FIS.
->     The Reg_144h is RWC and all its 32 bits are 'ORed'  to form the PxIS
-> bit3 and interrupt, if PxIE bit 3 enabled.
-> 
-> Yes.  Modifying the ata/ahci.c is OK to support atp8620.
+I did a git-bisect, but the result is probably not completely useful,
+because many kernel did non build with my config, and I marked them as bad.
+Anyway here's the output of git-bisect:
 
-This is good information, thanks.
+rao@infra-bb:/usr/src/linux-2.6$ git bisect bad
+99874d50481c093adfe74e796436024d88b6a48c is first bad commit
+commit 99874d50481c093adfe74e796436024d88b6a48c
+Author: Jens Axboe <jens.axboe@oracle.com>
+Date:   Fri Oct 12 12:50:41 2007 +0200
 
-After studying the datasheet I also noted a couple differences:
+    [BLOCK] Only include the compat ioctl code if CONFIG_BLOCK is set
 
-1) Port Multiplier support appears different from standard AHCI.
+    Add an extra CONFIG_BLOCK_COMPAT that we can use in the Makefile
 
-2) This chip includes target mode support.  Very nice, well done!
-I hope that standard AHCI eventually supports this nice feature!
+    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-	Jeff
+:040000 040000 f88b7b0e496edb8fbdd4bc74abd1a742a6a1d6d9
+32ead3bd57b52a664cc8ccb662195041868d7632 M      block
 
 
+Following the output of git-bisect log, hand edited by me to tag the one
+that did non build.
 
+git-bisect start
+# good: [fa285a3d7924a0e3782926e51f16865c5129a2f7] Linux 2.6.20
+git-bisect good fa285a3d7924a0e3782926e51f16865c5129a2f7
+# bad: [9aae299f7fd1888ea3a195cfe0edef17bb647415] Linux 2.6.24-rc2
+git-bisect bad 9aae299f7fd1888ea3a195cfe0edef17bb647415
+# good: [16cefa8c3863721fd40445a1b34dea18cd16ccfe] Merge
+git://git.linux-nfs.org/pub/linux/nfs-2.6
+git-bisect good 16cefa8c3863721fd40445a1b34dea18cd16ccfe
+# good: [dd6d1844af33acb4edd0a40b1770d091a22c94be] Merge branch
+'upstream' of git://ftp.linux-mips.org/pub/scm/upstream-linus
+git-bisect good dd6d1844af33acb4edd0a40b1770d091a22c94be
+# bad: [af767cbdd78f293485c294113885d95e7f1da123] hugetlb: fix dynamic
+pool resize failure case
+git-bisect bad af767cbdd78f293485c294113885d95e7f1da123
+# bad: [efefc6eb38d43b8e5daef482f575d767b002004e] Merge
+master.kernel.org:/pub/scm/linux/kernel/git/gregkh/driver-2.6 - ONLY A
+GUESS DID NOT COMPILE
+git-bisect bad efefc6eb38d43b8e5daef482f575d767b002004e
+# good: [038a5008b2f395c85e6e71d6ddf3c684e7c405b0] Merge branch 'master'
+of git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6
+git-bisect good 038a5008b2f395c85e6e71d6ddf3c684e7c405b0
+# good: [e86908614f2c7fec401827e5cefd7a6ea9407f85] Merge branch 'master'
+of git://git.kernel.org/pub/scm/linux/kernel/git/paulus/powerpc
+git-bisect good e86908614f2c7fec401827e5cefd7a6ea9407f85
+# bad: [4d5709a7b7d54fc5882d2943a14988a92d48c00a] Merge
+master.kernel.org:/pub/scm/linux/kernel/git/davej/cpufreq - ONLY A GUESS
+DID NOT COMPILE
+git-bisect bad 4d5709a7b7d54fc5882d2943a14988a92d48c00a
+# good: [f26e51f67ae6a75ffc57b96cf5fe096f75e778cb] Merge
+git://git.kernel.org/pub/scm/linux/kernel/git/steve/gfs2-2.6-nmw
+git-bisect good f26e51f67ae6a75ffc57b96cf5fe096f75e778cb
+# bad: [a6e3d7dba92e19acffaa36aad962741a762aa8c5] Merge branch
+'upstream-linus' of
+git://git.kernel.org/pub/scm/linux/kernel/git/mfasheh/ocfs2 - ONLY A
+GUESS DID NOT COMPILE
+git-bisect bad a6e3d7dba92e19acffaa36aad962741a762aa8c5
+# good: [5b6a3a2b4a5f071d170f8122038dd647a84810a8] ocfs2: Write support
+for directories with inline data
+git-bisect good 5b6a3a2b4a5f071d170f8122038dd647a84810a8
+# bad: [408af0dab78ef4145203b849d6bfd3195f6e3ec9] Merge branch
+'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/drzeus/mmc
+- ONLY A GUESS DID NOT COMPILE
+git-bisect bad 408af0dab78ef4145203b849d6bfd3195f6e3ec9
+# good: [000233e4d1321e54033d097e98f6868b11614217] Merge branch 'master'
+of git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6
+git-bisect good 000233e4d1321e54033d097e98f6868b11614217
+# bad: [b018fc09498f73da0014b44acbd59ea4a94300b4] [BLOCK] s390 xpram typo
+git-bisect bad b018fc09498f73da0014b44acbd59ea4a94300b4
+# good: [43d28d98bed372649060ef783719b426a91972ed] [BLOCK] Better fix
+for do_blk_trace_setup() for !CONFIG_BLOCK
+git-bisect good 43d28d98bed372649060ef783719b426a91972ed
+# bad: [99874d50481c093adfe74e796436024d88b6a48c] [BLOCK] Only include
+the compat ioctl code if CONFIG_BLOCK is set - ONLY A GUESS DID NOT COMPILE
+git-bisect bad 99874d50481c093adfe74e796436024d88b6a48c
+
+
+If needed I can do further investigation, changing the assumption of
+efefc6eb38d43b8e5daef482f575d767b002004e to good and see if the bisect
+points to a different commit.
+
+R.
