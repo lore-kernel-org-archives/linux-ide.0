@@ -1,42 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH #upstream-fixes] libata: skip 0xff polling for PATA
- controllers
-Date: Thu, 8 Nov 2007 10:53:43 +0000
-Message-ID: <20071108105343.3edfd36c@the-village.bc.nu>
-References: <47327262.9020004@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 13/15] ide: remove hwif->intrproc
+Date: Thu, 08 Nov 2007 20:08:24 +0900
+Message-ID: <4732EE28.5030700@gmail.com>
+References: <200710310055.13329.bzolnier@gmail.com> <4728F05A.5000502@ru.mvista.com> <47325DA0.4070905@rtr.ca> <473277E1.5000500@gmail.com> <20071108103943.GA8425@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:46909 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758467AbXKHKxa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 05:53:30 -0500
-In-Reply-To: <47327262.9020004@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:9441 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758339AbXKHLId (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 06:08:33 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so158290wah
+        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 03:08:33 -0800 (PST)
+In-Reply-To: <20071108103943.GA8425@devserv.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Luca Tettamanti <kronos.it@gmail.com>
+To: Alan Cox <alan@redhat.com>
+Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>
 
-On Thu, 08 Nov 2007 11:20:18 +0900
-Tejun Heo <htejun@gmail.com> wrote:
-
-> In a presentation of true workmanship, pata_ali asserts IRQ
-> permanantly if the TF status register is read more than once when
-> there's no device attached to the port.
+Alan Cox wrote:
+> On Thu, Nov 08, 2007 at 11:43:45AM +0900, Tejun Heo wrote:
+>>> I believe I have a small PCI card here with an HPT366 chip on it.
+>>> Does anyone there want it before I throw it away?
+>> I already have a 372.  It should be almost the same, right?
 > 
-> Avoid waiting polling for !0xff if it's PATA.  It's needed only for
-> some rare SATA devices anyway.
-> 
-> This problem is reported by Luca Tettamanti in bugzilla bug 9298.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Tested-By: Luca Tettamanti <kronos.it@gmail.com>
-> ---
->  drivers/ata/libata-core.c |   16 +++++++++++-----
->  1 file changed, 11 insertions(+), 5 deletions(-)
+> They are not very similar no. HPT37x is a progression from the 366
+> but quite different
 
-Bletch.. 8)
+Alright, then, if no one else wants it, please send it to me.  I can pay
+for the shipping via paypal. :-)
 
-Acked-by: Alan Cox <alan@redhat.com>
-
+-- 
+tejun
