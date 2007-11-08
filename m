@@ -1,28 +1,36 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH 13/15] ide: remove hwif->intrproc
-Date: Thu, 8 Nov 2007 05:39:43 -0500
-Message-ID: <20071108103943.GA8425@devserv.devel.redhat.com>
-References: <200710310055.13329.bzolnier@gmail.com> <4728F05A.5000502@ru.mvista.com> <47325DA0.4070905@rtr.ca> <473277E1.5000500@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Thu, 8 Nov 2007 10:48:13 +0000
+Message-ID: <20071108104813.78ca4d65@the-village.bc.nu>
+References: <20071101213013.M54162@visp.net.lb>
+	<20071107232045.GA26706@havoc.gtf.org>
+	<20071107235548.M95675@visp.net.lb>
+	<200711080130.54143.bzolnier@gmail.com>
+	<20071108071204.M66693@visp.net.lb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33854 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753005AbXKHKkR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 05:40:17 -0500
-Content-Disposition: inline
-In-Reply-To: <473277E1.5000500@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48534 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753636AbXKHKs2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 05:48:28 -0500
+In-Reply-To: <20071108071204.M66693@visp.net.lb>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Albert Lee <albertcc@tw.ibm.com>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-On Thu, Nov 08, 2007 at 11:43:45AM +0900, Tejun Heo wrote:
-> > I believe I have a small PCI card here with an HPT366 chip on it.
-> > Does anyone there want it before I throw it away?
+On Thu, 8 Nov 2007 09:16:35 +0200
+"Denys Fedoryshchenko" <denys@visp.net.lb> wrote:
+
+> Does it work as kernel parameter?
 > 
-> I already have a 372.  It should be almost the same, right?
+> I tried libata_dma_mask=0x4 and to set 0xf or 0xff - doesn't help. How to 
+> disable DMA in libata, if it is compiled in kernel?
 
-They are not very similar no. HPT37x is a progression from the 366
-but quite different
+libata.dma_mask=3
 
+will leave you with CD and disk DMA but not CF DMA
+
+(Note libata[DOT] not underscore)
