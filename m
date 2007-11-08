@@ -1,70 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
-Date: Thu, 8 Nov 2007 01:30:53 +0100
-Message-ID: <200711080130.54143.bzolnier@gmail.com>
-References: <20071101213013.M54162@visp.net.lb> <20071107232045.GA26706@havoc.gtf.org> <20071107235548.M95675@visp.net.lb>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 13/15] ide: remove hwif->intrproc
+Date: Wed, 07 Nov 2007 19:51:44 -0500
+Message-ID: <47325DA0.4070905@rtr.ca>
+References: <200710310055.13329.bzolnier@gmail.com> <4728F05A.5000502@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="koi8-r"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:62207 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966AbXKHAYW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 19:24:22 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so2441787fkz
-        for <linux-ide@vger.kernel.org>; Wed, 07 Nov 2007 16:24:20 -0800 (PST)
-In-Reply-To: <20071107235548.M95675@visp.net.lb>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:4696 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925AbXKHAvq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Nov 2007 19:51:46 -0500
+In-Reply-To: <4728F05A.5000502@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denys Fedoryshchenko <denys@visp.net.lb>
-Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
 
-On Thursday 08 November 2007, Denys Fedoryshchenko wrote:
-> 2.6.24-rc2 not working very well
+> Bartlomiej Zolnierkiewicz wrote:
 > 
-> 
-> dmesg
-> [   12.386395] Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> [   12.405579] ide: Assuming 33MHz system bus speed for PIO modes; override 
-> with idebus=xx
-> [   12.430441] SC1200: IDE controller (0x100b:0x0502 rev 0x01) at  PCI slot 
-> 0000:00:12.2
-> [   12.454070] SC1200: not 100% native mode: will probe irqs later
-> [   12.471947]     ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:pio, 
-> hdb:pio
-> [   12.493873]     ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:pio, 
-> hdd:pio
-> [   12.515810] Probing IDE interface ide0...
-> [   12.528810] Clocksource tsc unstable (delta = -497423729 ns)
-> [   12.545888] Time: pit clocksource has been installed.
-> [   12.563379] hda: SanDisk SDCFH-1024, CFA DISK drive
-> [   12.578340] hda: applying conservative PIO "downgrade"
-> [   12.593869] hda: host max PIO4 wanted PIO255(auto-tune) selected PIO1
-> [   12.594006] hda: MW DMA 2 mode selected
-> [   12.594297] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-> [   12.608778] Probing IDE interface ide1...
-> [   12.623192] hda: max request size: 128KiB
-> [   12.635322] hda: 2001888 sectors (1024 MB) w/1KiB Cache, CHS=1986/16/63, 
-> DMA
-> [   12.657134]  hda:<4>hda: dma_timer_expiry: dma status == 0x21
-> [   12.865846] hda: DMA timeout error
-> [   12.876092]  ide_dma_end dma_stat=21 err=1 newerr=0
-> [   12.890753] hda: dma timeout error: status=0x58 { DriveReady SeekComplete 
-> DataRequest }
-> [   12.914977] ide: failed opcode was: unknown
-> [   12.927743] hda: DMA disabled
-> [   12.937035] ide0: reset: success
-> [   12.948324]  hda1
-> 
-> Mounting taking long time on 1GB card cause of DMA issues. In dmesg i am not 
-> sure about timestamp showing few seconds, in real life it took about 2 
-> minutes.
+>> * hpt366.c::hpt3xx_intrproc() is the only user of hwif->intrproc
+..
 
-Please try booting with "hda=nodma".
+Speaking of which..
 
-It could be a hardware problem (CF adapter without DMA lines).
+I believe I have a small PCI card here with an HPT366 chip on it.
+Does anyone there want it before I throw it away?
 
-Thanks,
-Bart
+-ml
