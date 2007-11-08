@@ -1,32 +1,85 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
-Date: Thu, 8 Nov 2007 12:31:39 -0500
-Message-ID: <20071108173139.GA1932@havoc.gtf.org>
-References: <20071101213013.M54162@visp.net.lb> <20071107232045.GA26706@havoc.gtf.org> <20071107235548.M95675@visp.net.lb> <200711080130.54143.bzolnier@gmail.com> <20071108071204.M66693@visp.net.lb> <20071108104813.78ca4d65@the-village.bc.nu> <20071108164320.M82021@visp.net.lb>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: libata: cdrw/dvdrom disabed after s2ram (2.6.24-rc2)
+Date: Thu, 8 Nov 2007 09:49:58 -0800
+Message-ID: <20071108094958.5c9b1b22.akpm@linux-foundation.org>
+References: <4731C86B.1040704@infracomspa.it>
+	<20071107121355.5eaf4496.akpm@linux-foundation.org>
+	<47333CCF.1050403@infracomspa.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:41783 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760678AbXKHRbk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 12:31:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20071108164320.M82021@visp.net.lb>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33522 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760963AbXKHRus (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 12:50:48 -0500
+In-Reply-To: <47333CCF.1050403@infracomspa.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denys Fedoryshchenko <denys@visp.net.lb>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: Roberto Oppedisano <roppedisano@infracomspa.it>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Thu, Nov 08, 2007 at 06:44:31PM +0200, Denys Fedoryshchenko wrote:
-> Doesn't help
+> On Thu, 08 Nov 2007 17:43:59 +0100 Roberto Oppedisano <roppedisano@infracomspa.it> wrote:
+> Andrew Morton wrote, On 11/07/2007 09:13 PM:
+> >> On Wed, 07 Nov 2007 15:15:07 +0100 Roberto Oppedisano <roppedisano@infracomspa.it> wrote:
+> >> Hello.
+> >> I noticed that after suspending to ram the DVD-ROM/CDRW
+> >> drive in no more recognized on my laptop. Looking at dmesg
+> >> after suspend i found:
+> >>
+> >> [    5.313446] ata2.00: _GTF unexpected object type 0x1
+> >> [    5.313453] ata2.00: ACPI on devcfg failed the second time, disabling 
+> >> (errno=-22)
+> >> [    5.313457] ata2.00: revalidation failed (errno=1)
+> >> [    5.313459] ata2.00: disabled
+> >>
+> >>
+> >> Not sure when the bug was introduced or if it has been always been there
+> >> (but I can investigate if needed).
+> >>
+> >> More details on request.
+> >>
+> >> Following dmesg pre and after suspend.
+> > Yes, it would be useful if you could work ot whether this worked OK in an
+> > earlier kernel, thanks.
+> Hello Andrew.
+> The bug has been recently added.
 > 
-> WRAP ~ #cat /proc/cmdline
-> console=ttyS0,38400n8 libata.dma_mask=3
+> I did a git-bisect, but the result is probably not completely useful,
+> because many kernel did non build with my config, and I marked them as bad.
 
-It's "libata.dma" if its built into the kernel, or 'dma' module option
-if built as a kernel module.
+Those build errors are bad.  Please report them.  They directly prevented
+you from finding the commit which caused this regression.
 
-	Jeff
+The only way in which we'll stop people doing crap like this is to rub
+their noses (and the person who committed its nose) in it.
 
+> Anyway here's the output of git-bisect:
+> 
+> rao@infra-bb:/usr/src/linux-2.6$ git bisect bad
+> 99874d50481c093adfe74e796436024d88b6a48c is first bad commit
+> commit 99874d50481c093adfe74e796436024d88b6a48c
+> Author: Jens Axboe <jens.axboe@oracle.com>
+> Date:   Fri Oct 12 12:50:41 2007 +0200
+> 
+>     [BLOCK] Only include the compat ioctl code if CONFIG_BLOCK is set
+> 
+>     Add an extra CONFIG_BLOCK_COMPAT that we can use in the Makefile
+> 
+>     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> 
+> :040000 040000 f88b7b0e496edb8fbdd4bc74abd1a742a6a1d6d9
+> 32ead3bd57b52a664cc8ccb662195041868d7632 M      block
+> 
+> ...
+> 
+> If needed I can do further investigation, changing the assumption of
+> efefc6eb38d43b8e5daef482f575d767b002004e to good and see if the bisect
+> points to a different commit.
 
+Yes, it'll be some other commit.  Sorry.
+
+It would help you (and me) if an ata developer could pay some attention.
+
+Rafael, please track this as an ata regression.
 
