@@ -1,36 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 8/18] ide-disk: use ide_get_lba_addr()
-Date: Thu, 08 Nov 2007 17:05:14 +0300
-Message-ID: <4733179A.4050300@ru.mvista.com>
-References: <200711050022.57478.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Re: Should be Acard ATP8620 2SATA / 1 IDE  driver
+Date: Thu, 8 Nov 2007 11:18:55 -0500
+Message-ID: <20071108161855.GA31492@havoc.gtf.org>
+References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107223031.GB25799@havoc.gtf.org> <005801c821fa$892827f0$6200a8c0@jameshsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:54045 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754253AbXKHOFA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 09:05:00 -0500
-In-Reply-To: <200711050022.57478.bzolnier@gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:39556 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756351AbXKHQS4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 11:18:56 -0500
+Content-Disposition: inline
+In-Reply-To: <005801c821fa$892827f0$6200a8c0@jameshsu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: jameshsu <jameshsu@acard.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jason Wu <jason_wu@acard.com>, laurence@mail.acard.com, Daniel Weng <dweng@acard.com>
 
-Bartlomiej Zolnierkiewicz wrote:
+On Thu, Nov 08, 2007 at 07:28:38PM +0800, jameshsu wrote:
+> Not really understand your patch listed below. 
+> We do not provide ahci.c file to you, so we don't know where the patch came from(diff from where)?? 
+> Who create this and how can we get ahci.c file?? Can you tell us??
 
-> * Export ide_get_lba_addr().
+The file is found in the latest kernel source code.  Go to
 
-> * Convert idedisk_{read_native,set}_max_address() to use ide_get_lba_addr().
+	http://www.kernel.org/
 
-> * Remove incorrect comment from idedisk_read_native_max_address()
->   (noticed by Sergei).
+and download the latest "full" kernel version, 2.6.23:
 
-> There should be no functionality changes caused by this patch.
+	http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.23.tar.bz2
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+and then to get the latest kernel, apply this patch:
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+	http://www.kernel.org/pub/linux/kernel/v2.6/testing/patch-2.6.24-rc2.bz2
 
-MBR, Sergei
+Let me know if you need help unpacking and patching the kernel!
+
+	Jeff
+
+
 
