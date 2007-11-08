@@ -1,73 +1,44 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: libata: cdrw/dvdrom disabed after s2ram (2.6.24-rc2)
-Date: Thu, 8 Nov 2007 11:58:50 -0800
-Message-ID: <20071108115850.32e7adf3.akpm@linux-foundation.org>
-References: <4731C86B.1040704@infracomspa.it>
-	<20071107121355.5eaf4496.akpm@linux-foundation.org>
-	<47333CCF.1050403@infracomspa.it>
-	<20071108094958.5c9b1b22.akpm@linux-foundation.org>
-	<20071108180256.GB3491@havoc.gtf.org>
-	<20071108101341.6c4f88d4.akpm@linux-foundation.org>
-	<20071108181905.GA4895@havoc.gtf.org>
-	<20071108110240.df3214e7.akpm@linux-foundation.org>
-	<4733684D.6080108@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
+Date: Thu, 8 Nov 2007 15:09:20 -0500
+Message-ID: <20071108200920.GB4895@havoc.gtf.org>
+References: <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu> <20071108162229.GB31492@havoc.gtf.org> <473368FA.4030603@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <4733684D.6080108@rtr.ca>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jeff@garzik.org, roppedisano@infracomspa.it, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:54809 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753318AbXKHUJX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 15:09:23 -0500
+Content-Disposition: inline
+In-Reply-To: <473368FA.4030603@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-> On Thu, 08 Nov 2007 14:49:33 -0500 Mark Lord <liml@rtr.ca> wrote:
-> Andrew Morton wrote:
-> >> On Thu, 8 Nov 2007 13:19:05 -0500 Jeff Garzik <jeff@garzik.org> wrote:
-> >> On Thu, Nov 08, 2007 at 10:13:41AM -0800, Andrew Morton wrote:
-> >>>> On Thu, 8 Nov 2007 13:02:56 -0500 Jeff Garzik <jeff@garzik.org> wrote:
-> >>>> On Thu, Nov 08, 2007 at 09:49:58AM -0800, Andrew Morton wrote:
-> ..
-> >>> I suspect it wold be best to disable the feature for the 2.6.24 release,
-> >>> then reenable it afterwards and keep doing this until the code is
-> >>> sufficiently stable.
-> >> Re-read my message :)
-> >>
-> >> The code is stable.  Behavior _by definition_ will vary by BIOS.
-> >>
-> >> This feature (a) enables suspend/resume, but (b) now sends random
-> >> unvalidated shite to the device that we hope will work.
-> >>
-> >> Look at all the messages where turning on ACPI in libata _fixed_
-> >> suspend/resume (because its obviously required for many, including
-> >> laptops).
-> > 
-> > We fixed a somewhat-known number of machines and broke an unknown number. 
-> > Linus will come after you with a pointy stick if he finds out.
-> > 
-> > Fixing previously-broken machines is nice, but breaking previously-working
-> > ones gets people a lot more upset.
-> > 
-> >> So it's not an easy "turn it off" answer, you break shitloads of
-> >> suspend/resume that way, that we just fixed.
-> >>
-> >> The message "_GTF unexpected object type" indicates a broken BIOS, so
-> >> IMO we should proceed in that direction, blacklisting that platform.
-> >>
-> > 
-> > Suggest that the feature be disabled until we have most of these
-> > blacklistings in place.
+On Thu, Nov 08, 2007 at 02:52:26PM -0500, Mark Lord wrote:
+> Jeff Garzik wrote:
+> >..
+> >2) This chip includes target mode support.  Very nice, well done!
+> >I hope that standard AHCI eventually supports this nice feature!
 > ..
 > 
-> The problem is, this code has already sat out the last release,
-> and nobody noticed problems exactly because it was not enabled before.
+> Speaking of which.  Do we have a strategy as to how to implement/support
+> the target side of target mode on controllers which can do it?
 > 
-> If Jeff disables it again, then it will sit out another cycle without
-> anybody exercising it.  At some point, we need to turn it on, and collect
-> information about where there are problems (and fix them).
+> The Marvell chips also have a target mode feature, and I'd like to add
+> support for it soon-ish, but it's now clear how you would like it plumbed
+> into libata.
 > 
+> It's almost like a separate driver/subsystem, except that would be very 
+> silly.
 
-We get a decent amount of testing during the -rc's.  I think it's OK to turn
-a feature on during -rc and off for release while it gets settled in.
+I'm letting the SCSI folks do the heavy lifting, implementing SCSI
+target mode -- an effort already quite well along.
 
-Hopefully Matthew's fix will address this particular problem.
+We should be able to piggyback off of that work.
+
+	Jeff
+
+
