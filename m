@@ -1,65 +1,39 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA Target mode & libata
-Date: Thu, 8 Nov 2007 16:05:08 -0500
-Message-ID: <20071108210508.GA12845@havoc.gtf.org>
-References: <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu> <20071108162229.GB31492@havoc.gtf.org> <473368FA.4030603@rtr.ca> <20071108200920.GB4895@havoc.gtf.org> <47336F68.2080601@rtr.ca> <20071108203127.GC4895@havoc.gtf.org> <4733764D.80203@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Thu, 8 Nov 2007 22:40:43 +0000
+Message-ID: <20071108224043.4e0bd7b6@the-village.bc.nu>
+References: <20071101213013.M54162@visp.net.lb>
+	<20071107232045.GA26706@havoc.gtf.org>
+	<20071107235548.M95675@visp.net.lb>
+	<200711080130.54143.bzolnier@gmail.com>
+	<20071108071204.M66693@visp.net.lb>
+	<20071108104813.78ca4d65@the-village.bc.nu>
+	<20071108164320.M82021@visp.net.lb>
+	<20071108173139.GA1932@havoc.gtf.org>
+	<20071108195605.M20599@visp.net.lb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:42546 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758686AbXKHVFJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 16:05:09 -0500
-Content-Disposition: inline
-In-Reply-To: <4733764D.80203@rtr.ca>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56754 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751552AbXKHWlD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 17:41:03 -0500
+In-Reply-To: <20071108195605.M20599@visp.net.lb>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-On Thu, Nov 08, 2007 at 03:49:17PM -0500, Mark Lord wrote:
-> Jeff Garzik wrote:
-> >On Thu, Nov 08, 2007 at 03:19:52PM -0500, Mark Lord wrote:
-> ..
-> >>MMmm..  I wonder what the most common use case is for target mode?
-> >>
-> >>Everybody I've dealt with thus far uses it as a high-speed local comms 
-> >>interface,
-> >>which would suggest that it might be done as a network interface 
-> >>(ethernet emulation).
-> >>
-> >>But that would confusingly go across driver subsystems,
-> >>despite that this is how it actually is used.
-> >
-> >The low-level driver itself will just be a dumb DMA send/receive engine,
-> >with submit/completion APIs highly similar to the existing ones.  Then
-> >you can easily provide a network interface interface (not a typo) on top
-> >of that.
-> ..
+On Thu, 8 Nov 2007 21:56:32 +0200
+"Denys Fedoryshchenko" <denys@visp.net.lb> wrote:
+
+> Thanks, it works like that.
 > 
-> The obvious BIG difference is that in host mode, *we* initiate 
-> communcations,
-> whereas in target mode, it has to just sit there waiting for a host to say 
-> something.
-> 
-> That's a pretty big change from how libata operates today,
-> in just about every respect.
-
-Not at all -- both initiator and target modes have the exact same tasks:  
-1) send stuff to hardware, 2) receive hardware responses.
-
-On modern SAS/SATA hardware, you have both command and response queues.
-
-On modern SATA hardware, you have command queue and a received FIS list,
-which provides essentially the same services.
-
-Thus SATA target mode will simply need a "here is data I just received
-from the wire" hook, and the rest of the infrastructure already exists.
-
-Target mode will re-use ->qc_issue, and need a new ata_receive_fis()
-function for asynchronously received FIS's (H2D FIS, etc.)
-
-	Jeff
+> Seems in libata there is no fall-back to non-DMA mode, if DMA didn't work.
 
 
+It should be falling back from UDMA or MWDMA to PIO, if not please file a
+bug
 
+Alan
