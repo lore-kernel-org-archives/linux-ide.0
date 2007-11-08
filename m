@@ -1,39 +1,32 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
-Date: Thu, 8 Nov 2007 22:40:43 +0000
-Message-ID: <20071108224043.4e0bd7b6@the-village.bc.nu>
-References: <20071101213013.M54162@visp.net.lb>
-	<20071107232045.GA26706@havoc.gtf.org>
-	<20071107235548.M95675@visp.net.lb>
-	<200711080130.54143.bzolnier@gmail.com>
-	<20071108071204.M66693@visp.net.lb>
-	<20071108104813.78ca4d65@the-village.bc.nu>
-	<20071108164320.M82021@visp.net.lb>
-	<20071108173139.GA1932@havoc.gtf.org>
-	<20071108195605.M20599@visp.net.lb>
+From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Subject: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
+Date: Thu, 8 Nov 2007 14:41:39 -0800 (PST)
+Message-ID: <41622.41856.qm@web52604.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56754 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751552AbXKHWlD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 17:41:03 -0500
-In-Reply-To: <20071108195605.M20599@visp.net.lb>
+Received: from web52604.mail.re2.yahoo.com ([206.190.48.207]:32280 "HELO
+	web52604.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751435AbXKHWsV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 17:48:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Denys Fedoryshchenko <denys@visp.net.lb>
-Cc: Jeff Garzik <jeff@garzik.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On Thu, 8 Nov 2007 21:56:32 +0200
-"Denys Fedoryshchenko" <denys@visp.net.lb> wrote:
+(Same symptoms/behaviour as before: http://marc.info/?l=linux-ide&m=117949823328798&w=2  & http://marc.info/?t=117810970400003&r=1&w=2)
 
-> Thanks, it works like that.
-> 
-> Seems in libata there is no fall-back to non-DMA mode, if DMA didn't work.
+With mem=3500M all is well, otherwise it goes on reseting the ports in a loop & not booting :-(
+
+Thanks
+
+Hari
 
 
-It should be falling back from UDMA or MWDMA to PIO, if not please file a
-bug
 
-Alan
+
+
+      Feel safe with award winning spam protection on Yahoo!7 Mail.  
+www.yahoo.com.au/mail 
+
