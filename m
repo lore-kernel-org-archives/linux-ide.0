@@ -1,138 +1,72 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: port and host should be stopped before
- hardware resources are released
-Date: Thu, 08 Nov 2007 13:09:00 +0900
-Message-ID: <47328BDC.3090105@gmail.com>
+From: "Denys Fedoryshchenko" <denys@visp.net.lb>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Thu, 8 Nov 2007 09:01:38 +0200
+Message-ID: <20071108065119.M10146@visp.net.lb>
+References: <fa.FFqM2AneKZLH2d3/UIeCMjE/RLE@ifi.uio.no> <4732693B.1070509@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=koi8-r
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:35715 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbXKHEJI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Nov 2007 23:09:08 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so35507rvb
-        for <linux-ide@vger.kernel.org>; Wed, 07 Nov 2007 20:09:07 -0800 (PST)
+Received: from usermail.globalproof.net ([194.146.153.18]:39075 "EHLO
+	usermail.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbXKHHBt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 02:01:49 -0500
+In-Reply-To: <4732693B.1070509@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Port / host stop calls used to be made from ata_host_release() which
-is called after all hardware resources acquired after host allocation
-are released.  This is wrong as port and host stop routines often
-access the hardware.
+You are right, seems no dma lines in adapter. hda=nodma helped, no errors 
+anymore. I will try now also libata_dma_mask and will mail result. Btw there 
+is no notes in Documentation/kernel-parameters.txt about it.
 
-Add separate devres for port / host stop which is invoked right after
-IRQ is released but with all other hardware resources intact.  The
-devres is added iff ->host_stop and/or ->port_stop exist.
+In any case it is complete board, WRAP.2C made by PCEngines in 2003. Kind of 
+popular and mass produced, before was widely used by StarOS, probably known 
+GPL violator, who didn't bother himself to supply patches, but at same time 
+used it in his projects.
 
-This problem has been spotted by Mark Lord.
+If it is valid for all board with this revision, maybe it is better to put it 
+in some kind of fixup/quirk/black list, or how it is called?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>
----
-Jeff, this really needs to get into 2.6.24.  Although it hasn't caused
-any real problem (yet), ahci is one of the affected drivers and it's
-poking released iomems in its port_ops.
+On Wed, 07 Nov 2007 19:41:15 -0600, Robert Hancock wrote
+> Denys wrote:
+> > Finally i got full DMESG with 1GB card till end. Seems not readable too.
+> >
+> 
+> ...
+> 
+> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
+in
+> >          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> > ata1.00: status: { DRDY }
+> > ata1: soft resetting link
+> > ata1.00: configured for MWDMA1
+> > sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
+> > sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
+> > Descriptor sense data with sense descriptors (in hex):
+> >         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+> >         00 00 00 00
+> > sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
+> > end_request: I/O error, dev sda, sector 0
+> > Buffer I/O error on device sda, logical block 0
+> > ata1: EH complete
+> 
+> I'm guessing that your CF-to-IDE adapter doesn't have the correct 
+> lines wired up for DMA to work properly, and the card indicates DMA 
+> support, which libata tries to use but which doesn't work. It looks 
+> like it never tried falling back to PIO after DMA failed. Seems like 
+> a deficiency in the speed-down logic?
+> 
+> -- 
+> Robert Hancock      Saskatoon, SK, Canada
+> To email, remove "nospam" from hancockr@nospamshaw.ca
+> Home Page: http://www.roberthancock.com/
 
- drivers/ata/libata-core.c |   52 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 39 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ec3ce12..07c3444 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6821,19 +6821,6 @@ static void ata_host_release(struct device *gendev, void *res)
- 		if (!ap)
- 			continue;
- 
--		if ((host->flags & ATA_HOST_STARTED) && ap->ops->port_stop)
--			ap->ops->port_stop(ap);
--	}
--
--	if ((host->flags & ATA_HOST_STARTED) && host->ops->host_stop)
--		host->ops->host_stop(host);
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--
--		if (!ap)
--			continue;
--
- 		if (ap->scsi_host)
- 			scsi_host_put(ap->scsi_host);
- 
-@@ -6960,6 +6947,24 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
- 	return host;
- }
- 
-+static void ata_host_stop(struct device *gendev, void *res)
-+{
-+	struct ata_host *host = dev_get_drvdata(gendev);
-+	int i;
-+
-+	WARN_ON(!(host->flags & ATA_HOST_STARTED));
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		if (ap->ops->port_stop)
-+			ap->ops->port_stop(ap);
-+	}
-+
-+	if (host->ops->host_stop)
-+		host->ops->host_stop(host);
-+}
-+
- /**
-  *	ata_host_start - start and freeze ports of an ATA host
-  *	@host: ATA host to start ports for
-@@ -6978,6 +6983,8 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
-  */
- int ata_host_start(struct ata_host *host)
- {
-+	int have_stop = 0;
-+	void *start_dr = NULL;
- 	int i, rc;
- 
- 	if (host->flags & ATA_HOST_STARTED)
-@@ -6989,6 +6996,22 @@ int ata_host_start(struct ata_host *host)
- 		if (!host->ops && !ata_port_is_dummy(ap))
- 			host->ops = ap->ops;
- 
-+		if (ap->ops->port_stop)
-+			have_stop = 1;
-+	}
-+
-+	if (host->ops->host_stop)
-+		have_stop = 1;
-+
-+	if (have_stop) {
-+		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
-+		if (!start_dr)
-+			return -ENOMEM;
-+	}
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
- 		if (ap->ops->port_start) {
- 			rc = ap->ops->port_start(ap);
- 			if (rc) {
-@@ -7001,6 +7024,8 @@ int ata_host_start(struct ata_host *host)
- 		ata_eh_freeze_port(ap);
- 	}
- 
-+	if (start_dr)
-+		devres_add(host->dev, start_dr);
- 	host->flags |= ATA_HOST_STARTED;
- 	return 0;
- 
-@@ -7011,6 +7036,7 @@ int ata_host_start(struct ata_host *host)
- 		if (ap->ops->port_stop)
- 			ap->ops->port_stop(ap);
- 	}
-+	devres_free(start_dr);
- 	return rc;
- }
- 
+--
+Denys Fedoryshchenko
+Technical Manager
+Virtual ISP S.A.L.
+
