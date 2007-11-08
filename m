@@ -1,35 +1,41 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
-Date: Thu, 08 Nov 2007 14:52:26 -0500
-Message-ID: <473368FA.4030603@rtr.ca>
-References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu> <20071108162229.GB31492@havoc.gtf.org>
+From: "Denys Fedoryshchenko" <denys@visp.net.lb>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Thu, 8 Nov 2007 21:56:32 +0200
+Message-ID: <20071108195605.M20599@visp.net.lb>
+References: <20071101213013.M54162@visp.net.lb> <20071107232045.GA26706@havoc.gtf.org> <20071107235548.M95675@visp.net.lb> <200711080130.54143.bzolnier@gmail.com> <20071108071204.M66693@visp.net.lb> <20071108104813.78ca4d65@the-village.bc.nu> <20071108164320.M82021@visp.net.lb> <20071108173139.GA1932@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=koi8-r
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4636 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761040AbXKHTw1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 14:52:27 -0500
-In-Reply-To: <20071108162229.GB31492@havoc.gtf.org>
+Received: from usermail.globalproof.net ([194.146.153.18]:36950 "EHLO
+	usermail.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759541AbXKHT4x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 14:56:53 -0500
+In-Reply-To: <20071108173139.GA1932@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Jeff Garzik wrote:
->..
-> 2) This chip includes target mode support.  Very nice, well done!
-> I hope that standard AHCI eventually supports this nice feature!
-..
+Thanks, it works like that.
 
-Speaking of which.  Do we have a strategy as to how to implement/support
-the target side of target mode on controllers which can do it?
+Seems in libata there is no fall-back to non-DMA mode, if DMA didn't work.
 
-The Marvell chips also have a target mode feature, and I'd like to add
-support for it soon-ish, but it's now clear how you would like it plumbed
-into libata.
+On Thu, 8 Nov 2007 12:31:39 -0500, Jeff Garzik wrote
+> On Thu, Nov 08, 2007 at 06:44:31PM +0200, Denys Fedoryshchenko wrote:
+> > Doesn't help
+> > 
+> > WRAP ~ #cat /proc/cmdline
+> > console=ttyS0,38400n8 libata.dma_mask=3
+> 
+> It's "libata.dma" if its built into the kernel, or 'dma' module 
+> option if built as a kernel module.
+> 
+> 	Jeff
 
-It's almost like a separate driver/subsystem, except that would be very silly.
 
-???
+--
+Denys Fedoryshchenko
+Technical Manager
+Virtual ISP S.A.L.
+
