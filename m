@@ -1,68 +1,80 @@
 From: "Denys Fedoryshchenko" <denys@visp.net.lb>
 Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
-Date: Thu, 8 Nov 2007 09:01:38 +0200
-Message-ID: <20071108065119.M10146@visp.net.lb>
-References: <fa.FFqM2AneKZLH2d3/UIeCMjE/RLE@ifi.uio.no> <4732693B.1070509@shaw.ca>
+Date: Thu, 8 Nov 2007 09:16:35 +0200
+Message-ID: <20071108071204.M66693@visp.net.lb>
+References: <20071101213013.M54162@visp.net.lb> <20071107232045.GA26706@havoc.gtf.org> <20071107235548.M95675@visp.net.lb> <200711080130.54143.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset=koi8-r
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from usermail.globalproof.net ([194.146.153.18]:39075 "EHLO
+Received: from usermail.globalproof.net ([194.146.153.18]:51988 "EHLO
 	usermail.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbXKHHBt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 02:01:49 -0500
-In-Reply-To: <4732693B.1070509@shaw.ca>
+	with ESMTP id S1751811AbXKHHQs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 02:16:48 -0500
+In-Reply-To: <200711080130.54143.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, htejun@gmail.com
 
-You are right, seems no dma lines in adapter. hda=nodma helped, no errors 
-anymore. I will try now also libata_dma_mask and will mail result. Btw there 
-is no notes in Documentation/kernel-parameters.txt about it.
+Does it work as kernel parameter?
 
-In any case it is complete board, WRAP.2C made by PCEngines in 2003. Kind of 
-popular and mass produced, before was widely used by StarOS, probably known 
-GPL violator, who didn't bother himself to supply patches, but at same time 
-used it in his projects.
+I tried libata_dma_mask=0x4 and to set 0xf or 0xff - doesn't help. How to 
+disable DMA in libata, if it is compiled in kernel?
 
-If it is valid for all board with this revision, maybe it is better to put it 
-in some kind of fixup/quirk/black list, or how it is called?
-
-On Wed, 07 Nov 2007 19:41:15 -0600, Robert Hancock wrote
-> Denys wrote:
-> > Finally i got full DMESG with 1GB card till end. Seems not readable too.
-> >
+On Thu, 8 Nov 2007 01:30:53 +0100, Bartlomiej Zolnierkiewicz wrote
+> On Thursday 08 November 2007, Denys Fedoryshchenko wrote:
+> > 2.6.24-rc2 not working very well
+> > 
+> > 
+> > dmesg
+> > [   12.386395] Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> > [   12.405579] ide: Assuming 33MHz system bus speed for PIO modes; 
+override 
+> > with idebus=xx
+> > [   12.430441] SC1200: IDE controller (0x100b:0x0502 rev 0x01) at  PCI 
+slot 
+> > 0000:00:12.2
+> > [   12.454070] SC1200: not 100% native mode: will probe irqs later
+> > [   12.471947]     ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:pio, 
+> > hdb:pio
+> > [   12.493873]     ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:pio, 
+> > hdd:pio
+> > [   12.515810] Probing IDE interface ide0...
+> > [   12.528810] Clocksource tsc unstable (delta = -497423729 ns)
+> > [   12.545888] Time: pit clocksource has been installed.
+> > [   12.563379] hda: SanDisk SDCFH-1024, CFA DISK drive
+> > [   12.578340] hda: applying conservative PIO "downgrade"
+> > [   12.593869] hda: host max PIO4 wanted PIO255(auto-tune) selected PIO1
+> > [   12.594006] hda: MW DMA 2 mode selected
+> > [   12.594297] ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+> > [   12.608778] Probing IDE interface ide1...
+> > [   12.623192] hda: max request size: 128KiB
+> > [   12.635322] hda: 2001888 sectors (1024 MB) w/1KiB Cache, CHS=1986/16/
+63, 
+> > DMA
+> > [   12.657134]  hda:<4>hda: dma_timer_expiry: dma status == 0x21
+> > [   12.865846] hda: DMA timeout error
+> > [   12.876092]  ide_dma_end dma_stat=21 err=1 newerr=0
+> > [   12.890753] hda: dma timeout error: status=0x58 { DriveReady 
+SeekComplete 
+> > DataRequest }
+> > [   12.914977] ide: failed opcode was: unknown
+> > [   12.927743] hda: DMA disabled
+> > [   12.937035] ide0: reset: success
+> > [   12.948324]  hda1
+> > 
+> > Mounting taking long time on 1GB card cause of DMA issues. In dmesg i am 
+not 
+> > sure about timestamp showing few seconds, in real life it took about 2 
+> > minutes.
 > 
-> ...
+> Please try booting with "hda=nodma".
 > 
-> > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > ata1.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 
-in
-> >          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> > ata1.00: status: { DRDY }
-> > ata1: soft resetting link
-> > ata1.00: configured for MWDMA1
-> > sd 0:0:0:0: [sda] Result: hostbyte=0x00 driverbyte=0x08
-> > sd 0:0:0:0: [sda] Sense Key : 0xb [current] [descriptor]
-> > Descriptor sense data with sense descriptors (in hex):
-> >         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-> >         00 00 00 00
-> > sd 0:0:0:0: [sda] ASC=0x0 ASCQ=0x0
-> > end_request: I/O error, dev sda, sector 0
-> > Buffer I/O error on device sda, logical block 0
-> > ata1: EH complete
+> It could be a hardware problem (CF adapter without DMA lines).
 > 
-> I'm guessing that your CF-to-IDE adapter doesn't have the correct 
-> lines wired up for DMA to work properly, and the card indicates DMA 
-> support, which libata tries to use but which doesn't work. It looks 
-> like it never tried falling back to PIO after DMA failed. Seems like 
-> a deficiency in the speed-down logic?
-> 
-> -- 
-> Robert Hancock      Saskatoon, SK, Canada
-> To email, remove "nospam" from hancockr@nospamshaw.ca
-> Home Page: http://www.roberthancock.com/
+> Thanks,
+> Bart
 
 
 --
