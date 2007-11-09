@@ -1,46 +1,61 @@
-From: Krzysztof Oledzki <olel@ans.pl>
-Subject: Re: pata_serverworks hangs
-Date: Fri, 9 Nov 2007 15:55:29 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0711091553440.1076@bizon.gios.gov.pl>
-References: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
- <472B2E58.6080508@garzik.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Fri, 9 Nov 2007 07:02:30 -0800
+Message-ID: <20071109070230.73eb7be5@laptopd505.fenrus.org>
+References: <20071109020235.GA2031@ceren>
+	<20071109023129.GA25581@havoc.gtf.org>
+	<4733D421.7000505@rtr.ca>
+	<20071109034622.GB25581@havoc.gtf.org>
+	<4733E5A6.30808@rtr.ca>
+	<20071109045748.GD25581@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-187430788-2126939744-1194620129=:1076"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bizon.gios.gov.pl ([212.244.124.8]:55702 "EHLO
-	bizon.gios.gov.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbXKIOzp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 09:55:45 -0500
-In-Reply-To: <472B2E58.6080508@garzik.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:44991 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760067AbXKIPEg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 10:04:36 -0500
+In-Reply-To: <20071109045748.GD25581@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+Cc: Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, 8 Nov 2007 23:57:48 -0500
+Jeff Garzik <jeff@garzik.org> wrote:
 
----187430788-2126939744-1194620129=:1076
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> On Thu, Nov 08, 2007 at 11:44:22PM -0500, Mark Lord wrote:
+> > Jeff Garzik wrote:
+> > >On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
+> > >>And I might even privately patch my own kernels to map the ACHI
+> > >>BAR in the cases where the BIOS didn't...
+> > >
+> > >The inability to do this in the general case is the main reason why
+> > >AHCI was not unconditionally enabled, even in IDE mode, when it was
+> > >originally added...  :/
+> > ..
+> > 
+> > Yeah, that one's always puzzled me.
+> > It's just software,  so why don't we do it?  In the PCI layer, that
+> > is?
+> 
+> Ah, but it's not just software:  when trying to find bus address
+> space for the BAR, we don't know if we are stomping on magic hardware
+> resources the BIOS has conveniently failed to tell us about.
+> 
+> So while in all likelihood you will have no problem finding a
+> suitable bus address to use, as a generalized rule it is a far more
+> difficult proposition.
+> 
+
+another thing to test before doing this everywhere is suspend/resume.
+This would use the hardware in a way the bios doesn't expect, and sadly
+that kind of thing tends to royally b0rk the suspend/resume code often
+(but of course not always).
 
 
-
-On Fri, 2 Nov 2007, Jeff Garzik wrote:
-
-> Krzysztof Oledzki wrote:
->> Hello,
->>=20
->> I just tried to switch from old IDE to libata but unfortunately kernel=
-=20
->> (2.6.22.10) hangs during boot:
->
-> does 2.6.23.1 or 2.6.24-rc1 work?
-
-No. :( I checked 2.6.23.1 and 2.6.24-rc2 (with recent Alan's=20
-pata_serverworks fix).
-
-Best regards,
-
- =09=09=09Krzysztof Ol=EAdzki
----187430788-2126939744-1194620129=:1076--
+-- 
+If you want to reach me at my work email, use arjan@linux.intel.com
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
