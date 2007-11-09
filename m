@@ -1,43 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: FIS structure and Command List structure for AHCI SATA
-	controller
-Date: Thu, 8 Nov 2007 22:55:06 -0500
-Message-ID: <20071109035506.GC25581@havoc.gtf.org>
-References: <5c9cd53b0711081938m1e752087yda930792a57a98c0@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
+Date: Fri, 09 Nov 2007 13:00:36 +0900
+Message-ID: <4733DB64.1090803@gmail.com>
+References: <41622.41856.qm@web52604.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:46392 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753688AbXKIDzJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Nov 2007 22:55:09 -0500
-Content-Disposition: inline
-In-Reply-To: <5c9cd53b0711081938m1e752087yda930792a57a98c0@mail.gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:20798 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753511AbXKIEAw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 23:00:52 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so356722rvb
+        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 20:00:51 -0800 (PST)
+In-Reply-To: <41622.41856.qm@web52604.mail.re2.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: mike zheng <mail4mz@gmail.com>
+To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
 Cc: linux-ide@vger.kernel.org
 
-On Thu, Nov 08, 2007 at 10:38:25PM -0500, mike zheng wrote:
-> I am working on an AHCI SATA controller. For each port, there is one
-> FIS descriptor and one Command List, which points to a Received FIS
-> structure and Command List structure. So what is Received FIS
-> structure? The Command List structure points to Command Table, that
-> has Command FIS field and Physical Region Descriptor table. I assume
-> the Command table is used for the communication between processor and
-> the SATA controller. Then why do we need the Received FIS structure?
+Srihari Vijayaraghavan wrote:
+> (Same symptoms/behaviour as before: http://marc.info/?l=linux-ide&m=117949823328798&w=2  & http://marc.info/?t=117810970400003&r=1&w=2)
+> 
+> With mem=3500M all is well, otherwise it goes on reseting the ports in a loop & not booting :-(
 
-The driver actually doesn't need it at all, though a few ideas are
-floating around for using it.
+Hmmm.. weird.  The workaround is still there.  Please post boot log.
 
-However, it's required by the hardware by definition -- you must
-provide a buffer for incoming FIS's (P0FB), before enabling FIS
-reception (P0CMD bit 4, FRE).
+Thanks.
 
-If I had to guess, the hardware dumps the RX FIS into host memory rather
-than having additional internal buffers/FIFOs...
-
-	Jeff
-
-
-
+-- 
+tejun
