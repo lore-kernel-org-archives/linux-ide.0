@@ -1,51 +1,76 @@
-From: Krzysztof Oledzki <olel@ans.pl>
-Subject: Re: pata_serverworks hangs
-Date: Fri, 9 Nov 2007 15:24:40 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0711091523090.951@bizon.gios.gov.pl>
-References: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
- <20071102174148.49358f7e@the-village.bc.nu>
+From: =?ISO-8859-1?Q?T=F6r=F6k_Edwin?= <edwintorok@gmail.com>
+Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Fri, 09 Nov 2007 16:49:16 +0200
+Message-ID: <4734736C.5060003@gmail.com>
+References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca> <20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bizon.gios.gov.pl ([212.244.124.8]:47923 "EHLO
-	bizon.gios.gov.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbXKIOYw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 09:24:52 -0500
-In-Reply-To: <20071102174148.49358f7e@the-village.bc.nu>
+Received: from wx-out-0506.google.com ([66.249.82.239]:30984 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758614AbXKIOtX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 09:49:23 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so396552wxd
+        for <linux-ide@vger.kernel.org>; Fri, 09 Nov 2007 06:49:22 -0800 (PST)
+In-Reply-To: <20071109120425.543971bf@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-
-
-On Fri, 2 Nov 2007, Alan Cox wrote:
-
-> On Fri, 2 Nov 2007 14:29:17 +0100 (CET)
-> Krzysztof Oledzki <olel@ans.pl> wrote:
+Alan Cox wrote:
+> On Thu, 8 Nov 2007 22:46:22 -0500
+> Jeff Garzik <jeff@garzik.org> wrote:
 >
->> Hello,
->>
->> I just tried to switch from old IDE to libata but unfortunately kernel
->> (2.6.22.10) hangs during boot:
->>
->> ata1: PATA max UDMA/66 cmd 0x000101e8 ctl 0x000103ee bmdma 0x00012c40 irq 11
->> ata2: DUMMY
->> ata1.00: ATAPI: HL-DT-ST CD-ROM GCR-8482B, 1.00, max MWDMA2
->> ara1.01: ATAPI: LITE-ON LTR-62327S, QS75, max UDMA/33
->> ata1.00: configured for MWDMA2
->> ata1.01: configured for UDMA/33
->> scsi 2:0:0:0: CDROM             HL-DT-ST CDROM GCR-8482B 1.00 PQ: 0 ANSI 5
->> (kernel hangs)
->>
->> Attaching lspci and dmesg from working system, with pata_serverworks
->> disabled.
+>   
+>> On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
+>>     
+>>> And I might even privately patch my own kernels to map the ACHI BAR
+>>> in the cases where the BIOS didn't...
+>>>       
+>> The inability to do this in the general case is the main reason why
+>> AHCI was not unconditionally enabled, even in IDE mode, when it was
+>> originally added...  :/
+>>     
 >
-> Try the following patch and let me know if it helps:
+> We've done it all the time for various devices without problems (eg S3
+> video cards). I'd like to see it go in - although perhaps attached to a
+> force_ahci boot param initially
+>   
 
-It did not help. :( System still hangs exactly like before.
+There is one problem with force enabling ahci. You'll loose the CDROM on
+Dell laptops.
+Prior to force-enabling ahci there is one "device" that sees the 2 sata
+channels, and the 2 ide channels.
+When you force-enable ahci, this device becomes the ahci controller (it
+changes the device id),
+and the IDE controller will appear as a separate new device (with
+another device id), but it is disabled.
 
+There are registers on the ICH7 that allows you to set enabled/disabled
+status, but according to the documentation you should not enable a
+device after it has been disabled. In practice I couldn't get the CDROM
+to get re-enabled:
+* either nothing happend
+* spurious irqs were sent that nobody handles, unless I used irq=poll;
+but still no cdrom.
+
+Force-enabling AHCI, and not trying to enable the CDROM works, although
+I occasionally got NCQ errors.
+
+For a (long) discussion see this thread on the powertop mailing list:
+http://www.bughost.org/pipermail/power/2007-June/000533.html
+http://www.bughost.org/pipermail/power/2007-June/000573.html
+
+And there is also another slightly different approach:
+http://mjg59.livejournal.com/76062.html
 
 Best regards,
+--Edwin
 
- 				Krzysztof Oledzki
+
+
+
+
+
