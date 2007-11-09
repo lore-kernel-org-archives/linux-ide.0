@@ -1,38 +1,36 @@
-From: Sergei Shtylyov <sshtylyov@dev.rtsoft.ru>
-Subject: Re: [PATCH 1/8] alim15x3: PIO fallback fix
-Date: Fri, 09 Nov 2007 19:58:39 +0300
-Message-ID: <473491BF.8070200@dev.rtsoft.ru>
-References: <20070214015603.4619.41923.sendpatchset@localhost.localdomain> <46C6F90E.203@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/9] ide: convert do_rw_taskfile() to use ->data_phase
+Date: Fri, 09 Nov 2007 20:40:57 +0300
+Message-ID: <47349BA9.20206@ru.mvista.com>
+References: <200711022305.27131.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:56650 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750715AbXKIQ61 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 11:58:27 -0500
-In-Reply-To: <46C6F90E.203@ru.mvista.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:2231 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754195AbXKIRkp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 12:40:45 -0500
+In-Reply-To: <200711022305.27131.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello, I wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->> [PATCH] alim15x3: PIO fallback fix
+> * Use task->data_phase in do_rw_taskfile() to decide what to do.
 
->> If DMA tuning fails always set the best PIO mode.
+> * task->prehandler is only used by TASKFILE[_MULTI]_OUT so just
+>   use pre_task_out_intr() directly and remove no longer needed
+>   'prehandler' field from ide_task_t.
 
->> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> * Remove no longer needed ide_pre_handler_t type.
 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> There should be no functionality changes caused by this patch.
 
->    Oh, it's belated now. :-/
->    BTW, I'm going to hack on this driver since I've acquired a board 
-> with M1543C chip (that one for which there was an urgent bug that I had 
-> to fix some weeks ago :-)...
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-    Argh! PCI support for this board somehow doesn't work and doesn't even 
-want to compile. :-]
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-MBR, Seregi
+MBR, Sergei
