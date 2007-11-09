@@ -1,32 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
-Date: Fri, 09 Nov 2007 13:00:36 +0900
-Message-ID: <4733DB64.1090803@gmail.com>
-References: <41622.41856.qm@web52604.mail.re2.yahoo.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Thu, 08 Nov 2007 23:44:22 -0500
+Message-ID: <4733E5A6.30808@rtr.ca>
+References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca> <20071109034622.GB25581@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:20798 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511AbXKIEAw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 23:00:52 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so356722rvb
-        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 20:00:51 -0800 (PST)
-In-Reply-To: <41622.41856.qm@web52604.mail.re2.yahoo.com>
+Received: from rtr.ca ([76.10.145.34]:2215 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758344AbXKIEoY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 23:44:24 -0500
+In-Reply-To: <20071109034622.GB25581@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-Srihari Vijayaraghavan wrote:
-> (Same symptoms/behaviour as before: http://marc.info/?l=linux-ide&m=117949823328798&w=2  & http://marc.info/?t=117810970400003&r=1&w=2)
+Jeff Garzik wrote:
+> On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
+>> And I might even privately patch my own kernels to map the ACHI BAR
+>> in the cases where the BIOS didn't...
 > 
-> With mem=3500M all is well, otherwise it goes on reseting the ports in a loop & not booting :-(
+> The inability to do this in the general case is the main reason why
+> AHCI was not unconditionally enabled, even in IDE mode, when it was
+> originally added...  :/
+..
 
-Hmmm.. weird.  The workaround is still there.  Please post boot log.
-
-Thanks.
-
--- 
-tejun
+Yeah, that one's always puzzled me.
+It's just software,  so why don't we do it?  In the PCI layer, that is?
