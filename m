@@ -1,36 +1,33 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] libata: skip 0xff polling for PATA controllers
-Date: Fri, 09 Nov 2007 09:41:33 +0900
-Message-ID: <4733ACBD.4020602@gmail.com>
-References: <47327262.9020004@gmail.com> <473311A2.9080005@rtr.ca>
+Subject: Re: SC1200 failure in 2.6.23 and 2.6.24-rc1-git10
+Date: Fri, 09 Nov 2007 10:44:31 +0900
+Message-ID: <4733BB7F.8010004@gmail.com>
+References: <20071101213013.M54162@visp.net.lb> <20071107232045.GA26706@havoc.gtf.org> <20071107235548.M95675@visp.net.lb> <200711080130.54143.bzolnier@gmail.com> <20071108071204.M66693@visp.net.lb> <20071108104813.78ca4d65@the-village.bc.nu> <20071108164320.M82021@visp.net.lb> <20071108173139.GA1932@havoc.gtf.org> <20071108195605.M20599@visp.net.lb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=KOI8-R
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:40174 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbXKIBIf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 20:08:35 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so326768rvb
-        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 17:08:35 -0800 (PST)
-In-Reply-To: <473311A2.9080005@rtr.ca>
+Received: from wa-out-1112.google.com ([209.85.146.181]:58673 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751667AbXKIBon (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 20:44:43 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so445155wah
+        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 17:44:42 -0800 (PST)
+In-Reply-To: <20071108195605.M20599@visp.net.lb>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Luca Tettamanti <kronos.it@gmail.com>
+To: Denys Fedoryshchenko <denys@visp.net.lb>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mark Lord <liml@rtr.ca>, James Andrewartha <jamesa@daa.com.au>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> In a presentation of true workmanship, pata_ali asserts IRQ
->> permanantly if the TF status register is read more than once when
->> there's no device attached to the port.
-> ..
+Denys Fedoryshchenko wrote:
+> Thanks, it works like that.
 > 
-> Is using the altstatus reg (rather than status reg), when possible,
-> a better idea here?
+> Seems in libata there is no fall-back to non-DMA mode, if DMA didn't work.
 
-I dunno.  It probably differs case-by-case.  In general, status reg
-should be safer as it is supposed to clear IRQ.
+There is, it's just too conservative about that.  With improvements
+pending for 2.6.24, it should be quite snappy at falling back to PIO if
+configured transfer mode doesn't seem to work at all (consecutive IO
+command failures after transfer mode configuration change).
 
 -- 
 tejun
