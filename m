@@ -1,36 +1,81 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Fri, 9 Nov 2007 12:04:25 +0000
-Message-ID: <20071109120425.543971bf@the-village.bc.nu>
-References: <20071109020235.GA2031@ceren>
-	<20071109023129.GA25581@havoc.gtf.org>
-	<4733D421.7000505@rtr.ca>
-	<20071109034622.GB25581@havoc.gtf.org>
+From: Roberto Oppedisano <roppedisano@infracomspa.it>
+Subject: Re: [PATCH] Don't fail ata device revalidation for bad _GTF methods
+Date: Fri, 09 Nov 2007 13:29:30 +0100
+Message-ID: <473452AA.7080503@infracomspa.it>
+References: <4731C86B.1040704@infracomspa.it> <20071107121355.5eaf4496.akpm@linux-foundation.org> <47333CCF.1050403@infracomspa.it> <20071108094958.5c9b1b22.akpm@linux-foundation.org> <20071108180256.GB3491@havoc.gtf.org> <20071108101341.6c4f88d4.akpm@linux-foundation.org> <20071108182217.GA2685@srcf.ucam.org> <20071108183707.GA3008@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35440 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751578AbXKIMEc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 07:04:32 -0500
-In-Reply-To: <20071109034622.GB25581@havoc.gtf.org>
+Received: from mailgw.infracomspa.it ([217.12.183.244]:3756 "EHLO
+	svkmg019i.infracomspa.it" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751368AbXKIM3n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 07:29:43 -0500
+In-Reply-To: <20071108183707.GA3008@srcf.ucam.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, rjw@sisk.pl, linux-acpi@vger.kernel.org
 
-On Thu, 8 Nov 2007 22:46:22 -0500
-Jeff Garzik <jeff@garzik.org> wrote:
+I can confirm that this patch solves the problem with s2ram on my laptop.
 
-> On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
-> > And I might even privately patch my own kernels to map the ACHI BAR
-> > in the cases where the BIOS didn't...
-> 
-> The inability to do this in the general case is the main reason why
-> AHCI was not unconditionally enabled, even in IDE mode, when it was
-> originally added...  :/
+R
 
-We've done it all the time for various devices without problems (eg S3
-video cards). I'd like to see it go in - although perhaps attached to a
-force_ahci boot param initially
+Matthew Garrett wrote:
+> Experience suggests that the _GTF method may be bad. We currently fail 
+> device revalidation in that case, which seems excessive.
+>
+> Signed-off-by: Matthew Garrett <mjg59@srcf.ucam.org>
+>
+> ---
+>
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index 08a52dd..545ea86 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -312,7 +312,7 @@ EXPORT_SYMBOL_GPL(ata_acpi_stm);
+>   *
+>   * RETURNS:
+>   * Number of taskfiles on success, 0 if _GTF doesn't exist or doesn't
+> - * contain valid data.  -errno on other errors.
+> + * contain valid data.
+>   */
+>  static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+>  			   void **ptr_to_free)
+> @@ -339,7 +339,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+>  			ata_dev_printk(dev, KERN_WARNING,
+>  				       "_GTF evaluation failed (AE 0x%x)\n",
+>  				       status);
+> -			rc = -EIO;
+>  		}
+>  		goto out_free;
+>  	}
+> @@ -359,7 +358,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+>  		ata_dev_printk(dev, KERN_WARNING,
+>  			       "_GTF unexpected object type 0x%x\n",
+>  			       out_obj->type);
+> -		rc = -EINVAL;
+>  		goto out_free;
+>  	}
+>  
+> @@ -367,7 +365,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+>  		ata_dev_printk(dev, KERN_WARNING,
+>  			       "unexpected _GTF length (%d)\n",
+>  			       out_obj->buffer.length);
+> -		rc = -EINVAL;
+>  		goto out_free;
+>  	}
+>  
+> @@ -511,10 +508,7 @@ static int ata_acpi_exec_tfs(struct ata_device *dev)
+>  	int gtf_count, i, rc;
+>  
+>  	/* get taskfiles */
+> -	rc = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
+> -	if (rc < 0)
+> -		return rc;
+> -	gtf_count = rc;
+> +	gtf_count = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
+>  
+>  	/* execute them */
+>  	for (i = 0, rc = 0; i < gtf_count; i++) {
+>   
