@@ -1,33 +1,31 @@
-From: "mike zheng" <mail4mz@gmail.com>
-Subject: FIS structure and Command List structure for AHCI SATA controller
-Date: Thu, 8 Nov 2007 22:38:25 -0500
-Message-ID: <5c9cd53b0711081938m1e752087yda930792a57a98c0@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Thu, 8 Nov 2007 22:46:22 -0500
+Message-ID: <20071109034622.GB25581@havoc.gtf.org>
+References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:56088 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758344AbXKIDiZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2007 22:38:25 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so352727rvb
-        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2007 19:38:25 -0800 (PST)
+Received: from havoc.gtf.org ([69.61.125.42]:56378 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753369AbXKIDqX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Nov 2007 22:46:23 -0500
 Content-Disposition: inline
+In-Reply-To: <4733D421.7000505@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-Hi All,
+On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
+> And I might even privately patch my own kernels to map the ACHI BAR
+> in the cases where the BIOS didn't...
 
-I am working on an AHCI SATA controller. For each port, there is one
-FIS descriptor and one Command List, which points to a Received FIS
-structure and Command List structure. So what is Received FIS
-structure? The Command List structure points to Command Table, that
-has Command FIS field and Physical Region Descriptor table. I assume
-the Command table is used for the communication between processor and
-the SATA controller. Then why do we need the Received FIS structure?
+The inability to do this in the general case is the main reason why
+AHCI was not unconditionally enabled, even in IDE mode, when it was
+originally added...  :/
 
-Thanks for your help,
+	Jeff, taking a trip down memory lane
 
-Mike
+
+
