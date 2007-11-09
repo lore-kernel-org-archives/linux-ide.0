@@ -1,37 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 12/18] sis5513: factor out UDMA programming code
-Date: Fri, 09 Nov 2007 17:12:18 +0300
-Message-ID: <47346AC2.3090704@ru.mvista.com>
-References: <200711050026.49990.bzolnier@gmail.com>
+From: Krzysztof Oledzki <olel@ans.pl>
+Subject: Re: pata_serverworks hangs
+Date: Fri, 9 Nov 2007 15:24:40 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0711091523090.951@bizon.gios.gov.pl>
+References: <Pine.LNX.4.64.0711021415300.1316@bizon.gios.gov.pl>
+ <20071102174148.49358f7e@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:1347 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758302AbXKIOMF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 09:12:05 -0500
-In-Reply-To: <200711050026.49990.bzolnier@gmail.com>
+Received: from bizon.gios.gov.pl ([212.244.124.8]:47923 "EHLO
+	bizon.gios.gov.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbXKIOYw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2007 09:24:52 -0500
+In-Reply-To: <20071102174148.49358f7e@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
 
-> * Factor out UDMA programming code from sis_set_dma_mode() to per
->   chipset family helpers: sis_{ata33,ata133}_program_udma_timings().
 
-> * Add sis_program_udma_timings() helper.
+On Fri, 2 Nov 2007, Alan Cox wrote:
 
-> * Remove unneeded casts to 'unsigned long'.
+> On Fri, 2 Nov 2007 14:29:17 +0100 (CET)
+> Krzysztof Oledzki <olel@ans.pl> wrote:
+>
+>> Hello,
+>>
+>> I just tried to switch from old IDE to libata but unfortunately kernel
+>> (2.6.22.10) hangs during boot:
+>>
+>> ata1: PATA max UDMA/66 cmd 0x000101e8 ctl 0x000103ee bmdma 0x00012c40 irq 11
+>> ata2: DUMMY
+>> ata1.00: ATAPI: HL-DT-ST CD-ROM GCR-8482B, 1.00, max MWDMA2
+>> ara1.01: ATAPI: LITE-ON LTR-62327S, QS75, max UDMA/33
+>> ata1.00: configured for MWDMA2
+>> ata1.01: configured for UDMA/33
+>> scsi 2:0:0:0: CDROM             HL-DT-ST CDROM GCR-8482B 1.00 PQ: 0 ANSI 5
+>> (kernel hangs)
+>>
+>> Attaching lspci and dmesg from working system, with pata_serverworks
+>> disabled.
+>
+> Try the following patch and let me know if it helps:
 
-> * Minor cleanups.
+It did not help. :( System still hangs exactly like before.
 
-> There should be no functionality changes caused by this patch.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Best regards,
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+ 				Krzysztof Oledzki
