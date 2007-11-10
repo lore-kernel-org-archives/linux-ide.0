@@ -1,46 +1,63 @@
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Sat, 10 Nov 2007 19:38:05 +0100
-Message-ID: <20071110183805.GA28230@citd.de>
-References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca> <20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu> <20071109233215.GA22498@citd.de> <4735F1E8.1070009@rtr.ca>
+From: "Allen Martin" <AMartin@nvidia.com>
+Subject: RE: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Sat, 10 Nov 2007 10:37:15 -0800
+Message-ID: <DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com>
+References: <20071109020235.GA2031@ceren>	<20071109023129.GA25581@havoc.gtf.org>	<4733D421.7000505@rtr.ca>	<20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu> <47351FE1.4000001@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from enyo.dsw2k3.info ([195.71.86.239]:51428 "EHLO enyo.dsw2k3.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751605AbXKJSiS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Nov 2007 13:38:18 -0500
-Content-Disposition: inline
-In-Reply-To: <4735F1E8.1070009@rtr.ca>
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:8436 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbXKJSmW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Nov 2007 13:42:22 -0500
+In-Reply-To: <47351FE1.4000001@garzik.org>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-On 10.11.2007 13:01, Mark Lord wrote:
-> Matthias Schniedermeyer wrote:
->> ..
->> My computer/mainboard @work has such a "broken" BIOS. Of the 5 SATA-Ports 
->> this MB has only 1 (and 1 "missing" that is reported by linux but i can't 
->> find on the MB) is configured as AHCI which means that with 
-> ..
->
-> I have a P5B-VM here (very similar).
-> The "missing" AHCI port is an eSATA connector on the back panel
-> for this board.  Maybe your board just has empty tracks where
-> the connector would otherwise have been populated (?).
+ > Alan Cox wrote:
+> > On Thu, 8 Nov 2007 22:46:22 -0500
+> > Jeff Garzik <jeff@garzik.org> wrote:
+> > 
+> >> On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
+> >>> And I might even privately patch my own kernels to map 
+> the ACHI BAR 
+> >>> in the cases where the BIOS didn't...
+> >> The inability to do this in the general case is the main 
+> reason why 
+> >> AHCI was not unconditionally enabled, even in IDE mode, 
+> when it was 
+> >> originally added...  :/
+> > 
+> > We've done it all the time for various devices without 
+> problems (eg S3 
+> > video cards). I'd like to see it go in - although perhaps 
+> attached to 
+> > a force_ahci boot param initially
+> 
+> By forcing AHCI, your PATA devices will be inaccessible, in a 
+> common configuration.  It also means shuffling users from one 
+> driver to another, which induces breakage.
+> 
+> I was speaking wishfully.  Real life intrudes, alas.
+> 
 
-Maybe, but that still doesn't "solve" my problem of the SATA-ports that 
-i have to drive by PIIX, instead of the more preferable AHCI.
+At least for NVIDIA controllers, loading the AHCI driver when the BIOS
+is set to IDE mode is not recommended by NVIDIA.  Any AHCI workarounds
+in the BIOS are likely to be disabled when set to IDE mode.  In practice
+we don't expect to see a lot of users running an AHCI controller in IDE
+mode unless they have explicitly disabled AHCI from the BIOS or the
+system builder has some specific reason for shipping IDE mode by default
+(like support for some legacy DOS or Win9x tools)
 
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
-
+-Allen
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
