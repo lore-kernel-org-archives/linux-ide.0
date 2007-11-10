@@ -1,49 +1,49 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Sat, 10 Nov 2007 14:04:22 -0500
-Message-ID: <473600B6.5070103@garzik.org>
-References: <20071109020235.GA2031@ceren>	<20071109023129.GA25581@havoc.gtf.org>	<4733D421.7000505@rtr.ca>	<20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu> <47351FE1.4000001@garzik.org> <DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com>
+Subject: linux-ata.org contributions
+Date: Sat, 10 Nov 2007 17:10:43 -0500
+Message-ID: <47362C63.7080108@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43772 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59339 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752736AbXKJTEf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Nov 2007 14:04:35 -0500
-In-Reply-To: <DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com>
+	id S1754616AbXKJWKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Nov 2007 17:10:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Allen Martin <AMartin@nvidia.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <htejun@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>, Albert Lee <albertcc@tw.ibm.com>
 
-Allen Martin wrote:
-> At least for NVIDIA controllers, loading the AHCI driver when the BIOS
-> is set to IDE mode is not recommended by NVIDIA.  Any AHCI workarounds
-> in the BIOS are likely to be disabled when set to IDE mode.  In practice
+(cc'd to main potential content contributors)
 
-What workarounds, if any, are needed?
+What do you guys think about a git tree for linux-ata.org web pages, 
+rather than a wiki?  A git tree would be my preference.
 
-We need those in the driver not BIOS anyway, in order to fully support 
-suspend/resume and host controller reset during runtime operation.
+Whenever you want to update or add a page, just send a 'git pull' 
+request to me...
 
+As I noted to Tejun in IRC, the main caveat towards contributing to 
+linux-ata.org -- in any fashion, git or wiki or whatever -- is that I 
+would like to continue to have google adsense ads there.  They help pay 
+for the non-Red Hat dedicated server that handles these web pages.
 
-> we don't expect to see a lot of users running an AHCI controller in IDE
-> mode unless they have explicitly disabled AHCI from the BIOS or the
-> system builder has some specific reason for shipping IDE mode by default
-> (like support for some legacy DOS or Win9x tools)
+Additional disclosures follow, so that you may align or avoid as your 
+ethics dictates...
 
-That's the situation we run into the most:  the system is in IDE mode 
-not because AHCI doesn't work, but for legacy compatibility.  We even 
-run into cases (MacBook, Dell servers) where the user is never offered 
-the option to turn on AHCI, even though the silicon supports it.
+Disclosure #1:  income from linux-ata.org: Aug US$31, Sep US$38, Oct US$37
 
-As such, the user winds up being forced to into the inferior mode for no 
-reason related to their own setup (since they are obviously running Linux).
+Disclosure #2:  the dedicated server in question also handles my email 
+(which is intentionally not on Red Hat machines) and other sites like 
+linux.yyz.us.
 
-In Linux at least, we have a bunch of open sata_nv issues, so forcing 
-users' interface into AHCI mode as a default future policy seems like 
-the most stable choice on NVIDIA AHCI platforms.
+Disclosure #3:  All this is done under the copyright and onus of 
+"Dunvegan Media, Inc." which is really me and nobody else.  The company 
+was started to put a corporate face on the lulu.com and AdSense stuff, 
+and to give myself practice at running a business.  It also does a bit 
+of email and DNS hosting for some friends, but the vast majority of 
+usage is my linux stuff.  The company has always been [if only slightly] 
+cash flow negative, so its not like I'm getting rich off this.  :)
 
 	Jeff
 
