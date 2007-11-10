@@ -1,68 +1,48 @@
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Sat, 10 Nov 2007 00:32:15 +0100
-Message-ID: <20071109233215.GA22498@citd.de>
-References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca> <20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: FIS structure and Command List structure for AHCI SATA controller
+Date: Fri, 09 Nov 2007 22:03:04 -0500
+Message-ID: <47351F68.3020307@garzik.org>
+References: <5c9cd53b0711081938m1e752087yda930792a57a98c0@mail.gmail.com>	 <20071109035506.GC25581@havoc.gtf.org> <5c9cd53b0711090539u79c1ba4fte46ee13f5906b42a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from enyo.dsw2k3.info ([195.71.86.239]:45320 "EHLO enyo.dsw2k3.info"
+Received: from srv5.dvmed.net ([207.36.208.214]:34664 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754611AbXKJAEv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Nov 2007 19:04:51 -0500
-Content-Disposition: inline
-In-Reply-To: <20071109120425.543971bf@the-village.bc.nu>
+	id S1752399AbXKJDDI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Nov 2007 22:03:08 -0500
+In-Reply-To: <5c9cd53b0711090539u79c1ba4fte46ee13f5906b42a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
+To: mike zheng <mail4mz@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On 09.11.2007 12:04, Alan Cox wrote:
-> On Thu, 8 Nov 2007 22:46:22 -0500
-> Jeff Garzik <jeff@garzik.org> wrote:
+mike zheng wrote:
+> Hi Jeff,
 > 
-> > On Thu, Nov 08, 2007 at 10:29:37PM -0500, Mark Lord wrote:
-> > > And I might even privately patch my own kernels to map the ACHI BAR
-> > > in the cases where the BIOS didn't...
-> > 
-> > The inability to do this in the general case is the main reason why
-> > AHCI was not unconditionally enabled, even in IDE mode, when it was
-> > originally added...  :/
+> Actually I am using Marvell's 88SE6121 on kernel 2.4. I just wonder do
+> I have to enable the FIS? The SATA Command Table of the device have
+> following definitions:
 > 
-> We've done it all the time for various devices without problems (eg S3
-> video cards). I'd like to see it go in - although perhaps attached to a
-> force_ahci boot param initially
+> 00h Command FIS
+> 40h ATAPI Command (CDB)
+> 60h RSVD
+> 80h Physical Region Descriptor Table
+> 
+> Does it mean I can only use FIS or ATAPI for this device?
+> 
+> Another confusion is the manual say that software should prepare the
+> command header, command FIS and the ATAPI command (CDB) for the ATAPI
+> command. Why it needs the FIS for ATAPI command?
+> 
+> Thanks for your help.
 
-I second that.
+FIS == basic data message used by all Serial ATA.
 
-My computer/mainboard @work has such a "broken" BIOS. Of the 5 
-SATA-Ports this MB has only 1 (and 1 "missing" that is reported by linux 
-but i can't find on the MB) is configured as AHCI which means that with 
-a HDD & a DVD-ROM connected to 2 of the 4 "piix"-ports, i only have 1 
-hot-pluggable port instead of the possible 3. And for some temporary 
-work i would really need at least 2 hot-pluggable ports.
+Both SATA ATA and SATA ATAPI use a FIS, it is fundamental to the nature 
+of Serial ATA.
 
-So as a work-around i will try a Promise 150 TX4 controller as it is 
-supposed to support hotplug since 2.6.23.
-
-After having hotplug @home from the date the linux-kernel supporting it 
-was released, i don't want to live without it, as i use it daily.
-
-
-And on the topic of "broken" BIOSes. I have a little empathy for the MB 
-manufactures as non-RAID AHCI royaly screws Windos, so not supporting it 
-reduces their support costs enough to overlook screwing the non-windos 
-faction.
+	Jeff
 
 
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
 
