@@ -1,33 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.24-rc1: pata_acpi fails to activate DMA for DVD-ROM on ALi
- M5229 secondary channel
-Date: Sun, 11 Nov 2007 20:02:36 +0000
-Message-ID: <20071111200236.4cece127@the-village.bc.nu>
-References: <200710262130.03567.arvidjaar@mail.ru>
-	<20071026202559.01161aa9@the-village.bc.nu>
-	<200711112223.13542.arvidjaar@mail.ru>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] cmd64x: don't clear the other channels interrupt
+Date: Sun, 11 Nov 2007 22:52:58 +0100
+Message-ID: <200711112252.58538.bzolnier@gmail.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200702162321.40813.sshtylyov@ru.mvista.com> <200711091407.01369.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54094 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756145AbXKKUDO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Nov 2007 15:03:14 -0500
-In-Reply-To: <200711112223.13542.arvidjaar@mail.ru>
+Received: from fk-out-0910.google.com ([209.85.128.187]:14071 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbXKKVqC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Nov 2007 16:46:02 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so1274671fkz
+        for <linux-ide@vger.kernel.org>; Sun, 11 Nov 2007 13:46:00 -0800 (PST)
+In-Reply-To: <200711091407.01369.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, marogge@onlinehome.de, milon@wq.cz
 
-> BTW in rc2 it does not even boot - it babbles something about
-> Unable to determine IRQ for 00:04.0  (which is IDE controller) and that is
-> the end of story. No IDE device is found.
+On Friday 09 November 2007, Sergei Shtylyov wrote:
+> Make sure to not clear the other IDE channel's interrupt when clearing an IDE
+> interrupt via the MRDMODE register.
+> 
+> Thanks to Bart for finding a coding mistake.
 
-Thats not an IDE breakage I suspect. Various people are reporting IRQ
-related breakage with -rc2 so you should probably report that to the main
-linux-kernel list
+Could you resend with "Signed-off-by:" and "Tested-by:" tags?
 
-Doesn't explain the ALi DMA problem but I think its unrelated
+[ A reference to the problematic commit and crediting Martin for
+  patiently bisecting the issue would score an extra points. :) ]
 
-Alan
+> ---
+> The patch is against the Linus tree.
+> 
+>  drivers/ide/pci/cmd64x.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/ide/pci/cmd64x.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ide/pci/cmd64x.c
+> +++ linux-2.6/drivers/ide/pci/cmd64x.c
+> @@ -1,5 +1,5 @@
+>  /*
+> - * linux/drivers/ide/pci/cmd64x.c		Version 1.50	May 10, 2007
+> + * linux/drivers/ide/pci/cmd64x.c		Version 1.51	Nov 8, 2007
+>   *
+>   * cmd64x.c: Enable interrupts at initialization time on Ultra/PCI machines.
+>   *           Due to massive hardware bugs, UltraDMA is only supported
+> @@ -339,7 +339,8 @@ static int cmd648_ide_dma_end (ide_drive
+>  	u8  mrdmode		= inb(hwif->dma_master + 0x01);
+>  
+>  	/* clear the interrupt bit */
+> -	outb(mrdmode | irq_mask, hwif->dma_master + 0x01);
+> +	outb((mrdmode & ~(MRDMODE_INTR_CH0 | MRDMODE_INTR_CH1)) | irq_mask,
+> +	     hwif->dma_master + 0x01);
+>  
+>  	return err;
+>  }
+> 
+> 
+
+
