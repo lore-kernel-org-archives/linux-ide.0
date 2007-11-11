@@ -1,50 +1,33 @@
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: Re: 2.6.24-rc1: pata_acpi fails to activate DMA for DVD-ROM on ALi M5229 secondary channel
-Date: Sun, 11 Nov 2007 22:23:12 +0300
-Message-ID: <200711112223.13542.arvidjaar@mail.ru>
-References: <200710262130.03567.arvidjaar@mail.ru> <20071026202559.01161aa9@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.24-rc1: pata_acpi fails to activate DMA for DVD-ROM on ALi
+ M5229 secondary channel
+Date: Sun, 11 Nov 2007 20:02:36 +0000
+Message-ID: <20071111200236.4cece127@the-village.bc.nu>
+References: <200710262130.03567.arvidjaar@mail.ru>
+	<20071026202559.01161aa9@the-village.bc.nu>
+	<200711112223.13542.arvidjaar@mail.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1391882.HEx2pAVv0S";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757362AbXKKTX3@vger.kernel.org>
-In-Reply-To: <20071026202559.01161aa9@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:54094 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756145AbXKKUDO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Nov 2007 15:03:14 -0500
+In-Reply-To: <200711112223.13542.arvidjaar@mail.ru>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 
---nextPart1391882.HEx2pAVv0S
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> BTW in rc2 it does not even boot - it babbles something about
+> Unable to determine IRQ for 00:04.0  (which is IDE controller) and that is
+> the end of story. No IDE device is found.
 
-On Friday 26 October 2007, Alan Cox wrote:
-> On Fri, 26 Oct 2007 21:30:02 +0400
-> Andrey Borzenkov <arvidjaar@mail.ru> wrote:
->=20
-> > Running legacy IDE drivers apparently works in DMA mode for both:
->=20
-> Thanks - can you send me an lspci -vvxxx off list
->=20
+Thats not an IDE breakage I suspect. Various people are reporting IRQ
+related breakage with -rc2 so you should probably report that to the main
+linux-kernel list
 
-BTW in rc2 it does not even boot - it babbles something about
-Unable to determine IRQ for 00:04.0  (which is IDE controller) and that is
-the end of story. No IDE device is found.
+Doesn't explain the ALi DMA problem but I think its unrelated
 
---nextPart1391882.HEx2pAVv0S
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQBHN1ahR6LMutpd94wRArQGAJ4/VSZirE4Rw2sjM79cfRzukWo5FACgq8WY
-wCkAmoXOtHEWrESTIsXvkNk=
-=RyK8
------END PGP SIGNATURE-----
-
---nextPart1391882.HEx2pAVv0S--
+Alan
