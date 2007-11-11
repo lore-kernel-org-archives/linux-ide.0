@@ -1,67 +1,50 @@
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Sun, 11 Nov 2007 19:24:35 +0100
-Message-ID: <20071111182435.GA2265@citd.de>
-References: <20071109020235.GA2031@ceren> <20071109023129.GA25581@havoc.gtf.org> <4733D421.7000505@rtr.ca> <20071109034622.GB25581@havoc.gtf.org> <20071109120425.543971bf@the-village.bc.nu> <20071109233215.GA22498@citd.de> <4735F1E8.1070009@rtr.ca> <20071110183805.GA28230@citd.de> <47370C2A.108@ct.heise.de>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: 2.6.24-rc1: pata_acpi fails to activate DMA for DVD-ROM on ALi M5229 secondary channel
+Date: Sun, 11 Nov 2007 22:23:12 +0300
+Message-ID: <200711112223.13542.arvidjaar@mail.ru>
+References: <200710262130.03567.arvidjaar@mail.ru> <20071026202559.01161aa9@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from enyo.dsw2k3.info ([195.71.86.239]:49312 "EHLO enyo.dsw2k3.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751494AbXKKSYs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Nov 2007 13:24:48 -0500
-Content-Disposition: inline
-In-Reply-To: <47370C2A.108@ct.heise.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart1391882.HEx2pAVv0S";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757362AbXKKTX3@vger.kernel.org>
+In-Reply-To: <20071026202559.01161aa9@the-village.bc.nu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-ide@vger.kernel.org
-To: Thorsten Leemhuis <thl@ct.heise.de>
-Cc: Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-On 11.11.2007 15:05, Thorsten Leemhuis wrote:
-> On 10.11.2007 00:32, Matthias Schniedermeyer wrote:
-> >  [...]
-> > My computer/mainboard @work has such a "broken" BIOS. Of the 5 
-> > SATA-Ports this MB has only 1 (and 1 "missing" that is reported by
-> > linux but i can't find on the MB) is configured as AHCI [...]
-> 
-> There is nothing "broken" here. You have a ICH8 (without R) that drives
-> four SATA ports, which are handled by ata_piix.
-> 
-> Then you have a Jmicron JMB363 -- it handles the PATA-Channel and two
-> SATA-Ports -- one internal (near the battery)/next to the PCI-Slot and a
-> external eSATA port. Seems you configured it in AHCI-Mode in the
-> BIOS-Setup. Linux will work just fine if you connect the hard disc to
-> that port. But if you want to install Windows XP you need a driver from
-> Jmicron.
-> 
-> There were BIOSes for the P5B where you could enabled AHCI for the ICH8
-> as well. It seems Asus removed it in the later BIOS-versions again as
-> Intel doesn't provide a Windows-AHCI driver for the basic ICH8.
+--nextPart1391882.HEx2pAVv0S
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I don't have an P5B @work, but i guess MSI cooks with water too. :-)
+On Friday 26 October 2007, Alan Cox wrote:
+> On Fri, 26 Oct 2007 21:30:02 +0400
+> Andrey Borzenkov <arvidjaar@mail.ru> wrote:
+>=20
+> > Running legacy IDE drivers apparently works in DMA mode for both:
+>=20
+> Thanks - can you send me an lspci -vvxxx off list
+>=20
 
-But i have a (1 year old) P5B @home and it is exactly like you said.
+BTW in rc2 it does not even boot - it babbles something about
+Unable to determine IRQ for 00:04.0  (which is IDE controller) and that is
+the end of story. No IDE device is found.
 
-My main point is still the same, if Linux could force AHCI mode, i 
-wouldn't have to switch between those modes when booting Wintendo to 
-play some games. (And i could use AHCI @work where i can't switch it in 
-BIOS)
+--nextPart1391882.HEx2pAVv0S
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
 
-On a side note, with the mainboard i had before the P5B (ASUS, 925X 
-Chipset, ICH 6 or 7) Linux worked in AHCI-mode and Wintendo worked also 
-without problems. (IOW: I did not need to switch modes in BIOS!)
+iD8DBQBHN1ahR6LMutpd94wRArQGAJ4/VSZirE4Rw2sjM79cfRzukWo5FACgq8WY
+wCkAmoXOtHEWrESTIsXvkNk=
+=RyK8
+-----END PGP SIGNATURE-----
 
-
-
-
-
-
-Bis denn
-
--- 
-Real Programmers consider "what you see is what you get" to be just as 
-bad a concept in Text Editors as it is in women. No, the Real Programmer
-wants a "you asked for it, you got it" text editor -- complicated, 
-cryptic, powerful, unforgiving, dangerous.
-
+--nextPart1391882.HEx2pAVv0S--
