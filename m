@@ -1,60 +1,67 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Delkin Cardbus IDE, a.k.a. ASKA "Ninja" chipset
-Date: Mon, 12 Nov 2007 17:56:12 -0500
-Message-ID: <4738DA0C.1070009@rtr.ca>
-References: <200711031541.lA3FfJ6h006120@harpo.it.uu.se>	<20071103162203.5388a37f@the-village.bc.nu>	<47323E13.3030205@rtr.ca>	<20071107232132.238fdf04@the-village.bc.nu>	<47324A16.5010205@rtr.ca>	<4738B364.5030806@rtr.ca> <20071112212745.7e0f5b6e@the-village.bc.nu>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 1/13] serverworks: cleanup ->set_dma_mode method
+Date: Tue, 13 Nov 2007 00:01:16 +0100
+Message-ID: <200711130001.16287.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3389 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759905AbXKLWzQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Nov 2007 17:55:16 -0500
-In-Reply-To: <20071112212745.7e0f5b6e@the-village.bc.nu>
+Received: from nf-out-0910.google.com ([64.233.182.188]:63392 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757691AbXKLW6F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 17:58:05 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1250510nfb
+        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 14:58:03 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, greg.freemyer@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Mon, 12 Nov 2007 15:11:16 -0500
-> Mark Lord <liml@rtr.ca> wrote:
-> 
->> Mark Lord wrote:
->>> Alan Cox wrote:
->>>> On Wed, 07 Nov 2007 17:37:07 -0500
->>>> Mark Lord <liml@rtr.ca> wrote:
->>>>
->>>>> delkin_cb is also missing from libata.
->>>>>
->>>>> I was going to port it over once, but no longer have a cardbus slot
->>>>> in either of my notebooks here.
->>>> Yes I looked at it but it didn't have any proper speed setting, so I
->>>> decided it wasn't actually worth doing.
->>> ..
->>>
->>> Yeah.  No docs whatsoever, but there's more than a few users
->>> of it out there.
->> ...
->>
->> Mmmm.. the NetBSD people seem to have detailed information on these chips!
->> There seems to be more than enough information in the NetBSD sources
->> to implement full timings support and full bus-master DMA support:
->>
->> http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/ic/ninjaata32var.h?rev=1.3&content-type=text/x-cvsweb-markup
->> http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/ic/ninjaata32reg.h?rev=1.3&content-type=text/x-cvsweb-markup
->> http://cvsweb.netbsd.org/bsdweb.cgi/src/sys/dev/ic/ninjaata32.c?rev=1.9&content-type=text/x-cvsweb-markup
->>
->>
->> Anyone want to take this on?
-> 
-> I'll knock a driver out next week providing someone with hardware is
-> willing to be test monkey.
 
-I've got hardware here that you can have, if you want it.
-It's just a cardbus CF adapter, and neither of my own notebooks have slots.
+IDE core guarantees that ->set_dma_mode will be called only
+for DMA modes set in SWDMA/MWDMA/UDMA masks.
 
-Email me privately with mailing address if you want it.
+There should be no functionality changes caused by this patch.
 
-Cheers
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/pci/serverworks.c |   25 ++++++-------------------
+ 1 file changed, 6 insertions(+), 19 deletions(-)
+
+Index: b/drivers/ide/pci/serverworks.c
+===================================================================
+--- a/drivers/ide/pci/serverworks.c
++++ b/drivers/ide/pci/serverworks.c
+@@ -164,25 +164,12 @@ static void svwks_set_dma_mode(ide_drive
+ 	ultra_timing	&= ~(0x0F << (4*unit));
+ 	ultra_enable	&= ~(0x01 << drive->dn);
+ 
+-	switch(speed) {
+-		case XFER_MW_DMA_2:
+-		case XFER_MW_DMA_1:
+-		case XFER_MW_DMA_0:
+-			dma_timing |= dma_modes[speed - XFER_MW_DMA_0];
+-			break;
+-
+-		case XFER_UDMA_5:
+-		case XFER_UDMA_4:
+-		case XFER_UDMA_3:
+-		case XFER_UDMA_2:
+-		case XFER_UDMA_1:
+-		case XFER_UDMA_0:
+-			dma_timing   |= dma_modes[2];
+-			ultra_timing |= ((udma_modes[speed - XFER_UDMA_0]) << (4*unit));
+-			ultra_enable |= (0x01 << drive->dn);
+-		default:
+-			break;
+-	}
++	if (speed >= XFER_UDMA_0) {
++		dma_timing   |= dma_modes[2];
++		ultra_timing |= (udma_modes[speed - XFER_UDMA_0] << (4 * unit));
++		ultra_enable |= (0x01 << drive->dn);
++	} else if (speed >= XFER_MW_DMA_0)
++		dma_timing   |= dma_modes[speed - XFER_MW_DMA_0];
+ 
+ 	pci_write_config_byte(dev, drive_pci2[drive->dn], dma_timing);
+ 	pci_write_config_byte(dev, (0x56|hwif->channel), ultra_timing);
