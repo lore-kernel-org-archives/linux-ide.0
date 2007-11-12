@@ -1,42 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Hang during boot in piix_init_pcs (ata_piix.c) with macbook pro
-Date: Tue, 13 Nov 2007 00:20:30 +0900
-Message-ID: <47386F3E.8000906@gmail.com>
-References: <47371586.9090409@tng.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: possibly a dumb question about sb600/700
+Date: Mon, 12 Nov 2007 15:28:13 +0000
+Message-ID: <20071112152813.369372e3@the-village.bc.nu>
+References: <47381768.2060803@gmail.com>
+	<20071112131640.3bf0073c@the-village.bc.nu>
+	<4738542A.5050706@gmail.com>
+	<20071112143612.5be65fc8@the-village.bc.nu>
+	<473866CE.4010407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:4255 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbXKLPUl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 10:20:41 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1195670rvb
-        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 07:20:39 -0800 (PST)
-In-Reply-To: <47371586.9090409@tng.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49857 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751605AbXKLP2n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 10:28:43 -0500
+In-Reply-To: <473866CE.4010407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Rohwer <tr@tng.de>
-Cc: linux-ide@vger.kernel.org, "Gaston, Jason D" <jason.d.gaston@intel.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: conke.hu@gmail.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-[cc'ing Jason]
-Hello, Thomas.
+On Mon, 12 Nov 2007 23:44:30 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-Thomas Rohwer wrote:
-> My next try would be to put in a custom version ich8_map_db with
-> port_enable=1
-> (and possibly {P0, P2, NA, NA} in the first line of .map) and use this map
-> for pci id 8086:2828, because I think the notebook has only one sata
-> port anyway.
-> Is this the correct way to approach the matter?
+> Alan Cox wrote:
+> >> Alright, then.  I was just worried about the asymmetry.  Oh, this
+> >> _reminds me of another problem regarding enable bits.  There's a system
+> >> (wyse thin client) with pata_amd controller where the enable bit isn't
+> >> set by the BIOS and there's no reliable way to identify the system (no
+> >> DMI).  Do you know how important is the enabled bits test for these
+> >> controllers?
+> > 
+> > If we ignore the tests we get more problems with 30 second timeouts on
+> > other hardware that has incorrect termination or a port which is simply
+> > not wired on the mainboard.
+> > 
+> > I bet we can identify the Wyse somehow and I'd rather do that even if it
+> > means looking for magic strings in the BIOS ROM image.
+> 
+> Thanks.  I don't have direct access to the machine so I guess they'll
+> have to live with temporary workaround for the time being.  :-(
 
-Yes, adding a separate entry for ich8m is the correct approach w/
-port_enable=1 seems like the correct approach.  Does it fix the problem?
+cp biosrom file
+strings file
+grep product name
 
-> Please carbon copy me when answering, as I am not subscribed to the list.
+not approximate offset
 
-That's what people always do on any linux kernel mailing list.  you
-don't need to ask for it.
-
--- 
-tejun
