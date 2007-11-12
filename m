@@ -1,51 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Promise SATA TX4 300 port timeout with sata_promise in 2.6.22,
-   kernel panic in 2.6.23
-Date: Mon, 12 Nov 2007 17:58:38 +0900
-Message-ID: <473815BE.4070607@gmail.com>
-References: <6f048fc10711100443y6e9982b9jc00b3740f0a44d79@mail.gmail.com> <4737D2A3.6010103@gmail.com> <fh93nq$uif$1@ger.gmane.org>
+Subject: [PATCH] ata_piix: add SATELLITE U205 to broken suspend list
+Date: Mon, 12 Nov 2007 17:59:52 +0900
+Message-ID: <20071112085952.GA15967@htj.mynetwork.cxm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:47980 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:49415 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584AbXKLI6v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 03:58:51 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1459786wah
-        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 00:58:51 -0800 (PST)
-In-Reply-To: <fh93nq$uif$1@ger.gmane.org>
+	with ESMTP id S1751604AbXKLJAB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 04:00:01 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1460038wah
+        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 01:00:00 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patric Karlsson <patric@ce.chalmers.se>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, me@rpatterson.net
 
-Patric Karlsson wrote:
-> Tejun Heo wrote:
->> It seems those 3Gbps promise controllers have hard time getting out of
->> transmission errors.  Is it because hardreset doesn't work?  Can we
->> fix it?
->>
->> Also, if 3Gbps can't be made reliable on those controllers, how about
->> limiting it to 1.5Gbps by default with appropriate warning messages?
->> Without PMP, it's not like we're gonna earn anything by driving the
->> thing at 3Gbps.
-> 
-> I thought this was supposed to be fixed in 2.6.24-RC2 ?
+Satellite U205 has alternate product name where the satellite part is
+all capatalized.  Add it to the blacklist.
 
-Ah.... good news.
+This is reported by Ross Patterson in kernel bugzilla bug #7780.
 
-> Although I'm currently running a TX4 myself in 3Gbit mode with 2.6.23.1,
->  I'm waiting for 2.6.24 to reach stable until I try it out myself.
-> 2.6.23.1 seemed to fix the hard-lock when it tried to reset the card
-> tho, so now I just get a few errors about "soft resetting" in the logs.
-> No data loss.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Ross Patterson <me@rpatterson.net>
+---
+This patch has been queued in #tj-upstream-fixes and will be merged
+into 2.6.24.
 
-That's great too.
+ drivers/ata/ata_piix.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-I Stratford, can you please give 2.6.24-rc2 a shot?
-
-Thanks.
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 328ce8a..80b735b 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -974,6 +974,13 @@ static int piix_broken_suspend(void)
+ 			},
+ 		},
+ 		{
++			.ident = "SATELLITE U205",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "SATELLITE U205"),
++			},
++		},
++		{
+ 			.ident = "Portege M500",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
 -- 
-tejun
+1.5.2.4
+
