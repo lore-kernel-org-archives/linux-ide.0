@@ -1,79 +1,177 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 10/13] ide-cris: fix DMA methods
-Date: Tue, 13 Nov 2007 00:02:06 +0100
-Message-ID: <200711130002.06806.bzolnier@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB
+Date: Mon, 12 Nov 2007 17:13:37 -0600
+Message-ID: <4738DE21.8090702@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:11054 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758201AbXKLW6a (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 17:58:30 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so1634397fkz
-        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 14:58:30 -0800 (PST)
-Content-Disposition: inline
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:12806 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757654AbXKLXOf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 18:14:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Mikael Starvik <starvik@axis.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
+This fixes some problems with ATAPI devices on nForce4 controllers in ADMA mode
+on systems with memory located above 4GB. We need to make sure that the legacy
+PRD table and padding buffer are appropriately allocated according to the
+DMA mask requirements of the current operating mode (ADMA or legacy).
 
-* Rename cris_dma_{on,off}() to cris_dma_host_{on,off}().
+Also, we should run any DMA command with result taskfile requested in ADMA mode
+when the port is in ADMA mode, otherwise it may try to use the legacy DMA engine
+in ADMA mode which is not allowed.
 
-* Remove no longer needed ->dma_off_quietly
-  (IDE core has the needed code now).
+Fixes Red Hat Bugzilla #351451: https://bugzilla.redhat.com/show_bug.cgi?id=351451
 
-* Make cris_dma_host_on() void.
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-Cc: Mikael Starvik <starvik@axis.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/cris/ide-cris.c |   18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
-
-Index: b/drivers/ide/cris/ide-cris.c
-===================================================================
---- a/drivers/ide/cris/ide-cris.c
-+++ b/drivers/ide/cris/ide-cris.c
-@@ -673,9 +673,12 @@ static void cris_ide_input_data (ide_dri
- static void cris_ide_output_data (ide_drive_t *drive, void *, unsigned int);
- static void cris_atapi_input_bytes(ide_drive_t *drive, void *, unsigned int);
- static void cris_atapi_output_bytes(ide_drive_t *drive, void *, unsigned int);
--static int cris_dma_on (ide_drive_t *drive);
- 
--static void cris_dma_off(ide_drive_t *drive)
-+static void cris_dma_host_off(ide_drive_t *drive)
-+{
-+}
+--- linux-2.6.24-rc1-git10/drivers/ata/sata_nv.c	2007-11-01 20:01:32.000000000 -0600
++++ linux-2.6.24-rc1-git10edit/drivers/ata/sata_nv.c	2007-11-10 19:57:47.000000000 -0600
+@@ -247,6 +247,7 @@
+ 	void __iomem		*ctl_block;
+ 	void __iomem		*gen_block;
+ 	void __iomem		*notifier_clear_block;
++	u64			adma_dma_mask;
+ 	u8			flags;
+ 	int			last_issue_ncq;
+ };
+@@ -747,11 +748,29 @@
+ 		   on the port. */
+ 		adma_enable = 0;
+ 		nv_adma_register_mode(ap);
++		if (!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
++			/* Transitioning to legacy mode. Free the pad buffer. */
++			ata_pad_free(ap, ap->host->dev);
++			ap->pad = NULL;
++			ap->pad_dma = 0;
++		}
+ 	} else {
+-		bounce_limit = *ap->dev->dma_mask;
++		bounce_limit = pp->adma_dma_mask;
+ 		segment_boundary = NV_ADMA_DMA_BOUNDARY;
+ 		sg_tablesize = NV_ADMA_SGTBL_TOTAL_LEN;
+ 		adma_enable = 1;
 +
-+static void cris_dma_host_on(ide_drive_t *drive)
++		if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
++			/* Transitioning to ADMA mode. Free legacy PRD table
++			   and the pad buffer. */
++			ata_pad_free(ap, ap->host->dev);
++			ap->pad = NULL;
++			ap->pad_dma = 0;
++			dmam_free_coherent(ap->host->dev, ATA_PRD_TBL_SZ,
++				ap->prd, ap->prd_dma);
++			ap->prd = NULL;
++			ap->prd_dma = 0;
++		}
+ 	}
+ 
+ 	pci_read_config_dword(pdev, NV_MCP_SATA_CFG_20, &current_reg);
+@@ -763,23 +782,45 @@
+ 		config_mask = NV_MCP_SATA_CFG_20_PORT0_EN |
+ 			      NV_MCP_SATA_CFG_20_PORT0_PWB_EN;
+ 
++	/* Set appropriate DMA mask. */
++	pci_set_dma_mask(pdev, bounce_limit);
++	pci_set_consistent_dma_mask(pdev, bounce_limit);
++
++	blk_queue_bounce_limit(sdev->request_queue, bounce_limit);
++	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
++	blk_queue_max_hw_segments(sdev->request_queue, sg_tablesize);
++	ata_port_printk(ap, KERN_INFO,
++		"bounce limit 0x%llX, segment boundary 0x%lX, hw segs %hu\n",
++		(unsigned long long)bounce_limit, segment_boundary,
++		sg_tablesize);
++
+ 	if (adma_enable) {
+ 		new_reg = current_reg | config_mask;
+-		pp->flags &= ~NV_ADMA_ATAPI_SETUP_COMPLETE;
++		if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
++			/* Transition to ADMA mode.
++			   Reallocate the pad buffer. */
++			rc = ata_pad_alloc(ap, ap->host->dev);
++			pp->flags &= ~NV_ADMA_ATAPI_SETUP_COMPLETE;
++		}
+ 	} else {
+ 		new_reg = current_reg & ~config_mask;
+-		pp->flags |= NV_ADMA_ATAPI_SETUP_COMPLETE;
++		if (!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE)) {
++			/* Transition to legacy mode.
++			   Reallocate the legacy PRD and pad buffer. */
++			ap->prd = dmam_alloc_coherent(ap->host->dev,
++				ATA_PRD_TBL_SZ, &ap->prd_dma, GFP_KERNEL);
++			if (!ap->prd)
++				rc = -ENOMEM;
++			else
++				rc = ata_pad_alloc(ap, ap->host->dev);
++
++			pp->flags |= NV_ADMA_ATAPI_SETUP_COMPLETE;
++		}
+ 	}
+ 
+ 	if (current_reg != new_reg)
+ 		pci_write_config_dword(pdev, NV_MCP_SATA_CFG_20, new_reg);
+ 
+-	blk_queue_bounce_limit(sdev->request_queue, bounce_limit);
+-	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
+-	blk_queue_max_hw_segments(sdev->request_queue, sg_tablesize);
+-	ata_port_printk(ap, KERN_INFO,
+-		"bounce limit 0x%llX, segment boundary 0x%lX, hw segs %hu\n",
+-		(unsigned long long)bounce_limit, segment_boundary, sg_tablesize);
+ 	return rc;
+ }
+ 
+@@ -791,11 +832,13 @@
+ 
+ static void nv_adma_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
  {
- }
+-	/* Since commands where a result TF is requested are not
+-	   executed in ADMA mode, the only time this function will be called
+-	   in ADMA mode will be if a command fails. In this case we
+-	   don't care about going into register mode with ADMA commands
+-	   pending, as the commands will all shortly be aborted anyway. */
++	/* Other than when internal or pass-through commands are executed,
++	   the only time this function will be called in ADMA mode will be
++	   if a command fails. In the failure case we don't care about going
++	   into register mode with ADMA commands pending, as the commands will
++	   all shortly be aborted anyway. We assume that NCQ commands are not
++	   issued via passthrough and so this will not abort any commands in
++	   that case. */
+ 	nv_adma_register_mode(ap);
  
-@@ -798,9 +801,8 @@ init_e100_ide (void)
- 		hwif->OUTBSYNC = &cris_ide_outbsync;
- 		hwif->INB = &cris_ide_inb;
- 		hwif->INW = &cris_ide_inw;
--		hwif->dma_host_off = &cris_dma_off;
--		hwif->dma_host_on = &cris_dma_on;
--		hwif->dma_off_quietly = &cris_dma_off;
-+		hwif->dma_host_off = &cris_dma_host_off;
-+		hwif->dma_host_on = &cris_dma_host_on;
- 		hwif->cbl = ATA_CBL_PATA40;
- 		hwif->host_flags |= IDE_HFLAG_NO_ATAPI_DMA;
- 		hwif->pio_mask = ATA_PIO4,
-@@ -822,12 +824,6 @@ init_e100_ide (void)
- 	cris_ide_set_speed(TYPE_UDMA, ATA_UDMA2_CYC, ATA_UDMA2_DVS, 0);
- }
+ 	ata_tf_read(ap, tf);
+@@ -1136,7 +1179,9 @@
  
--static int cris_dma_on (ide_drive_t *drive)
--{
--	return 0;
--}
--
--
- static cris_dma_descr_type mydescr __attribute__ ((__aligned__(16)));
+ 	VPRINTK("ENTER\n");
  
- /*
+-	rc = ata_port_start(ap);
++	/* Do not allocate standard ATA PRD buffer here. Only do this if
++	   an ATAPI device is connected (in slave_config). */
++	rc = ata_pad_alloc(ap, dev);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1150,6 +1195,7 @@
+ 	pp->gen_block = ap->host->iomap[NV_MMIO_BAR] + NV_ADMA_GEN;
+ 	pp->notifier_clear_block = pp->gen_block +
+ 	       NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no);
++	pp->adma_dma_mask = *dev->dma_mask & dev->coherent_dma_mask;
+ 
+ 	mem = dmam_alloc_coherent(dev, NV_ADMA_PORT_PRIV_DMA_SZ,
+ 				  &mem_dma, GFP_KERNEL);
+@@ -1359,11 +1405,9 @@
+ 	struct nv_adma_port_priv *pp = qc->ap->private_data;
+ 
+ 	/* ADMA engine can only be used for non-ATAPI DMA commands,
+-	   or interrupt-driven no-data commands, where a result taskfile
+-	   is not required. */
++	   or interrupt-driven no-data commands. */
+ 	if ((pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
+-	   (qc->tf.flags & ATA_TFLAG_POLLING) ||
+-	   (qc->flags & ATA_QCFLAG_RESULT_TF))
++	   (qc->tf.flags & ATA_TFLAG_POLLING))
+ 		return 1;
+ 
+ 	if ((qc->flags & ATA_QCFLAG_DMAMAP) ||
+
