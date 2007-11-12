@@ -1,76 +1,49 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA eating my disk, port reset, destroying unrelated data
-Date: Mon, 12 Nov 2007 12:57:25 +0900
-Message-ID: <4737CF25.6070100@gmail.com>
-References: <fa.49dhbrKdHhj8Seg3o+OTGRYqytk@ifi.uio.no> <473256BD.1080205@shaw.ca>
+Subject: Re: Promise SATA TX4 300 port timeout with sata_promise in 2.6.22,
+ kernel panic in 2.6.23
+Date: Mon, 12 Nov 2007 13:12:19 +0900
+Message-ID: <4737D2A3.6010103@gmail.com>
+References: <6f048fc10711100443y6e9982b9jc00b3740f0a44d79@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:61641 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411AbXKLD5d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Nov 2007 22:57:33 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1060157rvb
-        for <linux-ide@vger.kernel.org>; Sun, 11 Nov 2007 19:57:33 -0800 (PST)
-In-Reply-To: <473256BD.1080205@shaw.ca>
+Received: from qb-out-0506.google.com ([72.14.204.235]:17061 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754341AbXKLEMi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Nov 2007 23:12:38 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so2441733qbe
+        for <linux-ide@vger.kernel.org>; Sun, 11 Nov 2007 20:12:36 -0800 (PST)
+In-Reply-To: <6f048fc10711100443y6e9982b9jc00b3740f0a44d79@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: I Stratford <i.d.stratford@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>
 
-Robert Hancock wrote:
-> Norbert Preining wrote:
->> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x400000 action 0x2
-> 
-> Serror 0x400000 means a handshake error. Usually Serror indications are
-> due to a hardware problem (bad SATA cable, power or drive problem).
-> 
->> ata1.00: (BMDMA stat 0x25)
->> ata1.00: cmd 35/00:00:2a:6f:c0/00:04:0c:00:00/e0 tag 0 cdb 0x0 data
->> 524288 out
->>          res 51/84:10:1a:72:c0/84:01:0c:00:00/e0 Emask 0x10 (ATA bus
->> error)
+Hello,
 
-And error register value 0x84 - ICRC (CRC error on ATA bus) and ABRT
-(command abort) - agrees with what SError indicates.  You're
-experiencing transmission errors.
+I Stratford wrote:
+> The purpose of the mail is to document and share my experience in the
+> hope that someone might find it useful, either for debugging their own
+> TX4 300-centric system issues or figuring out what is up with
+> sata_promise and the TX4 300 in 3Gbps mode. I also wish to offer my
+> somewhat unique promise-based system as a test environment for either
+> the timeout or kernel panic issues. I obviously have some basic need
+> for data integrity of the RAID5, but this system is not in production
+> and is therefore more available for testing purposes than the average
+> machine with 22 Promise SATA ports..  :)
 
->> ata1: soft resetting port
->> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->> ata1.00: configured for UDMA/133
->> ata1: EH complete
->>
->> Even worse, sometimes the reset does not work ...
->>
->> ata1: device not ready (errno=-16), forcing hardreset
->> ata1: hard resetting port
->> ata1 SRST failed (errno=-19)
->> ata1: reset failed (errno=-19), retrying in 10 secs
->> ..
->>
->> (typed from a digital photo, nothing remains in the logs)
->>
->> After this I need to do a cold boot otherwise the drive is really in a
->> bad state and not even the bios gets it right.
-> 
-> If even the BIOS cannot reset properly then that also really points to a
-> hardware problem..
+[cc'ing Mikael Pettersson]
 
-Also, firmware on some harddrives die solidly when transmission errors
-occur.  Maybe yours is one.  There's nothing much the driver can do
-about both the transmission error and the drive locking up afterward.
-If the transmission errors occur frequently, the chance is that either
-your drive or power supply is dying.  As for the drive lock up, maybe
-firmware update will help.
+It seems those 3Gbps promise controllers have hard time getting out of
+transmission errors.  Is it because hardreset doesn't work?  Can we fix it?
 
-* "smartctl -a /dev/sda" might report something interesting.
+Also, if 3Gbps can't be made reliable on those controllers, how about
+limiting it to 1.5Gbps by default with appropriate warning messages?
+Without PMP, it's not like we're gonna earn anything by driving the
+thing at 3Gbps.
 
-* Connect the drive to different SATA and power connector and see if the
-problem persists.
-
-* Connect the drive to a separate power supply and see if the problem
-persists.
+Thanks.
 
 -- 
 tejun
