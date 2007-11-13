@@ -1,46 +1,33 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: workaround DRQ=1 ERR=1 for ATAPI tape drives
-Date: Tue, 13 Nov 2007 13:22:11 -0500
-Message-ID: <4739EB53.5010206@rtr.ca>
-References: <471C6C44.2030607@gmail.com>	<471CEDD4.5040201@garzik.org>	<471D25D0.9020702@rtr.ca>	<47397784.9070205@tw.ibm.com>	<47397CC0.1070401@tw.ibm.com>	<4739AB5B.7000703@rtr.ca>	<20071113151459.086ffcae@the-village.bc.nu>	<4739DDDD.7060305@rtr.ca> <20071113181257.24ab95dd@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 18:25:16 +0000
+Message-ID: <20071113182516.250de873@the-village.bc.nu>
+References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com>
+	<20071113031553.3c7b5c16.akpm@linux-foundation.org>
+	<4739ADA2.4060604@rtr.ca>
+	<alpine.LFD.0.9999.0711131521590.3265@localhost.localdomain>
+	<20071113181053.GB1356@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3340 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757344AbXKMSWN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Nov 2007 13:22:13 -0500
-In-Reply-To: <20071113181257.24ab95dd@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
+In-Reply-To: <20071113181053.GB1356@flint.arm.linux.org.uk>
+Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
+List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
+List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
+List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
+List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Mark Lord <liml@rtr.ca>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, Natalie Protasevich <protasnb@gmail.com>, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
-> On Tue, 13 Nov 2007 12:24:45 -0500
-> Mark Lord <liml@rtr.ca> wrote:
-> 
->> Alan Cox wrote:
->>>> NAK.  There's no guarantee that the next command after an error
->>>> will always be REQUEST_SENSE.   Or is there?
->>> For that device over ATAPI I believe the guarantee is there, the same as
->>> for SCSI.
->> ..
->>
->> Even for SG_IO w/o requesting sense data?
-> 
-> Thats a very good question. Yes we might need to ignore ERR at that
-> point. Another possibility would be to notice if ERR seems to be stuck
-> after we are finished so we know for next time.
-..
+> Given the wide range of ARM platforms today, it is utterly idiotic to
+> expect a single person to be able to provide responses for all ARM bugs.
+> I for one wish I'd never *VOLUNTEERED* to be a part of the kernel
+> bugzilla, and really *WISH* I could pull out of that function.
 
-ERR should stay set until the next command has been written to the device.
-So we could try and be clever to ignore ERR after PACKET, before CDB, only
-if it was set by previous command.
+You can. Perhaps that bugzilla needs to point to some kind of
+arm-maintainers@vger.kernel.org list for the various ARM platform
+maintainers ?
 
-Sounds a bit complex.
-
-Just (unconditionally for tape) ignoring it between PACKET and CDB might be simpler.
-
-Cheers
+Alan
