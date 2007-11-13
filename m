@@ -1,46 +1,28 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Tue, 13 Nov 2007 08:43:57 -0800
-Message-ID: <20071113084357.1eacf89d.randy.dunlap@oracle.com>
-References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com>
-	<20071113031553.3c7b5c16.akpm@linux-foundation.org>
-	<1194968001.3416.12.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: workaround DRQ=1 ERR=1 for ATAPI tape drives
+Date: Tue, 13 Nov 2007 12:24:45 -0500
+Message-ID: <4739DDDD.7060305@rtr.ca>
+References: <471C6C44.2030607@gmail.com>	<471CEDD4.5040201@garzik.org>	<471D25D0.9020702@rtr.ca>	<47397784.9070205@tw.ibm.com>	<47397CC0.1070401@tw.ibm.com>	<4739AB5B.7000703@rtr.ca> <20071113151459.086ffcae@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
-In-Reply-To: <1194968001.3416.12.camel@localhost.localdomain>
-Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
-List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
-List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
-List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
-List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, mbligh@mbligh.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:2444 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753629AbXKMRYr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Nov 2007 12:24:47 -0500
+In-Reply-To: <20071113151459.086ffcae@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Tue, 13 Nov 2007 09:33:21 -0600 James Bottomley wrote:
-
-> On Tue, 2007-11-13 at 03:15 -0800, Andrew Morton wrote:
-> > >
-> > SCSI==================================================================
-> > > 
-> > > qla2xxx: driver initialization does not complete when booting with
-> > > Port connected
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=9267
-> > > Kernel: 2.6.23.1
-> > 
-> > No response from developers
+Alan Cox wrote:
+>> NAK.  There's no guarantee that the next command after an error
+>> will always be REQUEST_SENSE.   Or is there?
 > 
-> Urm, well, if no-one ever tells the SCSI list it's unrealistic to expect
-> anyone to be working on it.  As far as I can tell, email was sent to
-> Andrew Vasquez only on 31 October. However, the fault looks to be
-> generic, so he probably just dropped it.
+> For that device over ATAPI I believe the guarantee is there, the same as
+> for SCSI.
+..
 
-It seems that new SCSI bugs need to be sent to linux-scsi@vger.kernel.org.
-
-Martin, can you arrange that to happen automatically instead of
-Andrew having to do it manually?
-
----
-~Randy
+Even for SG_IO w/o requesting sense data?
