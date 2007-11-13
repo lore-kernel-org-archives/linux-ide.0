@@ -1,32 +1,33 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 7/13] icside: add ide_toggle_bounce() calls
-Date: Tue, 13 Nov 2007 14:21:07 +0300
-Message-ID: <473988A3.1080204@ru.mvista.com>
-References: <200711130001.49683.bzolnier@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 12:24:36 +0100
+Message-ID: <20071113112435.GA16809@kernel.dk>
+References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com> <20071113031553.3c7b5c16.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:31807 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751620AbXKMLUz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 06:20:55 -0500
-In-Reply-To: <200711130001.49683.bzolnier@gmail.com>
+Received: from brick.kernel.dk ([87.55.233.238]:27464 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750956AbXKMLVT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Nov 2007 06:21:19 -0500
+Content-Disposition: inline
+In-Reply-To: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Natalie Protasevich <protasnb@gmail.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Tue, Nov 13 2007, Andrew Morton wrote:
+> > I/O STORAGE===========================================================
+> > 
+> > kernel bug from pktcdvd
+> > http://bugzilla.kernel.org/show_bug.cgi?id=9294
+> > Kernel: 2.6.23
+> 
+> I think we might have fixed this.
 
-> Add ide_toggle_bounce() call to ->ide_dma_on/->dma_off_quietly
-> methods so they match generic __ide_dma_on()/ide_dma_off_quietly().
+It's fixed and merged, I just forgot to close the bugzilla. Did so now.
 
-> Since there is no PCI device there should be no functionality
-> changes caused by this patch.
+-- 
+Jens Axboe
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
