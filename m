@@ -1,57 +1,56 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Tue, 13 Nov 2007 09:08:32 -0500
-Message-ID: <4739AFE0.20705@rtr.ca>
-References: <20071113031553.3c7b5c16.akpm@linux-foundation.org> <20071113.033946.114918709.davem@davemloft.net> <20071113034916.2556edd7.akpm@linux-foundation.org> <20071113.035824.40509981.davem@davemloft.net> <20071113041259.79c9a8c5.akpm@linux-foundation.org> <20071113134029.GA30978@elte.hu>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB
+Date: Tue, 13 Nov 2007 09:12:53 -0500
+Message-ID: <4739B0E5.2010303@rtr.ca>
+References: <4738DE21.8090702@shaw.ca> <47390B2F.7090105@gmail.com> <47392768.3030509@shaw.ca> <47392B3D.1020101@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
-In-Reply-To: <20071113134029.GA30978@elte.hu>
-Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
-List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
-List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
-List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
-List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:4330 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752951AbXKMOMz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Nov 2007 09:12:55 -0500
+In-Reply-To: <47392B3D.1020101@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-Ingo Molnar wrote:
+Tejun Heo wrote:
+> Robert Hancock wrote:
+>> Tejun Heo wrote:
 ..
-> This is all QA-101 that _cannot be argued against on a rational basis_, 
-> it's just that these sorts of things have been largely ignored for 
-> years, in favor of the all-too-easy "open source means many eyeballs and 
-> that is our QA" answer, which is a _good_ answer but by far not the most 
-> intelligent answer! Today "many eyeballs" is simply not good enough and 
-> nature (and other OS projects) will route us around if we dont change.
+>> Yes, it should likely do something with these return values. Though
+>> theoretically it shouldn't fail, since the DMA mask is either 32-bit,
+>> which shouldn't fail, or one that was successfully set before. Also I
+>> don't think the SCSI layer actually checks the slave_config return
+>> value.. sigh.
+> 
+> Then please at least add WARN_ON() && another reason why allocating /
+> deallocating resources from ->slave_config isn't such a good idea.
 ..
 
-QA-101 and "many eyeballs" are not at all in opposition.
-The latter is how we find out about bugs on uncommon hardware,
-and the former is what we need to track them and overall quality.
+The entire point of "slave_configure" is to provide a point for the LLD
+to do per-device data structure allocation/init.
 
-A HUGE problem I have with current "efforts", is that once someone
-reports a bug, the onus seems to be 99% on the *reporter* to find
-the exact line of code or commit.  Ghad what a repressive method.
+And yes, SCSI does check the return code.  Whether the code around that check
+is buggy or not is another question, but it's always worked for me.
 
-And if the "developer" who broke the damn thing, or who at least
-"claims" to be supporting that code, cannot "reproduce" the bug,
-they drop it completely.
+>        if (sdev->host->hostt->slave_configure) {
+>                 int ret = sdev->host->hostt->slave_configure(sdev);
+>                 if (ret) {
+>                         /*
+>                          * if LLDD reports slave not present, don't clutter
+>                          * console with alloc failure messages
+>                          */
+>                         if (ret != -ENXIO) {
+>                                 sdev_printk(KERN_ERR, sdev,
+>                                         "failed to configure device\n");
+>                         }
+>                         return SCSI_SCAN_NO_RESPONSE;
+>                 }
+>         }
 
-Contrast that flawed approach with how Linus does things..
-he thinks through the symptoms, matches them to the code,
-and figures out what the few possibilities might be,
-and feeds back some trial balloon patches for the bug reporter to try.
 
-MUCH better. 
-
-Linus also asks for a git bisect, but doesn't insist upon the reporter
-learning an entire new (poorly documented) toolset just to to report a bug.
-
-Blah!
-
-And remember, *I'm* an old-time Linux kernel developer.. just think about
-the people reporting bugs who haven't been around here since 1992..
-
--ml
+Cheers
