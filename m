@@ -1,40 +1,57 @@
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: [PATCH] pata_sis.c: Add Packard Bell EasyNote K5305 to laptops
-Date: Tue, 13 Nov 2007 21:38:47 +0100
-Message-ID: <473A0B57.4030703@googlemail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 12:52:22 -0800
+Message-ID: <20071113125222.9eb53ac8.akpm@linux-foundation.org>
+References: <20071113034916.2556edd7.akpm@linux-foundation.org>
+	<20071113.035824.40509981.davem@davemloft.net>
+	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
+	<20071113.043207.44732743.davem@davemloft.net>
+	<20071113193219.GC1356@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:5063 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758155AbXKMUiw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 15:38:52 -0500
-Received: by nf-out-0910.google.com with SMTP id g13so1552265nfb
-        for <linux-ide@vger.kernel.org>; Tue, 13 Nov 2007 12:38:50 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
+In-Reply-To: <20071113193219.GC1356@flint.arm.linux.org.uk>
+Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
+List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
+List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
+List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
+List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: David Miller <davem@davemloft.net>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz
 List-Id: linux-ide@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@redhat.com>
 
-Hi,
+On Tue, 13 Nov 2007 19:32:19 +0000 Russell King <rmk+lkml@arm.linux.org.uk> wrote:
 
-With newer kernels HDD in my old laptop is limited to UDMA 33.
-With this patch I get UDMA 100 again.
+> There's another issue I want to raise concerning bugzilla.  We have the
+> classic case of "not enough people reading bugzilla bugs" - which is one
+> of the biggest problems with bugzilla.  Virtually no one in the ARM
+> community looks for ARM bugs in bugzilla.
 
-Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
+Nor should they.
 
----
+> Let's not forget that it would be a waste of time for people to manually
+> check bugzilla for ARM bugs.  There's soo few people reporting ARM bugs
+> into bugzilla that a weekly manual check by every maintainer would just
+> return the same old boring results for months and months at a time.
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 3b5be77..87546d9 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -55,6 +55,7 @@ static const struct sis_laptop sis_laptop[] = {
- 	/* devid, subvendor, subdev */
- 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
- 	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
-+	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
- 	/* end marker */
- 	{ 0, }
- };
+I screen all bugzilla reports.  100% of them.
+
+- I'll try to establish whether it is a regression
+
+- I'll solicit any extra information which I believe the reveloper will need
+
+- I'll ensure that an appropriate developer has seen the report
+
+And yes, the number of arm-specific reports in there is very small.
+
+> It would be far more productive if the ARM category was deleted from
+> bugzilla and the few people who use bugzilla reported their bugs on the
+> mailing list.  We've a couple of thousand people on the ARM kernel
+> mailing list at the moment - that's 3 orders of magnitude more of eyes
+> than look at bugzilla.
+
+Is that linux-arm-kernel@lists.arm.linux.org.uk?
+
+If so, MANITAINERS claims that it is subscribers-only.  That would cause
+some bug reporters to give up and go away.
