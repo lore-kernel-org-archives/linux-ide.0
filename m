@@ -1,28 +1,39 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: workaround DRQ=1 ERR=1 for ATAPI tape drives
-Date: Tue, 13 Nov 2007 12:24:45 -0500
-Message-ID: <4739DDDD.7060305@rtr.ca>
-References: <471C6C44.2030607@gmail.com>	<471CEDD4.5040201@garzik.org>	<471D25D0.9020702@rtr.ca>	<47397784.9070205@tw.ibm.com>	<47397CC0.1070401@tw.ibm.com>	<4739AB5B.7000703@rtr.ca> <20071113151459.086ffcae@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 17:30:19 +0000
+Message-ID: <20071113173019.14480202@the-village.bc.nu>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+	<20071113.033946.114918709.davem@davemloft.net>
+	<20071113034916.2556edd7.akpm@linux-foundation.org>
+	<20071113.035824.40509981.davem@davemloft.net>
+	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
+	<20071113134029.GA30978@elte.hu>
+	<4739AFE0.20705@rtr.ca>
+	<40f323d00711130752k19cab8eauc3456721274b3267@mail.gmail.com>
+	<20071113171356.GA25824@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2444 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753629AbXKMRYr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Nov 2007 12:24:47 -0500
-In-Reply-To: <20071113151459.086ffcae@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
+In-Reply-To: <20071113171356.GA25824@thunk.org>
+Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
+List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
+List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
+List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
+List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
+To: Theodore Tso <tytso@mit.edu>
+Cc: Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> NAK.  There's no guarantee that the next command after an error
->> will always be REQUEST_SENSE.   Or is there?
-> 
-> For that device over ATAPI I believe the guarantee is there, the same as
-> for SCSI.
-..
+> The other an automated set of standard pre-built bisection points so
+> that testers can more easily localize a bug down to a few hundred
+> commits without needing to learn how to use "git bisect" (think Ubuntu
+> users).
 
-Even for SG_IO w/o requesting sense data?
+Before that you want a flowchart or instruction list of boot options to
+try. A lot of errors can be localised simply by asking the reported to
+boot with things like "iommu=off", "pci=routeirq", "apci=off" etc
+
+That takes a lot less time to run through and can be very informative.
+
+Alan
