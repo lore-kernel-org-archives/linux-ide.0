@@ -1,42 +1,44 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: workaround DRQ=1 ERR=1 for ATAPI tape drives
-Date: Tue, 13 Nov 2007 18:12:57 +0000
-Message-ID: <20071113181257.24ab95dd@the-village.bc.nu>
-References: <471C6C44.2030607@gmail.com>
-	<471CEDD4.5040201@garzik.org>
-	<471D25D0.9020702@rtr.ca>
-	<47397784.9070205@tw.ibm.com>
-	<47397CC0.1070401@tw.ibm.com>
-	<4739AB5B.7000703@rtr.ca>
-	<20071113151459.086ffcae@the-village.bc.nu>
-	<4739DDDD.7060305@rtr.ca>
+From: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 19:17:23 +0100
+Message-ID: <1194977843.6098.18.camel@lappy>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+	 <20071113.033946.114918709.davem@davemloft.net>
+	 <20071113034916.2556edd7.akpm@linux-foundation.org>
+	 <20071113.035824.40509981.davem@davemloft.net>
+	 <20071113041259.79c9a8c5.akpm@linux-foundation.org>
+	 <20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca>
+	 <20071113164650.GA28493@elte.hu>  <4739E3D0.10201@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57365 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753303AbXKMSOL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 13:14:11 -0500
-In-Reply-To: <4739DDDD.7060305@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <4739E3D0.10201@rtr.ca>
+Sender: netdev-owner@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: albertl@mail.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+Cc: Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, 13 Nov 2007 12:24:45 -0500
-Mark Lord <liml@rtr.ca> wrote:
 
-> Alan Cox wrote:
-> >> NAK.  There's no guarantee that the next command after an error
-> >> will always be REQUEST_SENSE.   Or is there?
-> > 
-> > For that device over ATAPI I believe the guarantee is there, the same as
-> > for SCSI.
-> ..
+On Tue, 2007-11-13 at 12:50 -0500, Mark Lord wrote:
+> Ingo Molnar wrote:
+> >
+> > for example git-bisect was godsent. I remember that years ago bisection 
+> > of a bug was a very laborous task so that it was only used as a final, 
+> > last-ditch approach for really nasty bugs. Today we can autonomouly 
+> > bisect build bugs via a simple shell command around "git-bisect run", 
+> > without any human interaction! This freed up testing resources 
+> ...
 > 
-> Even for SG_IO w/o requesting sense data?
+> It's only a godsend for the few people who happen to be kernel developers
+> and who happen to already use git.
+> 
+> It's a 540MByte download over a slow link for everyone else.
 
-Thats a very good question. Yes we might need to ignore ERR at that
-point. Another possibility would be to notice if ERR seems to be stuck
-after we are finished so we know for next time.
+Oh, common. Leeching CDs is so yesterday. These days some distributions
+don't even offer CDs anymore in favour of DVDs.
+
+I'd be amazed if a lot of the testers would still be on slownet, its
+impossible to keep up with the latest distros without broadband.
+
+
