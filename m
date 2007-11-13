@@ -1,55 +1,104 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Tue, 13 Nov 2007 15:27:27 +0000
-Message-ID: <20071113152727.45b71939@the-village.bc.nu>
-References: <20071109020235.GA2031@ceren>
-	<20071109023129.GA25581@havoc.gtf.org>
-	<4733D421.7000505@rtr.ca>
-	<20071109034622.GB25581@havoc.gtf.org>
-	<20071109120425.543971bf@the-village.bc.nu>
-	<47351FE1.4000001@garzik.org>
-	<DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com>
-	<473600B6.5070103@garzik.org>
-	<F72FA20C31DD4F4C997B91C5B3690A095054A2@hqemmail07.nvidia.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Tue, 13 Nov 2007 09:33:21 -0600
+Message-ID: <1194968001.3416.12.camel@localhost.localdomain>
+References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com>
+	 <20071113031553.3c7b5c16.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58027 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754106AbXKMP20 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 10:28:26 -0500
-In-Reply-To: <F72FA20C31DD4F4C997B91C5B3690A095054A2@hqemmail07.nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Natalie Protasevich <protasnb@gmail.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Allen Martin <AMartin@nvidia.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-> What I'm worred about is SMI traps implemented in the SBIOS for AHCI
-> workarounds that may be disabled when in IDE mode.
+On Tue, 2007-11-13 at 03:15 -0800, Andrew Morton wrote:
+> >
+> SCSI==================================================================
+> > 
+> > qla2xxx: driver initialization does not complete when booting with
+> > Port connected
+> > http://bugzilla.kernel.org/show_bug.cgi?id=9267
+> > Kernel: 2.6.23.1
+> 
+> No response from developers
 
-For Nvidia devices those would only be present if there were problems
-with the AHCI hardware right, which would mean you could simply tell us
-what workarounds to implement.
+Urm, well, if no-one ever tells the SCSI list it's unrealistic to expect
+anyone to be working on it.  As far as I can tell, email was sent to
+Andrew Vasquez only on 31 October. However, the fault looks to be
+generic, so he probably just dropped it.
 
-> I believe most of the issues with sata_nv have been due to lack of
-> documentation of ADMA and swNCQ.  The NVIDA AHCI controllers that
+This seems to be the significant line from the trace:
 
-I am glad Nvidia accept this point. It would be nice to see it fixed.
+Oct  7 23:35:07 t-host kernel:   ISP2422: PCI-X Mode 1 (133 MHz) @
+0000:01:03.0
+hdma-, host#=1, fw=4.00.27 [IP] 
+Oct  7 23:35:07 t-host kernel: ACPI: PCI Interrupt 0000:01:03.1[B] -> GSI 29
+(level, low) -> IRQ 22
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Found an ISP2422, irq 22,
+iobase 0xf8cf4000
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Configuring PCI space...
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Configure NVRAM
+parameters...
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Verifying loaded RISC
+code...
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Allocated (64 KB) for
+EFT...
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: Allocated (1413 KB) for
+firmware dump...
+Oct  7 23:35:07 t-host kernel: scsi2 : qla2xxx
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.1: 
+Oct  7 23:35:07 t-host kernel:  QLogic Fibre Channel HBA Driver: 8.01.07-k7
+Oct  7 23:35:07 t-host kernel:   QLogic QLA2462 - PCI-X 2.0 to 4Gb FC, Dual
+Channel
+Oct  7 23:35:07 t-host kernel:   ISP2422: PCI-X Mode 1 (133 MHz) @ 0000:01:03.1
+hdma-, host#=2, fw=4.00.27 [IP] 
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.0: LIP reset occured (f8f7).
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.0: LIP occured (f8f7).
+Oct  7 23:35:07 t-host kernel: qla2xxx 0000:01:03.0: LOOP UP detected (4 Gbps).
+Oct  7 23:35:07 t-host kernel: ohci_hcd 0000:03:00.0: auto-stop root hub
+Oct  7 23:35:07 t-host kernel: ohci_hcd 0000:03:00.1: auto-stop root hub
+Oct  7 23:35:07 t-host kernel: scsi 1:0:0:0: Direct-Access     transtec
+PV610F16R1C      348B PQ: 0 ANSI: 4
+Oct  7 23:35:07 t-host kernel: kobject_add failed for 1:0:0:0 with -EEXIST,
+don't try to register things with the same name in the same directory.
+Oct  7 23:35:07 t-host kernel:  [<c022c841>] kobject_shadow_add+0x111/0x190
+Oct  7 23:35:07 t-host kernel:  [<c0286814>] device_add+0xc4/0x570
+Oct  7 23:35:07 t-host kernel:  [<c02c90ce>] scsi_adjust_queue_depth+0x9e/0xf0
+Oct  7 23:35:07 t-host kernel:  [<c02249b2>] __blk_queue_init_tags+0x32/0x70
+Oct  7 23:35:07 t-host kernel:  [<c02d302f>] scsi_sysfs_add_sdev+0x4f/0x230
+Oct  7 23:35:07 t-host kernel:  [<f8d93421>] qla2xxx_slave_configure+0x71/0x100
+[qla2xxx]
+Oct  7 23:35:07 t-host kernel:  [<c02d0ecf>] scsi_probe_and_add_lun+0xa5f/0xb40
+Oct  7 23:35:07 t-host kernel:  [<c02d1559>] __scsi_scan_target+0xd9/0x6c0
+Oct  7 23:35:07 t-host kernel:  [<c03a5be1>] schedule+0x2e1/0x950
+Oct  7 23:35:07 t-host kernel:  [<c02d21f9>] scsi_scan_target+0xa9/0xe0
+Oct  7 23:35:07 t-host kernel:  [<c02d5640>] fc_scsi_scan_rport+0x0/0x80
+Oct  7 23:35:07 t-host kernel:  [<c02d56a9>] fc_scsi_scan_rport+0x69/0x80
+Oct  7 23:35:07 t-host kernel:  [<c012b032>] run_workqueue+0x72/0x100
+Oct  7 23:35:07 t-host kernel:  [<c012e8d0>] prepare_to_wait+0x20/0x70
+Oct  7 23:35:07 t-host kernel:  [<c012b8c0>] worker_thread+0x0/0x100
+Oct  7 23:35:07 t-host kernel:  [<c012b964>] worker_thread+0xa4/0x100
+Oct  7 23:35:07 t-host kernel:  [<c012e720>] autoremove_wake_function+0x0/0x50
+Oct  7 23:35:07 t-host kernel:  [<c012b8c0>] worker_thread+0x0/0x100
+Oct  7 23:35:07 t-host kernel:  [<c012e462>] kthread+0x42/0x70
+Oct  7 23:35:07 t-host kernel:  [<c012e420>] kthread+0x0/0x70
+Oct  7 23:35:07 t-host kernel:  [<c0103573>] kernel_thread_helper+0x7/0x14
+Oct  7 23:35:07 t-host kernel:  =======================
+Oct  7 23:35:07 t-host kernel: error 1
 
-> I'm with you that AHCI mode is superior and should be used whenever
-> possible, but it probably comes as no suprise that almost all the
-> hardware/BIOS testing is done with Windows, and operating the hardware
-> in a mode that Windows doesn't (enabling AHCI in classcode 0101) seems
-> like asking for trouble.
+It looks like some type of sysfs/kobject race in SCSI ... and I think we
+might have seen it before, just not able to reproduce it reliably.
 
-I agree we must be careful, for example we should put the controller back
-into its boot mode before suspending so that we can reasonably expect the
-BIOS to handle suspend/resume. And we certainly need an override option
-in one direction or the other.
+My bet would be that the LIP which acts like a reset and occurs in the
+middle of the scan and so the initialising object is killed on the first
+scan but not yet dead and then can't be re-added on the second scan.
 
-Nevertheless you don't make progress by limiting yourself to avoid
-breaking the most ancient system. We gave up having a man walking in front
-of cars with a red flag a long time ago.
+Hannes has patches to help with this, but they're rather complex, and
+not really 2.6.24 material.  I could see if there's a simpler fix.
 
-Alan
+James
+
+
