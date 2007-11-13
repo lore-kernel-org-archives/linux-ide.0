@@ -1,84 +1,254 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB
-Date: Tue, 13 Nov 2007 13:42:37 +0900
-Message-ID: <47392B3D.1020101@gmail.com>
-References: <4738DE21.8090702@shaw.ca> <47390B2F.7090105@gmail.com> <47392768.3030509@shaw.ca>
+From: "Natalie Protasevich" <protasnb@gmail.com>
+Subject: [BUG] New Kernel Bugs
+Date: Mon, 12 Nov 2007 22:42:32 -0800
+Message-ID: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:63492 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756528AbXKMEmr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Nov 2007 23:42:47 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1798387wah
-        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 20:42:46 -0800 (PST)
-In-Reply-To: <47392768.3030509@shaw.ca>
+Received: from ug-out-1314.google.com ([66.249.92.173]:5513 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996AbXKMGmf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 01:42:35 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so40415ugc
+        for <linux-ide@vger.kernel.org>; Mon, 12 Nov 2007 22:42:33 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@
 
-Robert Hancock wrote:
-> Tejun Heo wrote:
->> How about always initialize DMA mask to ATA_DMA_MASK regardless of ADMA
->> mode such that PRD and PAD buffers are always accessible by register
->> mode and just raising PCI dma mask and queue bounce limit if ADMA mode
->> is active?
-> 
-> Could be done.. but, I don't want to constrain the ADMA APRD/CPB area in
-> that way (there are some dual-socket Opteron boxes with this controller,
-> forcing an allocation below 4GB for this could force a non-optimal node
-> allocation I think..) To do this I'd have to raise the mask for the APRD
-> allocation, drop it again, then raise it again in ADMA mode, which is
-> kind of ugly.
+This is the listing of the open bugs that are relatively new, around
+2.6.22 and up. They are vaguely classified by specific area.
+(not a full list, there are more :)
 
-I don't think it really matters.  The table isn't too big and it's not
-like access to the table has any processor locality.  Maybe it's better
-to allocate to the same node as the irq but raising DMA mask doesn't
-help at all.
+The good part is that reporters of the bugs below are still around and
+haven't dissipated, or disposed of their hardware, so it is a good
+time to get the bugs.
+Those bugzillas that have been started as regressions on Rafael's list
+are not mentioned here so far, since they are being tracked as new
+regressions already.
 
-I think performance impact is nil either way but even in highly unlikely
-case it has any impact, allocating PRDs under 4G should be better as it
-avoids DAC cycles on the bus.  But again, this is just irrelevant.
+It would be appreciated if the corresponding maintenance team could take a
+look, close off any which are fixed and see if they can fix any which aren't.
 
-I'd say just allocate everything under 4G.
-
-> Also, I'd rather not allocate the legacy PRD at all if we're in ADMA
-> mode. That way, if some bug causes us to try and do legacy DMA in ADMA
-> mode, we'll crash from null pointer dereference instead of potentially
-> transferring incorrect data (as we had in this case) and corrupting things.
-
-Yeap, I can agree with this.  But can you add BUG_ON()/WARN_ON() at
-places instead?  I know blanking pointers feel safer but I think it's
-best to keep resource allocation / release in ->port_start/stop().
-
->>> +    /* Set appropriate DMA mask. */
->>> +    pci_set_dma_mask(pdev, bounce_limit);
->>> +    pci_set_consistent_dma_mask(pdev, bounce_limit);
->>
->> These can fail.
-> 
-> Yes, it should likely do something with these return values. Though
-> theoretically it shouldn't fail, since the DMA mask is either 32-bit,
-> which shouldn't fail, or one that was successfully set before. Also I
-> don't think the SCSI layer actually checks the slave_config return
-> value.. sigh.
-
-Then please at least add WARN_ON() && another reason why allocating /
-deallocating resources from ->slave_config isn't such a good idea.
-
->> Also, please separate out the result TF handling to a separate patch.  I
->> know it's a small change but as both introduces important behavior
->> changes, I think it would be nice to have a bisection point inbetween.
-> 
-> Could do. That change would have to come first though, as the change to
-> not allocate the PRD except when necessary would cause some cases there
-> to blow up when before they might have worked in some cases.
-
-Yes, please.
-
+NOTE: when replying to this email, please add the bug number to the Subject in
+the form [Bug 1234] so that bugzilla will capture the discussion.
 Thanks.
 
--- 
-tejun
+ACPI====================================================================
+
+System does not load without acpi=off ide=nodma noapic
+http://bugzilla.kernel.org/show_bug.cgi?id=9358
+Kernel: 2.6.23.1
+
+ACPI Error attaching device data
+http://bugzilla.kernel.org/show_bug.cgi?id=9354
+Kernel: 2.6.24-rc2
+
+/proc/acpi/battery displays Incorrect voltages
+http://bugzilla.kernel.org/show_bug.cgi?id=9341
+Kernel: 2.6.23.1
+
+PATA scan: ACPI Exception AE_AML_PACKAGE_LIMIT... is beyond end of object
+http://bugzilla.kernel.org/show_bug.cgi?id=9320
+Kernel: 2.6.24-rc2
+(Tejun: calling _GTF without calling _STM first.  _GTM doesn't have any
+prerequisite (it can't).  Can someone familiar with ACPI tell me why the method
+is failing?  At any rate, libata should work fine regardless of ACPI failures.
+Maybe it's time to start blacklist to skip ATA-ACPI for some boards to avoid
+those annoying messages during boot)
+
+ACPI Battery Info in /sys but not /proc/acpi
+http://bugzilla.kernel.org/show_bug.cgi?id=9183
+Kernel: 2.6.23-rc8-mm2
+
+When using ACPI on a Compaq Presario V6221EU the laptop goes into
+deadlock after a random amount of time
+http://bugzilla.kernel.org/show_bug.cgi?id=9118
+Kernel: 2.6.23-rc6
+
+ACPI video driver should validate brightness level before setting it via _BCM
+http://bugzilla.kernel.org/show_bug.cgi?id=9277
+Kernel: 2.6.23
+
+VIDEO/DVB
+
+dvb driver reboot system
+http://bugzilla.kernel.org/show_bug.cgi?id=9357
+Kernel: 2.6.21.5
+
+
+PLATFORM===============================================================
+
+xipImage is built so that uBoot cant run it (ARM)
+http://bugzilla.kernel.org/show_bug.cgi?id=9356
+Kernel: 2.6.21
+
+Samsung R20 - ACPI: PCI Root Bridge [PCI0] (0000:00)	
+http://bugzilla.kernel.org/show_bug.cgi?id=9339
+Kernel: 2.6.24
+(boot is very long
+..MP-BIOS bug: 8254 timer not connected to IO-APIC
+then the boot stop at :
+ACPI: PCI Root Bridge [PCI0] (0000:00)
+(during 3 minutes, and boot continue)
+
+system_64.h: switch_to inline asm should be more robbust wrt optimizations
+http://bugzilla.kernel.org/show_bug.cgi?id=9302
+Kernel: 2.6.24-rc1
+
+with CONFIG_NO_HZ and/or CONFIG_HPET_TIMER set kernel 2.6.23 doesn't
+boot (ARM, Timer)
+http://bugzilla.kernel.org/show_bug.cgi?id=9229
+Kernel: 2.6.23
+
+NETWORKING===========================================================
+
+RTNLGRP_ND_USEROPT does not report ifindex (IPv6)
+http://bugzilla.kernel.org/show_bug.cgi?id=9349
+Kernel: 2.6.24+
+
+a kernel error happend in the func: __skb_dequeue when using in
+pfifo_fast_dequeue
+http://bugzilla.kernel.org/show_bug.cgi?id=9342
+Kernel: 2.6.11.1 - reporter asked to try recent kernel
+
+e100 does not work after boot
+http://bugzilla.kernel.org/show_bug.cgi?id=9336
+Kernel: 2.6.23.1
+
+2.6.23.1-smp kernel panic (network-related)
+http://bugzilla.kernel.org/show_bug.cgi?id=9318
+Kernel: 2.6.23.1
+Infiniband panic
+
+sundance -> 4port D-Link System Inc DFE-580TX -> Log errors
+http://bugzilla.kernel.org/show_bug.cgi?id=9311
+Kernel: 2.6.22.9
+
+via-rhine driver stalls with: PHY status 786d, resetting...
+http://bugzilla.kernel.org/show_bug.cgi?id=9300
+Kernel: 2.6.23+
+
+
+Weird network problems with 2.6.23-rc2
+http://bugzilla.kernel.org/show_bug.cgi?id=9080
+http://lkml.org/lkml/2007/8/11/40 - description
+
+rt2500pci: low TCP throughput (wireless)
+http://bugzilla.kernel.org/show_bug.cgi?id=9273
+Kernel: 2.6.24-rc1
+This is a regression
+
+Unable to build wifi network between zd1201 and b43
+http://bugzilla.kernel.org/show_bug.cgi?id=9237
+Kernel: 2.6.24-rc1
+
+Crash after module unload in b43 (wireless)
+http://bugzilla.kernel.org/show_bug.cgi?id=9233
+Kernel: 2.6.24-rc1
+
+(net typhoon) "no descs for cmd, had (needed) 0 (1) cmd, 31 (7) resp"
+http://bugzilla.kernel.org/show_bug.cgi?id=9225
+Kernel: 2.6.23.1
+
+
+IDE/SATA=========================================================
+
+pata_pdc202xx_old excessive ATA bus errors
+http://bugzilla.kernel.org/show_bug.cgi?id=9337
+2.6.24-rc2
+
+Drive seagate ST380011AS needs to be blacklisted
+http://bugzilla.kernel.org/show_bug.cgi?id=9309
+Kernel: 2.6.22.X
+
+DVD-RAM umount and disk free bug
+http://bugzilla.kernel.org/show_bug.cgi?id=9265
+Kernel: 2.6.15  (asked to try current kernel)
+
+FILE SYSTEMS=======================================================
+
+ext4: delalloc space accounting problem drops data
+http://bugzilla.kernel.org/show_bug.cgi?id=9329
+Kernel: 2.6.24-rc1
+
+POSIX Access Control Lists cause bogus file system check errors
+http://bugzilla.kernel.org/show_bug.cgi?id=9241
+Kernel: 2.6.23.1
+
+MEMORY MANAGEMENT================================================
+
+My system hangs when it has no more free memory to allocate via malloc()
+http://bugzilla.kernel.org/show_bug.cgi?id=9316
+Kernel: 2.6.23
+User program, "My system hangs when it has no more free memory to
+allocate via malloc()"
+
+BUG: unable to handle kernel paging request at virtual address
+26121228/kswapd0[231] exited with preempt_count 1
+http://bugzilla.kernel.org/show_bug.cgi?id=9305
+EIP is at free_block+0x6d/0xe4
+Kernel: 2.6.22.6
+
+POWER MANAGEMENT==================================================
+
+IBM X41 looses time after Suspend2Disk
+http://bugzilla.kernel.org/show_bug.cgi?id=9314
+Kernel: 2.6.23
+
+Suspend to RAM resume hangs on a tickless (NO_HZ) kernel
+http://bugzilla.kernel.org/show_bug.cgi?id=9275
+Kernel: 2.6.23
+This is HP notebook nc6320 T2400 945GM
+
+
+VIDEO DRIVERS========================================================
+
+No text consoles with FRAMEBUFFER_CONSOLE_DETECT_PRIMARY
+http://bugzilla.kernel.org/show_bug.cgi?id=9310
+Kernel: 2.6.24-rc1
+This is a regression
+
+
+PARALLEL PORT========================================================
+
+LPC IT8705 POST port making noise on parallel port
+http://bugzilla.kernel.org/show_bug.cgi?id=9306
+Kernel: 2.6.16+
+
+
+I/O STORAGE===========================================================
+
+kernel bug from pktcdvd
+http://bugzilla.kernel.org/show_bug.cgi?id=9294
+Kernel: 2.6.23
+
+After pci-e video card was installed, pci add-on usb card & firewire card fail
+http://bugzilla.kernel.org/show_bug.cgi?id=9223
+Kernel: 2.6.20 (testing of latest kernel requested)
+
+SCSI==================================================================
+
+qla2xxx: driver initialization does not complete when booting with
+Port connected
+http://bugzilla.kernel.org/show_bug.cgi?id=9267
+Kernel: 2.6.23.1
+
+SOUND ALSA============================================================
+
+Unable to load snd-hda-intel module: Unknown symbol in module, or
+unknown parameter
+http://bugzilla.kernel.org/show_bug.cgi?id=9242
+Kernel: 2.6.24-rc1
+
+usbaudio microphone: regular sound distortion on several Logitech Webcams
+http://bugzilla.kernel.org/show_bug.cgi?id=9230
+Kernel: 2.6.22.9
+
+HID====================================================================
+
+Kernel NULL pointer dereference at :usbhid:hiddev_ioctl+0x2f/0xabc
+http://bugzilla.kernel.org/show_bug.cgi?id=9216
+Kernel: 2.6.23.1
+Looks like this is a regression
