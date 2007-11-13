@@ -1,33 +1,46 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Tue, 13 Nov 2007 12:24:36 +0100
-Message-ID: <20071113112435.GA16809@kernel.dk>
-References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com> <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 12/13] ide: move drive->using_dma check to callers of
+ ->dma_host_on method
+Date: Tue, 13 Nov 2007 14:23:32 +0300
+Message-ID: <47398934.8030100@ru.mvista.com>
+References: <200711130002.20962.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:27464 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbXKMLVT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Nov 2007 06:21:19 -0500
-Content-Disposition: inline
-In-Reply-To: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+Received: from homer.mvista.com ([63.81.120.155]:31839 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753301AbXKMLXU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 06:23:20 -0500
+In-Reply-To: <200711130002.20962.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Natalie Protasevich <protasnb@gmail.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Nov 13 2007, Andrew Morton wrote:
-> > I/O STORAGE===========================================================
-> > 
-> > kernel bug from pktcdvd
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9294
-> > Kernel: 2.6.23
-> 
-> I think we might have fixed this.
+Bartlomiej Zolnierkiewicz wrote:
 
-It's fixed and merged, I just forgot to close the bugzilla. Did so now.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
--- 
-Jens Axboe
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
+MBR, Sergei
+
+> Index: b/drivers/ide/ide-dma.c
+> ===================================================================
+> --- a/drivers/ide/ide-dma.c
+> +++ b/drivers/ide/ide-dma.c
+> @@ -470,7 +470,7 @@ EXPORT_SYMBOL(ide_dma_off);
+>  
+>  void ide_dma_host_on(ide_drive_t *drive)
+>  {
+> -	if (drive->using_dma) {
+> +	if (1) {
+
+    Why so?
+
+>  		ide_hwif_t *hwif	= HWIF(drive);
+>  		u8 unit			= (drive->select.b.unit & 0x01);
+>  		u8 dma_stat		= hwif->INB(hwif->dma_status);
+
+WBR, Sergei
