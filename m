@@ -1,43 +1,43 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv: hard resetting port
-Date: Wed, 14 Nov 2007 11:11:37 -0500
-Message-ID: <473B1E39.8090800@rtr.ca>
-References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca> <473B1617.4010102@wpkg.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 9/13] ide: remove ->ide_dma_on and ->dma_off_quietly methods
+ from ide_hwif_t
+Date: Wed, 14 Nov 2007 19:31:17 +0300
+Message-ID: <473B22D5.5000500@ru.mvista.com>
+References: <200711130002.00911.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4339 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756545AbXKNQLj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 11:11:39 -0500
-In-Reply-To: <473B1617.4010102@wpkg.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:47119 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754931AbXKNQbH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 11:31:07 -0500
+In-Reply-To: <200711130002.00911.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tomasz Chmielewski wrote:
-> Mark Lord schrieb:
->> Tomasz Chmielewski wrote:
->>> This are the log entries I saw as I started e2fsck on a 5-disk Linux 
->>> RAID-5 array; all disks connected to a sata_mv controller:
->>>
->>> ata6.00: exception Emask 0x1 SAct 0x0 SErr 0x100000 action 0x6 frozen
->>> ata6.00: edma_err 0x00000084, EDMA self-disable
->> ..
->>
->> Translation:
->> "The port had a link CRC error, which caused it to drop out of 
->> host-queuing mode."
-> 
-> Is there an online Kernelish-English dictionary anywhere? ;)
-..
+Bartlomiej Zolnierkiewicz wrote:
 
-Unfortunately not.
+> * Make ide_dma_off_quietly() and __ide_dma_on() always available.
 
-At some point, we *really* need to convice {Tejun,Jeff} that libata
-messages should be simpler, fewer, and more human readable by default,
-with perhaps a sysfs flag to re-enable the {Tejun,Jeff}-speak versions.
+> * Drop "__" prefix from __ide_dma_on().
 
-Cheers
+> * Check for presence of ->dma_host_on instead of ->ide_dma_on.
+
+> * Convert all users of ->ide_dma_on and ->dma_off_quietly methods
+>   to use ide_dma_on() and ide_dma_off_quietly() instead.
+
+> * Remove no longer needed ->ide_dma_on and ->dma_off_quietly methods
+>   from ide_hwif_t.
+
+> * Make ide_dma_on() void.
+
+> There should be no functionality changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
