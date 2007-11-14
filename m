@@ -1,39 +1,71 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Wed, 14 Nov 2007 13:05:31 -0800
-Message-ID: <20071114130531.15d352fe.rdunlap@xenotime.net>
-References: <20071113.033946.114918709.davem@davemloft.net>
-	<20071113034916.2556edd7.akpm@linux-foundation.org>
-	<20071113.035824.40509981.davem@davemloft.net>
-	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
-	<20071113134029.GA30978@elte.hu>
-	<20071113085514.3414aa52.rdunlap@xenotime.net>
-	<20071114140847.GA11489@elte.hu>
-	<20071114093820.ff3ad8f9.rdunlap@xenotime.net>
-	<20071114201639.GA17182@elte.hu>
-	<20071114122932.bc3bec04.rdunlap@xenotime.net>
-	<20071114203737.GA20606@elte.hu>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
+Date: Wed, 14 Nov 2007 16:12:21 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com>
+References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:51344 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756078AbXKNVFg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 16:05:36 -0500
-Received: from midway.site ([71.117.233.180]) by xenotime.net for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 13:05:31 -0800
-In-Reply-To: <20071114203737.GA20606@elte.hu>
+Received: from empbedex1.empirix.com ([12.38.203.54]:13580 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758894AbXKNVYU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 16:24:20 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <473B44CB.6010209@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 14 Nov 2007 21:37:37 +0100 Ingo Molnar wrote:
+I have gotten it to boot from those hard-drives and it 
+has the same behavior:
 
-> ok, then you conceded it by not replying to it? good ;-)
+  	Copying a large file to the same partition (>150MEG) 
+  	causes the system to hang (no I/O - no input/output - 
+  	nothing - complete freeze - like a primary resource 
+  	is locked up or interrupts got completely & totally 
+  	turned off in an ISR and its pending for something?
 
-No, I don't intend to carry on this discussion,
-but I appreciate the smiley.
+Only way to get out of this is to power-cycle the box!
 
----
-~Randy
+@#$@#$#@
+
+
+
+
+
+-----Original Message-----
+
+> ::: Can you give me exact details of how to set up and reproduce this?
+> :::  -- Kernel version
+> 
+> 	Linux-2.6.23.1
+> 
+> 	NOTE: I am using ppc (arch/ppc instead of arch/powerpc)
+> 
+> :::  -- number/config/model of drives
+> 
+> 	2x250GIG Western Digital - 3 partitions (largest (/dev/sda3
+> 	~200Gig - formatted to ext2).
+> 
+> 	7042 PEX on a MPC8548 Board
+> 
+> :::  -- exact command line sequence to cause the failure
+> 
+> 	NFS mount root file system (I am currently rebuild to take away
+> 	the NFS file system dependency) - /dev/sda3 is drive in
+question...
+..
+
+MMmm.. I'd like to see that again without the rootfs-on-NFS.
+
+What exactly do you mean when you say "it just hangs" ?
+Everything (dead system)?
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
