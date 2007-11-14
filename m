@@ -1,43 +1,30 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Tue, 13 Nov 2007 17:56:16 -0800 (PST)
-Message-ID: <20071113.175616.129918600.davem@davemloft.net>
-References: <20071113193750.GD1356@flint.arm.linux.org.uk>
-	<473A067F.3090007@rtr.ca>
-	<20071113234033.GL1356@flint.arm.linux.org.uk>
+From: "Bjoern Olausson" <lkmlist@gmail.com>
+Subject: Re: [Bugme-new] [Bug 9373] New: PDC20267 exception Emask on I/O
+Date: Wed, 14 Nov 2007 02:57:00 +0100
+Message-ID: <5501535d0711131757j3cd25c79k2a995a5a8ff146f2@mail.gmail.com>
+References: <bug-9373-10286@http.bugzilla.kernel.org/>
+	 <20071113170412.ffd94bba.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
-In-Reply-To: <20071113234033.GL1356@flint.arm.linux.org.uk>
-Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
-List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
-List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
-List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
-List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
-To: rmk+lkml@arm.linux.org.uk
-Cc: liml@rtr.ca, mingo@elte.hu, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.185]:12617 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753194AbXKNB5C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 20:57:02 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so20682rvb
+        for <linux-ide@vger.kernel.org>; Tue, 13 Nov 2007 17:57:00 -0800 (PST)
+In-Reply-To: <20071113170412.ffd94bba.akpm@linux-foundation.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Date: Tue, 13 Nov 2007 23:40:33 +0000
+> Are you sure?  Was the relevant driver not present in 2.6.23?
 
-> ARM ep93xx defconfig has been broken since 2.6.23-git1 due to:
-> 
-> drivers/net/arm/ep93xx_eth.c:420: error: implicit declaration of function '__netif_rx_schedule_prep'
-> 
-> caused by: [NET]: Make NAPI polling independent of struct net_device objects.
-> 
-> ARM netx defconfig has been broken since 2.6.23-git1 due to:
-> 
-> drivers/net/netx-eth.c: In function 'netx_eth_hard_start_xmit':
-> drivers/net/netx-eth.c:131: error: 'dev' undeclared (first use in this function)
-> drivers/net/netx-eth.c:131: error: (Each undeclared identifier is reported only once
-> drivers/net/netx-eth.c:131: error: for each function it appears in.)
-> drivers/net/netx-eth.c: In function 'netx_eth_receive':
-> drivers/net/netx-eth.c:158: error: 'dev' undeclared (first use in this function)
-> 
-> caused by: [NET] drivers/net: statistics cleanup #1 -- save memory and shrink code
-> 
+I never tried 2.6.23. 2.6.22 with PDC202XX_OLD worked fine. Than I tried to get
+rid of the old ATA stuff and tried 2.6.22 with libata only and I got this
+error, than I switched to 2.6.24-rc2 to see if the bug is in the dev. version.
 
-I'll fix these up, thanks for the report.
+regards
+Bjoern Olausson
