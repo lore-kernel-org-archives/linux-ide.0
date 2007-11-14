@@ -1,58 +1,40 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: [stable] [PATCH] ide: fix serverworks.c UDMA regression
-Date: Wed, 14 Nov 2007 09:34:47 -0500
-Message-ID: <473B0787.1010805@cybernetics.com>
-References: <4713B9FA.8050803@cybernetics.com> <200710162125.41987.bzolnier@gmail.com> <20071113232859.GB10338@kroah.com>
+From: Larry Finger <larry.finger@lwfinger.net>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Wed, 14 Nov 2007 08:49:31 -0600
+Message-ID: <473B0AFB.2080400@lwfinger.net>
+References: <20071113.035824.40509981.davem@davemloft.net>	<20071113041259.79c9a8c5.akpm@linux-foundation.org>	<20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca>	<20071113164650.GA28493@elte.hu> <4739E3D0.10201@rtr.ca>	<20071113183925.GF17785@parisc-linux.org> <4739F069.6050102@rtr.ca>	<20071113184902.GG17785@parisc-linux.org> <4739F2DD.5050802@rtr.ca> <20071114143040.GA31025@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host06.cybernetics.com ([206.246.200.22]:2135 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1754218AbXKNOep (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 09:34:45 -0500
-In-Reply-To: <20071113232859.GB10338@kroah.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60431 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752585AbXKNOti (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 09:49:38 -0500
+In-Reply-To: <20071114143040.GA31025@elte.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, stable@kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Mark Lord <liml@rtr.ca>, alsa-devel@alsa-project.org, Matthew Wilcox <matthew@wil.cx>, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>
 
-Greg KH wrote:
-> On Tue, Oct 16, 2007 at 09:25:41PM +0200, Bartlomiej Zolnierkiewicz wrote:
->   
->> On Monday 15 October 2007, Tony Battersby wrote:
->>     
->>> The patch described by the following excerpt from ChangeLog-2.6.22 makes
->>> it impossible to use UDMA on a Tyan S2707 motherboard (SvrWks CSB5):
->>>
->>> commit 2d5eaa6dd744a641e75503232a01f52d0768884c
->>> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->>> Date:   Thu May 10 00:01:08 2007 +0200
->>>
->>>     ide: rework the code for selecting the best DMA transfer mode (v3)
->>>
->>>     ...
->>>
->>> This one-line patch against 2.6.23 fixes the problem.
->>>       
->> Thanks!! (and sorry for the bug)
+Ingo Molnar wrote:
+> * Mark Lord <liml@rtr.ca> wrote:
+> 
+>>> You're assuming that everything in linux-2.6 was downloaded; that's 
+>>> not true.  Everything in linux-2.6/.git was downloaded; but then you 
+>>> do a checkout which happens to approximately double the size of the 
+>>> linux-2.6 directory.
+>> ..
 >>
->>     
->>> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
->>>       
->> applied
->>
->> Greg/Chris: this is a perfect candidate for 2.6.23.2
->>     
->
-> Thanks, got it now.
->
-> greg k-h
->
->   
+>> Ah, I wondered why it took only half an hour to download.
+> 
+> and you can get even lower than the 260MB by downloading a shallow clone 
+> of v2.6.23 and then populating the git tree from tht point on. (see the 
+> --depth parameter of git-clone) [because most of the time you want to 
+> bisect back to the last stable release, not back to 2 years of git 
+> history.]
 
-Also applies to 2.6.22, if you are still maintaining that stable branch.
+When creating additional git trees (Linville's wireless-2.6 tree, for example) for driver
+development, you can save a lot of download bandwidth by using the --reference parameter of git-clone.
 
-Thanks,
-Tony
-
+Larry
