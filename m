@@ -1,237 +1,121 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Delkin Cardbus IDE, a.k.a. ASKA "Ninja" chipset
-Date: Wed, 14 Nov 2007 00:57:18 +0000
-Message-ID: <20071114005718.7b151b37@the-village.bc.nu>
-References: <200711031541.lA3FfJ6h006120@harpo.it.uu.se>
-	<20071103162203.5388a37f@the-village.bc.nu>
-	<47323E13.3030205@rtr.ca>
-	<20071107232132.238fdf04@the-village.bc.nu>
-	<47324A16.5010205@rtr.ca>
-	<4738B364.5030806@rtr.ca>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9373] New: PDC20267 exception Emask on I/O
+Date: Tue, 13 Nov 2007 17:04:12 -0800
+Message-ID: <20071113170412.ffd94bba.akpm@linux-foundation.org>
+References: <bug-9373-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:51046 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759510AbXKNA6M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 19:58:12 -0500
-In-Reply-To: <4738B364.5030806@rtr.ca>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:37063 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761747AbXKNBEp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 20:04:45 -0500
+In-Reply-To: <bug-9373-10286@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, greg.freemyer@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, lkmlist@gmail.com
 
-First guess
+On Tue, 13 Nov 2007 16:11:25 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
 
-/*
- * pata_ninja32.c 	- Ninja32 PATA for new ATA layer
- *			  (C) 2007 Red Hat Inc
- *			  Alan Cox <alan@redhat.com>
- *
- * Note: The controller like many controllers has shared timings for
- * PIO and DMA. We thus flip to the DMA timings in dma_start and flip back
- * in the dma_stop function. Thus we actually don't need a set_dmamode
- * method as the PIO method is always called and will set the right PIO
- * timing parameters.
- *
- * The Ninja32 Cardbus is not a generic SFF controller. Instead it is
- * laid out as follows off BAR 0. This is based upon Mark Lord's delkin
- * driver and the extensive analysis done by the BSD developers, notably
- * ITOH Yasufumi.
- *
- *	Base + 0x00 IRQ Status
- *	Base + 0x01 IRQ control
- *	Base + 0x02 Chipset control
- *	Base + 0x04 VDMA and reset control + wait bits
- *	Base + 0x08 BMIMBA
- *	Base + 0x0C DMA Length
- *	Base + 0x10 Taskfile
- *	Base + 0x18 BMDMA Status ?
- *	Base + 0x1C
- *	Base + 0x1D Bus master control
- *		bit 0 = enable
- *		bit 1 = 0 write/1 read
- *		bit 2 = 1 sgtable
- *		bit 3 = go
- *		bit 4-6 wait bits
- *		bit 7 = done
- *	Base + 0x1E AltStatus
- *	Base + 0x1F timing register
- */
+> http://bugzilla.kernel.org/show_bug.cgi?id=9373
+> 
+>            Summary: PDC20267 exception Emask on I/O
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.24-rc2
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Serial ATA
+>         AssignedTo: jgarzik@pobox.com
+>         ReportedBy: lkmlist@gmail.com
+>                 CC: htejun@gmail.com
+> 
+> 
+> Most recent kernel where this bug did not occur:
 
-#include <linux/kernel.h>
-#include <linux/module.h>
-#include <linux/pci.h>
-#include <linux/init.h>
-#include <linux/blkdev.h>
-#include <linux/delay.h>
-#include <scsi/scsi_host.h>
-#include <linux/libata.h>
+Are you sure?  Was the relevant driver not present in 2.6.23?
 
-#define DRV_NAME "pata_ninja32"
-#define DRV_VERSION "0.0.1"
-
-/**
- *	ninja32_configure_piomode	-	set chip PIO timing
- *	@ap: ATA interface
- *	@adev: ATA device
- *	@pio: PIO mode
- *
- *	Called to do the PIO mode setup. Our timing registers are shared
- *	so a configure_dmamode call will undo any work we do here and vice
- *	versa
- */
-
-static void ninja32_configure_piomode(struct ata_port *ap, struct ata_device *adev, int pio)
-{
-	static u16 pio_timing[5] = {
-		0xd6, 0x85, 0x44, 0x33, 0x13
-	};
-	iowrite8(pio_timing[pio], ap->ioaddr.bmdma_addr + 0x1f);
-}
-
-/**
- *	ninja32_set_piomode	-	set initial PIO mode data
- *	@ap: ATA interface
- *	@adev: ATA device
- *
- *	Called to do the PIO mode setup. Our timing registers are shared
- *	but we want to set the PIO timing by default.
- */
-
-static void ninja32_set_piomode(struct ata_port *ap, struct ata_device *adev)
-{
-	ninja32_configure_piomode(ap, adev, adev->pio_mode - XFER_PIO_0);
-}
-
-static struct scsi_host_template ninja32_sht = {
-	.module			= THIS_MODULE,
-	.name			= DRV_NAME,
-	.ioctl			= ata_scsi_ioctl,
-	.queuecommand		= ata_scsi_queuecmd,
-	.can_queue		= ATA_DEF_QUEUE,
-	.this_id		= ATA_SHT_THIS_ID,
-	.sg_tablesize		= LIBATA_MAX_PRD,
-	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
-	.emulated		= ATA_SHT_EMULATED,
-	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-	.proc_name		= DRV_NAME,
-	.dma_boundary		= ATA_DMA_BOUNDARY,
-	.slave_configure	= ata_scsi_slave_config,
-	.slave_destroy		= ata_scsi_slave_destroy,
-	.bios_param		= ata_std_bios_param,
-};
-
-static struct ata_port_operations ninja32_port_ops = {
-	.set_piomode	= ninja32_set_piomode,
-	.mode_filter	= ata_pci_default_filter,
-
-	.tf_load	= ata_tf_load,
-	.tf_read	= ata_tf_read,
-	.check_status 	= ata_check_status,
-	.exec_command	= ata_exec_command,
-	.dev_select 	= ata_std_dev_select,
-
-	.freeze		= ata_bmdma_freeze,
-	.thaw		= ata_bmdma_thaw,
-	.error_handler	= ata_bmdma_error_handler,
-	.post_internal_cmd = ata_bmdma_post_internal_cmd,
-	.cable_detect	= ata_cable_40wire,
-
-	.bmdma_setup 	= ata_bmdma_setup,
-	.bmdma_start 	= ata_bmdma_start,
-	.bmdma_stop	= ata_bmdma_stop,
-	.bmdma_status 	= ata_bmdma_status,
-
-	.qc_prep 	= ata_qc_prep,
-	.qc_issue	= ata_qc_issue_prot,
-
-	.data_xfer	= ata_data_xfer,
-
-	.irq_handler	= ata_interrupt,
-	.irq_clear	= ata_bmdma_irq_clear,
-	.irq_on		= ata_irq_on,
-
-	.port_start	= ata_sff_port_start,
-};
-
-static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
-{
-	struct ata_host *host;
-	struct ata_port *ap;
-	void __iomem *base;
-	int rc;
-	
-	host = ata_host_alloc(&dev->dev, 1);
-	if (!host)
-		return -ENOMEM;
-	ap = host->ports[0];
-
-	/* Set up the PCI device */
-	rc = pcim_enable_device(dev);
-	if (rc)
-		return rc;
-	rc = pcim_iomap_regions(dev, 1 << 0, DRV_NAME);
-	if (rc == -EBUSY)
-		pcim_pin_device(dev);
-	if (rc)
-		return rc;
-
-	host->iomap = pcim_iomap_table(dev);
-	rc = pci_set_dma_mask(dev, ATA_DMA_MASK);
-	if (rc)
-		return rc;
-	rc = pci_set_consistent_dma_mask(dev, ATA_DMA_MASK);
-	if (rc)
-		return rc;
-	pci_set_master(dev);
-		
-	/* Set up the register mappings */
-	base = host->iomap[0];
-	if (!base)
-		return -ENOMEM;
-	ap->ops = &ninja32_port_ops;
-	ap->pio_mask = 0x1F;
-	ap->flags |= ATA_FLAG_SLAVE_POSS;
-	
-	ap->ioaddr.cmd_addr = base + 0x10;
-	ap->ioaddr.ctl_addr = base + 0x1E;
-	ap->ioaddr.altstatus_addr = base + 0x1E;
-	ap->ioaddr.bmdma_addr = base;
-	ata_std_ports(&ap->ioaddr);
-	
-	return ata_host_activate(host, dev->irq, ata_interrupt, IRQF_SHARED, &ninja32_sht);
-}
-
-static const struct pci_device_id ninja32[] = {
-	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-	{ },
-};
-
-static struct pci_driver ninja32_pci_driver = {
-	.name 		= DRV_NAME,
-	.id_table	= ninja32,
-	.probe 		= ninja32_init_one,
-	.remove		= ata_pci_remove_one
-};
-
-static int __init ninja32_init(void)
-{
-	return pci_register_driver(&ninja32_pci_driver);
-}
-
-static void __exit ninja32_exit(void)
-{
-	pci_unregister_driver(&ninja32_pci_driver);
-}
-
-MODULE_AUTHOR("Alan Cox");
-MODULE_DESCRIPTION("low-level driver for Ninja32 ATA");
-MODULE_LICENSE("GPL");
-MODULE_DEVICE_TABLE(pci, ninja32);
-MODULE_VERSION(DRV_VERSION);
-
-module_init(ninja32_init);
-module_exit(ninja32_exit);
+> when not using the libata drivers
+> 
+> Distribution:
+> gentoo
+> 
+> Hardware Environment:
+> 00:00.0 Host bridge: Intel Corporation 82850 850 (Tehama) Chipset Host Bridge
+> (MCH) (rev 02)
+> 00:01.0 PCI bridge: Intel Corporation 82850 850 (Tehama) Chipset AGP Bridge
+> (rev 02)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 02)
+> 00:1f.0 ISA bridge: Intel Corporation 82801BA ISA Bridge (LPC) (rev 02)
+> 00:1f.1 IDE interface: Intel Corporation 82801BA IDE U100 Controller (rev 02)
+> 00:1f.2 USB Controller: Intel Corporation 82801BA/BAM USB Controller #1 (rev
+> 02)
+> 00:1f.3 SMBus: Intel Corporation 82801BA/BAM SMBus Controller (rev 02)
+> 00:1f.4 USB Controller: Intel Corporation 82801BA/BAM USB Controller #1 (rev
+> 02)
+> 01:00.0 VGA compatible controller: nVidia Corporation NV5 [RIVA TNT2/TNT2 Pro]
+> (rev 11)
+> 02:06.0 Mass storage controller: Promise Technology, Inc. PDC20267
+> (FastTrak100/Ultra100) (rev 02)
+> 02:09.0 RAID bus controller: Silicon Image, Inc. SiI 3114 [SATALink/SATARaid]
+> Serial ATA Controller (rev 02)
+> 02:0a.0 Ethernet controller: 3Com Corporation 3c905C-TX/TX-M [Tornado] (rev 74)
+> 
+> Software Environment:
+> Portage 2.1.3.19 (default-linux/x86/2007.0/desktop, gcc-3.4.6, glibc-2.6.1-r0,
+> 2.6.24-rc2 i686)
+> =================================================================
+> System uname: 2.6.24-rc2 i686 Intel(R) Pentium(R) 4 CPU 1500MHz
+> Timestamp of tree: Tue, 13 Nov 2007 15:16:01 +0000
+> distcc 2.18.3 i686-pc-linux-gnu (protocols 1 and 2) (default port 3632)
+> [disabled]
+> ccache version 2.4 [enabled]
+> app-shells/bash:     3.2_p17
+> dev-lang/python:     2.3.5-r3, 2.4.4-r6
+> dev-python/pycrypto: 2.0.1-r6
+> dev-util/ccache:     2.4-r7
+> sys-apps/baselayout: 1.12.9-r2
+> sys-apps/sandbox:    1.2.18.1-r2
+> sys-devel/autoconf:  2.13, 2.61-r1
+> sys-devel/automake:  1.4_p6, 1.5, 1.6.3, 1.7.9-r1, 1.8.5-r3, 1.9.6-r2, 1.10
+> sys-devel/binutils:  2.18-r1
+> sys-devel/gcc-config: 1.3.16
+> sys-devel/libtool:   1.5.24
+> virtual/os-headers:  2.6.22-r2
+> ACCEPT_KEYWORDS="x86"
+> CBUILD="i686-pc-linux-gnu"
+> CFLAGS="-march=pentium4 -O2 -pipe -msse2 -mfpmath=sse -fomit-frame-pointer"
+> CHOST="i686-pc-linux-gnu"
+> 
+> Problem Description:
+> The following occures when the drive has some I/O (realized it when transfering
+> data via FTP [only 2-5 MB/s and stalles])
+> 
+> [  536.333484] ata8.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+> [  536.333489] ata8.00: BMDMA stat 0x4
+> [  536.333498] ata8.00: cmd ca/00:18:c7:10:00/00:00:00:00:00/e0 tag 0 cdb 0x0
+> data 12288 out
+> [  536.333501]          res 51/84:00:de:10:00/00:00:00:00:00/e0 Emask 0x10 (ATA
+> bus error)
+> [  536.333506] ata8.00: status: { DRDY ERR }
+> [  536.333510] ata8.00: error: { ICRC ABRT }
+> [  536.333531] ata8: soft resetting link
+> 
+> Steps to reproduce:
+> 1) Boot
+> 2) Copy some files (via NFS/FTP/scp/cp....) from the drives to/from the
+> PDC20267
+> 
+> complete dmsg can be found here:
+> http://phpfi.com/276055
+> (dmsg buffer seems to be full is there a way to increase it?)
+> 
+> here's the part taken from messages:
+> http://phpfi.com/276059
+> 
