@@ -1,74 +1,30 @@
-From: Hein-Pieter van Braam <hp@syntomax.com>
-Subject: sata_mv PCI ERROR; PCI IRQ reason=0x00000000 highpoint rocketraid
-	2300 pci-e
-Date: Wed, 14 Nov 2007 23:58:19 +0100
-Message-ID: <1195081099.21755.18.camel@liza>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Moderated list
+Date: Wed, 14 Nov 2007 15:23:15 -0800 (PST)
+Message-ID: <20071114.152315.134994547.davem@davemloft.net>
+References: <s5h8x51fd2l.wl%tiwai@suse.de>
+	<473AE84A.4050004@keyaccess.nl>
+	<s5h3av9f9ac.wl%tiwai@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a80-126-0-120.adsl.xs4all.nl ([80.126.0.120]:34940 "EHLO
-	ifolder.erca.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110AbXKNXEi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 18:04:38 -0500
-Received: from [192.168.2.10] (krimson.erca.nl [192.168.4.1])
-	by ifolder.erca.nl (8.13.8/8.13.8/Debian-3) with ESMTP id lAEMwJh1013057
-	for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 23:58:19 +0100
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40015
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755274AbXKNXXQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 18:23:16 -0500
+In-Reply-To: <s5h3av9f9ac.wl%tiwai@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: tiwai@suse.de
+Cc: rene.herman@keyaccess.nl, rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, perex@suse.cz
 
-Hi list,
+From: Takashi Iwai <tiwai@suse.de>
+Date: Wed, 14 Nov 2007 10:47:39 +0100
 
-I have a couple of Highpoint Rocket(Fake)Raid 2300 PCI-e X1 adapters in
-my system, I bought those because the box said ('Open Source' next to
-'linux driver' btw, talk about false advertising). Here's the lspci
-output:
+> I think alsa-user can stay as is.  It's no place for dragging many
+> other addresses like alsa-devel.
+> 
+> BTW, I also prefer keeping the name alsa-devel@.  It's been so.
 
-02:00.0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-230x 4 Port SATA-II Controller (rev 02)
-03:00.0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-230x 4 Port SATA-II Controller (rev 02)
-04:00.0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-230x 4 Port SATA-II Controller (rev 02)
-
-and lspci -n
-
-02:00.0 0100: 1103:2300 (rev 02)
-03:00.0 0100: 1103:2300 (rev 02)
-04:00.0 0100: 1103:2300 (rev 02)
-
-Now, because the chip on the thing is a Marvell 7042 I figured I just
-add the PCI ID to the driver. I tried this, and, if I do not boot from
-the device it does seem to work. I did however get the following errors
-(a lot):
-
-02:00.0 sata_mv PCI ERROR; PCI IRQ reason=0x00000000
-
-I write this from memory, but the numbers are correct, sorry if they do
-not EXACTLY match.
-
-The disk drives do work, but they are dog slow, and when I try to boot
-my ubuntu 7.10 system with this driver, it hangs during boot, right
-after it tried to enable my software raid volumes. 
-
-I have tried both the 'stock' ubuntu kernel 2.6.22-14-generic (I guess
-that won't mean much) but I also tried vanilla kernel.org 2.6.23.1
-
-I realize that this is probably too little information, and I'm very
-willing to provide any other information that you might want. 
-I'd love to provide a complete boot log, but my @#$@#%@#$ motherboard
-does not have a serial interface. Any suggestion is highly
-appreciated :)
-
-Thank you so much for your help in advance, I feel all dirty using the
-proprietary driver from highpoint :)
-
-- Hein-Pieter van Braam
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+That's fine with me, I've changed it alsa-devel@vger.kernel.org
