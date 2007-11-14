@@ -1,47 +1,34 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Delkin Cardbus IDE, a.k.a. ASKA "Ninja" chipset
-Date: Tue, 13 Nov 2007 23:50:47 -0500
-Message-ID: <473A7EA7.2030404@rtr.ca>
-References: <200711031541.lA3FfJ6h006120@harpo.it.uu.se>	<20071103162203.5388a37f@the-village.bc.nu>	<47323E13.3030205@rtr.ca>	<20071107232132.238fdf04@the-village.bc.nu>	<47324A16.5010205@rtr.ca>	<4738B364.5030806@rtr.ca> <20071114005718.7b151b37@the-village.bc.nu>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Wed, 14 Nov 2007 06:56:06 +0100
+Message-ID: <20071114055606.GA5458@uranus.ravnborg.org>
+References: <20071113034916.2556edd7.akpm@linux-foundation.org> <20071113.035824.40509981.davem@davemloft.net> <20071113041259.79c9a8c5.akpm@linux-foundation.org> <20071113.043207.44732743.davem@davemloft.net> <20071113193219.GC1356@flint.arm.linux.org.uk> <20071113125222.9eb53ac8.akpm@linux-foundation.org> <20071113221801.GF1356@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1070 "EHLO mail.rtr.ca"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:50141 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757369AbXKNEus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Nov 2007 23:50:48 -0500
-In-Reply-To: <20071114005718.7b151b37@the-village.bc.nu>
+	id S1750779AbXKNFyZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Nov 2007 00:54:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20071113221801.GF1356@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, greg.freemyer@gmail.com, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger
 
-Alan wrote:
-> First guess
 > 
-> /*
->  * pata_ninja32.c 	- Ninja32 PATA for new ATA layer
-..
+> > If so, MANITAINERS claims that it is subscribers-only.  That would cause
+> > some bug reporters to give up and go away.
+> 
+> Find some other mailing list; I'm not hosting *nor* am I willing to run a
+> non-subscribers only mailing list.  Period.  Not negotiable, so don't even
+> try to change my mind.
 
-Okay, I tried it on the wife's notebook.
-It needs the patch below to enable chip interrupts,
-and it is *very* slow on I/O (1MB/sec), slower even
-than delkin_cb at present.
+The postmasters at vger is pretty good at running mailing lists.
+For linux-kbuild my effort so far has been to request it.
+Thats not a big deal.
 
-But it does work, with this patch:
+So if they accept it you could have linux-arm@vger.kernel.org for zero
+overhead for you.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-(I still have hardware here to send you..)
-
---- old/pata_ninja32.c	2007-11-13 23:06:21.000000000 -0500
-+++ new/pata_ninja32.c	2007-11-13 23:49:24.000000000 -0500
-@@ -169,6 +169,7 @@
- 	ap->pio_mask = 0x1F;
- 	ap->flags |= ATA_FLAG_SLAVE_POSS;
- 	
-+	iowrite8(0x05, base + 1);
- 	ap->ioaddr.cmd_addr = base + 0x10;
- 	ap->ioaddr.ctl_addr = base + 0x1E;
- 	ap->ioaddr.altstatus_addr = base + 0x1E;
+	Sam
