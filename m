@@ -1,44 +1,31 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Wed, 14 Nov 2007 13:37:49 -0500
-Message-ID: <473B407D.9020403@rtr.ca>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com>
+Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Wed, 14 Nov 2007 13:46:09 -0500
+Message-ID: <473B4271.3000201@rtr.ca>
+References: <20071109020235.GA2031@ceren><20071109023129.GA25581@havoc.gtf.org><4733D421.7000505@rtr.ca><20071109034622.GB25581@havoc.gtf.org><20071109120425.543971bf@the-village.bc.nu><47351FE1.4000001@garzik.org><DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com><473600B6.5070103@garzik.org><F72FA20C31DD4F4C997B91C5B3690A095054A2@hqemmail07.nvidia.com> <20071113152727.45b71939@the-village.bc.nu> <F72FA20C31DD4F4C997B91C5B3690A095054A7@hqemmail07.nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4910 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4554 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699AbXKNShv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 13:37:51 -0500
-In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com>
+	id S1754669AbXKNSqL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Nov 2007 13:46:11 -0500
+In-Reply-To: <F72FA20C31DD4F4C997B91C5B3690A095054A7@hqemmail07.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Morrison, Tom" <tmorrison@empirix.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Allen Martin <AMartin@nvidia.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-Morrison, Tom wrote:
-> -----Original Message-----
-> From: Mark Lord [mailto:liml@rtr.ca] 
-> Sent: Wednesday, November 14, 2007 12:57 PM
-> To: Morrison, Tom
-> Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-> 
-> Morrison, Tom wrote:
-> <snip >
->> The problem comes ONLY when I am doing large file operations 
->> (e.g.: just copying a file) to/from the SATA drives behind 
->> the subject line 7042....it just hangs after about 10-15 
->> seconds into the copy...
->>
->> How large a file causes the hang - you ask - well, somewhere 
->> between 100Meg & 500Meg...
+Allen Martin wrote:
+..
+> Errata for which there is an SBIOS workaround are generally only
+> released to BIOS vendors and under NDA.  If Linux users were impacted by
+> such a bug we would most likely release a patch, but a much more likely
 ..
 
-Oh yeah, Can I also please see the output of:
+All of that silly secrecy harms your company and your customers.
+You really should find a way to make the full information available
+to all O/S providers.  In the case of Linux, this costs nothing
+but a willingness on your part.
 
-   lspci -vv
-
-
-Thanks.
