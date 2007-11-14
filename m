@@ -1,30 +1,42 @@
-From: "Bjoern Olausson" <lkmlist@gmail.com>
-Subject: Re: [Bugme-new] [Bug 9373] New: PDC20267 exception Emask on I/O
-Date: Wed, 14 Nov 2007 02:57:00 +0100
-Message-ID: <5501535d0711131757j3cd25c79k2a995a5a8ff146f2@mail.gmail.com>
-References: <bug-9373-10286@http.bugzilla.kernel.org/>
-	 <20071113170412.ffd94bba.akpm@linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB
+Date: Wed, 14 Nov 2007 10:57:58 +0900
+Message-ID: <473A5626.7040008@gmail.com>
+References: <4738DE21.8090702@shaw.ca> <47390B2F.7090105@gmail.com> <47392768.3030509@shaw.ca> <47392B3D.1020101@gmail.com> <4739B0E5.2010303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:12617 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194AbXKNB5C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Nov 2007 20:57:02 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so20682rvb
-        for <linux-ide@vger.kernel.org>; Tue, 13 Nov 2007 17:57:00 -0800 (PST)
-In-Reply-To: <20071113170412.ffd94bba.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757561AbXKNB6m@vger.kernel.org>
+In-Reply-To: <4739B0E5.2010303@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-> Are you sure?  Was the relevant driver not present in 2.6.23?
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Robert Hancock wrote:
+>>> Tejun Heo wrote:
+> ..
+>>> Yes, it should likely do something with these return values. Though
+>>> theoretically it shouldn't fail, since the DMA mask is either 32-bit,
+>>> which shouldn't fail, or one that was successfully set before. Also I
+>>> don't think the SCSI layer actually checks the slave_config return
+>>> value.. sigh.
+>>
+>> Then please at least add WARN_ON() && another reason why allocating /
+>> deallocating resources from ->slave_config isn't such a good idea.
+> ..
+> 
+> The entire point of "slave_configure" is to provide a point for the LLD
+> to do per-device data structure allocation/init.
+> 
+> And yes, SCSI does check the return code.  Whether the code around that
+> check
+> is buggy or not is another question, but it's always worked for me.
 
-I never tried 2.6.23. 2.6.22 with PDC202XX_OLD worked fine. Than I tried to get
-rid of the old ATA stuff and tried 2.6.22 with libata only and I got this
-error, than I switched to 2.6.24-rc2 to see if the bug is in the dev. version.
+I see but I still prefer having PRD, pad buf allocation/release in
+->port_start/stop() primarily for consistency.  Robert, what do you think?
 
-regards
-Bjoern Olausson
+-- 
+tejun
