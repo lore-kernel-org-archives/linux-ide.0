@@ -1,50 +1,47 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
-Date: Wed, 14 Nov 2007 13:17:35 +0100
-Message-ID: <200711141317.35746.ak@suse.de>
-References: <198606.73895.qm@web52608.mail.re2.yahoo.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/2] libata: workaround DRQ=1 ERR=1 for ATAPI tape
+ drives
+Date: Wed, 14 Nov 2007 12:19:25 +0000
+Message-ID: <20071114121925.0c9eb5ce@the-village.bc.nu>
+References: <471C6C44.2030607@gmail.com>
+	<471CEDD4.5040201@garzik.org>
+	<471D25D0.9020702@rtr.ca>
+	<47397784.9070205@tw.ibm.com>
+	<47397CC0.1070401@tw.ibm.com>
+	<4739AB5B.7000703@rtr.ca>
+	<20071113151459.086ffcae@the-village.bc.nu>
+	<4739DDDD.7060305@rtr.ca>
+	<20071113181257.24ab95dd@the-village.bc.nu>
+	<4739EB53.5010206@rtr.ca>
+	<473A56CE.4080804@gmail.com>
+	<473A91F1.1060003@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33614 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751611AbXKNMVb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 07:21:31 -0500
-In-Reply-To: <198606.73895.qm@web52608.mail.re2.yahoo.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:33755 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752194AbXKNMWn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 07:22:43 -0500
+In-Reply-To: <473A91F1.1060003@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Cc: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: albertl@mail.com
+Cc: albertcc@tw.ibm.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
 
-On Wednesday 14 November 2007 12:55, Srihari Vijayaraghavan wrote:
-> [Sorry to reply to my own email thread]
->
-> Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au> wrote:
-> ...
->
-> > No problems. Here's the log of unworking kernel with IOMMU turned on.
-> > Basically it goes on reseting the SATA ports throwing many errors (none
-> > are present in 2.6.23 or on 2.6.24-rc with mem=3500M) for many minutes at
-> > which point I do a power reset :-(.
-> >
-> > Also the log of the working kernel with IOMMU but with mem=3500M is also
-> > attached for the record. It's basically the same above kernel just with
-> > the added parameter.
->
-> Gentlemen,
->
-> This changeset has introduced a regression in 2.6.24-rc, such that my
-> machine boots no more:
+On Wed, 14 Nov 2007 14:13:05 +0800
+Albert Lee <albertcc@tw.ibm.com> wrote:
 
-Hmm, you got an AHCI controller that does not do 64bit DMA masks?
-Or do you have CONFIG_IOMMU_DEBUG enabled? 
+> After an error condition, some ATAPI tape drives set DRQ=1 together with ERR=1
+> when asking the host to transfer the CDB of the next packet command (i.e. request sense).
+> This patch, a revised version of Alan/Mark's previous patch, adds ATA_HORKAGE_STUCK_ERR
+> to workaround the problem by ignoring the ERR bit and proceed sending the CDB.
+> 
+> 
+> Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Cc: Mark Lord <liml@rtr.ca>
 
-Anyways, not being able to deal with merged SG lists must be some
-driver or hardware bug. I would stick some printks into gart_map_sg()
-and try to find out where the failing DMA is initiatiated and then
-split it into multiple IO submissions at the caller level.
+Acked-by: Alan Cox <alan@redhat.com>
 
--Andi
+for both 1/2
