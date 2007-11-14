@@ -1,38 +1,63 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
-Date: Wed, 14 Nov 2007 17:46:26 +0100
-Message-ID: <200711141746.26793.ak@suse.de>
-References: <198606.73895.qm@web52608.mail.re2.yahoo.com> <200711141317.35746.ak@suse.de> <alpine.LFD.0.9999.0711141633400.3265@localhost.localdomain>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [PATCH] ide: fix serverworks.c UDMA regression
+Date: Wed, 14 Nov 2007 08:55:46 -0800
+Message-ID: <20071114165546.GA13889@kroah.com>
+References: <4713B9FA.8050803@cybernetics.com> <200710162125.41987.bzolnier@gmail.com> <20071113232859.GB10338@kroah.com> <473B0787.1010805@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35914 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755934AbXKNQqb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 11:46:31 -0500
-In-Reply-To: <alpine.LFD.0.9999.0711141633400.3265@localhost.localdomain>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35669 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760282AbXKNRCr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 12:02:47 -0500
 Content-Disposition: inline
+In-Reply-To: <473B0787.1010805@cybernetics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>, Ingo Molnar <mingo@elte.hu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, stable@kernel.org
 
- 
-> The AHCI code falls back to 32bit DMA in that case. Which in turn
-> causes the problem seen by Srihari. There is not much printk sticking
-> necessary, the code is simply not handling this. 
+On Wed, Nov 14, 2007 at 09:34:47AM -0500, Tony Battersby wrote:
+> Greg KH wrote:
+> > On Tue, Oct 16, 2007 at 09:25:41PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> >   
+> >> On Monday 15 October 2007, Tony Battersby wrote:
+> >>     
+> >>> The patch described by the following excerpt from ChangeLog-2.6.22 makes
+> >>> it impossible to use UDMA on a Tyan S2707 motherboard (SvrWks CSB5):
+> >>>
+> >>> commit 2d5eaa6dd744a641e75503232a01f52d0768884c
+> >>> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >>> Date:   Thu May 10 00:01:08 2007 +0200
+> >>>
+> >>>     ide: rework the code for selecting the best DMA transfer mode (v3)
+> >>>
+> >>>     ...
+> >>>
+> >>> This one-line patch against 2.6.23 fixes the problem.
+> >>>       
+> >> Thanks!! (and sorry for the bug)
+> >>
+> >>     
+> >>> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> >>>       
+> >> applied
+> >>
+> >> Greg/Chris: this is a perfect candidate for 2.6.23.2
+> >>     
+> >
+> > Thanks, got it now.
+> >
+> > greg k-h
+> >
+> >   
+> 
+> Also applies to 2.6.22, if you are still maintaining that stable branch.
 
-What code is not handling what? 
+Thanks, yes, I am, in fact it's already in my todo-22 directory which
+I'll get to after cleaning out this HUGE backlog of .23 patches that
+I've been slack on attending to :(
 
-IOMMU merging should be always safe. If it is not the driver should
-not submit things in a single SG list.
+thanks,
 
-> So the main option 
-> right now seems to revert the iommu_merge patch.
-
-I don't think that is the correct fix.
-
--Andi
- 
+greg k-h
