@@ -1,99 +1,58 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: sata_mv: hard resetting port
-Date: Wed, 14 Nov 2007 10:43:39 +0100
-Message-ID: <473AC34B.8000709@wpkg.org>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Wed, 14 Nov 2007 09:55:07 +0000
+Message-ID: <20071114095507.GA32595@flint.arm.linux.org.uk>
+References: <20071113125222.9eb53ac8.akpm@linux-foundation.org> <20071113221801.GF1356@flint.arm.linux.org.uk> <20071113143201.9441c940.akpm@linux-foundation.org> <20071113.175551.131375600.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:55720 "EHLO
-	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754280AbXKNJnq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 04:43:46 -0500
-Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
-	by mail2.syneticon.net (Postfix) with ESMTP id DC6543C2A9
-	for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 10:43:43 +0100 (CET)
-Received: from localhost (filter1.syneticon.net [192.168.113.3])
-	by postfix1.syneticon.net (Postfix) with ESMTP id 389DF9382
-	for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 10:43:43 +0100 (CET)
-Received: from postfix1.syneticon.net ([192.168.113.4])
-	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
-	with ESMTP id qKs5i0t1jg8K for <linux-ide@vger.kernel.org>;
-	Wed, 14 Nov 2007 10:43:41 +0100 (CET)
-Received: from [192.168.10.145] (xdsl-87-79-216-119.netcologne.de [87.79.216.119])
-	by postfix1.syneticon.net (Postfix) with ESMTP
-	for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 10:43:41 +0100 (CET)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20071113.175551.131375600.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: akpm@linux-foundation.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, alsa-devel@alsa-project.org, protasnb@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE <linux-ide@vger.kernel.org>
 
-This are the log entries I saw as I started e2fsck on a 5-disk Linux 
-RAID-5 array; all disks connected to a sata_mv controller:
+On Tue, Nov 13, 2007 at 05:55:51PM -0800, David Miller wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
+> Date: Tue, 13 Nov 2007 14:32:01 -0800
+> 
+> > On Tue, 13 Nov 2007 22:18:01 +0000 Russell King <rmk+lkml@arm.linux.org.uk> wrote:
+> > 
+> > > Find some other mailing list; I'm not hosting *nor* am I willing to run a
+> > > non-subscribers only mailing list.  Period.  Not negotiable, so don't even
+> > > try to change my mind.
+> > 
+> > Making a list subscribers-only will cause some bug reports to be lost.
+> > 
+> > Tradeoffs are involved, against which decisions must be made.  You have
+> > made yours.
+> 
+> Russell doesn't have to worry any more, he doesn't have to
+> host it, and he doesn't have to be willing to run a
+> non-subscribers-only mailing list.
+> 
+> Because I am.
+> 
+> I've created linux-arm@vger.kernel.org
 
-Nov 13 18:57:33 superthecus kernel: ata6.00: exception Emask 0x1 SAct 
-0x0 SErr 0x100000 action 0x6 frozen
-Nov 13 18:57:34 superthecus kernel: ata6.00: edma_err 0x00000084, EDMA 
-self-disable
-Nov 13 18:57:34 superthecus kernel: ata6.00: cmd 
-25/00:00:bf:09:24/00:02:1c:00:00/e0 tag 0 cdb 0x0 data 262144 in
-Nov 13 18:57:34 superthecus kernel:          res 
-51/84:00:bf:09:24/84:02:1c:00:00/e0 Emask 0x10 (ATA bus error)
-Nov 13 18:57:34 superthecus kernel: ata6: hard resetting port
-Nov 13 18:57:34 superthecus kernel: ata6: SATA link up 1.5 Gbps (SStatus 
-113 SControl 300)
-Nov 13 18:57:34 superthecus kernel: ata6.00: configured for UDMA/133
-Nov 13 18:57:34 superthecus kernel: ata6: EH complete
-Nov 13 18:57:34 superthecus kernel: sd 5:0:0:0: [sde] 781422768 512-byte 
-hardware sectors (400088 MB)
-Nov 13 18:57:34 superthecus kernel: sd 5:0:0:0: [sde] Write Protect is off
-Nov 13 18:57:34 superthecus kernel: sd 5:0:0:0: [sde] Mode Sense: 00 3a 
-00 00
-Nov 13 18:57:34 superthecus kernel: sd 5:0:0:0: [sde] Write cache: 
-enabled, read cache: enabled, doesn't support DPO or FUA
-Nov 13 18:57:37 superthecus kernel: ata6: exception Emask 0x10 SAct 0x0 
-SErr 0x180000 action 0x6 frozen
-Nov 13 18:57:37 superthecus kernel: ata6: edma_err 0x00000020
-Nov 13 18:57:37 superthecus kernel: ata6: hard resetting port
-Nov 13 18:57:37 superthecus kernel: ata6: SATA link up 1.5 Gbps (SStatus 
-113 SControl 300)
-Nov 13 18:57:37 superthecus kernel: ata6.00: configured for UDMA/133
-Nov 13 18:57:37 superthecus kernel: ata6: EH pending after completion, 
-repeating EH (cnt=4)
-Nov 13 18:57:37 superthecus kernel: ata6: exception Emask 0x10 SAct 0x0 
-SErr 0x4010000 action 0x7
-Nov 13 18:57:37 superthecus kernel: ata6: edma_err 0x00000010, dev connect
-Nov 13 18:57:37 superthecus kernel: ata6: hard resetting port
-Nov 13 18:57:37 superthecus kernel: ata6: SATA link up 1.5 Gbps (SStatus 
-113 SControl 300)
-Nov 13 18:57:38 superthecus kernel: ata6.00: configured for UDMA/133
-Nov 13 18:57:38 superthecus kernel: ata6: EH complete
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] 781422768 512-byte 
-hardware sectors (400088 MB)
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Write Protect is off
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Mode Sense: 00 3a 
-00 00
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Write cache: 
-enabled, read cache: enabled, doesn't support DPO or FUA
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] 781422768 512-byte 
-hardware sectors (400088 MB)
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Write Protect is off
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Mode Sense: 00 3a 
-00 00
-Nov 13 18:57:38 superthecus kernel: sd 5:0:0:0: [sde] Write cache: 
-enabled, read cache: enabled, doesn't support DPO or FUA
+By doing so you've just said (implicitly) that you can not tolerate
+someone having a different opinion from your own.
 
+While I accept *your* right to run *your* lists how you please, you
+are unable to accept *my* right to run *my* lists how I see fit.
 
+Time will tell which lists will survive.  Whatever, I suspect that by
+doing what you've just done, you're going to create more confusion and
+problems. Instead of having one focused place for discussions and bug
+reports, they're going to be spread more thinly, meaning less people
+looking at such things, meaning more bugs get ignored.  Thus making
+the issue worse.
 
-That's the Marvell controller:
-
-01:00.0 SCSI storage controller: Marvell Technology Group Ltd. 
-MV88SX6081 8-port SATA II PCI-X Controller (rev 09)
-
-
-smartctl didn't show any errors.
-
-
+So, when are you creating a replacement alsa-devel mailing list on
+vger?  That's also subscribers-only.
 
 -- 
-Tomasz Chmielewski
-http://lists.wpkg.org
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
