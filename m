@@ -1,59 +1,82 @@
-From: Rene Herman <rene.herman@keyaccess.nl>
-Subject: Re: [alsa-devel] [BUG] New Kernel Bugs
-Date: Wed, 14 Nov 2007 12:46:24 +0100
-Message-ID: <473AE010.4090806@keyaccess.nl>
-References: <20071113143201.9441c940.akpm@linux-foundation.org>	<20071113.175551.131375600.davem@davemloft.net>	<20071114095507.GA32595@flint.arm.linux.org.uk> <20071114.020706.219917088.davem@davemloft.net>
+From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
+Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
+Date: Wed, 14 Nov 2007 22:55:04 +1100 (EST)
+Message-ID: <198606.73895.qm@web52608.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
-In-Reply-To: <20071114.020706.219917088.davem@davemloft.net>
-Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
-List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
-List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
-List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
-List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
-To: David Miller <davem@davemloft.net>
-Cc: rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web52608.mail.re2.yahoo.com ([206.190.48.211]:41160 "HELO
+	web52608.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750866AbXKNLzG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 06:55:06 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andi Kleen <ak@suse.de>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On 14-11-07 11:07, David Miller wrote:
+[Sorry to reply to my own email thread]
 
-Added Jaroslav and Takashi to the already extensive CC....
-
-> From: Russell King <rmk+lkml@arm.linux.org.uk>
-
->> So, when are you creating a replacement alsa-devel mailing list on
->> vger?  That's also subscribers-only.
+Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au> wrote:
+...
+> No problems. Here's the log of unworking kernel with IOMMU turned on.
+> Basically it goes on reseting the SATA ports throwing many errors (none are
+> present in 2.6.23 or on 2.6.24-rc with mem=3500M) for many minutes at which
+> point I do a power reset :-(.
 > 
-> The operative term is "alternative" rather than "replacement".
-> Perhaps this misunderstanding is what you're so upset about.
-> 
-> And yes, that alsa list bugs the crap out of me too.  I'm more than
-> happy to provide an alternative for that one as well.
+> Also the log of the working kernel with IOMMU but with mem=3500M is also
+> attached for the record. It's basically the same above kernel just with the
+> added parameter.
 
-alsa-devel@alsa-project.org is not subscriber-only. Same as that arm list, 
-it's _moderated_ for non-subscribers and given that I and other moderators 
-have been doing our best to moderate quickly (I tend to stay logged in to 
-the moderation interface all day for example) what specifically bugged the 
-crap out of you? It's not something a poster needs to concern himself with.
+Gentlemen,
 
-Also for alsa-devel the moderators tend to add any valid non-subcribers to 
-a whitelist after landing in the queue the first time meaning even a delay 
-is just a one-time thing normally. So what's the trouble? Basically, noone 
-need even notice...
+This changeset has introduced a regression in 2.6.24-rc, such that my machine
+boots no more:
+http://www.kernel.org/hg/linux-2.6/rev/ddf8804136fb
+changeset:   72064:ddf8804136fb
+user:        Andi Kleen <ak@suse.de>
+date:        Fri Oct 19 20:35:03 2007 +0200
+files:       arch/x86/kernel/pci-dma_64.c
+description:
+x86: enable iommu_merge by default
 
-> In fact, *poof*, there it is, linux-alsa@vger.kernel.org is there and
-> available for anyone who wants to use it.
+[ tglx: arch/x86 adaptation ]
 
-Not that I think that moving alsa-devel over to vger wouldn't be a good idea 
-mind you; when the list moved from sourceforge, asking you to host it was my 
-preferred option. I do somewhat suspect that Jaroslav would like to keep the 
-alsa-devel@ name (and I'd like to ask you to then also host alsa-user@) and 
-would then rewrite mail to those lists @alsa-project.org to vger.
+Signed-off-by: Andi Kleen <ak@suse.de>
+Signed-off-by: Ingo Molnar <mingo@elte.hu>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
-But what is the problem you speak of with the alsa-devel list? While I would 
-not mind loosing it, moderation hasn't been overly laborious and I'm not 
-aware of any serious problems.
+committer: Thomas Gleixner <tglx@linutronix.de>
 
-Rene.
+
+diff -r 8c8683cbdc05 -r ddf8804136fb arch/x86/kernel/pci-dma_64.c
+--- a/arch/x86/kernel/pci-dma_64.c      Fri Oct 19 20:35:03 2007 +0200
++++ b/arch/x86/kernel/pci-dma_64.c      Fri Oct 19 20:35:03 2007 +0200
+@@ -11,7 +11,7 @@
+ #include <asm/iommu.h>
+ #include <asm/calgary.h>
+
+-int iommu_merge __read_mostly = 0;
++int iommu_merge __read_mostly = 1;
+ EXPORT_SYMBOL(iommu_merge);
+
+ dma_addr_t bad_dma_address __read_mostly;
+
+As a work-around, I can get it to boot with mem=3500M, but then it's ugly ;-)
+& I lose some valuable memory I have.
+
+Here's my email thread on linux-ide capturing the good & bad kernel behaviour
+for reference:
+http://marc.info/?t=119456213200005&r=1&w=2
+
+Thanks
+
+Hari
+
+PS: Here's hoping for a kernel mem= parameter free bootable 2.6.24 ;-).
+
+
+
+      Feel safe with award winning spam protection on Yahoo!7 Mail.  
+www.yahoo.com.au/mail 
+
