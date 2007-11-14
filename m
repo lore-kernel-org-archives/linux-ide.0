@@ -1,40 +1,36 @@
-From: Larry Finger <larry.finger@lwfinger.net>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Wed, 14 Nov 2007 08:49:31 -0600
-Message-ID: <473B0AFB.2080400@lwfinger.net>
-References: <20071113.035824.40509981.davem@davemloft.net>	<20071113041259.79c9a8c5.akpm@linux-foundation.org>	<20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca>	<20071113164650.GA28493@elte.hu> <4739E3D0.10201@rtr.ca>	<20071113183925.GF17785@parisc-linux.org> <4739F069.6050102@rtr.ca>	<20071113184902.GG17785@parisc-linux.org> <4739F2DD.5050802@rtr.ca> <20071114143040.GA31025@elte.hu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 4/13] cy82c693: correct DMA modes clipping
+Date: Wed, 14 Nov 2007 17:58:44 +0300
+Message-ID: <473B0D24.50907@ru.mvista.com>
+References: <200711130001.33628.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60431 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752585AbXKNOti (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 09:49:38 -0500
-In-Reply-To: <20071114143040.GA31025@elte.hu>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:46527 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752005AbXKNO6d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 09:58:33 -0500
+In-Reply-To: <200711130001.33628.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Mark Lord <liml@rtr.ca>, alsa-devel@alsa-project.org, Matthew Wilcox <matthew@wil.cx>, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Ingo Molnar wrote:
-> * Mark Lord <liml@rtr.ca> wrote:
-> 
->>> You're assuming that everything in linux-2.6 was downloaded; that's 
->>> not true.  Everything in linux-2.6/.git was downloaded; but then you 
->>> do a checkout which happens to approximately double the size of the 
->>> linux-2.6 directory.
->> ..
->>
->> Ah, I wondered why it took only half an hour to download.
-> 
-> and you can get even lower than the 260MB by downloading a shallow clone 
-> of v2.6.23 and then populating the git tree from tht point on. (see the 
-> --depth parameter of git-clone) [because most of the time you want to 
-> bisect back to the last stable release, not back to 2 years of git 
-> history.]
+Bartlomiej Zolnierkiewicz wrote:
 
-When creating additional git trees (Linville's wireless-2.6 tree, for example) for driver
-development, you can save a lot of download bandwidth by using the --reference parameter of git-clone.
+> * Mask device DMA masks by ATA_{S,M}WDMA2 in cy82c693_ide_dma_on().
 
-Larry
+> * Remove clipping of DMA modes by id->tDMA in cy82c693_dma_enable():
+>   - id->tDMA may not be defined on newer devices
+>   - id->vendor6/id->tDMA word is in LE endianness
+>     (cy82c693 seems to be Alpha specific though)
+
+> * Bump driver version.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
+
