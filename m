@@ -1,71 +1,77 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Wed, 14 Nov 2007 16:12:21 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Wed, 14 Nov 2007 14:39:58 -0700
+Message-ID: <200711141439.58200.vda.linux@googlemail.com>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org> <20071114133034.GR17785@parisc-linux.org> <473AF9A5.50707@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from empbedex1.empirix.com ([12.38.203.54]:13580 "EHLO
-	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758894AbXKNVYU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 16:24:20 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <473B44CB.6010209@rtr.ca>
+Received: from an-out-0708.google.com ([209.85.132.243]:7407 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752298AbXKNVkZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 16:40:25 -0500
+Received: by an-out-0708.google.com with SMTP id b36so63523ana
+        for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 13:40:25 -0800 (PST)
+In-Reply-To: <473AF9A5.50707@suse.de>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Matthew Wilcox <matthew@wil.cx>
+Cc: Adrian Bunk <bunk@kernel.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, Ingo Molnar <mingo@elte.hu>, David Miller <davem@davemloft.net>
 
-I have gotten it to boot from those hard-drives and it 
-has the same behavior:
+hi Matthew,
 
-  	Copying a large file to the same partition (>150MEG) 
-  	causes the system to hang (no I/O - no input/output - 
-  	nothing - complete freeze - like a primary resource 
-  	is locked up or interrupts got completely & totally 
-  	turned off in an ISR and its pending for something?
+On Wednesday 14 November 2007 06:35, Hannes Reinecke wrote:
+> Matthew Wilcox wrote:
+> > On Wed, Nov 14, 2007 at 12:46:20AM -0700, Denys Vlasenko wrote:
+> >> Finally they replied and asked to rediff it against their
+> >> git tree. I did that and sent patches back. No reply since then.
+> >>
+> >> And mind you, the patch is not trying to do anything
+> >> complex, it mostly moves code around, removes 'inline',
+> >> adds 'const'. What should I think about it?
+> >
+> > I'm waiting for an ACK/NAK from Hannes, the maintainer.  What should I
+> > do?
 
-Only way to get out of this is to power-cycle the box!
-
-@#$@#$#@
-
-
-
+You could have informed me about this, and I would talk to Hannes
+myself. This would free up your mind from keeping track of this
+particular patch.
+Parallelize development, prevent things from being forgotten.
 
 
------Original Message-----
+Hi Hannes,
 
-> ::: Can you give me exact details of how to set up and reproduce this?
-> :::  -- Kernel version
+> I haven't actually been able to test it here (too busy, sorry). If someone
+> else confirms it does it's job then
+>
+> Acked-by: Hannes Reinecke <hare@suse.de>
+
+It's not in my mailbox on this machine, gladly we have lkml archived
+in the Net. Here is a positive tester report:
+
+http://lkml.org/lkml/2007/10/15/168:
+
+======================
+Date	Mon, 15 Oct 2007 15:53:08 +0200
+From	Gabriel C <>
+Subject	Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
+
+>> Compile tested and applies cleanly to 2.6.23.
+>> I don't have this hardware anymore and cannot run test these patches.
 > 
-> 	Linux-2.6.23.1
-> 
-> 	NOTE: I am using ppc (arch/ppc instead of arch/powerpc)
-> 
-> :::  -- number/config/model of drives
-> 
-> 	2x250GIG Western Digital - 3 partitions (largest (/dev/sda3
-> 	~200Gig - formatted to ext2).
-> 
-> 	7042 PEX on a MPC8548 Board
-> 
-> :::  -- exact command line sequence to cause the failure
-> 
-> 	NFS mount root file system (I am currently rebuild to take away
-> 	the NFS file system dependency) - /dev/sda3 is drive in
-question...
-..
+> I can test these patches on an aic7892 controller later on today if you 
+want.
 
-MMmm.. I'd like to see that again without the rootfs-on-NFS.
+Works fine for me tested on :
 
-What exactly do you mean when you say "it just hangs" ?
-Everything (dead system)?
+03:0e.0 SCSI storage controller [0100]: Adaptec AIC-7892P U160/m [9005:008f] 
+(rev 02)
 
+Gabriel
+=======================
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+vda
