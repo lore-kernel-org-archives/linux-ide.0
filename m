@@ -1,75 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Wed, 14 Nov 2007 13:30:49 -0500
-Message-ID: <473B3ED9.40707@rtr.ca>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com>
+From: "Allen Martin" <AMartin@nvidia.com>
+Subject: RE: [PATCH] Add quirk to set AHCI mode on ICH boards
+Date: Wed, 14 Nov 2007 10:35:26 -0800
+Message-ID: <F72FA20C31DD4F4C997B91C5B3690A095054A7@hqemmail07.nvidia.com>
+References: <20071109020235.GA2031@ceren><20071109023129.GA25581@havoc.gtf.org><4733D421.7000505@rtr.ca><20071109034622.GB25581@havoc.gtf.org><20071109120425.543971bf@the-village.bc.nu><47351FE1.4000001@garzik.org><DBFABB80F7FD3143A911F9E6CFD477B0329351A3@hqemmail02.nvidia.com><473600B6.5070103@garzik.org><F72FA20C31DD4F4C997B91C5B3690A095054A2@hqemmail07.nvidia.com> <20071113152727.45b71939@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4837 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752788AbXKNSaw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 13:30:52 -0500
-In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com>
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:18401 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbXKNShA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 13:37:00 -0500
+In-Reply-To: <20071113152727.45b71939@the-village.bc.nu>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Morrison, Tom" <tmorrison@empirix.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-ide@vger.kernel.org
 
-Morrison, Tom wrote:
-..
-> ::: Can you give me exact details of how to set up and reproduce this?
-> :::  -- Kernel version
+> > What I'm worred about is SMI traps implemented in the SBIOS for AHCI
+> > workarounds that may be disabled when in IDE mode.
 > 
-> 	Linux-2.6.23.1
-> 
-> 	NOTE: I am using ppc (arch/ppc instead of arch/powerpc)
-..
+> For Nvidia devices those would only be present if there were problems
+> with the AHCI hardware right, which would mean you could 
+> simply tell us
+> what workarounds to implement.
 
-Okay.  Is that 32-bit or 64-bit?  How much RAM ?
+Errata for which there is an SBIOS workaround are generally only
+released to BIOS vendors and under NDA.  If Linux users were impacted by
+such a bug we would most likely release a patch, but a much more likely
+scenario is that it slips through the cracks because it's not a
+configuration we would test in our QA.  So a small minority of users
+that are running AHCI in class code 0101 would get some very rare but
+serious errors that would be impossible to debug.
 
-My PPC machine is not currently set up for Linux,
-and has only PCIX (not PCIe) slots, so I'll try this
-first on an x86-32 box with PCIe.
+> > I believe most of the issues with sata_nv have been due to lack of
+> > documentation of ADMA and swNCQ.  The NVIDA AHCI controllers that
+> 
+> I am glad Nvidia accept this point. It would be nice to see it fixed.
 
-If it works for me there, then I may be able to try
-a PCIX card in my PPC-32 box later.  The PCIX card
-won't have a 7042 of course, so I'll use a 6081 instead.
-Those earlier Marvell chips are supposed to be extremely similar.
+I don't have any say over that, but it's probably unlikely to be fixed.
+Going forward we're only using open standards for storage.
 
-> 
-> :::  -- number/config/model of drives
-> 
-> 	2x250GIG Western Digital - 3 partitions (largest (/dev/sda3
-> 	~200Gig - formatted to ext2).
-> 
-> 	7042 PEX on a MPC8548 Board
-> 
-> :::  -- exact command line sequence to cause the failure
-> 
-> 	NFS mount root file system (I am currently rebuild to take away
-> 	the NFS file system dependency) - /dev/sda3 is drive in
-> question...
-> 
-> 		a) mount /dev/sda3 /mnt/src 
-> 		b) cp large_500Meg_file /mnt/src/.
-> 
-> ==========================================================
-> ==========================================================
-> NOTE: this does NOT fail on a 2.6.11 kernel version!!!!
-> 	So I do NOT think it's a hardware problem!
-> 
-> 	It could be a PEX related problem with arch/ppc - I would
-> 	expect under heavy pounding with smaller files it would
-> 	fail as well - but it does NOT)
-> ==========================================================
-> ==========================================================
-> 
-> Anything else you need to know?
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Allen
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
