@@ -1,33 +1,30 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Wed, 14 Nov 2007 12:56:39 -0500
-Message-ID: <473B36D7.8000205@rtr.ca>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
+Date: Wed, 14 Nov 2007 13:09:04 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com>
+References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2475 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750971AbXKNR4k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 12:56:40 -0500
-In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "Morrison, Tom" <tmorrison@empirix.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762529AbXKNSJ0@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <473B36D7.8000205@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
 Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+
+-----Original Message-----
+From: Mark Lord [mailto:liml@rtr.ca] 
+Sent: Wednesday, November 14, 2007 12:57 PM
+To: Morrison, Tom
+Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
 
 Morrison, Tom wrote:
-> All,
 > 
-> I apologize if this has been discussed - but I haven't been
-> able to find exactly what I am looking for in the discussions 
-> the last few weeks...
-> 
-> I am running Linux 2.6.23.1 and have a 7042 SATA driver running
-> (that seems to run very well) - it has the fixes talked about
-> between Jeff & Olaf (mv_sg_fill changes)....
-> 
+<snip >
 > The problem comes ONLY when I am doing large file operations 
 > (e.g.: just copying a file) to/from the SATA drives behind 
 > the subject line 7042....it just hangs after about 10-15 
@@ -36,17 +33,41 @@ Morrison, Tom wrote:
 > How large a file causes the hang - you ask - well, somewhere 
 > between 100Meg & 500Meg...
 > 
-> In all other respects - this driver seems to be working...
-> 
-> Is there a known problem - or do I need to describe in more
-> detail?
-> 
-> Thanks in advance for any / all ideas / questions /...etc
-..
+<snip other drivel>
 
-Can you give me exact details of how to set up and reproduce this?
-  -- Kernel version
-  -- number/config/model of drives
-  -- exact command line sequence to cause the failure
 
-Thanks
+::: Can you give me exact details of how to set up and reproduce this?
+:::  -- Kernel version
+
+	Linux-2.6.23.1
+
+	NOTE: I am using ppc (arch/ppc instead of arch/powerpc)
+
+:::  -- number/config/model of drives
+
+	2x250GIG Western Digital - 3 partitions (largest (/dev/sda3
+	~200Gig - formatted to ext2).
+
+	7042 PEX on a MPC8548 Board
+
+:::  -- exact command line sequence to cause the failure
+
+	NFS mount root file system (I am currently rebuild to take away
+	the NFS file system dependency) - /dev/sda3 is drive in
+question...
+
+		a) mount /dev/sda3 /mnt/src 
+		b) cp large_500Meg_file /mnt/src/.
+
+==========================================================
+==========================================================
+NOTE: this does NOT fail on a 2.6.11 kernel version!!!!
+	So I do NOT think it's a hardware problem!
+
+	It could be a PEX related problem with arch/ppc - I would
+	expect under heavy pounding with smaller files it would
+	fail as well - but it does NOT)
+==========================================================
+==========================================================
+
+Anything else you need to know?
