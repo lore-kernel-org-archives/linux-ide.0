@@ -1,41 +1,56 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH] Add quirk to set AHCI mode on ICH boards
-Date: Wed, 14 Nov 2007 10:58:26 -0800
-Message-ID: <20071114185826.GA1384@suse.de>
-References: <20071113152727.45b71939@the-village.bc.nu> <F72FA20C31DD4F4C997B91C5B3690A095054A7@hqemmail07.nvidia.com> <473B4271.3000201@rtr.ca>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Wed, 14 Nov 2007 19:44:56 +0000
+Message-ID: <20071114194456.GC23221@flint.arm.linux.org.uk>
+References: <20071113143201.9441c940.akpm@linux-foundation.org> <20071113.175551.131375600.davem@davemloft.net> <20071114095507.GA32595@flint.arm.linux.org.uk> <20071114.020706.219917088.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33354 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699AbXKNTKn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 14:10:43 -0500
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <473B4271.3000201@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20071114.020706.219917088.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Allen Martin <AMartin@nvidia.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Riki Oktarianto <rkoktarianto@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Nov 14, 2007 at 01:46:09PM -0500, Mark Lord wrote:
-> Allen Martin wrote:
-> ..
->> Errata for which there is an SBIOS workaround are generally only
->> released to BIOS vendors and under NDA.  If Linux users were impacted by
->> such a bug we would most likely release a patch, but a much more likely
-> ..
->
-> All of that silly secrecy harms your company and your customers.
-> You really should find a way to make the full information available
-> to all O/S providers.  In the case of Linux, this costs nothing
-> but a willingness on your part.
+On Wed, Nov 14, 2007 at 02:07:06AM -0800, David Miller wrote:
+> From: Russell King <rmk+lkml@arm.linux.org.uk>
+> Date: Wed, 14 Nov 2007 09:55:07 +0000
+> 
+> > On Tue, Nov 13, 2007 at 05:55:51PM -0800, David Miller wrote:
+> > > I've created linux-arm@vger.kernel.org
+> > 
+> > By doing so you've just said (implicitly) that you can not tolerate
+> > someone having a different opinion from your own.
+> 
+> I created a mailing list on a machine where I provide such services.
+> 
+> People can choose to use or not use the new list, it is their choice.
+> 
+> > While I accept *your* right to run *your* lists how you please, you
+> > are unable to accept *my* right to run *my* lists how I see fit.
+> 
+> I didn't tell you to take your list down or to run it in some other
+> way.  I didn't tell you to unsubscribe everyone and move them over
+> to the new list either.
 
-Actually, we (Linux developers) can sign NDAs if that is what the
-manufacturer needs in order for us to be able to get this information.
+I didn't say that you were.
 
-If that is what nvidia requires, please let me know and I can set up the
-proper paperwork so that we can get this needed information.
+> I've provided an alternative, and people can pick and choose how they
+> see fit.  I'm letting natural selection run it's course.  Are you
+> able to cope with the fact that people might not want to use your
+> list any longer?  Perhaps that is what bugs you so much about my
+> giving people a alternative choice.
 
-thanks,
+Absolutely, and if you'd have read my message you'd have seen that
+I'd said effectively the same thing that you're saying here.
 
-greg k-h
+Having been flamed for not reading emails properly by AKPM shall
+I flame you for not reading my emails properly?  Oh no, it's merely
+human to occasionally have such misunderstandings.  Unless you're
+rmk.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
