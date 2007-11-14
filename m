@@ -1,38 +1,59 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Tue, 13 Nov 2007 19:47:46 -0800 (PST)
-Message-ID: <20071113.194746.47688258.davem@davemloft.net>
-References: <20071113143201.9441c940.akpm@linux-foundation.org>
-	<20071113.175551.131375600.davem@davemloft.net>
-	<20071113182700.ef821d0f.akpm@linux-foundation.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB
+Date: Tue, 13 Nov 2007 22:11:56 -0600
+Message-ID: <473A758C.1020105@shaw.ca>
+References: <4738DE21.8090702@shaw.ca> <47390B2F.7090105@gmail.com>
+ <47392768.3030509@shaw.ca> <47392B3D.1020101@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
-In-Reply-To: <20071113182700.ef821d0f.akpm@linux-foundation.org>
-Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
-List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
-List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
-List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
-List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
-To: akpm@linux-foundation.org
-Cc: rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760541AbXKNEMe@vger.kernel.org>
+In-reply-to: <47392B3D.1020101@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
 
-From: Andrew Morton <akpm@linux-foundation.org>
-Date: Tue, 13 Nov 2007 18:27:00 -0800
-
-> Let me just say - I'm astonished at how little spam gets though the vger
-> lists.  Considering how many times those email addresses must have been
-> added to spam databases.
+Tejun Heo wrote:
+>> Could be done.. but, I don't want to constrain the ADMA APRD/CPB area in
+>> that way (there are some dual-socket Opteron boxes with this controller,
+>> forcing an allocation below 4GB for this could force a non-optimal node
+>> allocation I think..) To do this I'd have to raise the mask for the APRD
+>> allocation, drop it again, then raise it again in ADMA mode, which is
+>> kind of ugly.
 > 
-> It must be a lot of work, and whoever is doing it does it well.
+> I don't think it really matters.  The table isn't too big and it's not
+> like access to the table has any processor locality.  Maybe it's better
+> to allocate to the same node as the irq but raising DMA mask doesn't
+> help at all.
+
+It's quite possible that restricting the DMA mask will also restrict 
+what node that can get allocated on. I'm not so much thinking of the CPU 
+access to the table but the controller's banging on the thing several 
+times for each command..
+
 > 
-> I don't even know.  Is it Matti?  You?
+> I think performance impact is nil either way but even in highly unlikely
+> case it has any impact, allocating PRDs under 4G should be better as it
+> avoids DAC cycles on the bus.  But again, this is just irrelevant.
+> 
+> I'd say just allocate everything under 4G.
 
-Matti gets all the credit for setting up the bayesian et al.
-filters we have and training it as needed.
+The DAC issue shouldn't matter as these controllers are integrated into 
+the chipset so it will be using all HT bus transactions, not PCI.
 
-> <contemplates linux-kernel@lists.sourceforge.net.  Shudders.>
+We can do it without all that mess in slave_config though, just by 
+delaying raising the DMA mask until after the PRD/pad buffers are allocated.
 
-Yes, sourceforge is a complete joke.
+> 
+>> Also, I'd rather not allocate the legacy PRD at all if we're in ADMA
+>> mode. That way, if some bug causes us to try and do legacy DMA in ADMA
+>> mode, we'll crash from null pointer dereference instead of potentially
+>> transferring incorrect data (as we had in this case) and corrupting things.
+> 
+> Yeap, I can agree with this.  But can you add BUG_ON()/WARN_ON() at
+> places instead?  I know blanking pointers feel safer but I think it's
+> best to keep resource allocation / release in ->port_start/stop().
+
+Yeah, I've got rid of that stuff now and added some BUG_ONs for this. 
+Will submit the patches shortly.
