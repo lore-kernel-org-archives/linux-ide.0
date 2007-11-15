@@ -1,7 +1,7 @@
 From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: [BUG] New Kernel Bugs
 Date: Thu, 15 Nov 2007 11:19:46 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711151034340.12193__10891.1492316567$1195143617$gmane$org@iabervon.org>
+Message-ID: <Pine.LNX.4.64.0711151034340.12193__24536.9091317572$1195143638$gmane$org@iabervon.org>
 References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
  <20071113.033946.114918709.davem@davemloft.net> <20071113034916.2556edd7.akpm@linux-foundation.org>
  <20071113.035824.40509981.davem@davemloft.net> <20071113041259.79c9a8c5.akpm@linux-foundation.org>
@@ -11,9 +11,9 @@ References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
  <20071115153057.GE17180@thunk.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763638AbXKOQUG@vger.kernel.org>
 In-Reply-To: <20071115153057.GE17180@thunk.org>
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Theodore Tso <tytso@mit.edu>
 Cc: Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 List-Id: linux-ide@vger.kernel.org
