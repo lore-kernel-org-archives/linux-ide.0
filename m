@@ -1,51 +1,29 @@
-From: Jim Paris <jim@jtan.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
 Subject: Re: stable basic 4-port SATA card
-Date: Thu, 15 Nov 2007 04:50:11 -0500
-Message-ID: <20071115095011.GA13034@jim.sh>
-References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com> <473BBDBE.7060208@gmail.com> <473BC890.9020902@rtr.ca> <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 15 Nov 2007 11:01:01 +0100 (MET)
+Message-ID: <200711151001.lAFA11wC019059@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:43496 "EHLO neurosis.jim.sh"
+Received: from aun.it.uu.se ([130.238.12.36]:48058 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501AbXKOJul (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2007 04:50:41 -0500
-Content-Disposition: inline
-In-Reply-To: <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
+	id S1756484AbXKOKBb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Nov 2007 05:01:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Breidenbach <jeff@jab.org>
-Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
+To: htejun@gmail.com, jeff@jab.org
+Cc: alan@lxorguk.ukuu.org.uk, hancockr@shaw.ca, jeff@garzik.org, liml@rtr.ca, linux-ide@vger.kernel.org, mikpe@it.uu.se
 
-Jeff Breidenbach wrote:
-> Thanks for the excellent rundown.
-> 
-> >sata_sil24: 3124/3132 chips don't have any outstanding serious
-> >problems.  IRQ loss on PCI-X was the only recent serious known
-> >problem but it's fixed now.
-> 
-> I'm still a little confused how to translate this known-good chipset to
-> an actual buyable PCI card.  It isn't obvious from basic web searching.
+On Thu, 15 Nov 2007 12:32:14 +0900, Tejun Heo wrote:
+> * sata_promise: Generally works okay; however there are still some
+> problems with recent 3Gbps chips. (Mikael, please pitch in)
 
-I also look for 3124/3132 and these are some that I've found:
-(determined by specs, product reviews, looking closely at photos, etc,
-it's worth a double-check before deciding)
+Right, 2nd-gen 3Gbps chips have had "intermittent" issues,
+which we hope are cured by the recent ASIC bug workaround,
+but it will take a while for that fix to propagate out.
+To speed up that process I'm considering backporting the fix
+to 2.6.23 and 2.6.22.
 
-3132 PCIe:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816132010
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816855002
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816132011
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816132008
+NCQ and PMP are supported in the hardware and in the vendor's
+driver, but not yet in sata_promise. My intention is to add
+NCQ soon, but there's no time-plan yet for this.
 
-3132 ExpressCard:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16839150001
-
-3124 PCI:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816124003
-
-3124 PCI-X:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816318004
-
-Hope this helps
-
--jim
+/Mikael
