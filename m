@@ -1,68 +1,75 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 14/18] ide: add IDE_HFLAG_ABUSE_SET_DMA_MODE host flag
-Date: Thu, 15 Nov 2007 13:21:16 +0300
-Message-ID: <473C1D9C.5000208@ru.mvista.com>
-References: <200711050031.10290.bzolnier@gmail.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: sata_mv: hard resetting port
+Date: Thu, 15 Nov 2007 11:26:46 +0100
+Message-ID: <473C1EE6.3070304@wpkg.org>
+References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:55681 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756957AbXKOKVE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 05:21:04 -0500
-In-Reply-To: <200711050031.10290.bzolnier@gmail.com>
+Received: from mail.syneticon.net ([213.239.212.131]:59337 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756333AbXKOK0x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 05:26:53 -0500
+In-Reply-To: <473B13D6.3080202@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+Mark Lord schrieb:
 
-> * Add IDE_HFLAG_ABUSE_SET_DMA_MODE host flag and use it to decide
->   what to do with transfer modes < XFER_PIO_0 in ide_set_xfer_rate().
+(...)
 
-> * Set IDE_HFLAG_ABUSE_SET_DMA_MODE in host drivers that need it
->   (aec62xx, amd74xx, cs5520, cs5535, hpt34x, hpt366, pdc202xx_old,
->   serverworks, tc86c001 and via82cxxx) and cleanup ->set_dma_mode
->   methods in host drivers that don't (IDE core code guarantees that
->   ->set_dma_mode will be called only for modes which are present
->   in SWDMA/MWDMA/UDMA masks).
+>> ata6: exception Emask 0x10 SAct 0x0 SErr 0x180000 action 0x6 frozen
+>> ata6: edma_err 0x00000020
+>> ata6: hard resetting port
+>> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata6.00: configured for UDMA/133
+>> ata6: EH pending after completion, repeating EH (cnt=4)
+>> ata6: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0x7
+>> ata6: edma_err 0x00000010, dev connect
+>> ata6: hard resetting port
 
-> While at it:
+> ..
+> 
+> Translation:
+> "libata reset the link, and everything appeared okay,
+> so it reissued the failed command and continued.
+> No data loss."
 
-> * Add IDE_HFLAGS_HPT34X/HPT3XX/PDC202XX/SVWKS define in
->   hpt34x/hpt366/pdc202xx_old/serverworks host driver.
+And today kernel (2.6.23.1) in the same machine have spoken to 
+not-mere-mortals again:
 
-> There should be no functionality changes caused by this patch.
+ata6: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6: edma_err 0x00000020
+ata6: hard resetting port
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata6.00: configured for UDMA/133
+ata6: EH complete
+sd 5:0:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
+sd 5:0:0:0: [sde] Write Protect is off
+sd 5:0:0:0: [sde] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+As I understand it now, your previous translation would fit here (or 
+not, as SErr differs?):
 
-> Index: b/drivers/ide/ide-lib.c
-> ===================================================================
-> --- a/drivers/ide/ide-lib.c
-> +++ b/drivers/ide/ide-lib.c
-> @@ -438,6 +438,12 @@ int ide_set_xfer_rate(ide_drive_t *drive
->  	 * case could happen iff the transfer mode has already been set on
->  	 * the device by ide-proc.c::set_xfer_rate()).
->  	 */
-> +	if (rate < XFER_PIO_0) {
-> +		if (hwif->host_flags & IDE_HFLAG_ABUSE_SET_DMA_MODE)
-> +			return ide_set_dma_mode(drive, rate);
+ > Translation:
+ > "libata reset the link, and everything appeared okay,
+ > so it reissued the failed command and continued.
+ > No data loss."
 
-    Not sure if it was worth the effort at all...
 
-> +		else
-> +			return ide_config_drive_speed(drive, rate);
+But why was the port reseted? There was no CRC error as before, was there?
 
-    It's tome that I go and make a patch which deals with 0x00 (default PIO 
-mode)...
 
-> +	}
->  
->  	return ide_set_dma_mode(drive, rate);
->  }
+What worries me is that it always happens for the same drive.
 
-MBR, Sergei
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
