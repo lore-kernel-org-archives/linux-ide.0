@@ -1,65 +1,49 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Thu, 15 Nov 2007 17:14:16 -0500
-Message-ID: <473CC4B8.4090607@rtr.ca>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com>
+From: john@BlueSkyTours.com
+Subject: Re: stable basic 4-port SATA card
+Date: Thu, 15 Nov 2007 15:37:10 -0700 (MST)
+Message-ID: <Pine.SOC.4.64.0711151536320.6367@katana>
+References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com>
+ <473BBDBE.7060208@gmail.com> <473BC890.9020902@rtr.ca>
+ <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
+ <20071115095011.GA13034@jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2524 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756278AbXKOWOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2007 17:14:18 -0500
-In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com>
+Received: from nat1.blueskytours.com ([12.96.192.180]:27666 "HELO
+	volcano.blueskytours.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1755196AbXKOWn5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 17:43:57 -0500
+In-Reply-To: <20071115095011.GA13034@jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Morrison, Tom" <tmorrison@empirix.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jim Paris <jim@jtan.com>
+Cc: Jeff Breidenbach <jeff@jab.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
 
-Morrison, Tom wrote:
-> The plot thickens - it looks like it might be some type 
-> of problem interacting with the setup of my 4Gig DDR memory
-> and how I setup some translation windows in my MPC8548E
-> 
-> I realized this morning that I have an inbound/ output PEX window
-> Translation Setup for mapping all from/to PEX bus to outside 
-> the physical 4GIG memory space (i.e.: up at 0xC_xxxx_xxxx). Thus,
-> all output operations that translation from 0xC_xxxx_xxxx to 
-> the pci 32 bit address of xxxx_xxxx) - and vice versa for for
-> the inbound. Note: we also have a straight 1:1 translation mapping 
-> as well for the lower 4Gig - so that's why this worked without
-> the below mentioned change...
-> 
-> So, I changed the Request & Response Hi Addresses (which were
-> Being shifted by 32 bits down anyways) and 'OR' that with my 
-> 0xC (so the effective 64bit DMA address is 0xC_xxxx_xxxx (where 
-> Xxxx_xxxx is the effective address). This was what we did to 
-> solve the problem with the Marvel Linux driver that we got from
-> the Marvel site....
-> 
-> This all works just fine with ONLY 2 gig of memory in the system
-> (and still have these inbound/output pex translation windows), 
-> but fails when I put back the 4 Gig (and the 8Gig) DDR memory.
-> 
-> Unfortunately, this still hasn't solved the problem though - 
-> so there is something else which I am not seeing?
-..
+On Thu, 15 Nov 2007, Jim Paris wrote:
 
-I don't know much about how 32-bit PPC deals with memory addresses
-that are more than 32-bits..
+> Jeff Breidenbach wrote:
+>> Thanks for the excellent rundown.
+>>
+>>> sata_sil24: 3124/3132 chips don't have any outstanding serious
+>>> problems.  IRQ loss on PCI-X was the only recent serious known
+>>> problem but it's fixed now.
+>>
+>> I'm still a little confused how to translate this known-good chipset to
+>> an actual buyable PCI card.  It isn't obvious from basic web searching.
+>
+> I also look for 3124/3132 and these are some that I've found:
+> (determined by specs, product reviews, looking closely at photos, etc,
+> it's worth a double-check before deciding)
+>
+> 3132 PCIe:
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132010
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816855002
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132011
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132008
 
-But does this patch have any effect:
+I have used the Syba without any problems:
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
 
 
---- old/drivers/ata/sata_mv.c	2007-10-12 12:43:44.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2007-11-15 17:12:24.000000000 -0500
-@@ -685,7 +685,7 @@
- {
- 	int rc;
- 
--	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+	if (0 && !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
- 		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
- 		if (rc) {
- 			rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+John
