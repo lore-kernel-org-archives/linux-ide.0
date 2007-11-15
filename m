@@ -1,66 +1,46 @@
-From: "mike zheng" <mail4mz@gmail.com>
-Subject: Re: FIS structure and Command List structure for AHCI SATA controller
-Date: Thu, 15 Nov 2007 09:49:50 -0500
-Message-ID: <5c9cd53b0711150649uddcb5b0p7c3b2fce227a1df3@mail.gmail.com>
-References: <5c9cd53b0711081938m1e752087yda930792a57a98c0@mail.gmail.com>
-	 <20071109035506.GC25581@havoc.gtf.org>
-	 <5c9cd53b0711090539u79c1ba4fte46ee13f5906b42a@mail.gmail.com>
-	 <47351F68.3020307@garzik.org>
+From: Theodore Tso <tytso@mit.edu>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 10:30:57 -0500
+Message-ID: <20071115153057.GE17180@thunk.org>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org> <20071113.033946.114918709.davem@davemloft.net> <20071113034916.2556edd7.akpm@linux-foundation.org> <20071113.035824.40509981.davem@davemloft.net> <20071113041259.79c9a8c5.akpm@linux-foundation.org> <20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca> <40f323d00711130752k19cab8eauc3456721274b3267@mail.gmail.com> <20071113171356.GA25824@thunk.org> <Pine.LNX.4.64.0711141810110.12193@iabervon.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:11240 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758107AbXKOOtv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 09:49:51 -0500
-Received: by py-out-1112.google.com with SMTP id u77so3514572pyb
-        for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2007 06:49:50 -0800 (PST)
-In-Reply-To: <47351F68.3020307@garzik.org>
+Received: from thunk.org ([69.25.196.29]:48249 "EHLO thunker.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752033AbXKOPbi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Nov 2007 10:31:38 -0500
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0711141810110.12193@iabervon.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Daniel Barkalow <barkalow@iabervon.org>
+Cc: Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 
-Hi Jeff,
+On Wed, Nov 14, 2007 at 06:23:34PM -0500, Daniel Barkalow wrote:
+> I don't see any reason that we couldn't have a tool accessible to Ubuntu 
+> users that does a real "git bisect". Git is really good at being scripted 
+> by fancy GUIs. It should be easy enough to have a drop down with all of 
+> the Ubuntu kernel package releases, where the user selects what works and 
+> what doesn't.
 
-Does kernel2.4 support this chip (Marvell's 88SE6121)? I assume kernel
-2.4 supports AHCI device. Is there any patch for this chip I may
-apply? And which version of kernel2.4 shall I use?
+It's possible users who haven't yet downloaded a git repository have
+to surmount some obstacles that might cause them to lose interest.
+First, they have to download some 190 megs of git repository, and if
+they have a slow link, that can take a while, and then they have to
+build each kernel, which can take a while.  A full kernel build with
+everything selected can take good 30 minutes or more, and that's on a
+fast dual-core machine with 4gigs of memory and 7200rpm disk drives.
+On a slower, memory limited laptop, doing a single kernel build can
+take more time than the user has patiences; multiply that by 7 or 8
+build and test boots, and it starts to get tiresome.  
 
-Thanks for your help,
+And then on top of that there are the issues about whether there is
+enough support for dealing with hitting kernel revisions that fail due
+to other bugs getting merged in during the -rc1 process, etc.
 
-Mike
+I agree that a tool that automated the bisection process and walked
+the user through it would be helpful, but I believe it would be
+possible for us do better.
 
-On 11/9/07, Jeff Garzik <jeff@garzik.org> wrote:
-> mike zheng wrote:
-> > Hi Jeff,
-> >
-> > Actually I am using Marvell's 88SE6121 on kernel 2.4. I just wonder do
-> > I have to enable the FIS? The SATA Command Table of the device have
-> > following definitions:
-> >
-> > 00h Command FIS
-> > 40h ATAPI Command (CDB)
-> > 60h RSVD
-> > 80h Physical Region Descriptor Table
-> >
-> > Does it mean I can only use FIS or ATAPI for this device?
-> >
-> > Another confusion is the manual say that software should prepare the
-> > command header, command FIS and the ATAPI command (CDB) for the ATAPI
-> > command. Why it needs the FIS for ATAPI command?
-> >
-> > Thanks for your help.
->
-> FIS == basic data message used by all Serial ATA.
->
-> Both SATA ATA and SATA ATAPI use a FIS, it is fundamental to the nature
-> of Serial ATA.
->
->        Jeff
->
->
->
->
+						- Ted
