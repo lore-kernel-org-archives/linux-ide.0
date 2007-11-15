@@ -1,114 +1,51 @@
-From: Patric Karlsson <patric@ce.chalmers.se>
-Subject: Re: libata_uli puts second channel to PIO4 on 2.6.18
-Date: Thu, 15 Nov 2007 10:20:23 +0100
-Message-ID: <fhh2sv$iht$1@ger.gmane.org>
-References: <Pine.LNX.4.63.0702030231150.6097@alpha.polcom.net> <45C96174.2030407@gmail.com> <Pine.LNX.4.63.0702110512010.15871@alpha.polcom.net> <473C0CCE.40407@ce.chalmers.se>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: stable basic 4-port SATA card
+Date: Thu, 15 Nov 2007 04:50:11 -0500
+Message-ID: <20071115095011.GA13034@jim.sh>
+References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com> <473BBDBE.7060208@gmail.com> <473BC890.9020902@rtr.ca> <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42293 "EHLO ciao.gmane.org"
+Received: from NEUROSIS.MIT.EDU ([18.95.3.133]:43496 "EHLO neurosis.jim.sh"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754977AbXKOJTL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2007 04:19:11 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1IsasB-0000MX-Rf
-	for linux-ide@vger.kernel.org; Thu, 15 Nov 2007 09:18:55 +0000
-Received: from lx32.ce.chalmers.se ([129.16.20.100])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2007 09:18:55 +0000
-Received: from patric by lx32.ce.chalmers.se with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2007 09:18:55 +0000
-In-Reply-To: <473C0CCE.40407@ce.chalmers.se>
+	id S1752501AbXKOJul (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Nov 2007 04:50:41 -0500
+Content-Disposition: inline
+In-Reply-To: <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Breidenbach <jeff@jab.org>
+Cc: Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
 
-Patric Karlsson wrote:
-> Grzegorz Kulewski wrote:
->> On Wed, 7 Feb 2007, Tejun Heo wrote:
->>> Grzegorz Kulewski wrote:
->>>>  It worked very well for half a year but with one disk (IIRC it was 
->>>> even
->>>>  plugged into second channel but I wont bet on it). Now I have 
->>>> second disk
->>>>  (very similar) and it is always put into PIO4 mode:
->>>>
->>>>  [   17.404451] libata version 2.00 loaded.
->>>>  [   17.404916] sata_uli 0000:00:04.0: version 1.0
->>>>  [   17.405009] ACPI: PCI Interrupt 0000:00:04.0[A] -> GSI 18 
->>>> (level, low)
->>>>  -> IRQ 185
->>>>  [   17.405223] ata1: SATA max UDMA/133 cmd 0xD400 ctl 0xD002 bmdma 
->>>> 0xB000
->>>>  irq 185
->>>>  [   17.405385] ata2: SATA max UDMA/133 cmd 0xB800 ctl 0xB402 bmdma 
->>>> 0xB008
->>>>  irq 185
->>>>  [   17.405519] scsi2 : sata_uli
->>>>  [   17.858803] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>>>  [   17.880541] ata1.00: ATA-7, max UDMA/133, 488397168 sectors: 
->>>> LBA48 NCQ
->>>>  (depth 0/32)
->>>>  [   17.880660] ata1.00: ata1: dev 0 multi count 16
->>>>  [   17.888858] ata1.00: configured for UDMA/133
->>>>  [   17.888941] scsi3 : sata_uli
->>>>  [   18.342469] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>>>  [   18.343573] ata2.00: ATA-7, max UDMA/133, 488397168 sectors: 
->>>> LBA48 NCQ
->>>>  (depth 0/32)
->>>>  [   18.343691] ata2.00: ata2: dev 0 multi count 16
->>>>  [   18.344972] ata2.00: configured for PIO4
->>>
->>> Some uli controllers have simplex bit stuck high indicating that they
->>> can't perform DMA transfers simultaneously on both channels.  In this
->>> case, libata configures the second channel as PIO only.  This has been
->>> worked around by the following commit.
->>>
->>> commit b2a8bbe67d73631c71492fd60b757fc50a87f182
->>> Author: Tejun Heo <htejun@gmail.com>
->>> Date:   Thu Jan 25 19:40:05 2007 +0900
->>>
->>>   libata: implement ATA_FLAG_IGN_SIMPLEX and use it in sata_uli
->>>
->>>    Some uli controllers have stuck SIMPLEX bit which can't be cleared
->>>    with ata_pci_clear_simplex(), but the controller is capable of doing
->>>    DMAs on both channels simultaneously.  Implement ATA_FLAG_IGN_SIMPLEX
->>>    which makes libata ignore the simplex bit and use it in sata_uli.
->>>
->>>    Signed-off-by: Tejun Heo <htejun@gmail.com>
->>>    Signed-off-by: Jeff Garzik <jeff@garzik.org>
->>>
->>> For quick fix, just comment out lines which set ATA_HOST_SIMPLEX in
->>> drivers/scsi/libata-bmdma.c.  e.g.
->>>
->>>      /*if (inb(bmdma + 2) & 0x80)
->>>          probe_ent->host_set_flags |= ATA_HOST_SIMPLEX;*/
->>
->> Thanks! After this fix it is working ok. Any chance to see the proper 
->> fix in -stable kernels for at least 2.6.18.x and 2.6.19.x?
->>
->>
->> Thanks,
->>
->> Grzegorz Kulewski
->>
+Jeff Breidenbach wrote:
+> Thanks for the excellent rundown.
 > 
-> I was wondering the same thing. While I could patch the kernel, and make 
-> a custom build. I prefer not to, and just upgrade to a newer version.
+> >sata_sil24: 3124/3132 chips don't have any outstanding serious
+> >problems.  IRQ loss on PCI-X was the only recent serious known
+> >problem but it's fixed now.
 > 
-> /Patric
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-Nevermind, I got the date wrong. This was fixed in Linux 2.6.20-rc7.
-Sorry for not reseaching it more.
+> I'm still a little confused how to translate this known-good chipset to
+> an actual buyable PCI card.  It isn't obvious from basic web searching.
 
-/Patric
+I also look for 3124/3132 and these are some that I've found:
+(determined by specs, product reviews, looking closely at photos, etc,
+it's worth a double-check before deciding)
 
+3132 PCIe:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816132010
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816855002
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816132011
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816132008
+
+3132 ExpressCard:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16839150001
+
+3124 PCI:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816124003
+
+3124 PCI-X:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816318004
+
+Hope this helps
+
+-jim
