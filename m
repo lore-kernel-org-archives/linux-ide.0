@@ -1,88 +1,45 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Thu, 15 Nov 2007 11:19:46 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711151034340.12193__12708.1765131608$1195147382$gmane$org@iabervon.org>
-References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
-	<20071113.033946.114918709.davem@davemloft.net>
-	<20071113034916.2556edd7.akpm@linux-foundation.org>
-	<20071113.035824.40509981.davem@davemloft.net>
-	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
-	<20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca>
-	<40f323d00711130752k19cab8eauc3456721274b3267@mail.gmail.com>
-	<20071113171356.GA25824@thunk.org>
-	<Pine.LNX.4.64.0711141810110.12193@iabervon.org>
-	<20071115153057.GE17180@thunk.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: sata_mv: hard resetting port
+Date: Thu, 15 Nov 2007 14:22:29 -0500
+Message-ID: <473C9C75.3060906@rtr.ca>
+References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca> <473C1EE6.3070304@wpkg.org> <473C582E.10607@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20071115153057.GE17180@thunk.org>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Sender: alsa-devel-bounces@alsa-project.org
-Errors-To: alsa-devel-bounces@alsa-project.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: alsa-devel@alsa-project.org, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, linux-input@atrey.karlin.mff.cuni.cz, Ingo Molnar <mingo@elte.hu>, David Miller <davem@davemloft.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:1795 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757920AbXKOTWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Nov 2007 14:22:30 -0500
+In-Reply-To: <473C582E.10607@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, "Eric D. Mudama" <edmudama@gmail.com>
 
-On Thu, 15 Nov 2007, Theodore Tso wrote:
-
-> On Wed, Nov 14, 2007 at 06:23:34PM -0500, Daniel Barkalow wrote:
-> > I don't see any reason that we couldn't have a tool accessible to Ubuntu 
-> > users that does a real "git bisect". Git is really good at being scripted 
-> > by fancy GUIs. It should be easy enough to have a drop down with all of 
-> > the Ubuntu kernel package releases, where the user selects what works and 
-> > what doesn't.
+Eric D. Mudama wrote:
+> On Nov 15, 2007 7:31 AM, Mark Lord <liml@rtr.ca> wrote:
+>> Here, the messages fail us.  The edma_err value says that there
+>> should be a non-zero value in the SErr value.  Except the messages
+>> show zero there, meaning the registers were probably read in the
+>> wrong sequence (some bits clear automatically on reads).
 > 
-> It's possible users who haven't yet downloaded a git repository have
-> to surmount some obstacles that might cause them to lose interest.
-> First, they have to download some 190 megs of git repository, and if
-> they have a slow link, that can take a while, and then they have to
-> build each kernel, which can take a while.
+> Isn't that the reset signature?
+..
 
-It should be possible for it to clone only the portion that they actually 
-care about based on where the known-good version is. It should also (in 
-theory, anyway) be possible to put off some amount of the download until 
-it's actually going to be relevant.
+No, it's just funny status.  The chipset (Marvell) claims it saw
+a SATA error.  But the SATA error register is all-zeros, meaning "no error".
 
-> A full kernel build with everything selected can take good 30 minutes or 
-> more, and that's on a fast dual-core machine with 4gigs of memory and 
-> 7200rpm disk drives. On a slower, memory limited laptop, doing a single 
-> kernel build can take more time than the user has patiences; multiply 
-> that by 7 or 8 build and test boots, and it starts to get tiresome.
+I think somebody forgot to save the latter before clearing it,
+or somebody forgot to clear the former from an earlier error.
+Either way, a nuisance, but no harm done here.
 
-None of this is going to take as long, even on a slow link and a slow 
-computer, as waiting for a response to a mailing list post. It'd annoy 
-users who are specifically waiting for it, but if the interface is that 
-the user says "kernel package X didn't work but the current kernel does", 
-and it says "I'll let you know when I've got something to test", and the 
-user watches a DVD, and afterward finds a message saying there's something 
-to test, and tries it, and reports how it went, and the process repeats 
-until it narrows it down to a single commit after a couple of days of the 
-user getting occasional responses, it's not that different from asking for 
-help online.
+> Maybe due to insufficient power the drive decided to reboot itself.
+> 
+> (What bits clear automatically on read, other than IRQ?)
+..
 
-> And then on top of that there are the issues about whether there is
-> enough support for dealing with hitting kernel revisions that fail due
-> to other bugs getting merged in during the -rc1 process, etc.
+Mmm.. none in this case (my mistake).
 
-Could have a distro-provided mask of things that aren't worth testing and 
-possibly back-ported fixes for revisions in particular ranges.
 
-> I agree that a tool that automated the bisection process and walked
-> the user through it would be helpful, but I believe it would be
-> possible for us do better.
 
-That would probably help for giving the user something to try right away. 
-I still think that the main cost to the user is the number of times that 
-the user has to stop doing stuff to reboot with a kernel to test, whether 
-the test kernels are available quickly from the distro site, slowly built 
-locally, or slowly as suggested by humans helping online.
-
-	-Daniel
-*This .sig left intentionally blank*
