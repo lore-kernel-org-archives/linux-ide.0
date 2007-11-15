@@ -1,75 +1,39 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: sata_mv: hard resetting port
-Date: Thu, 15 Nov 2007 11:26:46 +0100
-Message-ID: <473C1EE6.3070304@wpkg.org>
-References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 14/18] ide: add IDE_HFLAG_ABUSE_SET_DMA_MODE host flag
+Date: Thu, 15 Nov 2007 13:56:33 +0300
+Message-ID: <473C25E1.4040601@ru.mvista.com>
+References: <200711050031.10290.bzolnier@gmail.com> <473C1D9C.5000208@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.syneticon.net ([213.239.212.131]:59337 "EHLO
-	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756333AbXKOK0x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 05:26:53 -0500
-In-Reply-To: <473B13D6.3080202@rtr.ca>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:55936 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753711AbXKOK4U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 05:56:20 -0500
+In-Reply-To: <473C1D9C.5000208@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
 
-Mark Lord schrieb:
+Hello, I wrote:
 
-(...)
+>    It's tome that I go and make a patch which deals with 0x00 (default 
 
->> ata6: exception Emask 0x10 SAct 0x0 SErr 0x180000 action 0x6 frozen
->> ata6: edma_err 0x00000020
->> ata6: hard resetting port
->> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata6.00: configured for UDMA/133
->> ata6: EH pending after completion, repeating EH (cnt=4)
->> ata6: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0x7
->> ata6: edma_err 0x00000010, dev connect
->> ata6: hard resetting port
+    s/tome/time/
 
-> ..
-> 
-> Translation:
-> "libata reset the link, and everything appeared okay,
-> so it reissued the failed command and continued.
-> No data loss."
+> PIO mode)...
 
-And today kernel (2.6.23.1) in the same machine have spoken to 
-not-mere-mortals again:
+    But I'm unsure how this value could reach us form userspace because of the 
+argument check present everywhere that filters out 0 value form being passed 
+-- look at set_xfer_rate() and ide_cmd_ioctl(). So, such fix doesn't seem to 
+be applicable... :-|
 
-ata6: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata6: edma_err 0x00000020
-ata6: hard resetting port
-ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata6.00: configured for UDMA/133
-ata6: EH complete
-sd 5:0:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
-sd 5:0:0:0: [sde] Write Protect is off
-sd 5:0:0:0: [sde] Mode Sense: 00 3a 00 00
-sd 5:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
+>> +    }
+>>  
+>>      return ide_set_dma_mode(drive, rate);
+>>  }
 
+MBR, Sergei
 
-As I understand it now, your previous translation would fit here (or 
-not, as SErr differs?):
-
- > Translation:
- > "libata reset the link, and everything appeared okay,
- > so it reissued the failed command and continued.
- > No data loss."
-
-
-But why was the port reseted? There was no CRC error as before, was there?
-
-
-What worries me is that it always happens for the same drive.
-
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
