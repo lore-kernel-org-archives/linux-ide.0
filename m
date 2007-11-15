@@ -1,80 +1,101 @@
-From: Bron Gondwana <brong@fastmail.fm>
-Subject: Re: [alsa-devel] [BUG] New Kernel Bugs
-Date: Thu, 15 Nov 2007 15:16:13 +1100
-Message-ID: <20071115041613.GC15302__13233.4723523401$1195100252$gmane$org@brong.net>
-References: <20071113143201.9441c940.akpm@linux-foundation.org>
-	<20071113.175551.131375600.davem@davemloft.net>
-	<20071114095507.GA32595@flint.arm.linux.org.uk>
-	<20071114.020706.219917088.davem@davemloft.net>
-	<473AE010.4090806@keyaccess.nl>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: stable basic 4-port SATA card
+Date: Wed, 14 Nov 2007 22:16:04 -0600
+Message-ID: <473BC804.9030008@shaw.ca>
+References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com>
+ <473BBDBE.7060208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <473AE010.4090806@keyaccess.nl>
-List-Unsubscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: Rene Herman <rene.herman@keyaccess.nl>
-Cc: rmk+lkml@arm.linux.org.uk, Takashi Iwai <tiwai@suse.de>, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, alsa-devel@alsa-project.org, protasnb@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, David Miller <davem@davemloft.net>, Jaroslav Kysela <perex@suse.cz>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:32150 "EHLO
+	pd4mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753501AbXKOESW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 23:18:22 -0500
+Received: from pd4mr1so.prod.shaw.ca
+ (pd4mr1so-qfe3.prod.shaw.ca [10.0.141.212]) by l-daemon
+ (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JRJ00GXK56WQIC0@l-daemon> for linux-ide@vger.kernel.org; Wed,
+ 14 Nov 2007 21:16:08 -0700 (MST)
+Received: from pn2ml6so.prod.shaw.ca ([10.0.121.150])
+ by pd4mr1so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
+ 5 2006)) with ESMTP id <0JRJ00IOR56U5060@pd4mr1so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Wed, 14 Nov 2007 21:16:07 -0700 (MST)
+Received: from [192.168.1.113] ([70.64.130.4])
+ by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JRJ00F3U56TNK50@l-daemon> for linux-ide@vger.kernel.org; Wed,
+ 14 Nov 2007 21:16:06 -0700 (MST)
+In-reply-to: <473BBDBE.7060208@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Breidenbach <jeff@jab.org>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>
 
-On Wed, Nov 14, 2007 at 12:46:24PM +0100, Rene Herman wrote:
-> On 14-11-07 11:07, David Miller wrote:
->
-> Added Jaroslav and Takashi to the already extensive CC....
->
->> From: Russell King <rmk+lkml@arm.linux.org.uk>
->
->>> So, when are you creating a replacement alsa-devel mailing list on
->>> vger?  That's also subscribers-only.
->> The operative term is "alternative" rather than "replacement".
->> Perhaps this misunderstanding is what you're so upset about.
->> And yes, that alsa list bugs the crap out of me too.  I'm more than
->> happy to provide an alternative for that one as well.
->
-> alsa-devel@alsa-project.org is not subscriber-only. Same as that arm list, 
-> it's _moderated_ for non-subscribers and given that I and other moderators 
-> have been doing our best to moderate quickly (I tend to stay logged in to 
-> the moderation interface all day for example) what specifically bugged the 
-> crap out of you? It's not something a poster needs to concern himself with.
+Tejun Heo wrote:
+> Jeff Breidenbach wrote:
+>> I read with interest I. Straford's current trials and tribulations
+>> with the Promise SATA300 TX4. Do people have a favorite
+>> alternative to this card that plays well with Linux? I've read the
+>> chipset compatibility list, but am not sure how to boil that
+>> information down to an actual buyable SATA controller.
+>>
+>> http://www.mail-archive.com/linux-ide@vger.kernel.org/msg12398.html
+>> http://linux-ata.org/driver-status.html
+> 
+> It's a sort of a difficult question to answer but I think it'll be nice
+> to develop a standard answer to this kind of question and put it on
+> linux-ata.org so that users can choose.  It can also hopefully work as
+> another pressure for vendors to enhance their linux support.
+> 
+> Anyways, here are what I know.
+> 
+> * ata_piix: Although it lacks shiny new features (interface limitation),
+> it should work pretty well.  No known serious bugs.
+> 
+> * ahci: Well supported.  Command switching PMP support is merged for
+> 2.6.24 too.  Many (if not most) vendors now use ahci as programming
+> interface for storage controllers, so ahci driver supports lots of
+> controllers from many vendors.  Bugginess depends on which vendor or
+> chip you're actually using but in general all are well supported and if
+> you report a problem, it's very likely to get fixed soon.
+> 
+> * sata_sil: 3112 chips have problem with early seagate drives but both
+> 3112 itself and those drives have been discontinued for a long time now.
+>  There are reports of data corruption when 3114 is connected to mobos
+> with NVidia chipsets.  This is still being investigated.  If you're on
+> intel mobo, 3112/3114/3512 should work good.
+> 
+> * sata_sil24: 3124/3132 chips don't have any outstanding serious
+> problems.  IRQ loss on PCI-X was the only recent serious known problem
+> but it's fixed now.  These chips are pretty advanced and all the
+> advanced features are supported by Linux including FIS switching PMP
+> support (will be included in 2.6.24 release); however, there is a known
+> hardware performance limitation so you can't use full SATA bandwidth
+> even if you use PMP but it's more than sufficient for most cases and
+> this chip is my personal favorite.
+> 
+> * sata_promise: Generally works okay; however there are still some
+> problems with recent 3Gbps chips. (Mikael, please pitch in)
+> 
+> * sata_nv: Generally works okay but ADMA support still seems to have
+> some problems (Robert?).
 
-Totally unrelated - I sent something to the kolab mailing list a couple
-of days ago (it's moderated for non subscribers) informing them that I
-had found the cause of some Cyrus bugs that they had problems with in
-the past and providing a link to my post to the cyrus list with the
-patches attached.
+There aren't many in the way of specific known problems that aren't 
+worked around. There was a hotplug issue that was reported (kernel bug 
+8421), but only seems to happen on a certain revision of MSI Neo4 
+Platinum board so I suspect it's a board issue. Also there's the 
+ATAPI/>4GB RAM issue that's being debugged. But I haven't seen many 
+reports pointing to driver problems.
 
-It sat in the moderation queue and then was rejected with "non
-subscriber post to subscription only list".  Not only was the reponse a
-day later when I had moved on to other things, but it got me really
-pissed off that I had put some effort into providing a good quality post
-that outlined the specific issues and how they applied to their project,
-and had been summarily dismissed, probably without the effort being put
-in.
+As far as the poster's question, these controllers are all built into 
+the chipset, so it's not really relevant to their issue..
 
-There's no way for a non-subscriber to know in advance if the list they
-are trying to post to will do that to them, completely negating the
-effort put in to writing something worthwhile to inform that community.
-It's insular, and it sucks.
-
-So yeah, my attitude now is that the Kolab folks can go screw themselves
-and track down the fix on their own or wait until I've convinced
-upstream to accept the fixes (likely) and they have moved to the new
-version (unlikely for a long time, and meanwhile they're missing out on
-the performance increases that having a more stable skiplist library 
-would give them)
-
-I'm sure if I had something that I considered worth informing the ALSA
-project of, I'd be wary of spending the same effort writing a good
-post knowing it may be dropped in between the by a list moderator just
-selecing all and bouncing them.
-
-Bron.
+> 
+> * sata_inic162x: Has half-working driver.  We need more info from the
+> vendor to proceed further.  Stay away from it for now.
+> 
+> * sata_via: Works okay.  No known serious problems but the chip is
+> quirky and not too dependable when errors occur.
+> 
+> * marvell ones: I don't have much idea.  Jeff?  Mark?
+> 
