@@ -1,51 +1,67 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv: hard resetting port
-Date: Wed, 14 Nov 2007 23:12:36 -0500
-Message-ID: <473BC734.9090301@rtr.ca>
-References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca> <473B1617.4010102@wpkg.org> <473B1E39.8090800@rtr.ca> <473BBEDB.80000@gmail.com>
+From: Bron Gondwana <brong@fastmail.fm>
+Subject: Re: [alsa-devel] [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 15:16:13 +1100
+Message-ID: <20071115041613.GC15302__26040.81903487$1195100222$gmane$org@brong.net>
+References: <20071113143201.9441c940.akpm@linux-foundation.org> <20071113.175551.131375600.davem@davemloft.net> <20071114095507.GA32595@flint.arm.linux.org.uk> <20071114.020706.219917088.davem@davemloft.net> <473AE010.4090806@keyaccess.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3944 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754968AbXKOEMi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Nov 2007 23:12:38 -0500
-In-Reply-To: <473BBEDB.80000@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757449AbXKOEQ3@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <473AE010.4090806@keyaccess.nl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rene Herman <rene.herman@keyaccess.nl>
+Cc: David Miller <davem@davemloft.net>, rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Linux IDE <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Tomasz Chmielewski wrote:
->>> Is there an online Kernelish-English dictionary anywhere? ;)
->> ..
->>
->> Unfortunately not.
->>
->> At some point, we *really* need to convice {Tejun,Jeff} that libata
->> messages should be simpler, fewer, and more human readable by default,
->> with perhaps a sysfs flag to re-enable the {Tejun,Jeff}-speak versions.
-> 
-> Ummm... Okay.  That might have something to do with me not being a
-> native speaker.  :-)
-> 
-> I agree that the current message looks too scary and detailed.  Yeah,
-> essages for recovered errors can be shorter and sweeter.  Those messages
-> are pretty helpful to developers tho.  Always having duplicate SCSI
-> messages don't help either.
-> 
-> Thanks.  I'm putting it on the todo list but I have to admit it is of
-> low priority ATM.
-..
+On Wed, Nov 14, 2007 at 12:46:24PM +0100, Rene Herman wrote:
+> On 14-11-07 11:07, David Miller wrote:
+>
+> Added Jaroslav and Takashi to the already extensive CC....
+>
+>> From: Russell King <rmk+lkml@arm.linux.org.uk>
+>
+>>> So, when are you creating a replacement alsa-devel mailing list on
+>>> vger?  That's also subscribers-only.
+>> The operative term is "alternative" rather than "replacement".
+>> Perhaps this misunderstanding is what you're so upset about.
+>> And yes, that alsa list bugs the crap out of me too.  I'm more than
+>> happy to provide an alternative for that one as well.
+>
+> alsa-devel@alsa-project.org is not subscriber-only. Same as that arm list, 
+> it's _moderated_ for non-subscribers and given that I and other moderators 
+> have been doing our best to moderate quickly (I tend to stay logged in to 
+> the moderation interface all day for example) what specifically bugged the 
+> crap out of you? It's not something a poster needs to concern himself with.
 
-Nothing bad intended by that.. I can read the current messages just fine :)
-though there do seem to be a *lot* of them.
+Totally unrelated - I sent something to the kolab mailing list a couple
+of days ago (it's moderated for non subscribers) informing them that I
+had found the cause of some Cyrus bugs that they had problems with in
+the past and providing a link to my post to the cyrus list with the
+patches attached.
 
-But that is good for libata, in it's current level of immaturity and rapid
-development.  In a release or three, once things settle down a bit,
-we'll likely feel more pressure to make things understandable by others.
+It sat in the moderation queue and then was rejected with "non
+subscriber post to subscription only list".  Not only was the reponse a
+day later when I had moved on to other things, but it got me really
+pissed off that I had put some effort into providing a good quality post
+that outlined the specific issues and how they applied to their project,
+and had been summarily dismissed, probably without the effort being put
+in.
 
-Cheers
+There's no way for a non-subscriber to know in advance if the list they
+are trying to post to will do that to them, completely negating the
+effort put in to writing something worthwhile to inform that community.
+It's insular, and it sucks.
+
+So yeah, my attitude now is that the Kolab folks can go screw themselves
+and track down the fix on their own or wait until I've convinced
+upstream to accept the fixes (likely) and they have moved to the new
+version (unlikely for a long time, and meanwhile they're missing out on
+the performance increases that having a more stable skiplist library 
+would give them)
+
+I'm sure if I had something that I considered worth informing the ALSA
+project of, I'd be wary of spending the same effort writing a good
+post knowing it may be dropped in between the by a list moderator just
+selecing all and bouncing them.
+
+Bron.
