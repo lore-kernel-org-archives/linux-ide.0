@@ -1,88 +1,88 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Thu, 15 Nov 2007 11:39:01 -0500
-Message-ID: <473C7625.2040300@rtr.ca>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com>
+From: Daniel Barkalow <barkalow@iabervon.org>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 11:19:46 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0711151034340.12193__12708.1765131608$1195147382$gmane$org@iabervon.org>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+	<20071113.033946.114918709.davem@davemloft.net>
+	<20071113034916.2556edd7.akpm@linux-foundation.org>
+	<20071113.035824.40509981.davem@davemloft.net>
+	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
+	<20071113134029.GA30978@elte.hu> <4739AFE0.20705@rtr.ca>
+	<40f323d00711130752k19cab8eauc3456721274b3267@mail.gmail.com>
+	<20071113171356.GA25824@thunk.org>
+	<Pine.LNX.4.64.0711141810110.12193@iabervon.org>
+	<20071115153057.GE17180@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4678 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758729AbXKOQjC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2007 11:39:02 -0500
-In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <20071115153057.GE17180@thunk.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+To: Theodore Tso <tytso@mit.edu>
+Cc: alsa-devel@alsa-project.org, Andrew Morton <akpm@linux-foundation.org>, netdev@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, Benoit Boissinot <bboissin@gmail.com>, Mark Lord <liml@rtr.ca>, linux-input@atrey.karlin.mff.cuni.cz, Ingo Molnar <mingo@elte.hu>, David Miller <davem@davemloft.net>
 List-Id: linux-ide@vger.kernel.org
-To: "Morrison, Tom" <tmorrison@empirix.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Morrison, Tom wrote:
-> Additional information - the ~file size this is caused 
-> is somewhere close to 260Mbytesfiles. 
-> 
-> If I create a ~260Mbytes file - my program finishes creating
-> the file - but ~5 seconds later (I timed this by hitting enter
-> on the console every second after completion of the command 
-> that should have done a fsync of the created file before exiting)...
-> It hangs...
-> 
-> I did a little playing around with /proc/sys/dev/scsi/logging_level
-> (set to 0x7) - and it seems that the kernel/box locks up after
-> this line:
-> 
->>> scsi_add_timer: scmd: efca83c0, time: 7500, (c0160660)
->>> scsi_delete_timer: scmd: efca83c0, rtn: 1
->>> scsi_add_timer: scmd: efca8840, time: 7500, (c0160660)
-> 
-> 
-> Further analysis (setting logging level to 65535 (0xFFFF) 
-> Has the following behavior down low) - 
-> 
->>> scsi_add_timer: scmd: efca8960, time: 7500, (c0160660)
->>> sd 0:0:0:0: [sda] Send: 0xefca8960
->>> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 47 92 27 00 01 48 00
->>> buffer = 0xc0553040, bufflen = 167936, done = 0xc016b194,
-> queuecommand
->       0xc017ed34
->>> leaving scsi_dispatch_cmnd()
->>> scsi_delete_timer: scmd: efca8960, rtn: 1
->>> sd 0:0:0:0: [sda] Done: 0xefca8960 SUCCESS
->>> sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_OK,SUGGEST_OK
->>> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 47 92 27 00 01 48 00
->>> sd 0:0:0:0: [sda] scsi host busy 1 failed 0
->>> sd 0:0:0:0: Notifying upper driver of completion (result 0)
->>>
->>> scsi_add_timer: scmd: efca82a0, time: 7500, (c0160660)
->>> sd 0:0:0:0: [sda] Send: 0xefca82a0
->>> sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 47 93 6f 00 02 40 00
->>> buffer = 0xef5734c0, bufflen = 294912, done = 0xc016b194,
-> queuecommand
->       0xc017ed34
->>> leaving scsi_dispatch_cmnd()
-> 
-> Nothing more - it hangs!
-> 
-> This is really a nasty problem!!!!
-..
+On Thu, 15 Nov 2007, Theodore Tso wrote:
 
-Yes.  It's particularly nasty because, as of yet, I haven't seen anything
-to lead me to conclude *which* kernel subsystem is locking up.
+> On Wed, Nov 14, 2007 at 06:23:34PM -0500, Daniel Barkalow wrote:
+> > I don't see any reason that we couldn't have a tool accessible to Ubuntu 
+> > users that does a real "git bisect". Git is really good at being scripted 
+> > by fancy GUIs. It should be easy enough to have a drop down with all of 
+> > the Ubuntu kernel package releases, where the user selects what works and 
+> > what doesn't.
+> 
+> It's possible users who haven't yet downloaded a git repository have
+> to surmount some obstacles that might cause them to lose interest.
+> First, they have to download some 190 megs of git repository, and if
+> they have a slow link, that can take a while, and then they have to
+> build each kernel, which can take a while.
 
-It could be the block layer.
-It could be some PPC arch bug.
-It could be mm.
-It could even be the CPU scheduler.
+It should be possible for it to clone only the portion that they actually 
+care about based on where the known-good version is. It should also (in 
+theory, anyway) be possible to put off some amount of the download until 
+it's actually going to be relevant.
 
-Those messages above could help.
-Now we just need somebody to interpret them,
-and examine the code paths that follow to see
-where it might be possible to get stuck.
+> A full kernel build with everything selected can take good 30 minutes or 
+> more, and that's on a fast dual-core machine with 4gigs of memory and 
+> 7200rpm disk drives. On a slower, memory limited laptop, doing a single 
+> kernel build can take more time than the user has patiences; multiply 
+> that by 7 or 8 build and test boots, and it starts to get tiresome.
 
-The SCSI/libata layers by themselves could lock up the I/O,
-but not the entire machine..
+None of this is going to take as long, even on a slow link and a slow 
+computer, as waiting for a response to a mailing list post. It'd annoy 
+users who are specifically waiting for it, but if the interface is that 
+the user says "kernel package X didn't work but the current kernel does", 
+and it says "I'll let you know when I've got something to test", and the 
+user watches a DVD, and afterward finds a message saying there's something 
+to test, and tries it, and reports how it went, and the process repeats 
+until it narrows it down to a single commit after a couple of days of the 
+user getting occasional responses, it's not that different from asking for 
+help online.
 
-Cheers
- 
+> And then on top of that there are the issues about whether there is
+> enough support for dealing with hitting kernel revisions that fail due
+> to other bugs getting merged in during the -rc1 process, etc.
 
+Could have a distro-provided mask of things that aren't worth testing and 
+possibly back-ported fixes for revisions in particular ranges.
+
+> I agree that a tool that automated the bisection process and walked
+> the user through it would be helpful, but I believe it would be
+> possible for us do better.
+
+That would probably help for giving the user something to try right away. 
+I still think that the main cost to the user is the number of times that 
+the user has to stop doing stuff to reboot with a kernel to test, whether 
+the test kernels are available quickly from the distro site, slowly built 
+locally, or slowly as suggested by humans helping online.
+
+	-Daniel
+*This .sig left intentionally blank*
