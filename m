@@ -1,74 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv: hard resetting port
-Date: Thu, 15 Nov 2007 09:31:10 -0500
-Message-ID: <473C582E.10607@rtr.ca>
-References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca> <473C1EE6.3070304@wpkg.org>
+From: Rene Herman <rene.herman@keyaccess.nl>
+Subject: Re: [alsa-devel] [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 15:29:54 +0100
+Message-ID: <473C57E2.1080306@keyaccess.nl>
+References: <20071113143201.9441c940.akpm@linux-foundation.org> <20071113.175551.131375600.davem@davemloft.net> <20071114095507.GA32595@flint.arm.linux.org.uk> <20071114.020706.219917088.davem@davemloft.net> <473AE010.4090806@keyaccess.nl> <20071115041613.GC15302@brong.net> <473BE046.8070804@keyaccess.nl> <20071115120232.GB8297@brong.net> <473C3B0B.30206@keyaccess.nl> <20071115130019.GB10165@lazybastard.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1402 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755485AbXKOObM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2007 09:31:12 -0500
-In-Reply-To: <473C1EE6.3070304@wpkg.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20071115130019.GB10165@lazybastard.org>
+Sender: netdev-owner@vger.kernel.org
+To: =?ISO-8859-15?Q?J=F6rn_Engel?= <joern@logfs.org>
+Cc: Bron Gondwana <brong@fastmail.fm>, David Miller <davem@davemloft.net>, rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-Tomasz Chmielewski wrote:
->
-> And today kernel (2.6.23.1) in the same machine have spoken to 
-> not-mere-mortals again:
-> 
-> ata6: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata6: edma_err 0x00000020
-..
+On 15-11-07 14:00, J=F6rn Engel wrote:
 
-Here, the messages fail us.  The edma_err value says that there
-should be a non-zero value in the SErr value.  Except the messages
-show zero there, meaning the registers were probably read in the
-wrong sequence (some bits clear automatically on reads).
+> And even without mails being held hostage for weeks, every single=20
+> moderation mail is annoying.  Like the one I'm sure to receive after=20
+> sending this out.
 
-In any event, the messages that follow don't say anything about
-I/O failing in any way, so again this is nothing to be concerned about
-unless it happens frequently.
+Certainly. Upto this thread I wasn't actually aware the list was doing =
+that.=20
+While it might be informative once, getting it each time quickly gets o=
+ld.=20
+Don't know if mailman can do anything like it but I'd suggest anyone ru=
+nning=20
+a non-subscriber-moderation list configure it to send such messages at =
+most=20
+once a <time-period> per address or some such. And just disable the mes=
+sage=20
+if it cannot do that.
 
-At this point, I would unplug/replug all of the SATA cables,
-to ensure they have good connections.
+=46ortunately, alsa-devel is (almost) no longer such a list anyway as i=
+t's=20
+moving to vger. Hurrah. David -- thanks.
 
-
-> ata6: hard resetting port
-> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata6.00: configured for UDMA/133
-> ata6: EH complete
-> sd 5:0:0:0: [sde] 781422768 512-byte hardware sectors (400088 MB)
-> sd 5:0:0:0: [sde] Write Protect is off
-> sd 5:0:0:0: [sde] Mode Sense: 00 3a 00 00
-> sd 5:0:0:0: [sde] Write cache: enabled, read cache: enabled, doesn't 
-> support DPO or FUA
-> 
-> 
-> As I understand it now, your previous translation would fit here (or 
-> not, as SErr differs?):
-> 
->  > Translation:
->  > "libata reset the link, and everything appeared okay,
->  > so it reissued the failed command and continued.
->  > No data loss."
-> 
-> But why was the port reseted? There was no CRC error as before, was there?
-..
-
-I think the error-handling code is a bit heavy handed,
-in that the port reset was not actually needed in the prior case either.
-
-But this way it is simple, consistent, and does work.
-It just prints too many messages.
-
-> What worries me is that it always happens for the same drive.
-..
-
-Twiddle with the cabling for that drive, and it will probably behave.
+Rene.
 
