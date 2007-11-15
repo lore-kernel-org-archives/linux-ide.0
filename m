@@ -1,203 +1,44 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] drivers/ide/ide-probe.c, kernel 2.6.23.1
-Date: Thu, 15 Nov 2007 21:59:23 +0100
-Message-ID: <200711152159.23607.bzolnier@gmail.com>
-References: <473434F1.50509@purplescout.se> <200711132303.28424.bzolnier@gmail.com> <473C08B2.1030004@purplescout.se>
+From: Ben Dooks <ben@trinity.fluff.org>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 20:16:56 +0000
+Message-ID: <20071115201656.GD11305__5398.59037749029$1195161745$gmane$org@trinity.fluff.org>
+References: <32209efe0711122242m3a5f081asf1c11a38b24db10c@mail.gmail.com> <20071113031553.3c7b5c16.akpm@linux-foundation.org> <4739ADA2.4060604@rtr.ca> <alpine.LFD.0.9999.0711131521590.3265@localhost.localdomain> <20071113181053.GB1356@flint.arm.linux.org.uk> <20071113182516.250de873@the-village.bc.nu> <20071113223437.GG1356@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:13300 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932149AbXKOUxF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 15:53:05 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so663615fkz
-        for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2007 12:53:04 -0800 (PST)
-In-Reply-To: <473C08B2.1030004@purplescout.se>
+Received: from trinity.fluff.org ([89.145.97.151]:50433 "EHLO
+	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763429AbXKOVV3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 16:21:29 -0500
 Content-Disposition: inline
+In-Reply-To: <20071113223437.GG1356@flint.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jonas Stare <jonas.stare@purplescout.se>
-Cc: Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Thomas Gleixner <tglx@linutronix.de>, Mark Lord <liml@rtr.ca>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.o
 
+On Tue, Nov 13, 2007 at 10:34:37PM +0000, Russell King wrote:
+> On Tue, Nov 13, 2007 at 06:25:16PM +0000, Alan Cox wrote:
+> > > Given the wide range of ARM platforms today, it is utterly idiotic to
+> > > expect a single person to be able to provide responses for all ARM bugs.
+> > > I for one wish I'd never *VOLUNTEERED* to be a part of the kernel
+> > > bugzilla, and really *WISH* I could pull out of that function.
+> > 
+> > You can. Perhaps that bugzilla needs to point to some kind of
+> > arm-maintainers@vger.kernel.org list for the various ARM platform
+> > maintainers ?
+> 
+> That might work - though it would be hard to get all the platform
+> maintainers to be signed up to yet another mailing list, I'm sure
+> sufficient would do.
 
-Hi,
+As long as it would just be bug reports, I'm sure that most of us
+could be persuaded to subscribe. Adding another list for general
+discussions is probably not going to be read, the current list
+provides more than enough to keep us busy.
 
-On Thursday 15 November 2007, Jonas Stare wrote:
-> Hi, thanks for the reply. :)
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> > Hi,
-> > 
-> > On Monday 12 November 2007, Andrew Morton wrote:
-> >> On Fri, 09 Nov 2007 11:22:41 +0100 Jonas Stare <jonas.stare@purplescout.se> wrote:
-> >>
-> >>> Hi.
-> >>>
-> >>> This week I ran into a strange hardware problem. During boot I got a 35 
-> >>> second delay while waiting for IDE-disks that weren't there to report 
-> > 
-> > With what chipset and host driver does this happen?
-> 
-> I am not sure about the chip-set but I think it was vt82c686b. It used 
-> the via82cxxx-driver, but only _after_ using the generic ide-code to 
-> probe/wait (a long time) for the disks. (This was in Suse 10.1 SP 1.)
+-- 
+Ben
 
-AFAIK this means kernel version 2.6.16.xx.
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
 
-If this is the case maybe the underlying problem has been already fixed
-(but it doesn't mean that your patch is not worth applying, quite the
-contrary).
-
-> >>> that they were not in a BSY state. The problem was most likely in the 
-> >>> hardware but this patch enables you to ignore waiting for disks by 
-> >>> setting hdX=noprobe (and not setting the geometry by hand) as a kernel 
-> >>> option.
-> >>>
-> >>> If no noprobe-option is set the code will work (more or less) as the 
-> >>> original but if set the code will skip the ide_wait_not_busy() for that 
-> >>> drive. Even if there would be a drive there and it is still BSY 
-> >>> afterwards it should not matter since it isn't probed for later.
-> >>>
-> >>> There are other ways to get around the "35-seconds-of-waiting-in-vain", 
-> >>> like actually fix the hardware, insert a second drive that works or 
-> >>> recompile the kernel with edd-support builtin (atleast I've seen that 
-> >>> solution on a forum) and possibly others. But this patch would allow 
-> >>> people to get Linux to boot quickly on wonky hardware without having to 
-> >>> recompile anything.
-> >>> (The code also honors the MAX_DRIVES variable instead of assuming that 
-> >>> ther will be 2 drives on the bus.)
-> >> I keep on hearing about problems with boot-time IDE probing.  It's public
-> >> enemy #1 with the embedded guys.
-> > 
-> > The problem is that we are not hearing about them.
-> > 
-> > Please forward the reports to linux-ide@vger.kernel.org.
-> > 
-> >> It does seem that operator intervention is needed in some fashion.
-> >>
-> >>> I will be happy for all the comments I can get. :) But be gentle, this 
-> >>> is my first patch...
-> > 
-> > Jonas, could you also put printk() dumping content of 'stat' in
-> > ide-iops.c::ide_wait_not_busy() so we can verify that it is not
-> > some problem with ide_wait_not_busy() itself.
-> > 
-> 
-> Sorry. :( I don't have access to the hardware anymore (which is a 
-> "home-made" embedded machine). But from what I could get from poking 
-> around was that the BSY-bit on the slave (that never has or ever will 
-> exists) was set, probably because those who built the thing wanted to 
-> save money and/or space on that "billionth of a cent"-resistor that Alan 
-> Cox talked about.
-> 
-> >>>    Best regards
-> >>>    Jonas Stare
-> >>>
-> >>> Signed-off-by: Jonas Stare <jonas.stare@purplescout.se>
-> >>> --
-> >>> diff -u linux-2.6.23.1-orig/drivers/ide/ide-probe.c 
-> >>> linux-2.6.23.1/drivers/ide/ide-probe.c
-> >>> --- linux-2.6.23.1-orig/drivers/ide/ide-probe.c 2007-10-12 
-> >>> 18:43:44.000000000 +0200
-> >>> +++ linux-2.6.23.1/drivers/ide/ide-probe.c      2007-11-09 
-> >>> 10:43:16.000000000 +0100
-> >>> @@ -643,6 +643,7 @@
-> >>>   static int wait_hwif_ready(ide_hwif_t *hwif)
-> >>>   {
-> >>>          int rc;
-> >>> +       int unit;
-> >>>
-> >>>          printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
-> >>>
-> >>> @@ -659,20 +660,24 @@
-> >>>                  return rc;
-> >>>
-> > 
-> > Hmm, so the first ide_wait_not_busy() (for the currently
-> > selected device) is OK and doesn't stall?
-> > 
-> 
-> It didn't stall for me... But even if it had, probe_hwif() will ignore 
-> the entire controller if you set "idex=noprobe".
-> 
-> (From drivers/ide/ide-probe.c)
-> 
-> static void probe_hwif(ide_hwif_t *hwif, void (*fixup)(ide_hwif_t *hwif))
-> {
->          unsigned int unit;
->          unsigned long flags;
->          unsigned int irqd;
-> 
->          if (hwif->noprobe)
->                  return;
-> 
-> 
-> >>>          /* Now make sure both master & slave are ready */
-> >>> -       SELECT_DRIVE(&hwif->drives[0]);
-> >>> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-> >>> -       mdelay(2);
-> >>> -       rc = ide_wait_not_busy(hwif, 35000);
-> >>> -       if (rc)
-> >>> -               return rc;
-> >>> -       SELECT_DRIVE(&hwif->drives[1]);
-> >>> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-> >>> -       mdelay(2);
-> >>> -       rc = ide_wait_not_busy(hwif, 35000);
-> >>> +       for (unit = 0; unit < MAX_DRIVES; ++unit) {
-> >>> +               /* Ignore disks that we will not probe for later. */
-> >>> +               if (!hwif->drives[unit].noprobe ||
-> >>> +                   hwif->drives[unit].forced_geom) {
-> > 
-> > It is better to check for ->present
-> > (->forced_geom implies that ->present is set).
-> > 
-> 
-> Great comment. :) I'll change that right away...
-> 
-> >>> +                       SELECT_DRIVE(&hwif->drives[unit]);
-> >>> +                       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-> >>> +                       mdelay(2);
-> >>> +                       rc = ide_wait_not_busy(hwif, 35000);
-> >>> +                       /* Exit function with master selected (let's be 
-> >>> sane) */
-> >>> +                       SELECT_DRIVE(&hwif->drives[0]);
-> > 
-> > This changes the previous behavior adding an extra SELECT_DRIVE()
-> > before trying the slave drive.
-> > 
-> 
-> Mmmm, yes, I know. But I couldn't come up with a clean and nice way to 
-> be sure that the first drive is selected. Maybe I could move it inside 
-> the if-statement below?
-
-Then the code will miss re-selecting master drive after waiting for
-slave one if there were no problems (rc == 0).
-
-What about adding "if (unit)" statement before SELECT_DRIVE() call?
-
-> >>> +                       if (rc)
-> >>> +                               return rc;
-> >>> +               } else {
-> >>> +                       printk(KERN_DEBUG "Skip ide_wait_not_busy for 
-> >>> %s:%d\n",
-> >>> +                         hwif->name, unit);
-> >>> +               }
-> >>> +       }
-> >>>
-> >>> -       /* Exit function with master reselected (let's be sane) */
-> >>> -       SELECT_DRIVE(&hwif->drives[0]);
-> >>> -
-> >>>          return rc;
-> >>>   }
-> >> Maybe that's the fix, maybe not - I'll defer to others on that (please).
-> >>
-> >> Your email client is wordwrapping the text, and replaces tabs with spaces. 
-> >> Most of them seem to do this nowadays.  For thunderbird, please see
-> >> http://mbligh.org/linuxdocs/Email/Clients/Thunderbird
-
-Please fix the issues + wordwrapping and resubmit.
-
-Thanks,
-Bart
