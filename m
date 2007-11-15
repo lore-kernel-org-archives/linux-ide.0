@@ -1,43 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata-scsi:  be tolerant of 12-byte ATAPI commands in
- 16-byte CDBs
-Date: Thu, 15 Nov 2007 11:26:03 +0900
-Message-ID: <473BAE3B.2050906@gmail.com>
-References: <20071113164323.GA5252@section-eight> <20071113212230.77cadecd@the-village.bc.nu> <20071113232859.GA4681@section-eight> <473B0FA2.5000102@rtr.ca> <20071114153852.GA9019@section-eight> <473B1B83.9020103@rtr.ca> <473B33F7.7030708@rtr.ca>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 13:50:43 +1100
+Message-ID: <18235.46083.293604.560507__11868.5755682693$1195095102$gmane$org@notabene.brown>
+References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
+	<20071113.033946.114918709.davem@davemloft.net>
+	<20071113034916.2556edd7.akpm@linux-foundation.org>
+	<20071113.035824.40509981.davem@davemloft.net>
+	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
+	<20071113134029.GA30978@elte.hu>
+	<20071113085514.3414aa52.rdunlap@xenotime.net>
+	<20071114140847.GA11489@elte.hu>
+	<20071114093820.ff3ad8f9.rdunlap@xenotime.net>
+	<20071114182351.GI14254@fieldses.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:19703 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754335AbXKOC0P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 21:26:15 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so357774rvb
-        for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 18:26:14 -0800 (PST)
-In-Reply-To: <473B33F7.7030708@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: message from J. Bruce Fields on Wednesday November 14
+Sender: netdev-owner@vger.kernel.org
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Sebastian Kemper <sebastian_ml@gmx.net>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Mark Lord wrote:
-> Sebastian Kemper reported that issuing CD/DVD commands under libata
-> is not fully compatible with ide-scsi.  In particular, the
-> GPCMD_SET_STREAMING
-> was being rejected at the host level in some instances.
+On Wednesday November 14, bfields@fieldses.org wrote:
+> On Wed, Nov 14, 2007 at 09:38:20AM -0800, Randy Dunlap wrote:
+> > On Wed, 14 Nov 2007 15:08:47 +0100 Ingo Molnar wrote:
+> > > so please stop this "too busy and too noisy" nonsense already. It was 
+> > > nonsense 10 years ago and it's nonsense today. In 10 years the kernel 
+> > > grew from a 1 million lines codebase to an 8 million lines codebase, so 
+> > > what? Deal with it and be intelligent about filtering your information 
+> > > influx instead of imposing a hard pre-filtering criteria that restricts 
+> > > intelligent processing of information.
+> > 
+> > So you have a preferred method of handling email.  Please don't
+> > force it on the rest of us.
 > 
-> The reason is that libata-scsi insists upon the cmd_len field exactly
-> matching
-> the SCSI opcode being issued, whereas ide-scsi tolerates 12-byte commands
-> contained within a 16-byte (cmd_len) CDB.
-> 
-> There doesn't seem to be a good reason for us to not be compatible there,
-> so here is a patch to fix libata-scsi to permit SCSI opcodes so long as
-> they fit within whatever size CDB is provided.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+> I'd be curious for any pointers on tools, actually.  I "read" (ok, skim)
+> lkml but still overlook relevant bug reports occasionally.
+> (Fortunately, between Trond and Andrew and others forwarding things it's
+> not actually a problem, but I'm still curious).
 
-applied to #tj-upstream-fixes.
+Virtual Folders.
 
--- 
-tejun
+I use VM mode in EMACS, but I believe some other mail readers have the
+same functionality.
+I have a virtual folder called "nfs" which shows me all mail in my
+inbox which has the string 'nfs' or 'lockd' in a To, Cc, or Subject
+field.  When I visit that folder, I see all mail about nfs, whether it
+was sent to me personally, or to a relevant list, or to lkml.
+
+Admittedly if someone doesn't bother to choose a meaningful Subject,
+then I might miss that.  I think this mostly happens when Andrew sends
+a "-mm" announcement, asked people to change the subject line when
+following up, and someone follows up without changing the subject line
+and say "NFS doesn't work any more".
+
+I have another virtual folder which matches "md" and "raid" and
+"mdadm" in any header (so when the people from coraid.com talk about
+ATA over Ethernet, that gets badly filed, but it is a small cost).
+
+Then I have the "bkernel" (boring kernel) folder for all mail from
+lkml that doesn't mention nfs or raid or md, and isn't from or to
+me.  That folder I skim every week or so and just read the juicy
+debates and look for interesting tidbits from interesting people -
+then delete the whole folder, mostly unread.
+
+I don't think I could cope with mail without virtual folders.
+
+NeilBrown
