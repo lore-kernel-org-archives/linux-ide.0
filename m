@@ -1,45 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv: hard resetting port
-Date: Thu, 15 Nov 2007 12:36:59 +0900
-Message-ID: <473BBEDB.80000@gmail.com>
-References: <473AC34B.8000709@wpkg.org> <473B13D6.3080202@rtr.ca> <473B1617.4010102@wpkg.org> <473B1E39.8090800@rtr.ca>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH 2/2] sata_nv: fix ATAPI issues with memory over 4GB (v3)
+Date: Wed, 14 Nov 2007 22:06:55 -0600
+Message-ID: <473BC5DF.1040302@shaw.ca>
+References: <473A7677.6080007@shaw.ca> <473BA332.9030406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:53760 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754434AbXKODhF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 22:37:05 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so478686wah
-        for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 19:37:04 -0800 (PST)
-In-Reply-To: <473B1E39.8090800@rtr.ca>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:22275 "EHLO
+	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbXKOEHc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Nov 2007 23:07:32 -0500
+In-reply-to: <473BA332.9030406@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tomasz Chmielewski <mangoo@wpkg.org>, Linux IDE <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-Mark Lord wrote:
-> Tomasz Chmielewski wrote:
->> Is there an online Kernelish-English dictionary anywhere? ;)
-> ..
+Tejun Heo wrote:
+> Robert Hancock wrote:
+>> This fixes some problems with ATAPI devices on nForce4 controllers in ADMA mode
+>> on systems with memory located above 4GB. We need to delay setting the 64-bit
+>> DMA mask until the PRD table and padding buffer are allocated so that they don't
+>> get allocated above 4GB and break legacy mode (which is needed for ATAPI
+>> devices).
+>>
+>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 > 
-> Unfortunately not.
+> applied to #tj-upstream-fixes.
 > 
-> At some point, we *really* need to convice {Tejun,Jeff} that libata
-> messages should be simpler, fewer, and more human readable by default,
-> with perhaps a sysfs flag to re-enable the {Tejun,Jeff}-speak versions.
 
-Ummm... Okay.  That might have something to do with me not being a
-native speaker.  :-)
+I have a report that these patches crashed but the previous patch worked:
 
-I agree that the current message looks too scary and detailed.  Yeah,
-essages for recovered errors can be shorter and sweeter.  Those messages
-are pretty helpful to developers tho.  Always having duplicate SCSI
-messages don't help either.
+https://bugzilla.redhat.com/show_bug.cgi?id=351451
 
-Thanks.  I'm putting it on the todo list but I have to admit it is of
-low priority ATM.
-
--- 
-tejun
+So there may still be a problem here.
