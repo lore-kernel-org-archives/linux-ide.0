@@ -1,136 +1,80 @@
-From: Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [patch 37/40] libata: backport ATA_FLAG_NO_SRST and
-	ATA_FLAG_ASSUME_ATA
-Date: Wed, 14 Nov 2007 22:45:54 -0800
-Message-ID: <20071115064554.GL19218@kroah.com>
-References: <20071115062710.885284510@mini.kroah.org>
+From: Bron Gondwana <brong@fastmail.fm>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 15:16:13 +1100
+Message-ID: <20071115041613.GC15302__46848.6800128177$1195111046$gmane$org@brong.net>
+References: <20071113143201.9441c940.akpm@linux-foundation.org>
+	<20071113.175551.131375600.davem@davemloft.net>
+	<20071114095507.GA32595@flint.arm.linux.org.uk>
+	<20071114.020706.219917088.davem@davemloft.net>
+	<473AE010.4090806@keyaccess.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43759 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762766AbXKOGsU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 01:48:20 -0500
-Content-Disposition: inline; filename="libata-backport-ata_flag_no_srst-and-ata_flag_assume_ata.patch"
-In-Reply-To: <20071115064302.GA19218@kroah.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Content-Disposition: inline
+In-Reply-To: <473AE010.4090806@keyaccess.nl>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+To: Rene Herman <rene.herman@keyaccess.nl>
+Cc: rmk+lkml@arm.linux.org.uk, Takashi Iwai <tiwai@suse.de>, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, alsa-devel@alsa-project.org, protasnb@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, David Miller <davem@davemloft.net>, Jaroslav Kysela <perex@suse.cz>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>
 
+On Wed, Nov 14, 2007 at 12:46:24PM +0100, Rene Herman wrote:
+> On 14-11-07 11:07, David Miller wrote:
+>
+> Added Jaroslav and Takashi to the already extensive CC....
+>
+>> From: Russell King <rmk+lkml@arm.linux.org.uk>
+>
+>>> So, when are you creating a replacement alsa-devel mailing list on
+>>> vger?  That's also subscribers-only.
+>> The operative term is "alternative" rather than "replacement".
+>> Perhaps this misunderstanding is what you're so upset about.
+>> And yes, that alsa list bugs the crap out of me too.  I'm more than
+>> happy to provide an alternative for that one as well.
+>
+> alsa-devel@alsa-project.org is not subscriber-only. Same as that arm list, 
+> it's _moderated_ for non-subscribers and given that I and other moderators 
+> have been doing our best to moderate quickly (I tend to stay logged in to 
+> the moderation interface all day for example) what specifically bugged the 
+> crap out of you? It's not something a poster needs to concern himself with.
 
--stable review patch.  If anyone has any objections, please let us know.
+Totally unrelated - I sent something to the kolab mailing list a couple
+of days ago (it's moderated for non subscribers) informing them that I
+had found the cause of some Cyrus bugs that they had problems with in
+the past and providing a link to my post to the cyrus list with the
+patches attached.
 
-------------------
-From: Tejun Heo <htejun@gmail.com>
+It sat in the moderation queue and then was rejected with "non
+subscriber post to subscription only list".  Not only was the reponse a
+day later when I had moved on to other things, but it got me really
+pissed off that I had put some effort into providing a good quality post
+that outlined the specific issues and how they applied to their project,
+and had been summarily dismissed, probably without the effort being put
+in.
 
-Differs from mainline, but the functionality is already there.
+There's no way for a non-subscriber to know in advance if the list they
+are trying to post to will do that to them, completely negating the
+effort put in to writing something worthwhile to inform that community.
+It's insular, and it sucks.
 
-Backport ATA_FLAG_NO_SRST and ATA_FLAG_ASSUME_ATA.  These are
-originally link flags (ATA_LFLAG_*) but link abstraction doesn't exist
-on 2.6.23, so make it port flags.
+So yeah, my attitude now is that the Kolab folks can go screw themselves
+and track down the fix on their own or wait until I've convinced
+upstream to accept the fixes (likely) and they have moved to the new
+version (unlikely for a long time, and meanwhile they're missing out on
+the performance increases that having a more stable skiplist library 
+would give them)
 
-This is for the following workaround for ASUS P5W DH Deluxe.
+I'm sure if I had something that I considered worth informing the ALSA
+project of, I'd be wary of spending the same effort writing a good
+post knowing it may be dropped in between the by a list moderator just
+selecing all and bouncing them.
 
-These new flags don't introduce any behavior change unless set and
-nobody sets them yet.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/ata/libata-eh.c |   32 ++++++++++++++++++++++++--------
- include/linux/libata.h  |    2 ++
- 2 files changed, 26 insertions(+), 8 deletions(-)
-
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1759,9 +1759,11 @@ static int ata_do_reset(struct ata_port 
- 	return 0;
- }
- 
--static int ata_eh_followup_srst_needed(int rc, int classify,
--				       const unsigned int *classes)
-+static int ata_eh_followup_srst_needed(struct ata_port *ap, int rc,
-+				int classify, const unsigned int *classes)
- {
-+	if (ap->flags & ATA_FLAG_NO_SRST)
-+		return 0;
- 	if (rc == -EAGAIN)
- 		return 1;
- 	if (rc != 0)
-@@ -1792,7 +1794,8 @@ static int ata_eh_reset(struct ata_port 
- 	 */
- 	action = ehc->i.action;
- 	ehc->i.action &= ~ATA_EH_RESET_MASK;
--	if (softreset && (!hardreset || (!sata_set_spd_needed(ap) &&
-+	if (softreset && (!hardreset || (!(ap->flags & ATA_FLAG_NO_SRST) &&
-+					 !sata_set_spd_needed(ap) &&
- 					 !(action & ATA_EH_HARDRESET))))
- 		ehc->i.action |= ATA_EH_SOFTRESET;
- 	else
-@@ -1855,7 +1858,7 @@ static int ata_eh_reset(struct ata_port 
- 	rc = ata_do_reset(ap, reset, classes, deadline);
- 
- 	if (reset == hardreset &&
--	    ata_eh_followup_srst_needed(rc, classify, classes)) {
-+	    ata_eh_followup_srst_needed(ap, rc, classify, classes)) {
- 		/* okay, let's do follow-up softreset */
- 		reset = softreset;
- 
-@@ -1870,8 +1873,8 @@ static int ata_eh_reset(struct ata_port 
- 		ata_eh_about_to_do(ap, NULL, ATA_EH_RESET_MASK);
- 		rc = ata_do_reset(ap, reset, classes, deadline);
- 
--		if (rc == 0 && classify &&
--		    classes[0] == ATA_DEV_UNKNOWN) {
-+		if (rc == 0 && classify && classes[0] == ATA_DEV_UNKNOWN &&
-+		    !(ap->flags & ATA_FLAG_ASSUME_ATA)) {
- 			ata_port_printk(ap, KERN_ERR,
- 					"classification failed\n");
- 			rc = -EINVAL;
-@@ -1879,6 +1882,10 @@ static int ata_eh_reset(struct ata_port 
- 		}
- 	}
- 
-+	/* if we skipped follow-up srst, clear rc */
-+	if (rc == -EAGAIN)
-+		rc = 0;
-+
- 	if (rc && try < ARRAY_SIZE(ata_eh_reset_timeouts)) {
- 		unsigned long now = jiffies;
- 
-@@ -1906,8 +1913,17 @@ static int ata_eh_reset(struct ata_port 
- 		/* After the reset, the device state is PIO 0 and the
- 		 * controller state is undefined.  Record the mode.
- 		 */
--		for (i = 0; i < ATA_MAX_DEVICES; i++)
--			ap->device[i].pio_mode = XFER_PIO_0;
-+		for (i = 0; i < ata_port_max_devices(ap); i++) {
-+			struct ata_device *dev = &ap->device[i];
-+
-+			dev->pio_mode = XFER_PIO_0;
-+
-+			if (ata_port_offline(ap))
-+				continue;
-+
-+			if (ap->flags & ATA_FLAG_ASSUME_ATA)
-+				classes[dev->devno] = ATA_DEV_ATA;
-+		}
- 
- 		/* record current link speed */
- 		if (sata_scr_read(ap, SCR_STATUS, &sstatus) == 0)
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -177,6 +177,8 @@ enum {
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
-+	ATA_FLAG_NO_SRST	= (1 << 18),
-+	ATA_FLAG_ASSUME_ATA	= (1 << 19),
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
-
--- 
+Bron.
