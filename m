@@ -1,78 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [BUG] New Kernel Bugs
-Date: Thu, 15 Nov 2007 13:50:43 +1100
-Message-ID: <18235.46083.293604.560507__30560.222201939$1195111735$gmane$org@notabene.brown>
-References: <20071113031553.3c7b5c16.akpm@linux-foundation.org>
-	<20071113.033946.114918709.davem@davemloft.net>
-	<20071113034916.2556edd7.akpm@linux-foundation.org>
-	<20071113.035824.40509981.davem@davemloft.net>
-	<20071113041259.79c9a8c5.akpm@linux-foundation.org>
-	<20071113134029.GA30978@elte.hu>
-	<20071113085514.3414aa52.rdunlap@xenotime.net>
-	<20071114140847.GA11489@elte.hu>
-	<20071114093820.ff3ad8f9.rdunlap@xenotime.net>
-	<20071114182351.GI14254@fieldses.org>
+From: "Jeff Breidenbach" <jeff@jab.org>
+Subject: Re: stable basic 4-port SATA card
+Date: Wed, 14 Nov 2007 23:37:41 -0800
+Message-ID: <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
+References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com>
+	 <473BBDBE.7060208@gmail.com> <473BC890.9020902@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: message from J. Bruce Fields on Wednesday November 14
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Sender: alsa-devel-bounces@alsa-project.org
-Errors-To: alsa-devel-bounces@alsa-project.org
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.191]:62075 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604AbXKOHhn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 02:37:43 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so397127nfb
+        for <linux-ide@vger.kernel.org>; Wed, 14 Nov 2007 23:37:41 -0800 (PST)
+In-Reply-To: <473BC890.9020902@rtr.ca>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
 
-On Wednesday November 14, bfields@fieldses.org wrote:
-> On Wed, Nov 14, 2007 at 09:38:20AM -0800, Randy Dunlap wrote:
-> > On Wed, 14 Nov 2007 15:08:47 +0100 Ingo Molnar wrote:
-> > > so please stop this "too busy and too noisy" nonsense already. It was 
-> > > nonsense 10 years ago and it's nonsense today. In 10 years the kernel 
-> > > grew from a 1 million lines codebase to an 8 million lines codebase, so 
-> > > what? Deal with it and be intelligent about filtering your information 
-> > > influx instead of imposing a hard pre-filtering criteria that restricts 
-> > > intelligent processing of information.
-> > 
-> > So you have a preferred method of handling email.  Please don't
-> > force it on the rest of us.
-> 
-> I'd be curious for any pointers on tools, actually.  I "read" (ok, skim)
-> lkml but still overlook relevant bug reports occasionally.
-> (Fortunately, between Trond and Andrew and others forwarding things it's
-> not actually a problem, but I'm still curious).
+Thanks for the excellent rundown.
 
-Virtual Folders.
+>sata_sil24: 3124/3132 chips don't have any outstanding serious
+>problems.  IRQ loss on PCI-X was the only recent serious known
+>problem but it's fixed now.
 
-I use VM mode in EMACS, but I believe some other mail readers have the
-same functionality.
-I have a virtual folder called "nfs" which shows me all mail in my
-inbox which has the string 'nfs' or 'lockd' in a To, Cc, or Subject
-field.  When I visit that folder, I see all mail about nfs, whether it
-was sent to me personally, or to a relevant list, or to lkml.
-
-Admittedly if someone doesn't bother to choose a meaningful Subject,
-then I might miss that.  I think this mostly happens when Andrew sends
-a "-mm" announcement, asked people to change the subject line when
-following up, and someone follows up without changing the subject line
-and say "NFS doesn't work any more".
-
-I have another virtual folder which matches "md" and "raid" and
-"mdadm" in any header (so when the people from coraid.com talk about
-ATA over Ethernet, that gets badly filed, but it is a small cost).
-
-Then I have the "bkernel" (boring kernel) folder for all mail from
-lkml that doesn't mention nfs or raid or md, and isn't from or to
-me.  That folder I skim every week or so and just read the juicy
-debates and look for interesting tidbits from interesting people -
-then delete the whole folder, mostly unread.
-
-I don't think I could cope with mail without virtual folders.
-
-NeilBrown
+I'm still a little confused how to translate this known-good chipset to
+an actual buyable PCI card.  It isn't obvious from basic web searching.
