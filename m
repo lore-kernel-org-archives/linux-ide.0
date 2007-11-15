@@ -1,35 +1,37 @@
 From: Rene Herman <rene.herman@keyaccess.nl>
-Subject: Re: [alsa-devel] [BUG] New Kernel Bugs
-Date: Thu, 15 Nov 2007 06:59:34 +0100
-Message-ID: <473BE046.8070804@keyaccess.nl>
-References: <20071113143201.9441c940.akpm@linux-foundation.org> <20071113.175551.131375600.davem@davemloft.net> <20071114095507.GA32595@flint.arm.linux.org.uk> <20071114.020706.219917088.davem@davemloft.net> <473AE010.4090806@keyaccess.nl> <20071115041613.GC15302@brong.net>
+Subject: Re: Moderated list
+Date: Thu, 15 Nov 2007 07:09:20 +0100
+Message-ID: <473BE290.1000707@keyaccess.nl>
+References: <s5h8x51fd2l.wl%tiwai@suse.de>	<473AE84A.4050004@keyaccess.nl>	<s5h3av9f9ac.wl%tiwai@suse.de> <20071114.152315.134994547.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:44358 "EHLO
+Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:34674 "EHLO
 	smtpq2.tilbu1.nb.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751337AbXKOGER (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 01:04:17 -0500
-In-Reply-To: <20071115041613.GC15302@brong.net>
+	with ESMTP id S1759338AbXKOGNx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 01:13:53 -0500
+In-Reply-To: <20071114.152315.134994547.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bron Gondwana <brong@fastmail.fm>
-Cc: David Miller <davem@davemloft.net>, rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>
+To: David Miller <davem@davemloft.net>, perex@suse.cz
+Cc: tiwai@suse.de, rmk+lkml@arm.linux.org.uk, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, protasnb@gmail.com, linux-ide@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, akpm@linux-foundation.org
 
-On 15-11-07 05:16, Bron Gondwana wrote:
+On 15-11-07 00:23, David Miller wrote:
 
-> Totally unrelated - I sent something to the kolab mailing list a couple
+> From: Takashi Iwai <tiwai@suse.de>
 
-[ ... ]
+>> BTW, I also prefer keeping the name alsa-devel@.  It's been so.
+> 
+> That's fine with me, I've changed it alsa-devel@vger.kernel.org
 
-> I'm sure if I had something that I considered worth informing the ALSA 
-> project of, I'd be wary of spending the same effort writing a good post
-> knowing it may be dropped in between the by a list moderator just 
-> selecing all and bouncing them.
+Great, thanks. Jaroslav -- given that this list won't need moderation I'd 
+consider it the main/only alsa-devel. The alsa-devel subscriber database was 
+cleansed only a couple of months ago when moving from sourceforge so it 
+should now be okay to just transfer all subscriptions.
 
-Totally unrelated indeed so why are spouting crap? If the kohab list has a 
-problem take it up with them but keep ALSA out of it. alsa-devel has only 
-ever moderated out spam -- nothing else.
+Or maybe you're already moving things; mailman.alsa-project.org seems to be 
+down at least....
 
-ene
+Rene.
+
