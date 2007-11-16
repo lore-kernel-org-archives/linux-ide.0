@@ -1,37 +1,28 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 7/9] via82cxxx: keep local ide_pci_device_t copy
-Date: Fri, 16 Nov 2007 19:34:39 +0300
-Message-ID: <473DC69F.5060409@ru.mvista.com>
-References: <200709242245.17303.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ide: don't set PIO mode on pre-EIDE drives
+Date: Fri, 16 Nov 2007 16:42:40 +0000
+Message-ID: <20071116164240.40b02300@the-village.bc.nu>
+References: <200711161626.25580.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:7032 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751741AbXKPQe1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 11:34:27 -0500
-In-Reply-To: <200709242245.17303.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42380 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752894AbXKPQoD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 11:44:03 -0500
+In-Reply-To: <200711161626.25580.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Fri, 16 Nov 2007 16:26:25 +0300
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-> * Keep local ide_pci_device_t copy in via_init_one().
+> Fix handling of  the PIO modes for the pre-EIDE drives that did not support
+> the PIO Flow Control Transfer Mode value (00001 nnn) of the Set Transfer Mode
+> feature by  skipping the actual mode programming.
 
-> * Adjust ide_pci_device_t copy according to id->driver_data in via_init_one()
->   and remove no longer needed second via82cxxx_chipsets[] entry.
-
-> * via82cxxx_chipsets[] -> via82cxxx_chipset.
-
-> * Remove IDE_HFLAGS_VIA define.
-
-> * Bump driver version.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+You also need to cater for CF 1.1 compliant devices which do not have set
+xfer mode.
