@@ -1,48 +1,72 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ide: don't set PIO mode on pre-EIDE drives
-Date: Fri, 16 Nov 2007 16:56:29 +0000
-Message-ID: <20071116165629.6ba73708@the-village.bc.nu>
-References: <200711161626.25580.sshtylyov@ru.mvista.com>
-	<20071116164240.40b02300@the-village.bc.nu>
-	<473DC942.20803@ru.mvista.com>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
+Date: Fri, 16 Nov 2007 12:07:24 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AB2D7CF@EMPBEDEX.empirix.com>
+References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com> <473CC4B8.4090607@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58684 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753171AbXKPQ6G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 11:58:06 -0500
-In-Reply-To: <473DC942.20803@ru.mvista.com>
+Received: from empbedex1.empirix.com ([12.38.203.54]:19368 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbXKPRKq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 12:10:46 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <473CC4B8.4090607@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 16 Nov 2007 19:45:54 +0300
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+Mark,
 
-> Alan Cox wrote:
+I've ported the old sataMV driver (version 3.6) to the 2.6.23.1 
+kernel - and it works - no problems with a full mem=4000M (4Gig). 
+
+The only problem with this is that it is MUCH slower than the 
+sata_mv driver which - by this test - definitely has some 
+bug/dependency that gets broken when the physical memory 
+overlaps its memory I/O locations (and should be iomapped &
+dma mapped to a separate space up in 0xC_xxxx_xxxx)...
+
+Time to dig in and debug this driver! UGH!
+
+Tom
+
+-----Original Message-----
+From: Mark Lord [mailto:liml@rtr.ca] 
+Sent: Thursday, November 15, 2007 5:14 PM
+To: Morrison, Tom
+Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
+
+Morrison, Tom wrote:
+> The plot thickens - it looks like it might be some type 
+> of problem interacting with the setup of my 4Gig DDR memory
+> and how I setup some translation windows in my MPC8548E
 > 
-> >>Fix handling of  the PIO modes for the pre-EIDE drives that did not support
-> >>the PIO Flow Control Transfer Mode value (00001 nnn) of the Set Transfer Mode
-> >>feature by  skipping the actual mode programming.
+> I realized this morning that I have an inbound/ output PEX window
+> Translation Setup for mapping all from/to PEX bus to outside 
+> the physical 4GIG memory space (i.e.: up at 0xC_xxxx_xxxx). Thus,
+> all output operations that translation from 0xC_xxxx_xxxx to 
+> the pci 32 bit address of xxxx_xxxx) - and vice versa for for
+> the inbound. Note: we also have a straight 1:1 translation mapping 
+> as well for the lower 4Gig - so that's why this worked without
+> the below mentioned change...
 > 
-> > You also need to cater for CF 1.1 compliant devices which do not have set
-> > xfer mode.
+> So, I changed the Request & Response Hi Addresses (which were
+> Being shifted by 32 bits down anyways) and 'OR' that with my 
+> 0xC (so the effective 64bit DMA address is 0xC_xxxx_xxxx (where 
+> Xxxx_xxxx is the effective address). This was what we did to 
+> solve the problem with the Marvel Linux driver that we got from
+> the Marvel site....
 > 
->     Do they have IORDY support?
-
-Good question. 
-
-CF 1.4 says set features supports 01/0A/55/66/81/8A/9A/BB/CC
-(with 69/96/97 NOP or not recommended)
-
-However it documents both the PIO mode and DMA word in identify. I've
-never seen a CF 1.x card which does DMA or PIO > 2.
-
-CF 1.x is sort of ATA-2 ish but without some set features (eg its got
-idle immediate) and with some stuff that became general later (security
-features)
-
-Alan
+> This all works just fine with ONLY 2 gig of memory in the system
+> (and still have these inbound/output pex translation windows), 
+> but fails when I put back the 4 Gig (and the 8Gig) DDR memory.
+> 
+> Unfortunately, this still hasn't solved the problem though - 
+> so there is something else which I am not seeing?
+..
+<snip patch that has no affect>
