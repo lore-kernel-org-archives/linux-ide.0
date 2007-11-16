@@ -1,107 +1,71 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
-Date: Thu, 15 Nov 2007 19:07:56 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D901053E853F@EMPBEDEX.empirix.com>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com> <473CC4B8.4090607@rtr.ca>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9393] New: SError: { DevExch } occuring and
+ causing disruption
+Date: Thu, 15 Nov 2007 23:13:37 -0800
+Message-ID: <20071115231337.5db592e6.akpm@linux-foundation.org>
+References: <bug-9393-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [12.38.203.54] ([12.38.203.54]:35974 "EHLO
-	empbedex1.empirix.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1765554AbXKPAIE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 19:08:04 -0500
-Content-class: urn:content-classes:message
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:58582 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751504AbXKPHOL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 02:14:11 -0500
+In-Reply-To: <bug-9393-10286@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-In the case of PCI (am no big expert on this)- I believe the code
-allows you to address 32 bits at a time...you can see the the 
-effectve address resource address is some where around 
-0xea900000 - but, if you have PHYS_64BIT  & PTE_64BIT - 
-you get resource_types of 64bits...that you can manipulate accordingly.
- 
-In the case of the eDMA - its 64bit dma operations - thus, you 
-setup the hi portion (by shifting twice by 16 (you get compiler 
-warnings if you try to shiftg the size of the offset - a bug IMHO))
-and thus, can play the game I mentioned below and use the power 
-of the PEX inbound/outbound translation windows to move your data 
-correctly to the appropriate 32 bit location...
- 
-This game works fine very well for 2.6.11 + kernel  - there are a few 
-more tests I need to do (like setting mem=<just below the PEX space> 
-and see if it works correctly...and then try again just a little bit above 
-PEX memory space (> ~0xea900000) - if it works below & doesn't work
-above - it points to a problem with sata_mv doing some type of operation
-outside the dma engine that is corrupting memory - 
- 
-Thats another issue how does memory dribble/scribbling (only side affect 
-I can think of if something is going wrong with this translation)?
- 
-I'll try your 'patch' and see if that has any affect as well (and the
-associated side-affects...)
- 
-t
- 
- 
-
-________________________________
-
-From: Mark Lord [mailto:liml@rtr.ca]
-Sent: Thu 11/15/2007 5:14 PM
-To: Morrison, Tom
-Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
+To: linux-ide@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, avuton@gmail.com
 
 
+(switched to email - please reply via emailed reply-to-all, not via the
+bugzilla web interface)
 
-Morrison, Tom wrote:
-> The plot thickens - it looks like it might be some type
-> of problem interacting with the setup of my 4Gig DDR memory
-> and how I setup some translation windows in my MPC8548E
->
-> I realized this morning that I have an inbound/ output PEX window
-> Translation Setup for mapping all from/to PEX bus to outside
-> the physical 4GIG memory space (i.e.: up at 0xC_xxxx_xxxx). Thus,
-> all output operations that translation from 0xC_xxxx_xxxx to
-> the pci 32 bit address of xxxx_xxxx) - and vice versa for for
-> the inbound. Note: we also have a straight 1:1 translation mapping
-> as well for the lower 4Gig - so that's why this worked without
-> the below mentioned change...
->
-> So, I changed the Request & Response Hi Addresses (which were
-> Being shifted by 32 bits down anyways) and 'OR' that with my
-> 0xC (so the effective 64bit DMA address is 0xC_xxxx_xxxx (where
-> Xxxx_xxxx is the effective address). This was what we did to
-> solve the problem with the Marvel Linux driver that we got from
-> the Marvel site....
->
-> This all works just fine with ONLY 2 gig of memory in the system
-> (and still have these inbound/output pex translation windows),
-> but fails when I put back the 4 Gig (and the 8Gig) DDR memory.
->
-> Unfortunately, this still hasn't solved the problem though -
-> so there is something else which I am not seeing?
-..
+On Thu, 15 Nov 2007 22:39:41 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
 
-I don't know much about how 32-bit PPC deals with memory addresses
-that are more than 32-bits..
+> http://bugzilla.kernel.org/show_bug.cgi?id=9393
+> 
+>            Summary: SError: { DevExch } occuring and causing disruption
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: v2.6.24-rc2-g6e800af2
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Serial ATA
+>         AssignedTo: jgarzik@pobox.com
+>         ReportedBy: avuton@gmail.com
+> 
+> 
+> Most recent kernel where this bug did not occur: v2.6.23
 
-But does this patch have any effect:
+Rafael, one for the regression list please.
 
+> Distribution: Gentoo
+> 
+> Since running in the latest kernels I have been getting the following, but not
+> often. When it happens the computer grinds to a complete halt. Cursor will move
+> a small small amount every 20 seconds or so, making things pretty painful until
+> they complete.
+> 
+> v2.6.24-rc2-g6e800af2 was the first place I saw it, I didn't see it in
+> v2.6.24-rc1, but I was only on it briefly due to unrelated issues.
+> 
+> This hasn't completely been a problem too often, it happens once every day,
+> maybe two even, and I would bisect it but this occurs so infrequently I'm sure
+> I wouldn't get this bug report out until v2.6.24 :).
+> 
+> Now that I'm looking over my dmesg I also notice:
+> atl1 0000:03:00.0: tx busy
+> which could also be the problem
+> 
+> Any way I can help please let me know.
+> 
 
---- old/drivers/ata/sata_mv.c   2007-10-12 12:43:44.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c 2007-11-15 17:12:24.000000000 -0500
-@@ -685,7 +685,7 @@
- {
-        int rc;
+Yes, that's an ATA problem.
 
--       if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-+       if (0 && !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-                rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
-                if (rc) {
-                        rc = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
-
-
+(there is dmesg output and a few other things at the bugzilla URL).
