@@ -1,80 +1,37 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_sil680: kill bogus reset code
-Date: Fri, 16 Nov 2007 17:44:23 +0300
-Message-ID: <200711161744.23918.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/9] via82cxxx: keep local ide_pci_device_t copy
+Date: Fri, 16 Nov 2007 19:34:39 +0300
+Message-ID: <473DC69F.5060409@ru.mvista.com>
+References: <200709242245.17303.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:5965 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750989AbXKPOoL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 09:44:11 -0500
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:7032 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751741AbXKPQe1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 11:34:27 -0500
+In-Reply-To: <200709242245.17303.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Since writing to two reserved bits ain't much of a housekeeping, I think it's
-time we get rid of the custom error handler in this driver. ;-)
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> * Keep local ide_pci_device_t copy in via_init_one().
 
----
-This code has been discussed 4 months ago, and is still in the same state. :-|
-The patch is against the Linus' tree
+> * Adjust ide_pci_device_t copy according to id->driver_data in via_init_one()
+>   and remove no longer needed second via82cxxx_chipsets[] entry.
 
- drivers/ata/pata_sil680.c |   30 +-----------------------------
- 1 files changed, 1 insertion(+), 29 deletions(-)
+> * via82cxxx_chipsets[] -> via82cxxx_chipset.
 
-Index: linux-2.6/drivers/ata/pata_sil680.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_sil680.c
-+++ linux-2.6/drivers/ata/pata_sil680.c
-@@ -94,34 +94,6 @@ static int sil680_cable_detect(struct at
- }
- 
- /**
-- *	sil680_bus_reset	-	reset the SIL680 bus
-- *	@link: ATA link to reset
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	Perform the SIL680 housekeeping when doing an ATA bus reset
-- */
--
--static int sil680_bus_reset(struct ata_link *link, unsigned int *classes,
--			    unsigned long deadline)
--{
--	struct ata_port *ap = link->ap;
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	unsigned long addr = sil680_selreg(ap, 0);
--	u8 reset;
--
--	pci_read_config_byte(pdev, addr, &reset);
--	pci_write_config_byte(pdev, addr, reset | 0x03);
--	udelay(25);
--	pci_write_config_byte(pdev, addr, reset);
--	return ata_std_softreset(link, classes, deadline);
--}
--
--static void sil680_error_handler(struct ata_port *ap)
--{
--	ata_bmdma_drive_eh(ap, ata_std_prereset, sil680_bus_reset, NULL, ata_std_postreset);
--}
--
--/**
-  *	sil680_set_piomode	-	set initial PIO mode data
-  *	@ap: ATA interface
-  *	@adev: ATA device
-@@ -249,7 +221,7 @@ static struct ata_port_operations sil680
- 
- 	.freeze		= ata_bmdma_freeze,
- 	.thaw		= ata_bmdma_thaw,
--	.error_handler	= sil680_error_handler,
-+	.error_handler	= ata_bmdma_error_handler,
- 	.post_internal_cmd = ata_bmdma_post_internal_cmd,
- 	.cable_detect	= sil680_cable_detect,
- 
+> * Remove IDE_HFLAGS_VIA define.
 
+> * Bump driver version.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
