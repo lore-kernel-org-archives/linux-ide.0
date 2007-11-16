@@ -1,49 +1,32 @@
-From: john@BlueSkyTours.com
-Subject: Re: stable basic 4-port SATA card
-Date: Thu, 15 Nov 2007 15:37:10 -0700 (MST)
-Message-ID: <Pine.SOC.4.64.0711151536320.6367@katana>
-References: <e03b90ae0711132239l258677fbk724204998078a952@mail.gmail.com>
- <473BBDBE.7060208@gmail.com> <473BC890.9020902@rtr.ca>
- <e03b90ae0711142337x7112904ar8673f08a19a6ff19@mail.gmail.com>
- <20071115095011.GA13034@jim.sh>
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [BUG] New Kernel Bugs
+Date: Thu, 15 Nov 2007 19:05:39 -0500
+Message-ID: <20071116000539.GA3032@fieldses.org>
+References: <20071113.033946.114918709.davem@davemloft.net> <20071113034916.2556edd7.akpm@linux-foundation.org> <20071113.035824.40509981.davem@davemloft.net> <20071113041259.79c9a8c5.akpm@linux-foundation.org> <20071113134029.GA30978@elte.hu> <20071113085514.3414aa52.rdunlap@xenotime.net> <20071114140847.GA11489@elte.hu> <20071114093820.ff3ad8f9.rdunlap@xenotime.net> <20071114182351.GI14254@fieldses.org> <18235.46083.293604.560507@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat1.blueskytours.com ([12.96.192.180]:27666 "HELO
-	volcano.blueskytours.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1755196AbXKOWn5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2007 17:43:57 -0500
-In-Reply-To: <20071115095011.GA13034@jim.sh>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <18235.46083.293604.560507@notabene.brown>
+Sender: netdev-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, protasnb@gmail.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org, linux-ide@vger.kernel.org, linux-input@atrey.karlin.mff.cuni.cz, bugme-daemon@bugzilla.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: Jeff Breidenbach <jeff@jab.org>, Mark Lord <liml@rtr.ca>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Robert Hancock <hancockr@shaw.ca>, Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jeff@garzik.org>
 
-On Thu, 15 Nov 2007, Jim Paris wrote:
+On Thu, Nov 15, 2007 at 01:50:43PM +1100, Neil Brown wrote:
+> Virtual Folders.
+> 
+> I use VM mode in EMACS, but I believe some other mail readers have the
+> same functionality.
+> I have a virtual folder called "nfs" which shows me all mail in my
+> inbox which has the string 'nfs' or 'lockd' in a To, Cc, or Subject
+> field.  When I visit that folder, I see all mail about nfs, whether it
+> was sent to me personally, or to a relevant list, or to lkml.
 
-> Jeff Breidenbach wrote:
->> Thanks for the excellent rundown.
->>
->>> sata_sil24: 3124/3132 chips don't have any outstanding serious
->>> problems.  IRQ loss on PCI-X was the only recent serious known
->>> problem but it's fixed now.
->>
->> I'm still a little confused how to translate this known-good chipset to
->> an actual buyable PCI card.  It isn't obvious from basic web searching.
->
-> I also look for 3124/3132 and these are some that I've found:
-> (determined by specs, product reviews, looking closely at photos, etc,
-> it's worth a double-check before deciding)
->
-> 3132 PCIe:
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132010
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816855002
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132011
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132008
+Hm (googling around for "mutt" and "virtual folders"): looks like I can
+get most of the way there in mutt with some macros based on its "limit"
+command:
 
-I have used the Syba without any problems:
+	http://www.tummy.com/journals/entries/jafo_20060303_044440
 
-http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
-
-
-John
+Thanks.--b.
