@@ -1,64 +1,49 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ide: don't set PIO mode on pre-EIDE drives
-Date: Fri, 16 Nov 2007 16:26:25 +0300
-Message-ID: <200711161626.25580.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] cmd64x: don't clear the other channels interrupt
+Date: Fri, 16 Nov 2007 16:34:39 +0300
+Message-ID: <473D9C6F.5070205@ru.mvista.com>
+References: <200702032309.43867.sshtylyov@ru.mvista.com> <200711091407.01369.sshtylyov@ru.mvista.com> <200711112252.58538.bzolnier@gmail.com> <200711132158.36205.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:5835 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758203AbXKPN0P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 08:26:15 -0500
-Content-Disposition: inline
+Received: from gateway-1237.mvista.com ([63.81.120.155]:5700 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757073AbXKPNe1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 08:34:27 -0500
+In-Reply-To: <200711132158.36205.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, marogge@onlinehome.de, milon@wq.cz
 
-Fix handling of  the PIO modes for the pre-EIDE drives that did not support
-the PIO Flow Control Transfer Mode value (00001 nnn) of the Set Transfer Mode
-feature by  skipping the actual mode programming.
+Bartlomiej Zolnierkiewicz wrote:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>>>Make sure to not clear the other IDE channel's interrupt when clearing an IDE
+>>>interrupt via the MRDMODE register.
 
----
-The patch is against the Linus' tree...
+>>>Thanks to Bart for finding a coding mistake.
 
- drivers/ide/ide-iops.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletion(-)
+>>Could you resend with "Signed-off-by:" and "Tested-by:" tags?
 
-Index: linux-2.6/drivers/ide/ide-iops.c
-===================================================================
---- linux-2.6.orig/drivers/ide/ide-iops.c
-+++ linux-2.6/drivers/ide/ide-iops.c
-@@ -756,7 +756,7 @@ int ide_driveid_update(ide_drive_t *driv
- int ide_config_drive_speed(ide_drive_t *drive, u8 speed)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	int error;
-+	int error = 0;
- 	u8 stat;
- 
- //	while (HWGROUP(drive)->busy)
-@@ -767,6 +767,10 @@ int ide_config_drive_speed(ide_drive_t *
- 		hwif->dma_host_off(drive);
- #endif
- 
-+	/* Skip setting PIO flow-control modes on pre-EIDE drives */
-+	if ((speed & 0xf8) == XFER_PIO_0 && !(drive->id->capability & 0x08))
-+		goto skip;
-+
- 	/*
- 	 * Don't use ide_wait_cmd here - it will
- 	 * attempt to set_geometry and recalibrate,
-@@ -814,6 +818,7 @@ int ide_config_drive_speed(ide_drive_t *
- 	drive->id->dma_mword &= ~0x0F00;
- 	drive->id->dma_1word &= ~0x0F00;
- 
-+ skip:
- #ifdef CONFIG_BLK_DEV_IDEDMA
- 	if (speed >= XFER_SW_DMA_0)
- 		hwif->dma_host_on(drive);
+>>[ A reference to the problematic commit and crediting Martin for
+>>  patiently bisecting the issue would score an extra points. :) ]
 
+> Well, I dealt with it myself and just added "From:" (together
+> with "Tested-by:"-s and an enhanced patch description)...
+
+    Sorry, I somehow haven't noticed your mail in time... :-/
+
+> For the future please always run your patches through
+> scripts/checkpatch.pl before posting, this prevents missing
+
+    Aye aye, sir! :-)
+
+> "Signed-off-by:" (and few other issues :).
+
+    Like not crediting testers? ;-)
+
+> Thanks,
+> Bart
+
+WBR, Sergei
