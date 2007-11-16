@@ -1,74 +1,96 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH][RESUBMIT] drivers/ide/ide-probe.c, kernel 2.6.23.1
-Date: Fri, 16 Nov 2007 15:51:45 +0300
-Message-ID: <473D9261.6080209@ru.mvista.com>
-References: <473434F1.50509@purplescout.se> <200711132303.28424.bzolnier@gmail.com> <473C08B2.1030004@purplescout.se> <200711152159.23607.bzolnier@gmail.com> <473D88A5.306@purplescout.se>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: RE: 2.6.23.1 - sata_mv (7042) hang with large file operations
+Date: Fri, 16 Nov 2007 08:00:30 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AB2D234@EMPBEDEX.empirix.com>
+References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com> <473CC4B8.4090607@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:5388 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754439AbXKPMve (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 07:51:34 -0500
-In-Reply-To: <473D88A5.306@purplescout.se>
+Received: from empbedex1.empirix.com ([12.38.203.54]:5183 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757501AbXKPNAs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 08:00:48 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <473CC4B8.4090607@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jonas Stare <jonas.stare@purplescout.se>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jonas Stare wrote:
+This 'patch' did not work.
 
-> diff -u linux-2.6.23.1-orig/drivers/ide/ide-probe.c linux-2.6.23.1/drivers/ide/ide-probe.c 
-> --- linux-2.6.23.1-orig/drivers/ide/ide-probe.c 2007-10-12 18:43:44.000000000 +0200
-> +++ linux-2.6.23.1/drivers/ide/ide-probe.c      2007-11-16 10:26:23.000000000 +0100
-> @@ -643,6 +643,7 @@
->  static int wait_hwif_ready(ide_hwif_t *hwif)
->  {
->         int rc;
-> +       int unit;
->  
->         printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
->  
-> @@ -659,16 +660,25 @@
->                 return rc;
->  
->         /* Now make sure both master & slave are ready */
-> -       SELECT_DRIVE(&hwif->drives[0]);
-> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-> -       mdelay(2);
-> -       rc = ide_wait_not_busy(hwif, 35000);
-> -       if (rc)
-> -               return rc;
-> -       SELECT_DRIVE(&hwif->drives[1]);
-> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-> -       mdelay(2);
-> -       rc = ide_wait_not_busy(hwif, 35000);
-> +       for (unit = 0; unit < MAX_DRIVES; ++unit) {
-> +               /* Ignore disks that we will not probe for later. */
-> +               if (!hwif->drives[unit].noprobe ||
-> +                   hwif->drives[unit].present) {
+I tried setting the physical mem to just below the va addresses the
+PEX is being assigned (0xea900000 (3753M) and everything works...
 
-    Why not:
+I set it to just above - and it gets miscellaneous boot problems....
+like binfmt problems when attempting to insmod a module at boot time
+("runaway loop modprobe binfmt_????" (?=I forgot to write down #) - this
+was mem=3850M) or downright hanging after kernel has initialized and 
+it says "freeing kernel memory" (i.e.: where it attempts to run init
+on the root harddrive).
 
-		if (hwif->drives[unit].noprobe || !hwif->drives[unit].present) {
-                 	printk(KERN_DEBUG "Skip ide_wait_not_busy for %s:%d\n",
-                                hwif->name, unit);
-			continue;
-		}
-                 SELECT_DRIVE(&hwif->drives[unit]);
-                 hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
-                 mdelay(2);
-                 rc = ide_wait_not_busy(hwif, 35000);
-                 if (rc) {
-			/* Exit function with master reselected */
-                         if (unit != 0)
-                         	SELECT_DRIVE(&hwif->drives[0]);
-                         return rc;
-         	}
-	}
->  
->         /* Exit function with master reselected (let's be sane) */
->         SELECT_DRIVE(&hwif->drives[0]);
+IMHO, this tells me that perhaps there is somewhere else in the sata_mv
+code that is either modifying / accessing edma registers or something
+like this - that just doesn't seem right!
 
-MBR, Sergei
+I am going to try to port forward the driver that I know works and see
+if there are still any problems...stay tuned!
+
+Tom
+
+-----Original Message-----
+From: Mark Lord [mailto:liml@rtr.ca] 
+Sent: Thursday, November 15, 2007 5:14 PM
+To: Morrison, Tom
+Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: 2.6.23.1 - sata_mv (7042) hang with large file operations
+
+Morrison, Tom wrote:
+> The plot thickens - it looks like it might be some type 
+> of problem interacting with the setup of my 4Gig DDR memory
+> and how I setup some translation windows in my MPC8548E
+> 
+> I realized this morning that I have an inbound/ output PEX window
+> Translation Setup for mapping all from/to PEX bus to outside 
+> the physical 4GIG memory space (i.e.: up at 0xC_xxxx_xxxx). Thus,
+> all output operations that translation from 0xC_xxxx_xxxx to 
+> the pci 32 bit address of xxxx_xxxx) - and vice versa for for
+> the inbound. Note: we also have a straight 1:1 translation mapping 
+> as well for the lower 4Gig - so that's why this worked without
+> the below mentioned change...
+> 
+> So, I changed the Request & Response Hi Addresses (which were
+> Being shifted by 32 bits down anyways) and 'OR' that with my 
+> 0xC (so the effective 64bit DMA address is 0xC_xxxx_xxxx (where 
+> Xxxx_xxxx is the effective address). This was what we did to 
+> solve the problem with the Marvel Linux driver that we got from
+> the Marvel site....
+> 
+> This all works just fine with ONLY 2 gig of memory in the system
+> (and still have these inbound/output pex translation windows), 
+> but fails when I put back the 4 Gig (and the 8Gig) DDR memory.
+> 
+> Unfortunately, this still hasn't solved the problem though - 
+> so there is something else which I am not seeing?
+..
+
+I don't know much about how 32-bit PPC deals with memory addresses
+that are more than 32-bits..
+
+But does this patch have any effect:
+
+
+--- old/drivers/ata/sata_mv.c	2007-10-12 12:43:44.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2007-11-15 17:12:24.000000000 -0500
+@@ -685,7 +685,7 @@
+ {
+ 	int rc;
+ 
+-	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
++	if (0 && !pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
+ 		rc = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
+ 		if (rc) {
+ 			rc = pci_set_consistent_dma_mask(pdev,
+DMA_32BIT_MASK);
