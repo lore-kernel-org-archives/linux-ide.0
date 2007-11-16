@@ -1,31 +1,84 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] siimage: remove resetproc() method
-Date: Fri, 16 Nov 2007 22:38:22 +0100
-Message-ID: <200711162238.22813.bzolnier@gmail.com>
-References: <200711161716.16288.sshtylyov@ru.mvista.com>
+From: Jonas Stare <jonas.stare@purplescout.se>
+Subject: [PATCH] drivers/ide/ide-probe.c Skip ide_wait_not_busy on noprobe-disks.
+  was: [PATCH][RESUBMIT] drivers/ide/ide-probe.c, kernel 2.6.23.1
+Date: Fri, 16 Nov 2007 23:57:13 +0100
+Message-ID: <473E2049.4070806@purplescout.se>
+References: <473434F1.50509@purplescout.se> <200711152159.23607.bzolnier@gmail.com> <473D88A5.306@purplescout.se> <200711162222.54847.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:6346 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757578AbXKPVbb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 16:31:31 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so707017ugc
-        for <linux-ide@vger.kernel.org>; Fri, 16 Nov 2007 13:31:30 -0800 (PST)
-In-Reply-To: <200711161716.16288.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from proxy3.bredband.net ([195.54.101.73]:36066 "EHLO
+	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543AbXKPWzz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 17:55:55 -0500
+In-Reply-To: <200711162222.54847.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-On Friday 16 November 2007, Sergei Shtylyov wrote:
-> The intent behind siimage_reset() was probably to hard reset the interface and
-> the SATA PHY but as the code writes to two reserved bits instead, it obviously
-> has been ineffective from the start. So, just remove it.
-> 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+There is a problem in some hardware where the kernel will stall for
+35 seconds waiting for disks that dont exist. This patch will skip
+waiting for the BSY-bit on ide-drives to go away if you set
+hdx=noprobe as a kernel option and the disk is not marked
+as 'present' (like when you set the geometry by hand).
 
-applied
+If no noprobe-option is set the code will work (more or less) as the 
+original but if set the code will skip the ide_wait_not_busy() for that 
+drive. Even if there would be a drive there and it is still BSY 
+afterwards it should not matter since it isn't probed for later.
+
+(The code also honors the MAX_DRIVES variable instead of assuming that 
+there will be two harddrives on the bus.)
+
+
+Signed-off-by: Jonas Stare <jonas.stare@purplescout.se>
+
+diff -u linux-2.6.23.1-orig/drivers/ide/ide-probe.c linux-2.6.23.1/drivers/ide/ide-probe.c 
+--- linux-2.6.23.1-orig/drivers/ide/ide-probe.c 2007-10-12 18:43:44.000000000 +0200
++++ linux-2.6.23.1/drivers/ide/ide-probe.c      2007-11-16 10:26:23.000000000 +0100
+@@ -643,6 +643,7 @@
+ static int wait_hwif_ready(ide_hwif_t *hwif)
+ {
+        int rc;
++       int unit;
+ 
+        printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
+ 
+@@ -659,16 +660,25 @@
+                return rc;
+ 
+        /* Now make sure both master & slave are ready */
+-       SELECT_DRIVE(&hwif->drives[0]);
+-       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+-       mdelay(2);
+-       rc = ide_wait_not_busy(hwif, 35000);
+-       if (rc)
+-               return rc;
+-       SELECT_DRIVE(&hwif->drives[1]);
+-       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+-       mdelay(2);
+-       rc = ide_wait_not_busy(hwif, 35000);
++       for (unit = 0; unit < MAX_DRIVES; ++unit) {
++               /* Ignore disks that we will not probe for later. */
++               if (!hwif->drives[unit].noprobe ||
++                   hwif->drives[unit].present) {
++                       SELECT_DRIVE(&hwif->drives[unit]);
++                       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
++                       mdelay(2);
++                       rc = ide_wait_not_busy(hwif, 35000);
++                       if (rc) {
++                               /* Exit function with master reselected */
++                               if (unit != 0)
++                                       SELECT_DRIVE(&hwif->drives[0]);
++                               return rc;
++                       }
++               } else {
++                       printk(KERN_DEBUG "Skip ide_wait_not_busy for %s:%d\n",
++                               hwif->name, unit);
++               }
++       }
+ 
+        /* Exit function with master reselected (let's be sane) */
+        SELECT_DRIVE(&hwif->drives[0]);
