@@ -1,35 +1,31 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH] ide: don't set PIO mode on pre-EIDE drives
-Date: Fri, 16 Nov 2007 18:14:15 +0000
-Message-ID: <20071116181415.3953df74@the-village.bc.nu>
+Date: Fri, 16 Nov 2007 22:35:00 +0100
+Message-ID: <200711162235.01025.bzolnier@gmail.com>
 References: <200711161626.25580.sshtylyov@ru.mvista.com>
-	<20071116164240.40b02300@the-village.bc.nu>
-	<473DC942.20803@ru.mvista.com>
-	<20071116165629.6ba73708@the-village.bc.nu>
-	<473DD117.1090808@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60475 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752087AbXKPSPi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 13:15:38 -0500
-In-Reply-To: <473DD117.1090808@ru.mvista.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:7282 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757393AbXKPVb3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 16:31:29 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so707011ugc
+        for <linux-ide@vger.kernel.org>; Fri, 16 Nov 2007 13:31:28 -0800 (PST)
+In-Reply-To: <200711161626.25580.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
->     That's something at least.  I hope they also don't set bit 11 -- 
-> otherwise, bad luck.  Or am I supposed to also check the CF signature? :-)
+On Friday 16 November 2007, Sergei Shtylyov wrote:
+> Fix handling of  the PIO modes for the pre-EIDE drives that did not support
+> the PIO Flow Control Transfer Mode value (00001 nnn) of the Set Transfer Mode
+> feature by  skipping the actual mode programming.
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Libata issues the command but ignores an ABRT if the device is CFA or has
-no iordy flag and PIO <= 2 or MWDMA0 is used and the device thinks its in
-MWDMA0 anyway
-
-drivers/ide at least just used to aim, fire and ignore the result.
-
-
-
-Alan
+applied
