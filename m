@@ -1,59 +1,83 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: don't set PIO mode on pre-EIDE drives
-Date: Fri, 16 Nov 2007 20:19:19 +0300
-Message-ID: <473DD117.1090808@ru.mvista.com>
-References: <200711161626.25580.sshtylyov@ru.mvista.com>	<20071116164240.40b02300@the-village.bc.nu>	<473DC942.20803@ru.mvista.com> <20071116165629.6ba73708@the-village.bc.nu>
+From: Jonas Stare <jonas.stare@purplescout.se>
+Subject: Re: [PATCH][RESUBMIT] drivers/ide/ide-probe.c, kernel 2.6.23.1
+Date: Fri, 16 Nov 2007 18:46:32 +0100
+Message-ID: <473DD778.30607@purplescout.se>
+References: <473434F1.50509@purplescout.se> <200711132303.28424.bzolnier@gmail.com> <473C08B2.1030004@purplescout.se> <200711152159.23607.bzolnier@gmail.com> <473D88A5.306@purplescout.se> <473D9261.6080209@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:7416 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755421AbXKPRTH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 12:19:07 -0500
-In-Reply-To: <20071116165629.6ba73708@the-village.bc.nu>
+Received: from proxy3.bredband.net ([195.54.101.73]:41955 "EHLO
+	proxy3.bredband.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756199AbXKPRpQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2007 12:45:16 -0500
+In-Reply-To: <473D9261.6080209@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
+Sergei Shtylyov wrote:
+> Jonas Stare wrote:
+> 
+>> diff -u linux-2.6.23.1-orig/drivers/ide/ide-probe.c
+>> linux-2.6.23.1/drivers/ide/ide-probe.c ---
+>> linux-2.6.23.1-orig/drivers/ide/ide-probe.c 2007-10-12
+>> 18:43:44.000000000 +0200
+>> +++ linux-2.6.23.1/drivers/ide/ide-probe.c      2007-11-16
+>> 10:26:23.000000000 +0100
+>> @@ -643,6 +643,7 @@
+>>  static int wait_hwif_ready(ide_hwif_t *hwif)
+>>  {
+>>         int rc;
+>> +       int unit;
+>>  
+>>         printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
+>>  
+>> @@ -659,16 +660,25 @@
+>>                 return rc;
+>>  
+>>         /* Now make sure both master & slave are ready */
+>> -       SELECT_DRIVE(&hwif->drives[0]);
+>> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+>> -       mdelay(2);
+>> -       rc = ide_wait_not_busy(hwif, 35000);
+>> -       if (rc)
+>> -               return rc;
+>> -       SELECT_DRIVE(&hwif->drives[1]);
+>> -       hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+>> -       mdelay(2);
+>> -       rc = ide_wait_not_busy(hwif, 35000);
+>> +       for (unit = 0; unit < MAX_DRIVES; ++unit) {
+>> +               /* Ignore disks that we will not probe for later. */
+>> +               if (!hwif->drives[unit].noprobe ||
+>> +                   hwif->drives[unit].present) {
+> 
+>    Why not:
+> 
+>         if (hwif->drives[unit].noprobe || !hwif->drives[unit].present) {
+>                     printk(KERN_DEBUG "Skip ide_wait_not_busy for %s:%d\n",
+>                                hwif->name, unit);
+>             continue;
+>         }
+>                 SELECT_DRIVE(&hwif->drives[unit]);
+>                 hwif->OUTB(8, hwif->io_ports[IDE_CONTROL_OFFSET]);
+>                 mdelay(2);
+>                 rc = ide_wait_not_busy(hwif, 35000);
+>                 if (rc) {
+>             /* Exit function with master reselected */
+>                         if (unit != 0)
+>                             SELECT_DRIVE(&hwif->drives[0]);
+>                         return rc;
+>             }
+>     }
 
->>>>Fix handling of  the PIO modes for the pre-EIDE drives that did not support
->>>>the PIO Flow Control Transfer Mode value (00001 nnn) of the Set Transfer Mode
->>>>feature by  skipping the actual mode programming.
+Hmmm, I was rather fond of my "wait for the disk unless we are specifically told not to"
+rather than "don't check unless there might be a disk there". ...on the other hand
+thats not what my comment said. :)
 
->>>You also need to cater for CF 1.1 compliant devices which do not have set
->>>xfer mode.
-
->>    Do they have IORDY support?
-
-> Good question. 
-
-    I thought you know. :-)
-
-> CF 1.4 says set features supports 01/0A/55/66/81/8A/9A/BB/CC
-> (with 69/96/97 NOP or not recommended)
-
-    Well, the same spec says IORDY may be supported and bit 11 of word 49 may 
-be set.  Obviously, no PIO3/4 though.
-
-> However it documents both the PIO mode and DMA word in identify. I've
-
-    So what? That's PIO2 at max, and *default* mode at that, not changeable.
-
-> never seen a CF 1.x card which does DMA or PIO > 2.
-
-    That's something at least.  I hope they also don't set bit 11 -- 
-otherwise, bad luck.  Or am I supposed to also check the CF signature? :-)
-
-> CF 1.x is sort of ATA-2 ish but without some set features (eg its got
-> idle immediate) and with some stuff that became general later (security
-> features)
-
-    Well, at least CF 2.1 documents every imaginable feature value, it seems, 
-including Set Transfer Mode of all flavors.
-
-> Alan
-
-MBR, Sergei
+>>  
+>>         /* Exit function with master reselected (let's be sane) */
+>>         SELECT_DRIVE(&hwif->drives[0]);
+> 
+> MBR, Sergei
