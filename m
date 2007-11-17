@@ -1,83 +1,74 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Process Scheduling Issue using sg/libata
-Date: Sat, 17 Nov 2007 14:55:16 -0500
-Message-ID: <473F4724.6010107@rtr.ca>
-References: <8202f4270711161649v75d06d35kd1d56e36d272a883@mail.gmail.com>	 <473E6E62.9090309@rtr.ca>	 <8202f4270711162320s2eb1d48dwb1430f4a779809a9@mail.gmail.com>	 <473F15E1.5030601@rtr.ca> <8202f4270711171120nddf24a8m8d1ece8c41b6c1ab@mail.gmail.com>
+From: Aleksandar Radovanovic <biblbroks@sezampro.yu>
+Subject: [PATCH 2.6.24-rc3] aec62xx: Fix kernel oops in driver's probe function
+Date: Sat, 17 Nov 2007 22:43:56 +0100
+Message-ID: <200711172243.57087.biblbroks@sezampro.yu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <8202f4270711171120nddf24a8m8d1ece8c41b6c1ab@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail2.sezampro.yu ([77.105.0.24]:3213 "HELO asus.sezampro.yu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751977AbXKQWQK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Nov 2007 17:16:10 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org
 
-Fajun Chen wrote:
-> On 11/17/07, Mark Lord <liml@rtr.ca> wrote:
->> Fajun Chen wrote:
->>> On 11/16/07, Mark Lord <liml@rtr.ca> wrote:
->>>> Fajun Chen wrote:
-..
->>> This problem also happens with R/W DMA ops. Below are simplified code snippets:
->>>     // Open one sg device for read
->>>       if ((sg_fd  = open(dev_name, O_RDWR))<0)
->>>       {
->>>           ...
->>>       }
->>>       read_buffer = (U8 *)mmap(NULL, buf_sz, PROT_READ | PROT_WRITE,
->>>                              MAP_SHARED, sg_fd, 0);
->>>
->>>     // Open the same sg device for write
->>>       if ((sg_fd_wr = open(dev_name, O_RDWR))<0)
->>>       {
->>>          ...
->>>       }
->>>       write_buffer = (U8 *)mmap(NULL, buf_sz, PROT_READ | PROT_WRITE,
->>>                              MAP_SHARED, sg_fd_wr, 0);
->> ..
->>
->> Mmmm.. what is the purpose of those two mmap'd areas ?
->> I think this is important and relevant here:  what are they used for?
->>
->> As coded above, these are memory mapped areas taht (1) overlap,
->> and (2) will be demand paged automatically to/from the disk
->> as they are accessed/modified.  This *will* conflict with any SG_IO
->> operations happening at the same time on the same device.
-..
-> The purpose of using two memory mapped areas is to meet our
-> requirement that certain data patterns for writing need to be kept
-> across commands. For instance, if one buffer is used for both reads
-> and writes, then this buffer will need to be re-populated with certain
-> write data after each read command, which would be very costly for
-> write-read mixed type of ops. This separate R/W buffer setting also
-> facilitates data comparison.
-> 
-> These buffers are not used at the same time (one will be used only
-> after the command on the other is completed). My application is the
-> only program accessing disk using sg/libata and the rest of the
-> programs run from ramdisk. Also, each buffer is only about 0.5MB and
-> we have 64MB RAM on the target board.
-> With this setup,  these two buffers should be pretty much independent
-> and free from block layer/file system, correct?
-..
+From: Aleksandar Radovanovic <biblbroks@sezampro.yu>
 
-No.  Those "buffers" as coded above are actually mmap'ed representations
-of portions of the device (disk drive).  So any write into one of those
-buffers will trigger disk writes, and just accessing ("read") the buffers
-may trigger disk reads.
+Add pci_enable_device() to aec62xx probe function
+before doing any I/O.
 
-So what could be happening here, is when you trigger manual disk accesses
-via SG_IO, that result in data being copied into those "buffers", the kernel
-then automatically schedules disk writes to update the on-disk copies of
-those mmap'd regions.
+Original probe function tries to read from device's
+PCI region 4 before calling ide_setup_pci_device().
+Since the device is not enabled at this point,
+on machines that have no firmware PCI initialization
+(e.g. ASUS WL-700gE router), corresponding PCI BAR 
+is 0 and the following inb() causes a kernel oops.
 
-What you probably intended to do instead, was to use mmap to just allocate
-some page-aligned RAM, not to actually mmap'd any on-disk data.  Right?
+Signed-off-by: Aleksandar Radovanovic <biblbroks@sezampro.yu>
 
-Here's how that's done:
+---
 
-       read_buffer = (U8 *)mmap(NULL, buf_sz, PROT_READ | PROT_WRITE,
-                              MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+ aec62xx.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Cheers
+The patch has been tested and merged
+in the trunk of the OpenWrt distribution
+(on 2.6.23.1).
+
+Anyway, should be a fairly obvious fix.
+
+diff -Npur linux-2.6.24-rc3.orig/drivers/ide/pci/aec62xx.c linux-2.6.24-rc3/drivers/ide/pci/aec62xx.c
+--- linux-2.6.24-rc3.orig/drivers/ide/pci/aec62xx.c	2007-11-17 21:33:59.000000000 +0100
++++ linux-2.6.24-rc3/drivers/ide/pci/aec62xx.c	2007-11-17 20:55:12.000000000 +0100
+@@ -260,6 +260,11 @@ static int __devinit aec62xx_init_one(st
+ {
+ 	struct ide_port_info d;
+ 	u8 idx = id->driver_data;
++	int err;
++
++	err = pci_enable_device(dev);
++	if (err)
++		return err;
+
+ 	d = aec62xx_chipsets[idx];
+
+@@ -272,7 +277,11 @@ static int __devinit aec62xx_init_one(st
+ 		}
+ 	}
+
+-	return ide_setup_pci_device(dev, &d);
++	err = ide_setup_pci_device(dev, &d);
++	if (err)
++		pci_disable_device(dev);
++
++	return err;
+ }
+
+ static const struct pci_device_id aec62xx_pci_tbl[] = {
+
+
