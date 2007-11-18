@@ -1,95 +1,81 @@
-From: Tomas Carnecky <tom@dbservice.com>
-Subject: Re: laptop reboots right after hibernation
-Date: Sun, 18 Nov 2007 21:16:35 +0100
-Message-ID: <47409DA3.7070909@dbservice.com>
-References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com>
+From: Akkana Peck <akkana@shallowsky.com>
+Subject: Problem with PCMCIA IDE
+Date: Sun, 18 Nov 2007 12:23:09 -0800
+Message-ID: <20071118202309.GE15355@shallowsky.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753709AbXKRUQ7@vger.kernel.org>
-In-Reply-To: <4740692E.7010801@dbservice.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org
-Cc: linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from adsl-69-105-235-1.dsl.pltn13.pacbell.net ([69.105.235.1]:39820
+	"EHLO moon.timocharis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413AbXKRUwK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 15:52:10 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Since this is becoming more an IDE/ATA issue, I added
-linux-ide@vger.kernel.org to CC. I hope that's the right mailinglist.
+I've been having problems getting PCMCIA IDE to work on my Vaio
+laptop on recent kernels (I've been working most with 2.6.23.1 and
+.8). I've been hesitant to report it as a kernel bug because it
+may very well be a problem with my .config parameters -- the CDROM
+worked in distro kernels back around 2.6.17 and .18, and self-built
+kernels even earlier than that, but the configuration has changed
+quite a bit since then so it's hard to compare directly and figure
+out if I'm missing something.
 
-Tomas Carnecky wrote:
-> (3) Once the notebook was in the docking station (whether I boot it
-> while in the dock or boot it outside and then put it into the dock) and
-> I take it out (press the 'undock' button on the dock, wait for the green
-> led, then take out the notebook) things get interesting:
-> 
-> (a) I initiate STR, notebook correctly goes to sleep, but it only wakes
-> up if I have it in the docking station. If I try to wake it up outside
-> of the docking station it will fail.
+First, is this a reasonable place to report problems with PCMCIA,
+or does it belong on a PCMCIA list?
 
-  Magic number: 0:971:888
-  hash matches drivers/base/power/main.c:82
-  hash matches device ptyuf
-  hash matches device 0000:00:1f.1
+The machine is a Vaio SR17 and I'm hotplugging a PCMCIA CDROM drive
+(this is a subnotebook, so the drive is external).  I don't think
+it's CD specific (the CONFIG_BLK_DEV_IDECD code), because /proc/ide
+only shows ide0, not ide2 like I'm used to seeing in earlier kernels
+when the CD drive was connected.
 
-00:1f.1 IDE interface: Intel Corporation Mobile IDE Controller (rev 03)
+PCMCIA/Cardbus itself works fine (e.g. for network cards).
+There's no sata (this is an old machine).
 
-> (5) If the notebook is in the dock, I press the undock button and wait
-> for the green led then initiate STR, I can take the notebook out but
-> resuming doesn't work - unless I resume it while the notebook is back in
-> the docking station (see point 3a)
+Depending on how I set kernel options, I can get the kernel to lock
+up when the PCMCIA CDROM drive is plugged in, or not. When it locks,
+it stays locked up (no keyboard or X events), until I eject the
+PCMCIA plug, then after a few seconds things are back to normal.
+Either way, it never notices the CD drive or creates an ide2 bus.
 
-  Magic number: 0:648:888
-  hash matches drivers/base/power/main.c:103
-  hash matches device ptyuf
-  hash matches device 0000:00:1f.1
+In the cases where it locks up, dmesg says:
+BUG: soft lockup detected on CPU#0!
+ [<c01213b7>] update_process_times+0x27/0x70
+ [<c0130e7d>] tick_nohz_handler+0x5d/0xf0
+ [<c01069ab>] timer_interrupt+0xb/0x20
+ [<c013c795>] handle_IRQ_event+0x25/0x60
+ [<c013dd14>] handle_level_irq+0x44/0xa0
+ [<c0105d72>] do_IRQ+0x42/0x80
+ [<c01041af>] common_interrupt+0x23/0x28
+ [<c011dbcd>] __do_softirq+0x2d/0x90
+ [<c011dc56>] do_softirq+0x26/0x30
+ [<c011df1a>] irq_exit+0x5a/0x60
+ [<c0105d77>] do_IRQ+0x47/0x80
+ [<c01041af>] common_interrupt+0x23/0x28
+ [<c02eb163>] ide_register_hw_with_fixup+0x33/0x1e0
+ [<c02fc3d6>] idecs_register+0x76/0x80
+[ various more backtrace, then ]
+ =======================
+Probing IDE interface ide2...
 
-00:1f.1 IDE interface: Intel Corporation Mobile IDE Controller (rev 03)
+then that last message keeps repeating until I eject.
 
+Since it's obviously complaining about IRQs, I tried turning on
+CONFIG_IDEPCI_SHARE_IRQ=y (I also turned off CONFIG_BLK_DEV_IDEACPI
+to see if that made any difference) and that stopped the
+"BUG: soft lockup", but I still got the loop over "Probing IDE
+interface ide2..." and it still doesn't see the CDROM or ide2.
 
-I kindof had suspected that. The docking station has an ultrabay slot
-where I currently have a cdrom drive (since the notebook itself doesn't
-have any cdrom drive. Once I took the cdrom drive out, I was able to
-successfully perform what I wanted to do in points 3a and 5!
+I've put the full .config files at http://shallowsky.com/tmp/configs/
+so as not to clutter this list.
 
-The 'undock' button probably doesn't tell the kernel that it should
-unload the cdrom driver. Even though after pressing the undock button
-the drive becomes unusable (the green led that is on the side of the
-ultrabay disables and it's impossible to open the tray). Though pressing
-the undock button causes the usb ports to be removed from the kernel, at
-least that's what dmesg suggests (I put the notebook into the dock,
-waited a bit and then pressed the undock button):
+Can anybody offer any tips for figuring out whether this is a
+config error on my part, or a real kernel bug in IDECS?
+Or send me to a more appropriate forum, if this isn't it?
 
-usb 1-4: new high speed USB device using ehci_hcd and address 11
-usb 1-4: configuration #1 chosen from 1 choice
-hub 1-4:1.0: USB hub found
-hub 1-4:1.0: 4 ports detected
-ACPI: \_SB_.GDCK - docking
-ACPI: \_SB_.GDCK - undocking
-usb 1-4: USB disconnect, address 11
+Thanks in advance!
 
-The notebook+dock+STR works as long as the notebook doesn't know about
-the ultrabay device. That can be because the notebook was started
-outside of the docking station, or inside the docking station but with
-the ultrabay removed. But once the notebook sees the ultrabay device
-it's over. As little as one suspend/resume cycle inside the docking
-station and with a ultrabay device plugged in is enough to make the
-kernel (partially) recognize the device - the kernel doesn't recognize
-the device as a cdrom drive, but only as an UDMA/33 device. After one
-suspend/resume cycle I see this in dmesg:
-
-ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
-ata4: failed to recover some devices, retrying in 5 secs
-Coming out of suspend...
-[... snip ...]
-ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
-ata4.00: ACPI on devcfg failed the second time, disabling (errno=-5)
-ata4.00: revalidation failed (errno=1)
-ata4: failed to recover some devices, retrying in 5 secs
-ata4.00: configured for UDMA/33
-
-And after that I can't resume outside of the docking station. So the
-description of point 3 was incomplete, sorry about that.
-
-At least the two failures 3a and 5 can be explained...
-
-tom
+	...Akkana
