@@ -1,30 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Problem with PCMCIA IDE
-Date: Sun, 18 Nov 2007 22:37:25 +0000
-Message-ID: <20071118223725.19c2424b@the-village.bc.nu>
-References: <20071118202309.GE15355@shallowsky.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 21/21] ide: make remaining built-in only IDE host
+	drivers modular
+Date: Mon, 19 Nov 2007 10:04:58 +1100
+Message-ID: <1195427098.7022.13.camel@pasglop>
+References: <200711182341.31267.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56113 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753295AbXKRWjG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 17:39:06 -0500
-In-Reply-To: <20071118202309.GE15355@shallowsky.com>
+Received: from gate.crashing.org ([63.228.1.57]:44991 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752687AbXKRXFQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Nov 2007 18:05:16 -0500
+In-Reply-To: <200711182341.31267.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Akkana Peck <akkana@shallowsky.com>
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Mikael Starvik <starvik@axis.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Roman Zippel <zippel@linux-m68k.org>
 
-On Sun, 18 Nov 2007 12:23:09 -0800
-Akkana Peck <akkana@shallowsky.com> wrote:
 
-> I've been having problems getting PCMCIA IDE to work on my Vaio
-> laptop on recent kernels (I've been working most with 2.6.23.1 and
-> .8). I've been hesitant to report it as a kernel bug because it
-> may very well be a problem with my .config parameters -- the CDROM
+On Sun, 2007-11-18 at 23:41 +0100, Bartlomiej Zolnierkiewicz wrote:
+> * Make remaining built-in only IDE host drivers modular, add ide-scan-pci.c
+>   file for probing PCI host drivers registered with IDE core (special case
+>   for built-in IDE and CONFIG_IDEPCI_PCIBUS_ORDER=y) and then take care of
+>   the ordering in which all IDE host drivers are probed when IDE is built-in
+>   during link time.
 
-Does the same happen if you disable the tickless NOHZ kernel option ?
+  .../...
 
-Alan
+Do you have a git tree I can get all that stuff from ?
+
+Cheers,
+Ben.
+
+
