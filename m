@@ -1,45 +1,95 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Process Scheduling Issue using sg/libata
-Date: Sun, 18 Nov 2007 14:54:26 -0500
-Message-ID: <47409872.3060500@rtr.ca>
-References: <8202f4270711161649v75d06d35kd1d56e36d272a883@mail.gmail.com>	 <473E6E62.9090309@rtr.ca>	 <8202f4270711162320s2eb1d48dwb1430f4a779809a9@mail.gmail.com>	 <473F15E1.5030601@rtr.ca>	 <8202f4270711171120nddf24a8m8d1ece8c41b6c1ab@mail.gmail.com>	 <473F4724.6010107@rtr.ca>	 <8202f4270711172248x5d7abb0aq7a6e1bf2dad44e5e@mail.gmail.com>	 <47404CFC.7050405@rtr.ca> <8202f4270711181114w67632260la995daf65f507313@mail.gmail.com>
+From: Tomas Carnecky <tom@dbservice.com>
+Subject: Re: laptop reboots right after hibernation
+Date: Sun, 18 Nov 2007 21:16:35 +0100
+Message-ID: <47409DA3.7070909@dbservice.com>
+References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3664 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbXKRTy2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 18 Nov 2007 14:54:28 -0500
-In-Reply-To: <8202f4270711181114w67632260la995daf65f507313@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753709AbXKRUQ7@vger.kernel.org>
+In-Reply-To: <4740692E.7010801@dbservice.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org
+Cc: linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Fajun Chen wrote:
->..
-> I verified your program works in my system and my application works as
-> well if changed accordingly. However, this change (indirect IO in sg
-> term) may come at a performance cost for IO intensive applications
-> since it does NOT utilize mmaped buffer managed by sg driver.  Please
-> see relevant sg document below:
-> http://sg.torque.net/sg/p/sg_v3_ho.html#id2495330
-> http://sg.torque.net/sg/p/sg_v3_ho.html#dmmio
-> As an example, sg_rbuf.c in sg3_util package uses SG_FLAG_MMAP_IO flag
-> in SG_IO. Please see source code attached. I also noticed that
-> MAP_ANONYMOUS is NOT used in mmap() call in sg_rbuf.c, which may not
-> be desirable as you pointed out in previous emails. So this brings up
-> an interesting sg usage issue: can we use MAP_ANONYMOUS with
-> SG_FLAG_MMAP_IO flag in SG_IO?
-..
+Since this is becoming more an IDE/ATA issue, I added
+linux-ide@vger.kernel.org to CC. I hope that's the right mailinglist.
 
-The SG_FLAG_MMAP works only with /dev/sg* devices, not /dev/sd* devices.
-I don't know which kind you were trying to use, since you still have
-not provided your source code for examination.
+Tomas Carnecky wrote:
+> (3) Once the notebook was in the docking station (whether I boot it
+> while in the dock or boot it outside and then put it into the dock) and
+> I take it out (press the 'undock' button on the dock, wait for the green
+> led, then take out the notebook) things get interesting:
+> 
+> (a) I initiate STR, notebook correctly goes to sleep, but it only wakes
+> up if I have it in the docking station. If I try to wake it up outside
+> of the docking station it will fail.
 
-If you are using /dev/sg*, then you should be able to get your original mmap()
-code to work.  But the behaviour described thus far seems to indicate that
-your secret program must have been using /dev/sd* instead.
+  Magic number: 0:971:888
+  hash matches drivers/base/power/main.c:82
+  hash matches device ptyuf
+  hash matches device 0000:00:1f.1
 
-Cheers
+00:1f.1 IDE interface: Intel Corporation Mobile IDE Controller (rev 03)
+
+> (5) If the notebook is in the dock, I press the undock button and wait
+> for the green led then initiate STR, I can take the notebook out but
+> resuming doesn't work - unless I resume it while the notebook is back in
+> the docking station (see point 3a)
+
+  Magic number: 0:648:888
+  hash matches drivers/base/power/main.c:103
+  hash matches device ptyuf
+  hash matches device 0000:00:1f.1
+
+00:1f.1 IDE interface: Intel Corporation Mobile IDE Controller (rev 03)
+
+
+I kindof had suspected that. The docking station has an ultrabay slot
+where I currently have a cdrom drive (since the notebook itself doesn't
+have any cdrom drive. Once I took the cdrom drive out, I was able to
+successfully perform what I wanted to do in points 3a and 5!
+
+The 'undock' button probably doesn't tell the kernel that it should
+unload the cdrom driver. Even though after pressing the undock button
+the drive becomes unusable (the green led that is on the side of the
+ultrabay disables and it's impossible to open the tray). Though pressing
+the undock button causes the usb ports to be removed from the kernel, at
+least that's what dmesg suggests (I put the notebook into the dock,
+waited a bit and then pressed the undock button):
+
+usb 1-4: new high speed USB device using ehci_hcd and address 11
+usb 1-4: configuration #1 chosen from 1 choice
+hub 1-4:1.0: USB hub found
+hub 1-4:1.0: 4 ports detected
+ACPI: \_SB_.GDCK - docking
+ACPI: \_SB_.GDCK - undocking
+usb 1-4: USB disconnect, address 11
+
+The notebook+dock+STR works as long as the notebook doesn't know about
+the ultrabay device. That can be because the notebook was started
+outside of the docking station, or inside the docking station but with
+the ultrabay removed. But once the notebook sees the ultrabay device
+it's over. As little as one suspend/resume cycle inside the docking
+station and with a ultrabay device plugged in is enough to make the
+kernel (partially) recognize the device - the kernel doesn't recognize
+the device as a cdrom drive, but only as an UDMA/33 device. After one
+suspend/resume cycle I see this in dmesg:
+
+ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
+ata4: failed to recover some devices, retrying in 5 secs
+Coming out of suspend...
+[... snip ...]
+ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
+ata4.00: ACPI on devcfg failed the second time, disabling (errno=-5)
+ata4.00: revalidation failed (errno=1)
+ata4: failed to recover some devices, retrying in 5 secs
+ata4.00: configured for UDMA/33
+
+And after that I can't resume outside of the docking station. So the
+description of point 3 was incomplete, sorry about that.
+
+At least the two failures 3a and 5 can be explained...
+
+tom
