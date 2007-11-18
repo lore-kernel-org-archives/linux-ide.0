@@ -1,81 +1,48 @@
-From: Akkana Peck <akkana@shallowsky.com>
-Subject: Problem with PCMCIA IDE
-Date: Sun, 18 Nov 2007 12:23:09 -0800
-Message-ID: <20071118202309.GE15355@shallowsky.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] drivers/ide/ide-probe.c Skip ide_wait_not_busy on noprobe-disks. was: [PATCH][RESUBMIT] drivers/ide/ide-probe.c, kernel 2.6.23.1
+Date: Sun, 18 Nov 2007 22:39:33 +0100
+Message-ID: <200711182239.33274.bzolnier@gmail.com>
+References: <473434F1.50509@purplescout.se> <200711162222.54847.bzolnier@gmail.com> <473E2049.4070806@purplescout.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-69-105-235-1.dsl.pltn13.pacbell.net ([69.105.235.1]:39820
-	"EHLO moon.timocharis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413AbXKRUwK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 15:52:10 -0500
+Received: from ug-out-1314.google.com ([66.249.92.175]:55080 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751044AbXKRVkF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 16:40:05 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so869066ugc
+        for <linux-ide@vger.kernel.org>; Sun, 18 Nov 2007 13:40:03 -0800 (PST)
+In-Reply-To: <473E2049.4070806@purplescout.se>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jonas Stare <jonas.stare@purplescout.se>
+Cc: Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-ide@vger.kernel.org
 
-I've been having problems getting PCMCIA IDE to work on my Vaio
-laptop on recent kernels (I've been working most with 2.6.23.1 and
-.8). I've been hesitant to report it as a kernel bug because it
-may very well be a problem with my .config parameters -- the CDROM
-worked in distro kernels back around 2.6.17 and .18, and self-built
-kernels even earlier than that, but the configuration has changed
-quite a bit since then so it's hard to compare directly and figure
-out if I'm missing something.
+On Friday 16 November 2007, Jonas Stare wrote:
+> There is a problem in some hardware where the kernel will stall for
+> 35 seconds waiting for disks that dont exist. This patch will skip
+> waiting for the BSY-bit on ide-drives to go away if you set
+> hdx=noprobe as a kernel option and the disk is not marked
+> as 'present' (like when you set the geometry by hand).
+> 
+> If no noprobe-option is set the code will work (more or less) as the 
+> original but if set the code will skip the ide_wait_not_busy() for that 
+> drive. Even if there would be a drive there and it is still BSY 
+> afterwards it should not matter since it isn't probed for later.
+> 
+> (The code also honors the MAX_DRIVES variable instead of assuming that 
+> there will be two harddrives on the bus.)
+> 
+> 
+> Signed-off-by: Jonas Stare <jonas.stare@purplescout.se>
 
-First, is this a reasonable place to report problems with PCMCIA,
-or does it belong on a PCMCIA list?
+Thanks!
 
-The machine is a Vaio SR17 and I'm hotplugging a PCMCIA CDROM drive
-(this is a subnotebook, so the drive is external).  I don't think
-it's CD specific (the CONFIG_BLK_DEV_IDECD code), because /proc/ide
-only shows ide0, not ide2 like I'm used to seeing in earlier kernels
-when the CD drive was connected.
+PS There were still some whitespace problems (all tabs were replaced by
+spaces) so I just applied it by hand (and made few minor cleanups while
+at it).
 
-PCMCIA/Cardbus itself works fine (e.g. for network cards).
-There's no sata (this is an old machine).
-
-Depending on how I set kernel options, I can get the kernel to lock
-up when the PCMCIA CDROM drive is plugged in, or not. When it locks,
-it stays locked up (no keyboard or X events), until I eject the
-PCMCIA plug, then after a few seconds things are back to normal.
-Either way, it never notices the CD drive or creates an ide2 bus.
-
-In the cases where it locks up, dmesg says:
-BUG: soft lockup detected on CPU#0!
- [<c01213b7>] update_process_times+0x27/0x70
- [<c0130e7d>] tick_nohz_handler+0x5d/0xf0
- [<c01069ab>] timer_interrupt+0xb/0x20
- [<c013c795>] handle_IRQ_event+0x25/0x60
- [<c013dd14>] handle_level_irq+0x44/0xa0
- [<c0105d72>] do_IRQ+0x42/0x80
- [<c01041af>] common_interrupt+0x23/0x28
- [<c011dbcd>] __do_softirq+0x2d/0x90
- [<c011dc56>] do_softirq+0x26/0x30
- [<c011df1a>] irq_exit+0x5a/0x60
- [<c0105d77>] do_IRQ+0x47/0x80
- [<c01041af>] common_interrupt+0x23/0x28
- [<c02eb163>] ide_register_hw_with_fixup+0x33/0x1e0
- [<c02fc3d6>] idecs_register+0x76/0x80
-[ various more backtrace, then ]
- =======================
-Probing IDE interface ide2...
-
-then that last message keeps repeating until I eject.
-
-Since it's obviously complaining about IRQs, I tried turning on
-CONFIG_IDEPCI_SHARE_IRQ=y (I also turned off CONFIG_BLK_DEV_IDEACPI
-to see if that made any difference) and that stopped the
-"BUG: soft lockup", but I still got the loop over "Probing IDE
-interface ide2..." and it still doesn't see the CDROM or ide2.
-
-I've put the full .config files at http://shallowsky.com/tmp/configs/
-so as not to clutter this list.
-
-Can anybody offer any tips for figuring out whether this is a
-config error on my part, or a real kernel bug in IDECS?
-Or send me to a more appropriate forum, if this isn't it?
-
-Thanks in advance!
-
-	...Akkana
+Bart
