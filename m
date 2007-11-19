@@ -1,40 +1,39 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: Re: [PATCH] pata_platform: move ARCH_RPC to use MACH_HAS_PATA_PLATFORM
-Date: Mon, 19 Nov 2007 14:12:55 +0000
-Message-ID: <20071119141255.GK26444@trinity.fluff.org>
-References: <20071119124340.GJ26444@trinity.fluff.org> <20071119125014.GM31701@flint.arm.linux.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ahci: Invalid use of writel/readl with iomap
+Date: Mon, 19 Nov 2007 14:28:28 +0000
+Message-ID: <20071119142828.4fe4ee55@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trinity.fluff.org ([89.145.97.151]:48332 "EHLO
-	trinity.fluff.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212AbXKSONM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2007 09:13:12 -0500
-Content-Disposition: inline
-In-Reply-To: <20071119125014.GM31701@flint.arm.linux.org.uk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58374 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755355AbXKSOaS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2007 09:30:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Ben Dooks <ben-linux@fluff.org>, Sam Ravnborg <sam@ravnborg.org>, Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Vincent Sanders <vince@simtec.co.uk>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, akpm@osdl.org
 
-On Mon, Nov 19, 2007 at 12:50:15PM +0000, Russell King - ARM Linux wrote:
-> On Mon, Nov 19, 2007 at 12:43:40PM +0000, Ben Dooks wrote:
-> > Move ARCH_RPC to using MACH_HAS_PATA_PLATFORM as an example
-> > of using this new configuration.
-> 
-> I thought that it had been agreed (on linux-arch) that the name of these
-> options shall be HAVE_foo to enable a driver configuration symbol of
-> foo.
-> 
-> IOW, this should be HAVE_PATA_PLATFORM not MACH_HAS_PATA_PLATFORM.
+Should use ioread* as discussed previously
 
-Ok, HAVE_PATA_PLATFORM should be unique enough without adding anything
-like HAVE_DRIVER_PATA_PLATFORM. If no-one else objects, I will submit
-a new version of these two patches.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
--- 
-Ben
-
-Q:      What's a light-year?
-A:      One-third less calories than a regular year.
-
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc2-mm1/drivers/ata/ata_piix.c linux-2.6.24-rc2-mm1/drivers/ata/ata_piix.c
+--- linux.vanilla-2.6.24-rc2-mm1/drivers/ata/ata_piix.c	2007-11-16 17:55:11.000000000 +0000
++++ linux-2.6.24-rc2-mm1/drivers/ata/ata_piix.c	2007-11-16 18:11:02.000000000 +0000
+@@ -1086,12 +1086,12 @@
+ 	if (!mmio)
+ 		return -ENOMEM;
+ 
+-	tmp = readl(mmio + AHCI_GLOBAL_CTL);
++	tmp = ioread32(mmio + AHCI_GLOBAL_CTL);
+ 	if (tmp & AHCI_ENABLE) {
+ 		tmp &= ~AHCI_ENABLE;
+-		writel(tmp, mmio + AHCI_GLOBAL_CTL);
++		iowrite32(tmp, mmio + AHCI_GLOBAL_CTL);
+ 
+-		tmp = readl(mmio + AHCI_GLOBAL_CTL);
++		tmp = ioread32(mmio + AHCI_GLOBAL_CTL);
+ 		if (tmp & AHCI_ENABLE)
+ 			rc = -EIO;
+ 	}
