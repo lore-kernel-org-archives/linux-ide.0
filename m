@@ -1,35 +1,41 @@
-From: Akkana Peck <akkana@shallowsky.com>
-Subject: Re: Problem with PCMCIA IDE
-Date: Sun, 18 Nov 2007 18:58:38 -0800
-Message-ID: <20071119025837.GB23997@shallowsky.com>
-References: <20071118202309.GE15355@shallowsky.com> <20071118223725.19c2424b@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Hang during boot in piix_init_pcs (ata_piix.c) with macbook pro
+Date: Mon, 19 Nov 2007 12:07:28 +0900
+Message-ID: <4740FDF0.2060801@gmail.com>
+References: <47371586.9090409@tng.de> <47386F3E.8000906@gmail.com> <47407DD8.10301@tng.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-69-105-235-1.dsl.pltn13.pacbell.net ([69.105.235.1]:40114
-	"EHLO moon.timocharis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394AbXKSC6j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 21:58:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20071118223725.19c2424b@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.189]:3127 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753443AbXKSDHf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Nov 2007 22:07:35 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1307615rvb
+        for <linux-ide@vger.kernel.org>; Sun, 18 Nov 2007 19:07:35 -0800 (PST)
+In-Reply-To: <47407DD8.10301@tng.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Thomas Rohwer <tr@tng.de>
+Cc: linux-ide@vger.kernel.org, "Gaston, Jason D" <jason.d.gaston@intel.com>
 
-Alan Cox writes:
-> Akkana Peck <akkana@shallowsky.com> wrote:
+Thomas Rohwer wrote:
+> Hello Tejun,
 > 
-> > I've been having problems getting PCMCIA IDE to work on my Vaio
-> > laptop on recent kernels (I've been working most with 2.6.23.1 and
-> > .8). I've been hesitant to report it as a kernel bug because it
-> > may very well be a problem with my .config parameters -- the CDROM
+>> Yes, adding a separate entry for ich8m is the correct approach w/
+>> port_enable=1 seems like the correct approach.  Does it fix the problem?
 > 
-> Does the same happen if you disable the tickless NOHZ kernel option ?
+> yes, the hang did not occur anymore after the change.
+> A patch with respect to linux-2.6.24-rc3 is included as attachment
+> (Signed-off-by: Thomas Rohwer <tr@tng.de>).
+> In the pci_device_id table I limited the new mapping to the specific
+> subvendor (0x106b, 0x00a0), because in general the ich8m can have up to
+> 3 ports. I tested this only on my hardware and I am not sure if this
+> is the best fix for the issue.
 
-Yes, same behavior without tickless.
+applied to #tj-upstream-fixes w/ commit message and S-O-B added.
 
-Also, I had said that I didn't get the soft lockup if
-CONFIG_IDEPCI_SHARE_IRQ=y and I think that's true, but with tickless
-disabled I get the soft lockup regardless of the IRQ-sharing setting.
+Thanks.
 
-	...Akkana
+-- 
+tejun
