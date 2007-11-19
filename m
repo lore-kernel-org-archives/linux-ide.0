@@ -1,31 +1,32 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] pata_platform: move ARCH_RPC to use MACH_HAS_PATA_PLATFORM
-Date: Mon, 19 Nov 2007 12:50:15 +0000
-Message-ID: <20071119125014.GM31701@flint.arm.linux.org.uk>
-References: <20071119124340.GJ26444@trinity.fluff.org>
+From: Thomas Rohwer <tr@tng.de>
+Subject: Re: Hang during boot in piix_init_pcs (ata_piix.c) with macbook pro
+Date: Mon, 19 Nov 2007 13:59:21 +0100
+Message-ID: <474188A9.3020701@tng.de>
+References: <47371586.9090409@tng.de> <47386F3E.8000906@gmail.com> <47407DD8.10301@tng.de> <47412E96.6070701@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:40947 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367AbXKSMvV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2007 07:51:21 -0500
-Content-Disposition: inline
-In-Reply-To: <20071119124340.GJ26444@trinity.fluff.org>
+Received: from liadriel1.tng.de ([213.178.66.91]:57604 "EHLO smtp.tng.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752498AbXKSM7Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Nov 2007 07:59:24 -0500
+In-Reply-To: <47412E96.6070701@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Dooks <ben-linux@fluff.org>, Sam Ravnborg <sam@ravnborg.org>, Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Vincent Sanders <vince@simtec.co.uk>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, "Gaston, Jason D" <jason.d.gaston@intel.com>
 
-On Mon, Nov 19, 2007 at 12:43:40PM +0000, Ben Dooks wrote:
-> Move ARCH_RPC to using MACH_HAS_PATA_PLATFORM as an example
-> of using this new configuration.
+> One question.  Does macbook's firmware allow putting the controller into
+> ahci mode?
 
-I thought that it had been agreed (on linux-arch) that the name of these
-options shall be HAVE_foo to enable a driver configuration symbol of
-foo.
+Do you mean, that one can configure the firmware, so that it puts the
+controller in ahci mode during boot? I don't know. There seems to be no user interface
+for the firmware. The refit bootloader is able to manipulate efi setting
+variables, but one would need some documentation to understand the meaning of them.
 
-IOW, this should be HAVE_PATA_PLATFORM not MACH_HAS_PATA_PLATFORM.
+Or do you mean, that one can switch to ahci mode under linux?
 
-(Not sure who introduced MACH_HAS_xxx but added Sam and Mathieu
-since they were involved in the discussion over HAVE_xxx.)
+Sincerely,
+
+Thomas Rohwer
