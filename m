@@ -1,53 +1,50 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 17/59] drivers/ide: Add missing "space"
-Date: Mon, 19 Nov 2007 17:48:09 -0800
-Message-ID: <3c52bdbf8c60392df6b4fc91e6188f4a382b5310.1195454435.git.joe__14624.240602325$1195523859$gmane$org@perches.com>
-References: 1234567
- <1195523331-15303-1-git-send-email-joe@perches.com>
- <1195523331-15303-2-git-send-email-joe@perches.com>
- <1195523331-15303-3-git-send-email-joe@perches.com>
- <1195523331-15303-4-git-send-email-joe@perches.com>
- <1195523331-15303-5-git-send-email-joe@perches.com>
- <1195523331-15303-6-git-send-email-joe@perches.com>
- <1195523331-15303-7-git-send-email-joe@perches.com>
- <1195523331-15303-8-git-send-email-joe@perches.com>
- <1195523331-15303-9-git-send-email-joe@perches.com>
- <1195523331-15303-10-git-send-email-joe@perches.com>
- <1195523331-15303-11-git-send-email-joe@perches.com>
- <1195523331-15303-12-git-send-email-joe@perches.com>
- <1195523331-15303-13-git-send-email-joe@perches.com>
- <1195523331-15303-14-git-send-email-joe@perches.com>
- <1195523331-15303-15-git-send-email-joe@perches.com>
- <1195523331-15303-16-git-send-email-joe@perches.com>
- <1195523331-15303-17-git-send-email-joe@perches.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759048AbXKTBz6@vger.kernel.org>
-In-Reply-To: <1195523331-15303-17-git-send-email-joe@perches.com>
-Message-Id: <3c52bdbf8c60392df6b4fc91e6188f4a382b5310.1195454435.git.joe@perches.com>
-In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
-References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH 2/2] sata_nv: fix ATAPI issues with memory over 4GB (v3)
+Date: Mon, 19 Nov 2007 23:25:48 -0600
+Message-ID: <47426FDC.4030800@shaw.ca>
+References: <473A7677.6080007@shaw.ca> <473BA332.9030406@gmail.com>
+ <473BC5DF.1040302@shaw.ca> <474230DC.8020308@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758118AbXKTF0O@vger.kernel.org>
+In-reply-to: <474230DC.8020308@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
 
+Tejun Heo wrote:
+> Robert Hancock wrote:
+>> Tejun Heo wrote:
+>>> Robert Hancock wrote:
+>>>> This fixes some problems with ATAPI devices on nForce4 controllers in
+>>>> ADMA mode
+>>>> on systems with memory located above 4GB. We need to delay setting
+>>>> the 64-bit
+>>>> DMA mask until the PRD table and padding buffer are allocated so that
+>>>> they don't
+>>>> get allocated above 4GB and break legacy mode (which is needed for ATAPI
+>>>> devices).
+>>>>
+>>>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+>>> applied to #tj-upstream-fixes.
+>>>
+>> I have a report that these patches crashed but the previous patch worked:
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=351451
+>>
+>> So there may still be a problem here.
+> 
+> Any progress?
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ide/ppc/pmac.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+It looks like the problem is that even though we set the DMA mask after 
+we allocate the PRD and pad buffers, when the other port is set up, the 
+DMA mask is already over 64-bit and so it allocates its buffers over 4GB 
+and fails. I think we just need to explicitly set to 32-bit first, 
+getting the reporter to try that one now.
 
-diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
-index 5afdfef..7f7a598 100644
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1513,7 +1513,7 @@ pmac_ide_build_dmatable(ide_drive_t *drive, struct request *rq)
- 
- 		if (pmif->broken_dma && cur_addr & (L1_CACHE_BYTES - 1)) {
- 			if (pmif->broken_dma_warn == 0) {
--				printk(KERN_WARNING "%s: DMA on non aligned address,"
-+				printk(KERN_WARNING "%s: DMA on non aligned address, "
- 				       "switching to PIO on Ohare chipset\n", drive->name);
- 				pmif->broken_dma_warn = 1;
- 			}
 -- 
-1.5.3.5.652.gf192c
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
