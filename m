@@ -1,74 +1,136 @@
-From: "Konstantin A. Lepikhov" <lakostis@unsafe.ru>
-Subject: [PATCH] libata: blacklist TOSHIBA MK1637GSX
-Date: Tue, 20 Nov 2007 10:12:08 +0300
-Message-ID: <20071120071208.GB13851@lks.home>
+From: Kjartan Maraas <kmaraas@broadpark.no>
+Subject: Re: laptop reboots right after hibernation
+Date: Tue, 20 Nov 2007 10:32:21 +0100
+Message-ID: <1195551141.2792.3.camel@localhost.localdomain>
+References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz>
+ <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="qMm9M+Fa2AknHoGS"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mojo.unsafe.ru ([83.222.2.183]:2321 "EHLO mojo.unsafe.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751714AbXKTHfM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 20 Nov 2007 02:35:12 -0500
-Content-Disposition: inline
+Received: from osl1smout1.broadpark.no ([80.202.4.58]:50611 "EHLO
+	osl1smout1.broadpark.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627AbXKTKc7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 05:32:59 -0500
+In-reply-to: <47409DA3.7070909@dbservice.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Tomas Carnecky <tom@dbservice.com>
+Cc: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
 
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+s=C3=B8., 18.11.2007 kl. 21.16 +0100, skrev Tomas Carnecky:
+> Since this is becoming more an IDE/ATA issue, I added
+> linux-ide@vger.kernel.org to CC. I hope that's the right mailinglist.
+>=20
+> Tomas Carnecky wrote:
+> > (3) Once the notebook was in the docking station (whether I boot it
+> > while in the dock or boot it outside and then put it into the dock)=
+ and
+> > I take it out (press the 'undock' button on the dock, wait for the =
+green
+> > led, then take out the notebook) things get interesting:
+> >=20
+> > (a) I initiate STR, notebook correctly goes to sleep, but it only w=
+akes
+> > up if I have it in the docking station. If I try to wake it up outs=
+ide
+> > of the docking station it will fail.
+>=20
+[snip str problem description]
 
-Hi!
+> ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x5=
+1 Err=3D0x04)
+> ata4: failed to recover some devices, retrying in 5 secs
+> Coming out of suspend...
+> [... snip ...]
+> ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x5=
+1 Err=3D0x04)
+> ata4.00: ACPI on devcfg failed the second time, disabling (errno=3D-5=
+)
+> ata4.00: revalidation failed (errno=3D1)
+> ata4: failed to recover some devices, retrying in 5 secs
+> ata4.00: configured for UDMA/33
+>=20
+I get this exact error message on a normal first time boot here. I'm
+using the latest fedora development kernel which is 2.6.24-rc2-git6
+based. And I have the latest BIOS from HP IIRC.
 
-TOSHIBA MK1637GSX do spurious command completion
+This is an HP nc6400 intel based laptop:
 
-More details can be found in
-http://bugzilla.kernel.org/show_bug.cgi?id=9410
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x51 =
+Err=3D0x04)
+ata1.00: ACPI on devcfg failed the second time, disabling (errno=3D-5)
+ata1.00: revalidation failed (errno=3D1)
+ata1: failed to recover some devices, retrying in 5 secs
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: configured for UDMA/100
+ata2: SATA link down (SStatus 0 SControl 0)
+ata3: SATA link down (SStatus 0 SControl 0)
+ata4: SATA link down (SStatus 0 SControl 0)
+scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MHV2080B 892C PQ: 0 AN=
+SI: 5
+sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't su=
+pport DPO or FUA
+sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't su=
+pport DPO or FUA
+ sda: sda1 sda2 sda3 sda4
+sd 0:0:0:0: [sda] Attached SCSI disk
+insmod used greatest stack depth: 596 bytes left
 
--- 
-WBR et al.
+lspci:
 
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="libata-core-blacklist.patch"
+00:00.0 Host bridge: Intel Corporation Mobile 945GM/PM/GMS, 943/940GML =
+and 945GT Express Memory Controller Hub (rev 03)
+00:02.0 VGA compatible controller: Intel Corporation Mobile 945GM/GMS, =
+943/940GML Express Integrated Graphics Controller (rev 03)
+00:02.1 Display controller: Intel Corporation Mobile 945GM/GMS, 943/940=
+GML Express Integrated Graphics Controller (rev 03)
+00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High Defin=
+ition Audio Controller (rev 01)
+00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
+Port 1 (rev 01)
+00:1c.1 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
+Port 2 (rev 01)
+00:1c.3 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
+Port 4 (rev 01)
+00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
+ Controller #1 (rev 01)
+00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
+ Controller #2 (rev 01)
+00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
+ Controller #3 (rev 01)
+00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
+ Controller #4 (rev 01)
+00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHC=
+I Controller (rev 01)
+00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev e1)
+00:1f.0 ISA bridge: Intel Corporation 82801GBM (ICH7-M) LPC Interface B=
+ridge (rev 01)
+00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE Contr=
+oller (rev 01)
+00:1f.2 SATA controller: Intel Corporation 82801GBM/GHM (ICH7 Family) S=
+ATA AHCI Controller (rev 01)
+01:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5753M Gi=
+gabit Ethernet PCI Express (rev 21)
+02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG Netw=
+ork Connection (rev 02)
+04:06.0 CardBus bridge: Texas Instruments PCIxx12 Cardbus Controller
+04:06.2 Mass storage controller: Texas Instruments 5-in-1 Multimedia Ca=
+rd Reader (SD/MMC/MS/MS PRO/xD)
+04:06.3 Generic system peripheral [0805]: Texas Instruments PCIxx12 SDA=
+ Standard Compliant SD Host Controller
+04:06.4 Communication controller: Texas Instruments PCIxx12 GemCore bas=
+ed SmartCard controller
 
->From 9aca07148a192ece4c6fe085148b3cfb7390d367 Mon Sep 17 00:00:00 2001
-From: Konstantin A. Lepikhov <lakostis@altlinux.ru>
-Date: Mon, 19 Nov 2007 23:56:25 +0300
-Subject: [PATCH] libata: Another one in spurious command completion list:
-
-ata1.00: exception Emask 0x2 SAct 0x1 SErr 0x0 action 0x2 frozen
-ata1.00: spurious completions during NCQ issue=0x0 SAct=0x1 FIS=004040a1:00000020
-ata1.00: cmd 60/70:00:83:a6:f0/00:00:04:00:00/40 tag 0 cdb 0x0 data 57344 in
-
-Device Model:     TOSHIBA MK1637GSX
-Serial Number:    77VBT1CRT
-Firmware Version: DL040D
-
-Blacklist it.
-
-Signed-off-by: Konstantin A. Lepikhov <lakostis@altlinux.ru>
-Acked-by: Pavlov Konstantin <thresh@altlinux.ru>
----
- drivers/ata/libata-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8189803..0e9cd14 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4236,6 +4236,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
- 	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
- 	{ "Maxtor 7V300F0",	"VA111900",	ATA_HORKAGE_NONCQ, },
-+	{ "TOSHIBA MK1637GSX",	"DL040D",	ATA_HORKAGE_NONCQ, },
- 
- 	/* devices which puke on READ_NATIVE_MAX */
- 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
--- 
-1.5.3.5.GIT
+Cheers
+Kjartan
 
 
---qMm9M+Fa2AknHoGS--
