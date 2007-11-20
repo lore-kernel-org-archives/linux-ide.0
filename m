@@ -1,7 +1,7 @@
 From: Joe Perches <joe@perches.com>
 Subject: [PATCH 17/59] drivers/ide: Add missing "space"
 Date: Mon, 19 Nov 2007 17:48:09 -0800
-Message-ID: <1195523331-15303-18-git-send-email-joe@perches.com>
+Message-ID: <3c52bdbf8c60392df6b4fc91e6188f4a382b5310.1195454435.git.joe__14624.240602325$1195523859$gmane$org@perches.com>
 References: 1234567
  <1195523331-15303-1-git-send-email-joe@perches.com>
  <1195523331-15303-2-git-send-email-joe@perches.com>
@@ -20,19 +20,15 @@ References: 1234567
  <1195523331-15303-15-git-send-email-joe@perches.com>
  <1195523331-15303-16-git-send-email-joe@perches.com>
  <1195523331-15303-17-git-send-email-joe@perches.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:2073 "EHLO perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756986AbXKTBtF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Nov 2007 20:49:05 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759048AbXKTBz6@vger.kernel.org>
 In-Reply-To: <1195523331-15303-17-git-send-email-joe@perches.com>
 Message-Id: <3c52bdbf8c60392df6b4fc91e6188f4a382b5310.1195454435.git.joe@perches.com>
 In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 
 Signed-off-by: Joe Perches <joe@perches.com>
@@ -55,4 +51,3 @@ index 5afdfef..7f7a598 100644
  			}
 -- 
 1.5.3.5.652.gf192c
-
