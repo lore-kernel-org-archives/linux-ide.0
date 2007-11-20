@@ -1,136 +1,85 @@
-From: Kjartan Maraas <kmaraas@broadpark.no>
-Subject: Re: laptop reboots right after hibernation
-Date: Tue, 20 Nov 2007 10:32:21 +0100
-Message-ID: <1195551141.2792.3.camel@localhost.localdomain>
-References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz>
- <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
+Date: Tue, 20 Nov 2007 16:34:30 +0100 (CET)
+Message-ID: <alpine.LFD.0.9999.0711201559520.25057@localhost.localdomain>
+References: <198606.73895.qm@web52608.mail.re2.yahoo.com> <200711141317.35746.ak@suse.de> <alpine.LFD.0.9999.0711141633400.3265@localhost.localdomain> <200711141746.26793.ak@suse.de> <47423245.1050109@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from osl1smout1.broadpark.no ([80.202.4.58]:50611 "EHLO
-	osl1smout1.broadpark.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627AbXKTKc7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 05:32:59 -0500
-In-reply-to: <47409DA3.7070909@dbservice.com>
+Received: from www.tglx.de ([62.245.132.106]:51264 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757400AbXKTPes (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Nov 2007 10:34:48 -0500
+In-Reply-To: <47423245.1050109@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomas Carnecky <tom@dbservice.com>
-Cc: Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andi Kleen <ak@suse.de>, Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org
 
 
-s=C3=B8., 18.11.2007 kl. 21.16 +0100, skrev Tomas Carnecky:
-> Since this is becoming more an IDE/ATA issue, I added
-> linux-ide@vger.kernel.org to CC. I hope that's the right mailinglist.
->=20
-> Tomas Carnecky wrote:
-> > (3) Once the notebook was in the docking station (whether I boot it
-> > while in the dock or boot it outside and then put it into the dock)=
- and
-> > I take it out (press the 'undock' button on the dock, wait for the =
-green
-> > led, then take out the notebook) things get interesting:
-> >=20
-> > (a) I initiate STR, notebook correctly goes to sleep, but it only w=
-akes
-> > up if I have it in the docking station. If I try to wake it up outs=
-ide
-> > of the docking station it will fail.
->=20
-[snip str problem description]
 
-> ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x5=
-1 Err=3D0x04)
-> ata4: failed to recover some devices, retrying in 5 secs
-> Coming out of suspend...
-> [... snip ...]
-> ata4.00: ACPI cmd ef/03:45:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x5=
-1 Err=3D0x04)
-> ata4.00: ACPI on devcfg failed the second time, disabling (errno=3D-5=
-)
-> ata4.00: revalidation failed (errno=3D1)
-> ata4: failed to recover some devices, retrying in 5 secs
-> ata4.00: configured for UDMA/33
->=20
-I get this exact error message on a normal first time boot here. I'm
-using the latest fedora development kernel which is 2.6.24-rc2-git6
-based. And I have the latest BIOS from HP IIRC.
+On Tue, 20 Nov 2007, Tejun Heo wrote:
 
-This is an HP nc6400 intel based laptop:
+> Andi Kleen wrote:
+> >  
+> >> The AHCI code falls back to 32bit DMA in that case. Which in turn
+> >> causes the problem seen by Srihari. There is not much printk sticking
+> >> necessary, the code is simply not handling this. 
+> > 
+> > What code is not handling what? 
+> > 
+> > IOMMU merging should be always safe. If it is not the driver should
+> > not submit things in a single SG list.
+> 
+> Yeap, a sg merged by IOMMU should be safe.  It's just another contiguous
+> memory area from the POV of the controller anyway.  I wonder what went
+> wrong here.  What has exactly changed with iommu_merge patch?
 
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 failed (Emask=3D0x1 Stat=3D0x51 =
-Err=3D0x04)
-ata1.00: ACPI on devcfg failed the second time, disabling (errno=3D-5)
-ata1.00: revalidation failed (errno=3D1)
-ata1: failed to recover some devices, retrying in 5 secs
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: configured for UDMA/100
-ata2: SATA link down (SStatus 0 SControl 0)
-ata3: SATA link down (SStatus 0 SControl 0)
-ata4: SATA link down (SStatus 0 SControl 0)
-scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MHV2080B 892C PQ: 0 AN=
-SI: 5
-sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't su=
-pport DPO or FUA
-sd 0:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't su=
-pport DPO or FUA
- sda: sda1 sda2 sda3 sda4
-sd 0:0:0:0: [sda] Attached SCSI disk
-insmod used greatest stack depth: 596 bytes left
+Not much:
 
-lspci:
+-int iommu_merge __read_mostly = 0;
++int iommu_merge __read_mostly = 1;
+ EXPORT_SYMBOL(iommu_merge);
 
-00:00.0 Host bridge: Intel Corporation Mobile 945GM/PM/GMS, 943/940GML =
-and 945GT Express Memory Controller Hub (rev 03)
-00:02.0 VGA compatible controller: Intel Corporation Mobile 945GM/GMS, =
-943/940GML Express Integrated Graphics Controller (rev 03)
-00:02.1 Display controller: Intel Corporation Mobile 945GM/GMS, 943/940=
-GML Express Integrated Graphics Controller (rev 03)
-00:1b.0 Audio device: Intel Corporation 82801G (ICH7 Family) High Defin=
-ition Audio Controller (rev 01)
-00:1c.0 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
-Port 1 (rev 01)
-00:1c.1 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
-Port 2 (rev 01)
-00:1c.3 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express =
-Port 4 (rev 01)
-00:1d.0 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
- Controller #1 (rev 01)
-00:1d.1 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
- Controller #2 (rev 01)
-00:1d.2 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
- Controller #3 (rev 01)
-00:1d.3 USB Controller: Intel Corporation 82801G (ICH7 Family) USB UHCI=
- Controller #4 (rev 01)
-00:1d.7 USB Controller: Intel Corporation 82801G (ICH7 Family) USB2 EHC=
-I Controller (rev 01)
-00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev e1)
-00:1f.0 ISA bridge: Intel Corporation 82801GBM (ICH7-M) LPC Interface B=
-ridge (rev 01)
-00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE Contr=
-oller (rev 01)
-00:1f.2 SATA controller: Intel Corporation 82801GBM/GHM (ICH7 Family) S=
-ATA AHCI Controller (rev 01)
-01:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5753M Gi=
-gabit Ethernet PCI Express (rev 21)
-02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG Netw=
-ork Connection (rev 02)
-04:06.0 CardBus bridge: Texas Instruments PCIxx12 Cardbus Controller
-04:06.2 Mass storage controller: Texas Instruments 5-in-1 Multimedia Ca=
-rd Reader (SD/MMC/MS/MS PRO/xD)
-04:06.3 Generic system peripheral [0805]: Texas Instruments PCIxx12 SDA=
- Standard Compliant SD Host Controller
-04:06.4 Communication controller: Texas Instruments PCIxx12 GemCore bas=
-ed SmartCard controller
+Which in turn enables the iommu_merge functionality in gart_map_sg().
 
-Cheers
-Kjartan
+	for_each_sg(sg, s, nents, i) {
+		dma_addr_t addr = sg_phys(s);
+		s->dma_address = addr;
+		BUG_ON(s->length == 0);
 
+		nextneed = need_iommu(dev, addr, s->length);
 
+		/* Handle the previous not yet processed entries */
+		if (i > start) {
+			/* Can only merge when the last chunk ends on a page
+			   boundary and the new one doesn't have an offset. */
+			if (!iommu_merge || !nextneed || !need || s->offset ||
+			    (ps->offset + ps->length) % PAGE_SIZE) {
+				if (dma_map_cont(start_sg, i - start, sgmap,
+						  pages, need) < 0)
+					goto error;
+				out++;
+				sgmap = sg_next(sgmap);
+				pages = 0;
+				start = i;
+				start_sg = s;
+			}
+		}
+
+		need = nextneed;
+		pages += to_pages(s->offset, s->length);
+		ps = s;
+	}
+	if (dma_map_cont(start_sg, i - start, sgmap, pages, need) < 0)
+		goto error;
+
+So with iommu_merge off we map for each entry in the sg
+list. iommu_merge concatenates into larger segments.
+
+This requires propably working 64bit DMA, which is not possible with
+the SB600 controller.
+
+Thanks,
+
+	tglx
