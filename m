@@ -1,41 +1,48 @@
-From: Srihari Vijayaraghavan <sriharivijayaraghavan@yahoo.com.au>
-Subject: Re: 2.6.24-rc & SB600 AHCI no go on >=4GB of RAM
-Date: Tue, 20 Nov 2007 09:47:03 +1100 (EST)
-Message-ID: <625522.94543.qm@web52604.mail.re2.yahoo.com>
-References: <200711141746.26793.ak@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 2/2] sata_nv: fix ATAPI issues with memory over 4GB (v3)
+Date: Tue, 20 Nov 2007 09:57:00 +0900
+Message-ID: <474230DC.8020308@gmail.com>
+References: <473A7677.6080007@shaw.ca> <473BA332.9030406@gmail.com> <473BC5DF.1040302@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web52604.mail.re2.yahoo.com ([206.190.48.207]:42969 "HELO
-	web52604.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752400AbXKSWrG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2007 17:47:06 -0500
-In-Reply-To: <200711141746.26793.ak@suse.de>
+Received: from rv-out-0910.google.com ([209.85.198.188]:22402 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446AbXKTA5I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2007 19:57:08 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1587265rvb
+        for <linux-ide@vger.kernel.org>; Mon, 19 Nov 2007 16:57:08 -0800 (PST)
+In-Reply-To: <473BC5DF.1040302@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@elte.hu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-Andi Kleen <ak@suse.de> wrote:
-[...]
+Robert Hancock wrote:
+> Tejun Heo wrote:
+>> Robert Hancock wrote:
+>>> This fixes some problems with ATAPI devices on nForce4 controllers in
+>>> ADMA mode
+>>> on systems with memory located above 4GB. We need to delay setting
+>>> the 64-bit
+>>> DMA mask until the PRD table and padding buffer are allocated so that
+>>> they don't
+>>> get allocated above 4GB and break legacy mode (which is needed for ATAPI
+>>> devices).
+>>>
+>>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+>>
+>> applied to #tj-upstream-fixes.
+>>
 > 
-> IOMMU merging should be always safe. If it is not the driver should
-> not submit things in a single SG list.
+> I have a report that these patches crashed but the previous patch worked:
 > 
-> > So the main option 
-> > right now seems to revert the iommu_merge patch.
+> https://bugzilla.redhat.com/show_bug.cgi?id=351451
 > 
-> I don't think that is the correct fix.
+> So there may still be a problem here.
 
-Just to make sure this problem doesn't fall off the radar screen, I've filed
-it on Kernel Bugzilla: 
-http://bugzilla.kernel.org/show_bug.cgi?id=9412
+Any progress?
 
-Thanks
-
-
-
-      Feel safe with award winning spam protection on Yahoo!7 Mail.  
-www.yahoo.com.au/mail 
-
+-- 
+tejun
