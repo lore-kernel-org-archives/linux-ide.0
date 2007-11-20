@@ -1,32 +1,31 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2/2] sata_nv: fix ATAPI issues with memory over 4GB (v3)
-Date: Tue, 20 Nov 2007 14:49:36 +0900
-Message-ID: <47427570.5030103@gmail.com>
-References: <473A7677.6080007@shaw.ca> <473BA332.9030406@gmail.com> <473BC5DF.1040302@shaw.ca> <474230DC.8020308@gmail.com> <47426FDC.4030800@shaw.ca>
+From: Filippo Zangheri <filippo.zangheri@yahoo.it>
+Subject: 2.6.23.1 SATA disk not properly spun down
+Date: Tue, 20 Nov 2007 08:19:54 +0100
+Message-ID: <47428A9A.1080609@yahoo.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:2710 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbXKTFtm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 00:49:42 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2255385wah
-        for <linux-ide@vger.kernel.org>; Mon, 19 Nov 2007 21:49:41 -0800 (PST)
-In-Reply-To: <47426FDC.4030800@shaw.ca>
+Received: from smtp008.mail.ukl.yahoo.com ([217.12.11.62]:45570 "HELO
+	smtp008.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752799AbXKTH0g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 02:26:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> It looks like the problem is that even though we set the DMA mask after
-> we allocate the PRD and pad buffers, when the other port is set up, the
-> DMA mask is already over 64-bit and so it allocates its buffers over 4GB
-> and fails. I think we just need to explicitly set to 32-bit first,
-> getting the reporter to try that one now.
+Hi, I'm not subscribed to the list so, please, CC me  in replies,
 
-Ah.. right.  That makes sense.  Thanks.
+My shutdown sequence terminates with a message stating that my SATA disk
+was not correctly spun down and that I have to go to linux-ata.org .
+Well, I went there but no solutions. is there any patch?
+
+Thank you, great job guys.
+
 
 -- 
-tejun
+Filippo Zangheri
+
+GPG key ID: 0xE1D879FA
+Key fingerprint: 816B CE57 D43C 0A47 EF35 3378 EA5F A72A E1D8 79FA
+Key server: pgp.mit.edu
