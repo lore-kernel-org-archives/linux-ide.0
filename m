@@ -1,63 +1,38 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 6/21] ide: move CONFIG_IDE_ETRAX to drivers/ide/Kconfig
-Date: Wed, 21 Nov 2007 00:10:47 +0100
-Message-ID: <200711210010.47772.bzolnier@gmail.com>
-References: <200711182317.04300.bzolnier@gmail.com> <4741DE33.3000904@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Possibly SATA related freeze killed networking and RAID
+Date: Wed, 21 Nov 2007 00:45:45 +0000
+Message-ID: <20071121004545.512ad3ea@the-village.bc.nu>
+References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com>
+	<20071120220512.46b9e975@the-village.bc.nu>
+	<d00698fb0711201416n30b54d26kd8d5887896d3da83@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:58713 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbXKTXGW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 18:06:22 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1276549ugc
-        for <linux-ide@vger.kernel.org>; Tue, 20 Nov 2007 15:06:21 -0800 (PST)
-In-Reply-To: <4741DE33.3000904@ru.mvista.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58234 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755233AbXKUArq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 19:47:46 -0500
+In-Reply-To: <d00698fb0711201416n30b54d26kd8d5887896d3da83@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Mikael Starvik <starvik@axis.com>
+To: noah <noah123@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Monday 19 November 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
+> I've had other freezes before but this was the first time I was able
+> to see what was actually going on.
+> IRQ 21 appears to be shared between sata_nv and ethernet.
 > 
-> > * Move ETRAX_IDE and friends from arch/cris/arch-{v10,v32}/drivers/Kconfig
-> >   to drivers/ide/Kconfig.
-> 
-> > * Don't force selecting ide-disk and ide-cd device drivers
-> >   (please handle this through defconfig if necessary).
-> 
-> > * Make ETRAX_IDE depend on BROKEN for the time being
-> >   (it doesn't even compile currently).
-> 
-> > Cc: Mikael Starvik <starvik@axis.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> > Index: b/drivers/ide/Kconfig
-> > ===================================================================
-> > --- a/drivers/ide/Kconfig
-> > +++ b/drivers/ide/Kconfig
-> > @@ -870,6 +870,41 @@ config BLK_DEV_IDE_BAST
-> >  	  Say Y here if you want to support the onboard IDE channels on the
-> >  	  Simtec BAST or the Thorcom VR1000
-> >  
-> > +config ETRAX_IDE
-> > +	bool "ETRAX IDE support"
-> > +	depends on CRIS && BROKEN
-> > +	select BLK_DEV_IDEDMA
-> 
->     Shouldn't it be the other way around, i.e. BLK_DEV_IDEDMA is enabled by 
-> ETRAX_IDE as is the case with this option otherwise?
+> Does this mean my hardware/BIOS is broken somehow?
 
-Well, having a simple
+Not neccessarily. It could a bug in one of the drivers using IRQ 21
+(sata_nv or the nvidia ethernet), it could be another inactive device, or
+it could be a hardware funny.
 
-config BLK_DEV_IDEDMA
-	bool
+Nvidia stuff can be quite hard to diagnose as we have no documentation
+but we can try. The first question is whether it is network or disk
+triggered - seeing if heavy loads to one or the other trigger the problem
+might be a first plan.
 
-and making the other options select it seems to be a better solution.
 
-Thanks,
-Bart
+Alan
