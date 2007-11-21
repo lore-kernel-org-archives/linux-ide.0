@@ -1,38 +1,92 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Possibly SATA related freeze killed networking and RAID
-Date: Wed, 21 Nov 2007 00:45:45 +0000
-Message-ID: <20071121004545.512ad3ea@the-village.bc.nu>
-References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com>
-	<20071120220512.46b9e975@the-village.bc.nu>
-	<d00698fb0711201416n30b54d26kd8d5887896d3da83@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v2)
+Date: Tue, 20 Nov 2007 18:56:40 -0600
+Message-ID: <47438248.7030704@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58234 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755233AbXKUArq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 19:47:46 -0500
-In-Reply-To: <d00698fb0711201416n30b54d26kd8d5887896d3da83@mail.gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:3433 "EHLO
+	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752259AbXKUA5P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 19:57:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: noah <noah123@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-> I've had other freezes before but this was the first time I was able
-> to see what was actually going on.
-> IRQ 21 appears to be shared between sata_nv and ethernet.
-> 
-> Does this mean my hardware/BIOS is broken somehow?
+This fixes some problems with ATAPI devices on nForce4 controllers in ADMA
+mode on systems with memory located above 4GB. We need to delay setting the
+64-bit DMA mask until the PRD table and padding buffer are allocated so that
+they don't get allocated above 4GB and break legacy mode (which is needed for
+ATAPI devices). Also, explicitly set a 32-bit DMA mask before allocating the
+legacy buffers since setting the DMA mask affects both ports and we need to
+ensure the second port's buffers are allocated properly (fixes a problem
+with the previous version of this patch).
 
-Not neccessarily. It could a bug in one of the drivers using IRQ 21
-(sata_nv or the nvidia ethernet), it could be another inactive device, or
-it could be a hardware funny.
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-Nvidia stuff can be quite hard to diagnose as we have no documentation
-but we can try. The first question is whether it is network or disk
-triggered - seeing if heavy loads to one or the other trigger the problem
-might be a first plan.
+--- linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c.before2	2007-11-20 17:47:46.000000000 -0600
++++ linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c	2007-11-20 17:50:30.000000000 -0600
+@@ -247,6 +247,7 @@
+ 	void __iomem		*ctl_block;
+ 	void __iomem		*gen_block;
+ 	void __iomem		*notifier_clear_block;
++	u64			adma_dma_mask;
+ 	u8			flags;
+ 	int			last_issue_ncq;
+ };
+@@ -748,7 +749,7 @@
+ 		adma_enable = 0;
+ 		nv_adma_register_mode(ap);
+ 	} else {
+-		bounce_limit = *ap->dev->dma_mask;
++		bounce_limit = pp->adma_dma_mask;
+ 		segment_boundary = NV_ADMA_DMA_BOUNDARY;
+ 		sg_tablesize = NV_ADMA_SGTBL_TOTAL_LEN;
+ 		adma_enable = 1;
+@@ -1134,10 +1135,16 @@
+ 	void *mem;
+ 	dma_addr_t mem_dma;
+ 	void __iomem *mmio;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	u16 tmp;
+ 
+ 	VPRINTK("ENTER\n");
+ 
++	/* Ensure DMA mask is set to 32-bit before allocating legacy PRD and
++	   pad buffers */
++	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
++
+ 	rc = ata_port_start(ap);
+ 	if (rc)
+ 		return rc;
+@@ -1153,6 +1160,14 @@
+ 	pp->notifier_clear_block = pp->gen_block +
+ 	       NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no);
+ 
++	/* Now that the legacy PRD and padding buffer are allocated we can
++	   safely raise the DMA mask to allocate the CPB/APRD table. */
++	pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
++	/* Store the mask that was actually used so we can restore it as
++	   the bounce limit later if needed */
++	pp->adma_dma_mask = *dev->dma_mask;
++
+ 	mem = dmam_alloc_coherent(dev, NV_ADMA_PORT_PRIV_DMA_SZ,
+ 				  &mem_dma, GFP_KERNEL);
+ 	if (!mem)
+@@ -2408,12 +2423,6 @@
+ 	hpriv->type = type;
+ 	host->private_data = hpriv;
+ 
+-	/* set 64bit dma masks, may fail */
+-	if (type == ADMA) {
+-		if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) == 0)
+-			pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
+-	}
+-
+ 	/* request and iomap NV_MMIO_BAR */
+ 	rc = pcim_iomap_regions(pdev, 1 << NV_MMIO_BAR, DRV_NAME);
+ 	if (rc)
 
-
-Alan
