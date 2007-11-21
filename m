@@ -1,40 +1,69 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH 1/2] sata_nv: don't use legacy DMA in ADMA mode
-Date: Tue, 20 Nov 2007 18:59:04 -0600
-Message-ID: <474382D8.1050507@shaw.ca>
-References: <473A7628.3010907@shaw.ca> <473BA447.6090909@gmail.com>
- <473BA4D8.508@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [git patches] libata fixes
+Date: Tue, 20 Nov 2007 21:26:05 -0500
+Message-ID: <4743973D.4090604@pobox.com>
+References: <474112B8.6050505@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:34441 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910AbXKUA7l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Nov 2007 19:59:41 -0500
-In-reply-to: <473BA4D8.508@gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56130 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750953AbXKUC0M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Nov 2007 21:26:12 -0500
+In-Reply-To: <474112B8.6050505@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 Tejun Heo wrote:
-> Tejun Heo wrote:
->> If so, can you please add that switching into register mode is okay as
->> long as there's no other ADMA commands in flight and add
->> WARN_ON((qc->flags & ATA_QCFLAG_RESULT_TF) && link->sactive)?
+> These are upstream patches I collected while Jeff is away.  Thanks.
 > 
-> More accurately, link->sactive test can be substituted with
-> (ap->qc_allocated & ~(1 << qc->tag)).
+> * workaround for ATAPI tape drives
+> * detection/suspend workarounds for several laptops
+> * ICH8/9 port_enable fix
+> 
+> ata_piix controller ID reorganization is included to ease the fixes.
+> 
+> Please pull from 'upstream-linus' branch of
+> master.kernel.org:/pub/scm/linux/kernel/git/tj/libata-dev.git upstream-linus
+> 
+> to receive the following updates:
+> 
+>  drivers/ata/ata_piix.c    |   87 ++++++++++++++++++++++++++++------------
+>  drivers/ata/libata-core.c |  100 +++++++---------------------------------------
+>  drivers/ata/libata-eh.c   |   95 -------------------------------------------
+>  drivers/ata/libata-scsi.c |    3 -
+>  drivers/ata/pata_sis.c    |    1 
+>  include/linux/libata.h    |    5 --
+>  6 files changed, 81 insertions(+), 210 deletions(-)
+> 
+> Adrian Bunk (1):
+>       libata: remove unused functions
+> 
+> Albert Lee (2):
+>       libata: workaround DRQ=1 ERR=1 for ATAPI tape drives
+>       libata: use ATA_HORKAGE_STUCK_ERR for ATAPI tape drives
+> 
+> Gabriel C (1):
+>       pata_sis.c: Add Packard Bell EasyNote K5305 to laptops
+> 
+> Mark Lord (1):
+>       libata-scsi: be tolerant of 12-byte ATAPI commands in 16-byte CDBs
+> 
+> Tejun Heo (3):
+>       ata_piix: add SATELLITE U205 to broken suspend list
+>       ata_piix: reorganize controller IDs
+>       ata_piix: port enable for the first SATA controller of ICH8 is 0xf not 0x3
+> 
+> Thomas Rohwer (1):
+>       ata_piix: only enable the first port on apple macbook pro
 
-Unfortunately we only get the ata_port and ata_taskfile in the tf_read 
-callback, so I'm not sure if we can do the equivalent of the qc->flags & 
-ATA_QCFLAG_RESULT_TF test (i.e. distinguishing between the 
-error-handling case where we care if we abort outstanding commands and 
-the normal case with a RESULT_TF command where we do)..
+Just to make sure, I pulled this into #upstream-fixes.  If Linus already 
+picked it up, great.  Otherwise I'll make sure it goes upstream.
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+	Jeff
+
+
 
