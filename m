@@ -1,50 +1,106 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v2)
-Date: Thu, 22 Nov 2007 15:35:58 +0900
-Message-ID: <4745234E.9050409@gmail.com>
-References: <47438248.7030704@shaw.ca>
+Subject: [PATCH #upstream-fixes] sata_sil24: fix sg table sizing
+Date: Thu, 22 Nov 2007 18:46:57 +0900
+Message-ID: <20071122094657.GF30919@htj.mynetwork.cxm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:48873 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbXKVGgF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Nov 2007 01:36:05 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2294039rvb
-        for <linux-ide@vger.kernel.org>; Wed, 21 Nov 2007 22:36:04 -0800 (PST)
-In-Reply-To: <47438248.7030704@shaw.ca>
+Received: from wa-out-1112.google.com ([209.85.146.178]:27754 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751489AbXKVJrD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Nov 2007 04:47:03 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3094321wah
+        for <linux-ide@vger.kernel.org>; Thu, 22 Nov 2007 01:47:03 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Hello, Robert.
+sil24 unnecessarily used LIBATA_MAX_PRD and ATAPI sg table was short
+by one entry which might cause very obscure problems.  This patch
+updates sg table sizing such that
 
-Robert Hancock wrote:
-> This fixes some problems with ATAPI devices on nForce4 controllers in ADMA
-> mode on systems with memory located above 4GB. We need to delay setting the
-> 64-bit DMA mask until the PRD table and padding buffer are allocated so that
-> they don't get allocated above 4GB and break legacy mode (which is needed for
-> ATAPI devices). Also, explicitly set a 32-bit DMA mask before allocating the
-> legacy buffers since setting the DMA mask affects both ports and we need to
-> ensure the second port's buffers are allocated properly (fixes a problem
-> with the previous version of this patch).
-> 
-> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-> 
-> +	/* Ensure DMA mask is set to 32-bit before allocating legacy PRD and
-> +	   pad buffers */
-> +	pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-> +	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-[--snip--]
-> +	pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-> +	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+* One full page is used for PRB + sg table.  On 4k page,
+  this results in 253 sg's.
 
-I'm probably being paranoid here but please add error checks.  Just
-checking return value and returning error suffices.
+* Make ATAPI sg block properly sized.
 
-Thanks.
+* Make build fail if command block size doesn't equal PAGE_SIZE.
 
--- 
-tejun
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Jeff, this one is for #upstream-fixes.
+
+ drivers/ata/sata_sil24.c |   26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
+
+Index: work/drivers/ata/sata_sil24.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil24.c
++++ work/drivers/ata/sata_sil24.c
+@@ -63,6 +63,21 @@ enum {
+ 	SIL24_HOST_BAR		= 0,
+ 	SIL24_PORT_BAR		= 2,
+ 
++	/* sil24 fetches in chunks of 64bytes.  The first block
++	 * contains the PRB and two SGEs.  From the second block, it's
++	 * consisted of four SGEs and called SGT.  Calculate the
++	 * number of SGTs that fit into one page.
++	 */
++	SIL24_PRB_SZ		= sizeof(struct sil24_prb)
++				  + 2 * sizeof(struct sil24_sge),
++	SIL24_MAX_SGT		= (PAGE_SIZE - SIL24_PRB_SZ)
++				  / (4 * sizeof(struct sil24_sge)),
++
++	/* This will give us one unused SGEs for ATA.  This extra SGE
++	 * will be used to store CDB for ATAPI devices.
++	 */
++	SIL24_MAX_SGE		= 4 * SIL24_MAX_SGT + 1,
++
+ 	/*
+ 	 * Global controller registers (128 bytes @ BAR0)
+ 	 */
+@@ -247,13 +262,13 @@ enum {
+ 
+ struct sil24_ata_block {
+ 	struct sil24_prb prb;
+-	struct sil24_sge sge[LIBATA_MAX_PRD];
++	struct sil24_sge sge[SIL24_MAX_SGE];
+ };
+ 
+ struct sil24_atapi_block {
+ 	struct sil24_prb prb;
+ 	u8 cdb[16];
+-	struct sil24_sge sge[LIBATA_MAX_PRD - 1];
++	struct sil24_sge sge[SIL24_MAX_SGE];
+ };
+ 
+ union sil24_cmd_block {
+@@ -378,7 +393,7 @@ static struct scsi_host_template sil24_s
+ 	.change_queue_depth	= ata_scsi_change_queue_depth,
+ 	.can_queue		= SIL24_MAX_CMDS,
+ 	.this_id		= ATA_SHT_THIS_ID,
+-	.sg_tablesize		= LIBATA_MAX_PRD,
++	.sg_tablesize		= SIL24_MAX_SGE,
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+ 	.emulated		= ATA_SHT_EMULATED,
+ 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+@@ -1284,6 +1299,7 @@ static void sil24_init_controller(struct
+ 
+ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
++	extern int __MARKER__sil24_cmd_block_is_sized_wrongly;
+ 	static int printed_version;
+ 	struct ata_port_info pi = sil24_port_info[ent->driver_data];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+@@ -1292,6 +1308,10 @@ static int sil24_init_one(struct pci_dev
+ 	int i, rc;
+ 	u32 tmp;
+ 
++	/* cause link error if sil24_cmd_block is sized wrongly */
++	if (sizeof(union sil24_cmd_block) != PAGE_SIZE)
++		__MARKER__sil24_cmd_block_is_sized_wrongly = 1;
++
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+ 
