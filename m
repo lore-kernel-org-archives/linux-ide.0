@@ -1,44 +1,31 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Lost interrupt with cmd 64x
-Date: Fri, 23 Nov 2007 13:45:07 +0100
-Message-ID: <200711231345.08052.bzolnier@gmail.com>
-References: <BAY139-W374C1413B6CEBCB202A330A37D0@phx.gbl> <200711222312.58589.bzolnier@gmail.com> <4746BBBA.3010209@ru.mvista.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
+Date: Fri, 23 Nov 2007 10:22:21 -0500
+Message-ID: <4746F02D.2060204@rtr.ca>
+References: <47463534.9010100@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:7137 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbXKWMhU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2007 07:37:20 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so498205ugc
-        for <linux-ide@vger.kernel.org>; Fri, 23 Nov 2007 04:37:19 -0800 (PST)
-In-Reply-To: <4746BBBA.3010209@ru.mvista.com>
-Content-Disposition: inline
+Received: from rtr.ca ([76.10.145.34]:1640 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755125AbXKWPWX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Nov 2007 10:22:23 -0500
+In-Reply-To: <47463534.9010100@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Tobias Oed <tobiasoed@hotmail.com>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-On Friday 23 November 2007, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > This problem should have been already fixed by:
-> 
-> > 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6183289cd4356b790c5eaa619020fb887ec0fa44
-> 
-> > which was merged into 2.6.24-rc3.
-> 
->     Put your attenction at the version against which this was reported -- it's 
-> eralier than when the regression was introduced.
+Robert Hancock wrote:
+> This fixes some problems with ATAPI devices on nForce4 controllers in ADMA mode
+> on systems with memory located above 4GB. We need to delay setting the 64-bit
+> DMA mask until the PRD table and padding buffer are allocated so that they don't
+> get allocated above 4GB and break legacy mode (which is needed for ATAPI
+> devices).
+...
 
-Indeed, you are correct!
+Mmm.. I wonder how many other libata drivers have this exact same bug,
+whether noticed yet or not ?
 
-However it still would be worth to give 2.6.24-rc3 a try.
-
-Thanks,
-Bart
+Cheers
