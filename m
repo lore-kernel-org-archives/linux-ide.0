@@ -1,103 +1,66 @@
-From: Laurent Riffard <laurent.riffard@free.fr>
-Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
-Date: Fri, 23 Nov 2007 18:52:28 +0100
-Message-ID: <4747135C.60205@free.fr>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	<4744A6F2.4030302@free.fr> <20071121144116.c932727b.akpm@linux-foundation.org> <4746814F.80502@free.fr> <4746866B.5070207@suse.de> <4746BB9D.2030508@suse.de>
+From: "Morrison, Tom" <tmorrison@empirix.com>
+Subject: RE: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
+Date: Fri, 23 Nov 2007 13:47:01 -0500
+Message-ID: <BD261180E6D35F4D9D32F3E44FD3D901053E8543@EMPBEDEX.empirix.com>
+References: <47463534.9010100@shaw.ca> <4746F02D.2060204@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D901053E8542@EMPBEDEX.empirix.com> <474711FE.8040805@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp8-g19.free.fr ([212.27.42.65]:41981 "EHLO smtp8-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890AbXKWRwb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 12:52:31 -0500
-In-Reply-To: <4746BB9D.2030508@suse.de>
+Received: from empbedex1.empirix.com ([12.38.203.54]:17752 "EHLO
+	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbXKWSrI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2007 13:47:08 -0500
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-Le 23.11.2007 12:38, Hannes Reinecke a =E9crit :
-> Hannes Reinecke wrote:
->> Laurent Riffard wrote:
->>> Le 21.11.2007 23:41, Andrew Morton a =E9crit :
->>>> On Wed, 21 Nov 2007 22:45:22 +0100
->>>> Laurent Riffard <laurent.riffard@free.fr> wrote:
->>>>
->>>>> Le 21.11.2007 05:45, Andrew Morton a =E9crit :
->>>>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.=
-6.24-rc3/2.6.24-rc3-mm1/
->>>>> Hello,=20
->>>>>
->>>>> My system hangs shortly after I logged in Gnome desktop. SysRq-W =
-shows
->>>>> that a bunch of task are blocked in "D" state, they seem to wait =
-for
->>>>> some I/O completion. I can try to hand-copy some data if requeste=
-d.
->>>>>
->>>>> I found these messages in dmesg:
->>>>>
->>>>> ~$ grep -C2 end_request dmesg-2.6.24-rc3-mm1=20
->>>>> EXT3-fs: mounted filesystem with ordered data mode.
->>>>> sd 0:0:0:0: [sda] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sda, sector 16460
->>>>> ReiserFS: sda7: found reiserfs format "3.6" with standard journal
->>>>> ReiserFS: sda7: using ordered data mode
->>>>> --
->>>>> ReiserFS: sda7: Using r5 hash to sort names
->>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sdb, sector 19632
->>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sdb, sector 40037363
->>>>> Adding 1048568k swap on /dev/mapper/vglinux1-lvswap.  Priority:-1=
- extents:1 across:1048568k
->>>>> lp0: using parport0 (interrupt-driven).
->>>>>
->>>>> These errors occur *only* with 2.6.24-rc3-mm1, they are 100% repr=
-oducible.
->>>>> 2.6.24-rc3 and 2.6.24-rc2-mm1 are fine.
->>>>>
->>>>> Maybe something is broken in pata_via driver ?
->>>>>
->>>> Could be - libata-reimplement-ata_acpi_cbl_80wire-using-ata_acpi_g=
-tm_xfermask.patch
->>>> and pata_amd-pata_via-de-couple-programming-of-pio-mwdma-and-udma-=
-timings.patch
->>>> touch pata_via.c.
->>> None of the above...
->>>
->>> I did a bisection, it spotted git-scsi-misc.patch.=20
->>> I just run 2.6.24-rc3-mm1 + revert-git-scsi-misc.patch, and it work=
-s fine.
->>>
->>> I guess commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0 "[SCSI] Do =
-not=20
->>> requeue requests if REQ_FAILFAST is set" is the real culprit. The o=
-ther=20
->>> commits are touching documentation or drivers I don't use. I'll try=
-=20
->>> to revert only this one this evening.
+Yes, I believe that - otherwise, this problem would have
+been a crisis a LONG time ago...:-)
+ 
+But I do have some more questions in relationship to how 
+things are mapped in your environment. I have a flat memory 
+map (i.e.: the full 0x0 -- 0x1_0000_0000 is passed to the 32bit 
+Linux kernel without any 'holes' and/or reserved areas).
+ 
+Does your Intel memory map have this same type of flat memory 
+model (and thus allow use of the FULL lower 4Gig) - or does it 
+reserve areas of lower 4Gig for devices and such - if not - where 
+are these reserved areas - and how do the relate to the I/O memory
+map for the device?
+ 
+In other words, I would be very interested in seeing the memory 
+map & the PCI memory mapping to see if any overlap/correspond 
+to reserve areas of lower 4 Gig (in a linux 32bit mode)...
+ 
+Tom
 
-I can confirm : reverting commit 8655a546c83fc43f0a73416bbd126d02de7ad6=
-c0=20
-does fix the problem.
+________________________________
 
->> Hmm. Weird. I'll have a look into it. Apparently I'll be returning a=
-n error where
->> I shouldn't. Checking ...
->>
-> Ok, found it. We are blocking even special commands (ie requests with=
- PREEMPT not set)
-> when FAILFAST is set. Which is clearly wrong. The attached patch fixe=
-s this.
+From: Mark Lord [mailto:liml@rtr.ca]
+Sent: Fri 11/23/2007 12:46 PM
+To: Morrison, Tom
+Cc: Robert Hancock; linux-kernel; ide; Jeff Garzik; Tejun Heo
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
 
-Sorry, it's not enough. 2.6.24-rc3-mm1 + your patch still hangs with I/=
-O errors.
 
---=20
-laurent
+
+Morrison, Tom wrote:
+> I am hopeful that the sata_mv has this bug (I proved that the
+> problem I was experiencing was due to the sata_mv driver
+> with 3.75Gig or more of memory)...
+> 
+> I am on vacation for a week or more ...or I'd tell you today
+> if it did have this bug!
+..
+
+Yeah, I kind of had your reports in mind when I asked that.  :)
+
+On a related note, I now have lots of Marvell (sata_mv) hardware here,
+and an Intel CPU/chipset box with physical RAM above the 4GB boundary.
+
+Cheers
+
 
