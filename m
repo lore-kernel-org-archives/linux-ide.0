@@ -1,33 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] ide: add TORiSAN model: CD-ROM CDR_U200 fw: 1.09 to DMA
- blacklist
-Date: Fri, 23 Nov 2007 15:13:25 +0300
-Message-ID: <4746C3E5.2030401@ru.mvista.com>
-References: <200711222255.35558.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Lost interrupt with cmd 64x
+Date: Fri, 23 Nov 2007 13:45:07 +0100
+Message-ID: <200711231345.08052.bzolnier@gmail.com>
+References: <BAY139-W374C1413B6CEBCB202A330A37D0@phx.gbl> <200711222312.58589.bzolnier@gmail.com> <4746BBBA.3010209@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:6505 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755904AbXKWMNN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 07:13:13 -0500
-In-Reply-To: <200711222255.35558.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.171]:7137 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbXKWMhU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2007 07:37:20 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so498205ugc
+        for <linux-ide@vger.kernel.org>; Fri, 23 Nov 2007 04:37:19 -0800 (PST)
+In-Reply-To: <4746BBBA.3010209@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, snowbat@gmail.com
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Tobias Oed <tobiasoed@hotmail.com>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+On Friday 23 November 2007, Sergei Shtylyov wrote:
+> Hello.
+> 
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> > This problem should have been already fixed by:
+> 
+> > 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6183289cd4356b790c5eaa619020fb887ec0fa44
+> 
+> > which was merged into 2.6.24-rc3.
+> 
+>     Put your attenction at the version against which this was reported -- it's 
+> eralier than when the regression was introduced.
 
-> Based on the report from snowbat@gmail.com.
+Indeed, you are correct!
 
-> Should fix kernel bugzilla bug #9195.
+However it still would be worth to give 2.6.24-rc3 a try.
 
-> Cc: snowbat@gmail.com
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
+Thanks,
+Bart
