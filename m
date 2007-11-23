@@ -1,94 +1,146 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
-Date: Thu, 22 Nov 2007 20:04:36 -0600
-Message-ID: <47463534.9010100@shaw.ca>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: sata NCQ blacklist entry
+Date: Thu, 22 Nov 2007 23:21:09 -0800
+Message-ID: <20071122232109.efdbf1b4.akpm@linux-foundation.org>
+References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
+	<200711132155.15506.dl9pf@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:38222 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072AbXKWCGg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Nov 2007 21:06:36 -0500
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48752 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752422AbXKWHVd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2007 02:21:33 -0500
+In-Reply-To: <200711132155.15506.dl9pf@gmx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+To: Jan-Simon =?ISO-8859-1?Q?M=F6ller?= <dl9pf@gmx.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This fixes some problems with ATAPI devices on nForce4 controllers in ADMA mode
-on systems with memory located above 4GB. We need to delay setting the 64-bit
-DMA mask until the PRD table and padding buffer are allocated so that they don't
-get allocated above 4GB and break legacy mode (which is needed for ATAPI
-devices).
+On Tue, 13 Nov 2007 21:55:15 +0100 Jan-Simon M__ller <dl9pf@gmx.de> wrote:
 
-Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+> Hi!
 
---- linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c.before2	2007-11-22 19:42:28.000000000 -0600
-+++ linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c	2007-11-22 19:48:25.000000000 -0600
-@@ -247,6 +247,7 @@
- 	void __iomem		*ctl_block;
- 	void __iomem		*gen_block;
- 	void __iomem		*notifier_clear_block;
-+	u64			adma_dma_mask;
- 	u8			flags;
- 	int			last_issue_ncq;
- };
-@@ -748,7 +749,7 @@
- 		adma_enable = 0;
- 		nv_adma_register_mode(ap);
- 	} else {
--		bounce_limit = *ap->dev->dma_mask;
-+		bounce_limit = pp->adma_dma_mask;
- 		segment_boundary = NV_ADMA_DMA_BOUNDARY;
- 		sg_tablesize = NV_ADMA_SGTBL_TOTAL_LEN;
- 		adma_enable = 1;
-@@ -1134,10 +1135,20 @@
- 	void *mem;
- 	dma_addr_t mem_dma;
- 	void __iomem *mmio;
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	u16 tmp;
- 
- 	VPRINTK("ENTER\n");
- 
-+	/* Ensure DMA mask is set to 32-bit before allocating legacy PRD and
-+	   pad buffers */
-+	rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (rc)
-+		return rc;
-+	rc = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
-+	if (rc)
-+		return rc;
-+
- 	rc = ata_port_start(ap);
- 	if (rc)
- 		return rc;
-@@ -1153,6 +1164,15 @@
- 	pp->notifier_clear_block = pp->gen_block +
- 	       NV_ADMA_NOTIFIER_CLEAR + (4 * ap->port_no);
- 
-+	/* Now that the legacy PRD and padding buffer are allocated we can
-+	   safely raise the DMA mask to allocate the CPB/APRD table.
-+	   These are allowed to fail since we store the value that ends up
-+	   being used to set as the bounce limit in slave_config later if
-+	   needed. */
-+	pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-+	pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
-+	pp->adma_dma_mask = *dev->dma_mask;
-+
- 	mem = dmam_alloc_coherent(dev, NV_ADMA_PORT_PRIV_DMA_SZ,
- 				  &mem_dma, GFP_KERNEL);
- 	if (!mem)
-@@ -2414,12 +2434,6 @@
- 	hpriv->type = type;
- 	host->private_data = hpriv;
- 
--	/* set 64bit dma masks, may fail */
--	if (type == ADMA) {
--		if (pci_set_dma_mask(pdev, DMA_64BIT_MASK) == 0)
--			pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
--	}
--
- 	/* request and iomap NV_MMIO_BAR */
- 	rc = pcim_iomap_regions(pdev, 1 << NV_MMIO_BAR, DRV_NAME);
- 	if (rc)
+You removed from cc the guys who are most likely to fix this.  Please always
+do reply-to-all.
 
+> Just using kernel 2.6.24-rc2 (325d22df7b19e0116aff3391d3a03f73d0634ded).
+> 
+> When booting the system hangs, using the emergency-sync a couple of times gets 
+> the system to go on at some point. 
+> Its always around starting X/Firewall (can't actually say whats done in this 
+> moment).
+> 
+> Looking at dmesg i found this (NCQ disabled ...)
+> 
+> dmesg output
+> 
+> ata1.00: exception Emask 0x2 SAct 0x4 SErr 0x0 action 0x2 frozen
+> ata1.00: spurious completions during NCQ issue=0x0 SAct=0x4 
+> FIS=004040a1:00000002
+> ata1.00: cmd 61/08:10:bc:b2:5d/00:00:08:00:00/40 tag 2 cdb 0x0 data 4096 out
+>          res 40/00:14:bc:b2:5d/00:00:08:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: configured for UDMA/133
+> ata1: EH complete
+> sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support 
+> DPO or FUA
+> ata1.00: NCQ disabled due to excessive errors
+> ata1.00: exception Emask 0x2 SAct 0xfffd3 SErr 0x0 action 0x2 frozen
+> ata1.00: spurious completions during NCQ issue=0x0 SAct=0xfffd3 
+> FIS=004040a1:00000020
+> ata1.00: cmd 60/10:00:14:05:69/00:00:06:00:00/40 tag 0 cdb 0x0 data 8192 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:08:cc:dd:12/00:00:04:00:00/40 tag 1 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/18:20:84:54:a3/00:00:05:00:00/40 tag 4 cdb 0x0 data 12288 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:30:bc:b1:07/00:00:06:00:00/40 tag 6 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:38:dc:b1:07/00:00:06:00:00/40 tag 7 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/10:40:3c:b2:07/00:00:06:00:00/40 tag 8 cdb 0x0 data 8192 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:48:2c:cf:07/00:00:06:00:00/40 tag 9 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:50:3c:cf:07/00:00:06:00:00/40 tag 10 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:58:64:b4:12/00:00:04:00:00/40 tag 11 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/28:60:6c:b4:12/00:00:04:00:00/40 tag 12 cdb 0x0 data 20480 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/f8:68:7c:e1:07/00:00:06:00:00/40 tag 13 cdb 0x0 data 126976 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:70:a4:04:69/00:00:06:00:00/40 tag 14 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/18:78:b4:04:69/00:00:06:00:00/40 tag 15 cdb 0x0 data 12288 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:80:a4:5c:6a/00:00:06:00:00/40 tag 16 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/20:88:2c:05:69/00:00:06:00:00/40 tag 17 cdb 0x0 data 16384 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/30:90:54:05:69/00:00:06:00:00/40 tag 18 cdb 0x0 data 24576 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1.00: cmd 60/08:98:94:05:69/00:00:06:00:00/40 tag 19 cdb 0x0 data 4096 in
+>          res 40/00:04:14:05:69/00:00:06:00:00/40 Emask 0x2 (HSM violation)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: configured for UDMA/133
+> ata1: EH complete
+> sd 0:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support 
+> DPO or FUA
+> 
+> 
+> 
+> hdparm -i /dev/sda
+> 
+> /dev/sda:
+> 
+>  Model=WDC WD2500BEVS-22UST0                   , FwRev=01.01A01, SerialNo=     
+> WD-WXE807E07297
+>  Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
+>  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=50
+>  BuffType=unknown, BuffSize=8192kB, MaxMultSect=16, MultSect=?16?
+>  CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=268435455
+>  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>  PIO modes:  pio0 pio3 pio4
+>  DMA modes:  mdma0 mdma1 mdma2
+>  UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5
+>  AdvancedPM=yes: disabled (255) WriteCache=enabled
+>  Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
+> 
+>  * signifies the current active mode
+> 
+
+So is this problem (which in another email you attributed to smartd) also
+present in 2.6.23?
+
+And is is still present in 2.6.24-rc3?
+
+Thanks.
