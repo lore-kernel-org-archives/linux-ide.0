@@ -1,58 +1,153 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] sata_nv: don't use legacy DMA in ADMA mode (v2)
-Date: Sat, 24 Nov 2007 14:19:38 +0900
-Message-ID: <4747B46A.5000503@gmail.com>
-References: <47463580.8080909@shaw.ca> <4747B3BB.4000708@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
+Date: Sat, 24 Nov 2007 08:42:49 +0200
+Message-ID: <1195886569.3195.2.camel@localhost.localdomain>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org>
+	 <4744A6F2.4030302@free.fr>
+	 <20071121144116.c932727b.akpm@linux-foundation.org>
+	 <4746814F.80502@free.fr> <4746866B.5070207@suse.de>
+	 <4746BB9D.2030508@suse.de>  <4747135C.60205@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:43217 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbXKXFTp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Nov 2007 00:19:45 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so30241rvb
-        for <linux-ide@vger.kernel.org>; Fri, 23 Nov 2007 21:19:44 -0800 (PST)
-In-Reply-To: <4747B3BB.4000708@gmail.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:36723 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751597AbXKXGmy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Nov 2007 01:42:54 -0500
+In-Reply-To: <4747135C.60205@free.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: Laurent Riffard <laurent.riffard@free.fr>
+Cc: Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Robert Hancock wrote:
->> We need to run any DMA command with result taskfile requested in ADMA mode
->> when the port is in ADMA mode, otherwise it may try to use the legacy DMA engine
->> in ADMA mode which is not allowed. Enforce this with BUG_ON() since data
->> corruption could potentially result if this happened. Also WARN_ON() if we try
->> and send result taskfile commands while NCQ commands are still active, since the
->> hardware doesn't allow this.
->>
->> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
->>
->> @@ -1425,9 +1427,17 @@
->> +	/* We can't handle result taskfile with NCQ commands active, since
->> +	   retrieving the taskfile switches us out of ADMA mode and would abort
->> +	   existing commands. */
->> +	WARN_ON((qc->flags & ATA_QCFLAG_RESULT_TF) &&
->> +		(qc->ap->qc_allocated & ~(1 << qc->tag)));
-> 
-> I owe an apology here.  ap->qc_allocated & ~(1 << qc->tag) test isn't
-> correct.  Sorry.  qc deferring happens after qc is allocated so the
-> condition can trigger (although it should be rare) even when nothing is
-> going wrong, so I guess it should be WARN_ON((qc->flags &
-> ATA_QCFLAG_RESULT_TF) && link->sactive).
 
-Or, just make the assumption clear by not allowing NCQ w/ RESULT_TF at all.
+On Fri, 2007-11-23 at 18:52 +0100, Laurent Riffard wrote:
+> Le 23.11.2007 12:38, Hannes Reinecke a =C3=A9crit :
+> > Hannes Reinecke wrote:
+> >> Laurent Riffard wrote:
+> >>> Le 21.11.2007 23:41, Andrew Morton a =C3=A9crit :
+> >>>> On Wed, 21 Nov 2007 22:45:22 +0100
+> >>>> Laurent Riffard <laurent.riffard@free.fr> wrote:
+> >>>>
+> >>>>> Le 21.11.2007 05:45, Andrew Morton a =C3=A9crit :
+> >>>>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/=
+2.6.24-rc3/2.6.24-rc3-mm1/
+> >>>>> Hello,=20
+> >>>>>
+> >>>>> My system hangs shortly after I logged in Gnome desktop. SysRq-=
+W shows
+> >>>>> that a bunch of task are blocked in "D" state, they seem to wai=
+t for
+> >>>>> some I/O completion. I can try to hand-copy some data if reques=
+ted.
+> >>>>>
+> >>>>> I found these messages in dmesg:
+> >>>>>
+> >>>>> ~$ grep -C2 end_request dmesg-2.6.24-rc3-mm1=20
+> >>>>> EXT3-fs: mounted filesystem with ordered data mode.
+> >>>>> sd 0:0:0:0: [sda] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
+DRIVER_OK,SUGGEST_OK
+> >>>>> end_request: I/O error, dev sda, sector 16460
+> >>>>> ReiserFS: sda7: found reiserfs format "3.6" with standard journ=
+al
+> >>>>> ReiserFS: sda7: using ordered data mode
+> >>>>> --
+> >>>>> ReiserFS: sda7: Using r5 hash to sort names
+> >>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
+DRIVER_OK,SUGGEST_OK
+> >>>>> end_request: I/O error, dev sdb, sector 19632
+> >>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
+DRIVER_OK,SUGGEST_OK
+> >>>>> end_request: I/O error, dev sdb, sector 40037363
+> >>>>> Adding 1048568k swap on /dev/mapper/vglinux1-lvswap.  Priority:=
+-1 extents:1 across:1048568k
+> >>>>> lp0: using parport0 (interrupt-driven).
+> >>>>>
+> >>>>> These errors occur *only* with 2.6.24-rc3-mm1, they are 100% re=
+producible.
+> >>>>> 2.6.24-rc3 and 2.6.24-rc2-mm1 are fine.
+> >>>>>
+> >>>>> Maybe something is broken in pata_via driver ?
+> >>>>>
+> >>>> Could be - libata-reimplement-ata_acpi_cbl_80wire-using-ata_acpi=
+_gtm_xfermask.patch
+> >>>> and pata_amd-pata_via-de-couple-programming-of-pio-mwdma-and-udm=
+a-timings.patch
+> >>>> touch pata_via.c.
+> >>> None of the above...
+> >>>
+> >>> I did a bisection, it spotted git-scsi-misc.patch.=20
+> >>> I just run 2.6.24-rc3-mm1 + revert-git-scsi-misc.patch, and it wo=
+rks fine.
+> >>>
+> >>> I guess commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0 "[SCSI] D=
+o not=20
+> >>> requeue requests if REQ_FAILFAST is set" is the real culprit. The=
+ other=20
+> >>> commits are touching documentation or drivers I don't use. I'll t=
+ry=20
+> >>> to revert only this one this evening.
+>=20
+> I can confirm : reverting commit 8655a546c83fc43f0a73416bbd126d02de7a=
+d6c0=20
+> does fix the problem.
+>=20
+> >> Hmm. Weird. I'll have a look into it. Apparently I'll be returning=
+ an error where
+> >> I shouldn't. Checking ...
+> >>
+> > Ok, found it. We are blocking even special commands (ie requests wi=
+th PREEMPT not set)
+> > when FAILFAST is set. Which is clearly wrong. The attached patch fi=
+xes this.
+>=20
+> Sorry, it's not enough. 2.6.24-rc3-mm1 + your patch still hangs with =
+I/O errors.
 
-	if (unlikely(qc->tf.protocol == ATA_PROT_NCQ &&
-		     (qc->flags & ATA_QCFLAG_RESULT_TF)) {
-		ata_dev_printk(qc->dev, KERN_ERR,
-			       "NCQ w/ RESULT_TF not allowed\n");
-		return AC_ERR_SYSTEM;
-	}
+I think the problem is the way we treat BLOCKED and QUIESCED (the latte=
+r
+is the state that the domain validation uses and which we cannot kill
+fastfail on).  It's definitely wrong to kill fastfail requests when the
+state is QUIESCE.
 
-Thanks.
+This patch (which is applied on top of Hannes original) separates the
+BLOCK and QUIESCE states correctly ... does this fix the problem?
 
--- 
-tejun
+James
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 13e7e09..a7cf23a 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1279,18 +1279,21 @@ int scsi_prep_state_check(struct scsi_device *s=
+dev, struct request *req)
+ 				    "rejecting I/O to dead device\n");
+ 			ret =3D BLKPREP_KILL;
+ 			break;
+-		case SDEV_QUIESCE:
+ 		case SDEV_BLOCK:
+ 			/*
+-			 * If the devices is blocked we defer normal commands.
+-			 */
+-			if (!(req->cmd_flags & REQ_PREEMPT))
+-				ret =3D BLKPREP_DEFER;
+-			/*
+ 			 * Return failfast requests immediately
+ 			 */
+ 			if (req->cmd_flags & REQ_FAILFAST)
+ 				ret =3D BLKPREP_KILL;
++
++			/* fall through */
++
++		case SDEV_QUIESCE:
++			/*
++			 * If the devices is blocked we defer normal commands.
++			 */
++			if (!(req->cmd_flags & REQ_PREEMPT))
++				ret =3D BLKPREP_DEFER;
+ 			break;
+ 		default:
+ 			/*
+
+
