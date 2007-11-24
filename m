@@ -1,41 +1,42 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] sata_sil24: fix sg table sizing
-Date: Fri, 23 Nov 2007 19:24:37 -0500
-Message-ID: <47476F45.9090004@garzik.org>
-References: <20071122094657.GF30919@htj.mynetwork.cxm>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
+Date: Fri, 23 Nov 2007 18:31:59 -0600
+Message-ID: <474770FF.6040503@shaw.ca>
+References: <47463534.9010100@shaw.ca> <4746F02D.2060204@rtr.ca>
+ <BD261180E6D35F4D9D32F3E44FD3D901053E8542@EMPBEDEX.empirix.com>
+ <474711FE.8040805@rtr.ca> <47476CB9.2040409@shaw.ca>
+ <47476E31.2070801@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:36789 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752421AbXKXAYi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 19:24:38 -0500
-In-Reply-To: <20071122094657.GF30919@htj.mynetwork.cxm>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:26558 "EHLO
+	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755AbXKXAcr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2007 19:32:47 -0500
+In-reply-to: <47476E31.2070801@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Mark Lord <liml@rtr.ca>, "Morrison, Tom" <tmorrison@empirix.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Tejun Heo wrote:
-> sil24 unnecessarily used LIBATA_MAX_PRD and ATAPI sg table was short
-> by one entry which might cause very obscure problems.  This patch
-> updates sg table sizing such that
+Jeff Garzik wrote:
+> Robert Hancock wrote:
+>> Based on a quick look at sata_mv it appears it sets a 64-bit DMA mask 
+>> unconditionally, but for non-ATA_PROT_DMA commands (which includes all 
+>> ATAPI), it just falls back to ata_qc_issue_prot which issues via the 
+>> legacy SFF interface and can only handle 32-bit addressing. So yes, it 
+>> appears to have a similar bug as sata_nv had.
 > 
-> * One full page is used for PRB + sg table.  On 4k page,
->   this results in 253 sg's.
 > 
-> * Make ATAPI sg block properly sized.
-> 
-> * Make build fail if command block size doesn't equal PAGE_SIZE.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> Jeff, this one is for #upstream-fixes.
-> 
->  drivers/ata/sata_sil24.c |   26 +++++++++++++++++++++++---
->  1 file changed, 23 insertions(+), 3 deletions(-)
+> sata_mv doesn't do ATAPI at all...
 
-applied
+Right.. missed that ATA_FLAG_NO_ATAPI. So these issues Tom is reporting 
+are just with a normal SATA hard drive?
+
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
 
