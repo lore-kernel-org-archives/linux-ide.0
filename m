@@ -1,36 +1,35 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ata_piix: port enable for the first SATA controller of
- ICH8 is 0xf not 0x3
-Date: Fri, 23 Nov 2007 20:22:42 -0500
-Message-ID: <47477CE2.5080707@garzik.org>
-References: <20071119041459.GA30919@htj.mynetwork.cxm> <20071119041600.GB30919@htj.mynetwork.cxm> <20071119041731.GC30919@htj.mynetwork.cxm>
+Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
+Date: Fri, 23 Nov 2007 20:23:39 -0500
+Message-ID: <47477D1B.9050305@garzik.org>
+References: <20071119152434.45363e5d@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38305 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:58058 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752797AbXKXBWo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 20:22:44 -0500
-In-Reply-To: <20071119041731.GC30919@htj.mynetwork.cxm>
+	id S1752695AbXKXBXl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Nov 2007 20:23:41 -0500
+In-Reply-To: <20071119152434.45363e5d@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, tr@tng.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> ICH8 and 9 use two SFF controllers to show 6 SATA ports.  The first
-> controllre hosts the first 4 ports while the second one hosts the last
-> 2.  The PCS register of the first controller encompasses the first
-> four ports or all six ports depending on configuration while PCS of
-> the second controller controls the last two ports.  Using 0xf for the
-> first controller and 0x3 for the second controller always result in
-> the correct configuration.
+Alan Cox wrote:
+> Without the valid bits at least one set of TSScorp drives report 0 in
+> word 93 for PATA 40 wire, which we (and the specs) say actually means
+> SATA. (The SATA version seems to report 80 wire...)
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> applied to #tj-upstream-fixes
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-ACK
+SATA version on what controller?  Have you verified where the bridge is, 
+if it's not reporting word93==0 ?
+
+Is this for 2.6.24-rc, considering that we are late in -rc?
+
+	Jeff
+
 
 
