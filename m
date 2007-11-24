@@ -1,153 +1,51 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
-Date: Sat, 24 Nov 2007 08:42:49 +0200
-Message-ID: <1195886569.3195.2.camel@localhost.localdomain>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>
-	 <4744A6F2.4030302@free.fr>
-	 <20071121144116.c932727b.akpm@linux-foundation.org>
-	 <4746814F.80502@free.fr> <4746866B.5070207@suse.de>
-	 <4746BB9D.2030508@suse.de>  <4747135C.60205@free.fr>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [RFC][PATCH 0/3] OF-platform PATA driver
+Date: Sat, 24 Nov 2007 16:26:13 +0900
+Message-ID: <20071124072613.GA7303@linux-sh.org>
+References: <20071123175229.GA27143@localhost.localdomain> <4747751D.4060802@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:36723 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751597AbXKXGmy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Nov 2007 01:42:54 -0500
-In-Reply-To: <4747135C.60205@free.fr>
+Received: from pip15.gyao.ne.jp ([61.122.117.253]:1643 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752154AbXKXH0V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Nov 2007 02:26:21 -0500
+Content-Disposition: inline
+In-Reply-To: <4747751D.4060802@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Laurent Riffard <laurent.riffard@free.fr>
-Cc: Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: avorontsov@ru.mvista.com, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
+On Fri, Nov 23, 2007 at 07:49:33PM -0500, Jeff Garzik wrote:
+> Anton Vorontsov wrote:
+> >Here is the PATA Platform driver using OF infrastructure.
+> >
+> >Mostly it's just a wrapper around a bit modified pata_platform
+> >driver.
+> >
+> >Patches are well split for the easier review:
+> >
+> >First one factors out platform_device specific bits and modifies
+> >pata_platform to be a library-alike driver (with platform_device
+> >default binding).
+> >
+The only issue I have here is that this library-like version has subtle
+semantic changes that will break existing drivers.
 
-On Fri, 2007-11-23 at 18:52 +0100, Laurent Riffard wrote:
-> Le 23.11.2007 12:38, Hannes Reinecke a =C3=A9crit :
-> > Hannes Reinecke wrote:
-> >> Laurent Riffard wrote:
-> >>> Le 21.11.2007 23:41, Andrew Morton a =C3=A9crit :
-> >>>> On Wed, 21 Nov 2007 22:45:22 +0100
-> >>>> Laurent Riffard <laurent.riffard@free.fr> wrote:
-> >>>>
-> >>>>> Le 21.11.2007 05:45, Andrew Morton a =C3=A9crit :
-> >>>>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/=
-2.6.24-rc3/2.6.24-rc3-mm1/
-> >>>>> Hello,=20
-> >>>>>
-> >>>>> My system hangs shortly after I logged in Gnome desktop. SysRq-=
-W shows
-> >>>>> that a bunch of task are blocked in "D" state, they seem to wai=
-t for
-> >>>>> some I/O completion. I can try to hand-copy some data if reques=
-ted.
-> >>>>>
-> >>>>> I found these messages in dmesg:
-> >>>>>
-> >>>>> ~$ grep -C2 end_request dmesg-2.6.24-rc3-mm1=20
-> >>>>> EXT3-fs: mounted filesystem with ordered data mode.
-> >>>>> sd 0:0:0:0: [sda] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
-> >>>>> end_request: I/O error, dev sda, sector 16460
-> >>>>> ReiserFS: sda7: found reiserfs format "3.6" with standard journ=
-al
-> >>>>> ReiserFS: sda7: using ordered data mode
-> >>>>> --
-> >>>>> ReiserFS: sda7: Using r5 hash to sort names
-> >>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
-> >>>>> end_request: I/O error, dev sdb, sector 19632
-> >>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
-> >>>>> end_request: I/O error, dev sdb, sector 40037363
-> >>>>> Adding 1048568k swap on /dev/mapper/vglinux1-lvswap.  Priority:=
--1 extents:1 across:1048568k
-> >>>>> lp0: using parport0 (interrupt-driven).
-> >>>>>
-> >>>>> These errors occur *only* with 2.6.24-rc3-mm1, they are 100% re=
-producible.
-> >>>>> 2.6.24-rc3 and 2.6.24-rc2-mm1 are fine.
-> >>>>>
-> >>>>> Maybe something is broken in pata_via driver ?
-> >>>>>
-> >>>> Could be - libata-reimplement-ata_acpi_cbl_80wire-using-ata_acpi=
-_gtm_xfermask.patch
-> >>>> and pata_amd-pata_via-de-couple-programming-of-pio-mwdma-and-udm=
-a-timings.patch
-> >>>> touch pata_via.c.
-> >>> None of the above...
-> >>>
-> >>> I did a bisection, it spotted git-scsi-misc.patch.=20
-> >>> I just run 2.6.24-rc3-mm1 + revert-git-scsi-misc.patch, and it wo=
-rks fine.
-> >>>
-> >>> I guess commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0 "[SCSI] D=
-o not=20
-> >>> requeue requests if REQ_FAILFAST is set" is the real culprit. The=
- other=20
-> >>> commits are touching documentation or drivers I don't use. I'll t=
-ry=20
-> >>> to revert only this one this evening.
->=20
-> I can confirm : reverting commit 8655a546c83fc43f0a73416bbd126d02de7a=
-d6c0=20
-> does fix the problem.
->=20
-> >> Hmm. Weird. I'll have a look into it. Apparently I'll be returning=
- an error where
-> >> I shouldn't. Checking ...
-> >>
-> > Ok, found it. We are blocking even special commands (ie requests wi=
-th PREEMPT not set)
-> > when FAILFAST is set. Which is clearly wrong. The attached patch fi=
-xes this.
->=20
-> Sorry, it's not enough. 2.6.24-rc3-mm1 + your patch still hangs with =
-I/O errors.
+irq_flags exists in struct pata_platform_info precisely for the IRQ
+resource IRQ flags (as opposed to the IORESOURCE flags, which are what
+the IRQ resource flags refer to instead). This change takes that for
+granted and just assumes we're going to be using the res->flags, which is
+both an invalid assumption, and will utterly break blackfin and others
+that depend on it.
 
-I think the problem is the way we treat BLOCKED and QUIESCED (the latte=
-r
-is the state that the domain validation uses and which we cannot kill
-fastfail on).  It's definitely wrong to kill fastfail requests when the
-state is QUIESCE.
+Incidentally, we already have an include/linux/pata_platform.h. If this
+is going to be library-like, through the prototypes in there, rather than
+splitting them up betewen include/linux and drivers/ata. We don't need
+two headers.
 
-This patch (which is applied on top of Hannes original) separates the
-BLOCK and QUIESCE states correctly ... does this fix the problem?
-
-James
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 13e7e09..a7cf23a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1279,18 +1279,21 @@ int scsi_prep_state_check(struct scsi_device *s=
-dev, struct request *req)
- 				    "rejecting I/O to dead device\n");
- 			ret =3D BLKPREP_KILL;
- 			break;
--		case SDEV_QUIESCE:
- 		case SDEV_BLOCK:
- 			/*
--			 * If the devices is blocked we defer normal commands.
--			 */
--			if (!(req->cmd_flags & REQ_PREEMPT))
--				ret =3D BLKPREP_DEFER;
--			/*
- 			 * Return failfast requests immediately
- 			 */
- 			if (req->cmd_flags & REQ_FAILFAST)
- 				ret =3D BLKPREP_KILL;
-+
-+			/* fall through */
-+
-+		case SDEV_QUIESCE:
-+			/*
-+			 * If the devices is blocked we defer normal commands.
-+			 */
-+			if (!(req->cmd_flags & REQ_PREEMPT))
-+				ret =3D BLKPREP_DEFER;
- 			break;
- 		default:
- 			/*
-
-
+These patches basically look fine to me otherwise, though it would be
+nice if the semantic-changing bits had been abstracted. So as long as the
+old irq_flags behaviour is maintained and that irq_res->flags stuff is
+ripped out, I'll add my Acked-by as well.
