@@ -1,32 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
-Date: Fri, 23 Nov 2007 19:20:01 -0500
-Message-ID: <47476E31.2070801@garzik.org>
-References: <47463534.9010100@shaw.ca> <4746F02D.2060204@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D901053E8542@EMPBEDEX.empirix.com> <474711FE.8040805@rtr.ca> <47476CB9.2040409@shaw.ca>
+Subject: Re: [PATCH] pata_sil680: kill bogus reset code (take 2)
+Date: Fri, 23 Nov 2007 19:24:22 -0500
+Message-ID: <47476F36.4030201@garzik.org>
+References: <200711161950.04670.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44105 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36775 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755AbXKXAUK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 19:20:10 -0500
-In-Reply-To: <47476CB9.2040409@shaw.ca>
+	id S1752074AbXKXAYZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Nov 2007 19:24:25 -0500
+In-Reply-To: <200711161950.04670.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, "Morrison, Tom" <tmorrison@empirix.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Robert Hancock wrote:
-> Based on a quick look at sata_mv it appears it sets a 64-bit DMA mask 
-> unconditionally, but for non-ATA_PROT_DMA commands (which includes all 
-> ATAPI), it just falls back to ata_qc_issue_prot which issues via the 
-> legacy SFF interface and can only handle 32-bit addressing. So yes, it 
-> appears to have a similar bug as sata_nv had.
+Sergei Shtylyov wrote:
+> Since writing to two reserved bits ain't much of a housekeeping, I think it's
+> time we get rid of the custom error handler in this driver. ;-)
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> ---
+> Oops, somehow I've managed to send a stale patch, without a version change...
+> This code has been discussed 4 months ago, and is still in the same state. :-|
+> The patch is against the Linus' tree...
+> 
+>  drivers/ata/pata_sil680.c |   32 ++------------------------------
+>  1 files changed, 2 insertions(+), 30 deletions(-)
 
-
-sata_mv doesn't do ATAPI at all...
-
-	Jeff
+applied
 
 
