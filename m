@@ -1,71 +1,73 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHSET] libata: update timing and fix pata_amd transfer mode
- selection
-Date: Fri, 23 Nov 2007 20:18:54 -0500
-Message-ID: <47477BFE.9030008@garzik.org>
-References: <1194327550227-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH] ata_piix: reorganize controller IDs
+Date: Fri, 23 Nov 2007 20:21:25 -0500
+Message-ID: <47477C95.8050706@garzik.org>
+References: <20071119041459.GA30919@htj.mynetwork.cxm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38253 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:38286 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752609AbXKXBS5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Nov 2007 20:18:57 -0500
-In-Reply-To: <1194327550227-git-send-email-htejun@gmail.com>
+	id S1752777AbXKXBV1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Nov 2007 20:21:27 -0500
+In-Reply-To: <20071119041459.GA30919@htj.mynetwork.cxm>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Hello,
+> Move piix_pata_mwdma to top, rename ich9_2port_sata to ich8_2port_sata
+> for consistency and use automatically incremented values instead of
+> assigning fixed values to ease adding new controller IDs.
 > 
-> This patchset cleans up and improves PATA timing related code and fix
-> pata_amd transfer mode selection on top of the improvements.  This
-> patchset contains the following tweleve patches.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> applied to #tj-upstream-fixes.
 > 
->  0001-ata_generic-unindent-loop-in-generic_set_mode.patch
->  0002-libata-export-xfermode-PATA-timing-related-functi.patch
->  0003-libata-clean-up-xfermode-PATA-timing-related-stuf.patch
->  0004-libata-kill-ata_id_to_dma_mode.patch
->  0005-libata-xfer_mask-is-unsigned-int-not-unsigned-long.patch
->  0006-libata-separate-out-ata_acpi_gtm_xfermask-from-pa.patch
->  0007-libata-fix-ata_acpi_gtm_xfermask.patch
->  0008-libata-implement-ata_timing_cycle2mode-and-use-it.patch
->  0009-libata-implement-ata_acpi_init_gtm.patch
->  0010-libata-reimplement-ata_acpi_cbl_80wire-using-ata_.patch
->  0011-libata-add-ATA_CBL_PATA_IGN.patch
->  0012-pata_amd-update-mode-selection-for-NV-PATAs.patch
+>  drivers/ata/ata_piix.c |   62 ++++++++++++++++++++++++------------------------
+>  1 files changed, 31 insertions(+), 31 deletions(-)
 > 
-> 0001-0005 are clean ups of timing handling code.  0006-0008 unifies
-> timing handling code in libata-acpi.c and pata_acpi.c with the core
-> timing code.
-> 
-> 0009 implements initial GTM caching.  I thought about moving this to
-> LLDs but it's too much hassle.  GTM is host wide and doing it from
-> ->error_handler would require cross-port synchronization.  Left
-> alternative is adding a separate hook.  Simply doing it during ACPI
-> attach is simpler.
-> 
-> 0010 reimplements ata_acpi_cbl_80wire() using ata_acpi_gtm_xfermask().
-> This new function takes @gtm argument.  Both users (pata_via and
-> pata_amd) are converted to pass initial GTM.
-> 
-> 0011 implements ATA_CBL_PATA_IGN which tells libata to ignore cable
-> type and supporess all related handling.
-> 
-> 0012 updates mode selection for NV PATA controllers.  We just can't
-> tell what cable is attached on the controller either from host or
-> drive side.  So, for those controllers, pata_amd just sets cable type
-> to ATA_CBL_PATA_IGN and use ->mode_filter to limit transfer mode
-> according to BIOS/ACPI boot configuration.  If that fails (not
-> likely), pata_amd simply sets the highest allowed speed and let EH
-> figure out the mess.  With recent updates, EH should be able to figure
-> it out pretty soon.
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 80b735b..77fea05 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -119,18 +119,18 @@ enum {
+>  	PIIX_80C_SEC		= (1 << 7) | (1 << 6),
+>  
+>  	/* controller IDs */
+> -	piix_pata_33		= 0,	/* PIIX4 at 33Mhz */
+> -	ich_pata_33		= 1,	/* ICH up to UDMA 33 only */
+> -	ich_pata_66		= 2,	/* ICH up to 66 Mhz */
+> -	ich_pata_100		= 3,	/* ICH up to UDMA 100 */
+> -	ich5_sata		= 5,
+> -	ich6_sata		= 6,
+> -	ich6_sata_ahci		= 7,
+> -	ich6m_sata_ahci		= 8,
+> -	ich8_sata_ahci		= 9,
+> -	piix_pata_mwdma		= 10,	/* PIIX3 MWDMA only */
+> -	tolapai_sata_ahci	= 11,
+> -	ich9_2port_sata		= 12,
+> +	piix_pata_mwdma		= 0,	/* PIIX3 MWDMA only */
+> +	piix_pata_33,			/* PIIX4 at 33Mhz */
+> +	ich_pata_33,			/* ICH up to UDMA 33 only */
+> +	ich_pata_66,			/* ICH up to 66 Mhz */
+> +	ich_pata_100,			/* ICH up to UDMA 100 */
+> +	ich5_sata,
+> +	ich6_sata,
+> +	ich6_sata_ahci,
+> +	ich6m_sata_ahci,
+> +	ich8_sata_ahci,
+> +	ich8_2port_sata,
+> +	tolapai_sata_ahci,
 
-overall this seems pretty sane...  but I lean towards applying it in 
-2.6.25 rather than 2.6.24, since we are fairly deep into 2.6.24-rc at 
-this point, with little time to test these and the speed down changes to 
-ensure no last-minute breakage.
+When using automatically filled values, please move to a separate and 
+distinct enum...
+
+ACK everything else
+
+	Jeff
+
+
 
