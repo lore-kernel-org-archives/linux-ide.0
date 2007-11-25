@@ -1,112 +1,92 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: kernel bugzilla is FPOS (was: Re: "buggy cmd640" message
-	followed by soft lockup)
-Date: Sun, 25 Nov 2007 23:40:10 +0100
-Message-ID: <20071125224010.GA5006@stusta.de>
-References: <200711222007.12497.elendil@planet.nl> <200711252228.07312.rjw@sisk.pl> <20071125213640.GC18284@stusta.de> <200711252339.00557.rjw@sisk.pl>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: [PATCH] sata_nv: don't use legacy DMA in ADMA mode (v3)
+Date: Sun, 25 Nov 2007 16:59:36 -0600
+Message-ID: <4749FE58.4060800@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:38066 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756040AbXKYWkX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Nov 2007 17:40:23 -0500
-Content-Disposition: inline
-In-Reply-To: <200711252339.00557.rjw@sisk.pl>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:3881 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754549AbXKYXAp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Nov 2007 18:00:45 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-On Sun, Nov 25, 2007 at 11:38:59PM +0100, Rafael J. Wysocki wrote:
-> On Sunday, 25 of November 2007, Adrian Bunk wrote:
-> > On Sun, Nov 25, 2007 at 10:28:06PM +0100, Rafael J. Wysocki wrote:
-> > > On Sunday, 25 of November 2007, Adrian Bunk wrote:
-> > >..
-> > > > First of all, Bugzilla is a quite often used bug tracker in the open 
-> > > > source world [1], so many users already know it.
-> > > > 
-> > > > But more important, "it pretends to require them to spend" isn't true 
-> > > > because there's no pretending - we actually often require bug reporters 
-> > > > to spend a lot of time on the bug report (e.g. when asking for 
-> > > > bisecting).
-> > > 
-> > > But not *initially*.
-> > > 
-> > > We should not confuse *debugging* with *reporting bugs*.  While the former is
-> > > actually more difficult and more time consuming than writing the code in which
-> > > the bug is present, the latter should be as simple as sending an email.
-> > 
-> > For hardcore geeks like you and me sending an email might be easier than 
-> > using some web interface.
-> > 
-> > Normal humans tend to be more accustomed to web interfaces, and 
-> > following the instructions on some web page is _much_ easier than 
-> > reading three text files for knowing what to write in an email.
-> 
-> Hm, this is a good argument for having such a web interface, but IMO it
-> shouldn't be mandatory.  IOW, there should be a way to report a bug using plain
-> email, if the reporter prefers that.  We can, however, request that the address
-> of our bug tracking system be added to the report's Cc list.
+We need to run any DMA command with result taskfile requested in ADMA mode
+when the port is in ADMA mode, otherwise it may try to use the legacy DMA engine
+in ADMA mode which is not allowed. Enforce this with BUG_ON() since data
+corruption could potentially result if this happened. Also, fail any attempt to
+try and issue NCQ commands with result taskfile requested, since the hardware
+doesn't allow this.
 
-Looking at both other open source projects and the support of commercial 
-software a web interface should be enough.
+Signed-off-by: Robert Hancock <hancockr@shaw.ca>
 
-But this is not the problem - the problem is what happens after the 
-initial report with the bug report.
-
-> Now, the question is what information this web interface should ask for.
-> 
-> IMO, first, it should ask for what the bug is against, ie.:
-> - kernel version (to be obtained from 'git describe' or from /proc/version or
->   from .config, if the kernel doesn't boot)
-> - architecture (x86, ARM, MIPS etc.)
-> - subsystem and subsubsystem (that could be selectable from a menu and might
->   depend on the architecture)
-> 
-> It also should ask if the problem is a regression and what was the last known
-> good kernel (I'd prefer that to be the last known major release selectable from
-> a list).
-> 
-> Also, the reporter should be required to provide a summary (subject) and
-> a (concise) description of the problem and a list of email addresses to
-> send the report to in addition to the regular handling (there should be a way
-> to verify which addresses are acceptable).
-> 
-> Anything else?
-> 
-> Next, the report should be sent to a mailing list selected on the basis of the
-> information provided (not necessarily to individual developers, unless there
-> are some addresses provided explicitly by the reporter).
-
-The architecture choice seems to be the only thing from your list that
-isn't already available in the "Enter a new bug report" dialog of the
-kernel Bugzilla.
-
-> IMO, it should be possible to work on the bug using both email and the web
-> interface, whichever is preferred by the participant in question, without the
-> need to stick to any of them (ie. email messages sent in the corresponding
-> email thread should be registered by the bug tracking system and comments
-> entered into it should appear as messages in the email thread with the
-> appropriate To:, From: and Cc: information).
-> 
-> There surely are more things that we'd like it to do, but the above seem to be
-> a reasonable minimum.
-
-Except from the From: header in outgoing emails the kernel Bugzilla 
-already offers this for years.
-
->...
-> Greetings,
-> Rafael
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+--- linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c.before2	2007-11-25 16:28:58.000000000 -0600
++++ linux-2.6.24-rc3-git1edit/drivers/ata/sata_nv.c	2007-11-25 16:31:09.000000000 -0600
+@@ -792,11 +792,13 @@
+ 
+ static void nv_adma_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ {
+-	/* Since commands where a result TF is requested are not
+-	   executed in ADMA mode, the only time this function will be called
+-	   in ADMA mode will be if a command fails. In this case we
+-	   don't care about going into register mode with ADMA commands
+-	   pending, as the commands will all shortly be aborted anyway. */
++	/* Other than when internal or pass-through commands are executed,
++	   the only time this function will be called in ADMA mode will be
++	   if a command fails. In the failure case we don't care about going
++	   into register mode with ADMA commands pending, as the commands will
++	   all shortly be aborted anyway. We assume that NCQ commands are not
++	   issued via passthrough, which is the only way that switching into
++	   ADMA mode could abort outstanding commands. */
+ 	nv_adma_register_mode(ap);
+ 
+ 	ata_tf_read(ap, tf);
+@@ -1379,11 +1381,9 @@
+ 	struct nv_adma_port_priv *pp = qc->ap->private_data;
+ 
+ 	/* ADMA engine can only be used for non-ATAPI DMA commands,
+-	   or interrupt-driven no-data commands, where a result taskfile
+-	   is not required. */
++	   or interrupt-driven no-data commands. */
+ 	if ((pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) ||
+-	   (qc->tf.flags & ATA_TFLAG_POLLING) ||
+-	   (qc->flags & ATA_QCFLAG_RESULT_TF))
++	   (qc->tf.flags & ATA_TFLAG_POLLING))
+ 		return 1;
+ 
+ 	if ((qc->flags & ATA_QCFLAG_DMAMAP) ||
+@@ -1401,6 +1401,8 @@
+ 		       NV_CPB_CTL_IEN;
+ 
+ 	if (nv_adma_use_reg_mode(qc)) {
++		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
++			(qc->flags & ATA_QCFLAG_DMAMAP));
+ 		nv_adma_register_mode(qc->ap);
+ 		ata_qc_prep(qc);
+ 		return;
+@@ -1445,9 +1447,21 @@
+ 
+ 	VPRINTK("ENTER\n");
+ 
++	/* We can't handle result taskfile with NCQ commands, since
++	   retrieving the taskfile switches us out of ADMA mode and would abort
++	   existing commands. */
++	if (unlikely(qc->tf.protocol == ATA_PROT_NCQ &&
++		     (qc->flags & ATA_QCFLAG_RESULT_TF))) {
++		ata_dev_printk(qc->dev, KERN_ERR,
++			"NCQ w/ RESULT_TF not allowed\n");
++		return AC_ERR_SYSTEM;
++	}
++
+ 	if (nv_adma_use_reg_mode(qc)) {
+ 		/* use ATA register mode */
+ 		VPRINTK("using ATA register mode: 0x%lx\n", qc->flags);
++		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
++			(qc->flags & ATA_QCFLAG_DMAMAP));
+ 		nv_adma_register_mode(qc->ap);
+ 		return ata_qc_issue_prot(qc);
+ 	} else
 
