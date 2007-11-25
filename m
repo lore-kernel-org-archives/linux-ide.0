@@ -1,142 +1,108 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: kernel bugzilla is FPOS (was: Re: "buggy cmd640" message followed by soft lockup)
-Date: Sun, 25 Nov 2007 01:26:11 +0100
-Message-ID: <200711250126.11603.bzolnier@gmail.com>
-References: <200711222007.12497.elendil@planet.nl> <200711241904.13132.bzolnier@gmail.com> <200711242007.52430.rjw@sisk.pl>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
+Date: Sun, 25 Nov 2007 09:37:55 +0200
+Message-ID: <1195976275.3427.6.camel@localhost.localdomain>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org>
+	 <4744A6F2.4030302@free.fr>
+	 <20071121144116.c932727b.akpm@linux-foundation.org>
+	 <4746814F.80502@free.fr> <4746866B.5070207@suse.de>
+	 <4746BB9D.2030508@suse.de>  <4747135C.60205@free.fr>
+	 <1195886569.3195.2.camel@localhost.localdomain> <47481FA6.9050506@free.fr>
+	 <1195910809.3195.5.camel@localhost.localdomain> <4748ACC7.4010509@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:15206 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818AbXKYAVg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Nov 2007 19:21:36 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so715824ugc
-        for <linux-ide@vger.kernel.org>; Sat, 24 Nov 2007 16:21:34 -0800 (PST)
-In-Reply-To: <200711242007.52430.rjw@sisk.pl>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4748ACC7.4010509@free.fr>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Laurent Riffard <laurent.riffard@free.fr>
+Cc: Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+
+On Sat, 2007-11-24 at 23:59 +0100, Laurent Riffard wrote:
+> Le 24.11.2007 14:26, James Bottomley a =C3=A9crit :
+> > OK, could you post dmesgs again, please.  I actually tested this
+> with an
+> > aic79xx card, and for me it does cause Domain Validation to succeed
+> > again.
+>=20
+> James,=20
+>=20
+> Here is a dmesg produced by 2.6.24-rc3-mm1 + your patch "separates
+> the=20
+> BLOCK and QUIESCE states
+> correctly" (http://lkml.org/lkml/2007/11/24/8).
+>=20
+> How to reproduce :
+> - boot
+> - switch to a text console
+> - capture dmesg in a file, sync, etc. There are 3 I/O errors, but the=
+=20
+>   system does work.
+> - switch to X console, log in the Gnome Desktop, the system partially=
+=20
+>   hangs.
+> - switch back to a text console: dmesg(1) still works, it shows some=20
+>   additonal I/O errors. At this point, any disk access makes the
+> system=20
+>   completely hung.
+>=20
+> Additionnal data:
+> - the I/O errors always happen on the same blocks.
+>=20
+> plain text document attachment (dmesg-2.6.24-rc3-mm1-patched)
+[...]
+> [   25.521256] scsi0 : pata_via
+> [   25.521711] scsi1 : pata_via
+> [   25.524089] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma
+> 0xb800 irq 14
+> [   25.524176] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma
+> 0xb808 irq 15
+> [   25.683141] ata1.00: ATA-5: ST340016A, 3.75, max UDMA/100
+> [   25.683208] ata1.00: 78165360 sectors, multi 16: LBA=20
+> [   25.683475] ata1.01: ATA-7: Maxtor 6Y080L0, YAR41BW0, max UDMA/133
+> [   25.684116] ata1.01: 160086528 sectors, multi 16: LBA=20
+> [   25.691127] ata1.00: configured for UDMA/100
+> [   25.699142] ata1.01: configured for UDMA/100
+> [   26.170860] ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-4165B, DL05, max
+> UDMA/33
+> [   26.171562] ata2.01: ATAPI: CD-950E/AKU, A4Q, max MWDMA2, CDB intr
+> [   26.330839] ata2.00: configured for UDMA/33
+> [   26.490828] ata2.01: configured for MWDMA2
+> [   26.503014] scsi 0:0:0:0: Direct-Access     ATA      ST340016A
+> 3.75 PQ: 0 ANSI: 5
+> [   26.504670] scsi 0:0:1:0: Direct-Access     ATA      Maxtor 6Y080L=
+0
+> YAR4 PQ: 0 ANSI: 5
+> [   26.509842] scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM
+> GSA-4165B DL05 PQ: 0 ANSI: 5
+> [   26.511673] scsi 1:0:1:0: CD-ROM            E-IDE    CD-950E/AKU
+> A4Q  PQ: 0 ANSI: 5
+[...]
+> [   60.216113] sd 0:0:0:0: [sda] Result: hostbyte=3DDID_NO_CONNECT
+> driverbyte=3DDRIVER_OK,SUGGEST_OK
+> [   60.216124] end_request: I/O error, dev sda, sector 16460
+
+I think this one's quite easy:  PATA devices in libata are queue depth =
+1
+(since they don't do NCQ).  Thus, they're peculiarly sensitive to the
+bug where we fail over queue depth requests.
+
+On the other hand, I don't see how a filesystem request is getting
+REQ_FAILFAST ... unless there's a bio or readahead issue involved.
+Anyway, could you try this patch:
+
+http://marc.info/?l=3Dlinux-scsi&m=3D119592627425498
+
+Which should fix the queue depth issue, and see if the errors go away?
+
+Thanks,
+
+James
 
 
-[ I removed Frans from cc: since it is off-topic to the original bugreport ]
-
-On Saturday 24 November 2007, Rafael J. Wysocki wrote:
-> On Saturday, 24 of November 2007, Bartlomiej Zolnierkiewicz wrote:
-> [--snip--]
-> > Rafael, I see that you've filled a bug for this bugreport into kernel
-> > bugzilla tracker (one day after the bugreport):
-> > 
-> > 	http://bugzilla.kernel.org/show_bug.cgi?id=9442
-> > 
-> > Since we try to address regressions with the highest priority in the
-> > IDE-land (and usually they get fixed quickly) I would strongly prefer to
-> > use bugzilla only for long-term bugs and avoid the needless bureaucracy.
-> 
-> As a rule, I put all of the reported regressions into the Bugzilla early.  You
-> are not required to use these entries for tracking the bugs, though.  If you
-
-[ I really don't think that the recent push from both Andrew and you in
-  bugzilla direction is a good thing... ]
-
-There is a mix of technical and psychological issues with using bugzilla:
-
-* Interface for filling bugs is a joke:
-  - help for "Product" selection is mediocre
-    ("IO/Storage:" -> "Bugs related to IO")
-  - there is no help for "Componenet" selection
-  - "Some basic debugging hints" are not there
-  - "Kernel version" given by reporter should be checked against the latest
-    kernel version and if not matching there should be a kind request to
-    retest with the latest kernel
-  - it should be strongly suggested to attach dmesg output and kernel config
-  - zillion other little improvements...
-
-  [ The average bug quality is not very high (bugs often lack critical
-    information) and this is really not reporters' fault!  The interface
-    should be kept as simple as possible but if the reporter wants to
-    find some help and hints they should be there. ]
-
-* Bugs that sit in NEEDINFO state for more than i.e. one month should be
-  automatically closed.
-
-* After each major kernel release bugzilla should send a kind request for
-  retesting to all open bugs.
-
-* You can't close/reject bugs by email.
-
-* There is "Assigned-to:" field which is described as "This is the person in
-  charge of resolving the bug." in bugzilla's help so people get assumptions
-  that there is somebody who is supposed to handle the bug and that this
-  person should be actively working on it.  Both assumptions may be invalid
-  (orhpaned drivers, there are more high priority bugs etc.).  OTOH mailing
-  list doesn't give such assumptions and encourages more active attitudes
-  of bugreporters.
-
-  [ also compare this with "Maintained" definition in MAINTAINERS file ]
-
-* From maintainer/developer POV you really want to track bugs in public
-  (mailing list) so other people can jump in and help.
-
-  [ It is also important that the other developers see that you are active. ]
-
-* We want bug tracking the other way around: everything goes through mailing
-  list first (including bugs filled to the bug tracker) and if not fixed
-  quickly, somebody (maintainer of the given part of code or a higher level
-  maintainer) replies cc:ing bugzilla so the new bug entry is added.
-
-  Also this way we fix trivial/easy/medium bugs ASAP or reject invalid ones
-  without any bugzilla overhead.  We also add a new patch description tags:
-  - "Fixes-bug:" tag with reference to the original discussion
-  and
-  - "Fixes-commit:" tag with reference to the kernel commit
-  which are automatically snooped by bugzilla from git so we keep info about
-  fixed bugs/regression for statistics, bugs history and to aid -stable team
-  in their efforts.
-
-  [ This is just a blurry sketch of the desired workflow but please note how
-    this is different from just assigning your component to the mailing list
-    address which should already be possible. ]
-
-* Last but not least our bugzilla just looks ugly (it is _very_ important,
-  I feel disgusted each time I have to work with it, OTOH I love using
-  gitweb - you get the idea).
-
-Sigh, I've just realized that comparing to source code control we are in
-the "stone-age" when it comes to bug tracking.   Hmm, what about switching
-to some proprietary bug tracking system just to talk Linus into writing
-a superior one?  ;-)
-
-> don't want to, just leave the entry as is and I'll close it when the fix is in
-> the Linus' tree.
-
-> > Therefore I kindly ask you to defer filling bugs for new bugreports for
-> > a week or two, and give us some time to react (and always ping me about
-> > the bugreport status before filling bugzilla entry).
-> 
-> Well, I thought you'd get an email from the Bugzilla, but of course I can notify
-> you directly about reported regressions related to IDE.
-
-I do get mails from bugzilla so if you are going to assign these bugs to
-yourself and track them, then no need to notify me.
-
-[ I also regularly read your regressions list. ]
-
-> > The alternative solution would be that you fill all new bugreports but
-> > then please assign them to yourself and track their status (if after two
-> > weeks the problem is not fixed feel free to reassign bug to me).
-> 
-> I can do that, but please note that the bugs filed against IDE are assigned to
-> you automatically, so I'll have to reassign them to me (as I've just done with
-
-Thank you.
-
-> this particular entry).  If you don't want them to be assigned to you at all,
-> please contact the Bugzilla administrators and ask them to change that.
-
-Well, I consider this from time to time...
-
-Bart
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
