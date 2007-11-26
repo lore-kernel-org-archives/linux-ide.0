@@ -1,36 +1,50 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: Possibly SATA related freeze killed networking and RAID
-Date: Mon, 26 Nov 2007 12:06:50 +0000
-Message-ID: <20071126120649.GC4701@ucw.cz>
-References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from
+ qc->tf
+Date: Mon, 26 Nov 2007 21:18:38 +0900
+Message-ID: <474AB99E.3030109@gmail.com>
+References: <200711261200.lAQC0vFd029485@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:1047 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754339AbXKZMQX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Nov 2007 07:16:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20071120220512.46b9e975@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.188]:16108 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754232AbXKZMSp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 07:18:45 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so501617rvb
+        for <linux-ide@vger.kernel.org>; Mon, 26 Nov 2007 04:18:44 -0800 (PST)
+In-Reply-To: <200711261200.lAQC0vFd029485@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
-Hi!
+Hello,
 
-> >  kernel: [734344.717844] irq 21: nobody cared (try booting with the
-> > "irqpoll" option)
-> >  kernel: [734344.717866]
+Mikael Pettersson wrote:
+>>  	buf[20] = (1 << 5) | ATA_REG_FEATURE;
+>>  	buf[21] = feature;
+>>  	buf[22] = (1 << 5) | ATA_REG_BYTEL;
+>> -	buf[23] = nbytes & 0xFF;
+>> +	buf[23] = qc->tf.lbam;
+>>  	buf[24] = (1 << 5) | ATA_REG_BYTEH;
+>> -	buf[25] = (nbytes >> 8) & 0xFF;
+>> +	buf[25] = qc->tf.lbah;
 > 
-> Your machine decided to emit interrupt 21 without an apparent reason.
-> Whatever caused that made the kernel shut down IRQ 21 at which point the
-> disk drives on that IRQ were no longer being serviced. Everything on IRQ
-> 21 would have died - which may be why your networking failed too.
+> The original code matches what Promise' own driver does, including
+> the "set byte counter register to real transfer byte count" comment.
+> It's certainly possible that if lbah/lbam don't match ->nbytes,
+> the HW will go nuts. Their data sheets are very quiet about ATAPI.
 
-Hmm, perhaps that 'nobody cared' message should be worded more
-strongly, and printed and KERN_CRIT?
-							Pavel
+Yeah, now core code sets the value properly and I just posted a patch to
+massage transfer chunk size a bit so I was curious whether now
+sata_promise can use the result of core layer instead.
+
+> I can test your proposed change next weekend when I'm back to where
+> my sata_promise test equipment is.
+
+Thank you.
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+tejun
