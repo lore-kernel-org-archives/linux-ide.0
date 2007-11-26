@@ -1,31 +1,77 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
-Date: Mon, 26 Nov 2007 08:54:04 -0800
-Message-ID: <474AFA2C.5080800@oracle.com>
-References: <1196061373-6394-1-git-send-email-crquan@gmail.com> <1196062867.8948.25.camel@localhost> <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com> <20071126132513.GA3230@parisc-linux.org>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: kernel bugzilla is FPOS (was: Re: "buggy cmd640" message
+	followed by soft lockup)
+Date: Mon, 26 Nov 2007 22:45:55 +0100
+Message-ID: <20071126214554.GD917@stusta.de>
+References: <200711222007.12497.elendil@planet.nl> <200711260028.18489.rjw@sisk.pl> <20071125233458.GC5006@stusta.de> <200711260130.06985.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20071126132513.GA3230@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: rae l <crquan@gmail.com>, Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:36193 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754727AbXKZVqJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 16:46:09 -0500
+Content-Disposition: inline
+In-Reply-To: <200711260130.06985.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>
 
-Matthew Wilcox wrote:
-> On Mon, Nov 26, 2007 at 04:37:50PM +0800, rae l wrote:
->> I know this is different from the original hexdump in ide-scsi.c, I
->> just want to tell someone that there's a good implementation of
->> hexdump in kernel.h, and I think the default KERN_DEBUG and
->> print_hex_dump is more informative and has better output. However,
->> anyone want more precise control on debug message could make her/his
->> improvements with print_hex_dump.
+On Mon, Nov 26, 2007 at 01:30:06AM +0100, Rafael J. Wysocki wrote:
+> On Monday, 26 of November 2007, Adrian Bunk wrote:
+>...
+> > That's not possible, but as already said it's not required.
+> > And more important, it's unrelated to any problems we have.
+> > 
+> > And it sounds funny that you first write specifications mandating stuff 
+> > like "IMO, first, it should ask for what the bug is against" and then 
+> > demand an additional email interface that bypasses everything you 
+> > demanded previously.
 > 
-> using KERN_DEBUG is wrong -- this is part of a line, so you need to use
-> KERN_NONE or simply "".
+> I just realize that there are people who wouldn't like to use the web interface
+> and would prefer to use email instead.
 
-s/KERN_NONE/KERN_CONT/ for continuation lines.
+In the cases where these are kernel developers that do (or should) 
+handle dozens of bugs each week I see a point if they have problems 
+integrating some medium into their workflow.
+
+But in all software, no matter whether open source or commercial, bug 
+reporters simply have to use whatever the vendor offers as support 
+channel.
+
+> Moreover, you won't force people to use the web interface only for reporting
+> bugs, because frankly for some kinds of problems it's too heavywieght
+
+That developers who know what they are doing might bypass the bug
+tracking is not a problem.
+
+> (compilation problems and purely software, reproducible things like that are
+> much faster resolved using email; this also applies to easily reproducible bugs
+> in general).  Still, it wouldn't hurt if they were automatically tracked.
+
+This sounds like "a bit pregnant"...
+
+Tracking requires things like e.g. categorizing the issue and marking it 
+as fixed when it got fixed.
+
+> > > Also, if you "switch to email", and then want to switch back to the web
+> > > interface, the Cc list from the email messages will be lost.
+> > 
+> > The perfect is the enemy of the good.
+> 
+> Sure.
+> 
+> Greetings,
+> Rafael
+
+cu
+Adrian
 
 -- 
-~Randy
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
