@@ -1,35 +1,27 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
-Date: Mon, 26 Nov 2007 06:25:13 -0700
-Message-ID: <20071126132513.GA3230@parisc-linux.org>
-References: <1196061373-6394-1-git-send-email-crquan@gmail.com> <1196062867.8948.25.camel@localhost> <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_pcmcia: Minor cleanups and support for dual
+ channel cards
+Date: Mon, 26 Nov 2007 15:40:47 +0000
+Message-ID: <20071126154047.63021652@the-village.bc.nu>
+References: <20071119144307.7b67f09e@the-village.bc.nu>
+	<474774A6.5020906@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39045 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752862AbXKZNZR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 08:25:17 -0500
-Content-Disposition: inline
-In-Reply-To: <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43884 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752085AbXKZPnz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 10:43:55 -0500
+In-Reply-To: <474774A6.5020906@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rae l <crquan@gmail.com>
-Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-On Mon, Nov 26, 2007 at 04:37:50PM +0800, rae l wrote:
-> I know this is different from the original hexdump in ide-scsi.c, I
-> just want to tell someone that there's a good implementation of
-> hexdump in kernel.h, and I think the default KERN_DEBUG and
-> print_hex_dump is more informative and has better output. However,
-> anyone want more precise control on debug message could make her/his
-> improvements with print_hex_dump.
+setup and it821x fixes can go to mainstream for 2.6.25 I think - no bad
+reports yet.
 
-using KERN_DEBUG is wrong -- this is part of a line, so you need to use
-KERN_NONE or simply "".
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+BTW so we don't duplicate work right now I'm working on a full DMA engine
+based driver for the INIC162x. Dunno if I'll ever get it to work as the
+docs are a bit minimal but we shall see.
