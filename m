@@ -1,77 +1,68 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: kernel bugzilla is FPOS (was: Re: "buggy cmd640" message
-	followed by soft lockup)
-Date: Mon, 26 Nov 2007 22:45:55 +0100
-Message-ID: <20071126214554.GD917@stusta.de>
-References: <200711222007.12497.elendil@planet.nl> <200711260028.18489.rjw@sisk.pl> <20071125233458.GC5006@stusta.de> <200711260130.06985.rjw@sisk.pl>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: kernel bugzilla is FPOS (was: Re: "buggy cmd640" message followed by soft lockup)
+Date: Mon, 26 Nov 2007 23:57:04 +0100
+Message-ID: <200711262357.04817.rjw@sisk.pl>
+References: <200711222007.12497.elendil@planet.nl> <200711260130.06985.rjw@sisk.pl> <20071126214554.GD917@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:36193 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754727AbXKZVqJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 16:46:09 -0500
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756741AbXKZWjF@vger.kernel.org>
+In-Reply-To: <20071126214554.GD917@stusta.de>
 Content-Disposition: inline
-In-Reply-To: <200711260130.06985.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Mon, Nov 26, 2007 at 01:30:06AM +0100, Rafael J. Wysocki wrote:
-> On Monday, 26 of November 2007, Adrian Bunk wrote:
->...
-> > That's not possible, but as already said it's not required.
-> > And more important, it's unrelated to any problems we have.
+On Monday, 26 of November 2007, Adrian Bunk wrote:
+> On Mon, Nov 26, 2007 at 01:30:06AM +0100, Rafael J. Wysocki wrote:
+> > On Monday, 26 of November 2007, Adrian Bunk wrote:
+> >...
+> > > That's not possible, but as already said it's not required.
+> > > And more important, it's unrelated to any problems we have.
+> > > 
+> > > And it sounds funny that you first write specifications mandating stuff 
+> > > like "IMO, first, it should ask for what the bug is against" and then 
+> > > demand an additional email interface that bypasses everything you 
+> > > demanded previously.
 > > 
-> > And it sounds funny that you first write specifications mandating stuff 
-> > like "IMO, first, it should ask for what the bug is against" and then 
-> > demand an additional email interface that bypasses everything you 
-> > demanded previously.
+> > I just realize that there are people who wouldn't like to use the web interface
+> > and would prefer to use email instead.
 > 
-> I just realize that there are people who wouldn't like to use the web interface
-> and would prefer to use email instead.
-
-In the cases where these are kernel developers that do (or should) 
-handle dozens of bugs each week I see a point if they have problems 
-integrating some medium into their workflow.
-
-But in all software, no matter whether open source or commercial, bug 
-reporters simply have to use whatever the vendor offers as support 
-channel.
-
-> Moreover, you won't force people to use the web interface only for reporting
-> bugs, because frankly for some kinds of problems it's too heavywieght
-
-That developers who know what they are doing might bypass the bug
-tracking is not a problem.
-
-> (compilation problems and purely software, reproducible things like that are
-> much faster resolved using email; this also applies to easily reproducible bugs
-> in general).  Still, it wouldn't hurt if they were automatically tracked.
-
-This sounds like "a bit pregnant"...
-
-Tracking requires things like e.g. categorizing the issue and marking it 
-as fixed when it got fixed.
-
-> > > Also, if you "switch to email", and then want to switch back to the web
-> > > interface, the Cc list from the email messages will be lost.
-> > 
-> > The perfect is the enemy of the good.
+> In the cases where these are kernel developers that do (or should) 
+> handle dozens of bugs each week I see a point if they have problems 
+> integrating some medium into their workflow.
 > 
-> Sure.
+> But in all software, no matter whether open source or commercial, bug 
+> reporters simply have to use whatever the vendor offers as support 
+> channel.
+
+Yes.
+
+That's why we should tell them what the channel is. :-)
+
+> > Moreover, you won't force people to use the web interface only for reporting
+> > bugs, because frankly for some kinds of problems it's too heavywieght
 > 
-> Greetings,
-> Rafael
+> That developers who know what they are doing might bypass the bug
+> tracking is not a problem.
+> 
+> > (compilation problems and purely software, reproducible things like that are
+> > much faster resolved using email; this also applies to easily reproducible bugs
+> > in general).  Still, it wouldn't hurt if they were automatically tracked.
+> 
+> This sounds like "a bit pregnant"...
+> 
+> Tracking requires things like e.g. categorizing the issue and marking it 
+> as fixed when it got fixed.
 
-cu
-Adrian
+Yes, but that may be done after the fact.  It's not a big problem to review an
+email thread starting from a bug report and see if it lead to a fix (I do that
+on a regular basis).  [Note: They tend to be relatively short. ]  You can even
+check if the fix has been merged.
 
--- 
+Still, you need to know which threads to review.
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Greetings,
+Rafael
