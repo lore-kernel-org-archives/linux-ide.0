@@ -1,77 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
-Date: Mon, 26 Nov 2007 08:54:26 +0100
-Message-ID: <20071126075426.GC11261@ochil.suse.de>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <4744A6F2.4030302@free.fr> <20071121144116.c932727b.akpm@linux-foundation.org> <4746814F.80502@free.fr> <4746866B.5070207@suse.de> <4746BB9D.2030508@suse.de> <1195926253.3195.16.camel@localhost.localdomain>
+From: Tobias Oed <tobiasoed@hotmail.com>
+Subject: RE: Lost interrupt with cmd 64x
+Date: Mon, 26 Nov 2007 03:22:32 -0500
+Message-ID: <BAY139-W12F4E56BAE26296202C6BEA3750@phx.gbl>
+References: <BAY139-W374C1413B6CEBCB202A330A37D0@phx.gbl>
+ <200711222312.58589.bzolnier@gmail.com> <4746BBBA.3010209@ru.mvista.com>
+ <200711231345.08052.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:52333 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753193AbXKZHy3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Nov 2007 02:54:29 -0500
-Content-Disposition: inline
-In-Reply-To: <1195926253.3195.16.camel@localhost.localdomain>
+Received: from bay0-omc3-s15.bay0.hotmail.com ([65.54.246.215]:40886 "EHLO
+	bay0-omc3-s15.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752527AbXKZIWd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Nov 2007 03:22:33 -0500
+In-Reply-To: <200711231345.08052.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Laurent Riffard <laurent.riffard@free.fr>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-On Sat, Nov 24, 2007 at 07:44:13PM +0200, James Bottomley wrote:
-> Probing intermittent failures in Domain Validation, even with the fix=
-es
-> applied leads me to the conclusion that there are further problems wi=
-th
-> this commit:
->=20
-> commit fc5eb4facedbd6d7117905e775cee1975f894e79
-> Author: Hannes Reinecke <hare@suse.de>
-> Date:   Tue Nov 6 09:23:40 2007 +0100
->=20
->     [SCSI] Do not requeue requests if REQ_FAILFAST is set
-> =20
-> The essence of the problems is that you're causing REQ_FAILFAST to
-> terminate commands with error on requeuing conditions, some of which =
-are
-> relatively common on most SCSI devices.  While this may be the correc=
-t
-> behaviour for multi-path, it's certainly wrong for the previously
-> understood meaning of REQ_FAILFAST, which was don't retry on error,
-> which is why domain validation and other applications use it to contr=
-ol
-> error handling, but don't expect to get failures for a simple requeue
-> are now spitting errors.
->=20
-> I honestly can't see that, even for the multi-path case, returning an
-> error when we're over queue depth is the correct thing to do (it may =
-not
-> matter to something like a symmetrix, but an array that has a non-zer=
-o
-> cost associated with a path change, like a CPQ HSV or the AVT
-> controllers, will show fairly large slow downs if you do this).  Even=
- if
-> this is the desired behaviour (and I think that's a policy issue),
-> DID_NO_CONNECT is almost certainly the wrong error to be sending back=
-=2E
->=20
-> This patch fixes up domain validation to work again correctly, howeve=
-r,
-> I really think it's just a bandaid.  Do you want to rethink the above
-> commit?
->=20
-Given the amounted error, yes, I'll have to.
-But we still face the initial problem that requeued requests will be
-stuck in the queue forever (ie until the timeout catches it), causing
-failover to be painfully slow.
 
-Anyway, I'll think it over.
 
-Cheers,
+> On Friday 23 November 2007, Sergei Shtylyov wrote:
+>> Hello.
+>> 
+>> Bartlomiej Zolnierkiewicz wrote:
+>> 
+>>> This problem should have been already fixed by:
+>> 
+>>> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6183289cd4356b790c5eaa619020fb887ec0fa44
+>> 
+>>> which was merged into 2.6.24-rc3.
+>> 
+>>     Put your attenction at the version against which this was reported -- it's 
+>> eralier than when the regression was introduced.
+> 
+> Indeed, you are correct!
+> 
+> However it still would be worth to give 2.6.24-rc3 a try.
+> 
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=EF=BF=BDrnberg
-GF: Markus Rex, HRB 16746 (AG N=EF=BF=BDrnberg)
+Hello, sorry for getting back so late on this. I did try 24-rc3 with no luck. For info, I only have one disk connected to the card. Anything else I can try?
+Tobias
+
+
+_________________________________________________________________
+Share life as it happens with the new Windows Live.Download today it's FREE!
+http://www.windowslive.com/share.html?ocid=TXT_TAGLM_Wave2_sharelife_112007
