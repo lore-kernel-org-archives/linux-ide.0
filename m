@@ -1,104 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from
-	qc->tf
-Date: Mon, 26 Nov 2007 20:34:38 +0900
-Message-ID: <20071126113438.GB9232@htj.dyndns.org>
+Subject: [PATCH #upstream-fixes] libata: bump transfer chunk size if it's
+	odd
+Date: Mon, 26 Nov 2007 20:58:02 +0900
+Message-ID: <20071126115802.GC9232@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:5185 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753225AbXKZLez (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 06:34:55 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so491175rvb
-        for <linux-ide@vger.kernel.org>; Mon, 26 Nov 2007 03:34:54 -0800 (PST)
+Received: from wa-out-1112.google.com ([209.85.146.176]:52470 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094AbXKZL6W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 06:58:22 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so705067wah
+        for <linux-ide@vger.kernel.org>; Mon, 26 Nov 2007 03:58:21 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: mikpe@it.uu.se, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Make pdc_atapi_pkt() use values from qc->tf instead of creating its
-own.  This is to ease future ATAPI handling changes.
+None of the drives I have follows what the standard says about
+transfer chunk size.  Of the four SATA and six PATA ATAPI devices
+tested, four ignore transfer chunk size completely and the ones which
+honor it don't behave according to the spec when it's odd.
 
-DONT APPLY YET
+According to the spec, transfer chunk size can be odd if the amount of
+data to transfer equals or is smaller than the chunk size and the
+device can indicate the same odd number and transfer the whole thing
+at one go with a pad byte appended.  However, in reality, none of the
+drives I have does that.  They all indicate and transfer even number
+of bytes one byte shorter than the chunk size first; then indicate and
+transfer two bytes, which is clearly out of spec.
+
+In addition to unnecessary second PIO data phase, this also creates a
+weird problem when combined with SATA controllers which perform PIO
+via DMA.  Some of these controllers use actualy number of bytes
+received to update DMA pointer so chunks which are sized 4n + 2 makes
+DMA pointer off by two bytes.  This causes data corruption and buffer
+overruns.
+
+This patch rounds nbytes up to the nearest even number such that ATAPI
+devices don't split data transfer for the last odd byte.  This
+shouldn't confuse controllers which depend on transfer chunk size as
+devices will report the rounded-up number, actually transfer that much
+and padding buffer is there to receive them.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
-Mikael, would this work?  Values other than lbam and lbah remain the
-same.  Does sata_promise have strict requirements for lbam and lbah?
+ drivers/ata/libata-scsi.c |   35 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 32 insertions(+), 3 deletions(-)
 
-Thanks.
-
- drivers/ata/sata_promise.c |   34 +++++++++++++---------------------
- 1 file changed, 13 insertions(+), 21 deletions(-)
-
-Index: work/drivers/ata/sata_promise.c
+Index: work/drivers/ata/libata-scsi.c
 ===================================================================
---- work.orig/drivers/ata/sata_promise.c
-+++ work/drivers/ata/sata_promise.c
-@@ -450,7 +450,7 @@ static void pdc_atapi_pkt(struct ata_que
- 	struct pdc_port_priv *pp = ap->private_data;
- 	u8 *buf = pp->pkt;
- 	u32 *buf32 = (u32 *) buf;
--	unsigned int dev_sel, feature, nbytes;
-+	unsigned int dev_sel, feature;
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -2485,11 +2485,40 @@ static unsigned int atapi_xlat(struct at
+ 	if (!using_pio && ata_check_atapi_dma(qc))
+ 		using_pio = 1;
  
- 	/* set control bits (byte 0), zero delay seq id (byte 3),
- 	 * and seq id (byte 2)
-@@ -473,45 +473,37 @@ static void pdc_atapi_pkt(struct ata_que
- 	buf32[2] = 0;				/* no next-packet */
+-	/* Some controller variants snoop this value for Packet transfers
+-	   to do state machine and FIFO management. Thus we want to set it
+-	   properly, and for DMA where it is effectively meaningless */
++	/* Some controller variants snoop this value for Packet
++	 * transfers to do state machine and FIFO management.  Thus we
++	 * want to set it properly, and for DMA where it is
++	 * effectively meaningless.
++	 */
+ 	nbytes = min(qc->nbytes, (unsigned int)63 * 1024);
  
- 	/* select drive */
--	if (sata_scr_valid(&ap->link)) {
-+	if (sata_scr_valid(&ap->link))
- 		dev_sel = PDC_DEVICE_SATA;
--	} else {
--		dev_sel = ATA_DEVICE_OBS;
--		if (qc->dev->devno != 0)
--			dev_sel |= ATA_DEV1;
--	}
-+	else
-+		dev_sel = qc->tf.device;
++	/* Most ATAPI devices which honor transfer chunk size don't
++	 * behave according to the spec when odd chunk size which
++	 * matches the transfer length is specified.  If the number of
++	 * bytes to transfer is 2n+1.  According to the spec, what
++	 * should happen is to indicate that 2n+1 is going to be
++	 * transferred and transfer 2n+2 bytes where the last byte is
++	 * padding.
++	 *
++	 * In practice, this doesn't happen.  ATAPI devices first
++	 * indicate and transfer 2n bytes and then indicate and
++	 * transfer 2 bytes where the last byte is padding.
++	 *
++	 * This inconsistency confuses several controllers which
++	 * perform PIO using DMA such as Intel AHCIs and sil3124/32.
++	 * These controllers use actual number of transferred bytes to
++	 * update DMA poitner and transfer of 4n+2 bytes make those
++	 * controller push DMA pointer by 4n+4 bytes because SATA data
++	 * FISes are aligned to 4 bytes.  This causes data corruption
++	 * and buffer overrun.
++	 *
++	 * Always setting nbytes to even number solves this problem
++	 * because then ATAPI devices don't have to split data at 2n
++	 * boundaries.
++	 */
++	if (nbytes & 0x1)
++		nbytes++;
 +
- 	buf[12] = (1 << 5) | ATA_REG_DEVICE;
- 	buf[13] = dev_sel;
- 	buf[14] = (1 << 5) | ATA_REG_DEVICE | PDC_PKT_CLEAR_BSY;
- 	buf[15] = dev_sel; /* once more, waiting for BSY to clear */
+ 	qc->tf.lbam = (nbytes & 0xFF);
+ 	qc->tf.lbah = (nbytes >> 8);
  
- 	buf[16] = (1 << 5) | ATA_REG_NSECT;
--	buf[17] = 0x00;
-+	buf[17] = qc->tf.nsect;
- 	buf[18] = (1 << 5) | ATA_REG_LBAL;
--	buf[19] = 0x00;
-+	buf[19] = qc->tf.lbal;
- 
- 	/* set feature and byte counter registers */
--	if (qc->tf.protocol != ATA_PROT_ATAPI_DMA) {
-+	if (qc->tf.protocol != ATA_PROT_ATAPI_DMA)
- 		feature = PDC_FEATURE_ATAPI_PIO;
--		/* set byte counter register to real transfer byte count */
--		nbytes = qc->nbytes;
--		if (nbytes > 0xffff)
--			nbytes = 0xffff;
--	} else {
-+	else
- 		feature = PDC_FEATURE_ATAPI_DMA;
--		/* set byte counter register to 0 */
--		nbytes = 0;
--	}
-+
- 	buf[20] = (1 << 5) | ATA_REG_FEATURE;
- 	buf[21] = feature;
- 	buf[22] = (1 << 5) | ATA_REG_BYTEL;
--	buf[23] = nbytes & 0xFF;
-+	buf[23] = qc->tf.lbam;
- 	buf[24] = (1 << 5) | ATA_REG_BYTEH;
--	buf[25] = (nbytes >> 8) & 0xFF;
-+	buf[25] = qc->tf.lbah;
- 
- 	/* send ATAPI packet command 0xA0 */
- 	buf[26] = (1 << 5) | ATA_REG_CMD;
--	buf[27] = ATA_CMD_PACKET;
-+	buf[27] = qc->tf.command;
- 
- 	/* select drive and check DRQ */
- 	buf[28] = (1 << 5) | ATA_REG_DEVICE | PDC_PKT_WAIT_DRDY;
-
