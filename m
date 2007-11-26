@@ -1,27 +1,52 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_pcmcia: Minor cleanups and support for dual
- channel cards
-Date: Mon, 26 Nov 2007 15:40:47 +0000
-Message-ID: <20071126154047.63021652@the-village.bc.nu>
-References: <20071119144307.7b67f09e@the-village.bc.nu>
-	<474774A6.5020906@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] libata: bump transfer chunk size if it's
+ odd
+Date: Mon, 26 Nov 2007 11:04:29 -0500
+Message-ID: <474AEE8D.8060500@garzik.org>
+References: <20071126115802.GC9232@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43884 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752085AbXKZPnz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 10:43:55 -0500
-In-Reply-To: <474774A6.5020906@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:44462 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751634AbXKZQEd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Nov 2007 11:04:33 -0500
+In-Reply-To: <20071126115802.GC9232@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@osdl.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-setup and it821x fixes can go to mainstream for 2.6.25 I think - no bad
-reports yet.
+Tejun Heo wrote:
+> None of the drives I have follows what the standard says about
+> transfer chunk size.  Of the four SATA and six PATA ATAPI devices
+> tested, four ignore transfer chunk size completely and the ones which
+> honor it don't behave according to the spec when it's odd.
+> 
+> According to the spec, transfer chunk size can be odd if the amount of
+> data to transfer equals or is smaller than the chunk size and the
+> device can indicate the same odd number and transfer the whole thing
+> at one go with a pad byte appended.  However, in reality, none of the
+> drives I have does that.  They all indicate and transfer even number
+> of bytes one byte shorter than the chunk size first; then indicate and
+> transfer two bytes, which is clearly out of spec.
+> 
+> In addition to unnecessary second PIO data phase, this also creates a
+> weird problem when combined with SATA controllers which perform PIO
+> via DMA.  Some of these controllers use actualy number of bytes
+> received to update DMA pointer so chunks which are sized 4n + 2 makes
+> DMA pointer off by two bytes.  This causes data corruption and buffer
+> overruns.
+> 
+> This patch rounds nbytes up to the nearest even number such that ATAPI
+> devices don't split data transfer for the last odd byte.  This
+> shouldn't confuse controllers which depend on transfer chunk size as
+> devices will report the rounded-up number, actually transfer that much
+> and padding buffer is there to receive them.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-BTW so we don't duplicate work right now I'm working on a full DMA engine
-based driver for the INIC162x. Dunno if I'll ever get it to work as the
-docs are a bit minimal but we shall see.
+applied
+
+
