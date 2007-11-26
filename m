@@ -1,51 +1,31 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: bump transfer chunk size if it's
- odd
-Date: Mon, 26 Nov 2007 11:04:29 -0500
-Message-ID: <474AEE8D.8060500@garzik.org>
-References: <20071126115802.GC9232@htj.dyndns.org>
+Subject: Re: [PATCH] [libata] Return proper ATA INT status in pata_bf54x driver.
+Date: Mon, 26 Nov 2007 11:04:38 -0500
+Message-ID: <474AEE96.9070708@garzik.org>
+References: <1196070656.15520.4.camel@eight.analog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44462 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:44466 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbXKZQEd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Nov 2007 11:04:33 -0500
-In-Reply-To: <20071126115802.GC9232@htj.dyndns.org>
+	id S1752106AbXKZQEk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 26 Nov 2007 11:04:40 -0500
+In-Reply-To: <1196070656.15520.4.camel@eight.analog.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: sonic zhang <sonic.adi@gmail.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> None of the drives I have follows what the standard says about
-> transfer chunk size.  Of the four SATA and six PATA ATAPI devices
-> tested, four ignore transfer chunk size completely and the ones which
-> honor it don't behave according to the spec when it's odd.
+sonic zhang wrote:
+> INT status can be OR.
 > 
-> According to the spec, transfer chunk size can be odd if the amount of
-> data to transfer equals or is smaller than the chunk size and the
-> device can indicate the same odd number and transfer the whole thing
-> at one go with a pad byte appended.  However, in reality, none of the
-> drives I have does that.  They all indicate and transfer even number
-> of bytes one byte shorter than the chunk size first; then indicate and
-> transfer two bytes, which is clearly out of spec.
 > 
-> In addition to unnecessary second PIO data phase, this also creates a
-> weird problem when combined with SATA controllers which perform PIO
-> via DMA.  Some of these controllers use actualy number of bytes
-> received to update DMA pointer so chunks which are sized 4n + 2 makes
-> DMA pointer off by two bytes.  This causes data corruption and buffer
-> overruns.
+> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
 > 
-> This patch rounds nbytes up to the nearest even number such that ATAPI
-> devices don't split data transfer for the last odd byte.  This
-> shouldn't confuse controllers which depend on transfer chunk size as
-> devices will report the rounded-up number, actually transfer that much
-> and padding buffer is there to receive them.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  drivers/ata/pata_bf54x.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 
 applied
 
