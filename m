@@ -1,50 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from
- qc->tf
-Date: Mon, 26 Nov 2007 21:18:38 +0900
-Message-ID: <474AB99E.3030109@gmail.com>
-References: <200711261200.lAQC0vFd029485@harpo.it.uu.se>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
+Date: Mon, 26 Nov 2007 06:25:13 -0700
+Message-ID: <20071126132513.GA3230@parisc-linux.org>
+References: <1196061373-6394-1-git-send-email-crquan@gmail.com> <1196062867.8948.25.camel@localhost> <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:16108 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754232AbXKZMSp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 07:18:45 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so501617rvb
-        for <linux-ide@vger.kernel.org>; Mon, 26 Nov 2007 04:18:44 -0800 (PST)
-In-Reply-To: <200711261200.lAQC0vFd029485@harpo.it.uu.se>
+Received: from palinux.external.hp.com ([192.25.206.14]:39045 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862AbXKZNZR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Nov 2007 08:25:17 -0500
+Content-Disposition: inline
+In-Reply-To: <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
+To: rae l <crquan@gmail.com>
+Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-Hello,
+On Mon, Nov 26, 2007 at 04:37:50PM +0800, rae l wrote:
+> I know this is different from the original hexdump in ide-scsi.c, I
+> just want to tell someone that there's a good implementation of
+> hexdump in kernel.h, and I think the default KERN_DEBUG and
+> print_hex_dump is more informative and has better output. However,
+> anyone want more precise control on debug message could make her/his
+> improvements with print_hex_dump.
 
-Mikael Pettersson wrote:
->>  	buf[20] = (1 << 5) | ATA_REG_FEATURE;
->>  	buf[21] = feature;
->>  	buf[22] = (1 << 5) | ATA_REG_BYTEL;
->> -	buf[23] = nbytes & 0xFF;
->> +	buf[23] = qc->tf.lbam;
->>  	buf[24] = (1 << 5) | ATA_REG_BYTEH;
->> -	buf[25] = (nbytes >> 8) & 0xFF;
->> +	buf[25] = qc->tf.lbah;
-> 
-> The original code matches what Promise' own driver does, including
-> the "set byte counter register to real transfer byte count" comment.
-> It's certainly possible that if lbah/lbam don't match ->nbytes,
-> the HW will go nuts. Their data sheets are very quiet about ATAPI.
-
-Yeah, now core code sets the value properly and I just posted a patch to
-massage transfer chunk size a bit so I was curious whether now
-sata_promise can use the result of core layer instead.
-
-> I can test your proposed change next weekend when I'm back to where
-> my sata_promise test equipment is.
-
-Thank you.
+using KERN_DEBUG is wrong -- this is part of a line, so you need to use
+KERN_NONE or simply "".
 
 -- 
-tejun
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
