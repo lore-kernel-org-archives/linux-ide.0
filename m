@@ -1,93 +1,39 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH 3/3] [POWERPC] MPC8349E-mITX: introduce localbus and pata nodes
-Date: Tue, 27 Nov 2007 18:39:40 +0300
-Message-ID: <20071127153940.GC14183@localhost.localdomain>
-References: <20071127153708.GA12490@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+From: Saeed Bishara <saeed@marvell.com>
+Subject: [PATCH] [libata] sata_mv: fix compilation error when enabling DEBUG
+Date: Tue, 27 Nov 2007 17:42:33 +0200
+Message-ID: <11961781532837-git-send-email-saeed@marvell.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:7286 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756702AbXK0Per (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 10:34:47 -0500
-Content-Disposition: inline
-In-Reply-To: <20071127153708.GA12490@localhost.localdomain>
+Received: from host2.marvell.com ([65.219.4.2]:31251 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755058AbXK0Pj6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Nov 2007 10:39:58 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Saeed Bishara <saeed.bishara@gmail.com>, Saeed Bishara <saeed@marvell.com>
 
-This patch adds localbus and pata nodes to use CF IDE interface
-on MPC8349E-mITX boards.
+From: Saeed Bishara <saeed.bishara@gmail.com>
 
-Patch also adds code to probe localbus.
+use sstatus instead status.
 
-Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+Signed-off-by: Saeed Bishara <saeed@marvell.com>
 ---
- arch/powerpc/boot/dts/mpc8349emitx.dts    |   17 ++++++++++++++++-
- arch/powerpc/platforms/83xx/mpc834x_itx.c |   17 +++++++++++++++++
- 2 files changed, 33 insertions(+), 1 deletions(-)
+ drivers/ata/sata_mv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/arch/powerpc/boot/dts/mpc8349emitx.dts b/arch/powerpc/boot/dts/mpc8349emitx.dts
-index 5072f6d..7a97068 100644
---- a/arch/powerpc/boot/dts/mpc8349emitx.dts
-+++ b/arch/powerpc/boot/dts/mpc8349emitx.dts
-@@ -249,6 +249,21 @@
- 		device_type = "pci";
- 	};
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index a43f64d..97c3e11 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2170,7 +2170,7 @@ static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
+ 		mv_scr_read(ap, SCR_ERROR, &serror);
+ 		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+ 		DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
+-			"SCtrl 0x%08x\n", status, serror, scontrol);
++			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
+ 	}
+ #endif
  
-+	localbus@e0005000 {
-+		#address-cells = <2>;
-+		#size-cells = <1>;
-+		compatible = "fsl,mpc8349emitx-localbus",
-+			     "fsl,mpc8349e-localbus",
-+			     "fsl,pq2pro-localbus";
-+		reg = <e0005000 d8>;
-+		ranges = <3 0 f0000000 210>;
- 
--
-+		pata@3,0 {
-+			compatible = "fsl,mpc8349emitx-pata", "pata-platform";
-+			reg = <3 0 10 3 20c 4>;
-+			ioport-shift = <1>;
-+			interrupts = <17 8>;
-+			interrupt-parent = <&ipic>;
-+		};
-+	};
- };
-diff --git a/arch/powerpc/platforms/83xx/mpc834x_itx.c b/arch/powerpc/platforms/83xx/mpc834x_itx.c
-index aa76819..ea5f176 100644
---- a/arch/powerpc/platforms/83xx/mpc834x_itx.c
-+++ b/arch/powerpc/platforms/83xx/mpc834x_itx.c
-@@ -23,6 +23,7 @@
- #include <linux/delay.h>
- #include <linux/seq_file.h>
- #include <linux/root_dev.h>
-+#include <linux/of_platform.h>
- 
- #include <asm/system.h>
- #include <asm/atomic.h>
-@@ -37,6 +38,22 @@
- 
- #include "mpc83xx.h"
- 
-+static struct of_device_id mpc834x_itx_ids[] = {
-+	{ .name = "localbus", },
-+	{},
-+};
-+
-+static int __init mpc834x_itx_declare_of_platform_devices(void)
-+{
-+	if (!machine_is(mpc834x_itx))
-+		return 0;
-+
-+	of_platform_bus_probe(NULL, mpc834x_itx_ids, NULL);
-+
-+	return 0;
-+}
-+device_initcall(mpc834x_itx_declare_of_platform_devices);
-+
- /* ************************************************************************
-  *
-  * Setup the architecture
 -- 
-1.5.2.2
+1.5.0.6
+
