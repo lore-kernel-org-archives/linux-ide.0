@@ -1,47 +1,89 @@
-From: "Mikael Starvik" <mikael.starvik@axis.com>
-Subject: RE: [PATCH 7/21] ide-cris: don't override ide_register_hw() result
-Date: Tue, 27 Nov 2007 14:18:48 +0100
-Message-ID: <BFECAF9E178F144FAEF2BF4CE739C66804C40242@exmail1.se.axis.com>
-References: <BFECAF9E178F144FAEF2BF4CE739C668055FDB15@exmail1.se.axis.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 16/21] ide: add ide_init_port_hw() helper
+Date: Tue, 27 Nov 2007 16:21:26 +0300
+Message-ID: <474C19D6.7090108@ru.mvista.com>
+References: <200711182328.15772.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from miranda.se.axis.com ([193.13.178.8]:45779 "EHLO
-	miranda.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755726AbXK0NTI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 08:19:08 -0500
-In-Reply-To: <BFECAF9E178F144FAEF2BF4CE739C668055FDB15@exmail1.se.axis.com>
+Received: from h155.mvista.com ([63.81.120.155]:42193 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756112AbXK0NVO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Nov 2007 08:21:14 -0500
+In-Reply-To: <200711182328.15772.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Sergei Shtylyov' <sshtylyov@ru.mvista.com>, 'Bartlomiej Zolnierkiewicz' <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Mikael Starvik <mikael.starvik@axis.com>
-
-Acked-by: Mikael Starvik <starvik@axis.com>
-
------Original Message-----
-From: Sergei Shtylyov [mailto:sshtylyov@ru.mvista.com] 
-Sent: Tuesday, November 27, 2007 1:58 PM
-To: Bartlomiej Zolnierkiewicz
-Cc: linux-ide@vger.kernel.org; Mikael Starvik
-Subject: Re: [PATCH 7/21] ide-cris: don't override ide_register_hw() result
-
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>, Anton Vorontsov <avorontsov@ru.mvista.com>, Jeremy Higdon <jeremy@sgi.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Don't override ide_register_hw() result and check if there is a hwif
->   available to use.
+> * Add ide_init_port_hw() helper.
 
-> * MAX_HWIFS is user configurable nowadays so replace it by hard-coded
-value.
+> * rapide.c: convert rapide_locate_hwif() to rapide_setup_ports()
+>   and use ide_init_port_hw().
 
-> * Remove the comment about ide_hwifs[].
+> * ide_platform.c: convert plat_ide_locate_hwif() to plat_ide_setup_ports()
+>   and use ide_init_port_hw().
 
-> Cc: Mikael Starvik <starvik@axis.com>
+> * sgiioc4.c: use ide_init_port_hw().
+
+> * pmac.c: add 'hw_regs_t *hw' argument to pmac_ide_setup_device(),
+>   setup 'hw' in pmac_ide_{macio,pci}_attach() and use ide_init_port_hw()
+>   in pmac_ide_setup_device().
+
+> This patch is a preparation for the future changes in the IDE probing code.
+
+> There should be no functionality changes caused by this patch.
+
+> Cc: Russell King <rmk@arm.linux.org.uk>
+> Cc: Anton Vorontsov <avorontsov@ru.mvista.com>
+> Cc: Jeremy Higdon <jeremy@sgi.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-MBR, Sergei
+> @@ -1223,7 +1220,12 @@ pmac_ide_macio_attach(struct macio_dev *
+>  #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
+>  	dev_set_drvdata(&mdev->ofdev.dev, hwif);
+>  
+> -	rc = pmac_ide_setup_device(pmif, hwif);
+> +	memset(&hw, 0, sizeof(hw));
+> +	pmac_ide_init_hwif_ports(&hw, pmif->regbase, 0, NULL);
+> +	hw.irq = irq;
+> +	hw.dev = &mdev->ofdev.dev;
+> +
+> +	rc = pmac_ide_setup_device(pmif, hwif, &hw);
+>  	if (rc != 0) {
+>  		/* The inteface is released to the common IDE layer */
+>  		dev_set_drvdata(&mdev->ofdev.dev, NULL);
+> @@ -1282,6 +1284,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+>  	void __iomem *base;
+>  	unsigned long rbase, rlen;
+>  	int i, rc;
+> +	hw_regs_t hw;
+>  
+>  	np = pci_device_to_OF_node(pdev);
+>  	if (np == NULL) {
+> @@ -1315,7 +1318,6 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+>  	}
+>  
+>  	hwif->pci_dev = pdev;
+> -	hwif->gendev.parent = &pdev->dev;
+>  	pmif->mdev = NULL;
+>  	pmif->node = np;
+>  
+> @@ -1332,7 +1334,12 @@ pmac_ide_pci_attach(struct pci_dev *pdev
+>  
+>  	pci_set_drvdata(pdev, hwif);
+>  
+> -	rc = pmac_ide_setup_device(pmif, hwif);
+> +	memset(&hw, 0, sizeof(hw));
+> +	pmac_ide_init_hwif_ports(&hw, pmif->regbase, 0, NULL);
 
+    It seems that the last argument to that function can be dropped now as the 
+new code doesn't pass anything but NULL.
+
+MBR, Sergei
