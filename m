@@ -1,52 +1,90 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 13/13] libata: use PIO for misc ATAPI commands
-Date: Tue, 27 Nov 2007 16:56:00 +0000
-Message-ID: <20071127165600.39b8c383@the-village.bc.nu>
-References: <11961764391983-git-send-email-htejun@gmail.com>
-	<11961764413291-git-send-email-htejun@gmail.com>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] [POWERPC] MPC8349E-mITX: introduce localbus and pata nodes
+Date: Tue, 27 Nov 2007 20:27:58 +0300
+Message-ID: <20071127172758.GA15429@localhost.localdomain>
+References: <20071127153708.GA12490@localhost.localdomain> <20071127153940.GC14183@localhost.localdomain> <474C3C79.5060908@ru.mvista.com> <20071127164101.GA14790@localhost.localdomain> <474C49D5.2000206@ru.mvista.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50856 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758880AbXK0RGm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 12:06:42 -0500
-In-Reply-To: <11961764413291-git-send-email-htejun@gmail.com>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7518 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758343AbXK0RXG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 12:23:06 -0500
+Content-Disposition: inline
+In-Reply-To: <474C49D5.2000206@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Tejun Heo <htejun@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-On Wed, 28 Nov 2007 00:13:59 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+On Tue, Nov 27, 2007 at 07:46:13PM +0300, Sergei Shtylyov wrote:
+[...]
+> >>>+			ioport-shift = <1>;
+> 
+> >>  Bleh... that shift again. And this is surely not a good name for a 
+> >>property (where's I/O ports in your case?) -- why not call it "reg-shift" 
+> >>(well, I'd call it "reg-size" or "reg-stride" myself :-)?
+> 
+> >1. "shift" because pata_platform using that name. I don't see any
+> >   reason to contrive indirections. ioport-shift is what the whole
+> >   Linux kernel using nowadays, and ioport-shift dts property
+> >   anyway Linux-specific.
+> 
+>    It's just a bad name. There's not even I/O ports in this case (and 
+> moreover, the *real* I/O mapped device would always have a shift of 0, I 
+> bet -- larger strides are for memory mapped devices).
+> 
+> >   I'm just following todays' conventions.
+> 
+> >   If you feel really bad about that, I think better to fix that in
+> >   the source of the badness -- pata_platform. It's easy, I can do
+> 
+>    I only feel really bad about the "ioport" part, I can live with "shift" 
+> part. :-)
+> 
+> >   that. Would you ack patch that converts whole pata_platform and
+> >   users? Would Paul ack it?
+> 
+>    I don't understand -- why the property name should duplicate 
+>    pata_platform field name? :-O
 
-> ATAPI devices come with plethora of bugs and many ATA controllers have
-> trouble dealing with odd byte DMA transfers.  The problem is currently
-> somewhat masked by not allowing DMA transfers if the transfer size
-> isn't aligned to 16 bytes plus partial masking in problematic LLDs.
+Because:
 
-NAK. Same complaint I had originally and which is not addressed.
+> >1.  [...] I don't see any reason to contrive indirections.
+
+That is, different names for single thing is worse than single
+bogus name.
+
+>   Not really -- "size" just seems better, aesthetically. :-)
+
+reg-size will look confusing. Is it ata registers' size? No,
+can't be. So, what is it? It's stride/shift because of bus, on
+which ata resides.
+
+> >And btw, I can get rid of ioport-shift at all. And do fixups in
+> >the pata_of_platform driver via .compatible matching. But I don't
+> >want: it feels bad to list every needs-to-fixup board in the common
+> >driver. It also feels not so great creating something like
+> >pata-platform-stride-{1,2,4,...} compatible stuff. Heh.
+> 
+>    I didn't propose neither of that. :-)
+
+Yup, that was "by the way"...
+
+>    All I want is that "ioport-*" be renamed.
+
+I give up.
+
+The final name is..? I can think out wrong one, so you'd better
+convoy me on that way. ;-) reg-shift sounds okay? Or reg-stride
+better? No size, please.
 
 
-The whole approach being used here is fundamentally in the wrong place.
-Its also horribly damaging because of our PIO behaviour currently.
+Thanks,
 
-- Until our PIO works without IRQ masking you can't take this approach for
-arbitary devices without hurting users badly.
-- I still see no evidence in the drives I've looked at that all of this
-is drive side (or indeed that most of it is)
-- Control over the DMA/PIO strategy belongs with the driver. If we mess
-that up it will cost us dearly later.
-
-What we should be doing IMHO is
-
--	Fix the PIO IRQ masking
--	Creating ata_std_check_atapi_dma()
--	Let drivers select between the std_check_atapi_dma() and their
-own rules
-
-Finally ata_std_check_atapi_dma should be blacklist based for all but the
-really generic issues (%15 etc), otherwise we punish the 99.999% of
-systems that work perfectly well for the sake of a tiny number that are
-problematic.
-
+-- 
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
