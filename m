@@ -1,39 +1,157 @@
 From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH 0/3] OF-platform PATA driver
-Date: Tue, 27 Nov 2007 18:37:08 +0300
-Message-ID: <20071127153708.GA12490@localhost.localdomain>
-Reply-To: avorontsov@ru.mvista.com
+Subject: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device driver
+Date: Tue, 27 Nov 2007 18:39:08 +0300
+Message-ID: <20071127153908.GB14183@localhost.localdomain>
+References: <20071127153708.GA12490@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:7257 "EHLO
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7283 "EHLO
 	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752252AbXK0PcR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 10:32:17 -0500
+	by vger.kernel.org with ESMTP id S1759214AbXK0PeP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 10:34:15 -0500
 Content-Disposition: inline
+In-Reply-To: <20071127153708.GA12490@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
-Cc: Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Vitaly Bordug <vitb@kernel.crashing.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
 
-Hi all,
+This driver nicely wraps around pata_platform library functions,
+and provides OF platform bus bindings to the PATA devices.
 
-Here is the second spin of the OF-platform PATA driver and
-related patches.
+Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+---
+ drivers/ata/Kconfig            |   10 +++++
+ drivers/ata/Makefile           |    1 +
+ drivers/ata/pata_of_platform.c |   86 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/pata_of_platform.c
 
-Changes since RFC:
-- nuked drivers/ata/pata_platform.h;
-- powerpc bits: proper localbus node added.
-
-
-Thanks for the previous review! This time I'm collecting acks,
-don't be shy to give 'em generously. ;-)
-
-
-Good luck,
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index ba63619..5a492fa 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -614,6 +614,16 @@ config PATA_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
++config PATA_OF_PLATFORM
++	tristate "OpenFirmware platform device PATA support"
++	depends on PATA_PLATFORM && PPC_OF
++	help
++	  This option enables support for generic directly connected ATA
++	  devices commonly found on embedded systems with OpenFirmware
++	  bindings.
++
++	  If unsure, say N.
++
+ config PATA_ICSIDE
+ 	tristate "Acorn ICS PATA support"
+ 	depends on ARM && ARCH_ACORN
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index b13feb2..ebcee64 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -67,6 +67,7 @@ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+ obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+ obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
++obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+ obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+ # Should be last but two libata driver
+ obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+new file mode 100644
+index 0000000..e6c769c
+--- /dev/null
++++ b/drivers/ata/pata_of_platform.c
+@@ -0,0 +1,86 @@
++/*
++ * OF-platform PATA driver
++ *
++ * Copyright (c) 2007  MontaVista Software, Inc.
++ *                     Anton Vorontsov <avorontsov@ru.mvista.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License (Version 2) as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/pata_platform.h>
++
++static int __devinit pata_of_platform_probe(struct of_device *ofdev,
++					    const struct of_device_id *match)
++{
++	int ret;
++	struct device_node *dn = ofdev->node;
++	struct resource io_res;
++	struct resource ctl_res;
++	struct resource irq_res;
++	unsigned int ioport_shift = 0;
++	uint32_t *prop;
++
++	ret = of_address_to_resource(dn, 0, &io_res);
++	if (ret) {
++		dev_err(&ofdev->dev, "can't get IO address from "
++			"device tree\n");
++		return -EINVAL;
++	}
++
++	ret = of_address_to_resource(dn, 1, &ctl_res);
++	if (ret) {
++		dev_err(&ofdev->dev, "can't get CTL address from "
++			"device tree\n");
++		return -EINVAL;
++	}
++
++	ret = of_irq_to_resource(dn, 0, &irq_res);
++	if (ret == NO_IRQ)
++		irq_res.start = irq_res.end = -1;
++	else
++		irq_res.flags = 0;
++
++	prop = (uint32_t *)of_get_property(dn, "ioport-shift", NULL);
++	if (prop)
++		ioport_shift = *prop;
++
++	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, &irq_res,
++				     ioport_shift);
++}
++
++static int __devexit pata_of_platform_remove(struct of_device *ofdev)
++{
++	return __pata_platform_remove(&ofdev->dev);
++}
++
++static struct of_device_id pata_of_platform_match[] = {
++	{ .compatible = "pata-platform", },
++};
++
++static struct of_platform_driver pata_of_platform_driver = {
++	.name		= "pata_of_platform",
++	.match_table	= pata_of_platform_match,
++	.probe		= pata_of_platform_probe,
++	.remove		= __devexit_p(pata_of_platform_remove),
++};
++
++static int __init pata_of_platform_init(void)
++{
++	return of_register_platform_driver(&pata_of_platform_driver);
++}
++module_init(pata_of_platform_init);
++
++static void __exit pata_of_platform_exit(void)
++{
++	of_unregister_platform_driver(&pata_of_platform_driver);
++}
++module_exit(pata_of_platform_exit);
++
++MODULE_DESCRIPTION("OF-platform PATA driver");
++MODULE_AUTHOR("Anton Vorontsov <avorontsov@ru.mvista.com>");
++MODULE_LICENSE("GPL");
 -- 
-Anton Vorontsov
-email: cbou@mail.ru
-backup email: ya-cbou@yandex.ru
-irc://irc.freenode.net/bd2
+1.5.2.2
+
