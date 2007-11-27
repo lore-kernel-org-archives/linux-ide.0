@@ -1,50 +1,46 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 3/3] [POWERPC] MPC8349E-mITX: introduce localbus and pata
- nodes
-Date: Tue, 27 Nov 2007 21:07:14 +0300
-Message-ID: <474C5CD2.7080208@ru.mvista.com>
-References: <20071127153708.GA12490@localhost.localdomain> <20071127153940.GC14183@localhost.localdomain> <474C3C79.5060908@ru.mvista.com> <20071127164101.GA14790@localhost.localdomain> <474C49D5.2000206@ru.mvista.com> <20071127173456.GA15693@localhost.localdomain> <474C5513.6010801@ru.mvista.com> <20071127174826.GA15980@localhost.localdomain>
+Subject: Re: [PATCH 2/21] ide: merge ->fixup and ->quirkproc methods
+Date: Tue, 27 Nov 2007 21:39:02 +0300
+Message-ID: <474C6446.6080400@ru.mvista.com>
+References: <200711182311.35962.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:45034 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:45386 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755542AbXK0SHB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 13:07:01 -0500
-In-Reply-To: <20071127174826.GA15980@localhost.localdomain>
+	with ESMTP id S1756654AbXK0Sit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 13:38:49 -0500
+In-Reply-To: <200711182311.35962.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Anton Vorontsov wrote:
+Bartlomiej Zolnierkiewicz wrote:
 
->>>>>2. "ioport" because shift^Wstride ;-) applies only to the io range
->>>>>(yes, it's obvious, but worth open-wording, no?).
+> * Assign drive->quirk_list in ->quirkproc implementations:
+>   - hpt366.c::hpt3xx_quirkproc()
+>   - pdc202xx_new.c::pdcnew_quirkproc()
+>   - pdc202xx_old.c::pdc202xx_quirkproc()
 
->>>> Contrarywise, to memory range.
+> * Make ->quirkproc void.
 
->>>By io range I meant "I/O base", in contrast to "CTL base".
+> * Move calling ->quirkproc from do_identify() to probe_hwif().
 
->>>There is no need to apply shifting for CTL. That's why ioport-*
->>>appeared in the first place.
+> * Convert it821x_fixups() to it821x_quirkproc() in it821x.c.
 
->>   So, a matter of wrong terminology then. The thing that you meant by 
->>   "I/O" is actually called "command block".
+> * Convert siimage_fixup() to sil_quirkproc() in siimage.c, also remove
+>   no longer needed drive->present check from is_dev_seagate_sata().
 
-> Yes. And IO is the second name.
+> * Convert ide_undecoded_slave() to accept 'drive' instead of 'hwif'
+>   as an argument.  Then convert ide_register_hw() to accept 'quirkproc'
+>   argument instead of 'fixup' one.
 
-    I'd say the first place in drivers/ide belongs to the historic name 
-"taskfile". The "command block" which is as ATA standard calls it, is hardly used.
+> * Remove no longer needed ->fixup method.
 
-> It's used widespread in the drivers/ide/.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-    Don't remember seeing it.
-
-> Now you understand why I'm so reluctant to hanging up different
-> labels on the single thing? ;-)
-
-    :-)
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
