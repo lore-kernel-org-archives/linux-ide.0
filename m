@@ -1,84 +1,52 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/13] libata: add ATAPI_* cmd types and implement atapi_cmd_type()
-Date: Wed, 28 Nov 2007 00:13:50 +0900
-Message-ID: <11961764401134-git-send-email-htejun@gmail.com>
+Subject: [PATCH 02/13] cdrom: add more GPCMD_* constants
+Date: Wed, 28 Nov 2007 00:13:48 +0900
+Message-ID: <11961764393153-git-send-email-htejun@gmail.com>
 References: <11961764391983-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.178]:54873 "EHLO
+Received: from ro-out-1112.google.com ([72.14.202.178]:54869 "EHLO
 	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756134AbXK0POI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 10:14:08 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so1688067roc
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 07:14:07 -0800 (PST)
+	with ESMTP id S1755806AbXK0POL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 10:14:11 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so1688062roc
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 07:14:11 -0800 (PST)
 In-Reply-To: <11961764391983-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
 
-Add ATAPI command types - ATAPI_READ, WRITE, RW_BUF, READ_CD and MISC,
-and implement atapi_cmd_type() which takes SCSI opcode and returns to
-which class the opcode belongs.  This will be used later to improve
-ATAPI handling.
+Add GPCMD_* constants for READ_BUFFER, WRITE_12 and WRITE_BUFFER for
+completeness.  These will be used by libata.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- include/linux/libata.h |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+ include/linux/cdrom.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 62d09c8..72df408 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -35,6 +35,7 @@
- #include <linux/workqueue.h>
- #include <scsi/scsi_host.h>
- #include <linux/acpi.h>
-+#include <linux/cdrom.h>
- 
- /*
-  * Define if arch has non-standard setup.  This is a _PCI_ standard
-@@ -345,6 +346,12 @@ enum {
- 	ATA_DMA_MASK_ATA	= (1 << 0),	/* DMA on ATA Disk */
- 	ATA_DMA_MASK_ATAPI	= (1 << 1),	/* DMA on ATAPI */
- 	ATA_DMA_MASK_CFA	= (1 << 2),	/* DMA on CF Card */
-+
-+	/* ATAPI command types */
-+	ATAPI_READ		= 0,		/* READs */
-+	ATAPI_WRITE		= 1,		/* WRITEs */
-+	ATAPI_READ_CD		= 2,		/* READ CD [MSF] */
-+	ATAPI_MISC		= 3,		/* the rest */
- };
- 
- enum ata_xfer_mask {
-@@ -1407,6 +1414,27 @@ static inline int ata_try_flush_cache(const struct ata_device *dev)
- 	       ata_id_has_flush_ext(dev->id);
- }
- 
-+static inline int atapi_cmd_type(u8 opcode)
-+{
-+	switch (opcode) {
-+	case GPCMD_READ_10:
-+	case GPCMD_READ_12:
-+		return ATAPI_READ;
-+
-+	case GPCMD_WRITE_10:
-+	case GPCMD_WRITE_12:
-+	case GPCMD_WRITE_AND_VERIFY_10:
-+		return ATAPI_WRITE;
-+
-+	case GPCMD_READ_CD:
-+	case GPCMD_READ_CD_MSF:
-+		return ATAPI_READ_CD;
-+
-+	default:
-+		return ATAPI_MISC;
-+	}
-+}
-+
- static inline unsigned int ac_err_mask(u8 status)
- {
- 	if (status & (ATA_BUSY | ATA_DRQ))
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index c6d3e22..fcdc11b 100644
+--- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -451,6 +451,7 @@ struct cdrom_generic_command
+ #define GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL  0x1e
+ #define GPCMD_READ_10			    0x28
+ #define GPCMD_READ_12			    0xa8
++#define GPCMD_READ_BUFFER		    0x3c
+ #define GPCMD_READ_BUFFER_CAPACITY	    0x5c
+ #define GPCMD_READ_CDVD_CAPACITY	    0x25
+ #define GPCMD_READ_CD			    0xbe
+@@ -480,7 +481,9 @@ struct cdrom_generic_command
+ #define GPCMD_TEST_UNIT_READY		    0x00
+ #define GPCMD_VERIFY_10			    0x2f
+ #define GPCMD_WRITE_10			    0x2a
++#define GPCMD_WRITE_12			    0xaa
+ #define GPCMD_WRITE_AND_VERIFY_10	    0x2e
++#define GPCMD_WRITE_BUFFER		    0x3b
+ /* This is listed as optional in ATAPI 2.6, but is (curiously) 
+  * missing from Mt. Fuji, Table 57.  It _is_ mentioned in Mt. Fuji
+  * Table 377 as an MMC command for SCSi devices though...  Most ATAPI
 -- 
 1.5.2.4
 
