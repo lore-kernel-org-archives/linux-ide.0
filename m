@@ -1,87 +1,124 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 6/8] libata: adjust speed down rules
-Date: Tue, 27 Nov 2007 19:28:57 +0900
-Message-ID: <11961593403415-git-send-email-htejun@gmail.com>
+Subject: [PATCH 4/8] libata: move ata_set_mode() to libata-eh.c
+Date: Tue, 27 Nov 2007 19:28:55 +0900
+Message-ID: <11961593392856-git-send-email-htejun@gmail.com>
 References: <11961593392491-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:12188 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755076AbXK0K3U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:29:20 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1179675wah
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 02:29:19 -0800 (PST)
+Received: from rv-out-0910.google.com ([209.85.198.187]:15466 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716AbXK0K3T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:29:19 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so837301rvb
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 02:29:18 -0800 (PST)
 In-Reply-To: <11961593392491-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: bzolnier@gmail.com, Tejun Heo <htejun@gmail.com>
 
-Speed down rules were too conservative.  Adjust them a bit.
-
-* More than 10 timeouts can't happen in 5 minutes as command timeout
-  is 30secs.  Lower the limit for rule #1 to 6.
-
-* 10 timeouts is too high for rule #3 too.  Lower it to 6.
-
-* SATAPI can benefit from falling back to PIO too.  Allow SATAPI
-  devices to fall back to PIO.
+Move ata_set_mode() to libata-eh.c.  ata_set_mode() is surely an EH
+action and will be more tightly coupled with the rest of error
+handling.  Move it to libata-eh.c.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/ata/libata-core.c |   25 -------------------------
+ drivers/ata/libata-eh.c   |   25 +++++++++++++++++++++++++
+ drivers/ata/libata.h      |    2 +-
+ 3 files changed, 26 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8d5cd16..85053bf 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3181,31 +3181,6 @@ int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
+ }
+ 
+ /**
+- *	ata_set_mode - Program timings and issue SET FEATURES - XFER
+- *	@link: link on which timings will be programmed
+- *	@r_failed_dev: out paramter for failed device
+- *
+- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
+- *	ata_set_mode() fails, pointer to the failing device is
+- *	returned in @r_failed_dev.
+- *
+- *	LOCKING:
+- *	PCI/etc. bus probe sem.
+- *
+- *	RETURNS:
+- *	0 on success, negative errno otherwise
+- */
+-int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
+-{
+-	struct ata_port *ap = link->ap;
+-
+-	/* has private set_mode? */
+-	if (ap->ops->set_mode)
+-		return ap->ops->set_mode(link, r_failed_dev);
+-	return ata_do_set_mode(link, r_failed_dev);
+-}
+-
+-/**
+  *	ata_tf_to_host - issue ATA taskfile to host controller
+  *	@ap: port to which command is being issued
+  *	@tf: ATA taskfile register set
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 1245b96..e479df2 100644
+index 44c137e..b1dc6b9 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1525,13 +1525,13 @@ static int speed_down_verdict_cb(struct ata_ering_entry *ent, void *void_arg)
-  *	Even if multiple verdicts are returned, only one action is
-  *	taken per error.  ering is cleared after an action is taken.
-  *
-- *	1. If more than 10 ATA_BUS, TOUT_HSM or UNK_DEV errors
-+ *	1. If more than 6 ATA_BUS, TOUT_HSM or UNK_DEV errors
-  *	   ocurred during last 5 mins, FALLBACK_TO_PIO
-  *
-  *	2. If more than 3 TOUT_HSM or UNK_DEV errors occurred
-  *	   during last 10 mins, NCQ_OFF.
-  *
-- *	3. If more than 3 ATA_BUS or TOUT_HSM errors, or more than 10
-+ *	3. If more than 3 ATA_BUS or TOUT_HSM errors, or more than 6
-  *	   UNK_DEV errors occurred during last 10 mins, SPEED_DOWN.
-  *
-  *	LOCKING:
-@@ -1554,7 +1554,7 @@ static unsigned int ata_eh_speed_down_verdict(struct ata_device *dev)
+@@ -2297,6 +2297,31 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	return rc;
+ }
  
- 	if (arg.nr_errors[ATA_ECAT_ATA_BUS] +
- 	    arg.nr_errors[ATA_ECAT_TOUT_HSM] +
--	    arg.nr_errors[ATA_ECAT_UNK_DEV] > 10)
-+	    arg.nr_errors[ATA_ECAT_UNK_DEV] > 6)
- 		verdict |= ATA_EH_SPDN_FALLBACK_TO_PIO;
- 
- 	/* scan past 10 mins of error history */
-@@ -1568,7 +1568,7 @@ static unsigned int ata_eh_speed_down_verdict(struct ata_device *dev)
- 
- 	if (arg.nr_errors[ATA_ECAT_ATA_BUS] +
- 	    arg.nr_errors[ATA_ECAT_TOUT_HSM] > 3 ||
--	    arg.nr_errors[ATA_ECAT_UNK_DEV] > 10)
-+	    arg.nr_errors[ATA_ECAT_UNK_DEV] > 6)
- 		verdict |= ATA_EH_SPDN_SPEED_DOWN;
- 
- 	return verdict;
-@@ -1647,10 +1647,10 @@ static unsigned int ata_eh_speed_down(struct ata_device *dev,
- 	}
- 
- 	/* Fall back to PIO?  Slowing down to PIO is meaningless for
--	 * SATA.  Consider it only for PATA.
-+	 * SATA ATA devices.  Consider it only for PATA and SATAPI.
- 	 */
- 	if ((verdict & ATA_EH_SPDN_FALLBACK_TO_PIO) && (dev->spdn_cnt >= 2) &&
--	    (link->ap->cbl != ATA_CBL_SATA) &&
-+	    (link->ap->cbl != ATA_CBL_SATA || dev->class == ATA_DEV_ATAPI) &&
- 	    (dev->xfer_shift != ATA_SHIFT_PIO)) {
- 		if (ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO) == 0) {
- 			dev->spdn_cnt = 0;
++/**
++ *	ata_set_mode - Program timings and issue SET FEATURES - XFER
++ *	@link: link on which timings will be programmed
++ *	@r_failed_dev: out paramter for failed device
++ *
++ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
++ *	ata_set_mode() fails, pointer to the failing device is
++ *	returned in @r_failed_dev.
++ *
++ *	LOCKING:
++ *	PCI/etc. bus probe sem.
++ *
++ *	RETURNS:
++ *	0 on success, negative errno otherwise
++ */
++int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
++{
++	struct ata_port *ap = link->ap;
++
++	/* has private set_mode? */
++	if (ap->ops->set_mode)
++		return ap->ops->set_mode(link, r_failed_dev);
++	return ata_do_set_mode(link, r_failed_dev);
++}
++
+ static int ata_link_nr_enabled(struct ata_link *link)
+ {
+ 	struct ata_device *dev;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index c860705..f8ab11e 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -86,7 +86,6 @@ extern int ata_dev_configure(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link);
+ extern int sata_set_spd_needed(struct ata_link *link);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+-extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+ extern void ata_sg_clean(struct ata_queued_cmd *qc);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern void ata_qc_issue(struct ata_queued_cmd *qc);
+@@ -183,6 +182,7 @@ extern void ata_eh_report(struct ata_port *ap);
+ extern int ata_eh_reset(struct ata_link *link, int classify,
+ 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+ 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset);
++extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+ extern int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 			  ata_postreset_fn_t postreset,
 -- 
 1.5.2.4
 
