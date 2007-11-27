@@ -1,97 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 13/13] libata: use PIO for misc ATAPI commands
-Date: Wed, 28 Nov 2007 08:01:54 +0900
-Message-ID: <474CA1E2.1060008@gmail.com>
-References: <11961764391983-git-send-email-htejun@gmail.com>	<11961764413291-git-send-email-htejun@gmail.com> <20071127165600.39b8c383@the-village.bc.nu>
+Subject: Re: [PATCH 6/8] libata: adjust speed down rules
+Date: Wed, 28 Nov 2007 08:07:10 +0900
+Message-ID: <474CA31E.4000508@gmail.com>
+References: <11961593392491-git-send-email-htejun@gmail.com> <11961593403415-git-send-email-htejun@gmail.com> <474C9B10.4060500@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.238]:6920 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbXK0XCW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 18:02:22 -0500
-Received: by hu-out-0506.google.com with SMTP id 19so1321078hue
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 15:02:20 -0800 (PST)
-In-Reply-To: <20071127165600.39b8c383@the-village.bc.nu>
+Received: from ag-out-0708.google.com ([72.14.246.249]:47720 "EHLO
+	ag-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759543AbXK0XHS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 18:07:18 -0500
+Received: by ag-out-0708.google.com with SMTP id 35so1533193aga
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 15:07:17 -0800 (PST)
+In-Reply-To: <474C9B10.4060500@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Hello, Alan.
+Hello, Mark.
 
-Alan Cox wrote:
-> On Wed, 28 Nov 2007 00:13:59 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Speed down rules were too conservative.  Adjust them a bit.
+>>
+>> * More than 10 timeouts can't happen in 5 minutes as command timeout
+>>   is 30secs.  Lower the limit for rule #1 to 6.
+>>
+>> * 10 timeouts is too high for rule #3 too.  Lower it to 6.
+>>
+>> * SATAPI can benefit from falling back to PIO too.  Allow SATAPI
+>>   devices to fall back to PIO.
+> ..
 > 
->> ATAPI devices come with plethora of bugs and many ATA controllers have
->> trouble dealing with odd byte DMA transfers.  The problem is currently
->> somewhat masked by not allowing DMA transfers if the transfer size
->> isn't aligned to 16 bytes plus partial masking in problematic LLDs.
+> Mmmm...  I see two remaining problems with this:
 > 
-> NAK. Same complaint I had originally and which is not addressed.
+> -- bad sectors (media errors) will cause inappropriate speed-downs.
 
-Heh, yeah, I expected NACK from you and my argument is the same.  I'll
-just repeat one more time for the record as the other thread didn't cc
-linux-ide.  :-)
+No.  Media error is category 0 error which doesn't affect speed down at all.
 
-> The whole approach being used here is fundamentally in the wrong place.
-> Its also horribly damaging because of our PIO behaviour currently.
-> 
-> - Until our PIO works without IRQ masking you can't take this approach for
-> arbitary devices without hurting users badly.
+> -- deliberate (or otherwise) errors via SG_IO will cause inappropriate
+> speed-downs.
 
-That definitely is on to do list.  I wonder Jeff is still against
-turning off IRQ from the IRQ controller?
-
-Also, even if it's being done from interrupt handler, the data transfer
-is usually very short (tens of bytes).  I hardly feel any difference.
-Also, let's not forget there are already drivers which do things this
-way and yet others for which PIO or DMA doesn't matter at all.
-
-> - I still see no evidence in the drives I've looked at that all of this
-> is drive side (or indeed that most of it is)
-
-Of the ten drives I tested, only two were problematic but then again I
-didn't try with the 16 byte alignment test lifted.  What I'm worried
-about is test coverage.  The 16 byte alignment made us avoid some
-problem cases (Albert, do you recall which?) but the condition itself is
-problematic because it partially masks actual problems (dumb luck (tm)).
- Plus, different drivers use different masking rules, so debugging
-becomes difficult as the behavior depends on the combination of drive
-and controller.
-
-Because we can't use DMA uniformly, I went the other way and tried to
-use PIO uniformly.  Another important point is that the other OS which
-is probably the only platform most ATAPI device vendors test against use
-PIO for these commands.
-
-> - Control over the DMA/PIO strategy belongs with the driver. If we mess
-> that up it will cost us dearly later.
-
-And I don't get what we'll lose.  Care to deliberate?
-
-> What we should be doing IMHO is
-> 
-> -	Fix the PIO IRQ masking
-> -	Creating ata_std_check_atapi_dma()
-> -	Let drivers select between the std_check_atapi_dma() and their
-> own rules
-> 
-> Finally ata_std_check_atapi_dma should be blacklist based for all but the
-> really generic issues (%15 etc), otherwise we punish the 99.999% of
-> systems that work perfectly well for the sake of a tiny number that are
-> problematic.
-
-My argument is... Yes, we punish other systems, but the amount of
-punishment is not substantial and definitely negotiable with gained
-behavior uniformity between drivers and with the other OS.
-
-Note1: If anybody can show me what we'll actually lose by forcing PIO,
-I'm sold.
-
-Note2: Let's say we fixed PIO IRQ masking.  Would that change your opinion?
+No, only device errors issued via block layer are considered for speed
+down (ATA_QCFLAG_IO).  SG_IO commands will never trigger speed down
+unless the error is HSM or timeout.
 
 Thanks.
 
