@@ -1,89 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 16/21] ide: add ide_init_port_hw() helper
-Date: Tue, 27 Nov 2007 16:21:26 +0300
-Message-ID: <474C19D6.7090108@ru.mvista.com>
-References: <200711182328.15772.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 04/12] libata: kill ata_id_to_dma_mode()
+Date: Tue, 27 Nov 2007 22:52:17 +0900
+Message-ID: <474C2111.7080809@gmail.com>
+References: <11961602293422-git-send-email-htejun@gmail.com>	<11961602303295-git-send-email-htejun@gmail.com> <20071127113035.46806f39@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:42193 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756112AbXK0NVO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Nov 2007 08:21:14 -0500
-In-Reply-To: <200711182328.15772.bzolnier@gmail.com>
+Received: from ro-out-1112.google.com ([72.14.202.179]:55551 "EHLO
+	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808AbXK0NwZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 08:52:25 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so1665722roc
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 05:52:25 -0800 (PST)
+In-Reply-To: <20071127113035.46806f39@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>, Anton Vorontsov <avorontsov@ru.mvista.com>, Jeremy Higdon <jeremy@sgi.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Alan Cox wrote:
+> On Tue, 27 Nov 2007 19:43:41 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
+> 
+>> ata_id_to_dma_mode() isn't quite generic.  The function is basically
+>> privately implemented ata_id_xfermask() combined with hardcoded mode
+>> printing and configuration which are specific to ata_generic.
+>>
+>> Kill the function and open code it in generic_set_mode() using generic
+>> xfermode handling functions.
+> 
+> That one I still think is a bad idea. This sort of internal knowledge
+> belongs in library routines. It is a pretty generic function for the case
+> where the device is using existing modes and wants to display them.
 
-> * Add ide_init_port_hw() helper.
+The thing that bothers me is that the code assumes SWDMA and reports
+"DMA" and sets xfer_mask for MWDMA0.  This is specific to ata_generic
+and with that part removed, what can be factored out is...
 
-> * rapide.c: convert rapide_locate_hwif() to rapide_setup_ports()
->   and use ide_init_port_hw().
+	ata_dev_printk(dev, KERN_INFO, "configured for %s\n",
+		       ata_mode_string(xfer_mask));
+	dev->xfer_mode = ata_xfer_mask2mode(xfer_mask);
+	dev->xfer_shift = ata_xfer_mode2shift(dev->xfer_mode);
 
-> * ide_platform.c: convert plat_ide_locate_hwif() to plat_ide_setup_ports()
->   and use ide_init_port_hw().
+Unfortunately, ata_generic won't be able to use such generic helper
+because it uses unspecified DMA and PIO modes which generic helper
+wouldn't support.
 
-> * sgiioc4.c: use ide_init_port_hw().
+Unless we are gonna have other drivers which would blindly trust device
+setting regarding PIO/DMA modes, I don't think ata_id_to_dma_mode()
+would be useful, and if we are going to have more such drivers, we at
+least need to rename ata_id_to_dma_mode() to note that the function
+blindly trusts device reported configuration.
 
-> * pmac.c: add 'hw_regs_t *hw' argument to pmac_ide_setup_device(),
->   setup 'hw' in pmac_ide_{macio,pci}_attach() and use ide_init_port_hw()
->   in pmac_ide_setup_device().
+Thanks.
 
-> This patch is a preparation for the future changes in the IDE probing code.
-
-> There should be no functionality changes caused by this patch.
-
-> Cc: Russell King <rmk@arm.linux.org.uk>
-> Cc: Anton Vorontsov <avorontsov@ru.mvista.com>
-> Cc: Jeremy Higdon <jeremy@sgi.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> @@ -1223,7 +1220,12 @@ pmac_ide_macio_attach(struct macio_dev *
->  #endif /* CONFIG_BLK_DEV_IDEDMA_PMAC */
->  	dev_set_drvdata(&mdev->ofdev.dev, hwif);
->  
-> -	rc = pmac_ide_setup_device(pmif, hwif);
-> +	memset(&hw, 0, sizeof(hw));
-> +	pmac_ide_init_hwif_ports(&hw, pmif->regbase, 0, NULL);
-> +	hw.irq = irq;
-> +	hw.dev = &mdev->ofdev.dev;
-> +
-> +	rc = pmac_ide_setup_device(pmif, hwif, &hw);
->  	if (rc != 0) {
->  		/* The inteface is released to the common IDE layer */
->  		dev_set_drvdata(&mdev->ofdev.dev, NULL);
-> @@ -1282,6 +1284,7 @@ pmac_ide_pci_attach(struct pci_dev *pdev
->  	void __iomem *base;
->  	unsigned long rbase, rlen;
->  	int i, rc;
-> +	hw_regs_t hw;
->  
->  	np = pci_device_to_OF_node(pdev);
->  	if (np == NULL) {
-> @@ -1315,7 +1318,6 @@ pmac_ide_pci_attach(struct pci_dev *pdev
->  	}
->  
->  	hwif->pci_dev = pdev;
-> -	hwif->gendev.parent = &pdev->dev;
->  	pmif->mdev = NULL;
->  	pmif->node = np;
->  
-> @@ -1332,7 +1334,12 @@ pmac_ide_pci_attach(struct pci_dev *pdev
->  
->  	pci_set_drvdata(pdev, hwif);
->  
-> -	rc = pmac_ide_setup_device(pmif, hwif);
-> +	memset(&hw, 0, sizeof(hw));
-> +	pmac_ide_init_hwif_ports(&hw, pmif->regbase, 0, NULL);
-
-    It seems that the last argument to that function can be dropped now as the 
-new code doesn't pass anything but NULL.
-
-MBR, Sergei
+-- 
+tejun
