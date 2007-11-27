@@ -1,124 +1,98 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 4/8] libata: move ata_set_mode() to libata-eh.c
-Date: Tue, 27 Nov 2007 19:28:55 +0900
-Message-ID: <11961593392856-git-send-email-htejun@gmail.com>
+Subject: [PATCH 3/8] libata: factor out ata_eh_schedule_probe()
+Date: Tue, 27 Nov 2007 19:28:54 +0900
+Message-ID: <11961593392930-git-send-email-htejun@gmail.com>
 References: <11961593392491-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:15466 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716AbXK0K3T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:29:19 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so837301rvb
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 02:29:18 -0800 (PST)
+Received: from wa-out-1112.google.com ([209.85.146.179]:11782 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbXK0K3O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:29:14 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1179628wah
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 02:29:14 -0800 (PST)
 In-Reply-To: <11961593392491-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: bzolnier@gmail.com, Tejun Heo <htejun@gmail.com>
 
-Move ata_set_mode() to libata-eh.c.  ata_set_mode() is surely an EH
-action and will be more tightly coupled with the rest of error
-handling.  Move it to libata-eh.c.
+Factor out ata_eh_schedule_probe() from ata_eh_handle_dev_fail() and
+ata_eh_recover().  This is to improve maintainability and make future
+changes easier.
+
+In the previous revision, ata_dev_enabled() test was accidentally
+dropped while factoring out.  This problem was spotted by Bartlomiej.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/libata-core.c |   25 -------------------------
- drivers/ata/libata-eh.c   |   25 +++++++++++++++++++++++++
- drivers/ata/libata.h      |    2 +-
- 3 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/ata/libata-eh.c |   38 +++++++++++++++++++++-----------------
+ 1 files changed, 21 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8d5cd16..85053bf 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3181,31 +3181,6 @@ int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
- }
- 
- /**
-- *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-- *	@link: link on which timings will be programmed
-- *	@r_failed_dev: out paramter for failed device
-- *
-- *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-- *	ata_set_mode() fails, pointer to the failing device is
-- *	returned in @r_failed_dev.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *
-- *	RETURNS:
-- *	0 on success, negative errno otherwise
-- */
--int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
--{
--	struct ata_port *ap = link->ap;
--
--	/* has private set_mode? */
--	if (ap->ops->set_mode)
--		return ap->ops->set_mode(link, r_failed_dev);
--	return ata_do_set_mode(link, r_failed_dev);
--}
--
--/**
-  *	ata_tf_to_host - issue ATA taskfile to host controller
-  *	@ap: port to which command is being issued
-  *	@tf: ATA taskfile register set
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 44c137e..b1dc6b9 100644
+index c36c837..44c137e 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2297,6 +2297,31 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 	return rc;
+@@ -2343,6 +2343,22 @@ static int ata_eh_skip_recovery(struct ata_link *link)
+ 	return 1;
  }
  
-+/**
-+ *	ata_set_mode - Program timings and issue SET FEATURES - XFER
-+ *	@link: link on which timings will be programmed
-+ *	@r_failed_dev: out paramter for failed device
-+ *
-+ *	Set ATA device disk transfer mode (PIO3, UDMA6, etc.).  If
-+ *	ata_set_mode() fails, pointer to the failing device is
-+ *	returned in @r_failed_dev.
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	0 on success, negative errno otherwise
-+ */
-+int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev)
++static int ata_eh_schedule_probe(struct ata_device *dev)
 +{
-+	struct ata_port *ap = link->ap;
++	struct ata_eh_context *ehc = &dev->link->eh_context;
 +
-+	/* has private set_mode? */
-+	if (ap->ops->set_mode)
-+		return ap->ops->set_mode(link, r_failed_dev);
-+	return ata_do_set_mode(link, r_failed_dev);
++	if (!(ehc->i.probe_mask & (1 << dev->devno)) ||
++	    (ehc->did_probe_mask & (1 << dev->devno)))
++		return 0;
++
++	ata_eh_detach_dev(dev);
++	ata_dev_init(dev);
++	ehc->did_probe_mask |= (1 << dev->devno);
++	ehc->i.action |= ATA_EH_SOFTRESET;
++
++	return 1;
 +}
 +
- static int ata_link_nr_enabled(struct ata_link *link)
+ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
  {
- 	struct ata_device *dev;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index c860705..f8ab11e 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -86,7 +86,6 @@ extern int ata_dev_configure(struct ata_device *dev);
- extern int sata_down_spd_limit(struct ata_link *link);
- extern int sata_set_spd_needed(struct ata_link *link);
- extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
--extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
-@@ -183,6 +182,7 @@ extern void ata_eh_report(struct ata_port *ap);
- extern int ata_eh_reset(struct ata_link *link, int classify,
- 			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
- 			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset);
-+extern int ata_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
- 			  ata_postreset_fn_t postreset,
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
+@@ -2374,16 +2390,9 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
+ 		if (ata_link_offline(dev->link))
+ 			ata_eh_detach_dev(dev);
+ 
+-		/* probe if requested */
+-		if ((ehc->i.probe_mask & (1 << dev->devno)) &&
+-		    !(ehc->did_probe_mask & (1 << dev->devno))) {
+-			ata_eh_detach_dev(dev);
+-			ata_dev_init(dev);
+-
++		/* schedule probe if necessary */
++		if (ata_eh_schedule_probe(dev))
+ 			ehc->tries[dev->devno] = ATA_EH_DEV_TRIES;
+-			ehc->did_probe_mask |= (1 << dev->devno);
+-			ehc->i.action |= ATA_EH_SOFTRESET;
+-		}
+ 
+ 		return 1;
+ 	} else {
+@@ -2460,14 +2469,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			if (dev->flags & ATA_DFLAG_DETACH)
+ 				ata_eh_detach_dev(dev);
+ 
+-			if (!ata_dev_enabled(dev) &&
+-			    ((ehc->i.probe_mask & (1 << dev->devno)) &&
+-			     !(ehc->did_probe_mask & (1 << dev->devno)))) {
+-				ata_eh_detach_dev(dev);
+-				ata_dev_init(dev);
+-				ehc->did_probe_mask |= (1 << dev->devno);
+-				ehc->i.action |= ATA_EH_SOFTRESET;
+-			}
++			/* schedule probe if necessary */
++			if (!ata_dev_enabled(dev))
++				ata_eh_schedule_probe(dev);
+ 		}
+ 	}
+ 
 -- 
 1.5.2.4
 
