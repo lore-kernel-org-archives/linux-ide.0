@@ -1,82 +1,76 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
-Date: Tue, 27 Nov 2007 01:31:19 -0800
-Message-ID: <20071127013119.d12b7791.akpm@linux-foundation.org>
-References: <1196061373-6394-1-git-send-email-crquan@gmail.com>
+From: "jameshsu" <jameshsu@acard.com>
+Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
+Date: Tue, 27 Nov 2007 18:18:02 +0800
+Message-ID: <015401c830de$da8b62e0$6200a8c0@jameshsu>
+References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu> <20071108162229.GB31492@havoc.gtf.org>
+Reply-To: "jameshsu" <jameshsu@acard.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1196061373-6394-1-git-send-email-crquan@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Denis Cheng <crquan@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:2607 "EHLO
+	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbXK0KU1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:20:27 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matti Aarnio <postmaster@vger.kernel.org>, tytso@us.ibm.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, 26 Nov 2007 15:16:13 +0800 Denis Cheng <crquan@gmail.com> wrote:
+Jeff,
 
-> these utilities implemented in lib/hexdump.c are more handy, please use this.
-> 
-> ...
+First, appreciate for taking few minutes to answer my short question:
+
+1) How is the status of ACARD Linux SATA driver after spec studying??.
+Any progress and any qustion/help needed from Acard, esp., AHCI support??
+If you have draft open source(driver) now, do you mind to share with us!
+Please advise! Thanks!
+
+Best regards & happy holiday season!
+
+James
+----- Original Message -----
+From: Jeff Garzik
+To: jameshsu
+Cc: Jason Wu ; LaurenceWu ; Andrew Morton ; IDE/ATA development list ;
+tytso@us.ibm.com ; Matti Aarnio ; James Bottomley ; Daniel Weng
+Sent: Friday, November 09, 2007 12:22 AM
+Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
+
+
+On Thu, Nov 08, 2007 at 07:34:22PM +0800, jameshsu wrote:
+> From: LaurenceWu
+
+> We didn't study about ata/ahci.c, but it should be based on AHCI1.0 or 1.1
+> spec. That is, NO P.M. FIS base switching, but supports both non-NCQ and
+NCQ
+> protocols.
 >
-> --- a/drivers/scsi/ide-scsi.c
-> +++ b/drivers/scsi/ide-scsi.c
-> @@ -242,16 +242,6 @@ static void idescsi_output_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsign
->  	}
->  }
->  
-> -static void hexdump(u8 *x, int len)
-> -{
-> -	int i;
-> -
-> -	printk("[ ");
-> -	for (i = 0; i < len; i++)
-> -		printk("%x ", x[i]);
-> -	printk("]\n");
-> -}
-> -
->  static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
->  {
->  	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
-> @@ -282,7 +272,7 @@ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_co
->  	pc->scsi_cmd = ((idescsi_pc_t *) failed_command->special)->scsi_cmd;
->  	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
->  		printk ("ide-scsi: %s: queue cmd = ", drive->name);
-> -		hexdump(pc->c, 6);
-> +		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 6, 1);
->  	}
->  	rq->rq_disk = scsi->disk;
->  	return ide_do_drive_cmd(drive, rq, ide_preempt);
-> @@ -337,7 +327,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
->  		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
->  		if (log) {
->  			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, opc->scsi_cmd->serial_number);
-> -			hexdump(pc->buffer,16);
-> +			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->buffer, 16, 1);
->  		}
->  		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buffer, SCSI_SENSE_BUFFERSIZE);
->  		kfree(pc->buffer);
-> @@ -816,10 +806,10 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
->  
->  	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
->  		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
-> -		hexdump(cmd->cmnd, cmd->cmd_len);
-> +		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, cmd->cmnd, cmd->cmd_len, 1);
->  		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
->  			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
-> -			hexdump(pc->c, 12);
-> +			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 12, 1);
->  		}
->  	}
->  
+> For NCQ or nonNCQ, 8620 is very AHCI-like, although not fully compatible,
+> programmer can easily modify standard ahci.c
+> for 8620. The main differences between 8620 and AHCI are :
+>
+> 1. PRD table format changed, (please compare AHCI 1.x section 4.2.3.3 and
+> 8620 datasheet section 7.3), 'I' bit in 8620 is defined as 'EOT' and NO
+> PRDTL value are available in the
+>     Command List Structure.
+>
+> 2. For NCQ transfer, PxIS bit 3(SDBS) is changed. ATP8620 add the Reg_144h
+> to accumulate 32 Sactive bits in each SDB FIS.
+>     The Reg_144h is RWC and all its 32 bits are 'ORed'  to form the PxIS
+> bit3 and interrupt, if PxIE bit 3 enabled.
+>
+> Yes.  Modifying the ata/ahci.c is OK to support atp8620.
 
-Would you believe that this patch (which removes code) actually increases
-drivers/scsi/ide-scsi.o .text by 75 bytes?
+This is good information, thanks.
 
-I didn't look to see why - probably that huge arg count is hurting,
-possibly some additional strings being emitted?
+After studying the datasheet I also noted a couple differences:
 
-Either way, perhaps a simple little front-end to print_hex_dump() is called
-for.
+1) Port Multiplier support appears different from standard AHCI.
 
+2) This chip includes target mode support.  Very nice, well done!
+I hope that standard AHCI eventually supports this nice feature!
+
+Jeff
 
