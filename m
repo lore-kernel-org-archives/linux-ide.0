@@ -1,97 +1,53 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 4/6] ide: use ide_init_port_hw() in setup-pci.c
-Date: Tue, 27 Nov 2007 23:58:28 +0100
-Message-ID: <200711272358.28134.bzolnier@gmail.com>
+Subject: [PATCH 6/6] ide-pmac: use custom hwif->sg_max_nents only if DMA support is enabled
+Date: Wed, 28 Nov 2007 00:00:14 +0100
+Message-ID: <200711280000.14973.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:45106 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.172]:44678 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695AbXK0WxG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 17:53:06 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1367714ugc
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 14:53:05 -0800 (PST)
+	with ESMTP id S1752701AbXK0WxH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 17:53:07 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so1367706ugc
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 14:53:07 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
 
-* Move setting hwif->gendev.parent from ide_pci_setup_ports()
-  to ide_hwif_configure().
+Move setting hwif->sg_max_nents from pmac_ide_setup_device()
+to pmac_ide_setup_dma().
 
-* Always set hwif->io_ports in ide_hwif_configure().
-
-* Use ide_init_port_hw() in ide_hwif_configure().
-
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/setup-pci.c |   33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+ drivers/ide/ppc/pmac.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Index: b/drivers/ide/setup-pci.c
+Index: b/drivers/ide/ppc/pmac.c
 ===================================================================
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -363,6 +363,8 @@ static ide_hwif_t *ide_hwif_configure(st
- 	unsigned long ctl = 0, base = 0;
- 	ide_hwif_t *hwif;
- 	u8 bootable = (d->host_flags & IDE_HFLAG_BOOTABLE) ? 1 : 0;
-+	u8 oldnoprobe = 0;
-+	struct hw_regs_s hw;
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1133,8 +1133,6 @@ pmac_ide_setup_device(pmac_ide_hwif_t *p
+ 		hwif->noprobe = 0;
+ #endif /* CONFIG_PMAC_MEDIABAY */
  
- 	if ((d->host_flags & IDE_HFLAG_ISA_PORTS) == 0) {
- 		/*  Possibly we should fail if these checks report true */
-@@ -385,22 +387,25 @@ static ide_hwif_t *ide_hwif_configure(st
+-	hwif->sg_max_nents = MAX_DCMDS;
+-
+ #ifdef CONFIG_BLK_DEV_IDEDMA_PMAC
+ 	/* has a DBDMA controller channel */
+ 	if (pmif->dma_regs)
+@@ -1751,6 +1749,8 @@ pmac_ide_setup_dma(pmac_ide_hwif_t *pmif
+ 		return;
  	}
- 	if ((hwif = ide_match_hwif(base, bootable, d->name)) == NULL)
- 		return NULL;	/* no room in ide_hwifs[] */
--	if (hwif->io_ports[IDE_DATA_OFFSET] != base ||
--	    hwif->io_ports[IDE_CONTROL_OFFSET] != (ctl | 2)) {
--		hw_regs_t hw;
--
--		memset(&hw, 0, sizeof(hw));
--		ide_std_init_ports(&hw, base, ctl | 2);
--		memcpy(hwif->io_ports, hw.io_ports, sizeof(hwif->io_ports));
--		hwif->noprobe = 0;
--	}
--	hwif->chipset = d->chipset ? d->chipset : ide_pci;
-+
-+	memset(&hw, 0, sizeof(hw));
-+	hw.irq = hwif->irq ? hwif->irq : irq;
-+	hw.dev = &dev->dev;
-+	hw.chipset = d->chipset ? d->chipset : ide_pci;
-+	ide_std_init_ports(&hw, base, ctl | 2);
-+
-+	if (hwif->io_ports[IDE_DATA_OFFSET] == base &&
-+	    hwif->io_ports[IDE_CONTROL_OFFSET] == (ctl | 2))
-+		oldnoprobe = hwif->noprobe;
-+
-+	ide_init_port_hw(hwif, &hw);
-+
-+	hwif->noprobe = oldnoprobe;
-+
- 	hwif->pci_dev = dev;
- 	hwif->cds = d;
- 	hwif->channel = port;
  
--	if (!hwif->irq)
--		hwif->irq = irq;
- 	if (mate) {
- 		hwif->mate = mate;
- 		mate->mate = hwif;
-@@ -535,12 +540,8 @@ void ide_pci_setup_ports(struct pci_dev 
- 		if ((hwif = ide_hwif_configure(dev, d, mate, port, pciirq)) == NULL)
- 			continue;
- 
--		/* setup proper ancestral information */
--		hwif->gendev.parent = &dev->dev;
--
- 		*(idx + port) = hwif->index;
- 
--		
- 		if (d->init_iops)
- 			d->init_iops(hwif);
- 
++	hwif->sg_max_nents = MAX_DCMDS;
++
+ 	hwif->dma_host_set = &pmac_ide_dma_host_set;
+ 	hwif->dma_setup = &pmac_ide_dma_setup;
+ 	hwif->dma_exec_cmd = &pmac_ide_dma_exec_cmd;
