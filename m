@@ -1,39 +1,105 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: [PATCH] [libata] sata_mv: fix compilation error when enabling DEBUG
-Date: Tue, 27 Nov 2007 17:26:08 +0200
-Message-ID: <1196177168791-git-send-email-saeed@marvell.com>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: [PATCH 3/3] [POWERPC] MPC8349E-mITX: introduce localbus and pata nodes
+Date: Tue, 27 Nov 2007 19:41:01 +0300
+Message-ID: <20071127164101.GA14790@localhost.localdomain>
+References: <20071127153708.GA12490@localhost.localdomain> <20071127153940.GC14183@localhost.localdomain> <474C3C79.5060908@ru.mvista.com>
+Reply-To: avorontsov@ru.mvista.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:31828 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756782AbXK0Pwd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Nov 2007 10:52:33 -0500
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7437 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751018AbXK0QgK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 11:36:10 -0500
+Content-Disposition: inline
+In-Reply-To: <474C3C79.5060908@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: nico@marvell.com, buytenh@marvell.com, Saeed Bishara <saeed.bishara@gmail.com>, Saeed Bishara <saeed@marvell.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
 
-From: Saeed Bishara <saeed.bishara@gmail.com>
+On Tue, Nov 27, 2007 at 06:49:13PM +0300, Sergei Shtylyov wrote:
+> Hello.
 
-use sstatus instead status.
+Hi Sergei,
 
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
----
- drivers/ata/sata_mv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> Anton Vorontsov wrote:
+> 
+> >This patch adds localbus and pata nodes to use CF IDE interface
+> >on MPC8349E-mITX boards.
+> 
+> >Patch also adds code to probe localbus.
+> 
+> >Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> >---
+> > arch/powerpc/boot/dts/mpc8349emitx.dts    |   17 ++++++++++++++++-
+> > arch/powerpc/platforms/83xx/mpc834x_itx.c |   17 +++++++++++++++++
+> > 2 files changed, 33 insertions(+), 1 deletions(-)
+> 
+> >diff --git a/arch/powerpc/boot/dts/mpc8349emitx.dts 
+> >b/arch/powerpc/boot/dts/mpc8349emitx.dts
+> >index 5072f6d..7a97068 100644
+> >--- a/arch/powerpc/boot/dts/mpc8349emitx.dts
+> >+++ b/arch/powerpc/boot/dts/mpc8349emitx.dts
+> >@@ -249,6 +249,21 @@
+> > 		device_type = "pci";
+> > 	};
+> > 
+> >+	localbus@e0005000 {
+> >+		#address-cells = <2>;
+> >+		#size-cells = <1>;
+> >+		compatible = "fsl,mpc8349emitx-localbus",
+> 
+>    Board compatible bus?
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index a43f64d..97c3e11 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2170,7 +2170,7 @@ static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
- 		mv_scr_read(ap, SCR_ERROR, &serror);
- 		mv_scr_read(ap, SCR_CONTROL, &scontrol);
- 		DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
--			"SCtrl 0x%08x\n", status, serror, scontrol);
-+			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
- 	}
- #endif
- 
+This is what Documentation/powerpc/booting-without-of.txt suggests
+for localbuses. I'm following.
+
+> >+			     "fsl,mpc8349e-localbus",
+> >+			     "fsl,pq2pro-localbus";
+> >+		reg = <e0005000 d8>;
+> >+		ranges = <3 0 f0000000 210>;
+> > 
+> >-
+> >+		pata@3,0 {
+> >+			compatible = "fsl,mpc8349emitx-pata", 
+> >"pata-platform";
+> >+			reg = <3 0 10 3 20c 4>;
+> >+			ioport-shift = <1>;
+> 
+>    Bleh... that shift again. And this is surely not a good name for a 
+> property (where's I/O ports in your case?) -- why not call it "reg-shift" 
+> (well, I'd call it "reg-size" or "reg-stride" myself :-)?
+
+1. "shift" because pata_platform using that name. I don't see any
+   reason to contrive indirections. ioport-shift is what the whole
+   Linux kernel using nowadays, and ioport-shift dts property
+   anyway Linux-specific.
+
+   I'm just following todays' conventions.
+
+   If you feel really bad about that, I think better to fix that in
+   the source of the badness -- pata_platform. It's easy, I can do
+   that. Would you ack patch that converts whole pata_platform and
+   users? Would Paul ack it?
+
+   Still, is there any hardware that needs not power of 2 stride?
+
+2. "ioport" because shift^Wstride ;-) applies only to the io range
+   (yes, it's obvious, but worth open-wording, no?).
+
+
+And btw, I can get rid of ioport-shift at all. And do fixups in
+the pata_of_platform driver via .compatible matching. But I don't
+want: it feels bad to list every needs-to-fixup board in the common
+driver. It also feels not so great creating something like
+pata-platform-stride-{1,2,4,...} compatible stuff. Heh.
+
+
+Thanks,
+
 -- 
-1.5.0.6
-
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
