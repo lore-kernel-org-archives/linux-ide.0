@@ -1,76 +1,47 @@
-From: "jameshsu" <jameshsu@acard.com>
-Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
-Date: Tue, 27 Nov 2007 18:18:02 +0800
-Message-ID: <015401c830de$da8b62e0$6200a8c0@jameshsu>
-References: <00b501c81ace$ece895f0$6200a8c0@jameshsu> <47270656.7080205@garzik.org> <003701c81c63$cee89c30$6200a8c0@jameshsu> <025c01c82016$fbcf3810$d400a8c0@laurence> <025001c82067$d76c04c0$6200a8c0@jameshsu> <20071107221355.GB15784@havoc.gtf.org> <001f01c821b0$20b6c9f0$6200a8c0@jameshsu> <02d301c821e2$25dc01c0$d400a8c0@laurence> <005e01c821fb$502be120$6200a8c0@jameshsu> <20071108162229.GB31492@havoc.gtf.org>
-Reply-To: "jameshsu" <jameshsu@acard.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 1/8] libata: rearrange ATA_DFLAG_*
+Date: Tue, 27 Nov 2007 19:28:52 +0900
+Message-ID: <11961593391512-git-send-email-htejun@gmail.com>
+References: <11961593392491-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:2607 "EHLO
-	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbXK0KU1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:20:27 -0500
+Received: from wa-out-1112.google.com ([209.85.146.179]:11782 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581AbXK0K3Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 05:29:16 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1179628wah
+        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 02:29:16 -0800 (PST)
+In-Reply-To: <11961593392491-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matti Aarnio <postmaster@vger.kernel.org>, tytso@us.ibm.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com, Tejun Heo <htejun@gmail.com>
 
-Jeff,
+Area for DFLAGs which are cleared on INIT is full.  Extend it by 8
+bits.
 
-First, appreciate for taking few minutes to answer my short question:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ include/linux/libata.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-1) How is the status of ACARD Linux SATA driver after spec studying??.
-Any progress and any qustion/help needed from Acard, esp., AHCI support??
-If you have draft open source(driver) now, do you mind to share with us!
-Please advise! Thanks!
-
-Best regards & happy holiday season!
-
-James
------ Original Message -----
-From: Jeff Garzik
-To: jameshsu
-Cc: Jason Wu ; LaurenceWu ; Andrew Morton ; IDE/ATA development list ;
-tytso@us.ibm.com ; Matti Aarnio ; James Bottomley ; Daniel Weng
-Sent: Friday, November 09, 2007 12:22 AM
-Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
-
-
-On Thu, Nov 08, 2007 at 07:34:22PM +0800, jameshsu wrote:
-> From: LaurenceWu
-
-> We didn't study about ata/ahci.c, but it should be based on AHCI1.0 or 1.1
-> spec. That is, NO P.M. FIS base switching, but supports both non-NCQ and
-NCQ
-> protocols.
->
-> For NCQ or nonNCQ, 8620 is very AHCI-like, although not fully compatible,
-> programmer can easily modify standard ahci.c
-> for 8620. The main differences between 8620 and AHCI are :
->
-> 1. PRD table format changed, (please compare AHCI 1.x section 4.2.3.3 and
-> 8620 datasheet section 7.3), 'I' bit in 8620 is defined as 'EOT' and NO
-> PRDTL value are available in the
->     Command List Structure.
->
-> 2. For NCQ transfer, PxIS bit 3(SDBS) is changed. ATP8620 add the Reg_144h
-> to accumulate 32 Sactive bits in each SDB FIS.
->     The Reg_144h is RWC and all its 32 bits are 'ORed'  to form the PxIS
-> bit3 and interrupt, if PxIE bit 3 enabled.
->
-> Yes.  Modifying the ata/ahci.c is OK to support atp8620.
-
-This is good information, thanks.
-
-After studying the datasheet I also noted a couple differences:
-
-1) Port Multiplier support appears different from standard AHCI.
-
-2) This chip includes target mode support.  Very nice, well done!
-I hope that standard AHCI eventually supports this nice feature!
-
-Jeff
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ef52a07..9cd06dd 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -141,10 +141,10 @@ enum {
+ 	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
+ 	ATA_DFLAG_SPUNDOWN	= (1 << 14), /* XXX: for spindown_compat */
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+-	ATA_DFLAG_INIT_MASK	= (1 << 16) - 1,
++	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
+ 
+-	ATA_DFLAG_DETACH	= (1 << 16),
+-	ATA_DFLAG_DETACHED	= (1 << 17),
++	ATA_DFLAG_DETACH	= (1 << 24),
++	ATA_DFLAG_DETACHED	= (1 << 25),
+ 
+ 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
+ 	ATA_DEV_ATA		= 1,	/* ATA device */
+-- 
+1.5.2.4
 
