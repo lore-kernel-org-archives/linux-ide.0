@@ -1,79 +1,90 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
-	driver
-Date: Wed, 28 Nov 2007 19:11:19 +0300
-Message-ID: <474D9327.9020305@ru.mvista.com>
-References: <20071127153708.GA12490@localhost.localdomain>	<20071127153908.GB14183@localhost.localdomain>	<20071127212222.GB10829@lixom.net>	<200711272233.00456.arnd@arndb.de>
-	<20071128154904.GA20722@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Flexible SFF interrupt handling
+Date: Wed, 28 Nov 2007 11:09:38 -0500
+Message-ID: <474D92C2.1080804@garzik.org>
+References: <474D70E0.4060709@garzik.org> <20071128142947.17221a33@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20071128154904.GA20722@localhost.localdomain>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: avorontsov@ru.mvista.com
-Cc: Olof Johansson <olof@lixom.net>, linuxppc-dev@ozlabs.org, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:44044 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752069AbXK1QJk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Nov 2007 11:09:40 -0500
+In-Reply-To: <20071128142947.17221a33@the-village.bc.nu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Anton Vorontsov wrote:
+Alan Cox wrote:
+>> In general, I think we should adopt a flexible or "loose" model for 
+>> acking interrupts on SFF controllers.
+> 
+> Agreed - especially as the IRQ is often essentially the drive output not
+> under any kind of sane control of ours.
 
->>>>This driver nicely wraps around pata_platform library functions,
->>>>and provides OF platform bus bindings to the PATA devices.
+Good point (I had not thought of looking at it that way).
 
->>>>+static struct of_device_id pata_of_platform_match[] = {
->>>>+     { .compatible = "pata-platform", },
->>>>+};
 
->>>"pata-platform" really means nothing outside of linux. A more
->>>generic label would be useful.
+>> (a) whenever we are in bus-idle (qc == NULL), and get an interrupt, go 
+>> ahead and read Status.
+> 
+> Please call into the driver. Quite a few PATA drivers have multiple IRQ
+> sources, and SATA many. 
 
-> Agreed.
+Done :)  This should simply be a new behavior coded into the existing 
+interrupt handlers.
 
-    Now you're quick to agree. :-)
+Thus you can choose per-driver whether to do this or not.
 
->>Maybe the name of the standards it supports? Could be
->>"ata-4", "ata-5" and the like, or the exact transfer mode, like
->>"pata-udma-5", "pata-pio-3", "sata-150", etc.
 
-> You're quite optimistic about pata_platform capabilities. ;-)
+>> (b) if we are expecting an interrupt, and receive one, check Status (or 
+>> AltStatus if DMAing).
+> 
+> Providing we are not mid data transfer (which is why we need to get into
+> enable/disable_irq for some controllers). Right now its a problem that
+> can't occur but on some controllers reading status mid PIO xfer causes
+> joyous things like silent corruption.
 
-    Indeed. :-)
+True..
 
-> As far as I know it is [obviously] supports PIO modes only. And so
-> far I was able to get max 5.28 MB/s read transfers. Which looks like
-> ideal case for PIO1 (CF I'm testing on is 3.0, max. PIO4).
 
-    Believe me, it's a great speed even for PIO4. Most systems only show 3+ 
-MiB/s in this mode according to hdparm.
+>> (c) if condition "(b)" indicates busy, initiate status polling every 
+>> 250ms until timeout occurs or BSY clears.
+> 
+> Yep.
+> 
+>> (d) if N seconds (4?) elapses without an interrupt, initiate polling. 
+>> keep a history of such "fail-over" events, and note each fail-over'd 
+>> command's eventual success via polling, success via interrupt, or 
+>> timeout.  Use that history to decide to switch to 100% polling mode 
+>> (i.e. reach conclusion that interrupt delivery is broken, via observation)
+> 
+> N = 8 sounds good to me (7 being the normal maximum command timeout)
+> 
+>> That should cover no-interrupts, lost interrupts, early interrupts, 
+>> screaming interrupts, insane devices, and of course normal operation.
+> 
+> Should we also consider resetting the device as one of the strategies (at
+> least once off)
+> 
+> Might also want to think at that point about the case of 
+> 
+> 	command
+> 	....
+> 	timeout
+> 
+> where old IDE checks with the controller to spot lost IRQ cases where a
+> command finished and stuff vanished. Old IDE doesn't do much with it but
+> we could use that as a good hint that we want to switch to polling mode
+> and tell the user their computer sucks.
 
-> I've modified pio_mask appropriately, plus I've tried to comment
-> out .set_mode = pata_platform_set_mode, and now it says:
+That's basically where I wanted to go with "(d)".  Being able to both 
+handle interrupts _and_ fall back to polling makes it easy to notice 
+when interrupts are getting lost.  If more than a couple rescues of this 
+nature occur, do as you describe.
 
-> ata5: PATA max PIO4 mmio cmd 0xf0000000 ctl 0xf000020c irq 24
-> ata5.00: CFA: TOSHIBA THNCF512MQG, 3.00, max PIO4
-> ata5.00: configured for PIO4
-> ata5.00: configured for PIO4
+	Jeff
 
-> That looks good, but speed is the same. Oh well, it's another
-> matter.
 
-> Back to dts, I think pata-pio-X is good scheme. That way we can
-> pass pio_mask via device tree. Sounds reasonable?
-
-    Grumble. Can't we pass this via some property other than "compatible"? I'm 
-opposed to "ata-5" and the like in there as well cause it's not clear what 
-information this would provide. Why people so love to make things complex WRT 
-the "compatible" property -- instead of making the task of selecting a proper 
-driver more simple, they tend to make it mode complex by trying to specify 
-values that have quite little to do with the device's programming interface 
-itself...
-
-MBR, Sergei
