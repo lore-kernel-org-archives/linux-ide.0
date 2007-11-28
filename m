@@ -1,31 +1,85 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: 2.6.24-rc3-mm2: Result: hostbyte=0x01 driverbyte=0x00\nend_request: I/O error
-Date: Wed, 28 Nov 2007 16:14:21 -0700
-Message-ID: <20071128231421.GB2584@parisc-linux.org>
-References: <20071128034140.648383f0.akpm@linux-foundation.org> <20071128200130.GA13361@martell.zuzino.mipt.ru> <20071128134036.417b3def.akpm@linux-foundation.org>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: [stable patch] backport of "be tolerant of 12-byte ATAPI commands
+ in 16-byte CDBs"
+Date: Wed, 28 Nov 2007 18:36:07 -0500
+Message-ID: <474DFB67.5070603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20071128134036.417b3def.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alexey Dobriyan <adobriyan@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:51663 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758286AbXK1XgI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Nov 2007 18:36:08 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id lASNa8OM001568
+	for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 18:36:08 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lASNa8T9002943
+	for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 18:36:08 -0500
+Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id lASNa79Q005705
+	for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 18:36:07 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Wed, Nov 28, 2007 at 01:40:36PM -0800, Andrew Morton wrote:
-> On Wed, 28 Nov 2007 23:01:31 +0300
-> Alexey Dobriyan <adobriyan@gmail.com> wrote:
-> 
-> > Reliably spams dmesg with end_request() horrors. This happens when git
-> > starts checking out linux tree to fresh ext2 partition. Disk is several
-> > month old and there were no prolems with, say, 2.6.24-rc3:
+Submitted for comment, not compile tested.
 
-Could you try reverting 6f5391c283d7fdcf24bf40786ea79061919d1e1d and see
-if the problem still exists?
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Backport of commit 607126c2a21cd6e9bb807fdd415c1a992f7b9009
+libata-scsi: be tolerant of 12-byte ATAPI commands in 16-byte CDBs
+
+---
+ drivers/ata/libata-scsi.c |   27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+
+--- linux-2.6.23.noarch.orig/drivers/ata/libata-scsi.c
++++ linux-2.6.23.noarch/drivers/ata/libata-scsi.c
+@@ -2747,16 +2747,15 @@ static inline int __ata_scsi_queuecmd(st
+ 				      struct ata_device *dev)
+ {
+ 	int rc = 0;
++	u8 scsi_op = scmd->cmnd[0];
+ 
+-	if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len)) {
+-		DPRINTK("bad CDB len=%u, max=%u\n",
+-			scmd->cmd_len, dev->cdb_len);
+-		scmd->result = DID_ERROR << 16;
+-		done(scmd);
+-		return 0;
+-	}
++	if (unlikely(!scmd->cmd_len))
++		goto bad_cdb_len;
+ 
+ 	if (dev->class == ATA_DEV_ATA) {
++		if (unlikely(scmd->cmd_len > dev->cdb_len))
++			goto bad_cdb_len;
++
+ 		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+ 							      scmd->cmnd[0]);
+ 
+@@ -2764,10 +2763,22 @@ static inline int __ata_scsi_queuecmd(st
+ 			rc = ata_scsi_translate(dev, scmd, done, xlat_func);
+ 		else
+ 			ata_scsi_simulate(dev, scmd, done);
+-	} else
++	} else {
++		int len = COMMAND_SIZE(scsi_op);
++		if (unlikely(len > scmd->cmd_len || len > dev->cdb_len))
++			goto bad_cdb_len;
++
+ 		rc = ata_scsi_translate(dev, scmd, done, atapi_xlat);
++	}
+ 
+ 	return rc;
++
++ bad_cdb_len:
++	DPRINTK("bad CDB len=%u, scsi_op=0x%02x, max=%u\n",
++		scmd->cmd_len, scsi_op, dev->cdb_len);
++	scmd->result = DID_ERROR << 16;
++	done(scmd);
++	return 0;
+ }
+ 
+ /**
