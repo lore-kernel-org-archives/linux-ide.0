@@ -1,32 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: laptop reboots right after hibernation
-Date: Wed, 28 Nov 2007 10:09:10 +0900
-Message-ID: <474CBFB6.4020105@gmail.com>
-References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com> <1195551141.2792.3.camel@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH 6/8] libata: adjust speed down rules
+Date: Tue, 27 Nov 2007 20:10:47 -0500
+Message-ID: <474CC017.3040305@rtr.ca>
+References: <11961593392491-git-send-email-htejun@gmail.com> <11961593403415-git-send-email-htejun@gmail.com> <474C9B10.4060500@rtr.ca> <474CA31E.4000508@gmail.com> <474CA94E.9080603@rtr.ca> <474CA9C4.9040902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.238]:17837 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbXK1BK3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 20:10:29 -0500
-Received: by hu-out-0506.google.com with SMTP id 19so1358486hue
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 17:10:27 -0800 (PST)
-In-Reply-To: <1195551141.2792.3.camel@localhost.localdomain>
+Received: from rtr.ca ([76.10.145.34]:3700 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759985AbXK1BKt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Nov 2007 20:10:49 -0500
+In-Reply-To: <474CA9C4.9040902@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kjartan Maraas <kmaraas@broadpark.no>
-Cc: Tomas Carnecky <tom@dbservice.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Kjartan Maraas wrote:
-> I get this exact error message on a normal first time boot here. I'm
-> using the latest fedora development kernel which is 2.6.24-rc2-git6
-> based. And I have the latest BIOS from HP IIRC.
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> Hi Tejun,
+>>
+>> Tejun Heo wrote:
+>>> Mark Lord wrote:
+>> ..
+>>>> -- deliberate (or otherwise) errors via SG_IO will cause inappropriate
+>>>> speed-downs.
+>>> No, only device errors issued via block layer are considered for speed
+>>> down (ATA_QCFLAG_IO).  SG_IO commands will never trigger speed down
+>>> unless the error is HSM or timeout.
+>> ..
+>>
+>> Mmmm... what category is "device rejected the command" (ABRT) ?
+>> Is that HSM ?
 > 
-> This is an HP nc6400 intel based laptop:
+> Nope, that's UNK_DEV if the command is IO (came from block layer) and
+> cat-0 (don't care) if it has come from SG_IO.
+..
 
-Care to post boot dmesg?  Or does harddisk detection fail because of this?
+Perfect, thanks!
 
--- 
-tejun
+Last question:  what about CD/DVD writers?
+
+Are the data-out commands for those done via block, or via SG_IO ?
+(my memory fails me here).
+
+Do they ever get speed up/down based on WRITE errors ?
+
+Cheers
+
+
