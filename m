@@ -1,33 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] [libata] sata_mv: fix compilation error when enabling
- DEBUG
-Date: Wed, 28 Nov 2007 11:53:27 +0900
-Message-ID: <474CD827.8030307@gmail.com>
-References: <11961781532837-git-send-email-saeed@marvell.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 1/6] au1xxx-ide: au_ide_probe() fixes
+Date: Wed, 28 Nov 2007 15:01:25 +0300
+Message-ID: <474D5895.60203@ru.mvista.com>
+References: <200711272355.33053.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:42192 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759592AbXK1Cxe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Nov 2007 21:53:34 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1079862rvb
-        for <linux-ide@vger.kernel.org>; Tue, 27 Nov 2007 18:53:33 -0800 (PST)
-In-Reply-To: <11961781532837-git-send-email-saeed@marvell.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:54054 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751467AbXK1MBM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 07:01:12 -0500
+In-Reply-To: <200711272355.33053.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: linux-ide@vger.kernel.org, Saeed Bishara <saeed.bishara@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Saeed Bishara wrote:
-> From: Saeed Bishara <saeed.bishara@gmail.com>
-> 
-> use sstatus instead status.
-> 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+Bartlomiej Zolnierkiewicz wrote:
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+> * hwif->hold is always set in au_ide_probe() (few lines earlier),
+>   no need to set it again
 
--- 
-tejun
+> * hwif->{channel,select_data,config_data} should be always zero
+
+> * autotune PIO also if CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_BDMA is not defined
+
+    You mean "also if CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA is defined"?
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
