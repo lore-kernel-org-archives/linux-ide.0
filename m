@@ -1,67 +1,93 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device driver
-Date: Wed, 28 Nov 2007 18:49:04 +0300
-Message-ID: <20071128154904.GA20722@localhost.localdomain>
-References: <20071127153708.GA12490@localhost.localdomain> <20071127153908.GB14183@localhost.localdomain> <20071127212222.GB10829@lixom.net> <200711272233.00456.arnd@arndb.de>
-Reply-To: avorontsov@ru.mvista.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Flexible SFF interrupt handling
+Date: Wed, 28 Nov 2007 10:58:03 -0500
+Message-ID: <474D900B.8030408@garzik.org>
+References: <474D70E0.4060709@garzik.org> <474D7C21.9000303@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:9970 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752930AbXK1PoT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 10:44:19 -0500
-Content-Disposition: inline
-In-Reply-To: <200711272233.00456.arnd@arndb.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:40224 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757196AbXK1P6G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Nov 2007 10:58:06 -0500
+In-Reply-To: <474D7C21.9000303@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linuxppc-dev@ozlabs.org, Olof Johansson <olof@lixom.net>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Nov 27, 2007 at 10:32:58PM +0100, Arnd Bergmann wrote:
-> On Tuesday 27 November 2007, Olof Johansson wrote:
-> > On Tue, Nov 27, 2007 at 06:39:08PM +0300, Anton Vorontsov wrote:
-> > > This driver nicely wraps around pata_platform library functions,
-> > > and provides OF platform bus bindings to the PATA devices.
-> >=20
-> > > +static struct of_device_id pata_of_platform_match[] =3D {
-> > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0{ .compatible =3D "pata-platform",=
- },
-> > > +};
-> >=20
-> > "pata-platform" really means nothing outside of linux. A more
-> > generic label would be useful.
+Mark Lord wrote:
+> Jeff Garzik wrote:
+>> This has been bubbling on my brain for a while.  I blathered on about 
+>> this on IRC to Tejun, but figured I might as well post it here and get 
+>> it archived.
+>>
+>> In general, I think we should adopt a flexible or "loose" model for 
+>> acking interrupts on SFF controllers.
+>>
+>> (a) whenever we are in bus-idle (qc == NULL), and get an interrupt, go 
+>> ahead and read Status.
+>>
+>> (b) if we are expecting an interrupt, and receive one, check Status 
+>> (or AltStatus if DMAing).
+>>
+>> (c) if condition "(b)" indicates busy, initiate status polling every 
+>> 250ms until timeout occurs or BSY clears.
+>>
+>> (d) if N seconds (4?) elapses without an interrupt, initiate polling. 
+>> keep a history of such "fail-over" events, and note each fail-over'd 
+>> command's eventual success via polling, success via interrupt, or 
+>> timeout.  Use that history to decide to switch to 100% polling mode 
+>> (i.e. reach conclusion that interrupt delivery is broken, via 
+>> observation)
+>>
+>> That should cover no-interrupts, lost interrupts, early interrupts, 
+>> screaming interrupts, insane devices, and of course normal operation.
+>>
+>> The model could be summarized as "interrupt as a hint" operation.
+> ..
+> 
+> The only question is, under which conditions do we return IRQ "handled=1",
+> and which times should we return 0 ?
+> 
+> Definitely when a real IRQ wakes us up and we see (qc != NULL && 
+> drive_ready),
+> essentially exactly as we currently do it.
+> 
+> But things might be trickier once polling is introduced, unless we also 
+> mask
+> the device interrupt before initiating the polling.
 
-Agreed.
+Actually no, and that is a key benefit of this scheme:  if we ensure 
+that the polling paths are resilient even in case where interrupts are 
+being delivered -- as we must do anyway -- then we don't have to worry 
+about interrupt masking, either on the interrupt controller or on the 
+device[1].
 
-> Maybe the name of the standards it supports? Could be
-> "ata-4", "ata-5" and the like, or the exact transfer mode, like
-> "pata-udma-5", "pata-pio-3", "sata-150", etc.
+If we do get an interrupt, ack it ASAP.  That covers normal operation 
+and screaming interrupts.
+If we don't get an interrupt, we will notice after a spell and poll 
+Status to ensure progress occurs.
 
-You're quite optimistic about pata_platform capabilities. ;-)
+Note that this polling is a different sort of polling than running an 
+entire ATA command via a kernel thread.  In this case, we're talking 
+about periodic Status (or AltStatus or LLD-specific-register status) 
+polling only.
 
-As far as I know it is [obviously] supports PIO modes only. And so
-far I was able to get max 5.28 MB/s read transfers. Which looks like
-ideal case for PIO1 (CF I'm testing on is 3.0, max. PIO4).
+A lot of fiddling with irq masking is getting around ugliness that I am 
+instead trying to eliminate altogether.  A truly robust system follows 
+the spec WRT nIEN and other interrupt masking.....  but then prepares 
+for the case where hw decides to send an interrupt anyway.
 
-I've modified pio_mask appropriately, plus I've tried to comment
-out .set_mode =3D pata_platform_set_mode, and now it says:
+On SFF controllers, we should consider interrupts to be unreliable 
+messages delivered on a best effort basis by hardware.  If we get them, 
+great, ack and act.  If we lack them, make sure progress occurs.
 
-ata5: PATA max PIO4 mmio cmd 0xf0000000 ctl 0xf000020c irq 24
-ata5.00: CFA: TOSHIBA THNCF512MQG, 3.00, max PIO4
-ata5.00: configured for PIO4
-ata5.00: configured for PIO4
+Regards,
 
-That looks good, but speed is the same. Oh well, it's another
-matter.
+	Jeff
 
 
-Back to dts, I think pata-pio-X is good scheme. That way we can
-pass pio_mask via device tree. Sounds reasonable?
-
---=20
-Anton Vorontsov
-email: cbou@mail.ru
-backup email: ya-cbou@yandex.ru
-irc://irc.freenode.net/bd2
+[1] well, there -are- exceptions, such as when we are bitbanging the ATA 
+Data register
