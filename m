@@ -1,39 +1,40 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: Re: [PATCH 0/3] OF-platform PATA driver
-Date: Wed, 28 Nov 2007 16:24:52 +0300
-Message-ID: <20071128132451.GA19422@localhost.localdomain>
-References: <20071127153708.GA12490@localhost.localdomain> <20071128095151.GA29107@linux-sh.org>
-Reply-To: avorontsov@ru.mvista.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 6/8] libata: adjust speed down rules
+Date: Wed, 28 Nov 2007 17:30:02 +0900
+Message-ID: <474D270A.6030102@gmail.com>
+References: <11961593392491-git-send-email-htejun@gmail.com> <11961593403415-git-send-email-htejun@gmail.com> <474C9B10.4060500@rtr.ca> <474CA31E.4000508@gmail.com> <474CA94E.9080603@rtr.ca> <474CA9C4.9040902@gmail.com> <474CC017.3040305@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:9683 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757261AbXK1NUG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 08:20:06 -0500
-Content-Disposition: inline
-In-Reply-To: <20071128095151.GA29107@linux-sh.org>
+Received: from qb-out-0506.google.com ([72.14.204.226]:33184 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbXK1Ia2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 03:30:28 -0500
+Received: by qb-out-0506.google.com with SMTP id e11so1520920qbe
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 00:30:26 -0800 (PST)
+In-Reply-To: <474CC017.3040305@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Vitaly Bordug <vitb@kernel.crashing.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-On Wed, Nov 28, 2007 at 06:51:51PM +0900, Paul Mundt wrote:
-> On Tue, Nov 27, 2007 at 06:37:08PM +0300, Anton Vorontsov wrote:
-> > Here is the second spin of the OF-platform PATA driver and
-> > related patches.
-> > 
-> So either the patches are missing, or I wasn't CC'ed on them. I'm going
-> to go out on a limb and assume the latter. If you wish me to Ack them,
-> I'm not going to start grovelling around list archives trying to find the
-> relevant posts.
+Hello, Mark.
 
-Point taken, fair enough. I'll Cc you explicitly next time.
+Mark Lord wrote:
+> Last question:  what about CD/DVD writers?
+> 
+> Are the data-out commands for those done via block, or via SG_IO ?
+> (my memory fails me here).
+> 
+> Do they ever get speed up/down based on WRITE errors ?
 
-Thanks,
+That depends on how the writing commands are issued.  If the commands
+are issued via SG_IO (which is the case for wodim and probably for
+others too), it won't affect speed down.  If the commands are issued by
+writing to /dev/sr0, it will.
+
+Thanks.
 
 -- 
-Anton Vorontsov
-email: cbou@mail.ru
-backup email: ya-cbou@yandex.ru
-irc://irc.freenode.net/bd2
+tejun
