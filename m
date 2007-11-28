@@ -1,48 +1,96 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: laptop reboots right after hibernation
-Date: Wed, 28 Nov 2007 09:11:05 -0500
-Message-ID: <474D76F9.6080504@rtr.ca>
-References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com> <1195551141.2792.3.camel@localhost.localdomain> <474CBFB6.4020105@gmail.com> <1196253340.2884.1.camel@localhost.localdomain> <474D6EA7.2000506@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata: report protocol and full CDB on error
+Date: Wed, 28 Nov 2007 23:16:09 +0900
+Message-ID: <474D7829.5040303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2188 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752723AbXK1OLH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Nov 2007 09:11:07 -0500
-In-Reply-To: <474D6EA7.2000506@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.184]:52204 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbXK1OQP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 09:16:15 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1219169rvb
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 06:16:15 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Kjartan Maraas <kmaraas@broadpark.no>, Tomas Carnecky <tom@dbservice.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
->
-> Your BIOS is probably trying to issue DCO freeze lock to all drives.  I
-> don't have the faintest idea why it does but it does.  I think there are
-> several choices here.
-> 
-> 1. Ignore device errors for _GTF commands.  Report the failure with
-> KERN_DEBUG priority and just keep processing.  ISTR there was a patch to
-> do this.  Anyone knows what happened to it.
-..
+Protocol and CDB allocation size field are important in determining
+what went wrong with ATAPI commands.  Report them on failure.
 
-Since we now *know* that this is how it has to be done
-(as otherwise the BIOS would never even attempt DCO here
-because most drives don't support it yet),
-then ignoring the return value seems to be a useful strategy.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+This one is for #upstream-fixes.  Thanks.
 
-> 2. Filter out certain commands from ACPI.  I definitely don't like BIOS
-> locking up random features via _GTF commands.  It makes debugging difficult.
-..
+ drivers/ata/libata-eh.c |   42 +++++++++++++++++++++++++++++++++---------
+ 1 file changed, 33 insertions(+), 9 deletions(-)
 
-Mmmm.. I agree there, too!  I'm not big on filtering out commands
-that *we* don't happen to like, but for this specific opcode, yes.
-
-> 3. Look at opcode on failure and ignore error for certain operations.
-..
-
-Number 1. would take care of this.
-
-Cheers
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 0dac69d..e6605f0 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1850,30 +1850,54 @@ static void ata_eh_link_report(struct ata_link *link)
+ 		  ehc->i.serror & SERR_DEV_XCHG ? "DevExch " : "");
+ 
+ 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+-		static const char *dma_str[] = {
+-			[DMA_BIDIRECTIONAL]	= "bidi",
+-			[DMA_TO_DEVICE]		= "out",
+-			[DMA_FROM_DEVICE]	= "in",
+-			[DMA_NONE]		= "",
+-		};
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+ 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
++		const u8 *cdb = qc->cdb;
++		char data_buf[20] = "";
++		char cdb_buf[70] = "";
+ 
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
+ 		    qc->dev->link != link || !qc->err_mask)
+ 			continue;
+ 
++		if (qc->dma_dir != DMA_NONE) {
++			static const char *dma_str[] = {
++				[DMA_BIDIRECTIONAL]	= "bidi",
++				[DMA_TO_DEVICE]		= "out",
++				[DMA_FROM_DEVICE]	= "in",
++			};
++			static const char *prot_str[] = {
++				[ATA_PROT_PIO]		= "pio",
++				[ATA_PROT_DMA]		= "dma",
++				[ATA_PROT_NCQ]		= "ncq",
++				[ATA_PROT_ATAPI]	= "pio",
++				[ATA_PROT_ATAPI_DMA]	= "dma",
++			};
++
++			snprintf(data_buf, sizeof(data_buf), " %s %u %s",
++				 prot_str[qc->tf.protocol], qc->nbytes,
++				 dma_str[qc->dma_dir]);
++		}
++
++		if (is_atapi_taskfile(&qc->tf))
++			snprintf(cdb_buf, sizeof(cdb_buf),
++				 "cdb %02x %02x %02x %02x %02x %02x %02x %02x  "
++				 "%02x %02x %02x %02x %02x %02x %02x %02x\n         ",
++				 cdb[0], cdb[1], cdb[2], cdb[3],
++				 cdb[4], cdb[5], cdb[6], cdb[7],
++				 cdb[8], cdb[9], cdb[10], cdb[11],
++				 cdb[12], cdb[13], cdb[14], cdb[15]);
++
+ 		ata_dev_printk(qc->dev, KERN_ERR,
+ 			"cmd %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
+-			"tag %d cdb 0x%x data %u %s\n         "
++			"tag %d%s\n         %s"
+ 			"res %02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x "
+ 			"Emask 0x%x (%s)%s\n",
+ 			cmd->command, cmd->feature, cmd->nsect,
+ 			cmd->lbal, cmd->lbam, cmd->lbah,
+ 			cmd->hob_feature, cmd->hob_nsect,
+ 			cmd->hob_lbal, cmd->hob_lbam, cmd->hob_lbah,
+-			cmd->device, qc->tag, qc->cdb[0], qc->nbytes,
+-			dma_str[qc->dma_dir],
++			cmd->device, qc->tag, data_buf, cdb_buf,
+ 			res->command, res->feature, res->nsect,
+ 			res->lbal, res->lbam, res->lbah,
+ 			res->hob_feature, res->hob_nsect,
