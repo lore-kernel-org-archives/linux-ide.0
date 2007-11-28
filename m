@@ -1,38 +1,69 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 6/8] libata: adjust speed down rules
-Date: Wed, 28 Nov 2007 17:30:02 +0900
-Message-ID: <474D270A.6030102@gmail.com>
-References: <11961593392491-git-send-email-htejun@gmail.com> <11961593403415-git-send-email-htejun@gmail.com> <474C9B10.4060500@rtr.ca> <474CA31E.4000508@gmail.com> <474CA94E.9080603@rtr.ca> <474CA9C4.9040902@gmail.com> <474CC017.3040305@rtr.ca>
+Subject: Re: laptop reboots right after hibernation
+Date: Wed, 28 Nov 2007 22:35:35 +0900
+Message-ID: <474D6EA7.2000506@gmail.com>
+References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com> <1195551141.2792.3.camel@localhost.localdomain> <474CBFB6.4020105@gmail.com> <1196253340.2884.1.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.226]:33184 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbXK1Ia2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 03:30:28 -0500
-Received: by qb-out-0506.google.com with SMTP id e11so1520920qbe
-        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 00:30:26 -0800 (PST)
-In-Reply-To: <474CC017.3040305@rtr.ca>
+Received: from ro-out-1112.google.com ([72.14.202.183]:27267 "EHLO
+	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755673AbXK1Nfo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 08:35:44 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so2450734roc
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 05:35:44 -0800 (PST)
+In-Reply-To: <1196253340.2884.1.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Kjartan Maraas <kmaraas@broadpark.no>
+Cc: Tomas Carnecky <tom@dbservice.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello, Mark.
+[cc'ing libata people]
 
-Mark Lord wrote:
-> Last question:  what about CD/DVD writers?
-> 
-> Are the data-out commands for those done via block, or via SG_IO ?
-> (my memory fails me here).
-> 
-> Do they ever get speed up/down based on WRITE errors ?
+Hello,
 
-That depends on how the writing commands are issued.  If the commands
-are issued via SG_IO (which is the case for wodim and probably for
-others too), it won't affect speed down.  If the commands are issued by
-writing to /dev/sr0, it will.
+Kjartan Maraas wrote:
+> Here you go. It shows the error two times and then it gets it right and
+> continues to boot. No other problems arise from this that I can see.
+
+Cool, it proves even my code works from time to time if the moon and
+stars are perfectly aligned.
+
+> ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
+
+Your BIOS wants to issue DEVICE CONFIGURATION FREEZE LOCK but the device
+NACKs it probably because the drive doesn't support DCO feature set.
+
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ACPI cmd b1/c1:00:00:00:00:a0 failed (Emask=0x1 Stat=0x51 Err=0x04)
+> ata1.00: ACPI on devcfg failed the second time, disabling (errno=-5)
+
+libata EH gives ACPI one more chance but it fails again, so ACPI is
+turned off.
+
+> ata1.00: revalidation failed (errno=1)
+> ata1: failed to recover some devices, retrying in 5 secs
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: configured for UDMA/100
+
+Device is now configured properly.
+
+Your BIOS is probably trying to issue DCO freeze lock to all drives.  I
+don't have the faintest idea why it does but it does.  I think there are
+several choices here.
+
+1. Ignore device errors for _GTF commands.  Report the failure with
+KERN_DEBUG priority and just keep processing.  ISTR there was a patch to
+do this.  Anyone knows what happened to it.
+
+2. Filter out certain commands from ACPI.  I definitely don't like BIOS
+locking up random features via _GTF commands.  It makes debugging difficult.
+
+3. Look at opcode on failure and ignore error for certain operations.
+
+My favorite is #2 but #1 should be fine too.  Any thoughts?
 
 Thanks.
 
