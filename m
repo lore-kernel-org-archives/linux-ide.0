@@ -1,52 +1,27 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Flexible SFF interrupt handling
-Date: Wed, 28 Nov 2007 08:45:04 -0500
-Message-ID: <474D70E0.4060709@garzik.org>
+Subject: Re: laptop reboots right after hibernation
+Date: Wed, 28 Nov 2007 08:47:23 -0500
+Message-ID: <474D716B.30608@garzik.org>
+References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz> <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com> <1195551141.2792.3.camel@localhost.localdomain> <474CBFB6.4020105@gmail.com> <1196253340.2884.1.camel@localhost.localdomain> <474D6EA7.2000506@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38934 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751297AbXK1NpG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Nov 2007 08:45:06 -0500
-Received: from cpe-069-134-071-233.nc.res.rr.com ([69.134.71.233] helo=core.yyz.us)
-	by mail.dvmed.net with esmtpsa (Exim 4.63 #1 (Red Hat Linux))
-	id 1IxNDt-00057g-3m
-	for linux-ide@vger.kernel.org; Wed, 28 Nov 2007 13:45:05 +0000
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760807AbXK1Nrn@vger.kernel.org>
+In-Reply-To: <474D6EA7.2000506@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Kjartan Maraas <kmaraas@broadpark.no>, Tomas Carnecky <tom@dbservice.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This has been bubbling on my brain for a while.  I blathered on about 
-this on IRC to Tejun, but figured I might as well post it here and get 
-it archived.
+Tejun Heo wrote:
+> 2. Filter out certain commands from ACPI.  I definitely don't like BIOS
+> locking up random features via _GTF commands.  It makes debugging difficult.
 
-In general, I think we should adopt a flexible or "loose" model for 
-acking interrupts on SFF controllers.
+I agree.
 
-(a) whenever we are in bus-idle (qc == NULL), and get an interrupt, go 
-ahead and read Status.
+Take a look at what Alan has been doing for the "trusted" command stuff.
 
-(b) if we are expecting an interrupt, and receive one, check Status (or 
-AltStatus if DMAing).
-
-(c) if condition "(b)" indicates busy, initiate status polling every 
-250ms until timeout occurs or BSY clears.
-
-(d) if N seconds (4?) elapses without an interrupt, initiate polling. 
-keep a history of such "fail-over" events, and note each fail-over'd 
-command's eventual success via polling, success via interrupt, or 
-timeout.  Use that history to decide to switch to 100% polling mode 
-(i.e. reach conclusion that interrupt delivery is broken, via observation)
-
-That should cover no-interrupts, lost interrupts, early interrupts, 
-screaming interrupts, insane devices, and of course normal operation.
-
-The model could be summarized as "interrupt as a hint" operation.
+At the very least we should definitely blare a warning into the log if 
+the BIOS is taking away key features from the user.
 
 	Jeff
-
-
-
-
