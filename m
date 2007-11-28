@@ -1,55 +1,72 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv fixes:  coding style preference?
-Date: Wed, 28 Nov 2007 09:19:20 -0500
-Message-ID: <474D78E8.8040806@rtr.ca>
-References: <474CC20D.6010800@rtr.ca> <474D3D8E.7030207@pobox.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Flexible SFF interrupt handling
+Date: Wed, 28 Nov 2007 14:29:47 +0000
+Message-ID: <20071128142947.17221a33@the-village.bc.nu>
+References: <474D70E0.4060709@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3595 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753972AbXK1OTV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Nov 2007 09:19:21 -0500
-In-Reply-To: <474D3D8E.7030207@pobox.com>
+Received: from [81.2.110.250] ([81.2.110.250]:39757 "EHLO the-village.bc.nu"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755870AbXK1OdI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Nov 2007 09:33:08 -0500
+In-Reply-To: <474D70E0.4060709@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-(adding linux-ide to CC:)
+> In general, I think we should adopt a flexible or "loose" model for 
+> acking interrupts on SFF controllers.
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->
->> Below, I used inline functions to calculate the correct reg offsets
->> so that the rest of the code doesn't need any special if-stmts.
->> But another way to do it would be to just store the correct offsets
->> as new fields within the mv_host_priv struct.  I suspect that method
->> would be better.
-> 
-> Yes, store the offsets, you shouldn't need to call a function to 
-> calculate the same value over and over again.  Simple, no branches added 
-> to the code, ...
-..
+Agreed - especially as the IRQ is often essentially the drive output not
+under any kind of sane control of ours.
 
-Good, so we all agree on that!
+> (a) whenever we are in bus-idle (qc == NULL), and get an interrupt, go 
+> ahead and read Status.
 
-And as it turns out, this patch (or the better version coming later)
-fixes both of the Marvell 7042 problems reported here a couple of weeks ago:
+Please call into the driver. Quite a few PATA drivers have multiple IRQ
+sources, and SATA many. 
 
-1:  Tom Morrison "hang with large file operations".
-2.  Hein-Pieter van Braam "PCI ERROR; PCI IRQ reason=0x00000000 highpoint rocketraid 2300 pci-e"
+> (b) if we are expecting an interrupt, and receive one, check Status (or 
+> AltStatus if DMAing).
 
-Tom has confirmed the fix, and I'm waiting to hear back from Hein-Pieter
-even though I now have identical hardware here as what he has.
+Providing we are not mid data transfer (which is why we need to get into
+enable/disable_irq for some controllers). Right now its a problem that
+can't occur but on some controllers reading status mid PIO xfer causes
+joyous things like silent corruption.
 
-Jeff:  This fix (one I reissue it) should go upstream for 2.6.24, if possible.
+> (c) if condition "(b)" indicates busy, initiate status polling every 
+> 250ms until timeout occurs or BSY clears.
 
-Right now the driver is guaranteed to fail on 7042, since it is hitting
-reserved PCI addresses instead of valid registers.
+Yep.
 
-Not a regression though, so your call.
-But it does fix reported bugs, and really cannot hurt anything.
+> (d) if N seconds (4?) elapses without an interrupt, initiate polling. 
+> keep a history of such "fail-over" events, and note each fail-over'd 
+> command's eventual success via polling, success via interrupt, or 
+> timeout.  Use that history to decide to switch to 100% polling mode 
+> (i.e. reach conclusion that interrupt delivery is broken, via observation)
 
-Cheers
+N = 8 sounds good to me (7 being the normal maximum command timeout)
+
+> That should cover no-interrupts, lost interrupts, early interrupts, 
+> screaming interrupts, insane devices, and of course normal operation.
+
+Should we also consider resetting the device as one of the strategies (at
+least once off)
+
+Might also want to think at that point about the case of 
+
+	command
+	....
+	timeout
+
+where old IDE checks with the controller to spot lost IRQ cases where a
+command finished and stuff vanished. Old IDE doesn't do much with it but
+we could use that as a good hint that we want to switch to polling mode
+and tell the user their computer sucks.
+
+Alan
+
+
