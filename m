@@ -1,62 +1,95 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Flexible SFF interrupt handling
-Date: Wed, 28 Nov 2007 12:00:57 -0500
-Message-ID: <474D9EC9.6030100@rtr.ca>
-References: <474D70E0.4060709@garzik.org> <474D7C21.9000303@rtr.ca> <474D900B.8030408@garzik.org> <474D9BC8.1080104@rtr.ca>
+From: Dark Sylinc <dark_sylinc@yahoo.com.ar>
+Subject: Re: SATA Shutdown issue confuses (sda)
+Date: Wed, 28 Nov 2007 17:02:22 -0300 (ART)
+Message-ID: <947127.83110.qm@web56306.mail.re3.yahoo.com>
+References: <474CDB65.9050700@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3625 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756704AbXK1RA7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Nov 2007 12:00:59 -0500
-In-Reply-To: <474D9BC8.1080104@rtr.ca>
+Received: from web56306.mail.re3.yahoo.com ([216.252.110.230]:37078 "HELO
+	web56306.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754727AbXK1UCY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 15:02:24 -0500
+In-Reply-To: <474CDB65.9050700@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, hmh@debian.org
 
-Mark Lord wrote:
-> Jeff Garzik wrote:
->> Mark Lord wrote:
->>> Jeff Garzik wrote:
-...
->>> The only question is, under which conditions do we return IRQ 
->>> "handled=1",
->>> and which times should we return 0 ?
->>>
->>> Definitely when a real IRQ wakes us up and we see (qc != NULL && 
->>> drive_ready),
->>> essentially exactly as we currently do it.
->>>
->>> But things might be trickier once polling is introduced, unless we 
->>> also mask
->>> the device interrupt before initiating the polling.
->>
->> Actually no, and that is a key benefit of this scheme:  if we ensure 
->> that the polling paths are resilient even in case where interrupts are 
->> being delivered -- as we must do anyway -- then we don't have to worry 
->> about interrupt masking, either on the interrupt controller or on the 
->> device[1].
->>
->> If we do get an interrupt, ack it ASAP.  That covers normal operation 
->> and screaming interrupts.
-> ..
-> 
-> I was considering a shared IRQ environment, where the screamer
-> might be a different device on the same IRQ..
-...
+Thanks for the quick reply
+Actually I managed to fix the issue by using the
+patches here:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D436703
+After using that patch, no more "clack"
 
-To clarify:  If we are sharing an IRQ line with other device(s),
-then it is not good to always return "handled=1" from our IRQ handler
-in cases where the interrupt could not be confirmed to be ours.
+> Don't have any debian around but apparently it's
+> issuing spin down for
+> /dev/sdX's too.
 
-Because if we did, then the babbling-IRQ detection ("too many spurious")
-elsewhere in the kernel will be unable to function for this particular IRQ line.
+The patch still doesn't solve the missing flush-cache,
+however after seeing the code, seems that the origin
+of the problem was that shutdown was NOT issuing spin
+down at all (for sdX).
 
-If we really have no other good option, then fine --> sata_qstor does this.
-And I suppose that's the intent --> only fall back to this kind of stuff
-when we are dealing with hardware that is known to be unreliable w.r.t. IRQs.
+> > 4) What everyone in forums is asking... are they
+> SATA
+> > drives being forced from long time ago, and they
+> have
+> > just found out by using the new kernel? That
+> remains
+> > unclear.
+>=20
+> I don't really get the question here.  Can you
+> please elaborate?
 
-Cheers
+Some people around the net is concerned about their
+SATA drives. They're wondering if before kernel 2.6.22
+their SATA HDDs were making emergency shutdowns and
+didn't realize that they weren't normal shutdowns. And
+they may have been using Linux in their SATAs from a
+long time ago, just to realize now (thanks to the new
+K2.6.22 warning) that they were damaging their HDDs
+since years.
+In summary: the emergency shutdowns issue appeared in
+K2.6.22, and using previous kernels fixes it, or the
+emergenct shutdown happens in any kernel version??
+I can't answer that question by myself, because I've
+just installed Linux in this HDD and upgraded
+immediately.
+
+> Sure way to tell is to look at emergency unload
+> count int the output of
+> 'smartctl -a'.  Basically, it should identical to
+> 'hdparm -y'.
+
+Thanks, but the idea that software can do such thing
+gives me the creeps.
+
+
+> Opcode 0x94 is retired now and it's probably not too
+> good a idea to
+> issue it to modern disks.  0xE0 should be good
+> enough
+
+Don't blame me, it's in Debian's src. I'm not an HDD
+expert. :D
+
+> and yes you
+> definitely need to issue FLUSH before spinning down
+> the disk.
+
+Seems missing both in the official src and in the
+patch provided...
+May be I can submit a patch...
+However the patch I'm using doesn't trigger FLUSH but
+the problem is solved anyway.
+
+Thanks again
+Dark Sylinc
+
+
+      Compart=ED video en la ventana de tus mensajes (y tambi=E9n tus f=
+otos de Flickr).=20
+Us=E1 el nuevo Yahoo! Messenger versi=F3n Beta. http://ar.beta.messenge=
+r.yahoo.com/
