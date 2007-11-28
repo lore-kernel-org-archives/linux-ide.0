@@ -1,52 +1,102 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
- driver
-Date: Wed, 28 Nov 2007 19:29:12 +0300
-Message-ID: <474D9758.9070200@ru.mvista.com>
-References: <20071127153708.GA12490@localhost.localdomain>	<20071127153908.GB14183@localhost.localdomain>	<20071127212222.GB10829@lixom.net> <200711272233.00456.arnd@arndb.de>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Flexible SFF interrupt handling
+Date: Wed, 28 Nov 2007 11:48:08 -0500
+Message-ID: <474D9BC8.1080104@rtr.ca>
+References: <474D70E0.4060709@garzik.org> <474D7C21.9000303@rtr.ca> <474D900B.8030408@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:56216 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759004AbXK1Q27 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 11:28:59 -0500
-In-Reply-To: <200711272233.00456.arnd@arndb.de>
+Received: from rtr.ca ([76.10.145.34]:3200 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754897AbXK1QsL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Nov 2007 11:48:11 -0500
+In-Reply-To: <474D900B.8030408@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linuxppc-dev@ozlabs.org, Olof Johansson <olof@lixom.net>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello.
+Jeff Garzik wrote:
+> Mark Lord wrote:
+>> Jeff Garzik wrote:
+>>> This has been bubbling on my brain for a while.  I blathered on about 
+>>> this on IRC to Tejun, but figured I might as well post it here and 
+>>> get it archived.
+>>>
+>>> In general, I think we should adopt a flexible or "loose" model for 
+>>> acking interrupts on SFF controllers.
+>>>
+>>> (a) whenever we are in bus-idle (qc == NULL), and get an interrupt, 
+>>> go ahead and read Status.
+>>>
+>>> (b) if we are expecting an interrupt, and receive one, check Status 
+>>> (or AltStatus if DMAing).
+>>>
+>>> (c) if condition "(b)" indicates busy, initiate status polling every 
+>>> 250ms until timeout occurs or BSY clears.
+>>>
+>>> (d) if N seconds (4?) elapses without an interrupt, initiate polling. 
+>>> keep a history of such "fail-over" events, and note each fail-over'd 
+>>> command's eventual success via polling, success via interrupt, or 
+>>> timeout.  Use that history to decide to switch to 100% polling mode 
+>>> (i.e. reach conclusion that interrupt delivery is broken, via 
+>>> observation)
+>>>
+>>> That should cover no-interrupts, lost interrupts, early interrupts, 
+>>> screaming interrupts, insane devices, and of course normal operation.
+>>>
+>>> The model could be summarized as "interrupt as a hint" operation.
+>> ..
+>>
+>> The only question is, under which conditions do we return IRQ 
+>> "handled=1",
+>> and which times should we return 0 ?
+>>
+>> Definitely when a real IRQ wakes us up and we see (qc != NULL && 
+>> drive_ready),
+>> essentially exactly as we currently do it.
+>>
+>> But things might be trickier once polling is introduced, unless we 
+>> also mask
+>> the device interrupt before initiating the polling.
+> 
+> Actually no, and that is a key benefit of this scheme:  if we ensure 
+> that the polling paths are resilient even in case where interrupts are 
+> being delivered -- as we must do anyway -- then we don't have to worry 
+> about interrupt masking, either on the interrupt controller or on the 
+> device[1].
+> 
+> If we do get an interrupt, ack it ASAP.  That covers normal operation 
+> and screaming interrupts.
+..
 
-Arnd Bergmann wrote:
+I was considering a shared IRQ environment, where the screamer
+might be a different device on the same IRQ..
 
->>>This driver nicely wraps around pata_platform library functions,
->>>and provides OF platform bus bindings to the PATA devices.
 
->>>+static struct of_device_id pata_of_platform_match[] = {
->>>+     { .compatible = "pata-platform", },
->>>+};
+> If we don't get an interrupt, we will notice after a spell and poll 
+> Status to ensure progress occurs.
+> 
+> Note that this polling is a different sort of polling than running an 
+> entire ATA command via a kernel thread.  In this case, we're talking 
+> about periodic Status (or AltStatus or LLD-specific-register status) 
+> polling only.
+> 
+> A lot of fiddling with irq masking is getting around ugliness that I am 
+> instead trying to eliminate altogether.  A truly robust system follows 
+> the spec WRT nIEN and other interrupt masking.....  but then prepares 
+> for the case where hw decides to send an interrupt anyway.
+> 
+> On SFF controllers, we should consider interrupts to be unreliable 
+> messages delivered on a best effort basis by hardware.  If we get them, 
+> great, ack and act.  If we lack them, make sure progress occurs.
+> 
+> Regards,
+> 
+>     Jeff
+> 
+> 
+> [1] well, there -are- exceptions, such as when we are bitbanging the ATA 
+> Data register
 
->>"pata-platform" really means nothing outside of linux. A more
->>generic label would be useful.
-
-> Maybe the name of the standards it supports? Could be
-> "ata-4", "ata-5" and the like,
-
-    It's not clear what info this would provide.
-
-> or the exact transfer mode, like
-> "pata-udma-5", "pata-pio-3", "sata-150", etc.
-
-    I think this info should follow from the compatible property value 
-implicitly, or maybe this info should be conveyed in some optional properties. 
-It doesn't make sense to the generic platform driver anyway since it has no 
-notion about the mode programming specifics. I think that as the device being 
-driven is assumed to be a generic IDE device, the "compatible" property should 
-contain "generic" or something alike (as well as usual board's and chip's names).
-
-> 	Arnd <><
-
-MBR, Sergei
