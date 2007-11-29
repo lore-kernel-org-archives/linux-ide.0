@@ -1,75 +1,70 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Dark Sylinc <dark_sylinc@yahoo.com.ar>
 Subject: Re: SATA Shutdown issue confuses (sda)
-Date: Thu, 29 Nov 2007 10:04:18 +0900
-Message-ID: <474E1012.40703@gmail.com>
-References: <947127.83110.qm@web56306.mail.re3.yahoo.com>
+Date: Wed, 28 Nov 2007 23:17:57 -0300 (ART)
+Message-ID: <21360.16619.qm@web56311.mail.re3.yahoo.com>
+References: <474E1012.40703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.181]:4350 "EHLO
-	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758949AbXK2BE0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 20:04:26 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so2809702roc
-        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 17:04:25 -0800 (PST)
-In-Reply-To: <947127.83110.qm@web56306.mail.re3.yahoo.com>
+Received: from web56311.mail.re3.yahoo.com ([216.252.110.235]:38013 "HELO
+	web56311.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756317AbXK2CR7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 21:17:59 -0500
+In-Reply-To: <474E1012.40703@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dark Sylinc <dark_sylinc@yahoo.com.ar>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org, hmh@debian.org
 
-Dark Sylinc wrote:
-> Some people around the net is concerned about their
-> SATA drives. They're wondering if before kernel 2.6.22
-> their SATA HDDs were making emergency shutdowns and
-> didn't realize that they weren't normal shutdowns. And
-> they may have been using Linux in their SATAs from a
-> long time ago, just to realize now (thanks to the new
-> K2.6.22 warning) that they were damaging their HDDs
-> since years.
-> In summary: the emergency shutdowns issue appeared in
-> K2.6.22, and using previous kernels fixes it, or the
-> emergenct shutdown happens in any kernel version??
-> I can't answer that question by myself, because I've
-> just installed Linux in this HDD and upgraded
-> immediately.
+Hi,
 
-It depends on your distro.  If the distro issues spin down on shutdown,
-things should have been fine beofre 2.6.22 but it it doesn't, disks
-attached via libata would do emergency unload on power off.  Also small
-fraction of disks which spin up to do FLUSH_CACHE issued by kernel would
-do double spin down where the last one is emergency if the distro
-shutdown issues spin down.
+> 2.6.22 fixes the problem completely for distros
+> which don't issue spin
+> down.  For distros which do issue spin down, the
+> situation isn't worse,
+> the kernel behaves the same way as before 2.6.22.=20
+> It just issues
+> FLUSH_CACHE.  The warning message is for small
+> fraction of disks
+> mentioned above which do double spin down and to
+> accelerate transition
+> to kernel-driven spin down.
 
-2.6.22 fixes the problem completely for distros which don't issue spin
-down.  For distros which do issue spin down, the situation isn't worse,
-the kernel behaves the same way as before 2.6.22.  It just issues
-FLUSH_CACHE.  The warning message is for small fraction of disks
-mentioned above which do double spin down and to accelerate transition
-to kernel-driven spin down.
+What you're telling me contradicts my experience.
+I'm using Debian Etch with my custom kernel 2.6.23
+After seeing debian's code, shutdown does NOT issue
+spin down in my friend's pc. The clack sounds, and the
+warning appears.
+Using patched code, I don't have any more clacks and
+warnings. After seeing the altered code, shutdown now
+IS spinning down the sda.
+However none of them is flushing the cache as you
+suggests.
 
->> Sure way to tell is to look at emergency unload
->> count int the output of
->> 'smartctl -a'.  Basically, it should identical to
->> 'hdparm -y'.
-> 
-> Thanks, but the idea that software can do such thing
-> gives me the creeps.
+So you're saying:
+1) Don't spin down to avoid the problem
+2) Flush cache solves the problem
 
-Oh well, it can, apparently.  :-)
+I'm seeing:
+1) The hdd is not spun down by shutdown and the
+problem persists
+2) By spinning down /dev/sdX in shutdown(8) the
+problem disappears. Flush cache doesn't seem to
+influence the emergency shutdown problem.
 
->> and yes you
->> definitely need to issue FLUSH before spinning down
->> the disk.
-> 
-> Seems missing both in the official src and in the
-> patch provided...
-> May be I can submit a patch...
-> However the patch I'm using doesn't trigger FLUSH but
-> the problem is solved anyway.
+That's why I'm confused.
+May be I've missed something in the code.
 
-So, the patch isn't in the package yet?
+> So, the patch isn't in the package yet?
 
--- 
-tejun
+I checked yesterday both Debian's unstable and
+testing, and the patch wasn't there.
+
+Dark Sylinc
+
+
+      Compart=ED video en la ventana de tus mensajes (y tambi=E9n tus f=
+otos de Flickr).=20
+Us=E1 el nuevo Yahoo! Messenger versi=F3n Beta. http://ar.beta.messenge=
+r.yahoo.com/
