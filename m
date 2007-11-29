@@ -1,42 +1,49 @@
 From: "Bjoern Olausson" <lkmlist@gmail.com>
-Subject: Re: sata NCQ blacklist entry
-Date: Thu, 29 Nov 2007 18:17:07 +0100
-Message-ID: <5501535d0711290917r16a16b0dx36669de89f829231@mail.gmail.com>
-References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
-	 <4731B5DD.1060203@gmail.com>
+Subject: Sil4726 ahci driver initialization sequence
+Date: Thu, 29 Nov 2007 18:27:27 +0100
+Message-ID: <5501535d0711290927u613e61d1h2368eebc26bd4982@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:32103 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.191]:53261 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761869AbXK2RRI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 12:17:08 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1611229rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 09:17:07 -0800 (PST)
-In-Reply-To: <4731B5DD.1060203@gmail.com>
+	with ESMTP id S1758259AbXK2R12 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 12:27:28 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1614357rvb
+        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 09:27:28 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, htejun@gmail.com
 
-On 11/7/07, Tejun Heo <htejun@gmail.com> wrote:
->
-> Thanks.  We're currently trying to find out what's actually going on
-> with all these drives.  At first, drives which got blacklisted aren't
-> many and made sense (had other problems with NCQ, etc..) but with new
-> generation drives from many vendors showing the same symptom, we aren't
-> too sure now.
->
-> I'll keep your email in my todo list and add the drive to the blacklist
-> once the problem is verified.
->
-> Thanks.
+Tejun, I am reffering to the post on your hompage
+(http://home-tj.org/wiki/index.php/Libata-tj-stable)
 
-Something new on the NCQ front?
-Just asking if you need someone to test some of your ideas?
+-------------------------------------------------------------------------------------------------------
+* Again, Sil4726 doesn't like ahci driver initialization sequence.
+  During driver initialization, the whole controller is reset and the
+  PHY goes offline and comes back.  Sil4726 doesn't like it and goes
+  out for lunch for several secs after that which makes initial
+  probing think that the port is empty.  After probing is complete,
+  Sil4726 comes back and gets detected but at that point detection is
+  asynchronous and if boot device is on one of fan-out ports, it can
+  be a problem.  Again, this might have been fixed by new firmware.
+  Anyone up for testing?
+--------------------------------------------------------------------------------------------------------
 
-I got the "WDC WD740ADFD-00NLR1"
+I managed to install WinXP  and I think I got the driver to work on WindowsXP.
+The installation was ony possible in IDE Enhaced mode. I wasn't able
+to feed XP the Intel Matrix Storage controller during installation to
+use XP wiith AHCI mode.
 
-by the way, and OT, did the Plextor DVD-RW drive reach you, Tejun?
+I searched around for instructions on how to upgrade the jmb firmware
+but without luck. Thougt I upgraded the BIOS of the P5W-DH Mainboard
+to the latest one (Actually I don't know what Asus changed [Asus does
+not provide changelogs])
+
+So if you could give me a hint, I'll try to upgrade thie jmb firmware
+and test hotpluging again.
+
+regards
+Bjoern
