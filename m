@@ -1,32 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 06/14] libata: improve ATAPI draining
-Date: Fri, 30 Nov 2007 01:42:46 +0900
-Message-ID: <474EEC06.70304@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468192463-git-send-email-htejun@gmail.com> <20071129155956.4004ca89@the-village.bc.nu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 14/15] ide: remove 'command_type' field from ide_task_t
+Date: Thu, 29 Nov 2007 19:47:58 +0300
+Message-ID: <474EED3E.4030404@ru.mvista.com>
+References: <200710310055.17380.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:27892 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758310AbXK2Qm5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 11:42:57 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1600089rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 08:42:56 -0800 (PST)
-In-Reply-To: <20071129155956.4004ca89@the-village.bc.nu>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:3463 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751882AbXK2Qrr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 11:47:47 -0500
+In-Reply-To: <200710310055.17380.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Albert Lee <albertcc@tw.ibm.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> * Limit the amount of draining to ATAPI_MAX_DRAIN (16k currently).
-> 
-> Why 16 not 64K ?
+Bartlomiej Zolnierkiewicz wrote:
 
-Oops, forgot to answer here.  That would result in 16 sg entries for
-draining which felt a bit too much.  As draining is for misc commands, I
-thought 16k should be enough.
+> * Add 'data_buf' and 'nsect' variables in ide_taskfile_ioctl()
+>   to cache data buffer pointer and number of sectors to transfer
+>   (this allows us to have only one ide_diag_taskfile() call).
 
--- 
-tejun
+> * Add IDE_TFLAG_WRITE taskfile flag and use it to check whether
+>   the REQ_RW request flag should be set.
+
+> * Move ->command_type handling from ide_diag_taskfile() to
+>   ide_taskfile_ioctl() and use ->req_cmd instead of ->command_type.
+
+> * Add 'nsect' parameter to ide_raw_taskfile().
+
+> * Merge ide_diag_taskfile() into ide_raw_taskfile().
+
+> * Initialize ->data_phase explicitly in idedisk_prepare_flush(),
+>   ide_start_power_step() and ide_disk_special().
+
+> * Remove no longer needed 'command_type' field from ide_task_t.
+
+> * Add #ifndef/#endif __KERNEL__ to <linux/hdreg.h> around no
+>   longer used by kernel IDE_DRIVE_TASK_* and TASKFILE_* defines.
+
+> There should be no functionality changes caused by this patch.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
