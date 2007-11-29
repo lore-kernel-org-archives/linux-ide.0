@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 12/14] libata: implement ATAPI drain buffer
-Date: Thu, 29 Nov 2007 23:33:35 +0900
-Message-ID: <11963468201321-git-send-email-htejun@gmail.com>
+Subject: [PATCH 05/14] libata: make ->data_xfer return the number of consumed bytes
+Date: Thu, 29 Nov 2007 23:33:28 +0900
+Message-ID: <11963468181417-git-send-email-htejun@gmail.com>
 References: <1196346817387-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:17452 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761985AbXK2OeG (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:41590 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762111AbXK2OeG (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 09:34:06 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1455011nze
+Received: by wa-out-1112.google.com with SMTP id v27so2204926wah
         for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 06:34:06 -0800 (PST)
 In-Reply-To: <1196346817387-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,279 +16,537 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-Misc ATAPI commands may try to transfer more bytes than requested.
-For PIO which is performed by libata HSM, this is worked around by
-draining extra bytes from __atapi_pio_bytes().
+Depending on how many bytes are transferred as a unit, PIO data
+tranasfer may consume more bytes than requested.  Knowing how much
+data is consumed is necessary to determine how much is left for
+draining.  This patch update ->data_xfer such that it returns the
+number of consumed bytes.
 
-This patch implements drain buffer to perform draining for DMA and
-PIO-over-DMA cases.  One page is allocated w/ GFP_DMA32 during libata
-core layer initialization.  On host registration, this drain page is
-DMA mapped and ATAPI_MAX_DRAIN_PAGES sg entries are reserved.
+While at it, it also makes the following changes.
 
-ata_sg_setup_extra() uses these extra sg entries to map the drain page
-ATAPI_MAX_DRAIN_PAGES times, extending sg list by ATAPI_MAX_DRAIN
-bytes.  This allows both DMA and PIO-over-DMA misc ATAPI commands to
-overflow by ATAPI_MAX_DRAIN bytes just like PIO commands.
+* s/adev/dev/
+* s/buflen/len/
+* use READ/WRITE constants for rw indication
+* misc clean ups
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |  116 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/ata/libata-scsi.c |   14 ++++--
- include/linux/libata.h    |    4 +-
- 3 files changed, 116 insertions(+), 18 deletions(-)
+ drivers/ata/libata-core.c    |   56 ++++++++++++++++++++++++++---------------
+ drivers/ata/pata_bf54x.c     |   34 +++++++++++++------------
+ drivers/ata/pata_ixp4xx_cf.c |   32 ++++++++++++-----------
+ drivers/ata/pata_legacy.c    |   38 +++++++++++++++-------------
+ drivers/ata/pata_qdi.c       |   32 +++++++++++++----------
+ drivers/ata/pata_scc.c       |   38 +++++++++++++++-------------
+ drivers/ata/pata_winbond.c   |   32 +++++++++++++----------
+ include/linux/libata.h       |   11 ++++---
+ 8 files changed, 152 insertions(+), 121 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 62a8479..4da4f26 100644
+index bc53492..10f3b42 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4756,6 +4756,60 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
- 	qc->cursg = qc->sg;
- }
+@@ -4966,48 +4966,55 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
  
-+/**
-+ *	ata_sg_setup_extra - Setup extra sg entries
-+ *	@qc: Command to setup extra sg entries for
-+ *	@n_elem_extra: Out parameter for the number of extra sg entries
-+ *	@nbytes_extra: Out parameter for the number of extra bytes
-+ *
-+ *	Extra sg entries are used to deal with ATAPI peculiarities.
-+ *	First, the content to be transferred can be of any size but
-+ *	transfer length should be aligned to 4 bytes, so if data size
-+ *	isn't aligned, it needs to be padded.
-+ *
-+ *	Second, for commands whose repsonse can be variable, due to
-+ *	userland bugs (more likely) and hardware bugs, devices can try
-+ *	to transfer more bytes than requested.  This can be worked
-+ *	around by appending drain buffers at the end.
-+ *
-+ *	This function sets up both padding and draining sg entries.
-+ *	For this purpose, each qc has 2 + ATAPI_MAX_DRAIN_PAGES extra
-+ *	sg entries.  Each extra sg has assigned function.
-+ *
-+ *	   e[0]  |   e[1]  |   e[2]  | ... | e[2 + ATAPI_MAX_DRAIN_PAGES - 1]
-+ *	----------------------------------------------------------------------
-+ *	   link  | padding | draining  ...
-+ *		   or link
-+ *
-+ *	After sg setup is complete, sg list looks like the following.
-+ *
-+ *	1. Padding necessary, padding doesn't replace the last sg
-+ *
-+ *	o[0][1][2]...[last]   e[0][1]([2]... if draining is necessary)
-+ *	               |        ^
-+ *                      \------/
-+ *	   e[0] carries the original content of o[last].
-+ *
-+ *	2. Padding necessary, padding replaces the last sg
-+ *
-+ *	o[0][1][2]...[last]   e[0][1]([2]... if draining is necessary)
-+ *	               |           ^
-+ *                      \---------/
-+ *	   e[1] completely includes what o[last] used to point to.
-+ *
-+ *	3. Only draining is necessary.
-+ *
-+ *	[0][1][2]...[last]   e[0][1][2]...
-+ *	              |           ^
-+ *                     \---------/
-+ *	   e[1] carries the original conetent of o[last].
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
+ /**
+  *	ata_data_xfer - Transfer data by PIO
+- *	@adev: device to target
++ *	@dev: device to target
+  *	@buf: data buffer
+- *	@buflen: buffer length
++ *	@len: buffer length
+  *	@write_data: read/write
+  *
+  *	Transfer data from/to the device data register by PIO.
+  *
+  *	LOCKING:
+  *	Inherited from caller.
 + *
 + *	RETURNS:
-+ *	Adjusted n_elem which should be mapped.
-+ */
- static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
- 				       unsigned int *n_elem_extra,
- 				       unsigned int *nbytes_extra)
-@@ -4763,6 +4817,7 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
- 	struct ata_port *ap = qc->ap;
- 	unsigned int n_elem = qc->n_elem;
- 	struct scatterlist *lsg, *copy_lsg = NULL, *tsg = NULL, *esg = NULL;
-+	int drain;
- 
- 	*n_elem_extra = 0;
- 	*nbytes_extra = 0;
-@@ -4770,7 +4825,10 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
- 	/* needs padding? */
- 	qc->pad_len = qc->nbytes & 3;
- 
--	if (likely(!qc->pad_len))
-+	/* needs drain? */
-+	drain = atapi_qc_may_overflow(qc);
-+
-+	if (likely(!qc->pad_len && !drain))
- 		return n_elem;
- 
- 	/* locate last sg and save it */
-@@ -4832,6 +4890,29 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
- 		(*nbytes_extra) += 4 - qc->pad_len;
- 	}
- 
-+	if (drain) {
-+		struct scatterlist *dsg = qc->extra_sg + 2;
-+		int i;
-+
-+		for (i = 0; i < ATAPI_MAX_DRAIN_PAGES; i++) {
-+			sg_set_page(dsg, virt_to_page(ata_drain_page),
-+				    PAGE_SIZE, 0);
-+			sg_dma_address(dsg) = ap->host->drain_page_dma;
-+			sg_dma_len(dsg) = PAGE_SIZE;
-+			dsg++;
-+		}
-+
-+		if (!tsg) {
-+			copy_lsg = &qc->extra_sg[1];
-+			tsg = &qc->extra_sg[1];
-+		}
-+
-+		esg = dsg - 1;
-+
-+		(*n_elem_extra) += ATAPI_MAX_DRAIN_PAGES;
-+		(*nbytes_extra) += ATAPI_MAX_DRAIN_PAGES * PAGE_SIZE;
-+	}
-+
- 	if (copy_lsg)
- 		sg_set_page(copy_lsg, sg_page(lsg), lsg->length, lsg->offset);
- 
-@@ -6883,6 +6964,9 @@ static void ata_host_stop(struct device *gendev, void *res)
- 			ap->ops->port_stop(ap);
- 	}
- 
-+	dma_unmap_single(host->dev, host->drain_page_dma, PAGE_SIZE,
-+			 DMA_FROM_DEVICE);
-+
- 	if (host->ops->host_stop)
- 		host->ops->host_stop(host);
- }
-@@ -6905,8 +6989,8 @@ static void ata_host_stop(struct device *gendev, void *res)
++ *	Bytes consumed.
   */
- int ata_host_start(struct ata_host *host)
+-void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
+-		   unsigned int buflen, int write_data)
++unsigned int ata_data_xfer(struct ata_device *dev, unsigned char *buf,
++			   unsigned int len, int rw)
  {
--	int have_stop = 0;
- 	void *start_dr = NULL;
-+	dma_addr_t dma;
- 	int i, rc;
+-	struct ata_port *ap = adev->link->ap;
+-	unsigned int words = buflen >> 1;
++	struct ata_port *ap = dev->link->ap;
++	void __iomem *data_addr = ap->ioaddr.data_addr;
++	unsigned int words = len >> 1;
  
- 	if (host->flags & ATA_HOST_STARTED)
-@@ -6917,20 +7001,23 @@ int ata_host_start(struct ata_host *host)
+ 	/* Transfer multiple of 2 bytes */
+-	if (write_data)
+-		iowrite16_rep(ap->ioaddr.data_addr, buf, words);
++	if (rw == READ)
++		ioread16_rep(data_addr, buf, words);
+ 	else
+-		ioread16_rep(ap->ioaddr.data_addr, buf, words);
++		iowrite16_rep(data_addr, buf, words);
  
- 		if (!host->ops && !ata_port_is_dummy(ap))
- 			host->ops = ap->ops;
--
--		if (ap->ops->port_stop)
--			have_stop = 1;
- 	}
+ 	/* Transfer trailing 1 byte, if any. */
+-	if (unlikely(buflen & 0x01)) {
++	if (unlikely(len & 0x01)) {
+ 		u16 align_buf[1] = { 0 };
+-		unsigned char *trailing_buf = buf + buflen - 1;
++		unsigned char *trailing_buf = buf + len - 1;
  
--	if (host->ops->host_stop)
--		have_stop = 1;
-+	start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
-+	if (!start_dr)
-+		return -ENOMEM;
- 
--	if (have_stop) {
--		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
--		if (!start_dr)
--			return -ENOMEM;
-+	/* map drain page */
-+	dma = dma_map_single(host->dev, ata_drain_page, PAGE_SIZE,
-+			     DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dma)) {
-+		dev_printk(KERN_ERR, host->dev, "failed to map drain page\n");
-+		rc = -ENOMEM;
-+		goto err_map;
- 	}
-+	host->drain_page_dma = dma;
- 
-+	/* start ports */
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
-@@ -6939,7 +7026,7 @@ int ata_host_start(struct ata_host *host)
- 			if (rc) {
- 				ata_port_printk(ap, KERN_ERR, "failed to "
- 						"start port (errno=%d)\n", rc);
--				goto err_out;
-+				goto err_start;
- 			}
+-		if (write_data) {
+-			memcpy(align_buf, trailing_buf, 1);
+-			iowrite16(le16_to_cpu(align_buf[0]), ap->ioaddr.data_addr);
+-		} else {
+-			align_buf[0] = cpu_to_le16(ioread16(ap->ioaddr.data_addr));
++		if (rw == READ) {
++			align_buf[0] = cpu_to_le16(ioread16(data_addr));
+ 			memcpy(trailing_buf, align_buf, 1);
++		} else {
++			memcpy(align_buf, trailing_buf, 1);
++			iowrite16(le16_to_cpu(align_buf[0]), data_addr);
  		}
- 
-@@ -6951,13 +7038,16 @@ int ata_host_start(struct ata_host *host)
- 	host->flags |= ATA_HOST_STARTED;
- 	return 0;
- 
-- err_out:
-+ err_start:
- 	while (--i >= 0) {
- 		struct ata_port *ap = host->ports[i];
- 
- 		if (ap->ops->port_stop)
- 			ap->ops->port_stop(ap);
++		words++;
  	}
-+ err_map:
-+	dma_unmap_single(host->dev, host->drain_page_dma, PAGE_SIZE,
-+			 DMA_FROM_DEVICE);
- 	devres_free(start_dr);
- 	return rc;
++
++	return words << 1;
  }
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f523e66..f07704c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -832,13 +832,19 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 	/* configure max sectors */
- 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
  
--	/* SATA DMA transfers must be multiples of 4 byte, so
--	 * we need to pad ATAPI transfers using an extra sg.
--	 * Decrement max hw segments accordingly.
-+	/* SATA DMA transfers must be multiples of 4 byte, so we need
-+	 * to pad ATAPI transfers using an extra sg.  Also, ATAPI
-+	 * commands with variable length reponse needs draining of
-+	 * extra data.  Decrement max hw segments accordingly.
- 	 */
- 	if (dev->class == ATA_DEV_ATAPI) {
- 		struct request_queue *q = sdev->request_queue;
--		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
-+		unsigned short hw_segments = q->max_hw_segments;
+ /**
+  *	ata_data_xfer_noirq - Transfer data by PIO
+- *	@adev: device to target
++ *	@dev: device to target
+  *	@buf: data buffer
+- *	@buflen: buffer length
++ *	@len: buffer length
+  *	@write_data: read/write
+  *
+  *	Transfer data from/to the device data register by PIO. Do the
+@@ -5015,14 +5022,21 @@ void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
+  *
+  *	LOCKING:
+  *	Inherited from caller.
++ *
++ *	RETURNS:
++ *	Bytes consumed.
+  */
+-void ata_data_xfer_noirq(struct ata_device *adev, unsigned char *buf,
+-			 unsigned int buflen, int write_data)
++unsigned int ata_data_xfer_noirq(struct ata_device *dev, unsigned char *buf,
++				 unsigned int len, int rw)
+ {
+ 	unsigned long flags;
++	unsigned int consumed;
 +
-+		BUG_ON(hw_segments <= 1 + ATAPI_MAX_DRAIN_PAGES);
-+		hw_segments -= 1 + ATAPI_MAX_DRAIN_PAGES;
+ 	local_irq_save(flags);
+-	ata_data_xfer(adev, buf, buflen, write_data);
++	consumed = ata_data_xfer(dev, buf, len, rw);
+ 	local_irq_restore(flags);
 +
-+		blk_queue_max_hw_segments(q, hw_segments);
++	return consumed;
+ }
+ 
+ 
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index 81db405..53ae7d3 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1161,40 +1161,42 @@ static unsigned char bfin_bmdma_status(struct ata_port *ap)
+  *	bfin_data_xfer - Transfer data by PIO
+  *	@adev: device for this I/O
+  *	@buf: data buffer
+- *	@buflen: buffer length
++ *	@len: buffer length
+  *	@write_data: read/write
+  *
+  *	Note: Original code is ata_data_xfer().
+  */
+ 
+-static void bfin_data_xfer(struct ata_device *adev, unsigned char *buf,
+-			   unsigned int buflen, int write_data)
++static unsigned int bfin_data_xfer(struct ata_device *dev, unsigned char *buf,
++				   unsigned int len, int rw)
+ {
+-	struct ata_port *ap = adev->link->ap;
+-	unsigned int words = buflen >> 1;
+-	unsigned short *buf16 = (u16 *) buf;
++	struct ata_port *ap = dev->link->ap;
+ 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
++	unsigned int words = len >> 1;
++	unsigned short *buf16 = (u16 *)buf;
+ 
+ 	/* Transfer multiple of 2 bytes */
+-	if (write_data) {
+-		write_atapi_data(base, words, buf16);
+-	} else {
++	if (rw == READ)
+ 		read_atapi_data(base, words, buf16);
+-	}
++	else
++		write_atapi_data(base, words, buf16);
+ 
+ 	/* Transfer trailing 1 byte, if any. */
+-	if (unlikely(buflen & 0x01)) {
++	if (unlikely(len & 0x01)) {
+ 		unsigned short align_buf[1] = { 0 };
+-		unsigned char *trailing_buf = buf + buflen - 1;
++		unsigned char *trailing_buf = buf + len - 1;
+ 
+-		if (write_data) {
+-			memcpy(align_buf, trailing_buf, 1);
+-			write_atapi_data(base, 1, align_buf);
+-		} else {
++		if (rw == READ) {
+ 			read_atapi_data(base, 1, align_buf);
+ 			memcpy(trailing_buf, align_buf, 1);
++		} else {
++			memcpy(align_buf, trailing_buf, 1);
++			write_atapi_data(base, 1, align_buf);
+ 		}
++		words++;
+ 	}
++
++	return words << 1;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index fcd532a..b8a6ce3 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -42,13 +42,13 @@ static int ixp4xx_set_mode(struct ata_link *link, struct ata_device **error)
+ 	return 0;
+ }
+ 
+-static void ixp4xx_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
+-				unsigned int buflen, int write_data)
++static unsigned int ixp4xx_mmio_data_xfer(struct ata_device *dev,
++				unsigned char *buf, unsigned int len, int rw)
+ {
+ 	unsigned int i;
+-	unsigned int words = buflen >> 1;
++	unsigned int words = len >> 1;
+ 	u16 *buf16 = (u16 *) buf;
+-	struct ata_port *ap = adev->link->ap;
++	struct ata_port *ap = dev->link->ap;
+ 	void __iomem *mmio = ap->ioaddr.data_addr;
+ 	struct ixp4xx_pata_data *data = ap->host->dev->platform_data;
+ 
+@@ -59,30 +59,32 @@ static void ixp4xx_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
+ 	udelay(100);
+ 
+ 	/* Transfer multiple of 2 bytes */
+-	if (write_data) {
+-		for (i = 0; i < words; i++)
+-			writew(buf16[i], mmio);
+-	} else {
++	if (rw == READ)
+ 		for (i = 0; i < words; i++)
+ 			buf16[i] = readw(mmio);
+-	}
++	else
++		for (i = 0; i < words; i++)
++			writew(buf16[i], mmio);
+ 
+ 	/* Transfer trailing 1 byte, if any. */
+-	if (unlikely(buflen & 0x01)) {
++	if (unlikely(len & 0x01)) {
+ 		u16 align_buf[1] = { 0 };
+-		unsigned char *trailing_buf = buf + buflen - 1;
++		unsigned char *trailing_buf = buf + len - 1;
+ 
+-		if (write_data) {
+-			memcpy(align_buf, trailing_buf, 1);
+-			writew(align_buf[0], mmio);
+-		} else {
++		if (rw == READ) {
+ 			align_buf[0] = readw(mmio);
+ 			memcpy(trailing_buf, align_buf, 1);
++		} else {
++			memcpy(align_buf, trailing_buf, 1);
++			writew(align_buf[0], mmio);
+ 		}
++		words++;
  	}
  
- 	if (dev->flags & ATA_DFLAG_AN)
+ 	udelay(100);
+ 	*data->cs0_cfg |= 0x01;
++
++	return words << 1;
+ }
+ 
+ static struct scsi_host_template ixp4xx_sht = {
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 7bed8d8..f04e980 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -249,13 +249,14 @@ static void pdc20230_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 
+ }
+ 
+-static void pdc_data_xfer_vlb(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
++static unsigned int pdc_data_xfer_vlb(struct ata_device *dev,
++				unsigned char *buf, unsigned int len, int rw)
+ {
+-	struct ata_port *ap = adev->link->ap;
+-	int slop = buflen & 3;
+-	unsigned long flags;
+-
+ 	if (ata_id_has_dword_io(adev->id)) {
++		struct ata_port *ap = dev->link->ap;
++		int slop = len & 3;
++		unsigned long flags;
++
+ 		local_irq_save(flags);
+ 
+ 		/* Perform the 32bit I/O synchronization sequence */
+@@ -264,28 +265,29 @@ static void pdc_data_xfer_vlb(struct ata_device *adev, unsigned char *buf, unsig
+ 		ioread8(ap->ioaddr.nsect_addr);
+ 
+ 		/* Now the data */
+-
+-		if (write_data)
+-			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++		if (rw == READ)
++			ioread32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 		else
+-			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++			iowrite32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 
+ 		if (unlikely(slop)) {
+ 			u32 pad;
+-			if (write_data) {
+-				memcpy(&pad, buf + buflen - slop, slop);
+-				pad = le32_to_cpu(pad);
+-				iowrite32(pad, ap->ioaddr.data_addr);
+-			} else {
++			if (rw == READ) {
+ 				pad = ioread32(ap->ioaddr.data_addr);
+ 				pad = cpu_to_le16(pad);
+-				memcpy(buf + buflen - slop, &pad, slop);
++				memcpy(buf + len - slop, &pad, slop);
++			} else {
++				memcpy(&pad, buf + len - slop, slop);
++				pad = le32_to_cpu(pad);
++				iowrite32(pad, ap->ioaddr.data_addr);
+ 			}
++			len += 4 - slop;
+ 		}
+ 		local_irq_restore(flags);
+-	}
+-	else
+-		ata_data_xfer_noirq(adev, buf, buflen, write_data);
++	} else
++		len = ata_data_xfer_noirq(dev, buf, len, rw);
++
++	return len;
+ }
+ 
+ static struct ata_port_operations pdc20230_port_ops = {
+diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
+index 7d4c696..9e1802e 100644
+--- a/drivers/ata/pata_qdi.c
++++ b/drivers/ata/pata_qdi.c
+@@ -124,31 +124,35 @@ static unsigned int qdi_qc_issue_prot(struct ata_queued_cmd *qc)
+ 	return ata_qc_issue_prot(qc);
+ }
+ 
+-static void qdi_data_xfer(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
++static unsigned int qdi_data_xfer(struct ata_device *dev, unsigned char *buf,
++				  unsigned int len, int rw)
+ {
+-	struct ata_port *ap = adev->link->ap;
+-	int slop = buflen & 3;
++	if (ata_id_has_dword_io(dev->id)) {
++		struct ata_port *ap = dev->link->ap;
++		int slop = len & 3;
+ 
+-	if (ata_id_has_dword_io(adev->id)) {
+-		if (write_data)
+-			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++		if (rw == READ)
++			ioread32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 		else
+-			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++			iowrite32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 
+ 		if (unlikely(slop)) {
+ 			u32 pad;
+-			if (write_data) {
+-				memcpy(&pad, buf + buflen - slop, slop);
+-				pad = le32_to_cpu(pad);
+-				iowrite32(pad, ap->ioaddr.data_addr);
+-			} else {
++			if (rw == READ) {
+ 				pad = ioread32(ap->ioaddr.data_addr);
+ 				pad = cpu_to_le32(pad);
+-				memcpy(buf + buflen - slop, &pad, slop);
++				memcpy(buf + len - slop, &pad, slop);
++			} else {
++				memcpy(&pad, buf + len - slop, slop);
++				pad = le32_to_cpu(pad);
++				iowrite32(pad, ap->ioaddr.data_addr);
+ 			}
++			len += 4 - slop;
+ 		}
+ 	} else
+-		ata_data_xfer(adev, buf, buflen, write_data);
++		len = ata_data_xfer(dev, buf, len, rw);
++
++	return len;
+ }
+ 
+ static struct scsi_host_template qdi_sht = {
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index ea2ef9f..755e2b9 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -768,45 +768,47 @@ static u8 scc_bmdma_status (struct ata_port *ap)
+ 
+ /**
+  *	scc_data_xfer - Transfer data by PIO
+- *	@adev: device for this I/O
++ *	@dev: device for this I/O
+  *	@buf: data buffer
+- *	@buflen: buffer length
+- *	@write_data: read/write
++ *	@len: buffer length
++ *	@rw: read/write
+  *
+  *	Note: Original code is ata_data_xfer().
+  */
+ 
+-static void scc_data_xfer (struct ata_device *adev, unsigned char *buf,
+-			   unsigned int buflen, int write_data)
++static unsigned int scc_data_xfer (struct ata_device *dev, unsigned char *buf,
++				   unsigned int len, int rw)
+ {
+-	struct ata_port *ap = adev->link->ap;
+-	unsigned int words = buflen >> 1;
++	struct ata_port *ap = dev->link->ap;
++	unsigned int words = len >> 1;
+ 	unsigned int i;
+ 	u16 *buf16 = (u16 *) buf;
+ 	void __iomem *mmio = ap->ioaddr.data_addr;
+ 
+ 	/* Transfer multiple of 2 bytes */
+-	if (write_data) {
+-		for (i = 0; i < words; i++)
+-			out_be32(mmio, cpu_to_le16(buf16[i]));
+-	} else {
++	if (rw == READ)
+ 		for (i = 0; i < words; i++)
+ 			buf16[i] = le16_to_cpu(in_be32(mmio));
+-	}
++	else
++		for (i = 0; i < words; i++)
++			out_be32(mmio, cpu_to_le16(buf16[i]));
+ 
+ 	/* Transfer trailing 1 byte, if any. */
+-	if (unlikely(buflen & 0x01)) {
++	if (unlikely(len & 0x01)) {
+ 		u16 align_buf[1] = { 0 };
+-		unsigned char *trailing_buf = buf + buflen - 1;
++		unsigned char *trailing_buf = buf + len - 1;
+ 
+-		if (write_data) {
+-			memcpy(align_buf, trailing_buf, 1);
+-			out_be32(mmio, cpu_to_le16(align_buf[0]));
+-		} else {
++		if (rw == READ) {
+ 			align_buf[0] = le16_to_cpu(in_be32(mmio));
+ 			memcpy(trailing_buf, align_buf, 1);
++		} else {
++			memcpy(align_buf, trailing_buf, 1);
++			out_be32(mmio, cpu_to_le16(align_buf[0]));
+ 		}
++		words++;
+ 	}
++
++	return words << 1;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
+index 311cdb3..9ded084 100644
+--- a/drivers/ata/pata_winbond.c
++++ b/drivers/ata/pata_winbond.c
+@@ -92,31 +92,35 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ }
+ 
+ 
+-static void winbond_data_xfer(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
++static void winbond_data_xfer(struct ata_device *dev, unsigned char *buf,
++			      unsigned int len, int rw)
+ {
+-	struct ata_port *ap = adev->link->ap;
+-	int slop = buflen & 3;
++	struct ata_port *ap = dev->link->ap;
++	int slop = len & 3;
+ 
+-	if (ata_id_has_dword_io(adev->id)) {
+-		if (write_data)
+-			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++	if (ata_id_has_dword_io(dev->id)) {
++		if (rw == READ)
++			ioread32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 		else
+-			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
++			iowrite32_rep(ap->ioaddr.data_addr, buf, len >> 2);
+ 
+ 		if (unlikely(slop)) {
+ 			u32 pad;
+-			if (write_data) {
+-				memcpy(&pad, buf + buflen - slop, slop);
+-				pad = le32_to_cpu(pad);
+-				iowrite32(pad, ap->ioaddr.data_addr);
+-			} else {
++			if (rw == read) {
+ 				pad = ioread32(ap->ioaddr.data_addr);
+ 				pad = cpu_to_le16(pad);
+-				memcpy(buf + buflen - slop, &pad, slop);
++				memcpy(buf + len - slop, &pad, slop);
++			} else {
++				memcpy(&pad, buf + len - slop, slop);
++				pad = le32_to_cpu(pad);
++				iowrite32(pad, ap->ioaddr.data_addr);
+ 			}
++			len += 4 - slop;
+ 		}
+ 	} else
+-		ata_data_xfer(adev, buf, buflen, write_data);
++		len = ata_data_xfer(dev, buf, len, rw);
++
++	return len;
+ }
+ 
+ static struct scsi_host_template winbond_sht = {
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a20a8a8..449307d 100644
+index 72df408..4b39650 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -121,6 +121,7 @@ enum {
- 	ATA_SHORT_PAUSE		= (HZ >> 6) + 1,
+@@ -700,7 +700,8 @@ struct ata_port_operations {
+ 	void (*bmdma_setup) (struct ata_queued_cmd *qc);
+ 	void (*bmdma_start) (struct ata_queued_cmd *qc);
  
- 	ATAPI_MAX_DRAIN		= 16 << 10,
-+	ATAPI_MAX_DRAIN_PAGES	= ATAPI_MAX_DRAIN >> PAGE_SHIFT,
+-	void (*data_xfer) (struct ata_device *, unsigned char *, unsigned int, int);
++	unsigned int (*data_xfer) (struct ata_device *dev, unsigned char *buf,
++				   unsigned int len, int rw);
  
- 	ATA_SHT_EMULATED	= 1,
- 	ATA_SHT_CMD_PER_LUN	= 1,
-@@ -438,6 +439,7 @@ struct ata_host {
- 	void			*private_data;
- 	const struct ata_port_operations *ops;
- 	unsigned long		flags;
-+	dma_addr_t		drain_page_dma;
- #ifdef CONFIG_ATA_ACPI
- 	acpi_handle		acpi_handle;
- #endif
-@@ -476,7 +478,7 @@ struct ata_queued_cmd {
- 	struct scatterlist	*last_sg;
- 	struct scatterlist	saved_last_sg;
- 	struct scatterlist	sgent;
--	struct scatterlist	extra_sg[2];
-+	struct scatterlist	extra_sg[2 + ATAPI_MAX_DRAIN_PAGES];
- 
- 	struct scatterlist	*sg;
- 
+ 	int (*qc_defer) (struct ata_queued_cmd *qc);
+ 	void (*qc_prep) (struct ata_queued_cmd *qc);
+@@ -880,10 +881,10 @@ extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf)
+ extern int ata_port_start(struct ata_port *ap);
+ extern int ata_sff_port_start(struct ata_port *ap);
+ extern irqreturn_t ata_interrupt(int irq, void *dev_instance);
+-extern void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
+-			  unsigned int buflen, int write_data);
+-extern void ata_data_xfer_noirq(struct ata_device *adev, unsigned char *buf,
+-				unsigned int buflen, int write_data);
++extern unsigned int ata_data_xfer(struct ata_device *dev,
++				unsigned char *buf, unsigned int len, int rw);
++extern unsigned int ata_data_xfer_noirq(struct ata_device *dev,
++				unsigned char *buf, unsigned int len, int rw);
+ extern int ata_std_qc_defer(struct ata_queued_cmd *qc);
+ extern void ata_dumb_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_qc_prep(struct ata_queued_cmd *qc);
 -- 
 1.5.2.4
 
