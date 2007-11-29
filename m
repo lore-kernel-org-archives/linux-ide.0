@@ -1,33 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 05/14] libata: make ->data_xfer return the number of consumed
- bytes
-Date: Thu, 29 Nov 2007 13:57:03 -0500
-Message-ID: <474F0B7F.8090209@rtr.ca>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468181417-git-send-email-htejun@gmail.com>	<20071129155546.694c6c45@the-village.bc.nu>	<474EE394.6020604@gmail.com>	<20071129174259.6a1edc88@the-village.bc.nu>	<474EFE58.701@gmail.com> <20071129182409.2fcd66d6@the-village.bc.nu>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch] ata: ahci: Enclosure Management via LED
+Date: Thu, 29 Nov 2007 11:22:20 -0800
+Message-ID: <20071129112220.55310ff5@appleyard>
+References: <20071129094802.49e729ed@appleyard>
+	<474F01E7.5040101@rtr.ca>
+Reply-To: kristen.c.accardi@intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4611 "EHLO mail.rtr.ca"
+Received: from mga02.intel.com ([134.134.136.20]:19535 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758105AbXK2S5E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Nov 2007 13:57:04 -0500
-In-Reply-To: <20071129182409.2fcd66d6@the-village.bc.nu>
+	id S1761478AbXK2TYa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Nov 2007 14:24:30 -0500
+In-Reply-To: <474F01E7.5040101@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, jeff@garzik.org, linux-ide@vger.kernel.org, albertl@mail.com, jens.axboe@oracle.com
+To: Mark Lord <lkml@rtr.ca>
+Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->> DMA alignment is host restriction so I think it belongs to ata_host if
->> we ever need it.  Do you know of any controller which require such
->> thing?  No need to add complexity when it's not necessary.
+On Thu, 29 Nov 2007 13:16:07 -0500
+Mark Lord <lkml@rtr.ca> wrote:
+
+> Kristen wrote:
+> ...
+> >+	 * XXX will need Port Multiplier support
 > 
-> If we ever get the blasted inic162x working then that appears to have
-> some alignment limits. At least the docs say the DMA buffers must be quad
-> word aligned and sized (although it doesn't describe what occurs if the
-> total length of xfer disagrees with the buffers)
-...
+> What's that all about ?
+> 
 
-If it's an ADMA device, then they may support bits in the CPB
-to direct what should happen for various overrun/underrun conditions.
+I didn't have any hardware that had LED support as well as Port
+Multiplier, so I didn't implement port multiplier support for this.  I
+wasn't sure if it was better to just do it anyway, or leave it for when
+we actually have hardware that needs it.
