@@ -1,47 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/14] libata: make ->data_xfer return the number of consumed
- bytes
-Date: Fri, 30 Nov 2007 01:06:44 +0900
-Message-ID: <474EE394.6020604@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468181417-git-send-email-htejun@gmail.com> <20071129155546.694c6c45@the-village.bc.nu>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 13/14] libata: implement ATAPI per-command-type DMA
+ horkages
+Date: Thu, 29 Nov 2007 16:04:00 +0000
+Message-ID: <20071129160400.106d8c5b@the-village.bc.nu>
+References: <1196346817387-git-send-email-htejun@gmail.com>
+	<1196346820396-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:18658 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbXK2QGz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 11:06:55 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1588842rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 08:06:55 -0800 (PST)
-In-Reply-To: <20071129155546.694c6c45@the-village.bc.nu>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:58304 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762734AbXK2QIO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 11:08:14 -0500
+In-Reply-To: <1196346820396-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Tejun Heo <htejun@gmail.com>
 
-Alan Cox wrote:
-> On Thu, 29 Nov 2007 23:33:28 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> Depending on how many bytes are transferred as a unit, PIO data
->> tranasfer may consume more bytes than requested.  Knowing how much
->> data is consumed is necessary to determine how much is left for
->> draining.  This patch update ->data_xfer such that it returns the
->> number of consumed bytes.
-> 
-> Why do we care ? 
-> 
-> If the drive and controller disagree or the drive has gone off its
-> trolley all we actually care about is when the thing stops saying there
-> is data. In addition all our methods transfer the entire block they are
-> asked to each time.
+On Thu, 29 Nov 2007 23:33:36 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-It's for draining.  Let's say drive says it wanna transfer 18 bytes but
-the buffer is only 13 bytes long.  If the transfer method consumes 2
-bytes per read, it would consume 14 bytes.  If the transfer method
-consumes 4 bytes per read, it would consume 16 bytes.  If we drain too
-much, we risk hanging the machine.
+> ATAPI DMA is filled with mines.  Sector aligned READ transfers usually
+> work but many other commands transfer non-sector aligned or variable
+> number of bytes, and there are devices and controllers which have
+> problems dealing with such non-aligned DMA transactions.
+> 
+> This patch implement ATAPI per-command-type DMA horkages and EH logic
+> to set those quickly.  This way, failures localized to certain command
+> type don't affect other operations (most importantly READs) and
+> working configuration is found quickly such that the device can be
+> used.
 
--- 
-tejun
+This I think makes sense. We want to fail rapidly when we discover DMA
+problems with ATAPI and non core commands. OTOH we want to be pretty
+resistant to randomly dropping into PIO on stuff we know works reliably.
+
+
+> +	ATAPI_DMA_HORKAGE_WRITE		= (1 << 28), /* PIO for WRITEs */
+> +	ATAPI_DMA_HORKAGE_READ_CD	= (1 << 29), /* PIO for READ_CDs */
+> +	ATAPI_DMA_HORKAGE_READ_DVD_STR	= (1 << 30), /* PIO for READ DVD STR */
+> +	ATAPI_DMA_HORKAGE_MISC		= (1 << 31), /* PIO for MISC commands */
+> +
+>  	 /* DMA mask for user DMA control: User visible values; DO NOT
+>  	    renumber */
+>  	ATA_DMA_MASK_ATA	= (1 << 0),	/* DMA on ATA Disk */
+
+What are the locking rules for ->horkage at this point ?
