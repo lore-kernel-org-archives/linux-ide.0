@@ -1,40 +1,56 @@
 From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [patch] ata: ahci: Enclosure Management via LED
-Date: Thu, 29 Nov 2007 15:04:17 -0500
-Message-ID: <474F1B41.5040302@rtr.ca>
-References: <20071129094802.49e729ed@appleyard>	<474F01E7.5040101@rtr.ca> <20071129112220.55310ff5@appleyard>
+Subject: Re: Peculiar out-of-sync boot log lines
+Date: Thu, 29 Nov 2007 15:12:20 -0500
+Message-ID: <474F1D24.4070009@rtr.ca>
+References: <20071129193728.2f1c237e@linuxamd.linicks.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3973 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:1945 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757802AbXK2UET (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Nov 2007 15:04:19 -0500
-In-Reply-To: <20071129112220.55310ff5@appleyard>
+	id S932519AbXK2UMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Nov 2007 15:12:22 -0500
+In-Reply-To: <20071129193728.2f1c237e@linuxamd.linicks.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nick Warne <nick@ukfsn.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Kristen Carlson Accardi wrote:
-> On Thu, 29 Nov 2007 13:16:07 -0500
-> Mark Lord <lkml@rtr.ca> wrote:
+Nick Warne wrote:
+> Hi all,
 > 
->> Kristen wrote:
->> ...
->>> +	 * XXX will need Port Multiplier support
->> What's that all about ?
->>
+> 2.6.23.9
 > 
-> I didn't have any hardware that had LED support as well as Port
-> Multiplier, so I didn't implement port multiplier support for this.  I
-> wasn't sure if it was better to just do it anyway, or leave it for when
-> we actually have hardware that needs it.
-..
+> I have noticed after applying Bart's patch to word93 blacklist my new
+> DVD drive:
+> 
+> http://lkml.org/lkml/2007/10/23/475
+> 
+> I see now in logs (look at the hdd line:
+> 
+> [dmesg]
+> hdc: 39876480 sectors (20416 MB) w/2048KiB Cache, CHS=39560/16/63,
+> UDMA(66)
+> hdc: cache flushes not supported
+>  hdc: hdc1
+> hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
+> skipping word 93 validity check
+> , UDMA(66)
+> Uniform CD-ROM driver Revision: 3.20
+> 
+> 
+> <7> ??  And the ", UDMA(66)" gets new lined, so in syslog it appears all
+> by itself:
+...
 
-Good.  So please replace the "XXX" comment with the better
-explanation given in your posting above.  That'll make future
-maintenance a lot less guessy.
+That's a minor bug with the patch.
 
-Cheers
+The code does this:
+
+ide_dma_verbose::printk( ... "2048kB Cache");
+eighty_ninty_three::printk(KERN_DEBUG "%s: skipping word 93 validity check\n");
+ide_dma_verbose::printk(", UDMA(66)"
+
+Something in there needs to insert a '\n' before the "skipping word" message.
+Since it doesn't do that right now, the KERN_DEBUG string appears as "<7>"
