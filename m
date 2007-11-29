@@ -1,78 +1,76 @@
-From: Albert Lee <albertcc@tw.ibm.com>
-Subject: Re: [PATCH 05/13] libata: improve ATAPI draining
-Date: Thu, 29 Nov 2007 14:28:50 +0800
-Message-ID: <474E5C22.7010405@tw.ibm.com>
-References: <11961764391983-git-send-email-htejun@gmail.com> <11961764403671-git-send-email-htejun@gmail.com>
-Reply-To: albertl@mail.com
+From: "Sonic Zhang" <sonic.adi@gmail.com>
+Subject: Re: [PATCH] [libata] Set proper ATA UDMA mode for bf548 according to system clock.
+Date: Thu, 29 Nov 2007 15:18:24 +0800
+Message-ID: <4e5ebad50711282318k3d99d0cei42b97d51f8aac7f2@mail.gmail.com>
+References: <1196138859.6974.2.camel@eight.analog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:35339 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337AbXK2G3Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 01:29:24 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id lAT5RihX031413
-	for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 00:27:44 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lAT6T29J121210
-	for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 23:29:02 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lAT6T1wT002250
-	for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 23:29:02 -0700
-In-Reply-To: <11961764403671-git-send-email-htejun@gmail.com>
+Received: from mu-out-0910.google.com ([209.85.134.190]:26170 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112AbXK2HS0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 02:18:26 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so2058627mue
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 23:18:24 -0800 (PST)
+In-Reply-To: <1196138859.6974.2.camel@eight.analog.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+To: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> For misc ATAPI commands which transfer variable length data to the
-> host, overflow can occur due to application or hardware bug.  Such
-> overflows can be ignored safely as long as overflow data is properly
-> drained.  libata HSM implementation has this implemented in
-> __atapi_pio_bytes() but it isn't enough.  Improve drain logic such
-> that...
-> 
-> * Multiple PIO data phases are allowed.  Not allowing this used to be
->   okay when transfer chunk size was set to 8k unconditionally but with
->   transfer hcunk size set to allocation size, treating extra PIO data
->   phases as HSM violations cause a lot of trouble.
-> 
-> * Limit the amount of draining to ATAPI_MAX_DRAIN (16k currently).
-> 
-> * Don't whine if overflow is allowed and safe.  When unexpected
->   overflow occurs, trigger HSM violation and report the problem using
->   ehi error description.
-> 
-> * If the device indicates that it wants to transfer odd number of
->   bytes, it should be rounded up not down.
-> 
+Any comment?
 
-If the trailing data is odd-lengthed, normally the situation is that
-we have odd-lengthed real data before the trailing data. e.g. The real
-data is 9 bytes, but the drive returns 10 bytes (so, the trailing data
-is 1 byte).
+Thanks
 
-In ata_data_xfer(), we have the following code:
+Sonic
 
-    /* Transfer trailing 1 byte, if any. */
-    ... (for write case) ...
-    iowrite16(le16_to_cpu(align_buf[0]), ap->ioaddr.data_addr);  or
-
-    ... (for read case) ...
-    ioread16(ap->ioaddr.data_addr)
-
-The PATA bus is actually 16-bit wide. So, ata_data_xfer() actually
-implicitly transfers one more byte than we see if it's odd-lengthed.
-
-That's why in atapi_pio_bytes(), the trailing length was round down
-instead round up.
-
---
-albert
-
-
-
-
+On Nov 27, 2007 12:47 PM, sonic zhang <sonic.adi@gmail.com> wrote:
+> UDMA Mode - Frequency compatibility
+>
+> UDMA5 - 100 MB/s   - SCLK  = 133 MHz
+> UDMA4 - 66 MB/s    - SCLK >=  80 MHz
+> UDMA3 - 44.4 MB/s  - SCLK >=  50 MHz
+> UDMA2 - 33 MB/s    - SCLK >=  40 MHz
+>
+>
+> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+> ---
+>  drivers/ata/pata_bf54x.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+> index 81db405..088a41f 100644
+> --- a/drivers/ata/pata_bf54x.c
+> +++ b/drivers/ata/pata_bf54x.c
+> @@ -1489,6 +1489,8 @@ static int __devinit bfin_atapi_probe(st
+>         int board_idx = 0;
+>         struct resource *res;
+>         struct ata_host *host;
+> +       unsigned int fsclk = get_sclk();
+> +       int udma_mode = 5;
+>         const struct ata_port_info *ppi[] =
+>                 { &bfin_port_info[board_idx], NULL };
+>
+> @@ -1507,6 +1509,11 @@ static int __devinit bfin_atapi_probe(st
+>         if (res == NULL)
+>                 return -EINVAL;
+>
+> +       while (bfin_port_info[board_idx].udma_mask>0 && udma_fsclk[udma_mode] > fsclk) {
+> +               udma_mode--;
+> +               bfin_port_info[board_idx].udma_mask >>= 1;
+> +       }
+> +
+>         /*
+>          * Now that that's out of the way, wire up the port..
+>          */
+> --
+> 1.4.3.4
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
