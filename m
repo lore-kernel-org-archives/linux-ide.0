@@ -1,42 +1,58 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 05/14] libata: make ->data_xfer return the number of consumed
- bytes
-Date: Thu, 29 Nov 2007 14:37:03 -0500
-Message-ID: <474F14DF.8050201@garzik.org>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468181417-git-send-email-htejun@gmail.com>	<20071129155546.694c6c45@the-village.bc.nu>	<474EE394.6020604@gmail.com>	<20071129174259.6a1edc88@the-village.bc.nu>	<474EFE58.701@gmail.com> <20071129182409.2fcd66d6@the-village.bc.nu> <474F0B7F.8090209@rtr.ca>
+From: Nick Warne <nick@ukfsn.org>
+Subject: Peculiar out-of-sync boot log lines
+Date: Thu, 29 Nov 2007 19:37:28 +0000
+Message-ID: <20071129193728.2f1c237e@linuxamd.linicks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55640 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759717AbXK2ThG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Nov 2007 14:37:06 -0500
-In-Reply-To: <474F0B7F.8090209@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933384AbXK2Thw@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, albertl@mail.com, jens.axboe@oracle.com
-
-Mark Lord wrote:
-> Alan Cox wrote:
->>> DMA alignment is host restriction so I think it belongs to ata_host if
->>> we ever need it.  Do you know of any controller which require such
->>> thing?  No need to add complexity when it's not necessary.
->>
->> If we ever get the blasted inic162x working then that appears to have
->> some alignment limits. At least the docs say the DMA buffers must be quad
->> word aligned and sized (although it doesn't describe what occurs if the
->> total length of xfer disagrees with the buffers)
-> ...
-> 
-> If it's an ADMA device, then they may support bits in the CPB
-> to direct what should happen for various overrun/underrun conditions.
-
-Yeah most devices that are not strictly SFF (i.e. have a real register 
-space) are like that.
-
-	Jeff
 
 
+Hi all,
 
+2.6.23.9
+
+I have noticed after applying Bart's patch to word93 blacklist my new
+DVD drive:
+
+http://lkml.org/lkml/2007/10/23/475
+
+I see now in logs (look at the hdd line:
+
+[dmesg]
+hdc: 39876480 sectors (20416 MB) w/2048KiB Cache, CHS=39560/16/63,
+UDMA(66)
+hdc: cache flushes not supported
+ hdc: hdc1
+hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
+skipping word 93 validity check
+, UDMA(66)
+Uniform CD-ROM driver Revision: 3.20
+
+
+<7> ??  And the ", UDMA(66)" gets new lined, so in syslog it appears all
+by itself:
+
+
+[/var/log/syslog]
+Nov 29 19:22:00 linuxamd kernel: hda: Maxtor 6Y080L0, ATA DISK drive
+Nov 29 19:22:00 linuxamd kernel: hdb: Maxtor 51536H2, ATA DISK drive
+Nov 29 19:22:00 linuxamd kernel: ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+Nov 29 19:22:00 linuxamd kernel: hdc: Maxtor 52049H3, ATA DISK drive
+Nov 29 19:22:00 linuxamd kernel: hdd: TSSTcorp CDDVDW SH-S202J, ATAPI
+CD/DVD-ROM drive
+Nov 29 19:22:00 linuxamd kernel: ide1 at 0x170-0x177,0x376 on irq 15
+Nov 29 19:22:00 linuxamd kernel: , UDMA(66)
+
+
+
+I have tried to trace this, but cannot see anywhere printk
+does this.
+
+Nick
+-- 
+Free Software Foundation Associate Member 5508
