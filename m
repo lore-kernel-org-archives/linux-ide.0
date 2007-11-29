@@ -1,91 +1,75 @@
-From: Anton Vorontsov <cbou@mail.ru>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
-	driver
-Date: Thu, 29 Nov 2007 03:54:40 +0300
-Message-ID: <20071129005440.GA2235@zarina>
-References: <20071127153708.GA12490@localhost.localdomain> <20071127153908.GB14183@localhost.localdomain> <20071127212222.GB10829@lixom.net> <200711272233.00456.arnd@arndb.de> <20071128154904.GA20722@localhost.localdomain> <474D9327.9020305@ru.mvista.com>
-Reply-To: cbou@mail.ru
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA Shutdown issue confuses (sda)
+Date: Thu, 29 Nov 2007 10:04:18 +0900
+Message-ID: <474E1012.40703@gmail.com>
+References: <947127.83110.qm@web56306.mail.re3.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx34.mail.ru ([194.67.23.200]:8359 "EHLO mx34.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758286AbXK2BBQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Nov 2007 20:01:16 -0500
-Content-Disposition: inline
-In-Reply-To: <474D9327.9020305@ru.mvista.com>
+Received: from ro-out-1112.google.com ([72.14.202.181]:4350 "EHLO
+	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758949AbXK2BE0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 20:04:26 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so2809702roc
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2007 17:04:25 -0800 (PST)
+In-Reply-To: <947127.83110.qm@web56306.mail.re3.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: avorontsov@ru.mvista.com, Olof Johansson <olof@lixom.net>, linuxppc-dev@ozlabs.org, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org
+To: Dark Sylinc <dark_sylinc@yahoo.com.ar>
+Cc: linux-ide@vger.kernel.org, hmh@debian.org
 
-On Wed, Nov 28, 2007 at 07:11:19PM +0300, Sergei Shtylyov wrote:
-> Anton Vorontsov wrote:
-> 
-> >>>>This driver nicely wraps around pata_platform library functions,
-> >>>>and provides OF platform bus bindings to the PATA devices.
-> 
-> >>>>+static struct of_device_id pata_of_platform_match[] = {
-> >>>>+     { .compatible = "pata-platform", },
-> >>>>+};
-> 
-> >>>"pata-platform" really means nothing outside of linux. A more
-> >>>generic label would be useful.
-> 
-> > Agreed.
-> 
->     Now you're quick to agree. :-)
+Dark Sylinc wrote:
+> Some people around the net is concerned about their
+> SATA drives. They're wondering if before kernel 2.6.22
+> their SATA HDDs were making emergency shutdowns and
+> didn't realize that they weren't normal shutdowns. And
+> they may have been using Linux in their SATAs from a
+> long time ago, just to realize now (thanks to the new
+> K2.6.22 warning) that they were damaging their HDDs
+> since years.
+> In summary: the emergency shutdowns issue appeared in
+> K2.6.22, and using previous kernels fixes it, or the
+> emergenct shutdown happens in any kernel version??
+> I can't answer that question by myself, because I've
+> just installed Linux in this HDD and upgraded
+> immediately.
 
-I'm quick to change my mind either. ;-)
+It depends on your distro.  If the distro issues spin down on shutdown,
+things should have been fine beofre 2.6.22 but it it doesn't, disks
+attached via libata would do emergency unload on power off.  Also small
+fraction of disks which spin up to do FLUSH_CACHE issued by kernel would
+do double spin down where the last one is emergency if the distro
+shutdown issues spin down.
 
-*BOOM*, I changed my mind.
+2.6.22 fixes the problem completely for distros which don't issue spin
+down.  For distros which do issue spin down, the situation isn't worse,
+the kernel behaves the same way as before 2.6.22.  It just issues
+FLUSH_CACHE.  The warning message is for small fraction of disks
+mentioned above which do double spin down and to accelerate transition
+to kernel-driven spin down.
 
-> >>Maybe the name of the standards it supports? Could be
-> >>"ata-4", "ata-5" and the like, or the exact transfer mode, like
-> >>"pata-udma-5", "pata-pio-3", "sata-150", etc.
+>> Sure way to tell is to look at emergency unload
+>> count int the output of
+>> 'smartctl -a'.  Basically, it should identical to
+>> 'hdparm -y'.
 > 
-> > You're quite optimistic about pata_platform capabilities. ;-)
-> 
->     Indeed. :-)
-> 
-> > As far as I know it is [obviously] supports PIO modes only. And so
-> > far I was able to get max 5.28 MB/s read transfers. Which looks like
-> > ideal case for PIO1 (CF I'm testing on is 3.0, max. PIO4).
-> 
->     Believe me, it's a great speed even for PIO4. Most systems only show 3+ 
-> MiB/s in this mode according to hdparm.
-> 
-> > I've modified pio_mask appropriately, plus I've tried to comment
-> > out .set_mode = pata_platform_set_mode, and now it says:
-> 
-> > ata5: PATA max PIO4 mmio cmd 0xf0000000 ctl 0xf000020c irq 24
-> > ata5.00: CFA: TOSHIBA THNCF512MQG, 3.00, max PIO4
-> > ata5.00: configured for PIO4
-> > ata5.00: configured for PIO4
-> 
-> > That looks good, but speed is the same. Oh well, it's another
-> > matter.
-> 
-> > Back to dts, I think pata-pio-X is good scheme. That way we can
-> > pass pio_mask via device tree. Sounds reasonable?
-> 
->     Grumble. Can't we pass this via some property other than "compatible"? I'm 
-> opposed to "ata-5" and the like in there as well cause it's not clear what 
-> information this would provide. Why people so love to make things complex WRT 
-> the "compatible" property -- instead of making the task of selecting a proper 
-> driver more simple, they tend to make it mode complex by trying to specify 
-> values that have quite little to do with the device's programming interface 
-> itself...
+> Thanks, but the idea that software can do such thing
+> gives me the creeps.
 
-Ok, now I'm agree here. dts already specifying "fsl,mpc8349emitx-pata",
-second compatible entry is okay to mean nothing outside Linux itself,
-there are plenty of examples for such kind.
+Oh well, it can, apparently.  :-)
 
-Remaining question: any preferred name for that property? pio-mode okay?
-It's assuming that PIO6 capable bus supports PIO0 as well, thus no mask.
+>> and yes you
+>> definitely need to issue FLUSH before spinning down
+>> the disk.
+> 
+> Seems missing both in the official src and in the
+> patch provided...
+> May be I can submit a patch...
+> However the patch I'm using doesn't trigger FLUSH but
+> the problem is solved anyway.
+
+So, the patch isn't in the package yet?
 
 -- 
-Anton Vorontsov
-email: cbou@mail.ru
-backup email: ya-cbou@yandex.ru
-irc://irc.freenode.net/bd2
+tejun
