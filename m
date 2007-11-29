@@ -1,56 +1,31 @@
-From: Mark Lord <lkml@rtr.ca>
+From: Joe Perches <joe@perches.com>
 Subject: Re: Peculiar out-of-sync boot log lines
-Date: Thu, 29 Nov 2007 15:12:20 -0500
-Message-ID: <474F1D24.4070009@rtr.ca>
+Date: Thu, 29 Nov 2007 12:13:46 -0800
+Message-ID: <1196367226.22120.53.camel@localhost>
 References: <20071129193728.2f1c237e@linuxamd.linicks.net>
+	 <1196365871.6473.107.camel@perihelion>
+	 <20071129200332.2130298b@linuxamd.linicks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1945 "EHLO mail.rtr.ca"
+Received: from DSL022.labridge.com ([206.117.136.22]:4907 "EHLO perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932519AbXK2UMW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Nov 2007 15:12:22 -0500
-In-Reply-To: <20071129193728.2f1c237e@linuxamd.linicks.net>
+	id S1757782AbXK2UQA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Nov 2007 15:16:00 -0500
+In-Reply-To: <20071129200332.2130298b@linuxamd.linicks.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Nick Warne <nick@ukfsn.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jon Masters <jonathan@jonmasters.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Nick Warne wrote:
-> Hi all,
-> 
-> 2.6.23.9
-> 
-> I have noticed after applying Bart's patch to word93 blacklist my new
-> DVD drive:
-> 
-> http://lkml.org/lkml/2007/10/23/475
-> 
-> I see now in logs (look at the hdd line:
-> 
-> [dmesg]
-> hdc: 39876480 sectors (20416 MB) w/2048KiB Cache, CHS=39560/16/63,
-> UDMA(66)
-> hdc: cache flushes not supported
->  hdc: hdc1
-> hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
-> skipping word 93 validity check
-> , UDMA(66)
-> Uniform CD-ROM driver Revision: 3.20
-> 
-> 
-> <7> ??  And the ", UDMA(66)" gets new lined, so in syslog it appears all
-> by itself:
-...
+On Thu, 2007-11-29 at 20:03 +0000, Nick Warne wrote:
+> Yes, but where does the <7> come from?
 
-That's a minor bug with the patch.
+printk interleaving of functions in ide-cd and ide-iops.
 
-The code does this:
+drivers/ide/ide-cd.c ide_cdrom_probe_capabilities could
+use something like the string_buf implementations talked
+about awhile ago.
 
-ide_dma_verbose::printk( ... "2048kB Cache");
-eighty_ninty_three::printk(KERN_DEBUG "%s: skipping word 93 validity check\n");
-ide_dma_verbose::printk(", UDMA(66)"
 
-Something in there needs to insert a '\n' before the "skipping word" message.
-Since it doesn't do that right now, the KERN_DEBUG string appears as "<7>"
