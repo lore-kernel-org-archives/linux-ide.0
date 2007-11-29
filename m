@@ -1,48 +1,51 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 14/14] libata: use PIO for misc ATAPI commands
-Date: Fri, 30 Nov 2007 07:52:04 +0900
-Message-ID: <474F4294.9030203@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468202627-git-send-email-htejun@gmail.com> <20071129160555.38ee2edc@the-village.bc.nu> <474EE561.7010207@gmail.com> <474EE5F8.1030409@gmail.com> <474F0B11.7000205@rtr.ca>
+Subject: Re: sata NCQ blacklist entry
+Date: Fri, 30 Nov 2007 07:57:04 +0900
+Message-ID: <474F43C0.6080008@gmail.com>
+References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>	 <4731B5DD.1060203@gmail.com> <5501535d0711290917r16a16b0dx36669de89f829231@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:18553 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.190]:27036 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756974AbXK2WwN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 17:52:13 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1722424rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 14:52:11 -0800 (PST)
-In-Reply-To: <474F0B11.7000205@rtr.ca>
+	with ESMTP id S933703AbXK2W5M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 17:57:12 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1723812rvb
+        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 14:57:11 -0800 (PST)
+In-Reply-To: <5501535d0711290917r16a16b0dx36669de89f829231@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-ide@vger.kernel.org, albertl@mail.com, jens.axboe@oracle.com
+To: Bjoern Olausson <lkmlist@gmail.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> I'm split on this one.  For fast systems (typical notebook/desktop) it's
-> almost a non-issue either way.
+Bjoern Olausson wrote:
+> On 11/7/07, Tejun Heo <htejun@gmail.com> wrote:
+>> Thanks.  We're currently trying to find out what's actually going on
+>> with all these drives.  At first, drives which got blacklisted aren't
+>> many and made sense (had other problems with NCQ, etc..) but with new
+>> generation drives from many vendors showing the same symptom, we aren't
+>> too sure now.
+>>
+>> I'll keep your email in my todo list and add the drive to the blacklist
+>> once the problem is verified.
+>>
+>> Thanks.
 > 
-> But a lot of media boxes will be using this code, and they tend to have
-> very low-power, slow-clockrate CPUs in the 200-800Mhz range, and so the
-> real-time hit there (from PIO) will have a much more significant impact.
+> Something new on the NCQ front?
+> Just asking if you need someone to test some of your ideas?
 > 
-> Using DMA as much as possible on those slower platforms is definitely
-> a plus towards avoiding non-jerky, skipped frames, or start-stoppy DVD
-> recording.
-> 
-> Now the most intensive commands are still DMA under the proposed scheme,
-> so it's not those that one would be concerned with.  But dropping to PIO
-> even for a few uncommon commands will still peg a real-time hit or two
-> on a slower media processor.
-> 
-> So..  ????
+> I got the "WDC WD740ADFD-00NLR1"
 
-One thing I don't understand about this argument is that PIO cycle time
-is not determined by CPU power.  It's bound by PCI and ATA bus speed.
-If you put a faster CPU on the job, it just ends up wasting the same
-amount of time burning up more CPU cycles or am I misjudging power of
-those embedded CPUs?
+I now have affected drives on my desk and am gonna try reproduce it.  My
+gut feeling says it's timing related problem on controller / driver
+side.  Please wait a bit.
+
+> by the way, and OT, did the Plextor DVD-RW drive reach you, Tejun?
+
+No, not yet.  Do you have a tracking number or something?
+
+Thanks.
 
 -- 
 tejun
