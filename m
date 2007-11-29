@@ -1,47 +1,47 @@
-From: Tom Evans <tom@23palmer.net>
-Subject: Re: SATA PMP support in 2.6.24-rc3?
-Date: Wed, 28 Nov 2007 22:17:50 -0500
-Message-ID: <474E2F5E.1010509@23palmer.net>
-References: <39B20DF628532344BC7A2692CB6AEE070201BD83@orsmsx420.amr.corp.intel.com> <474CC423.70705@gmail.com>
+From: Dark Sylinc <dark_sylinc@yahoo.com.ar>
+Subject: Re: SATA Shutdown issue confuses (sda)
+Date: Thu, 29 Nov 2007 00:49:19 -0300 (ART)
+Message-ID: <930126.21016.qm@web56308.mail.re3.yahoo.com>
+References: <474E22B6.2020304@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.lnh.mail.rcn.net ([207.172.157.102]:21406 "EHLO
-	smtp02.lnh.mail.rcn.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757700AbXK2DRz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 22:17:55 -0500
-In-Reply-To: <474CC423.70705@gmail.com>
+Received: from web56308.mail.re3.yahoo.com ([216.252.110.232]:39177 "HELO
+	web56308.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751441AbXK2DtV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2007 22:49:21 -0500
+In-Reply-To: <474E22B6.2020304@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, hmh@debian.org
 
 
-I'm also seeing this with 2.6.23-rc3 on my Alpha system - sata_sil24 and 
-a SiliconImage PMP.
+>  I'm attaching a patch that fixes it. It basically
+> follows
+>  http://linux-ata.org/shutdown.html and *SKIPS* the
+> drive shutdown when
+>  the respective
+> /sys/block/sdX/device/scsi_disk:*/manage_start_stop
+>  exists (leaving it for the kernel to do).
+>=20
 
-...tom
+eeeehhh, I'm ashamed :$ . Now everything makes sense.
+Thanks
 
-Tejun Heo wrote:
-> Gaston, Jason D wrote:
->   
->> Does 2.6.24-rc3 support SATA port multipliers?
->>
->> I am getting "ata6.03: COMRESET failed (errno=-5)" error messages with a
->> SiliconImage PMP connected to an Intel ICH9 SATA controller in AHCI
->> mode.  
->>     
->
-> Yeah, it should work.
->
->   
->> Dmesg output attached.
->>     
->
-> Eeek.. Can you please tell me more about the configuration?  Which
-> devices are connected to which downstream port, etc...
->
-> Thanks.
->
->   
+> >> So, the patch isn't in the package yet?
+> >=20
+> > I checked yesterday both Debian's unstable and
+> > testing, and the patch wasn't there.
+>=20
+> Eeeeekk....
+
+Dark Sylinc
+
+
+      Los referentes m=E1s importantes en compra/ venta de autos se jun=
+taron:
+Demotores y Yahoo!
+Ahora comprar o vender tu auto es m=E1s f=E1cil. Vist=E1 ar.autos.yahoo=
+=2Ecom/
