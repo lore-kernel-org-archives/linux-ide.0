@@ -1,56 +1,29 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/13] libata: improve ATAPI draining
-Date: Thu, 29 Nov 2007 23:34:36 +0900
-Message-ID: <474ECDFC.60803@gmail.com>
-References: <11961764391983-git-send-email-htejun@gmail.com> <11961764403671-git-send-email-htejun@gmail.com> <474E5C22.7010405@tw.ibm.com> <474E6993.3070008@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 03/14] libata: rename ATA_PROT_ATAPI_* to ATAPI_PROT_*
+Date: Thu, 29 Nov 2007 15:52:23 +0000
+Message-ID: <20071129155223.7249fe1a@the-village.bc.nu>
+References: <1196346817387-git-send-email-htejun@gmail.com>
+	<11963468182270-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:44286 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762157AbXK2Oen (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 09:34:43 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2205248wah
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 06:34:43 -0800 (PST)
-In-Reply-To: <474E6993.3070008@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36918 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755470AbXK2P5G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 10:57:06 -0500
+In-Reply-To: <11963468182270-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: albertl@mail.com
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, jens.axboe@oracle.com
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Tejun Heo <htejun@gmail.com>
 
-Tejun Heo wrote:
-> Albert Lee wrote:
->> If the trailing data is odd-lengthed, normally the situation is that
->> we have odd-lengthed real data before the trailing data. e.g. The real
->> data is 9 bytes, but the drive returns 10 bytes (so, the trailing data
->> is 1 byte).
->>
->> In ata_data_xfer(), we have the following code:
->>
->>     /* Transfer trailing 1 byte, if any. */
->>     ... (for write case) ...
->>     iowrite16(le16_to_cpu(align_buf[0]), ap->ioaddr.data_addr);  or
->>
->>     ... (for read case) ...
->>     ioread16(ap->ioaddr.data_addr)
->>
->> The PATA bus is actually 16-bit wide. So, ata_data_xfer() actually
->> implicitly transfers one more byte than we see if it's odd-lengthed.
->>
->> That's why in atapi_pio_bytes(), the trailing length was round down
->> instead round up.
+On Thu, 29 Nov 2007 23:33:26 +0900
+Tejun Heo <htejun@gmail.com> wrote:
+
+> ATA_PROT_ATAPI_* are ugly and naming schemes between ATA_PROT_* and
+> ATA_PROT_ATAPI_* are inconsistent causing confusion.  Rename them to
+> ATAPI_PROT_* and make them consistent with ATA counterpart.
 > 
-> Hmmm... it's tricky.  When draining a partial chunk because of
-> odd-length short buffer on even-length chunk, it needs to be rounded
-> down but on all other cases it needs to be rounded up, right?
-> 
-> This is basically because count isn't updated with actually consumed
-> number of bytes.  I'll fix it and post an updated patch.
+> Signed-off-by: Tejun Heo <htejun@gmail.com> 
 
-Okay, updated patchset posted.  Albert, can you please review the new one?
-
-Thanks.
-
--- 
-tejun
+Acked-by: Alan Cox <alan@redhat.com>
