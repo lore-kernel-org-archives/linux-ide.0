@@ -1,42 +1,58 @@
-From: Jon Masters <jonathan@jonmasters.org>
+From: Nick Warne <nick@ukfsn.org>
 Subject: Re: Peculiar out-of-sync boot log lines
-Date: Thu, 29 Nov 2007 14:51:11 -0500
-Message-ID: <1196365871.6473.107.camel@perihelion>
+Date: Thu, 29 Nov 2007 20:03:32 +0000
+Message-ID: <20071129200332.2130298b@linuxamd.linicks.net>
 References: <20071129193728.2f1c237e@linuxamd.linicks.net>
+	<1196365871.6473.107.camel@perihelion>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933619AbXK2Twk@vger.kernel.org>
-In-Reply-To: <20071129193728.2f1c237e@linuxamd.linicks.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nick Warne <nick@ukfsn.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from s2.ukfsn.org ([217.158.120.143]:60464 "EHLO mail.ukfsn.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759703AbXK2UDw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Nov 2007 15:03:52 -0500
+In-Reply-To: <1196365871.6473.107.camel@perihelion>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jon Masters <jonathan@jonmasters.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
+Hi Jon,
 
-On Thu, 2007-11-29 at 19:37 +0000, Nick Warne wrote:
-> Hi all,
-> 
-> 2.6.23.9
-> 
-> I have noticed after applying Bart's patch to word93 blacklist my new
-> DVD drive:
-> 
-> http://lkml.org/lkml/2007/10/23/475
-> 
-> I see now in logs (look at the hdd line:
-> 
-> [dmesg]
-> hdc: 39876480 sectors (20416 MB) w/2048KiB Cache, CHS=39560/16/63,
-> UDMA(66)
-> hdc: cache flushes not supported
->  hdc: hdc1
-> hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
-> skipping word 93 validity check
-> , UDMA(66)
-> Uniform CD-ROM driver Revision: 3.20
+On Thu, 29 Nov 2007 14:51:11 -0500
+Jon Masters <jonathan@jonmasters.org> wrote:
 
-Only very early in boot are you guaranteed for things to execute
-sequentially, and for logs to look nice and pretty.
+> 
+> On Thu, 2007-11-29 at 19:37 +0000, Nick Warne wrote:
+> > Hi all,
+> > 
+> > 2.6.23.9
+> > 
+> > I have noticed after applying Bart's patch to word93 blacklist my
+> > new DVD drive:
+> > 
+> > http://lkml.org/lkml/2007/10/23/475
+> > 
+> > I see now in logs (look at the hdd line:
+> > 
+> > [dmesg]
+> > hdc: 39876480 sectors (20416 MB) w/2048KiB Cache, CHS=39560/16/63,
+> > UDMA(66)
+> > hdc: cache flushes not supported
+> >  hdc: hdc1
+> > hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
+> > skipping word 93 validity check
+> > , UDMA(66)
+> > Uniform CD-ROM driver Revision: 3.20
+> 
+> Only very early in boot are you guaranteed for things to execute
+> sequentially, and for logs to look nice and pretty.
+> 
 
-Jon.
+Yes, but where does the <7> come from?
+
+Nick
+
+-- 
+Free Software Foundation Associate Member 5508
