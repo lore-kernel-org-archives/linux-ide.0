@@ -1,49 +1,46 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/14] libata: make ->data_xfer return the number of consumed
- bytes
-Date: Fri, 30 Nov 2007 03:00:56 +0900
-Message-ID: <474EFE58.701@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468181417-git-send-email-htejun@gmail.com>	<20071129155546.694c6c45@the-village.bc.nu>	<474EE394.6020604@gmail.com> <20071129174259.6a1edc88@the-village.bc.nu>
+Subject: Re: [PATCH 06/14] libata: improve ATAPI draining
+Date: Fri, 30 Nov 2007 03:11:16 +0900
+Message-ID: <474F00C4.3010406@gmail.com>
+References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468192463-git-send-email-htejun@gmail.com>	<20071129155956.4004ca89@the-village.bc.nu>	<474EEC06.70304@gmail.com> <20071129174027.7597bd4a@the-village.bc.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:56573 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763607AbXK2SBE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 13:01:04 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1624567rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 10:01:03 -0800 (PST)
-In-Reply-To: <20071129174259.6a1edc88@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.177]:46838 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758126AbXK2SL0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 13:11:26 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2293845wah
+        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 10:11:25 -0800 (PST)
+In-Reply-To: <20071129174027.7597bd4a@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Albert Lee <albertcc@tw.ibm.com>
 
 Alan Cox wrote:
->> It's for draining.  Let's say drive says it wanna transfer 18 bytes but
->> the buffer is only 13 bytes long.  If the transfer method consumes 2
->> bytes per read, it would consume 14 bytes.  If the transfer method
->> consumes 4 bytes per read, it would consume 16 bytes.  If we drain too
->> much, we risk hanging the machine.
+> On Fri, 30 Nov 2007 01:42:46 +0900
+> Tejun Heo <htejun@gmail.com> wrote:
 > 
-> Do we have any actual cases where trying to drain beyond the controller
-> granuality is a problem ?
+>> Alan Cox wrote:
+>>>> * Limit the amount of draining to ATAPI_MAX_DRAIN (16k currently).
+>>> Why 16 not 64K ?
+>> Oops, forgot to answer here.  That would result in 16 sg entries for
+>> draining which felt a bit too much. 
 > 
-> Might be cleaner to sort this (and the DMA assumption of 2 byte
-> alignment, and possibly 16 byte for some devices/controllers) with 
-> 
-> 	dev->pio_io_size;
-> 	dev->dma_io_size;
-> 
+> 16 sg entries but only one page of memory so its not a bit bump ?
 
-That could be cleaner although slightly less flexible.  For example, a
-driver may do 32bit IOs normally but choose to do smaller size IO at the
-end for whatever reason.
+The only added cpu cycle overhead is to setup sg entries and controller
+DMA table accordingly which should be pretty small.  I was more worried
+about reserving that many sg entries as it can affect bulk data
+transfers.  I thought about appending draining sg's on left-over SGs.
+ie. drain only min(nr_left_sgs, ATA_MAX_DRAIN_PAGES) pages but it ends
+up dereferencing deep upto request_queue and things get a bit complex
+because the way libata currently associates ata_device's with scsi_device's.
 
-DMA alignment is host restriction so I think it belongs to ata_host if
-we ever need it.  Do you know of any controller which require such
-thing?  No need to add complexity when it's not necessary.
+So, I thought 16k was a good trade off.  Not as comfortable as 64k tho,
+I agree.  Would it be worth to add more complexity for this?
 
 Thanks.
 
