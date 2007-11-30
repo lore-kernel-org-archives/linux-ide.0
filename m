@@ -1,52 +1,47 @@
-From: Kjartan Maraas <kmaraas@broadpark.no>
-Subject: Re: laptop reboots right after hibernation
-Date: Fri, 30 Nov 2007 22:37:07 +0100
-Message-ID: <1196458627.4106.1.camel@localhost.localdomain>
-References: <473730F6.2010900@dbservice.com> <20071118105214.GB7299@ucw.cz>
- <4740692E.7010801@dbservice.com> <47409DA3.7070909@dbservice.com>
- <1195551141.2792.3.camel@localhost.localdomain> <474CBFB6.4020105@gmail.com>
- <1196253340.2884.1.camel@localhost.localdomain> <474FE862.4040700@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: SAS v SATA interface performance
+Date: Fri, 30 Nov 2007 23:17:05 +0000
+Message-ID: <20071130231705.51e056f4@the-village.bc.nu>
+References: <47506237.3000406@clear.net.nz>
+	<47507F9A.3080109@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from osl1smout1.broadpark.no ([80.202.4.58]:35298 "EHLO
-	osl1smout1.broadpark.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752935AbXK3VhK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Nov 2007 16:37:10 -0500
-In-reply-to: <474FE862.4040700@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37166 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755212AbXK3XWT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Nov 2007 18:22:19 -0500
+In-Reply-To: <47507F9A.3080109@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Tomas Carnecky <tom@dbservice.com>, Pavel Machek <pavel@ucw.cz>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org
 
+> First of all, I've yet to see a controller that is really able
+> to handle multiple requests in parallel.  Usually, multiple
+> I/O threads gets exactly the same summary performance as a
+> single thread - UNLIKE of linux software raid which clearly
 
-fr., 30.11.2007 kl. 19.39 +0900, skrev Tejun Heo:
-> Kjartan Maraas wrote:
-> > on., 28.11.2007 kl. 10.09 +0900, skrev Tejun Heo:
-> >> Kjartan Maraas wrote:
-> >>> I get this exact error message on a normal first time boot here. I'm
-> >>> using the latest fedora development kernel which is 2.6.24-rc2-git6
-> >>> based. And I have the latest BIOS from HP IIRC.
-> >>>
-> >>> This is an HP nc6400 intel based laptop:
-> >> Care to post boot dmesg?  Or does harddisk detection fail because of this?
-> >>
-> > Here you go. It shows the error two times and then it gets it right and
-> > continues to boot. No other problems arise from this that I can see.
-> 
-> I'm attaching two patches.  Please apply each on top of clean 2.6.24-rc3
-> and report kernel boot logs for both.
-> 
-I tried to do that but recent kernels hang on boot here after TSC:
-clocksource installed.
+Thats usually true of hardware raid cards as they lack enough CPU power
+and they are on a single PCI slot. With PCIE and things like AHCI where
+the host is doing the hard work and the controller engine is doing the
+NCQ low level work and channel work you've got a much better chance.
 
-Filed a bug here:
-https://bugzilla.redhat.com/show_bug.cgi?id=405721
+> They says that modern SATA drives has NCQ, which is "more
+> advanced" than ol'good TCQ used in SCSI (and SAS) drives.
+> I've no idea what's "advanced" in it, except of that it
+> just does not work.  There's almost no difference with
+> NCQ turned on or off, and in many cases turning NCQ ON
+> actually REDUCES performance.
 
-but it also happens on the plain rc3 kernel...
+NCQ is straight 32 way tagged queueing. On some workloads it makes a big
+difference but its dependent on controller and drive firmware.
 
-Cheers
-Kjartan
+The big big constraint on a modern drive is still ops/second. Its
+mechanical and the mechanical behaviour is limited by the laws of physics
+and hasn't much changed in years
 
-
+If you want really high performance use multiple drives, on multiple PCIE
+controllers. Just make sure your backup planning of raid 1+0 setup is
+done right as many drives means a lot more drive fails.
