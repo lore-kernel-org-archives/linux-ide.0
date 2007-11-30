@@ -1,37 +1,41 @@
-From: "Bjoern Olausson" <lkmlist@gmail.com>
-Subject: Re: sata NCQ blacklist entry
-Date: Fri, 30 Nov 2007 00:32:55 +0100
-Message-ID: <5501535d0711291532u1ea214f9n7c47aa175892962d@mail.gmail.com>
-References: <20071107111813.GA9064@dudweiler.stuttgart.redhat.com>
-	 <4731B5DD.1060203@gmail.com>
-	 <5501535d0711290917r16a16b0dx36669de89f829231@mail.gmail.com>
-	 <474F43C0.6080008@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Possibly SATA related freeze killed networking and RAID
+Date: Fri, 30 Nov 2007 09:02:21 +0900
+Message-ID: <474F530D.8090302@gmail.com>
+References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu> <20071126120649.GC4701@ucw.cz> <474CCA82.7030000@gmail.com> <474F3A4B.3080304@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:29324 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934333AbXK2Xc4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 18:32:56 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1733368rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 15:32:55 -0800 (PST)
-In-Reply-To: <474F43C0.6080008@gmail.com>
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.176]:50160 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763598AbXK3ACa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Nov 2007 19:02:30 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2453309wah
+        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 16:02:28 -0800 (PST)
+In-Reply-To: <474F3A4B.3080304@cfl.rr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 11/29/07, Tejun Heo <htejun@gmail.com> wrote:
->
-> I now have affected drives on my desk and am gonna try reproduce it.  My
-> gut feeling says it's timing related problem on controller / driver
-> side.  Please wait a bit.
->
+Phillip Susi wrote:
+> Tejun Heo wrote:
+>> Agreed.  Nobody cared on ATA controllers is usually very effective at
+>> taking the whole machine down.  Is there any reason why we don't turn on
+>> irqpoll on turned off IRQs automatically?
+> 
+> Why does a single spurious interrupt cause it to be shut down?  I can
+> see if the interrupt is stuck on and keeps interrupting constantly, but
+> if it's just the occasional spurious interrupt, why not just ignore it
+> and move on?
 
-> > by the way, and OT, did the Plextor DVD-RW drive reach you, Tejun?
->
-> No, not yet.  Do you have a tracking number or something?
->
-> Thanks.
+Because SFF ATA controller don't have IRQ pending bit.  You don't know
+whether IRQ is raised or not.  Plus, accessing the status register which
+clears pending IRQ can be very slow on PATA machines.  It has to go
+through the PCI and ATA bus and come back.  So, unconditionally trying
+to clear IRQ by accessing Status can incur noticeable overhead if the
+IRQ is shared with devices which raise a lot of IRQs.
+
+-- 
+tejun
