@@ -1,32 +1,90 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Issuing a vendor specific ATA cmd on SATA Disk via ATA Pass Thru
-Date: Fri, 30 Nov 2007 15:12:06 +0900
-Message-ID: <474FA9B6.105@gmail.com>
-References: <004d01c83273$68ded140$6539a8c0@usish.com.cn> <474F64F5.9070205@gmail.com> <006101c83301$bf79bef0$6539a8c0@usish.com.cn>
+Subject: [PATCH #upstream-fixes] ata_piix: add more toshiba laptops to broken
+ suspend list
+Date: Fri, 30 Nov 2007 15:28:29 +0900
+Message-ID: <474FAD8D.5050403@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:23295 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:48268 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027AbXK3GMN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Nov 2007 01:12:13 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1817039rvb
-        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 22:12:13 -0800 (PST)
-In-Reply-To: <006101c83301$bf79bef0$6539a8c0@usish.com.cn>
+	with ESMTP id S1752213AbXK3G2f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Nov 2007 01:28:35 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1819875rvb
+        for <linux-ide@vger.kernel.org>; Thu, 29 Nov 2007 22:28:35 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sam song <sam_song@usish.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, peter@bluetoad.com.au
 
-sam song wrote:
-> Attached pls see the details debug log on SUSE Linux Enterprise 10 I just
-> did. As for code, I will send to you in private for it is kind of poor and
-> confidential. Really sorry for that.
+From: Peter Schwenke <peter@bluetoad.com.au>
 
-Aieee... SLES10.  Is it SLES10SP1 or just SLES10.  I'm fairly sure
-passthrough support is broken in SLES10.  Can you please try the program
-on vanilla kernel (2.6.23.X)?
+Add more toshiba laptops to broken suspend list.  This is from OSDL
+bugzilla bug 7780.
 
--- 
-tejun
+tj: re-formatted patch and added description and SOB.
+
+Signed-off-by: Peter Schwenke <peter@bluetoad.com.au>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+This one is for #upstream-fixes && -stable.  I'll push it to Greg once
+it gets to Linus's tree.
+
+Thanks.
+
+ drivers/ata/ata_piix.c |   28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 483269d..b538e1d 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -967,6 +967,13 @@ static int piix_broken_suspend(void)
+ 			},
+ 		},
+ 		{
++			.ident = "TECRA M3",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Tecra M3"),
++			},
++		},
++		{
+ 			.ident = "TECRA M5",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+@@ -981,6 +988,20 @@ static int piix_broken_suspend(void)
+ 			},
+ 		},
+ 		{
++			.ident = "TECRA A8",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA A8"),
++			},
++		},
++		{
++			.ident = "Satellite R25",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite R25"),
++			},
++		},
++		{
+ 			.ident = "Satellite U200",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+@@ -988,6 +1009,13 @@ static int piix_broken_suspend(void)
+ 			},
+ 		},
+ 		{
++			.ident = "Satellite U200",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "SATELLITE U200"),
++			},
++		},
++		{
+ 			.ident = "Satellite Pro U200",
+ 			.matches = {
+ 				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
