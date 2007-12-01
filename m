@@ -1,33 +1,37 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SAS v SATA interface performance
-Date: Sat, 01 Dec 2007 15:40:58 -0500
-Message-ID: <4751C6DA.3080409@garzik.org>
-References: <47506237.3000406@clear.net.nz> <47507F9A.3080109@msgid.tls.msk.ru> <20071130231705.51e056f4@the-village.bc.nu> <475110A8.5090709@clear.net.nz> <87f94c370712010637o5efa9c4rd9a86ec5a3cba6ff@mail.gmail.com> <4751B3DA.6030508@clear.net.nz> <4751BDA4.9080102@rtr.ca>
+Subject: Re: [PATCH] [libata] Set proper ATA UDMA mode for bf548 according
+ to	system clock.
+Date: Sat, 01 Dec 2007 17:36:45 -0500
+Message-ID: <4751E1FD.60206@garzik.org>
+References: <1196138859.6974.2.camel@eight.analog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58957 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41907 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751847AbXLAUlG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 15:41:06 -0500
-In-Reply-To: <4751BDA4.9080102@rtr.ca>
+	id S1751610AbXLAWgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 17:36:47 -0500
+In-Reply-To: <1196138859.6974.2.camel@eight.analog.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org
+To: sonic zhang <sonic.adi@gmail.com>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Mark Lord wrote:
-> SATA port multipliers (think, "hub") permit multiple drives
-> to be active simultaneously.
+sonic zhang wrote:
+> UDMA Mode - Frequency compatibility
+> 
+> UDMA5 - 100 MB/s   - SCLK  = 133 MHz
+> UDMA4 - 66 MB/s    - SCLK >=  80 MHz
+> UDMA3 - 44.4 MB/s  - SCLK >=  50 MHz
+> UDMA2 - 33 MB/s    - SCLK >=  40 MHz
+> 
+> 
+> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+> ---
+>  drivers/ata/pata_bf54x.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
 
-Quite true, although the host controller could artificially limit this, 
-giving the user a mistaken impression of their port multiplier being 
-limited to one-command-per-N-drives.
+applied #upstream-fixes
 
-</nit pick>
-
-:)
-
-	Jeff
 
