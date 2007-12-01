@@ -1,42 +1,31 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/3] OF-platform PATA driver
-Date: Sat, 01 Dec 2007 17:54:49 -0500
-Message-ID: <4751E639.8090308@garzik.org>
-References: <20071127153708.GA12490@localhost.localdomain>
+Subject: Re: [PATCH 1/8] libata: rearrange ATA_DFLAG_*
+Date: Sat, 01 Dec 2007 18:05:52 -0500
+Message-ID: <4751E8D0.8070801@garzik.org>
+References: <11961593392491-git-send-email-htejun@gmail.com> <11961593391512-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46833 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53047 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752071AbXLAWy5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 17:54:57 -0500
-In-Reply-To: <20071127153708.GA12490@localhost.localdomain>
+	id S1751585AbXLAXFz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 18:05:55 -0500
+In-Reply-To: <11961593391512-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Vitaly Bordug <vitb@kernel.crashing.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Anton Vorontsov wrote:
-> Hi all,
+Tejun Heo wrote:
+> Area for DFLAGs which are cleared on INIT is full.  Extend it by 8
+> bits.
 > 
-> Here is the second spin of the OF-platform PATA driver and
-> related patches.
-> 
-> Changes since RFC:
-> - nuked drivers/ata/pata_platform.h;
-> - powerpc bits: proper localbus node added.
-> 
-> 
-> Thanks for the previous review! This time I'm collecting acks,
-> don't be shy to give 'em generously. ;-)
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+>  include/linux/libata.h |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 
-if (ack_collected(PaulM))
-	push(ACK)
-else {
-	/* do nothing */
-}
-
-
+applied 1-8 to #upstream
 
 
