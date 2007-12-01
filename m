@@ -1,30 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: report protocol and full CDB on error
-Date: Sat, 01 Dec 2007 17:37:29 -0500
-Message-ID: <4751E229.4060004@garzik.org>
-References: <474D7829.5040303@gmail.com>
+Subject: Re: [PATCH 1/1] Several fixes for the AVR32 PATA driver
+Date: Sat, 01 Dec 2007 17:37:19 -0500
+Message-ID: <4751E21F.5040503@garzik.org>
+References: <200711291201.51598.kngregertsen@norway.atmel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41933 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41928 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752038AbXLAWhb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 17:37:31 -0500
-In-Reply-To: <474D7829.5040303@gmail.com>
+	id S1751569AbXLAWh2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 17:37:28 -0500
+In-Reply-To: <200711291201.51598.kngregertsen@norway.atmel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, gregerts@stud.ntnu.no, Haavard Skinnemoen <hskinnemoen@atmel.com>, kernel@avr32linux.org
 
-Tejun Heo wrote:
-> Protocol and CDB allocation size field are important in determining
-> what went wrong with ATAPI commands.  Report them on failure.
+Kristoffer Nyborg Gregertsen wrote:
+> Several fixes for the AVR32 PATA driver:
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> This one is for #upstream-fixes.  Thanks.
+> * Updated to use new AVR32 SMC timing API. This removes the need for "magic"
+> constants in signal timing.
+> 
+> * Removed the ATA_FLAG_PIO_POLLING, the driver should use interrupts.
+> 
+> * Removed .port_disable and .irq_ack as these are no longer needed.
+> 
+> * Improved some comments.
+> 
+> Signed-off-by: Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
 
-nod, applied
+applied #upstream-fixes
 
 
