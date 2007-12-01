@@ -1,40 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from
- qc->tf
-Date: Sat, 01 Dec 2007 18:23:44 -0500
-Message-ID: <4751ED00.90802@garzik.org>
-References: <20071126113438.GB9232@htj.dyndns.org>
+Subject: Re: [patch] ata: ahci: Enclosure Management via LED rev2
+Date: Sat, 01 Dec 2007 18:28:54 -0500
+Message-ID: <4751EE36.6050506@garzik.org>
+References: <20071129121925.7d178915@appleyard> <20071130163443.2feabc5d@appleyard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55745 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48305 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420AbXLAXXq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 18:23:46 -0500
-In-Reply-To: <20071126113438.GB9232@htj.dyndns.org>
+	id S1752560AbXLAX25 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 18:28:57 -0500
+In-Reply-To: <20071130163443.2feabc5d@appleyard>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: mikpe@it.uu.se, linux-ide@vger.kernel.org
+To: kristen.c.accardi@intel.com
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Make pdc_atapi_pkt() use values from qc->tf instead of creating its
-> own.  This is to ease future ATAPI handling changes.
+Kristen Carlson Accardi wrote:
+> Enclosure Management via LED
 > 
-> DONT APPLY YET
+> This patch implements Enclosure Management via the LED protocol as specified
+> in AHCI specification.
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > ---
-> Mikael, would this work?  Values other than lbam and lbah remain the
-> same.  Does sata_promise have strict requirements for lbam and lbah?
-> 
-> Thanks.
-> 
->  drivers/ata/sata_promise.c |   34 +++++++++++++---------------------
->  1 file changed, 13 insertions(+), 21 deletions(-)
+> This revision makes the change to the comment requested by Mark Lord,
+> fixes some bugs in the bit shifting for writing the new led state,
+> and implements a show function so that led status can be read as
+> well as written.
 
-what was the outcome of this discussion?
+Overall looks pretty good, from a technical review perspective.
 
-I haven't looked over the Promise datasheet nor checked my brain for 
-details, hoping Mikael would do that for me ;-)
+Two worries:
+
+1) exporting ata_scsi_find_dev(), and assuming a scsi device is 
+attached.  the latter can be fixed by a !NULL check (and should be), but 
+its a bit of a layering violation since long term we want to make the 
+SCSI simulator optional for all ATA devices.
+
+2) vaguely related to #1, I'm not so sure the attributes should be 
+implemented directly in ahci.  if this __or something like it__ appears 
+on non-Intel hardware, the code should be somewhere more generic.
 
 
