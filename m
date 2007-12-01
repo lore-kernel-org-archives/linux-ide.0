@@ -1,46 +1,41 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Sat, 01 Dec 2007 17:45:43 -0500
-Message-ID: <4751E417.7060308@pobox.com>
-References: <4751A2DA.6030403@rtr.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] ata_piix: add more toshiba laptops to
+ broken suspend list
+Date: Sat, 01 Dec 2007 17:46:12 -0500
+Message-ID: <4751E434.1070902@garzik.org>
+References: <474FAD8D.5050403@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59221 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59234 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537AbXLAWpt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 17:45:49 -0500
-In-Reply-To: <4751A2DA.6030403@rtr.ca>
+	id S1754661AbXLAWqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 17:46:15 -0500
+In-Reply-To: <474FAD8D.5050403@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>, Tom Morrison <tmorrison@empirix.com>, Hein-Pieter van Braam <hp@syntomax.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, peter@bluetoad.com.au
 
-Mark Lord wrote:
-> sata_mv:  Fix broken Marvell 7042 support.
+Tejun Heo wrote:
+> From: Peter Schwenke <peter@bluetoad.com.au>
 > 
-> The Marvell 7042 chip is more or less the same as the 6042 internally,
-> but sports a PCIe bus.  Despite having identical SATA cores, the 7042
-> does differ from its PCI bus counterparts in placment and layout of
-> certain bus related registers.
+> Add more toshiba laptops to broken suspend list.  This is from OSDL
+> bugzilla bug 7780.
 > 
-> This patch fixes sata_mv to distinguish between the PCI bus registers
-> of earlier chips, and the PCIe bus registers of the 7042.
+> tj: re-formatted patch and added description and SOB.
 > 
-> Specifically, move the offsets and bit patterns for the
-> PCI/PCIe interrupt cause/mask registers into the struct mv_host_priv,
-> as these values differ between the 6xxx and 7xxx series chips.
+> Signed-off-by: Peter Schwenke <peter@bluetoad.com.au>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This one is for #upstream-fixes && -stable.  I'll push it to Greg once
+> it gets to Linus's tree.
 > 
-> This fixes the driver to not access reserved PCI addresses,
-> and prevents the lockups reported in linux-2.6.24 with 7042 boards.
+> Thanks.
 > 
-> Also add a new PCI ID for the Highpoint 2300 7042-based board
-> that I'm using for testing this stuff here.
-> 
-> Tested with Marvell 6081 + 7042 chips, on x86 & x86_64.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+>  drivers/ata/ata_piix.c |   28 ++++++++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
 
 applied #upstream-fixes
 
