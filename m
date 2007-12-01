@@ -1,30 +1,28 @@
-From: Richard Scobie <r.scobie@clear.net.nz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: SAS v SATA interface performance
-Date: Sat, 01 Dec 2007 13:04:51 +1300
-Message-ID: <4750A523.7010501@clear.net.nz>
+Date: Sat, 1 Dec 2007 00:17:40 +0000
+Message-ID: <20071201001740.7ffce6f6@the-village.bc.nu>
+References: <4750A523.7010501@clear.net.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:57184 "EHLO smtp.sauce.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759612AbXLAAGF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Nov 2007 19:06:05 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35113 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758141AbXLAAV1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Nov 2007 19:21:27 -0500
+In-Reply-To: <4750A523.7010501@clear.net.nz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Richard Scobie <r.scobie@clear.net.nz>
+Cc: linux-ide@vger.kernel.org
 
-Thanks for the comments.
+> The comment I saw, which I'm trying to verify, mentioned the SATA drives 
+> "held the bus" or similar longer than SAS ones.
 
-It was really protocol/bus behaviour differences (if any), between SATA 
-drives in a SAS environment, vs SAS drives, that I am looking at.
+SATA normally uses one link per device so the device side isn't contended
+unless you descend into the murky world of port multipliers. 
 
-I do know that SATA drives only support a subset of the SCSI commands 
-and wondered if the SAS drives were more "clever" in a multi drive scenario.
-
-The comment I saw, which I'm trying to verify, mentioned the SATA drives 
-"held the bus" or similar longer than SAS ones.
-
-Regards,
-
-Richard
+On the host side an AHCI controller offloads all the tedious operations
+to the controller so you don't get long slow PCI side accesses slowing up
+the CPU either.
