@@ -1,36 +1,43 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] [libata] Set proper ATA UDMA mode for bf548 according
- to	system clock.
-Date: Sat, 01 Dec 2007 17:36:45 -0500
-Message-ID: <4751E1FD.60206@garzik.org>
-References: <1196138859.6974.2.camel@eight.analog.com>
+Subject: Re: [PATCH] [libata] sata_mv: fix compilation error when enabling
+ DEBUG
+Date: Sat, 01 Dec 2007 17:36:56 -0500
+Message-ID: <4751E208.2060109@garzik.org>
+References: <1196177168791-git-send-email-saeed@marvell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41907 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:41915 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751610AbXLAWgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 17:36:47 -0500
-In-Reply-To: <1196138859.6974.2.camel@eight.analog.com>
+	id S1753374AbXLAWg7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 17:36:59 -0500
+In-Reply-To: <1196177168791-git-send-email-saeed@marvell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sonic zhang <sonic.adi@gmail.com>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Saeed Bishara <saeed@marvell.com>
+Cc: linux-ide@vger.kernel.org, nico@marvell.com, buytenh@marvell.com, Saeed Bishara <saeed.bishara@gmail.com>
 
-sonic zhang wrote:
-> UDMA Mode - Frequency compatibility
+Saeed Bishara wrote:
+> From: Saeed Bishara <saeed.bishara@gmail.com>
 > 
-> UDMA5 - 100 MB/s   - SCLK  = 133 MHz
-> UDMA4 - 66 MB/s    - SCLK >=  80 MHz
-> UDMA3 - 44.4 MB/s  - SCLK >=  50 MHz
-> UDMA2 - 33 MB/s    - SCLK >=  40 MHz
+> use sstatus instead status.
 > 
-> 
-> Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
 > ---
->  drivers/ata/pata_bf54x.c |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
+>  drivers/ata/sata_mv.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index a43f64d..97c3e11 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -2170,7 +2170,7 @@ static void mv_phy_reset(struct ata_port *ap, unsigned int *class,
+>  		mv_scr_read(ap, SCR_ERROR, &serror);
+>  		mv_scr_read(ap, SCR_CONTROL, &scontrol);
+>  		DPRINTK("S-regs after ATA_RST: SStat 0x%08x SErr 0x%08x "
+> -			"SCtrl 0x%08x\n", status, serror, scontrol);
+> +			"SCtrl 0x%08x\n", sstatus, serror, scontrol);
 
 applied #upstream-fixes
 
