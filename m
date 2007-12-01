@@ -1,44 +1,58 @@
-From: Richard Scobie <r.scobie@clear.net.nz>
-Subject: Re: SAS v SATA interface performance
-Date: Sun, 02 Dec 2007 12:55:46 +1300
-Message-ID: <4751F482.60204@clear.net.nz>
-References: <47506237.3000406@clear.net.nz> <47507F9A.3080109@msgid.tls.msk.ru> <20071130231705.51e056f4@the-village.bc.nu> <475110A8.5090709@clear.net.nz> <87f94c370712010637o5efa9c4rd9a86ec5a3cba6ff@mail.gmail.com> <4751B3DA.6030508@clear.net.nz> <4751BDA4.9080102@rtr.ca> <4751C6DA.3080409@garzik.org>
+From: Anton Vorontsov <cbou@mail.ru>
+Subject: Re: [PATCH 0/3] OF-platform PATA driver
+Date: Sun, 2 Dec 2007 02:58:10 +0300
+Message-ID: <20071201235810.GA2635@zarina>
+References: <20071127153708.GA12490@localhost.localdomain> <4751E639.8090308@garzik.org>
+Reply-To: cbou@mail.ru
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:37119 "EHLO smtp.sauce.co.nz"
+Received: from mx30.mail.ru ([194.67.23.238]:31023 "EHLO mx30.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752522AbXLAX5A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 18:57:00 -0500
-In-Reply-To: <4751C6DA.3080409@garzik.org>
+	id S1753169AbXLBAFQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 19:05:16 -0500
+Content-Disposition: inline
+In-Reply-To: <4751E639.8090308@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Mark Lord <liml@rtr.ca>, linux-ide@vger.kernel.org
+Cc: avorontsov@ru.mvista.com, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Paul Mundt <lethal@linux-sh.org>
 
+On Sat, Dec 01, 2007 at 05:54:49PM -0500, Jeff Garzik wrote:
+> Anton Vorontsov wrote:
+> > Hi all,
+> > 
+> > Here is the second spin of the OF-platform PATA driver and
+> > related patches.
+> > 
+> > Changes since RFC:
+> > - nuked drivers/ata/pata_platform.h;
+> > - powerpc bits: proper localbus node added.
+> > 
+> > 
+> > Thanks for the previous review! This time I'm collecting acks,
+> > don't be shy to give 'em generously. ;-)
+> if (ack_collected(PaulM))
+> 	push(ACK)
+> else {
+> 	/* do nothing */
+> }
 
+Yep, this is obvious.
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> SATA port multipliers (think, "hub") permit multiple drives
->> to be active simultaneously.
-> 
-> Quite true, although the host controller could artificially limit this, 
-> giving the user a mistaken impression of their port multiplier being 
-> limited to one-command-per-N-drives.
+Here is the algo I'm following:
 
-Interesting. I was basing my comments on what may well be a vested 
-interest slanted paper - see the sidebar on page 2.
+while (1) {
+	send_patches();
 
-http://www.xtore.com/Downloads/WhitePapers/SAS_SATAValue%20Whitepaper_final.pdf
+	if (ack_collected(PaulM) && ack_collected(PowerPC_people))
+		break;
 
-For the modest extra cost of a non-RAID SAS HBA and JBOD enclosure with 
-SATA drives, over a port multiplied setup, there would seem to be some 
-advantages.
+	sleep(wait_for_comments_timeout); <-- currently here.
+}
 
-Or have I been taken in by the hype... :)
-
-Regards,
-
-Richard
+-- 
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
