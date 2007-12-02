@@ -1,56 +1,42 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: libata-dev git question:
-Date: Sun, 02 Dec 2007 11:48:48 -0500
-Message-ID: <4752E1F0.10403@rtr.ca>
-References: <4752C70F.80506@rtr.ca> <4752CAD0.1040303@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from qc->tf
+Date: Sun, 2 Dec 2007 18:06:16 +0100 (MET)
+Message-ID: <200712021706.lB2H6GJd025895@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4812 "EHLO mail.rtr.ca"
+Received: from aun.it.uu.se ([130.238.12.36]:51838 "EHLO aun.it.uu.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752046AbXLBQst (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Dec 2007 11:48:49 -0500
-In-Reply-To: <4752CAD0.1040303@pobox.com>
+	id S1756596AbXLBRG3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Dec 2007 12:06:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: htejun@gmail.com, jeff@garzik.org
+Cc: linux-ide@vger.kernel.org, mikpe@it.uu.se
 
-Jeff Garzik wrote:
-> Mark Lord wrote:
->> I am below "novice" when it comes to git:
->>
->>> $ git-pull --update-head-ok --tags 
->>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>> Warning: No merge candidate found because value of config option
->>>         "branch.master.merge" does not match any remote branch fetched.
->>> No changes.
->> ..
->>
->> Is that "normal" ?
+On Sat, 01 Dec 2007 18:23:44 -0500, Jeff Garzik wrote:
+> Tejun Heo wrote:
+> > Make pdc_atapi_pkt() use values from qc->tf instead of creating its
+> > own.  This is to ease future ATAPI handling changes.
+> > 
+> > DONT APPLY YET
+> > ---
+> > Mikael, would this work?  Values other than lbam and lbah remain the
+> > same.  Does sata_promise have strict requirements for lbam and lbah?
+> > 
+> > Thanks.
+> > 
+> >  drivers/ata/sata_promise.c |   34 +++++++++++++---------------------
+> >  1 file changed, 13 insertions(+), 21 deletions(-)
 > 
-> Yes.
+> what was the outcome of this discussion?
 > 
-> 
->> Is that even the correct command to update my entire local existing 
->> copy of Jeff's git tree?
-> 
-> No.
-> 
-> Generally I would use
-> 
->     cd $repo
->     git-checkout master    # if not already there
->     git pull        # fetches new objects, updates 'master'
->     git-fetch -f $URL upstream:upstream    # fetch updated branch
->     git-fetch -f $URL mv-ncq:mv-ncq
->     git-fetch -f $URL upstream-fixes:upstream-fixes
->     git-fetch -f $URL upstream:upstream
->     ... continue for each branch you like...
-> 
-> There is probably an easier way to get it to download all branches, even 
-> if they have been rebased.
-..
+> I haven't looked over the Promise datasheet nor checked my brain for 
+> details, hoping Mikael would do that for me ;-)
 
-Thanks.  I was just going by your KHGTG page until now.
+I've now tested this on top of 2.6.24-rc3, with no observable
+regressions. Blanking, writing, and mounting/reading CD-RWs
+on both SATAPI and PATAPI works (tested on a 300 TX2plus card).
+
+I can't find anything in Promise's public docs or reference driver
+about non-standard requirements on lbam/lbah in ATAPI packets.
+
+/Mikael
