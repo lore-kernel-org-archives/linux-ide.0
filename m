@@ -1,31 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 12/12] pata_amd: update mode selection for NV PATAs
-Date: Sun, 2 Dec 2007 14:15:21 +0000
-Message-ID: <20071202141521.28af79c0@the-village.bc.nu>
-References: <11961602293422-git-send-email-htejun@gmail.com>
-	<11961602321707-git-send-email-htejun@gmail.com>
-	<4751ECC2.2050000@garzik.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: libata-dev git question:
+Date: Sun, 02 Dec 2007 09:54:07 -0500
+Message-ID: <4752C70F.80506@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37266 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752503AbXLBOTg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Dec 2007 09:19:36 -0500
-In-Reply-To: <4751ECC2.2050000@garzik.org>
+Received: from rtr.ca ([76.10.145.34]:1936 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752952AbXLBOyJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Dec 2007 09:54:09 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> > Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> > ---
-> >  drivers/ata/pata_amd.c |  129 ++++++++++++++++++++++++++++++++++-------------
-> >  1 files changed, 93 insertions(+), 36 deletions(-)
-> 
-> Yeah, I think this is a better way to do things long term.  Thanks...
+I am below "novice" when it comes to git:
 
-Ditto - and I believe we should make the same change to VIA. A subset of
-VIA boards are showing the same troubles.
+> $ git-pull --update-head-ok --tags git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+> Warning: No merge candidate found because value of config option
+>         "branch.master.merge" does not match any remote branch fetched.
+> No changes.
+..
+
+Is that "normal" ?
+Is that even the correct command to update my entire local existing copy of Jeff's git tree?
+
+git version 1.5.2.5
+
+??
