@@ -1,41 +1,34 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: SAS v SATA interface performance
-Date: Sat, 01 Dec 2007 22:49:00 -0500
-Message-ID: <47522B2C.2010205@rtr.ca>
-References: <47506237.3000406@clear.net.nz> <47507F9A.3080109@msgid.tls.msk.ru> <20071130231705.51e056f4@the-village.bc.nu> <475110A8.5090709@clear.net.nz> <87f94c370712010637o5efa9c4rd9a86ec5a3cba6ff@mail.gmail.com> <4751B3DA.6030508@clear.net.nz> <4751BDA4.9080102@rtr.ca> <4751C6DA.3080409@garzik.org> <4751F482.60204@clear.net.nz> <47522A45.50706@rtr.ca>
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH 0/3] OF-platform PATA driver
+Date: Sat, 1 Dec 2007 21:57:55 -0600
+Message-ID: <20071202035755.GA3116@lixom.net>
+References: <20071127153708.GA12490@localhost.localdomain> <4751E639.8090308@garzik.org> <20071201235810.GA2635@zarina>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2698 "EHLO mail.rtr.ca"
+Received: from lixom.net ([66.141.50.11]:41607 "EHLO mail.lixom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753849AbXLBDtB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 1 Dec 2007 22:49:01 -0500
-In-Reply-To: <47522A45.50706@rtr.ca>
+	id S1753986AbXLBDyR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 1 Dec 2007 22:54:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20071201235810.GA2635@zarina>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Scobie <r.scobie@clear.net.nz>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: Anton Vorontsov <cbou@mail.ru>
+Cc: Jeff Garzik <jeff@garzik.org>, Paul Mundt <lethal@linux-sh.org>, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org
 
-Oh, more fiction:
+On Sun, Dec 02, 2007 at 02:58:10AM +0300, Anton Vorontsov wrote:
+> On Sat, Dec 01, 2007 at 05:54:49PM -0500, Jeff Garzik wrote:
+> while (1) {
+> 	send_patches();
+> 
+> 	if (ack_collected(PaulM) && ack_collected(PowerPC_people))
+> 		break;
+> 
+> 	sleep(wait_for_comments_timeout); <-- currently here.
 
-> Because SATA uses point-to-point connectivity, the scaling
-> available with SAS controllers is not possible with SATA
-> controllers. SATA drives must be connected on a one-to-one
-> basis with the SATA connectors on the controller =96 i.e, a fourport
-> SATA controller can connect up to four drives, an eight-port
-> SATA controller can connect up to eight drives, etc. This means
-> that the number of drives needed must be known prior to
-> purchasing a SATA controller, or additional hardware costs will
-> be incurred.
+I still haven't seen you address the compatible comments (that
+pata-platform is suboptimal). Or did I miss some respin of the patches?
 
-Ignoring port multipliers (hubs) again there.
 
-A SATA hub can connect up to 31 drives to a single SATA port,
-or up to 248 drives per 8-port PCI(X/e) controller card.
-
-I don't know if anyone currently sells a 31-port multiplier, though.
-
-Cheers
-
+-Olof
