@@ -1,90 +1,54 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [PATCH 09/28] blk_end_request: changing ps3disk
-	(take 3)
-Date: Sun, 2 Dec 2007 10:34:56 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0712021032490.29349@anakin>
-References: <20071130.182810.98558485.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Anton Vorontsov <cbou@mail.ru>
+Subject: Re: [PATCH 0/3] OF-platform PATA driver
+Date: Sun, 2 Dec 2007 14:46:17 +0300
+Message-ID: <20071202114617.GA2923@zarina>
+References: <20071127153708.GA12490@localhost.localdomain> <4751E639.8090308@garzik.org> <20071201235810.GA2635@zarina> <20071202035755.GA3116@lixom.net>
+Reply-To: cbou@mail.ru
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463808512-250639608-1196588096=:29349"
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071130.182810.98558485.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, Linux/PPC Development <linuxppc-dev@ozlabs.org>, jens.axboe@oracle.com, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
-List-Id: linux-ide@vger.kernel.org
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463808512-250639608-1196588096=:29349
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 30 Nov 2007, Kiyoshi Ueda wrote:
-> This patch converts ps3disk to use blk_end_request().
-                                     ^^^^^^^^^^^^^^^
-Patch subject and description are inconsistent with actual change.
-
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> ---
->  drivers/block/ps3disk.c |    6 +-----
->  1 files changed, 1 insertion(+), 5 deletions(-)
->=20
-> Index: 2.6.24-rc3-mm2/drivers/block/ps3disk.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- 2.6.24-rc3-mm2.orig/drivers/block/ps3disk.c
-> +++ 2.6.24-rc3-mm2/drivers/block/ps3disk.c
-> @@ -280,11 +280,7 @@ static irqreturn_t ps3disk_interrupt(int
->  	}
-> =20
->  	spin_lock(&priv->lock);
-> -	if (!end_that_request_first(req, uptodate, num_sectors)) {
-> -		add_disk_randomness(req->rq_disk);
-> -		blkdev_dequeue_request(req);
-> -		end_that_request_last(req, uptodate);
-> -	}
-> +	__blk_end_request(req, uptodate, num_sectors << 9);
-        ^^^^^^^^^^^^^^^^^
-
-With kind regards,
-=20
-Geert Uytterhoeven
-Software Architect
-
-Sony Network and Software Technology Center Europe
-The Corporate Village =C2=B7 Da Vincilaan 7-D1 =C2=B7 B-1935 Zaventem =C2=
-=B7 Belgium
-=20
-Phone:    +32 (0)2 700 8453=09
-Fax:      +32 (0)2 700 8622=09
-E-mail:   Geert.Uytterhoeven@sonycom.com=09
-Internet: http://www.sony-europe.com/
- =09
-Sony Network and Software Technology Center Europe=09
-A division of Sony Service Centre (Europe) N.V.=09
-Registered office: Technologielaan 7 =C2=B7 B-1840 Londerzeel =C2=B7 Belg=
-ium=09
-VAT BE 0413.825.160 =C2=B7 RPR Brussels=09
-Fortis Bank Zaventem =C2=B7 Swift GEBABEBB08A =C2=B7 IBAN BE3900138235861=
-9
----1463808512-250639608-1196588096=:29349
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx30.mail.ru ([194.67.23.238]:25172 "EHLO mx30.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbXLBLxc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Dec 2007 06:53:32 -0500
 Content-Disposition: inline
+In-Reply-To: <20071202035755.GA3116@lixom.net>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>
+Cc: linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org
 
+On Sat, Dec 01, 2007 at 09:57:55PM -0600, Olof Johansson wrote:
+> On Sun, Dec 02, 2007 at 02:58:10AM +0300, Anton Vorontsov wrote:
+> > On Sat, Dec 01, 2007 at 05:54:49PM -0500, Jeff Garzik wrote:
+> > while (1) {
+> > 	send_patches();
+> > 
+> > 	if (ack_collected(PaulM) && ack_collected(PowerPC_people))
+> > 		break;
+> > 
+> > 	sleep(wait_for_comments_timeout); <-- currently here.
+> 
+> I still haven't seen you address the compatible comments (that
+> pata-platform is suboptimal). Or did I miss some respin of the patches?
 
----1463808512-250639608-1196588096=:29349--
+I didn't resend these patches yet. You started the thread, but you hid
+away from the discussion (you had been Cc'ed to every mail).
+
+1. Arnd suggested {p,s}ata-pio-{1,2,3,..} or ata-{1,2,3,..} compatible
+   scheme;
+2. Sergei verbosely explained that that there is no reason to
+   complicate compatible property. He suggested ata-generic, or
+   ata-simple;
+
+Mainly I was awaiting for your further comments. By now I tend to
+follow Sergei's comments and rename compatible stuff to ata-generic.
+Are you fine with it?
+
+Thanks,
+
+-- 
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
