@@ -1,68 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 2/2] [libata] sata_mv: Support integrated controllers
-Date: Sun, 02 Dec 2007 17:51:22 -0500
-Message-ID: <475336EA.2050206@rtr.ca>
-References: <11966092121262-git-send-email-saeed.bishara@gmail.com> <11966092143056-git-send-email-saeed.bishara@gmail.com> <11966092162669-git-send-email-saeed.bishara@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 0/3] OF-platform PATA driver
+Date: Mon, 3 Dec 2007 00:40:21 +0100
+Message-ID: <200712030040.22701.arnd@arndb.de>
+References: <20071127153708.GA12490@localhost.localdomain> <20071202114617.GA2923@zarina> <20071202154539.GA12415@lixom.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3426 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbXLBWvY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Dec 2007 17:51:24 -0500
-In-Reply-To: <11966092162669-git-send-email-saeed.bishara@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:51555 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbXLBXkx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Dec 2007 18:40:53 -0500
+In-Reply-To: <20071202154539.GA12415@lixom.net>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed.bishara@gmail.com
-Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org, Saeed Bishara <saeed@marvell.com>
+To: Olof Johansson <olof@lixom.net>
+Cc: Anton Vorontsov <cbou@mail.ru>, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org
 
-saeed.bishara@gmail.com wrote:
-> From: Saeed Bishara <saeed@marvell.com>
-> 
-> Marvell's Orion SoC includes SATA controllers based on Marvell's
-> PCI-to-SATA 88SX controllers. The integrated SATA unit is connected
-> directly to the internal bus of the Orion SoC, and not via PCI.
-> This patch extends the libATA sata_mv driver to support those
-> controllers.
-> 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
-> ---
->  drivers/ata/sata_mv.c   |  392 ++++++++++++++++++++++++++++++++++++++++-------
->  include/linux/sata_mv.h |   21 +++
->  2 files changed, 358 insertions(+), 55 deletions(-)
->  create mode 100644 include/linux/sata_mv.h
-...
+On Sunday 02 December 2007, Olof Johansson wrote:
 
-This patch won't apply, because sata_mv.c was just recently updated
-to fix 7042 PCIe support.  You'll have to rebase this patch against that.
+> Yes, I agree with Sergei: I don't think the pio/ata mode belongs there,
+> "ata-generic" (or "generic-ata") sounds good to me. If firmwares want to
+> specify pata/sata stuff as more specific compatible fields, then they are
+> free to, but the driver shouldn't depend on it as long as "ata-generic"
+> is in the list.
 
-Also, I'm not sure I understand why there's a need for the new sata_mv.h file ?
+Yes, that makes sense. Let me just make it clear that I no longer think
+we should have the PIO mode or the ATA level in the compatible property.
+The PIO modes should really have their own property, if any, and the ATA
+standard would need to be a property of the attached device, not a property
+of the controller.
 
-> new file mode 100644
-> index 0000000..b0fa7cd
-> --- /dev/null
-> +++ b/include/linux/sata_mv.h
-> @@ -0,0 +1,21 @@
-> +/*
-> + * Marvell integrated SATA platfrom device data definition file.
-> + *
-> + * Saeed Bishara <saeed@marvell.com>
-> + *
-> + * This file is licensed under the terms of the GNU General Public
-> + * License version 2. This program is licensed "as is" without any
-> + * warranty of any kind, whether express or implied.
-> + */
-> +
-> +#ifndef __LINUX_SATA_MV_H__
-> +#define __LINUX_SATA_MV_H__
-> +
-> +/*
-> + * Sata private data
-> + */
-> +struct mv_sata_platform_data {
-> +	int	n_ports; /* number of sata ports */
-> +};
-> +
-> +#endif
+I can see a point in listing the ATA devices themselves in the device tree,
+but it's probably not really worth it for the fdt setup, since they
+can easily be probed at runtime.
 
+> I will need to add a compatible field to it myself (our firmware uses
+> "electra-ide") + some minor changes, but I will do that on top of this
+> patch once it goes in since it involves removing the old code from
+> arch/powerpc/platforms/pasemi.
+
+I'd suggest to also have electra-ide hardcoded in the driver alongside
+ata-generic, as a special case for backwards compatibility.
+
+	Arnd <><
