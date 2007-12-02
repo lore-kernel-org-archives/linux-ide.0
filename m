@@ -1,42 +1,43 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from qc->tf
-Date: Sun, 2 Dec 2007 18:06:16 +0100 (MET)
-Message-ID: <200712021706.lB2H6GJd025895@harpo.it.uu.se>
+From: Nick Warne <nick@ukfsn.org>
+Subject: Re: Peculiar out-of-sync boot log lines
+Date: Sun, 2 Dec 2007 17:31:30 +0000
+Message-ID: <20071202173130.1c645dbc@linuxamd.linicks.net>
+References: <20071129193728.2f1c237e@linuxamd.linicks.net>
+	<474F1D24.4070009@rtr.ca>
+	<200712012259.35152.bzolnier@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:51838 "EHLO aun.it.uu.se"
+Received: from s2.ukfsn.org ([217.158.120.143]:45492 "EHLO mail.ukfsn.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756596AbXLBRG3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Dec 2007 12:06:29 -0500
+	id S1752906AbXLBRbj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Dec 2007 12:31:39 -0500
+In-Reply-To: <200712012259.35152.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, jeff@garzik.org
-Cc: linux-ide@vger.kernel.org, mikpe@it.uu.se
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Mark Lord <lkml@rtr.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, 01 Dec 2007 18:23:44 -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Make pdc_atapi_pkt() use values from qc->tf instead of creating its
-> > own.  This is to ease future ATAPI handling changes.
-> > 
-> > DONT APPLY YET
-> > ---
-> > Mikael, would this work?  Values other than lbam and lbah remain the
-> > same.  Does sata_promise have strict requirements for lbam and lbah?
-> > 
-> > Thanks.
-> > 
-> >  drivers/ata/sata_promise.c |   34 +++++++++++++---------------------
-> >  1 file changed, 13 insertions(+), 21 deletions(-)
+On Sat, 1 Dec 2007 22:59:35 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+
+ 
+> Thanks for reporting/debugging it guys!
 > 
-> what was the outcome of this discussion?
+> > Something in there needs to insert a '\n' before the "skipping
+> > word" message. Since it doesn't do that right now, the KERN_DEBUG
+> > string appears as "<7>"
 > 
-> I haven't looked over the Promise datasheet nor checked my brain for 
-> details, hoping Mikael would do that for me ;-)
+> This seems like a good occasion to fix ide_dma_verbose() for good
+> so... :)
+ 
+> This patch should fix the following problem with out-of-sync IDE
+> messages reported by Nick Warned:
+...
 
-I've now tested this on top of 2.6.24-rc3, with no observable
-regressions. Blanking, writing, and mounting/reading CD-RWs
-on both SATAPI and PATAPI works (tested on a 300 TX2plus card).
+I was only reporting it... not warning anybody ;-)
 
-I can't find anything in Promise's public docs or reference driver
-about non-standard requirements on lbam/lbah in ATAPI packets.
-
-/Mikael
+Nick
+-- 
+Free Software Foundation Associate Member 5508
