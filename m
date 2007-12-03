@@ -1,39 +1,43 @@
-From: "saeed bishara" <saeed.bishara@gmail.com>
-Subject: Re: [PATCH 2/2] [libata] sata_mv: Support integrated controllers
-Date: Mon, 3 Dec 2007 09:46:48 +0200
-Message-ID: <c70ff3ad0712022346k44ec6303s3cecff9ec7e7d549@mail.gmail.com>
-References: <11966092121262-git-send-email-saeed.bishara@gmail.com>
-	 <11966092143056-git-send-email-saeed.bishara@gmail.com>
-	 <11966092162669-git-send-email-saeed.bishara@gmail.com>
-	 <475336EA.2050206@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: [PATCH RFC] sata_promise: make pdc_atapi_pkt() use values from qc->tf
+Date: Mon, 3 Dec 2007 09:41:49 +0100 (MET)
+Message-ID: <200712030841.lB38fnrN000525@harpo.it.uu.se>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:13447 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752697AbXLCHqv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 02:46:51 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so4933158wah
-        for <linux-ide@vger.kernel.org>; Sun, 02 Dec 2007 23:46:50 -0800 (PST)
-In-Reply-To: <475336EA.2050206@rtr.ca>
-Content-Disposition: inline
+Received: from aun.it.uu.se ([130.238.12.36]:59576 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146AbXLCImD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 03:42:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-ide@vger.kernel.org, nico@cam.org, buytenh@wantstofly.org, Saeed Bishara <saeed@marvell.com>
+To: htejun@gmail.com, mikpe@it.uu.se
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
->
-> This patch won't apply, because sata_mv.c was just recently updated
-> to fix 7042 PCIe support.  You'll have to rebase this patch against that.
-ok. I'll check that.
->
-> Also, I'm not sure I understand why there's a need for the new sata_mv.h file ?
-This file contains the definition of the data structure that passed by
-board setup code to the sata driver. so this data structure must be
-defined in header file. for this specific case where the information
-made up of only one integer, you can avoid the structure definition
-and the new file creation, but, the this will make the code less
-readable, and I know that this information will be extended in the
-future.
->
+On Mon, 03 Dec 2007 13:49:36 +0900, Tejun Heo wrote:
+> Mikael Pettersson wrote:
+> >> what was the outcome of this discussion?
+> >>
+> >> I haven't looked over the Promise datasheet nor checked my brain for 
+> >> details, hoping Mikael would do that for me ;-)
+> > 
+> > I've now tested this on top of 2.6.24-rc3, with no observable
+> > regressions. Blanking, writing, and mounting/reading CD-RWs
+> > on both SATAPI and PATAPI works (tested on a 300 TX2plus card).
+> > 
+> > I can't find anything in Promise's public docs or reference driver
+> > about non-standard requirements on lbam/lbah in ATAPI packets.
+> 
+> The values set by core layer should be good enough.  The only thing I'm
+> worried about is setting transfer chunk size when protocol is DMA.  As
+> setting this value hasn't caused any problem for other controllers and
+> it seems sata_promise doesn't seem to have problem with it either, I'm
+> leaning toward keeping this value but if setting this value to zero is
+> the right thing to do, we can definitely change that in the core layer.
+>  One way or the other, I'd really like to keep sata_promise's behavior
+> in line with other libata drivers.
+> 
+> So, Mikael, do you think it would be okay to include the patch for
+> #upstream and see how it works in -mm?
+
+Yes
+
+/Mikael
