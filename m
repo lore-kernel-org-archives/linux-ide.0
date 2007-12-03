@@ -1,45 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Enabling MSI in sata_nv
-Date: Mon, 03 Dec 2007 14:16:15 -0500
-Message-ID: <475455FF.2060707@garzik.org>
-References: <47537304.2030801@overt.org> <87f94c370712031055h4c359ee9w59fd076fedcc8b9f@mail.gmail.com>
+Date: Mon, 03 Dec 2007 14:17:57 -0500
+Message-ID: <47545665.2070109@garzik.org>
+References: <47537304.2030801@overt.org> <47543CAF.9060003@rtr.ca> <475443A4.4020508@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53440 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:53452 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751384AbXLCTQS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 14:16:18 -0500
-In-Reply-To: <87f94c370712031055h4c359ee9w59fd076fedcc8b9f@mail.gmail.com>
+	id S1751608AbXLCTSA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 14:18:00 -0500
+In-Reply-To: <475443A4.4020508@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Philip Langdale <philipl@overt.org>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
+To: Mark Lord <liml@rtr.ca>
+Cc: Philip Langdale <philipl@overt.org>, linux-ide@vger.kernel.org
 
-Greg Freemyer wrote:
-> On Dec 2, 2007 10:07 PM, Philip Langdale <philipl@overt.org> wrote:
->> Hi all,
+Mark Lord wrote:
+> Mark Lord wrote:
+>> Philip Langdale wrote:
+>>> Hi all,
+>>>
+>>> At least for my hardware (MCP55), the sata controller supports MSI
+>>> and it seems that turning it on is as simple as inserting the call
+>>> to pci_enable_msi - after that it Just Works(tm).
+>>>
+>>> Are there any gotchas that I'm missing? Would a patch to do this
+>>> be accepted?
+>> ..
 >>
->> At least for my hardware (MCP55), the sata controller supports MSI
->> and it seems that turning it on is as simple as inserting the call
->> to pci_enable_msi - after that it Just Works(tm).
->>
->> Are there any gotchas that I'm missing? Would a patch to do this
->> be accepted?
->>
->> --phil
+>> Don't even dream about it for now.  The driver is unstable enough
+>> without throwing MSI into the works.
+> ..
 > 
-> I don't know if it is relevant, but I had to disable MSI to get a
-> MCP55 NIC to work under 2.6.22.
+> Oh, wait a minute.. I misread "sata_nv" as "sata_mv" there.
 
-MSI is pretty flaky, but we default it to 'on' for AHCI, which is the 
-"enhanced mode" side of the sata_nv chip.
+FWIW:  Marvell says they run with MSI enabled on 6440 (mvsas) in their 
+vendor driver, but not on any of the 50xx and 60xx variants supported by 
+sata_mv.
 
-So it is likely that it works on newer boards -- but even though Mark 
-Lord's response was mistaken (he thought sata_mv was being discussed), 
-he was right too...  sata_nv has stability problems and I would prefer 
-not to enable MSI just yet, until we cure the other problems.
+Maybe that's changed in the past year with 7042, I dunno.  But that's 
+the latest info I have.
 
 	Jeff
 
