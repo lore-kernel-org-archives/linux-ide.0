@@ -1,91 +1,47 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 24/28] blk_end_request: changing ide normal
- caller (take 3)
-Date: Mon, 03 Dec 2007 18:12:52 -0500 (EST)
-Message-ID: <20071203.181252.58460084.k-ueda@ct.jp.nec.com>
-References: <20071130.183358.35360061.k-ueda@ct.jp.nec.com>
-	<200712012353.05187.bzolnier@gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
+Date: Mon, 3 Dec 2007 23:10:57 +0000
+Message-ID: <20071203231057.39ae9b71@the-village.bc.nu>
+References: <4751A2DA.6030403@rtr.ca>
+	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
+	<20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+	<47543C58.4040106@rtr.ca>
+	<475447A0.2010101@rtr.ca>
+	<47544B3C.2010901@rtr.ca>
+	<1196712661.6362.5.camel@liza>
+	<475465F7.7050705@rtr.ca>
+	<1196714235.6362.9.camel@liza>
+	<47546CF6.30301@rtr.ca>
+	<1196722124.6362.17.camel@liza>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <200712012353.05187.bzolnier@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bzolnier@gmail.com
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:37454 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750824AbXLCXQ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 18:16:27 -0500
+In-Reply-To: <1196722124.6362.17.camel@liza>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hein-Pieter van Braam <hp@syntomax.com>
+Cc: Mark Lord <liml@rtr.ca>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-Hi Bartlomiej,
+On Mon, 03 Dec 2007 23:48:44 +0100
+Hein-Pieter van Braam <hp@syntomax.com> wrote:
 
-On Sat, 1 Dec 2007 23:53:05 +0100, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> On Saturday 01 December 2007, Kiyoshi Ueda wrote:
-> > This patch converts "normal" parts of ide to use blk_end_request().
-> > 
-> > Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> > Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> > ---
-> >  drivers/ide/ide-cd.c |    6 +++---
-> >  drivers/ide/ide-io.c |   17 ++++++-----------
-> >  2 files changed, 9 insertions(+), 14 deletions(-)
+> > Man, what a quirky BIOS!
 > 
-> [...]
+> Hum... I can pvcreate on the md device just fine, but after that, pvscan
+> won't find it... 
 > 
-> > Index: 2.6.24-rc3-mm2/drivers/ide/ide-io.c
-> > ===================================================================
-> > --- 2.6.24-rc3-mm2.orig/drivers/ide/ide-io.c
-> > +++ 2.6.24-rc3-mm2/drivers/ide/ide-io.c
-> > @@ -78,14 +78,9 @@ static int __ide_end_request(ide_drive_t
-> >  		ide_dma_on(drive);
-> >  	}
-> >  
-> > -	if (!end_that_request_chunk(rq, uptodate, nr_bytes)) {
-> > -		add_disk_randomness(rq->rq_disk);
-> > -		if (dequeue) {
-> > -			if (!list_empty(&rq->queuelist))
-> > -				blkdev_dequeue_request(rq);
-> > +	if (!__blk_end_request(rq, uptodate, nr_bytes)) {
-> > +		if (dequeue)
-> >  			HWGROUP(drive)->rq = NULL;
-> > -		}
-> > -		end_that_request_last(rq, uptodate);
-> >  		ret = 0;
-> >  	}
+> I have a suspicion that there's a BIOS doing some sector hiding or
+> replacement of sorts... 
 > 
-> Hmmm, this seems to change the old behavior (the request should
-> be dequeued from the queue only if 'dequeue' variable is set)
-> and AFAIR some error handling code (in ide-cd?) depends on the
-> old behavior so please revisit this patch.
+> *facepalm*
 
-blk_end_request() takes care of the dequeue like below,
-so I think no problem.  (Please see PATCH 01)
+That would make sense. However we have weapons to make it surrender. See
+the "dmraid" tool - you should be able to use that as an example of how
+to set up device mapper mapped linear mappings to "unshift" partitions.
 
-> +	/* rq->queuelist of dequeued request should be list_empty() */
-> +	if (!list_empty(&rq->queuelist))
-> +		blkdev_dequeue_request(rq);
-
-In the case of ide-cd,
-  o 'dequeue' variable is 1 only when the request is still linked
-    to the queue (i.e. rq->queuelist is not empty)
-  o 'dequeue' variable is 0 only when the request has already been
-    removed from the queue (i.e. rq->queuelist is empty)
-So blk_end_request() can handle it correctly.
-
-
-If there are any drivers which don't want dequeue the queued request,
-the code above would not work.
-But, as far as I investigated, I have never seen such a requirement
-in device drivers.
-
-Do you think that ide may still gets a problem for the 'dequeue'?
-
-Thanks,
-Kiyoshi Ueda
+Alan
