@@ -1,53 +1,59 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Mon, 03 Dec 2007 15:54:14 -0500
-Message-ID: <47546CF6.30301@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>
+From: Mark Lord <lkml@rtr.ca>
+Subject: [Fwd: Reminder: Last day for submissions to the Storage and Filesystem
+ Workshop.]
+Date: Mon, 03 Dec 2007 16:21:16 -0500
+Message-ID: <4754734C.5080806@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2194 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:1418 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751033AbXLCUyP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 15:54:15 -0500
-In-Reply-To: <1196714235.6362.9.camel@liza>
+	id S1750942AbXLCVVS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 16:21:18 -0500
+Received: from [10.0.0.6] (corey.localnet [10.0.0.6])
+	by mail.rtr.ca (Postfix) with ESMTP id E719E25C108
+	for <linux-ide@vger.kernel.org>; Mon,  3 Dec 2007 16:21:16 -0500 (EST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hein-Pieter van Braam <hp@syntomax.com>
-Cc: "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hein-Pieter van Braam wrote:
->>> I'll try and make a bootable USB stick with my patched 2.6.23.9 and see
->>> what the results are then.
->> ..
->>
->> How are you booting without the USB stick?
->> Are you booting from the Highpoint card drives?
->> What bootloader ?
->>
->> Thanks
->> -
-> 
-> Right now I just boot using GRUB really, perhaps the BIOS hides the 9th 
-> sector if it's in some form of RAID mode? I haven't had any trouble
-> using GRUB...
-> 
-> I haven't done anything special apart from putting the drives in JBOD
-> mode, each disk is set to JBOD, it's set per disk, so not one large JBOD
-> over 8 disks, but 8 separate JBOD volumes.
-..
 
-Man, what a quirky BIOS!
 
-Okay, so if I connect a drive and don't do anything in the Highpoint BIOS setup,
-it then corrupts the drive by overwriting the 9th sector on every reboot.
+-------- Original Message --------
+Subject: Reminder: Last day for submissions to the Storage and Filesyst=
+em Workshop.
+Date: Mon, 3 Dec 2007 09:00:17 -0500
+=46rom: Chris Mason <chris.mason@oracle.com>
+To: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-But.. if I connect a drive and go into the Highpoint BIOS setup,
-and "initialize" the drive there, and then set it all as a "JBOD volume",
-it then leaves the drive content untouched on subsequent reboots.
+Hello everyone,
 
-Screwy to the max.
+The deadline for position statements to the Linux Storage and
+=46ilesystem Workshop is here.  Submitting a position statement
+is an easy way for you to tell the organizers that you would like to
+attend, and which topics you are most interesting in.
 
-So, I might be able to boot from it by cloning the disk *after* setting
-it to "JBOD" in the BIOS.  That will take a (longish) while to do.
+You can find all the details about the workshop here:
+
+http://www.usenix.org/events/lsf08/
+
+The Linux Storage and Filesystem Workshop is a small, tightly focused,
+by-invitation workshop. It is intended to bring together developers and
+researchers interested in implementing improvements in the Linux
+filesystem and storage subsystems that can find their way into the
+mainline kernel and into Linux distributions in the 1=E2??2 year timefr=
+ame.
+The workshop will be two days and will be separated into storage and
+filesystem tracks, with some combined plenary sessions.
+
+The workshop will be held Feb 25 and 26 in San Jose.
+
+-chris
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
+ in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
