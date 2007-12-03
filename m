@@ -1,47 +1,47 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Mon, 03 Dec 2007 14:12:03 -0500
-Message-ID: <47545503.2070006@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	<20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	<47543C58.4040106@rtr.ca>	<475447A0.2010101@rtr.ca>	<47544B2F.5080007@pobox.com>	<47544BAA.1020901@rtr.ca>	<BD261180E6D35F4D9D32F3E44FD3D9010ADF35A5@EMPBEDEX.empirix.com>	<47544DA9.3070702@rtr.ca>	<47544E74.3000608@rtr.ca> <20071203184204.1a2d7e35@the-village.bc.nu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Enabling MSI in sata_nv
+Date: Mon, 03 Dec 2007 14:16:15 -0500
+Message-ID: <475455FF.2060707@garzik.org>
+References: <47537304.2030801@overt.org> <87f94c370712031055h4c359ee9w59fd076fedcc8b9f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4637 "EHLO mail.rtr.ca"
+Received: from srv5.dvmed.net ([207.36.208.214]:53440 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595AbXLCTMG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 14:12:06 -0500
-In-Reply-To: <20071203184204.1a2d7e35@the-village.bc.nu>
+	id S1751384AbXLCTQS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 14:16:18 -0500
+In-Reply-To: <87f94c370712031055h4c359ee9w59fd076fedcc8b9f@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Morrison, Tom" <tmorrison@empirix.com>, Jeff Garzik <jgarzik@pobox.com>, hp@syntomax.com, IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Philip Langdale <philipl@overt.org>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
-Alan Cox wrote:
->> Confirmed.  It writes "lgcy" + stuff into the 9th sector of the drive
->> (for my "Legacy" drive).
+Greg Freemyer wrote:
+> On Dec 2, 2007 10:07 PM, Philip Langdale <philipl@overt.org> wrote:
+>> Hi all,
+>>
+>> At least for my hardware (MCP55), the sata controller supports MSI
+>> and it seems that turning it on is as simple as inserting the call
+>> to pci_enable_msi - after that it Just Works(tm).
+>>
+>> Are there any gotchas that I'm missing? Would a patch to do this
+>> be accepted?
+>>
+>> --phil
 > 
-> Thats quite nasty. Given that users putting volumes unpartitioned on
-> drives may see actual data corruption and loss perhaps we should
-> blacklist that controller variant with a large warning ?
-..
+> I don't know if it is relevant, but I had to disable MSI to get a
+> MCP55 NIC to work under 2.6.22.
 
-Yeah, that's quite obnoxious of Highpoint to just arbitrarily overwrite data.
+MSI is pretty flaky, but we default it to 'on' for AHCI, which is the 
+"enhanced mode" side of the sata_nv chip.
 
-Some warnings would probably be quite useful here.
+So it is likely that it works on newer boards -- but even though Mark 
+Lord's response was mistaken (he thought sata_mv was being discussed), 
+he was right too...  sata_nv has stability problems and I would prefer 
+not to enable MSI just yet, until we cure the other problems.
 
-We could log a WARNING the first few times (after boot)
-whenever we see software writing to that sector.
-Do this with a hack in mv_qc_prep or mv_qc_issue ?
+	Jeff
 
-Or even just fail any write to that sector, so that the error
-gets propagated all the way back to usermode where it might be visible?
 
-Plus some big nasty "awareness" messages at boot regardless.
-
-If software never writes to it, then it should work fine.
-Except when drives are imported from somewhere else..
-as I just discovered with my GRUB disk.
-
-Then the disk is already corrupted before our kernel is even loaded.
 
