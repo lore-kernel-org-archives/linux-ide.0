@@ -1,42 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 26/28] blk_end_request: changing ide-cd (take 3)
-Date: Mon, 03 Dec 2007 18:55:48 +0300
-Message-ID: <47542704.2030602@ru.mvista.com>
-References: <20071130.183447.82055860.k-ueda@ct.jp.nec.com> <200712012342.52134.bzolnier@gmail.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Possibly SATA related freeze killed networking and RAID
+Date: Mon, 03 Dec 2007 12:15:19 -0500
+Message-ID: <475439A7.6060108@cfl.rr.com>
+References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu> <20071126120649.GC4701@ucw.cz> <474CCA82.7030000@gmail.com> <474F3A4B.3080304@cfl.rr.com> <474F530D.8090302@gmail.com> <47505A63.8070507@cfl.rr.com> <4750A33C.4080509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:38535 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750730AbXLCPzc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 10:55:32 -0500
-In-Reply-To: <200712012342.52134.bzolnier@gmail.com>
+Received: from iriserv.iradimed.com ([72.242.190.170]:58561 "EHLO iradimed.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750866AbXLCRPR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 12:15:17 -0500
+In-Reply-To: <4750A33C.4080509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Tejun Heo wrote:
+> Surprise, surprise.  There's no way to tell whether the controller
+> raised interrupt or not if command is not in progress.  As I said
+> before, there's no IRQ pending bit.  While processing commands, you can
+> tell by looking at other status registers but when there's nothing in
+> flight and the controller determines it's a good time to raise a
+> spurious interrupt, there's no way you can tell.  That dang SFF
+> interface is like 15+ years old.
+> 
+> But we can still make things pretty robust.  We're working on it.
+> 
+> Thanks.
+> 
 
-> [PATCH] ide-cd: remove dead post_transform_command()
+It sounds like you mean that you know the controller did NOT raise the 
+interrupt ( intentionally/correctly ) if there was no command in 
+progress, as opposed to not being able to tell.  Unless there is some 
+condition under which it is valid for the controller to raise an 
+interrupt when it had no commands in progress?  And if that's the case 
+and there's know way to know WHY, that's a broken design.
 
-> post_transform_command() call in cdrom_newpc_intr() has no effect because
-> it is done after the request has already been fully completed (rq->bio and
-> rq->data are always NULL).  It was verified to be true regardless whether
-> INQUIRY command is using DMA or PIO to transfer data (by using modified
-> Tejun Heo's test-shortsg.c utility and adding a few printk()-s to ide-cd).
-
-> This was uncovered thanks to the "blk_end_request: full I/O completion
-> handler (take 3)" patch series from Kiyoshi Ueda.
-
-> Cc: jens.axboe@oracle.com
-> Cc: bharrosh@panasas.com
-> Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com
-> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
