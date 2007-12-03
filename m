@@ -1,40 +1,64 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Possibly SATA related freeze killed networking and RAID
-Date: Mon, 03 Dec 2007 12:15:19 -0500
-Message-ID: <475439A7.6060108@cfl.rr.com>
-References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu> <20071126120649.GC4701@ucw.cz> <474CCA82.7030000@gmail.com> <474F3A4B.3080304@cfl.rr.com> <474F530D.8090302@gmail.com> <47505A63.8070507@cfl.rr.com> <4750A33C.4080509@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
+Date: Mon, 03 Dec 2007 12:26:48 -0500
+Message-ID: <47543C58.4040106@rtr.ca>
+References: <4751A2DA.6030403@rtr.ca>	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com> <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iriserv.iradimed.com ([72.242.190.170]:58561 "EHLO iradimed.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750866AbXLCRPR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 12:15:17 -0500
-In-Reply-To: <4750A33C.4080509@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:4898 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750763AbXLCR0u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 12:26:50 -0500
+In-Reply-To: <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: hp@syntomax.com
+Cc: "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-Tejun Heo wrote:
-> Surprise, surprise.  There's no way to tell whether the controller
-> raised interrupt or not if command is not in progress.  As I said
-> before, there's no IRQ pending bit.  While processing commands, you can
-> tell by looking at other status registers but when there's nothing in
-> flight and the controller determines it's a good time to raise a
-> spurious interrupt, there's no way you can tell.  That dang SFF
-> interface is like 15+ years old.
-> 
-> But we can still make things pretty robust.  We're working on it.
-> 
-> Thanks.
-> 
+hp@syntomax.com wrote:
+> It doesn't quite work for me, the system locks up without discernible 
+> error messages (Highpoint RocketRaid 2300 PCIe) . The drives come up, 
+> and immediately get hyper active, and I get dumped in an initrd busybox 
+> shell, when I try to tail /dev/sda it hangs, pvscan doesn't find any 
+> physical volumes for LVM, on the upside, I don't get the PCI ERROR 
+> messages anymore :) I'll try and get netconsole to work to get a proper 
+> log.
+...
 
-It sounds like you mean that you know the controller did NOT raise the 
-interrupt ( intentionally/correctly ) if there was no command in 
-progress, as opposed to not being able to tell.  Unless there is some 
-condition under which it is valid for the controller to raise an 
-interrupt when it had no commands in progress?  And if that's the case 
-and there's know way to know WHY, that's a broken design.
+Before this, you were booting from some other device,
+and the sata_mv mostly worked for you there, right ?
+
+Specifically, you wrote:
+> Now, because the chip on the thing is a Marvell 7042 I figured I just
+> add the PCI ID to the driver. I tried this, and, if I do not boot from
+> the device it does seem to work. I did however get the following errors
+> (a lot):
+> 
+> 02:00.0 sata_mv PCI ERROR; PCI IRQ reason=0x00000000
+> 
+> I write this from memory, but the numbers are correct, sorry if they do
+> not EXACTLY match.
+> 
+> The disk drives do work, but they are dog slow, and when I try to boot
+> my ubuntu 7.10 system with this driver, it hangs during boot, right
+> after it tried to enable my software raid volumes. 
+> 
+> I have tried both the 'stock' ubuntu kernel 2.6.22-14-generic (I guess
+> that won't mean much) but I also tried vanilla kernel.org 2.6.23.1
+..
+
+So at least that much should now be working much better for you.
+
+I have not actually ever booted from a sata_mv controller yet,
+so maybe there's still something peculiar about libata::sata_mv
+early in the boot stages ?
+
+I'm using sata_mv as a module here, but I *never* use initrd/initramfs images.
+They just complicate things needlessly once I know my hardware config.
+But it should work.  I'll try booting from a sata_mv drive here
+on your board and see what's up.
+
+Cheers
 
