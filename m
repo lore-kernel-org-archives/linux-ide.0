@@ -1,59 +1,60 @@
-From: Mark Lord <liml@rtr.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Mon, 03 Dec 2007 18:37:03 -0500
-Message-ID: <4754931F.7080705@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>	 <47546CF6.30301@rtr.ca> <1196720911.6362.14.camel@liza>
+Date: Mon, 3 Dec 2007 23:34:02 +0000
+Message-ID: <20071203233402.5bcd2dc8@the-village.bc.nu>
+References: <4751A2DA.6030403@rtr.ca>
+	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
+	<20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+	<47543C58.4040106@rtr.ca>
+	<475447A0.2010101@rtr.ca>
+	<47544B3C.2010901@rtr.ca>
+	<1196712661.6362.5.camel@liza>
+	<475465F7.7050705@rtr.ca>
+	<1196714235.6362.9.camel@liza>
+	<47546CF6.30301@rtr.ca>
+	<1196722124.6362.17.camel@liza>
+	<20071203231057.39ae9b71@the-village.bc.nu>
+	<47549236.5000809@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1617 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752295AbXLCXhF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 18:37:05 -0500
-In-Reply-To: <1196720911.6362.14.camel@liza>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53428 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750808AbXLCXjO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 18:39:14 -0500
+In-Reply-To: <47549236.5000809@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hein-Pieter van Braam <hp@syntomax.com>
-Cc: "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Hein-Pieter van Braam <hp@syntomax.com>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-Hein-Pieter van Braam wrote:
->> Man, what a quirky BIOS!
->>
->> Okay, so if I connect a drive and don't do anything in the Highpoint BIOS setup,
->> it then corrupts the drive by overwriting the 9th sector on every reboot.
->>
->> But.. if I connect a drive and go into the Highpoint BIOS setup,
->> and "initialize" the drive there, and then set it all as a "JBOD volume",
->> it then leaves the drive content untouched on subsequent reboots.
->>
->> Screwy to the max.
->>
->> So, I might be able to boot from it by cloning the disk *after* setting
->> it to "JBOD" in the BIOS.  That will take a (longish) while to do.
+On Mon, 03 Dec 2007 18:33:10 -0500
+Mark Lord <liml@rtr.ca> wrote:
+
+> Alan Cox wrote:
+> > On Mon, 03 Dec 2007 23:48:44 +0100
+> > Hein-Pieter van Braam <hp@syntomax.com> wrote:
+> > 
+> >>> Man, what a quirky BIOS!
+> >> Hum... I can pvcreate on the md device just fine, but after that, pvscan
+> >> won't find it... 
+> >>
+> >> I have a suspicion that there's a BIOS doing some sector hiding or
+> >> replacement of sorts... 
+> >>
+> >> *facepalm*
+> > 
+> > That would make sense. However we have weapons to make it surrender. See
+> > the "dmraid" tool - you should be able to use that as an example of how
+> > to set up device mapper mapped linear mappings to "unshift" partitions.
+> ...
 > 
-> I've just managed to boot with PXE and 2.6.23.9 and I have come to the
-> following:
-> 
-> * softraid still works
-> * sata_mv is a bit slower than the proprietary highpoint drivers (I get
-> 300MB/s from my array rather than 400MB/s)
-..
+> Ahh.. So dmraid is a way to work with using the HighPoint BIOS to define RAIDs.
+> But not so advisable for maintaining adaptor-neutral pure Linux s/w RAID.
 
-No worries.
-That performance number will eventually come up as we develop sata_mv more.
+dmraid is a tool which knows large numbers of vendor "secret so the
+customer can't swap vendor easily" type disk formats. It then translates
+them into logical mappings using the dm layer, just as LVM2 does.
 
-NCQ and IRQ-coalescing together oughta do it.  They're "on the list".
-
-> * they array works
-> * the content of the array seems to have shifted 'down' a bit, that's
-> probably why it won't boot. 
-..
-
-Shifted "down" which way, I wonder... ?
-Maybe they're using a Host Protected Area, which would explain why I don't
-see them modifying the 9th sector after "initializing" (WTF?) my drive as
-a JBOD using their BIOS.
-
-What does "hdparm -g /dev/sd*" show with their driver and with our driver?
-
+http://people.redhat.com/~heinzm/sw/dmraid/readme
