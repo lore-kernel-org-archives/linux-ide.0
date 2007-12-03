@@ -1,44 +1,24 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
+From: hp@syntomax.com
 Subject: RE: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Mon, 3 Dec 2007 09:56:16 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010ADF3021@EMPBEDEX.empirix.com>
-References: <4751A2DA.6030403@rtr.ca><BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com> <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+Date: Mon, 03 Dec 2007 15:47:49 +0100
+Message-ID: <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+References: <4751A2DA.6030403@rtr.ca>
+	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from empbedex1.empirix.com ([12.38.203.54]:52121 "EHLO
-	empbedex1.empirix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642AbXLCO4Z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 09:56:25 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+Received: from [213.197.255.169] ([213.197.255.169]:40223 "EHLO syntomax.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751071AbXLCPYo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 10:24:44 -0500
+In-Reply-To: <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hp@syntomax.com
+To: "Morrison, Tom" <tmorrison@empirix.com>
 Cc: Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
-
-I should've added that I am working with a 2.6.23.x (x=8 right now)
-kernel/sata_mv.c. Which unless I am mistaken - has not change any
-until this patch - so I didn't have a problem...I need to work 
-on the 2.6.23.x - because I am trying to stabilize my build to
-release a kernel for my developers to use for our next generation
-product...this was the last piece...and I am going through a 
-regression to make sure everything is working correctly right now...
-
-I don't think there should be a difference with module versus a
-built-in...
-
-Tom
-
------Original Message-----
-From: hp@syntomax.com [mailto:hp@syntomax.com] 
-Sent: Monday, December 03, 2007 9:48 AM
-To: Morrison, Tom
-Cc: Mark Lord; IDE/ATA development list; Jeff Garzik; Tejun Heo; Alan
-Cox
-Subject: RE: [PATCH] sata_mv: Fix broken Marvell 7042 support.
 
 It doesn't quite work for me, the system locks up without discernible  
 error messages (Highpoint RocketRaid 2300 PCIe) . The drives come up,  
@@ -104,8 +84,7 @@ Citeren "Morrison, Tom" <tmorrison@empirix.com>:
 > Patch is agains 2.6.24-rc3-git5, and should go into 2.6.24.
 >
 > --- old/drivers/ata/sata_mv.c	2007-12-01 11:48:28.000000000 -0500
-> +++ linux/drivers/ata/sata_mv.c	2007-12-01 12:06:30.000000000
--0500
+> +++ linux/drivers/ata/sata_mv.c	2007-12-01 12:06:30.000000000 -0500
 > @@ -164,10 +164,14 @@
 >  	MV_PCI_ERR_ATTRIBUTE	= 0x1d48,
 >  	MV_PCI_ERR_COMMAND	= 0x1d50,
@@ -164,8 +143,7 @@ Citeren "Morrison, Tom" <tmorrison@empirix.com>:
 > -};
 > -
 >  static void mv_irq_clear(struct ata_port *ap);
->  static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
-u32
+>  static int mv_scr_read(struct ata_port *ap, unsigned int sc_reg_in, u32
 > *val);
 >  static int mv_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
 > u32 val);
@@ -214,8 +192,7 @@ u32
 >  		ap = host->ports[i];
 > @@ -1926,6 +1936,8 @@
 >  #define ZERO(reg) writel(0, mmio + (reg))
->  static void mv_reset_pci_bus(struct pci_dev *pdev, void __iomem
-*mmio)
+>  static void mv_reset_pci_bus(struct pci_dev *pdev, void __iomem *mmio)
 >  {
 > +	struct ata_host     *host = dev_get_drvdata(&pdev->dev);
 > +	struct mv_host_priv *hpriv = host->private_data;
@@ -283,8 +260,7 @@ u32
 >  done:
 >  	return rc;
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"
-in
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
