@@ -1,54 +1,47 @@
-From: "sam song" <sam_song@usish.com>
-Subject: Re: Issuing a vendor specific ATA cmd on SATA Disk via ATA Pass Thru
-Date: Tue, 4 Dec 2007 09:32:00 +0800
-Message-ID: <002d01c83615$79261090$6539a8c0@usish.com.cn>
-References: <004d01c83273$68ded140$6539a8c0@usish.com.cn> <474F64F5.9070205@gmail.com> <006101c83301$bf79bef0$6539a8c0@usish.com.cn> <474FA9B6.105@gmail.com> <008f01c8331a$50efacb0$6539a8c0@usish.com.cn> <474FAECC.6070303@gmail.com> <009901c8331c$30d2c780$6539a8c0@usish.com.cn> <474FB1FB.9050904@gmail.com> <009b01c8331e$e8f40200$6539a8c0@usish.com.cn> <474FC845.7050308@gmail.com> <006301c83596$2e58fed0$6539a8c0@usish.com.cn> <4754A368.70806@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Possibly SATA related freeze killed networking and RAID
+Date: Tue, 04 Dec 2007 10:32:39 +0900
+Message-ID: <4754AE37.9050403@gmail.com>
+References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu> <20071126120649.GC4701@ucw.cz> <474CCA82.7030000@gmail.com> <474F3A4B.3080304@cfl.rr.com> <474F530D.8090302@gmail.com> <47505A63.8070507@cfl.rr.com> <4750A33C.4080509@gmail.com> <475439A7.6060108@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from usish.com ([210.5.144.203]:50826 "EHLO sr3.usish.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751135AbXLDBcG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 20:32:06 -0500
-In-Reply-To: <4754A368.70806@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:12732 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbXLDBcq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 20:32:46 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so5682643wah
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2007 17:32:46 -0800 (PST)
+In-Reply-To: <475439A7.6060108@cfl.rr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-> sam song wrote:
-> >  [USI]: ata pass through(16) cdb: 85 0b 06 00 41 00 00 00 00 00 00 00 00
-e0
-> > fd 00
-> >  [<unknown opcode>: 85 0b 06 00 41 00 00 00 00 00 00 00 00 e0 fd 00 ]
-> >   scsi_status=0x2, host_status=0x0, driver_status=0x8
-> >   info=0x1  duration=8184280 milliseconds
-> [--snip--]
-> > ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> > ata2.00: cmd fd/41:00:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data
-33280 out
-> >          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-> > ata2: port is slow to respond, please be patient (Status 0xd0)
-> > ata2: device not ready (errno=-16), forcing hardreset
-> > ata2: soft resetting port
-> > ata2.00: configured for UDMA/133
-> > ata2: EH complete
-> > sd 2:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
-> > sd 2:0:0:0: [sdb] Write Protect is off
-> > sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> > sd 2:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't
-support DPO or FUA
+Phillip Susi wrote:
+> Tejun Heo wrote:
+>> Surprise, surprise.  There's no way to tell whether the controller
+>> raised interrupt or not if command is not in progress.  As I said
+>> before, there's no IRQ pending bit.  While processing commands, you can
+>> tell by looking at other status registers but when there's nothing in
+>> flight and the controller determines it's a good time to raise a
+>> spurious interrupt, there's no way you can tell.  That dang SFF
+>> interface is like 15+ years old.
+>>
+>> But we can still make things pretty robust.  We're working on it.
 > 
-> Hmmm... It's timeout.  How long does the command take?  It's a bit weird
-> because 36000s but the reported command duration is 136s.  How long did
-> the command take actually?
+> It sounds like you mean that you know the controller did NOT raise the
+> interrupt ( intentionally/correctly ) if there was no command in
+> progress, as opposed to not being able to tell.  Unless there is some
+> condition under which it is valid for the controller to raise an
+> interrupt when it had no commands in progress?  And if that's the case
+> and there's know way to know WHY, that's a broken design.
 
-The command did actually take 136minutes25seconds. I set the timeout in app
-as 36000seconds(10-hour). 
+If everything works correctly, all interrupts can be accounted for.
+It's just that there's no margin for erratic behaviors and most ATA
+controllers are built really cheap.  So, yeah, it's a 15+ years old
+half-broken design.
 
-Thanks so much,
-
-Sam Song
-
+-- 
+tejun
