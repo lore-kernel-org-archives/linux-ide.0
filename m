@@ -1,48 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ATA ACPI (was Re: Linux 2.6.24-rc4)
-Date: Tue, 04 Dec 2007 18:00:23 -0500
-Message-ID: <4755DC07.5090009@garzik.org>
-References: <alpine.LFD.0.9999.0712032055080.2981@woody.linux-foundation.org>	 <8db1092f0712041251w71768544o6f922454e2bb6758@mail.gmail.com>	 <4755C544.5060909@garzik.org> <4755C63B.7080608@garzik.org> <8db1092f0712041448t5a3da9ecna73730e421626450@mail.gmail.com>
+From: Hein-Pieter van Braam <hp@syntomax.com>
+Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
+Date: Wed, 05 Dec 2007 00:56:39 +0100
+Message-ID: <1196812599.6909.10.camel@liza>
+References: <4751A2DA.6030403@rtr.ca>
+	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
+	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
+	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>
+	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>
+	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>
+	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>
+	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>
+	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>
+	 <47549E0B.9070509@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46750 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751235AbXLDXAZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Dec 2007 18:00:25 -0500
-In-Reply-To: <8db1092f0712041448t5a3da9ecna73730e421626450@mail.gmail.com>
+Received: from a80-126-0-120.adsl.xs4all.nl ([80.126.0.120]:59864 "EHLO
+	ifolder.erca.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbXLDX54 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 18:57:56 -0500
+In-Reply-To: <47549E0B.9070509@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-Maciej Rutecki wrote:
-> http://www.unixy.pl/maciek/download/kernel/2.6.24-rc4/dmidecode.txt.gz
+I zero'd all the disks, and now they show up as 'new' in the highpoint
+BIOS again... so, I guess there IS some reserved part somewhere that's
+accessible with the sata_mv driver.
 
-Thanks.
-
-
->>> And may I presume that booting with libata module option 'noacpi=1'
->>> fixes the problem?
-> 
-> noacpi=1 kernel command line or module parameters?
-> 
-> First, no change:
-> http://www.unixy.pl/maciek/download/kernel/2.6.24-rc4/dmesg_noacpi.txt.gz
-> Kernel command line: root=/dev/sda2 ro vga=0x318 resume=/dev/sda3
-> selinux=1 enforcing=1  noacpi=1
+that's a bit of a problem, because if you overwrite the RAID metadata,
+the raid bios won't allow booting from the devices...
 
 
-Yes, that's a module option.
-
-_If_ libata is built into the kernel, and not a kernel module, then you 
-can supply "libata.noacpi=1" on the kernel command line.  I don't think 
-that works with modules.
-
-With libata built as a module (libata.ko), you will probably need to 
-edit /etc/modprobe.conf.
-
-	Jeff
-
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
