@@ -1,78 +1,24 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 4/6] ide: add ide_busy_sleep() helper
-Date: Tue, 4 Dec 2007 15:01:22 +0100
-Message-ID: <200712041501.22872.bzolnier@gmail.com>
-References: <200712032252.53249.bzolnier@gmail.com> <475548F1.6040308@ru.mvista.com>
+Subject: Re: [PATCH 20/28] blk_end_request: changing ide-scsi (take 3)
+Date: Tue, 4 Dec 2007 14:47:03 +0100
+Message-ID: <200712041447.04039.bzolnier@gmail.com>
+References: <20071130.183243.66055473.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:48756 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754315AbXLDNzX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 08:55:23 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so77825ugc
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 05:55:22 -0800 (PST)
-In-Reply-To: <475548F1.6040308@ru.mvista.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20071130.183243.66055473.k-ueda@ct.jp.nec.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
 
+On Saturday 01 December 2007, Kiyoshi Ueda wrote:
+> This patch converts ide-scsi to use blk_end_request().
+> 
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 
-Hi,
-
-On Tuesday 04 December 2007, Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Add ide_busy_sleep() helper and use it in do_probe(),
-> > enable_nest() and probe_hwif().
-> 
-> > As a nice side-effect this fixes a minor bug in enable_nest()
-> > (the code was reading status register without any delay).
-> 
->     Huh?
-> 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> 
-> > Index: b/drivers/ide/ide-probe.c
-> > ===================================================================
-> > --- a/drivers/ide/ide-probe.c
-> > +++ b/drivers/ide/ide-probe.c
-> [...]
-> > @@ -489,20 +499,16 @@ static int do_probe (ide_drive_t *drive,
-> >  static void enable_nest (ide_drive_t *drive)
-> >  {
-> >  	ide_hwif_t *hwif = HWIF(drive);
-> > -	unsigned long timeout;
-> >  
-> >  	printk("%s: enabling %s -- ", hwif->name, drive->id->model);
-> >  	SELECT_DRIVE(drive);
-> >  	msleep(50);
-> >  	hwif->OUTB(EXABYTE_ENABLE_NEST, IDE_COMMAND_REG);
-> > -	timeout = jiffies + WAIT_WORSTCASE;
-> > -	do {
-> > -		if (time_after(jiffies, timeout)) {
-> > -			printk("failed (timeout)\n");
-> > -			return;
-> > -		}
-> > -		msleep(50);
-> 
->     Here's a delay, isn't it?
-
-s/enable_nest/do_probe/
-
-Thanks for pointing this out, I fixed patch description locally.
-
-> > -	} while ((hwif->INB(IDE_STATUS_REG)) & BUSY_STAT);
-> > +
-> > +	if (ide_busy_sleep(hwif)) {
-> > +		printk(KERN_CONT "failed (timeout)\n");
-> > +		return;
-> > +	}
-> >  
-> >  	msleep(50);
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
