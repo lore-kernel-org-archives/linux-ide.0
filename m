@@ -1,60 +1,54 @@
-From: Hein-Pieter van Braam <hp@syntomax.com>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Tue, 04 Dec 2007 20:21:15 +0100
-Message-ID: <1196796075.6909.6.camel@liza>
-References: <4751A2DA.6030403@rtr.ca>
-	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
-	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
-	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>
-	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>
-	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>
-	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>
-	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>
-	 <47549A26.6080900@rtr.ca>  <1196727475.6362.27.camel@liza>
+From: Scott Wood <scottwood@freescale.com>
+Subject: Re: [PATCH v2 3/4] [POWERPC] MPC8349E-mITX: introduce localbus and
+	pata nodes
+Date: Tue, 04 Dec 2007 13:23:46 -0600
+Message-ID: <4755A942.2010802@freescale.com>
+References: <20071204170442.GA10460@localhost.localdomain>	<20071204170726.GC15599@localhost.localdomain>
+	<20071204191657.GB5758@lixom.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a80-126-0-120.adsl.xs4all.nl ([80.126.0.120]:56655 "EHLO
-	ifolder.erca.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbXLDTYP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 14:24:15 -0500
-In-Reply-To: <1196727475.6362.27.camel@liza>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20071204191657.GB5758@lixom.net>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Olof Johansson <olof@lixom.net>
+Cc: Arnd Bergmann <arnd@arndb.de>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
+Olof Johansson wrote:
+> Hi,
+> 
+> On Tue, Dec 04, 2007 at 08:07:26PM +0300, Anton Vorontsov wrote:
+>> diff --git a/arch/powerpc/boot/dts/mpc8349emitx.dts b/arch/powerpc/boot/dts/mpc8349emitx.dts
+>> index 5072f6d..c459b0a 100644
+>> --- a/arch/powerpc/boot/dts/mpc8349emitx.dts
+>> +++ b/arch/powerpc/boot/dts/mpc8349emitx.dts
+>> @@ -249,6 +249,22 @@
+>>  		device_type = "pci";
+>>  	};
+>>  
+>> +	localbus@e0005000 {
+>> +		#address-cells = <2>;
+>> +		#size-cells = <1>;
+>> +		compatible = "fsl,mpc8349emitx-localbus",
+>> +			     "fsl,mpc8349e-localbus",
+>> +			     "fsl,pq2pro-localbus";
+>> +		reg = <e0005000 d8>;
+>> +		ranges = <3 0 f0000000 210>;
+>>  
+>> -
+>> +		pata@3,0 {
+> 
+> What's the ,0 for?
 
-On Tue, 2007-12-04 at 01:17 +0100, Hein-Pieter van Braam wrote:
-> I'll come up with the hdparm -g output and the results of this test with
-> the two different drivers tomorrow. 
+chipselect 3, offset 0.
 
-Just a little status update, I've been getting some REALLY strange
-results when using the disks as raid array, and I'm zeroing all the
-disks now to see if that will help. I'm not using the system not anyway,
-not as long as it requires the proprietary drivers to function.
-
-(still using 2.6.23.9 + the patch that started this thread)
-
-What I'm seeing now:
-pvcreate works
-pvscan doesn't work, MOST of the time, but if I say, put it in a watch
-loop after a while it'll pick it up, then lose it again, then pick it up
-again, sometimes complaining about corrupted meta-data
-when it finally finds the pv, I get the same behavior from vgcreate,
-after a while it'll work, then fail again, complaining from time to time
-then vgscan, same, sometimes complaining that it can't find the volume
-group, but still NAMING the volume group
-then lvcreate, same deal.
-
-I just want to rule out any screwyness of the previous data on the disk
-first, and it'll take about 4 hours to wipe all 8 disks.
-
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+-Scott
