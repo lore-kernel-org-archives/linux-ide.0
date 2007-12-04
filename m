@@ -1,202 +1,33 @@
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: Re: [PATCH v2 2/4] [libata] pata_of_platform: OF-Platform PATA device driver
-Date: Tue, 4 Dec 2007 23:37:51 +0300
-Message-ID: <20071204203751.GA3015@localhost.localdomain>
-References: <20071204170442.GA10460@localhost.localdomain> <20071204170719.GB15599@localhost.localdomain> <20071204184826.GA5758@lixom.net> <20071204194921.GB1253@localhost.localdomain> <20071204200121.GA6782@lixom.net>
-Reply-To: avorontsov@ru.mvista.com
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
+Date: Tue, 4 Dec 2007 20:29:44 +0000
+Message-ID: <20071204202944.57d93849@the-village.bc.nu>
+References: <20071119152434.45363e5d@the-village.bc.nu>
+	<4755A898.7050707@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:5380 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750915AbXLDUdv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 15:33:51 -0500
-Content-Disposition: inline
-In-Reply-To: <20071204200121.GA6782@lixom.net>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50560 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751108AbXLDUeL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 15:34:11 -0500
+In-Reply-To: <4755A898.7050707@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>
-Cc: Jeff Garzik <jeff@garzik.org>, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Paul Mundt <lethal@linux-sh.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Dec 04, 2007 at 02:01:21PM -0600, Olof Johansson wrote:
-> On Tue, Dec 04, 2007 at 10:49:21PM +0300, Anton Vorontsov wrote:
-> >  	tristate "Generic platform device PATA support"
-> > -	depends on EMBEDDED || ARCH_RPC
-> > +	depends on EMBEDDED || ARCH_PPC
+> > -	if (ata_id_is_sata(dev_id))
+> > -		return 0;	/* SATA */
+> >  	if ((dev_id[93] & 0x2000) == 0x2000)
+> >  		return 0;	/* 80 wire */
+> >  	return 1;
 > 
-> It needs to be || PPC, not || ARCH_PPC.
+> I've been thinking a lot about this, and I am really wondering if we 
+> should fix up the IDENTIFY DEVICE page instead?
 
-D'oh.
+You want to intercept all the SG_IO calls to do an ATAPI identify and
+make them lie ? I'm not personally sure thats a good idea.
 
-- - - -
-From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH v2.2] [libata] pata_of_platform: OF-Platform PATA device driver
-
-This driver nicely wraps around pata_platform library functions,
-and provides OF platform bus bindings to the PATA devices.
-
-In addition fix ARCH_RPC typo in the PATA_PLATFORM Kconfig entry,
-spotted by Olof Johansson.
-
-Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
----
- drivers/ata/Kconfig            |   12 ++++-
- drivers/ata/Makefile           |    1 +
- drivers/ata/pata_of_platform.c |  104 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 116 insertions(+), 1 deletions(-)
- create mode 100644 drivers/ata/pata_of_platform.c
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ba63619..299ff1f 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -607,13 +607,23 @@ config PATA_WINBOND_VLB
- 
- config PATA_PLATFORM
- 	tristate "Generic platform device PATA support"
--	depends on EMBEDDED || ARCH_RPC
-+	depends on EMBEDDED || PPC
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems.
- 
- 	  If unsure, say N.
- 
-+config PATA_OF_PLATFORM
-+	tristate "OpenFirmware platform device PATA support"
-+	depends on PATA_PLATFORM && PPC_OF
-+	help
-+	  This option enables support for generic directly connected ATA
-+	  devices commonly found on embedded systems with OpenFirmware
-+	  bindings.
-+
-+	  If unsure, say N.
-+
- config PATA_ICSIDE
- 	tristate "Acorn ICS PATA support"
- 	depends on ARM && ARCH_ACORN
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index b13feb2..ebcee64 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -67,6 +67,7 @@ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
- obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
- obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
- obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
-+obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
- obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
- # Should be last but two libata driver
- obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-new file mode 100644
-index 0000000..4daf118
---- /dev/null
-+++ b/drivers/ata/pata_of_platform.c
-@@ -0,0 +1,104 @@
-+/*
-+ * OF-platform PATA driver
-+ *
-+ * Copyright (c) 2007  MontaVista Software, Inc.
-+ *                     Anton Vorontsov <avorontsov@ru.mvista.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License (Version 2) as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_platform.h>
-+#include <linux/pata_platform.h>
-+
-+static int __devinit pata_of_platform_probe(struct of_device *ofdev,
-+					    const struct of_device_id *match)
-+{
-+	int ret;
-+	struct device_node *dn = ofdev->node;
-+	struct resource io_res;
-+	struct resource ctl_res;
-+	struct resource irq_res;
-+	unsigned int reg_shift = 0;
-+	int pio_mode = 0;
-+	int pio_mask;
-+	const u32 *prop;
-+
-+	ret = of_address_to_resource(dn, 0, &io_res);
-+	if (ret) {
-+		dev_err(&ofdev->dev, "can't get IO address from "
-+			"device tree\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = of_address_to_resource(dn, 1, &ctl_res);
-+	if (ret) {
-+		dev_err(&ofdev->dev, "can't get CTL address from "
-+			"device tree\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = of_irq_to_resource(dn, 0, &irq_res);
-+	if (ret == NO_IRQ)
-+		irq_res.start = irq_res.end = -1;
-+	else
-+		irq_res.flags = 0;
-+
-+	prop = (u32 *)of_get_property(dn, "reg-shift", NULL);
-+	if (prop)
-+		reg_shift = *prop;
-+
-+	prop = (u32 *)of_get_property(dn, "pio-mode", NULL);
-+	if (prop) {
-+		pio_mode = *prop;
-+		if (pio_mode > 6) {
-+			dev_err(&ofdev->dev, "invalid pio-mode\n");
-+			return -EINVAL;
-+		}
-+	} else {
-+		dev_info(&ofdev->dev, "pio-mode unspecified, assuming PIO0\n");
-+	}
-+
-+	pio_mask = 1 << pio_mode;
-+	pio_mask |= (1 << pio_mode) - 1;
-+
-+	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, &irq_res,
-+				     reg_shift, pio_mask);
-+}
-+
-+static int __devexit pata_of_platform_remove(struct of_device *ofdev)
-+{
-+	return __pata_platform_remove(&ofdev->dev);
-+}
-+
-+static struct of_device_id pata_of_platform_match[] = {
-+	{ .compatible = "ata-generic", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, pata_of_platform_match);
-+
-+static struct of_platform_driver pata_of_platform_driver = {
-+	.name		= "pata_of_platform",
-+	.match_table	= pata_of_platform_match,
-+	.probe		= pata_of_platform_probe,
-+	.remove		= __devexit_p(pata_of_platform_remove),
-+};
-+
-+static int __init pata_of_platform_init(void)
-+{
-+	return of_register_platform_driver(&pata_of_platform_driver);
-+}
-+module_init(pata_of_platform_init);
-+
-+static void __exit pata_of_platform_exit(void)
-+{
-+	of_unregister_platform_driver(&pata_of_platform_driver);
-+}
-+module_exit(pata_of_platform_exit);
-+
-+MODULE_DESCRIPTION("OF-platform PATA driver");
-+MODULE_AUTHOR("Anton Vorontsov <avorontsov@ru.mvista.com>");
-+MODULE_LICENSE("GPL");
--- 
-1.5.2.2
-
+Alan
