@@ -1,37 +1,67 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH v2 4/4] [libata] pata_platform: s/ioport_shift/reg_shift/g
-Date: Tue, 04 Dec 2007 20:08:09 +0300
-Message-ID: <47558979.40002@ru.mvista.com>
-References: <20071204170442.GA10460@localhost.localdomain> <20071204170745.GD15599@localhost.localdomain>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 24/28] blk_end_request: changing ide normal
+ caller (take 3)
+Date: Tue, 04 Dec 2007 13:04:41 -0500 (EST)
+Message-ID: <20071204.130441.41629552.k-ueda@ct.jp.nec.com>
+References: <200712012353.05187.bzolnier@gmail.com>
+	<20071203.181252.58460084.k-ueda@ct.jp.nec.com>
+	<200712041447.00238.bzolnier@gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:51941 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751472AbXLDRHx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 12:07:53 -0500
-In-Reply-To: <20071204170745.GD15599@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <200712041447.00238.bzolnier@gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: bzolnier@gmail.com
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Kumar Gala <galak@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
 
-Hello.
+Hi Bartlomiej,
 
-Anton Vorontsov wrote:
+On Tue, 4 Dec 2007 14:47:00 +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > Hmmm, this seems to change the old behavior (the request should
+> > > be dequeued from the queue only if 'dequeue' variable is set)
+> > > and AFAIR some error handling code (in ide-cd?) depends on the
+> > > old behavior so please revisit this patch.
+> > 
+> > blk_end_request() takes care of the dequeue like below,
+> > so I think no problem.  (Please see PATCH 01)
+> > 
+> > > +	/* rq->queuelist of dequeued request should be list_empty() */
+> > > +	if (!list_empty(&rq->queuelist))
+> > > +		blkdev_dequeue_request(rq);
+> > 
+> > In the case of ide-cd,
+> >   o 'dequeue' variable is 1 only when the request is still linked
+> >     to the queue (i.e. rq->queuelist is not empty)
+> >   o 'dequeue' variable is 0 only when the request has already been
+> >     removed from the queue (i.e. rq->queuelist is empty)
+> > So blk_end_request() can handle it correctly.
+> 
+> It would be helpful to add the above explanation to a patch description.
+> 
+> > If there are any drivers which don't want dequeue the queued request,
+> > the code above would not work.
+> > But, as far as I investigated, I have never seen such a requirement
+> > in device drivers.
+> > 
+> > Do you think that ide may still gets a problem for the 'dequeue'?
+> 
+> Everything seems to be fine now.
+> 
+> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-> This patch renames ioport_shift member of pata_platform_info
-> structure to reg_shift. Users of pata_platform are followed
-> appropriately.
+Thank you for the check.
+OK, I'll add the explanation about the 'dequeue' to patch description.
 
-> Rationale of that change is: shifting applies to the whole memory
-> mapped region, not only to the command block of the ATA registers,
-> despite the fact that shifting is meaningless for ctl register.
-
-> This patch should make Sergei Shtylyov a bit more happy. ;-)
-
-    In fact, I don't care about how platform driver calls this stuff. ;-)
-I only care about the property name.
-
-MBR, Sergei
+Thanks,
+Kiyoshi Ueda
