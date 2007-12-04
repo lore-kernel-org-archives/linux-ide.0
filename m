@@ -1,47 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Possibly SATA related freeze killed networking and RAID
-Date: Tue, 04 Dec 2007 10:32:39 +0900
-Message-ID: <4754AE37.9050403@gmail.com>
-References: <d00698fb0711201109m23ff096eiabeb22c8f9a917dc@mail.gmail.com> <20071120220512.46b9e975@the-village.bc.nu> <20071126120649.GC4701@ucw.cz> <474CCA82.7030000@gmail.com> <474F3A4B.3080304@cfl.rr.com> <474F530D.8090302@gmail.com> <47505A63.8070507@cfl.rr.com> <4750A33C.4080509@gmail.com> <475439A7.6060108@cfl.rr.com>
+From: Philip Langdale <philipl@overt.org>
+Subject: Re: Enabling MSI in sata_nv
+Date: Mon, 03 Dec 2007 17:56:52 -0800
+Message-ID: <4754B3E4.60208@overt.org>
+References: <47537304.2030801@overt.org> <87f94c370712031055h4c359ee9w59fd076fedcc8b9f@mail.gmail.com> <475455FF.2060707@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:12732 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbXLDBcq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2007 20:32:46 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so5682643wah
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2007 17:32:46 -0800 (PST)
-In-Reply-To: <475439A7.6060108@cfl.rr.com>
+Received: from usul.saidi.cx ([204.11.33.34]:59167 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750730AbXLDB5B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 20:57:01 -0500
+In-Reply-To: <475455FF.2060707@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Alan Cox <alan@lxorguk.ukuu.org.uk>, noah <noah123@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-Phillip Susi wrote:
-> Tejun Heo wrote:
->> Surprise, surprise.  There's no way to tell whether the controller
->> raised interrupt or not if command is not in progress.  As I said
->> before, there's no IRQ pending bit.  While processing commands, you can
->> tell by looking at other status registers but when there's nothing in
->> flight and the controller determines it's a good time to raise a
->> spurious interrupt, there's no way you can tell.  That dang SFF
->> interface is like 15+ years old.
->>
->> But we can still make things pretty robust.  We're working on it.
+Jeff Garzik wrote:
 > 
-> It sounds like you mean that you know the controller did NOT raise the
-> interrupt ( intentionally/correctly ) if there was no command in
-> progress, as opposed to not being able to tell.  Unless there is some
-> condition under which it is valid for the controller to raise an
-> interrupt when it had no commands in progress?  And if that's the case
-> and there's know way to know WHY, that's a broken design.
+> MSI is pretty flaky, but we default it to 'on' for AHCI, which is the
+> "enhanced mode" side of the sata_nv chip.
 
-If everything works correctly, all interrupts can be accounted for.
-It's just that there's no margin for erratic behaviors and most ATA
-controllers are built really cheap.  So, yeah, it's a 15+ years old
-half-broken design.
+If it's new enough. MCP55 has no ahci mode.
 
--- 
-tejun
+> So it is likely that it works on newer boards -- but even though Mark
+> Lord's response was mistaken (he thought sata_mv was being discussed),
+> he was right too...  sata_nv has stability problems and I would prefer
+> not to enable MSI just yet, until we cure the other problems.
+
+Fair enough. Well, just chalk me down as a data point where it seems
+to be working.
+
+--phil
