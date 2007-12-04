@@ -1,36 +1,54 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Mon, 03 Dec 2007 20:17:39 -0500
-Message-ID: <4754AAB3.6070902@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	<BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com> <20071203154749.6lah7pulw8ow0s84@email.syntomax.com> <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca> <47544B3C.2010901@rtr.ca>
+From: "sam song" <sam_song@usish.com>
+Subject: Re: Issuing a vendor specific ATA cmd on SATA Disk via ATA Pass Thru
+Date: Tue, 4 Dec 2007 09:32:00 +0800
+Message-ID: <002d01c83615$79261090$6539a8c0@usish.com.cn>
+References: <004d01c83273$68ded140$6539a8c0@usish.com.cn> <474F64F5.9070205@gmail.com> <006101c83301$bf79bef0$6539a8c0@usish.com.cn> <474FA9B6.105@gmail.com> <008f01c8331a$50efacb0$6539a8c0@usish.com.cn> <474FAECC.6070303@gmail.com> <009901c8331c$30d2c780$6539a8c0@usish.com.cn> <474FB1FB.9050904@gmail.com> <009b01c8331e$e8f40200$6539a8c0@usish.com.cn> <474FC845.7050308@gmail.com> <006301c83596$2e58fed0$6539a8c0@usish.com.cn> <4754A368.70806@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4343 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750806AbXLDBRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2007 20:17:41 -0500
-In-Reply-To: <47544B3C.2010901@rtr.ca>
+Received: from usish.com ([210.5.144.203]:50826 "EHLO sr3.usish.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135AbXLDBcG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Dec 2007 20:32:06 -0500
+In-Reply-To: <4754A368.70806@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hp@syntomax.com
-Cc: "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: 'Tejun Heo' <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
->
-> So to boot from a 7042 the only theoretical choice is the Highpoint board,
-> and for that we need to somehow coax it into not overwriting GRUB
-> every time the onboard BIOS reinitializes.
-..
+> sam song wrote:
+> >  [USI]: ata pass through(16) cdb: 85 0b 06 00 41 00 00 00 00 00 00 00 00
+e0
+> > fd 00
+> >  [<unknown opcode>: 85 0b 06 00 41 00 00 00 00 00 00 00 00 e0 fd 00 ]
+> >   scsi_status=0x2, host_status=0x0, driver_status=0x8
+> >   info=0x1  duration=8184280 milliseconds
+> [--snip--]
+> > ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> > ata2.00: cmd fd/41:00:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data
+33280 out
+> >          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> > ata2: port is slow to respond, please be patient (Status 0xd0)
+> > ata2: device not ready (errno=-16), forcing hardreset
+> > ata2: soft resetting port
+> > ata2.00: configured for UDMA/133
+> > ata2: EH complete
+> > sd 2:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+> > sd 2:0:0:0: [sdb] Write Protect is off
+> > sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> > sd 2:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't
+support DPO or FUA
+> 
+> Hmmm... It's timeout.  How long does the command take?  It's a bit weird
+> because 36000s but the reported command duration is 136s.  How long did
+> the command take actually?
 
-With the drive set-up as a "JBOD volume" in the HighPoint BIOS,
-I've now got a system that boots/runs from a single drive
-attached to the HighPoint 2300 PCIe board (Marvell 7042 - sata_mv).
+The command did actually take 136minutes25seconds. I set the timeout in app
+as 36000seconds(10-hour). 
 
-So that much works, which is good!
+Thanks so much,
 
-I also then upgraded the card's BIOS from v1.0 to v2.2,
-and didn't notice anything different.
+Sam Song
 
-Cheers
