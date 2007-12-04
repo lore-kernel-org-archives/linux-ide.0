@@ -1,67 +1,62 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 24/28] blk_end_request: changing ide normal
- caller (take 3)
-Date: Tue, 04 Dec 2007 13:04:41 -0500 (EST)
-Message-ID: <20071204.130441.41629552.k-ueda@ct.jp.nec.com>
-References: <200712012353.05187.bzolnier@gmail.com>
-	<20071203.181252.58460084.k-ueda@ct.jp.nec.com>
-	<200712041447.00238.bzolnier@gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Kantor Zsolt <kantorzsolt@yahoo.com>
+Subject: Re: reset IOCTLs
+Date: Tue, 4 Dec 2007 10:21:25 -0800 (PST)
+Message-ID: <719908.73262.qm@web35414.mail.mud.yahoo.com>
+References: <47553F3B.1090805@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <200712041447.00238.bzolnier@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bzolnier@gmail.com
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from web35414.mail.mud.yahoo.com ([66.163.179.123]:48056 "HELO
+	web35414.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752371AbXLDSV0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 13:21:26 -0500
+In-Reply-To: <47553F3B.1090805@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
 
-On Tue, 4 Dec 2007 14:47:00 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > Hmmm, this seems to change the old behavior (the request should
-> > > be dequeued from the queue only if 'dequeue' variable is set)
-> > > and AFAIR some error handling code (in ide-cd?) depends on the
-> > > old behavior so please revisit this patch.
-> > 
-> > blk_end_request() takes care of the dequeue like below,
-> > so I think no problem.  (Please see PATCH 01)
-> > 
-> > > +	/* rq->queuelist of dequeued request should be list_empty() */
-> > > +	if (!list_empty(&rq->queuelist))
-> > > +		blkdev_dequeue_request(rq);
-> > 
-> > In the case of ide-cd,
-> >   o 'dequeue' variable is 1 only when the request is still linked
-> >     to the queue (i.e. rq->queuelist is not empty)
-> >   o 'dequeue' variable is 0 only when the request has already been
-> >     removed from the queue (i.e. rq->queuelist is empty)
-> > So blk_end_request() can handle it correctly.
-> 
-> It would be helpful to add the above explanation to a patch description.
-> 
-> > If there are any drivers which don't want dequeue the queued request,
-> > the code above would not work.
-> > But, as far as I investigated, I have never seen such a requirement
-> > in device drivers.
-> > 
-> > Do you think that ide may still gets a problem for the 'dequeue'?
-> 
-> Everything seems to be fine now.
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+--- Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
-Thank you for the check.
-OK, I'll add the explanation about the 'dequeue' to patch description.
+> Hello.
+> 
+> Kantor Zsolt wrote:
+> 
+> > Can somebody tell me what is the difference between these reset commands (I'm developing an
+> open
+> > source application and I would like to know this): one is in the cdrom.h (CDROMRESET -
+> 0x5312),
+> 
+>     This one seems to be handled only by discrete (non-IDE) CD-ROM drivers.
+> 
+> > and the second with the third are in the hdreg.h (HDIO_DRIVE_RESET - 0x031c,
+> 
+>     This gets handled as the usual IDE reset, i.e. wia SRST bit of the device 
+> control register.
+> 
+> > WIN_DEVICE_RESET - 0x08)
+> 
+>     This is not an ioctl() at all but ATAPI Device Reset command which can be 
+> use dto reset ATAPI device insted of the usual IDE reset.
+> 
+> > Thanks
+> >   Kantor
+> 
+> MBR, Sergei
+> 
 
-Thanks,
-Kiyoshi Ueda
+Thanks a lot ! I have one more question: I see that the HDIO_DRIVE_RESET - 0x031c is a soft reset,
+but the WIN_DEVICE_RESET - 0x08 for ATAPI devices is a soft reset too ? and the first one for
+non-IDE CD-ROMs is a hard reset ? because in the cdrom.h file states this: CDROMRESET 0x5312 /*
+hard-reset the drive */
+
+Cheers
+  Kantor
+
+
+      ____________________________________________________________________________________
+Get easy, one-click access to your favorites. 
+Make Yahoo! your homepage.
+http://www.yahoo.com/r/hs 
