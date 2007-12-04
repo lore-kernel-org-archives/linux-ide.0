@@ -1,62 +1,38 @@
-From: Kantor Zsolt <kantorzsolt@yahoo.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 Subject: Re: reset IOCTLs
-Date: Tue, 4 Dec 2007 10:21:25 -0800 (PST)
-Message-ID: <719908.73262.qm@web35414.mail.mud.yahoo.com>
-References: <47553F3B.1090805@ru.mvista.com>
+Date: Tue, 04 Dec 2007 21:31:09 +0300
+Message-ID: <47559CED.5010104@ru.mvista.com>
+References: <719908.73262.qm@web35414.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from web35414.mail.mud.yahoo.com ([66.163.179.123]:48056 "HELO
-	web35414.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752371AbXLDSV0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 13:21:26 -0500
-In-Reply-To: <47553F3B.1090805@ru.mvista.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:53020 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750764AbXLDSaw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 13:30:52 -0500
+In-Reply-To: <719908.73262.qm@web35414.mail.mud.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+To: Kantor Zsolt <kantorzsolt@yahoo.com>
 Cc: linux-ide@vger.kernel.org
 
+Kantor Zsolt wrote:
 
---- Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+> Thanks a lot ! I have one more question: I see that the HDIO_DRIVE_RESET - 0x031c is a soft reset,
+> but the WIN_DEVICE_RESET - 0x08 for ATAPI devices is a soft reset too ?
 
-> Hello.
-> 
-> Kantor Zsolt wrote:
-> 
-> > Can somebody tell me what is the difference between these reset commands (I'm developing an
-> open
-> > source application and I would like to know this): one is in the cdrom.h (CDROMRESET -
-> 0x5312),
-> 
->     This one seems to be handled only by discrete (non-IDE) CD-ROM drivers.
-> 
-> > and the second with the third are in the hdreg.h (HDIO_DRIVE_RESET - 0x031c,
-> 
->     This gets handled as the usual IDE reset, i.e. wia SRST bit of the device 
-> control register.
-> 
-> > WIN_DEVICE_RESET - 0x08)
-> 
->     This is not an ioctl() at all but ATAPI Device Reset command which can be 
-> use dto reset ATAPI device insted of the usual IDE reset.
-> 
-> > Thanks
-> >   Kantor
-> 
-> MBR, Sergei
-> 
+    Yes.
 
-Thanks a lot ! I have one more question: I see that the HDIO_DRIVE_RESET - 0x031c is a soft reset,
-but the WIN_DEVICE_RESET - 0x08 for ATAPI devices is a soft reset too ? and the first one for
-non-IDE CD-ROMs is a hard reset ? because in the cdrom.h file states this: CDROMRESET 0x5312 /*
-hard-reset the drive */
+> and the first one for
+> non-IDE CD-ROMs is a hard reset ?
 
-Cheers
-  Kantor
+    Don't know.
 
+> because in the cdrom.h file states this: CDROMRESET 0x5312 /*
+> hard-reset the drive */
 
-      ____________________________________________________________________________________
-Get easy, one-click access to your favorites. 
-Make Yahoo! your homepage.
-http://www.yahoo.com/r/hs 
+> Cheers
+>   Kantor
+
+MBR, Sergei
