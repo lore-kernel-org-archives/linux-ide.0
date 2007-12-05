@@ -1,65 +1,45 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
-Date: Tue, 04 Dec 2007 19:09:09 -0600
-Message-ID: <4755FA35.5000105@shaw.ca>
-References: <47463534.9010100@shaw.ca> <4755D1E4.3020601@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 14/14] libata: use PIO for misc ATAPI commands
+Date: Wed, 05 Dec 2007 10:14:56 +0900
+Message-ID: <4755FB90.50505@gmail.com>
+References: <1196346817387-git-send-email-htejun@gmail.com> <11963468202627-git-send-email-htejun@gmail.com> <4755ABB3.6030907@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:64982 "EHLO
-	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbXLEBJt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 20:09:49 -0500
-In-reply-to: <4755D1E4.3020601@garzik.org>
+Received: from rv-out-0910.google.com ([209.85.198.189]:8784 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709AbXLEBPn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 20:15:43 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so3392384rvb
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 17:15:39 -0800 (PST)
+In-Reply-To: <4755ABB3.6030907@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
 
 Jeff Garzik wrote:
-> Robert Hancock wrote:
->> This fixes some problems with ATAPI devices on nForce4 controllers in 
->> ADMA mode
->> on systems with memory located above 4GB. We need to delay setting the 
->> 64-bit
->> DMA mask until the PRD table and padding buffer are allocated so that 
->> they don't
->> get allocated above 4GB and break legacy mode (which is needed for ATAPI
->> devices).
->>
->> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
-> 
-> This is a bit nasty :/
-> 
-> I would consider setting the consistent DMA mask to 32-bit, and setting 
-> the overall mask to 64-bit.
-> 
-> Seems like that would solve the problem?
+> The other patches were OK, but I'm still not happy about "punishing the
+> good guys"
 
-The issue with that is that it would also constrain the ADMA CPB/PRD 
-table allocation to 32-bit, which I'd rather avoid having to do. There 
-are dual-socket Opteron boxes like HP xw9300 that use this controller, 
-and limiting the allocation to 32-bit could force a non-optimal node 
-allocation for the table memory.
+Yeah, I know.  I guess you know my but-what's-the-actual-punishment
+argument too by now.
 
-These type of devices really want a version of dma_alloc_coherent that 
-allows overriding the DMA mask for specific allocations to make this 
-cleaner. I'm sure this isn't the only device that has different DMA mask 
-requirements for different consistent memory allocations..
+This is about time we make decision on this.  If we're gonna go
+DMA-for-everything way, we should lift 16 byte default masking for -mm
+and -rc's as that only makes debugging difficult and try to blacklist
+offending devices and controllers individually.
 
-This patch does has the advantage of being confirmed to fix the 
-reporter's problem (https://bugzilla.redhat.com/show_bug.cgi?id=351451) 
-which there's something to be said for this late in the .24-rc series..
+My primary concern is about not achieving enough test coverage and
+isolated cases where it's difficult to tell whether it's the device or
+the controller.  e.g. Loading recent distro on an ancient and/or strange
+machine, scratching head while cursing and giving up.  Unfortunately,
+I've seen similar things happening often enough (and I did so myself
+more times than I'm proud of).  Only very small fraction of problems
+actually reaches developers.
 
-> 
-> Also, does this need to be rebased on top of what I just pushed upstream?
-
-It don't think so.. this change is independent from the "sata_nv: don't 
-use legacy DMA in ADMA mode (v3)" patch you just merged.
+Thanks.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
