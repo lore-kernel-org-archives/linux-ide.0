@@ -1,35 +1,33 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH v2 4/4] [libata] pata_platform: s/ioport_shift/reg_shift/g
-Date: Wed, 5 Dec 2007 09:56:43 +0900
-Message-ID: <20071205005643.GA28860@linux-sh.org>
-References: <20071204170442.GA10460@localhost.localdomain> <20071204170745.GD15599@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 06/14] libata: improve ATAPI draining
+Date: Wed, 05 Dec 2007 10:00:34 +0900
+Message-ID: <4755F832.8090709@gmail.com>
+References: <1196346817387-git-send-email-htejun@gmail.com> <11963468192463-git-send-email-htejun@gmail.com> <475526AD.3090406@tw.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pip10.gyao.ne.jp ([61.122.117.248]:63564 "EHLO mx.gate01.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751761AbXLEA5K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Dec 2007 19:57:10 -0500
-Content-Disposition: inline
-In-Reply-To: <20071204170745.GD15599@localhost.localdomain>
+Received: from ro-out-1112.google.com ([72.14.202.182]:64532 "EHLO
+	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbXLEBAp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 20:00:45 -0500
+Received: by ro-out-1112.google.com with SMTP id p4so5764396roc
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 17:00:44 -0800 (PST)
+In-Reply-To: <475526AD.3090406@tw.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olof Johansson <olof@lixom.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Kumar Gala <galak@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
+To: albertl@mail.com
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, jens.axboe@oracle.com
 
-On Tue, Dec 04, 2007 at 08:07:45PM +0300, Anton Vorontsov wrote:
-> This patch renames ioport_shift member of pata_platform_info
-> structure to reg_shift. Users of pata_platform are followed
-> appropriately.
-> 
-> Rationale of that change is: shifting applies to the whole memory
-> mapped region, not only to the command block of the ATA registers,
-> despite the fact that shifting is meaningless for ctl register.
-> 
-It's called ioport_shift because of the fact it shifts an ioport, namely
-a struct ata_ioport *. We could rename it, but I really don't see the
-point. If you don't like the choice of name on your platform, add a
-comment to your platform-specific code noting this particular outrage so
-it can be grepped for by future generations ;-)
+Albert Lee wrote:
+> Maybe we should add an additional check to atapi_pio_bytes() such
+> that "DRQ asserted with bytes = 0" is considered as AC_ERR_HSM?
+> (patch attached below.) Otherwise the device might keep interruping us
+> with DRQ asserted + zero byte count, and we are in infinite loop...
 
-Nacked-by: Paul Mundt <lethal@linux-sh.org>
+Yeah, the check will probably look best with ireason check.  I'll add it.
+
+Thanks.
+
+-- 
+tejun
