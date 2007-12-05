@@ -1,61 +1,56 @@
-From: Zhao Yakui <yakui.zhao@intel.com>
-Subject: Re: a question about interrupt of IDE controller( bug 5637)
-Date: Wed, 05 Dec 2007 13:33:46 +0800
-Message-ID: <1196832826.10467.15.camel@yakui_zhao.sh.intel.com>
-References: <1196738884.4012.55.camel@yakui_zhao.sh.intel.com>
-	 <20071204123828.09fc2648@the-village.bc.nu>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 02/15] libata: zero xfer length on ATAPI data xfer IRQ is HSM violation
+Date: Wed,  5 Dec 2007 16:43:02 +0900
+Message-ID: <11968405953773-git-send-email-htejun@gmail.com>
+References: <11968405951262-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60022 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750964AbXLEFlf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 00:41:35 -0500
-In-Reply-To: <20071204123828.09fc2648@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.178]:33171 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbXLEHnb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:31 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so6895624wah
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:30 -0800 (PST)
+In-Reply-To: <11968405951262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, shaohua.li@intel.com, rui.zhang@intel.com
+To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+Cc: Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>
 
-On Tue, 2007-12-04 at 12:38 +0000, Alan Cox wrote:
-> > 	When the IDE controller works in legacy mode, the default IRQ for Ide0
-> > interface is 14 and IRQ for Ide1 interface is 15. The default interrupt
-> > mode for IRQ14/15 is edge/high. If the interrupt of some PCI devices is
-> > routed to IRQ14 or 15 and the interrupt mode is switched to Low/Level,
-> > an exception will appear.(If the I/O APIC is used as the Interrupt
-> > controller, IRQ14/15 nobody cared for. If the I8259 is used as the
-> > interrupt controller, maybe some IDE interrupts will be lost). 
-> 
-> Yes.
-> 
-> > 	In the Bug 5637: When the system works in acpi mode, there is no PCI
-> > interrupt router for IDE pci device in ACPI tables and OS will guess an
-> > interrupt for IDE PCI device, which is obtained from IDE PCI
-> > configuration space(The IRQ number is 15). OS will register the IRQ 15
-> > using acpi_register_gsi and switch the interrupt mode of IRQ 15 to
-> > Low/level. Because the interrupt mode for IRQ 15 is uncorrect, there
-> > will be interrupt flood and the system reports: IRQ 15 nobody cared.
-> > 	
-> > 	How to fix this issue? Is IRQ 14/15 always reserved for the IDE
-> > device?
-> 
-> No.
-> 
-> If the IDE device is in legacy mode then the IRQ is fixed at 14/15 for
-> the two channels. If it is in PCI mode then the PCI and ACPI routing
-> applies. This is defined in the header of the IDE device.
-> 
-> Class STORAGE:IDE
-> 
-> Programming class bit 0 -> channel 0 is legacy (0x1F0, 0x3F6, 14)
-> Programming class bit 2 -> channel 1 is legacy (0x170, 0x376. 15)
-Thanks for the response.
-When IDE device works in legacy mode, the IRQ of IDE is fixed at 14/15
-for the two channel. But IDE controller is a PCI device, OS will assign
-an interrupt number for the PCI device in which IDE controller resides.
-This is realized by calling ide_pci_enable, which will call
-pcibios_enable_irq. 
-In the bug5637 OS registers the IRQ 15 in the initialization phase of
-PCI IDE controller and the interrupt mode is Low/level. So the problem
-appears.
+From: Albert Lee <albertcc@tw.ibm.com>
+
+Treat zero xfer length as HSM violation.  While at it, add
+unlikely()'s to ATAPI ireason and transfer length checks.
+
+tj: Formatted patch and added unlikely()'s.
+
+Signed-off-by: Albert Lee <albertcc@tw.ibm.com>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 597e07c..88f7637 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5280,12 +5280,15 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
+ 	bytes = (bc_hi << 8) | bc_lo;
+ 
+ 	/* shall be cleared to zero, indicating xfer of data */
+-	if (ireason & (1 << 0))
++	if (unlikely(ireason & (1 << 0)))
+ 		goto err_out;
+ 
+ 	/* make sure transfer direction matches expected */
+ 	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
+-	if (do_write != i_write)
++	if (unlikely(do_write != i_write))
++		goto err_out;
++
++	if (unlikely(!bytes))
+ 		goto err_out;
+ 
+ 	VPRINTK("ata%u: xfering %d bytes\n", ap->print_id, bytes);
+-- 
+1.5.2.4
+
