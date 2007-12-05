@@ -1,45 +1,45 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: a question about interrupt of IDE controller( bug 5637)
-Date: Wed, 05 Dec 2007 17:32:49 +0300
-Message-ID: <4756B691.3080202@ru.mvista.com>
-References: <1196738884.4012.55.camel@yakui_zhao.sh.intel.com>	<20071204123828.09fc2648@the-village.bc.nu>	<1196832826.10467.15.camel@yakui_zhao.sh.intel.com> <20071205141809.615d1f59@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil issue on 2.6.22
+Date: Wed, 05 Dec 2007 23:33:55 +0900
+Message-ID: <4756B6D3.9020307@gmail.com>
+References: <47434526.7010304@verizonbusiness.com> <474CC29E.8020102@gmail.com> <475032AF.6090001@verizonbusiness.com> <4754C15C.1020107@gmail.com> <4756B5B2.1010302@verizonbusiness.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:1932 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751502AbXLEOcd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 09:32:33 -0500
-In-Reply-To: <20071205141809.615d1f59@the-village.bc.nu>
+Received: from rv-out-0910.google.com ([209.85.198.188]:23692 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbXLEOeJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 09:34:09 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so3643354rvb
+        for <linux-ide@vger.kernel.org>; Wed, 05 Dec 2007 06:34:01 -0800 (PST)
+In-Reply-To: <4756B5B2.1010302@verizonbusiness.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Zhao Yakui <yakui.zhao@intel.com>, linux-ide@vger.kernel.org, len.brown@intel.com, shaohua.li@intel.com, rui.zhang@intel.com
+To: mark.paulus@verizonbusiness.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Mark Paulus wrote:
+> Well, I feel foolish. 
+> One problem is that the prebuilt kernel is using an initrd
+> image, so I made your patch changes, and put them into
+> /lib/modules/`uname -r`/kernel/drivers/ata/sata_sil.ko,
+> and guess what, they never got loaded.  Foolishness on my
+> part.
+> 
+> Anyway, this time I got to the single boot prompt, where I did
+> a 'rmmod sata_sil', and a 'modprobe sata_sil', and I know
+> it loaded the new version, because you can see the 'sata_sil
+> 0000:02:0b.0: version 2.2b', which I put in
+> to verify what the heck is going on.
+> This machine is pretty slow to compile the kernel, which is
+> why I was trying to short cut the build/install some, but I might try to
+> build the kernel on a faster machine and see if
+> I can get the initrd image rebuilt also.
 
-Alan Cox wrote:
+This one is good enough, thanks.  It seems the controller is raising
+spurious SATA_IRQ.  I wonder why.  You're using a SATA-PATA bridge,
+right?  What chip are you using?
 
->>When IDE device works in legacy mode, the IRQ of IDE is fixed at 14/15
->>for the two channel. But IDE controller is a PCI device, OS will assign
->>an interrupt number for the PCI device in which IDE controller resides.
->>This is realized by calling ide_pci_enable, which will call
->>pcibios_enable_irq. 
-
-> And pcibios_enable_irq should see interrupt in as 0 in that case. It also
-
-    Should doesn't mean it actually does. I've just looked at my 82801DB 
-configuration, see yourself:
-
-[root@wasted etc]# lspci -x -s 0:1f.1
-00:1f.1 IDE interface: Intel Corp. 82801DB ICH4 IDE (rev 02)
-00: 86 80 cb 24 07 00 80 02 02 8a 01 01 00 00 00 00
-10: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
-20: 01 f0 00 00 00 00 00 20 00 00 00 00 43 10 89 80
-30: 00 00 00 00 00 00 00 00 00 00 00 00 09 01 00 00
-
-    The controller is in legacy mode (programming i/f is 0x8a), yet it 
-requests IRQ (interrupt pin = 1) and got assigned IRQ9.
-
-MBR, Sergei
+-- 
+tejun
