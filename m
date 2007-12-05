@@ -1,51 +1,294 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 04/15] cdrom: add more GPCMD_* constants
-Date: Wed,  5 Dec 2007 16:43:04 +0900
-Message-ID: <11968405963401-git-send-email-htejun@gmail.com>
+Subject: [PATCH 13/15] libata: implement ATAPI drain buffer
+Date: Wed,  5 Dec 2007 16:43:13 +0900
+Message-ID: <1196840598577-git-send-email-htejun@gmail.com>
 References: <11968405951262-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:33171 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.177]:34008 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbXLEHn7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:59 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6895624wah
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:59 -0800 (PST)
+	with ESMTP id S1751997AbXLEHoE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:44:04 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so6895949wah
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:44:04 -0800 (PST)
 In-Reply-To: <11968405951262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add GPCMD_* constants for READ_BUFFER, WRITE_12 and WRITE_BUFFER for
-completeness.  These will be used libata.
+Misc ATAPI commands may try to transfer more bytes than requested.
+For PIO which is performed by libata HSM, this is worked around by
+draining extra bytes from __atapi_pio_bytes().
+
+This patch implements drain buffer to perform draining for DMA and
+PIO-over-DMA cases.  One page is allocated w/ GFP_DMA32 during libata
+core layer initialization.  On host registration, this drain page is
+DMA mapped and ATAPI_MAX_DRAIN_PAGES sg entries are reserved.
+
+ata_sg_setup_extra() uses these extra sg entries to map the drain page
+ATAPI_MAX_DRAIN_PAGES times, extending sg list by ATAPI_MAX_DRAIN
+bytes.  This allows both DMA and PIO-over-DMA misc ATAPI commands to
+overflow by ATAPI_MAX_DRAIN bytes just like PIO commands.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/cdrom.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/ata/libata-core.c |  116 ++++++++++++++++++++++++++++++++++++++++-----
+ drivers/ata/libata-scsi.c |   14 ++++--
+ include/linux/libata.h    |    4 +-
+ 3 files changed, 116 insertions(+), 18 deletions(-)
 
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index c6d3e22..fcdc11b 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -451,6 +451,7 @@ struct cdrom_generic_command
- #define GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL  0x1e
- #define GPCMD_READ_10			    0x28
- #define GPCMD_READ_12			    0xa8
-+#define GPCMD_READ_BUFFER		    0x3c
- #define GPCMD_READ_BUFFER_CAPACITY	    0x5c
- #define GPCMD_READ_CDVD_CAPACITY	    0x25
- #define GPCMD_READ_CD			    0xbe
-@@ -480,7 +481,9 @@ struct cdrom_generic_command
- #define GPCMD_TEST_UNIT_READY		    0x00
- #define GPCMD_VERIFY_10			    0x2f
- #define GPCMD_WRITE_10			    0x2a
-+#define GPCMD_WRITE_12			    0xaa
- #define GPCMD_WRITE_AND_VERIFY_10	    0x2e
-+#define GPCMD_WRITE_BUFFER		    0x3b
- /* This is listed as optional in ATAPI 2.6, but is (curiously) 
-  * missing from Mt. Fuji, Table 57.  It _is_ mentioned in Mt. Fuji
-  * Table 377 as an MMC command for SCSi devices though...  Most ATAPI
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9bc89a6..1a81e22 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4759,6 +4759,60 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+ 	qc->cursg = qc->sg;
+ }
+ 
++/**
++ *	ata_sg_setup_extra - Setup extra sg entries
++ *	@qc: Command to setup extra sg entries for
++ *	@n_elem_extra: Out parameter for the number of extra sg entries
++ *	@nbytes_extra: Out parameter for the number of extra bytes
++ *
++ *	Extra sg entries are used to deal with ATAPI peculiarities.
++ *	First, the content to be transferred can be of any size but
++ *	transfer length should be aligned to 4 bytes, so if data size
++ *	isn't aligned, it needs to be padded.
++ *
++ *	Second, for commands whose repsonse can be variable, due to
++ *	userland bugs (more likely) and hardware bugs, devices can try
++ *	to transfer more bytes than requested.  This can be worked
++ *	around by appending drain buffers at the end.
++ *
++ *	This function sets up both padding and draining sg entries.
++ *	For this purpose, each qc has 2 + ATAPI_MAX_DRAIN_PAGES extra
++ *	sg entries.  Each extra sg has assigned function.
++ *
++ *	   e[0]  |   e[1]  |   e[2]  | ... | e[2 + ATAPI_MAX_DRAIN_PAGES - 1]
++ *	----------------------------------------------------------------------
++ *	   link  | padding | draining  ...
++ *		   or link
++ *
++ *	After sg setup is complete, sg list looks like the following.
++ *
++ *	1. Padding necessary, padding doesn't replace the last sg
++ *
++ *	o[0][1][2]...[last]   e[0][1]([2]... if draining is necessary)
++ *	               |        ^
++ *                      \------/
++ *	   e[0] carries the original content of o[last].
++ *
++ *	2. Padding necessary, padding replaces the last sg
++ *
++ *	o[0][1][2]...[last]   e[0][1]([2]... if draining is necessary)
++ *	               |           ^
++ *                      \---------/
++ *	   e[1] completely includes what o[last] used to point to.
++ *
++ *	3. Only draining is necessary.
++ *
++ *	[0][1][2]...[last]   e[0][1][2]...
++ *	              |           ^
++ *                     \---------/
++ *	   e[1] carries the original conetent of o[last].
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Adjusted n_elem which should be mapped.
++ */
+ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ 				       unsigned int *n_elem_extra,
+ 				       unsigned int *nbytes_extra)
+@@ -4766,6 +4820,7 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int n_elem = qc->n_elem;
+ 	struct scatterlist *lsg, *copy_lsg = NULL, *tsg = NULL, *esg = NULL;
++	int drain;
+ 
+ 	*n_elem_extra = 0;
+ 	*nbytes_extra = 0;
+@@ -4773,7 +4828,10 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ 	/* needs padding? */
+ 	qc->pad_len = qc->nbytes & 3;
+ 
+-	if (likely(!qc->pad_len))
++	/* needs drain? */
++	drain = atapi_qc_may_overflow(qc);
++
++	if (likely(!qc->pad_len && !drain))
+ 		return n_elem;
+ 
+ 	/* locate last sg and save it */
+@@ -4835,6 +4893,29 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ 		(*nbytes_extra) += 4 - qc->pad_len;
+ 	}
+ 
++	if (drain) {
++		struct scatterlist *dsg = qc->extra_sg + 2;
++		int i;
++
++		for (i = 0; i < ATAPI_MAX_DRAIN_PAGES; i++) {
++			sg_set_page(dsg, virt_to_page(ata_drain_page),
++				    PAGE_SIZE, 0);
++			sg_dma_address(dsg) = ap->host->drain_page_dma;
++			sg_dma_len(dsg) = PAGE_SIZE;
++			dsg++;
++		}
++
++		if (!tsg) {
++			copy_lsg = &qc->extra_sg[1];
++			tsg = &qc->extra_sg[1];
++		}
++
++		esg = dsg - 1;
++
++		(*n_elem_extra) += ATAPI_MAX_DRAIN_PAGES;
++		(*nbytes_extra) += ATAPI_MAX_DRAIN_PAGES * PAGE_SIZE;
++	}
++
+ 	if (copy_lsg)
+ 		sg_set_page(copy_lsg, sg_page(lsg), lsg->length, lsg->offset);
+ 
+@@ -6892,6 +6973,9 @@ static void ata_host_stop(struct device *gendev, void *res)
+ 			ap->ops->port_stop(ap);
+ 	}
+ 
++	dma_unmap_single(host->dev, host->drain_page_dma, PAGE_SIZE,
++			 DMA_FROM_DEVICE);
++
+ 	if (host->ops->host_stop)
+ 		host->ops->host_stop(host);
+ }
+@@ -6914,8 +6998,8 @@ static void ata_host_stop(struct device *gendev, void *res)
+  */
+ int ata_host_start(struct ata_host *host)
+ {
+-	int have_stop = 0;
+ 	void *start_dr = NULL;
++	dma_addr_t dma;
+ 	int i, rc;
+ 
+ 	if (host->flags & ATA_HOST_STARTED)
+@@ -6926,20 +7010,23 @@ int ata_host_start(struct ata_host *host)
+ 
+ 		if (!host->ops && !ata_port_is_dummy(ap))
+ 			host->ops = ap->ops;
+-
+-		if (ap->ops->port_stop)
+-			have_stop = 1;
+ 	}
+ 
+-	if (host->ops->host_stop)
+-		have_stop = 1;
++	start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
++	if (!start_dr)
++		return -ENOMEM;
+ 
+-	if (have_stop) {
+-		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+-		if (!start_dr)
+-			return -ENOMEM;
++	/* map drain page */
++	dma = dma_map_single(host->dev, ata_drain_page, PAGE_SIZE,
++			     DMA_FROM_DEVICE);
++	if (dma_mapping_error(dma)) {
++		dev_printk(KERN_ERR, host->dev, "failed to map drain page\n");
++		rc = -ENOMEM;
++		goto err_map;
+ 	}
++	host->drain_page_dma = dma;
+ 
++	/* start ports */
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 
+@@ -6948,7 +7035,7 @@ int ata_host_start(struct ata_host *host)
+ 			if (rc) {
+ 				if (rc != -ENODEV)
+ 					dev_printk(KERN_ERR, host->dev, "failed to start port %d (errno=%d)\n", i, rc);
+-				goto err_out;
++				goto err_start;
+ 			}
+ 		}
+ 		ata_eh_freeze_port(ap);
+@@ -6959,13 +7046,16 @@ int ata_host_start(struct ata_host *host)
+ 	host->flags |= ATA_HOST_STARTED;
+ 	return 0;
+ 
+- err_out:
++ err_start:
+ 	while (--i >= 0) {
+ 		struct ata_port *ap = host->ports[i];
+ 
+ 		if (ap->ops->port_stop)
+ 			ap->ops->port_stop(ap);
+ 	}
++ err_map:
++	dma_unmap_single(host->dev, host->drain_page_dma, PAGE_SIZE,
++			 DMA_FROM_DEVICE);
+ 	devres_free(start_dr);
+ 	return rc;
+ }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f523e66..f07704c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -832,13 +832,19 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+ 	/* configure max sectors */
+ 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
+ 
+-	/* SATA DMA transfers must be multiples of 4 byte, so
+-	 * we need to pad ATAPI transfers using an extra sg.
+-	 * Decrement max hw segments accordingly.
++	/* SATA DMA transfers must be multiples of 4 byte, so we need
++	 * to pad ATAPI transfers using an extra sg.  Also, ATAPI
++	 * commands with variable length reponse needs draining of
++	 * extra data.  Decrement max hw segments accordingly.
+ 	 */
+ 	if (dev->class == ATA_DEV_ATAPI) {
+ 		struct request_queue *q = sdev->request_queue;
+-		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
++		unsigned short hw_segments = q->max_hw_segments;
++
++		BUG_ON(hw_segments <= 1 + ATAPI_MAX_DRAIN_PAGES);
++		hw_segments -= 1 + ATAPI_MAX_DRAIN_PAGES;
++
++		blk_queue_max_hw_segments(q, hw_segments);
+ 	}
+ 
+ 	if (dev->flags & ATA_DFLAG_AN)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f0017fc..73080d9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -121,6 +121,7 @@ enum {
+ 	ATA_SHORT_PAUSE		= (HZ >> 6) + 1,
+ 
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
++	ATAPI_MAX_DRAIN_PAGES	= ATAPI_MAX_DRAIN >> PAGE_SHIFT,
+ 
+ 	ATA_SHT_EMULATED	= 1,
+ 	ATA_SHT_CMD_PER_LUN	= 1,
+@@ -438,6 +439,7 @@ struct ata_host {
+ 	void			*private_data;
+ 	const struct ata_port_operations *ops;
+ 	unsigned long		flags;
++	dma_addr_t		drain_page_dma;
+ #ifdef CONFIG_ATA_ACPI
+ 	acpi_handle		acpi_handle;
+ #endif
+@@ -476,7 +478,7 @@ struct ata_queued_cmd {
+ 	struct scatterlist	*last_sg;
+ 	struct scatterlist	saved_last_sg;
+ 	struct scatterlist	sgent;
+-	struct scatterlist	extra_sg[2];
++	struct scatterlist	extra_sg[2 + ATAPI_MAX_DRAIN_PAGES];
+ 
+ 	struct scatterlist	*sg;
+ 
 -- 
 1.5.2.4
 
