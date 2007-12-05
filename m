@@ -1,310 +1,124 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 08/15] libata: improve ATAPI draining
-Date: Wed,  5 Dec 2007 16:43:08 +0900
-Message-ID: <11968405973998-git-send-email-htejun@gmail.com>
+Subject: [PATCH 12/15] libata: make qc->nbytes include extra buffers
+Date: Wed,  5 Dec 2007 16:43:12 +0900
+Message-ID: <11968405981339-git-send-email-htejun@gmail.com>
 References: <11968405951262-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from wa-out-1112.google.com ([209.85.146.177]:34008 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751644AbXLEHny (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:54 -0500
+	with ESMTP id S1751878AbXLEHn4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:56 -0500
 Received: by wa-out-1112.google.com with SMTP id v27so6895949wah
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:52 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:56 -0800 (PST)
 In-Reply-To: <11968405951262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>, Albert Lee <albertcc@tw.ibm.com>
+Cc: Tejun Heo <htejun@gmail.com>
 
-For misc ATAPI commands which transfer variable length data to the
-host, overflow can occur due to application or hardware bug.  Such
-overflows can be ignored safely as long as overflow data is properly
-drained.  libata HSM implementation has this implemented in
-__atapi_pio_bytes() but it isn't enough.  Improve drain logic such
-that...
+qc->nbytes didn't use to include extra buffers setup by libata core
+layer and my be odd.  This patch makes qc->nbytes include any extra
+buffers setup by libata core layer and guaranteed to be aligned on 4
+byte boundary.
 
-* Multiple PIO data phases are allowed.  Not allowing this used to be
-  okay when transfer chunk size was set to 8k unconditionally but with
-  transfer hcunk size set to allocation size, treating extra PIO data
-  phases as HSM violations cause a lot of trouble.
+This value is to be used to program the host controller.  As this
+represents the actual length of buffer available to the controller and
+the controller must be able to deal with short transfers for ATAPI
+commands which can transfer variable length, this shouldn't break any
+controllers while making problems like rounding-down and controllers
+choking up on odd transfer bytes much less likely.
 
-* Limit the amount of draining to ATAPI_MAX_DRAIN (16k currently).
-
-* Don't whine if overflow is allowed and safe.  When unexpected
-  overflow occurs, trigger HSM violation and report the problem using
-  ehi error description.
-
-* Properly calculate the number of bytes to be drained considering
-  actual number of consumed bytes for partial draining.
-
-* Add and use ata_drain_page for draining.  This change fixes the
-  problem where LLDs which do 32bit IOs consumes 4 bytes on each 2
-  byte draining resulting in draining twice more data than requested.
-
-This patch fixes ATAPI regressions introduced by setting transfer
-chunk size to allocation size.
+The unmodified value is stored in new field qc->raw_nbytes.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>
 ---
- drivers/ata/libata-core.c |  126 ++++++++++++++++++++++++++++++---------------
- include/linux/libata.h    |    2 +
- 2 files changed, 87 insertions(+), 41 deletions(-)
+ drivers/ata/libata-core.c |   14 ++++++++++----
+ include/linux/libata.h    |    3 ++-
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 70e273c..399f085 100644
+index 6e5e7dd..9bc89a6 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -83,8 +83,8 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
- 
- unsigned int ata_print_id = 1;
- static struct workqueue_struct *ata_wq;
--
- struct workqueue_struct *ata_aux_wq;
-+static void *ata_drain_page;
- 
- int atapi_enabled = 1;
- module_param(atapi_enabled, int, 0444);
-@@ -4674,6 +4674,28 @@ int ata_check_atapi_dma(struct ata_queued_cmd *qc)
+@@ -4760,13 +4760,15 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
  }
  
- /**
-+ *	atapi_qc_may_overflow - Check whether data transfer may overflow
-+ *	@qc: ATA command in question
-+ *
-+ *	ATAPI commands which transfer variable length data to host
-+ *	might overflow due to application error or hardare bug.  This
-+ *	function checks whether overflow should be drained and ignored
-+ *	for @qc.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	1 if @qc may overflow; otherwise, 0.
-+ */
-+static int atapi_qc_may_overflow(struct ata_queued_cmd *qc)
-+{
-+	return ata_is_atapi(qc->tf.protocol) && ata_is_data(qc->tf.protocol) &&
-+		atapi_cmd_type(qc->cdb[0]) == ATAPI_MISC &&
-+		!(qc->tf.flags & ATA_TFLAG_WRITE);
-+}
-+
-+/**
-  *	ata_std_qc_defer - Check whether a qc needs to be deferred
-  *	@qc: ATA command in question
-  *
-@@ -5175,23 +5197,20 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
-  *	Inherited from caller.
-  *
-  */
--
--static void __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
-+static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
- {
--	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
--	struct scatterlist *sg = qc->__sg;
--	struct scatterlist *lsg = sg_last(qc->__sg, qc->n_elem);
-+	int rw = (qc->tf.flags & ATA_TFLAG_WRITE) ? WRITE : READ;
- 	struct ata_port *ap = qc->ap;
-+	struct ata_device *dev = qc->dev;
-+	struct ata_eh_info *ehi = &dev->link->eh_info;
-+	struct scatterlist *sg;
- 	struct page *page;
- 	unsigned char *buf;
--	unsigned int offset, count;
--	int no_more_sg = 0;
--
--	if (qc->curbytes + bytes >= qc->nbytes)
--		ap->hsm_task_state = HSM_ST_LAST;
-+	unsigned int offset, count, consumed;
- 
- next_sg:
--	if (unlikely(no_more_sg)) {
-+	sg = qc->cursg;
-+	if (unlikely(!sg)) {
- 		/*
- 		 * The end of qc->sg is reached and the device expects
- 		 * more data to transfer. In order not to overrun qc->sg
-@@ -5199,23 +5218,32 @@ next_sg:
- 		 *    - for read case, discard trailing data from the device
- 		 *    - for write case, padding zero data to the device
- 		 */
--		u16 pad_buf[1] = { 0 };
--		unsigned int words = bytes >> 1;
--		unsigned int i;
-+		if (qc->curbytes + bytes > qc->nbytes + ATAPI_MAX_DRAIN) {
-+			ata_ehi_push_desc(ehi, "too much trailing data "
-+					  "buf=%u cur=%u bytes=%u",
-+					  qc->nbytes, qc->curbytes, bytes);
-+			return -1;
-+		}
- 
--		if (words) /* warning if bytes > 1 */
--			ata_dev_printk(qc->dev, KERN_WARNING,
--				       "%u bytes trailing data\n", bytes);
-+		/* allow overflow only for misc ATAPI commands */
-+		if (!atapi_qc_may_overflow(qc)) {
-+			ata_ehi_push_desc(ehi, "unexpected trailing data "
-+					  "%u bytes", bytes);
-+			return -1;
-+		}
- 
--		for (i = 0; i < words; i++)
--			ap->ops->data_xfer(qc->dev, (unsigned char *)pad_buf, 2, do_write);
-+		consumed = 0;
-+		while (consumed < bytes) {
-+			count = min_t(unsigned int,
-+				      bytes - consumed, PAGE_SIZE);
-+			consumed += ap->ops->data_xfer(dev, ata_drain_page,
-+						       count, rw);
-+		}
- 
--		ap->hsm_task_state = HSM_ST_LAST;
--		return;
-+		qc->curbytes += bytes;
-+		return 0;
- 	}
- 
--	sg = qc->cursg;
--
- 	page = sg_page(sg);
- 	offset = sg->offset + qc->cursg_ofs;
- 
-@@ -5239,29 +5267,30 @@ next_sg:
- 		buf = kmap_atomic(page, KM_IRQ0);
- 
- 		/* do the actual data transfer */
--		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
-+		consumed = ap->ops->data_xfer(dev,  buf + offset, count, rw);
- 
- 		kunmap_atomic(buf, KM_IRQ0);
- 		local_irq_restore(flags);
- 	} else {
- 		buf = page_address(page);
--		ap->ops->data_xfer(qc->dev,  buf + offset, count, do_write);
-+		consumed = ap->ops->data_xfer(dev,  buf + offset, count, rw);
- 	}
- 
--	bytes -= count;
-+	bytes -= min(bytes, consumed);
- 	qc->curbytes += count;
- 	qc->cursg_ofs += count;
- 
- 	if (qc->cursg_ofs == sg->length) {
--		if (qc->cursg == lsg)
--			no_more_sg = 1;
--
- 		qc->cursg = sg_next(qc->cursg);
- 		qc->cursg_ofs = 0;
- 	}
- 
-+	/* consumed can be larger than count only for the last transfer */
-+	WARN_ON(qc->cursg && count != consumed);
-+
- 	if (bytes)
- 		goto next_sg;
-+	return 0;
- }
- 
- /**
-@@ -5278,6 +5307,7 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
+ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+-				       unsigned int *n_elem_extra)
++				       unsigned int *n_elem_extra,
++				       unsigned int *nbytes_extra)
  {
  	struct ata_port *ap = qc->ap;
- 	struct ata_device *dev = qc->dev;
-+	struct ata_eh_info *ehi = &dev->link->eh_info;
- 	unsigned int ireason, bc_lo, bc_hi, bytes;
- 	int i_write, do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? 1 : 0;
+ 	unsigned int n_elem = qc->n_elem;
+ 	struct scatterlist *lsg, *copy_lsg = NULL, *tsg = NULL, *esg = NULL;
  
-@@ -5295,25 +5325,28 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
+ 	*n_elem_extra = 0;
++	*nbytes_extra = 0;
  
- 	/* shall be cleared to zero, indicating xfer of data */
- 	if (unlikely(ireason & (1 << 0)))
--		goto err_out;
-+		goto atapi_check;
+ 	/* needs padding? */
+ 	qc->pad_len = qc->nbytes & 3;
+@@ -4830,6 +4832,7 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ 		esg = &qc->extra_sg[1];
  
- 	/* make sure transfer direction matches expected */
- 	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
- 	if (unlikely(do_write != i_write))
--		goto err_out;
-+		goto atapi_check;
+ 		(*n_elem_extra)++;
++		(*nbytes_extra) += 4 - qc->pad_len;
+ 	}
  
- 	if (unlikely(!bytes))
--		goto err_out;
-+		goto atapi_check;
- 
- 	VPRINTK("ata%u: xfering %d bytes\n", ap->print_id, bytes);
- 
--	__atapi_pio_bytes(qc, bytes);
-+	if (unlikely(__atapi_pio_bytes(qc, bytes)))
-+		goto err_out;
- 	ata_altstatus(ap); /* flush */
- 
- 	return;
- 
--err_out:
--	ata_dev_printk(dev, KERN_INFO, "ATAPI check failed\n");
-+ atapi_check:
-+	ata_ehi_push_desc(ehi, "ATAPI check failed (ireason=0x%x bytes=%u)",
-+			  ireason, bytes);
-+ err_out:
- 	qc->err_mask |= AC_ERR_HSM;
- 	ap->hsm_task_state = HSM_ST_ERR;
- }
-@@ -7434,24 +7467,35 @@ int ata_pci_device_resume(struct pci_dev *pdev)
- static int __init ata_init(void)
+ 	if (copy_lsg)
+@@ -4863,11 +4866,11 @@ static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
+ static int ata_sg_setup(struct ata_queued_cmd *qc)
  {
- 	ata_probe_timeout *= HZ;
-+
-+	ata_drain_page = (void *)__get_free_page(GFP_DMA32);
-+	if (!ata_drain_page)
-+		goto err_drain_page;
-+
- 	ata_wq = create_workqueue("ata");
- 	if (!ata_wq)
--		return -ENOMEM;
-+		goto err_ata_wq;
+ 	struct ata_port *ap = qc->ap;
+-	unsigned int n_elem, n_elem_extra;
++	unsigned int n_elem, n_elem_extra, nbytes_extra;
  
- 	ata_aux_wq = create_singlethread_workqueue("ata_aux");
--	if (!ata_aux_wq) {
--		destroy_workqueue(ata_wq);
--		return -ENOMEM;
--	}
-+	if (!ata_aux_wq)
-+		goto err_ata_aux_wq;
+ 	VPRINTK("ENTER, ata%u\n", ap->print_id);
  
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+-	n_elem = ata_sg_setup_extra(qc, &n_elem_extra);
++	n_elem = ata_sg_setup_extra(qc, &n_elem_extra, &nbytes_extra);
+ 
+ 	if (n_elem) {
+ 		n_elem = dma_map_sg(ap->dev, qc->sg, n_elem, qc->dma_dir);
+@@ -4882,7 +4885,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+ 
+ 	qc->n_elem = qc->mapped_n_elem = n_elem;
+ 	qc->n_elem += n_elem_extra;
+-
++	qc->nbytes += nbytes_extra;
+ 	qc->flags |= ATA_QCFLAG_DMAMAP;
+ 
  	return 0;
+@@ -5952,6 +5955,9 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+ 	 */
+ 	BUG_ON(ata_is_data(prot) && (!qc->sg || !qc->n_elem || !qc->nbytes));
+ 
++	/* ata_sg_setup() may update nbytes */
++	qc->raw_nbytes = qc->nbytes;
 +
-+ err_ata_aux_wq:
-+	destroy_workqueue(ata_wq);
-+ err_ata_wq:
-+	free_page((unsigned long)ata_drain_page);
-+ err_drain_page:
-+	return -ENOMEM;
- }
- 
- static void __exit ata_exit(void)
- {
- 	destroy_workqueue(ata_wq);
- 	destroy_workqueue(ata_aux_wq);
-+	free_page((unsigned long)ata_drain_page);
- }
- 
- subsys_initcall(ata_init);
+ 	if (ata_is_dma(prot) || (ata_is_pio(prot) &&
+ 				 (ap->flags & ATA_FLAG_PIO_DMA)))
+ 		if (ata_sg_setup(qc))
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index e291f04..31e2cbf 100644
+index bf03577..f0017fc 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -120,6 +120,8 @@ enum {
- 	ATA_DEF_BUSY_WAIT	= 10000,
- 	ATA_SHORT_PAUSE		= (HZ >> 6) + 1,
+@@ -467,6 +467,7 @@ struct ata_queued_cmd {
+ 	unsigned int		sect_size;
  
-+	ATAPI_MAX_DRAIN		= 16 << 10,
-+
- 	ATA_SHT_EMULATED	= 1,
- 	ATA_SHT_CMD_PER_LUN	= 1,
- 	ATA_SHT_THIS_ID		= -1,
+ 	unsigned int		nbytes;
++	unsigned int		raw_nbytes;
+ 	unsigned int		curbytes;
+ 
+ 	struct scatterlist	*cursg;
+@@ -1363,7 +1364,7 @@ static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
+ 	qc->flags = 0;
+ 	qc->cursg = NULL;
+ 	qc->cursg_ofs = 0;
+-	qc->nbytes = qc->curbytes = 0;
++	qc->nbytes = qc->raw_nbytes = qc->curbytes = 0;
+ 	qc->n_elem = 0;
+ 	qc->mapped_n_elem = 0;
+ 	qc->n_iter = 0;
 -- 
 1.5.2.4
 
