@@ -1,33 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 05/14] libata: make ->data_xfer return the number of consumed
- bytes
-Date: Wed, 05 Dec 2007 09:49:18 +0900
-Message-ID: <4755F58E.3020703@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com> <11963468181417-git-send-email-htejun@gmail.com> <4755AAE1.5060000@garzik.org>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH v2 4/4] [libata] pata_platform: s/ioport_shift/reg_shift/g
+Date: Wed, 5 Dec 2007 09:56:43 +0900
+Message-ID: <20071205005643.GA28860@linux-sh.org>
+References: <20071204170442.GA10460@localhost.localdomain> <20071204170745.GD15599@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:32830 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbXLEAt1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 19:49:27 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6626917wah
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 16:49:26 -0800 (PST)
-In-Reply-To: <4755AAE1.5060000@garzik.org>
+Received: from pip10.gyao.ne.jp ([61.122.117.248]:63564 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751761AbXLEA5K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:57:10 -0500
+Content-Disposition: inline
+In-Reply-To: <20071204170745.GD15599@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olof Johansson <olof@lixom.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Kumar Gala <galak@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
 
-Jeff Garzik wrote:
-> IMO s/buflen/len/ causes needless patch noise, and makes this harder review
+On Tue, Dec 04, 2007 at 08:07:45PM +0300, Anton Vorontsov wrote:
+> This patch renames ioport_shift member of pata_platform_info
+> structure to reg_shift. Users of pata_platform are followed
+> appropriately.
+> 
+> Rationale of that change is: shifting applies to the whole memory
+> mapped region, not only to the command block of the ATA registers,
+> despite the fact that shifting is meaningless for ctl register.
+> 
+It's called ioport_shift because of the fact it shifts an ioport, namely
+a struct ata_ioport *. We could rename it, but I really don't see the
+point. If you don't like the choice of name on your platform, add a
+comment to your platform-specific code noting this particular outrage so
+it can be grepped for by future generations ;-)
 
-Separating out s/buflen/len/ to a separate patch seemed silly yet I
-wanted to renamed it.  :-P
-
-If you want to kill it, I'll kill the renaming.  If you want it in a
-separate patch, I'll separate it out.
-
--- 
-tejun
+Nacked-by: Paul Mundt <lethal@linux-sh.org>
