@@ -1,48 +1,58 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: a question about interrupt of IDE controller( bug 5637)
-Date: Wed, 5 Dec 2007 14:18:09 +0000
-Message-ID: <20071205141809.615d1f59@the-village.bc.nu>
-References: <1196738884.4012.55.camel@yakui_zhao.sh.intel.com>
-	<20071204123828.09fc2648@the-village.bc.nu>
-	<1196832826.10467.15.camel@yakui_zhao.sh.intel.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 14/14] libata: use PIO for misc ATAPI commands
+Date: Wed, 05 Dec 2007 23:22:13 +0900
+Message-ID: <4756B415.404@gmail.com>
+References: <1196346817387-git-send-email-htejun@gmail.com>	<11963468202627-git-send-email-htejun@gmail.com>	<4755ABB3.6030907@garzik.org>	<4755FB90.50505@gmail.com>	<20071205124713.4d31c5e7@the-village.bc.nu>	<4756A1AE.4010205@gmail.com> <20071205140119.532c1eb4@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [81.2.110.250] ([81.2.110.250]:55166 "EHLO the-village.bc.nu"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750862AbXLEOWx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 09:22:53 -0500
-In-Reply-To: <1196832826.10467.15.camel@yakui_zhao.sh.intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:7768 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbXLEOXr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 09:23:47 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so7164223wah
+        for <linux-ide@vger.kernel.org>; Wed, 05 Dec 2007 06:22:27 -0800 (PST)
+In-Reply-To: <20071205140119.532c1eb4@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zhao Yakui <yakui.zhao@intel.com>
-Cc: linux-ide@vger.kernel.org, len.brown@intel.com, shaohua.li@intel.com, rui.zhang@intel.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Mikael Pettersson <mikpe@it.uu.se>
 
-> When IDE device works in legacy mode, the IRQ of IDE is fixed at 14/15
-> for the two channel. But IDE controller is a PCI device, OS will assign
-> an interrupt number for the PCI device in which IDE controller resides.
-> This is realized by calling ide_pci_enable, which will call
-> pcibios_enable_irq. 
+Alan Cox wrote:
+>> Well, if we change that in #upstream now, -mm will receive it and after
+>> 2.6.24 is released, it will end up in -rc1.  We can change it back if
+>> the damage is too grave.
+> 
+> Getting it in -rc is going to mess up other testing. It's perfect for -mm
+> testing not -rc testing.
 
-And pcibios_enable_irq should see interrupt in as 0 in that case. It also
-knows about this but it seems the ACPI one doesn't.
+It eventually has to end up in -rc.  If not for 2.6.25-rc1 is too early,
+we can put it in #testing and put it into #upstream later.
 
-I don't have a problem system but this would be my guess as to what we need
+>> Yeah, ALi seems to be genuine driver problem.  I don't think using PIO
+>> for misc ATAPI commands is extreme considering Windows is doing it.
+> 
+> Windows does a lot of things that are bad and ugly workarounds for messes
+> in the past. We have the ability to do a lot better than that.
 
---- drivers/acpi/pci_irq.c~	2007-12-05 14:07:47.389727744 +0000
-+++ drivers/acpi/pci_irq.c	2007-12-05 14:07:47.389727744 +0000
-@@ -429,6 +429,13 @@
- 					  &polarity, &link,
- 					  acpi_pci_allocate_irq);
- 
-+	if (irq < 0) {
-+		/* IDE legacy mode controller IRQs are magic. Why do compat
-+		   extensions always make such a nasty mess */
-+		if (dev->class >> 8 == PCI_CLASS_STORAGE_IDE && 
-+						(dev->class & 0x05) == 0)
-+			return 0;
-+	}
- 	/*
- 	 * No IRQ known to the ACPI subsystem - maybe the BIOS / 
- 	 * driver reported one, then use it. Exit in any case.
+I agree.  It's double edged sword tho.  We're not gonna get much test
+coverage over those messes of the past and as I said, those are what I'm
+primarily worried about.  Command type dependent quick fallback might
+help but ancient controllers are more likely to bring the whole machine
+down when a DMA transaction goes south.
+
+>> Another thing is check_atapi_dma in sata_promise.  It mentions losing
+>> interrupt which is exactly what happens if the drive tries to transfer
+>> more data but DMA buffer is short on several controllers.  I wonder
+>> whether this is unnecessary with DMA draining added.
+> 
+> Is it like the inic where you must do transfers in specific chunk sizes ?
+
+I don't think so.  It does READ_CD and READ_DVD_STRUCTURE via DMA.  The
+first one isn't 2k aligned the second is of variable size.  I think the
+driver was just working around buggy userland which issues commands like
+mode sense with longer allocation size than actual buffer size.
+
+-- 
+tejun
