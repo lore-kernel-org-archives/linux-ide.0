@@ -1,62 +1,91 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Wed, 05 Dec 2007 18:35:16 -0500
-Message-ID: <475735B4.7020401@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>	 <47549E0B.9070509@rtr.ca> <1196812599.6909.10.camel@liza> <47572A18.2010904@rtr.ca> <475732C0.2090901@rtr.ca>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Hard drives only detected when booting from CD on nVidia MCP67 SATA
+Date: Wed, 05 Dec 2007 18:53:46 -0500
+Message-ID: <47573A0A.4070401@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4736 "EHLO mail.rtr.ca"
+Received: from mx1.redhat.com ([66.187.233.31]:56577 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751439AbXLEXfS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 18:35:18 -0500
-In-Reply-To: <475732C0.2090901@rtr.ca>
+	id S1751696AbXLEXxs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Dec 2007 18:53:48 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id lB5NrlGm025119
+	for <linux-ide@vger.kernel.org>; Wed, 5 Dec 2007 18:53:48 -0500
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lB5NrkSu018022
+	for <linux-ide@vger.kernel.org>; Wed, 5 Dec 2007 18:53:46 -0500
+Received: from [172.16.83.145] (dhcp83-145.boston.redhat.com [172.16.83.145])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id lB5NrkNl008208
+	for <linux-ide@vger.kernel.org>; Wed, 5 Dec 2007 18:53:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hein-Pieter van Braam <hp@syntomax.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Mark Lord wrote:
-> Mark Lord wrote:
->> Hein-Pieter van Braam wrote:
->>> I zero'd all the disks, and now they show up as 'new' in the highpoint
->>> BIOS again... so, I guess there IS some reserved part somewhere that's
->>> accessible with the sata_mv driver.
->> ..
->>
->> Yeah, that's my suspicion too.. they must have just simply moved
->> the metadata to near the end instead of sector-8.
->>
->> Mmm...  I'll try a smaller drive here,
->> and zero the entire drive, then reboot with it
->> on the Highpoint board, and then see what sector it modified.
->>
->> This'll take a while.
-> ..
-> 
-> Actually, it doesn't take long at all,
-> with some creative use of fdisk.
-> 
-> And I haven't yet figured out their logic,
-> but here's what I've found.
-> 
-> They write their RAID metadata near-ish to the end of the drive.
-> On my 320GB drives, it ended up at about -199853 sectors from
-> the end of the drive.  I have no idea what logic leads to them
-> choosing such a peculiar location for it.
-..
+With kernel 2.6.23 on an Acer 7220 notebook using nVidia MCP67 SATA,
+hard drives are only detected after first booting from a CD.
 
-Correction:  Metadata begins at sector -191192 on my drive.
+Boot from hard drive      No drives detected
 
-> 
-> That's NOT an even cylinder or anything else I can figure out.
-> 
-> But if you leave the last 100KB of the drive unallocated for any 
-> partitions, then your data might survive.
-> 
-> This needs more research, and probably another patch of some kind
-> in the driver for #upstream-fixes.  I'm busy with a course all week,
-> this won't happen (from me) until the weekend.
-> 
-> What a screwy BIOS.
+Boot live CD              Detected
+
+Boot CD to GRUB menu,     Detected
+then warm-boot from hard
+drive
+
+
+Non-detect case:
+
+ahci 0000:00:09.0: version 2.3
+ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+IRQ 16
+input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+PCI: Setting latency timer of device 0000:00:09.0 to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2: SATA link down (SStatus 0 SControl 300)
+ata3: SATA link down (SStatus 0 SControl 300)
+ata4: SATA link down (SStatus 0 SControl 300)
+Waiting for driver initialization
+
+But, if a LiveCD is used to boot or if a LiveCD was used before an hot reboot 
+(without a power off), disks are correctly found :
+
+Loading ahci.ko
+ahci 0000:00:09.0: version 2.3
+ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+IRQ 16
+input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+PCI: Setting latency timer of device 0000:00:09.0 to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ATA-7: Hitachi HTS541612J9SA00, SBDOC70P, max UDMA/100
+ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata1.00: configured for UDMA/100
+ata2: SATA link down (SStatus 0 SControl 300)
+ata3: SATA link down (SStatus 0 SControl 300)
+ata4: SATA link down (SStatus 0 SControl 300)
+
+
+https://bugzilla.redhat.com/show_bug.cgi?id=411171
