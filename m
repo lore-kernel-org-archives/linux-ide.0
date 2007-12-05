@@ -1,40 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 14/14] libata: use PIO for misc ATAPI commands
-Date: Wed, 5 Dec 2007 13:52:46 -0500
-Message-ID: <20071205185246.GA24035@havoc.gtf.org>
-References: <1196346817387-git-send-email-htejun@gmail.com> <11963468202627-git-send-email-htejun@gmail.com> <4755ABB3.6030907@garzik.org> <4755FB90.50505@gmail.com> <20071205124713.4d31c5e7@the-village.bc.nu> <4756A1AE.4010205@gmail.com> <20071205140119.532c1eb4@the-village.bc.nu> <4756B415.404@gmail.com> <20071205144649.4bca7a3c@the-village.bc.nu> <4756C00E.3060100@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
+Date: Wed, 05 Dec 2007 17:45:44 -0500
+Message-ID: <47572A18.2010904@rtr.ca>
+References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>	 <47549E0B.9070509@rtr.ca> <1196812599.6909.10.camel@liza>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:51567 "EHLO havoc.gtf.org"
+Received: from rtr.ca ([76.10.145.34]:2454 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750892AbXLESwv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 13:52:51 -0500
-Content-Disposition: inline
-In-Reply-To: <4756C00E.3060100@gmail.com>
+	id S1752298AbXLEWpq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Dec 2007 17:45:46 -0500
+In-Reply-To: <1196812599.6909.10.camel@liza>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Mikael Pettersson <mikpe@it.uu.se>
+To: Hein-Pieter van Braam <hp@syntomax.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-On Thu, Dec 06, 2007 at 12:13:18AM +0900, Tejun Heo wrote:
-> Alan Cox wrote:
-> >> It eventually has to end up in -rc.  If not for 2.6.25-rc1 is too early,
-> >> we can put it in #testing and put it into #upstream later.
-> > 
-> > Nobody cares about libata git trees. If you want some initial test
-> > coverage put it in -mm.
+Hein-Pieter van Braam wrote:
+> I zero'd all the disks, and now they show up as 'new' in the highpoint
+> BIOS again... so, I guess there IS some reserved part somewhere that's
+> accessible with the sata_mv driver.
+..
 
-99% incorrect.
+Yeah, that's my suspicion too.. they must have just simply moved
+the metadata to near the end instead of sector-8.
 
+Mmm...  I'll try a smaller drive here,
+and zero the entire drive, then reboot with it
+on the Highpoint board, and then see what sector it modified.
 
-> #for-testing ends up in #ALL which Andrew always includes in -mm.
-> #upstream also ends up in #ALL but is different in that it will get into
-> mainline when the next -rc1 opens.  Jeff, right?
+This'll take a while.
 
-100% correct.
-
-	Jeff
-
-
-
+Cheers
