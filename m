@@ -1,523 +1,959 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/15] change-data_xfer
-Date: Wed,  5 Dec 2007 16:43:07 +0900
-Message-ID: <11968405971209-git-send-email-htejun@gmail.com>
+Subject: [PATCH 11/15] libata: convert to chained sg
+Date: Wed,  5 Dec 2007 16:43:11 +0900
+Message-ID: <11968405973132-git-send-email-htejun@gmail.com>
 References: <11968405951262-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:34008 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:34723 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751968AbXLEHn7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:59 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6895949wah
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:58 -0800 (PST)
+	with ESMTP id S1752017AbXLEHoE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:44:04 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so6895985wah
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:44:03 -0800 (PST)
 In-Reply-To: <11968405951262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>
+To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
 
-Depending on how many bytes are transferred as a unit, PIO data
-tranasfer may consume more bytes than requested.  Knowing how much
-data is consumed is necessary to determine how much is left for
-draining.  This patch update ->data_xfer such that it returns the
-number of consumed bytes.
+libata used private sg iterator to handle padding sg.  Now that sg can
+be chained, padding can be handled using standard sg ops.  Convert to
+chained sg.
 
-While at it, it also makes the following changes.
+* s/qc->__sg/qc->sg/
 
-* s/adev/dev/
-* use READ/WRITE constants for rw indication
-* misc clean ups
+* s/qc->pad_sgent/qc->extra_sg[]/.  Because chaining consumes one sg
+  entry.  There need to be two extra sg entries.  The renaming is also
+  for future addition of other extra sg entries.
+
+* Padding setup is moved into ata_sg_setup_extra() which is organized
+  in a way that future addition of other extra sg entries is easy.
+
+* qc->orig_n_elem is unused and removed.
+
+* qc->n_elem now contains the number of sg entries that LLDs should
+  map.  qc->mapped_n_elem is added to carry the original number of
+  mapped sgs for unmapping.
+
+* The last sg of the original sg list is used to chain to extra sg
+  list.  The original last sg is pointed to by qc->last_sg and the
+  content is stored in qc->saved_last_sg.  It's restored during
+  ata_sg_clean().
+
+* All sg walking code has been updated.  Unnecessary assertions and
+  checks for conditions the core layer already guarantees are removed.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ata/libata-core.c    |   46 +++++++++++++++++++++++++++--------------
- drivers/ata/pata_bf54x.c     |   28 +++++++++++++-----------
- drivers/ata/pata_ixp4xx_cf.c |   26 ++++++++++++-----------
- drivers/ata/pata_legacy.c    |   36 +++++++++++++++++---------------
- drivers/ata/pata_qdi.c       |   30 +++++++++++++++-----------
- drivers/ata/pata_scc.c       |   30 ++++++++++++++------------
- drivers/ata/pata_winbond.c   |   28 ++++++++++++++-----------
- include/linux/libata.h       |   11 +++++----
- 8 files changed, 133 insertions(+), 102 deletions(-)
+ drivers/ata/ahci.c            |   18 ++---
+ drivers/ata/libata-core.c     |  201 ++++++++++++++++++++++++-----------------
+ drivers/ata/libata-scsi.c     |    2 +-
+ drivers/ata/pata_bf54x.c      |   13 ++-
+ drivers/ata/pata_icside.c     |    3 +-
+ drivers/ata/pdc_adma.c        |    3 +-
+ drivers/ata/sata_fsl.c        |    4 +-
+ drivers/ata/sata_mv.c         |    3 +-
+ drivers/ata/sata_nv.c         |   25 ++----
+ drivers/ata/sata_promise.c    |   40 ++++-----
+ drivers/ata/sata_qstor.c      |   13 +--
+ drivers/ata/sata_sil24.c      |    6 +-
+ drivers/ata/sata_sx4.c        |    4 +-
+ drivers/scsi/ipr.c            |    3 +-
+ drivers/scsi/libsas/sas_ata.c |   10 +--
+ include/linux/libata.h        |   42 ++-------
+ 16 files changed, 193 insertions(+), 197 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a8c4453..5b874d3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1481,28 +1481,24 @@ static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
+ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ {
+ 	struct scatterlist *sg;
+-	struct ahci_sg *ahci_sg;
+-	unsigned int n_sg = 0;
++	struct ahci_sg *ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
++	unsigned int si;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+ 	/*
+ 	 * Next, the S/G list.
+ 	 */
+-	ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		dma_addr_t addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+ 
+-		ahci_sg->addr = cpu_to_le32(addr & 0xffffffff);
+-		ahci_sg->addr_hi = cpu_to_le32((addr >> 16) >> 16);
+-		ahci_sg->flags_size = cpu_to_le32(sg_len - 1);
+-
+-		ahci_sg++;
+-		n_sg++;
++		ahci_sg[si].addr = cpu_to_le32(addr & 0xffffffff);
++		ahci_sg[si].addr_hi = cpu_to_le32((addr >> 16) >> 16);
++		ahci_sg[si].flags_size = cpu_to_le32(sg_len - 1);
+ 	}
+ 
+-	return n_sg;
++	return si;
+ }
+ 
+ static void ahci_qc_prep(struct ata_queued_cmd *qc)
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1af9b84..70e273c 100644
+index 8478fd6..6e5e7dd 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4969,7 +4969,7 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- 
- /**
-  *	ata_data_xfer - Transfer data by PIO
-- *	@adev: device to target
-+ *	@dev: device to target
-  *	@buf: data buffer
-  *	@buflen: buffer length
-  *	@write_data: read/write
-@@ -4978,37 +4978,44 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
-  *
-  *	LOCKING:
-  *	Inherited from caller.
-+ *
-+ *	RETURNS:
-+ *	Bytes consumed.
-  */
--void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
--		   unsigned int buflen, int write_data)
-+unsigned int ata_data_xfer(struct ata_device *dev, unsigned char *buf,
-+			   unsigned int buflen, int rw)
+@@ -4483,13 +4483,13 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ void ata_sg_clean(struct ata_queued_cmd *qc)
  {
--	struct ata_port *ap = adev->link->ap;
-+	struct ata_port *ap = dev->link->ap;
-+	void __iomem *data_addr = ap->ioaddr.data_addr;
- 	unsigned int words = buflen >> 1;
+ 	struct ata_port *ap = qc->ap;
+-	struct scatterlist *sg = qc->__sg;
++	struct scatterlist *sg = qc->sg;
+ 	int dir = qc->dma_dir;
+ 	void *pad_buf = NULL;
  
- 	/* Transfer multiple of 2 bytes */
--	if (write_data)
--		iowrite16_rep(ap->ioaddr.data_addr, buf, words);
-+	if (rw == READ)
-+		ioread16_rep(data_addr, buf, words);
- 	else
--		ioread16_rep(ap->ioaddr.data_addr, buf, words);
-+		iowrite16_rep(data_addr, buf, words);
+ 	WARN_ON(sg == NULL);
  
- 	/* Transfer trailing 1 byte, if any. */
- 	if (unlikely(buflen & 0x01)) {
- 		u16 align_buf[1] = { 0 };
- 		unsigned char *trailing_buf = buf + buflen - 1;
+-	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
++	VPRINTK("unmapping %u sg elements\n", qc->mapped_n_elem);
  
--		if (write_data) {
--			memcpy(align_buf, trailing_buf, 1);
--			iowrite16(le16_to_cpu(align_buf[0]), ap->ioaddr.data_addr);
--		} else {
--			align_buf[0] = cpu_to_le16(ioread16(ap->ioaddr.data_addr));
-+		if (rw == READ) {
-+			align_buf[0] = cpu_to_le16(ioread16(data_addr));
- 			memcpy(trailing_buf, align_buf, 1);
-+		} else {
-+			memcpy(align_buf, trailing_buf, 1);
-+			iowrite16(le16_to_cpu(align_buf[0]), data_addr);
- 		}
-+		words++;
+ 	/* if we padded the buffer out to 32-bit bound, and data
+ 	 * xfer direction is from-device, we must copy from the
+@@ -4498,19 +4498,20 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
+ 	if (qc->pad_len && !(qc->tf.flags & ATA_TFLAG_WRITE))
+ 		pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
+ 
+-	if (qc->n_elem)
+-		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
++	if (qc->mapped_n_elem)
++		dma_unmap_sg(ap->dev, sg, qc->mapped_n_elem, dir);
+ 	/* restore last sg */
+-	sg_last(sg, qc->orig_n_elem)->length += qc->pad_len;
++	if (qc->last_sg)
++		*qc->last_sg = qc->saved_last_sg;
+ 	if (pad_buf) {
+-		struct scatterlist *psg = &qc->pad_sgent;
++		struct scatterlist *psg = &qc->extra_sg[1];
+ 		void *addr = kmap_atomic(sg_page(psg), KM_IRQ0);
+ 		memcpy(addr + psg->offset, pad_buf, qc->pad_len);
+ 		kunmap_atomic(addr, KM_IRQ0);
  	}
-+
-+	return words << 1;
+ 
+ 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+-	qc->__sg = NULL;
++	qc->sg = NULL;
  }
  
  /**
-  *	ata_data_xfer_noirq - Transfer data by PIO
-- *	@adev: device to target
-+ *	@dev: device to target
-  *	@buf: data buffer
-  *	@buflen: buffer length
-  *	@write_data: read/write
-@@ -5018,14 +5025,21 @@ void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
-  *
-  *	LOCKING:
-  *	Inherited from caller.
-+ *
-+ *	RETURNS:
-+ *	Bytes consumed.
-  */
--void ata_data_xfer_noirq(struct ata_device *adev, unsigned char *buf,
--			 unsigned int buflen, int write_data)
-+unsigned int ata_data_xfer_noirq(struct ata_device *dev, unsigned char *buf,
-+				 unsigned int buflen, int rw)
+@@ -4528,13 +4529,10 @@ static void ata_fill_sg(struct ata_queued_cmd *qc)
  {
- 	unsigned long flags;
-+	unsigned int consumed;
-+
- 	local_irq_save(flags);
--	ata_data_xfer(adev, buf, buflen, write_data);
-+	consumed = ata_data_xfer(dev, buf, buflen, rw);
- 	local_irq_restore(flags);
-+
-+	return consumed;
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg;
+-	unsigned int idx;
++	unsigned int si, pi;
+ 
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+-
+-	idx = 0;
+-	ata_for_each_sg(sg, qc) {
++	pi = 0;
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u32 addr, offset;
+ 		u32 sg_len, len;
+ 
+@@ -4551,18 +4549,17 @@ static void ata_fill_sg(struct ata_queued_cmd *qc)
+ 			if ((offset + sg_len) > 0x10000)
+ 				len = 0x10000 - offset;
+ 
+-			ap->prd[idx].addr = cpu_to_le32(addr);
+-			ap->prd[idx].flags_len = cpu_to_le32(len & 0xffff);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++			ap->prd[pi].addr = cpu_to_le32(addr);
++			ap->prd[pi].flags_len = cpu_to_le32(len & 0xffff);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
+ 
+-			idx++;
++			pi++;
+ 			sg_len -= len;
+ 			addr += len;
+ 		}
+ 	}
+ 
+-	if (idx)
+-		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
  }
  
+ /**
+@@ -4582,13 +4579,10 @@ static void ata_fill_sg_dumb(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg;
+-	unsigned int idx;
+-
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
++	unsigned int si, pi;
  
+-	idx = 0;
+-	ata_for_each_sg(sg, qc) {
++	pi = 0;
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u32 addr, offset;
+ 		u32 sg_len, len, blen;
+ 
+@@ -4606,25 +4600,24 @@ static void ata_fill_sg_dumb(struct ata_queued_cmd *qc)
+ 				len = 0x10000 - offset;
+ 
+ 			blen = len & 0xffff;
+-			ap->prd[idx].addr = cpu_to_le32(addr);
++			ap->prd[pi].addr = cpu_to_le32(addr);
+ 			if (blen == 0) {
+ 			   /* Some PATA chipsets like the CS5530 can't
+ 			      cope with 0x0000 meaning 64K as the spec says */
+-				ap->prd[idx].flags_len = cpu_to_le32(0x8000);
++				ap->prd[pi].flags_len = cpu_to_le32(0x8000);
+ 				blen = 0x8000;
+-				ap->prd[++idx].addr = cpu_to_le32(addr + 0x8000);
++				ap->prd[++pi].addr = cpu_to_le32(addr + 0x8000);
+ 			}
+-			ap->prd[idx].flags_len = cpu_to_le32(blen);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++			ap->prd[pi].flags_len = cpu_to_le32(blen);
++			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
+ 
+-			idx++;
++			pi++;
+ 			sg_len -= len;
+ 			addr += len;
+ 		}
+ 	}
+ 
+-	if (idx)
+-		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
+ }
+ 
+ /**
+@@ -4761,54 +4754,48 @@ void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
+ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+ 		 unsigned int n_elem)
+ {
+-	qc->__sg = sg;
++	qc->sg = sg;
+ 	qc->n_elem = n_elem;
+-	qc->orig_n_elem = n_elem;
+-	qc->cursg = qc->__sg;
++	qc->cursg = qc->sg;
+ }
+ 
+-/**
+- *	ata_sg_setup - DMA-map the scatter-gather table associated with a command.
+- *	@qc: Command with scatter-gather table to be mapped.
+- *
+- *	DMA-map the scatter-gather table associated with queued_cmd @qc.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- *
+- *	RETURNS:
+- *	Zero on success, negative on error.
+- *
+- */
+-
+-static int ata_sg_setup(struct ata_queued_cmd *qc)
++static unsigned int ata_sg_setup_extra(struct ata_queued_cmd *qc,
++				       unsigned int *n_elem_extra)
+ {
+ 	struct ata_port *ap = qc->ap;
+-	struct scatterlist *sg = qc->__sg;
+-	struct scatterlist *lsg = sg_last(qc->__sg, qc->n_elem);
+-	int n_elem, pre_n_elem, dir, trim_sg = 0;
++	unsigned int n_elem = qc->n_elem;
++	struct scatterlist *lsg, *copy_lsg = NULL, *tsg = NULL, *esg = NULL;
+ 
+-	VPRINTK("ENTER, ata%u\n", ap->print_id);
++	*n_elem_extra = 0;
++
++	/* needs padding? */
++	qc->pad_len = qc->nbytes & 3;
++
++	if (likely(!qc->pad_len))
++		return n_elem;
++
++	/* locate last sg and save it */
++	lsg = sg_last(qc->sg, n_elem);
++	qc->last_sg = lsg;
++	qc->saved_last_sg = *lsg;
++
++	sg_init_table(qc->extra_sg, ARRAY_SIZE(qc->extra_sg));
+ 
+-	/* we must lengthen transfers to end on a 32-bit boundary */
+-	qc->pad_len = lsg->length & 3;
+ 	if (qc->pad_len) {
++		struct scatterlist *psg = &qc->extra_sg[1];
+ 		void *pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
+-		struct scatterlist *psg = &qc->pad_sgent;
+ 		unsigned int offset;
+ 
+ 		WARN_ON(qc->dev->class != ATA_DEV_ATAPI);
+ 
+ 		memset(pad_buf, 0, ATA_DMA_PAD_SZ);
+ 
+-		/*
+-		 * psg->page/offset are used to copy to-be-written
++		/* psg->page/offset are used to copy to-be-written
+ 		 * data in this function or read data in ata_sg_clean.
+ 		 */
+ 		offset = lsg->offset + lsg->length - qc->pad_len;
+-		sg_init_table(psg, 1);
+ 		sg_set_page(psg, nth_page(sg_page(lsg), offset >> PAGE_SHIFT),
+-				qc->pad_len, offset_in_page(offset));
++			    qc->pad_len, offset_in_page(offset));
+ 
+ 		if (qc->tf.flags & ATA_TFLAG_WRITE) {
+ 			void *addr = kmap_atomic(sg_page(psg), KM_IRQ0);
+@@ -4818,36 +4805,84 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+ 
+ 		sg_dma_address(psg) = ap->pad_dma + (qc->tag * ATA_DMA_PAD_SZ);
+ 		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
+-		/* trim last sg */
++
++		/* Trim the last sg entry and chain the original and
++		 * padding sg lists.
++		 *
++		 * Because chaining consumes one sg entry, one extra
++		 * sg entry is allocated and the last sg entry is
++		 * copied to it if the length isn't zero after padded
++		 * amount is removed.
++		 *
++		 * If the last sg entry is completely replaced by
++		 * padding sg entry, the first sg entry is skipped
++		 * while chaining.
++		 */
+ 		lsg->length -= qc->pad_len;
+-		if (lsg->length == 0)
+-			trim_sg = 1;
++		if (lsg->length) {
++			copy_lsg = &qc->extra_sg[0];
++			tsg = &qc->extra_sg[0];
++		} else {
++			n_elem--;
++			tsg = &qc->extra_sg[1];
++		}
++
++		esg = &qc->extra_sg[1];
+ 
+-		DPRINTK("padding done, sg[%d].length=%u pad_len=%u\n",
+-			qc->n_elem - 1, lsg->length, qc->pad_len);
++		(*n_elem_extra)++;
+ 	}
+ 
+-	pre_n_elem = qc->n_elem;
+-	if (trim_sg && pre_n_elem)
+-		pre_n_elem--;
++	if (copy_lsg)
++		sg_set_page(copy_lsg, sg_page(lsg), lsg->length, lsg->offset);
+ 
+-	if (!pre_n_elem) {
+-		n_elem = 0;
+-		goto skip_map;
++	sg_chain(lsg, 1, tsg);
++	sg_mark_end(esg);
++
++	/* sglist can't start with chaining sg entry, fast forward */
++	if (qc->sg == lsg) {
++		qc->sg = tsg;
++		qc->cursg = tsg;
+ 	}
+ 
+-	dir = qc->dma_dir;
+-	n_elem = dma_map_sg(ap->dev, sg, pre_n_elem, dir);
+-	if (n_elem < 1) {
+-		/* restore last sg */
+-		lsg->length += qc->pad_len;
+-		return -1;
++	return n_elem;
++}
++
++/**
++ *	ata_sg_setup - DMA-map the scatter-gather table associated with a command.
++ *	@qc: Command with scatter-gather table to be mapped.
++ *
++ *	DMA-map the scatter-gather table associated with queued_cmd @qc.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	Zero on success, negative on error.
++ *
++ */
++static int ata_sg_setup(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	unsigned int n_elem, n_elem_extra;
++
++	VPRINTK("ENTER, ata%u\n", ap->print_id);
++
++	n_elem = ata_sg_setup_extra(qc, &n_elem_extra);
++
++	if (n_elem) {
++		n_elem = dma_map_sg(ap->dev, qc->sg, n_elem, qc->dma_dir);
++		if (n_elem < 1) {
++			/* restore last sg */
++			if (qc->last_sg)
++				*qc->last_sg = qc->saved_last_sg;
++			return -1;
++		}
++		DPRINTK("%d sg elements mapped\n", n_elem);
+ 	}
+ 
+-	DPRINTK("%d sg elements mapped\n", n_elem);
++	qc->n_elem = qc->mapped_n_elem = n_elem;
++	qc->n_elem += n_elem_extra;
+ 
+-skip_map:
+-	qc->n_elem = n_elem;
+ 	qc->flags |= ATA_QCFLAG_DMAMAP;
+ 
+ 	return 0;
+@@ -5915,7 +5950,7 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+ 	/* We guarantee to LLDs that they will have at least one
+ 	 * non-zero sg if the command is a data command.
+ 	 */
+-	BUG_ON(ata_is_data(prot) && (!qc->__sg || !qc->n_elem || !qc->nbytes));
++	BUG_ON(ata_is_data(prot) && (!qc->sg || !qc->n_elem || !qc->nbytes));
+ 
+ 	if (ata_is_dma(prot) || (ata_is_pio(prot) &&
+ 				 (ap->flags & ATA_FLAG_PIO_DMA)))
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 6251caa..f523e66 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -517,7 +517,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = done;
+ 
+-		qc->__sg = scsi_sglist(cmd);
++		qc->sg = scsi_sglist(cmd);
+ 		qc->n_elem = scsi_sg_count(cmd);
+ 	} else {
+ 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
 diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 088a41f..9970952 100644
+index 9970952..58cf000 100644
 --- a/drivers/ata/pata_bf54x.c
 +++ b/drivers/ata/pata_bf54x.c
-@@ -1167,34 +1167,36 @@ static unsigned char bfin_bmdma_status(struct ata_port *ap)
-  *	Note: Original code is ata_data_xfer().
-  */
- 
--static void bfin_data_xfer(struct ata_device *adev, unsigned char *buf,
--			   unsigned int buflen, int write_data)
-+static unsigned int bfin_data_xfer(struct ata_device *dev, unsigned char *buf,
-+				   unsigned int buflen, int rw)
+@@ -832,6 +832,7 @@ static void bfin_bmdma_setup(struct ata_queued_cmd *qc)
  {
--	struct ata_port *ap = adev->link->ap;
--	unsigned int words = buflen >> 1;
--	unsigned short *buf16 = (u16 *) buf;
-+	struct ata_port *ap = dev->link->ap;
+ 	unsigned short config = WDSIZE_16;
+ 	struct scatterlist *sg;
++	unsigned int si;
+ 
+ 	pr_debug("in atapi dma setup\n");
+ 	/* Program the ATA_CTRL register with dir */
+@@ -839,7 +840,7 @@ static void bfin_bmdma_setup(struct ata_queued_cmd *qc)
+ 		/* fill the ATAPI DMA controller */
+ 		set_dma_config(CH_ATAPI_TX, config);
+ 		set_dma_x_modify(CH_ATAPI_TX, 2);
+-		ata_for_each_sg(sg, qc) {
++		for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 			set_dma_start_addr(CH_ATAPI_TX, sg_dma_address(sg));
+ 			set_dma_x_count(CH_ATAPI_TX, sg_dma_len(sg) >> 1);
+ 		}
+@@ -848,7 +849,7 @@ static void bfin_bmdma_setup(struct ata_queued_cmd *qc)
+ 		/* fill the ATAPI DMA controller */
+ 		set_dma_config(CH_ATAPI_RX, config);
+ 		set_dma_x_modify(CH_ATAPI_RX, 2);
+-		ata_for_each_sg(sg, qc) {
++		for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 			set_dma_start_addr(CH_ATAPI_RX, sg_dma_address(sg));
+ 			set_dma_x_count(CH_ATAPI_RX, sg_dma_len(sg) >> 1);
+ 		}
+@@ -867,6 +868,7 @@ static void bfin_bmdma_start(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
  	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
-+	unsigned int words = buflen >> 1;
-+	unsigned short *buf16 = (u16 *)buf;
+ 	struct scatterlist *sg;
++	unsigned int si;
  
- 	/* Transfer multiple of 2 bytes */
--	if (write_data) {
--		write_atapi_data(base, words, buf16);
--	} else {
-+	if (rw == READ)
- 		read_atapi_data(base, words, buf16);
--	}
-+	else
-+		write_atapi_data(base, words, buf16);
- 
- 	/* Transfer trailing 1 byte, if any. */
- 	if (unlikely(buflen & 0x01)) {
- 		unsigned short align_buf[1] = { 0 };
- 		unsigned char *trailing_buf = buf + buflen - 1;
- 
--		if (write_data) {
--			memcpy(align_buf, trailing_buf, 1);
--			write_atapi_data(base, 1, align_buf);
--		} else {
-+		if (rw == READ) {
- 			read_atapi_data(base, 1, align_buf);
- 			memcpy(trailing_buf, align_buf, 1);
-+		} else {
-+			memcpy(align_buf, trailing_buf, 1);
-+			write_atapi_data(base, 1, align_buf);
+ 	pr_debug("in atapi dma start\n");
+ 	if (!(ap->udma_mask || ap->mwdma_mask))
+@@ -881,7 +883,7 @@ static void bfin_bmdma_start(struct ata_queued_cmd *qc)
+ 		 * data cache is enabled. Otherwise, this loop
+ 		 * is an empty loop and optimized out.
+ 		 */
+-		ata_for_each_sg(sg, qc) {
++		for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 			flush_dcache_range(sg_dma_address(sg),
+ 				sg_dma_address(sg) + sg_dma_len(sg));
  		}
-+		words++;
- 	}
-+
-+	return words << 1;
- }
+@@ -910,7 +912,7 @@ static void bfin_bmdma_start(struct ata_queued_cmd *qc)
+ 	ATAPI_SET_CONTROL(base, ATAPI_GET_CONTROL(base) | TFRCNT_RST);
  
- /**
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index fcd532a..0ec3f62 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -42,13 +42,13 @@ static int ixp4xx_set_mode(struct ata_link *link, struct ata_device **error)
- 	return 0;
- }
- 
--static void ixp4xx_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
--				unsigned int buflen, int write_data)
-+static unsigned int ixp4xx_mmio_data_xfer(struct ata_device *dev,
-+				unsigned char *buf, unsigned int buflen, int rw)
- {
- 	unsigned int i;
- 	unsigned int words = buflen >> 1;
- 	u16 *buf16 = (u16 *) buf;
--	struct ata_port *ap = adev->link->ap;
-+	struct ata_port *ap = dev->link->ap;
- 	void __iomem *mmio = ap->ioaddr.data_addr;
- 	struct ixp4xx_pata_data *data = ap->host->dev->platform_data;
- 
-@@ -59,30 +59,32 @@ static void ixp4xx_mmio_data_xfer(struct ata_device *adev, unsigned char *buf,
- 	udelay(100);
- 
- 	/* Transfer multiple of 2 bytes */
--	if (write_data) {
--		for (i = 0; i < words; i++)
--			writew(buf16[i], mmio);
--	} else {
-+	if (rw == READ)
- 		for (i = 0; i < words; i++)
- 			buf16[i] = readw(mmio);
--	}
-+	else
-+		for (i = 0; i < words; i++)
-+			writew(buf16[i], mmio);
- 
- 	/* Transfer trailing 1 byte, if any. */
- 	if (unlikely(buflen & 0x01)) {
- 		u16 align_buf[1] = { 0 };
- 		unsigned char *trailing_buf = buf + buflen - 1;
- 
--		if (write_data) {
--			memcpy(align_buf, trailing_buf, 1);
--			writew(align_buf[0], mmio);
--		} else {
-+		if (rw == READ) {
- 			align_buf[0] = readw(mmio);
- 			memcpy(trailing_buf, align_buf, 1);
-+		} else {
-+			memcpy(align_buf, trailing_buf, 1);
-+			writew(align_buf[0], mmio);
- 		}
-+		words++;
+ 		/* Set transfer length to buffer len */
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		ATAPI_SET_XFER_LEN(base, (sg_dma_len(sg) >> 1));
  	}
  
- 	udelay(100);
- 	*data->cs0_cfg |= 0x01;
-+
-+	return words << 1;
- }
- 
- static struct scsi_host_template ixp4xx_sht = {
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 7bed8d8..ed59667 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -249,13 +249,14 @@ static void pdc20230_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 
- }
- 
--static void pdc_data_xfer_vlb(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
-+static unsigned int pdc_data_xfer_vlb(struct ata_device *dev,
-+				unsigned char *buf, unsigned int buflen, int rw)
+@@ -932,6 +934,7 @@ static void bfin_bmdma_stop(struct ata_queued_cmd *qc)
  {
--	struct ata_port *ap = adev->link->ap;
--	int slop = buflen & 3;
--	unsigned long flags;
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg;
++	unsigned int si;
+ 
+ 	pr_debug("in atapi dma stop\n");
+ 	if (!(ap->udma_mask || ap->mwdma_mask))
+@@ -950,7 +953,7 @@ static void bfin_bmdma_stop(struct ata_queued_cmd *qc)
+ 			 * data cache is enabled. Otherwise, this loop
+ 			 * is an empty loop and optimized out.
+ 			 */
+-			ata_for_each_sg(sg, qc) {
++			for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 				invalidate_dcache_range(
+ 					sg_dma_address(sg),
+ 					sg_dma_address(sg)
+diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+index 842fe08..5b8586d 100644
+--- a/drivers/ata/pata_icside.c
++++ b/drivers/ata/pata_icside.c
+@@ -224,6 +224,7 @@ static void pata_icside_bmdma_setup(struct ata_queued_cmd *qc)
+ 	struct pata_icside_state *state = ap->host->private_data;
+ 	struct scatterlist *sg, *rsg = state->sg;
+ 	unsigned int write = qc->tf.flags & ATA_TFLAG_WRITE;
++	unsigned int si;
+ 
+ 	/*
+ 	 * We are simplex; BUG if we try to fiddle with DMA
+@@ -234,7 +235,7 @@ static void pata_icside_bmdma_setup(struct ata_queued_cmd *qc)
+ 	/*
+ 	 * Copy ATAs scattered sg list into a contiguous array of sg
+ 	 */
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		memcpy(rsg, sg, sizeof(*sg));
+ 		rsg++;
+ 	}
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index 459cb7b..8e1b7e9 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -321,8 +321,9 @@ static int adma_fill_sg(struct ata_queued_cmd *qc)
+ 	u8  *buf = pp->pkt, *last_buf = NULL;
+ 	int i = (2 + buf[3]) * 8;
+ 	u8 pFLAGS = pORD | ((qc->tf.flags & ATA_TFLAG_WRITE) ? pDIRO : 0);
++	unsigned int si;
+ 
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u32 addr;
+ 		u32 len;
+ 
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index a3c33f1..d041709 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -323,6 +323,7 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 	struct scatterlist *sg;
+ 	unsigned int num_prde = 0;
+ 	u32 ttl_dwords = 0;
++	unsigned int si;
+ 
+ 	/*
+ 	 * NOTE : direct & indirect prdt's are contigiously allocated
+@@ -333,13 +334,14 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 	struct prde *prd_ptr_to_indirect_ext = NULL;
+ 	unsigned indirect_ext_segment_sz = 0;
+ 	dma_addr_t indirect_ext_segment_paddr;
++	unsigned int si;
+ 
+ 	VPRINTK("SATA FSL : cd = 0x%x, prd = 0x%x\n", cmd_desc, prd);
+ 
+ 	indirect_ext_segment_paddr = cmd_desc_paddr +
+ 	    SATA_FSL_CMD_DESC_OFFSET_TO_PRDT + SATA_FSL_MAX_PRD_DIRECT * 16;
+ 
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		dma_addr_t sg_addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+ 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index fe0105d..30ba1c8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -1136,9 +1136,10 @@ static void mv_fill_sg(struct ata_queued_cmd *qc)
+ 	struct mv_port_priv *pp = qc->ap->private_data;
+ 	struct scatterlist *sg;
+ 	struct mv_sg *mv_sg, *last_sg = NULL;
++	unsigned int si;
+ 
+ 	mv_sg = pp->sg_tbl;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		dma_addr_t addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+ 
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index ed5dc7c..a0f98fd 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1336,21 +1336,18 @@ static void nv_adma_fill_aprd(struct ata_queued_cmd *qc,
+ static void nv_adma_fill_sg(struct ata_queued_cmd *qc, struct nv_adma_cpb *cpb)
+ {
+ 	struct nv_adma_port_priv *pp = qc->ap->private_data;
+-	unsigned int idx;
+ 	struct nv_adma_prd *aprd;
+ 	struct scatterlist *sg;
++	unsigned int si;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	idx = 0;
 -
- 	if (ata_id_has_dword_io(adev->id)) {
-+		struct ata_port *ap = dev->link->ap;
-+		int slop = buflen & 3;
-+		unsigned long flags;
-+
- 		local_irq_save(flags);
- 
- 		/* Perform the 32bit I/O synchronization sequence */
-@@ -264,28 +265,29 @@ static void pdc_data_xfer_vlb(struct ata_device *adev, unsigned char *buf, unsig
- 		ioread8(ap->ioaddr.nsect_addr);
- 
- 		/* Now the data */
+-	ata_for_each_sg(sg, qc) {
+-		aprd = (idx < 5) ? &cpb->aprd[idx] :
+-			       &pp->aprd[NV_ADMA_SGTBL_LEN * qc->tag + (idx-5)];
+-		nv_adma_fill_aprd(qc, sg, idx, aprd);
+-		idx++;
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
++		aprd = (si < 5) ? &cpb->aprd[si] :
++			       &pp->aprd[NV_ADMA_SGTBL_LEN * qc->tag + (si-5)];
++		nv_adma_fill_aprd(qc, sg, si, aprd);
+ 	}
+-	if (idx > 5)
++	if (si > 5)
+ 		cpb->next_aprd = cpu_to_le64(((u64)(pp->aprd_dma + NV_ADMA_SGTBL_SZ * qc->tag)));
+ 	else
+ 		cpb->next_aprd = cpu_to_le64(0);
+@@ -1995,17 +1992,14 @@ static void nv_swncq_fill_sg(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg;
+-	unsigned int idx;
+ 	struct nv_swncq_port_priv *pp = ap->private_data;
+ 	struct ata_prd *prd;
 -
--		if (write_data)
--			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
--		else
-+		if (rw == READ)
- 			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
-+		else
-+			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
++	unsigned int si, idx;
  
- 		if (unlikely(slop)) {
- 			u32 pad;
--			if (write_data) {
--				memcpy(&pad, buf + buflen - slop, slop);
--				pad = le32_to_cpu(pad);
--				iowrite32(pad, ap->ioaddr.data_addr);
--			} else {
-+			if (rw == READ) {
- 				pad = ioread32(ap->ioaddr.data_addr);
- 				pad = cpu_to_le16(pad);
- 				memcpy(buf + buflen - slop, &pad, slop);
-+			} else {
-+				memcpy(&pad, buf + buflen - slop, slop);
-+				pad = le32_to_cpu(pad);
-+				iowrite32(pad, ap->ioaddr.data_addr);
- 			}
-+			buflen += 4 - slop;
+ 	prd = pp->prd + ATA_MAX_PRD * qc->tag;
+ 
+ 	idx = 0;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u32 addr, offset;
+ 		u32 sg_len, len;
+ 
+@@ -2027,8 +2021,7 @@ static void nv_swncq_fill_sg(struct ata_queued_cmd *qc)
  		}
- 		local_irq_restore(flags);
--	}
--	else
--		ata_data_xfer_noirq(adev, buf, buflen, write_data);
-+	} else
-+		buflen = ata_data_xfer_noirq(dev, buf, buflen, rw);
-+
-+	return buflen;
+ 	}
+ 
+-	if (idx)
+-		prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++	prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
  }
  
- static struct ata_port_operations pdc20230_port_ops = {
-diff --git a/drivers/ata/pata_qdi.c b/drivers/ata/pata_qdi.c
-index 7d4c696..e0e26db 100644
---- a/drivers/ata/pata_qdi.c
-+++ b/drivers/ata/pata_qdi.c
-@@ -124,31 +124,35 @@ static unsigned int qdi_qc_issue_prot(struct ata_queued_cmd *qc)
- 	return ata_qc_issue_prot(qc);
- }
- 
--static void qdi_data_xfer(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
-+static unsigned int qdi_data_xfer(struct ata_device *dev, unsigned char *buf,
-+				  unsigned int buflen, int rw)
+ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 01738d7..a07d319 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -533,17 +533,15 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
  {
--	struct ata_port *ap = adev->link->ap;
--	int slop = buflen & 3;
-+	if (ata_id_has_dword_io(dev->id)) {
-+		struct ata_port *ap = dev->link->ap;
-+		int slop = buflen & 3;
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg;
+-	unsigned int idx;
+ 	const u32 SG_COUNT_ASIC_BUG = 41*4;
++	unsigned int si, idx;
++	u32 len;
  
--	if (ata_id_has_dword_io(adev->id)) {
--		if (write_data)
--			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
--		else
-+		if (rw == READ)
- 			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
-+		else
-+			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
+ 	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+ 		return;
  
- 		if (unlikely(slop)) {
- 			u32 pad;
--			if (write_data) {
--				memcpy(&pad, buf + buflen - slop, slop);
--				pad = le32_to_cpu(pad);
--				iowrite32(pad, ap->ioaddr.data_addr);
--			} else {
-+			if (rw == READ) {
- 				pad = ioread32(ap->ioaddr.data_addr);
- 				pad = cpu_to_le32(pad);
- 				memcpy(buf + buflen - slop, &pad, slop);
-+			} else {
-+				memcpy(&pad, buf + buflen - slop, slop);
-+				pad = le32_to_cpu(pad);
-+				iowrite32(pad, ap->ioaddr.data_addr);
- 			}
-+			buflen += 4 - slop;
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+-
+ 	idx = 0;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u32 addr, offset;
+ 		u32 sg_len, len;
+ 
+@@ -570,29 +568,27 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
  		}
- 	} else
--		ata_data_xfer(adev, buf, buflen, write_data);
-+		buflen = ata_data_xfer(dev, buf, buflen, rw);
-+
-+	return buflen;
- }
+ 	}
  
- static struct scsi_host_template qdi_sht = {
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index ea2ef9f..55055b2 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -768,45 +768,47 @@ static u8 scc_bmdma_status (struct ata_port *ap)
+-	if (idx) {
+-		u32 len = le32_to_cpu(ap->prd[idx - 1].flags_len);
++	len = le32_to_cpu(ap->prd[idx - 1].flags_len);
  
- /**
-  *	scc_data_xfer - Transfer data by PIO
-- *	@adev: device for this I/O
-+ *	@dev: device for this I/O
-  *	@buf: data buffer
-  *	@buflen: buffer length
-- *	@write_data: read/write
-+ *	@rw: read/write
-  *
-  *	Note: Original code is ata_data_xfer().
-  */
+-		if (len > SG_COUNT_ASIC_BUG) {
+-			u32 addr;
++	if (len > SG_COUNT_ASIC_BUG) {
++		u32 addr;
  
--static void scc_data_xfer (struct ata_device *adev, unsigned char *buf,
--			   unsigned int buflen, int write_data)
-+static unsigned int scc_data_xfer (struct ata_device *dev, unsigned char *buf,
-+				   unsigned int buflen, int rw)
- {
--	struct ata_port *ap = adev->link->ap;
-+	struct ata_port *ap = dev->link->ap;
- 	unsigned int words = buflen >> 1;
- 	unsigned int i;
- 	u16 *buf16 = (u16 *) buf;
- 	void __iomem *mmio = ap->ioaddr.data_addr;
+-			VPRINTK("Splitting last PRD.\n");
++		VPRINTK("Splitting last PRD.\n");
  
- 	/* Transfer multiple of 2 bytes */
--	if (write_data) {
--		for (i = 0; i < words; i++)
--			out_be32(mmio, cpu_to_le16(buf16[i]));
--	} else {
-+	if (rw == READ)
- 		for (i = 0; i < words; i++)
- 			buf16[i] = le16_to_cpu(in_be32(mmio));
--	}
-+	else
-+		for (i = 0; i < words; i++)
-+			out_be32(mmio, cpu_to_le16(buf16[i]));
+-			addr = le32_to_cpu(ap->prd[idx - 1].addr);
+-			ap->prd[idx - 1].flags_len = cpu_to_le32(len - SG_COUNT_ASIC_BUG);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
++		addr = le32_to_cpu(ap->prd[idx - 1].addr);
++		ap->prd[idx - 1].flags_len = cpu_to_le32(len - SG_COUNT_ASIC_BUG);
++		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
  
- 	/* Transfer trailing 1 byte, if any. */
- 	if (unlikely(buflen & 0x01)) {
- 		u16 align_buf[1] = { 0 };
- 		unsigned char *trailing_buf = buf + buflen - 1;
+-			addr = addr + len - SG_COUNT_ASIC_BUG;
+-			len = SG_COUNT_ASIC_BUG;
+-			ap->prd[idx].addr = cpu_to_le32(addr);
+-			ap->prd[idx].flags_len = cpu_to_le32(len);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
++		addr = addr + len - SG_COUNT_ASIC_BUG;
++		len = SG_COUNT_ASIC_BUG;
++		ap->prd[idx].addr = cpu_to_le32(addr);
++		ap->prd[idx].flags_len = cpu_to_le32(len);
++		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
  
--		if (write_data) {
--			memcpy(align_buf, trailing_buf, 1);
--			out_be32(mmio, cpu_to_le16(align_buf[0]));
--		} else {
-+		if (rw == READ) {
- 			align_buf[0] = le16_to_cpu(in_be32(mmio));
- 			memcpy(trailing_buf, align_buf, 1);
-+		} else {
-+			memcpy(align_buf, trailing_buf, 1);
-+			out_be32(mmio, cpu_to_le16(align_buf[0]));
- 		}
-+		words++;
+-			idx++;
+-		}
+-
+-		ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
++		idx++;
  	}
 +
-+	return words << 1;
++	ap->prd[idx - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
  }
  
- /**
-diff --git a/drivers/ata/pata_winbond.c b/drivers/ata/pata_winbond.c
-index 311cdb3..3da36d2 100644
---- a/drivers/ata/pata_winbond.c
-+++ b/drivers/ata/pata_winbond.c
-@@ -92,31 +92,35 @@ static void winbond_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index 2875549..c55ab77 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -287,14 +287,10 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
+ 	struct scatterlist *sg;
+ 	struct ata_port *ap = qc->ap;
+ 	struct qs_port_priv *pp = ap->private_data;
+-	unsigned int nelem;
+ 	u8 *prd = pp->pkt + QS_CPB_BYTES;
++	unsigned int si;
+ 
+-	WARN_ON(qc->__sg == NULL);
+-	WARN_ON(qc->n_elem == 0 && qc->pad_len == 0);
+-
+-	nelem = 0;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		u64 addr;
+ 		u32 len;
+ 
+@@ -306,12 +302,11 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
+ 		*(__le32 *)prd = cpu_to_le32(len);
+ 		prd += sizeof(u64);
+ 
+-		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", nelem,
++		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", si,
+ 					(unsigned long long)addr, len);
+-		nelem++;
+ 	}
+ 
+-	return nelem;
++	return si;
  }
  
- 
--static void winbond_data_xfer(struct ata_device *adev, unsigned char *buf, unsigned int buflen, int write_data)
-+static void winbond_data_xfer(struct ata_device *dev, unsigned char *buf,
-+			      unsigned int buflen, int rw)
+ static void qs_qc_prep(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 4f25209..b3c4f44 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -813,8 +813,9 @@ static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
  {
--	struct ata_port *ap = adev->link->ap;
-+	struct ata_port *ap = dev->link->ap;
- 	int slop = buflen & 3;
+ 	struct scatterlist *sg;
+ 	struct sil24_sge *last_sge = NULL;
++	unsigned int si;
  
--	if (ata_id_has_dword_io(adev->id)) {
--		if (write_data)
--			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
--		else
-+	if (ata_id_has_dword_io(dev->id)) {
-+		if (rw == READ)
- 			ioread32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
-+		else
-+			iowrite32_rep(ap->ioaddr.data_addr, buf, buflen >> 2);
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		sge->addr = cpu_to_le64(sg_dma_address(sg));
+ 		sge->cnt = cpu_to_le32(sg_dma_len(sg));
+ 		sge->flags = 0;
+@@ -823,8 +824,7 @@ static inline void sil24_fill_sg(struct ata_queued_cmd *qc,
+ 		sge++;
+ 	}
  
- 		if (unlikely(slop)) {
- 			u32 pad;
--			if (write_data) {
--				memcpy(&pad, buf + buflen - slop, slop);
--				pad = le32_to_cpu(pad);
--				iowrite32(pad, ap->ioaddr.data_addr);
--			} else {
-+			if (rw == read) {
- 				pad = ioread32(ap->ioaddr.data_addr);
- 				pad = cpu_to_le16(pad);
- 				memcpy(buf + buflen - slop, &pad, slop);
-+			} else {
-+				memcpy(&pad, buf + buflen - slop, slop);
-+				pad = le32_to_cpu(pad);
-+				iowrite32(pad, ap->ioaddr.data_addr);
- 			}
-+			buflen += 4 - slop;
- 		}
- 	} else
--		ata_data_xfer(adev, buf, buflen, write_data);
-+		buflen = ata_data_xfer(dev, buf, buflen, rw);
-+
-+	return buflen;
+-	if (likely(last_sge))
+-		last_sge->flags = cpu_to_le32(SGE_TRM);
++	last_sge->flags = cpu_to_le32(SGE_TRM);
  }
  
- static struct scsi_host_template winbond_sht = {
+ static int sil24_qc_defer(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index 3de0c27..211ba8d 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -473,7 +473,7 @@ static void pdc20621_dma_prep(struct ata_queued_cmd *qc)
+ 	void __iomem *mmio = ap->host->iomap[PDC_MMIO_BAR];
+ 	void __iomem *dimm_mmio = ap->host->iomap[PDC_DIMM_BAR];
+ 	unsigned int portno = ap->port_no;
+-	unsigned int i, idx, total_len = 0, sgt_len;
++	unsigned int i, si, idx, total_len = 0, sgt_len;
+ 	u32 *buf = (u32 *) &pp->dimm_buf[PDC_DIMM_HEADER_SZ];
+ 
+ 	WARN_ON(!(qc->flags & ATA_QCFLAG_DMAMAP));
+@@ -487,7 +487,7 @@ static void pdc20621_dma_prep(struct ata_queued_cmd *qc)
+ 	 * Build S/G table
+ 	 */
+ 	idx = 0;
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		buf[idx++] = cpu_to_le32(sg_dma_address(sg));
+ 		buf[idx++] = cpu_to_le32(sg_dma_len(sg));
+ 		total_len += sg_dma_len(sg);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 3e78bc2..aa0df0a 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5142,6 +5142,7 @@ static void ipr_build_ata_ioadl(struct ipr_cmnd *ipr_cmd,
+ 	struct ipr_ioadl_desc *last_ioadl = NULL;
+ 	int len = qc->nbytes + qc->pad_len;
+ 	struct scatterlist *sg;
++	unsigned int si;
+ 
+ 	if (len == 0)
+ 		return;
+@@ -5159,7 +5160,7 @@ static void ipr_build_ata_ioadl(struct ipr_cmnd *ipr_cmd,
+ 			cpu_to_be32(sizeof(struct ipr_ioadl_desc) * ipr_cmd->dma_use_sg);
+ 	}
+ 
+-	ata_for_each_sg(sg, qc) {
++	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		ioadl->flags_and_data_len = cpu_to_be32(ioadl_flags | sg_dma_len(sg));
+ 		ioadl->address = cpu_to_be32(sg_dma_address(sg));
+ 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index f78d060..827cfb1 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -158,8 +158,8 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	struct Scsi_Host *host = sas_ha->core.shost;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
+ 	struct scatterlist *sg;
+-	unsigned int num = 0;
+ 	unsigned int xfer = 0;
++	unsigned int si;
+ 
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+@@ -181,17 +181,15 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 		task->total_xfer_len = qc->nbytes + qc->pad_len;
+ 		task->num_scatter = qc->pad_len ? qc->n_elem + 1 : qc->n_elem;
+ 	} else {
+-		ata_for_each_sg(sg, qc) {
+-			num++;
++		for_each_sg(qc->sg, sg, qc->n_elem, si)
+ 			xfer += sg->length;
+-		}
+ 
+ 		task->total_xfer_len = xfer;
+-		task->num_scatter = num;
++		task->num_scatter = si;
+ 	}
+ 
+ 	task->data_dir = qc->dma_dir;
+-	task->scatter = qc->__sg;
++	task->scatter = qc->sg;
+ 	task->ata_task.retry_count = 1;
+ 	task->task_state_flags = SAS_TASK_STATE_PENDING;
+ 	qc->lldd_task = task;
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 72df408..e291f04 100644
+index 87bf14b..bf03577 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -700,7 +700,8 @@ struct ata_port_operations {
- 	void (*bmdma_setup) (struct ata_queued_cmd *qc);
- 	void (*bmdma_start) (struct ata_queued_cmd *qc);
+@@ -459,7 +459,7 @@ struct ata_queued_cmd {
+ 	unsigned int		tag;
+ 	unsigned int		n_elem;
+ 	unsigned int		n_iter;
+-	unsigned int		orig_n_elem;
++	unsigned int		mapped_n_elem;
  
--	void (*data_xfer) (struct ata_device *, unsigned char *, unsigned int, int);
-+	unsigned int (*data_xfer) (struct ata_device *dev, unsigned char *buf,
-+				   unsigned int buflen, int rw);
+ 	int			dma_dir;
  
- 	int (*qc_defer) (struct ata_queued_cmd *qc);
- 	void (*qc_prep) (struct ata_queued_cmd *qc);
-@@ -880,10 +881,10 @@ extern void ata_exec_command(struct ata_port *ap, const struct ata_taskfile *tf)
- extern int ata_port_start(struct ata_port *ap);
- extern int ata_sff_port_start(struct ata_port *ap);
- extern irqreturn_t ata_interrupt(int irq, void *dev_instance);
--extern void ata_data_xfer(struct ata_device *adev, unsigned char *buf,
--			  unsigned int buflen, int write_data);
--extern void ata_data_xfer_noirq(struct ata_device *adev, unsigned char *buf,
--				unsigned int buflen, int write_data);
-+extern unsigned int ata_data_xfer(struct ata_device *dev,
-+			unsigned char *buf, unsigned int buflen, int rw);
-+extern unsigned int ata_data_xfer_noirq(struct ata_device *dev,
-+			unsigned char *buf, unsigned int buflen, int rw);
- extern int ata_std_qc_defer(struct ata_queued_cmd *qc);
- extern void ata_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_qc_prep(struct ata_queued_cmd *qc);
+@@ -472,11 +472,12 @@ struct ata_queued_cmd {
+ 	struct scatterlist	*cursg;
+ 	unsigned int		cursg_ofs;
+ 
++	struct scatterlist	*last_sg;
++	struct scatterlist	saved_last_sg;
+ 	struct scatterlist	sgent;
+-	struct scatterlist	pad_sgent;
++	struct scatterlist	extra_sg[2];
+ 
+-	/* DO NOT iterate over __sg manually, use ata_for_each_sg() */
+-	struct scatterlist	*__sg;
++	struct scatterlist	*sg;
+ 
+ 	unsigned int		err_mask;
+ 	struct ata_taskfile	result_tf;
+@@ -1124,35 +1125,6 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
+ 			       const char *name);
+ #endif
+ 
+-/*
+- * qc helpers
+- */
+-static inline struct scatterlist *
+-ata_qc_first_sg(struct ata_queued_cmd *qc)
+-{
+-	qc->n_iter = 0;
+-	if (qc->n_elem)
+-		return qc->__sg;
+-	if (qc->pad_len)
+-		return &qc->pad_sgent;
+-	return NULL;
+-}
+-
+-static inline struct scatterlist *
+-ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
+-{
+-	if (sg == &qc->pad_sgent)
+-		return NULL;
+-	if (++qc->n_iter < qc->n_elem)
+-		return sg_next(sg);
+-	if (qc->pad_len)
+-		return &qc->pad_sgent;
+-	return NULL;
+-}
+-
+-#define ata_for_each_sg(sg, qc) \
+-	for (sg = ata_qc_first_sg(qc); sg; sg = ata_qc_next_sg(sg, qc))
+-
+ static inline unsigned int ata_tag_valid(unsigned int tag)
+ {
+ 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
+@@ -1387,15 +1359,17 @@ static inline void ata_tf_init(struct ata_device *dev, struct ata_taskfile *tf)
+ static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
+ {
+ 	qc->dma_dir = DMA_NONE;
+-	qc->__sg = NULL;
++	qc->sg = NULL;
+ 	qc->flags = 0;
+ 	qc->cursg = NULL;
+ 	qc->cursg_ofs = 0;
+ 	qc->nbytes = qc->curbytes = 0;
+ 	qc->n_elem = 0;
++	qc->mapped_n_elem = 0;
+ 	qc->n_iter = 0;
+ 	qc->err_mask = 0;
+ 	qc->pad_len = 0;
++	qc->last_sg = NULL;
+ 	qc->sect_size = ATA_SECT_SIZE;
+ 
+ 	ata_tf_init(qc->dev, &qc->tf);
 -- 
 1.5.2.4
 
