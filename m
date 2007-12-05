@@ -1,42 +1,61 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 2/4] [libata] pata_of_platform: OF-Platform PATA
-	device driver
-Date: Tue, 4 Dec 2007 21:26:57 -0600
-Message-ID: <20071205032657.GB13906@lixom.net>
-References: <20071204170442.GA10460@localhost.localdomain> <20071204170719.GB15599@localhost.localdomain> <20071204184826.GA5758@lixom.net> <20071204194921.GB1253@localhost.localdomain> <20071204200121.GA6782@lixom.net> <20071205004841.GA25905@linux-sh.org>
+From: Zhao Yakui <yakui.zhao@intel.com>
+Subject: Re: a question about interrupt of IDE controller( bug 5637)
+Date: Wed, 05 Dec 2007 13:33:46 +0800
+Message-ID: <1196832826.10467.15.camel@yakui_zhao.sh.intel.com>
+References: <1196738884.4012.55.camel@yakui_zhao.sh.intel.com>
+	 <20071204123828.09fc2648@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:60219 "EHLO mail.lixom.net"
+Received: from mga01.intel.com ([192.55.52.88]:60022 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751196AbXLEDWw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Dec 2007 22:22:52 -0500
-Content-Disposition: inline
-In-Reply-To: <20071205004841.GA25905@linux-sh.org>
+	id S1750964AbXLEFlf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Dec 2007 00:41:35 -0500
+In-Reply-To: <20071204123828.09fc2648@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org, shaohua.li@intel.com, rui.zhang@intel.com
 
-On Wed, Dec 05, 2007 at 09:48:41AM +0900, Paul Mundt wrote:
-> On Tue, Dec 04, 2007 at 02:01:21PM -0600, Olof Johansson wrote:
-> > On Tue, Dec 04, 2007 at 10:49:21PM +0300, Anton Vorontsov wrote:
-> > >  	tristate "Generic platform device PATA support"
-> > > -	depends on EMBEDDED || ARCH_RPC
-> > > +	depends on EMBEDDED || ARCH_PPC
-> > 
-> > It needs to be || PPC, not || ARCH_PPC.
-> > 
-> Wrong. It needs to be EMBEDDED || ARCH_RPC || PPC.
+On Tue, 2007-12-04 at 12:38 +0000, Alan Cox wrote:
+> > 	When the IDE controller works in legacy mode, the default IRQ for Ide0
+> > interface is 14 and IRQ for Ide1 interface is 15. The default interrupt
+> > mode for IRQ14/15 is edge/high. If the interrupt of some PCI devices is
+> > routed to IRQ14 or 15 and the interrupt mode is switched to Low/Level,
+> > an exception will appear.(If the I/O APIC is used as the Interrupt
+> > controller, IRQ14/15 nobody cared for. If the I8259 is used as the
+> > interrupt controller, maybe some IDE interrupts will be lost). 
 > 
-> ARCH_RPC is not a typo, it's an ARM platform. Please grep first :-)
-
-I'm sorry, but seeing ARCH_RPC and not having an arch/rpc made me
-suspect it being a typo. It surprises me that the ARM guys chose such
-a generic prefix as ARCH_ for their specific platforms.  (powerpc uses
-PPC_<platform>).
-
-Anyway, thanks for catching it.
-
-
--Olof
+> Yes.
+> 
+> > 	In the Bug 5637: When the system works in acpi mode, there is no PCI
+> > interrupt router for IDE pci device in ACPI tables and OS will guess an
+> > interrupt for IDE PCI device, which is obtained from IDE PCI
+> > configuration space(The IRQ number is 15). OS will register the IRQ 15
+> > using acpi_register_gsi and switch the interrupt mode of IRQ 15 to
+> > Low/level. Because the interrupt mode for IRQ 15 is uncorrect, there
+> > will be interrupt flood and the system reports: IRQ 15 nobody cared.
+> > 	
+> > 	How to fix this issue? Is IRQ 14/15 always reserved for the IDE
+> > device?
+> 
+> No.
+> 
+> If the IDE device is in legacy mode then the IRQ is fixed at 14/15 for
+> the two channels. If it is in PCI mode then the PCI and ACPI routing
+> applies. This is defined in the header of the IDE device.
+> 
+> Class STORAGE:IDE
+> 
+> Programming class bit 0 -> channel 0 is legacy (0x1F0, 0x3F6, 14)
+> Programming class bit 2 -> channel 1 is legacy (0x170, 0x376. 15)
+Thanks for the response.
+When IDE device works in legacy mode, the IRQ of IDE is fixed at 14/15
+for the two channel. But IDE controller is a PCI device, OS will assign
+an interrupt number for the PCI device in which IDE controller resides.
+This is realized by calling ide_pci_enable, which will call
+pcibios_enable_irq. 
+In the bug5637 OS registers the IRQ 15 in the initialization phase of
+PCI IDE controller and the interrupt mode is Low/level. So the problem
+appears.
