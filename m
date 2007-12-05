@@ -1,86 +1,53 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Comments - using the qc_defer hook for serializing controllers ?
-Date: Wed, 5 Dec 2007 15:26:58 +0000
-Message-ID: <20071205152658.563466b7@the-village.bc.nu>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: Re: [PATCH v2 1/4] [libata] pata_platform: make probe and remove functions device type neutral
+Date: Wed, 5 Dec 2007 18:37:27 +0300
+Message-ID: <20071205153727.GA27896@localhost.localdomain>
+References: <20071204170442.GA10460@localhost.localdomain> <20071204170625.GA15599@localhost.localdomain>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53183 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754309AbXLEPb3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 10:31:29 -0500
-Received: from the-village.bc.nu (localhost.localdomain [127.0.0.1])
-	by the-village.bc.nu (8.14.1/8.13.8) with ESMTP id lB5FQwZU005250
-	for <linux-ide@vger.kernel.org>; Wed, 5 Dec 2007 15:26:58 GMT
+Received: from rtsoft3.corbina.net ([85.21.88.6]:7128 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752172AbXLEPdd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 10:33:33 -0500
+Content-Disposition: inline
+In-Reply-To: <20071204170625.GA15599@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Arnd Bergmann <arnd@arndb.de>, Paul Mundt <lethal@linux-sh.org>, Olof Johansson <olof@lixom.net>
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc3-mm2/drivers/ata/pata_sl82c105.c linux-2.6.24-rc3-mm2/drivers/ata/pata_sl82c105.c
---- linux.vanilla-2.6.24-rc3-mm2/drivers/ata/pata_sl82c105.c	2007-11-30 17:43:24.000000000 +0000
-+++ linux-2.6.24-rc3-mm2/drivers/ata/pata_sl82c105.c	2007-12-05 15:14:42.437347728 +0000
-@@ -26,7 +26,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME "pata_sl82c105"
--#define DRV_VERSION "0.3.2"
-+#define DRV_VERSION "0.3.3"
- 
- enum {
- 	/*
-@@ -206,6 +206,37 @@
- 	sl82c105_set_piomode(ap, qc->dev);
- }
- 
-+/**
-+ *	sl82c105_qc_defer	-	implement serialization
-+ *	@qc: command
-+ *
-+ *	We must issue one command per host not per channel because
-+ *	of the reset bug.
-+ *
-+ *	Q: is the scsi host lock sufficient ?
-+ */
-+
-+static int sl82c105_qc_defer(struct ata_queued_cmd *qc)
-+{
-+	struct ata_host *host = qc->ap->host;
-+	int rc;
-+
-+	/* First apply the usual rules */	
-+	rc = ata_std_qc_defer(qc);
-+	if (rc != 0)
-+		return rc;
-+
-+	/* Now apply serialization rules. Only allow a command if the
-+	   other channel state machine is idle */
-+	if (host->port[0] != qc->ap && 
-+			host->port[0]->hsm_task_state != HSM_ST_IDLE)
-+		return	ATA_DEFER_PORT;
-+	if (host->port[1] != qc->ap && 
-+			host->port[1]->hsm_task_state != HSM_ST_IDLE)
-+		return	ATA_DEFER_PORT;
-+	return 0;
-+}
-+
- static struct scsi_host_template sl82c105_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -245,6 +276,7 @@
- 	.bmdma_stop	= sl82c105_bmdma_stop,
- 	.bmdma_status 	= ata_bmdma_status,
- 
-+	.qc_defer	= sl82c105_qc_defer,
- 	.qc_prep 	= ata_qc_prep,
- 	.qc_issue	= ata_qc_issue_prot,
- 
-@@ -312,7 +344,7 @@
- 	};
- 	/* for now use only the first port */
- 	const struct ata_port_info *ppi[] = { &info_early,
--					       &ata_dummy_port_info };
-+					       NULL };
- 	u32 val;
- 	int rev;
- 
+On Tue, Dec 04, 2007 at 08:06:25PM +0300, Anton Vorontsov wrote:
+> Split pata_platform_{probe,remove} into two pieces:
+> 1. pata_platform_{probe,remove} -- platform_device-dependant bits;
+> 2. __ptata_platform_{probe,remove} -- device type neutral bits.
+> 
+> This is done to not duplicate code for the OF-platform driver.
+
+Paul, do you have any objections regarding that one?
+
+If there is no objections, could you stamp Acked-by on it?
+Thus I can resend this set one more time for the merge, w/o
+fourth patch.
+
+>  /**
+> - *	pata_platform_probe		-	attach a platform interface
+> - *	@pdev: platform device
+> + *	__pata_platform_probe		-	attach a platform interface
+> + *	@dev: device
+> + *	@io_res: Resource representing I/O base
+> + *	@ctl_res: Resource representing CTL base
+> + *	@irq_res: Resource representing IRQ and its flags
+> + *	@ioport_shift: I/O port shift
+  + *	@__pio_mask: PIO mask
+
+^^^ added
+
+Thanks,
+
+-- 
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
