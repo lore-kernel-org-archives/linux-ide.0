@@ -1,41 +1,60 @@
-From: Hein-Pieter van Braam <hp@syntomax.com>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Wed, 05 Dec 2007 00:56:39 +0100
-Message-ID: <1196812599.6909.10.camel@liza>
-References: <4751A2DA.6030403@rtr.ca>
-	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>
-	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>
-	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>
-	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>
-	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>
-	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>
-	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>
-	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>
-	 <47549E0B.9070509@rtr.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 01/14] libata: update atapi_eh_request_sense() such that
+ lbam/lbah contains buffer size
+Date: Wed, 05 Dec 2007 09:47:29 +0900
+Message-ID: <4755F521.1020201@gmail.com>
+References: <1196346817387-git-send-email-htejun@gmail.com> <11963468181752-git-send-email-htejun@gmail.com> <4755AA23.7010108@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from a80-126-0-120.adsl.xs4all.nl ([80.126.0.120]:59864 "EHLO
-	ifolder.erca.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbXLDX54 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 18:57:56 -0500
-In-Reply-To: <47549E0B.9070509@rtr.ca>
+Received: from wa-out-1112.google.com ([209.85.146.178]:28208 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522AbXLEArp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 19:47:45 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so6625734wah
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 16:47:44 -0800 (PST)
+In-Reply-To: <4755AA23.7010108@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
 
-I zero'd all the disks, and now they show up as 'new' in the highpoint
-BIOS again... so, I guess there IS some reserved part somewhere that's
-accessible with the sata_mv driver.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> While updating lbam/h for ATAPI commands, atapi_eh_request_sense() was
+>> left out.  Update it.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>>  drivers/ata/libata-eh.c |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index 77083b5..2e3d3a2 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -1302,8 +1302,8 @@ static unsigned int
+>> atapi_eh_request_sense(struct ata_queued_cmd *qc)
+>>          tf.feature |= ATAPI_PKT_DMA;
+>>      } else {
+>>          tf.protocol = ATA_PROT_ATAPI;
+>> -        tf.lbam = (8 * 1024) & 0xff;
+>> -        tf.lbah = (8 * 1024) >> 8;
+>> +        tf.lbam = SCSI_SENSE_BUFFERSIZE;
+>> +        tf.lbah = 0;
+> 
+> seems like #upstream-fixes material?
 
-that's a bit of a problem, because if you overwrite the RAID metadata,
-the raid bios won't allow booting from the devices...
+I'm not too sure yet whether we'll need to revert ATAPI transfer chunk
+size change for #upstream-fixes or not.  It fixes some cases while
+breaking others.  Dunno which side is larger but we definitely don't
+wanna regress in a released kernel.  I thought adding full chunk
+draining would fix regressions but apparently not.  Fortunately, with
+full ATAPI data transfer improvement patch applied, it works.  I'll
+investigate more.
 
+Thanks.
 
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+tejun
