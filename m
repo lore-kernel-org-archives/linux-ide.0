@@ -1,45 +1,36 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 14/14] libata: use PIO for misc ATAPI commands
-Date: Wed, 05 Dec 2007 10:14:56 +0900
-Message-ID: <4755FB90.50505@gmail.com>
-References: <1196346817387-git-send-email-htejun@gmail.com> <11963468202627-git-send-email-htejun@gmail.com> <4755ABB3.6030907@garzik.org>
+Subject: Re: [PATCH 4/8] libata: move ata_set_mode() to libata-eh.c
+Date: Wed, 05 Dec 2007 10:21:54 +0900
+Message-ID: <4755FD32.7070907@gmail.com>
+References: <11961593392491-git-send-email-htejun@gmail.com> <11961593392856-git-send-email-htejun@gmail.com> <4751E921.9060108@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:8784 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.189]:22007 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709AbXLEBPn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 20:15:43 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so3392384rvb
-        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 17:15:39 -0800 (PST)
-In-Reply-To: <4755ABB3.6030907@garzik.org>
+	with ESMTP id S1750806AbXLEBWL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2007 20:22:11 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so3394481rvb
+        for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 17:22:10 -0800 (PST)
+In-Reply-To: <4751E921.9060108@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
 Jeff Garzik wrote:
-> The other patches were OK, but I'm still not happy about "punishing the
-> good guys"
+> Tejun Heo wrote:
+>> Move ata_set_mode() to libata-eh.c.  ata_set_mode() is surely an EH
+>> action and will be more tightly coupled with the rest of error
+>> handling.  Move it to libata-eh.c.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> Does this mean SET FEATURES - XFER MODE via SG_IO will be possible soon?
+>  ;-)
 
-Yeah, I know.  I guess you know my but-what's-the-actual-punishment
-argument too by now.
-
-This is about time we make decision on this.  If we're gonna go
-DMA-for-everything way, we should lift 16 byte default masking for -mm
-and -rc's as that only makes debugging difficult and try to blacklist
-offending devices and controllers individually.
-
-My primary concern is about not achieving enough test coverage and
-isolated cases where it's difficult to tell whether it's the device or
-the controller.  e.g. Loading recent distro on an ancient and/or strange
-machine, scratching head while cursing and giving up.  Unfortunately,
-I've seen similar things happening often enough (and I did so myself
-more times than I'm proud of).  Only very small fraction of problems
-actually reaches developers.
-
-Thanks.
+Hopefully, yeah.
 
 -- 
 tejun
