@@ -1,278 +1,434 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 09/15] libata: kill non-sg DMA interface
-Date: Wed,  5 Dec 2007 16:43:09 +0900
-Message-ID: <1196840597299-git-send-email-htejun@gmail.com>
+Subject: [PATCH 05/15] libata: rename ATA_PROT_ATAPI_* to ATAPI_PROT_*
+Date: Wed,  5 Dec 2007 16:43:05 +0900
+Message-ID: <1196840596229-git-send-email-htejun@gmail.com>
 References: <11968405951262-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:33171 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.176]:34723 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbXLEHn5 (ORCPT
+	with ESMTP id S1751982AbXLEHn5 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2007 02:43:57 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so6895624wah
+Received: by wa-out-1112.google.com with SMTP id v27so6895985wah
         for <linux-ide@vger.kernel.org>; Tue, 04 Dec 2007 23:43:56 -0800 (PST)
 In-Reply-To: <11968405951262-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
-Cc: Tejun Heo <htejun@gmail.com>, Rusty Russel <rusty@rustcorp.com.au>
+Cc: Tejun Heo <htejun@gmail.com>
 
-With atapi_request_sense() converted to use sg, there's no user of
-non-sg interface.  Kill non-sg interface.
-
-* ATA_QCFLAG_SINGLE and ATA_QCFLAG_SG are removed.  ATA_QCFLAG_DMAMAP
-  is used instead.  (this way no LLD change is necessary)
-
-* qc->buf_virt is removed.
-
-* ata_sg_init_one() and ata_sg_setup_one() are removed.
+ATA_PROT_ATAPI_* are ugly and naming schemes between ATA_PROT_* and
+ATA_PROT_ATAPI_* are inconsistent causing confusion.  Rename them to
+ATAPI_PROT_* and make them consistent with ATA counterpart.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Rusty Russel <rusty@rustcorp.com.au>
 ---
- drivers/ata/libata-core.c |  148 +++++----------------------------------------
- include/linux/libata.h    |    7 +--
- 2 files changed, 16 insertions(+), 139 deletions(-)
+ drivers/ata/libata-core.c       |   24 ++++++++++++------------
+ drivers/ata/libata-eh.c         |    8 ++++----
+ drivers/ata/libata-scsi.c       |   10 +++++-----
+ drivers/ata/libata-sff.c        |    2 +-
+ drivers/ata/pata_pdc202xx_old.c |    5 ++---
+ drivers/ata/pdc_adma.c          |    2 +-
+ drivers/ata/sata_inic162x.c     |    2 +-
+ drivers/ata/sata_promise.c      |   26 ++++++++++++--------------
+ drivers/ata/sata_qstor.c        |    2 +-
+ drivers/ata/sata_sx4.c          |    2 +-
+ drivers/scsi/ipr.c              |    6 +++---
+ drivers/scsi/libsas/sas_ata.c   |    2 +-
+ include/linux/ata.h             |   12 ++++++------
+ 13 files changed, 50 insertions(+), 53 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 399f085..5d21cc7 100644
+index 88f7637..1af9b84 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4490,9 +4490,6 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
- 	WARN_ON(!(qc->flags & ATA_QCFLAG_DMAMAP));
- 	WARN_ON(sg == NULL);
+@@ -5136,13 +5136,13 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	ata_altstatus(ap); /* flush */
  
--	if (qc->flags & ATA_QCFLAG_SINGLE)
--		WARN_ON(qc->n_elem > 1);
--
- 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 	switch (qc->tf.protocol) {
+-	case ATA_PROT_ATAPI:
++	case ATAPI_PROT_PIO:
+ 		ap->hsm_task_state = HSM_ST;
+ 		break;
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_NODATA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		break;
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		/* initiate bmdma */
+ 		ap->ops->bmdma_start(qc);
+@@ -5488,7 +5488,7 @@ fsm_start:
  
- 	/* if we padded the buffer out to 32-bit bound, and data
-@@ -4502,27 +4499,15 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
- 	if (qc->pad_len && !(qc->tf.flags & ATA_TFLAG_WRITE))
- 		pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
+ 	case HSM_ST:
+ 		/* complete command or read/write the data register */
+-		if (qc->tf.protocol == ATA_PROT_ATAPI) {
++		if (qc->tf.protocol == ATAPI_PROT_PIO) {
+ 			/* ATAPI PIO protocol */
+ 			if ((status & ATA_DRQ) == 0) {
+ 				/* No more data to transfer or device error.
+@@ -6043,11 +6043,11 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
+ 		switch (qc->tf.protocol) {
+ 		case ATA_PROT_PIO:
+ 		case ATA_PROT_NODATA:
+-		case ATA_PROT_ATAPI:
+-		case ATA_PROT_ATAPI_NODATA:
++		case ATAPI_PROT_PIO:
++		case ATAPI_PROT_NODATA:
+ 			qc->tf.flags |= ATA_TFLAG_POLLING;
+ 			break;
+-		case ATA_PROT_ATAPI_DMA:
++		case ATAPI_PROT_DMA:
+ 			if (qc->dev->flags & ATA_DFLAG_CDB_INTR)
+ 				/* see ata_dma_blacklisted() */
+ 				BUG();
+@@ -6111,8 +6111,8 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
  
--	if (qc->flags & ATA_QCFLAG_SG) {
--		if (qc->n_elem)
--			dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
--		/* restore last sg */
--		sg_last(sg, qc->orig_n_elem)->length += qc->pad_len;
--		if (pad_buf) {
--			struct scatterlist *psg = &qc->pad_sgent;
--			void *addr = kmap_atomic(sg_page(psg), KM_IRQ0);
--			memcpy(addr + psg->offset, pad_buf, qc->pad_len);
--			kunmap_atomic(addr, KM_IRQ0);
--		}
--	} else {
--		if (qc->n_elem)
--			dma_unmap_single(ap->dev,
--				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
--				dir);
--		/* restore sg */
--		sg->length += qc->pad_len;
--		if (pad_buf)
--			memcpy(qc->buf_virt + sg->length - qc->pad_len,
--			       pad_buf, qc->pad_len);
-+	if (qc->n_elem)
-+		dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
-+	/* restore last sg */
-+	sg_last(sg, qc->orig_n_elem)->length += qc->pad_len;
-+	if (pad_buf) {
-+		struct scatterlist *psg = &qc->pad_sgent;
-+		void *addr = kmap_atomic(sg_page(psg), KM_IRQ0);
-+		memcpy(addr + psg->offset, pad_buf, qc->pad_len);
-+		kunmap_atomic(addr, KM_IRQ0);
+ 		break;
+ 
+-	case ATA_PROT_ATAPI:
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_PIO:
++	case ATAPI_PROT_NODATA:
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+ 			ata_qc_set_polling(qc);
+ 
+@@ -6126,7 +6126,7 @@ unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc)
+ 			ata_port_queue_task(ap, ata_pio_task, qc, 0);
+ 		break;
+ 
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		WARN_ON(qc->tf.flags & ATA_TFLAG_POLLING);
+ 
+ 		ap->ops->tf_load(ap, &qc->tf);	 /* load tf registers */
+@@ -6187,7 +6187,7 @@ inline unsigned int ata_host_intr(struct ata_port *ap,
+ 		break;
+ 	case HSM_ST_LAST:
+ 		if (qc->tf.protocol == ATA_PROT_DMA ||
+-		    qc->tf.protocol == ATA_PROT_ATAPI_DMA) {
++		    qc->tf.protocol == ATAPI_PROT_DMA) {
+ 			/* check status of DMA engine */
+ 			host_stat = ap->ops->bmdma_status(ap);
+ 			VPRINTK("ata%u: host_stat 0x%X\n",
+@@ -6229,7 +6229,7 @@ inline unsigned int ata_host_intr(struct ata_port *ap,
+ 	ata_hsm_move(ap, qc, status, 0);
+ 
+ 	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
+-				       qc->tf.protocol == ATA_PROT_ATAPI_DMA))
++				       qc->tf.protocol == ATAPI_PROT_DMA))
+ 		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
+ 
+ 	return 1;	/* irq handled */
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 32d7287..3688f21 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1298,10 +1298,10 @@ static unsigned int atapi_eh_request_sense(struct ata_queued_cmd *qc)
+ 
+ 	/* is it pointless to prefer PIO for "safety reasons"? */
+ 	if (ap->flags & ATA_FLAG_PIO_DMA) {
+-		tf.protocol = ATA_PROT_ATAPI_DMA;
++		tf.protocol = ATAPI_PROT_DMA;
+ 		tf.feature |= ATAPI_PKT_DMA;
+ 	} else {
+-		tf.protocol = ATA_PROT_ATAPI;
++		tf.protocol = ATAPI_PROT_PIO;
+ 		tf.lbam = SCSI_SENSE_BUFFERSIZE;
+ 		tf.lbah = 0;
  	}
+@@ -1968,8 +1968,8 @@ static void ata_eh_link_report(struct ata_link *link)
+ 				[ATA_PROT_PIO]		= "pio",
+ 				[ATA_PROT_DMA]		= "dma",
+ 				[ATA_PROT_NCQ]		= "ncq",
+-				[ATA_PROT_ATAPI]	= "pio",
+-				[ATA_PROT_ATAPI_DMA]	= "dma",
++				[ATAPI_PROT_PIO]	= "pio",
++				[ATAPI_PROT_DMA]	= "dma",
+ 			};
  
- 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
-@@ -4762,33 +4747,6 @@ void ata_dumb_qc_prep(struct ata_queued_cmd *qc)
- void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
+ 			snprintf(data_buf, sizeof(data_buf), " %s %u %s",
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 29e8336..6251caa 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2353,10 +2353,10 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
+ 	qc->tf.command = ATA_CMD_PACKET;
  
- /**
-- *	ata_sg_init_one - Associate command with memory buffer
-- *	@qc: Command to be associated
-- *	@buf: Memory buffer
-- *	@buflen: Length of memory buffer, in bytes.
-- *
-- *	Initialize the data-related elements of queued_cmd @qc
-- *	to point to a single memory buffer, @buf of byte length @buflen.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--
--void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf, unsigned int buflen)
--{
--	qc->flags |= ATA_QCFLAG_SINGLE;
--
--	qc->__sg = &qc->sgent;
--	qc->n_elem = 1;
--	qc->orig_n_elem = 1;
--	qc->buf_virt = buf;
--	qc->nbytes = buflen;
--	qc->cursg = qc->__sg;
--
--	sg_init_one(&qc->sgent, buf, buflen);
--}
--
--/**
-  *	ata_sg_init - Associate command with scatter-gather table.
-  *	@qc: Command to be associated
-  *	@sg: Scatter-gather table.
-@@ -4805,7 +4763,7 @@ void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf, unsigned int buflen)
- void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
- 		 unsigned int n_elem)
+ 	if (ata_pio_use_silly(ap)) {
+-		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
++		qc->tf.protocol = ATAPI_PROT_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
+ 	} else {
+-		qc->tf.protocol = ATA_PROT_ATAPI;
++		qc->tf.protocol = ATAPI_PROT_PIO;
+ 		qc->tf.lbam = SCSI_SENSE_BUFFERSIZE;
+ 		qc->tf.lbah = 0;
+ 	}
+@@ -2527,12 +2527,12 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
+ 	if (using_pio || nodata) {
+ 		/* no data, or PIO data xfer */
+ 		if (nodata)
+-			qc->tf.protocol = ATA_PROT_ATAPI_NODATA;
++			qc->tf.protocol = ATAPI_PROT_NODATA;
+ 		else
+-			qc->tf.protocol = ATA_PROT_ATAPI;
++			qc->tf.protocol = ATAPI_PROT_PIO;
+ 	} else {
+ 		/* DMA data xfer */
+-		qc->tf.protocol = ATA_PROT_ATAPI_DMA;
++		qc->tf.protocol = ATAPI_PROT_DMA;
+ 		qc->tf.feature |= ATAPI_PKT_DMA;
+ 
+ 		if (atapi_dmadir && (scmd->sc_data_direction != DMA_TO_DEVICE))
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index fb69476..3b62479 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -417,7 +417,7 @@ void ata_bmdma_drive_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 	ap->hsm_task_state = HSM_ST_IDLE;
+ 
+ 	if (qc && (qc->tf.protocol == ATA_PROT_DMA ||
+-		   qc->tf.protocol == ATA_PROT_ATAPI_DMA)) {
++		   qc->tf.protocol == ATAPI_PROT_DMA)) {
+ 		u8 host_stat;
+ 
+ 		host_stat = ap->ops->bmdma_status(ap);
+diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
+index bc7c2d5..407dbcf 100644
+--- a/drivers/ata/pata_pdc202xx_old.c
++++ b/drivers/ata/pata_pdc202xx_old.c
+@@ -168,8 +168,7 @@ static void pdc2026x_bmdma_start(struct ata_queued_cmd *qc)
+ 	pdc202xx_set_dmamode(ap, qc->dev);
+ 
+ 	/* Cases the state machine will not complete correctly without help */
+-	if ((tf->flags & ATA_TFLAG_LBA48) ||  tf->protocol == ATA_PROT_ATAPI_DMA)
+-	{
++	if ((tf->flags & ATA_TFLAG_LBA48) ||  tf->protocol == ATAPI_PROT_DMA) {
+ 		len = qc->nbytes / 2;
+ 
+ 		if (tf->flags & ATA_TFLAG_WRITE)
+@@ -208,7 +207,7 @@ static void pdc2026x_bmdma_stop(struct ata_queued_cmd *qc)
+ 	void __iomem *atapi_reg = master + 0x20 + (4 * ap->port_no);
+ 
+ 	/* Cases the state machine will not complete correctly */
+-	if (tf->protocol == ATA_PROT_ATAPI_DMA || ( tf->flags & ATA_TFLAG_LBA48)) {
++	if (tf->protocol == ATAPI_PROT_DMA || (tf->flags & ATA_TFLAG_LBA48)) {
+ 		iowrite32(0, atapi_reg);
+ 		iowrite8(ioread8(clock) & ~sel66, clock);
+ 	}
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index bd4c2a3..459cb7b 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -455,7 +455,7 @@ static unsigned int adma_qc_issue(struct ata_queued_cmd *qc)
+ 		adma_packet_start(qc);
+ 		return 0;
+ 
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		BUG();
+ 		break;
+ 
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index 323c087..96e614a 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -585,7 +585,7 @@ static struct ata_port_operations inic_port_ops = {
+ };
+ 
+ static struct ata_port_info inic_port_info = {
+-	/* For some reason, ATA_PROT_ATAPI is broken on this
++	/* For some reason, ATAPI_PROT_PIO is broken on this
+ 	 * controller, and no, PIO_POLLING does't fix it.  It somehow
+ 	 * manages to report the wrong ireason and ignoring ireason
+ 	 * results in machine lock up.  Tell libata to always prefer
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 9638faa..01738d7 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -456,13 +456,13 @@ static void pdc_atapi_pkt(struct ata_queued_cmd *qc)
+ 	 * and seq id (byte 2)
+ 	 */
+ 	switch (qc->tf.protocol) {
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		if (!(qc->tf.flags & ATA_TFLAG_WRITE))
+ 			buf32[0] = cpu_to_le32(PDC_PKT_READ);
+ 		else
+ 			buf32[0] = 0;
+ 		break;
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_NODATA:
+ 		buf32[0] = cpu_to_le32(PDC_PKT_NODATA);
+ 		break;
+ 	default:
+@@ -489,7 +489,7 @@ static void pdc_atapi_pkt(struct ata_queued_cmd *qc)
+ 	buf[19] = qc->tf.lbal;
+ 
+ 	/* set feature and byte counter registers */
+-	if (qc->tf.protocol != ATA_PROT_ATAPI_DMA)
++	if (qc->tf.protocol != ATAPI_PROT_DMA)
+ 		feature = PDC_FEATURE_ATAPI_PIO;
+ 	else
+ 		feature = PDC_FEATURE_ATAPI_DMA;
+@@ -619,14 +619,14 @@ static void pdc_qc_prep(struct ata_queued_cmd *qc)
+ 		pdc_pkt_footer(&qc->tf, pp->pkt, i);
+ 		break;
+ 
+-	case ATA_PROT_ATAPI:
++	case ATAPI_PROT_PIO:
+ 		pdc_fill_sg(qc);
+ 		break;
+ 
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		pdc_fill_sg(qc);
+ 		/*FALLTHROUGH*/
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_NODATA:
+ 		pdc_atapi_pkt(qc);
+ 		break;
+ 
+@@ -746,8 +746,8 @@ static inline unsigned int pdc_host_intr(struct ata_port *ap,
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_DMA:
+ 	case ATA_PROT_NODATA:
+-	case ATA_PROT_ATAPI_DMA:
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_DMA:
++	case ATAPI_PROT_NODATA:
+ 		qc->err_mask |= ac_err_mask(ata_wait_idle(ap));
+ 		ata_qc_complete(qc);
+ 		handled = 1;
+@@ -892,7 +892,7 @@ static inline void pdc_packet_start(struct ata_queued_cmd *qc)
+ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc)
  {
--	qc->flags |= ATA_QCFLAG_SG;
-+	qc->flags |= ATA_QCFLAG_DMAMAP;
- 	qc->__sg = sg;
- 	qc->n_elem = n_elem;
- 	qc->orig_n_elem = n_elem;
-@@ -4813,75 +4771,6 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+ 	switch (qc->tf.protocol) {
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_NODATA:
+ 		if (qc->dev->flags & ATA_DFLAG_CDB_INTR)
+ 			break;
+ 		/*FALLTHROUGH*/
+@@ -900,7 +900,7 @@ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc)
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+ 			break;
+ 		/*FALLTHROUGH*/
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 	case ATA_PROT_DMA:
+ 		pdc_packet_start(qc);
+ 		return 0;
+@@ -914,16 +914,14 @@ static unsigned int pdc_qc_issue_prot(struct ata_queued_cmd *qc)
+ 
+ static void pdc_tf_load_mmio(struct ata_port *ap, const struct ata_taskfile *tf)
+ {
+-	WARN_ON(tf->protocol == ATA_PROT_DMA ||
+-		tf->protocol == ATA_PROT_ATAPI_DMA);
++	WARN_ON(tf->protocol == ATA_PROT_DMA || tf->protocol == ATAPI_PROT_DMA);
+ 	ata_tf_load(ap, tf);
  }
  
- /**
-- *	ata_sg_setup_one - DMA-map the memory buffer associated with a command.
-- *	@qc: Command with memory buffer to be mapped.
-- *
-- *	DMA-map the memory buffer associated with queued_cmd @qc.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- *	RETURNS:
-- *	Zero on success, negative on error.
-- */
--
--static int ata_sg_setup_one(struct ata_queued_cmd *qc)
--{
--	struct ata_port *ap = qc->ap;
--	int dir = qc->dma_dir;
--	struct scatterlist *sg = qc->__sg;
--	dma_addr_t dma_address;
--	int trim_sg = 0;
--
--	/* we must lengthen transfers to end on a 32-bit boundary */
--	qc->pad_len = sg->length & 3;
--	if (qc->pad_len) {
--		void *pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
--		struct scatterlist *psg = &qc->pad_sgent;
--
--		WARN_ON(qc->dev->class != ATA_DEV_ATAPI);
--
--		memset(pad_buf, 0, ATA_DMA_PAD_SZ);
--
--		if (qc->tf.flags & ATA_TFLAG_WRITE)
--			memcpy(pad_buf, qc->buf_virt + sg->length - qc->pad_len,
--			       qc->pad_len);
--
--		sg_dma_address(psg) = ap->pad_dma + (qc->tag * ATA_DMA_PAD_SZ);
--		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
--		/* trim sg */
--		sg->length -= qc->pad_len;
--		if (sg->length == 0)
--			trim_sg = 1;
--
--		DPRINTK("padding done, sg->length=%u pad_len=%u\n",
--			sg->length, qc->pad_len);
--	}
--
--	if (trim_sg) {
--		qc->n_elem--;
--		goto skip_map;
--	}
--
--	dma_address = dma_map_single(ap->dev, qc->buf_virt,
--				     sg->length, dir);
--	if (dma_mapping_error(dma_address)) {
--		/* restore sg */
--		sg->length += qc->pad_len;
--		return -1;
--	}
--
--	sg_dma_address(sg) = dma_address;
--	sg_dma_len(sg) = sg->length;
--
--skip_map:
--	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
--		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
--
--	return 0;
--}
--
--/**
-  *	ata_sg_setup - DMA-map the scatter-gather table associated with a command.
-  *	@qc: Command with scatter-gather table to be mapped.
-  *
-@@ -4903,7 +4792,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
- 	int n_elem, pre_n_elem, dir, trim_sg = 0;
+ static void pdc_exec_command_mmio(struct ata_port *ap,
+ 				  const struct ata_taskfile *tf)
+ {
+-	WARN_ON(tf->protocol == ATA_PROT_DMA ||
+-		tf->protocol == ATA_PROT_ATAPI_DMA);
++	WARN_ON(tf->protocol == ATA_PROT_DMA || tf->protocol == ATAPI_PROT_DMA);
+ 	ata_exec_command(ap, tf);
+ }
  
- 	VPRINTK("ENTER, ata%u\n", ap->print_id);
--	WARN_ON(!(qc->flags & ATA_QCFLAG_SG));
-+	WARN_ON(!(qc->flags & ATA_QCFLAG_DMAMAP));
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index 2f1de6e..2875549 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -376,7 +376,7 @@ static unsigned int qs_qc_issue(struct ata_queued_cmd *qc)
+ 		qs_packet_start(qc);
+ 		return 0;
  
- 	/* we must lengthen transfers to end on a 32-bit boundary */
- 	qc->pad_len = lsg->length & 3;
-@@ -6028,16 +5917,10 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		BUG();
+ 		break;
  
- 	if (ata_is_dma(prot) || (ata_is_pio(prot) &&
- 				 (ap->flags & ATA_FLAG_PIO_DMA))) {
--		if (qc->flags & ATA_QCFLAG_SG) {
--			if (ata_sg_setup(qc))
--				goto sg_err;
--		} else if (qc->flags & ATA_QCFLAG_SINGLE) {
--			if (ata_sg_setup_one(qc))
--				goto sg_err;
--		}
--	} else {
--		qc->flags &= ~ATA_QCFLAG_DMAMAP;
--	}
-+		if (ata_sg_setup(qc))
-+			goto sg_err;
-+	} else
-+		qc->flags &= ATA_QCFLAG_DMAMAP;
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index 4d85718..3de0c27 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -700,7 +700,7 @@ static unsigned int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc)
+ 		pdc20621_packet_start(qc);
+ 		return 0;
  
- 	/* if device is sleeping, schedule softreset and abort the link */
- 	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-@@ -7625,7 +7508,6 @@ EXPORT_SYMBOL_GPL(ata_host_register);
- EXPORT_SYMBOL_GPL(ata_host_activate);
- EXPORT_SYMBOL_GPL(ata_host_detach);
- EXPORT_SYMBOL_GPL(ata_sg_init);
--EXPORT_SYMBOL_GPL(ata_sg_init_one);
- EXPORT_SYMBOL_GPL(ata_hsm_move);
- EXPORT_SYMBOL_GPL(ata_qc_complete);
- EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 31e2cbf..87bf14b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -220,9 +220,7 @@ enum {
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		BUG();
+ 		break;
  
- 	/* struct ata_queued_cmd flags */
- 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
--	ATA_QCFLAG_SG		= (1 << 1), /* have s/g table? */
--	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
--	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
-+	ATA_QCFLAG_DMAMAP	= (1 << 1), /* SG table is DMA mapped */
- 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
- 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
- 	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
-@@ -476,7 +474,6 @@ struct ata_queued_cmd {
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 0841df0..3e78bc2 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5222,12 +5222,12 @@ static unsigned int ipr_qc_issue(struct ata_queued_cmd *qc)
+ 		regs->flags |= IPR_ATA_FLAG_XFER_TYPE_DMA;
+ 		break;
  
- 	struct scatterlist	sgent;
- 	struct scatterlist	pad_sgent;
--	void			*buf_virt;
+-	case ATA_PROT_ATAPI:
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_PIO:
++	case ATAPI_PROT_NODATA:
+ 		regs->flags |= IPR_ATA_FLAG_PACKET_CMD;
+ 		break;
  
- 	/* DO NOT iterate over __sg manually, use ata_for_each_sg() */
- 	struct scatterlist	*__sg;
-@@ -892,8 +889,6 @@ extern void ata_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
--extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
--		unsigned int buflen);
- extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
- 		 unsigned int n_elem);
- extern unsigned int ata_dev_classify(const struct ata_taskfile *tf);
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		regs->flags |= IPR_ATA_FLAG_PACKET_CMD;
+ 		regs->flags |= IPR_ATA_FLAG_XFER_TYPE_DMA;
+ 		break;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 831294d..f78d060 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -200,7 +200,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	case ATA_PROT_NCQ:
+ 		task->ata_task.use_ncq = 1;
+ 		/* fall through */
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 	case ATA_PROT_DMA:
+ 		task->ata_task.dma_xfer = 1;
+ 		break;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 3992557..0c52476 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -326,9 +326,9 @@ enum ata_tf_protocols {
+ 	ATA_PROT_PIO,		/* PIO data xfer */
+ 	ATA_PROT_DMA,		/* DMA */
+ 	ATA_PROT_NCQ,		/* NCQ */
+-	ATA_PROT_ATAPI,		/* packet command, PIO data xfer*/
+-	ATA_PROT_ATAPI_NODATA,	/* packet command, no data */
+-	ATA_PROT_ATAPI_DMA,	/* packet command with special DMA sauce */
++	ATAPI_PROT_NODATA,	/* packet command, no data */
++	ATAPI_PROT_PIO,		/* packet command, PIO data xfer*/
++	ATAPI_PROT_DMA,		/* packet command with special DMA sauce */
+ };
+ 
+ enum ata_ioctls {
+@@ -380,11 +380,11 @@ static inline unsigned int ata_prot_flags(u8 prot)
+ 		return ATA_PROT_FLAG_DMA;
+ 	case ATA_PROT_NCQ:
+ 		return ATA_PROT_FLAG_DMA | ATA_PROT_FLAG_NCQ;
+-	case ATA_PROT_ATAPI_NODATA:
++	case ATAPI_PROT_NODATA:
+ 		return ATA_PROT_FLAG_ATAPI;
+-	case ATA_PROT_ATAPI:
++	case ATAPI_PROT_PIO:
+ 		return ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_PIO;
+-	case ATA_PROT_ATAPI_DMA:
++	case ATAPI_PROT_DMA:
+ 		return ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_DMA;
+ 	}
+ 	return 0;
 -- 
 1.5.2.4
 
