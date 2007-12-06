@@ -1,40 +1,103 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
-Date: Thu, 06 Dec 2007 17:32:24 -0500
-Message-ID: <47587878.7020109@rtr.ca>
-References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>	 <47549E0B.9070509@rtr.ca> <1196812599.6909.10.camel@liza> <47572A18.2010904@rtr.ca> <475732C0.2090901@rtr.ca> <475735B4.7020401@rtr.ca> <47573A54.5000004@rtr.ca> <47573C16.7010704@pobox.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Thu, 6 Dec 2007 17:38:08 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0712061737500.8523@p34.internal.lan>
+References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
+ <20071206140038.f06e18ad.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3655 "EHLO mail.rtr.ca"
+Received: from lucidpixels.com ([75.144.35.66]:39170 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752759AbXLFWc0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Dec 2007 17:32:26 -0500
-In-Reply-To: <47573C16.7010704@pobox.com>
+	id S1752511AbXLFWiK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Dec 2007 17:38:10 -0500
+In-Reply-To: <20071206140038.f06e18ad.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Hein-Pieter van Braam <hp@syntomax.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 
-Jeff Garzik wrote:
-..
-> OTOH it is quite reasonable to explore auto-loading DM on top of the 
-> bare drive, and populating a DM table, if you see that particular BIOS 
-> signature or [insert other detection method].
-..
 
-I am very interested to hear a more detailed explanation of this,
-as I don't really see how it addresses the problems.
 
-Probably because I don't know much about device mapper.
+On Thu, 6 Dec 2007, Andrew Morton wrote:
 
-But my understanding of it is that it re-exports portions of
-the original device as a second device.
+> On Sat, 1 Dec 2007 06:26:08 -0500 (EST)
+> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>
+>> I am putting a new machine together and I have dual raptor raid 1 for the
+>> root, which works just fine under all stress tests.
+>>
+>> Then I have the WD 750 GiB drive (not RE2, desktop ones for ~150-160 on
+>> sale now adays):
+>>
+>> I ran the following:
+>>
+>> dd if=/dev/zero of=/dev/sdc
+>> dd if=/dev/zero of=/dev/sdd
+>> dd if=/dev/zero of=/dev/sde
+>>
+>> (as it is always a very good idea to do this with any new disk)
+>>
+>> And sometime along the way(?) (i had gone to sleep and let it run), this
+>> occurred:
+>>
+>> [42880.680144] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4010000
+>> action 0x2 frozen
+>
+> Gee we're seeing a lot of these lately.
+>
+>> [42880.680231] ata3.00: irq_stat 0x00400040, connection status changed
+>> [42880.680290] ata3.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 cdb
+>> 0x0 data 512 in
+>> [42880.680292]          res 40/00:ac:d8:64:54/00:00:57:00:00/40 Emask 0x10
+>> (ATA bus error)
+>> [42881.841899] ata3: soft resetting port
+>> [42885.966320] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> [42915.919042] ata3.00: qc timeout (cmd 0xec)
+>> [42915.919094] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+>> [42915.919149] ata3.00: revalidation failed (errno=-5)
+>> [42915.919206] ata3: failed to recover some devices, retrying in 5 secs
+>> [42920.912458] ata3: hard resetting port
+>> [42926.411363] ata3: port is slow to respond, please be patient (Status
+>> 0x80)
+>> [42930.943080] ata3: COMRESET failed (errno=-16)
+>> [42930.943130] ata3: hard resetting port
+>> [42931.399628] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> [42931.413523] ata3.00: configured for UDMA/133
+>> [42931.413586] ata3: EH pending after completion, repeating EH (cnt=4)
+>> [42931.413655] ata3: EH complete
+>> [42931.413719] sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors
+>> (750156 MB)
+>> [42931.413809] sd 2:0:0:0: [sdc] Write Protect is off
+>> [42931.413856] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+>> [42931.413867] sd 2:0:0:0: [sdc] Write cache: enabled, read cache:
+>> enabled, doesn't support DPO or FUA
+>>
+>> Usually when I see this sort of thing with another box I have full of
+>> raptors, it was due to a bad raptor and I never saw it again after I
+>> replaced the disk that it happened on, but that was using the Intel P965
+>> chipset.
+>>
+>> For this board, it is a Gigabyte GSP-P35-DS4 (Rev 2.0) and I have all of
+>> the drives (2 raptors, 3 750s connected to the Intel ICH9 Southbridge).
+>>
+>> I am going to do some further testing but does this indicate a bad drive?
+>> Bad cable?  Bad connector?
+>>
+>> As you can see above, /dev/sdc stopped responding for a little bit and
+>> then the kernel reset the port.
+>>
+>> Why is this though?  What is the likely root cause?  Should I replace the
+>> drive?  Obviously this is not normal and cannot be good at all, the idea
+>> is to put these drives in a RAID5 and if one is going to timeout that is
+>> going to cause the array to go degraded and thus be worthless in a raid5
+>> configuration.
+>>
+>> Can anyone offer any insight here?
+>
+> It would be interesting to try 2.6.21 or 2.6.22.
+>
 
-It doesn't seem to prevent using the original device afterward,
-and I don't know if dm devices can have GRUB installed on them or not.
+This was due to NCQ issues (disabling it fixed the problem).
 
-So a more full tutorial might be in order here.
-
-Cheers
+Justin.
