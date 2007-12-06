@@ -1,7 +1,7 @@
 From: Zhao Yakui <yakui.zhao@intel.com>
 Subject: Re: a question about interrupt of IDE controller( bug 5637)
-Date: Thu, 06 Dec 2007 09:04:49 +0800
-Message-ID: <1196903089.29019.6.camel@yakui_zhao.sh.intel.com>
+Date: Thu, 06 Dec 2007 09:30:16 +0800
+Message-ID: <1196904616.29019.12.camel@yakui_zhao.sh.intel.com>
 References: <1196738884.4012.55.camel@yakui_zhao.sh.intel.com>
 	 <20071204123828.09fc2648@the-village.bc.nu>
 	 <1196832826.10467.15.camel@yakui_zhao.sh.intel.com>
@@ -10,10 +10,10 @@ Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15002 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:61741 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751619AbXLFBK5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Dec 2007 20:10:57 -0500
+	id S1751432AbXLFBkK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Dec 2007 20:40:10 -0500
 In-Reply-To: <20071205141809.615d1f59@the-village.bc.nu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -48,6 +48,8 @@ On Wed, 2007-12-05 at 14:18 +0000, Alan Cox wrote:
 >  	/*
 >  	 * No IRQ known to the ACPI subsystem - maybe the BIOS / 
 >  	 * driver reported one, then use it. Exit in any case.
-The above patch can fix the issue in bug 5637. But if the interrupt of
-other PCI device is routed to 14/15, this patch won't fix it.
+The above patch can fix the issue in Bug5637. But if IDE controller
+works in legcay mode and PRT tells us the interrupt for some PCI devices
+is 14/15, should we make it pci-like interrupt(level trigger, low
+active)? 
 Thanks.
