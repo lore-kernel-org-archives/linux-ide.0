@@ -1,390 +1,91 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 27/28] blk_end_request: changing scsi
- mid-layer for bidi (take 3)
-Date: Thu, 06 Dec 2007 14:44:17 -0500 (EST)
-Message-ID: <20071206.144417.41628995.k-ueda@ct.jp.nec.com>
-References: <47555880.9070902@panasas.com>
-	<20071205.192611.08317167.k-ueda@ct.jp.nec.com>
-	<4757BFDC.6090502@panasas.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Thu, 6 Dec 2007 14:00:38 -0800
+Message-ID: <20071206140038.f06e18ad.akpm@linux-foundation.org>
+References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4757BFDC.6090502@panasas.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bharrosh@panasas.com, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 List-Id: linux-ide@vger.kernel.org
 
-Hi Boaz, Jens,
+On Sat, 1 Dec 2007 06:26:08 -0500 (EST)
+Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-On Thu, 06 Dec 2007 11:24:44 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > Index: 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> > ===================================================================
-> > --- 2.6.24-rc3-mm2.orig/drivers/scsi/scsi_lib.c
-> > +++ 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> > @@ -629,28 +629,6 @@ void scsi_run_host_queues(struct Scsi_Ho
-> >  		scsi_run_queue(sdev->request_queue);
-> >  }
-> >  
-> > -static void scsi_finalize_request(struct scsi_cmnd *cmd, int uptodate)
-> > -{
-> > -	struct request_queue *q = cmd->device->request_queue;
-> > -	struct request *req = cmd->request;
-> > -	unsigned long flags;
-> > -
-> > -	add_disk_randomness(req->rq_disk);
-> > -
-> > -	spin_lock_irqsave(q->queue_lock, flags);
-> > -	if (blk_rq_tagged(req))
-> > -		blk_queue_end_tag(q, req);
-> > -
-> > -	end_that_request_last(req, uptodate);
-> > -	spin_unlock_irqrestore(q->queue_lock, flags);
-> > -
-> > -	/*
-> > -	 * This will goose the queue request function at the end, so we don't
-> > -	 * need to worry about launching another command.
-> > -	 */
-> > -	scsi_next_command(cmd);
-> > -}
-> > -
-> >  /*
-> >   * Function:    scsi_end_request()
-> >   *
-> > @@ -921,6 +899,20 @@ void scsi_release_buffers(struct scsi_cm
-> >  EXPORT_SYMBOL(scsi_release_buffers);
-> >  
-> >  /*
-> > + * Called from blk_end_request_callback() after all DATA in rq and its next_rq
-> > + * are completed before rq is completed/freed.
-> > + */
-> > +static int scsi_end_bidi_request_cb(struct request *rq)
-> > +{
-> > +	struct scsi_cmnd *cmd = rq->special;
-> > +
-> > +	rq->data_len = scsi_out(cmd)->resid;
-> > +	rq->next_rq->data_len = scsi_in(cmd)->resid;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/*
-> >   * Bidi commands Must be complete as a whole, both sides at once.
-> >   * If part of the bytes were written and lld returned
-> >   * scsi_in()->resid and/or scsi_out()->resid this information will be left
-> > @@ -931,22 +923,28 @@ void scsi_end_bidi_request(struct scsi_c
-> >  {
-> >  	struct request *req = cmd->request;
-> >  
-> > -	end_that_request_chunk(req, 1, req->data_len);
-> > -	req->data_len = scsi_out(cmd)->resid;
-> > -
-> > -	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
-> > -	req->next_rq->data_len = scsi_in(cmd)->resid;
-> > -
-> > -	scsi_release_buffers(cmd);
-> > -
-> >  	/*
-> >  	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
-> > -	 *       in end_that_request_last() then this WARN_ON must be removed.
-> > +	 *       in blk_end_request() then this WARN_ON must be removed.
-> >  	 *       for now, upper-driver must have registered an end_io.
-> >  	 */
-> >  	WARN_ON(!req->end_io);
-> >  
-> > -	scsi_finalize_request(cmd, 1);
-> > +	/*
-> > +	 * blk_end_request() family take care of data completion of next_rq.
-> > +	 * blk_end_request() family use next_rq->data_len for 
-> > +	 * the completion data size of next_rq.
-> > +	 * So resid can't be set before the data completion of next_rq
-> > +	 * in blk_end_request().
-> > +	 * To resolve that, use the callback feature of blk_end_request().
-> > +	 */
-> > +	if (blk_end_request_callback(req, 1, req->data_len,
-> > +				     scsi_end_bidi_request_cb))
-> > +		/* req has not been completed */
-> > +		BUG();
-> > +
-> > +	scsi_release_buffers(cmd);
-> > +	scsi_next_command(cmd);
-> >  }
-> >  
-> >  /*
-> > Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> > ===================================================================
-> > --- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
-> > +++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> > @@ -3817,6 +3817,12 @@ int blk_end_request(struct request *rq, 
-> >  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> >  		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> >  			return 1;
-> > +
-> > +		/* Bidi request must be completed as a whole */
-> > +		if (blk_bidi_rq(rq) &&
-> > +		    __end_that_request_first(rq->next_rq, uptodate,
-> > +					     blk_rq_bytes(rq->next_rq)))
-> > +			return 1;
-> >  	}
-> >  
-> >  	add_disk_randomness(rq->rq_disk);
-> > @@ -3840,6 +3846,12 @@ int __blk_end_request(struct request *rq
-> >  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> >  		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> >  			return 1;
-> > +
-> > +		/* Bidi request must be completed as a whole */
-> > +		if (blk_bidi_rq(rq) &&
-> > +		    __end_that_request_first(rq->next_rq, uptodate,
-> > +					     blk_rq_bytes(rq->next_rq)))
-> > +			return 1;
-> >  	}
-> >  
-> >  	add_disk_randomness(rq->rq_disk);
-> > @@ -3884,6 +3896,12 @@ int blk_end_request_callback(struct requ
-> >  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> >  		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> >  			return 1;
-> > +
-> > +		/* Bidi request must be completed as a whole */
-> > +		if (blk_bidi_rq(rq) &&
-> > +		    __end_that_request_first(rq->next_rq, uptodate,
-> > +					     blk_rq_bytes(rq->next_rq)))
-> > +			return 1;
-> >  	}
-> >  
-> >  	/* Special feature for tricky drivers */
->
-> No I don't like it. The only client left for blk_end_request_callback()
-> is bidi,
-
-ide-cd (cdrom_newpc_intr) is another client.
-So I can't drop blk_end_request_callback() even if bidi doesn't use it.
-
-> and for bidi we can do a much simpler thing. listed below 
-> are some possible solutions.
+> I am putting a new machine together and I have dual raptor raid 1 for the 
+> root, which works just fine under all stress tests.
 > 
-> 1. Take extra parm to blk_end_request like
-> int blk_end_request(struct request *rq, int error, int nr_bytes, int bidi_bytes)
+> Then I have the WD 750 GiB drive (not RE2, desktop ones for ~150-160 on 
+> sale now adays):
 > 
-> if the bidi_bytes is not zero than req->next_req is freed like above.
+> I ran the following:
+> 
+> dd if=/dev/zero of=/dev/sdc
+> dd if=/dev/zero of=/dev/sdd
+> dd if=/dev/zero of=/dev/sde
+> 
+> (as it is always a very good idea to do this with any new disk)
+> 
+> And sometime along the way(?) (i had gone to sleep and let it run), this 
+> occurred:
+> 
+> [42880.680144] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4010000 
+> action 0x2 frozen
 
-OK, I agree with the interface basically.
-I didn't like to have the 'bidi_bytes', since I considered it was
-a driver specific argument and I prefer to avoid driver specific
-interface like blk_end_request_callback() as much as possible.
-However, it can be considered as block-layer generic, since next_rq is
-a member of struct request (and other drivers might have bidi support
-although scsi is only one user right now).
+Gee we're seeing a lot of these lately.
 
-So I made a tentative patch below, which adds a variant,
-blk_end_bidi_request().
-Please take a look.
+> [42880.680231] ata3.00: irq_stat 0x00400040, connection status changed
+> [42880.680290] ata3.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 cdb 
+> 0x0 data 512 in
+> [42880.680292]          res 40/00:ac:d8:64:54/00:00:57:00:00/40 Emask 0x10 
+> (ATA bus error)
+> [42881.841899] ata3: soft resetting port
+> [42885.966320] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [42915.919042] ata3.00: qc timeout (cmd 0xec)
+> [42915.919094] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [42915.919149] ata3.00: revalidation failed (errno=-5)
+> [42915.919206] ata3: failed to recover some devices, retrying in 5 secs
+> [42920.912458] ata3: hard resetting port
+> [42926.411363] ata3: port is slow to respond, please be patient (Status 
+> 0x80)
+> [42930.943080] ata3: COMRESET failed (errno=-16)
+> [42930.943130] ata3: hard resetting port
+> [42931.399628] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [42931.413523] ata3.00: configured for UDMA/133
+> [42931.413586] ata3: EH pending after completion, repeating EH (cnt=4)
+> [42931.413655] ata3: EH complete
+> [42931.413719] sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors 
+> (750156 MB)
+> [42931.413809] sd 2:0:0:0: [sdc] Write Protect is off
+> [42931.413856] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> [42931.413867] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: 
+> enabled, doesn't support DPO or FUA
+> 
+> Usually when I see this sort of thing with another box I have full of 
+> raptors, it was due to a bad raptor and I never saw it again after I 
+> replaced the disk that it happened on, but that was using the Intel P965 
+> chipset.
+> 
+> For this board, it is a Gigabyte GSP-P35-DS4 (Rev 2.0) and I have all of 
+> the drives (2 raptors, 3 750s connected to the Intel ICH9 Southbridge).
+> 
+> I am going to do some further testing but does this indicate a bad drive? 
+> Bad cable?  Bad connector?
+> 
+> As you can see above, /dev/sdc stopped responding for a little bit and 
+> then the kernel reset the port.
+> 
+> Why is this though?  What is the likely root cause?  Should I replace the 
+> drive?  Obviously this is not normal and cannot be good at all, the idea 
+> is to put these drives in a RAID5 and if one is going to timeout that is 
+> going to cause the array to go degraded and thus be worthless in a raid5 
+> configuration.
+> 
+> Can anyone offer any insight here?
 
+It would be interesting to try 2.6.21 or 2.6.22.
 
-> And please reconsider that double implementation. (triple above, but I hope
-> now I have convinced you to drop one). Jense please ?
-
-I have a plan to remove that duplication using the internal-with-flags
-implementation something like the patch (blk_end_io) below.
-
-Jens,
-If you agree with passing a 'needlock' flag, which is used to decide
-whether to get queue's lock, I can remove the last duplication of
-__blk_end_request() too.  Do you still disagree?
-
-Thanks,
-Kiyoshi Ueda
-
-
-Index: 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-===================================================================
---- 2.6.24-rc3-mm2.orig/drivers/scsi/scsi_lib.c
-+++ 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-@@ -629,28 +629,6 @@ void scsi_run_host_queues(struct Scsi_Ho
- 		scsi_run_queue(sdev->request_queue);
- }
- 
--static void scsi_finalize_request(struct scsi_cmnd *cmd, int uptodate)
--{
--	struct request_queue *q = cmd->device->request_queue;
--	struct request *req = cmd->request;
--	unsigned long flags;
--
--	add_disk_randomness(req->rq_disk);
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	if (blk_rq_tagged(req))
--		blk_queue_end_tag(q, req);
--
--	end_that_request_last(req, uptodate);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	/*
--	 * This will goose the queue request function at the end, so we don't
--	 * need to worry about launching another command.
--	 */
--	scsi_next_command(cmd);
--}
--
- /*
-  * Function:    scsi_end_request()
-  *
-@@ -930,23 +908,25 @@ EXPORT_SYMBOL(scsi_release_buffers);
- void scsi_end_bidi_request(struct scsi_cmnd *cmd)
- {
- 	struct request *req = cmd->request;
-+	unsigned int dlen = req->data_len;
-+	unsigned int next_dlen = req->next_rq->data_len;
- 
--	end_that_request_chunk(req, 1, req->data_len);
- 	req->data_len = scsi_out(cmd)->resid;
--
--	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
- 	req->next_rq->data_len = scsi_in(cmd)->resid;
- 
--	scsi_release_buffers(cmd);
--
- 	/*
- 	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
--	 *       in end_that_request_last() then this WARN_ON must be removed.
-+	 *       in blk_end_bidi_request() then this WARN_ON must be removed.
- 	 *       for now, upper-driver must have registered an end_io.
- 	 */
- 	WARN_ON(!req->end_io);
- 
--	scsi_finalize_request(cmd, 1);
-+	if (blk_end_bidi_request(req, 1, dlen, next_dlen))
-+		/* req has not been completed */
-+		BUG();
-+
-+	scsi_release_buffers(cmd);
-+	scsi_next_command(cmd);
- }
- 
- /*
-Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
-===================================================================
---- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
-+++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-@@ -3792,24 +3792,17 @@ static void complete_request(struct requ
- 	if (!list_empty(&rq->queuelist))
- 		blkdev_dequeue_request(rq);
- 
-+	if (blk_bidi_rq(rq) && !rq->end_io)
-+		__blk_put_request(rq->next_rq->q, rq->next_rq);
-+
- 	end_that_request_last(rq, uptodate);
- }
- 
--/**
-- * blk_end_request - Helper function for drivers to complete the request.
-- * @rq:       the request being processed
-- * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-- * @nr_bytes: number of bytes to complete
-- *
-- * Description:
-- *     Ends I/O on a number of bytes attached to @rq.
-- *     If @rq has leftover, sets it up for the next range of segments.
-- *
-- * Return:
-- *     0 - we are done with this request
-- *     1 - still buffers pending for this request
-- **/
--int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-+/*
-+ * Internal function
-+ */
-+static int blk_end_io(struct request *rq, int uptodate, int nr_bytes,
-+		      int bidi_bytes, int (drv_callback)(struct request *))
- {
- 	struct request_queue *q = rq->q;
- 	unsigned long flags = 0UL;
-@@ -3817,8 +3810,17 @@ int blk_end_request(struct request *rq, 
- 	if (blk_fs_request(rq) || blk_pc_request(rq)) {
- 		if (__end_that_request_first(rq, uptodate, nr_bytes))
- 			return 1;
-+
-+		/* Bidi request must be completed as a whole */
-+		if (blk_bidi_rq(rq) &&
-+		    __end_that_request_first(rq->next_rq, uptodate, bidi_bytes))
-+			return 1;
- 	}
- 
-+	/* Special feature for tricky drivers */
-+	if (drv_callback && drv_callback(rq))
-+		return 1;
-+
- 	add_disk_randomness(rq->rq_disk);
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
-@@ -3827,6 +3829,32 @@ int blk_end_request(struct request *rq, 
- 
- 	return 0;
- }
-+
-+int blk_end_bidi_request(struct request *rq, int uptodate, int nr_bytes,
-+			 int bidi_bytes)
-+{
-+	return blk_end_io(rq, uptodate, nr_bytes, bidi_bytes, NULL);
-+}
-+EXPORT_SYMBOL_GPL(blk_end_bidi_request);
-+
-+/**
-+ * blk_end_request - Helper function for drivers to complete the request.
-+ * @rq:       the request being processed
-+ * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-+ * @nr_bytes: number of bytes to complete
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @rq.
-+ *     If @rq has leftover, sets it up for the next range of segments.
-+ *
-+ * Return:
-+ *     0 - we are done with this request
-+ *     1 - still buffers pending for this request
-+ **/
-+int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-+{
-+	return blk_end_io(rq, uptodate, nr_bytes, 0, NULL);
-+}
- EXPORT_SYMBOL_GPL(blk_end_request);
- 
- /**
-@@ -3878,25 +3906,7 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
- int blk_end_request_callback(struct request *rq, int uptodate, int nr_bytes,
- 			     int (drv_callback)(struct request *))
- {
--	struct request_queue *q = rq->q;
--	unsigned long flags = 0UL;
--
--	if (blk_fs_request(rq) || blk_pc_request(rq)) {
--		if (__end_that_request_first(rq, uptodate, nr_bytes))
--			return 1;
--	}
--
--	/* Special feature for tricky drivers */
--	if (drv_callback && drv_callback(rq))
--		return 1;
--
--	add_disk_randomness(rq->rq_disk);
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	complete_request(rq, uptodate);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	return 0;
-+	return blk_end_io(rq, uptodate, nr_bytes, 0, drv_callback);
- }
- EXPORT_SYMBOL_GPL(blk_end_request_callback);
- 
