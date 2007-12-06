@@ -1,113 +1,98 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Thu, 6 Dec 2007 15:05:11 -0800
-Message-ID: <20071206150511.e0dd0b07.akpm@linux-foundation.org>
-References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan>
-	<20071206140038.f06e18ad.akpm@linux-foundation.org>
-	<Pine.LNX.4.64.0712061737500.8523@p34.internal.lan>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Hard drives only detected when booting from CD on nVidia MCP67
+ SATA
+Date: Thu, 06 Dec 2007 18:05:09 -0500
+Message-ID: <47588025.6090203@redhat.com>
+References: <47573A0A.4070401@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45007 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751880AbXLFXFQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Dec 2007 18:05:16 -0500
-In-Reply-To: <Pine.LNX.4.64.0712061737500.8523@p34.internal.lan>
+Received: from mx1.redhat.com ([66.187.233.31]:54271 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751369AbXLFXFL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Dec 2007 18:05:11 -0500
+In-Reply-To: <47573A0A.4070401@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <peerchen@gmail.com>
 
-On Thu, 6 Dec 2007 17:38:08 -0500 (EST)
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-
+On 12/05/2007 06:53 PM, Chuck Ebbert wrote:
+> With kernel 2.6.23 on an Acer 7220 notebook using nVidia MCP67 SATA,
+> hard drives are only detected after first booting from a CD.
+> 
+> Boot from hard drive      No drives detected
+> 
+> Boot live CD              Detected
+> 
+> Boot CD to GRUB menu,     Detected
+> then warm-boot from hard
+> drive
 > 
 > 
-> On Thu, 6 Dec 2007, Andrew Morton wrote:
+> Non-detect case:
 > 
-> > On Sat, 1 Dec 2007 06:26:08 -0500 (EST)
-> > Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >
-> >> I am putting a new machine together and I have dual raptor raid 1 for the
-> >> root, which works just fine under all stress tests.
-> >>
-> >> Then I have the WD 750 GiB drive (not RE2, desktop ones for ~150-160 on
-> >> sale now adays):
-> >>
-> >> I ran the following:
-> >>
-> >> dd if=/dev/zero of=/dev/sdc
-> >> dd if=/dev/zero of=/dev/sdd
-> >> dd if=/dev/zero of=/dev/sde
-> >>
-> >> (as it is always a very good idea to do this with any new disk)
-> >>
-> >> And sometime along the way(?) (i had gone to sleep and let it run), this
-> >> occurred:
-> >>
-> >> [42880.680144] ata3.00: exception Emask 0x10 SAct 0x0 SErr 0x4010000
-> >> action 0x2 frozen
-> >
-> > Gee we're seeing a lot of these lately.
-> >
-> >> [42880.680231] ata3.00: irq_stat 0x00400040, connection status changed
-> >> [42880.680290] ata3.00: cmd ec/00:00:00:00:00/00:00:00:00:00/00 tag 0 cdb
-> >> 0x0 data 512 in
-> >> [42880.680292]          res 40/00:ac:d8:64:54/00:00:57:00:00/40 Emask 0x10
-> >> (ATA bus error)
-> >> [42881.841899] ata3: soft resetting port
-> >> [42885.966320] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> >> [42915.919042] ata3.00: qc timeout (cmd 0xec)
-> >> [42915.919094] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> >> [42915.919149] ata3.00: revalidation failed (errno=-5)
-> >> [42915.919206] ata3: failed to recover some devices, retrying in 5 secs
-> >> [42920.912458] ata3: hard resetting port
-> >> [42926.411363] ata3: port is slow to respond, please be patient (Status
-> >> 0x80)
-> >> [42930.943080] ata3: COMRESET failed (errno=-16)
-> >> [42930.943130] ata3: hard resetting port
-> >> [42931.399628] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> >> [42931.413523] ata3.00: configured for UDMA/133
-> >> [42931.413586] ata3: EH pending after completion, repeating EH (cnt=4)
-> >> [42931.413655] ata3: EH complete
-> >> [42931.413719] sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors
-> >> (750156 MB)
-> >> [42931.413809] sd 2:0:0:0: [sdc] Write Protect is off
-> >> [42931.413856] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> >> [42931.413867] sd 2:0:0:0: [sdc] Write cache: enabled, read cache:
-> >> enabled, doesn't support DPO or FUA
-> >>
-> >> Usually when I see this sort of thing with another box I have full of
-> >> raptors, it was due to a bad raptor and I never saw it again after I
-> >> replaced the disk that it happened on, but that was using the Intel P965
-> >> chipset.
-> >>
-> >> For this board, it is a Gigabyte GSP-P35-DS4 (Rev 2.0) and I have all of
-> >> the drives (2 raptors, 3 750s connected to the Intel ICH9 Southbridge).
-> >>
-> >> I am going to do some further testing but does this indicate a bad drive?
-> >> Bad cable?  Bad connector?
-> >>
-> >> As you can see above, /dev/sdc stopped responding for a little bit and
-> >> then the kernel reset the port.
-> >>
-> >> Why is this though?  What is the likely root cause?  Should I replace the
-> >> drive?  Obviously this is not normal and cannot be good at all, the idea
-> >> is to put these drives in a RAID5 and if one is going to timeout that is
-> >> going to cause the array to go degraded and thus be worthless in a raid5
-> >> configuration.
-> >>
-> >> Can anyone offer any insight here?
-> >
-> > It would be interesting to try 2.6.21 or 2.6.22.
-> >
+> ahci 0000:00:09.0: version 2.3
+> ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+> ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+> IRQ 16
+> input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+> ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+> ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+> PCI: Setting latency timer of device 0000:00:09.0 to 64
+> scsi0 : ahci
+> scsi1 : ahci
+> scsi2 : ahci
+> scsi3 : ahci
+> ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata2: SATA link down (SStatus 0 SControl 300)
+> ata3: SATA link down (SStatus 0 SControl 300)
+> ata4: SATA link down (SStatus 0 SControl 300)
+> Waiting for driver initialization
 > 
-> This was due to NCQ issues (disabling it fixed the problem).
+> But, if a LiveCD is used to boot or if a LiveCD was used before an hot reboot 
+> (without a power off), disks are correctly found :
+> 
+> Loading ahci.ko
+> ahci 0000:00:09.0: version 2.3
+> ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+> ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+> IRQ 16
+> input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+> ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+> ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+> PCI: Setting latency timer of device 0000:00:09.0 to 64
+> scsi0 : ahci
+> scsi1 : ahci
+> scsi2 : ahci
+> scsi3 : ahci
+> ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata1.00: ATA-7: Hitachi HTS541612J9SA00, SBDOC70P, max UDMA/100
+> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata1.00: configured for UDMA/100
+> ata2: SATA link down (SStatus 0 SControl 300)
+> ata3: SATA link down (SStatus 0 SControl 300)
+> ata4: SATA link down (SStatus 0 SControl 300)
+> 
 > 
 
-I cannot locate any further email discussion on this topic.
+Possibly fixed by:
 
-Disabling NCQ at either compile time or runtime is not a "fix" and further
-work should be done here to maek the kernel run acceptably on that
-hardware.
+Commit:     3cc3eb1148e4b2dfabf7a1dcf36fd8be1331ca95
+[libata] AHCI: enable AHCI mode, before using AHCI reset
+
+Plus:
+
+Commit:     ab6fc95f609b372a19e18ea689986846ab1ba29c
+[libata] AHCI: fix newly introduced host-reset bug
+
+??
