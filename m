@@ -1,164 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Why we were seeing so many spurious NCQ completions
-Date: Fri, 07 Dec 2007 11:18:00 +0900
-Message-ID: <4758AD58.3000801@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_mv:  Fix broken Marvell 7042 support.
+Date: Thu, 06 Dec 2007 21:22:39 -0500
+Message-ID: <4758AE6F.9060205@pobox.com>
+References: <4751A2DA.6030403@rtr.ca>	 <BD261180E6D35F4D9D32F3E44FD3D9010ADF2E30@EMPBEDEX.empirix.com>	 <20071203154749.6lah7pulw8ow0s84@email.syntomax.com>	 <47543C58.4040106@rtr.ca> <475447A0.2010101@rtr.ca>	 <47544B3C.2010901@rtr.ca> <1196712661.6362.5.camel@liza>	 <475465F7.7050705@rtr.ca> <1196714235.6362.9.camel@liza>	 <47546CF6.30301@rtr.ca> <1196722124.6362.17.camel@liza>	 <20071203231057.39ae9b71@the-village.bc.nu> <1196726490.6362.21.camel@liza>	 <47549A26.6080900@rtr.ca> <1196727475.6362.27.camel@liza>	 <47549E0B.9070509@rtr.ca> <1196812599.6909.10.camel@liza> <47572A18.2010904@rtr.ca> <475732C0.2090901@rtr.ca> <475735B4.7020401@rtr.ca> <47573A54.5000004@rtr.ca> <47573C16.7010704@pobox.com> <47577499.7000004@rtr.ca> <47577E0F.1030709@pobox.com> <47587649.5030009@rtr.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070401040202070208050200"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:18511 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbXLGCSH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Dec 2007 21:18:07 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1069718wah
-        for <linux-ide@vger.kernel.org>; Thu, 06 Dec 2007 18:18:07 -0800 (PST)
+Received: from srv5.dvmed.net ([207.36.208.214]:35633 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753129AbXLGCW6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 Dec 2007 21:22:58 -0500
+In-Reply-To: <47587649.5030009@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, diego torres <dtorres@coral.dnsalias.org>, Michael Tokarev <mjt@tls.msk.ru>
+To: Mark Lord <liml@rtr.ca>
+Cc: Hein-Pieter van Braam <hp@syntomax.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Morrison, Tom" <tmorrison@empirix.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@redhat.com>
 
-This is a multi-part message in MIME format.
---------------070401040202070208050200
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Mark Lord wrote:
+> Jeff Garzik wrote:
+> ...
+>> If you pop the BIOS chip or plug the card into a non-x86 box (or any 
+>> of several other alternatives), the problem is likely to go away.
+> ..
 
-Hello, all.
+> Yeah, I was hoping for a removable BIOS chip, but it's soldered in place.
+> And that's not a solution for most users anyway.
 
-This has been going on for quite some time now but I finally succeeded
-to reproduce the problem and find out what has been going on.  It
-wasn't drive's or controller's fault.  The spurious completion
-detection logic was wrong which makes all of this my fault.  :-)
+That was an example, silly :)  I'm not asking users to pop out chips. 
+I'm illustrating that they are separate and distinct pieces, and you 
+cannot assume.
 
-The attached patch induces NCQ spurious completions by inserting
-artificial delays during irq handling.  The following is log with the
-patch applied.
+Boot into a non-x86 platform, or use your x86 BIOS to disable all 
+optional ROMs, and the BIOS-stomps-data issue goes away.
 
-A [ 1125.478813] ata35: MON issue=0x0 SAct=0x1 sactive=0x3 SDB FIS=004040a1:00000002
-B [ 1125.480248] ata35: MON issue=0x4 SAct=0x6 sactive=0x7 SDB FIS=004040a1:00000001
-C [ 1125.481614] ata35: MON issue=0x0 SAct=0x5 sactive=0x7 SDB FIS=004040a1:00000002
-D [ 1125.481704] ata35: YYY 0x2 -> 0x4
-E [ 1125.481722] ata35: XXX issue=0x0 SAct=0x1 sactive=0x1 SDB FIS=004040a1:00000004
-F [ 1125.483087] ata35: MON issue=0x0 SAct=0x0 sactive=0x1 SDB FIS=004040a1:00000001
-G [ 1125.484297] ata35: MON issue=0x4 SAct=0x6 sactive=0x7 SDB FIS=004040a1:00000001
+I'm not saying the _problem_ goes away; instead I am illustrating why it 
+is incorrect to update sata_mv for this problem.  The solution belongs 
+elsewhere, because the problem is not with the chip, but the BIOS.
 
-MON lines are printed on each SDB FIS while YYY line indicates that
-SDB FIS RX area has changed during the artificial delay.  XXX line
-notes condition which triggers spurious NCQ completion - invoking EH
-is disabled for debugging.
+Continuing with the other emails...
 
-Here's what happens.
+> What other cards do we support that automatically overwrite user data
+> without confirmation or notice of any kind? 
 
-1. On A, NCQ command 0 and 1 are in flight - command 0 is still being
-   transmitted to the device.  The first SDB FIS indicates completion
-   of command 1.
+If you use any vendor RAID (BIOS RAID / "fake RAID"), and fail to use 
+DM+dmraid, then data corruption occurs due to lack of knowledge about 
+the presence of underlying BIOS-created RAID metadata.
 
-2. Between A and B, the driver issues NCQ commands 1 and 2.  0 is
-   still in flight.
+Your case is just another case of problems caused by lack of knowledge 
+of the underlying vendor RAID that the BIOS insists upon using.
 
-3. On B, command 0 completes and drive sends completion for it.
+I'm pretty sure the most recently Fedora release has full dmraid support 
+for known formats, so AFAICS the task at hand should be simply to figure 
+out how to identify the underlying vendor RAID (on-disk signatures are 
+greatly preferred over PCI ID matching), and update dmraid accordingly.
 
-4. Between B and C, the driver issues NCQ command 0.
+Welcome to the suck that is BIOS RAID :)
 
-5. On C, command 1 completes and drive sends completion for it.
+	Jeff
 
-6. On D, then the drive completes command 2 and sends completion for
-   it.  This makes SDB FIS RX area updated and as the driver is still
-   in IRQ handler, sets IRQ pending bit again.  Note that YYY line is
-   printed *before* actually completing commands.  So, after printing
-   YYY line, the driver completes both commands 1 and 2.
 
-7. On E, the IRQ handler is invoked again because of the IRQ pending
-   status set from #6.  However, completions contained in the SDB FIS
-   which triggered this IRQ handler invocation is already processed.
-   ie. Completion for command 2 is already processed in the previous
-   IRQ handler invocation, so this time IRQ handler has nothing to do
-   but SDB FIS RX area shows that this IRQ is for SDB FIS which
-   includes completion for command 2, which triggers spurious NCQ
-   completion condition.
-
-8. It goes on.
-
-So, trying to detect spurious completions using IRQ and RX FIS area
-turns out to be stupid as they aren't interlocked.  I'll soon post a
-patch to remove spurious completion check and blacklist resulted from
-it.
-
-Thanks a lot.
-
--- 
-tejun
-
---------------070401040202070208050200
-Content-Type: text/x-patch;
- name="spurious-completion-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="spurious-completion-debug.patch"
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4688dbf..9f9a658 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1664,6 +1664,10 @@ static void ahci_port_intr(struct ata_port *ap)
- 	}
- 
- 	if (status & PORT_IRQ_SDB_FIS) {
-+		const __le32 *f = pp->rx_fis + RX_FIS_SDB;
-+		u32 t = le32_to_cpu(f[1]);
-+		int i;
-+
- 		/* If SNotification is available, leave notification
- 		 * handling to sata_async_notification().  If not,
- 		 * emulate it by snooping SDB FIS RX area.
-@@ -1686,6 +1690,32 @@ static void ahci_port_intr(struct ata_port *ap)
- 			if (f0 & (1 << 15))
- 				sata_async_notification(ap);
- 		}
-+
-+		if (le32_to_cpu(f[1]) & ~pp->active_link->sactive)
-+			ata_link_printk(pp->active_link, KERN_INFO,
-+				"XXX issue=0x%x SAct=0x%x sactive=0x%x SDB FIS=%08x:%08x\n",
-+				readl(port_mmio + PORT_CMD_ISSUE),
-+				readl(port_mmio + PORT_SCR_ACT),
-+				pp->active_link->sactive,
-+				le32_to_cpu(f[0]), le32_to_cpu(f[1]));
-+		else
-+			ata_link_printk(pp->active_link, KERN_INFO,
-+				"MON issue=0x%x SAct=0x%x sactive=0x%x SDB FIS=%08x:%08x\n",
-+				readl(port_mmio + PORT_CMD_ISSUE),
-+				readl(port_mmio + PORT_SCR_ACT),
-+				pp->active_link->sactive,
-+				le32_to_cpu(f[0]), le32_to_cpu(f[1]));
-+
-+		for (i = 0; i < 100; i++) {
-+			if (t != le32_to_cpu(f[1])) {
-+				ata_link_printk(pp->active_link, KERN_INFO,
-+						"YYY 0x%x -> 0x%x\n",
-+						t, le32_to_cpu(f[1]));
-+				break;
-+			}
-+			udelay(1);
-+			cpu_relax();
-+		}
- 	}
- 
- 	/* pp->active_link is valid iff any command is in flight */
-@@ -1746,7 +1776,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 			 * with HSM violation.  EH will turn off NCQ
- 			 * after several such failures.
- 			 */
--			ata_ehi_push_desc(ehi,
-+			/*			ata_ehi_push_desc(ehi,
- 				"spurious completions during NCQ "
- 				"issue=0x%x SAct=0x%x FIS=%08x:%08x",
- 				readl(port_mmio + PORT_CMD_ISSUE),
-@@ -1754,7 +1784,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 				le32_to_cpu(f[0]), le32_to_cpu(f[1]));
- 			ehi->err_mask |= AC_ERR_HSM;
- 			ehi->action |= ATA_EH_SOFTRESET;
--			ata_port_freeze(ap);
-+			ata_port_freeze(ap);*/
- 		} else {
- 			if (!pp->ncq_saw_sdb)
- 				ata_port_printk(ap, KERN_INFO,
-
---------------070401040202070208050200--
