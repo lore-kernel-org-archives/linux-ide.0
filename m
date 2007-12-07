@@ -1,39 +1,39 @@
-From: devzero@web.de
-Subject: ata_piix init/performance regression ?
-Date: Sat, 08 Dec 2007 00:46:59 +0100
-Message-ID: <32463620@web.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: AHCI + ST3160023AS + NCQ problems
+Date: Sat, 08 Dec 2007 08:51:33 +0900
+Message-ID: <4759DC85.8000100@gmail.com>
+References: <305c16960710291713v22875d26v8ccfc76daab102bd@mail.gmail.com>	 <47270CE9.4060501@msgid.tls.msk.ru>	 <311601c90710300615j33bf0959l51b1b2505e9b2048@mail.gmail.com>	 <472788F4.60300@msgid.tls.msk.ru>	 <305c16960710301728j557689a5rbec52a11ec606963@mail.gmail.com>	 <305c16960711062221u69e8eb37p1367b18343d0e2a5@mail.gmail.com>	 <4737C2C0.10905@gmail.com> <305c16960712071254n5d78b293if8d5ba2879a66b4a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756649AbXLGXrV@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.191]:8092 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbXLGXvl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 18:51:41 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so868752rvb
+        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 15:51:40 -0800 (PST)
+In-Reply-To: <305c16960712071254n5d78b293if8d5ba2879a66b4a@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Matheus Izvekov <mizvekov@gmail.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, "Eric D. Mudama" <edmudama@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Hello !
+Matheus Izvekov wrote:
+>> * unstable power supply (this is quite common)
+>> * faulty cable or poorly seated connectors
+>> * faulty drive or controller (seems rare)
+> 
+> Tried everything, short of trying the hd on another controller, but
+> the problem persists.
 
-on my old fujitsu-siemens lifebook, booting is at least 20 seconds slower as before.
+Weird, ICH7 + 7200.7 combination is very widely tested.  Can you please
+post the result of "hdparm -I /dev/sdX" and "smartctl -a /dev/sdX" where
+sdX is the offending drive?  So, if you connect the drive to a different
+port of the controller using a different cable, the problem follows the
+drive, right?
 
-on ata_piix init i can see 2 longer delays of ~10 seconds each, which didn`t happen before.
+Thanks.
 
-i`m using SuSE kernel of the day from http://ftp.suse.com/pub/projects/kernel/kotd/
-
-problem exists with these kernels:
-kernel-vanilla-2.6.24_rc3_git3-20071201095839
-kernel-default-2.6.24_rc3_git3-20071201095839
-kernel-default-2.6.24_rc4_git3-20071206172629
-kernel-vanilla-2.6.24_rc4_git3-20071206172629
-
-problem didn`t exist with this one:
-kernel-default-2.6.22.12-0.1 (opensuse 10.3 default)
-
-please see https://bugzilla.novell.com/show_bug.cgi?id=345442 for more details.
-
-regards
-roland
-
-_____________________________________________________________________
-Der WEB.DE SmartSurfer hilft bis zu 70% Ihrer Onlinekosten zu sparen!
-http://smartsurfer.web.de/?mc=100071&distributionid=000000000066
-
+-- 
+tejun
