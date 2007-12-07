@@ -1,77 +1,85 @@
-From: Zan Lynx <zlynx@acm.org>
-Subject: Re: 2.6.24-rc4-mm1 and Very Slow PCMCIA Compact Flash
-Date: Fri, 07 Dec 2007 23:39:04 +0000
-Message-ID: <1197070744.15428.33.camel@localhost>
-References: <1197059904.15428.15.camel@localhost>
-	 <20071207150251.a0dbae23.akpm@linux-foundation.org>
-	 <1197068983.15428.29.camel@localhost>
-	 <20071207152249.360af326.akpm@linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] sata_sil: fix spurious IRQ handling
+Date: Sat, 08 Dec 2007 08:45:27 +0900
+Message-ID: <4759DB17.9010505@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DqAwPAeW7Gfhi+oYS+Kg"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756080AbXLGXjT@vger.kernel.org>
-In-Reply-To: <20071207152249.360af326.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.179]:20715 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbXLGXpe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 18:45:34 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1769572wah
+        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 15:45:33 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: mark.paulus@technologist.com, sveint@gmail.com, bug-track@fisher-privat.net
 
+Interestingly, sata_sil raises spurious interrupts if it's coupled
+with Sil SATA_PATA bridge.  Currently, sata_sil interrupt handler is
+strict about spurious interrupts and freezes the port when it occurs.
+This patch makes it more forgiving.
 
---=-DqAwPAeW7Gfhi+oYS+Kg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+* On SATA PHY event interrupt, serror value is checked to see whether
+  it really is PHYRDY CHG event.  If not, SATA PHY event interrupt is
+  ignored.
 
+* If ATA interrupt occurs while no command is in progress, it's
+  cleared and ignored.
 
-On Fri, 2007-12-07 at 15:22 -0800, Andrew Morton wrote:
-> On Fri, 07 Dec 2007 23:09:43 +0000
-> Zan Lynx <zlynx@acm.org> wrote:
->=20
-> >=20
-> > On Fri, 2007-12-07 at 15:02 -0800, Andrew Morton wrote:
-> > > On Fri, 07 Dec 2007 20:38:24 +0000
-> > > Zan Lynx <zlynx@acm.org> wrote:
-> > >=20
-> > > > While I'm reporting problems I'll get this one out there.
-> > > >=20
-> > > > I normally use a USB-2 memory card reader but I also have a PCMCIA
-> > > > CompactFlash adapter that I use occasionally.  During the MM series
-> > > > kernels 2.6.22 and 23 (I am pretty sure) this didn't work at all.  =
-I
-> > > > don't know about vanilla since I don't run that.
-> > > >=20
-> > > > Now with MM kernels 2.6.24 rc1-4 the PCMCIA adapter works again, bu=
-t I
-> > > > only get read rates of 1.6 MB/s.  When it used to work in 2.6.20 I =
-got
-> > > > at least 16 MB/s.  The card itself is capable of 30+ in the USB-2
-> > > > reader.
-> > > >
-> >=20
-[cut]
-> Oh, OK.  Hopefully the ata guys can help out with this.
->=20
-> I don't know if it actually strictly a regression?  Did libata ever suppo=
-rt
-> that device in any earlier kernels?
+This fixes bugzilla bug 9505.
 
-That could be why it didn't work for a few kernel versions.  I
-reconfigured for a libata-only system a while back.  And, since I
-usually use the USB-2 flash reader I didn't care much about the PCMCIA.
+  http://bugzilla.kernel.org/show_bug.cgi?id=9505
 
-I will try reverting that patch later tonight, in a few hours.
---=20
-Zan Lynx <zlynx@acm.org>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/sata_sil.c |   29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
---=-DqAwPAeW7Gfhi+oYS+Kg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQBHWdmYG8fHaOLTWwgRAm8vAKCY1iRViJwnnqs4Q1gu6gR/LZT5awCdHab7
-VKBRbOgE/uAmzSeUsngtHU8=
-=a9VD
------END PGP SIGNATURE-----
-
---=-DqAwPAeW7Gfhi+oYS+Kg--
-
+Index: work/drivers/ata/sata_sil.c
+===================================================================
+--- work.orig/drivers/ata/sata_sil.c
++++ work/drivers/ata/sata_sil.c
+@@ -390,23 +390,28 @@ static void sil_host_intr(struct ata_por
+ 		sil_scr_read(ap, SCR_ERROR, &serror);
+ 		sil_scr_write(ap, SCR_ERROR, serror);
+ 
+-		/* Trigger hotplug and accumulate SError only if the
+-		 * port isn't already frozen.  Otherwise, PHY events
+-		 * during hardreset makes controllers with broken SIEN
+-		 * repeat probing needlessly.
++		/* Sometimes spurious interrupts occur, double check
++		 * it's PHYRDY CHG.
+ 		 */
+-		if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+-			ata_ehi_hotplugged(&ap->link.eh_info);
+-			ap->link.eh_info.serror |= serror;
++		if (serror & SERR_PHYRDY_CHG) {
++			/* Trigger hotplug and accumulate SError only
++			 * if the port isn't already frozen.
++			 * Otherwise, PHY events during hardreset
++			 * makes controllers with broken SIEN repeat
++			 * probing needlessly.
++			 */
++			if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
++				ata_ehi_hotplugged(&ap->link.eh_info);
++				ap->link.eh_info.serror |= serror;
++			}
++			goto freeze;
+ 		}
+ 
+-		goto freeze;
++		if (!(bmdma2 & SIL_DMA_COMPLETE))
++			return;
+ 	}
+ 
+-	if (unlikely(!qc))
+-		goto freeze;
+-
+-	if (unlikely(qc->tf.flags & ATA_TFLAG_POLLING)) {
++	if (unlikely(!qc || (qc->tf.flags & ATA_TFLAG_POLLING))) {
+ 		/* this sometimes happens, just clear IRQ */
+ 		ata_chk_status(ap);
+ 		return;
