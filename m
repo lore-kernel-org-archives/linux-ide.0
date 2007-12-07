@@ -1,94 +1,183 @@
-From: "Hemmann, Volker Armin" <volker.armin.hemmann@tu-clausthal.de>
-Subject: Re: question about sata-error on boot.
-Date: Fri, 7 Dec 2007 14:32:08 +0100
-Message-ID: <200712071432.08699.volker.armin.hemmann@tu-clausthal.de>
-References: <200711021934.21123.volker.armin.hemmann@tu-clausthal.de> <20071106221556.55c3cd0b.akpm@linux-foundation.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: Peculiar out-of-sync boot log lines
+Date: Fri, 07 Dec 2007 19:34:26 +0300
+Message-ID: <47597612.4080508@ru.mvista.com>
+References: <20071129193728.2f1c237e@linuxamd.linicks.net> <200712012259.35152.bzolnier@gmail.com> <20071201151419.39a169f1.randy.dunlap@oracle.com> <200712021930.34413.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755810AbXLGNcX@vger.kernel.org>
-In-Reply-To: <20071106221556.55c3cd0b.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from h155.mvista.com ([63.81.120.155]:26232 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750900AbXLGQgO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Dec 2007 11:36:14 -0500
+In-Reply-To: <200712021930.34413.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Mark Lord <lkml@rtr.ca>, Nick Warne <nick@ukfsn.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+Hello.
 
-On Mittwoch, 7. November 2007, Andrew Morton wrote:
-> > On Fri, 2 Nov 2007 19:34:20 +0100 "Hemmann, Volker Armin"
-> > <volker.armin.hemmann@tu-clausthal.de> wrote: Hi,
->
-> (cc linux-ide)
->
-> > for some time (and I can't say for how long, but the board is less than a
-> > month old) I get this error on boot:
-> >
-> > [   42.116273] ahci 0000:00:0a.0: version 2.2
-> > [   42.116482] ACPI: PCI Interrupt Link [LSA0] enabled at IRQ 23
-> > [   42.116653] ACPI: PCI Interrupt 0000:00:0a.0[A] -> Link [LSA0] -> GSI
-> > 23 (level, low) -> IRQ 23
-> > [   43.119478] ahci 0000:00:0a.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps
-> > 0xf impl IDE mode
-> > [   43.119778] ahci 0000:00:0a.0: flags: 64bit led clo pmp pio
-> > [   43.119943] PCI: Setting latency timer of device 0000:00:0a.0 to 64
-> > [   43.120149] scsi0 : ahci
-> > [   43.120365] scsi1 : ahci
-> > [   43.120556] scsi2 : ahci
-> > [   43.120741] scsi3 : ahci
-> > [   43.120927] ata1: SATA max UDMA/133 cmd 0xffffc20000014100 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 315
-> > [   43.121227] ata2: SATA max UDMA/133 cmd 0xffffc20000014180 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 315
-> > [   43.121526] ata3: SATA max UDMA/133 cmd 0xffffc20000014200 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 315
-> > [   43.121826] ata4: SATA max UDMA/133 cmd 0xffffc20000014280 ctl
-> > 0x0000000000000000 bmdma 0x0000000000000000 irq 315
-> > [   43.934296] ata1: softreset failed (1st FIS failed)
-> > [   43.934461] ata1: reset failed (errno=-5), retrying in 10 secs
-> > [   53.885194] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [   53.885890] ata1.00: ATA-7: WDC WD1600JS-00MHB1, 10.02E01, max
-> > UDMA/133 [   53.886056] ata1.00: 312581808 sectors, multi 16: LBA48
-> > [   53.886804] ata1.00: configured for UDMA/133
-> > [   54.201147] ata2: SATA link down (SStatus 0 SControl 300)
-> > [   54.517101] ata3: SATA link down (SStatus 0 SControl 300)
-> > [   54.833055] ata4: SATA link down (SStatus 0 SControl 300)
+Bartlomiej Zolnierkiewicz wrote:
 
-this is gone with 2.6.22.13 an 2.6.23.9:
+> [PATCH] ide: DMA reporting and validity checking fixes (take 2)
 
-[   33.277039] scsi0 : ahci
-[   33.277262] scsi1 : ahci
-[   33.277454] scsi2 : ahci
-[   33.277645] scsi3 : ahci
-[   33.277826] ata1: SATA max UDMA/133 cmd 0xffffc20000020100 ctl 
-0x0000000000000000 bmdma 0x0000000000000000 irq 315
-[   33.278120] ata2: SATA max UDMA/133 cmd 0xffffc20000020180 ctl 
-0x0000000000000000 bmdma 0x0000000000000000 irq 315
-[   33.278414] ata3: SATA max UDMA/133 cmd 0xffffc20000020200 ctl 
-0x0000000000000000 bmdma 0x0000000000000000 irq 315
-[   33.278708] ata4: SATA max UDMA/133 cmd 0xffffc20000020280 ctl 
-0x0000000000000000 bmdma 0x0000000000000000 irq 315
-[   33.751855] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[   33.752659] ata1.00: ATA-7: WDC WD1600JS-00MHB1, 10.02E01, max UDMA/133
-[   33.752821] ata1.00: 312581808 sectors, multi 16: LBA48
-[   33.753574] ata1.00: configured for UDMA/133
-[   34.067809] ata2: SATA link down (SStatus 0 SControl 300)
-[   34.383762] ata3: SATA link down (SStatus 0 SControl 300)
-[   34.699717] ata4: SATA link down (SStatus 0 SControl 300)
-[   34.700029] scsi 0:0:0:0: Direct-Access     ATA      WDC WD1600JS-00M 10.0 
-PQ: 0 ANSI: 5
-[   34.700377] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 
-MB)
-[   34.700544] sd 0:0:0:0: [sda] Write Protect is off
-[   34.700703] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[   34.700712] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, 
-doesn't support DPO or FUA
-[   34.701026] sd 0:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 
-MB)
-[   34.701191] sd 0:0:0:0: [sda] Write Protect is off
-[   34.701350] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[   34.701358] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, 
-doesn't support DPO or FUA
-[   34.701651]  sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+> * ide_xfer_verbose() fixups:
+>   - beautify returned mode names
+>   - fix PIO5 reporting
+>   - make it return 'const char *'
+
+> * Change printk() level from KERN_DEBUG to KERN_INFO in ide_find_dma_mode().
+
+> * Add ide_id_dma_bug() helper based on ide_dma_verbose() to check for invalid
+>   DMA info in identify block.
+
+> * Use ide_id_dma_bug() in ide_tune_dma() and ide_driveid_update().
+
+>   As a result DMA won't be tuned or will be disabled after tuning if device
+>   reports inconsistent info about enabled DMA mode (ide_dma_verbose() does the
+>   same checks while the IDE device is probed by ide-{cd,disk} device driver).
+
+> * Since (id->capability & 1) && id->tDMA is a valid configuration handle
+>   it correctly in ide_id_dma_bug().
+
+    Huh? You don't check (id->capability & 1) there...
+
+> * Remove no longer needed ide_dma_verbose().
+
+> This patch should fix the following problem with out-of-sync IDE messages
+> reported by Nick Warne:
+
+>        hdd: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache<7>hdd:
+>        skipping word 93 validity check
+>         , UDMA(66)
+
+> and later debugged by Mark Lord to be caused by:
+
+>         ide_dma_verbose()
+>                 printk( ... "2048kB Cache");
+>         eighty_ninty_three()
+>                 printk(KERN_DEBUG "%s: skipping word 93 validity check\n");
+>         ide_dma_verbose()
+>                 printk(", UDMA(66)"
+
+> Please note that as a result ide-{cd,disk} device drivers won't report the
+> DMA speed used but this is intended since now DMA mode being used is always
+> reported by IDE core code.
+
+> v2:
+> * fixes suggested by Randy:
+>   - use KERN_CONT for printk()-s in ide-{cd,disk}.c
+>   - don't remove argument name from ide_xfer_verbose() declaration
+
+> Cc: Nick Warne <nick@ukfsn.org>
+> Cc: Mark Lord <lkml@rtr.ca>
+> Cc: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+[...]
+
+> Index: b/drivers/ide/ide-dma.c
+> ===================================================================
+> --- a/drivers/ide/ide-dma.c
+> +++ b/drivers/ide/ide-dma.c
+> @@ -806,58 +809,26 @@ static int ide_dma_check(ide_drive_t *dr
+>  	return vdma ? 0 : -1;
+>  }
+>  
+> -void ide_dma_verbose(ide_drive_t *drive)
+> +int ide_id_dma_bug(ide_drive_t *drive)
+>  {
+> -	struct hd_driveid *id	= drive->id;
+> -	ide_hwif_t *hwif	= HWIF(drive);
+> +	struct hd_driveid *id = drive->id;
+>  
+>  	if (id->field_valid & 4) {
+>  		if ((id->dma_ultra >> 8) && (id->dma_mword >> 8))
+[...]
+> +			goto err_out;
+>  	} else if (id->field_valid & 2) {
+>  		if ((id->dma_mword >> 8) && (id->dma_1word >> 8))
+> -			goto bug_dma_off;
+> -		printk(", DMA");
+> +			goto err_out;
+>  	} else if (id->field_valid & 1) {
+
+    Hm, bit 0 only gurantees that current translation
+
+> -		goto bug_dma_off;
+> +		if (id->tDMA == 0)
+
+    Despite the name, this is not a transfer period but SW DMA mode number, so 
+why mode 0 is bad?
+
+> +			goto err_out;
+>  	}
+> -	return;
+> -bug_dma_off:
+> -	printk(", BUG DMA OFF");
+> -	hwif->dma_off_quietly(drive);
+> -	return;
+> +	return 0;
+> +err_out:
+> +	printk(KERN_ERR "%s: bad DMA info in identify block\n", drive->name);
+> +	return 1;
+>  }
+>  
+> Index: b/drivers/ide/ide-lib.c
+> ===================================================================
+> --- a/drivers/ide/ide-lib.c
+> +++ b/drivers/ide/ide-lib.c
+> @@ -29,41 +29,44 @@
+>   *	Add common non I/O op stuff here. Make sure it has proper
+>   *	kernel-doc function headers or your patch will be rejected
+>   */
+> - 
+> +
+> +static const char *udma_str[] =
+> +	 { "UDMA/16", "UDMA/25",  "UDMA/33",  "UDMA/44",
+> +	   "UDMA/66", "UDMA/100", "UDMA/133", "UDMA7" };
+> +static const char *mwdma_str[] =
+> +	{ "MWDMA0", "MWDMA1", "MWDMA2" };
+> +static const char *swdma_str[] =
+> +	{ "SWDMA0", "SWDMA1", "SWDMA2" };
+> +static const char *pio_str[] =
+> +	{ "PIO0", "PIO1", "PIO2", "PIO3", "PIO4", "PIO5" };
+>  
+>  /**
+>   *	ide_xfer_verbose	-	return IDE mode names
+> - *	@xfer_rate: rate to name
+> + *	@mode: transfer mode
+>   *
+>   *	Returns a constant string giving the name of the mode
+>   *	requested.
+>   */
+>  
+> -char *ide_xfer_verbose (u8 xfer_rate)
+> +const char *ide_xfer_verbose(u8 mode)
+>  {
+[...]
+> +	const char *s;
+> +	u8 i = mode & 0xf;
+> +
+> +	if (mode >= XFER_UDMA_0 && mode <= XFER_UDMA_7)
+> +		s = udma_str[i];
+> +	else if (mode >= XFER_MW_DMA_0 && mode <= XFER_MW_DMA_2)
+> +		s = mwdma_str[i];
+> +	else if (mode >= XFER_SW_DMA_0 && mode <= XFER_SW_DMA_2)
+> +		s = swdma_str[i];
+> +	else if (mode >= XFER_PIO_0 && mode <= XFER_PIO_5)
+> +		s = pio_str[i & 0x7];
+> +	else if (mode == XFER_PIO_SLOW)
+> +		s = "XFER SLOW";
+
+    Not "PIO SLOW"?
+
+> +	else
+> +		s = "XFER ERROR";
+> +
+> +	return s;
+>  }
+
+MBR, Sergei
