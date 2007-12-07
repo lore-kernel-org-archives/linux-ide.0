@@ -1,34 +1,24 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [patch] ata: ahci: Enclosure Management via LED
-Date: Wed, 5 Dec 2007 11:13:53 +0000
-Message-ID: <20071205111352.GB3864@ucw.cz>
-References: <20071129094802.49e729ed@appleyard>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Frans Pop <elendil@planet.nl>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 07 Dec 2007 22:27:49 +0100
+Message-ID: <E1J0kjd-0006zE-SG@faramir.fjphome.nl>
+References: <20071207203401.GA29005@havoc.gtf.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:1451 "EHLO spitz.ucw.cz"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753364AbXLGVVY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Dec 2007 16:21:24 -0500
-Content-Disposition: inline
-In-Reply-To: <20071129094802.49e729ed@appleyard>
+Received: from hpsmtp-eml12.KPNXCHANGE.COM ([213.75.38.112]:20011 "EHLO
+	hpsmtp-eml12.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754508AbXLGV1w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 16:27:52 -0500
+In-reply-To: <20071207203401.GA29005@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi!
+Jeff Garzik wrote:
+> libata disabling command queueing (aka NCQ) based on some hueristics for
+> detection device brokenness.... that ultimately turned out to be broken.
+> 
+> Remove the broken hueristic and turn NCQ back on for all the wrongfully
+> maligned hard drives.
 
->  
-> +static int ahci_em_messages = 1;
-> +module_param(ahci_em_messages, int, 0444);
-> +/* add other LED protocol types when they become supported */
-> +MODULE_PARM_DESC(ahci_em_messages,
-> +	"Set AHCI Enclosure Management Message type (0 = disabled, 1 = LED");
-
-Should you add line in Doc* somewhere?
-
-							Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Yay!
