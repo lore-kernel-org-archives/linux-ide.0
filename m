@@ -1,22 +1,21 @@
 From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: Failure with SATA DVD-RW
-Date: Thu, 6 Dec 2007 16:39:36 -0800
-Message-ID: <20071206163936.6b1fb00a.akpm@linux-foundation.org>
+Date: Thu, 6 Dec 2007 16:40:43 -0800
+Message-ID: <20071206164043.589290f4.akpm@linux-foundation.org>
 References: <cd32a0620712041608o7733db74xf4975dec44925730@mail.gmail.com>
 	<loom.20071206T012459-620@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:52215 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755597AbXLGAkH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Dec 2007 19:40:07 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755842AbXLGAlE@vger.kernel.org>
 In-Reply-To: <loom.20071206T012459-620@post.gmane.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Parag Warudkar <parag.warudkar@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tom Lanyon <tomlanyon@gmail.com>
+List-Id: linux-ide@vger.kernel.org
+
+
+(argh, shit, resent.  Please don't massage the cc list.  Do reply-to-all)
 
 On Thu, 6 Dec 2007 01:33:16 +0000 (UTC)
 Parag Warudkar <parag.warudkar@gmail.com> wrote:
