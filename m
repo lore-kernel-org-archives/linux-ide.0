@@ -1,68 +1,51 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: kill spurious NCQ completion
- detection
-Date: Fri, 07 Dec 2007 15:29:33 -0500
-Message-ID: <4759AD2D.60903@garzik.org>
-References: <4758C20F.8020005@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] ata_piix: add Toshiba Tecra M4 to broken
+ suspend list
+Date: Fri, 07 Dec 2007 15:29:41 -0500
+Message-ID: <4759AD35.3050004@garzik.org>
+References: <47560165.3070008@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57767 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:57772 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754682AbXLGU3m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Dec 2007 15:29:42 -0500
-In-Reply-To: <4758C20F.8020005@gmail.com>
+	id S1751311AbXLGU3n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Dec 2007 15:29:43 -0500
+In-Reply-To: <47560165.3070008@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, albertl@mail.com, diego torres <dtorres@coral.dnsalias.org>, Michael Tokarev <mjt@tls.msk.ru>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Tejun Heo wrote:
-> Spurious NCQ completion detection implemented in ahci was incorrect.
-> On AHCI receving and processing FISes and raising interrupts are not
-> interlocked and spurious interrupts are expected.
+> From: Peter Schwenke <peter@bluetoad.com.au>
 > 
-> For example, if an interrupt occurs while interrupt handler is running
-> and the running interrupt handler handles the event the new IRQ
-> indicated, after IRQ handler finishes, it will be executed again
-> because IRQ pending bit is set by the new interrupt but there won't be
-> anything to process.
+> Add Toshiba Tecra M4 to broken suspend list.  This is from OSDL
+> bugzilla bug 7780.
 > 
-> Please read the following message for more information.
-> 
->   http://article.gmane.org/gmane.linux.ide/26012
-> 
-> This patch...
-> 
-> * Removes all spurious IRQ whining from ahci.  Spurious NCQ completion
->   detection was completely wrong.  Spurious D2H Register FIS taught us
->   that some early drives send spurious D2H Register FIS with I bit set
->   while NCQ commands are in progress but none of recent drives does
->   that and even the ones which show such behavior can do NCQ fine.
-> 
-> * Kills all NCQ blacklist entries which were added because of spurious
->   NCQ completions.  I tracked down each commit and verified all
->   removed ones are actually added because of spurious completions.
-> 
->   WD740ADFD-00NLR1 wasn't deleted but moved upward because the drive
->   not only had spurious NCQ completions but also is slow on sequential
->   data transfers if NCQ is enabled.
-> 
->   Maxtor 7V300F0 was added by 0e3dbc01d53940fe10e5a5cfec15ede3e929c918
->   from Alan Cox.  I can only find evidences that the drive only had
->   troubles with spuruious completions by searching the mailing list.
->   This entry needs to be verified and removed if it doesn't have other
->   NCQ related problems.
-> 
+> Signed-off-by: Peter Schwenke <peter@bluetoad.com.au>
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 > ---
-> Alan, can you please check why 7V300F0 was added?  Thanks a lot.
+>  drivers/ata/ata_piix.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
 > 
->  drivers/ata/ahci.c        |   74 +---------------------------------------------
->  drivers/ata/libata-core.c |   18 -----------
->  2 files changed, 4 insertions(+), 88 deletions(-)
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index b538e1d..bb62a58 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -974,6 +974,13 @@ static int piix_broken_suspend(void)
+>  			},
+>  		},
+>  		{
+> +			.ident = "TECRA M4",
+> +			.matches = {
+> +				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+> +				DMI_MATCH(DMI_PRODUCT_NAME, "Tecra M4"),
+> +			},
+> +		},
+> +		{
+>  			.ident = "TECRA M5",
 
 applied
 
