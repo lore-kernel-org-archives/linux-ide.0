@@ -1,24 +1,29 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 07 Dec 2007 22:27:49 +0100
-Message-ID: <E1J0kjd-0006zE-SG@faramir.fjphome.nl>
-References: <20071207203401.GA29005@havoc.gtf.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: question about sata-error on boot.
+Date: Sat, 08 Dec 2007 08:20:47 +0900
+Message-ID: <4759D54F.1080304@gmail.com>
+References: <200711021934.21123.volker.armin.hemmann@tu-clausthal.de> <20071106221556.55c3cd0b.akpm@linux-foundation.org> <200712071432.08699.volker.armin.hemmann@tu-clausthal.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hpsmtp-eml12.KPNXCHANGE.COM ([213.75.38.112]:20011 "EHLO
-	hpsmtp-eml12.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754508AbXLGV1w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 16:27:52 -0500
-In-reply-To: <20071207203401.GA29005@havoc.gtf.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:25817 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408AbXLGXU6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 18:20:58 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1759144wah
+        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 15:20:57 -0800 (PST)
+In-Reply-To: <200712071432.08699.volker.armin.hemmann@tu-clausthal.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Hemmann, Volker Armin" <volker.armin.hemmann@tu-clausthal.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> libata disabling command queueing (aka NCQ) based on some hueristics for
-> detection device brokenness.... that ultimately turned out to be broken.
-> 
-> Remove the broken hueristic and turn NCQ back on for all the wrongfully
-> maligned hard drives.
+Hemmann, Volker Armin wrote:
+> this is gone with 2.6.22.13 an 2.6.23.9:
 
-Yay!
+Thanks for letting us know.  Probably CLO related problem which got
+updated recently.
+
+-- 
+tejun
