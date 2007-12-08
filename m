@@ -1,51 +1,140 @@
-From: Peter Missel <peter.missel@onlinehome.de>
-Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
-Date: Sat, 8 Dec 2007 15:55:01 +0100
-Message-ID: <200712081555.01520.peter.missel@onlinehome.de>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] hpt366: fix HPT37x PIO mode timings (take 2)
+Date: Sat, 8 Dec 2007 18:38:10 +0300
+Message-ID: <200712081838.10647.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:52270 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbXLHOzF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 09:55:05 -0500
+Received: from rtsoft3.corbina.net ([85.21.88.6]:14538 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751820AbXLHPh5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 10:37:57 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@redhat.com>, jeff@garzik.org, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-Hi all!
+After looking into the HPT370 manual (now that I have it) and re-checking all
+the timing tables, here's what I have discovered:
 
-As the originator of this patch, please let me comment.
+- at 33 MHz clock, PIO mode 0 timings turned to be overclocked, and all other
+  PIO modes underclocked;
 
-Jeff Garzik wrote:
->Alan Cox wrote:
->> Without the valid bits at least one set of TSScorp drives report 0 in
->> word 93 for PATA 40 wire, which we (and the specs) say actually means
->> SATA. (The SATA version seems to report 80 wire...)
->> 
->> Signed-off-by: Alan Cox <alan@redhat.com>
+- at 50 MHz clock, PIO modes 0 to 2 turned to be overclocked;
 
->SATA version on what controller?  Have you verified where the bridge is, 
->if it's not reporting word93==0 ?
+- at 66 MHz clock, PIO mode 0 was overclocked too.
 
->Is this for 2.6.24-rc, considering that we are late in -rc?
+Finally, the taskfile timing (matching PIO mode 0) turned to be overclocked at
+all clock frequencies (and in all manuals)...
 
-The offending drives are native IDE, but their word93 is broken, in that the 
-validation bits are missing. Hence, if connected to a 40-wire cable, they 
-return word93=0x0000 and make themselves look like a SATA drive.
+The new timings have been tested on HPT370 chip (at 33 MHz PCI clock) and on
+HPT371N chip (at both 50 and 66 MHz DPLL clock).
 
-This makes the 'relaxed' cable check do the exact wrong thing - allow fast 
-UDMA modes.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-The patch discussed here corrects the 'relaxed' cable check, so that it 
-actually does what it's supposed to - look at nothing but the cable type bit 
-in word93 and exactly NOT draw any other conclusions from word93. 
+---
+Many PIO modes at 55/66 MHz (as well as MDDMA modes at all clocks) are also
+underclocked but I decided not to touch them, at least for the time being.
+The patch is against the Linus' tree, with PIO0 setup time correct this time...
 
-Due the dangerous behaviour of the unpatched code, I strongly vote for 
-inclusion in 2.6.24.
+ drivers/ide/pci/hpt366.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 70 insertions(+), 1 deletion(-)
 
-regards,
-Peter
+Index: linux-2.6/drivers/ide/pci/hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/hpt366.c
++++ linux-2.6/drivers/ide/pci/hpt366.c
+@@ -1,5 +1,5 @@
+ /*
+- * linux/drivers/ide/pci/hpt366.c		Version 1.21	Oct 23, 2007
++ * linux/drivers/ide/pci/hpt366.c		Version 1.22	Dec 4, 2007
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
+@@ -310,6 +310,8 @@ static u32 twenty_five_base_hpt36x[] = {
+ 	/* XFER_PIO_0 */	0xc0d08585
+ };
+ 
++#if 0
++/* These are the timing tables from the HighPoint open source drivers... */
+ static u32 thirty_three_base_hpt37x[] = {
+ 	/* XFER_UDMA_6 */	0x12446231,	/* 0x12646231 ?? */
+ 	/* XFER_UDMA_5 */	0x12446231,
+@@ -369,6 +371,73 @@ static u32 sixty_six_base_hpt37x[] = {
+ 	/* XFER_PIO_1 */	0x0d029d26,
+ 	/* XFER_PIO_0 */	0x0d029d5e
+ };
++#else
++/*
++ * The following are the new timing tables with PIO mode data/taskfile transfer
++ * overclocking fixed...
++ */
++
++/* This table is taken from the HPT370 data manual rev. 1.02 */
++static u32 thirty_three_base_hpt37x[] = {
++	/* XFER_UDMA_6 */	0x16455031,	/* 0x16655031 ?? */
++	/* XFER_UDMA_5 */	0x16455031,
++	/* XFER_UDMA_4 */	0x16455031,
++	/* XFER_UDMA_3 */	0x166d5031,
++	/* XFER_UDMA_2 */	0x16495031,
++	/* XFER_UDMA_1 */	0x164d5033,
++	/* XFER_UDMA_0 */	0x16515097,
++
++	/* XFER_MW_DMA_2 */	0x26515031,
++	/* XFER_MW_DMA_1 */	0x26515033,
++	/* XFER_MW_DMA_0 */	0x26515097,
++
++	/* XFER_PIO_4 */	0x06515021,
++	/* XFER_PIO_3 */	0x06515022,
++	/* XFER_PIO_2 */	0x06515033,
++	/* XFER_PIO_1 */	0x06915065,
++	/* XFER_PIO_0 */	0x06d1508a
++};
++
++static u32 fifty_base_hpt37x[] = {
++	/* XFER_UDMA_6 */	0x1a861842,
++	/* XFER_UDMA_5 */	0x1a861842,
++	/* XFER_UDMA_4 */	0x1aae1842,
++	/* XFER_UDMA_3 */	0x1a8e1842,
++	/* XFER_UDMA_2 */	0x1a0e1842,
++	/* XFER_UDMA_1 */	0x1a161854,
++	/* XFER_UDMA_0 */	0x1a1a18ea,
++
++	/* XFER_MW_DMA_2 */	0x2a821842,
++	/* XFER_MW_DMA_1 */	0x2a821854,
++	/* XFER_MW_DMA_0 */	0x2a8218ea,
++
++	/* XFER_PIO_4 */	0x0a821842,
++	/* XFER_PIO_3 */	0x0a821843,
++	/* XFER_PIO_2 */	0x0a821855,
++	/* XFER_PIO_1 */	0x0ac218a8,
++	/* XFER_PIO_0 */	0x0b02190c
++};
++
++static u32 sixty_six_base_hpt37x[] = {
++	/* XFER_UDMA_6 */	0x1c86fe62,
++	/* XFER_UDMA_5 */	0x1caefe62,	/* 0x1c8afe62 */
++	/* XFER_UDMA_4 */	0x1c8afe62,
++	/* XFER_UDMA_3 */	0x1c8efe62,
++	/* XFER_UDMA_2 */	0x1c92fe62,
++	/* XFER_UDMA_1 */	0x1c9afe62,
++	/* XFER_UDMA_0 */	0x1c82fe62,
++
++	/* XFER_MW_DMA_2 */	0x2c82fe62,
++	/* XFER_MW_DMA_1 */	0x2c82fe66,
++	/* XFER_MW_DMA_0 */	0x2c82ff2e,
++
++	/* XFER_PIO_4 */	0x0c82fe62,
++	/* XFER_PIO_3 */	0x0c82fe84,
++	/* XFER_PIO_2 */	0x0c82fea6,
++	/* XFER_PIO_1 */	0x0d02ff26,
++	/* XFER_PIO_0 */	0x0d42ff7f
++};
++#endif
+ 
+ #define HPT366_DEBUG_DRIVE_INFO		0
+ #define HPT371_ALLOW_ATA133_6		1
+
