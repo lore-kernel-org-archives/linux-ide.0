@@ -1,57 +1,66 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH #upstream-fixes] libata: clear link->eh_info.serror from
  ata_std_postreset()
-Date: Fri, 07 Dec 2007 18:53:29 -0500
-Message-ID: <4759DCF9.10407@garzik.org>
-References: <4759DB17.9010505@gmail.com> <4759DB75.1010702@gmail.com>
+Date: Sat, 08 Dec 2007 09:05:05 +0900
+Message-ID: <4759DFB1.7000405@gmail.com>
+References: <4759DB17.9010505@gmail.com> <4759DB75.1010702@gmail.com> <4759DCF9.10407@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55433 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751021AbXLGXxm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Dec 2007 18:53:42 -0500
-In-Reply-To: <4759DB75.1010702@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:32167 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501AbXLHAFM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 19:05:12 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so872735rvb
+        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 16:05:11 -0800 (PST)
+In-Reply-To: <4759DCF9.10407@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, mark.paulus@technologist.com, sveint@gmail.com, bug-track@fisher-privat.net
 
-Tejun Heo wrote:
-> link->eh_info.serror is used to cache SError for controllers which
-> need it cleared from interrupt handler to clear IRQ.  It also should
-> be cleared after reset just like SError itself.
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> link->eh_info.serror is used to cache SError for controllers which
+>> need it cleared from interrupt handler to clear IRQ.  It also should
+>> be cleared after reset just like SError itself.
+>>
+>> Make ata_std_postreset() clear link->eh_info.serror too and update
+>> sata_sil such that it doesn't care about bookkeeping the value.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+>> ---
+>>  drivers/ata/libata-core.c |    1 +
+>>  drivers/ata/sata_sil.c    |   11 +----------
+>>  2 files changed, 2 insertions(+), 10 deletions(-)
+>>
+>> Index: work/drivers/ata/libata-core.c
+>> ===================================================================
+>> --- work.orig/drivers/ata/libata-core.c
+>> +++ work/drivers/ata/libata-core.c
+>> @@ -3923,6 +3923,7 @@ void ata_std_postreset(struct ata_link *
+>>      /* clear SError */
+>>      if (sata_scr_read(link, SCR_ERROR, &serror) == 0)
+>>          sata_scr_write(link, SCR_ERROR, serror);
+>> +    link->eh_info.serror = 0;
 > 
-> Make ata_std_postreset() clear link->eh_info.serror too and update
-> sata_sil such that it doesn't care about bookkeeping the value.
+> IMO it would make more sense to record the state of the hardware
+> following sata_scr_write() than simply zeroing the cache value.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  drivers/ata/sata_sil.c    |   11 +----------
->  2 files changed, 2 insertions(+), 10 deletions(-)
+> Just a gut feeling... it seems like having a manufactured value (zero)
+> rather than the last known from-the-hardware value could lead to
+> inconsistencies.
 > 
-> Index: work/drivers/ata/libata-core.c
-> ===================================================================
-> --- work.orig/drivers/ata/libata-core.c
-> +++ work/drivers/ata/libata-core.c
-> @@ -3923,6 +3923,7 @@ void ata_std_postreset(struct ata_link *
->  	/* clear SError */
->  	if (sata_scr_read(link, SCR_ERROR, &serror) == 0)
->  		sata_scr_write(link, SCR_ERROR, serror);
-> +	link->eh_info.serror = 0;
+> Comments?
 
-IMO it would make more sense to record the state of the hardware 
-following sata_scr_write() than simply zeroing the cache value.
+link->eh_info.serror is always used as complement to the hardware SError
+value.  It's a temporary storage to dump/accumulate SError value when
+for whatever reason the hardware can't hold the value.
+link->eh_info.serror and the hardware SError value are always OR'd
+before being used, so no reason to dup the value.
 
-Just a gut feeling... it seems like having a manufactured value (zero) 
-rather than the last known from-the-hardware value could lead to 
-inconsistencies.
+Thanks.
 
-Comments?
-
-	Jeff
-
-
-
+-- 
+tejun
