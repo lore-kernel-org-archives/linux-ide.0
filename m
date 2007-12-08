@@ -1,76 +1,61 @@
-From: Zan Lynx <zlynx@acm.org>
-Subject: Re: 2.6.24-rc4-mm1 and Very Slow PCMCIA Compact Flash
-Date: Fri, 07 Dec 2007 22:01:33 -0700
-Message-ID: <1197090093.7157.2.camel@localhost>
-References: <1197059904.15428.15.camel@localhost>
-	 <20071207150251.a0dbae23.akpm@linux-foundation.org>
-	 <1197068983.15428.29.camel@localhost>
-	 <20071207152249.360af326.akpm@linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Sat, 8 Dec 2007 01:36:31 -0800
+Message-ID: <20071208013631.3147986a.akpm@linux-foundation.org>
+References: <200712080340.49546.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jUQX9/2rFOmL7uJYwmRG"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from threatwall.zlynx.org ([199.45.143.218]:34624 "EHLO zlynx.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754130AbXLHFBr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Dec 2007 00:01:47 -0500
-In-Reply-To: <20071207152249.360af326.akpm@linux-foundation.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44254 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756185AbXLHJgo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Dec 2007 04:36:44 -0500
+In-Reply-To: <200712080340.49546.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
+On Sat, 8 Dec 2007 03:40:49 +0100 "Rafael J. Wysocki" <rjw@sisk.pl> wro=
+te:
 
---=-jUQX9/2rFOmL7uJYwmRG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-On Fri, 2007-12-07 at 15:22 -0800, Andrew Morton wrote:
-> On Fri, 07 Dec 2007 23:09:43 +0000
-> Zan Lynx <zlynx@acm.org> wrote:
-[cut]=20
-> > > > Now with MM kernels 2.6.24 rc1-4 the PCMCIA adapter works again, bu=
-t I
-> > > > only get read rates of 1.6 MB/s.  When it used to work in 2.6.20 I =
-got
-> > > > at least 16 MB/s.  The card itself is capable of 30+ in the USB-2
-> > > > reader.
-[cut]
-> Maybe pata_pcmcia-minor-cleanups-and-support-for-dual-channel-cards.patch=
-?
+> This message contains a list of some regressions from 2.6.23 which ha=
+ve been
+> reported since 2.6.24-rc1 was released and for which there are no fix=
+es in the
+> mainline that I know of. =A0If any of them have been fixed already, p=
+lease let me
+> know.
 >=20
-> Could you try a `patch -R' of the below?
+> If you know of any other unresolved regressions from 2.6.23, please l=
+et me know
+> either and I'll add them to the list.
 >=20
 >=20
-> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Subject		: PATA scan: ACPI Exception AE_AML_PACKAGE_LIMIT... is beyon=
+d end of object
+> Submitter	: Hans de Bruin <bruinjm@xs4all.nl>
+> References	: http://bugzilla.kernel.org/show_bug.cgi?id=3D9320
+> Handled-By	: Robert Moore <Robert.Moore@intel.com>
+> 		  Tejun Heo <htejun@gmail.com>
+> 		  Fu Michael <michael.fu@intel.com>
+> Patch		:=20
 >=20
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
->=20
->  drivers/ata/pata_pcmcia.c |   31 +++++++++++++++++--------------
->  1 file changed, 17 insertions(+), 14 deletions(-)
->=20
-> diff -puN drivers/ata/pata_pcmcia.c~pata_pcmcia-minor-cleanups-and-suppor=
-t-for-dual-channel-cards drivers/ata/pata_pcmcia.c
-[cut]
 
-Nope, that did not change anything.  It still detects as PIO0 and still
-runs at 1.6 MB/s.
---=20
-Zan Lynx <zlynx@acm.org>
+A number of other people are seeing the same thing and Tejun is putting=
+ in
+a blacklist of machines which cannot use libata+acpi.  That patch is no=
+t
+yet in any git tree which I pull.
 
---=-jUQX9/2rFOmL7uJYwmRG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+AFACIT the machines kepe working OK - there's just some nasty dmesg spe=
+w.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQBHWiUtG8fHaOLTWwgRAmP/AJ9LGH/D5PUnqQ4fS9//cy+dSiUKbACgq/H9
-MwJ/SNhvPo50Z3SAnVU+HIk=
-=LeMM
------END PGP SIGNATURE-----
-
---=-jUQX9/2rFOmL7uJYwmRG--
+If any machines _are_ breaking then this could cause real problems and =
+I'd
+prefer that we either go for a whitelist or arrange to detect the condi=
+tion
+and fall back to non-acpi ata.
 
