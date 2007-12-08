@@ -1,77 +1,45 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH pata-2.6] hpt366: kill set_dma_mode() method wrapper
-Date: Sat, 8 Dec 2007 20:50:41 +0300
-Message-ID: <200712082050.41067.sshtylyov@ru.mvista.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Sat, 08 Dec 2007 12:24:16 -0600
+Message-ID: <475AE150.9050306@shaw.ca>
+References: <fa.qQhD8aJpiTOFaZqjRYwoaG7YT1c@ifi.uio.no>
+ <fa.yaP86AixGhz5Q7eXSu04pIQp6ho@ifi.uio.no>
+ <fa.c3k8VKWAx4HIo9zXWbL5Ek0oSBw@ifi.uio.no>
+ <fa.C8ACnOhs8bXB++vmugf5F34JcJg@ifi.uio.no>
+ <fa.5o6E6S0UWnARbQPxLe30TvLQIiY@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtsoft3.corbina.net ([85.21.88.6]:14798 "EHLO
-	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751459AbXLHRuY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 12:50:24 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-reply-to: <fa.5o6E6S0UWnARbQPxLe30TvLQIiY@ifi.uio.no>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Andreas Mohr <andi@lisas.de>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-ide@vger.kernel.org
 
-There's no reason to keep the set_dma_mode() method wrapper for two different
-chip families, so get rid of it...
+Matthew Garrett wrote:
+> On Sat, Dec 08, 2007 at 02:20:01AM -0800, Andrew Morton wrote:
+>> On Sat, 8 Dec 2007 11:12:57 +0100 Andreas Mohr <andi@lisas.de> wrote:
+>>> ACPI Exception (exoparg2-0442): AE_AML_PACKAGE_LIMIT, Index (0FFFFFFFF) is beyond end of object [20070126]
+>>> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.GTF_] (Node c180b990), AE_AML_PACKAGE_LIMIT
+>>> ACPI Error (psparse-0537): Method parse/execution failed [\_SB_.PCI0.IDE0.CHN0.DRV1._GTF] (Node c180b888), AE_AML_PACKAGE_LIMIT
+>>> ata1.01: _GTF evaluation failed (AE 0x300d)
+> 
+> 037f6bb79f753c014bc84bca0de9bf98bb5ab169 ought to have fixed this?
+> 
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+I should think it should have.
 
----
-The patch is against the pata-2.6 patchset...
+I think we're too aggressive about disabling the libata ACPI support, 
+even. One of my laptop's _GTF commands on resume is a DEVICE 
+CONFIGURATION FREEZE LOCK command, which gets rejected by the drive 
+(maybe it worked on the original Hitachi disk, but I've upgraded it to a 
+  newer Samsung). I'd say if the drive returns command aborted on one of 
+these, we should just ignore that command and continue to the next one 
+without trying to retry or disabling the ACPI support entirely.
 
- drivers/ide/pci/hpt366.c |   21 +++++++--------------
- 1 files changed, 7 insertions(+), 14 deletions(-)
-
-Index: linux-2.6/drivers/ide/pci/hpt366.c
-===================================================================
---- linux-2.6.orig/drivers/ide/pci/hpt366.c
-+++ linux-2.6/drivers/ide/pci/hpt366.c
-@@ -1,5 +1,5 @@
- /*
-- * linux/drivers/ide/pci/hpt366.c		Version 1.23	Dec 7, 2007
-+ * linux/drivers/ide/pci/hpt366.c		Version 1.24	Dec 8, 2007
-  *
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-  * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-@@ -725,20 +725,9 @@ static void hpt37x_set_mode(ide_drive_t 
- 	pci_write_config_dword(dev, itr_addr, new_itr);
- }
- 
--static void hpt3xx_set_mode(ide_drive_t *drive, const u8 speed)
--{
--	ide_hwif_t *hwif	= HWIF(drive);
--	struct hpt_info	*info	= pci_get_drvdata(hwif->pci_dev);
--
--	if (info->chip_type >= HPT370)
--		hpt37x_set_mode(drive, speed);
--	else	/* hpt368: hpt_minimum_revision(dev, 2) */
--		hpt36x_set_mode(drive, speed);
--}
--
- static void hpt3xx_set_pio_mode(ide_drive_t *drive, const u8 pio)
- {
--	hpt3xx_set_mode(drive, XFER_PIO_0 + pio);
-+	HWIF(drive)->set_dma_mode(drive, XFER_PIO_0 + pio);
- }
- 
- static void hpt3xx_quirkproc(ide_drive_t *drive)
-@@ -1310,7 +1299,11 @@ static void __devinit init_hwif_hpt366(i
- 	hwif->select_data	= hwif->channel ? 0x54 : 0x50;
- 
- 	hwif->set_pio_mode	= &hpt3xx_set_pio_mode;
--	hwif->set_dma_mode	= &hpt3xx_set_mode;
-+	if (chip_type >= HPT370)
-+		hwif->set_dma_mode = &hpt37x_set_mode;
-+	else
-+		hwif->set_dma_mode = &hpt36x_set_mode;
-+
- 	hwif->quirkproc		= &hpt3xx_quirkproc;
- 	hwif->maskproc		= &hpt3xx_maskproc;
- 	hwif->busproc		= &hpt3xx_busproc;
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
