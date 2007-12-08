@@ -1,40 +1,51 @@
-From: Andreas Mohr <andi@lisas.de>
-Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
-Date: Sat, 8 Dec 2007 11:55:57 +0100
-Message-ID: <20071208105557.GA27646@rhlx01.hs-esslingen.de>
-References: <200712080340.49546.rjw@sisk.pl> <20071208013631.3147986a.akpm@linux-foundation.org> <20071208101256.GA25807@rhlx01.hs-esslingen.de> <20071208022001.155e0c52.akpm@linux-foundation.org>
+From: Peter Missel <peter.missel@onlinehome.de>
+Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
+Date: Sat, 8 Dec 2007 15:55:01 +0100
+Message-ID: <200712081555.01520.peter.missel@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:59283 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbXLHKz6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 05:55:58 -0500
+Received: from moutng.kundenserver.de ([212.227.126.186]:52270 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750704AbXLHOzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 09:55:05 -0500
 Content-Disposition: inline
-In-Reply-To: <20071208022001.155e0c52.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andreas Mohr <andi@lisas.de>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+To: Alan Cox <alan@redhat.com>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Hi,
+Hi all!
 
-On Sat, Dec 08, 2007 at 02:20:01AM -0800, Andrew Morton wrote:
-> > Does this report now win me the lucky draw, pretty please? ;)
-> 
-> nah, you have to cc the acpi guys to get a prize ;)
+As the originator of this patch, please let me comment.
 
-Thought so shortly, but missed it.
+Jeff Garzik wrote:
+>Alan Cox wrote:
+>> Without the valid bits at least one set of TSScorp drives report 0 in
+>> word 93 for PATA 40 wire, which we (and the specs) say actually means
+>> SATA. (The SATA version seems to report 80 wire...)
+>> 
+>> Signed-off-by: Alan Cox <alan@redhat.com>
 
-> Andreas, please do separately report that WOL problem too..
+>SATA version on what controller?  Have you verified where the bridge is, 
+>if it's not reporting word93==0 ?
 
-Local setup issue only, at least this one *isn't* a 2.6.24-rc regression. ;)
+>Is this for 2.6.24-rc, considering that we are late in -rc?
 
-> Our list just reached 30.
+The offending drives are native IDE, but their word93 is broken, in that the 
+validation bits are missing. Hence, if connected to a 40-wire cable, they 
+return word93=0x0000 and make themselves look like a SATA drive.
 
-Oh, so this is in fact a separate issue? Wasn't sure, couldn't do
-enough analysis of similar cases.
+This makes the 'relaxed' cable check do the exact wrong thing - allow fast 
+UDMA modes.
 
-Will test any (already submitted!) suggestions ASAP.
+The patch discussed here corrects the 'relaxed' cable check, so that it 
+actually does what it's supposed to - look at nothing but the cable type bit 
+in word93 and exactly NOT draw any other conclusions from word93. 
 
-Andreas Mohr
+Due the dangerous behaviour of the unpatched code, I strongly vote for 
+inclusion in 2.6.24.
+
+regards,
+Peter
