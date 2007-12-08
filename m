@@ -1,66 +1,185 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] libata: clear link->eh_info.serror from
- ata_std_postreset()
-Date: Sat, 08 Dec 2007 09:05:05 +0900
-Message-ID: <4759DFB1.7000405@gmail.com>
-References: <4759DB17.9010505@gmail.com> <4759DB75.1010702@gmail.com> <4759DCF9.10407@garzik.org>
+Subject: [PATCH -stable] libata: kill spurious NCQ completion detection
+Date: Sat, 08 Dec 2007 09:25:31 +0900
+Message-ID: <4759E47B.8000108@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:32167 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752501AbXLHAFM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 19:05:12 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so872735rvb
-        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 16:05:11 -0800 (PST)
-In-Reply-To: <4759DCF9.10407@garzik.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:54312 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455AbXLHAZn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 19:25:43 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1787090wah
+        for <linux-ide@vger.kernel.org>; Fri, 07 Dec 2007 16:25:42 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, mark.paulus@technologist.com, sveint@gmail.com, bug-track@fisher-privat.net
+To: stable@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Michael Tokarev <mjt@tls.msk.ru>, Diego Torres <dtorres@coral.dnsalias.org>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> link->eh_info.serror is used to cache SError for controllers which
->> need it cleared from interrupt handler to clear IRQ.  It also should
->> be cleared after reset just like SError itself.
->>
->> Make ata_std_postreset() clear link->eh_info.serror too and update
->> sata_sil such that it doesn't care about bookkeeping the value.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
->> ---
->>  drivers/ata/libata-core.c |    1 +
->>  drivers/ata/sata_sil.c    |   11 +----------
->>  2 files changed, 2 insertions(+), 10 deletions(-)
->>
->> Index: work/drivers/ata/libata-core.c
->> ===================================================================
->> --- work.orig/drivers/ata/libata-core.c
->> +++ work/drivers/ata/libata-core.c
->> @@ -3923,6 +3923,7 @@ void ata_std_postreset(struct ata_link *
->>      /* clear SError */
->>      if (sata_scr_read(link, SCR_ERROR, &serror) == 0)
->>          sata_scr_write(link, SCR_ERROR, serror);
->> +    link->eh_info.serror = 0;
-> 
-> IMO it would make more sense to record the state of the hardware
-> following sata_scr_write() than simply zeroing the cache value.
-> 
-> Just a gut feeling... it seems like having a manufactured value (zero)
-> rather than the last known from-the-hardware value could lead to
-> inconsistencies.
-> 
-> Comments?
+Spurious NCQ completion detection implemented in ahci was incorrect.
+On AHCI receving and processing FISes and raising interrupts are not
+interlocked and spurious interrupts are expected.
 
-link->eh_info.serror is always used as complement to the hardware SError
-value.  It's a temporary storage to dump/accumulate SError value when
-for whatever reason the hardware can't hold the value.
-link->eh_info.serror and the hardware SError value are always OR'd
-before being used, so no reason to dup the value.
+For example, if an interrupt occurs while interrupt handler is running
+and the running interrupt handler handles the event the new IRQ
+indicated, after IRQ handler finishes, it will be executed again
+because IRQ pending bit is set by the new interrupt but there won't be
+anything to process.
 
-Thanks.
+Please read the following message for more information.
 
--- 
-tejun
+  http://article.gmane.org/gmane.linux.ide/26012
+
+This patch...
+
+* Removes all spurious IRQ whining from ahci.  Spurious NCQ completion
+  detection was completely wrong.  Spurious D2H Register FIS taught us
+  that some early drives send spurious D2H Register FIS with I bit set
+  while NCQ commands are in progress but none of recent drives does
+  that and even the ones which show such behavior can do NCQ fine.
+
+* Kills all NCQ blacklist entries which were added because of spurious
+  NCQ completions.  I tracked down each commit and verified all
+  removed ones are actually added because of spurious completions.
+
+  WD740ADFD-00NLR1 wasn't deleted but moved upward because the drive
+  not only had spurious NCQ completions but also is slow on sequential
+  data transfers if NCQ is enabled.
+
+  Maxtor 7V300F0 was added by 0e3dbc01d53940fe10e5a5cfec15ede3e929c918
+  from Alan Cox.  I can only find evidences that the drive only had
+  troubles with spuruious completions by searching the mailing list.
+  This entry needs to be verified and removed if it doesn't have other
+  NCQ related problems.
+
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+---
+ drivers/ata/ahci.c        |   65 ----------------------------------------------
+ drivers/ata/libata-core.c |   17 ------------
+ 2 files changed, 2 insertions(+), 80 deletions(-)
+
+Index: tree0/drivers/ata/ahci.c
+===================================================================
+--- tree0.orig/drivers/ata/ahci.c
++++ tree0/drivers/ata/ahci.c
+@@ -1432,7 +1432,7 @@ static void ahci_port_intr(struct ata_po
+ 	struct ata_eh_info *ehi = &ap->eh_info;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u32 status, qc_active;
+-	int rc, known_irq = 0;
++	int rc;
+ 
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+@@ -1448,74 +1448,11 @@ static void ahci_port_intr(struct ata_po
+ 		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
+ 
+ 	rc = ata_qc_complete_multiple(ap, qc_active, NULL);
+-	if (rc > 0)
+-		return;
+ 	if (rc < 0) {
+ 		ehi->err_mask |= AC_ERR_HSM;
+ 		ehi->action |= ATA_EH_SOFTRESET;
+ 		ata_port_freeze(ap);
+-		return;
+-	}
+-
+-	/* hmmm... a spurious interupt */
+-
+-	/* if !NCQ, ignore.  No modern ATA device has broken HSM
+-	 * implementation for non-NCQ commands.
+-	 */
+-	if (!ap->sactive)
+-		return;
+-
+-	if (status & PORT_IRQ_D2H_REG_FIS) {
+-		if (!pp->ncq_saw_d2h)
+-			ata_port_printk(ap, KERN_INFO,
+-				"D2H reg with I during NCQ, "
+-				"this message won't be printed again\n");
+-		pp->ncq_saw_d2h = 1;
+-		known_irq = 1;
+-	}
+-
+-	if (status & PORT_IRQ_DMAS_FIS) {
+-		if (!pp->ncq_saw_dmas)
+-			ata_port_printk(ap, KERN_INFO,
+-				"DMAS FIS during NCQ, "
+-				"this message won't be printed again\n");
+-		pp->ncq_saw_dmas = 1;
+-		known_irq = 1;
+-	}
+-
+-	if (status & PORT_IRQ_SDB_FIS) {
+-		const __le32 *f = pp->rx_fis + RX_FIS_SDB;
+-
+-		if (le32_to_cpu(f[1])) {
+-			/* SDB FIS containing spurious completions
+-			 * might be dangerous, whine and fail commands
+-			 * with HSM violation.  EH will turn off NCQ
+-			 * after several such failures.
+-			 */
+-			ata_ehi_push_desc(ehi,
+-				"spurious completions during NCQ "
+-				"issue=0x%x SAct=0x%x FIS=%08x:%08x",
+-				readl(port_mmio + PORT_CMD_ISSUE),
+-				readl(port_mmio + PORT_SCR_ACT),
+-				le32_to_cpu(f[0]), le32_to_cpu(f[1]));
+-			ehi->err_mask |= AC_ERR_HSM;
+-			ehi->action |= ATA_EH_SOFTRESET;
+-			ata_port_freeze(ap);
+-		} else {
+-			if (!pp->ncq_saw_sdb)
+-				ata_port_printk(ap, KERN_INFO,
+-					"spurious SDB FIS %08x:%08x during NCQ, "
+-					"this message won't be printed again\n",
+-					le32_to_cpu(f[0]), le32_to_cpu(f[1]));
+-			pp->ncq_saw_sdb = 1;
+-		}
+-		known_irq = 1;
+ 	}
+-
+-	if (!known_irq)
+-		ata_port_printk(ap, KERN_INFO, "spurious interrupt "
+-				"(irq_stat 0x%x active_tag 0x%x sactive 0x%x)\n",
+-				status, ap->active_tag, ap->sactive);
+ }
+ 
+ static void ahci_irq_clear(struct ata_port *ap)
+Index: tree0/drivers/ata/libata-core.c
+===================================================================
+--- tree0.orig/drivers/ata/libata-core.c
++++ tree0/drivers/ata/libata-core.c
+@@ -3772,6 +3772,7 @@ static const struct ata_blacklist_entry 
+ 	/* Devices where NCQ should be avoided */
+ 	/* NCQ is slow */
+         { "WDC WD740ADFD-00",   NULL,		ATA_HORKAGE_NONCQ },
++	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+ 	/* http://thread.gmane.org/gmane.linux.ide/14907 */
+ 	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
+ 	/* NCQ is broken */
+@@ -3790,22 +3791,6 @@ static const struct ata_blacklist_entry 
+ 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
+-	/* Drives which do spurious command completion */
+-	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
+-	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+-	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
+-	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+-	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
+-	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+-	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
+-	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9160821AS",	"3.CCD",	ATA_HORKAGE_NONCQ, },
+-	{ "ST3160812AS",	"3.ADJ",	ATA_HORKAGE_NONCQ, },
+-	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
+-	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
+ 
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
