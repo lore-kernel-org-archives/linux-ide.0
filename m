@@ -1,74 +1,76 @@
-From: Robert Hancock <hancockr@shaw.ca>
+From: Zan Lynx <zlynx@acm.org>
 Subject: Re: 2.6.24-rc4-mm1 and Very Slow PCMCIA Compact Flash
-Date: Fri, 07 Dec 2007 22:47:57 -0600
-Message-ID: <475A21FD.6020009@shaw.ca>
-References: <fa.9+cyQSoHqcg4p5BAdLi4beGvJ8E@ifi.uio.no>
- <fa.es7DHARPOKbnzAqaEFBauYRpWjo@ifi.uio.no>
- <fa.kwN53ZHLrpa2M5QIn+VR9hoaqjA@ifi.uio.no>
- <fa.IgSJMFcov+qjLkhPpd1LhbCf93o@ifi.uio.no>
- <fa.5knWxRyOEvQSAwZoz5fEa2Krvko@ifi.uio.no>
+Date: Fri, 07 Dec 2007 22:01:33 -0700
+Message-ID: <1197090093.7157.2.camel@localhost>
+References: <1197059904.15428.15.camel@localhost>
+	 <20071207150251.a0dbae23.akpm@linux-foundation.org>
+	 <1197068983.15428.29.camel@localhost>
+	 <20071207152249.360af326.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jUQX9/2rFOmL7uJYwmRG"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:19626 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752453AbXLHEsa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2007 23:48:30 -0500
-In-reply-to: <fa.5knWxRyOEvQSAwZoz5fEa2Krvko@ifi.uio.no>
+Received: from threatwall.zlynx.org ([199.45.143.218]:34624 "EHLO zlynx.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754130AbXLHFBr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Dec 2007 00:01:47 -0500
+In-Reply-To: <20071207152249.360af326.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zan Lynx <zlynx@acm.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
 
-Zan Lynx wrote:
-> On Fri, 2007-12-07 at 15:22 -0800, Andrew Morton wrote:
->> On Fri, 07 Dec 2007 23:09:43 +0000
->> Zan Lynx <zlynx@acm.org> wrote:
->>
->>> On Fri, 2007-12-07 at 15:02 -0800, Andrew Morton wrote:
->>>> On Fri, 07 Dec 2007 20:38:24 +0000
->>>> Zan Lynx <zlynx@acm.org> wrote:
->>>>
->>>>> While I'm reporting problems I'll get this one out there.
->>>>>
->>>>> I normally use a USB-2 memory card reader but I also have a PCMCIA
->>>>> CompactFlash adapter that I use occasionally.  During the MM series
->>>>> kernels 2.6.22 and 23 (I am pretty sure) this didn't work at all.  I
->>>>> don't know about vanilla since I don't run that.
->>>>>
->>>>> Now with MM kernels 2.6.24 rc1-4 the PCMCIA adapter works again, but I
->>>>> only get read rates of 1.6 MB/s.  When it used to work in 2.6.20 I got
->>>>> at least 16 MB/s.  The card itself is capable of 30+ in the USB-2
->>>>> reader.
->>>>>
-> [cut]
->> Oh, OK.  Hopefully the ata guys can help out with this.
->>
->> I don't know if it actually strictly a regression?  Did libata ever support
->> that device in any earlier kernels?
-> 
-> That could be why it didn't work for a few kernel versions.  I
-> reconfigured for a libata-only system a while back.  And, since I
-> usually use the USB-2 flash reader I didn't care much about the PCMCIA.
-> 
-> I will try reverting that patch later tonight, in a few hours.
 
-It looks like pata_pcmcia is always PIO mode 0:
+--=-jUQX9/2rFOmL7uJYwmRG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-/**
-  *	pcmcia_init_one		-	attach a PCMCIA interface
-  *	@pdev: pcmcia device
-  *
-  *	Register a PCMCIA IDE interface. Such interfaces are PIO 0 and
-  *	shared IRQ.
-  */
 
-I assume that with old IDE this would use ide_cs.c, but I'm drawing a 
-blank on what modes that supports..
+On Fri, 2007-12-07 at 15:22 -0800, Andrew Morton wrote:
+> On Fri, 07 Dec 2007 23:09:43 +0000
+> Zan Lynx <zlynx@acm.org> wrote:
+[cut]=20
+> > > > Now with MM kernels 2.6.24 rc1-4 the PCMCIA adapter works again, bu=
+t I
+> > > > only get read rates of 1.6 MB/s.  When it used to work in 2.6.20 I =
+got
+> > > > at least 16 MB/s.  The card itself is capable of 30+ in the USB-2
+> > > > reader.
+[cut]
+> Maybe pata_pcmcia-minor-cleanups-and-support-for-dual-channel-cards.patch=
+?
+>=20
+> Could you try a `patch -R' of the below?
+>=20
+>=20
+> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+>=20
+> Signed-off-by: Alan Cox <alan@redhat.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+>=20
+>  drivers/ata/pata_pcmcia.c |   31 +++++++++++++++++--------------
+>  1 file changed, 17 insertions(+), 14 deletions(-)
+>=20
+> diff -puN drivers/ata/pata_pcmcia.c~pata_pcmcia-minor-cleanups-and-suppor=
+t-for-dual-channel-cards drivers/ata/pata_pcmcia.c
+[cut]
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+Nope, that did not change anything.  It still detects as PIO0 and still
+runs at 1.6 MB/s.
+--=20
+Zan Lynx <zlynx@acm.org>
+
+--=-jUQX9/2rFOmL7uJYwmRG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.7 (GNU/Linux)
+
+iD8DBQBHWiUtG8fHaOLTWwgRAmP/AJ9LGH/D5PUnqQ4fS9//cy+dSiUKbACgq/H9
+MwJ/SNhvPo50Z3SAnVU+HIk=
+=LeMM
+-----END PGP SIGNATURE-----
+
+--=-jUQX9/2rFOmL7uJYwmRG--
 
