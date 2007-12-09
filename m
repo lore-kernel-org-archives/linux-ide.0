@@ -1,79 +1,59 @@
-From: Marco Schuster <marco@harddisk.is-a-geek.org>
-Subject: WDC WD1600BEVS-2 on NCQ blacklist
-Date: Sun, 09 Dec 2007 11:52:07 +0100
-Message-ID: <475BC8D7.5070407@harddisk.is-a-geek.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Sun, 9 Dec 2007 15:20:03 +0100
+Message-ID: <200712091520.04740.rjw@sisk.pl>
+References: <200712080340.49546.rjw@sisk.pl> <20071208013631.3147986a.akpm@linux-foundation.org> <475B90C7.4070505@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigEBAFA925115DB137F068ADB3"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from velirat.de ([85.25.68.44]:35044 "EHLO www.velirat.de"
+Received: from ogre.sisk.pl ([217.79.144.158]:42874 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141AbXLILfw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Dec 2007 06:35:52 -0500
+	id S1750884AbXLIOAz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 9 Dec 2007 09:00:55 -0500
+In-Reply-To: <475B90C7.4070505@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigEBAFA925115DB137F068ADB3
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Sunday, 9 of December 2007, Tejun Heo wrote:
+> Hello,
+> 
+> Andrew Morton wrote:
+> >> Subject		: PATA scan: ACPI Exception AE_AML_PACKAGE_LIMIT... is beyond end of object
+> >> Submitter	: Hans de Bruin <bruinjm@xs4all.nl>
+> >> References	: http://bugzilla.kernel.org/show_bug.cgi?id=9320
+> >> Handled-By	: Robert Moore <Robert.Moore@intel.com>
+> >> 		  Tejun Heo <htejun@gmail.com>
+> >> 		  Fu Michael <michael.fu@intel.com>
+> >> Patch		: 
+> >>
+> > 
+> > A number of other people are seeing the same thing and Tejun is
+> > putting in a blacklist of machines which cannot use libata+acpi.
+> > That patch is not yet in any git tree which I pull.
+> > 
+> > AFACIT the machines kepe working OK - there's just some nasty dmesg
+> > spew.
+> > 
+> > If any machines _are_ breaking then this could cause real problems
+> > and I'd prefer that we either go for a whitelist or arrange to
+> > detect the condition and fall back to non-acpi ata.
+> 
+> The pending patchset should make ATA ACPI quite resistant to failures.
 
-Hi all,
+Are you going to push it for 2.6.24?
 
-I use a WDC WD1600BEVS-2 SATA drive (160GB).
-The controller is a standard Intel ICH8 chipset.
-During high disk load (fsck, large file copies) the system or the
-process (mostly both) lock up and resume some secs later. In dmesg for
-every of those breaks this appears:
+> Known bad boards can be blacklisted (currently only one is on the
+> list), ATA ACPI is disabled quicker if ACPI evalution fails, execution
+> errors are handled better and commands which are intended to help the
+> vendor instead of the user are filtered.  So, I think we have enough
+> safety nets.
 
-ata3.00: exception Emask 0x2 SAct 0x8001 SErr 0x0 action 0x2 frozen
-ata3.00: spurious completions during NCQ issue=3D0x0 SAct=3D0x8001
-FIS=3D004040a1:00004000
-ata3.00: cmd 60/08:00:77:00:00/00:00:00:00:00/40 tag 0 cdb 0x0 data 4096 =
-in
-         res 40/00:7c:af:5d:83/00:00:0a:00:00/40 Emask 0x2 (HSM violation=
-)
-ata3.00: cmd 61/00:78:af:5d:83/04:00:0a:00:00/40 tag 15 cdb 0x0 data
-524288 out
-         res 40/00:7c:af:5d:83/00:00:0a:00:00/40 Emask 0x2 (HSM violation=
-)
-ata3: soft resetting port
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: configured for UDMA/133
-ata3: EH complete
-sd 2:0:0:0: [sda] 312581808 512-byte hardware sectors (160042 MB)
-sd 2:0:0:0: [sda] Write Protect is off
-sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
+Sounds good.  :-)
 
-
-Someone other than me also has this problem with this disk, see
-http://marc.info/?l=3Dlinux-kernel&m=3D118789093418142&w=3D2 for details.=
-
-xingu on freenode/#debian suggested me to do echo 1 >
-/sys/block/sdX/device/queue_depth, which solved these problems for one
-session and to email you to put this drive/controller combo on the NCQ
-blacklist.
-
-Regards,
-Marco Schuster
-
-
---------------enigEBAFA925115DB137F068ADB3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFHW8jbW6S2GapJUuQRAkR3AJsF8guE567E5QbUR1RFsw9wra25JgCcDtvR
-bsponnseFxfcmN/6HCKnzuM=
-=m7g6
------END PGP SIGNATURE-----
-
---------------enigEBAFA925115DB137F068ADB3--
+Thanks,
+Rafael
