@@ -1,38 +1,46 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: AHCI + ST3160023AS + NCQ problems
-Date: Sun, 09 Dec 2007 19:39:18 +0900
-Message-ID: <475BC5D6.4030708@gmail.com>
-References: <305c16960710291713v22875d26v8ccfc76daab102bd@mail.gmail.com>	 <47270CE9.4060501@msgid.tls.msk.ru>	 <311601c90710300615j33bf0959l51b1b2505e9b2048@mail.gmail.com>	 <472788F4.60300@msgid.tls.msk.ru>	 <305c16960710301728j557689a5rbec52a11ec606963@mail.gmail.com>	 <305c16960711062221u69e8eb37p1367b18343d0e2a5@mail.gmail.com>	 <4737C2C0.10905@gmail.com>	 <305c16960712071254n5d78b293if8d5ba2879a66b4a@mail.gmail.com>	 <4759DC85.8000100@gmail.com> <305c16960712071639x50a78699pbfc0b9d9c7501b96@mail.gmail.com>
+Subject: [PATCH #upstream-fixes] libata: add ST3160023AS / 3.42 to NCQ blacklist
+Date: Sun, 09 Dec 2007 19:45:39 +0900
+Message-ID: <475BC753.7090108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:16385 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.183]:30400 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079AbXLIKj1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Dec 2007 05:39:27 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2633012wah
-        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 02:39:26 -0800 (PST)
-In-Reply-To: <305c16960712071639x50a78699pbfc0b9d9c7501b96@mail.gmail.com>
+	with ESMTP id S1750790AbXLIKpu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Dec 2007 05:45:50 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2635957wah
+        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 02:45:50 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matheus Izvekov <mizvekov@gmail.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, "Eric D. Mudama" <edmudama@gmail.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Jeff Garzik <jeff@garzik.org>, Matheus Izvekov <mizvekov@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>Matheus Izvekov <mizvekov@gmail.com>, "Eric D. Mudama" <edm>
 
-Matheus Izvekov wrote:
-> Yes it follows the drive. I have another drive which is quite similiar
-> to the offending one, but has no NCQ so the problem doesnt apply. i
-> have another that is sata2 (has ncq) and shows no problem.
 
-Hmmm... Everything looks normal.  The problem is that there's currently
-only one report and I can't tell whether your specific drive is faulty
-or the model with the firmware version is faulty.
+Like ST380817AS / 3.42, ST3160023AS / 3.42 times out commands if NCQ
+is used.  Blacklist it.  This is reported by Matheus Izvekov in the
+following thread.
 
-Ah... okay.  Another drive with the same firmware version is already
-blacklisted, which makes the latter far more likely.  I'll create a
-blacklist entry for your drive.
+  http://thread.gmane.org/gmane.linux.ide/24202
 
-Thanks.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Matheus Izvekov <mizvekov@gmail.com>
+---
+It could be that all devices with 3.42 firmware have this problem.
+I'll ask around.  Thanks.
 
--- 
-tejun
+ drivers/ata/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e4dea86..e080b07 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4149,6 +4149,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HITACHI HDS7250SASUN500G*", NULL,    ATA_HORKAGE_NONCQ },
+ 	{ "HITACHI HDS7225SBSUN250G*", NULL,    ATA_HORKAGE_NONCQ },
+ 	{ "ST380817AS",		"3.42",		ATA_HORKAGE_NONCQ },
++	{ "ST3160023AS",	"3.42",		ATA_HORKAGE_NONCQ },
+ 
+ 	/* Blacklist entries taken from Silicon Image 3124/3132
+ 	   Windows driver .inf file - also several Linux problem reports */
