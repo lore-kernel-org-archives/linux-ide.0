@@ -1,62 +1,76 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 15/20] ide: don't enable local IRQs for PIO-in in driver_cmd_intr()
-Date: Sun, 9 Dec 2007 22:18:30 +0100
-Message-ID: <200712092218.30672.bzolnier@gmail.com>
+Subject: [PATCH 14/20] ide: convert "empty" REQ_TYPE_ATA_CMD requests to use REQ_TYPE_ATA_TASKFILE
+Date: Sun, 9 Dec 2007 22:17:32 +0100
+Message-ID: <200712092217.32139.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:55432 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:55855 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbXLIVVF (ORCPT
+	with ESMTP id S1751459AbXLIVVF (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Dec 2007 16:21:05 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1381308ugc
-        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 13:21:04 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id z38so1381343ugc
+        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 13:21:03 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
 
-Don't enable local IRQs for PIO-in protocol in driver_cmd_intr().
+Based on the previous work by Tejun Heo.
 
-While at it:
+There should be no functionality changes caused by this patch.
 
-* Remove redundant rq->cmd_type check.
-
-* Read status register after enabling local IRQs for no-data protocol.
-
+Cc: Tejun Heo <htejun@gmail.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-io.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/ide/ide-disk.c     |    4 +++-
+ drivers/ide/ide-taskfile.c |    2 +-
+ drivers/ide/ide.c          |    2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-Index: b/drivers/ide/ide-io.c
+Index: b/drivers/ide/ide-disk.c
 ===================================================================
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -638,17 +638,18 @@ static ide_startstop_t drive_cmd_intr (i
- {
- 	struct request *rq = HWGROUP(drive)->rq;
- 	ide_hwif_t *hwif = HWIF(drive);
--	u8 *args = (u8 *) rq->buffer;
--	u8 stat = hwif->INB(IDE_STATUS_REG);
-+	u8 *args = (u8 *)rq->buffer, pio_in = (args && args[3]) ? 1 : 0, stat;
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -620,8 +620,10 @@ static int set_multcount(ide_drive_t *dr
  
--	local_irq_enable_in_hardirq();
--	if (rq->cmd_type == REQ_TYPE_ATA_CMD &&
--	    (stat & DRQ_STAT) && args && args[3]) {
-+	if (pio_in) {
- 		u8 io_32bit = drive->io_32bit;
-+		stat = hwif->INB(IDE_STATUS_REG);
- 		drive->io_32bit = 0;
- 		hwif->ata_input_data(drive, &args[4], args[3] * SECTOR_WORDS);
- 		drive->io_32bit = io_32bit;
- 		stat = wait_drive_not_busy(drive);
-+	} else {
-+		local_irq_enable_in_hardirq();
-+		stat = hwif->INB(IDE_STATUS_REG);
+ 	if (drive->special.b.set_multmode)
+ 		return -EBUSY;
++
+ 	ide_init_drive_cmd (&rq);
+-	rq.cmd_type = REQ_TYPE_ATA_CMD;
++	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
++
+ 	drive->mult_req = arg;
+ 	drive->special.b.set_multmode = 1;
+ 	(void) ide_do_drive_cmd (drive, &rq, ide_wait);
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -782,7 +782,7 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
+ 		struct request rq;
+ 
+ 		ide_init_drive_cmd(&rq);
+-		rq.cmd_type = REQ_TYPE_ATA_CMD;
++		rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
+ 
+ 		return ide_do_drive_cmd(drive, &rq, ide_wait);
  	}
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -876,7 +876,7 @@ int set_pio_mode(ide_drive_t *drive, int
+ 		return -EBUSY;
  
- 	if (!OK_STAT(stat, READY_STAT, BAD_STAT))
+ 	ide_init_drive_cmd(&rq);
+-	rq.cmd_type = REQ_TYPE_ATA_CMD;
++	rq.cmd_type = REQ_TYPE_ATA_TASKFILE;
+ 
+ 	drive->tune_req = (u8) arg;
+ 	drive->special.b.set_tune = 1;
