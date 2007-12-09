@@ -1,45 +1,47 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: WDC WD1600BEVS-2 on NCQ blacklist
-Date: Sun, 09 Dec 2007 18:17:26 +0300
-Message-ID: <475C0706.7090709@msgid.tls.msk.ru>
-References: <475BC8D7.5070407@harddisk.is-a-geek.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Mon, 10 Dec 2007 00:46:57 +0900
+Message-ID: <475C0DF1.50108@gmail.com>
+References: <200712080340.49546.rjw@sisk.pl> <20071208013631.3147986a.akpm@linux-foundation.org> <20071208101256.GA25807@rhlx01.hs-esslingen.de> <20071208022001.155e0c52.akpm@linux-foundation.org> <20071208105557.GA27646@rhlx01.hs-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:20117 "EHLO hobbit.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136AbXLIPR2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Dec 2007 10:17:28 -0500
-In-Reply-To: <475BC8D7.5070407@harddisk.is-a-geek.org>
+Received: from rv-out-0910.google.com ([209.85.198.185]:48324 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbXLIPrG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Dec 2007 10:47:06 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1308271rvb
+        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 07:47:05 -0800 (PST)
+In-Reply-To: <20071208105557.GA27646@rhlx01.hs-esslingen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marco Schuster <marco@harddisk.is-a-geek.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Andreas Mohr <andi@lisas.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 
-Marco Schuster wrote:
-> Hi all,
+Andreas Mohr wrote:
+> Hi,
 > 
-> I use a WDC WD1600BEVS-2 SATA drive (160GB).
-> The controller is a standard Intel ICH8 chipset.
-> During high disk load (fsck, large file copies) the system or the
-> process (mostly both) lock up and resume some secs later. In dmesg for
-> every of those breaks this appears:
+> On Sat, Dec 08, 2007 at 02:20:01AM -0800, Andrew Morton wrote:
+>>> Does this report now win me the lucky draw, pretty please? ;)
+>> nah, you have to cc the acpi guys to get a prize ;)
 > 
-> ata3.00: exception Emask 0x2 SAct 0x8001 SErr 0x0 action 0x2 frozen
-> ata3.00: spurious completions during NCQ issue=0x0 SAct=0x8001 FIS=004040a1:00004000
-[]
-> Someone other than me also has this problem with this disk, see
-> http://marc.info/?l=linux-kernel&m=118789093418142&w=2 for details.
-> xingu on freenode/#debian suggested me to do echo 1 >
-> /sys/block/sdX/device/queue_depth, which solved these problems for one
-> session and to email you to put this drive/controller combo on the NCQ
-> blacklist.
+> Thought so shortly, but missed it.
+> 
+>> Andreas, please do separately report that WOL problem too..
+> 
+> Local setup issue only, at least this one *isn't* a 2.6.24-rc regression. ;)
+> 
+>> Our list just reached 30.
+> 
+> Oh, so this is in fact a separate issue? Wasn't sure, couldn't do
+> enough analysis of similar cases.
+> 
+> Will test any (already submitted!) suggestions ASAP.
 
-Marco, please see
+Please post full kernel boot log and the result of 'lspci -nn'.
 
-  http://marc.info/?l=linux-ide&m=119707355016060&w=2
+Thanks.
 
-before adding more entries to the blacklist...
-
-/mjt
+-- 
+tejun
