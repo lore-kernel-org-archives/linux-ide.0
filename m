@@ -1,79 +1,47 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.24-rc4-mm1 and Very Slow PCMCIA Compact Flash
-Date: Sat, 8 Dec 2007 20:04:15 -0800
-Message-ID: <20071208200415.611afb57.akpm@linux-foundation.org>
-References: <1197059904.15428.15.camel@localhost>
-	<20071207150251.a0dbae23.akpm@linux-foundation.org>
-	<1197068983.15428.29.camel@localhost>
-	<20071207152249.360af326.akpm@linux-foundation.org>
-	<1197090093.7157.2.camel@localhost>
-	<20071208020722.9c7d91d0.akpm@linux-foundation.org>
-	<1197169375.7352.4.camel@localhost>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Sun, 09 Dec 2007 14:59:34 +0900
+Message-ID: <475B8446.4010300@gmail.com>
+References: <fa.qQhD8aJpiTOFaZqjRYwoaG7YT1c@ifi.uio.no> <fa.yaP86AixGhz5Q7eXSu04pIQp6ho@ifi.uio.no> <fa.c3k8VKWAx4HIo9zXWbL5Ek0oSBw@ifi.uio.no> <fa.C8ACnOhs8bXB++vmugf5F34JcJg@ifi.uio.no> <fa.5o6E6S0UWnARbQPxLe30TvLQIiY@ifi.uio.no> <475AE150.9050306@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:56553 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750940AbXLIEEp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Dec 2007 23:04:45 -0500
-In-Reply-To: <1197169375.7352.4.camel@localhost>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <475AE150.9050306@shaw.ca>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Andrew Morton <akpm@linux-foundation.org>, Andreas Mohr <andi@lisas.de>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zan Lynx <zlynx@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>
 
-On Sat, 08 Dec 2007 20:02:54 -0700 Zan Lynx <zlynx@acm.org> wrote:
-
+Robert Hancock wrote:
+> Matthew Garrett wrote:
+>> On Sat, Dec 08, 2007 at 02:20:01AM -0800, Andrew Morton wrote:
+>>> On Sat, 8 Dec 2007 11:12:57 +0100 Andreas Mohr <andi@lisas.de> wrote:
+>>>> ACPI Exception (exoparg2-0442): AE_AML_PACKAGE_LIMIT, Index
+>>>> (0FFFFFFFF) is beyond end of object [20070126]
+>>>> ACPI Error (psparse-0537): Method parse/execution failed
+>>>> [\_SB_.PCI0.IDE0.GTF_] (Node c180b990), AE_AML_PACKAGE_LIMIT
+>>>> ACPI Error (psparse-0537): Method parse/execution failed
+>>>> [\_SB_.PCI0.IDE0.CHN0.DRV1._GTF] (Node c180b888), AE_AML_PACKAGE_LIMIT
+>>>> ata1.01: _GTF evaluation failed (AE 0x300d)
+>>
+>> 037f6bb79f753c014bc84bca0de9bf98bb5ab169 ought to have fixed this?
+>>
 > 
-> On Sat, 2007-12-08 at 02:07 -0800, Andrew Morton wrote:
-> > On Fri, 07 Dec 2007 22:01:33 -0700 Zan Lynx <zlynx@acm.org> wrote:
-> > 
-> > > 
-> > > On Fri, 2007-12-07 at 15:22 -0800, Andrew Morton wrote:
-> > > > On Fri, 07 Dec 2007 23:09:43 +0000
-> > > > Zan Lynx <zlynx@acm.org> wrote:
-> > > [cut] 
-> > > > > > > Now with MM kernels 2.6.24 rc1-4 the PCMCIA adapter works again, but I
-> > > > > > > only get read rates of 1.6 MB/s.  When it used to work in 2.6.20 I got
-> > > > > > > at least 16 MB/s.  The card itself is capable of 30+ in the USB-2
-> > > > > > > reader.
-> [cut]
-> > argh.  OK.  And Linus's current tree is OK, yes?
-> > 
-> > In which case we should be OK for 2.6.24 and I guess we can hope like heck
-> > that the dud patch doesn't leak into mainline.  Hopefully Alan will get
-> > some time to look into it before 2.6.25 opens.
+> I should think it should have.
 > 
-> Linus' tree is also broken.
-> 
-> I tried a Linus 2.6.24-rc4 and it acts the same way, with a very slow
-> transfer rate.  
+> I think we're too aggressive about disabling the libata ACPI support,
+> even. One of my laptop's _GTF commands on resume is a DEVICE
+> CONFIGURATION FREEZE LOCK command, which gets rejected by the drive
+> (maybe it worked on the original Hitachi disk, but I've upgraded it to a
+>  newer Samsung). I'd say if the drive returns command aborted on one of
+> these, we should just ignore that command and continue to the next one
+> without trying to retry or disabling the ACPI support entirely.
 
-shit
+Yeap, my pending patchset does exactly that.  It's currently being
+tested by but reporters.  I'll soon post the patchset.
 
-> I also tried 2.6.24-rc4 with the older not-libata PATA drivers and it is
-> broken.
+Thanks.
 
-squared.
-
->  dmesg had a line about the CF card detected as hda,
-> but /sys/block did not have hda and /dev/hda did not function.
-
-But these drivers did work in earlier kernels, yes? 2.6.20 worked, but
-we don't know about intervening kernels.
-
-Can you tell us which version(s)?
-
-> I will try the patches you mentioned
-
-Yes, that won't tell use anything.
-
-> but I think I may also have to
-> work backward through kernel versions until I find the last one where
-> the PCMCIA hd{a,b,c,d,e} drivers worked.
-
-That would be great - a git-bisect is often ideal. 
-http://www.kernel.org/doc/local/git-quick.html has details.
-
-
+-- 
+tejun
