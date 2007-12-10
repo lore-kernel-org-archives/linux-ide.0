@@ -1,23 +1,24 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: SAS v SATA interface performance
-Date: Mon, 10 Dec 2007 15:36:57 +0100
-Message-ID: <20071210143656.GD9227@kernel.dk>
-References: <47506237.3000406@clear.net.nz> <47507F9A.3080109@msgid.tls.msk.ru> <475CEBBA.3050409@gmail.com>
+Date: Mon, 10 Dec 2007 08:50:18 -0600
+Message-ID: <1197298218.5169.4.camel@localhost.localdomain>
+References: <47506237.3000406@clear.net.nz>
+	 <47507F9A.3080109@msgid.tls.msk.ru>  <475CEBBA.3050409@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:21069 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751188AbXLJOkD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Dec 2007 09:40:03 -0500
-Content-Disposition: inline
+Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:57529
+	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751818AbXLJO60 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 09:58:26 -0500
 In-Reply-To: <475CEBBA.3050409@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Mon, Dec 10 2007, Tejun Heo wrote:
+On Mon, 2007-12-10 at 16:33 +0900, Tejun Heo wrote:
 > There's one thing we can do to improve the situation tho.  Several
 > drives including raptors and 7200.11s suffer serious performance hit if
 > sequential transfer is performed by multiple NCQ commands.  My 7200.11
@@ -29,31 +30,21 @@ On Mon, Dec 10 2007, Tejun Heo wrote:
 > sequential stream.  In fact, there isn't much to gain by issuing more
 > than two commands to one sequential stream.
 
-Well... CFQ wont go to deep queue depths across processes if they are
-doing streaming IO, but it wont stop a single process from doing so. I'd
-like to know what real life process would issue a streaming IO in some
-async manner as to get 31 pending commands sequentially? Not very likely
-:-)
+You're entering an area of perennial debate even for SCSI drives.  What
+we know is that for drives whose firmware elevator doesn't perform very
+well is that a lower TCQ depth (2-4) is better than a high one, the only
+use tags have being to saturate the transport.  For high end arrays and
+better performing firmware drives, the situation is much more murky.  It
+boils down to whose elevator do you trust, the drive/array's or the
+kernel's.  If the latter, then you want a depth of around 4 and if the
+former, you want a depth as high as possible (arrays like 64-128).
 
-So I'd consider your case above a microbenchmark results. I'd also claim
-that the firmware is very crappy, if it performs like described.
+Given the way IDE drives are made, I'd bet they fall into the category
+of firmware elevator that doesn't perform very well, so you probably
+want a low NCQ depth with them (just sufficient to saturate the
+transport, but not high enough to allow the drive to make too many head
+scheduling decisions).
 
-There's another possibility as well - that the queueing by the drive
-generates a worse issue IO pattern, and that is why the performance
-drops. Did you check with blktrace what the generated IO looks like?
+James
 
-> Both raptors and 7200.11 perform noticeably better on random workload
-> with NCQ enabled.  So, it's about time to update IO schedulers
-> accordingly, it seems.
-
-Definitely. Again microbenchmarks are able to show 30-40% improvements
-when I last tested. That's a pure random workload though, again not
-something that you would see in real life.
-
-I tend to always run with a depth around 4 here. It seems to be a good
-value, you get some benefits from NCQ but you don't allow the drive
-firmware to screw you over.
-
--- 
-Jens Axboe
 
