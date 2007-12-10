@@ -1,39 +1,35 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Mon, 10 Dec 2007 17:23:39 +0900
-Message-ID: <475CF78B.3040404@gmail.com>
-References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan> <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr> <Pine.LNX.4.64.0712010722590.28887@p34.internal.lan> <20071201174733.646a5c35@absurd> <Pine.LNX.4.64.0712011155110.6257@p34.internal.lan> <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan>
+Subject: Re: ATA ACPI (was Re: Linux 2.6.24-rc4)
+Date: Mon, 10 Dec 2007 17:42:16 +0900
+Message-ID: <475CFBE8.7000203@gmail.com>
+References: <alpine.LFD.0.9999.0712032055080.2981@woody.linux-foundation.org>	 <8db1092f0712041251w71768544o6f922454e2bb6758@mail.gmail.com>	 <4755C544.5060909@garzik.org> <4755C63B.7080608@garzik.org>	 <8db1092f0712041448t5a3da9ecna73730e421626450@mail.gmail.com>	 <4755DC07.5090009@garzik.org> <8db1092f0712042346m38182aafn953077c0c090bdad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0712020409280.30169@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.184]:50053 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751687AbXLJImZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 03:42:25 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1548450rvb
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 00:42:25 -0800 (PST)
+In-Reply-To: <8db1092f0712042346m38182aafn953077c0c090bdad@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Justin Piszcz wrote:
-> The badblocks did not do anything; however, when I built a software raid
-> 5 and the performed a dd:
+Maciej Rutecki wrote:
+> 2007/12/5, Jeff Garzik <jeff@garzik.org>:
 > 
-> /usr/bin/time dd if=/dev/zero of=fill_disk bs=1M
-> 
-> [42332.936615] ata5.00: exception Emask 0x2 SAct 0x7000 SErr 0x0 action
-> 0x2 frozen
-> [42332.936706] ata5.00: spurious completions during NCQ issue=0x0
-> SAct=0x7000 FIS=004040a1:00000800
-> 
-> Next test, I will turn off NCQ and try to make the problem re-occur.
-> If anyone else has any thoughts here..?
-> I ran long smart tests on all 3 disks, they all ran successfully.
-> 
-> Perhaps these drives need to be NCQ BLACKLISTED with the P35 chipset?
+>> _If_ libata is built into the kernel, and not a kernel module, then you
+>> can supply "libata.noacpi=1" on the kernel command line.  I don't think
+>> that works with modules.
 
-That was me being stupid.  Patches for both upstream and -stable
-branches are posted.  These will go away.
+JFYI: fix for this and other ACPI issues is being tested.  Please take a
+look at the following bug.
 
-Thanks.
+  http://bugzilla.kernel.org/show_bug.cgi?id=9320
 
 -- 
 tejun
