@@ -1,52 +1,109 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: PROBLEM: WARNING: at kernel/irq/manage.c:158 enable_irq() during
- boot
-Date: Mon, 10 Dec 2007 18:35:27 +0900
-Message-ID: <475D085F.9010307@gmail.com>
-References: <fd0490a021a8.21a8fd0490a0@comp.waw.pl>
+Subject: Re: Hard drives only detected when booting from CD on nVidia MCP67
+ SATA
+Date: Mon, 10 Dec 2007 18:43:30 +0900
+Message-ID: <475D0A42.9030502@gmail.com>
+References: <47573A0A.4070401@redhat.com> <47588025.6090203@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:33274 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.177]:52325 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbXLJJfv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 04:35:51 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3242917wah
-        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 01:35:50 -0800 (PST)
-In-Reply-To: <fd0490a021a8.21a8fd0490a0@comp.waw.pl>
+	with ESMTP id S1755401AbXLJJnh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 04:43:37 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3246645wah
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 01:43:36 -0800 (PST)
+In-Reply-To: <47588025.6090203@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: wojtekz@comp.waw.pl
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <peerchen@gmail.com>
 
-(cc'ing Bartlomiej)
-Hello,
+Chuck Ebbert wrote:
+> On 12/05/2007 06:53 PM, Chuck Ebbert wrote:
+>> With kernel 2.6.23 on an Acer 7220 notebook using nVidia MCP67 SATA,
+>> hard drives are only detected after first booting from a CD.
+>>
+>> Boot from hard drive      No drives detected
+>>
+>> Boot live CD              Detected
+>>
+>> Boot CD to GRUB menu,     Detected
+>> then warm-boot from hard
+>> drive
+>>
+>>
+>> Non-detect case:
+>>
+>> ahci 0000:00:09.0: version 2.3
+>> ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+>> ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+>> IRQ 16
+>> input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+>> ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+>> ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+>> PCI: Setting latency timer of device 0000:00:09.0 to 64
+>> scsi0 : ahci
+>> scsi1 : ahci
+>> scsi2 : ahci
+>> scsi3 : ahci
+>> ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata2: SATA link down (SStatus 0 SControl 300)
+>> ata3: SATA link down (SStatus 0 SControl 300)
+>> ata4: SATA link down (SStatus 0 SControl 300)
+>> Waiting for driver initialization
+>>
+>> But, if a LiveCD is used to boot or if a LiveCD was used before an hot reboot 
+>> (without a power off), disks are correctly found :
+>>
+>> Loading ahci.ko
+>> ahci 0000:00:09.0: version 2.3
+>> ACPI: PCI Interrupt Link [LSI0] enabled at IRQ 23
+>> ACPI: PCI Interrupt 0000:00:09.0[A] -> Link [LSI0] -> GSI 23 (level, low) -> 
+>> IRQ 16
+>> input: ImPS/2 Generic Wheel Mouse as /class/input/input2
+>> ahci 0000:00:09.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl IDE mode
+>> ahci 0000:00:09.0: flags: 64bit sntf led clo pmp pio slum part
+>> PCI: Setting latency timer of device 0000:00:09.0 to 64
+>> scsi0 : ahci
+>> scsi1 : ahci
+>> scsi2 : ahci
+>> scsi3 : ahci
+>> ata1: SATA max UDMA/133 cmd 0xf8854100 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata2: SATA max UDMA/133 cmd 0xf8854180 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata3: SATA max UDMA/133 cmd 0xf8854200 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata4: SATA max UDMA/133 cmd 0xf8854280 ctl 0x00000000 bmdma 0x00000000 irq 221
+>> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata1.00: ATA-7: Hitachi HTS541612J9SA00, SBDOC70P, max UDMA/100
+>> ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 0/32)
+>> ata1.00: configured for UDMA/100
+>> ata2: SATA link down (SStatus 0 SControl 300)
+>> ata3: SATA link down (SStatus 0 SControl 300)
+>> ata4: SATA link down (SStatus 0 SControl 300)
+>>
+>>
+> 
+> Possibly fixed by:
+> 
+> Commit:     3cc3eb1148e4b2dfabf7a1dcf36fd8be1331ca95
+> [libata] AHCI: enable AHCI mode, before using AHCI reset
+> 
+> Plus:
+> 
+> Commit:     ab6fc95f609b372a19e18ea689986846ab1ba29c
+> [libata] AHCI: fix newly introduced host-reset bug
+> 
+> ??
 
-wojtekz@comp.waw.pl wrote:
-> Dec  6 11:58:23 titanium kernel: WARNING: at kernel/irq/manage.c:158 enable_irq()
-> Dec  6 11:58:23 titanium kernel:  [<c014b5c3>] enable_irq+0x6e/0xa2
-> Dec  6 11:58:23 titanium kernel:  [<f887b783>] probe_hwif+0x6d8/0x7c7 [ide_core]
-> Dec  6 11:58:23 titanium kernel:  [<f887c0be>] probe_hwif_init_with_fixup+0xc/0x80 [ide_core]
-> Dec  6 11:58:23 titanium kernel:  [<c0190007>] elf_core_dump+0x627/0xb60
-> Dec  6 11:58:23 titanium kernel:  [<f887df7b>] ide_setup_pci_device+0x6f/0x9c [ide_core]
-> Dec  6 11:58:23 titanium kernel:  [<f883b1a7>] pdc202new_init_one+0xf/0x10 [pdc202xx_new]
-> Dec  6 11:58:23 titanium kernel:  [<c01d94de>] pci_device_probe+0x36/0x55
-> Dec  6 11:58:23 titanium kernel:  [<c021f8cb>] driver_probe_device+0xc8/0x14b
-> Dec  6 11:58:23 titanium kernel:  [<c021fa37>] __driver_attach+0x52/0x87
-> Dec  6 11:58:23 titanium kernel:  [<c021eecc>] bus_for_each_dev+0x35/0x57
-> Dec  6 11:58:23 titanium kernel:  [<c021f748>] driver_attach+0x16/0x18
-> Dec  6 11:58:23 titanium kernel:  [<c021f9e5>] __driver_attach+0x0/0x87
-> Dec  6 11:58:23 titanium kernel:  [<c021f1a8>] bus_add_driver+0x6d/0x153
-> Dec  6 11:58:23 titanium kernel:  [<c01d961d>] __pci_register_driver+0x4b/0x77
-> Dec  6 11:58:23 titanium kernel:  [<c0143a39>] sys_init_module+0x1525/0x15fb
-> Dec  6 11:58:23 titanium kernel:  [<f8879af9>] ide_config_drive_speed+0x0/0x314 [ide_core]
-> Dec  6 11:58:23 titanium kernel:  [<c0103f9e>] syscall_call+0x7/0xb
-> Dec  6 11:58:23 titanium kernel:  [<c02b0000>] wireless_nlevent_process+0x15/0x31
-> Dec  6 11:58:23 titanium kernel:  =======================
+Is it fixed by the above two patches?  Or are you saying that the above
+two patches look like they might fix the problem?
 
-That means IRQ is being enabled more times than it should be.  Can you
-please give a shot at 2.6.24-rc4 and see whether the problem is still there?
+Thanks.
 
 -- 
 tejun
