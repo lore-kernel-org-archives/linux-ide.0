@@ -1,43 +1,49 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/20] dtc2278: ->io_32bit setting don't have to be identical for master/slave
-Date: Mon, 10 Dec 2007 00:52:28 +0100
-Message-ID: <200712100052.28528.bzolnier@gmail.com>
-References: <200712092208.58494.bzolnier@gmail.com> <200712100015.15735.bzolnier@gmail.com> <20071209230736.2cdb6e44@the-village.bc.nu>
+From: Andreas Mohr <andi@lisas.de>
+Subject: Re: 2.6.24-rc4-git5: Reported regressions from 2.6.23
+Date: Mon, 10 Dec 2007 01:04:31 +0100
+Message-ID: <20071210000429.GA3916@rhlx01.hs-esslingen.de>
+References: <fa.qQhD8aJpiTOFaZqjRYwoaG7YT1c@ifi.uio.no> <fa.yaP86AixGhz5Q7eXSu04pIQp6ho@ifi.uio.no> <fa.c3k8VKWAx4HIo9zXWbL5Ek0oSBw@ifi.uio.no> <fa.C8ACnOhs8bXB++vmugf5F34JcJg@ifi.uio.no> <fa.5o6E6S0UWnARbQPxLe30TvLQIiY@ifi.uio.no> <475AE150.9050306@shaw.ca> <20071209213642.GA27096@rhlx01.hs-esslingen.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:30939 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbXLIXnd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Dec 2007 18:43:33 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1402423ugc
-        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 15:43:31 -0800 (PST)
-In-Reply-To: <20071209230736.2cdb6e44@the-village.bc.nu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20071209213642.GA27096@rhlx01.hs-esslingen.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Andreas Mohr <andi@lisas.de>
+Cc: Robert Hancock <hancockr@shaw.ca>, Matthew Garrett <mjg59@srcf.ucam.org>, Andrew Morton <akpm@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
 
-On Monday 10 December 2007, Alan Cox wrote:
-> > There is absolutely no hardware setup done by IDE subsystem or dtc2278
-> > host driver when ->io_32bit setting is changed and since ->io_32bit setting
+Hi,
+
+On Sun, Dec 09, 2007 at 10:36:42PM +0100, Andreas Mohr wrote:
+> And the second, possibly much more lucrative, question would be
+> whether we're actually doing something wrong with our ACPI _GTM execution
+> which triggers the AE_AML_PACKAGE_LIMIT problem.
 > 
-> So ?
-> 
-> The original author went to great trouble to specifically enforce the
-> behaviour in question and probably did so for a reason. Would it not be
+> This might help here, perhaps (relevant snippets of AML dump):
 
-Probably so but please keep in mind the state of IDE subsystem back
-then...
+Indeed, after looking over this horrid ASL stuff for ages I'm now starting
+to believe that our IDE controller state is wrong,
+since the Match()ing etc. in this particular _GTM implementation
+is heavily dependant on actual PCI values
+(it references some PCI_Config OperationRegion:s),
+and some indexing seems to go wrong due to this.
 
-> far safer to fix it by keeping that enforcement and fixing where it is
-> lost than removing it - especially if you cannot test the hardware ?
+IOW, it seems very likely that _GTM on these BIOSes (VIA chipsets) isn't
+actually wrongly implemented but simply expects IDE controller values
+to have been set up ""differently"".
 
-What about just enforcing ->io_32bit for both drives in ->init_hwif method
-and disallowing any futher changes with 'hwif->no_io_32bit = 1'?
 
-Thanks,
-Bart
+Or... one could possibly even infer from this that - maybe -
+the _GTM invocation spot is wrong, it should be done somewhere
+different during bootup. Or whatever.
+
+
+
+This seems to tell me again that we're often quick to blacklist
+or whitelist things left and right when instead fundamental problems
+are hidden somewhere.
+
+Still investigating,
+
+Andreas Mohr
