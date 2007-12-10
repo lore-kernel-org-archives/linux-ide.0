@@ -1,39 +1,75 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: problems with packet command
-Date: Mon, 10 Dec 2007 16:54:10 +0900
-Message-ID: <475CF0A2.1050208@gmail.com>
-References: <743310.96837.qm@web35412.mail.mud.yahoo.com>
+Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
+Date: Mon, 10 Dec 2007 17:14:54 +0900
+Message-ID: <475CF57E.7060406@gmail.com>
+References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan> <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr> <4751AB91.2000207@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:31667 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.181]:22391 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbXLJHyV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 02:54:21 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3195304wah
-        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 23:54:20 -0800 (PST)
-In-Reply-To: <743310.96837.qm@web35412.mail.mud.yahoo.com>
+	with ESMTP id S1751342AbXLJIPR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 03:15:17 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3205011wah
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 00:15:15 -0800 (PST)
+In-Reply-To: <4751AB91.2000207@tmr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kantor Zsolt <kantorzsolt@yahoo.com>
-Cc: linux-ide@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Jan Engelhardt <jengelh@computergmbh.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
 
-Kantor Zsolt wrote:
-> Hi, I'm developing an application that uses cd-rom IOCTL's. All is
-> fine but I have one problem I can not set up a packet command,
-> because I don't know exactly how to fill out the 12 byte command 
-> field.  I searched the internet, looked in the cdrom.c driver, some
-> other programs source code, but I don't have a clear picture about
-> that. I just know that the first element cmd[0] is the command.
->
-> Would somebody please explain me how to fill out the 12 bytes ? or if
-> not then at least could point out a good online resource. You are my
-> last hope
+Bill Davidsen wrote:
+> Jan Engelhardt wrote:
+>> On Dec 1 2007 06:26, Justin Piszcz wrote:
+>>> I ran the following:
+>>>
+>>> dd if=/dev/zero of=/dev/sdc
+>>> dd if=/dev/zero of=/dev/sdd
+>>> dd if=/dev/zero of=/dev/sde
+>>>
+>>> (as it is always a very good idea to do this with any new disk)
+>>
+>> Why would you care about what's on the disk? fdisk, mkfs and
+>> the day-to-day operation will overwrite it _anyway_.
+>>
+>> (If you think the disk is not empty, you should look at it
+>> and copy off all usable warez beforehand :-)
+>>
+> Do you not test your drive for minimum functionality before using them?
 
-That field contains SCSI CDBs which are described in SCSI standards.
-You can download standard drafts from t10.org freely and drafts are as
-good as the real ones.  You'll need to look at SPC and MMC standards.
+I personally don't.
+
+> Also, if you have the tools to check for relocated sectors before and
+> after doing this, that's a good idea as well. S.M.A.R.T is your friend.
+> And when writing /dev/zero to a drive, if it craps out you have less
+> emotional attachment to the data.
+
+Writing all zero isn't too useful tho.  Drive failing reallocation on
+write is catastrophic failure.  It means that the drive wanna relocate
+but can't because it used up all its extra space which usually indicates
+something else is seriously wrong with the drive.  The drive will have
+to go to the trash can.  This is all serious and bad but the catch is
+that in such cases the problem usually stands like a sore thumb so
+either vendor doesn't ship such drive or you'll find the failure very
+early.  I personally haven't seen any such failure yet.  Maybe I'm lucky.
+
+Most data loss occurs when the drive fails to read what it thought it
+wrote successfully and the opposite - reading and dumping the whole disk
+to /dev/null periodically is probably much better than writing zeros as
+it allows the drive to find out deteriorating sector early while it's
+still readable and relocate.  But then again I think it's an overkill.
+
+Writing zeros to sectors is more useful as cure rather than prevention.
+ If your drive fails to read a sector, write whatever value to the
+sector.  The drive will forget about the data on the damaged sector and
+reallocate and write new data to it.  Of course, you lose data which was
+originally on the sector.
+
+I personally think it's enough to just throw in an extra disk and make
+it RAID0 or 5 and rebuild the array if read fails on one of the disks.
+If write fails or read fail continues, replace the disk.  Of course, if
+you wanna be extra cautious, good for you.  :-)
 
 -- 
 tejun
