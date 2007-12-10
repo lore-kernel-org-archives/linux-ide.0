@@ -1,48 +1,59 @@
 From: Marco Gatti <marco@pianoinflames.de>
 Subject: Re: Bug: get EXT3-fs error Allocating block in system zone
-Date: Mon, 10 Dec 2007 18:47:11 +0100
-Message-ID: <475D7B9F.2090407@pianoinflames.de>
-References: <fa.Fg53DJSEh/kZhf/uRCv9FYZsaSQ@ifi.uio.no> <fa.nPzIjJ2SchPb1LOa/dRWb/WyEZU@ifi.uio.no> <fa.LkmHGN+Fx6H930bfeCDU6pGdBKM@ifi.uio.no> <fa.oSqMiIX7WubypXrhZGaRKU5wNGU@ifi.uio.no> <fa.0pc9/nNmTq+eWIU9rADRn0xYGdI@ifi.uio.no> <fa.hqM73i24f6G31R5F3sKL8+3H8Ww@ifi.uio.no> <475C2C02.70001@shaw.ca> <alpine.LFD.0.9999.0712091057200.12046@woody.linux-foundation.org> <475D6B78.8000200@rtr.ca>
+Date: Mon, 10 Dec 2007 19:01:39 +0100
+Message-ID: <475D7F03.7050100@pianoinflames.de>
+References: <fa.LkmHGN+Fx6H930bfeCDU6pGdBKM@ifi.uio.no> <fa.oSqMiIX7WubypXrhZGaRKU5wNGU@ifi.uio.no> <fa.0pc9/nNmTq+eWIU9rADRn0xYGdI@ifi.uio.no> <fa.hqM73i24f6G31R5F3sKL8+3H8Ww@ifi.uio.no> <475C2C02.70001@shaw.ca> <alpine.LFD.0.9999.0712091057200.12046@woody.linux-foundation.org> <20071209190913.GB13382@kernel.dk> <475C48EE.8020701@pianoinflames.de> <20071209200440.GC13382@kernel.dk> <475C536B.5070409@pianoinflames.de> <20071209210137.GD13382@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from echo836.server4you.de ([85.25.140.112]:52322 "EHLO
+Received: from echo836.server4you.de ([85.25.140.112]:38497 "EHLO
 	mail.pianoinflames.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363AbXLJRrY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 12:47:24 -0500
-In-Reply-To: <475D6B78.8000200@rtr.ca>
+	with ESMTP id S1756902AbXLJSBq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 13:01:46 -0500
+In-Reply-To: <20071209210137.GD13382@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Robert Hancock <hancockr@shaw.ca>, Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Robert Hancock <hancockr@shaw.ca>, Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@pobox.com>
 
-Mark Lord schrieb:
->>
->> AHCI is a pretty well tested driver, but 99%+ of all testers still 
->> tend to have less than 4GB of memory. So I do *not* believe that the 
->> highmem bits are all that well tested at all.
->> Can somebody who knows the driver send Marco a test-patch to just 
->> limit DMA to the low 32 bits, and then Marco can at least verify that 
->> yes, that that it. While it looks like DMA problems, there could 
->> obviously be some other subtle issue with big-memory machines (ie the 
->> PCI allocations etc tend to change too!)
-> ..
+Jens Axboe schrieb:
+>>>> Hello Jens,
+>>>> Thanks for help. I just applied the patch. Unfortunately it doesn't work.
+>>> Can you try and additionally boot with iommu=off as a boot parameter?
+>>>
+>> Yes. This is the end of getting any sata devices. See screenshots for 
+>> errors. It continued untill ata4. At the end no root device was found.
 > 
-> We have another outstanding bug report of a Marvell chipset being
-> used in a funky 32-bit PPC situation with memory above the 4GB mark.
+> Hmm, even though the address is set to 0xffffffff we still seem to
+> receive requests outside that range. Lets assume it's the scsi logic,
+> can you test this? IOW, patch + iommu=off + this patch.
 > 
-> Possibly related, possibly not.
+> I probably wont see any more mails tonight, we can continue this
+> tomorrow (or someone else can step in, whatever comes first :-)
 > 
-> The Marvell SATA driver is still VERY EXPERIMENTAL right now,
-> missing some errata and stuff.  This should improve over the next few 
-> months.
-> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 2faced6..769ce3a 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1572,7 +1572,9 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+>  #endif
+>  
+>  	blk_queue_max_sectors(q, shost->max_sectors);
+> +#if 0
+>  	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+> +#else
+>  	blk_queue_segment_boundary(q, shost->dma_boundary);
+>  
+>  	if (!shost->use_clustering)
+I applied the path. Got Hunk #1 succeeded at 1562 with fuzz 2 (offset 
+-10 lines).
 
-Hello,
+I didn't compile completly.
 
-I don't have a Marvell chipset. I didn't compiled in this. I have a 
-"Intel Corporation PT IDER Controller" and an intel matrix storage 
-controller. So I think it doesn't concern my case...
+drivers/scsi/scsi_lib.c:1565:1: error: unterminated #else
+make[2]: *** [drivers/scsi/scsi_lib.o] Error 1
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
-Greets
+
