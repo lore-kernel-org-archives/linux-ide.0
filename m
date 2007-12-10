@@ -1,85 +1,48 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: RE: Revisiting - 2.6.23.8 - Hang with sata_mv (7042) + Flat 4Gig (no holes) Memory
-Date: Mon, 10 Dec 2007 11:46:49 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AFB051A@EMPBEDEX.empirix.com>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com> <473CC4B8.4090607@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AEF6982@EMPBEDEX.empirix.com> <475D6CC3.2080400@rtr.ca>
+From: Marco Gatti <marco@pianoinflames.de>
+Subject: Re: Bug: get EXT3-fs error Allocating block in system zone
+Date: Mon, 10 Dec 2007 18:47:11 +0100
+Message-ID: <475D7B9F.2090407@pianoinflames.de>
+References: <fa.Fg53DJSEh/kZhf/uRCv9FYZsaSQ@ifi.uio.no> <fa.nPzIjJ2SchPb1LOa/dRWb/WyEZU@ifi.uio.no> <fa.LkmHGN+Fx6H930bfeCDU6pGdBKM@ifi.uio.no> <fa.oSqMiIX7WubypXrhZGaRKU5wNGU@ifi.uio.no> <fa.0pc9/nNmTq+eWIU9rADRn0xYGdI@ifi.uio.no> <fa.hqM73i24f6G31R5F3sKL8+3H8Ww@ifi.uio.no> <475C2C02.70001@shaw.ca> <alpine.LFD.0.9999.0712091057200.12046@woody.linux-foundation.org> <475D6B78.8000200@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [12.38.203.54] ([12.38.203.54]:18352 "EHLO
-	empbedex1.empirix.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbXLJQqo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 11:46:44 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <475D6CC3.2080400@rtr.ca>
+Received: from echo836.server4you.de ([85.25.140.112]:52322 "EHLO
+	mail.pianoinflames.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363AbXLJRrY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 12:47:24 -0500
+In-Reply-To: <475D6B78.8000200@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, hp@syntomax.com
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Robert Hancock <hancockr@shaw.ca>, Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jgarzik@pobox.com>
 
-I'll try - it will take me a little while to get back to this - had to
-reconfigure my target for a different test...more later~!
-
-Tom
-
-
------Original Message-----
-From: Mark Lord [mailto:liml@rtr.ca] 
-Sent: Monday, December 10, 2007 11:44 AM
-To: Morrison, Tom
-Cc: Jeff Garzik; linux-ide@vger.kernel.org; Tejun Heo; hp@syntomax.com
-Subject: Re: Revisiting - 2.6.23.8 - Hang with sata_mv (7042) + Flat
-4Gig (no holes) Memory
-
-Morrison, Tom wrote:
-..
-> To re-state the problem....
+Mark Lord schrieb:
+>>
+>> AHCI is a pretty well tested driver, but 99%+ of all testers still 
+>> tend to have less than 4GB of memory. So I do *not* believe that the 
+>> highmem bits are all that well tested at all.
+>> Can somebody who knows the driver send Marco a test-patch to just 
+>> limit DMA to the low 32 bits, and then Marco can at least verify that 
+>> yes, that that it. While it looks like DMA problems, there could 
+>> obviously be some other subtle issue with big-memory machines (ie the 
+>> PCI allocations etc tend to change too!)
+> ..
 > 
-> Hardware/Configuration:
->    MPC8548E with a 7042 (rev 2 - connected internal via a PEX switch) 
->    2.6.23.8 (using PHYS_64BIT & PTE_64BIT - for 36 bit addressing
->              & MSI is NOT compiled in)
->    Flat 4Gig Memory Map (no holes - 0 - 0x0_FFFF_FFFF defined -
-special
->  	                   low reserve memory is also used)
+> We have another outstanding bug report of a Marvell chipset being
+> used in a funky 32-bit PPC situation with memory above the 4GB mark.
 > 
->    Local Bus & PCI Express IOMem mapped to unique space in 
-> 		0xC_xxxx_xxxx with extensions to the ioremap routines 
-> 		to create the appropriate requested physical address...
-> 		This is (and should be) transparent to the requesting 
-> 		function that calls ioremap.
-> 		
->    2 SATA hard drives connected.
+> Possibly related, possibly not.
 > 
-> To recreate:
->    Write a large file (now greater than >310Mbytes) - hangs
->    and soft lockup is detected by kernel - no useful info 
->    in stack trace...
+> The Marvell SATA driver is still VERY EXPERIMENTAL right now,
+> missing some errata and stuff.  This should improve over the next few 
+> months.
 > 
-> Of interest:
->    a) Replace sata_mv.c - with the 'old' Marvell's reference 
->       driver and it works perfectly!!
-> 
->    b) Also, sata_mv works perfectly in all conditions - if we boot
-with 
->       less than the ~3750M from the command line (which I note is
-~below
->       where its PEX IOmemory space is located).
-..
 
-Tom:  could you please try and follow the recent thread here (linux-ide)
-entitled "Bug: get EXT3-fs error Allocating block in system zone".
+Hello,
 
-Somebody there has a similar problem on x86-32 with RAM above 4GB
-using a standard AHCI SATA controller.
+I don't have a Marvell chipset. I didn't compiled in this. I have a 
+"Intel Corporation PT IDER Controller" and an intel matrix storage 
+controller. So I think it doesn't concern my case...
 
-Jens has posted a couple of debugging patches there to try and isolate
-things.
-(patches attached here for convenience, though you'll have to
-modify/hack
- the first one for sata_mv instead of ahci).
-
--ml
-
+Greets
