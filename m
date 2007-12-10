@@ -1,70 +1,78 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: SAS v SATA interface performance
-Date: Mon, 10 Dec 2007 16:15:49 +0900
-Message-ID: <475CE7A5.3060608@gmail.com>
-References: <4750A523.7010501@clear.net.nz> <20071201001740.7ffce6f6@the-village.bc.nu> <4750CFB7.7040400@rtr.ca>
+Date: Mon, 10 Dec 2007 16:33:14 +0900
+Message-ID: <475CEBBA.3050409@gmail.com>
+References: <47506237.3000406@clear.net.nz> <47507F9A.3080109@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:9760 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.186]:41528 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbXLJHP5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 02:15:57 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1523982rvb
-        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 23:15:56 -0800 (PST)
-In-Reply-To: <4750CFB7.7040400@rtr.ca>
+	with ESMTP id S1751570AbXLJHdV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 02:33:21 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1528661rvb
+        for <linux-ide@vger.kernel.org>; Sun, 09 Dec 2007 23:33:21 -0800 (PST)
+In-Reply-To: <47507F9A.3080109@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Richard Scobie <r.scobie@clear.net.nz>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Mark Lord wrote:
-> Alan Cox wrote:
->>> The comment I saw, which I'm trying to verify, mentioned the SATA
->>> drives "held the bus" or similar longer than SAS ones.
->>
->> SATA normally uses one link per device so the device side isn't contended
->> unless you descend into the murky world of port multipliers. 
-> ..
+(cc'ing Jens as it contains some discussion about IO scheduling)
+
+Michael Tokarev wrote:
+> Richard Scobie wrote:
+>> If one disregards the rotational speed and access time advantage that
+>> SAS drives have over SATA, does the SAS interface offer any performance
+>> advantage?
 > 
-> And that's where NCQ comes into it's own, allowing full bus release
-> so that other drives on the same port multiplier can burst as needed.
+> It's a very good question, to which I wish I have an answer myself ;)
+> Since I never tried actual SAS controllers with SAS drives, I'll
+> reply from ol'good SCSI vs SATA perspective.
 
-Non-NCQ R/W does full bus release too.  It's basically packet based so
-nothing really holds the bus.  Even the ATAPI commands don't hold the bus.
+Purely from transport layer protocol perspective, SATA has slightly
+shorter latency thanks to its simplicity but compared to actual IO
+latency, this is negligible and if you throw NCQ and TCQ into play, this
+theoretical advantage becomes completely negligible.
 
-> I've only had a port multiplier here for a few days, and used only a pair
-> of *notebook* SATA drives on it thus far.  Both drives can stream at full
-> rate without any slowdown -- that's 55MByte/sec from each drive, at the
-> same time, for sequential reading, 100MByte/sec total.  Notebook drives.
+> They says that modern SATA drives has NCQ, which is "more
+> advanced" than ol'good TCQ used in SCSI (and SAS) drives.
+> I've no idea what's "advanced" in it, except of that it
+> just does not work.  There's almost no difference with
+> NCQ turned on or off, and in many cases turning NCQ ON
+> actually REDUCES performance.
 
-With FIS-based switching, PMP won't impose performance limits on most
-configurations until it fills up the connection bandwidth.  Catches are...
+NCQ is not more advanced than SCSI TCQ.  NCQ is "native" and "advanced"
+compared to old IDE style bus-releasing queueing support which was one
+ugly beast which no one really supported well.  The only example I can
+remember which actually worked was first gen raptors paired with
+specific controller with custom driver on windows.
 
-1. All currently supported controllers have only upto 32 command slots
-per port, which means all devices sharing a PMP will compete for command
-slots.  This doesn't really matter unless the PMP is very large (say >
-16 ports).
+If you compare protocol to protocol, NCQ should be able to perform as
+good as TCQ unless you're talking about monster storage enclosure device
+which can have a lot of spindles behind it.  Again, NCQ has lower
+overhead but bus latency / overhead don't really matter.
 
-2. The only FIS-based switching controller we currently support is
-sata_sil24.  It generally works impressively well.  Unfortunately, it
-has some limitations - it for some reason can't fully fill the
-bandwidth.  It seems the silicon itself is limited.  This problem is
-reported on different operating systems too.  I don't remember the exact
-number but it's somewhere between 100 and 150MB/s.
+However, that is not to say SATA drives with NCQ support perform as good
+as SCSI drives with TCQ support.  SCSI drivers are simply faster and
+tend to have better firmware.  There is nothing much operating system
+can do about it.
 
-3. sil24/32 family controllers have another quirk which basically forces
-command-switching mode for ATAPI devices, so if you connect an ATAPI
-device to PMP, the ATAPI device virtually holds the bus while command is
-in progress.
+There's one thing we can do to improve the situation tho.  Several
+drives including raptors and 7200.11s suffer serious performance hit if
+sequential transfer is performed by multiple NCQ commands.  My 7200.11
+can do > 100MB/s if non-NCQ command is used or only upto two NCQ
+commands are issued; however, if all 31 (maximum currently supported by
+libata) are used, the transfer rate drops to miserable 70MB/s.
 
-I have untested code for ahci 1.2 FIS-based switching PMP support and
-the next gen JMB and ICHs are slated to support FIS-based switching.  I
-just need more hardware samples and time which seems so scarce these
-days.  :-P
+It seems that what we need to do is not issuing too many commands to one
+sequential stream.  In fact, there isn't much to gain by issuing more
+than two commands to one sequential stream.
 
-Mark, how is marvell PMP support going?
+Both raptors and 7200.11 perform noticeably better on random workload
+with NCQ enabled.  So, it's about time to update IO schedulers
+accordingly, it seems.
 
 Thanks.
 
