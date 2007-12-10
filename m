@@ -1,53 +1,75 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 15/20] ide: don't enable local IRQs for PIO-in in driver_cmd_intr()
-Date: Mon, 10 Dec 2007 16:39:38 +0300
-Message-ID: <475D419A.1050506@ru.mvista.com>
-References: <200712092218.30672.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Recent kernel hosing partition
+Date: Mon, 10 Dec 2007 22:39:54 +0900
+Message-ID: <475D41AA.2060205@gmail.com>
+References: <14119388.post@talk.nabble.com> <475CEFF8.5050707@gmail.com>	 <f68177890712100208o27d71584l685520d2e9ecf5bd@mail.gmail.com>	 <475D11A1.1070700@gmail.com> <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:48344 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751153AbXLJNjS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Dec 2007 08:39:18 -0500
-In-Reply-To: <200712092218.30672.bzolnier@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.190]:21760 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbXLJNkD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 08:40:03 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1632091rvb
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 05:39:59 -0800 (PST)
+In-Reply-To: <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Business Kid <business.kid@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Business Kid wrote:
+>     Yeah, dd will do that but I'm not too sure whether that would be
+>     helpful.  
+> 
+> That's a bit rough! Hexedit with style?  :-).
 
-> Don't enable local IRQs for PIO-in protocol in driver_cmd_intr().
+:-)
 
-> While at it:
+>     The drive is triggering all sorts of errors.  Can you post the
+>     result of 'smartctl -a /dev/sdX' where sdX is the offending drive.  Also
+>     please restore cc to linux-ide@vger.kernel.org
+>     <mailto:linux-ide@vger.kernel.org>.
+> 
+> 
+> Attached smartctl -a /dev/sda > smartctl.out
+> 
+> I see where you're going, and I think you're wrong. The drive is only 2
+> months old. I had heavy toolchain compiles and massive copies/ deletions
+> pass of without incident on sda8 while F7's root partition (sda3) was
+> lightly loaded by comparison. sda3 picked up _all_ the errors.  I never
+> hit an error on the hard work - no dodgy exits. The console stuff on
+> sda3 was all fine. It only screwed every application I was running under
+> X - Firefox particularly. I could still compile with the tools & libs on
+> sda3 when X was screwed. Badblocks never found a thing (e2fsck -cf).
+> Lost+found is empty on every other partition.
 
-> * Remove redundant rq->cmd_type check.
+Right, it doesn't look like your harddrive is bad.
 
-> * Read status register after enabling local IRQs for no-data protocol.
+> Sadly, "errors all over the place" is common enough with Via chipsets
+> and Seagate disks.  I've seen it before. I'm stuck with Via in this box.
+> I would not have bought Seagate, but when someone gives it to you and
+> you're unemployed...
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+I'm not aware of any specific issues with via + Segate drives.  Have
+pointers?
 
-> Index: b/drivers/ide/ide-io.c
-> ===================================================================
-> --- a/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -638,17 +638,18 @@ static ide_startstop_t drive_cmd_intr (i
->  {
->  	struct request *rq = HWGROUP(drive)->rq;
->  	ide_hwif_t *hwif = HWIF(drive);
-> -	u8 *args = (u8 *) rq->buffer;
-> -	u8 stat = hwif->INB(IDE_STATUS_REG);
-> +	u8 *args = (u8 *)rq->buffer, pio_in = (args && args[3]) ? 1 : 0, stat;
->  
-> -	local_irq_enable_in_hardirq();
-> -	if (rq->cmd_type == REQ_TYPE_ATA_CMD &&
-> -	    (stat & DRQ_STAT) && args && args[3]) {
-> +	if (pio_in) {
->  		u8 io_32bit = drive->io_32bit;
-> +		stat = hwif->INB(IDE_STATUS_REG);
+> Another issue here is that the old ide driver could get through the
+> mess, whereas the newer one cannot. I get "Drive reset: success" and the
+> old ide driver recovers, whereas the new one goes out to lunch. The log
+> snippets show a 60 seconds gap between errors. That's a 60 second freeze.
 
-    You've lost DRQ=1 check (which is returned in the next patch however)...
+Hmmm...
 
-MBR, Sergei
+1. So, the IDE driver suffers from error conditions too?  Do you have
+logs around?
+
+2. Do you have logs of libata driver goes out to lunch?
+
+3. Can you post boot log from you current setup?
+
+Thanks.
+
+-- 
+tejun
