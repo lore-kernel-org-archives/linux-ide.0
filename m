@@ -1,33 +1,60 @@
-From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
-Subject: Re: SATA drive keeps hard resetting
-Date: Tue, 11 Dec 2007 09:44:08 -0300
-Message-ID: <475E8618.2040603@gmail.com>
-References: <475E08FC.9010809@gmail.com> <475E5D51.8010902@msgid.tls.msk.ru>
+From: Wojciech Zareba <wojtekz@comp.waw.pl>
+Subject: Re: PROBLEM: WARNING: at kernel/irq/manage.c:158 enable_irq() during
+ boot
+Date: Tue, 11 Dec 2007 14:00:30 +0100
+Message-ID: <475E89EE.70501@comp.waw.pl>
+References: <fd0490a021a8.21a8fd0490a0@comp.waw.pl> <475D085F.9010307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:23101 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbXLKMoN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 07:44:13 -0500
-Received: by an-out-0708.google.com with SMTP id d31so476475and
-        for <linux-ide@vger.kernel.org>; Tue, 11 Dec 2007 04:44:13 -0800 (PST)
-In-Reply-To: <475E5D51.8010902@msgid.tls.msk.ru>
+Received: from pe122.internetdsl.tpnet.pl ([80.55.4.122]:60397 "EHLO
+	gentum.icd.waw.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbXLKNTl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 08:19:41 -0500
+Received: from [127.0.0.1] (titanium [10.2.1.11])
+	by gentum.icd.waw.pl (Postfix) with ESMTP id 77EB83C50
+	for <linux-ide@vger.kernel.org>; Tue, 11 Dec 2007 13:58:53 +0100 (CET)
+In-Reply-To: <475D085F.9010307@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Michael Tokarev escribi=F3:
->
-> By the way, which drive it is?  If it's Seagate, pull out its
-> only jumper (factory preset) which limits it to SATAI.
->
-> /mjt
-Thanks for your reply. It's a Hitachi HDS728080PLA380 80GB SATA drive.=20
-It's kind of old so it may show the bug you mention. I'll compile the=20
-kernel with that patch and tell you how it worked.
+Hello,
 
-Mat=EDas
+Tejun Heo pisze:
+> (cc'ing Bartlomiej)
+> Hello,
+> 
+> wojtekz@comp.waw.pl wrote:
+>> Dec  6 11:58:23 titanium kernel: WARNING: at kernel/irq/manage.c:158 enable_irq()
+>> Dec  6 11:58:23 titanium kernel:  [<c014b5c3>] enable_irq+0x6e/0xa2
+>> Dec  6 11:58:23 titanium kernel:  [<f887b783>] probe_hwif+0x6d8/0x7c7 [ide_core]
+>> Dec  6 11:58:23 titanium kernel:  [<f887c0be>] probe_hwif_init_with_fixup+0xc/0x80 [ide_core]
+>> Dec  6 11:58:23 titanium kernel:  [<c0190007>] elf_core_dump+0x627/0xb60
+>> Dec  6 11:58:23 titanium kernel:  [<f887df7b>] ide_setup_pci_device+0x6f/0x9c [ide_core]
+>> Dec  6 11:58:23 titanium kernel:  [<f883b1a7>] pdc202new_init_one+0xf/0x10 [pdc202xx_new]
+>> Dec  6 11:58:23 titanium kernel:  [<c01d94de>] pci_device_probe+0x36/0x55
+>> Dec  6 11:58:23 titanium kernel:  [<c021f8cb>] driver_probe_device+0xc8/0x14b
+>> Dec  6 11:58:23 titanium kernel:  [<c021fa37>] __driver_attach+0x52/0x87
+>> Dec  6 11:58:23 titanium kernel:  [<c021eecc>] bus_for_each_dev+0x35/0x57
+>> Dec  6 11:58:23 titanium kernel:  [<c021f748>] driver_attach+0x16/0x18
+>> Dec  6 11:58:23 titanium kernel:  [<c021f9e5>] __driver_attach+0x0/0x87
+>> Dec  6 11:58:23 titanium kernel:  [<c021f1a8>] bus_add_driver+0x6d/0x153
+>> Dec  6 11:58:23 titanium kernel:  [<c01d961d>] __pci_register_driver+0x4b/0x77
+>> Dec  6 11:58:23 titanium kernel:  [<c0143a39>] sys_init_module+0x1525/0x15fb
+>> Dec  6 11:58:23 titanium kernel:  [<f8879af9>] ide_config_drive_speed+0x0/0x314 [ide_core]
+>> Dec  6 11:58:23 titanium kernel:  [<c0103f9e>] syscall_call+0x7/0xb
+>> Dec  6 11:58:23 titanium kernel:  [<c02b0000>] wireless_nlevent_process+0x15/0x31
+>> Dec  6 11:58:23 titanium kernel:  =======================
+> 
+> That means IRQ is being enabled more times than it should be.  Can you
+> please give a shot at 2.6.24-rc4 and see whether the problem is still there?
+> 
+It seems to be no more of this warning in the 2.6.24-rc4 kernel. But my feeling
+is that overall system performance is much poorer... pity. Maybe I should change
+something in the .config file?
+
+Regards
+Wojciech
+
