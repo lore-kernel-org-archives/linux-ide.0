@@ -1,114 +1,121 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Recent kernel hosing partition
-Date: Tue, 11 Dec 2007 10:47:35 +0900
-Message-ID: <475DEC37.1020404@gmail.com>
-References: <14119388.post@talk.nabble.com> <475CEFF8.5050707@gmail.com>	 <f68177890712100208o27d71584l685520d2e9ecf5bd@mail.gmail.com>	 <475D11A1.1070700@gmail.com>	 <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>	 <475D41AA.2060205@gmail.com> <1197308981.1873.75.camel@genius.chateau.dec>
+From: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>
+Subject: SATA drive keeps hard resetting
+Date: Tue, 11 Dec 2007 00:50:20 -0300
+Message-ID: <475E08FC.9010809@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:23791 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbXLKBrp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 20:47:45 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1839443rvb
-        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 17:47:42 -0800 (PST)
-In-Reply-To: <1197308981.1873.75.camel@genius.chateau.dec>
+Received: from an-out-0708.google.com ([209.85.132.248]:7702 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbXLKDuQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 22:50:16 -0500
+Received: by an-out-0708.google.com with SMTP id d31so446941and
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 19:50:15 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: For Junk Mail <junk_mail@irishbroadband.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+Hi all,
 
-For Junk Mail wrote:
->> I'm not aware of any specific issues with via + Segate drives.  Have
->> pointers?
-> 
-> Remember the infamous via 'hardware error' which via insist is a
-> configuration error from the MPV3 chipset? This 8235 southbridge is the
-> same southbridge basically, shrunk down and sped up. They never liked
-> Seagate drives, which seem to use non standard dma - fine with a windows
-> driver, but dodgy in linux. I did some crashtesting for mandrake on disk
-> optimizing scripts in times (far) past. They built a database of drives
-> and how fast they could set safely them, and Seagate never got past PIO
-> 4. So I never bought Seagate.
+I have a SATA drive in a motherboard with an ATI SB600 chipset that=20
+until now worked just fine.
+The disk seems fine but after a while it start making noises (like=20
+spinning up) and the computer freezes during 2 or 3 seconds. I think my=
+=20
+SATA drive is broken, or maybe the motherboard. This is what dmesg says=
+:
 
-AFAIK, there currently isn't any known problem specific to VIA - Seagate
-combination.  sata_via surely has some issues on error conditions tho.
+[  229.096000] ata4: exception Emask 0x10 SAct 0x0 SErr 0x90200 action=20
+0x6 frozen
+[  229.096000] ata4: (irq_stat 0x00400000, PHY RDY changed)
+[  229.096000] ata4: hard resetting port
+[  233.400000] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  233.404000] ata4.00: configured for UDMA/133
+[  233.404000] ata4: EH complete
+[  233.404000] sd 3:0:0:0: [sda] 160836480 512-byte hardware sectors=20
+(82348 MB)
+[  233.404000] sd 3:0:0:0: [sda] Write Protect is off
+[  233.404000] sd 3:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[  233.404000] sd 3:0:0:0: [sda] Write cache: enabled, read cache:=20
+enabled, doesn't support DPO or FUA
 
->>> Another issue here is that the old ide driver could get through the
->>> mess, whereas the newer one cannot. I get "Drive reset: success" and the
->>> old ide driver recovers, whereas the new one goes out to lunch. The log
->>> snippets show a 60 seconds gap between errors. That's a 60 second freeze.
->> Hmmm...
->>
->> 1. So, the IDE driver suffers from error conditions too?  Do you have
->> logs around?
->>
-> There is only IDE. No SATA. 80 ribbon cable. But Fedora only uses ATA
-> driver so it's sda, and not hda as per normal. Sorry for the confusion.
-> This is not a new box (2004/2005)
 
-I meant the old driver/ide/* drivers.
+This happens randomly, maybe after a few seconds, maybe after an hour.=20
+Sometimes if the coimputer case receives a little bump or it is moved=20
+the problem appears inmediatly.
+What's the kernel complaining about? Something is broken isn't it? I=20
+hope it's the cable...
 
->> 2. Do you have logs of libata driver goes out to lunch?
->>
-> Catch 22. Did you see the film? I've only one hard disk. Reset to get
-> out of trouble, so how does it log the disk going out to lunch?. Where
-> would I log it to?
+I'm using Ubuntu 7.10 with kernel 2.6.22-14-generic in a dual processor=
+=20
+computer. Below there's some hardware information. The output of dmesg=20
+is attached. Thanks!
 
-Ah.. Catch 22 is name of a film.  I knew what it meant but never knew
-where the expression came from.  Anyways, in such cases, log is usually
-collected via serial or net console, usb or other storage if you have
-quasi working userland or digital cameras as a last resort.
+Mat=EDas.
 
-> https://bugzilla.redhat.com/attachment.cgi?id=281341 is the output of 
-> grep -C10 frozen /var/log/messages > errors.out which gives context. I
-> have the whole /var/log/messages. The recorded errors are mainly in the
-> bootup phase, as sda3 was unmountable every time there after an
-> 'out-to-lunch' episode.
-> 
-> Typically, in an 'out to lunch' period, the line beginning 'exception
-> Emask' down as far as 'DPO or FUA' would repeat on stdout. Some disk
-> error would precede it, e.g. '/usr/lib/something.so: no such file or
-> directory'. That file would probably migrate to lost+found on the next
-> e2fsck pass and when I went to check it 2 reboots later it was indeed
-> missing. Then we got to the stage where the
-> entire /usr/lib/firefox<version>/  directory migrated and we departed
-> from reality at that point.
+--------------------------------------------
 
-Ah... I'd really like to see the log.
+lspci:
 
-> If we can provoke the error, I feel the way to trap it is
-> 1. make intelligent recoverable changes to ide partition /dev/sda3 on
-> firefox files.
-> 2. Directly or indirectly, Mount my 1 gig usb disk on /var/log :-D.
-> Would that get around the Catch-22? I can stick in another (old) disk if
-> needed, but I only have ide, and we freeze, so that will hardly be much
-> good.
+00:00.0 Host bridge: ATI Technologies Inc RS480 Host Bridge (rev 10)
+00:02.0 PCI bridge: ATI Technologies Inc RS480 PCI-X Root Port
+00:12.0 SATA controller: ATI Technologies Inc SB600 Non-Raid-5 SATA
+00:13.0 USB Controller: ATI Technologies Inc SB600 USB (OHCI0)
+00:13.1 USB Controller: ATI Technologies Inc SB600 USB (OHCI1)
+00:13.2 USB Controller: ATI Technologies Inc SB600 USB (OHCI2)
+00:13.3 USB Controller: ATI Technologies Inc SB600 USB (OHCI3)
+00:13.4 USB Controller: ATI Technologies Inc SB600 USB (OHCI4)
+00:13.5 USB Controller: ATI Technologies Inc SB600 USB Controller (EHCI=
+)
+00:14.0 SMBus: ATI Technologies Inc SBx00 SMBus Controller (rev 13)
+00:14.1 IDE interface: ATI Technologies Inc SB600 IDE
+00:14.2 Audio device: ATI Technologies Inc SBx00 Azalia
+00:14.3 ISA bridge: ATI Technologies Inc SB600 PCI to LPC Bridge
+00:14.4 PCI bridge: ATI Technologies Inc SBx00 PCI to PCI Bridge
+00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]=
+=20
+HyperTransport Technology Configuration
+00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]=
+=20
+Address Map
+00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]=
+=20
+DRAM Controller
+00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]=
+=20
+Miscellaneous Control
+01:00.0 VGA compatible controller: nVidia Corporation G71 [GeForce 7300=
+=20
+GS] (rev a1)
+02:06.0 Ethernet controller: Realtek Semiconductor Co., Ltd.=20
+RTL-8110SC/8169SC Gigabit Ethernet (rev 10)
 
-Usually the best way is serial or net console.
+--------------------------------------------
 
-> 3. Go browsing and hope that trouble starts. 
-> 
-> Looking at the lost+found files in detail, I was struck by the #numbers.
-> There are a number of strings there: At least 3 from Firefox; at least
-> one each from openoffice, /etc/rc.d, and one I think from Evolution. 
+lshw:
 
-There are other reports of sata_via freezing up after transport errors
-and sadly there isn't too much to do about it.  The controller hangs
-while holding the PCI bus and no software can recover from that.  I'm
-currently not sure whether the controller locks up on transmission
-errors or as a response to libata's error handling sequence.  If latter,
-we may be able to avoid it by changing EH sequence but unfortunately I
-don't have access to affected hardware or time at the moment.
+     *-pci:0
+          description: Host bridge
+          product: RS480 Host Bridge
+          vendor: ATI Technologies Inc
+          physical id: 100
+          bus info: pci@0000:00:00.0
+          version: 10
+          width: 32 bits
+          clock: 66MHz
+      =20
+           *-storage
+               description: SATA controller
+               product: SB600 Non-Raid-5 SATA
+               vendor: ATI Technologies Inc
+               physical id: 12
+               bus info: pci@0000:00:12.0
+               version: 00
+               width: 32 bits
+               clock: 66MHz
+               capabilities: storage ahci_1.0 bus_master cap_list
+               configuration: driver=3Dahci latency=3D64 module=3Dahci
 
-What worries me is that your case actually resulted in data corruption.
- libata's EH is safe.  Another possibility is that your filesystem got
-corrupted while going through several lockup - reboot sequences in which
-case data sure is lost.  But still journaling and barrier should be able
-to avoid filesystem corruption.  You have barrier enabled, right?
-
--- 
-tejun
+--------------------------------------------
