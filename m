@@ -1,52 +1,66 @@
-From: "Morrison, Tom" <tmorrison@empirix.com>
-Subject: RE: Responding to 2 thread <2.6.23.8 - Hang with sata_mv (7042)...> AND  <Bug: get EXT3-fs error Allocating block in system zone>
-Date: Tue, 11 Dec 2007 12:53:07 -0500
-Message-ID: <BD261180E6D35F4D9D32F3E44FD3D9010AFF29AC@EMPBEDEX.empirix.com>
-References: <BD261180E6D35F4D9D32F3E44FD3D901053E84BD@EMPBEDEX.empirix.com> <45ED682A.9040408@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010A7E1B45@EMPBEDEX.empirix.com> <4728A816.8020608@garzik.org> <BD261180E6D35F4D9D32F3E44FD3D9010AAE852F@EMPBEDEX.empirix.com> <473B36D7.8000205@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE8585@EMPBEDEX.empirix.com> <473B44CB.6010209@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE89CA@EMPBEDEX.empirix.com> <473B76E0.7010500@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AAE911D@EMPBEDEX.empirix.com> <473C7625.2040300@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AB2CFF0@EMPBEDEX.empirix.com> <473CC4B8.4090607@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AEF6982@EMPBEDEX.empirix.com> <475D6CC3.2080400@rtr.ca> <BD261180E6D35F4D9D32F3E44FD3D9010AFF2936@EMPBEDEX.empirix.c
- om> <475ECBF5.4050205@rtr.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH] sata_mv: improve warnings about Highpoint RocketRAID 23xx
+ cards
+Date: Tue, 11 Dec 2007 12:58:05 -0500
+Message-ID: <475ECFAD.2030901@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [12.38.203.54] ([12.38.203.54]:36356 "EHLO
-	empbedex1.empirix.com" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940AbXLKRxN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 12:53:13 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <475ECBF5.4050205@rtr.ca>
+Received: from rtr.ca ([76.10.145.34]:3601 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753394AbXLKR6I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Dec 2007 12:58:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, hp@syntomax.com
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, hp@syntomax.com, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-k>
 
-Correct, it has a flat memory map 0-0xFFFFFFFF
+Improve the existing boot/load time warnings from sata_mv
+for Highpoint RocketRAID 23xx cards, based on new knowledge
+about where the BIOS likes to overwrite sectors with metadata.
 
-I don't make this stuff up and I checked it 3 times 
-(with & without this set (#if 0 & #if 1) - just to make 
-sure I don't have something else weird going on...
+Harmless to us, but very useful for end users.
 
-I'll send you privately my sata_mv.c - so you can inspect
-that yourself (only custom thing is the EDMA buffers hi/low
-buffers are set to point to the physical PCI space which is 
-way up in 0xC_xxxx_xxxx space...
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+This should ideally go upstream for 2.6.24.
 
-tom
-
-
------Original Message-----
-From: Mark Lord [mailto:liml@rtr.ca] 
-Sent: Tuesday, December 11, 2007 12:42 PM
-To: Morrison, Tom
-Cc: Jeff Garzik; linux-ide@vger.kernel.org; Tejun Heo; hp@syntomax.com
-Subject: Re: Responding to 2 thread <2.6.23.8 - Hang with sata_mv
-(7042)...> AND <Bug: get EXT3-fs error Allocating block in system zone>
-
-Morrison, Tom wrote:
->> <snip results that worked>
->> That's a bit strange, actually.. because you said that this system
->>does not have any RAM at any addresses above 0xffffffff.
->> The physical RAM in this system is supposedly from 0 - 0xffffffff
-(4Gbytes).
-
-<snip original question>
+--- old/drivers/ata/sata_mv.c	2007-12-10 18:14:09.000000000 -0500
++++ linux/drivers/ata/sata_mv.c	2007-12-11 12:51:51.000000000 -0500
+@@ -2506,11 +2506,31 @@
+ 		if (pdev->vendor == PCI_VENDOR_ID_TTI &&
+ 		    (pdev->device == 0x2300 || pdev->device == 0x2310))
+ 		{
+-			printk(KERN_WARNING "sata_mv: Highpoint RocketRAID BIOS"
+-				" will CORRUPT DATA on attached drives when"
+-				" configured as \"Legacy\".  BEWARE!\n");
+-			printk(KERN_WARNING "sata_mv: Use BIOS \"JBOD\" volumes"
+-				" instead for safety.\n");
++			/*
++			 * Highpoint RocketRAID PCIe 23xx series cards:
++			 *
++			 * Unconfigured drives are treated as "Legacy"
++			 * by the BIOS, and it overwrites sector 8 with
++			 * a "Lgcy" metadata block prior to Linux boot.
++			 *
++			 * Configured drives (RAID or JBOD) leave sector 8
++			 * alone, but instead overwrite a high numbered
++			 * sector for the RAID metadata.  This sector can
++			 * be determined exactly, by truncating the physical
++			 * drive capacity to a nice even GB value.
++			 *
++			 * RAID metadata is at: (dev->n_sectors & ~0xfffff)
++			 *
++			 * Warn the user, lest they think we're just buggy.
++			 */
++			printk(KERN_WARNING DRV_NAME ": Highpoint RocketRAID"
++				" BIOS CORRUPTS DATA on all attached drives,"
++				" regardless of if/how they are configured."
++				" BEWARE!\n");
++			printk(KERN_WARNING DRV_NAME ": For data safety, do not"
++				" use sectors 8-9 on \"Legacy\" drives,"
++				" and avoid the final two gigabytes on"
++				" all RocketRAID BIOS initialized drives.\n");
+ 		}
+ 	case chip_6042:
+ 		hpriv->ops = &mv6xxx_ops;
