@@ -1,43 +1,52 @@
-From: "Grant Likely" <grant.likely@secretlab.ca>
-Subject: Re: [PATCH 20/30] blk_end_request: changing xsysace (take 4)
-Date: Tue, 11 Dec 2007 15:59:25 -0700
-Message-ID: <fa686aa40712111459k28a9bd96r484d8d9317c11671@mail.gmail.com>
-References: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [stable] [PATCH -stable] libata: kill spurious NCQ completion
+ detection
+Date: Wed, 12 Dec 2007 08:30:08 +0900
+Message-ID: <475F1D80.5040402@gmail.com>
+References: <4759E47B.8000108@gmail.com> <20071211225149.GB17643@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:42105 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbXLKXaR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 18:30:17 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so4476rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 11 Dec 2007 15:30:16 -0800 (PST)
+In-Reply-To: <20071211225149.GB17643@kroah.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: stable@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Michael Tokarev <mjt@tls.msk.ru>, Jeff Garzik <jeff@garzik.org>, Diego Torres <dtorres@coral.dnsalias.org>
 
-On 12/11/07, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> This patch converts xsysace to use blk_end_request interfaces.
-> Related 'uptodate' arguments are converted to 'error'.
->
-> xsysace is a little bit different from "normal" drivers.
-> xsysace driver has a state machine in it.
-> It calls end_that_request_first() and end_that_request_last()
-> from different states. (ACE_FSM_STATE_REQ_TRANSFER and
-> ACE_FSM_STATE_REQ_COMPLETE, respectively.)
->
-> However, those states are consecutive and without any interruption
-> inbetween.
-> So we can just follow the standard conversion rule (b) mentioned in
-> the patch subject "[PATCH 01/30] blk_end_request: add new request
-> completion interface".
->
-> Cc: Grant Likely <grant.likely@secretlab.ca>
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Greg KH wrote:
+> On Sat, Dec 08, 2007 at 09:25:31AM +0900, Tejun Heo wrote:
+>> Spurious NCQ completion detection implemented in ahci was incorrect.
+>> On AHCI receving and processing FISes and raising interrupts are not
+>> interlocked and spurious interrupts are expected.
+>>
+>> For example, if an interrupt occurs while interrupt handler is running
+>> and the running interrupt handler handles the event the new IRQ
+>> indicated, after IRQ handler finishes, it will be executed again
+>> because IRQ pending bit is set by the new interrupt but there won't be
+>> anything to process.
+>>
+>> Please read the following message for more information.
+>>
+>>   http://article.gmane.org/gmane.linux.ide/26012
+>>
+>> This patch...
+> 
+> Is this already in Linus's tree?  Is this for 2.6.23-stable, and/or
+> older ones too?
 
-Acked-by: Grant Likely <grant.likely@secretlab.ca>
+Yes, this is in Linus's tree and it's for 2.6.23-stable.  2.6.22 is
+affected too so it'll be a good idea to update 2.6.22 too.  Kernels
+before 2.6.22 are fine.
+
+Thanks.
+
 
 -- 
-Grant Likely, B.Sc., P.Eng.
-Secret Lab Technologies Ltd.
-grant.likely@secretlab.ca
-(403) 399-0195
+tejun
