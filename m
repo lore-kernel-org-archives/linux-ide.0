@@ -1,114 +1,114 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Iomega ZIP-100 drive unsupported with jmicron JMB361 chip?
-Date: Mon, 10 Dec 2007 18:21:19 -0600
-Message-ID: <475DD7FF.4030906@shaw.ca>
-References: <fa.yONLBG7CMuz80f4dUP5r/5k7emw@ifi.uio.no>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Recent kernel hosing partition
+Date: Tue, 11 Dec 2007 10:47:35 +0900
+Message-ID: <475DEC37.1020404@gmail.com>
+References: <14119388.post@talk.nabble.com> <475CEFF8.5050707@gmail.com>	 <f68177890712100208o27d71584l685520d2e9ecf5bd@mail.gmail.com>	 <475D11A1.1070700@gmail.com>	 <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>	 <475D41AA.2060205@gmail.com> <1197308981.1873.75.camel@genius.chateau.dec>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:25343 "EHLO
-	pd4mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbXLKAVr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 19:21:47 -0500
-In-reply-to: <fa.yONLBG7CMuz80f4dUP5r/5k7emw@ifi.uio.no>
+Received: from rv-out-0910.google.com ([209.85.198.189]:23791 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602AbXLKBrp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Dec 2007 20:47:45 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1839443rvb
+        for <linux-ide@vger.kernel.org>; Mon, 10 Dec 2007 17:47:42 -0800 (PST)
+In-Reply-To: <1197308981.1873.75.camel@genius.chateau.dec>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trash can <thetrashcan@earthlink.net>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: For Junk Mail <junk_mail@irishbroadband.net>
+Cc: linux-ide@vger.kernel.org
 
-(linux-ide cc'ed)
+Hello,
 
-trash can wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+For Junk Mail wrote:
+>> I'm not aware of any specific issues with via + Segate drives.  Have
+>> pointers?
 > 
-> I have tolerated this problem for a year and do not post to this list in
-> haste. I have posted on forums and searched the community over the past
-> year. I have looked at the list archive on gossamer-threads.com for
-> solutions. With Fedora Core 6 unsupported (the last kernel for which my
-> zip drive worked), it is time for my last attempt at a solution. Please
-> CC: any response as I have not joined the list. I have compiled a
-> kernel-debug RPM and can run this if its output would help. Thank you
-> for any time you might devote to this problem.
-> 
-> motherboard: MSI P965 Platinum/Intel P965 Express Chipset Based (MS-7238
-> series)
-> Fedora 8 : kernel 2.6.23.1-42.fc8
-> Iomega Zip drive internal Model Z100ATAPI
-> 
-> lspci
-> 03:00.0 SATA controller: JMicron Technologies, Inc. JMB361 AHCI/IDE (rev 02)
-> 03:00.1 IDE interface: JMicron Technologies, Inc. JMB361 AHCI/IDE (rev 02)
-> 
-> # lsmod | grep ata
-> pata_jmicron            8257  0
-> ata_generic             8901  0
-> ata_piix               16709  0
-> libata                 99633  4 ahci,pata_jmicron,ata_generic,ata_piix
-> scsi_mod              119757  4 sr_mod,sg,libata,sd_mod
-> 
-> I have recently changed the BIOS setting for the SATA#1 Controller from
-> [IDE] to [AHCI] with no effect. I assume AHCI is correct?
+> Remember the infamous via 'hardware error' which via insist is a
+> configuration error from the MPV3 chipset? This 8235 southbridge is the
+> same southbridge basically, shrunk down and sped up. They never liked
+> Seagate drives, which seem to use non standard dma - fine with a windows
+> driver, but dodgy in linux. I did some crashtesting for mandrake on disk
+> optimizing scripts in times (far) past. They built a database of drives
+> and how fast they could set safely them, and Seagate never got past PIO
+> 4. So I never bought Seagate.
 
-AHCI is better, yes. It shouldn't be relevant this this problem though.
+AFAIK, there currently isn't any known problem specific to VIA - Seagate
+combination.  sata_via surely has some issues on error conditions tho.
 
+>>> Another issue here is that the old ide driver could get through the
+>>> mess, whereas the newer one cannot. I get "Drive reset: success" and the
+>>> old ide driver recovers, whereas the new one goes out to lunch. The log
+>>> snippets show a 60 seconds gap between errors. That's a 60 second freeze.
+>> Hmmm...
+>>
+>> 1. So, the IDE driver suffers from error conditions too?  Do you have
+>> logs around?
+>>
+> There is only IDE. No SATA. 80 ribbon cable. But Fedora only uses ATA
+> driver so it's sda, and not hda as per normal. Sorry for the confusion.
+> This is not a new box (2004/2005)
+
+I meant the old driver/ide/* drivers.
+
+>> 2. Do you have logs of libata driver goes out to lunch?
+>>
+> Catch 22. Did you see the film? I've only one hard disk. Reset to get
+> out of trouble, so how does it log the disk going out to lunch?. Where
+> would I log it to?
+
+Ah.. Catch 22 is name of a film.  I knew what it meant but never knew
+where the expression came from.  Anyways, in such cases, log is usually
+collected via serial or net console, usb or other storage if you have
+quasi working userland or digital cameras as a last resort.
+
+> https://bugzilla.redhat.com/attachment.cgi?id=281341 is the output of 
+> grep -C10 frozen /var/log/messages > errors.out which gives context. I
+> have the whole /var/log/messages. The recorded errors are mainly in the
+> bootup phase, as sda3 was unmountable every time there after an
+> 'out-to-lunch' episode.
 > 
-> Text below attached as text.txt for readability.
-> from dmesg:
-> libata version 2.21 loaded.
-> device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised: dm-devel@redhat.com
-> PCI: Enabling device 0000:03:00.1 (0000 -> 0001)
-> ACPI: PCI Interrupt 0000:03:00.1[B] -> GSI 17 (level, low) -> IRQ 17
-> PCI: Setting latency timer of device 0000:03:00.1 to 64
-> scsi0 : pata_jmicron
-> scsi1 : pata_jmicron
-> ata1: PATA max UDMA/100 cmd 0x0001cc00 ctl 0x0001c882 bmdma 0x0001c400 irq 17
-> ata2: PATA max UDMA/100 cmd 0x0001c800 ctl 0x0001c482 bmdma 0x0001c408 irq 17
-> ata1.00: ATAPI: LITE-ON DVDRW SOHW-1693S, KS0B, max UDMA/66
-> ata1.01: ATAPI: IOMEGA  ZIP 100       ATAPI, 05.H, max MWDMA1, CDB intr
-> ata1.00: configured for UDMA/66
-> ata1.01: configured for MWDMA1
-> scsi 0:0:0:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS0B PQ: 0 ANSI: 5
-> scsi 0:0:1:0: Direct-Access     IOMEGA   ZIP 100          05.H PQ: 0 ANSI: 5
-> sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> sd 0:0:1:0: [sda] Write Protect is off
-> sd 0:0:1:0: [sda] Mode Sense: 00 40 00 00
-> sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> sd 0:0:1:0: [sda] Write Protect is off
-> sd 0:0:1:0: [sda] Mode Sense: 00 40 00 00
-> sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sda:<6>sd 0:0:1:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> sd 0:0:1:0: [sda] Sense Key : Hardware Error [current]
-> sd 0:0:1:0: [sda] Add. Sense: Scsi parity error
-> end_request: I/O error, dev sda, sector 0
-> Buffer I/O error on device sda, logical block 0
+> Typically, in an 'out to lunch' period, the line beginning 'exception
+> Emask' down as far as 'DPO or FUA' would repeat on stdout. Some disk
+> error would precede it, e.g. '/usr/lib/something.so: no such file or
+> directory'. That file would probably migrate to lost+found on the next
+> e2fsck pass and when I went to check it 2 reboots later it was indeed
+> missing. Then we got to the stage where the
+> entire /usr/lib/firefox<version>/  directory migrated and we departed
+> from reality at that point.
+
+Ah... I'd really like to see the log.
+
+> If we can provoke the error, I feel the way to trap it is
+> 1. make intelligent recoverable changes to ide partition /dev/sda3 on
+> firefox files.
+> 2. Directly or indirectly, Mount my 1 gig usb disk on /var/log :-D.
+> Would that get around the Catch-22? I can stick in another (old) disk if
+> needed, but I only have ide, and we freeze, so that will hardly be much
+> good.
+
+Usually the best way is serial or net console.
+
+> 3. Go browsing and hope that trouble starts. 
 > 
-> If a disk is inserted into the drive (/var/log/messages)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Spinning up disk.....<5>sd 0:0:1:0: [sda] Spinning up disk....ready
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write Protect is off
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write Protect is off
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Dec 10 14:22:53 localhost kernel:  sda:<6>sd 0:0:1:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Sense Key : Hardware Error [current]
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Add. Sense: Scsi parity error
-> Dec 10 14:22:53 localhost kernel: end_request: I/O error, dev sda, sector 0
-> Dec 10 14:22:53 localhost kernel: printk: 42 messages suppressed.
-> Dec 10 14:22:53 localhost kernel: Buffer I/O error on device sda, logical block 0
+> Looking at the lost+found files in detail, I was struck by the #numbers.
+> There are a number of strings there: At least 3 from Firefox; at least
+> one each from openoffice, /etc/rc.d, and one I think from Evolution. 
 
-That is rather curious. There's no sign of any libata error handling 
-going on.. Maybe the drive is actually returning that error code in the 
-ATAPI CDB, or at least we think it is?
+There are other reports of sata_via freezing up after transport errors
+and sadly there isn't too much to do about it.  The controller hangs
+while holding the PCI bus and no software can recover from that.  I'm
+currently not sure whether the controller locks up on transmission
+errors or as a response to libata's error handling sequence.  If latter,
+we may be able to avoid it by changing EH sequence but unfortunately I
+don't have access to affected hardware or time at the moment.
 
-You are sure that this drive still works with older kernels using 
-drivers/ide, and that the hardware didn't break at some point, I assume?
+What worries me is that your case actually resulted in data corruption.
+ libata's EH is safe.  Another possibility is that your filesystem got
+corrupted while going through several lockup - reboot sequences in which
+case data sure is lost.  But still journaling and barrier should be able
+to avoid filesystem corruption.  You have barrier enabled, right?
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
