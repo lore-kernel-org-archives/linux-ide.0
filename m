@@ -1,66 +1,48 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH] sata_mv: improve warnings about Highpoint RocketRAID 23xx
- cards
-Date: Tue, 11 Dec 2007 12:58:05 -0500
-Message-ID: <475ECFAD.2030901@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 17/21] ide: drop 'initializing' argument from ide_register_hw()
+Date: Tue, 11 Dec 2007 21:18:11 +0300
+Message-ID: <475ED463.5050607@ru.mvista.com>
+References: <200711182331.23988.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3601 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753394AbXLKR6I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 11 Dec 2007 12:58:08 -0500
+Received: from gateway-1237.mvista.com ([63.81.120.155]:64845 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750905AbXLKSRw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 13:17:52 -0500
+In-Reply-To: <200711182331.23988.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, hp@syntomax.com, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-k>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Roman Zippel <zippel@linux-m68k.org>
 
-Improve the existing boot/load time warnings from sata_mv
-for Highpoint RocketRAID 23xx cards, based on new knowledge
-about where the BIOS likes to overwrite sectors with metadata.
+Bartlomiej Zolnierkiewicz wrote:
 
-Harmless to us, but very useful for end users.
+> * Rename init_hwif_data() to ide_init_port_data() and export it.
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-This should ideally go upstream for 2.6.24.
+> * For all users of ide_register_hw() with 'initializing' argument set
+>   hwif->present and hwif->hold are always zero so convert these host
+>   drivers to use ide_find_port()+ide_init_port_data()+ide_init_port_hw()
+>   instead (also no need for init_hwif_default() call since the setup
+>   done by it gets over-ridden by ide_init_port_data() call).
 
---- old/drivers/ata/sata_mv.c	2007-12-10 18:14:09.000000000 -0500
-+++ linux/drivers/ata/sata_mv.c	2007-12-11 12:51:51.000000000 -0500
-@@ -2506,11 +2506,31 @@
- 		if (pdev->vendor == PCI_VENDOR_ID_TTI &&
- 		    (pdev->device == 0x2300 || pdev->device == 0x2310))
- 		{
--			printk(KERN_WARNING "sata_mv: Highpoint RocketRAID BIOS"
--				" will CORRUPT DATA on attached drives when"
--				" configured as \"Legacy\".  BEWARE!\n");
--			printk(KERN_WARNING "sata_mv: Use BIOS \"JBOD\" volumes"
--				" instead for safety.\n");
-+			/*
-+			 * Highpoint RocketRAID PCIe 23xx series cards:
-+			 *
-+			 * Unconfigured drives are treated as "Legacy"
-+			 * by the BIOS, and it overwrites sector 8 with
-+			 * a "Lgcy" metadata block prior to Linux boot.
-+			 *
-+			 * Configured drives (RAID or JBOD) leave sector 8
-+			 * alone, but instead overwrite a high numbered
-+			 * sector for the RAID metadata.  This sector can
-+			 * be determined exactly, by truncating the physical
-+			 * drive capacity to a nice even GB value.
-+			 *
-+			 * RAID metadata is at: (dev->n_sectors & ~0xfffff)
-+			 *
-+			 * Warn the user, lest they think we're just buggy.
-+			 */
-+			printk(KERN_WARNING DRV_NAME ": Highpoint RocketRAID"
-+				" BIOS CORRUPTS DATA on all attached drives,"
-+				" regardless of if/how they are configured."
-+				" BEWARE!\n");
-+			printk(KERN_WARNING DRV_NAME ": For data safety, do not"
-+				" use sectors 8-9 on \"Legacy\" drives,"
-+				" and avoid the final two gigabytes on"
-+				" all RocketRAID BIOS initialized drives.\n");
- 		}
- 	case chip_6042:
- 		hpriv->ops = &mv6xxx_ops;
+    But init_hwif_default() gets called *after* ide_init_port_data() call, at 
+least in ide_register_hw()...
+
+> * Drop 'initializing' argument from ide_register_hw().
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> Index: b/drivers/ide/ide.c
+> ===================================================================
+> --- a/drivers/ide/ide.c
+> +++ b/drivers/ide/ide.c
+> @@ -116,7 +116,7 @@ EXPORT_SYMBOL(ide_hwifs);
+>  /*
+>   * Do not even *think* about calling this!
+>   */
+
+    Isn't this comment being obsoleted by the patch?
+
+MBR, Sergei
