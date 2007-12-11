@@ -1,171 +1,117 @@
-From: For Junk Mail <junk_mail@irishbroadband.net>
-Subject: Re: Recent kernel hosing partition
-Date: Tue, 11 Dec 2007 10:19:04 +0000
-Message-ID: <1197368344.1830.67.camel@genius.chateau.dec>
-References: <14119388.post@talk.nabble.com> <475CEFF8.5050707@gmail.com>
-	 <f68177890712100208o27d71584l685520d2e9ecf5bd@mail.gmail.com>
-	 <475D11A1.1070700@gmail.com>
-	 <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>
-	 <475D41AA.2060205@gmail.com> <1197308981.1873.75.camel@genius.chateau.dec>
-	 <475DEC37.1020404@gmail.com>
+From: "Kuan Luo" <kluo@nvidia.com>
+Subject: RE: [PATCH] sata_nv,adma: fix error when rmmod sata_nv
+Date: Tue, 11 Dec 2007 20:04:29 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AAB@hkemmail01.nvidia.com>
+References: <200709251323031982245@gmail.com> <470FE47B.5060505@garzik.org> <cfaab6210710160108x1328086cse991f668e23e569e@mail.gmail.com> <47181CE1.4000802@garzik.org> <cfaab6210710182358t4de355f9wd6d605a7b8076ace@mail.gmail.com> <47185BFD.2010909@garzik.org> <cfaab6210710211855q7a2de35co13d3017b2a07d4cc@mail.gmail.com> <47352DD8.6040607@garzik.org> <47353AE8.5050900@garzik.org> <4735FFE6.6020705@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.irishbroadband.ie ([62.231.32.12]:55242 "EHLO
-	smtp1.irishbroadband.ie" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351AbXLKKTO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 05:19:14 -0500
-In-Reply-To: <475DEC37.1020404@gmail.com>
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:1649 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbXLKMJy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Dec 2007 07:09:54 -0500
+In-Reply-To: <4735FFE6.6020705@shaw.ca>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: peer chen <peerchen@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, akpm <akpm@linux-foundation.org>, Robert Hancock <hancockr@shaw.ca>
 
-On Tue, 2007-12-11 at 10:47 +0900, Tejun Heo wrote:
-> Hello,
-> 
-[snip]
-> 
-> AFAIK, there currently isn't any known problem specific to VIA - Seagate
-> combination.  sata_via surely has some issues on error conditions tho.
+hi,
+The below error happens when i rmmod sata_nv in adma mode on ck804
+chipset with 2.6.24 kernel.
+I traced the code and found that the driver attempts to write device mem
+that has been unmapped.
 
->From previous incarnations of the via chipset I've had errors on dma,
-drive 'ringing' (where access/copying to hdb wakes up hda which says
-"What's going on?" and confuses everything) from Seagate drives. One M/B
-sat down and refused to work with 2 hard disks on the same ribbon. Maybe
-I'm just one disenchanted luser but I had the logs to prove it in the
-crashtesting days and they were examined by Mandrake's guys.
-> 
-> >>> Another issue here is that the old ide driver could get through the
-> >>> mess, whereas the newer one cannot. I get "Drive reset: success" and the
-> >>> old ide driver recovers, whereas the new one goes out to lunch. The log
-> >>> snippets show a 60 seconds gap between errors. That's a 60 second freeze.
-> >> Hmmm...
-> >>
-> >> 1. So, the IDE driver suffers from error conditions too?  Do you have
-> >> logs around?
-> >>
-> 
-> I meant the old driver/ide/* drivers.
-> 
-/checks every distro
-YES! I have logs of errors with the old ide driver. When Fedora 7 went
-out to lunch, I was embarassed for a kernel for my (previous) fedora 5,
-and ended up using e2fsck from a uClibc based experimental distro from
- 
-http://kevux.org/
+Only simply removing the code" writew(0, mmio + NV_ADMA_CTL);" in the
+nv_adma_port_stop function or remove .port_stop field in nv_adma_ops,
+rmmod is ok.
 
-It has e2fsck-1.40.2, and some weird alternative log system. I'll send
-the appropriate log privately as well as Fedora's log. Logs are dated.
-The last errors in Kevux will correspond to a time shortly
-after /usr/lib/firefox went missing in Fedora 7, as I went from one to
-the other to sort the disk out. Do you understand me? 
+static void nv_adma_port_stop(struct ata_port *ap)
+{
+	struct nv_adma_port_priv *pp = ap->private_data;
+	void __iomem *mmio = pp->ctl_block;
 
-I should be very clear. These errors occurred using the old driver on
-hda3(sda3) while dealing with errors _caused_ by what you are trying to
-investigate. Fedora 7 also had /dev/sda5 mounted as /home, and /dev/sda1
-as /boot and not one error occurred on either of those. I checked the
-whole disk with e2fsck at some points, and everything was fine.
-Filesystems were modified, but nothing came to lost+found, or nothing
-was corrupted to my knowledge except on sda3.
+	VPRINTK("ENTER\n");
+-	writew(0, mmio + NV_ADMA_CTL);
+}
 
-What upset me personally, btw, is that nobody in RedHat/Fedora gave an
-<expletive deleted>. When you're finished, Slackware is going in
-there :-D
+Or
+ Place pcim_iomap_regions before ata_pci_prepare_native_host in
+nv_init_one function.
+This can guarantee that the code "writew(0, mmio + NV_ADMA_CTL) " write
+device mem before the device mem is unmapped.
 
-> >> 2. Do you have logs of libata driver goes out to lunch?
-> >>
-> > Catch 22. Did you see the film? I've only one hard disk. Reset to get
-> > out of trouble, so how does it log the disk going out to lunch?. Where
-> > would I log it to?
-> 
-> Ah.. Catch 22 is name of a film.  I knew what it meant but never knew
-> where the expression came from.  Anyways, in such cases, log is usually
-> collected via serial or net console, usb or other storage if you have
-> quasi working userland or digital cameras as a last resort.
-
-Have you a doc on setting up such a log somewhere? I'll set one up. As
-long as it doesn't queue in the ide cache. BTW, Catch-22 was also a
-book, which I read. It was full of army tales. You didn't miss much,
-imho. Knowing what it means is enough.
-> 
-[snip]
-> > Typically, in an 'out to lunch' period, the line beginning 'exception
-> > Emask' down as far as 'DPO or FUA' would repeat on stdout. Some disk
-> > error would precede it, e.g. '/usr/lib/something.so: no such file or
-> > directory'. That file would probably migrate to lost+found on the next
-> > e2fsck pass and when I went to check it 2 reboots later it was indeed
-> > missing. Then we got to the stage where the
-> > entire /usr/lib/firefox<version>/  directory migrated and we departed
-> > from reality at that point.
-> 
-> Ah... I'd really like to see the log.
-
-Sadly, there wasn't one. The box froze in X. I hit Ctrl_Alt_F1. I saw
-/usr/lib/firefox-2.0.0.9/firefox-bin: No such file or directory
-Followed by the error (Emask ... --> DPO or FUA)
-e2fsck found illegal inodes, loose inodes, inodes claimed by 2 programs,
-counts all over the place. It restarted itself after stage 2, and I
-nearly blew a gasket because stage1 had the badblocks option set :-(. I
-saw A, B, & C to some of these 5 stages that I never saw before. I'll
-privately send you the /var/log/messages in it's entirety, which is all
-the Fedora 7 recorded data. I know linux-ide will bounce it. The _last_
-set of errors in the file will be that time
-when /usr/lib/firefox-2.0.0.9/ went awol.
-
-
-Subsequent to that outage I compiled binutils, uClibc, installed linux
-headers, and finally crashed out on a repeatable error in compiling gcc
-using somebody's scripts in Fedora 7. But I couldn't run X, because
-gnome and every X program was borked by this error. I'd get X (the grey
-screen) and then things went sadly wrong in gnome.
-
-> 
-> > If we can provoke the error, I feel the way to trap it is
-> > 1. make intelligent recoverable changes to ide partition /dev/sda3 on
-> > firefox files.
-> > 2. Directly or indirectly, Mount my 1 gig usb disk on /var/log :-D.
-> > Would that get around the Catch-22? I can stick in another (old) disk if
-> > needed, but I only have ide, and we freeze, so that will hardly be much
-> > good.
-> 
-> Usually the best way is serial or net console.
-
-Have you a reference, or a doc on doing that? I'll set it up.
-
-
-> 
-> There are other reports of sata_via freezing up after transport errors
-> and sadly there isn't too much to do about it.  The controller hangs
-> while holding the PCI bus and no software can recover from that.  I'm
-> currently not sure whether the controller locks up on transmission
-> errors or as a response to libata's error handling sequence.  If latter,
-> we may be able to avoid it by changing EH sequence but unfortunately I
-> don't have access to affected hardware or time at the moment.
-
-Here Via has one step up (or down) from everybody because PCI and IDE
-are split in the Southbridge, and the 2 are not linked. I have the
-datasheet to prove it. So it's freezing further back. I've worked in
-electronic hardware and I see 2 problems
-
-1. The error condition reading the filesystem for whatever reason (In my
-case, linked to some X program). 
-2. The soft reset libata provides doesn't sort things out. The drive
-reset provided by the old ide driver seemed to sort it out. 
-> 
-> What worries me is that your case actually resulted in data corruption.
->  libata's EH is safe.  Another possibility is that your filesystem got
-> corrupted while going through several lockup - reboot sequences in which
-> case data sure is lost.  But still journaling and barrier should be able
-> to avoid filesystem corruption.  You have barrier enabled, right?
-
-I really don't know if barrier is enabled. If you tell me how I can
-check it. journalling is on the same partition, but as we froze, and
-apparently did more damage as things went on, I was quick to reset. That
-effectively reduces it to ext2. But I was also quick to check the whole
-partition (Because I couldn't boot otherwise).
-
--- 
-For Junk Mail <junk_mail@irishbroadband.net>
-
+messages:
+Dec 19 02:23:24 localhost kernel: ata16.00: disabled
+Dec 19 02:23:24 localhost kernel: sd 15:0:0:0: [sda] Synchronizing SCSI
+cache
+Dec 19 02:23:24 localhost kernel: sd 15:0:0:0: [sda] Result:
+hostbyte=0x04 driverbyte=0x00
+Dec 19 02:23:24 localhost kernel: sd 15:0:0:0: [sda] Stopping disk
+Dec 19 02:23:24 localhost kernel: sd 15:0:0:0: [sda] START_STOP FAILED
+Dec 19 02:23:24 localhost kernel: sd 15:0:0:0: [sda] Result:
+hostbyte=0x04 driverbyte=0x00
+Dec 19 02:23:24 localhost kernel: BUG: unable to handle kernel paging
+request at virtual address e881a4c0
+Dec 19 02:23:24 localhost kernel: printing eip: e88224e9 *pde = 0180c067
+*pte = 00000000 
+Dec 19 02:23:24 localhost kernel: Oops: 0002 [#1] SMP 
+Dec 19 02:23:24 localhost kernel: Modules linked in: sata_nv libata
+Dec 19 02:23:24 localhost kernel: 
+Dec 19 02:23:24 localhost kernel: Pid: 4915, comm: rmmod Not tainted
+(2.6.24-rc1-ge2e031eb #2)
+Dec 19 02:23:24 localhost kernel: EIP: 0060:[<e88224e9>] EFLAGS:
+00210292 CPU: 1
+Dec 19 02:23:24 localhost kernel: EIP is at nv_adma_port_stop+0x3d/0x53
+[sata_nv]
+Dec 19 02:23:24 localhost kernel: EAX: 00000015 EBX: e881a480 ECX:
+00200046 EDX: 00200046
+Dec 19 02:23:24 localhost kernel: ESI: c220b50c EDI: c1979154 EBP:
+c197904c ESP: c2429ecc
+Dec 19 02:23:24 localhost kernel:  DS: 007b ES: 007b FS: 00d8 GS: 0033
+SS: 0068
+Dec 19 02:23:24 localhost kernel: Process rmmod (pid: 4915, ti=c2428000
+task=c25e5a40 task.ti=c2428000)
+Dec 19 02:23:24 localhost kernel: Stack: e8823e1b e881a480 00000000
+e884398e c220b500 c18a3ec0 c1979154 00000000 
+Dec 19 02:23:24 localhost kernel:        c02818be c1979154 c197904c
+0000000d c18a3ec0 c18a3a40 c197904c e88259d0 
+Dec 19 02:23:24 localhost kernel:        e88259d0 c2428000 c0281987
+00200286 c197904c c027f8bb c1834600 c197904c 
+Dec 19 02:23:24 localhost kernel: Call Trace:
+Dec 19 02:23:24 localhost kernel:  [<e884398e>]
+ata_host_release+0x2f/0x92 [libata]
+Dec 19 02:23:24 localhost kernel:  [<c02818be>]
+release_nodes+0x10f/0x12f
+Dec 19 02:23:24 localhost kernel:  [<c0281987>]
+devres_release_all+0x27/0x2a
+Dec 19 02:23:24 localhost kernel:  [<c027f8bb>]
+__device_release_driver+0x72/0x88
+Dec 19 02:23:24 localhost kernel:  [<c027fccb>] driver_detach+0x76/0xb3
+Dec 19 02:23:24 localhost kernel:  [<c027f49f>]
+bus_remove_driver+0x63/0x81
+Dec 19 02:23:24 localhost kernel:  [<c0228b5a>]
+pci_unregister_driver+0xc/0x57
+Dec 19 02:23:24 localhost kernel:  [<c0143792>]
+sys_delete_module+0x197/0x1bd
+Dec 19 02:23:24 localhost kernel:  [<c0417673>]
+do_page_fault+0x202/0x581
+Dec 19 02:23:24 localhost kernel:  [<c01570ec>] do_munmap+0x193/0x1ac
+Dec 19 02:23:24 localhost kernel:  [<c0104e4e>]
+sysenter_past_esp+0x5f/0x85
+Dec 19 02:23:24 localhost kernel:  =======================
+Dec 19 02:23:24 localhost kernel: Code: 3e 82 e8 e8 b8 30 90 d7 89 5c 24
+04 c7 04 24 0f 3e 82 e8 e8 a8 30 90 d7 8b 5b 10 c7 04 24 1b 3e 82 e8 89
+5c 24 04 e8 95 30 90 d7 <66> c7 43 40 00 00 c7 04 24 29 3e 82 e8 e8 83
+30 90 d7 5b 58 5b 
+Dec 19 02:23:24 localhost kernel: EIP: [<e88224e9>]
+nv_adma_port_stop+0x3d/0x53 [sata_nv] SS:ESP 0068:c2429ecc
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
