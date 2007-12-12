@@ -1,49 +1,86 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Bugme-new] [Bug 9533] New: 2.6.24-rc4: some ahci/acpi interaction
- causes delays during boot
-Date: Wed, 12 Dec 2007 17:20:47 +0900
-Message-ID: <475F99DF.7070903@gmail.com>
-References: <bug-9533-10286@http.bugzilla.kernel.org/>	<20071210125243.df6b441e.akpm@linux-foundation.org> <20071210125543.80b1e841.akpm@linux-foundation.org>
+From: Will Trives <will@trivescon.com.au>
+Subject: Re: [PATCH #upstream-fixes] libata:
+	update	atapi_eh_request_sense() such that lbam/lbah contains buffer size
+Date: Wed, 12 Dec 2007 19:16:06 +1100
+Message-ID: <1197447366.3467.10.camel@Athas>
+References: <475F51AE.1010305@gmail.com> <1197446739.3467.4.camel@Athas>
+	 <475F98C9.6080804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:45318 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754748AbXLLIUy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 03:20:54 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so245175wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 12 Dec 2007 00:20:54 -0800 (PST)
-In-Reply-To: <20071210125543.80b1e841.akpm@linux-foundation.org>
+Received: from mail12.tpgi.com.au ([203.12.160.162]:40518 "EHLO
+	mail12.tpgi.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbXLLIWO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 03:22:14 -0500
+In-Reply-To: <475F98C9.6080804@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: rjw@sisk.pl, bugme-daemon@bugzilla.kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, yannick.dirou@axetic.com, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Andrew Morton wrote:
-> On Mon, 10 Dec 2007 12:52:43 -0800
-> Andrew Morton <akpm@linux-foundation.org> wrote:
-> 
->> On Mon, 10 Dec 2007 05:55:20 -0800 (PST)
->> bugme-daemon@bugzilla.kernel.org wrote:
->>
->>> http://bugzilla.kernel.org/show_bug.cgi?id=9533
->> Another box-killing regression to track, please.  Either ATA or ACPI.
-> 
-> er, no, not box-killing - just scary warnings.
-> 
-> It's not clear what "kernel doesn't get to userland yet" is referring to - 
-> something else I guess.
-> 
-> Your desire to avoid doing a bisection search is a good one - I've been
-> trying to do one for a couple of days on and off and there are so many
-> fatally buggy bisection points between 2.6.23 and 2.6.24-rc1 that I've
-> given up on the attempt.
 
-This one will be fixed by ACPI fixes which are currently being tested.
-I just need to get one more test result.  I'll post the patch to 9533 too.
+On Wed, 2007-12-12 at 17:16 +0900, Tejun Heo wrote:
+Will Trives wrote:
+> > Hello guys,
+> > 
+> > Yannick does it work ok for you when you try to blank a dvd+rw disc ?
+> > Mine no longer jams up the drive now but it does say that the media or
+> > drive does not support blanking. I'm thinking its either because these
+> > discs just do multisession so this is what was meant to happen all along
+> > or there's still something going on. 
+> 
+> Does the kernel complain about anything?
+> 
+Nope.
 
-Thanks.
+> This drive or media does not support the 'BLANK media' command
+> > wodim: Cannot blank disk, aborting.
+> > wodim: Some drives do not support all blank types.
+> > wodim: Try again with wodim blank=all.
+> 
+> wodim suggests "blank=all", does it work?
+> 
+Nope same thing happens.
 
--- 
-tejun
+"dvd+rw-format /dev/sr0 -force"  Works ok though.
+
+This is the media info after the format
+
+dvd+rw-mediainfo /dev/sr0
+
+INQUIRY:                [BENQ    ][DVD DD DW1640   ][BSRB]
+GET [CURRENT] CONFIGURATION:
+ Mounted Media:         1Ah, DVD+RW
+ Current Write Speed:   4.0x1385=5540KB/s
+ Write Speed #0:        4.0x1385=5540KB/s
+ Write Speed #1:        2.4x1385=3324KB/s
+GET [CURRENT] PERFORMANCE:
+ Write Performance:     4.0x1385=5540KB/s@[0 -> 264671]
+ Speed Descriptor#0:    00/264671 R@5.2x1385=7181KB/s W@4.0x1385=5540KB/s
+ Speed Descriptor#1:    00/264671 R@5.2x1385=7181KB/s W@2.4x1385=3324KB/s
+READ DVD STRUCTURE[#0h]:
+ Media Book Type:       00h, DVD-ROM book [revision 0]
+ Media ID:              MKM/A02
+ Legacy lead-out at:    264672*2KB=542048256
+READ DISC INFORMATION:
+ Disc status:           complete
+ Number of Sessions:    1
+ State of Last Session: complete
+ Number of Tracks:      1
+ BG Format Status:      suspended
+READ FORMAT CAPACITIES:
+ formatted:             264672*2048=542048256
+ 26h(0):                2295104*2048=4700372992
+READ TRACK INFORMATION[#1]:
+ Track State:           complete
+ Track Start Address:   0*2KB
+ Free Blocks:           0*2KB
+ Track Size:            2295104*2KB
+FABRICATED TOC:
+ Track#1  :             14@0
+ Track#AA :             17@2295104
+ Multi-session Info:    #1@0
+READ CAPACITY:          2295104*2048=4700372992
+
+
