@@ -1,63 +1,87 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA drive keeps hard resetting
-Date: Wed, 12 Dec 2007 17:27:59 +0900
-Message-ID: <475F9B8F.1050208@gmail.com>
-References: <475E08FC.9010809@gmail.com> <475E5D51.8010902@msgid.tls.msk.ru>
+From: Will Trives <will@trivescon.com.au>
+Subject: Re: [PATCH #upstream-fixes] libata: update
+	atapi_eh_request_sense() such that lbam/lbah contains buffer size
+Date: Wed, 12 Dec 2007 19:05:39 +1100
+Message-ID: <1197446739.3467.4.camel@Athas>
+References: <475F51AE.1010305@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:64541 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbXLLI2M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 03:28:12 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so248689wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 12 Dec 2007 00:28:12 -0800 (PST)
-In-Reply-To: <475E5D51.8010902@msgid.tls.msk.ru>
+Received: from smtp-out8.tpgi.com.au ([220.244.226.118]:57386 "EHLO
+	mail8.tpgi.com.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757641AbXLLIe6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 03:34:58 -0500
+In-Reply-To: <475F51AE.1010305@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: =?ISO-8859-1?Q?Mat=ED=ADas_Alejandro_Torres?= <torresmat@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, yannick.dirou@axetic.com, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Michael Tokarev wrote:
-> Mat=ED=ADas Alejandro Torres wrote:
->> Hi all,
->>
->> I have a SATA drive in a motherboard with an ATI SB600 chipset that
->> until now worked just fine.
->> The disk seems fine but after a while it start making noises (like
->> spinning up) and the computer freezes during 2 or 3 seconds. I think=
- my
->> SATA drive is broken, or maybe the motherboard. This is what dmesg s=
-ays:
->>
->> [  229.096000] ata4: exception Emask 0x10 SAct 0x0 SErr 0x90200 acti=
-on 0x6 frozen
->=20
-> See http://marc.info/?l=3Dlinux-ide&m=3D119707355016060&w=3D2
-> ...
->> I'm using Ubuntu 7.10 with kernel 2.6.22-14-generic in a dual proces=
-sor
->> computer. Below there's some hardware information. The output of dme=
-sg
->> is attached. Thanks!
->=20
-> That patch will not apply cleanly to 2.6.22 - it will show rejects
-> in libata-core.c.  Those are OK - it's a cleanup of wrongly blacklist=
-ed
-> drives.  The main part - in ahci.c - is the one that's needed.
+Hello guys,
 
-Matias's problem doesn't have anything to do with spurious completion.
-PHY RDY changed and HSM violation are completely different error condit=
-ions.
+Yannick does it work ok for you when you try to blank a dvd+rw disc ?
+Mine no longer jams up the drive now but it does say that the media or
+drive does not support blanking. I'm thinking its either because these
+discs just do multisession so this is what was meant to happen all along
+or there's still something going on. 
 
-I think either the harddrive or power supply is dying.  smartctl -a
-might show something but I'm not too hopeful.  The surest way is to
-connect the drive to a different PSU and see whether the problem goes
-away but if all other drives on the system is fine, I would just throw
-away the harddrive.
 
-Thanks.
+wodim -blank=fast dev=/dev/sr0
+wodim: Operation not permitted. Warning: Cannot raise RLIMIT_MEMLOCK
+limits.Device type    : Removable CD-ROM
+Version        : 5
+Response Format: 2
+Capabilities   :
+Vendor_info    : 'BENQ    '
+Identification : 'DVD DD DW1640   '
+Revision       : 'BSRB'
+Device seems to be: Generic mmc2 DVD-R/DVD-RW.
+Using generic SCSI-3/mmc DVD-R(W) driver (mmc_mdvd).
+Driver flags   : SWABAUDIO BURNFREE
+Supported modes: PACKET SAO
+HINT: use dvd+rw-mediainfo from dvd+rw-tools for information extraction.
+Speed set to 5540 KB/s
+Starting to write CD/DVD at speed   4.0 in real BLANK mode for single
+session.
+Last chance to quit, starting real write i   0 seconds. Operation
+starts.
+Error: this media does not support blanking, ignoring.
+This drive or media does not support the 'BLANK media' command
+wodim: Cannot blank disk, aborting.
+wodim: Some drives do not support all blank types.
+wodim: Try again with wodim blank=all.
 
---=20
-tejun
+
+Regards,
+
+Will Trives
+
+On Wed, 2007-12-12 at 12:12 +0900, Tejun Heo wrote:
+> While updating lbam/h for ATAPI commands, atapi_eh_request_sense() was
+> left out.  Update it.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> This patch is from improve-ATAPI-data-xfer patchset pending for
+> #upstream.
+> 
+>  drivers/ata/libata-eh.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: work/drivers/ata/libata-eh.c
+> ===================================================================
+> --- work.orig/drivers/ata/libata-eh.c
+> +++ work/drivers/ata/libata-eh.c
+> @@ -1264,8 +1264,8 @@ static unsigned int atapi_eh_request_sen
+>  		tf.feature |= ATAPI_PKT_DMA;
+>  	} else {
+>  		tf.protocol = ATA_PROT_ATAPI;
+> -		tf.lbam = (8 * 1024) & 0xff;
+> -		tf.lbah = (8 * 1024) >> 8;
+> +		tf.lbam = SCSI_SENSE_BUFFERSIZE;
+> +		tf.lbah = 0;
+>  	}
+>  
+>  	return ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
+
