@@ -1,142 +1,60 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 22/30] blk_end_request: changing cpqarray (take 4)
-Date: Wed, 12 Dec 2007 15:25:52 +0000
-Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE15718B39@G6W0268.americas.hpqcorp.net>
-References: <20071211.175021.39666150.k-ueda@ct.jp.nec.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_legacy: Restructure and revamp
+Date: Wed, 12 Dec 2007 16:00:04 +0000
+Message-ID: <20071212160004.57735b9c@the-village.bc.nu>
+References: <20071208155506.77642115@the-village.bc.nu>
+	<20071211212326.0223589c.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20071211.175021.39666150.k-ueda@ct.jp.nec.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, "jens.axboe@oracle.com" <jens.axboe@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35880 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751848AbXLLQGL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 11:06:11 -0500
+In-Reply-To: <20071211212326.0223589c.akpm@linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
+> Is this patch going to screw my kernel up?
 
+I hope not. I've been testing it both on systems with PCI bus and with
+just ISA/VLB. I've also done all=1 testing on various PCI systems which
+then correctly work with legacy IDE although performance of course sucks
+rocks.
 
-> -----Original Message-----
-> From: Kiyoshi Ueda [mailto:k-ueda@ct.jp.nec.com]
-> Sent: Tuesday, December 11, 2007 4:50 PM
-> To: jens.axboe@oracle.com
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
-> linux-ide@vger.kernel.org; dm-devel@redhat.com;
-> j-nomura@ce.jp.nec.com; k-ueda@ct.jp.nec.com; Miller, Mike (OS Dev)
-> Subject: [PATCH 22/30] blk_end_request: changing cpqarray (take 4)
->
-> This patch converts cpqarray to use blk_end_request interfaces.
-> Related 'ok' arguments are converted to 'error'.
->
-> cpqarray is a little bit different from "normal" drivers.
-> cpqarray directly calls bio_endio() and disk_stat_add() when
-> completing request.  But those can be replaced with
-> __end_that_request_first().
-> After the replacement, request completion procedures of those
-> drivers become like the following:
->     o end_that_request_first()
->     o add_disk_randomness()
->     o end_that_request_last()
-> This can be converted to __blk_end_request() by following the
-> rule (b) mentioned in the patch subject "[PATCH 01/30]
-> blk_end_request: add new request completion interface".
->
-> Cc: Mike Miller <mike.miller@hp.com>
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+On most boxes the code path executed is
 
-Acked-by: Mike Miller <mike.miller@hp.com>
+	have we got PCI ata
+	yes
+	exit
 
-> ---
->  drivers/block/cpqarray.c |   36 +++++++-----------------------------
->  1 files changed, 7 insertions(+), 29 deletions(-)
->
-> Index: 2.6.24-rc4/drivers/block/cpqarray.c
-> ===================================================================
-> --- 2.6.24-rc4.orig/drivers/block/cpqarray.c
-> +++ 2.6.24-rc4/drivers/block/cpqarray.c
-> @@ -167,7 +167,6 @@ static void start_io(ctlr_info_t *h);
->
->  static inline void addQ(cmdlist_t **Qptr, cmdlist_t *c);
-> static inline cmdlist_t *removeQ(cmdlist_t **Qptr, cmdlist_t
-> *c); -static inline void complete_buffers(struct bio *bio,
-> int ok);  static inline void complete_command(cmdlist_t *cmd,
-> int timeout);
->
->  static irqreturn_t do_ida_intr(int irq, void *dev_id); @@
-> -980,26 +979,13 @@ static void start_io(ctlr_info_t *h)
->         }
->  }
->
-> -static inline void complete_buffers(struct bio *bio, int ok) -{
-> -       struct bio *xbh;
-> -
-> -       while (bio) {
-> -               xbh = bio->bi_next;
-> -               bio->bi_next = NULL;
-> -
-> -               bio_endio(bio, ok ? 0 : -EIO);
-> -
-> -               bio = xbh;
-> -       }
-> -}
->  /*
->   * Mark all buffers that cmd was responsible for
->   */
->  static inline void complete_command(cmdlist_t *cmd, int timeout)  {
->         struct request *rq = cmd->rq;
-> -       int ok=1;
-> +       int error = 0;
->         int i, ddir;
->
->         if (cmd->req.hdr.rcode & RCODE_NONFATAL && @@
-> -1011,16 +997,17 @@ static inline void complete_command(cmdl
->         if (cmd->req.hdr.rcode & RCODE_FATAL) {
->                 printk(KERN_WARNING "Fatal error on ida/c%dd%d\n",
->                                 cmd->ctlr, cmd->hdr.unit);
-> -               ok = 0;
-> +               error = -EIO;
->         }
->         if (cmd->req.hdr.rcode & RCODE_INVREQ) {
->                                 printk(KERN_WARNING "Invalid
-> request on ida/c%dd%d = (cmd=%x sect=%d cnt=%d sg=%d ret=%x)\n",
->                                 cmd->ctlr, cmd->hdr.unit,
-> cmd->req.hdr.cmd,
->                                 cmd->req.hdr.blk,
-> cmd->req.hdr.blk_cnt,
->                                 cmd->req.hdr.sg_cnt,
-> cmd->req.hdr.rcode);
-> -               ok = 0;
-> +               error = -EIO;
->         }
-> -       if (timeout) ok = 0;
-> +       if (timeout)
-> +               error = -EIO;
->         /* unmap the DMA mapping for all the scatter gather
-> elements */
->         if (cmd->req.hdr.cmd == IDA_READ)
->                 ddir = PCI_DMA_FROMDEVICE; @@ -1030,18
-> +1017,9 @@ static inline void complete_command(cmdl
->                  pci_unmap_page(hba[cmd->ctlr]->pci_dev,
-> cmd->req.sg[i].addr,
->                                 cmd->req.sg[i].size, ddir);
->
-> -       complete_buffers(rq->bio, ok);
-> -
-> -       if (blk_fs_request(rq)) {
-> -               const int rw = rq_data_dir(rq);
-> -
-> -               disk_stat_add(rq->rq_disk, sectors[rw],
-> rq->nr_sectors);
-> -       }
-> -
-> -       add_disk_randomness(rq->rq_disk);
-> -
->         DBGPX(printk("Done with %p\n", rq););
-> -       end_that_request_last(rq, ok ? 1 : -EIO);
-> +       if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
-> +               BUG();
->  }
->
->  /*
->
+> 
+> > +static __init void probe_opti_vlb(void)
+> > +{
+> > +	/* If an OPTI 82C46X is present find out where the channels are */
+> > +	static const char *optis[4] = {
+> > +		"3/463MV", "5MV",
+> > +		"5MVA", "5MVB"
+> > +	};
+> > +	u8 chans = 1;
+> > +	u8 ctrl = (opti_syscfg(0x30) & 0xC0) >> 6;
+> > +
+> > +	opti82c46x = 3;	/* Assume master and slave first */
+> > +	printk(KERN_INFO DRV_NAME ": Opti 82C46%s chipset support.\n",
+> > +								optis[ctrl]);
+> > +	if (ctrl == 3)
+> > +		chans = (opti_syscfg(0x3F) & 0x20) ? 2 : 1;
+> 
+> this could be
+> 
+> 	if (ctrl == 3 && (opti_syscfg(0x3F) & 0x20))
+> 		chans = 2;
+> 
+> if that's any clearer...
+
+Agreed - that is clearer.
+
+Alan
