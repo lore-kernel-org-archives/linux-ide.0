@@ -1,71 +1,132 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] pata_legacy: Restructure and revamp
-Date: Tue, 11 Dec 2007 21:23:26 -0800
-Message-ID: <20071211212326.0223589c.akpm@linux-foundation.org>
-References: <20071208155506.77642115@the-village.bc.nu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Recent kernel hosing partition
+Date: Wed, 12 Dec 2007 17:07:40 +0900
+Message-ID: <475F96CC.6040300@gmail.com>
+References: <14119388.post@talk.nabble.com> <475CEFF8.5050707@gmail.com>	 <f68177890712100208o27d71584l685520d2e9ecf5bd@mail.gmail.com>	 <475D11A1.1070700@gmail.com>	 <f68177890712100347i3a03df38n36cffd00c8603ae1@mail.gmail.com>	 <475D41AA.2060205@gmail.com> <1197308981.1873.75.camel@genius.chateau.dec>	 <475DEC37.1020404@gmail.com> <1197368344.1830.67.camel@genius.chateau.dec>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:54883 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752178AbXLLFXl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 00:23:41 -0500
-In-Reply-To: <20071208155506.77642115@the-village.bc.nu>
+Received: from wa-out-1112.google.com ([209.85.146.176]:11317 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071AbXLLIHt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Dec 2007 03:07:49 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so238867wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 12 Dec 2007 00:07:48 -0800 (PST)
+In-Reply-To: <1197368344.1830.67.camel@genius.chateau.dec>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: For Junk Mail <junk_mail@irishbroadband.net>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 8 Dec 2007 15:55:06 +0000 Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+Hello,
 
-> Rework the pata_legacy driver to have an internal way to plug multiple legacy interface types
-> and designs into the driver. 
+For Junk Mail wrote:
+>>From previous incarnations of the via chipset I've had errors on dma,
+> drive 'ringing' (where access/copying to hdb wakes up hda which says
+> "What's going on?" and confuses everything) from Seagate drives. One M/B
+> sat down and refused to work with 2 hard disks on the same ribbon. Maybe
+> I'm just one disenchanted luser but I had the logs to prove it in the
+> crashtesting days and they were examined by Mandrake's guys.
+
+I see.  Please report to kernel bugzilla (bugzilla.kernel.org) or this
+mailing list if you see anything like this the next time.  Even if we
+can't fix it right away, it will be useful for future references or when
+pattern of similar problems emerges.
+
+>>>> 1. So, the IDE driver suffers from error conditions too?  Do you have
+>>>> logs around?
+>>>>
+>> I meant the old driver/ide/* drivers.
+>>
+> /checks every distro
+> YES! I have logs of errors with the old ide driver. When Fedora 7 went
+> out to lunch, I was embarassed for a kernel for my (previous) fedora 5,
+> and ended up using e2fsck from a uClibc based experimental distro from
+>  
+> http://kevux.org/
 > 
-> This driver supports
-> 	- Generic legacy ISA on primary/secondary and tertiary ports
-> 	- BIOS or jumper configured legacy ports
-> 	- VLB controllers that snoop the mode set for PIO
-> 		(Cirrus CLPD7220, Adaptec AIC25VL01)
-> 	- Promise PDC20230
-> 	- Holtek 6560A/B
-> 	- Opti VLB controllers
-> 	- QDI 6500/6580/6580DP controllers
+> It has e2fsck-1.40.2, and some weird alternative log system. I'll send
+> the appropriate log privately as well as Fedora's log. Logs are dated.
+> The last errors in Kevux will correspond to a time shortly
+> after /usr/lib/firefox went missing in Fedora 7, as I went from one to
+> the other to sort the disk out. Do you understand me? 
 > 
-> The new driver also adds an "all" option so you can load all the PCI drivers you have, decide you have
-> a controller that is totally unknown and then load pata_legacy all=1 to grab the primary/secondary ports
-> as a last resort fallback.
+> I should be very clear. These errors occurred using the old driver on
+> hda3(sda3) while dealing with errors _caused_ by what you are trying to
+> investigate. Fedora 7 also had /dev/sda5 mounted as /home, and /dev/sda1
+> as /boot and not one error occurred on either of those. I checked the
+> whole disk with e2fsck at some points, and everything was fine.
+> Filesystems were modified, but nothing came to lost+found, or nothing
+> was corrupted to my knowledge except on sda3.
+
+This bit is very interesting, so you're saying that the ide driver also
+showed IO errors while trying to repair the filesystem damaged while
+using libata driver.
+
+If that's the case, it strongly points to harddrive malfunction.
+Different driver seeing the same problems after rebooting and those
+errors going away after re-installing or fsck'ing strongly indicates
+that those errors were caused by defects on the media.
+
+> What upset me personally, btw, is that nobody in RedHat/Fedora gave an
+> <expletive deleted>. When you're finished, Slackware is going in
+> there :-D
+
+I myself also work for a distro and my buglist is always accumulating.
+I guess RH has a handful too.  With recent transition to libata and its
+rapid development, there are a lot of issues to be dealt with and ppl
+working on libata are heavily loaded these days.  I hope you could cut
+us some slack.  :-)
+
+>>> If we can provoke the error, I feel the way to trap it is
+>>> 1. make intelligent recoverable changes to ide partition /dev/sda3 on
+>>> firefox files.
+>>> 2. Directly or indirectly, Mount my 1 gig usb disk on /var/log :-D.
+>>> Would that get around the Catch-22? I can stick in another (old) disk if
+>>> needed, but I only have ide, and we freeze, so that will hardly be much
+>>> good.
+>> Usually the best way is serial or net console.
 > 
-> TODO:
-> 	Add ST412 support (needs some kind of geometry hook in libata core code)
-> 	Winbond W83759A in programmable mode (aka DTC2278)
-> 	Find more insane VLB controllers to support
+> Have you a reference, or a doc on doing that? I'll set it up.
+
+It's included in the kernel source tree under Documentation/.
+serial-console.txt and networking/netconsole.txt.
+
+>> There are other reports of sata_via freezing up after transport errors
+>> and sadly there isn't too much to do about it.  The controller hangs
+>> while holding the PCI bus and no software can recover from that.  I'm
+>> currently not sure whether the controller locks up on transmission
+>> errors or as a response to libata's error handling sequence.  If latter,
+>> we may be able to avoid it by changing EH sequence but unfortunately I
+>> don't have access to affected hardware or time at the moment.
 > 
-> This driver obsoletes pata_qdi, which can go once this is settled in.
+> Here Via has one step up (or down) from everybody because PCI and IDE
+> are split in the Southbridge, and the 2 are not linked. I have the
+> datasheet to prove it. So it's freezing further back. I've worked in
+> electronic hardware and I see 2 problems
+
+It doesn't matter where the controller is.  If a controller dies while
+holding PCI bus or while the CPU is performing IO cycle on it, the
+machine is locked up completely unless it has hardware mechanism to get
+out of such lockup (PCI bridges on fancy servers have mechanisms to
+detect such condition and abort the hung transaction).
+
+> 2. The soft reset libata provides doesn't sort things out. The drive
+> reset provided by the old ide driver seemed to sort it out. 
+>> What worries me is that your case actually resulted in data corruption.
+>>  libata's EH is safe.  Another possibility is that your filesystem got
+>> corrupted while going through several lockup - reboot sequences in which
+>> case data sure is lost.  But still journaling and barrier should be able
+>> to avoid filesystem corruption.  You have barrier enabled, right?
 > 
+> I really don't know if barrier is enabled. If you tell me how I can
+> check it. journalling is on the same partition, but as we froze, and
+> apparently did more damage as things went on, I was quick to reset. That
+> effectively reduces it to ext2. But I was also quick to check the whole
+> partition (Because I couldn't boot otherwise).
 
-Is this patch going to screw my kernel up?
+mount will show barrier=1 if you have it enabled.
 
-> +static __init void probe_opti_vlb(void)
-> +{
-> +	/* If an OPTI 82C46X is present find out where the channels are */
-> +	static const char *optis[4] = {
-> +		"3/463MV", "5MV",
-> +		"5MVA", "5MVB"
-> +	};
-> +	u8 chans = 1;
-> +	u8 ctrl = (opti_syscfg(0x30) & 0xC0) >> 6;
-> +
-> +	opti82c46x = 3;	/* Assume master and slave first */
-> +	printk(KERN_INFO DRV_NAME ": Opti 82C46%s chipset support.\n",
-> +								optis[ctrl]);
-> +	if (ctrl == 3)
-> +		chans = (opti_syscfg(0x3F) & 0x20) ? 2 : 1;
-
-this could be
-
-	if (ctrl == 3 && (opti_syscfg(0x3F) & 0x20))
-		chans = 2;
-
-if that's any clearer...
-
+-- 
+tejun
