@@ -1,74 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 17/21] ide: drop 'initializing' argument from ide_register_hw()
-Date: Thu, 13 Dec 2007 14:54:48 +0100
-Message-ID: <200712131454.48336.bzolnier@gmail.com>
-References: <200711182331.23988.bzolnier@gmail.com> <200712122236.46043.bzolnier@gmail.com> <47612D60.4050408@ru.mvista.com>
+Subject: Re: [PATCH 14/20] ide: convert "empty" REQ_TYPE_ATA_CMD requests to use REQ_TYPE_ATA_TASKFILE
+Date: Thu, 13 Dec 2007 14:54:52 +0100
+Message-ID: <200712131454.53053.bzolnier@gmail.com>
+References: <200712092217.32139.bzolnier@gmail.com> <47612BAE.5030109@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:9182 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:8838 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753994AbXLMNps (ORCPT
+	with ESMTP id S1753910AbXLMNps (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 08:45:48 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so871393ugc.16
-        for <linux-ide@vger.kernel.org>; Thu, 13 Dec 2007 05:45:39 -0800 (PST)
-In-Reply-To: <47612D60.4050408@ru.mvista.com>
+Received: by ug-out-1314.google.com with SMTP id z38so871404ugc.16
+        for <linux-ide@vger.kernel.org>; Thu, 13 Dec 2007 05:45:40 -0800 (PST)
+In-Reply-To: <47612BAE.5030109@ru.mvista.com>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Roman Zippel <zippel@linux-m68k.org>
-
-
-Hi,
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
 On Thursday 13 December 2007, Sergei Shtylyov wrote:
 > Bartlomiej Zolnierkiewicz wrote:
 > 
-> >>>* Rename init_hwif_data() to ide_init_port_data() and export it.
+> > Based on the previous work by Tejun Heo.
 > 
-> >>>* For all users of ide_register_hw() with 'initializing' argument set
-> >>>  hwif->present and hwif->hold are always zero so convert these host
-> >>>  drivers to use ide_find_port()+ide_init_port_data()+ide_init_port_hw()
-> >>>  instead (also no need for init_hwif_default() call since the setup
-> >>>  done by it gets over-ridden by ide_init_port_data() call).
+> > There should be no functionality changes caused by this patch.
 > 
-> >>    But init_hwif_default() gets called *after* ide_init_port_data() call, at 
-> >>least in ide_register_hw()...
-> 
-> > This is a mistake in the patch description:
-> 
-> > s/ide_init_port_data/ide_init_port_hw/
-> 
-> > [ I fixed it locally ]
-> 
-> >>>* Drop 'initializing' argument from ide_register_hw().
-> 
-> >>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> >>>Index: b/drivers/ide/ide.c
-> >>>===================================================================
-> >>>--- a/drivers/ide/ide.c
-> >>>+++ b/drivers/ide/ide.c
-> >>>@@ -116,7 +116,7 @@ EXPORT_SYMBOL(ide_hwifs);
-> >>> /*
-> >>>  * Do not even *think* about calling this!
-> >>>  */
-> 
-> >>    Isn't this comment being obsoleted by the patch?
-> 
-> > It is still valid because ide_init_port_data() destroys
-> > "hdx=" and "idex=" kernel parameters...
-> 
->     But the drivers are now calling it nevertheless...
+>     I didn't get the point. Why do you consider them "empty"?
 
-...and they also called it before this patch (indirectly through
-ide_register_hw() call).
+These requests don't have command buffer (in case of REQ_TYPE_ATA_CMD)
+or ide_task_t (REQ_ATA_TYPE_ATA_TASKFILE) attached to them.
 
-Needs fixing but not necessarily in this particular patch (since IDE uses
-static hwif objects it may be that hwif clearing was explicitely needed by
-some host driver, caution is needed).  Incremental patches are welcomed.
+[ Please see execute_drive_cmd() for details. ]
 
 Bart
