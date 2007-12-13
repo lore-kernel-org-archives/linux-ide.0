@@ -1,32 +1,36 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Mark Lord <lkml@rtr.ca>
 Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 11:53:26 -0700
-Message-ID: <20071213185326.GQ26334@parisc-linux.org>
-References: <47617B92.6020908@rtr.ca> <47617C07.3020501@rtr.ca> <47617E72.6080504@rtr.ca>
+Date: Thu, 13 Dec 2007 14:03:59 -0500
+Message-ID: <4761821F.3050602@rtr.ca>
+References: <47617B92.6020908@rtr.ca> <47617C07.3020501@rtr.ca> <47617E72.6080504@rtr.ca> <20071213185326.GQ26334@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49717 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758783AbXLMSx1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 13:53:27 -0500
-Content-Disposition: inline
-In-Reply-To: <47617E72.6080504@rtr.ca>
+Received: from rtr.ca ([76.10.145.34]:4366 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753418AbXLMTEB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Dec 2007 14:04:01 -0500
+In-Reply-To: <20071213185326.GQ26334@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Dec 13, 2007 at 01:48:18PM -0500, Mark Lord wrote:
-> Problem confirmed.  2.6.23.8 regularly generates segments up to 64KB for 
-> libata,
-> but 2.6.24 uses only 4KB segments and a *few* 8KB segments.
+Matthew Wilcox wrote:
+> On Thu, Dec 13, 2007 at 01:48:18PM -0500, Mark Lord wrote:
+>> Problem confirmed.  2.6.23.8 regularly generates segments up to 64KB for 
+>> libata,
+>> but 2.6.24 uses only 4KB segments and a *few* 8KB segments.
+> 
+> Just a suspicion ... could this be slab vs slub?  ie check your configs
+> are the same / similar between the two kernels.
+..
 
-Just a suspicion ... could this be slab vs slub?  ie check your configs
-are the same / similar between the two kernels.
+Mmmm.. a good thought, that one.
+But I just rechecked, and both have CONFIG_SLAB=y
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+My guess is that something got changed around when Jens
+reworked the block layer for 2.6.24.
+I'm going to dig around in there now.
+
