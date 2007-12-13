@@ -1,64 +1,58 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: stable basic 4-port SATA card
-Date: Thu, 13 Dec 2007 15:09:05 +0100
-Message-ID: <18273.15617.119611.820953@harpo.it.uu.se>
-References: <200711151001.lAFA11wC019059@harpo.it.uu.se>
-	<fjrci9$v8o$1@ger.gmane.org>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: [PATCH 0/2] [libata] sata_mv: Add support for Marvell's integrated SATA controller
+Date: Thu, 13 Dec 2007 18:04:02 +0200
+Message-ID: <c70ff3ad0712130804h6634612ct3e1c5415f01852de@mail.gmail.com>
+References: <11966092121262-git-send-email-saeed.bishara@gmail.com>
+	 <c70ff3ad0712130613j4b856533idb3dacdf36cee256@mail.gmail.com>
+	 <47614EC6.2090004@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:41342 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317AbXLMOJK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Dec 2007 09:09:10 -0500
-In-Reply-To: <fjrci9$v8o$1@ger.gmane.org>
+Received: from nz-out-0506.google.com ([64.233.162.237]:44103 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbXLMQEE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 11:04:04 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so400016nze.1
+        for <linux-ide@vger.kernel.org>; Thu, 13 Dec 2007 08:04:03 -0800 (PST)
+In-Reply-To: <47614EC6.2090004@rtr.ca>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Patric Karlsson <patric@ce.chalmers.se>
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Saeed Bishara <saeed@marvell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Patric Karlsson writes:
- > Mikael Pettersson wrote:
- > > On Thu, 15 Nov 2007 12:32:14 +0900, Tejun Heo wrote:
- > >> * sata_promise: Generally works okay; however there are still some
- > >> problems with recent 3Gbps chips. (Mikael, please pitch in)
- > > 
- > > Right, 2nd-gen 3Gbps chips have had "intermittent" issues,
- > > which we hope are cured by the recent ASIC bug workaround,
- > > but it will take a while for that fix to propagate out.
- > > To speed up that process I'm considering backporting the fix
- > > to 2.6.23 and 2.6.22.
- > > 
- > > NCQ and PMP are supported in the hardware and in the vendor's
- > > driver, but not yet in sata_promise. My intention is to add
- > > NCQ soon, but there's no time-plan yet for this.
- > > 
- > > /Mikael
- > > -
- > > To unsubscribe from this list: send the line "unsubscribe linux-ide" in
- > > the body of a message to majordomo@vger.kernel.org
- > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
- > > 
- > 
- > Backporting would be nice, since we're still some ways from a stable 
- > 2.6.24, and I'm not comfortable running -rc kernels in production 
- > enviroments.
+>
+> I really think that a lot of the new variable/macro/enum names are overly long,
+> making the code a bit harder to read.
+> The patch is all about "System On Chip (SOC)" support,
+> yet the names all say "INTEGRATED".
+well, many socs have SATA or Ethernet controllers as pci controller,
+but in this case, the sata controller has been integrated into the soc
+by cutting the pci interface and connecting the sata core directly to
+the soc's bus. so I though that the "integrated" well show this fact.
 
-Ok.
+>
+> How about changing "INTEGRATED" to "SOC", and "integrated" to "soc" everywhere ?
+>
+> The mv_integrated_reset_hc_port() (or mv_soc_reset_hc_port()) function
+> seems to be a duplicate of the existing mv5_reset_hc_port() function.
+except the line that writes to the EDMA_CFG_OFS register (101f vs
+11f). also , I think that in the future the the integrated/soc variant
+will have more register that does not exist in mv5 to reset.
 
-For 2.6.23 there is one patch:
+BTW, the mv5_sht and mv6_sht are identical, are there any plans to
+modify any or them?
 
-<http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_promise-1-asic-sg-bug-fix-v3-2.6.23>
-This is the workaround for the ASIC PRD/SG bug.
-
-For 2.6.22 there are two patches:
-
-<http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_promise-1-ft_tx4200-is-gen2-2.6.22>
-This corrects the classification of FastTrack TX4200 cards,
-which in turn fixes nasty errors in how they are accessed.
-
-<http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_promise-2-asic-sg-bug-fix-v3-2.6.22>
-This is the workaround for the ASIC PRD/SG bug.
-
-/Mikael
+> The new fields in the mv_host_priv struct are __iomem pointers
+> rather than offsets as was done for similar fields in the past
+> (offsets take up less space on 64-bit machines).
+> We should be consistent there, one way or the other.
+well, as those registers get access in the main flow (data commands),
+preparing the final address will save some runtime calculations. so,
+it's the speed vs memory tradeoff. I think speed should be preferred.
+agree?
+>
+> Cheers
+>
+> Mark
