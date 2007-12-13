@@ -1,40 +1,26 @@
-From: <gregkh@suse.de>
-Subject: patch libata-kill-spurious-ncq-completion-detection.patch queued to -stable tree
-Date: Wed, 12 Dec 2007 22:11:08 -0800
-Message-ID: <20071213061201.CAFF71454450@imap.suse.de>
-References: <4759E47B.8000108@gmail.com>
+From: Greg KH <gregkh@suse.de>
+Subject: [patch 35/36] libata: kill spurious NCQ completion detection
+Date: Wed, 12 Dec 2007 22:35:37 -0800
+Message-ID: <20071213063537.GJ25301@kroah.com>
+References: <20071213062511.265908583@mini.kroah.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34297 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000AbXLMGMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:12:05 -0500
-In-Reply-To: <4759E47B.8000108@gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:56715 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757640AbXLMGiq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 01:38:46 -0500
+Content-Disposition: inline; filename="libata-kill-spurious-ncq-completion-detection.patch"
+In-Reply-To: <20071213063308.GA25301@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, alan@lxorguk.ukuu.org.uk, dtorres@coral.dnsalias.org, gregkh@suse.de, jeff@garzik.org, linux-ide@vger.kernel.org, mjt@tls.msk.ru
-Cc: stable@kernel.org, stable-commits@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Michael Tokarev <mjt@tls.msk.ru>, Jeff Garzik <jeff@garzik.org>, Diego Torres <dtorres@coral.dnsalias.org>, Tejun Heo <htejun@gmail.com>
 
+2.6.22-stable review patch.  If anyone has any objections, please let us
+know.
 
-This is a note to let you know that we have just queued up the patch titled
-
-     Subject: s [PATCH -stable] libata: kill spurious NCQ completion detection
-
-to the 2.6.22-stable tree.  Its filename is
-
-     libata-kill-spurious-ncq-completion-detection.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From stable-bounces@linux.kernel.org Fri Dec  7 16:26:06 2007
-From: Tejun Heo <htejun@gmail.com>
-Date: Sat, 08 Dec 2007 09:25:31 +0900
-Subject: [stable] [PATCH -stable] libata: kill spurious NCQ completion detection
-To: stable@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Jeff Garzik <jeff@garzik.org>, Diego Torres <dtorres@coral.dnsalias.org>
-Message-ID: <4759E47B.8000108@gmail.com>
-
+------------------
 From: Tejun Heo <htejun@gmail.com>
 
 patch 459ad68893a84fb0881e57919340b97edbbc3dc7 in mainline.
@@ -198,7 +184,4 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	/* End Marker */
  	{ }
 
-
-Patches currently in stable-queue which might be from htejun@gmail.com are
-
-queue-2.6.22/libata-kill-spurious-ncq-completion-detection.patch
+-- 
