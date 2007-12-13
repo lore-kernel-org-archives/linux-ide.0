@@ -1,13 +1,13 @@
 From: <gregkh@suse.de>
 Subject: patch libata-kill-spurious-ncq-completion-detection.patch queued to -stable tree
-Date: Wed, 12 Dec 2007 22:03:25 -0800
-Message-ID: <20071213060415.6FB421454450@imap.suse.de>
+Date: Wed, 12 Dec 2007 22:11:08 -0800
+Message-ID: <20071213061201.CAFF71454450@imap.suse.de>
 References: <4759E47B.8000108@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33827 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34297 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750724AbXLMGEV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Dec 2007 01:04:21 -0500
+	id S1752000AbXLMGMF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Dec 2007 01:12:05 -0500
 In-Reply-To: <4759E47B.8000108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,7 +19,7 @@ This is a note to let you know that we have just queued up the patch titled
 
      Subject: s [PATCH -stable] libata: kill spurious NCQ completion detection
 
-to the 2.6.23-stable tree.  Its filename is
+to the 2.6.22-stable tree.  Its filename is
 
      libata-kill-spurious-ncq-completion-detection.patch
 
@@ -82,12 +82,12 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 ---
  drivers/ata/ahci.c        |   65 ----------------------------------------------
- drivers/ata/libata-core.c |   17 ------------
- 2 files changed, 2 insertions(+), 80 deletions(-)
+ drivers/ata/libata-core.c |   10 -------
+ 2 files changed, 2 insertions(+), 73 deletions(-)
 
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1432,7 +1432,7 @@ static void ahci_port_intr(struct ata_po
+@@ -1241,7 +1241,7 @@ static void ahci_host_intr(struct ata_po
  	struct ata_eh_info *ehi = &ap->eh_info;
  	struct ahci_port_priv *pp = ap->private_data;
  	u32 status, qc_active;
@@ -96,7 +96,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
  	status = readl(port_mmio + PORT_IRQ_STAT);
  	writel(status, port_mmio + PORT_IRQ_STAT);
-@@ -1448,74 +1448,11 @@ static void ahci_port_intr(struct ata_po
+@@ -1257,74 +1257,11 @@ static void ahci_host_intr(struct ata_po
  		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
  
  	rc = ata_qc_complete_multiple(ap, qc_active, NULL);
@@ -173,7 +173,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  static void ahci_irq_clear(struct ata_port *ap)
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3772,6 +3772,7 @@ static const struct ata_blacklist_entry 
+@@ -3785,6 +3785,7 @@ static const struct ata_blacklist_entry 
  	/* Devices where NCQ should be avoided */
  	/* NCQ is slow */
          { "WDC WD740ADFD-00",   NULL,		ATA_HORKAGE_NONCQ },
@@ -181,31 +181,24 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	/* http://thread.gmane.org/gmane.linux.ide/14907 */
  	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
  	/* NCQ is broken */
-@@ -3790,22 +3791,6 @@ static const struct ata_blacklist_entry 
+@@ -3803,15 +3804,6 @@ static const struct ata_blacklist_entry 
  	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
  	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
  	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
 -	/* Drives which do spurious command completion */
 -	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
 -	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
--	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
 -	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
--	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
 -	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
--	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
 -	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
--	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
 -	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
--	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
--	{ "ST9160821AS",	"3.CCD",	ATA_HORKAGE_NONCQ, },
--	{ "ST3160812AS",	"3.ADJ",	ATA_HORKAGE_NONCQ, },
--	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
+-	{ "ST3160812AS",	"3.AD",		ATA_HORKAGE_NONCQ, },
 -	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
  
- 	/* devices which puke on READ_NATIVE_MAX */
- 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+ 	/* End Marker */
+ 	{ }
 
 
 Patches currently in stable-queue which might be from htejun@gmail.com are
 
-queue-2.6.23/libata-kill-spurious-ncq-completion-detection.patch
+queue-2.6.22/libata-kill-spurious-ncq-completion-detection.patch
