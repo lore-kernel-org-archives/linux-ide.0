@@ -1,30 +1,19 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 17:15:06 -0500
-Message-ID: <1197584106.3154.55.camel@localhost.localdomain>
-References: <20071213185326.GQ26334@parisc-linux.org>
-	 <4761821F.3050602@rtr.ca> <20071213192633.GD10104@kernel.dk>
-	 <4761883A.7050908@rtr.ca> <476188C4.9030802@rtr.ca>
-	 <20071213193937.GG10104@kernel.dk> <47618B0B.8020203@rtr.ca>
-	 <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk>
-	 <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk>
-	 <20071213140207.111f94e2.akpm@linux-foundation.org>
+Date: Thu, 13 Dec 2007 23:17:39 +0100
+Message-ID: <20071213221738.GE19673@kernel.dk>
+References: <20071213192633.GD10104@kernel.dk> <4761883A.7050908@rtr.ca> <476188C4.9030802@rtr.ca> <20071213193937.GG10104@kernel.dk> <47618B0B.8020203@rtr.ca> <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk> <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:48570
-	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751264AbXLMWPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 17:15:17 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20071213140207.111f94e2.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mel@csn.ul.ie>
+Cc: liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mel@csn.ul.ie>
+List-Id: linux-ide@vger.kernel.org
 
-
-On Thu, 2007-12-13 at 14:02 -0800, Andrew Morton wrote:
+On Thu, Dec 13 2007, Andrew Morton wrote:
 > On Thu, 13 Dec 2007 21:09:59 +0100
 > Jens Axboe <jens.axboe@oracle.com> wrote:
 > 
@@ -45,10 +34,29 @@ On Thu, 2007-12-13 at 14:02 -0800, Andrew Morton wrote:
 > It would help if you could provide us with a simple recipe for
 > demonstrating this problem, please.
 
-The simple way seems to be to malloc a large area, touch every page and
-then look at the physical pages assigned ... they now mostly seem to be
-descending in physical address.
+Basically anything involving IO :-). A boot here showed a handful of
+good merges, and probably in the order of 100,000 descending
+allocations. A kernel make is a fine test as well.
 
-James
+Something like the below should work fine - if you see oodles of these
+basicaly doing any type of IO, then you are screwed.
 
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index e30b1a4..8ce3fcc 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -1349,6 +1349,10 @@ new_segment:
+ 				sg = sg_next(sg);
+ 			}
+ 
++			if (bvprv) {
++				if (page_address(bvec->bv_page) + PAGE_SIZE == page_address(bvprv->bv_page) && printk_ratelimit())
++					printk("page alloc order backwards\n");
++			}
+ 			sg_set_page(sg, bvec->bv_page, nbytes, bvec->bv_offset);
+ 			nsegs++;
+ 		}
+
+-- 
+Jens Axboe
 
