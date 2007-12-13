@@ -1,94 +1,54 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Kernel 2.6.23.9 / P35 Chipset + WD 750GB Drives (reset port)
-Date: Thu, 13 Dec 2007 17:27:39 -0500
-Message-ID: <4761B1DB.20600@tmr.com>
-References: <Pine.LNX.4.64.0712010619150.25643@p34.internal.lan> <Pine.LNX.4.64.0712011310410.30316@fbirervta.pbzchgretzou.qr> <4751AB91.2000207@tmr.com> <475CF57E.7060406@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Thu, 13 Dec 2007 17:15:06 -0500
+Message-ID: <1197584106.3154.55.camel@localhost.localdomain>
+References: <20071213185326.GQ26334@parisc-linux.org>
+	 <4761821F.3050602@rtr.ca> <20071213192633.GD10104@kernel.dk>
+	 <4761883A.7050908@rtr.ca> <476188C4.9030802@rtr.ca>
+	 <20071213193937.GG10104@kernel.dk> <47618B0B.8020203@rtr.ca>
+	 <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk>
+	 <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk>
+	 <20071213140207.111f94e2.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:50720 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751763AbXLMWJz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Dec 2007 17:09:55 -0500
-In-Reply-To: <475CF57E.7060406@gmail.com>
+Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:48570
+	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751264AbXLMWPR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 17:15:17 -0500
+In-Reply-To: <20071213140207.111f94e2.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jan Engelhardt <jengelh@computergmbh.de>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, apiszcz@solarrain.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mel@csn.ul.ie>
 
-Tejun Heo wrote:
-> Bill Davidsen wrote:
->   
->> Jan Engelhardt wrote:
->>     
->>> On Dec 1 2007 06:26, Justin Piszcz wrote:
->>>       
->>>> I ran the following:
->>>>
->>>> dd if=/dev/zero of=/dev/sdc
->>>> dd if=/dev/zero of=/dev/sdd
->>>> dd if=/dev/zero of=/dev/sde
->>>>
->>>> (as it is always a very good idea to do this with any new disk)
->>>>         
->>> Why would you care about what's on the disk? fdisk, mkfs and
->>> the day-to-day operation will overwrite it _anyway_.
->>>
->>> (If you think the disk is not empty, you should look at it
->>> and copy off all usable warez beforehand :-)
->>>
->>>       
->> Do you not test your drive for minimum functionality before using them?
->>     
->
-> I personally don't.
->
->   
->> Also, if you have the tools to check for relocated sectors before and
->> after doing this, that's a good idea as well. S.M.A.R.T is your friend.
->> And when writing /dev/zero to a drive, if it craps out you have less
->> emotional attachment to the data.
->>     
->
-> Writing all zero isn't too useful tho.  Drive failing reallocation on
-> write is catastrophic failure.  It means that the drive wanna relocate
-> but can't because it used up all its extra space which usually indicates
-> something else is seriously wrong with the drive.  The drive will have
-> to go to the trash can.  This is all serious and bad but the catch is
-> that in such cases the problem usually stands like a sore thumb so
-> either vendor doesn't ship such drive or you'll find the failure very
-> early.  I personally haven't seen any such failure yet.  Maybe I'm lucky.
->   
 
-The problem is usually not with what the vendor ships, but what the 
-carrier delivers. Bad handling does happen, "drop ship" can have several 
-meanings, and I have received shipments with the "G sensor" in the case 
-triggered. Zero is a handy source of data, but the important thing is to 
-look at the relocated sector count before and after the write. If there 
-are a lot of bad sectors initially, the drive is probably a poor choice 
-for anything critical.
-> Most data loss occurs when the drive fails to read what it thought it
-> wrote successfully and the opposite - reading and dumping the whole disk
-> to /dev/null periodically is probably much better than writing zeros as
-> it allows the drive to find out deteriorating sector early while it's
-> still readable and relocate.  But then again I think it's an overkill.
->
-> Writing zeros to sectors is more useful as cure rather than prevention.
->  If your drive fails to read a sector, write whatever value to the
-> sector.  The drive will forget about the data on the damaged sector and
-> reallocate and write new data to it.  Of course, you lose data which was
-> originally on the sector.
->
-> I personally think it's enough to just throw in an extra disk and make
-> it RAID0 or 5 and rebuild the array if read fails on one of the disks.
-> If write fails or read fail continues, replace the disk.  Of course, if
-> you wanna be extra cautious, good for you.  :-)
->
->   
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+On Thu, 2007-12-13 at 14:02 -0800, Andrew Morton wrote:
+> On Thu, 13 Dec 2007 21:09:59 +0100
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> >
+> > OK, it's a vm issue,
+> 
+> cc linux-mm and probable culprit.
+> 
+> >  I have tens of thousand "backward" pages after a
+> > boot - IOW, bvec->bv_page is the page before bvprv->bv_page, not
+> > reverse. So it looks like that bug got reintroduced.
+> 
+> Bill Irwin fixed this a couple of years back: changed the page allocator so
+> that it mostly hands out pages in ascending physical-address order.
+> 
+> I guess we broke that, quite possibly in Mel's page allocator rework.
+> 
+> It would help if you could provide us with a simple recipe for
+> demonstrating this problem, please.
+
+The simple way seems to be to malloc a large area, touch every page and
+then look at the physical pages assigned ... they now mostly seem to be
+descending in physical address.
+
+James
 
 
