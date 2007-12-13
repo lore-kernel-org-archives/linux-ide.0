@@ -1,62 +1,54 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 17/21] ide: drop 'initializing' argument from ide_register_hw()
-Date: Thu, 13 Dec 2007 16:02:24 +0300
-Message-ID: <47612D60.4050408@ru.mvista.com>
-References: <200711182331.23988.bzolnier@gmail.com> <475ED463.5050607@ru.mvista.com> <200712122236.46043.bzolnier@gmail.com>
+From: Patric Karlsson <patric@ce.chalmers.se>
+Subject: Re: stable basic 4-port SATA card
+Date: Thu, 13 Dec 2007 14:37:14 +0100
+Message-ID: <fjrci9$v8o$1@ger.gmane.org>
+References: <200711151001.lAFA11wC019059@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:29045 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754978AbXLMNCF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 08:02:05 -0500
-In-Reply-To: <200712122236.46043.bzolnier@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:60298 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759290AbXLMNpI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Dec 2007 08:45:08 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1J2oKw-0003BA-9e
+	for linux-ide@vger.kernel.org; Thu, 13 Dec 2007 13:42:50 +0000
+Received: from lx32.ce.chalmers.se ([129.16.20.100])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 13 Dec 2007 13:42:50 +0000
+Received: from patric by lx32.ce.chalmers.se with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 13 Dec 2007 13:42:50 +0000
+In-Reply-To: <200711151001.lAFA11wC019059@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Roman Zippel <zippel@linux-m68k.org>
+To: linux-ide@vger.kernel.org
 
-Bartlomiej Zolnierkiewicz wrote:
+Mikael Pettersson wrote:
+> On Thu, 15 Nov 2007 12:32:14 +0900, Tejun Heo wrote:
+>> * sata_promise: Generally works okay; however there are still some
+>> problems with recent 3Gbps chips. (Mikael, please pitch in)
+> 
+> Right, 2nd-gen 3Gbps chips have had "intermittent" issues,
+> which we hope are cured by the recent ASIC bug workaround,
+> but it will take a while for that fix to propagate out.
+> To speed up that process I'm considering backporting the fix
+> to 2.6.23 and 2.6.22.
+> 
+> NCQ and PMP are supported in the hardware and in the vendor's
+> driver, but not yet in sata_promise. My intention is to add
+> NCQ soon, but there's no time-plan yet for this.
+> 
+> /Mikael
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
->>>* Rename init_hwif_data() to ide_init_port_data() and export it.
+Backporting would be nice, since we're still some ways from a stable 
+2.6.24, and I'm not comfortable running -rc kernels in production 
+enviroments.
 
->>>* For all users of ide_register_hw() with 'initializing' argument set
->>>  hwif->present and hwif->hold are always zero so convert these host
->>>  drivers to use ide_find_port()+ide_init_port_data()+ide_init_port_hw()
->>>  instead (also no need for init_hwif_default() call since the setup
->>>  done by it gets over-ridden by ide_init_port_data() call).
-
->>    But init_hwif_default() gets called *after* ide_init_port_data() call, at 
->>least in ide_register_hw()...
-
-> This is a mistake in the patch description:
-
-> s/ide_init_port_data/ide_init_port_hw/
-
-> [ I fixed it locally ]
-
->>>* Drop 'initializing' argument from ide_register_hw().
-
->>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
->>>Index: b/drivers/ide/ide.c
->>>===================================================================
->>>--- a/drivers/ide/ide.c
->>>+++ b/drivers/ide/ide.c
->>>@@ -116,7 +116,7 @@ EXPORT_SYMBOL(ide_hwifs);
->>> /*
->>>  * Do not even *think* about calling this!
->>>  */
-
->>    Isn't this comment being obsoleted by the patch?
-
-> It is still valid because ide_init_port_data() destroys
-> "hdx=" and "idex=" kernel parameters...
-
-    But the drivers are now calling it nevertheless...
-
-> Thanks,
-> Bart
-
-MBR, Sergei
