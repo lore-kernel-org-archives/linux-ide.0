@@ -1,76 +1,36 @@
-From: Krzysztof Oledzki <olel@ans.pl>
-Subject: Re: stable basic 4-port SATA card
-Date: Thu, 13 Dec 2007 17:37:50 +0100
-Message-ID: <47615FDE.5000702@ans.pl>
-References: <200711151001.lAFA11wC019059@harpo.it.uu.se>	<fjrci9$v8o$1@ger.gmane.org> <18273.15617.119611.820953@harpo.it.uu.se>
+From: Mark Lord <lkml@rtr.ca>
+Subject: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Thu, 13 Dec 2007 13:36:02 -0500
+Message-ID: <47617B92.6020908@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pigeon.axelspringer.pl ([195.177.210.68]:59648 "EHLO
-	mx1.axelspringer.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751691AbXLMRFH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 12:05:07 -0500
-In-Reply-To: <18273.15617.119611.820953@harpo.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Patric Karlsson <patric@ce.chalmers.se>, linux-ide@vger.kernel.org
 
-On 2007-12-13 15:09, Mikael Pettersson wrote:
-> Patric Karlsson writes:
->  > Mikael Pettersson wrote:
->  > > On Thu, 15 Nov 2007 12:32:14 +0900, Tejun Heo wrote:
->  > >> * sata_promise: Generally works okay; however there are still s=
-ome
->  > >> problems with recent 3Gbps chips. (Mikael, please pitch in)
->  > >=20
->  > > Right, 2nd-gen 3Gbps chips have had "intermittent" issues,
->  > > which we hope are cured by the recent ASIC bug workaround,
->  > > but it will take a while for that fix to propagate out.
->  > > To speed up that process I'm considering backporting the fix
->  > > to 2.6.23 and 2.6.22.
->  > >=20
->  > > NCQ and PMP are supported in the hardware and in the vendor's
->  > > driver, but not yet in sata_promise. My intention is to add
->  > > NCQ soon, but there's no time-plan yet for this.
->  > >=20
->  > > /Mikael
->  > > -
->  > > To unsubscribe from this list: send the line "unsubscribe linux-=
-ide" in
->  > > the body of a message to majordomo@vger.kernel.org
->  > > More majordomo info at  http://vger.kernel.org/majordomo-info.ht=
-ml
->  > >=20
->  >=20
->  > Backporting would be nice, since we're still some ways from a stab=
-le=20
->  > 2.6.24, and I'm not comfortable running -rc kernels in production=20
->  > enviroments.
->=20
-> Ok.
->=20
-> For 2.6.23 there is one patch:
->=20
-> <http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_pr=
-omise-1-asic-sg-bug-fix-v3-2.6.23>
-> This is the workaround for the ASIC PRD/SG bug.
->=20
-> For 2.6.22 there are two patches:
->=20
-> <http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_pr=
-omise-1-ft_tx4200-is-gen2-2.6.22>
-> This corrects the classification of FastTrack TX4200 cards,
-> which in turn fixes nasty errors in how they are accessed.
->=20
-> <http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_pr=
-omise-2-asic-sg-bug-fix-v3-2.6.22>
-> This is the workaround for the ASIC PRD/SG bug.
+Jens,
 
-Maybe -stable should get this?
+I'm experimenting here with trying to generate large I/O through libata,
+and not having much luck.
 
-Best regards,
+The limit seems to be the number of hardware PRD (SG) entries permitted
+by the driver (libata:ata_piix), which is 128 by default.
 
-				Krzysztof Ol=EAdzki
+The problem is, the block layer *never* sends an SG entry larger than 8192 bytes,
+and even that size is exceptionally rare.  Nearly all I/O segments are 4096 bytes,
+so I never see a single I/O larger than 512KB (128 * 4096).
+
+If I patch various parts of block and SCSI, this limit doesn't budge,
+but when I change the hardware PRD limit in libata, it scales by exactly
+whatever I set the new value to.  This tells me that adjacent I/O segments
+are not being combined.
+
+I thought that QUEUE_FLAG_CLUSTER (aka. SCSI host .use_clustering=1) should
+result in adjacent single pages being combined into larger physical segments?
+
+This is x86-32 with latest 2.6.24-rc*.
+I'll re-test on older kernels next.
+
+???
