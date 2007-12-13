@@ -1,45 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 11:42:21 -0700
-Message-ID: <20071213184221.GP26334@parisc-linux.org>
+Date: Thu, 13 Dec 2007 13:46:03 -0500
+Message-ID: <1197571563.3154.41.camel@localhost.localdomain>
 References: <47617B92.6020908@rtr.ca> <47617C07.3020501@rtr.ca>
+	 <20071213184221.GP26334@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56808 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbXLMSmW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 13:42:22 -0500
-Content-Disposition: inline
-In-Reply-To: <47617C07.3020501@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20071213184221.GP26334@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-On Thu, Dec 13, 2007 at 01:37:59PM -0500, Mark Lord wrote:
-> The problem is, the block layer *never* sends an SG entry larger than 8192 
-> bytes,
-> and even that size is exceptionally rare.  Nearly all I/O segments are 4096 
-> bytes,
-> so I never see a single I/O larger than 512KB (128 * 4096).
+
+On Thu, 2007-12-13 at 11:42 -0700, Matthew Wilcox wrote:
+> On Thu, Dec 13, 2007 at 01:37:59PM -0500, Mark Lord wrote:
+> > The problem is, the block layer *never* sends an SG entry larger than 8192 
+> > bytes,
+> > and even that size is exceptionally rare.  Nearly all I/O segments are 4096 
+> > bytes,
+> > so I never see a single I/O larger than 512KB (128 * 4096).
+> > 
+> > If I patch various parts of block and SCSI, this limit doesn't budge,
+> > but when I change the hardware PRD limit in libata, it scales by exactly
+> > whatever I set the new value to.  This tells me that adjacent I/O segments
+> > are not being combined.
+> > 
+> > I thought that QUEUE_FLAG_CLUSTER (aka. SCSI host .use_clustering=1) should
+> > result in adjacent single pages being combined into larger physical 
+> > segments?
 > 
-> If I patch various parts of block and SCSI, this limit doesn't budge,
-> but when I change the hardware PRD limit in libata, it scales by exactly
-> whatever I set the new value to.  This tells me that adjacent I/O segments
-> are not being combined.
-> 
-> I thought that QUEUE_FLAG_CLUSTER (aka. SCSI host .use_clustering=1) should
-> result in adjacent single pages being combined into larger physical 
-> segments?
+> I was recently debugging a driver and noticed that consecutive pages in
+> an sg list are in the reverse order.  ie first you get page 918, then
+> 917, 916, 915, 914, etc.  I vaguely remember James having patches to
+> correct this, but maybe they weren't merged?
 
-I was recently debugging a driver and noticed that consecutive pages in
-an sg list are in the reverse order.  ie first you get page 918, then
-917, 916, 915, 914, etc.  I vaguely remember James having patches to
-correct this, but maybe they weren't merged?
+Yes, they were ... it was actually Bill Irwin's patch.  The old problem
+was that we fault allocations in reverse order (because we were taking
+from the end of the zone list).  I can't remember when his patches went
+in, but it was several years ago.  After they did, I was getting a 33%
+chance of physical merging (as opposed to zero before).  Probably
+someone redid the vm or the zones without understanding this and we've
+gone back to the original position.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+James
+
+
