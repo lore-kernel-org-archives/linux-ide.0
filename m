@@ -1,23 +1,23 @@
 From: Greg KH <gregkh@suse.de>
-Subject: [patch 35/36] libata: kill spurious NCQ completion detection
-Date: Wed, 12 Dec 2007 22:35:37 -0800
-Message-ID: <20071213063537.GJ25301@kroah.com>
-References: <20071213062511.265908583@mini.kroah.org>
+Subject: [patch 56/60] libata: kill spurious NCQ completion detection
+Date: Wed, 12 Dec 2007 22:53:41 -0800
+Message-ID: <20071213065341.GF6867@kroah.com>
+References: <20071213064518.328162328@mini.kroah.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56715 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:55746 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757640AbXLMGiq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 01:38:46 -0500
+	with ESMTP id S1762653AbXLMG6j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 01:58:39 -0500
 Content-Disposition: inline; filename="libata-kill-spurious-ncq-completion-detection.patch"
-In-Reply-To: <20071213063308.GA25301@kroah.com>
+In-Reply-To: <20071213065039.GA6867@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Michael Tokarev <mjt@tls.msk.ru>, Jeff Garzik <jeff@garzik.org>, Diego Torres <dtorres@coral.dnsalias.org>, Tejun Heo <htejun@gmail.com>
 
-2.6.22-stable review patch.  If anyone has any objections, please let us
+2.6.23-stable review patch.  If anyone has any objections, please let us
 know.
 
 ------------------
@@ -68,12 +68,12 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 ---
  drivers/ata/ahci.c        |   65 ----------------------------------------------
- drivers/ata/libata-core.c |   10 -------
- 2 files changed, 2 insertions(+), 73 deletions(-)
+ drivers/ata/libata-core.c |   17 ------------
+ 2 files changed, 2 insertions(+), 80 deletions(-)
 
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1241,7 +1241,7 @@ static void ahci_host_intr(struct ata_po
+@@ -1432,7 +1432,7 @@ static void ahci_port_intr(struct ata_po
  	struct ata_eh_info *ehi = &ap->eh_info;
  	struct ahci_port_priv *pp = ap->private_data;
  	u32 status, qc_active;
@@ -82,7 +82,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
  	status = readl(port_mmio + PORT_IRQ_STAT);
  	writel(status, port_mmio + PORT_IRQ_STAT);
-@@ -1257,74 +1257,11 @@ static void ahci_host_intr(struct ata_po
+@@ -1448,74 +1448,11 @@ static void ahci_port_intr(struct ata_po
  		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
  
  	rc = ata_qc_complete_multiple(ap, qc_active, NULL);
@@ -159,7 +159,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  static void ahci_irq_clear(struct ata_port *ap)
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3785,6 +3785,7 @@ static const struct ata_blacklist_entry 
+@@ -3772,6 +3772,7 @@ static const struct ata_blacklist_entry 
  	/* Devices where NCQ should be avoided */
  	/* NCQ is slow */
          { "WDC WD740ADFD-00",   NULL,		ATA_HORKAGE_NONCQ },
@@ -167,21 +167,28 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	/* http://thread.gmane.org/gmane.linux.ide/14907 */
  	{ "FUJITSU MHT2060BH",	NULL,		ATA_HORKAGE_NONCQ },
  	/* NCQ is broken */
-@@ -3803,15 +3804,6 @@ static const struct ata_blacklist_entry 
+@@ -3790,22 +3791,6 @@ static const struct ata_blacklist_entry 
  	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
  	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
  	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
 -	/* Drives which do spurious command completion */
 -	{ "HTS541680J9SA00",	"SB2IC7EP",	ATA_HORKAGE_NONCQ, },
 -	{ "HTS541612J9SA00",	"SBDIC7JP",	ATA_HORKAGE_NONCQ, },
+-	{ "HDT722516DLA380",	"V43OA96A",	ATA_HORKAGE_NONCQ, },
 -	{ "Hitachi HTS541616J9SA00", "SB4OC70P", ATA_HORKAGE_NONCQ, },
+-	{ "Hitachi HTS542525K9SA00", "BBFOC31P", ATA_HORKAGE_NONCQ, },
 -	{ "WDC WD740ADFD-00NLR1", NULL,		ATA_HORKAGE_NONCQ, },
+-	{ "WDC WD3200AAJS-00RYA0", "12.01B01",	ATA_HORKAGE_NONCQ, },
 -	{ "FUJITSU MHV2080BH",	"00840028",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9120822AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
 -	{ "ST9160821AS",	"3.CLF",	ATA_HORKAGE_NONCQ, },
--	{ "ST3160812AS",	"3.AD",		ATA_HORKAGE_NONCQ, },
+-	{ "ST9160821AS",	"3.ALD",	ATA_HORKAGE_NONCQ, },
+-	{ "ST9160821AS",	"3.CCD",	ATA_HORKAGE_NONCQ, },
+-	{ "ST3160812AS",	"3.ADJ",	ATA_HORKAGE_NONCQ, },
+-	{ "ST980813AS",		"3.ADB",	ATA_HORKAGE_NONCQ, },
 -	{ "SAMSUNG HD401LJ",	"ZZ100-15",	ATA_HORKAGE_NONCQ, },
  
- 	/* End Marker */
- 	{ }
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
 
 -- 
