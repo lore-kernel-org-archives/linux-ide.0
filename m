@@ -1,64 +1,62 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 15/20] ide: don't enable local IRQs for PIO-in in driver_cmd_intr()
-Date: Thu, 13 Dec 2007 15:59:59 +0300
-Message-ID: <47612CCF.5070006@ru.mvista.com>
-References: <200712092218.30672.bzolnier@gmail.com> <475D419A.1050506@ru.mvista.com> <200712122228.37569.bzolnier@gmail.com>
+Subject: Re: [PATCH 17/21] ide: drop 'initializing' argument from ide_register_hw()
+Date: Thu, 13 Dec 2007 16:02:24 +0300
+Message-ID: <47612D60.4050408@ru.mvista.com>
+References: <200711182331.23988.bzolnier@gmail.com> <475ED463.5050607@ru.mvista.com> <200712122236.46043.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:29011 "EHLO
+Received: from homer.mvista.com ([63.81.120.155]:29045 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752265AbXLMM7l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 07:59:41 -0500
-In-Reply-To: <200712122228.37569.bzolnier@gmail.com>
+	with ESMTP id S1754978AbXLMNCF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Dec 2007 08:02:05 -0500
+In-Reply-To: <200712122236.46043.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Roman Zippel <zippel@linux-m68k.org>
 
 Bartlomiej Zolnierkiewicz wrote:
 
->>>Index: b/drivers/ide/ide-io.c
+>>>* Rename init_hwif_data() to ide_init_port_data() and export it.
+
+>>>* For all users of ide_register_hw() with 'initializing' argument set
+>>>  hwif->present and hwif->hold are always zero so convert these host
+>>>  drivers to use ide_find_port()+ide_init_port_data()+ide_init_port_hw()
+>>>  instead (also no need for init_hwif_default() call since the setup
+>>>  done by it gets over-ridden by ide_init_port_data() call).
+
+>>    But init_hwif_default() gets called *after* ide_init_port_data() call, at 
+>>least in ide_register_hw()...
+
+> This is a mistake in the patch description:
+
+> s/ide_init_port_data/ide_init_port_hw/
+
+> [ I fixed it locally ]
+
+>>>* Drop 'initializing' argument from ide_register_hw().
+
+>>>Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+>>>Index: b/drivers/ide/ide.c
 >>>===================================================================
->>>--- a/drivers/ide/ide-io.c
->>>+++ b/drivers/ide/ide-io.c
->>>@@ -638,17 +638,18 @@ static ide_startstop_t drive_cmd_intr (i
->>> {
->>> 	struct request *rq = HWGROUP(drive)->rq;
->>> 	ide_hwif_t *hwif = HWIF(drive);
->>>-	u8 *args = (u8 *) rq->buffer;
->>>-	u8 stat = hwif->INB(IDE_STATUS_REG);
->>>+	u8 *args = (u8 *)rq->buffer, pio_in = (args && args[3]) ? 1 : 0, stat;
->>> 
->>>-	local_irq_enable_in_hardirq();
->>>-	if (rq->cmd_type == REQ_TYPE_ATA_CMD &&
->>>-	    (stat & DRQ_STAT) && args && args[3]) {
->>>+	if (pio_in) {
->>> 		u8 io_32bit = drive->io_32bit;
->>>+		stat = hwif->INB(IDE_STATUS_REG);
+>>>--- a/drivers/ide/ide.c
+>>>+++ b/drivers/ide/ide.c
+>>>@@ -116,7 +116,7 @@ EXPORT_SYMBOL(ide_hwifs);
+>>> /*
+>>>  * Do not even *think* about calling this!
+>>>  */
 
->>    You've lost DRQ=1 check (which is returned in the next patch however)...
+>>    Isn't this comment being obsoleted by the patch?
 
+> It is still valid because ide_init_port_data() destroys
+> "hdx=" and "idex=" kernel parameters...
 
-> Thanks, revised patch below.
+    But the drivers are now calling it nevertheless...
 
-> [PATCH] ide: don't enable local IRQs for PIO-in in driver_cmd_intr() (take 2)
-
-> Don't enable local IRQs for PIO-in protocol in driver_cmd_intr().
-
-> While at it:
-
-> * Remove redundant rq->cmd_type check.
-
-> * Read status register after enabling local IRQs for no-data protocol.
-
-> v2:
-> * Re-add DRQ=1 check lost in v1 (noticed by Sergei).
-
-> Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Thanks,
+> Bart
 
 MBR, Sergei
