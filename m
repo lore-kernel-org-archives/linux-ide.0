@@ -1,39 +1,69 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: Re: [PATCH v2 2/4] [libata] pata_of_platform: OF-Platform PATA
-	device driver
-Date: Fri, 14 Dec 2007 10:33:05 -0600
-Message-ID: <20071214163305.GA3704@lixom.net>
-References: <20071204170442.GA10460@localhost.localdomain> <20071204170719.GB15599@localhost.localdomain> <20071204184826.GA5758@lixom.net> <20071204194921.GB1253@localhost.localdomain> <20071204200121.GA6782@lixom.net> <20071205004841.GA25905@linux-sh.org> <20071205183912.GA4516@loki.buserror.net> <20071214082313.GA28118@lixom.net> <20071214160928.GA16607@ld0162-tx32.am.freescale.net>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
+Date: Fri, 14 Dec 2007 12:04:54 -0500 (EST)
+Message-ID: <20071214.120454.39153297.k-ueda@ct.jp.nec.com>
+References: <20071211154803.58beb681.zaitcev@redhat.com>
+	<20071212.153815.39152138.k-ueda@ct.jp.nec.com>
+	<20071213135916.27ebe3f9.zaitcev@redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:49929 "EHLO mail.lixom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753768AbXLNQ1e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Dec 2007 11:27:34 -0500
-Content-Disposition: inline
-In-Reply-To: <20071214160928.GA16607@ld0162-tx32.am.freescale.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20071213135916.27ebe3f9.zaitcev@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: zaitcev@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-ide@vger.kernel.org
-To: Scott Wood <scottwood@freescale.com>
-Cc: linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Jeff Garzik <jeff@garzik.org>, linuxppc-dev@ozlabs.org
 
-On Fri, Dec 14, 2007 at 10:09:28AM -0600, Scott Wood wrote:
-> On Fri, Dec 14, 2007 at 02:23:13AM -0600, Olof Johansson wrote:
-> > On Wed, Dec 05, 2007 at 12:39:12PM -0600, Scott Wood wrote:
-> > > Why is it dependent on anything other than platform bus support and ATA?
-> > 
-> > There's no way to specify dependency on platform bus as a config option,
-> > that's likely what EMBEDDED was meant to do. Some platforms have platform
-> > bus in spite of being !EMBEDDED, arch/arm/configs/rpc_defconfig seems
-> > to be among those. PPC too.
+Hi Pete,
+
+On Thu, 13 Dec 2007 13:59:16 -0800, Pete Zaitcev <zaitcev@redhat.com> wrote:
+> > > > -	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+> > > > -	end_that_request_last(rq, uptodate);
+> > > > +	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
+> > > > +		BUG();
+> > >
+> > > My understanding was, blk_end_request() is the same thing, only
+> > > takes the queue lock. But then, should I refactor ub so that it
+> > > calls __blk_end_request if request function ends with an error
+> > > and blk_end_request if the end-of-IO even is processed?
+> >
+> > I'm using __blk_end_request() here and I think it's sufficient, because:
+> >   o end_that_request_last() must be called with the queue lock held
+> >   o ub_end_rq() calls end_that_request_last() without taking
+> >     the queue lock in itself.
+> >     So the queue lock must have been taken outside ub_end_rq().
+> >
+> > But, if ub is calling end_that_request_last() without the queue lock,
+> > it is a bug in the original code and we should use blk_end_request()
+> > to fix that.
 > 
-> If platform bus can't be configged out, then the only dependency should
-> be the implicit one on ATA (is there anything else whose absence will
-> stop the code from building, or working if the appropriate platform
-> device is passed in?).
+> So, I have to rewrite ub to split the paths after all, right?
+> Let's do this then: I'll wait until your patch gets to Linus and
+> then update it with the split. The reason is, I need the whole
+> enchilada applied and I don't want to bother tracking iterations
+> and all the little segments (of which you already have 30).
+> Until then, ub will have a race by using your original small patch.
 
-Sure, sounds good to me.
+No.
+Are you doubting that the current ub code has the problem, aren't you?
+My patch shouldn't introduce a NEW problem to ub.
 
+I have investigated all code paths which call ub_end_rq() in ub.c,
+and confirmed that ub_end_rq() is always called with the queue lock
+held.  (sc->lock is registered as a queue lock.)
 
--Olof
+So there is no such race in the current ub code.
+You don't need to rewrite ub.
+
+Thanks,
+Kiyoshi Ueda
