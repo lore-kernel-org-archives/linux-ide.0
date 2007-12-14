@@ -1,32 +1,50 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [BUG] Kernel Bugs Weekly (maybe bi-weekly)
-Date: Fri, 14 Dec 2007 14:46:28 +0000
-Message-ID: <20071214144628.GB15149@flint.arm.linux.org.uk>
-References: <32209efe0712132057x247219e0m602f24d1e3a2c20b@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 7/9] libata-acpi: improve _GTF execution error handling
+ and reporting
+Date: Fri, 14 Dec 2007 23:50:23 +0900
+Message-ID: <4762982F.2060701@gmail.com>
+References: <11976129411285-git-send-email-htejun@gmail.com> <11976129433239-git-send-email-htejun@gmail.com> <47628F3A.1060806@rtr.ca> <47629004.4040701@gmail.com> <47629720.4010602@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753818AbXLNOrY@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <32209efe0712132057x247219e0m602f24d1e3a2c20b@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Natalie Protasevich <protasnb@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-input@atrey.karlin.mff.cuni.cz, linux-dvb@linuxtv.org, linux-acpi@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.184]:38860 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbXLNOua (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2007 09:50:30 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so964854rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2007 06:50:29 -0800 (PST)
+In-Reply-To: <47629720.4010602@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: jeff@garzik.org, hancockr@shaw.ca, linux-ide@vger.kernel.org
 
-On Thu, Dec 13, 2007 at 08:57:24PM -0800, Natalie Protasevich wrote:
-> PLATFORM======================================================================
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Mark Lord wrote:
+>>> Tejun Heo wrote:
+>>>> As _GTF commands can't transfer data, device error never signals
+>>>> transfer error.  It indicates that the device vetoed the operation, so
+>>>> it's meaningless to retry.
+>>> ..
+>>>
+>>> The SECURITY commands may pass a data block to the drive,
+>>> containing the password required to unlock/freeze a drive.
+>>> I suspect ACPI on many machines will issue such a command,
+>>> and it does indeed transfer data (512 bytes).
+>>
+>> Surprise, ACPI _GTF can't do that.  Don't ask me why.  :-)
+> ..
 > 
-> s3c2440_clk_add disables inactive clocks _ARM_
-> http://bugzilla.kernel.org/show_bug.cgi?id=9040
-> Kernel: 2.6.22
-> ARM, assigned to Ben Dooks (question is if he knows this :)
+> Then why are we (going to be) filtering those op's (one of your patches) ?
 
-Not quite sure what the point of putting it in an email he hasn't seen
-is either.
-
-Adding Ben as a CC.
+Filtered ones are not LOCK / FREEZE LOCK commands which prevent further
+changes.  e.g. SET MAX FREEZE LOCK will prevent further size changes
+using SET MAX [EXT].  It's bad for three reasons 1. it locks down drive
+feature without user consent (e.g. can't unlock HPA) 2. it makes
+debugging difficult by putting drives into different states 3. it just
+doesn't serve any good.
 
 -- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+tejun
