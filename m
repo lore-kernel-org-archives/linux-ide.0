@@ -1,78 +1,46 @@
-From: Olof Johansson <olof@lixom.net>
-Subject: [PATCH] Fix build break caused by "ide: remove ideprobe_init()"
-Date: Fri, 14 Dec 2007 03:09:15 -0600
-Message-ID: <20071214090915.GA28681@lixom.net>
-References: <200711182325.09262.bzolnier@gmail.com>
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Fri, 14 Dec 2007 11:50:39 +0000
+Message-ID: <20071214115038.GB11046@csn.ul.ie>
+References: <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lixom.net ([66.141.50.11]:33808 "EHLO mail.lixom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752808AbXLNJDr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Dec 2007 04:03:47 -0500
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200711182325.09262.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20071213163726.3bb601fa.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mark Lord <liml@rtr.ca>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, linuxppc-dev@ozlabs.org
 
-Fix build break of powerpc holly_defconfig:
-
-In file included from arch/powerpc/platforms/embedded6xx/holly.c:24:
-include/linux/ide.h:1206: error: 'CONFIG_IDE_MAX_HWIFS' undeclared here (not in a function)
-
-There's no need to have a sized array in the prototype, might as well
-turn it into a pointer.
-
-It could probably be argued that large parts of the include file can be
-covered under #ifdef CONFIG_IDE, but that's a larger undertaking.
-
-
-Signed-off-by: Olof Johansson <olof@lixom.net>
-
----
-
-On Sun, Nov 18, 2007 at 11:25:09PM +0100, Bartlomiej Zolnierkiewicz wrote:
+On (13/12/07 16:37), Andrew Morton didst pronounce:
+> On Thu, 13 Dec 2007 19:30:00 -0500
+> Mark Lord <liml@rtr.ca> wrote:
 > 
-> * Rename ide_device_add() to ide_device_add_all() and make it accept
->   'u8 idx[MAX_HWIFS]' instead of 'u8 idx[4]' as an argument.
+> > Here's the commit that causes the regression:
+> > 
+> > ...
+> >
+> > --- a/mm/page_alloc.c
+> > +++ b/mm/page_alloc.c
+> > @@ -760,7 +760,8 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
+> >  		struct page *page = __rmqueue(zone, order, migratetype);
+> >  		if (unlikely(page == NULL))
+> >  			break;
+> > -		list_add_tail(&page->lru, list);
+> > +		list_add(&page->lru, list);
 > 
-> * Add ide_device_add() wrapper for ide_device_add_all().
+> well that looks fishy.
 > 
-> * Convert ide_generic_init() to use ide_device_add_all().
-> 
-> * Remove no longer needed ideprobe_init().
-> 
-> There should be no functionality changes caused by this patch.
 
-This patch broke builds of powerpc holly_defconfig in -mm. It has
-CONFIG_EMBEDDED=y, CONFIG_IDE=n but includes linux/ide.h:
+The reasoning behind the change was the first page encountered on the list
+by the caller would have a matching migratetype. I failed to take into
+account the physical ordering of pages returned. I'm setting up to run some
+performance benchmarks of the candidate fix merged into the -mm tree to see
+if the search shows up or not. I'm testing against 2.6.25-rc5 but it'll
+take a few hours to complete.
 
-
-Index: mm/drivers/ide/ide-probe.c
-===================================================================
---- mm.orig/drivers/ide/ide-probe.c
-+++ mm/drivers/ide/ide-probe.c
-@@ -1335,7 +1335,7 @@ static void hwif_register_devices(ide_hw
- 	}
- }
- 
--int ide_device_add_all(u8 idx[MAX_HWIFS])
-+int ide_device_add_all(u8 *idx)
- {
- 	ide_hwif_t *hwif;
- 	int i, rc = 0;
-Index: mm/include/linux/ide.h
-===================================================================
---- mm.orig/include/linux/ide.h
-+++ mm/include/linux/ide.h
-@@ -1203,7 +1203,7 @@ void ide_unregister_region(struct gendis
- 
- void ide_undecoded_slave(ide_drive_t *);
- 
--int ide_device_add_all(u8 idx[MAX_HWIFS]);
-+int ide_device_add_all(u8 *idx);
- int ide_device_add(u8 idx[4]);
- 
- static inline void *ide_get_hwifdata (ide_hwif_t * hwif)
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
