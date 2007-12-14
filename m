@@ -1,32 +1,49 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
-Date: Fri, 14 Dec 2007 11:13:40 -0700
-Message-ID: <20071214181339.GW26334@parisc-linux.org>
-References: <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca> <20071214174236.GA28613@csn.ul.ie>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH v3 0/3] OF-platform PATA driver
+Date: Fri, 14 Dec 2007 21:21:09 +0300
+Message-ID: <20071214182109.GA858@localhost.localdomain>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:8909 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752455AbXLNSSV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2007 13:18:21 -0500
 Content-Disposition: inline
-In-Reply-To: <20071214174236.GA28613@csn.ul.ie>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org
+Cc: Paul Mundt <lethal@linux-sh.org>, Arnd Bergmann <arnd@arndb.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olof Johansson <olof@lixom.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Kumar Gala <galak@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
 
-On Fri, Dec 14, 2007 at 05:42:37PM +0000, Mel Gorman wrote:
-> Regrettably this interferes with anti-fragmentation because the "next" page
-> on the list on return from rmqueue_bulk is not guaranteed to be of the right
-> mobility type. I fixed it as an additional patch but it adds additional cost
-> that should not be necessary and it's visible in microbenchmark results on
-> at least one machine.
+Hi all,
 
-Is this patch to be preferred to the one Andrew Morton posted to do
-list_for_each_entry_reverse?
+Here is the third version of the OF-platform PATA driver and
+related patches.
 
-I'll send it to our DB team to see if this improves our numbers at all.
+
+Changes since v2:
+- "PPC" added to PATA_PLATFORM "depends on" Kconfig entry;
+  I didn't remove EMBEDDED "depends on" -- this wasn't discussed
+  much and these patches should not depend on the decision.
+- cosmetic fixes;
+- "s/ioport_shift/reg_shift/g" patch dropped.
+
+Changes since v1:
+- __pata_platform_probe now accepts pio_mask argument;
+- pata-platform compatible property renamed to ata-generic;
+- pata_of_platform understands pio-mode property. It's used to pass
+  pio_mask to the __pata_platform_probe. That is, in ata-generic
+  context pio-mode means "pio mode the bus already configured for";
+- New optional patch that renames pata_platform_info's
+  ioport_shift to reg_shift.
+
+Changes since RFC:
+- nuked drivers/ata/pata_platform.h;
+- powerpc bits: proper localbus node added.
 
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Anton Vorontsov
+email: cbou@mail.ru
+backup email: ya-cbou@yandex.ru
+irc://irc.freenode.net/bd2
