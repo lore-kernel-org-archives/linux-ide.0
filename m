@@ -1,36 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: git repo and #upstream merging
-Date: Sat, 15 Dec 2007 15:15:54 +0900
-Message-ID: <4763711A.8010204@gmail.com>
-References: <11976987063011-git-send-email-htejun@gmail.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
+ driver
+Date: Sun, 16 Dec 2007 01:09:22 +1100
+Message-ID: <20071216010922.13ef21d0.sfr@canb.auug.org.au>
+References: <20071214182109.GA858@localhost.localdomain>
+	<20071214182438.GB1017@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:8496 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbXLOGQB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 01:16:01 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1196280rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2007 22:16:00 -0800 (PST)
-In-Reply-To: <11976987063011-git-send-email-htejun@gmail.com>
+Received: from chilli.pcug.org.au ([203.10.76.44]:32905 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756725AbXLOOJd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Dec 2007 09:09:33 -0500
+In-Reply-To: <20071214182438.GB1017@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, hancockr@shaw.ca, linux-ide@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Arnd Bergmann <arnd@arndb.de>, Paul Mundt <lethal@linux-sh.org>, Olof Johansson <olof@lixom.net>
 
-Tejun Heo wrote:
-> This is the second take of improve-ACPI-corner-case-handling patchset
-> and contains the following ten patches.
+--Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Jeff, this patchset can also be pulled from the following git tree.
+On Fri, 14 Dec 2007 21:24:38 +0300 Anton Vorontsov <avorontsov@ru.mvista.co=
+m> wrote:
+>
+> +	prop =3D (u32 *)of_get_property(dn, "reg-shift", NULL);
 
-  master.kernel.org:/pub/scm/linux/kernel/git/tj/libata-dev.git acpi-fixes
+This cast is unnecessary.
 
-Also, merging this into #upstream can cause some interesting conflicts
-w/ ACPI timing handling update patches.  If you ACK the patchset, I'll
-prep merged git HEAD for you.
+> +	if (prop)
+> +		reg_shift =3D *prop;
+> +
+> +	prop =3D (u32 *)of_get_property(dn, "pio-mode", NULL);
 
-Thanks.
+So is this one.
 
--- 
-tejun
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHY+AYTgG2atn1QN8RAp21AJ9zGiZQPsyFbyuofbsH57ogiqT92ACaAgKx
+N6dQf7DMBkJo7F3DFGm8gMY=
+=4aw3
+-----END PGP SIGNATURE-----
+
+--Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im--
