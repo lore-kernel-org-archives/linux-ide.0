@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 07/10] libata-acpi: implement dev->gtf_cache and evaluate _GTF right after _STM during resume
-Date: Sat, 15 Dec 2007 15:05:03 +0900
-Message-ID: <11976987073001-git-send-email-htejun@gmail.com>
+Subject: [PATCH 06/10] libata-acpi: implement and use ata_acpi_init_gtm()
+Date: Sat, 15 Dec 2007 15:05:02 +0900
+Message-ID: <1197698707349-git-send-email-htejun@gmail.com>
 References: <11976987063011-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:52978 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.191]:53113 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757286AbXLOGFV (ORCPT
+	with ESMTP id S1757002AbXLOGFV (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 01:05:21 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1193512rvb.1
+Received: by rv-out-0910.google.com with SMTP id k20so1193517rvb.1
         for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2007 22:05:19 -0800 (PST)
 In-Reply-To: <11976987063011-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,196 +16,194 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, hancockr@shaw.ca, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-On certain implementations, _GTF evaluation depends on preceding _STM
-and both can be pretty picky about the configuration.  Using _GTM
-result cached during controller initialization satisfies the most
-neurotic _STM implementation.  However, libata evaluates _GTF after
-reset during device configuration and the hardware state can be
-different from what _GTF expects and can cause evaluation failure.
+_GTM fetches currently configured transfer mode while _STM configures
+controller according to _GTM parameter and prepares transfer mode
+configuration TFs for _GTF.  In many cases _GTM and _STM
+implementations are quite brittle and can't cope with configuration
+changed by libata.
 
-This patch adds dev->gtf_cache and updates ata_dev_get_GTF() such that
-it uses the cached value if available.  Cache is cleared with a call
-to ata_acpi_clear_gtf().
+libata does not depend on ATA ACPI to configure devices.  The only
+reason libata performs _GTM and _STM are to make _GTF evaluation
+succeed and libata also doesn't care about how _GTF TFs configure
+transfer mode.  It overrides that configuration anyway, so from
+libata's POV, it doesn't matter what value is feeded to _STM as long
+as evaluation succeeds for _STM and following _GTF.
 
-Because for SATA ACPI nodes _GTF must be evaluated after _SDD which
-can't be done till IDENTIFY is complete, _GTF caching from
-ata_acpi_on_resume() is used only for IDE ACPI nodes.
+This patch adds dev->__acpi_init_gtm and store initial _GTM values on
+host initialization before modified by reset and mode configuration.
+If the field is valid, ata_acpi_init_gtm() returns pointer to the
+saved _GTM structure; otherwise, NULL.
+
+This saved value is used for _STM during resume and peek at
+BIOS/firmware programmed initial timing for later use.  The accessor
+is there to make building w/o ACPI easy as dev->__acpi_init doesn't
+exist if ACPI is not enabled.
+
+On driver detach, the initial BIOS configuration is restored by
+executing _STM with the initial _GTM values such that the next driver
+can also use the initial BIOS configured values.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-acpi.c |   69 ++++++++++++++++++++++++++++++++-------------
- include/linux/libata.h    |    1 +
- 2 files changed, 50 insertions(+), 20 deletions(-)
+ drivers/ata/libata-acpi.c |   62 +++++++++++++++++++-------------------------
+ include/linux/libata.h    |   14 ++++++++-
+ 2 files changed, 39 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index b3aeca3..e0dd132 100644
+index 9e5fc5d..b3aeca3 100644
 --- a/drivers/ata/libata-acpi.c
 +++ b/drivers/ata/libata-acpi.c
-@@ -41,6 +41,12 @@ static int is_pci_dev(struct device *dev)
- 	return (dev->bus == &pci_bus_type);
+@@ -94,6 +94,9 @@ static void ata_acpi_associate_ide_port(struct ata_port *ap)
+ 
+ 		dev->acpi_handle = acpi_get_child(ap->acpi_handle, i);
+ 	}
++
++	if (ata_acpi_gtm(ap, &ap->__acpi_init_gtm) == 0)
++		ap->pflags |= ATA_PFLAG_INIT_GTM_VALID;
  }
  
-+static void ata_acpi_clear_gtf(struct ata_device *dev)
-+{
-+	kfree(dev->gtf_cache);
-+	dev->gtf_cache = NULL;
-+}
-+
- /**
-  * ata_acpi_associate_sata_port - associate SATA port with ACPI objects
-  * @ap: target SATA port
-@@ -327,7 +333,6 @@ EXPORT_SYMBOL_GPL(ata_acpi_stm);
-  * ata_dev_get_GTF - get the drive bootup default taskfile settings
-  * @dev: target ATA device
-  * @gtf: output parameter for buffer containing _GTF taskfile arrays
-- * @ptr_to_free: pointer which should be freed
-  *
-  * This applies to both PATA and SATA drives.
-  *
-@@ -344,8 +349,7 @@ EXPORT_SYMBOL_GPL(ata_acpi_stm);
-  * Number of taskfiles on success, 0 if _GTF doesn't exist or doesn't
-  * contain valid data.
+ static void ata_acpi_handle_hotplug(struct ata_port *ap, struct kobject *kobj,
+@@ -199,7 +202,18 @@ void ata_acpi_associate(struct ata_host *host)
   */
--static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
--			   void **ptr_to_free)
-+static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+ void ata_acpi_dissociate(struct ata_host *host)
  {
- 	struct ata_port *ap = dev->link->ap;
- 	acpi_status status;
-@@ -353,6 +357,12 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 	union acpi_object *out_obj;
- 	int rc = 0;
- 
-+	/* if _GTF is cached, use the cached value */
-+	if (dev->gtf_cache) {
-+		out_obj = dev->gtf_cache;
-+		goto done;
-+	}
+-	/* nada */
++	int i;
 +
- 	/* set up output buffer */
- 	output.length = ACPI_ALLOCATE_BUFFER;
- 	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
-@@ -363,6 +373,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 
- 	/* _GTF has no input parameters */
- 	status = acpi_evaluate_object(dev->acpi_handle, "_GTF", NULL, &output);
-+	out_obj = dev->gtf_cache = output.pointer;
- 
- 	if (ACPI_FAILURE(status)) {
- 		if (status != AE_NOT_FOUND) {
-@@ -383,7 +394,6 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 		goto out_free;
- 	}
- 
--	out_obj = output.pointer;
- 	if (out_obj->type != ACPI_TYPE_BUFFER) {
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "_GTF unexpected object type 0x%x\n",
-@@ -398,18 +408,19 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
- 		goto out_free;
- 	}
- 
--	*ptr_to_free = out_obj;
--	*gtf = (void *)out_obj->buffer.pointer;
-+ done:
- 	rc = out_obj->buffer.length / REGS_PER_GTF;
--
--	if (ata_msg_probe(ap))
--		ata_dev_printk(dev, KERN_DEBUG, "%s: returning "
--			"gtf=%p, gtf_count=%d, ptr_to_free=%p\n",
--			__FUNCTION__, *gtf, rc, *ptr_to_free);
-+	if (gtf) {
-+		*gtf = (void *)out_obj->buffer.pointer;
-+		if (ata_msg_probe(ap))
-+			ata_dev_printk(dev, KERN_DEBUG,
-+				       "%s: returning gtf=%p, gtf_count=%d\n",
-+				       __FUNCTION__, *gtf, rc);
++	/* Restore initial _GTM values so that driver which attaches
++	 * afterward can use them too.
++	 */
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++		const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
++
++		if (ap->acpi_handle && gtm)
++			ata_acpi_stm(ap, gtm);
 +	}
- 	return rc;
- 
-  out_free:
--	kfree(output.pointer);
-+	ata_acpi_clear_gtf(dev);
- 	return rc;
  }
  
-@@ -533,11 +544,10 @@ static int taskfile_load_raw(struct ata_device *dev,
- static int ata_acpi_exec_tfs(struct ata_device *dev)
+ /**
+@@ -409,22 +423,21 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf,
+ 
+ int ata_acpi_cbl_80wire(struct ata_port *ap)
  {
- 	struct ata_acpi_gtf *gtf = NULL;
--	void *ptr_to_free = NULL;
- 	int gtf_count, i, rc;
+-	struct ata_acpi_gtm gtm;
++	const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
+ 	int valid = 0;
  
- 	/* get taskfiles */
--	gtf_count = ata_dev_get_GTF(dev, &gtf, &ptr_to_free);
-+	gtf_count = ata_dev_get_GTF(dev, &gtf);
+-	/* No _GTM data, no information */
+-	if (ata_acpi_gtm(ap, &gtm) < 0)
++	if (!gtm)
+ 		return 0;
  
- 	/* execute them */
- 	for (i = 0, rc = 0; i < gtf_count; i++) {
-@@ -551,7 +561,7 @@ static int ata_acpi_exec_tfs(struct ata_device *dev)
- 			rc = tmp;
- 	}
+ 	/* Split timing, DMA enabled */
+-	if ((gtm.flags & 0x11) == 0x11 && gtm.drive[0].dma < 55)
++	if ((gtm->flags & 0x11) == 0x11 && gtm->drive[0].dma < 55)
+ 		valid |= 1;
+-	if ((gtm.flags & 0x14) == 0x14 && gtm.drive[1].dma < 55)
++	if ((gtm->flags & 0x14) == 0x14 && gtm->drive[1].dma < 55)
+ 		valid |= 2;
+ 	/* Shared timing, DMA enabled */
+-	if ((gtm.flags & 0x11) == 0x01 && gtm.drive[0].dma < 55)
++	if ((gtm->flags & 0x11) == 0x01 && gtm->drive[0].dma < 55)
+ 		valid |= 1;
+-	if ((gtm.flags & 0x14) == 0x04 && gtm.drive[0].dma < 55)
++	if ((gtm->flags & 0x14) == 0x04 && gtm->drive[0].dma < 55)
+ 		valid |= 2;
  
--	kfree(ptr_to_free);
-+	ata_acpi_clear_gtf(dev);
+ 	/* Drive check */
+@@ -612,27 +625,8 @@ static int ata_acpi_push_id(struct ata_device *dev)
+  */
+ int ata_acpi_on_suspend(struct ata_port *ap)
+ {
+-	unsigned long flags;
+-	int rc;
+-
+-	/* proceed iff per-port acpi_handle is valid */
+-	if (!ap->acpi_handle)
+-		return 0;
+-	BUG_ON(ap->flags & ATA_FLAG_ACPI_SATA);
+-
+-	/* store timing parameters */
+-	rc = ata_acpi_gtm(ap, &ap->acpi_gtm);
+-
+-	spin_lock_irqsave(ap->lock, flags);
+-	if (rc == 0)
+-		ap->pflags |= ATA_PFLAG_GTM_VALID;
+-	else
+-		ap->pflags &= ~ATA_PFLAG_GTM_VALID;
+-	spin_unlock_irqrestore(ap->lock, flags);
+-
+-	if (rc == -ENOENT)
+-		rc = 0;
+-	return rc;
++	/* nada */
++	return 0;
+ }
  
- 	if (rc == 0)
- 		return gtf_count;
-@@ -644,13 +654,31 @@ void ata_acpi_on_resume(struct ata_port *ap)
- 	const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
+ /**
+@@ -647,14 +641,12 @@ int ata_acpi_on_suspend(struct ata_port *ap)
+  */
+ void ata_acpi_on_resume(struct ata_port *ap)
+ {
++	const struct ata_acpi_gtm *gtm = ata_acpi_init_gtm(ap);
  	struct ata_device *dev;
  
--	/* restore timing parameters */
--	if (ap->acpi_handle && gtm)
-+	if (ap->acpi_handle && gtm) {
-+		/* _GTM valid */
-+
-+		/* restore timing parameters */
- 		ata_acpi_stm(ap, gtm);
+-	if (ap->acpi_handle && (ap->pflags & ATA_PFLAG_GTM_VALID)) {
+-		BUG_ON(ap->flags & ATA_FLAG_ACPI_SATA);
+-
+-		/* restore timing parameters */
+-		ata_acpi_stm(ap, &ap->acpi_gtm);
+-	}
++	/* restore timing parameters */
++	if (ap->acpi_handle && gtm)
++		ata_acpi_stm(ap, gtm);
  
--	/* schedule _GTF */
--	ata_link_for_each_dev(dev, &ap->link)
--		dev->flags |= ATA_DFLAG_ACPI_PENDING;
-+		/* _GTF should immediately follow _STM so that it can
-+		 * use values set by _STM.  Cache _GTF result and
-+		 * schedule _GTF.
-+		 */
-+		ata_link_for_each_dev(dev, &ap->link) {
-+			ata_acpi_clear_gtf(dev);
-+			if (ata_dev_get_GTF(dev, NULL) >= 0)
-+				dev->flags |= ATA_DFLAG_ACPI_PENDING;
-+		}
-+	} else {
-+		/* SATA _GTF needs to be evaulated after _SDD and
-+		 * there's no reason to evaluate IDE _GTF early
-+		 * without _STM.  Clear cache and schedule _GTF.
-+		 */
-+		ata_link_for_each_dev(dev, &ap->link) {
-+			ata_acpi_clear_gtf(dev);
-+			dev->flags |= ATA_DFLAG_ACPI_PENDING;
-+		}
-+	}
- }
- 
- /**
-@@ -735,4 +763,5 @@ int ata_acpi_on_devcfg(struct ata_device *dev)
-  */
- void ata_acpi_on_disable(struct ata_device *dev)
- {
-+	ata_acpi_clear_gtf(dev);
- }
+ 	/* schedule _GTF */
+ 	ata_link_for_each_dev(dev, &ap->link)
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ba84d8a..cb91280 100644
+index 3784af3..ba84d8a 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -498,6 +498,7 @@ struct ata_device {
- 	struct scsi_device	*sdev;		/* attached SCSI device */
+@@ -211,7 +211,7 @@ enum {
+ 
+ 	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
+ 	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
+-	ATA_PFLAG_GTM_VALID	= (1 << 19), /* acpi_gtm data valid */
++	ATA_PFLAG_INIT_GTM_VALID = (1 << 19), /* initial gtm data valid */
+ 
+ 	/* struct ata_queued_cmd flags */
+ 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
+@@ -653,7 +653,7 @@ struct ata_port {
+ 
  #ifdef CONFIG_ATA_ACPI
  	acpi_handle		acpi_handle;
-+	union acpi_object	*gtf_cache;
+-	struct ata_acpi_gtm	acpi_gtm;
++	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
  #endif
- 	/* n_sector is used as CLEAR_OFFSET, read comment above CLEAR_OFFSET */
- 	u64			n_sectors;	/* size of device, if ATA */
+ 	u8			sector_buf[ATA_SECT_SIZE]; /* owned by EH */
+ };
+@@ -939,10 +939,20 @@ enum {
+ 
+ /* libata-acpi.c */
+ #ifdef CONFIG_ATA_ACPI
++static inline const struct ata_acpi_gtm *ata_acpi_init_gtm(struct ata_port *ap)
++{
++	if (ap->pflags & ATA_PFLAG_INIT_GTM_VALID)
++		return &ap->__acpi_init_gtm;
++	return NULL;
++}
+ extern int ata_acpi_cbl_80wire(struct ata_port *ap);
+ int ata_acpi_stm(struct ata_port *ap, const struct ata_acpi_gtm *stm);
+ int ata_acpi_gtm(struct ata_port *ap, struct ata_acpi_gtm *stm);
+ #else
++static inline const struct ata_acpi_gtm *ata_acpi_init_gtm(struct ata_port *ap)
++{
++	return NULL;
++}
+ static inline int ata_acpi_cbl_80wire(struct ata_port *ap) { return 0; }
+ #endif
+ 
 -- 
 1.5.2.4
 
