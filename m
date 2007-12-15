@@ -1,68 +1,59 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [PATCH] drivers/ata/ahci.c, kernel 2.6.23.10
-Date: Sat, 15 Dec 2007 12:19:58 -0500
-Message-ID: <47640CBE.3030502@rtr.ca>
-References: <4763F336.7050206@googlemail.com> <476404BD.5090801@rtr.ca> <47640A18.4010308@googlemail.com>
+From: Peter Missel <peter.missel@onlinehome.de>
+Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
+Date: Sat, 15 Dec 2007 18:35:32 +0100
+Message-ID: <200712151835.33275.peter.missel@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3462 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758309AbXLORUA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Dec 2007 12:20:00 -0500
-In-Reply-To: <47640A18.4010308@googlemail.com>
+Received: from moutng.kundenserver.de ([212.227.126.179]:50658 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756122AbXLORgU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 12:36:20 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?Michael_K=FChn?= <breiteseite1337@googlemail.com>
-Cc: linux-ide@vger.kernel.org, torvalds@linux-foundation.org
+To: Alan Cox <alan@redhat.com>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Michael K=FChn wrote:
-> Hmm...
-> but why we shouldn't integrate this fix in 2.6.23* branch?
-> I thought 2.6.23 and 2.6.24 are indepented from each other and get th=
-eir=20
-> own fixes. So it's just a nice have-to-be in the next Bugfix release.
-=2E.
+Pinging ... don't take this personal guys, but are we going to keep the 
+original, dangerously broken implementation in 2.6.24, or will my patch go 
+upstream in time?
 
-You can forward it to GregK, who looks after the backported fixes
-for those releases, and see if he's interested in it.
+cheers,
+Peter
 
-Cheers
+---------------
+Hi all!
 
+As the originator of this patch, please let me comment.
 
+Jeff Garzik wrote:
+>Alan Cox wrote:
+>> Without the valid bits at least one set of TSScorp drives report 0 in
+>> word 93 for PATA 40 wire, which we (and the specs) say actually means
+>> SATA. (The SATA version seems to report 80 wire...)
+>> 
+>> Signed-off-by: Alan Cox <alan@redhat.com>
 
-> Yours sincerly
-> Michael K=FChn
->=20
-> Mark Lord schrieb:
->> Michael K=FChn wrote:
->>> This patch remove a unused variable in the ahci_port_intr function =
-and
->>> therewith a compiler warning.
->>>
->>> Signed-off-by: Michael K=FChn <breiteseite1337@googlemail.com>
->>>
->>>
->>> --- linux-2.6.23.10/drivers/ata/ahci.c  2007-12-14 19:01:59.0000000=
-00=20
->>> +0100
->>> +++ linux-2.6.23.10.new/drivers/ata/ahci.c      2007-12-15
->>> 01:03:41.000000000 +0100
->>> @@ -1430,7 +1430,6 @@
->>>  {
->>>         void __iomem *port_mmio =3D ap->ioaddr.cmd_addr;
->>>         struct ata_eh_info *ehi =3D &ap->eh_info;
->>> -       struct ahci_port_priv *pp =3D ap->private_data;
->>>         u32 status, qc_active;
->>>         int rc;
->> ..
->>
->> Mmmm.. seems to not be applicable to current 2.6.24-rc*,
->> as the "pp" variable *is* used in that function there.
->>
->> For older kernels, only serious bugs warrant an update.
->>
->> Cheers
+>SATA version on what controller?  Have you verified where the bridge is, 
+>if it's not reporting word93==0 ?
 
+>Is this for 2.6.24-rc, considering that we are late in -rc?
+
+The offending drives are native IDE, but their word93 is broken, in that the 
+validation bits are missing. Hence, if connected to a 40-wire cable, they 
+return word93=0x0000 and make themselves look like a SATA drive.
+
+This makes the 'relaxed' cable check do the exact wrong thing - allow fast 
+UDMA modes.
+
+The patch discussed here corrects the 'relaxed' cable check, so that it 
+actually does what it's supposed to - look at nothing but the cable type bit 
+in word93 and exactly NOT draw any other conclusions from word93. 
+
+Due the dangerous behaviour of the unpatched code, I strongly vote for 
+inclusion in 2.6.24.
+
+regards,
+Peter
