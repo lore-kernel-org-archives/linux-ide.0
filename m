@@ -1,62 +1,159 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 03/10] libata: add more opcodes to ata.h
-Date: Sat, 15 Dec 2007 15:04:59 +0900
-Message-ID: <11976987063184-git-send-email-htejun@gmail.com>
+Subject: [PATCH 09/10] libata-acpi: improve _GTF execution error handling and reporting
+Date: Sat, 15 Dec 2007 15:05:05 +0900
+Message-ID: <11976987081688-git-send-email-htejun@gmail.com>
 References: <11976987063011-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:53113 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.187]:53382 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757266AbXLOGFO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 01:05:14 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1193517rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2007 22:05:13 -0800 (PST)
+	with ESMTP id S1758303AbXLOGFV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 01:05:21 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1193509rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2007 22:05:19 -0800 (PST)
 In-Reply-To: <11976987063011-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, hancockr@shaw.ca, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Add constants for DEVICE CONFIGURATION OVERLAY and SET_MAX to
-include/linux/ata.h.
+As _GTF commands can't transfer data, device error never signals
+transfer error.  It indicates that the device vetoed the operation, so
+it's meaningless to retry.
+
+This patch makes libata-acpi to report and continue on device errors
+when executing _GTF commands.  Also commands rejected by device don't
+contribute to the number of _GTF commands executed.
+
+While at it, update _GTF execution reporting such that all successful
+commands are logged at KERN_DEBUG and rename taskfile_load_raw() to
+ata_acpi_run_tf() for consistency.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/ata.h |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/ata/libata-acpi.c |   77 +++++++++++++++++++++++++++------------------
+ 1 files changed, 46 insertions(+), 31 deletions(-)
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 5c4e54a..72ab808 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -190,6 +190,8 @@ enum {
- 	ATA_CMD_READ_LOG_EXT	= 0x2f,
- 	ATA_CMD_PMP_READ	= 0xE4,
- 	ATA_CMD_PMP_WRITE	= 0xE8,
-+	ATA_CMD_CONF_OVERLAY	= 0xB1,
-+	ATA_CMD_SEC_FREEZE_LOCK	= 0xF5,
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 5932ae2..d4cb557 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -466,7 +466,7 @@ int ata_acpi_cbl_80wire(struct ata_port *ap)
+ EXPORT_SYMBOL_GPL(ata_acpi_cbl_80wire);
  
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_SATA_NCQ	= 0x10,
-@@ -239,6 +241,19 @@ enum {
- 	SATA_AN			= 0x05,  /* Asynchronous Notification */
- 	SATA_DIPM		= 0x03,  /* Device Initiated Power Management */
+ /**
+- * taskfile_load_raw - send taskfile registers to host controller
++ * ata_acpi_run_tf - send taskfile registers to host controller
+  * @dev: target ATA device
+  * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
+  *
+@@ -485,14 +485,17 @@ EXPORT_SYMBOL_GPL(ata_acpi_cbl_80wire);
+  * EH context.
+  *
+  * RETURNS:
+- * 0 on success, -errno on failure.
++ * 1 if command is executed successfully.  0 if ignored or rejected,
++ * -errno on other errors.
+  */
+-static int taskfile_load_raw(struct ata_device *dev,
+-			      const struct ata_acpi_gtf *gtf)
++static int ata_acpi_run_tf(struct ata_device *dev,
++			   const struct ata_acpi_gtf *gtf)
+ {
+-	struct ata_port *ap = dev->link->ap;
+ 	struct ata_taskfile tf, rtf;
+ 	unsigned int err_mask;
++	const char *level;
++	char msg[60];
++	int rc;
  
-+	/* feature values for SET_MAX */
-+	ATA_SET_MAX_ADDR	= 0x00,
-+	ATA_SET_MAX_PASSWD	= 0x01,
-+	ATA_SET_MAX_LOCK	= 0x02,
-+	ATA_SET_MAX_UNLOCK	= 0x03,
-+	ATA_SET_MAX_FREEZE_LOCK	= 0x04,
+ 	if ((gtf->tf[0] == 0) && (gtf->tf[1] == 0) && (gtf->tf[2] == 0)
+ 	    && (gtf->tf[3] == 0) && (gtf->tf[4] == 0) && (gtf->tf[5] == 0)
+@@ -512,24 +515,39 @@ static int taskfile_load_raw(struct ata_device *dev,
+ 	tf.device  = gtf->tf[5];	/* 0x1f6 */
+ 	tf.command = gtf->tf[6];	/* 0x1f7 */
+ 
+-	if (ata_msg_probe(ap))
+-		ata_dev_printk(dev, KERN_DEBUG, "executing ACPI cmd "
+-			       "%02x/%02x:%02x:%02x:%02x:%02x:%02x\n",
+-			       tf.command, tf.feature, tf.nsect,
+-			       tf.lbal, tf.lbam, tf.lbah, tf.device);
+-
+ 	rtf = tf;
+ 	err_mask = ata_exec_internal(dev, &rtf, NULL, DMA_NONE, NULL, 0, 0);
+-	if (err_mask) {
+-		ata_dev_printk(dev, KERN_ERR,
+-			"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x failed "
+-			"(Emask=0x%x Stat=0x%02x Err=0x%02x)\n",
+-			tf.command, tf.feature, tf.nsect, tf.lbal, tf.lbam,
+-			tf.lbah, tf.device, err_mask, rtf.command, rtf.feature);
+-		return -EIO;
 +
-+	/* feature values for DEVICE CONFIGURATION OVERLAY */
-+	ATA_DCO_RESTORE		= 0xC0,
-+	ATA_DCO_FREEZE_LOCK	= 0xC1,
-+	ATA_DCO_IDENTIFY	= 0xC2,
-+	ATA_DCO_SET		= 0xC3,
++	switch (err_mask) {
++	case 0:
++		level = KERN_DEBUG;
++		snprintf(msg, sizeof(msg), "succeeded");
++		rc = 1;
++		break;
 +
- 	/* ATAPI stuff */
- 	ATAPI_PKT_DMA		= (1 << 0),
- 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
++	case AC_ERR_DEV:
++		level = KERN_INFO;
++		snprintf(msg, sizeof(msg),
++			 "rejected by device (Stat=0x%02x Err=0x%02x)",
++			 rtf.command, rtf.feature);
++		rc = 0;
++		break;
++
++	default:
++		level = KERN_ERR;
++		snprintf(msg, sizeof(msg),
++			 "failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
++			 err_mask, rtf.command, rtf.feature);
++		rc = -EIO;
++		break;
+ 	}
+ 
+-	return 0;
++	ata_dev_printk(dev, level,
++		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x %s\n",
++		       tf.command, tf.feature, tf.nsect, tf.lbal,
++		       tf.lbam, tf.lbah, tf.device, msg);
++
++	return rc;
+ }
+ 
+ /**
+@@ -558,22 +576,19 @@ static int ata_acpi_exec_tfs(struct ata_device *dev, int *nr_executed)
+ 	gtf_count = rc;
+ 
+ 	/* execute them */
+-	for (i = 0, rc = 0; i < gtf_count; i++) {
+-		int tmp;
+-
+-		/* ACPI errors are eventually ignored.  Run till the
+-		 * end even after errors.
+-		 */
+-		tmp = taskfile_load_raw(dev, gtf++);
+-		if (!rc)
+-			rc = tmp;
+-
+-		(*nr_executed)++;
++	for (i = 0; i < gtf_count; i++) {
++		rc = ata_acpi_run_tf(dev, gtf++);
++		if (rc < 0)
++			break;
++		if (rc)
++			(*nr_executed)++;
+ 	}
+ 
+ 	ata_acpi_clear_gtf(dev);
+ 
+-	return rc;
++	if (rc < 0)
++		return rc;
++	return 0;
+ }
+ 
+ /**
 -- 
 1.5.2.4
 
