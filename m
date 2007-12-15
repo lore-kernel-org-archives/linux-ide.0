@@ -1,58 +1,36 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
- driver
-Date: Sun, 16 Dec 2007 01:09:22 +1100
-Message-ID: <20071216010922.13ef21d0.sfr@canb.auug.org.au>
-References: <20071214182109.GA858@localhost.localdomain>
-	<20071214182438.GB1017@localhost.localdomain>
+From: =?ISO-8859-15?Q?Michael_K=FChn?= <breiteseite1337@googlemail.com>
+Subject: [PATCH] drivers/ata/ahci.c, kernel 2.6.23.10
+Date: Sat, 15 Dec 2007 16:31:02 +0100
+Message-ID: <4763F336.7050206@googlemail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im"
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:32905 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756725AbXLOOJd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Dec 2007 09:09:33 -0500
-In-Reply-To: <20071214182438.GB1017@localhost.localdomain>
+Received: from fk-out-0910.google.com ([209.85.128.189]:43879 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbXLOOb7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 09:31:59 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so395448fkz.5
+        for <linux-ide@vger.kernel.org>; Sat, 15 Dec 2007 06:31:57 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Arnd Bergmann <arnd@arndb.de>, Paul Mundt <lethal@linux-sh.org>, Olof Johansson <olof@lixom.net>
+To: linux-ide@vger.kernel.org
+Cc: torvalds@linux-foundation.org, lkml@rtr.ca
 
---Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch remove a unused variable in the ahci_port_intr function and
+therewith a compiler warning.
 
-On Fri, 14 Dec 2007 21:24:38 +0300 Anton Vorontsov <avorontsov@ru.mvista.co=
-m> wrote:
->
-> +	prop =3D (u32 *)of_get_property(dn, "reg-shift", NULL);
+Signed-off-by: Michael K=FChn <breiteseite1337@googlemail.com>
 
-This cast is unnecessary.
 
-> +	if (prop)
-> +		reg_shift =3D *prop;
-> +
-> +	prop =3D (u32 *)of_get_property(dn, "pio-mode", NULL);
-
-So is this one.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHY+AYTgG2atn1QN8RAp21AJ9zGiZQPsyFbyuofbsH57ogiqT92ACaAgKx
-N6dQf7DMBkJo7F3DFGm8gMY=
-=4aw3
------END PGP SIGNATURE-----
-
---Signature=_Sun__16_Dec_2007_01_09_22_+1100_WWFH_=wHbbmcA3im--
+--- linux-2.6.23.10/drivers/ata/ahci.c  2007-12-14 19:01:59.000000000 +=
+0100
++++ linux-2.6.23.10.new/drivers/ata/ahci.c      2007-12-15
+01:03:41.000000000 +0100
+@@ -1430,7 +1430,6 @@
+ {
+        void __iomem *port_mmio =3D ap->ioaddr.cmd_addr;
+        struct ata_eh_info *ehi =3D &ap->eh_info;
+-       struct ahci_port_priv *pp =3D ap->private_data;
+        u32 status, qc_active;
+        int rc;
