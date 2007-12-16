@@ -1,45 +1,27 @@
 From: "Adrian McMenamin" <lkmladrian@gmail.com>
-Subject: [PATCH 1/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Sun, 16 Dec 2007 00:21:05 +0000
-Message-ID: <8b67d60712151621i5134eb7co9bab02cfe9e4fb81@mail.gmail.com>
+Subject: [PATCH 3/3] Add GD-Rom support to the SEGA Dreamcast
+Date: Sun, 16 Dec 2007 00:21:28 +0000
+Message-ID: <8b67d60712151621m6dbd3e14sbcaf4b5c0de61097@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.177]:20972 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756631AbXLPAV2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2007 19:21:28 -0500
+Received: by py-out-1112.google.com with SMTP id u77so2318775pyb.16
+        for <linux-ide@vger.kernel.org>; Sat, 15 Dec 2007 16:21:28 -0800 (PST)
 Content-Disposition: inline
-Sender: linux-sh-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, axboe@kernel.dk
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
 
-diff -ruN ./linux-2.6-orig/drivers/block/Kconfig
-./linux-2.6/drivers/block/Kconfig
---- ./linux-2.6-orig/drivers/block/Kconfig	2007-12-15 22:23:47.000000000 +0000
-+++ ./linux-2.6/drivers/block/Kconfig	2007-12-15 22:18:28.000000000 +0000
-@@ -105,6 +105,18 @@
- 	  "MicroSolutions backpack protocol", "DataStor Commuter protocol"
- 	  etc.).
+diff -ruN ./linux-2.6-orig/drivers/sh/Makefile ./linux-2.6/drivers/sh/Makefile
+--- ./linux-2.6-orig/drivers/sh/Makefile	2007-12-15 22:23:59.000000000 +0000
++++ ./linux-2.6/drivers/sh/Makefile	2007-12-15 22:18:45.000000000 +0000
+@@ -4,3 +4,4 @@
 
-+config	GDROM
-+	tristate "SEGA Dreamcast GD-ROM drive"
-+	depends on SH_DREAMCAST
-+	help
-+	  A standard SEGA Dreamcast comes with a modified CD ROM drive called a
-+	  "GD-ROM" by SEGA to signify it is capable of reading special disks
-+	  with up to 1 GB of data. This drive will also read standard CD ROM
-+	  disks. Select this option to access any disks in you GD ROM drive.
-+         Most users will want to say "Y" here.
-+	  You can also build this as a module - which will be called gdrom.ko
-+
-+
- source "drivers/block/paride/Kconfig"
-
- config BLK_CPQ_DA
-diff -ruN ./linux-2.6-orig/drivers/cdrom/Makefile
-./linux-2.6/drivers/cdrom/Makefile
---- ./linux-2.6-orig/drivers/cdrom/Makefile	2007-12-15 22:23:47.000000000 +0000
-+++ ./linux-2.6/drivers/cdrom/Makefile	2007-12-15 22:18:29.000000000 +0000
-@@ -11,3 +11,4 @@
- obj-$(CONFIG_CDROM_PKTCDVD)	+=		cdrom.o
-
- obj-$(CONFIG_VIOCD)		+= viocd.o      cdrom.o
-+obj-$(CONFIG_GDROM)		+=		cdrom.o
+ obj-$(CONFIG_SUPERHYWAY)	+= superhyway/
+ obj-$(CONFIG_MAPLE)		+= maple/
++obj-$(CONFIG_GDROM)		+= gdrom/
