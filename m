@@ -1,65 +1,42 @@
-From: Saeed Bishara <saeed@marvell.com>
-Subject: [PATCH 1/1] [LibATA] sata_mv: Remove dumplicated host template
-Date: Sun, 16 Dec 2007 16:11:56 +0200
-Message-ID: <11978143164051-git-send-email-saeed@marvell.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:40342 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753960AbXLPOMI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Dec 2007 09:12:08 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
+Subject: Re: [PATCH 0/3] Add GD-Rom support to the SEGA Dreamcast
+Date: Sun, 16 Dec 2007 17:06:46 +0000
+Message-ID: <1197824806.6254.5.camel@localhost.localdomain>
+References: <8b67d60712151620s331281f4s7e150aacacff4400@mail.gmail.com>
+	 <20071216041348.GB11113@linux-sh.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <20071216041348.GB11113@linux-sh.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: Paul Mundt <lethal@linux-sh.org>
+Cc: Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: saeed.bishara@gmail.com, htejun@gmail.com, liml@rtr.ca, Saeed Bishara <saeed@marvell.com>
 
-The mv5_sht and mv6_sht structures are identical. This patch removes one of
-those structures and renames the other to mv_sht.
 
-Signed-off-by: Saeed Bishara <saeed@marvell.com>
----
- drivers/ata/sata_mv.c |   22 ++--------------------
- 1 files changed, 2 insertions(+), 20 deletions(-)
+On Sun, 2007-12-16 at 13:13 +0900, Paul Mundt wrote:
+> On Sun, Dec 16, 2007 at 12:20:54AM +0000, Adrian McMenamin wrote:
+> > This device is electrically compatible with ATA-3 IDE CD drives but
+> > implements a proprietary packet interface. There have been previous
+> > Dreamcast CD drivers around but this is new code and uses DMA as
+> > opposed to PIO for reads.
+> > 
+> > It also supports reading the proprietary GD Rom format disks.
+> > 
+> > The driver will live as drivers/sh/gdrom/gdrom.c
+> > 
+> No, the driver will live in drivers/cdrom if that's the API that you
+> depend on. The only things in drivers/sh are SH-specific bus support
+> code, it is not a dumping ground for unrelated drivers.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 8d864e5..4076194 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -452,25 +452,7 @@ static void mv_reset_pci_bus(struct pci_dev *pdev, void __iomem *mmio);
- static void mv_channel_reset(struct mv_host_priv *hpriv, void __iomem *mmio,
- 			     unsigned int port_no);
- 
--static struct scsi_host_template mv5_sht = {
--	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
--	.ioctl			= ata_scsi_ioctl,
--	.queuecommand		= ata_scsi_queuecmd,
--	.can_queue		= ATA_DEF_QUEUE,
--	.this_id		= ATA_SHT_THIS_ID,
--	.sg_tablesize		= MV_MAX_SG_CT / 2,
--	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
--	.emulated		= ATA_SHT_EMULATED,
--	.use_clustering		= 1,
--	.proc_name		= DRV_NAME,
--	.dma_boundary		= MV_DMA_BOUNDARY,
--	.slave_configure	= ata_scsi_slave_config,
--	.slave_destroy		= ata_scsi_slave_destroy,
--	.bios_param		= ata_std_bios_param,
--};
--
--static struct scsi_host_template mv6_sht = {
-+static struct scsi_host_template mv_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
- 	.ioctl			= ata_scsi_ioctl,
-@@ -2740,7 +2722,7 @@ static int mv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	pci_set_master(pdev);
- 	pci_try_set_mwi(pdev);
- 	return ata_host_activate(host, pdev->irq, mv_interrupt, IRQF_SHARED,
--				 IS_GEN_I(hpriv) ? &mv5_sht : &mv6_sht);
-+				 &mv_sht);
- }
- 
- static int __init mv_init(void)
--- 
-1.5.0.6
+
+Well, the other cd drives exist in mainline outside that directory eg
+drivers/block/paride/pcd.c  drivers/ide/ide-cd.c drivers/scsi/sr.c 
+
+As far as I can see if this joins mainline it will be the only
+proprietary CD device - there were six others which were
+in /drivers/cdrom but they were purged recently.
+
+I'm not bothered where it goes, though.
 
