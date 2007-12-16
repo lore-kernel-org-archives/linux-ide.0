@@ -1,28 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Sun, 16 Dec 2007 10:09:13 +0000
-Message-ID: <20071216100913.GA1208@infradead.org>
-References: <8b67d60712151621j2101c411p19d75125c6d1c2f9@mail.gmail.com> <20071216095019.GA12184@linux-sh.org>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 1/3] [libata] pata_platform: make probe and remove functions device type neutral
+Date: Sun, 16 Dec 2007 21:46:04 +0900
+Message-ID: <20071216124604.GA12769@linux-sh.org>
+References: <20071214182109.GA858@localhost.localdomain> <20071214182429.GA1017@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pip10.gyao.ne.jp ([61.122.117.248]:29771 "EHLO mx.gate01.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751336AbXLPMq3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Dec 2007 07:46:29 -0500
 Content-Disposition: inline
-In-Reply-To: <20071216095019.GA12184@linux-sh.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>, Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk
+In-Reply-To: <20071214182429.GA1017@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Olof Johansson <olof@lixom.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Kumar Gala <galak@kernel.crashing.org>, Jeff Garzik <jeff@garzik.org>
 
-On Sun, Dec 16, 2007 at 06:50:19PM +0900, Paul Mundt wrote:
-> > +static irqreturn_t gdrom_command_interrupt(int irq, void *dev_id)
-> > +{
-> > +	if (dev_id != &gd)
-> > +		return IRQ_NONE;
+On Fri, Dec 14, 2007 at 09:24:29PM +0300, Anton Vorontsov wrote:
+> Split pata_platform_{probe,remove} into two pieces:
+> 1. pata_platform_{probe,remove} -- platform_device-dependant bits;
+> 2. __ptata_platform_{probe,remove} -- device type neutral bits.
 > 
-> You aren't setting this up as a shared IRQ, so this shouldn't be
-> necessary.
+> This is done to not duplicate code for the OF-platform driver.
+> 
+> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> Acked-by: Olof Johansson <olof@lixom.net>
 
-It's not nessecary for shared irqs either.  The irq code will never
-pass you a different cookied back than the one you passed in.
-Everything else would be a nighmare and these cargo cult workarounds
-wouldn't help either.
+Looks fine to me now, thanks for cleaning it up Anton.
 
+Acked-by: Paul Mundt <lethal@linux-sh.org>
