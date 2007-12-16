@@ -1,77 +1,64 @@
-From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
-Subject: Re: [PATCH 2/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Sun, 16 Dec 2007 18:05:13 +0000
-Message-ID: <1197828313.6254.21.camel@localhost.localdomain>
-References: <8b67d60712151621j2101c411p19d75125c6d1c2f9@mail.gmail.com>
-	 <20071216095019.GA12184@linux-sh.org>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: Re: How to Switch DMA off for only one Harddisk at Kernelboot
+Date: Sun, 16 Dec 2007 20:45:39 +0100
+Message-ID: <47658063.5010707@googlemail.com>
+References: <4765690C.6010605@j-o-a.de> <47657BA8.3020004@googlemail.com> <47657D79.7090100@j-o-a.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mk-filter-3-a-1.mail.uk.tiscali.com ([212.74.100.54]:32253 "EHLO
-	mk-filter-3-a-4.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1765954AbXLPSFl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Dec 2007 13:05:41 -0500
-In-Reply-To: <20071216095019.GA12184@linux-sh.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758671AbXLPTp5@vger.kernel.org>
+In-Reply-To: <47657D79.7090100@j-o-a.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Oliver Joa <oliver@j-o-a.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk
 
-
-On Sun, 2007-12-16 at 18:50 +0900, Paul Mundt wrote:
-
-> > +static int gdrom_readdisk_dma(int block, int block_cnt, char *buffer)
-> > +{
-> > +	int err;
-> > +	struct packet_command *read_command;
-> > +	/* release the spin lock but check later
-> > + 	 * we're not in the middle of some dma */
-> > +	spin_unlock(&gdrom_lock);
+Oliver Joa wrote:
+> Hi,
 > 
-> The locking strategy here is a bit interesting, has spinlock debugging
-> tossed any profanities to your console?
+> Gabriel C wrote:
+>> Oliver Joa wrote:
+>>> Hi,
+>> Hi Oliver ,
+>>
+>>> how can I tell the kernel not to probe DMA for a specific harddisk (e.g. 
+>>> hda). My first Drive (hda) is a Compact-Flash Card which can not do DMA. 
+>>> The kernel tries at boot to switch to DMA but fails. If I use ide=nodma, 
+>>> the kernel boots about 2 minutes faster, but then I can not switch on 
+>>> DMA for the second Drive (hdc) which is a normal Harddisk. Do I have to 
+>>> live with this 2 minutes waiting time or is there another solution? I 
+>>> did not find any kernel-parameter for this purpose.
+>>>
+>>> Sorry if I ask here, but I can not find any solution, and I asked 
+>>> already in other groups.
+>>>
+>>> Thank you very much
+>> Should work with hda=nodma or ideX=nodma ( where X is your HDD nr , in your case is 0 )
+> 
+> I tried this already, it does not work.
+> 
+>> Also have a look at Documentation/ide.txt.
+> 
+> I read this already. Searching for "nodma" in this document gives only 
+> one line:
+> 
+>   "ide=nodma"            : disable DMA globally for the IDE subsystem.
+> 
+> If the documentation is correct hda=nodma and ideX=nodma should not 
+> work. I use kernel 2.6.23.1 at the moment.
+
+grep nodma Documentation/ide.txt
+ "hdx=nodma"            : disallow DMA
+
+ide=foo_option is for the whole ide sub-system where ideX|hdX=foo_option is just for that HDD.
+
+Anyway I've CC'ed linux-ide.
+
+> 
+> Thanks
+> 
+> Olli
 > 
 
-No, no errors reported.
 
-I think I've been careful - I release the lock because we're doing
-things like allocating memory and then sleeping on the queue.
-
-But I also need to check various registers so that (a) we don't try to
-do a second DMA until the hardware is ready and (b) we properly
-serialize access to the device by two different threads of execution.
-
-Seems to work.
-
-Though I have an issue with the AICA driver: as it just locks out all
-other DMA when doing its own DMA, it is causing the GD Rom driver to
-miss some reads (as the interrupts are locked between the DMA being
-requested and the interrupt returning afaics). It's not terminal by any
-means, but it can be annoying!
-
-/ # /mpg123 -g 25 /mnt/01-Come\ together.mp3 
-High Performance MPEG 1.0/2.0/2.5 Audio Player for Layer 1, 2 and 3.
-Version 0.59r-gpl (2005/04/08). Copyright 1995-2005 by The Mpg123
-Project.
-Uses code from various people, see 'AUTHORS' for full list.
-This software comes with ABSOLUTELY NO WARRANTY. For details, see 
-the enclosed file COPYING for license information (GPL).
-
-Directory: /mnt/
-Playing MPEG stream from 01-Come together.mp3 ...
-Junk at the beginning 49443303
-MPEG 1.0 layer III, 192 kbit/s, 44100 Hz joint-stereo
-[  168.794478] irq 11, desc: 8c2723dc, depth: 1, count: 0, unhandled: 0
-[  168.800318] ->handle_irq():  8c048580, handle_bad_irq+0x0/0x2c0
-[  168.806404] ->chip(): 8c2768c4, no_irq_chip+0x0/0x40
-[  168.811522] ->action(): 00000000
-[  168.814846]   IRQ_DISABLED set
-[  168.817992] unexpected IRQ trap at vector 0b
-[  173.548850] irq 11, desc: 8c2723dc, depth: 1, count: 0, unhandled: 0
-[  173.554691] ->handle_irq():  8c048580, handle_bad_irq+0x0/0x2c0
-[  173.560777] ->chip(): 8c2768c4, no_irq_chip+0x0/0x40
-[  173.565895] ->action(): 00000000
-[  173.569219]   IRQ_DISABLED set
-
-
+Gabriel
