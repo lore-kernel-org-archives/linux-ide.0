@@ -1,28 +1,33 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] ata.h: Don't do a SATA check for 40wire_relaxed
-Date: Sat, 15 Dec 2007 12:49:51 -0500
-Message-ID: <20071215174951.GA16691@devserv.devel.redhat.com>
-References: <200712151835.33275.peter.missel@onlinehome.de>
+From: "Adrian McMenamin" <lkmladrian@gmail.com>
+Subject: [PATCH 0/3] Add GD-Rom support to the SEGA Dreamcast
+Date: Sun, 16 Dec 2007 00:20:54 +0000
+Message-ID: <8b67d60712151620s331281f4s7e150aacacff4400@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49840 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759978AbXLORt5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Dec 2007 12:49:57 -0500
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-sh-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200712151835.33275.peter.missel@onlinehome.de>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-sh-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, linux-sh@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Missel <peter.missel@onlinehome.de>
-Cc: Alan Cox <alan@redhat.com>, jeff@garzik.org, linux-ide@vger.kernel.org
 
-On Sat, Dec 15, 2007 at 06:35:32PM +0100, Peter Missel wrote:
-> Pinging ... don't take this personal guys, but are we going to keep the 
-> original, dangerously broken implementation in 2.6.24, or will my patch go 
-> upstream in time?
+(Apologies if you've already had this. I sent it to lkml etc an hour
+ago but it just disappeated into the ether - trying it in smaller
+packets this time.)
 
-Up to Jeff/Linus.
+This patch adds support for the CD drive on the SEGA Dreamcast - the
+so-called GD Rom drive.
 
-Alan (on holiday)
+This device is electrically compatible with ATA-3 IDE CD drives but
+implements a proprietary packet interface. There have been previous
+Dreamcast CD drivers around but this is new code and uses DMA as
+opposed to PIO for reads.
 
+It also supports reading the proprietary GD Rom format disks.
+
+The driver will live as drivers/sh/gdrom/gdrom.c
+
+This has been tested against the latest git in Paul Mundt's 2.6.25
+queue as well as 2.6.24-rc5
+
+Signed-off by: Adrian McMenamin <adrian@mcmen.demon.co.uk>
