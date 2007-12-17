@@ -1,104 +1,108 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Iomega ZIP-100 drive unsupported with jmicron JMB361 chip?
-Date: Mon, 17 Dec 2007 01:00:41 -0800
-Message-ID: <20071217010041.103b4eab.akpm@linux-foundation.org>
-References: <475D9D07.6070705@earthlink.net>
+Subject: Re: ATA bus error with external hd on esata
+Date: Mon, 17 Dec 2007 02:53:21 -0800
+Message-ID: <20071217025321.2f7507db.akpm@linux-foundation.org>
+References: <47642D9A.4080600@softmonsters.com>
+	<476434C7.6040307@softmonsters.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:49375 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36730 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756480AbXLQJAp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2007 04:00:45 -0500
-In-Reply-To: <475D9D07.6070705@earthlink.net>
+	by vger.kernel.org with ESMTP id S933650AbXLQKx2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2007 05:53:28 -0500
+In-Reply-To: <476434C7.6040307@softmonsters.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trash can <thetrashcan@earthlink.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Zsolt Barat <zsolt@softmonsters.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Mon, 10 Dec 2007 15:09:43 -0500 trash can <thetrashcan@earthlink.net> wrote:
+On Sat, 15 Dec 2007 21:10:47 +0100 Zsolt Barat <zsolt@softmonsters.com> wrote:
 
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> I have tolerated this problem for a year and do not post to this list in
-> haste. I have posted on forums and searched the community over the past
-> year.
+> Zsolt Barat schrieb:
+> > hi list,
 
-Your report is welcome - thanks.  Let's cc the IDE/sata development list.
+Let's cc the IDE development list.
 
-> I have looked at the list archive on gossamer-threads.com for
-> solutions. With Fedora Core 6 unsupported (the last kernel for which my
-> zip drive worked), it is time for my last attempt at a solution. Please
-> CC: any response as I have not joined the list. I have compiled a
-> kernel-debug RPM and can run this if its output would help. Thank you
-> for any time you might devote to this problem.
-> 
-> motherboard: MSI P965 Platinum/Intel P965 Express Chipset Based (MS-7238
-> series)
-> Fedora 8 : kernel 2.6.23.1-42.fc8
-> Iomega Zip drive internal Model Z100ATAPI
-> 
-> lspci
-> 03:00.0 SATA controller: JMicron Technologies, Inc. JMB361 AHCI/IDE (rev 02)
-> 03:00.1 IDE interface: JMicron Technologies, Inc. JMB361 AHCI/IDE (rev 02)
-> 
-> # lsmod | grep ata
-> pata_jmicron            8257  0
-> ata_generic             8901  0
-> ata_piix               16709  0
-> libata                 99633  4 ahci,pata_jmicron,ata_generic,ata_piix
-> scsi_mod              119757  4 sr_mod,sg,libata,sd_mod
-> 
-> I have recently changed the BIOS setting for the SATA#1 Controller from
-> [IDE] to [AHCI] with no effect. I assume AHCI is correct?
-> 
-> Text below attached as text.txt for readability.
-> from dmesg:
-> libata version 2.21 loaded.
-> device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised: dm-devel@redhat.com
-> PCI: Enabling device 0000:03:00.1 (0000 -> 0001)
-> ACPI: PCI Interrupt 0000:03:00.1[B] -> GSI 17 (level, low) -> IRQ 17
-> PCI: Setting latency timer of device 0000:03:00.1 to 64
-> scsi0 : pata_jmicron
-> scsi1 : pata_jmicron
-> ata1: PATA max UDMA/100 cmd 0x0001cc00 ctl 0x0001c882 bmdma 0x0001c400 irq 17
-> ata2: PATA max UDMA/100 cmd 0x0001c800 ctl 0x0001c482 bmdma 0x0001c408 irq 17
-> ata1.00: ATAPI: LITE-ON DVDRW SOHW-1693S, KS0B, max UDMA/66
-> ata1.01: ATAPI: IOMEGA  ZIP 100       ATAPI, 05.H, max MWDMA1, CDB intr
-> ata1.00: configured for UDMA/66
-> ata1.01: configured for MWDMA1
-> scsi 0:0:0:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS0B PQ: 0 ANSI: 5
-> scsi 0:0:1:0: Direct-Access     IOMEGA   ZIP 100          05.H PQ: 0 ANSI: 5
-> sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> sd 0:0:1:0: [sda] Write Protect is off
-> sd 0:0:1:0: [sda] Mode Sense: 00 40 00 00
-> sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> sd 0:0:1:0: [sda] Write Protect is off
-> sd 0:0:1:0: [sda] Mode Sense: 00 40 00 00
-> sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sda:<6>sd 0:0:1:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> sd 0:0:1:0: [sda] Sense Key : Hardware Error [current]
-> sd 0:0:1:0: [sda] Add. Sense: Scsi parity error
-> end_request: I/O error, dev sda, sector 0
-> Buffer I/O error on device sda, logical block 0
-> 
-> If a disk is inserted into the drive (/var/log/messages)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Spinning up disk.....<5>sd 0:0:1:0: [sda] Spinning up disk....ready
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write Protect is off
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] 196608 512-byte hardware sectors (101 MB)
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write Protect is off
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> Dec 10 14:22:53 localhost kernel:  sda:<6>sd 0:0:1:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Sense Key : Hardware Error [current]
-> Dec 10 14:22:53 localhost kernel: sd 0:0:1:0: [sda] Add. Sense: Scsi parity error
-> Dec 10 14:22:53 localhost kernel: end_request: I/O error, dev sda, sector 0
-> Dec 10 14:22:53 localhost kernel: printk: 42 messages suppressed.
-> Dec 10 14:22:53 localhost kernel: Buffer I/O error on device sda, logical block 0
+> > i just bought a "MyBook" called external HD with a fixed enclosure, from
+> > WD. Connected to the SATA port i constantly get "ATA bus error" messages
+> > in the kernel log. Is this a known issue?
+> >
+> > /var/log/messages:
+> > Dec 15 18:37:53 proto1 ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+> > action 0x2
+> > Dec 15 18:37:53 proto1 ata2.00: irq_stat 0x40000001
+> > Dec 15 18:37:53 proto1 ata2.00: cmd 35/00:e0:a7:d2:01/00:01:33:00:00/e0
+> > tag 0 cdb 0x0 data 245760 out
+> > Dec 15 18:37:53 proto1 res 51/84:00:86:d4:01/00:00:33:00:00/e0 Emask
+> > 0x10 (ATA bus error)
+> > Dec 15 18:37:54 proto1 ata2: soft resetting port
+> > Dec 15 18:37:54 proto1 ata2: SATA link up 1.5 Gbps (SStatus 113 SControl
+> > 310)
+> > Dec 15 18:37:54 proto1 ata2.00: configured for UDMA/33
+> > Dec 15 18:37:54 proto1 ata2: EH complete
+> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] 976773168 512-byte hardware
+> > sectors (500108 MB)
+> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Write Protect is off
+> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Write cache: enabled, read
+> > cache: enabled, doesn't support DPO or FUA
+> > Dec 15 18:38:15 proto1 ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0
+> > action 0x2
+> > Dec 15 18:38:15 proto1 ata2.00: irq_stat 0x40000001
+> > Dec 15 18:38:15 proto1 ata2.00: cmd 35/00:80:bf:09:14/00:01:33:00:00/e0
+> > tag 0 cdb 0x0 data 196608 out
+> > Dec 15 18:38:15 proto1 res 51/84:00:3e:0b:14/00:00:33:00:00/e0 Emask
+> > 0x10 (ATA bus error)
+> > Dec 15 18:38:15 proto1 ata2: soft resetting port
+> > Dec 15 18:38:15 proto1 ata2: SATA link up 1.5 Gbps (SStatus 113 SControl
+> > 310)
+> > Dec 15 18:38:15 proto1 ata2.00: configured for UDMA/33
+> > Dec 15 18:38:15 proto1 ata2: EH complete
+> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] 976773168 512-byte hardware
+> > sectors (500108 MB)
+> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Write Protect is off
+> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Write cache: enabled, read
+> > cache: enabled, doesn't support DPO or FUA
+> >
+> > lspci:
+> > 00:00.0 Host bridge: ATI Technologies Inc Unknown device 7910
+> > 00:01.0 PCI bridge: ATI Technologies Inc Unknown device 7912
+> > 00:07.0 PCI bridge: ATI Technologies Inc Unknown device 7917
+> > 00:12.0 SATA controller: ATI Technologies Inc SB600 Non-Raid-5 SATA
+> > 00:13.0 USB Controller: ATI Technologies Inc SB600 USB (OHCI0)
+> > 00:13.1 USB Controller: ATI Technologies Inc SB600 USB (OHCI1)
+> > 00:13.2 USB Controller: ATI Technologies Inc SB600 USB (OHCI2)
+> > 00:13.3 USB Controller: ATI Technologies Inc SB600 USB (OHCI3)
+> > 00:13.4 USB Controller: ATI Technologies Inc SB600 USB (OHCI4)
+> > 00:13.5 USB Controller: ATI Technologies Inc SB600 USB Controller (EHCI)
+> > 00:14.0 SMBus: ATI Technologies Inc SB600 SMBus (rev 13)
+> > 00:14.1 IDE interface: ATI Technologies Inc SB600 IDE
+> > 00:14.2 Audio device: ATI Technologies Inc SB600 Azalia
+> > 00:14.3 ISA bridge: ATI Technologies Inc SB600 PCI to LPC Bridge
+> > 00:14.4 PCI bridge: ATI Technologies Inc SB600 PCI to PCI Bridge
+> > 00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> > HyperTransport Technology Configuration
+> > 00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> > Address Map
+> > 00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> > DRAM Controller
+> > 00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+> > Miscellaneous Control
+> > 01:05.0 VGA compatible controller: ATI Technologies Inc Radeon X1200 Series
+> > 01:05.2 Audio device: ATI Technologies Inc Radeon X1200 Series Audio
+> > Controller
+> > 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+> > RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 01)
+> > 03:00.0 FireWire (IEEE 1394): VIA Technologies, Inc. IEEE 1394 Host
+> > Controller (rev c0)
+> >
+> > thanks and best regards
+> >
+> > zsolt
+> >   
+> sorry, kernel version is: 2.6.23-gentoo-r1
 > 
 
-So which is the most recent kernel version which worked OK?
