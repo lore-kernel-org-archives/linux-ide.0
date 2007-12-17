@@ -1,94 +1,92 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Iomega ZIP-100 drive unsupported with jmicron JMB361 chip?
-Date: Sun, 16 Dec 2007 19:50:48 -0500
-Message-ID: <4765C7E8.8010107@tmr.com>
-References: <fa.yONLBG7CMuz80f4dUP5r/5k7emw@ifi.uio.no> <475DD7FF.4030906@shaw.ca> <475EAEDD.9090905@earthlink.net> <475EC0D1.8010200@rtr.ca> <475EC163.8070305@rtr.ca> <475EDF76.4000703@earthlink.net> <475EE560.6040601@rtr.ca> <47603532.7060008@earthlink.net>
+From: "jameshsu" <jameshsu@acard.com>
+Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
+Date: Mon, 17 Dec 2007 10:35:49 +0800
+Message-ID: <000501c84055$939c7000$6200a8c0@acardjameshsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="utf-8";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:53464 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753744AbXLQAcT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Dec 2007 19:32:19 -0500
-In-Reply-To: <47603532.7060008@earthlink.net>
+Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:3979 "EHLO
+	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289AbXLQCiG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Dec 2007 21:38:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: trash can <thetrashcan@earthlink.net>
-Cc: Mark Lord <liml@rtr.ca>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-trash can wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> Success!
-> I downloaded kernel-2.6.24-0.81.rc4.git7.fc9.src.rpm from the Fedora
-> development tree. Went through "rpm dependecy hell" and solved all
-> dependencies by installing other fc9 rpms. I used
-> config-2.6.23.1-42.fc8 as my starting point. My
-> config-2.6.24-0.81.rc4.git7.local.fc8 is attached.
-> 
-> After compilation and installation of the kernel rpm, upon boot I could
-> see a device sdc4 being created, but boot failed with
-> "mount: missing mount point", some errors in mounting from setuproot and
-> switchroot.
-> 
-> I believe the problem was with the Red Hat/Fedora anaconda installer
-> and/or grub, and my multiboot machine setup. I had not been able to boot
-> updated fc8 kernel packages, only the originally installed kernel.
-> Note that my Fedora 7 and Fedora 8 distributions share no directories
-> (one exception) and all this work is taking place in the Fedora 8
-> distribution. The /boot partition IS shared among my distributions.
-> I found my /etc/fstab file had two "/" mount point entries. The last line
-> contained LABEL=/ and is a reference to my Fedora 7 root partition.
-> I deleted this line from fstab as I did not want to change the mount
-> point for this line to mount my Fedora 7 distribution on Fedora 8.
-> This kernel installation process was appending LABEL=/ to my kernel
-> line in grub.conf:
-> kernel /vmlinuz-2.6.24-0.81.rc4.git7.local.fc8 ro root=/dev/VGf800/LogVol00 rhgb quiet LABEL=/
-> 
-> LABEL=/ was removed from the line.
-> 
-> I then needed to recreate my initrd image:
-> mkinitrd /boot/initrd-2.6.24-0.81.rc4.git7.local.fc8.img \
->   2.6.24-0.81.rc4.git7.local.fc8
-> 
-> Finally I was able to boot (Zip disk inserted) to the local kernel and the
-> Zip drive works as expected.
-> 
-> # blkid
-> /dev/sdc4: SEC_TYPE="msdos" LABEL="ZIP-100" UUID="4910-1305" TYPE="vfat"
-> 
-> dmesg:
-> ata9.00: ATAPI: LITE-ON DVDRW SOHW-1693S, KS0B, max UDMA/66
-> ata9.01: ATAPI: IOMEGA  ZIP 100       ATAPI, 05.H, max MWDMA1, CDB intr
-> ata9.00: limited to UDMA/33 due to 40-wire cable
-> ata9.00: configured for UDMA/33
-> ata9.01: configured for MWDMA1
-> scsi 8:0:0:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS0B PQ: 0 ANSI: 5
-> scsi 8:0:1:0: Direct-Access     IOMEGA   ZIP 100          05.H PQ: 0 ANSI: 5
-> sd 8:0:1:0: [sdc] 196608 512-byte hardware sectors (101 MB)
-> sd 8:0:1:0: [sdc] Write Protect is off
-> sd 8:0:1:0: [sdc] Mode Sense: 00 40 00 00
-> sd 8:0:1:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> sd 8:0:1:0: [sdc] 196608 512-byte hardware sectors (101 MB)
-> sd 8:0:1:0: [sdc] Write Protect is off
-> sd 8:0:1:0: [sdc] Mode Sense: 00 40 00 00
-> sd 8:0:1:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->  sdc: sdc4
-> 
-> My thanks to all the great people who solved this problem and those who patiently
-> responded to my queries.
-> 
-> - -RoyBoy626
-> 
-I've been behing reading this list, I was going to say that I have 
-always had best luck with those drives using the old idescsi driver, 
-although I haven't used a kernel newer than... 2.6.18 or so on the old 
-machines. Since you have a solution I won't suggest you try that with an 
-old kernel ;-)
+Jeff,
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+Do you know who has SATA sample driver w/ AHCI support for reference (esp., 
+for Acard SATA chip)??
+If possible, please advise in your earlier convenience ! Appreciate for your 
+help!
+James
+----- Original Message ----- 
+From: jameshsu
+To: Jeff Garzik
+Cc: James Bottomley ; Matti Aarnio ; tytso@us.ibm.com ; IDE/ATA development 
+list ; Andrew Morton
+Sent: Tuesday, November 27, 2007 6:18 PM
+Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
+
+
+Jeff,
+
+First, appreciate for taking few minutes to answer my short question:
+
+1) How is the status of ACARD Linux SATA driver after spec studying??.
+Any progress and any qustion/help needed from Acard, esp., AHCI support??
+If you have draft open source(driver) now, do you mind to share with us!
+Please advise! Thanks!
+
+Best regards & happy holiday season!
+
+James
+----- Original Message -----
+From: Jeff Garzik
+To: jameshsu
+Cc: Jason Wu ; LaurenceWu ; Andrew Morton ; IDE/ATA development list ;
+tytso@us.ibm.com ; Matti Aarnio ; James Bottomley ; Daniel Weng
+Sent: Friday, November 09, 2007 12:22 AM
+Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
+
+
+On Thu, Nov 08, 2007 at 07:34:22PM +0800, jameshsu wrote:
+> From: LaurenceWu
+
+> We didn't study about ata/ahci.c, but it should be based on AHCI1.0 or 1.1
+> spec. That is, NO P.M. FIS base switching, but supports both non-NCQ and
+NCQ
+> protocols.
+>
+> For NCQ or nonNCQ, 8620 is very AHCI-like, although not fully compatible,
+> programmer can easily modify standard ahci.c
+> for 8620. The main differences between 8620 and AHCI are :
+>
+> 1. PRD table format changed, (please compare AHCI 1.x section 4.2.3.3 and
+> 8620 datasheet section 7.3), 'I' bit in 8620 is defined as 'EOT' and NO
+> PRDTL value are available in the
+>     Command List Structure.
+>
+> 2. For NCQ transfer, PxIS bit 3(SDBS) is changed. ATP8620 add the Reg_144h
+> to accumulate 32 Sactive bits in each SDB FIS.
+>     The Reg_144h is RWC and all its 32 bits are 'ORed'  to form the PxIS
+> bit3 and interrupt, if PxIE bit 3 enabled.
+>
+> Yes.  Modifying the ata/ahci.c is OK to support atp8620.
+
+This is good information, thanks.
+
+After studying the datasheet I also noted a couple differences:
+
+1) Port Multiplier support appears different from standard AHCI.
+
+2) This chip includes target mode support.  Very nice, well done!
+I hope that standard AHCI eventually supports this nice feature!
+
+Jeff 
+
