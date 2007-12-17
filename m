@@ -1,92 +1,58 @@
-From: "jameshsu" <jameshsu@acard.com>
-Subject: Re: Acard ATP8620 2SATA / 1 IDE  driver - AHCI.C Nov082007
-Date: Mon, 17 Dec 2007 10:35:49 +0800
-Message-ID: <000501c84055$939c7000$6200a8c0@acardjameshsu>
+From: Zhao Yakui <yakui.zhao@intel.com>
+Subject: [Patch]: ACPI : Not register gsi for PCI IDE controller in legacy
+	mode
+Date: Mon, 17 Dec 2007 15:13:29 +0800
+Message-ID: <1197875609.7945.70.camel@yakui_zhao.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="utf-8";
-	reply-type=original
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:3979 "EHLO
-	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbXLQCiG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Dec 2007 21:38:06 -0500
+Received: from mga11.intel.com ([192.55.52.93]:27712 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761960AbXLQHcr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Dec 2007 02:32:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, tytso@us.ibm.com, Matti Aarnio <postmaster@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: lenb@kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff,
+Subject: ACPI : Not register gsi for PCI IDE controller in legacy mode
+>From : Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Do you know who has SATA sample driver w/ AHCI support for reference (esp., 
-for Acard SATA chip)??
-If possible, please advise in your earlier convenience ! Appreciate for your 
-help!
-James
------ Original Message ----- 
-From: jameshsu
-To: Jeff Garzik
-Cc: James Bottomley ; Matti Aarnio ; tytso@us.ibm.com ; IDE/ATA development 
-list ; Andrew Morton
-Sent: Tuesday, November 27, 2007 6:18 PM
-Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
+When PCI IDE controller works in legacy mode and no PRT entry is found 
+in ACPI PRT table, OSPM will neither read the irq number from the IDE
+PCI configuration space nor call the function of acpi_register_gsi to
+register gsi.
 
+http://bugzilla.kernel.org/show_bug.cgi?id=5637
 
-Jeff,
+Signed-off-by: Zhao Yakui <yakui.zhao@intel.com>
+Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+Signed-off-by: Alan Cox  <alan@lxorguk.ukuu.org.uk>
 
-First, appreciate for taking few minutes to answer my short question:
+---
+ drivers/acpi/pci_irq.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-1) How is the status of ACARD Linux SATA driver after spec studying??.
-Any progress and any qustion/help needed from Acard, esp., AHCI support??
-If you have draft open source(driver) now, do you mind to share with us!
-Please advise! Thanks!
+Index: linux-2.6.24-rc5/drivers/acpi/pci_irq.c
+===================================================================
+--- linux-2.6.24-rc5.orig/drivers/acpi/pci_irq.c
++++ linux-2.6.24-rc5/drivers/acpi/pci_irq.c
+@@ -429,6 +429,15 @@ int acpi_pci_irq_enable(struct pci_dev *
+ 					  &polarity, &link,
+ 					  acpi_pci_allocate_irq);
+ 
++	if (irq < 0) {
++		/*
++		 * IDE legacy mode controller IRQs are magic. Why do compat
++		 * extensions always make such a nasty mess.
++		 */
++		if (dev->class >> 8 == PCI_CLASS_STORAGE_IDE &&
++				(dev->class & 0x05) == 0)
++			return 0;
++	}
+ 	/*
+ 	 * No IRQ known to the ACPI subsystem - maybe the BIOS / 
+ 	 * driver reported one, then use it. Exit in any case.
 
-Best regards & happy holiday season!
-
-James
------ Original Message -----
-From: Jeff Garzik
-To: jameshsu
-Cc: Jason Wu ; LaurenceWu ; Andrew Morton ; IDE/ATA development list ;
-tytso@us.ibm.com ; Matti Aarnio ; James Bottomley ; Daniel Weng
-Sent: Friday, November 09, 2007 12:22 AM
-Subject: Re: Acard ATP8620 2SATA / 1 IDE driver - AHCI.C Nov082007
-
-
-On Thu, Nov 08, 2007 at 07:34:22PM +0800, jameshsu wrote:
-> From: LaurenceWu
-
-> We didn't study about ata/ahci.c, but it should be based on AHCI1.0 or 1.1
-> spec. That is, NO P.M. FIS base switching, but supports both non-NCQ and
-NCQ
-> protocols.
->
-> For NCQ or nonNCQ, 8620 is very AHCI-like, although not fully compatible,
-> programmer can easily modify standard ahci.c
-> for 8620. The main differences between 8620 and AHCI are :
->
-> 1. PRD table format changed, (please compare AHCI 1.x section 4.2.3.3 and
-> 8620 datasheet section 7.3), 'I' bit in 8620 is defined as 'EOT' and NO
-> PRDTL value are available in the
->     Command List Structure.
->
-> 2. For NCQ transfer, PxIS bit 3(SDBS) is changed. ATP8620 add the Reg_144h
-> to accumulate 32 Sactive bits in each SDB FIS.
->     The Reg_144h is RWC and all its 32 bits are 'ORed'  to form the PxIS
-> bit3 and interrupt, if PxIE bit 3 enabled.
->
-> Yes.  Modifying the ata/ahci.c is OK to support atp8620.
-
-This is good information, thanks.
-
-After studying the datasheet I also noted a couple differences:
-
-1) Port Multiplier support appears different from standard AHCI.
-
-2) This chip includes target mode support.  Very nice, well done!
-I hope that standard AHCI eventually supports this nice feature!
-
-Jeff 
 
