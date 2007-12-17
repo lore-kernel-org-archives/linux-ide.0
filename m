@@ -1,108 +1,282 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: ATA bus error with external hd on esata
-Date: Mon, 17 Dec 2007 02:53:21 -0800
-Message-ID: <20071217025321.2f7507db.akpm@linux-foundation.org>
-References: <47642D9A.4080600@softmonsters.com>
-	<476434C7.6040307@softmonsters.com>
+From: Jean-Louis Dupond <info@dupondje.be>
+Subject: sata_mv not working with a RocketRaid 2220
+Date: Mon, 17 Dec 2007 11:57:47 +0100
+Message-ID: <4766562B.8090609@dupondje.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36730 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933650AbXLQKx2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2007 05:53:28 -0500
-In-Reply-To: <476434C7.6040307@softmonsters.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934942AbXLQK7N@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zsolt Barat <zsolt@softmonsters.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, 15 Dec 2007 21:10:47 +0100 Zsolt Barat <zsolt@softmonsters.com> wrote:
+Added CC to linux-ide
 
-> Zsolt Barat schrieb:
-> > hi list,
+-------- Originele bericht --------
+Onderwerp: 	sata_mv not working with a RocketRaid 2220
+Datum: 	Mon, 17 Dec 2007 00:15:30 +0100
+Van: 	Jean-Louis Dupond <info@dupondje.be>
+Aan: 	linux-kernel@vger.kernel.org
 
-Let's cc the IDE development list.
 
-> > i just bought a "MyBook" called external HD with a fixed enclosure, from
-> > WD. Connected to the SATA port i constantly get "ATA bus error" messages
-> > in the kernel log. Is this a known issue?
-> >
-> > /var/log/messages:
-> > Dec 15 18:37:53 proto1 ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-> > action 0x2
-> > Dec 15 18:37:53 proto1 ata2.00: irq_stat 0x40000001
-> > Dec 15 18:37:53 proto1 ata2.00: cmd 35/00:e0:a7:d2:01/00:01:33:00:00/e0
-> > tag 0 cdb 0x0 data 245760 out
-> > Dec 15 18:37:53 proto1 res 51/84:00:86:d4:01/00:00:33:00:00/e0 Emask
-> > 0x10 (ATA bus error)
-> > Dec 15 18:37:54 proto1 ata2: soft resetting port
-> > Dec 15 18:37:54 proto1 ata2: SATA link up 1.5 Gbps (SStatus 113 SControl
-> > 310)
-> > Dec 15 18:37:54 proto1 ata2.00: configured for UDMA/33
-> > Dec 15 18:37:54 proto1 ata2: EH complete
-> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] 976773168 512-byte hardware
-> > sectors (500108 MB)
-> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Write Protect is off
-> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> > Dec 15 18:37:54 proto1 sd 1:0:0:0: [sdb] Write cache: enabled, read
-> > cache: enabled, doesn't support DPO or FUA
-> > Dec 15 18:38:15 proto1 ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-> > action 0x2
-> > Dec 15 18:38:15 proto1 ata2.00: irq_stat 0x40000001
-> > Dec 15 18:38:15 proto1 ata2.00: cmd 35/00:80:bf:09:14/00:01:33:00:00/e0
-> > tag 0 cdb 0x0 data 196608 out
-> > Dec 15 18:38:15 proto1 res 51/84:00:3e:0b:14/00:00:33:00:00/e0 Emask
-> > 0x10 (ATA bus error)
-> > Dec 15 18:38:15 proto1 ata2: soft resetting port
-> > Dec 15 18:38:15 proto1 ata2: SATA link up 1.5 Gbps (SStatus 113 SControl
-> > 310)
-> > Dec 15 18:38:15 proto1 ata2.00: configured for UDMA/33
-> > Dec 15 18:38:15 proto1 ata2: EH complete
-> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] 976773168 512-byte hardware
-> > sectors (500108 MB)
-> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Write Protect is off
-> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> > Dec 15 18:38:15 proto1 sd 1:0:0:0: [sdb] Write cache: enabled, read
-> > cache: enabled, doesn't support DPO or FUA
-> >
-> > lspci:
-> > 00:00.0 Host bridge: ATI Technologies Inc Unknown device 7910
-> > 00:01.0 PCI bridge: ATI Technologies Inc Unknown device 7912
-> > 00:07.0 PCI bridge: ATI Technologies Inc Unknown device 7917
-> > 00:12.0 SATA controller: ATI Technologies Inc SB600 Non-Raid-5 SATA
-> > 00:13.0 USB Controller: ATI Technologies Inc SB600 USB (OHCI0)
-> > 00:13.1 USB Controller: ATI Technologies Inc SB600 USB (OHCI1)
-> > 00:13.2 USB Controller: ATI Technologies Inc SB600 USB (OHCI2)
-> > 00:13.3 USB Controller: ATI Technologies Inc SB600 USB (OHCI3)
-> > 00:13.4 USB Controller: ATI Technologies Inc SB600 USB (OHCI4)
-> > 00:13.5 USB Controller: ATI Technologies Inc SB600 USB Controller (EHCI)
-> > 00:14.0 SMBus: ATI Technologies Inc SB600 SMBus (rev 13)
-> > 00:14.1 IDE interface: ATI Technologies Inc SB600 IDE
-> > 00:14.2 Audio device: ATI Technologies Inc SB600 Azalia
-> > 00:14.3 ISA bridge: ATI Technologies Inc SB600 PCI to LPC Bridge
-> > 00:14.4 PCI bridge: ATI Technologies Inc SB600 PCI to PCI Bridge
-> > 00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > HyperTransport Technology Configuration
-> > 00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > Address Map
-> > 00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > DRAM Controller
-> > 00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
-> > Miscellaneous Control
-> > 01:05.0 VGA compatible controller: ATI Technologies Inc Radeon X1200 Series
-> > 01:05.2 Audio device: ATI Technologies Inc Radeon X1200 Series Audio
-> > Controller
-> > 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> > RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 01)
-> > 03:00.0 FireWire (IEEE 1394): VIA Technologies, Inc. IEEE 1394 Host
-> > Controller (rev c0)
-> >
-> > thanks and best regards
-> >
-> > zsolt
-> >   
-> sorry, kernel version is: 2.6.23-gentoo-r1
-> 
+
+Hello,
+
+I'm trying to get my HighPoint RocketRaid Controller working with the 
+sata_mv drivers.
+But something is not working correctly :(
+
+Kernel version 2.6.23.11 (also tried 2.6.24-rc5 with same results)
+Controller in lspci: Marvell Technology Group Ltd. MV88SX6081 8-port 
+SATA II PCI-X Controller (rev 07)
+
+  1.
+     Dec 16 22:44:29 localhost kernel: sata_mv 0000:05:08.0: Gen-II 32
+     slots 8 ports SCSI mode IRQ via INTx
+  2.
+     Dec 16 22:44:29 localhost kernel: scsi4 : sata_mv
+  3.
+     Dec 16 22:44:29 localhost kernel: scsi5 : sata_mv
+  4.
+     Dec 16 22:44:29 localhost kernel: scsi6 : sata_mv
+  5.
+     Dec 16 22:44:29 localhost kernel: scsi7 : sata_mv
+  6.
+     Dec 16 22:44:29 localhost kernel: scsi8 : sata_mv
+  7.
+     Dec 16 22:44:29 localhost kernel: scsi9 : sata_mv
+  8.
+     Dec 16 22:44:29 localhost kernel: scsi10 : sata_mv
+  9.
+     Dec 16 22:44:29 localhost kernel: scsi11 : sata_mv
+ 10.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010122120 bmdma 0x0000000000000000
+     irq 16
+ 11.
+     Dec 16 22:44:29 localhost kernel: ata6: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010124120 bmdma 0x0000000000000000
+     irq 16
+ 12.
+     Dec 16 22:44:29 localhost kernel: ata7: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010126120 bmdma 0x0000000000000000
+     irq 16
+ 13.
+     Dec 16 22:44:29 localhost kernel: ata8: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010128120 bmdma 0x0000000000000000
+     irq 16
+ 14.
+     Dec 16 22:44:29 localhost kernel: ata9: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010132120 bmdma 0x0000000000000000
+     irq 16
+ 15.
+     Dec 16 22:44:29 localhost kernel: ata10: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010134120 bmdma 0x0000000000000000
+     irq 16
+ 16.
+     Dec 16 22:44:29 localhost kernel: ata11: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010136120 bmdma 0x0000000000000000
+     irq 16
+ 17.
+     Dec 16 22:44:29 localhost kernel: ata12: SATA max UDMA/133 cmd
+     0x0000000000000000 ctl 0xffffc20010138120 bmdma 0x0000000000000000
+     irq 16
+ 18.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 19.
+     Dec 16 22:44:29 localhost kernel: ata5.00: ATA-7: SAMSUNG SP2504C,
+     VT100-33, max UDMA7
+ 20.
+     Dec 16 22:44:29 localhost kernel: ata5.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 21.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+ 22.
+     Dec 16 22:44:29 localhost kernel: ata6: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 23.
+     Dec 16 22:44:29 localhost kernel: ata6.00: ATA-7: SAMSUNG SP2504C,
+     VT100-33, max UDMA7
+ 24.
+     Dec 16 22:44:29 localhost kernel: ata6.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 25.
+     Dec 16 22:44:29 localhost kernel: ata6.00: configured for UDMA/133
+ 26.
+     Dec 16 22:44:29 localhost kernel: ata7: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 27.
+     Dec 16 22:44:29 localhost kernel: ata7.00: ATA-7: SAMSUNG SP2504C,
+     VT100-33, max UDMA7
+ 28.
+     Dec 16 22:44:29 localhost kernel: ata7.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 29.
+     Dec 16 22:44:29 localhost kernel: ata7.00: configured for UDMA/133
+ 30.
+     Dec 16 22:44:29 localhost kernel: ata8: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 31.
+     Dec 16 22:44:29 localhost kernel: ata8.00: ATA-7: SAMSUNG SP2504C,
+     VT100-33, max UDMA7
+ 32.
+     Dec 16 22:44:29 localhost kernel: ata8.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 33.
+     Dec 16 22:44:29 localhost kernel: ata8.00: configured for UDMA/133
+ 34.
+     Dec 16 22:44:29 localhost kernel: ata9: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 35.
+     Dec 16 22:44:29 localhost kernel: ata9.00: ATA-7: SAMSUNG SP2504C,
+     VT100-33, max UDMA7
+ 36.
+     Dec 16 22:44:29 localhost kernel: ata9.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 37.
+     Dec 16 22:44:29 localhost kernel: ata9.00: configured for UDMA/133
+ 38.
+     Dec 16 22:44:29 localhost kernel: ata10: SATA link down (SStatus 0
+     SControl 300)
+ 39.
+     Dec 16 22:44:29 localhost kernel: ata11: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 40.
+     Dec 16 22:44:29 localhost kernel: ata11.00: ATA-7: SAMSUNG
+     SP2504C, VT100-33, max UDMA7
+ 41.
+     Dec 16 22:44:29 localhost kernel: ata11.00: 488397168 sectors,
+     multi 0: LBA48 NCQ (depth 0/32)
+ 42.
+     Dec 16 22:44:29 localhost kernel: ata11.00: configured for UDMA/133
+ 43.
+     Dec 16 22:44:29 localhost kernel: ata12: SATA link down (SStatus 0
+     SControl 300)
+ 44.
+     Dec 16 22:44:29 localhost kernel: scsi 4:0:0:0: Direct-Access    
+     ATA      SAMSUNG SP2504C  VT10 PQ: 0 ANSI: 5
+ 45.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] 488397168
+     512-byte hardware sectors (250059 MB)
+ 46.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Write Protect
+     is off
+ 47.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Mode Sense: 00
+     3a 00 00
+ 48.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Write cache:
+     enabled, read cache: enabled, doesn't support DPO or FUA
+ 49.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] 488397168
+     512-byte hardware sectors (250059 MB)
+ 50.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Write Protect
+     is off
+ 51.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Mode Sense: 00
+     3a 00 00
+ 52.
+     Dec 16 22:44:29 localhost kernel: sd 4:0:0:0: [sdb] Write cache:
+     enabled, read cache: enabled, doesn't support DPO or FUA
+ 53.
+     Dec 16 22:44:29 localhost kernel:  sdb:<3>ata5.00: exception Emask
+     0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ 54.
+     Dec 16 22:44:29 localhost kernel: ata5.00: cmd
+     c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+ 55.
+     Dec 16 22:44:29 localhost kernel:          res
+     40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ 56.
+     Dec 16 22:44:29 localhost kernel: ata5: soft resetting port
+ 57.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 58.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+ 59.
+     Dec 16 22:44:29 localhost kernel: ata5: EH complete
+ 60.
+     Dec 16 22:44:29 localhost kernel: ata5.00: exception Emask 0x0
+     SAct 0x0 SErr 0x0 action 0x2 frozen
+ 61.
+     Dec 16 22:44:29 localhost kernel: ata5.00: cmd
+     c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+ 62.
+     Dec 16 22:44:29 localhost kernel:          res
+     40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ 63.
+     Dec 16 22:44:29 localhost kernel: ata5: soft resetting port
+ 64.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 65.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+ 66.
+     Dec 16 22:44:29 localhost kernel: ata5: EH complete
+ 67.
+     Dec 16 22:44:29 localhost kernel: ata5.00: exception Emask 0x0
+     SAct 0x0 SErr 0x0 action 0x2 frozen
+ 68.
+     Dec 16 22:44:29 localhost kernel: ata5.00: cmd
+     c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+ 69.
+     Dec 16 22:44:29 localhost kernel:          res
+     40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ 70.
+     Dec 16 22:44:29 localhost kernel: ata5: soft resetting port
+ 71.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 72.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+ 73.
+     Dec 16 22:44:29 localhost kernel: ata5: EH complete
+ 74.
+     Dec 16 22:44:29 localhost kernel: ata5: limiting SATA link speed
+     to 1.5 Gbps
+ 75.
+     Dec 16 22:44:29 localhost kernel: ata5.00: exception Emask 0x0
+     SAct 0x0 SErr 0x0 action 0x6 frozen
+ 76.
+     Dec 16 22:44:29 localhost kernel: ata5.00: cmd
+     c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+ 77.
+     Dec 16 22:44:29 localhost kernel:          res
+     40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ 78.
+     Dec 16 22:44:29 localhost kernel: ata5: hard resetting port
+ 79.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 80.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+ 81.
+     Dec 16 22:44:29 localhost kernel: ata5: EH complete
+ 82.
+     Dec 16 22:44:29 localhost kernel: ata5.00: exception Emask 0x0
+     SAct 0x0 SErr 0x0 action 0x2 frozen
+ 83.
+     Dec 16 22:44:29 localhost kernel: ata5.00: cmd
+     c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 cdb 0x0 data 4096 in
+ 84.
+     Dec 16 22:44:29 localhost kernel:          res
+     40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ 85.
+     Dec 16 22:44:29 localhost kernel: ata5: hard resetting port
+ 86.
+     Dec 16 22:44:29 localhost kernel: ata5: SATA link up 3.0 Gbps
+     (SStatus 123 SControl 300)
+ 87.
+     Dec 16 22:44:29 localhost kernel: ata5.00: configured for UDMA/133
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
+
 
