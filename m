@@ -1,59 +1,68 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: sata_mv not working with a RocketRaid 2220
-Date: Mon, 17 Dec 2007 17:44:15 -0500
-Message-ID: <4766FBBF.5020606@rtr.ca>
-References: <4766562B.8090609@dupondje.be>
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH] Fix build break caused by "ide: remove ideprobe_init()"
+Date: Mon, 17 Dec 2007 16:56:40 -0600
+Message-ID: <20071217225640.GA22779@lixom.net>
+References: <200711182325.09262.bzolnier@gmail.com> <20071214090915.GA28681@lixom.net> <200712172153.31427.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1846 "EHLO mail.rtr.ca"
+Received: from lixom.net ([66.141.50.11]:35363 "EHLO mail.lixom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936978AbXLQWoU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Dec 2007 17:44:20 -0500
-In-Reply-To: <4766562B.8090609@dupondje.be>
+	id S1764770AbXLQWuj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Dec 2007 17:50:39 -0500
+Content-Disposition: inline
+In-Reply-To: <200712172153.31427.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jean-Louis Dupond <info@dupondje.be>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, akpm@linux-foundation.org, linuxppc-dev@ozlabs.org
 
-Jean-Louis Dupond wrote:
-> Added CC to linux-ide
+On Mon, Dec 17, 2007 at 09:53:31PM +0100, Bartlomiej Zolnierkiewicz wrote:
 > 
-> -------- Originele bericht --------
-> Onderwerp:     sata_mv not working with a RocketRaid 2220
-> Datum:     Mon, 17 Dec 2007 00:15:30 +0100
-> Van:     Jean-Louis Dupond <info@dupondje.be>
-> Aan:     linux-kernel@vger.kernel.org
+> Hi,
 > 
+> applied but...
 > 
+> > ---
+> > 
+> > On Sun, Nov 18, 2007 at 11:25:09PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > > 
+> > > * Rename ide_device_add() to ide_device_add_all() and make it accept
+> > >   'u8 idx[MAX_HWIFS]' instead of 'u8 idx[4]' as an argument.
+> > > 
+> > > * Add ide_device_add() wrapper for ide_device_add_all().
+> > > 
+> > > * Convert ide_generic_init() to use ide_device_add_all().
+> > > 
+> > > * Remove no longer needed ideprobe_init().
+> > > 
+> > > There should be no functionality changes caused by this patch.
+> > 
+> > This patch broke builds of powerpc holly_defconfig in -mm. It has
+> > CONFIG_EMBEDDED=y, CONFIG_IDE=n but includes linux/ide.h:
+>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 
-> Hello,
+> ...could you also fix the root source of the problem so the similar issue
+> won't re-appear in the future?
 > 
-> I'm trying to get my HighPoint RocketRaid Controller working with the 
-> sata_mv drivers.
-> But something is not working correctly :(
+> <linux/ide.h> is IDE subsystem specific in the same way that <linux/libata.h>
+> is libata specific, <linux/ata.h> is the place to put subsystem independent
+> defines, inlines and co.
 > 
-> Kernel version 2.6.23.11 (also tried 2.6.24-rc5 with same results)
-> Controller in lspci: Marvell Technology Group Ltd. MV88SX6081 8-port 
-> SATA II PCI-X Controller (rev 07)
+> There are some powerpc abusers of the above rule but they should at least cover
+> references to <linux/ide.h> and IDE subsystem specific code with #ifdef/#endif
+> CONFIG_BLK_DEV_IDE.
 > 
-..
+> In arch/powerpc/platforms/embedded6xx/holly.c case it seems that <linux/ide.h>
+> include is actually not needed and may be just removed?
 
-The sata_mv driver is currently not very good,
-but should improve over this winter as some effort
-is finally going into fixing it.
+Yep, that was my original simple fix to the problem, but when I looked
+closer I wanted to get the include file fixed as well.
 
-And the Highpoint RocketRAID cards are a similarly dubious choice,
-as their onboard BIOS is known to corrupt filesystems before Linux
-is even booted.
+Turns out I never posted the powerpc patch :), I'll do so (and audit
+other platforms for the same).
 
-In particular, an "unconfigured" drive -- just plugged into a RR card
-without entering the BIOS setup to configure a RAID -- gets sector 8 
-overwritten by the BIOS.  This will destroy GRUB if it was installed.
-And for drives which *have* been configured in the RR BIOS,
-it overwrites a sector at the end of the final full GB on the drive,
-for holding RR metadata.
 
-Cheers
+Thanks,
 
+-Olof
