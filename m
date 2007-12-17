@@ -1,44 +1,94 @@
-From: Adrian McMenamin <adrian@newgolddream.dyndns.info>
-Subject: Re: [PATCH 2/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Mon, 17 Dec 2007 00:06:23 +0000
-Message-ID: <1197849983.1626.12.camel@localhost.localdomain>
-References: <8b67d60712151621j2101c411p19d75125c6d1c2f9@mail.gmail.com>
-	 <20071216095019.GA12184@linux-sh.org>
-	 <1197826371.6254.14.camel@localhost.localdomain>
-	 <20071216215929.GA14278@linux-sh.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Iomega ZIP-100 drive unsupported with jmicron JMB361 chip?
+Date: Sun, 16 Dec 2007 19:50:48 -0500
+Message-ID: <4765C7E8.8010107@tmr.com>
+References: <fa.yONLBG7CMuz80f4dUP5r/5k7emw@ifi.uio.no> <475DD7FF.4030906@shaw.ca> <475EAEDD.9090905@earthlink.net> <475EC0D1.8010200@rtr.ca> <475EC163.8070305@rtr.ca> <475EDF76.4000703@earthlink.net> <475EE560.6040601@rtr.ca> <47603532.7060008@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-sh-owner@vger.kernel.org>
-In-Reply-To: <20071216215929.GA14278@linux-sh.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.tmr.com ([64.65.253.246]:53464 "EHLO gaimboi.tmr.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753744AbXLQAcT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Dec 2007 19:32:19 -0500
+In-Reply-To: <47603532.7060008@earthlink.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: trash can <thetrashcan@earthlink.net>
+Cc: Mark Lord <liml@rtr.ca>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-
-On Mon, 2007-12-17 at 06:59 +0900, Paul Mundt wrote:
-
+trash can wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 > 
-> While I realize that this is all undocumented and based entirely on
-> reverse engineering, you should at least verify that that's precisely
-> what is going on, and that this is not just a precaution for flushing
-> posted writes. You can test that by removing the loop and doing a dummy
-> read after your write (to the same register, rather than the entire ROM
-> space). If it's a posting issue, then you will have to do your own
-> read/write_reg routines that handle the flush.
+> Success!
+> I downloaded kernel-2.6.24-0.81.rc4.git7.fc9.src.rpm from the Fedora
+> development tree. Went through "rpm dependecy hell" and solved all
+> dependencies by installing other fc9 rpms. I used
+> config-2.6.23.1-42.fc8 as my starting point. My
+> config-2.6.24-0.81.rc4.git7.local.fc8 is attached.
+> 
+> After compilation and installation of the kernel rpm, upon boot I could
+> see a device sdc4 being created, but boot failed with
+> "mount: missing mount point", some errors in mounting from setuproot and
+> switchroot.
+> 
+> I believe the problem was with the Red Hat/Fedora anaconda installer
+> and/or grub, and my multiboot machine setup. I had not been able to boot
+> updated fc8 kernel packages, only the originally installed kernel.
+> Note that my Fedora 7 and Fedora 8 distributions share no directories
+> (one exception) and all this work is taking place in the Fedora 8
+> distribution. The /boot partition IS shared among my distributions.
+> I found my /etc/fstab file had two "/" mount point entries. The last line
+> contained LABEL=/ and is a reference to my Fedora 7 root partition.
+> I deleted this line from fstab as I did not want to change the mount
+> point for this line to mount my Fedora 7 distribution on Fedora 8.
+> This kernel installation process was appending LABEL=/ to my kernel
+> line in grub.conf:
+> kernel /vmlinuz-2.6.24-0.81.rc4.git7.local.fc8 ro root=/dev/VGf800/LogVol00 rhgb quiet LABEL=/
+> 
+> LABEL=/ was removed from the line.
+> 
+> I then needed to recreate my initrd image:
+> mkinitrd /boot/initrd-2.6.24-0.81.rc4.git7.local.fc8.img \
+>   2.6.24-0.81.rc4.git7.local.fc8
+> 
+> Finally I was able to boot (Zip disk inserted) to the local kernel and the
+> Zip drive works as expected.
+> 
+> # blkid
+> /dev/sdc4: SEC_TYPE="msdos" LABEL="ZIP-100" UUID="4910-1305" TYPE="vfat"
+> 
+> dmesg:
+> ata9.00: ATAPI: LITE-ON DVDRW SOHW-1693S, KS0B, max UDMA/66
+> ata9.01: ATAPI: IOMEGA  ZIP 100       ATAPI, 05.H, max MWDMA1, CDB intr
+> ata9.00: limited to UDMA/33 due to 40-wire cable
+> ata9.00: configured for UDMA/33
+> ata9.01: configured for MWDMA1
+> scsi 8:0:0:0: CD-ROM            LITE-ON  DVDRW SOHW-1693S KS0B PQ: 0 ANSI: 5
+> scsi 8:0:1:0: Direct-Access     IOMEGA   ZIP 100          05.H PQ: 0 ANSI: 5
+> sd 8:0:1:0: [sdc] 196608 512-byte hardware sectors (101 MB)
+> sd 8:0:1:0: [sdc] Write Protect is off
+> sd 8:0:1:0: [sdc] Mode Sense: 00 40 00 00
+> sd 8:0:1:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> sd 8:0:1:0: [sdc] 196608 512-byte hardware sectors (101 MB)
+> sd 8:0:1:0: [sdc] Write Protect is off
+> sd 8:0:1:0: [sdc] Mode Sense: 00 40 00 00
+> sd 8:0:1:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>  sdc: sdc4
+> 
+> My thanks to all the great people who solved this problem and those who patiently
+> responded to my queries.
+> 
+> - -RoyBoy626
+> 
+I've been behing reading this list, I was going to say that I have 
+always had best luck with those drives using the old idescsi driver, 
+although I haven't used a kernel newer than... 2.6.18 or so on the old 
+machines. Since you have a solution I won't suggest you try that with an 
+old kernel ;-)
 
-
-I've looked at this some more and, from the various things on the web,
-it seems SEGA introduced some sort of crude checksum security feature
-which ctrl_outl(0x1fffff, GDROM_RESET_REG) appears to start. Unless it
-is used then the GD Rom remains disabled.
-
-After that, the hardware executes a checksum of the ROM to ensure that
-you are actually booting from a Dreamcast.
-
-Well, that is my interpretation of
-http://www.ludd.ltu.se/~jlo/dc/bootROM.c and similar. Certainly any
-other sort of read seems to keep the gdrom disabled.
-
-
+-- 
+Bill Davidsen <davidsen@tmr.com>
+   "We have more to fear from the bungling of the incompetent than from
+the machinations of the wicked."  - from Slashdot
