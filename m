@@ -1,35 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 01/10] libata-acpi: adjust constness in ata_acpi_gtm/stm()
- parameters
-Date: Mon, 17 Dec 2007 20:35:38 -0500
-Message-ID: <476723EA.10601@garzik.org>
-References: <11976987063011-git-send-email-htejun@gmail.com> <11976987061239-git-send-email-htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_mv: improve warnings about Highpoint RocketRAID
+ 23xx cards
+Date: Mon, 17 Dec 2007 20:37:48 -0500
+Message-ID: <4767246C.3000407@pobox.com>
+References: <475ECFAD.2030901@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:37098 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:60158 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751991AbXLRBfl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Dec 2007 20:35:41 -0500
-In-Reply-To: <11976987061239-git-send-email-htejun@gmail.com>
+	id S1762903AbXLRBiQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Dec 2007 20:38:16 -0500
+In-Reply-To: <475ECFAD.2030901@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: hancockr@shaw.ca, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, hp@syntomax.com, Alan Cox <alan@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Tejun Heo wrote:
-> * No internal function uses const ata_port.  Drop const from @ap.
+Mark Lord wrote:
+> Improve the existing boot/load time warnings from sata_mv
+> for Highpoint RocketRAID 23xx cards, based on new knowledge
+> about where the BIOS likes to overwrite sectors with metadata.
 > 
-> * Make ata_acpi_stm() copy @stm before using it and change @stm to
->   const.
+> Harmless to us, but very useful for end users.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> ---
+> This should ideally go upstream for 2.6.24.
 
-for the record, I -would- use const ata_port where feasible; its just so 
-rarely feasible, since members of that struct are often being modified. 
-  However in a small query-style function, I could see some const-ness 
-perhaps...
-
-	Jeff
-
+applied #upstream-fixes
 
 
