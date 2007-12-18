@@ -1,71 +1,50 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 2/9] pata_hpt37x-fix-outstanding-bug-reports-on-the-hpt374-and-37x-cable-detect-checkpatch-fixes
-Date: Tue, 18 Dec 2007 16:20:37 -0500
-Message-ID: <476839A5.6000902@garzik.org>
-References: <200712140001.lBE01ce9025429@imap1.linux-foundation.org>
+Subject: Re: [PATCH 01/15] libata: make atapi_request_sense() use sg
+Date: Tue, 18 Dec 2007 16:30:26 -0500
+Message-ID: <47683BF2.8090604@garzik.org>
+References: <11968405951262-git-send-email-htejun@gmail.com> <11968405951137-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45085 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:36653 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754891AbXLRVUj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2007 16:20:39 -0500
-In-Reply-To: <200712140001.lBE01ce9025429@imap1.linux-foundation.org>
+	id S1751440AbXLRVac (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Dec 2007 16:30:32 -0500
+In-Reply-To: <11968405951137-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Rusty Russel <rusty@rustcorp.com.au>
 
-akpm@linux-foundation.org wrote:
-> From: Andrew Morton <akpm@linux-foundation.org>
+Tejun Heo wrote:
+> atapi_request_sense() is now the only left user of ata_sg_init_one().
+> Convert it to use sg interface.
 > 
-> WARNING: line over 80 characters
-> #70: FILE: drivers/ata/pata_hpt37x.c:850:
-> +		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
-> 
-> ERROR: else should follow close brace '}'
-> #78: FILE: drivers/ata/pata_hpt37x.c:858:
-> +	}
-> +	else
-> 
-> total: 1 errors, 1 warnings, 100 lines checked
-> Your patch has style problems, please review.  If any of these errors
-> are false positives report them to the maintainer, see
-> CHECKPATCH in MAINTAINERS.
-> 
-> Please run checkpatch prior to sending patches
-> 
-> Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Rusty Russel <rusty@rustcorp.com.au>
 > ---
+>  drivers/ata/libata-scsi.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
->  drivers/ata/pata_hpt37x.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff -puN drivers/ata/pata_hpt37x.c~pata_hpt37x-fix-outstanding-bug-reports-on-the-hpt374-and-37x-cable-detect-checkpatch-fixes drivers/ata/pata_hpt37x.c
-> --- a/drivers/ata/pata_hpt37x.c~pata_hpt37x-fix-outstanding-bug-reports-on-the-hpt374-and-37x-cable-detect-checkpatch-fixes
-> +++ a/drivers/ata/pata_hpt37x.c
-> @@ -847,15 +847,16 @@ static u32 hpt374_read_freq(struct pci_d
->  	u32 freq;
->  	unsigned long io_base = pci_resource_start(pdev, 4);
->  	if (PCI_FUNC(pdev->devfn) & 1) {
-> -		struct pci_dev *pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
-> +		struct pci_dev *pdev_0;
-> +
-> +		pdev_0 = pci_get_slot(pdev->bus, pdev->devfn - 1);
->  		/* Someone hot plugged the controller on us ? */
->  		if (pdev_0 == NULL)
->  			return 0;
->  		io_base = pci_resource_start(pdev_0, 4);
->  		freq = inl(io_base + 0x90);
->  		pci_dev_put(pdev_0);
-> -	}
-> -	else
-> +	} else
->  		freq = inl(io_base + 0x90);
->  	return freq;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a1ec970..29e8336 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2340,7 +2340,9 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
+>  
+>  	ata_qc_reinit(qc);
+>  
+> -	ata_sg_init_one(qc, cmd->sense_buffer, sizeof(cmd->sense_buffer));
+> +	/* setup sg table and init transfer direction */
+> +	sg_init_one(&qc->sgent, cmd->sense_buffer, sizeof(cmd->sense_buffer));
+> +	ata_sg_init(qc, &qc->sgent, 1);
+>  	qc->dma_dir = DMA_FROM_DEVICE;
 
-applied #upstream after fixing subject line
+applied 1-4 to #upstream, although patch #3 was imported from 
+upstream-fixes (update atapi buffersize in request-sense)
+
+	Jeff
+
 
 
