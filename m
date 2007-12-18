@@ -1,58 +1,43 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 08/15] libata: improve ATAPI draining
-Date: Tue, 18 Dec 2007 16:41:18 -0500
-Message-ID: <47683E7E.4030102@garzik.org>
-References: <11968405951262-git-send-email-htejun@gmail.com> <11968405973998-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 12/15] libata: make qc->nbytes include extra buffers
+Date: Tue, 18 Dec 2007 16:44:03 -0500
+Message-ID: <47683F23.4020504@garzik.org>
+References: <11968405951262-git-send-email-htejun@gmail.com> <11968405981339-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57879 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48171 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752725AbXLRVlV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2007 16:41:21 -0500
-In-Reply-To: <11968405973998-git-send-email-htejun@gmail.com>
+	id S1753010AbXLRVoG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Dec 2007 16:44:06 -0500
+In-Reply-To: <11968405981339-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com, Albert Lee <albertcc@tw.ibm.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, liml@rtr.ca, albertl@mail.com, jens.axboe@oracle.com
 
 Tejun Heo wrote:
-> For misc ATAPI commands which transfer variable length data to the
-> host, overflow can occur due to application or hardware bug.  Such
-> overflows can be ignored safely as long as overflow data is properly
-> drained.  libata HSM implementation has this implemented in
-> __atapi_pio_bytes() but it isn't enough.  Improve drain logic such
-> that...
+> qc->nbytes didn't use to include extra buffers setup by libata core
+> layer and my be odd.  This patch makes qc->nbytes include any extra
+> buffers setup by libata core layer and guaranteed to be aligned on 4
+> byte boundary.
 > 
-> * Multiple PIO data phases are allowed.  Not allowing this used to be
->   okay when transfer chunk size was set to 8k unconditionally but with
->   transfer hcunk size set to allocation size, treating extra PIO data
->   phases as HSM violations cause a lot of trouble.
+> This value is to be used to program the host controller.  As this
+> represents the actual length of buffer available to the controller and
+> the controller must be able to deal with short transfers for ATAPI
+> commands which can transfer variable length, this shouldn't break any
+> controllers while making problems like rounding-down and controllers
+> choking up on odd transfer bytes much less likely.
 > 
-> * Limit the amount of draining to ATAPI_MAX_DRAIN (16k currently).
-> 
-> * Don't whine if overflow is allowed and safe.  When unexpected
->   overflow occurs, trigger HSM violation and report the problem using
->   ehi error description.
-> 
-> * Properly calculate the number of bytes to be drained considering
->   actual number of consumed bytes for partial draining.
-> 
-> * Add and use ata_drain_page for draining.  This change fixes the
->   problem where LLDs which do 32bit IOs consumes 4 bytes on each 2
->   byte draining resulting in draining twice more data than requested.
-> 
-> This patch fixes ATAPI regressions introduced by setting transfer
-> chunk size to allocation size.
+> The unmodified value is stored in new field qc->raw_nbytes.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Albert Lee <albertcc@tw.ibm.com>
+> ---
+>  drivers/ata/libata-core.c |   14 ++++++++++----
+>  include/linux/libata.h    |    3 ++-
+>  2 files changed, 12 insertions(+), 5 deletions(-)
 
-I'm dropping this one, since a good portion of it is already upstream 
-as140b5e59119a172a91b5fa13d54ca4f79bbefee1
-
-	Jeff
-
+applied 9-12 to #upstream
 
 
