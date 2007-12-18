@@ -1,52 +1,64 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/2] [libata] sata_mv: Support integrated controllers
-Date: Tue, 18 Dec 2007 17:02:01 -0500
-Message-ID: <47684359.9030706@garzik.org>
-References: <11966101971581-git-send-email-saeed.bishara@gmail.com> <1196610199229-git-send-email-saeed.bishara@gmail.com> <11966102001423-git-send-email-saeed.bishara@gmail.com>
+Subject: Merged some Alan patches...
+Date: Tue, 18 Dec 2007 17:06:38 -0500
+Message-ID: <4768446E.4090702@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45132 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59022 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754478AbXLRWCD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2007 17:02:03 -0500
-In-Reply-To: <11966102001423-git-send-email-saeed.bishara@gmail.com>
+	id S1755795AbXLRWGk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Dec 2007 17:06:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: saeed.bishara@gmail.com
-Cc: linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-saeed.bishara@gmail.com wrote:
-> From: Saeed Bishara <saeed@marvell.com>
+I just moved the following changes from #for-testing (which 
+auto-propagates to -mm along with other stuff) into #upstream, queueing 
+for 2.6.25:
+
+Applied:
+> Author: Alan <alan@lxorguk.ukuu.org.uk>
+> Date:   Tue Oct 2 13:53:05 2007 -0700
 > 
-> Marvell's Orion SoC includes SATA controllers based on Marvell's
-> PCI-to-SATA 88SX controllers. The integrated SATA unit is connected
-> directly to the internal bus of the Orion SoC, and not via PCI.
-> This patch extends the libATA sata_mv driver to support those
-> controllers.
+>     libata: fix (hopefully) all the remaining problems with devices failing setu
+>     
+>     Two fixes in this test patch.  One of them allows old CF cards to refuse
+>     pio mode setting, and one to wait for the drive to settle after a set
+>     features changes the speed settings, which is based upon the workarounds
+>     used by drivers/ide.
+
+Applied:
+> Author: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Date:   Mon Oct 15 20:44:11 2007 +0100
 > 
-> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+>     pata_pcmcia: Add support for dumb 8bit IDE emulations
 
-Overall, looks pretty good.
-
-My main comment is that several changes, like
-
--	void (*reset_bus)(struct pci_dev *pdev, void __iomem *mmio);
-+	void (*reset_bus)(struct ata_host *host, void __iomem *mmio);
-
-and
-
--	if (unlikely(irq_stat & PCI_ERR)) {
-+	if (unlikely(irq_stat & PCI_ERR) && HAS_PCI(host)) {
-
-belong in patch #1, the PCI isolation patch, rather than this patch 
-implementing support for integrated controllers.
-
-Finally, don't hardcode a 32-bit DMA mask in your platform_device setup, 
-pass that mask in via mv_sata_platform_data.
-
-	Jeff
+Applied:
+> Author: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Date:   Thu Oct 25 14:21:16 2007 +0100
+> 
+>     libata/pata_it821x: Improve handling of poorly compatible emulations
+>     
+>     Some it821x RAID firmwares return 0 for the err return off both devices.
+>     A similar issue occurs with the slave returning 0 not 1 if you plug a
+>     gigabyte sata ramdisk into a controller that fakes two SATA ports as
+>     master/slave on an SFF channel.
+>     
+>     The patch does the following
+>     
+>     - Allow the 'failed diagnostics' case on both master and slave
+>     - Move the HORKAGE_DIAGNOSTIC check after ->dev_config
 
 
+And finally, dropped one patch as per request:
+> Author: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> Date:   Mon Oct 15 19:23:13 2007 +0100
+> 
+>     libata-core: Don't have screaming fits over DF/ERR combinations
+>     
+>     Some hardware seems to get this wrong in a non-harmful way, and there are
+>     some devices that seem to do it deliberately for various reasons.
 
