@@ -1,51 +1,29 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: [PATCH 2/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Tue, 18 Dec 2007 00:20:44 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0712180019590.32270@fbirervta.pbzchgretzou.qr>
-References: <8b67d60712151621j2101c411p19d75125c6d1c2f9@mail.gmail.com>
- <20071216095019.GA12184@linux-sh.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata-core: blacklist drives from using NCQ
+Date: Tue, 18 Dec 2007 00:00:15 +0000
+Message-ID: <20071218000015.38307406@the-village.bc.nu>
+References: <20071217221759.GA17766@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sovereign.computergmbh.de ([85.214.69.204]:52501 "EHLO
-	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937226AbXLQXUp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2007 18:20:45 -0500
-In-Reply-To: <20071216095019.GA12184@linux-sh.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:47932 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752489AbXLRAHm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2007 19:07:42 -0500
+In-Reply-To: <20071217221759.GA17766@dhcp-210.hsv.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk
+To: David Milburn <dmilburn@redhat.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
+On Mon, 17 Dec 2007 16:17:59 -0600
+David Milburn <dmilburn@redhat.com> wrote:
 
-On Dec 16 2007 18:50, Paul Mundt wrote:
->On Sun, Dec 16, 2007 at 12:21:21AM +0000, Adrian McMenamin wrote:
->> +/* GD Rom registers */
->> +#define GDROM_BASE_REG 0xA05F7000
->> +#define GDROM_ALTSTATUS_REG GDROM_BASE_REG + 0x18
->> +#define GDROM_DATA_REG GDROM_BASE_REG + 0x80
->> +#define GDROM_ERROR_REG GDROM_BASE_REG + 0x84
->> +#define GDROM_INTSEC_REG GDROM_BASE_REG + 0x88
->> +#define GDROM_SECNUM_REG GDROM_BASE_REG + 0x8C
->> +#define GDROM_BCL_REG  GDROM_BASE_REG + 0x90
->> +#define GDROM_BCH_REG GDROM_BASE_REG + 0x94
->> +#define GDROM_DSEL_REG GDROM_BASE_REG + 0x98
->> +#define GDROM_STATUSCOMMAND_REG GDROM_BASE_REG + 0x9C
->> +#define GDROM_RESET_REG GDROM_BASE_REG + 0x4E4
->> +
->> +#define GDROM_DATA_REG_P0 0x005F7080
->> +
->> +#define GDROM_DMA_STARTADDR_REG GDROM_BASE_REG + 0x404
->> +#define GDROM_DMA_LENGTH_REG GDROM_BASE_REG + 0x408
->> +#define GDROM_DMA_DIRECTION_REG GDROM_BASE_REG + 0x40C
->> +#define GDROM_DMA_ENABLE_REG GDROM_BASE_REG + 0x414
->> +#define GDROM_DMA_STATUS_REG GDROM_BASE_REG + 0x418
->> +#define GDROM_DMA_WAIT_REG GDROM_BASE_REG + 0x4A0
->> +#define GDROM_DMA_ACCESS_CTRL_REG GDROM_BASE_REG + 0x4B8
->> +
->These should all be encapsulated by brackets.
+> Blacklist "HITACHI HDS7225SCSUN250G*" and "SEAGATE STN7225SASUN250G*"
+> drives from using NCQ.
+> 
+> Signed-off-by David Milburn <dmilburn@redhat.com>
 
-Or making it an enum {
-	GDROM_DMA_ACCESS_CTL_REG = GDROM_BASE_REG + 0x4B8,
-}; without brackets.
-
+Tejun fixed the bug causing the false reporting of NCQ errors so these
+blacklist entries should no longer be needed.
