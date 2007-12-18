@@ -1,48 +1,35 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 3/9] libata: xfer_mask is unsigned int not unsigned long
-Date: Mon, 17 Dec 2007 20:30:33 -0500
-Message-ID: <476722B9.5080601@garzik.org>
-References: <200712140001.lBE01dxT025432@imap1.linux-foundation.org>
+Subject: Re: [PATCH 01/10] libata-acpi: adjust constness in ata_acpi_gtm/stm()
+ parameters
+Date: Mon, 17 Dec 2007 20:34:20 -0500
+Message-ID: <4767239C.6070306@garzik.org>
+References: <11976987063011-git-send-email-htejun@gmail.com> <11976987061239-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:44080 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37072 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750792AbXLRBag (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Dec 2007 20:30:36 -0500
-In-Reply-To: <200712140001.lBE01dxT025432@imap1.linux-foundation.org>
+	id S1751466AbXLRBeX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Dec 2007 20:34:23 -0500
+In-Reply-To: <11976987061239-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, htejun@gmail.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: hancockr@shaw.ca, linux-ide@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> From: Tejun Heo <htejun@gmail.com>
+Tejun Heo wrote:
+> * No internal function uses const ata_port.  Drop const from @ap.
 > 
-> xfer_mask is unsigned int not unsigned long.  Change ->mode_filter to
-> take and return unsigned int.
+> * Make ata_acpi_stm() copy @stm before using it and change @stm to
+>   const.
 > 
-> While at it, rename @adev of ata_pci_default_filter() to @dev for
-> consistency.
-> 
-> [akpm@linux-foundation.org: fix types]
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
-> 
->  drivers/ata/libata-sff.c       |    5 +++--
->  drivers/ata/pata_acpi.c        |    2 +-
->  drivers/ata/pata_ali.c         |    2 +-
->  drivers/ata/pata_amd.c         |   10 +++++-----
->  drivers/ata/pata_hpt366.c      |    2 +-
->  drivers/ata/pata_hpt37x.c      |    4 ++--
->  drivers/ata/pata_pdc2027x.c    |    4 ++--
->  drivers/ata/pata_scc.c         |    2 +-
->  drivers/ata/pata_serverworks.c |    4 ++--
->  include/linux/libata.h         |    9 +++++----
->  10 files changed, 23 insertions(+), 21 deletions(-)
+>  drivers/ata/libata-acpi.c |    7 ++++---
+>  include/linux/libata.h    |    4 ++--
+>  2 files changed, 6 insertions(+), 5 deletions(-)
 
-patch is outdated...
+applied 1-10 to #upstream-fixes
 
 
