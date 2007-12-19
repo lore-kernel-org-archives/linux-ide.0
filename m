@@ -1,58 +1,28 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 9/9] pata_legacy: restructure and revamp
-Date: Tue, 18 Dec 2007 17:08:42 -0500
-Message-ID: <476844EA.10204@garzik.org>
-References: <200712140001.lBE01j6b025453@imap1.linux-foundation.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Wed, 19 Dec 2007 17:31:26 +1100
+Message-ID: <200712191731.26512.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43144 "EHLO mail.dvmed.net"
+Received: from ozlabs.org ([203.10.76.45]:46645 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754464AbXLRWIo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2007 17:08:44 -0500
-In-Reply-To: <200712140001.lBE01j6b025453@imap1.linux-foundation.org>
+	id S1751541AbXLSGbg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Dec 2007 01:31:36 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-akpm@linux-foundation.org wrote:
-> From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-> 
-> Rework the pata_legacy driver to have an internal way to plug multiple
-> legacy interface types and designs into the driver.
-> 
-> This driver supports
-> 	- Generic legacy ISA on primary/secondary and tertiary ports
-> 	- BIOS or jumper configured legacy ports
-> 	- VLB controllers that snoop the mode set for PIO
-> 		(Cirrus CLPD7220, Adaptec AIC25VL01)
-> 	- Promise PDC20230
-> 	- Holtek 6560A/B
-> 	- Opti VLB controllers
-> 	- QDI 6500/6580/6580DP controllers
-> 
-> The new driver also adds an "all" option so you can load all the PCI
-> drivers you have, decide you have a controller that is totally unknown and
-> then load pata_legacy all=1 to grab the primary/secondary ports as a last
-> resort fallback.
-> 
-> TODO:
-> 	Add ST412 support (needs some kind of geometry hook in libata core code)
-> 	Winbond W83759A in programmable mode (aka DTC2278)
-> 	Find more insane VLB controllers to support
-> 
-> This driver obsoletes pata_qdi, which can go once this is settled in.
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
-> Cc: Jeff Garzik <jeff@garzik.org>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/ata/pata_legacy.c |  765 ++++++++++++++++++++++++++++--------
->  1 file changed, 607 insertions(+), 158 deletions(-)
+This patch series is the start of my attempt to simplify and make explicit
+the chained scatterlist logic.
 
-ACK but needs rediffing
+It's not complete: my SATA box boots and seems happy, but all the other
+users of SCSI need to be updated and checked.  But I've gotten far enough
+to believe it's worth persuing.
 
-
+Cheers,
+Rusty.
