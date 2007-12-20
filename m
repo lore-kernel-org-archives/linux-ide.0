@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 39/63] ide-cd: merge cdrom_read_subchannel() into ide_cdrom_get_mcn()
-Date: Thu, 20 Dec 2007 02:22:51 +0100
-Message-ID: <200712200222.51336.bzolnier@gmail.com>
+Subject: [PATCH 27/63] ide-cd: kill CDROM_STATE_FLAGS() macro
+Date: Thu, 20 Dec 2007 02:13:02 +0100
+Message-ID: <200712200213.03084.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
@@ -9,10 +9,10 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.171]:12147 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756318AbXLTBeo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:44 -0500
+	with ESMTP id S1758567AbXLTBed (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:33 -0500
 Received: by ug-out-1314.google.com with SMTP id z38so389253ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:43 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:32 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,89 +20,190 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
+While at it rename 'info' variable to 'cd' in cdrom_saw_media_change().
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
--19 bytes
- drivers/ide/ide-cd.c |   53 ++++++++++++++++++++-------------------------------
- 1 file changed, 21 insertions(+), 32 deletions(-)
+-49 bytes
+ drivers/ide/ide-cd.c |   44 ++++++++++++++++++++++++--------------------
+ drivers/ide/ide-cd.h |    2 --
+ 2 files changed, 24 insertions(+), 22 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -1996,25 +1996,6 @@ static int ide_cd_read_tochdr(ide_drive_
- 	return 0;
- }
- 
--static int cdrom_read_subchannel(ide_drive_t *drive, int format, char *buf,
--				 int buflen, struct request_sense *sense)
--{
--	struct request req;
--
--	cdrom_prepare_request(drive, &req);
--
--	req.sense = sense;
--	req.data = buf;
--	req.data_len = buflen;
--	req.cmd[0] = GPCMD_READ_SUBCHANNEL;
--	req.cmd[1] = 2;     /* MSF addressing */
--	req.cmd[2] = 0x40;  /* request subQ data */
--	req.cmd[3] = format;
--	req.cmd[7] = (buflen >> 8);
--	req.cmd[8] = (buflen & 0xff);
--	return cdrom_queue_packet_command(drive, &req);
--}
--
- /* ATAPI cdrom drives are free to select the speed you request or any slower
-    rate :-( Requesting too fast a speed will _not_ produce an error. */
- static int cdrom_select_speed(ide_drive_t *drive, int speed,
-@@ -2356,28 +2337,36 @@ int ide_cdrom_get_last_session (struct c
- 	return 0;
- }
- 
--static
--int ide_cdrom_get_mcn (struct cdrom_device_info *cdi,
--		       struct cdrom_mcn *mcn_info)
-+static int ide_cdrom_get_mcn(struct cdrom_device_info *cdi,
-+			     struct cdrom_mcn *mcn_info)
+@@ -93,11 +93,11 @@ static void ide_cd_put(struct cdrom_info
+    buffers. */
+ static void cdrom_saw_media_change (ide_drive_t *drive)
  {
--	int stat;
--	char mcnbuf[24];
- 	ide_drive_t *drive = cdi->handle;
-+	int stat, mcnlen;
-+	struct request rq;
-+	char buf[24];
+-	struct cdrom_info *info = drive->driver_data;
+-	
+-	CDROM_STATE_FLAGS (drive)->media_changed = 1;
+-	CDROM_STATE_FLAGS (drive)->toc_valid = 0;
+-	info->nsectors_buffered = 0;
++	struct cdrom_info *cd = drive->driver_data;
 +
-+	cdrom_prepare_request(drive, &rq);
-+
-+	rq.data = buf;
-+	rq.data_len = sizeof(buf);
++	cd->state_flags.media_changed = 1;
++	cd->state_flags.toc_valid = 0;
++	cd->nsectors_buffered = 0;
+ }
  
--/* get MCN */
--	if ((stat = cdrom_read_subchannel(drive, 2, mcnbuf, sizeof (mcnbuf), NULL)))
-+	rq.cmd[0] = GPCMD_READ_SUBCHANNEL;
-+	rq.cmd[1] = 2;		/* MSF addressing */
-+	rq.cmd[2] = 0x40;	/* request subQ data */
-+	rq.cmd[3] = 2;		/* format */
-+	rq.cmd[8] = sizeof(buf);
-+
-+	stat = cdrom_queue_packet_command(drive, &rq);
-+	if (stat)
- 		return stat;
+ static int cdrom_log_sense(ide_drive_t *drive, struct request *rq,
+@@ -1859,7 +1859,7 @@ cdrom_lockdoor(ide_drive_t *drive, int l
+ 		stat = 0;
  
--	memcpy (mcn_info->medium_catalog_number, mcnbuf+9,
--		sizeof (mcn_info->medium_catalog_number)-1);
--	mcn_info->medium_catalog_number[sizeof (mcn_info->medium_catalog_number)-1]
--		= '\0';
-+	mcnlen = sizeof(mcn_info->medium_catalog_number) - 1;
-+	memcpy(mcn_info->medium_catalog_number, buf + 9, mcnlen);
-+	mcn_info->medium_catalog_number[mcnlen] = '\0';
+ 	if (stat == 0)
+-		CDROM_STATE_FLAGS(drive)->door_locked = lockflag;
++		cd->state_flags.door_locked = lockflag;
+ 
+ 	return stat;
+ }
+@@ -1879,7 +1879,7 @@ static int cdrom_eject(ide_drive_t *driv
+ 		return -EDRIVE_CANT_DO_THIS;
+ 
+ 	/* reload fails on some drives, if the tray is locked */
+-	if (CDROM_STATE_FLAGS(drive)->door_locked && ejectflag)
++	if (cd->state_flags.door_locked && ejectflag)
+ 		return 0;
+ 
+ 	cdrom_prepare_request(drive, &req);
+@@ -1977,7 +1977,7 @@ static int cdrom_read_toc(ide_drive_t *d
+ 	   If it is, just return. */
+ 	(void) cdrom_check_status(drive, sense);
+ 
+-	if (CDROM_STATE_FLAGS(drive)->toc_valid)
++	if (info->state_flags.toc_valid)
+ 		return 0;
+ 
+ 	/* Try to get the total cdrom capacity and sector size. */
+@@ -2116,7 +2116,7 @@ static int cdrom_read_toc(ide_drive_t *d
+ 	}
+ 
+ 	/* Remember that we've read this stuff. */
+-	CDROM_STATE_FLAGS(drive)->toc_valid = 1;
++	info->state_flags.toc_valid = 1;
  
  	return 0;
  }
+@@ -2198,7 +2198,7 @@ static int cdrom_get_toc_entry(ide_drive
+ 	/*
+ 	 * don't serve cached data, if the toc isn't valid
+ 	 */
+-	if (!CDROM_STATE_FLAGS(drive)->toc_valid)
++	if (!info->state_flags.toc_valid)
+ 		return -EINVAL;
  
+ 	/* Check validity of requested track number. */
+@@ -2330,6 +2330,7 @@ static
+ int ide_cdrom_reset (struct cdrom_device_info *cdi)
+ {
+ 	ide_drive_t *drive = cdi->handle;
++	struct cdrom_info *cd = drive->driver_data;
+ 	struct request_sense sense;
+ 	struct request req;
+ 	int ret;
+@@ -2343,7 +2344,7 @@ int ide_cdrom_reset (struct cdrom_device
+ 	 * A reset will unlock the door. If it was previously locked,
+ 	 * lock it again.
+ 	 */
+-	if (CDROM_STATE_FLAGS(drive)->door_locked)
++	if (cd->state_flags.door_locked)
+ 		(void) cdrom_lockdoor(drive, 1, &sense);
+ 
+ 	return ret;
+@@ -2413,7 +2414,7 @@ void ide_cdrom_update_speed (ide_drive_t
+ 		maxspeed = be16_to_cpu(cap->maxspeed);
+ 	}
+ 
+-	CDROM_STATE_FLAGS(drive)->current_speed = (curspeed + (176/2)) / 176;
++	cd->state_flags.current_speed = (curspeed + (176/2)) / 176;
+ 	cd->config_flags.max_speed = (maxspeed + (176/2)) / 176;
+ }
+ 
+@@ -2421,6 +2422,7 @@ static
+ int ide_cdrom_select_speed (struct cdrom_device_info *cdi, int speed)
+ {
+ 	ide_drive_t *drive = cdi->handle;
++	struct cdrom_info *cd = drive->driver_data;
+ 	struct request_sense sense;
+ 	struct atapi_capabilities_page cap;
+ 	int stat;
+@@ -2430,7 +2432,7 @@ int ide_cdrom_select_speed (struct cdrom
+ 
+ 	if (!ide_cdrom_get_capabilities(drive, &cap)) {
+ 		ide_cdrom_update_speed(drive, &cap);
+-		cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
++		cdi->speed = cd->state_flags.current_speed;
+ 	}
+         return 0;
+ }
+@@ -2491,7 +2493,7 @@ int ide_cdrom_get_last_session (struct c
+ 	struct request_sense sense;
+ 	int ret;
+ 
+-	if (!CDROM_STATE_FLAGS(drive)->toc_valid || info->toc == NULL)
++	if (!info->state_flags.toc_valid || info->toc == NULL)
+ 		if ((ret = cdrom_read_toc(drive, &sense)))
+ 			return ret;
+ 
+@@ -2533,12 +2535,13 @@ int ide_cdrom_check_media_change_real (s
+ 				       int slot_nr)
+ {
+ 	ide_drive_t *drive = cdi->handle;
++	struct cdrom_info *cd = drive->driver_data;
+ 	int retval;
+-	
++
+ 	if (slot_nr == CDSL_CURRENT) {
+ 		(void) cdrom_check_status(drive, NULL);
+-		retval = CDROM_STATE_FLAGS(drive)->media_changed;
+-		CDROM_STATE_FLAGS(drive)->media_changed = 0;
++		retval = cd->state_flags.media_changed;
++		cd->state_flags.media_changed = 0;
+ 		return retval;
+ 	} else {
+ 		return -EINVAL;
+@@ -2560,9 +2563,10 @@ static
+ void ide_cdrom_release_real (struct cdrom_device_info *cdi)
+ {
+ 	ide_drive_t *drive = cdi->handle;
++	struct cdrom_info *cd = drive->driver_data;
+ 
+ 	if (!cdi->use_count)
+-		CDROM_STATE_FLAGS(drive)->toc_valid = 0;
++		cd->state_flags.toc_valid = 0;
+ }
+ 
+ #define IDE_CD_CAPABILITIES \
+@@ -2594,7 +2598,7 @@ static int ide_cdrom_register (ide_drive
+ 	struct cdrom_device_info *devinfo = &info->devinfo;
+ 
+ 	devinfo->ops = &ide_cdrom_dops;
+-	devinfo->speed = CDROM_STATE_FLAGS(drive)->current_speed;
++	devinfo->speed = info->state_flags.current_speed;
+ 	devinfo->capacity = nslots;
+ 	devinfo->handle = drive;
+ 	strcpy(devinfo->name, drive->name);
+@@ -2820,7 +2824,7 @@ int ide_cdrom_setup (ide_drive_t *drive)
+ 
+ 	drive->special.all	= 0;
+ 
+-	CDROM_STATE_FLAGS(drive)->media_changed = 1;
++	cd->state_flags.media_changed = 1;
+ 
+ #if NO_DOOR_LOCKING
+ 	cd->config_flags.no_doorlock = 1;
+Index: b/drivers/ide/ide-cd.h
+===================================================================
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -80,8 +80,6 @@ struct ide_cd_state_flags {
+ 	byte current_speed;	/* Current speed of the drive */
+ };
+ 
+-#define CDROM_STATE_FLAGS(drive) (&(((struct cdrom_info *)(drive->driver_data))->state_flags))
 -
--
- /****************************************************************************
-  * Other driver requests (open, close, check media change).
-  */
+ /* Structure of a MSF cdrom address. */
+ struct atapi_msf {
+ 	byte reserved;
