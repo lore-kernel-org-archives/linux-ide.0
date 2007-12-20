@@ -1,113 +1,36 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 41/63] ide-cd: move lba_to_msf() and msf_to_lba() to
-	<linux/cdrom.h>
-Date: Thu, 20 Dec 2007 09:27:10 +0100
-Message-ID: <20071220082710.GJ13958@kernel.dk>
-References: <200712200224.16183.bzolnier@gmail.com>
+From: Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH] pata_of_platform: Move electra-ide support over to new
+	framework
+Date: Thu, 20 Dec 2007 14:53:46 +1100
+Message-ID: <18281.59210.200603.12093@cargo.ozlabs.ibm.com>
+References: <20071204170442.GA10460@localhost.localdomain>
+	<20071204204432.GD8099@lixom.net>
+	<4755BD7B.6030208@garzik.org>
+	<20071204210344.GE8099@lixom.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:13331 "EHLO kernel.dk"
+Received: from ozlabs.org ([203.10.76.45]:42592 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754745AbXLTIbw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Dec 2007 03:31:52 -0500
-Content-Disposition: inline
-In-Reply-To: <200712200224.16183.bzolnier@gmail.com>
+	id S1753219AbXLTIe1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Dec 2007 03:34:27 -0500
+In-Reply-To: <20071204210344.GE8099@lixom.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>
+Cc: Jeff Garzik <jeff@garzik.org>, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Paul Mundt <lethal@linux-sh.org>
 
-On Thu, Dec 20 2007, Bartlomiej Zolnierkiewicz wrote:
+Olof Johansson writes:
+
+> > FWIW I'm presuming this work will go via a powerpc tree not libata... 
+> > Generally that's not the case, but here it's largely an arch-specific work.
 > 
-> * Move lba_to_msf() and msf_to_lba() to <linux/cdrom.h>
->   (use 'u8' type instead of 'byte' while at it).
-> 
-> * Remove msf_to_lba() copy from drivers/cdrom/cdrom.c.
-> 
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Ok, that works. I was thinking of letting this patch go through libata,
+> and do the removal through the powerpc merge path. But I can do both
+> through powerpc.
 
-Acked-by: Jens Axboe <jens.axboe@oracle.com>
+Are you going to send me a patch to do this addition plus the removal
+of the old stuff, or do you want me to merge this patch as is?
 
-> ---
->  drivers/cdrom/cdrom.c |    6 ------
->  drivers/ide/ide-cd.c  |   18 ------------------
->  include/linux/cdrom.h |   14 ++++++++++++++
->  3 files changed, 14 insertions(+), 24 deletions(-)
-> 
-> Index: b/drivers/cdrom/cdrom.c
-> ===================================================================
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -2787,12 +2787,6 @@ int cdrom_ioctl(struct file * file, stru
->  	return -ENOSYS;
->  }
->  
-> -static inline
-> -int msf_to_lba(char m, char s, char f)
-> -{
-> -	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
-> -}
-> -
->  /*
->   * Required when we need to use READ_10 to issue other than 2048 block
->   * reads
-> Index: b/drivers/ide/ide-cd.c
-> ===================================================================
-> --- a/drivers/ide/ide-cd.c
-> +++ b/drivers/ide/ide-cd.c
-> @@ -1643,24 +1643,6 @@ void msf_from_bcd (struct atapi_msf *msf
->  	msf->frame  = BCD2BIN(msf->frame);
->  }
->  
-> -static inline
-> -void lba_to_msf (int lba, byte *m, byte *s, byte *f)
-> -{
-> -	lba += CD_MSF_OFFSET;
-> -	lba &= 0xffffff;  /* negative lbas use only 24 bits */
-> -	*m = lba / (CD_SECS * CD_FRAMES);
-> -	lba %= (CD_SECS * CD_FRAMES);
-> -	*s = lba / CD_FRAMES;
-> -	*f = lba % CD_FRAMES;
-> -}
-> -
-> -
-> -static inline
-> -int msf_to_lba (byte m, byte s, byte f)
-> -{
-> -	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
-> -}
-> -
->  static int cdrom_check_status(ide_drive_t *drive, struct request_sense *sense)
->  {
->  	struct request req;
-> Index: b/include/linux/cdrom.h
-> ===================================================================
-> --- a/include/linux/cdrom.h
-> +++ b/include/linux/cdrom.h
-> @@ -1184,6 +1184,20 @@ struct media_event_desc {
->  
->  extern int cdrom_get_media_event(struct cdrom_device_info *cdi, struct media_event_desc *med);
->  
-> +static inline void lba_to_msf(int lba, u8 *m, u8 *s, u8 *f)
-> +{
-> +	lba += CD_MSF_OFFSET;
-> +	lba &= 0xffffff;  /* negative lbas use only 24 bits */
-> +	*m = lba / (CD_SECS * CD_FRAMES);
-> +	lba %= (CD_SECS * CD_FRAMES);
-> +	*s = lba / CD_FRAMES;
-> +	*f = lba % CD_FRAMES;
-> +}
-> +
-> +static inline int msf_to_lba(u8 m, u8 s, u8 f)
-> +{
-> +	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
-> +}
->  #endif  /* End of kernel only stuff */ 
->  
->  #endif  /* _LINUX_CDROM_H */
-
--- 
-Jens Axboe
-
+Paul.
