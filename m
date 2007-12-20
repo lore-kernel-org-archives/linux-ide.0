@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 11/63] ide-cd: add ide_cd_pad_transfer() helper
-Date: Thu, 20 Dec 2007 02:00:38 +0100
-Message-ID: <200712200200.38615.bzolnier@gmail.com>
+Subject: [PATCH 62/63] ide-cd: unify request end exit path in cdrom_decode_status()
+Date: Thu, 20 Dec 2007 02:39:39 +0100
+Message-ID: <200712200239.39261.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:12451 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:12865 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757001AbXLTBeM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:12 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389252ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:11 -0800 (PST)
+	with ESMTP id S1756258AbXLTBfH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:35:07 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389451ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:35:05 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,122 +20,94 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-Add ide_cd_pad_transfer() helper and use it in cdrom_[new]pc_intr()
-and cdrom_{read,write}_check_ireason().
-
 There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
--39 bytes
- drivers/ide/ide-cd.c |   51 +++++++++++++++++++++++++--------------------------
- 1 file changed, 25 insertions(+), 26 deletions(-)
+-59 bytes
+ drivers/ide/ide-cd.c |   50 ++++++++++++++++++++++++--------------------------
+ 1 file changed, 24 insertions(+), 26 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -1007,6 +1007,15 @@ static ide_startstop_t cdrom_transfer_pa
+@@ -332,7 +332,6 @@ static int cdrom_decode_status(ide_drive
  
- typedef void (xfer_func_t)(ide_drive_t *, void *, u32);
+ 	} else if (blk_pc_request(rq) || rq->cmd_type == REQ_TYPE_ATA_PC) {
+ 		/* All other functions, except for READ. */
+-		unsigned long flags;
  
-+static void ide_cd_pad_transfer(ide_drive_t *drive, xfer_func_t *xf, int len)
-+{
-+	while (len > 0) {
-+		int dum = 0;
-+		xf(drive, &dum, sizeof(dum));
-+		len -= sizeof(dum);
-+	}
-+}
-+
- /*
-  * Buffer up to SECTORS_TO_TRANSFER sectors from the drive in our sector
-  * buffer.  Once the first sector is added, any subsequent sectors are
-@@ -1063,17 +1072,15 @@ int cdrom_read_check_ireason (ide_drive_
- 	if (ireason == 2)
- 		return 0;
- 	else if (ireason == 0) {
-+		ide_hwif_t *hwif = drive->hwif;
-+
- 		/* Whoops... The drive is expecting to receive data from us! */
- 		printk(KERN_ERR "%s: %s: wrong transfer direction!\n",
- 				drive->name, __FUNCTION__);
- 
- 		/* Throw some data at the drive so it doesn't hang
- 		   and quit this request. */
--		while (len > 0) {
--			int dum = 0;
--			HWIF(drive)->atapi_output_bytes(drive, &dum, sizeof (dum));
--			len -= sizeof (dum);
--		}
-+		ide_cd_pad_transfer(drive, hwif->atapi_output_bytes, len);
- 	} else  if (ireason == 1) {
- 		/* Some drives (ASUS) seem to tell us that status
- 		 * info is available. just get it and ignore.
-@@ -1500,15 +1507,8 @@ static ide_startstop_t cdrom_pc_intr (id
- 		/* Transfer the data. */
- 		xferfunc(drive, rq->data, thislen);
- 
--		/* If we haven't moved enough data to satisfy the drive,
--		   add some padding. */
--		while (len > thislen) {
--			int dum = 0;
--			xferfunc(drive, &dum, sizeof(dum));
--			len -= sizeof(dum);
--		}
+ 		/*
+ 		 * if we have an error, pass back CHECK_CONDITION as the
+@@ -370,15 +369,7 @@ static int cdrom_decode_status(ide_drive
+ 		 * remove failed request completely and end it when the
+ 		 * request sense has completed
+ 		 */
+-		if (stat & ERR_STAT) {
+-			spin_lock_irqsave(&ide_lock, flags);
+-			blkdev_dequeue_request(rq);
+-			HWGROUP(drive)->rq = NULL;
+-			spin_unlock_irqrestore(&ide_lock, flags);
 -
- 		/* Keep count of how much data we've moved. */
-+		len -= thislen;
- 		rq->data += thislen;
- 		rq->data_len -= thislen;
+-			cdrom_queue_request_sense(drive, rq->sense, rq);
+-		} else
+-			cdrom_end_request(drive, 0);
++		goto end_request;
  
-@@ -1525,6 +1525,13 @@ confused:
- 		return ide_stopped;
- 	}
+ 	} else if (blk_fs_request(rq)) {
+ 		int do_end_request = 0;
+@@ -458,23 +449,15 @@ static int cdrom_decode_status(ide_drive
+ 		   sense data. We need this in order to perform end of media
+ 		   processing */
  
-+	/*
-+	 * If we haven't moved enough data to satisfy the drive,
-+	 * add some padding.
-+	 */
-+	if (len > 0)
-+		ide_cd_pad_transfer(drive, xferfunc, len);
-+
- 	/* Now we wait for another interrupt. */
- 	ide_set_handler(drive, &cdrom_pc_intr, ATAPI_WAIT_PC, cdrom_timer_expiry);
- 	return ide_started;
-@@ -1617,15 +1624,13 @@ static int cdrom_write_check_ireason(ide
- 	if (ireason == 0)
- 		return 0;
- 	else if (ireason == 2) {
-+		ide_hwif_t *hwif = drive->hwif;
-+
- 		/* Whoops... The drive wants to send data. */
- 		printk(KERN_ERR "%s: %s: wrong transfer direction!\n",
- 				drive->name, __FUNCTION__);
+-		if (do_end_request) {
+-			if (stat & ERR_STAT) {
+-				unsigned long flags;
+-				spin_lock_irqsave(&ide_lock, flags);
+-				blkdev_dequeue_request(rq);
+-				HWGROUP(drive)->rq = NULL;
+-				spin_unlock_irqrestore(&ide_lock, flags);
++		if (do_end_request)
++			goto end_request;
  
--		while (len > 0) {
--			int dum = 0;
--			HWIF(drive)->atapi_input_bytes(drive, &dum, sizeof(dum));
--			len -= sizeof(dum);
+-				cdrom_queue_request_sense(drive, rq->sense, rq);
+-			} else
+-				cdrom_end_request(drive, 0);
+-		} else {
+-			/* If we got a CHECK_CONDITION status,
+-			   queue a request sense command. */
+-			if (stat & ERR_STAT)
+-				cdrom_queue_request_sense(drive, NULL, NULL);
 -		}
-+		ide_cd_pad_transfer(drive, hwif->atapi_input_bytes, len);
++		/*
++		 * If we got a CHECK_CONDITION status,
++		 * queue a request sense command.
++		 */
++		if (stat & ERR_STAT)
++			cdrom_queue_request_sense(drive, NULL, NULL);
  	} else {
- 		/* Drive wants a command packet, or invalid ireason... */
- 		printk(KERN_ERR "%s: %s: bad interrupt reason 0x02%x\n",
-@@ -1754,14 +1759,8 @@ static ide_startstop_t cdrom_newpc_intr(
- 	/*
- 	 * pad, if necessary
- 	 */
--	if (len > 0) {
--		while (len > 0) {
--			int pad = 0;
--
--			xferfunc(drive, &pad, sizeof(pad));
--			len -= sizeof(pad);
--		}
--	}
-+	if (len > 0)
-+		ide_cd_pad_transfer(drive, xferfunc, len);
+ 		blk_dump_rq_flags(rq, "ide-cd: bad rq");
+ 		cdrom_end_request(drive, 0);
+@@ -482,6 +465,21 @@ static int cdrom_decode_status(ide_drive
  
- 	BUG_ON(HWGROUP(drive)->handler != NULL);
+ 	/* Retry, or handle the next request. */
+ 	return 1;
++
++end_request:
++	if (stat & ERR_STAT) {
++		unsigned long flags;
++
++		spin_lock_irqsave(&ide_lock, flags);
++		blkdev_dequeue_request(rq);
++		HWGROUP(drive)->rq = NULL;
++		spin_unlock_irqrestore(&ide_lock, flags);
++
++		cdrom_queue_request_sense(drive, rq->sense, rq);
++	} else
++		cdrom_end_request(drive, 0);
++
++	return 1;
+ }
  
+ static int cdrom_timer_expiry(ide_drive_t *drive)
