@@ -1,106 +1,124 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 41/63] ide-cd: move lba_to_msf() and msf_to_lba() to <linux/cdrom.h>
-Date: Thu, 20 Dec 2007 02:24:16 +0100
-Message-ID: <200712200224.16183.bzolnier@gmail.com>
+Subject: [PATCH 40/63] ide-cd: merge cdrom_select_speed() into ide_cdrom_select_speed()
+Date: Thu, 20 Dec 2007 02:23:31 +0100
+Message-ID: <200712200223.31134.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:12071 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.170]:12451 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758866AbXLTBeq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:46 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389250ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:45 -0800 (PST)
+	with ESMTP id S1758837AbXLTBep (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:45 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389252ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:44 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
 
 
-* Move lba_to_msf() and msf_to_lba() to <linux/cdrom.h>
-  (use 'u8' type instead of 'byte' while at it).
-
-* Remove msf_to_lba() copy from drivers/cdrom/cdrom.c.
-
-Cc: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/cdrom/cdrom.c |    6 ------
- drivers/ide/ide-cd.c  |   18 ------------------
- include/linux/cdrom.h |   14 ++++++++++++++
- 3 files changed, 14 insertions(+), 24 deletions(-)
+-13 bytes
+ drivers/ide/ide-cd.c |   66 ++++++++++++++++++++++-----------------------------
+ 1 file changed, 29 insertions(+), 37 deletions(-)
 
-Index: b/drivers/cdrom/cdrom.c
-===================================================================
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2787,12 +2787,6 @@ int cdrom_ioctl(struct file * file, stru
- 	return -ENOSYS;
- }
- 
--static inline
--int msf_to_lba(char m, char s, char f)
--{
--	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
--}
--
- /*
-  * Required when we need to use READ_10 to issue other than 2048 block
-  * reads
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -1643,24 +1643,6 @@ void msf_from_bcd (struct atapi_msf *msf
- 	msf->frame  = BCD2BIN(msf->frame);
+@@ -1996,38 +1996,6 @@ static int ide_cd_read_tochdr(ide_drive_
+ 	return 0;
  }
  
--static inline
--void lba_to_msf (int lba, byte *m, byte *s, byte *f)
+-/* ATAPI cdrom drives are free to select the speed you request or any slower
+-   rate :-( Requesting too fast a speed will _not_ produce an error. */
+-static int cdrom_select_speed(ide_drive_t *drive, int speed,
+-			      struct request_sense *sense)
 -{
--	lba += CD_MSF_OFFSET;
--	lba &= 0xffffff;  /* negative lbas use only 24 bits */
--	*m = lba / (CD_SECS * CD_FRAMES);
--	lba %= (CD_SECS * CD_FRAMES);
--	*s = lba / CD_FRAMES;
--	*f = lba % CD_FRAMES;
+-	struct cdrom_info *cd = drive->driver_data;
+-	struct cdrom_device_info *cdi = &cd->devinfo;
+-	struct request req;
+-	cdrom_prepare_request(drive, &req);
+-
+-	req.sense = sense;
+-	if (speed == 0)
+-		speed = 0xffff; /* set to max */
+-	else
+-		speed *= 177;   /* Nx to kbytes/s */
+-
+-	req.cmd[0] = GPCMD_SET_SPEED;
+-	/* Read Drive speed in kbytes/second MSB */
+-	req.cmd[2] = (speed >> 8) & 0xff;	
+-	/* Read Drive speed in kbytes/second LSB */
+-	req.cmd[3] = speed & 0xff;
+-	if ((cdi->mask & (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) !=
+-	    (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) {
+-		/* Write Drive speed in kbytes/second MSB */
+-		req.cmd[4] = (speed >> 8) & 0xff;
+-		/* Write Drive speed in kbytes/second LSB */
+-		req.cmd[5] = speed & 0xff;
+-       }
+-
+-	return cdrom_queue_packet_command(drive, &req);
 -}
 -
--
--static inline
--int msf_to_lba (byte m, byte s, byte f)
--{
--	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
--}
--
- static int cdrom_check_status(ide_drive_t *drive, struct request_sense *sense)
+ static int cdrom_get_toc_entry(ide_drive_t *drive, int track,
+ 				struct atapi_toc_entry **ent)
  {
- 	struct request req;
-Index: b/include/linux/cdrom.h
-===================================================================
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -1184,6 +1184,20 @@ struct media_event_desc {
+@@ -2251,23 +2219,47 @@ static void ide_cdrom_update_speed(ide_d
+ 	cd->max_speed = (maxspeed + (176/2)) / 176;
+ }
  
- extern int cdrom_get_media_event(struct cdrom_device_info *cdi, struct media_event_desc *med);
+-static
+-int ide_cdrom_select_speed (struct cdrom_device_info *cdi, int speed)
++/*
++ * ATAPI devices are free to select the speed you request or any slower
++ * rate. :-(  Requesting too fast a speed will _not_ produce an error.
++ */
++static int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
++	struct request rq;
+ 	struct request_sense sense;
+ 	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
+ 	int stat;
  
-+static inline void lba_to_msf(int lba, u8 *m, u8 *s, u8 *f)
-+{
-+	lba += CD_MSF_OFFSET;
-+	lba &= 0xffffff;  /* negative lbas use only 24 bits */
-+	*m = lba / (CD_SECS * CD_FRAMES);
-+	lba %= (CD_SECS * CD_FRAMES);
-+	*s = lba / CD_FRAMES;
-+	*f = lba % CD_FRAMES;
-+}
+-	if ((stat = cdrom_select_speed(drive, speed, &sense)) < 0)
+-		return stat;
++	cdrom_prepare_request(drive, &rq);
 +
-+static inline int msf_to_lba(u8 m, u8 s, u8 f)
-+{
-+	return (((m * CD_SECS) + s) * CD_FRAMES + f) - CD_MSF_OFFSET;
-+}
- #endif  /* End of kernel only stuff */ 
++	rq.sense = &sense;
++
++	if (speed == 0)
++		speed = 0xffff; /* set to max */
++	else
++		speed *= 177;   /* Nx to kbytes/s */
++
++	rq.cmd[0] = GPCMD_SET_SPEED;
++	/* Read Drive speed in kbytes/second MSB/LSB */
++	rq.cmd[2] = (speed >> 8) & 0xff;
++	rq.cmd[3] = speed & 0xff;
++	if ((cdi->mask & (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) !=
++	    (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) {
++		/* Write Drive speed in kbytes/second MSB/LSB */
++		rq.cmd[4] = (speed >> 8) & 0xff;
++		rq.cmd[5] = speed & 0xff;
++	}
++
++	stat = cdrom_queue_packet_command(drive, &rq);
  
- #endif  /* _LINUX_CDROM_H */
+ 	if (!ide_cdrom_get_capabilities(drive, buf)) {
+ 		ide_cdrom_update_speed(drive, buf);
+ 		cdi->speed = cd->current_speed;
+ 	}
+-        return 0;
++
++	return 0;
+ }
+ 
+ /*
