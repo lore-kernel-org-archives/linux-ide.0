@@ -1,56 +1,72 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Bug: get EXT3-fs error Allocating block in system zone
-Date: Wed, 19 Dec 2007 21:27:27 +0000
-Message-ID: <20071219212727.4e0a47c3@the-village.bc.nu>
-References: <fa.Fg53DJSEh/kZhf/uRCv9FYZsaSQ@ifi.uio.no>
-	<fa.nPzIjJ2SchPb1LOa/dRWb/WyEZU@ifi.uio.no>
-	<fa.LkmHGN+Fx6H930bfeCDU6pGdBKM@ifi.uio.no>
-	<fa.oSqMiIX7WubypXrhZGaRKU5wNGU@ifi.uio.no>
-	<fa.0pc9/nNmTq+eWIU9rADRn0xYGdI@ifi.uio.no>
-	<fa.hqM73i24f6G31R5F3sKL8+3H8Ww@ifi.uio.no>
-	<475C2C02.70001@shaw.ca>
-	<alpine.LFD.0.9999.0712091057200.12046@woody.linux-foundation.org>
-	<47698C39.6040902@pianoinflames.de>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 00/63] ide-cd: redux
+Date: Thu, 20 Dec 2007 01:48:49 +0100
+Message-ID: <200712200148.49690.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50134 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753365AbXLSVgD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 16:36:03 -0500
-In-Reply-To: <47698C39.6040902@pianoinflames.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758127AbXLTBeS@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marco Gatti <marco@pianoinflames.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Robert Hancock <hancockr@shaw.ca>, Andrew Morton <akpm@linux-foundation.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Greg KH <greg@kroah.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jgarzik@pobox.com>
-
-> > AHCI is a pretty well tested driver, but 99%+ of all testers still tend to 
-> > have less than 4GB of memory. So I do *not* believe that the highmem bits 
-> > are all that well tested at all. 
-
-Lab tested well and we pretty rapidly found the problems with non Intel
-AHCI that had 4GB cases.
-
-> dmesg, see bellow. But everything seems to work fine with it. No ext3 
-> issues. On the other hand, the I/O is very low (4.2 MB/s) in comparison 
-> to ahci. Maybe this can give us a hint for problems in ahci and 64-bit dma.
-
-4.2MB/sec is abnormally low.
 
 
-> scsi0 : ata_piix
-> scsi1 : ata_piix
-> ata1: SATA max UDMA/133 cmd 0x0000000000011cc0 ctl 0x0000000000011cb6 
-> bmdma 0x0000000000011c60 irq 22
-> ata2: SATA max UDMA/133 cmd 0x0000000000011cb8 ctl 0x0000000000011cb2 
-> bmdma 0x0000000000011c68 irq 22
+Hi,
 
-No devices. The messages here don't make any sense at all.
+This patch series is a major rework of the ide-cd driver.
 
-> Adding 2000084k swap on /dev/hdd2.  Priority:-1 extents:1 across:2000084k
-> ADDRCONF(NETDEV_UP): eth0: link is not ready
+The motivations behind it are twofold:
 
-And in fact you are using /dev/hda so you are not using the ata_piix
-driver at all but something like the IDE legacy mode PIO driver
+* ide-cd is still in use but because it has been out of luck for maintainers
+  lately the code become quite hard to debug and maintain - this puts it back
+  into the shape
 
+* aid efforts of developers (Tejun and Alan) who are working on libata ATAPI
+  support - it should be now a lot easier to spot the various quirks for
+  weird/buggy devices, differences between sr/ide-cd etc.
+
+This patch series contains only safe/straightforward changes (some "risky"
+ones are scheduled for later time) and should be fully bisectable.
+
+
+Changes:
+
+* unify _four_ slightly different IRQ handlers into one
+
+* re-organize handling of quirky-devices (group quirks scattered
+  all over the driver in the table and handle them using flags)
+
+* move code for verbose error logging to ide-cd_verbose.c (this
+  code doesn't have any IDE subsystem dependencies so if desired
+  it can be easily converted into generic IDE/libata library)
+
+* move code handling cdrom.c IOCTLs to ide-cd_ioctl.c
+
+* remove duplicated/dead code (> 700 LOC gone)
+
+* move historical changelog to Documentation/ide/
+
+* fix few bugs discovered during rewrite
+
+
+diffstat:
+
+ Documentation/ide/ChangeLog.ide-cd.1994-2004 |  268 ++
+ drivers/cdrom/cdrom.c                        |    6
+ drivers/ide/Kconfig                          |    9
+ drivers/ide/Makefile                         |    6
+ drivers/ide/ide-cd.c                         | 3236 +++++++++------------------
+ drivers/ide/ide-cd.h                         |  737 ------
+ drivers/ide/ide-cd_ioctl.c                   |  265 ++
+ drivers/ide/ide-cd_verbose.c                 |  359 ++
+ include/linux/cdrom.h                        |   14
+ 9 files changed, 2095 insertions(+), 2805 deletions(-)
+
+
+PS ide-cd Maintainer position is still open...
+
+Thanks,
+Bart
