@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 27/63] ide-cd: kill CDROM_STATE_FLAGS() macro
-Date: Thu, 20 Dec 2007 02:13:02 +0100
-Message-ID: <200712200213.03084.bzolnier@gmail.com>
+Subject: [PATCH 25/63] ide-cd: remove redundant config flags
+Date: Thu, 20 Dec 2007 02:11:36 +0100
+Message-ID: <200712200211.37052.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:12147 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.172]:12071 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758567AbXLTBed (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:33 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389253ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:32 -0800 (PST)
+	with ESMTP id S1756867AbXLTBea (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:30 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389250ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:29 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,190 +20,243 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-While at it rename 'info' variable to 'cd' in cdrom_saw_media_change().
+* Use CDC_* flags directly and remove redundant flags from ->config_flags.
+
+While at it:
+* Add KERN_CONT to printk()-s in ide_cdrom_probe_capabilities().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
--49 bytes
- drivers/ide/ide-cd.c |   44 ++++++++++++++++++++++++--------------------
- drivers/ide/ide-cd.h |    2 --
- 2 files changed, 24 insertions(+), 22 deletions(-)
+-294 bytes
+ drivers/ide/ide-cd.c |  102 ++++++++++++++++++++-------------------------------
+ drivers/ide/ide-cd.h |   10 -----
+ 2 files changed, 40 insertions(+), 72 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -93,11 +93,11 @@ static void ide_cd_put(struct cdrom_info
-    buffers. */
- static void cdrom_saw_media_change (ide_drive_t *drive)
+@@ -1868,6 +1868,8 @@ cdrom_lockdoor(ide_drive_t *drive, int l
+ static int cdrom_eject(ide_drive_t *drive, int ejectflag,
+ 		       struct request_sense *sense)
  {
--	struct cdrom_info *info = drive->driver_data;
--	
--	CDROM_STATE_FLAGS (drive)->media_changed = 1;
--	CDROM_STATE_FLAGS (drive)->toc_valid = 0;
--	info->nsectors_buffered = 0;
 +	struct cdrom_info *cd = drive->driver_data;
-+
-+	cd->state_flags.media_changed = 1;
-+	cd->state_flags.toc_valid = 0;
-+	cd->nsectors_buffered = 0;
- }
- 
- static int cdrom_log_sense(ide_drive_t *drive, struct request *rq,
-@@ -1859,7 +1859,7 @@ cdrom_lockdoor(ide_drive_t *drive, int l
- 		stat = 0;
- 
- 	if (stat == 0)
--		CDROM_STATE_FLAGS(drive)->door_locked = lockflag;
-+		cd->state_flags.door_locked = lockflag;
- 
- 	return stat;
- }
-@@ -1879,7 +1879,7 @@ static int cdrom_eject(ide_drive_t *driv
- 		return -EDRIVE_CANT_DO_THIS;
- 
- 	/* reload fails on some drives, if the tray is locked */
--	if (CDROM_STATE_FLAGS(drive)->door_locked && ejectflag)
-+	if (cd->state_flags.door_locked && ejectflag)
- 		return 0;
- 
- 	cdrom_prepare_request(drive, &req);
-@@ -1977,7 +1977,7 @@ static int cdrom_read_toc(ide_drive_t *d
- 	   If it is, just return. */
- 	(void) cdrom_check_status(drive, sense);
- 
--	if (CDROM_STATE_FLAGS(drive)->toc_valid)
-+	if (info->state_flags.toc_valid)
- 		return 0;
- 
- 	/* Try to get the total cdrom capacity and sector size. */
-@@ -2116,7 +2116,7 @@ static int cdrom_read_toc(ide_drive_t *d
- 	}
- 
- 	/* Remember that we've read this stuff. */
--	CDROM_STATE_FLAGS(drive)->toc_valid = 1;
-+	info->state_flags.toc_valid = 1;
- 
- 	return 0;
- }
-@@ -2198,7 +2198,7 @@ static int cdrom_get_toc_entry(ide_drive
- 	/*
- 	 * don't serve cached data, if the toc isn't valid
- 	 */
--	if (!CDROM_STATE_FLAGS(drive)->toc_valid)
-+	if (!info->state_flags.toc_valid)
- 		return -EINVAL;
- 
- 	/* Check validity of requested track number. */
-@@ -2330,6 +2330,7 @@ static
- int ide_cdrom_reset (struct cdrom_device_info *cdi)
- {
- 	ide_drive_t *drive = cdi->handle;
-+	struct cdrom_info *cd = drive->driver_data;
- 	struct request_sense sense;
++	struct cdrom_device_info *cdi = &cd->devinfo;
  	struct request req;
- 	int ret;
-@@ -2343,7 +2344,7 @@ int ide_cdrom_reset (struct cdrom_device
- 	 * A reset will unlock the door. If it was previously locked,
- 	 * lock it again.
- 	 */
--	if (CDROM_STATE_FLAGS(drive)->door_locked)
-+	if (cd->state_flags.door_locked)
- 		(void) cdrom_lockdoor(drive, 1, &sense);
+ 	char loej = 0x02;
  
- 	return ret;
-@@ -2413,7 +2414,7 @@ void ide_cdrom_update_speed (ide_drive_t
- 		maxspeed = be16_to_cpu(cap->maxspeed);
- 	}
+@@ -1881,7 +1883,7 @@ static int cdrom_eject(ide_drive_t *driv
+ 	cdrom_prepare_request(drive, &req);
  
--	CDROM_STATE_FLAGS(drive)->current_speed = (curspeed + (176/2)) / 176;
-+	cd->state_flags.current_speed = (curspeed + (176/2)) / 176;
- 	cd->config_flags.max_speed = (maxspeed + (176/2)) / 176;
- }
+ 	/* only tell drive to close tray if open, if it can do that */
+-	if (ejectflag && !CDROM_CONFIG_FLAGS(drive)->close_tray)
++	if (ejectflag && (cdi->mask & CDC_CLOSE_TRAY))
+ 		loej = 0;
  
-@@ -2421,6 +2422,7 @@ static
- int ide_cdrom_select_speed (struct cdrom_device_info *cdi, int speed)
+ 	req.sense = sense;
+@@ -2142,6 +2144,8 @@ static int cdrom_read_subchannel(ide_dri
+ static int cdrom_select_speed(ide_drive_t *drive, int speed,
+ 			      struct request_sense *sense)
  {
- 	ide_drive_t *drive = cdi->handle;
 +	struct cdrom_info *cd = drive->driver_data;
- 	struct request_sense sense;
- 	struct atapi_capabilities_page cap;
- 	int stat;
-@@ -2430,7 +2432,7 @@ int ide_cdrom_select_speed (struct cdrom
++	struct cdrom_device_info *cdi = &cd->devinfo;
+ 	struct request req;
+ 	cdrom_prepare_request(drive, &req);
  
- 	if (!ide_cdrom_get_capabilities(drive, &cap)) {
- 		ide_cdrom_update_speed(drive, &cap);
--		cdi->speed = CDROM_STATE_FLAGS(drive)->current_speed;
-+		cdi->speed = cd->state_flags.current_speed;
- 	}
-         return 0;
- }
-@@ -2491,7 +2493,7 @@ int ide_cdrom_get_last_session (struct c
- 	struct request_sense sense;
- 	int ret;
- 
--	if (!CDROM_STATE_FLAGS(drive)->toc_valid || info->toc == NULL)
-+	if (!info->state_flags.toc_valid || info->toc == NULL)
- 		if ((ret = cdrom_read_toc(drive, &sense)))
- 			return ret;
- 
-@@ -2533,12 +2535,13 @@ int ide_cdrom_check_media_change_real (s
- 				       int slot_nr)
- {
- 	ide_drive_t *drive = cdi->handle;
-+	struct cdrom_info *cd = drive->driver_data;
- 	int retval;
--	
-+
- 	if (slot_nr == CDSL_CURRENT) {
- 		(void) cdrom_check_status(drive, NULL);
--		retval = CDROM_STATE_FLAGS(drive)->media_changed;
--		CDROM_STATE_FLAGS(drive)->media_changed = 0;
-+		retval = cd->state_flags.media_changed;
-+		cd->state_flags.media_changed = 0;
- 		return retval;
- 	} else {
- 		return -EINVAL;
-@@ -2560,9 +2563,10 @@ static
- void ide_cdrom_release_real (struct cdrom_device_info *cdi)
- {
- 	ide_drive_t *drive = cdi->handle;
-+	struct cdrom_info *cd = drive->driver_data;
- 
- 	if (!cdi->use_count)
--		CDROM_STATE_FLAGS(drive)->toc_valid = 0;
-+		cd->state_flags.toc_valid = 0;
- }
- 
- #define IDE_CD_CAPABILITIES \
-@@ -2594,7 +2598,7 @@ static int ide_cdrom_register (ide_drive
+@@ -2156,9 +2160,8 @@ static int cdrom_select_speed(ide_drive_
+ 	req.cmd[2] = (speed >> 8) & 0xff;	
+ 	/* Read Drive speed in kbytes/second LSB */
+ 	req.cmd[3] = speed & 0xff;
+-	if (CDROM_CONFIG_FLAGS(drive)->cd_r ||
+-	    CDROM_CONFIG_FLAGS(drive)->cd_rw ||
+-	    CDROM_CONFIG_FLAGS(drive)->dvd_r) {
++	if ((cdi->mask & (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) !=
++	    (CDC_CD_R | CDC_CD_RW | CDC_DVD_R)) {
+ 		/* Write Drive speed in kbytes/second MSB */
+ 		req.cmd[4] = (speed >> 8) & 0xff;
+ 		/* Write Drive speed in kbytes/second LSB */
+@@ -2588,33 +2591,10 @@ static int ide_cdrom_register (ide_drive
  	struct cdrom_device_info *devinfo = &info->devinfo;
  
  	devinfo->ops = &ide_cdrom_dops;
--	devinfo->speed = CDROM_STATE_FLAGS(drive)->current_speed;
-+	devinfo->speed = info->state_flags.current_speed;
+-	devinfo->mask = 0;
+ 	devinfo->speed = CDROM_STATE_FLAGS(drive)->current_speed;
  	devinfo->capacity = nslots;
  	devinfo->handle = drive;
  	strcpy(devinfo->name, drive->name);
-@@ -2820,7 +2824,7 @@ int ide_cdrom_setup (ide_drive_t *drive)
+-	
+-	/* set capability mask to match the probe. */
+-	if (!CDROM_CONFIG_FLAGS(drive)->cd_r)
+-		devinfo->mask |= CDC_CD_R;
+-	if (!CDROM_CONFIG_FLAGS(drive)->cd_rw)
+-		devinfo->mask |= CDC_CD_RW;
+-	if (!CDROM_CONFIG_FLAGS(drive)->dvd)
+-		devinfo->mask |= CDC_DVD;
+-	if (!CDROM_CONFIG_FLAGS(drive)->dvd_r)
+-		devinfo->mask |= CDC_DVD_R;
+-	if (!CDROM_CONFIG_FLAGS(drive)->dvd_ram)
+-		devinfo->mask |= CDC_DVD_RAM;
+-	if (!CDROM_CONFIG_FLAGS(drive)->is_changer)
+-		devinfo->mask |= CDC_SELECT_DISC;
+-	if (!CDROM_CONFIG_FLAGS(drive)->audio_play)
+-		devinfo->mask |= CDC_PLAY_AUDIO;
+-	if (!CDROM_CONFIG_FLAGS(drive)->close_tray)
+-		devinfo->mask |= CDC_CLOSE_TRAY;
+-	if (!CDROM_CONFIG_FLAGS(drive)->mo_drive)
+-		devinfo->mask |= CDC_MO_DRIVE;
+-	if (!CDROM_CONFIG_FLAGS(drive)->ram)
+-		devinfo->mask |= CDC_RAM;
  
- 	drive->special.all	= 0;
+ 	if (CDROM_CONFIG_FLAGS(drive)->no_speed_select)
+ 		devinfo->mask |= CDC_SELECT_SPEED;
+@@ -2631,9 +2611,12 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	struct atapi_capabilities_page cap;
+ 	int nslots = 1;
  
--	CDROM_STATE_FLAGS(drive)->media_changed = 1;
-+	cd->state_flags.media_changed = 1;
++	cdi->mask = (CDC_CD_R | CDC_CD_RW | CDC_DVD | CDC_DVD_R |
++		     CDC_DVD_RAM | CDC_SELECT_DISC | CDC_PLAY_AUDIO |
++		     CDC_MO_DRIVE | CDC_RAM);
++
+ 	if (drive->media == ide_optical) {
+-		CDROM_CONFIG_FLAGS(drive)->mo_drive = 1;
+-		CDROM_CONFIG_FLAGS(drive)->ram = 1;
++		cdi->mask &= ~(CDC_MO_DRIVE | CDC_RAM);
+ 		printk(KERN_ERR "%s: ATAPI magneto-optical drive\n", drive->name);
+ 		return nslots;
+ 	}
+@@ -2641,7 +2624,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	if (CDROM_CONFIG_FLAGS(drive)->nec260 ||
+ 	    !strcmp(drive->id->model,"STINGRAY 8422 IDE 8X CD-ROM 7-27-95")) {
+ 		CDROM_CONFIG_FLAGS(drive)->no_eject = 0;
+-		CDROM_CONFIG_FLAGS(drive)->audio_play = 1;
++		cdi->mask &= ~CDC_PLAY_AUDIO;
+ 		return nslots;
+ 	}
  
- #if NO_DOOR_LOCKING
- 	cd->config_flags.no_doorlock = 1;
+@@ -2663,23 +2646,19 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	if (cap.eject)
+ 		CDROM_CONFIG_FLAGS(drive)->no_eject = 0;
+ 	if (cap.cd_r_write)
+-		CDROM_CONFIG_FLAGS(drive)->cd_r = 1;
+-	if (cap.cd_rw_write) {
+-		CDROM_CONFIG_FLAGS(drive)->cd_rw = 1;
+-		CDROM_CONFIG_FLAGS(drive)->ram = 1;
+-	}
++		cdi->mask &= ~CDC_CD_R;
++	if (cap.cd_rw_write)
++		cdi->mask &= ~(CDC_CD_RW | CDC_RAM);
+ 	if (cap.dvd_ram_read || cap.dvd_r_read || cap.dvd_rom)
+-		CDROM_CONFIG_FLAGS(drive)->dvd = 1;
+-	if (cap.dvd_ram_write) {
+-		CDROM_CONFIG_FLAGS(drive)->dvd_ram = 1;
+-		CDROM_CONFIG_FLAGS(drive)->ram = 1;
+-	}
++		cdi->mask &= ~CDC_DVD;
++	if (cap.dvd_ram_write)
++		cdi->mask &= ~(CDC_DVD_RAM | CDC_RAM);
+ 	if (cap.dvd_r_write)
+-		CDROM_CONFIG_FLAGS(drive)->dvd_r = 1;
++		cdi->mask &= ~CDC_DVD_R;
+ 	if (cap.audio_play)
+-		CDROM_CONFIG_FLAGS(drive)->audio_play = 1;
++		cdi->mask &= ~CDC_PLAY_AUDIO;
+ 	if (cap.mechtype == mechtype_caddy || cap.mechtype == mechtype_popup)
+-		CDROM_CONFIG_FLAGS(drive)->close_tray = 0;
++		cdi->mask |= CDC_CLOSE_TRAY;
+ 
+ 	/* Some drives used by Apple don't advertise audio play
+ 	 * but they do support reading TOC & audio datas
+@@ -2688,11 +2667,11 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8186") == 0 ||
+ 	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8176") == 0 ||
+ 	    strcmp(drive->id->model, "MATSHITADVD-ROM SR-8174") == 0)
+-		CDROM_CONFIG_FLAGS(drive)->audio_play = 1;
++		cdi->mask &= ~CDC_PLAY_AUDIO;
+ 
+ #if ! STANDARD_ATAPI
+ 	if (cdi->sanyo_slot > 0) {
+-		CDROM_CONFIG_FLAGS(drive)->is_changer = 1;
++		cdi->mask &= ~CDC_SELECT_DISC;
+ 		nslots = 3;
+ 	}
+ 
+@@ -2702,7 +2681,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	    cap.mechtype == mechtype_cartridge_changer) {
+ 		nslots = cdrom_number_of_slots(cdi);
+ 		if (nslots > 1)
+-			CDROM_CONFIG_FLAGS(drive)->is_changer = 1;
++			cdi->mask &= ~CDC_SELECT_DISC;
+ 	}
+ 
+ 	ide_cdrom_update_speed(drive, &cap);
+@@ -2711,22 +2690,22 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	printk(KERN_INFO "%s: ATAPI", drive->name);
+ 	if (CDROM_CONFIG_FLAGS(drive)->max_speed)
+ 		printk(" %dX", CDROM_CONFIG_FLAGS(drive)->max_speed);
+-	printk(" %s", CDROM_CONFIG_FLAGS(drive)->dvd ? "DVD-ROM" : "CD-ROM");
++	printk(KERN_CONT " %s", (cdi->mask & CDC_DVD) ? "CD-ROM" : "DVD-ROM");
++
++	if ((cdi->mask & CDC_DVD_R) == 0 || (cdi->mask & CDC_DVD_RAM) == 0)
++		printk(KERN_CONT " DVD%s%s",
++				 (cdi->mask & CDC_DVD_R) ? "" : "-R",
++				 (cdi->mask & CDC_DVD_RAM) ? "" : "-RAM");
++
++	if ((cdi->mask & CDC_CD_R) == 0 || (cdi->mask & CDC_CD_RW) == 0)
++		printk(KERN_CONT " CD%s%s",
++				 (cdi->mask & CDC_CD_R) ? "" : "-R",
++				 (cdi->mask & CDC_CD_RW) ? "" : "/RW");
+ 
+-	if (CDROM_CONFIG_FLAGS(drive)->dvd_r|CDROM_CONFIG_FLAGS(drive)->dvd_ram)
+-        	printk(" DVD%s%s", 
+-        	(CDROM_CONFIG_FLAGS(drive)->dvd_r)? "-R" : "", 
+-        	(CDROM_CONFIG_FLAGS(drive)->dvd_ram)? "-RAM" : "");
+-
+-        if (CDROM_CONFIG_FLAGS(drive)->cd_r|CDROM_CONFIG_FLAGS(drive)->cd_rw) 
+-        	printk(" CD%s%s", 
+-        	(CDROM_CONFIG_FLAGS(drive)->cd_r)? "-R" : "", 
+-        	(CDROM_CONFIG_FLAGS(drive)->cd_rw)? "/RW" : "");
+-
+-        if (CDROM_CONFIG_FLAGS(drive)->is_changer) 
+-        	printk(" changer w/%d slots", nslots);
+-        else 	
+-        	printk(" drive");
++	if ((cdi->mask & CDC_SELECT_DISC) == 0)
++		printk(KERN_CONT " changer w/%d slots", nslots);
++	else
++		printk(KERN_CONT " drive");
+ 
+ 	printk(KERN_CONT ", %dkB Cache\n", be16_to_cpu(cap.buffer_size));
+ 
+@@ -2844,7 +2823,6 @@ int ide_cdrom_setup (ide_drive_t *drive)
+ 	if ((drive->id->config & 0x0060) == 0x20)
+ 		CDROM_CONFIG_FLAGS(drive)->drq_interrupt = 1;
+ 	CDROM_CONFIG_FLAGS(drive)->no_eject = 1;
+-	CDROM_CONFIG_FLAGS(drive)->close_tray = 1;
+ 
+ 	/* limit transfer size per interrupt. */
+ 	/* a testament to the nice quality of Samsung drives... */
 Index: b/drivers/ide/ide-cd.h
 ===================================================================
 --- a/drivers/ide/ide-cd.h
 +++ b/drivers/ide/ide-cd.h
-@@ -80,8 +80,6 @@ struct ide_cd_state_flags {
- 	byte current_speed;	/* Current speed of the drive */
+@@ -61,20 +61,10 @@ struct ide_cd_config_flags {
+ 	__u8 nec260		: 1; /* Drive is a pre-1.2 NEC 260 drive. */
+ 	__u8 tocaddr_as_bcd	: 1; /* TOC addresses are in BCD. */
+ 	__u8 toctracks_as_bcd	: 1; /* TOC track numbers are in BCD. */
+-	__u8 is_changer		: 1; /* Drive is a changer. */
+-	__u8 cd_r		: 1; /* Drive can write to CD-R media . */
+-	__u8 cd_rw		: 1; /* Drive can write to CD-R/W media . */
+-	__u8 dvd		: 1; /* Drive is a DVD-ROM */
+-	__u8 dvd_r		: 1; /* Drive can write DVD-R */
+-	__u8 dvd_ram		: 1; /* Drive can write DVD-RAM */
+-	__u8 ram		: 1; /* generic WRITE (dvd-ram/mrw) */
+ 	__u8 limit_nframes	: 1; /* Drive does not provide data in
+ 					multiples of SECTOR_SIZE when more
+ 					than one interrupt is needed. */
+ 	__u8 seeking		: 1; /* Seeking in progress */
+-	__u8 audio_play		: 1; /* can do audio related commands */
+-	__u8 close_tray		: 1; /* can close the tray */
+-	__u8 mo_drive		: 1; /* drive is an MO device */
+ 	__u8 no_speed_select	: 1; /* SET_CD_SPEED command is unsupported. */
+ 	byte max_speed;		     /* Max speed of the drive */
  };
- 
--#define CDROM_STATE_FLAGS(drive) (&(((struct cdrom_info *)(drive->driver_data))->state_flags))
--
- /* Structure of a MSF cdrom address. */
- struct atapi_msf {
- 	byte reserved;
