@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 35/63] ide-cd: coding style fixes for VERBOSE_IDE_CD_ERRORS code
-Date: Thu, 20 Dec 2007 02:20:00 +0100
-Message-ID: <200712200220.00690.bzolnier@gmail.com>
+Subject: [PATCH 32/63] ide-cd: use BCD2BIN()/BIN2BCD() macros from <linux/bcd.h>
+Date: Thu, 20 Dec 2007 02:17:03 +0100
+Message-ID: <200712200217.03918.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:12147 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:11731 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758768AbXLTBek (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:40 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389253ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:40 -0800 (PST)
+	with ESMTP id S1755687AbXLTBeh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:37 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389245ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:36 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,251 +20,93 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-* Coding style fixes for VERBOSE_IDE_CD_ERRORS code.
-
-* Add KERN_{ERR,CONT} printk() levels where needed.
-
-This is a preparation for moving this code out of ide-cd.[c,h].
+Use BCD2BIN()/BIN2BCD() macros from <linux/bcd.h>
+and remove the local bcd2bin()/bin2bcd() inlines.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |   65 +++++++++++++++++++++++++--------------------------
- drivers/ide/ide-cd.h |   33 ++++++++++++-------------
- 2 files changed, 49 insertions(+), 49 deletions(-)
++15 bytes :(
+ drivers/ide/ide-cd.c |   34 +++++++++++-----------------------
+ 1 file changed, 11 insertions(+), 23 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -205,28 +205,30 @@ void cdrom_analyze_sense_data(ide_drive_
- 		const char *s = "bad sense key!";
- 		char buf[80];
+@@ -46,6 +46,7 @@
+ #include <linux/ide.h>
+ #include <linux/completion.h>
+ #include <linux/mutex.h>
++#include <linux/bcd.h>
  
--		printk ("ATAPI device %s:\n", drive->name);
--		if (sense->error_code==0x70)
--			printk("  Error: ");
--		else if (sense->error_code==0x71)
-+		printk(KERN_ERR "ATAPI device %s:\n", drive->name);
-+		if (sense->error_code == 0x70)
-+			printk(KERN_CONT "  Error: ");
-+		else if (sense->error_code == 0x71)
- 			printk("  Deferred Error: ");
- 		else if (sense->error_code == 0x7f)
--			printk("  Vendor-specific Error: ");
-+			printk(KERN_CONT "  Vendor-specific Error: ");
- 		else
--			printk("  Unknown Error Type: ");
-+			printk(KERN_CONT "  Unknown Error Type: ");
+ #include <scsi/scsi.h>	/* For SCSI -> ATAPI command conversion */
  
- 		if (sense->sense_key < ARRAY_SIZE(sense_key_texts))
- 			s = sense_key_texts[sense->sense_key];
+@@ -1754,25 +1755,12 @@ ide_do_rw_cdrom (ide_drive_t *drive, str
+  * can also be NULL, in which case no sense information is returned.
+  */
  
--		printk("%s -- (Sense key=0x%02x)\n", s, sense->sense_key);
-+		printk(KERN_CONT "%s -- (Sense key=0x%02x)\n",
-+				 s, sense->sense_key);
- 
- 		if (sense->asc == 0x40) {
- 			sprintf(buf, "Diagnostic failure on component 0x%02x",
--				 sense->ascq);
-+				sense->ascq);
- 			s = buf;
- 		} else {
- 			int lo = 0, mid, hi = ARRAY_SIZE(sense_data_texts);
- 			unsigned long key = (sense->sense_key << 16);
-+
- 			key |= (sense->asc << 8);
- 			if (!(sense->ascq >= 0x80 && sense->ascq <= 0xdd))
- 				key |= sense->ascq;
-@@ -238,11 +240,10 @@ void cdrom_analyze_sense_data(ide_drive_
- 				    sense_data_texts[mid].asc_ascq == (0xff0000|key)) {
- 					s = sense_data_texts[mid].text;
- 					break;
--				}
--				else if (sense_data_texts[mid].asc_ascq > key)
-+				} else if (sense_data_texts[mid].asc_ascq > key)
- 					hi = mid;
- 				else
--					lo = mid+1;
-+					lo = mid + 1;
- 			}
- 		}
- 
-@@ -254,11 +255,10 @@ void cdrom_analyze_sense_data(ide_drive_
- 		}
- 
- 		printk(KERN_ERR "  %s -- (asc=0x%02x, ascq=0x%02x)\n",
--			s, sense->asc, sense->ascq);
-+				s, sense->asc, sense->ascq);
- 
- 		if (failed_command != NULL) {
+-static inline
+-int bin2bcd (int x)
+-{
+-	return (x%10) | ((x/10) << 4);
+-}
 -
--			int lo=0, mid, hi= ARRAY_SIZE(packet_command_texts);
-+			int lo = 0, mid, hi = ARRAY_SIZE(packet_command_texts);
- 			s = NULL;
- 
- 			while (hi > lo) {
-@@ -272,13 +272,15 @@ void cdrom_analyze_sense_data(ide_drive_
- 				    failed_command->cmd[0])
- 					hi = mid;
- 				else
--					lo = mid+1;
-+					lo = mid + 1;
- 			}
- 
--			printk (KERN_ERR "  The failed \"%s\" packet command was: \n  \"", s);
--			for (i=0; i<sizeof (failed_command->cmd); i++)
--				printk ("%02x ", failed_command->cmd[i]);
--			printk ("\"\n");
-+			printk(KERN_ERR "  The failed \"%s\" packet command "
-+					"was: \n  \"", s);
-+			for (i = 0; i < sizeof(failed_command->cmd); i++)
-+				printk(KERN_CONT "%02x ",
-+						 failed_command->cmd[i]);
-+			printk(KERN_CONT "\"\n");
- 		}
- 
- 		/* The SKSV bit specifies validity of the sense_key_specific
-@@ -288,38 +290,37 @@ void cdrom_analyze_sense_data(ide_drive_
- 		 */
- 		if (sense->sense_key == NOT_READY && (sense->sks[0] & 0x80)) {
- 			int progress = (sense->sks[1] << 8 | sense->sks[2]) * 100;
--			printk(KERN_ERR "  Command is %02d%% complete\n", progress / 0xffff);
- 
-+			printk(KERN_ERR "  Command is %02d%% complete\n",
-+					progress / 0xffff);
- 		}
- 
- 		if (sense->sense_key == ILLEGAL_REQUEST &&
- 		    (sense->sks[0] & 0x80) != 0) {
- 			printk(KERN_ERR "  Error in %s byte %d",
--				(sense->sks[0] & 0x40) != 0 ?
--				"command packet" : "command data",
--				(sense->sks[1] << 8) + sense->sks[2]);
-+					(sense->sks[0] & 0x40) != 0 ?
-+					"command packet" : "command data",
-+					(sense->sks[1] << 8) + sense->sks[2]);
- 
- 			if ((sense->sks[0] & 0x40) != 0)
--				printk (" bit %d", sense->sks[0] & 0x07);
-+				printk(KERN_CONT " bit %d",
-+						 sense->sks[0] & 0x07);
- 
--			printk ("\n");
-+			printk(KERN_CONT "\n");
- 		}
- 	}
 -
- #else /* not VERBOSE_IDE_CD_ERRORS */
+-static inline
+-int bcd2bin (int x)
+-{
+-	return (x >> 4) * 10 + (x & 0x0f);
+-}
 -
- 	/* Suppress printing unit attention and `in progress of becoming ready'
- 	   errors when we're not being verbose. */
--
- 	if (sense->sense_key == UNIT_ATTENTION ||
- 	    (sense->sense_key == NOT_READY && (sense->asc == 4 ||
- 						sense->asc == 0x3a)))
- 		return;
- 
--	printk(KERN_ERR "%s: error code: 0x%02x  sense_key: 0x%02x  asc: 0x%02x  ascq: 0x%02x\n",
--		drive->name,
--		sense->error_code, sense->sense_key,
--		sense->asc, sense->ascq);
-+	printk(KERN_ERR "%s: error code: 0x%02x  sense_key: 0x%02x  "
-+			"asc: 0x%02x  ascq: 0x%02x\n",
-+			drive->name, sense->error_code, sense->sense_key,
-+			sense->asc, sense->ascq);
- #endif /* not VERBOSE_IDE_CD_ERRORS */
+ static
+ void msf_from_bcd (struct atapi_msf *msf)
+ {
+-	msf->minute = bcd2bin (msf->minute);
+-	msf->second = bcd2bin (msf->second);
+-	msf->frame  = bcd2bin (msf->frame);
++	msf->minute = BCD2BIN(msf->minute);
++	msf->second = BCD2BIN(msf->second);
++	msf->frame  = BCD2BIN(msf->frame);
  }
  
-Index: b/drivers/ide/ide-cd.h
-===================================================================
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -159,9 +159,8 @@ struct cdrom_info {
+ static inline
+@@ -1999,8 +1987,8 @@ static int cdrom_read_toc(ide_drive_t *d
+ 		return stat;
  
- /* This stuff should be in cdrom.h, since it is now generic... */
- #if VERBOSE_IDE_CD_ERRORS
--
-- /* The generic packet command opcodes for CD/DVD Logical Units,
-- * From Table 57 of the SFF8090 Ver. 3 (Mt. Fuji) draft standard. */ 
-+/* The generic packet command opcodes for CD/DVD Logical Units,
-+ * From Table 57 of the SFF8090 Ver. 3 (Mt. Fuji) draft standard. */
- static const struct {
- 	unsigned short packet_command;
- 	const char * const text;
-@@ -187,7 +186,8 @@ static const struct {
- 	{ GPCMD_GET_CONFIGURATION, "Get Configuration" },
- 	{ GPCMD_PLAY_AUDIO_MSF, "Play Audio MSF" },
- 	{ GPCMD_PLAYAUDIO_TI, "Play Audio TrackIndex" },
--	{ GPCMD_GET_EVENT_STATUS_NOTIFICATION, "Get Event Status Notification" },
-+	{ GPCMD_GET_EVENT_STATUS_NOTIFICATION,
-+		"Get Event Status Notification" },
- 	{ GPCMD_PAUSE_RESUME, "Pause/Resume" },
- 	{ GPCMD_STOP_PLAY_SCAN, "Stop Play/Scan" },
- 	{ GPCMD_READ_DISC_INFO, "Read Disc Info" },
-@@ -217,8 +217,6 @@ static const struct {
- 	{ GPCMD_READ_CD, "Read CD" },
- };
+ 	if (info->cd_flags & IDE_CD_FLAG_TOCTRACKS_AS_BCD) {
+-		toc->hdr.first_track = bcd2bin(toc->hdr.first_track);
+-		toc->hdr.last_track  = bcd2bin(toc->hdr.last_track);
++		toc->hdr.first_track = BCD2BIN(toc->hdr.first_track);
++		toc->hdr.last_track  = BCD2BIN(toc->hdr.last_track);
+ 	}
  
--
--
- /* From Table 303 of the SFF8090 Ver. 3 (Mt. Fuji) draft standard. */
- static const char * const sense_key_texts[16] = {
- 	"No sense data",
-@@ -262,16 +260,16 @@ static const struct {
- 	{ 0x011802, "Recovered data - the data was auto-reallocated" },
- 	{ 0x011803, "Recovered data with CIRC" },
- 	{ 0x011804, "Recovered data with L-EC" },
--	{ 0x015d00, 
--	    "Failure prediction threshold exceeded - Predicted logical unit failure" },
--	{ 0x015d01, 
--	    "Failure prediction threshold exceeded - Predicted media failure" },
-+	{ 0x015d00, "Failure prediction threshold exceeded"
-+		    " - Predicted logical unit failure" },
-+	{ 0x015d01, "Failure prediction threshold exceeded"
-+		    " - Predicted media failure" },
- 	{ 0x015dff, "Failure prediction threshold exceeded - False" },
- 	{ 0x017301, "Power calibration area almost full" },
- 	{ 0x020400, "Logical unit not ready - cause not reportable" },
- 	/* Following is misspelled in ATAPI 2.6, _and_ in Mt. Fuji */
--	{ 0x020401,
--	  "Logical unit not ready - in progress [sic] of becoming ready" },
-+	{ 0x020401, "Logical unit not ready"
-+		    " - in progress [sic] of becoming ready" },
- 	{ 0x020402, "Logical unit not ready - initializing command required" },
- 	{ 0x020403, "Logical unit not ready - manual intervention required" },
- 	{ 0x020404, "Logical unit not ready - format in progress" },
-@@ -310,7 +308,6 @@ static const struct {
- 	{ 0x037304, "Program memory area / RMA update failure" },
- 	{ 0x037305, "Program memory area / RMA is full" },
- 	{ 0x037306, "Program memory area / RMA is (almost) full" },
--
- 	{ 0x040200, "No seek complete" },
- 	{ 0x040300, "Write fault" },
- 	{ 0x040900, "Track following error" },
-@@ -344,12 +341,15 @@ static const struct {
- 	{ 0x055500, "System resource failure" },
- 	{ 0x056300, "End of user area encountered on this track" },
- 	{ 0x056400, "Illegal mode for this track or incompatible medium" },
--	{ 0x056f00, "Copy protection key exchange failure - Authentication failure" },
-+	{ 0x056f00, "Copy protection key exchange failure"
-+		    " - Authentication failure" },
- 	{ 0x056f01, "Copy protection key exchange failure - Key not present" },
--	{ 0x056f02, "Copy protection key exchange failure - Key not established" },
-+	{ 0x056f02, "Copy protection key exchange failure"
-+		     " - Key not established" },
- 	{ 0x056f03, "Read of scrambled sector without authentication" },
- 	{ 0x056f04, "Media region code is mismatched to logical unit" },
--	{ 0x056f05,  "Drive region must be permanent / region reset count error" },
-+	{ 0x056f05, "Drive region must be permanent"
-+		    " / region reset count error" },
- 	{ 0x057203, "Session fixation error - incomplete track in session" },
- 	{ 0x057204, "Empty or partially written reserved track" },
- 	{ 0x057205, "No more RZONE reservations are allowed" },
-@@ -364,7 +364,6 @@ static const struct {
- 	{ 0x065a00, "Operator request or state change input (unspecified)" },
- 	{ 0x065a01, "Operator medium removal request" },
- 	{ 0x0bb900, "Play operation aborted" },
--
- 	/* Here we use 0xff for the key (not a valid key) to signify
- 	 * that these can have _any_ key value associated with them... */
- 	{ 0xff0401, "Logical unit is in process of becoming ready" },
+ 	ntracks = toc->hdr.last_track - toc->hdr.first_track + 1;
+@@ -2037,8 +2025,8 @@ static int cdrom_read_toc(ide_drive_t *d
+ 			return stat;
+ 
+ 		if (info->cd_flags & IDE_CD_FLAG_TOCTRACKS_AS_BCD) {
+-			toc->hdr.first_track = bin2bcd(CDROM_LEADOUT);
+-			toc->hdr.last_track = bin2bcd(CDROM_LEADOUT);
++			toc->hdr.first_track = (u8)BIN2BCD(CDROM_LEADOUT);
++			toc->hdr.last_track = (u8)BIN2BCD(CDROM_LEADOUT);
+ 		} else {
+ 			toc->hdr.first_track = CDROM_LEADOUT;
+ 			toc->hdr.last_track = CDROM_LEADOUT;
+@@ -2051,14 +2039,14 @@ static int cdrom_read_toc(ide_drive_t *d
+ 	toc->hdr.toc_length = ntohs (toc->hdr.toc_length);
+ 
+ 	if (info->cd_flags & IDE_CD_FLAG_TOCTRACKS_AS_BCD) {
+-		toc->hdr.first_track = bcd2bin(toc->hdr.first_track);
+-		toc->hdr.last_track  = bcd2bin(toc->hdr.last_track);
++		toc->hdr.first_track = BCD2BIN(toc->hdr.first_track);
++		toc->hdr.last_track  = BCD2BIN(toc->hdr.last_track);
+ 	}
+ 
+ 	for (i = 0; i <= ntracks; i++) {
+ 		if (info->cd_flags & IDE_CD_FLAG_TOCADDR_AS_BCD) {
+ 			if (info->cd_flags & IDE_CD_FLAG_TOCTRACKS_AS_BCD)
+-				toc->ent[i].track = bcd2bin(toc->ent[i].track);
++				toc->ent[i].track = BCD2BIN(toc->ent[i].track);
+ 			msf_from_bcd(&toc->ent[i].addr.msf);
+ 		}
+ 		toc->ent[i].addr.lba = msf_to_lba (toc->ent[i].addr.msf.minute,
