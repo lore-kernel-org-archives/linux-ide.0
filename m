@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 61/63] ide-cd: merge cdrom_write_check_ireason() and cdrom_read_check_ireason()
-Date: Thu, 20 Dec 2007 02:38:57 +0100
-Message-ID: <200712200238.57933.bzolnier@gmail.com>
+Subject: [PATCH 63/63] ide-cd: update driver version, comments and copyrights
+Date: Thu, 20 Dec 2007 02:40:20 +0100
+Message-ID: <200712200240.21077.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:11733 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:12764 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758975AbXLTBfG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:35:06 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389248ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:35:04 -0800 (PST)
+	with ESMTP id S1758982AbXLTBfH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:35:07 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389457ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:35:06 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,113 +20,58 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-Add 'rw' parameter to cdrom_read_check_ireason(), make it handle
-both read and write checking, rename it to ide_cd_check_ireason(),
-finally remove no longer needed cdrom_write_check_ireason().
+* Bump driver version.
 
-There should be no functionality changes caused by this patch.
+* Remove filename and stale TODO from comments.
+
+* Add my copyrights.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
--61 bytes
- drivers/ide/ide-cd.c |   64 +++++++++++----------------------------------------
- 1 file changed, 15 insertions(+), 49 deletions(-)
+ drivers/ide/ide-cd.c |   17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -683,21 +683,25 @@ static void cdrom_buffer_sectors (ide_dr
-  * ok; nonzero if the request has been terminated.
+@@ -1,14 +1,14 @@
+ /*
+- * linux/drivers/ide/ide-cd.c
++ * ATAPI CD-ROM driver.
+  *
+- * Copyright (C) 1994, 1995, 1996  scott snyder  <snyder@fnald0.fnal.gov>
++ * Copyright (C) 1994-1996  Scott Snyder <snyder@fnald0.fnal.gov>
+  * Copyright (C) 1996-1998  Erik Andersen <andersee@debian.org>
+  * Copyright (C) 1998-2000  Jens Axboe <axboe@suse.de>
++ * Copyright (C)      2007  Bartlomiej Zolnierkiewicz
+  *
+  * May be copied or modified under the terms of the GNU General Public
+  * License.  See linux/COPYING for more information.
+  *
+- * ATAPI CD-ROM driver.  To be used with ide.c.
+  * See Documentation/cdrom/ide-cd for usage information.
+  *
+  * Suggestions are welcome. Patches that work are more welcome though. ;-)
+@@ -19,20 +19,11 @@
+  * ftp://fission.dt.wdc.com/pub/standards/SFF_atapi/spec/SFF8020-r2.6/PS/8020r26.ps
+  * ftp://ftp.avc-pioneer.com/Mtfuji4/Spec/Fuji4r10.pdf
+  *
+- * Drives that deviate from these standards will be accommodated as much
+- * as possible via compile time or command-line options.  Since I only have
+- * a few drives, you generally need to send me patches...
+- *
+- * ----------------------------------
+- * TO DO LIST:
+- * -Make it so that Pioneer CD DR-A24X and friends don't get screwed up on
+- *   boot
+- *
+  * For historical changelog please see:
+  *	Documentation/ide/ChangeLog.ide-cd.1994-2004
   */
- static
--int cdrom_read_check_ireason (ide_drive_t *drive, int len, int ireason)
-+int ide_cd_check_ireason(ide_drive_t *drive, int len, int ireason, int rw)
- {
--	if (ireason == 2)
-+	/*
-+	 * ireason == 0: the drive wants to receive data from us
-+	 * ireason == 2: the drive is expecting to transfer data to us
-+	 */
-+	if (ireason == (!rw << 1))
- 		return 0;
--	else if (ireason == 0) {
-+	else if (ireason == (rw << 1)) {
- 		ide_hwif_t *hwif = drive->hwif;
-+		xfer_func_t *xf;
  
--		/* Whoops... The drive is expecting to receive data from us! */
-+		/* Whoops... */
- 		printk(KERN_ERR "%s: %s: wrong transfer direction!\n",
- 				drive->name, __FUNCTION__);
+-#define IDECD_VERSION "4.61"
++#define IDECD_VERSION "5.00"
  
--		/* Throw some data at the drive so it doesn't hang
--		   and quit this request. */
--		ide_cd_pad_transfer(drive, hwif->atapi_output_bytes, len);
--	} else  if (ireason == 1) {
-+		xf = rw ? hwif->atapi_output_bytes : hwif->atapi_input_bytes;
-+		ide_cd_pad_transfer(drive, xf, len);
-+	} else  if (rw == 0 && ireason == 1) {
- 		/* Some drives (ASUS) seem to tell us that status
- 		 * info is available. just get it and ignore.
- 		 */
-@@ -984,35 +988,6 @@ int ide_cd_queue_pc(ide_drive_t *drive, 
- 	return (rq->cmd_flags & REQ_FAILED) ? -EIO : 0;
- }
- 
--/*
-- * Write handling
-- */
--static int cdrom_write_check_ireason(ide_drive_t *drive, int len, int ireason)
--{
--	/* Two notes about IDE interrupt reason here - 0 means that
--	 * the drive wants to receive data from us, 2 means that
--	 * the drive is expecting to transfer data to us.
--	 */
--	if (ireason == 0)
--		return 0;
--	else if (ireason == 2) {
--		ide_hwif_t *hwif = drive->hwif;
--
--		/* Whoops... The drive wants to send data. */
--		printk(KERN_ERR "%s: %s: wrong transfer direction!\n",
--				drive->name, __FUNCTION__);
--
--		ide_cd_pad_transfer(drive, hwif->atapi_input_bytes, len);
--	} else {
--		/* Drive wants a command packet, or invalid ireason... */
--		printk(KERN_ERR "%s: %s: bad interrupt reason 0x%02x\n",
--				drive->name, __FUNCTION__, ireason);
--	}
--
--	cdrom_end_request(drive, 0);
--	return 1;
--}
--
- static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- {
- 	struct cdrom_info *info = drive->driver_data;
-@@ -1100,20 +1075,11 @@ static ide_startstop_t cdrom_newpc_intr(
- 	/*
- 	 * check which way to transfer data
- 	 */
--	if ((blk_fs_request(rq) || blk_pc_request(rq)) && write) {
--		/*
--		 * write to drive
--		 */
--		if (cdrom_write_check_ireason(drive, len, ireason))
--			return ide_stopped;
--	} else if (blk_fs_request(rq) || blk_pc_request(rq)) {
--		/*
--		 * read from drive
--		 */
--		if (cdrom_read_check_ireason(drive, len, ireason))
-+	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-+		if (ide_cd_check_ireason(drive, len, ireason, write))
- 			return ide_stopped;
- 
--		if (blk_fs_request(rq)) {
-+		if (blk_fs_request(rq) && write == 0) {
- 			int nskip;
- 
- 			if (ide_cd_check_transfer_size(drive, len)) {
+ #include <linux/module.h>
+ #include <linux/types.h>
