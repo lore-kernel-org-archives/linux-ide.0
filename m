@@ -1,64 +1,59 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 50/63] ide-cd: remove cdrom_do_pc_continuation()
-Date: Thu, 20 Dec 2007 02:30:27 +0100
-Message-ID: <200712200230.27388.bzolnier@gmail.com>
+Subject: [PATCH 06/63] ide-cd: fix error messages in cdrom_write_intr()
+Date: Thu, 20 Dec 2007 01:56:13 +0100
+Message-ID: <200712200156.13518.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:11604 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757495AbXLTBey (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:54 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389244ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:53 -0800 (PST)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759476AbXLTBg5@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-
-cdrom_do_pc_continuation() is now identical to cdrom_do_newpc_cont()
-so just always use the latter function.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
--49 bytes
- drivers/ide/ide-cd.c |   15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
+ drivers/ide/ide-cd.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -1061,18 +1061,7 @@ static void ide_cd_request_sense_fixup(s
+@@ -1799,8 +1799,9 @@ static ide_startstop_t cdrom_write_intr(
+ 	/* Check for errors. */
+ 	if (dma) {
+ 		info->dma = 0;
+-		if ((dma_error = HWIF(drive)->ide_dma_end(drive))) {
+-			printk(KERN_ERR "ide-cd: write dma error\n");
++		dma_error = HWIF(drive)->ide_dma_end(drive);
++		if (dma_error) {
++			printk(KERN_ERR "%s: DMA write error\n", drive->name);
+ 			ide_dma_off(drive);
  		}
- }
+ 	}
+@@ -1833,8 +1834,9 @@ static ide_startstop_t cdrom_write_intr(
+ 		 */
+ 		uptodate = 1;
+ 		if (rq->current_nr_sectors > 0) {
+-			printk(KERN_ERR "%s: write_intr: data underrun (%d blocks)\n",
+-			drive->name, rq->current_nr_sectors);
++			printk(KERN_ERR "%s: %s: data underrun (%d blocks)\n",
++					drive->name, __FUNCTION__,
++					rq->current_nr_sectors);
+ 			uptodate = 0;
+ 		}
+ 		cdrom_end_request(drive, uptodate);
+@@ -1854,7 +1856,8 @@ static ide_startstop_t cdrom_write_intr(
+ 		int this_transfer;
  
--static ide_startstop_t cdrom_newpc_intr(ide_drive_t *);
--
--static ide_startstop_t cdrom_do_pc_continuation (ide_drive_t *drive)
--{
--	struct request *rq = HWGROUP(drive)->rq;
--
--	if (!rq->timeout)
--		rq->timeout = ATAPI_WAIT_PC;
--
--	/* Send the command to the drive and return. */
--	return cdrom_transfer_packet_command(drive, rq, cdrom_newpc_intr);
--}
-+static ide_startstop_t cdrom_do_newpc_cont(ide_drive_t *);
+ 		if (!rq->current_nr_sectors) {
+-			printk(KERN_ERR "ide-cd: write_intr: oops\n");
++			printk(KERN_ERR "%s: %s: confused, missing data\n",
++					drive->name, __FUNCTION__);
+ 			break;
+ 		}
  
- static ide_startstop_t cdrom_do_packet_command (ide_drive_t *drive)
- {
-@@ -1085,7 +1074,7 @@ static ide_startstop_t cdrom_do_packet_c
- 	len = rq->data_len;
- 
- 	/* Start sending the command to the drive. */
--	return cdrom_start_packet_command(drive, len, cdrom_do_pc_continuation);
-+	return cdrom_start_packet_command(drive, len, cdrom_do_newpc_cont);
- }
- 
- int ide_cd_queue_pc(ide_drive_t *drive, struct request *rq)
