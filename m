@@ -1,55 +1,30 @@
-From: "Adrian McMenamin" <lkmladrian@gmail.com>
-Subject: Re: [PATCH 2/3] Add GD-Rom support to the SEGA Dreamcast
-Date: Thu, 20 Dec 2007 21:53:54 +0000
-Message-ID: <8b67d60712201353y71a85498p9d77f1f21761856c@mail.gmail.com>
-References: <8b67d60712151621j2101c411p19d75125c6d1c2f9@mail.gmail.com>
-	 <20071216095019.GA12184@linux-sh.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
+Date: Thu, 20 Dec 2007 15:37:28 -0700
+Message-ID: <20071220223728.GM29690@parisc-linux.org>
+References: <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca> <20071214174236.GA28613@csn.ul.ie> <20071214181339.GW26334@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:20029 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754561AbXLTVxz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Dec 2007 16:53:55 -0500
-Received: by py-out-1112.google.com with SMTP id u77so103785pyb.16
-        for <linux-ide@vger.kernel.org>; Thu, 20 Dec 2007 13:53:54 -0800 (PST)
-In-Reply-To: <20071216095019.GA12184@linux-sh.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:53986 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbXLTWha (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Dec 2007 17:37:30 -0500
 Content-Disposition: inline
+In-Reply-To: <20071214181339.GW26334@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>, Adrian McMenamin <lkmladrian@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, axboe@kernel.dk
+To: Mel Gorman <mel@csn.ul.ie>
+Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-On 16/12/2007, Paul Mundt <lethal@linux-sh.org> wrote:
+On Fri, Dec 14, 2007 at 11:13:40AM -0700, Matthew Wilcox wrote:
+> I'll send it to our DB team to see if this improves our numbers at all.
 
->
-> Also, __devinit/__devexit annotations?
->
+It does, by approximately 0.67%.  This is about double the margin of
+error, and a significant improvement.  Thanks!
 
-Is there any difference between __init and __devint? I am using
-__init/__exit already
-
-> > +static struct platform_driver gdrom_driver = {
-> > +     .probe = probe_gdrom,
-> > +     .remove = remove_gdrom,
->
-> __devexit_p()?
->
-> > +static void __exit exit_gdrom(void)
-> > +{
-> > +     blk_cleanup_queue(gd.gdrom_rq);
-> > +     free_irq(HW_EVENT_GDROM_CMD, &gd);
-> > +     free_irq(HW_EVENT_GDROM_DMA, &gd);
-> > +     del_gendisk(gd.disk);
-> > +     if (gdrom_major)
-> > +             unregister_blkdev(gdrom_major, GDROM_DEV_NAME);
-> > +     platform_device_unregister(pd);
-> > +     platform_driver_unregister(&gdrom_driver);
-> > +     if (gd.toc)
-> > +             kfree(gd.toc);
-> > +}
-> > +
-> Ah, here's where you do the rest of the cleanup. This is non-intuitive,
-> remove should balance the work done by probe and exit the work done by
-> init.
->
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
