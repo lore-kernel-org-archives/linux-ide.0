@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 17/63] ide-cd: remove unused defines from ide-cd.h
-Date: Thu, 20 Dec 2007 02:05:10 +0100
-Message-ID: <200712200205.10565.bzolnier@gmail.com>
+Subject: [PATCH 58/63] ide-cd: prepare cdrom_rw_intr() and cdrom_newpc_intr() to be merged
+Date: Thu, 20 Dec 2007 02:36:41 +0100
+Message-ID: <200712200236.41270.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:11731 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.175]:12429 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757746AbXLTBeS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:18 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389245ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:17 -0800 (PST)
+	with ESMTP id S1758947AbXLTBfD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:35:03 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so389390ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:35:01 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,29 +20,126 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
+In cdrom_newpc_intr():
+* cleanup variables in the 'transfer data' loop
+
+In cdrom_rw_intr():
+* rename 'sectors_to_transfer' to 'thislen'
+* rename 'this_transfer' to 'blen'
+* keep number of bytes (instead of sectors) in 'thislen' and 'blen'
+* call 'xferfunc' only once for 'blen'
+* cache 'rq->buffer' in 'ptr' variable
+* check for 'rq->bio' before setting 'ptr' and 'blen'
+* check for 'ptr' instead of 'rq->current_nr_sectors'
+
+There should be no functionality changes caused by this patch.
+
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.h |   10 ----------
- 1 file changed, 10 deletions(-)
++54 bytes
+ drivers/ide/ide-cd.c |   45 +++++++++++++++++++++++++--------------------
+ 1 file changed, 25 insertions(+), 20 deletions(-)
 
-Index: b/drivers/ide/ide-cd.h
+Index: b/drivers/ide/ide-cd.c
 ===================================================================
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -49,16 +49,6 @@
- #endif
- #define SECTORS_PER_FRAME	(CD_FRAMESIZE >> SECTOR_BITS)
- #define SECTOR_BUFFER_SIZE	(CD_FRAMESIZE * 32)
--#define SECTORS_BUFFER		(SECTOR_BUFFER_SIZE >> SECTOR_BITS)
--#define SECTORS_MAX		(131072 >> SECTOR_BITS)
--
--#define BLOCKS_PER_FRAME	(CD_FRAMESIZE / BLOCK_SIZE)
--
--/* special command codes for strategy routine. */
--#define PACKET_COMMAND        4315
--#define REQUEST_SENSE_COMMAND 4316
--#define RESET_DRIVE_COMMAND   4317
--
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1115,8 +1115,8 @@ static ide_startstop_t cdrom_newpc_intr(
+ 	 * transfer data
+ 	 */
+ 	while (thislen > 0) {
+-		int blen = blen = rq->data_len;
+-		char *ptr = rq->data;
++		u8 *ptr = rq->data;
++		int blen = rq->data_len;
  
- /* Configuration flags.  These describe the capabilities of the drive.
-    They generally do not change after initialization, unless we learn
+ 		/*
+ 		 * bio backed?
+@@ -1192,7 +1192,7 @@ static ide_startstop_t cdrom_rw_intr(ide
+ 	struct cdrom_info *info = drive->driver_data;
+ 	struct request *rq = HWGROUP(drive)->rq;
+ 	xfer_func_t *xferfunc;
+-	int stat, ireason, len, sectors_to_transfer, uptodate, nskip;
++	int stat, ireason, len, thislen, uptodate, nskip;
+ 	int dma_error = 0, dma = info->dma, write = rq_data_dir(rq) == WRITE;
+ 	u8 lowcyl = 0, highcyl = 0;
+ 
+@@ -1247,7 +1247,7 @@ static ide_startstop_t cdrom_rw_intr(ide
+ 		return ide_stopped;
+ 	}
+ 
+-	sectors_to_transfer = len / SECTOR_SIZE;
++	thislen = len;
+ 
+ 	/* Check that the drive is expecting to do the same thing we are. */
+ 	if (write) {
+@@ -1270,12 +1270,12 @@ static ide_startstop_t cdrom_rw_intr(ide
+ 		 */
+ 		nskip = min_t(int, rq->current_nr_sectors
+ 				   - bio_cur_sectors(rq->bio),
+-				   sectors_to_transfer);
++				   thislen >> 9);
+ 
+ 		if (nskip > 0) {
+ 			ide_cd_drain_data(drive, nskip);
+ 			rq->current_nr_sectors -= nskip;
+-			sectors_to_transfer -= nskip;
++			thislen -= (nskip << 9);
+ 		}
+ 
+ 		xferfunc = HWIF(drive)->atapi_input_bytes;
+@@ -1284,17 +1284,23 @@ static ide_startstop_t cdrom_rw_intr(ide
+ 	/*
+ 	 * now loop and read/write the data
+ 	 */
+-	while (sectors_to_transfer > 0) {
+-		int this_transfer;
++	while (thislen > 0) {
++		u8 *ptr = NULL;
++		int blen;
++
++		if (rq->bio) {
++			ptr = rq->buffer;
++			blen = rq->current_nr_sectors << 9;
++		}
+ 
+-		if (!rq->current_nr_sectors) {
++		if (!ptr) {
+ 			if (!write)
+ 				/*
+ 				 * If the buffers are full, cache the rest
+ 				 * of the data in our internal buffer.
+ 				 */
+ 				cdrom_buffer_sectors(drive, rq->sector,
+-						     sectors_to_transfer);
++						     thislen >> 9);
+ 			else
+ 				printk(KERN_ERR "%s: %s: confused, missing "
+ 						"data\n",
+@@ -1305,17 +1311,16 @@ static ide_startstop_t cdrom_rw_intr(ide
+ 		/*
+ 		 * Figure out how many sectors we can transfer
+ 		 */
+-		this_transfer = min_t(int, sectors_to_transfer, rq->current_nr_sectors);
++		if (blen > thislen)
++			blen = thislen;
+ 
+-		while (this_transfer > 0) {
+-			xferfunc(drive, rq->buffer, SECTOR_SIZE);
+-			rq->buffer += SECTOR_SIZE;
+-			--rq->nr_sectors;
+-			--rq->current_nr_sectors;
+-			++rq->sector;
+-			--this_transfer;
+-			--sectors_to_transfer;
+-		}
++		xferfunc(drive, ptr, blen);
++
++		thislen -= blen;
++		rq->buffer += blen;
++		rq->nr_sectors -= (blen >> 9);
++		rq->current_nr_sectors -= (blen >> 9);
++		rq->sector += (blen >> 9);
+ 
+ 		/*
+ 		 * current buffer complete, move on
