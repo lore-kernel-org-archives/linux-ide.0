@@ -1,18 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 01/63] ide-cd: fix SAMSUNG CD-ROM SCR-3231 quirk
-Date: Thu, 20 Dec 2007 01:50:28 +0100
-Message-ID: <200712200150.29036.bzolnier@gmail.com>
+Subject: [PATCH 03/63] ide-cd: use ide_cd_release() in ide_cd_probe()
+Date: Thu, 20 Dec 2007 01:52:28 +0100
+Message-ID: <200712200152.28958.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:11733 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.170]:12451 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753975AbXLTBeF (ORCPT
+	with ESMTP id S1754555AbXLTBeF (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Dec 2007 20:34:05 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so389248ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:02 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id z38so389252ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 19 Dec 2007 17:34:04 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,51 +20,39 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 
 
-cdi->mask is cleared by ide_cdrom_register() which is called after the quirk.
+Use ide_cd_release() to do the cleanup if ide_cdrom_setup() fails.
 
-Fix it by adding new ->no_speed_select flag to struct ide_cd_config_flags
-and using it in ide_cdrom_register() to set CDC_SELECT_SPEED flag.
+It fixes:
+- the default drive->dsc_overlap value not being restored
+- the default drive->queue's prep_rq_fn not being restored
+- struct gendisk 'g' not being freed
+- wrong function name being reported on unregister_cdrom() error
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-cd.c |    5 ++++-
- drivers/ide/ide-cd.h |    3 ++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+-164 bytes
+ drivers/ide/ide-cd.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
 Index: b/drivers/ide/ide-cd.c
 ===================================================================
 --- a/drivers/ide/ide-cd.c
 +++ b/drivers/ide/ide-cd.c
-@@ -2903,6 +2903,9 @@ static int ide_cdrom_register (ide_drive
- 	if (!CDROM_CONFIG_FLAGS(drive)->ram)
- 		devinfo->mask |= CDC_RAM;
+@@ -3501,15 +3501,8 @@ static int ide_cd_probe(ide_drive_t *dri
+ 	g->driverfs_dev = &drive->gendev;
+ 	g->flags = GENHD_FL_CD | GENHD_FL_REMOVABLE;
+ 	if (ide_cdrom_setup(drive)) {
+-		struct cdrom_device_info *devinfo = &info->devinfo;
+ 		ide_proc_unregister_driver(drive, &ide_cdrom_driver);
+-		kfree(info->buffer);
+-		kfree(info->toc);
+-		kfree(info->changer_info);
+-		if (devinfo->handle == drive && unregister_cdrom(devinfo))
+-			printk (KERN_ERR "%s: ide_cdrom_cleanup failed to unregister device from the cdrom 
+driver.\n", drive->name);
+-		kfree(info);
+-		drive->driver_data = NULL;
++		ide_cd_release(&info->kref);
+ 		goto failed;
+ 	}
  
-+	if (CDROM_CONFIG_FLAGS(drive)->no_speed_select)
-+		devinfo->mask |= CDC_SELECT_SPEED;
-+
- 	devinfo->disk = info->disk;
- 	return register_cdrom(devinfo);
- }
-@@ -3155,7 +3158,7 @@ int ide_cdrom_setup (ide_drive_t *drive)
- 		CDROM_CONFIG_FLAGS(drive)->limit_nframes = 1;
- 	/* the 3231 model does not support the SET_CD_SPEED command */
- 	else if (!strcmp(drive->id->model, "SAMSUNG CD-ROM SCR-3231"))
--		cdi->mask |= CDC_SELECT_SPEED;
-+		CDROM_CONFIG_FLAGS(drive)->no_speed_select = 1;
- 
- #if ! STANDARD_ATAPI
- 	/* by default Sanyo 3 CD changer support is turned off and
-Index: b/drivers/ide/ide-cd.h
-===================================================================
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -91,7 +91,8 @@ struct ide_cd_config_flags {
- 	__u8 close_tray		: 1; /* can close the tray */
- 	__u8 writing		: 1; /* pseudo write in progress */
- 	__u8 mo_drive		: 1; /* drive is an MO device */
--	__u8 reserved		: 2;
-+	__u8 no_speed_select	: 1; /* SET_CD_SPEED command is unsupported. */
-+	__u8 reserved		: 1;
- 	byte max_speed;		     /* Max speed of the drive */
- };
- #define CDROM_CONFIG_FLAGS(drive) (&(((struct cdrom_info *)(drive->driver_data))->config_flags))
