@@ -1,27 +1,25 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 06/63] ide-cd: fix error messages in cdrom_write_intr()
-Date: Fri, 21 Dec 2007 16:13:47 +0300
-Message-ID: <476BBC0B.4040302@ru.mvista.com>
-References: <200712200156.13518.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: pata_via question.
+Date: Fri, 21 Dec 2007 13:48:44 +0000
+Message-ID: <20071221134844.1b58fbcd@the-village.bc.nu>
+References: <200712210755.52792.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:31073 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752313AbXLUNN0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 08:13:26 -0500
-In-Reply-To: <200712200156.13518.bzolnier@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34615 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751016AbXLUN4M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 08:56:12 -0500
+In-Reply-To: <200712210755.52792.gene.heskett@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: ide <linux-ide@vger.kernel.org>
 
-Bartlomiej Zolnierkiewicz wrote:
+> Or is it all covered by this:  from lspci, with or without pata_via loaded
+> 
+> 01:0a.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID Controller 
+> (rev 50)
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
-
+sata_via handles the extra pata_port on this controller
