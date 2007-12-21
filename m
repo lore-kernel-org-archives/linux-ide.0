@@ -1,17 +1,18 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 63/63] ide-cd: update driver version, comments and copyrights
-Date: Fri, 21 Dec 2007 15:48:33 +0300
-Message-ID: <476BB621.20000@ru.mvista.com>
-References: <200712200240.21077.bzolnier@gmail.com>
+Subject: Re: [PATCH 59/63] ide-cd: call blk_dump_rq_flags() on "missing data"
+ in cdrom_rw_intr()
+Date: Fri, 21 Dec 2007 15:55:13 +0300
+Message-ID: <476BB7B1.8080208@ru.mvista.com>
+References: <200712200237.16566.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:30872 "EHLO
+Received: from gateway-1237.mvista.com ([63.81.120.155]:30932 "EHLO
 	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750975AbXLUMsM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 07:48:12 -0500
-In-Reply-To: <200712200240.21077.bzolnier@gmail.com>
+	with ESMTP id S1760346AbXLUMyw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 07:54:52 -0500
+In-Reply-To: <200712200237.16566.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -19,15 +20,8 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> * Bump driver version.
-
-> * Remove filename and stale TODO from comments.
-
-> * Add my copyrights.
-
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
 Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 MBR, Sergei
-
