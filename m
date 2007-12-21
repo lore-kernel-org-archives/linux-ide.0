@@ -1,25 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: pata_via question.
-Date: Fri, 21 Dec 2007 13:48:44 +0000
-Message-ID: <20071221134844.1b58fbcd@the-village.bc.nu>
-References: <200712210755.52792.gene.heskett@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 00/63] ide-cd: redux
+Date: Fri, 21 Dec 2007 20:57:56 +0100
+Message-ID: <200712212057.56942.bzolnier@gmail.com>
+References: <200712200148.49690.bzolnier@gmail.com> <476ACFE5.2060800@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34615 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751016AbXLUN4M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 08:56:12 -0500
-In-Reply-To: <200712210755.52792.gene.heskett@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.174]:23049 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753423AbXLUTrz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Dec 2007 14:47:55 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so673655ugc.16
+        for <linux-ide@vger.kernel.org>; Fri, 21 Dec 2007 11:47:54 -0800 (PST)
+In-Reply-To: <476ACFE5.2060800@cfl.rr.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: ide <linux-ide@vger.kernel.org>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Or is it all covered by this:  from lspci, with or without pata_via loaded
+On Thursday 20 December 2007, Phillip Susi wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > Hi,
+> > 
+> > This patch series is a major rework of the ide-cd driver.
 > 
-> 01:0a.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID Controller 
-> (rev 50)
+> Hi, in the future could you please post big patchbombs like this as 
+> replies to the first one so they fold nicely into one thread?  IIRC, 
+> git-send-email does this by default now.
 
-sata_via handles the extra pata_port on this controller
+Sure, sorry for forgetting about it this time.
+
+Bart
