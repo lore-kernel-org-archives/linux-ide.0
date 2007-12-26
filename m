@@ -1,41 +1,98 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 7/7] sg_ring: convert core ATA code to sg_ring.
-Date: Wed, 26 Dec 2007 11:12:59 -0600
-Message-ID: <1198689179.3317.16.camel@localhost.localdomain>
-References: <200712191731.26512.rusty@rustcorp.com.au>
-	 <200712191836.06769.rusty@rustcorp.com.au>
-	 <200712191837.04697.rusty@rustcorp.com.au>
-	 <200712191838.27363.rusty@rustcorp.com.au>  <47721294.7030401@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] trm290: do hook dma_host_{on,off} methods
+Date: Wed, 26 Dec 2007 22:47:23 +0300
+Message-ID: <200712262247.23255.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [76.243.235.52] ([76.243.235.52]:37667 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751223AbXLZRNT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 12:13:19 -0500
-In-Reply-To: <47721294.7030401@gmail.com>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:25261 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751401AbXLZTqz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 14:46:55 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Rusty Russell <rusty@rustcorp.com.au>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
+Those two methods were reading/writing TRM-290 config. register; luckily (?)
+the writes only tried to change undefined bits.  While fixing this, also
 
-On Wed, 2007-12-26 at 17:36 +0900, Tejun Heo wrote:
-> (PS, I haven't followed the sg chaining discussion.  Why is sg chaining
-> an optional feature?  Performance overhead on low end machines?)
+- get rid of the 'ide_' prefixes in several functions for which the prefix has
+  been ectomized before;
 
-The idea of SG chaining is to allow drivers that wish to take advantage
-of it to increase their transfer lengths beyond
-MAX_HW_SEGMENTS*PAGE_SIZE by using chaining.  However, drivers that stay
-below MAX_HW_SEGMENTS for the scatterlist length don't need to be
-altered.
+- align the code initializing methods in init_hwif_trm290()...
 
-The ultimate goal (well, perhaps more wish) is to have all drivers
-converted, so SCSI can use something small for the default scatterlist
-sizing and dump all the sglist mempool stuff (although this may never be
-reached).
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-James
+ drivers/ide/pci/trm290.c |   26 ++++++++++++++++++--------
+ 1 files changed, 18 insertions(+), 8 deletions(-)
 
+Index: linux-2.6/drivers/ide/pci/trm290.c
+===================================================================
+--- linux-2.6.orig/drivers/ide/pci/trm290.c
++++ linux-2.6/drivers/ide/pci/trm290.c
+@@ -177,7 +177,7 @@ static void trm290_selectproc (ide_drive
+ 	trm290_prepare_drive(drive, drive->using_dma);
+ }
+ 
+-static void trm290_ide_dma_exec_cmd(ide_drive_t *drive, u8 command)
++static void trm290_dma_exec_cmd(ide_drive_t *drive, u8 command)
+ {
+ 	BUG_ON(HWGROUP(drive)->handler != NULL);	/* paranoia check */
+ 	ide_set_handler(drive, &ide_dma_intr, WAIT_CMD, NULL);
+@@ -185,7 +185,7 @@ static void trm290_ide_dma_exec_cmd(ide_
+ 	outb(command, IDE_COMMAND_REG);
+ }
+ 
+-static int trm290_ide_dma_setup(ide_drive_t *drive)
++static int trm290_dma_setup(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq = hwif->hwgroup->rq;
+@@ -215,7 +215,7 @@ static int trm290_ide_dma_setup(ide_driv
+ 	return 0;
+ }
+ 
+-static void trm290_ide_dma_start(ide_drive_t *drive)
++static void trm290_dma_start(ide_drive_t *drive)
+ {
+ }
+ 
+@@ -240,6 +240,14 @@ static int trm290_ide_dma_test_irq (ide_
+ 	return (status == 0x00ff);
+ }
+ 
++void trm290_dma_host_on (ide_drive_t *drive)
++{
++}
++
++void trm290_dma_host_off(ide_drive_t *drive)
++{
++}
++
+ static void __devinit init_hwif_trm290(ide_hwif_t *hwif)
+ {
+ 	unsigned int cfgbase = 0;
+@@ -280,11 +288,13 @@ static void __devinit init_hwif_trm290(i
+ 
+ 	ide_setup_dma(hwif, (hwif->config_data + 4) ^ (hwif->channel ? 0x0080 : 0x0000), 3);
+ 
+-	hwif->dma_setup = &trm290_ide_dma_setup;
+-	hwif->dma_exec_cmd = &trm290_ide_dma_exec_cmd;
+-	hwif->dma_start = &trm290_ide_dma_start;
+-	hwif->ide_dma_end = &trm290_ide_dma_end;
+-	hwif->ide_dma_test_irq = &trm290_ide_dma_test_irq;
++	hwif->dma_host_off	= &trm290_dma_host_off;
++	hwif->dma_host_on	= &trm290_dma_host_on;
++	hwif->dma_setup 	= &trm290_dma_setup;
++	hwif->dma_exec_cmd	= &trm290_dma_exec_cmd;
++	hwif->dma_start 	= &trm290_dma_start;
++	hwif->ide_dma_end	= &trm290_ide_dma_end;
++	hwif->ide_dma_test_irq	= &trm290_ide_dma_test_irq;
+ 
+ 	hwif->selectproc = &trm290_selectproc;
+ #if 1
 
