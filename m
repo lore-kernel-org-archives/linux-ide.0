@@ -1,50 +1,49 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: HSM violation errors
-Date: Wed, 26 Dec 2007 00:57:35 -0600
-Message-ID: <4771FB5F.6070608@shaw.ca>
-References: <fa.h7PRfrlP7LlqB19GxhqX2RLeHc8@ifi.uio.no>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 2.6.24-rc6 and earlier: "host bus error" after STR
+Date: Wed, 26 Dec 2007 17:10:59 +0900
+Message-ID: <47720C93.2010800@gmail.com>
+References: <20071224204813.GA3546@martell.zuzino.mipt.ru> <20071225094151.GA9769@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:27221 "EHLO
-	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238AbXLZG5i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 01:57:38 -0500
-In-reply-to: <fa.h7PRfrlP7LlqB19GxhqX2RLeHc8@ifi.uio.no>
+Received: from rv-out-0910.google.com ([209.85.198.186]:30755 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbXLZL2a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 06:28:30 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2212763rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 26 Dec 2007 03:28:30 -0800 (PST)
+In-Reply-To: <20071225094151.GA9769@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Mitchell <jeffrey.mitchell@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, torvalds@osdl.org, jgarzik@pobox.com, pavel@suse.cz, rjw@sisk.pl, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Mitchell wrote:
-> I'm seeing errors in dmesg and the like.  It appears to be somewhat
-> similar to the issue reported here:
-> http://kerneltrap.org/mailarchive/linux-kernel/2007/8/25/164711 except
-> that my machine doesn't freeze, and everything seems normal --
-> hopefully nothing like silent corruption is going on.  Also it's on
-> brand new hardware...Intel ICH8 mobile chipset with AHCI.  Output from
-> dmesg, hdparm -I /dev/sda and hdparm --drq-hsm-error /dev/sda is
-> below...please let me know if there's anything else that would be of
-> use (and, of course, if this is something I should be worried about
-> :-)  ).
-> 
-> Thanks.
-> Jeff
-> 
-> 
-> dmesg:
-> 
-> ata1.00: exception Emask 0x2 SAct 0xfffd SErr 0x0 action 0x2 frozen
-> ata1.00: spurious completions during NCQ issue=0x1 SAct=0xfffd
-> FIS=005040a1:00000002
+Hello,
 
-You didn't say what kernel you were using, but in the latest kernels 
-this spurious completion check was removed since it was broken, so this 
-error shouldn't happen anymore.
+Jeff Garzik wrote:
+>> ata3.00: limiting speed to UDMA/33:PIO4
+>> ata3.00: exception Emask 0x0 Sact 0x0 Serr 0x0 action 0x2
+>> ata3.00: BMDMA stat 0x6
+>> ata3.00: cmd ca/00:08:47:66:6e/00:00:00:00:00/eb tag 0 dma 4096 out
+>> 	 res 51/84:08:47:66:6e/00:00:00:00:00/eb Emask 0x30 (host bus error)
+>> ata3.00: status: { DRDY ERR }
+>> ata3.00: error: { ICRC ABRT }
+>> ata3: soft resetting link
+> 
+> host bus == PCI
+> 
+> So, your PCI bus is crapping itself in a major way.
+> 
+> One thing to try might be "libata.noacpi=1"
+
+Yeah, BMDMA stat 0x6 is INTR and ERR which means the controller tried to
+perform DMA write but couldn't pull data from main memory.  Maybe PCI
+bus isn't setup properly after resuming.  Comparing the result of 'lspci
+-xxx' before and after resume and see what changed can be helpful.
+
+Thanks.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+tejun
 
