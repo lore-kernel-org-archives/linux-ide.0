@@ -1,35 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: question about SATA vs (SATA via USB)
-Date: Wed, 26 Dec 2007 17:40:03 +0900
-Message-ID: <47721363.9050601@gmail.com>
-References: <fkamek$gqs$1@ger.gmane.org>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 00/63] ide-cd: redux
+Date: Wed, 26 Dec 2007 16:43:29 +0100
+Message-ID: <20071226154329.GA4713@gollum.tnic>
+References: <200712200148.49690.bzolnier@gmail.com> <20071225140514.fa13f5ac.akpm@linux-foundation.org>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.186]:30779 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695AbXLZL2b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 06:28:31 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so2212768rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 26 Dec 2007 03:28:30 -0800 (PST)
-In-Reply-To: <fkamek$gqs$1@ger.gmane.org>
+Received: from smtp107.plus.mail.re1.yahoo.com ([69.147.102.70]:45490 "HELO
+	smtp107.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751111AbXLZPpj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Dec 2007 10:45:39 -0500
+Content-Disposition: inline
+In-Reply-To: <20071225140514.fa13f5ac.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harri <harald.dunkel@t-online.de>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Harri wrote:
-> Next I mounted (rw, shame on me) the old SATA disk via USB
-> to the PC, and tried to copy the data. But during the copy
-> there were some syslog messages about file system corruptions
-> on the old disk. I stopped rsync, unmounted the disk,
-> and ran fsck, but it was damaged beyond repair. No chance
-> to recover any data.
+On Tue, Dec 25, 2007 at 02:05:14PM -0800, Andrew Morton wrote:
+> On Thu, 20 Dec 2007 01:48:49 +0100 Bartlomiej Zolnierkiewicz <bzolnie=
+r@gmail.com> wrote:
+>=20
+> > This patch series is a major rework of the ide-cd driver.
+>=20
+> woo-hoo.
+>=20
+> > PS ide-cd Maintainer position is still open...
+>=20
+> boo-hoo.
+>=20
+> I wish someone would fix that "The drive appears confused (ireason =3D
+> 0x%02x)" thing.  I had a go a while back but iirc the reporter disapp=
+eared
+> on me.  It is somewhat common.
+>=20
+> Or do you think this patch might indeed fix it?
 
-Hmmm... interesting.  That isn't supposed to happen.  Do you have kernel
-logs saved?
-
--- 
-tejun
-
+Andrew, take a look at patch #12 in this series: "ide-cd: fix "missing =
+data" handling in
+cdrom_pc_intr()."
+--=20
+Regards/Gru=DF,
+    Boris.
