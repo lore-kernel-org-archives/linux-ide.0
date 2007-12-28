@@ -1,58 +1,70 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] trm290: do hook dma_host_{on,off} methods (take 2)
-Date: Fri, 28 Dec 2007 22:41:26 +0300
-Message-ID: <47755166.7030809@ru.mvista.com>
-References: <200712271355.36105.sshtylyov@ru.mvista.com> <200712271705.32867.bzolnier@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] sata_nv: fix ADMA ATAPI issues with memory over 4GB (v3)
+Date: Fri, 28 Dec 2007 15:37:28 -0600
+Message-ID: <47756C98.3080804@shaw.ca>
+References: <47463534.9010100@shaw.ca> <4755D1E4.3020601@garzik.org>
+ <4755FA35.5000105@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from homer.mvista.com ([63.81.120.155]:8980 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755844AbXL1Tk7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Dec 2007 14:40:59 -0500
-In-Reply-To: <200712271705.32867.bzolnier@gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:20983 "EHLO
+	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbXL1Vi4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Dec 2007 16:38:56 -0500
+In-reply-to: <4755FA35.5000105@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Hello.
+Robert Hancock wrote:
+> Jeff Garzik wrote:
+>> Robert Hancock wrote:
+>>> This fixes some problems with ATAPI devices on nForce4 controllers in 
+>>> ADMA mode
+>>> on systems with memory located above 4GB. We need to delay setting 
+>>> the 64-bit
+>>> DMA mask until the PRD table and padding buffer are allocated so that 
+>>> they don't
+>>> get allocated above 4GB and break legacy mode (which is needed for ATAPI
+>>> devices).
+>>>
+>>> Signed-off-by: Robert Hancock <hancockr@shaw.ca>
+>>
+>> This is a bit nasty :/
+>>
+>> I would consider setting the consistent DMA mask to 32-bit, and 
+>> setting the overall mask to 64-bit.
+>>
+>> Seems like that would solve the problem?
+> 
+> The issue with that is that it would also constrain the ADMA CPB/PRD 
+> table allocation to 32-bit, which I'd rather avoid having to do. There 
+> are dual-socket Opteron boxes like HP xw9300 that use this controller, 
+> and limiting the allocation to 32-bit could force a non-optimal node 
+> allocation for the table memory.
+> 
+> These type of devices really want a version of dma_alloc_coherent that 
+> allows overriding the DMA mask for specific allocations to make this 
+> cleaner. I'm sure this isn't the only device that has different DMA mask 
+> requirements for different consistent memory allocations..
+> 
+> This patch does has the advantage of being confirmed to fix the 
+> reporter's problem (https://bugzilla.redhat.com/show_bug.cgi?id=351451) 
+> which there's something to be said for this late in the .24-rc series..
+> 
+>>
+>> Also, does this need to be rebased on top of what I just pushed upstream?
+> 
+> It don't think so.. this change is independent from the "sata_nv: don't 
+> use legacy DMA in ADMA mode (v3)" patch you just merged.
 
-Bartlomiej Zolnierkiewicz wrote:
+This bug fix is still outstanding. I haven't heard any more comments on 
+this one recently..
 
->>Using default methods caused the chip's DMA PRD count registers, inadvertently
->>starting DMA!  While fixing it, also do:
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
-> nasty, this could possibly explain the following trm290.c hack:
-
-    Frankly speaking, I'm not sure it's that destructive: the register in 
-question is accessed by inw()/outw() while the genric code would only "spoil" 
-it by inb(). So, I don't know if this would be access to the same register as
-outw() does (that write starts DMA, and it is a number of 32-bit words in PRD 
-table - 1). Actually, the PRD address is loaded by 32-bit write at address 2 
-bytes below the one in question, and so overlaps our register -- the chip must 
-be looking at byte enables when deciding what register is addressed).
-
-> ...
-> #if 0 /* play it safe for now */
-			  IDE_HFLAG_TRUST_BIOS_FOR_DMA |
-> #endif
-> ...
-
->>- get rid of the 'ide_' prefixes in several functions for which the prefix in
->>  the method's name has been 'ide_' ectomized already;
-
->>- align the code hooking the IDE DMA methods in init_hwif_trm290()...
-
->>---
->>Fixed the header, added 'static' to the new method definitions.
->>The patch is against Linus' kernel tree...
-
->>Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> applied
-
-    The next patch is cooking... :-)
-
-WBR, Sergei
