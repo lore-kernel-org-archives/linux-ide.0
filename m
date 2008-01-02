@@ -1,61 +1,34 @@
-From: Jean-Yves Simon <lethalwp@tiscali.be>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Sil4723 on ata2 - ICH7 - Timeouts - Suspend to RAM
-Date: Wed, 02 Jan 2008 11:26:13 +0100
-Message-ID: <1199269573.3357.3.camel@little.lethalwp>
-References: <1182090097.3108.6.camel@little.lethalwp>
-	 <46761D02.8090106@gmail.com> <1199259632.3066.6.camel@little.lethalwp>
-	 <477B4458.2070407@gmail.com>
+Date: Wed, 02 Jan 2008 19:40:07 +0900
+Message-ID: <477B6A07.5030408@gmail.com>
+References: <1182090097.3108.6.camel@little.lethalwp>	 <46761D02.8090106@gmail.com> <1199259632.3066.6.camel@little.lethalwp>	 <477B4458.2070407@gmail.com> <1199269573.3357.3.camel@little.lethalwp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:13831 "EHLO
-	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756058AbYABK0Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 05:26:16 -0500
-In-Reply-To: <477B4458.2070407@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.186]:40364 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754030AbYABKkO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 05:40:14 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so5221636rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 02 Jan 2008 02:40:13 -0800 (PST)
+In-Reply-To: <1199269573.3357.3.camel@little.lethalwp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Jean-Yves Simon <lethalwp@tiscali.be>
 Cc: linux-ide@vger.kernel.org
 
+Jean-Yves Simon wrote:
+> This mail to confirm that the sil4723 sata "bridge" using 2.6.24-rc6
+> now:
+>  - has no timeouts anymore on boot & on first suspend
+>  - support a suspend to ram sleeping mode
 
-Hello,
+Note: This is about the dreaded ASUS P5W-DH w/ on board PMP, which
+wasn't fixed by PMP support but by adding a whole lot of ugly quirks to
+work around dumbass single disk emulation mode of the 4723.  Anyways,
+it's good to hear all that ugliness does some good.  :-)
 
-
-This mail to confirm that the sil4723 sata "bridge" using 2.6.24-rc6
-now:
- - has no timeouts anymore on boot & on first suspend
- - support a suspend to ram sleeping mode
-
-
- Wed, 2008-01-02 at 16:59 +0900, Tejun Heo wrote:
-> Jean-Yves Simon wrote:
-> > Hello Tejun,
-> > 
-> > First of all, happy new year 2008 ;)
-> > 
-> > I don't know if i should bother you with this, just an update on how
-> > well/bad the sil4723 works with fedora 8 (kernel 2.6.23.9-85 )
-> > 
-> > boot time: no timeouts anymore,
-> > but the device doesn't support the suspend to ram sleeping mode at all
-> > now
-> > 
-> > 
-> > I have no device connected through the port multiplier, so can't say if
-> > the basic functionnality works at all
-> > 
-> > 
-> > Can you help me to dig this out & fix it? Maybe the vanilla 2.6.3-12
-> > could fix this?
-> > 
-> 
-> Can you please give a shot at 2.6.24-rc6?  It's rc but should be ripe
-> enough for production use.
-> 
-> Thanks.
-> 
 -- 
-Jean-Yves Simon <lethalwp@tiscali.be>
-
+tejun
