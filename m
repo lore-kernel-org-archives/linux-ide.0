@@ -1,31 +1,40 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [PATCH 1/3] ide: use MODULE_VERSION()
-Date: Wed, 2 Jan 2008 16:40:16 -0600
-Message-ID: <20080102224016.GA30155@auslistsprd01.us.dell.com>
-References: <200801011840.38757.bzolnier@gmail.com> <1199241156.3300.55.camel@perihelion> <20080102044620.GB10762@auslistsprd01.us.dell.com> <200801022345.17529.bzolnier@gmail.com>
+From: "Allen Martin" <AMartin@nvidia.com>
+Subject: RE: sata_nv + ADMA + Samsung disk problem
+Date: Wed, 2 Jan 2008 15:23:26 -0800
+Message-ID: <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:14183 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbYABWk1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 17:40:27 -0500
-Content-Disposition: inline
-In-Reply-To: <200801022345.17529.bzolnier@gmail.com>
+Received: from hqemgate02.nvidia.com ([216.228.112.143]:14406 "EHLO
+	HQEMGATE02.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759583AbYABXYB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 18:24:01 -0500
+In-Reply-To: <477BDEA5.8040701@garzik.org>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jon Masters <jonathan@jonmasters.org>, Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-On Wed, Jan 02, 2008 at 11:45:17PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> Unfortunately 'srcversion' is set only if MODULE_VERSION() is used... :(
+> The software definitely provides that guarantee for all NCQ-capable 
+> controllers.
+> 
 
-or CONFIG_MODULE_SRCVERSION_ALL=y.  I see Fedora doesn't use that :-(
-but Ubuntu, openSUSE do.
+Well if that's not it, it must be some problem entering ADMA legacy
+mode.  Here's what the Windows driver does:
 
-/me files a change request...
 
--- 
-Matt Domsch
-Linux Technology Strategist, Dell Office of the CTO
-linux.dell.com & www.dell.com/linux
+ADMACtrl.aGO = 0
+ADMACtrl.aEIEN = 0
+poll {
+  until ADMAStatus.aLGCY = 1 || timeout
+}
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
