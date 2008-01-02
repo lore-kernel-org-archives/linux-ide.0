@@ -1,39 +1,46 @@
-From: "Allen Martin" <AMartin@nvidia.com>
-Subject: RE: sata_nv + ADMA + Samsung disk problem
-Date: Wed, 2 Jan 2008 09:23:29 -0800
-Message-ID: <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Re: SATA kernel-buffered read VERY slow (not raid, Promise TX300
+ card); 2.6.23.1(vanilla)
+Date: Wed, 02 Jan 2008 10:40:07 -0800
+Message-ID: <477BDA87.7030702@tlinx.org>
+References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no> <4777E08C.4000603@shaw.ca> <4779870E.5070507@tlinx.org> <pan.2008.01.01.01.45.23.430875@wizards.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753878AbYABRgI@vger.kernel.org>
-In-Reply-To: <477B0CFD.1030603@shaw.ca>
-Content-class: urn:content-classes:message
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755357AbYABSkY@vger.kernel.org>
+In-Reply-To: <pan.2008.01.01.01.45.23.430875@wizards.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, Tejun Heo <htejun@gmail.com>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+To: Holger Hoffstaette <holger@wizards.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+Holger Hoffstaette wrote:
+>>     Another new "problem" (not as important) -- even though SATA disks are
+>> called with "sdX", my ATA disks that *were* at hda-hdc are now at hde-hdg.
+>> Devices hda-hdd are not populated in my dev directory on bootup.  Of
+>>     
+>
+> I think this is because the Promise SATA card also has one or more PATA
+> channels, so if the card is activated it takes precedence over your old
+> controller. But it should only be one channel, not four?
+> As for the other problem - I plan on adding such a card to one of my
+> systems during the week and might be able to contribute some findings.
+>   
+---
+    FYI - this specific card was sold as "4-SATA" channels.  There were
+other contemporary (same package design) Promise cards offered that
+were advertised to 1) support 2-sata+2pata or 2) support RAID w/SATA.
+I think there was also a RAID card supporting PATA-only as well.
 
-> The question I had for NVIDIA regarding this that I never got 
-> answered 
-> was, is there any reason why we would need a delay when switching 
-> between NCQ and non-NCQ commands on ADMA, and if not, is 
-> there any known 
-> cause that could cause the controller to get into this seemingly 
-> locked-up state?
+    It is quite possible (though thoroughly 'lame'), that they have 1
+card providing, both 4 SATA and 4 PATA, but only provide the connectors
+for some subset, with the RAID being a firmware-only (software-only)
+option that is implemented in software on the card (as my web searching
+indicated was true for some Promise SATA cards). 
 
-When switching from NCQ to non NCQ or vice versa you must make sure all
-outstanding commands are completed before issuing the new command.  The
-hardware doesn't do anything to prevent queued and non queued commands
-from going out on the wire at the same time which will certainly cause
-some drives to fail.
+    Perhaps an "RFE" for hdparm might be someway to specify the
+target device by using a label on one of the devices partitions, since
+my boot-time hdparm settings suffer from the same problems my
+/etc/fstab used to suffer before "labels" were available.
 
--Allen
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+
