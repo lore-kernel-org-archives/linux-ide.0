@@ -1,44 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: commit a258f183ee4e48e9352b408e8448467eebdc6cd2
-Date: Wed, 02 Jan 2008 23:33:27 +0900
-Message-ID: <477BA0B7.3030509@gmail.com>
-References: <477B5AAE.7070008@gmail.com>	<20080102134859.17e75789@the-village.bc.nu>	<477B9E9E.3000104@gmail.com> <20080102141937.62d49c5e@the-village.bc.nu>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 1/3] ide: use MODULE_VERSION()
+Date: Wed, 02 Jan 2008 15:40:20 +0100
+Message-ID: <477BA254.9010702@s5r6.in-berlin.de>
+References: <200801011840.38757.bzolnier@gmail.com>	 <20080101175333.GA27566@does.not.exist>	 <200801011933.43930.bzolnier@gmail.com>	 <1199241156.3300.55.camel@perihelion>	 <20080102044620.GB10762@auslistsprd01.us.dell.com> <1199252790.3300.77.camel@perihelion>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.155]:57331 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbYABOde (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 09:33:34 -0500
-Received: by po-out-1718.google.com with SMTP id c31so4023956poi.1
-        for <linux-ide@vger.kernel.org>; Wed, 02 Jan 2008 06:33:33 -0800 (PST)
-In-Reply-To: <20080102141937.62d49c5e@the-village.bc.nu>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:55217 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbYABOlN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 09:41:13 -0500
+In-Reply-To: <1199252790.3300.77.camel@perihelion>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jon Masters <jonathan@jonmasters.org>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Adrian Bunk <bunk@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
-> On Wed, 02 Jan 2008 23:24:30 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
+Jon Masters wrote:
+> On Tue, 2008-01-01 at 22:46 -0600, Matt Domsch wrote:
+>> $ modinfo dell_rbu | grep version
+>> version:        3.2
+>> srcversion:     1D4815D7D6FBEE6612F3C18
 > 
->> Alan Cox wrote:
->>> On Wed, 02 Jan 2008 18:34:38 +0900
->>> Tejun Heo <htejun@gmail.com> wrote:
->>>
->>>> Happy new year, Jeff, Alan.
->>>>
->>>> I'm curious why commit a258f183 got in?  
->>> Whats that commit in real code ?
->> The attached one.
-> 
-> Ok I don't see how that is related to the switch to polling. The
-> old IDE code found it neccessary and always did polling.
+> Right. And I was referring to the is above (I forgot it's a CRC32 and
+> not a SHA1). But my point is why not codify some "policy" here with
+> respect to module versioning, rather than have the latter exist to
+> workaround the case that module versions aren't bumped manually.
 
-ata_host_intr() is just never traveled while executing SETXFER because
-SETXFERs are executed using polling which nicely works around quirky
-controllers which raises interrupt a tad bit too early during SETXFER.
-
+How about this version scheme:
+driver version == Linux kernel version
 -- 
-tejun
+Stefan Richter
+-=====-==--- ---= ---=-
+http://arcgraph.de/sr/
