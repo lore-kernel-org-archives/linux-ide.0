@@ -1,29 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: commit a258f183ee4e48e9352b408e8448467eebdc6cd2
-Date: Wed, 02 Jan 2008 18:34:38 +0900
-Message-ID: <477B5AAE.7070008@gmail.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: ide-floppy redux p1
+Date: Wed, 2 Jan 2008 10:36:46 +0100
+Message-ID: <20080102093646.GA16987@gollum.tnic>
+References: <20080102092505.GA16665@gollum.tnic>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:41325 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753430AbYABJeo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 04:34:44 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so5203091rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 02 Jan 2008 01:34:43 -0800 (PST)
+Received: from smtp112.plus.mail.re1.yahoo.com ([69.147.102.75]:44624 "HELO
+	smtp112.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753430AbYABJjX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 04:39:23 -0500
+Content-Disposition: inline
+In-Reply-To: <20080102092505.GA16665@gollum.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Happy new year, Jeff, Alan.
+On Wed, Jan 02, 2008 at 10:25:05AM +0100, Borislav Petkov wrote:
 
-I'm curious why commit a258f183 got in?  We already deal with this
-problem by executing SETXFER by polling.  That's better IMHO for two
-reasons - no clutter in hot path && applies to drivers which use custom
-interrupt handlers.
+by the way, i messed up the numbering of the patches: their correct cou=
+nt is not
+12 but 10 so you shouldn't be missing any even if it seems so at a firs=
+t glance.
 
-Thanks.
-
--- 
-tejun
+--=20
+Regards/Gru=DF,
+    Boris.
