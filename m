@@ -1,51 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Wed, 02 Jan 2008 15:55:45 +0900
-Message-ID: <477B3571.6080500@gmail.com>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <477B10F2.9000107@shaw.ca> <477B1233.3090706@gmail.com> <477B2CE4.8070602@garzik.org> <477B318E.4030309@shaw.ca>
+From: Tejun Heo <teheo@novell.com>
+Subject: Re: Maybe Sorry for that but where should i write .)
+Date: Wed, 02 Jan 2008 16:14:26 +0900
+Message-ID: <477B39D2.6030201@novell.com>
+References: <4775A7D8.6000001@trollprod.org> <477786B8.9040000@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:62610 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbYABGzx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 01:55:53 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so5158751rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 01 Jan 2008 22:55:52 -0800 (PST)
-In-Reply-To: <477B318E.4030309@shaw.ca>
+Received: from ns1.suse.de ([195.135.220.2]:59410 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755644AbYABHOg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Jan 2008 02:14:36 -0500
+In-Reply-To: <477786B8.9040000@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kluo@nvidia.com, AMartin@nvidia.com, pchen@nvidia.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: thanatos <thanatos@trollprod.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Robert Hancock wrote:
-> Jeff Garzik wrote:
->> Tejun Heo wrote:
->>> Thanks a lot for the detailed explanation.  Nvidia ppl, any ideas?
->>> FLUSH is used regularly.  We really need to fix this.
+Boaz Harrosh wrote:
+> On Sat, Dec 29 2007 at 3:50 +0200, thanatos <thanatos@trollprod.org> wrote:
+>> I got a sata controller  ignitio
+>>
+>>  00:11.0 SATA controller: Initio Corporation INI-1623 PCI SATA-II 
+>> Controller (rev 02) (prog-if 00 [Vendor specific])
+>>         Subsystem: Initio Corporation INI-1623 PCI SATA-II Controller
+>>         Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 11
+>>         I/O ports at dc00 [size=256]
+>>         I/O ports at d800 [size=256]
+>>         I/O ports at d400 [size=256]
+>>         I/O ports at d000 [size=256]
+>>         I/O ports at cc00 [size=256]
+>>         Memory at cffff000 (32-bit, non-prefetchable) [size=4K]
+>>         Expansion ROM at cff80000 [disabled] [size=256K]
+>>         Capabilities: [dc] Power Management version 2
 >>
 >>
->> I reiterate my opinion :)  ...   We should remove ADMA support from
->> sata_nv.  It's only in a few chips, it's not appearing in any new
->> chips, and nasty problems have lingered since ADMA support was
->> introduced.
+>> and an "no yet usable" 320 hdd, cause of lba48
 >>
->> Definitely sounds like we should disable ADMA by default for
->> 2.6.24-rc, too.
+>> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata3.00: HPA unlocked: 625142448 -> 625142448, native 18446744072354982576
+>> ata3.00: ATA-8: SAMSUNG HD321KJ, CP100-12, max UDMA7
+>> ata3.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 0/32)
+>> ata3.00: ERROR: This driver doesn't support LBA48 yet and may cause
+>>                 data corruption on such devices.  Disabling.
+>> ata3.00: disabled
+>>
+>> i'm still on kernel 2.6.22. i had look on changelog 2.6.23 and even 
+>> 2.6.24 nothing for that, is theyre a roadmap ?
+>>
+>> so if i could help in any way testing patch. i'm theyre
 > 
-> I wouldn't agree.. It's only in a few chips (CK804/MCP04), but those
-> chips are very common in desktop, workstation, even some server
-> machines. Given the huge number of these chips out there, problem
-> reports have been quite rare.
+> cc: the linux-scsi mailing list.
+> 
+> Personally I have nothing to do with this driver, I only sent a fix
+> for a patch in 2.6.23
 
-I agree with Jeff here.  Maybe not remove but disable it by default and
-when enabling warn loudly.  NCQ just doesn't enough for its cost when
-the cost includes erratic behaviors.  Only very small fraction of error
-cases actually make to bugzilla or this mailing list.
-
-Nvidia gents, is there anyway (be it NDA or whatever) to get Robert or
-any of us technical documentation?
+Actually, the correct mailing list is linux-ide.  Alan Cox began working
+on the driver.  Cc'ing both.
 
 Thanks.
 
