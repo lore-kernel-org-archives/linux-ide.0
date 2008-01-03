@@ -1,53 +1,70 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH #upstream-fixes] sata_qstor: use hardreset instead of
- softreset
-Date: Thu, 03 Jan 2008 10:38:02 -0500
-Message-ID: <477D015A.3050807@rtr.ca>
-References: <477CFDAB.3090705@gmail.com>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Thu, 03 Jan 2008 10:44:32 -0500
+Message-ID: <477D02E0.5040301@rtr.ca>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org> <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com> <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1729 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:2520 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753303AbYACPiE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Jan 2008 10:38:04 -0500
-In-Reply-To: <477CFDAB.3090705@gmail.com>
+	id S1759372AbYACPod (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Jan 2008 10:44:33 -0500
+In-Reply-To: <477C6A85.9020607@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Mark Lord <lkml@rtr.ca>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Tejun Heo wrote:
-> During conversion to new EH, sata_qstor was accidentaly changed to use
-> softreset, which is buggy on this chip, instead of hardreset.  This
-> patch updates sata_qstor such that it uses hardreset again.
+Robert Hancock wrote:
+> Mark Lord wrote:
+>> Robert Hancock wrote:
+>> ..
+>>>  From some of the traces I took previously (posted on LKML as 
+>>> "sata_nv ADMA controller lockup investigation" way back in Feb 07), 
+>>> what seems to occur is that when the second command is issued very 
+>>> rapidly (within less than 20 microseconds, or potentially longer) 
+>>> after the previous command's completion, the ADMA status changes from 
+>>> 0x500 (STOPPED and IDLE) to 0x400 (just IDLE) as it typically does, 
+>>> but then it sticks there, no interrupt is ever raised, and CPB 
+>>> response flags remain at 0.
+>> ..
+>>
+>> Assuming that NVidia got their ADMA core logic from Pacific Digital
+>> (the inventors), then it may have some of the same bugs as the original.
+>>
+>> One of those bugs is that the aGO trigger is sampled in a "racey" way,
+>> such that it sometimes may miss a recent addition to the ring.
+>>
+>> The *only* way to guarantee things with the original Pacific Digital core
+>> was to (1) always retrigger aGO for a full ring scan with each new 
+>> addition,
+>> and (2) poll periodically (every half second or so) rather than relying
+>> exclusively on the IRQ actually working..
+>>
+>> Dunno about the NVidia version.
 > 
-> This fixes bugzilla bug 9631.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mark Lord <mlord@pobox.com>
-> ---
->  drivers/ata/sata_qstor.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-> index 2f1de6e..c68b241 100644
-> --- a/drivers/ata/sata_qstor.c
-> +++ b/drivers/ata/sata_qstor.c
-> @@ -270,7 +270,7 @@ static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
->  static void qs_error_handler(struct ata_port *ap)
->  {
->  	qs_enter_reg_mode(ap);
-> -	ata_do_eh(ap, qs_prereset, ata_std_softreset, NULL,
-> +	ata_do_eh(ap, qs_prereset, NULL, sata_std_hardreset,
->  		  ata_std_postreset);
->  }
->  
+> Theirs works rather differently - the GO bit is there, but there's 
+> another append register which is used to tell the controller that a new 
+> tag has been added to the CPB list.
+..
 
-Ack.  This fixes a regression and should go out in 2.6.24.
+The PacDigi core uses a "search count" register for that purpose,
+but the buggy nature of the core required that it always be set
+to "2 * ring_size" to ensure nothing got missed.
 
-And now we know that I'm not the only Linux user on the planet
-with a QStor card -- there's at least one other out there!
+Here's some comments from the original ADMA driver.
+Maybe something from here might help with the NV stuff, too.
 
-Cheers
+       // There is a chance that the chip will skip over a CPB if a SERVICE interrupt
+        // occurs while it's reading the CPB header.  This won't cause us to get
+        // stuck anywhere, but it might slow down execution of the new CPB if
+        // it has to wait for the next time we hit aGO.  So.. Dxxx/Dxxx suggest
+        // that all we need to do is tell the chip to do two passes around the ring
+        // from an aGO instead of one pass, so that it will find the "missed" CPB
+        // on the second pass.  This isn't as bad as it first looks.
+        //
+        writew(channel->num_cpbs * 2, &adma_regs->cpb_search_count);
+
+Or again, the NV stuff may be completely different (?).
