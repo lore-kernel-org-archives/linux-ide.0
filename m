@@ -1,47 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] libata-sff: PCI IRQ handling fix
-Date: Thu, 3 Jan 2008 17:22:28 +0000
-Message-ID: <20080103172228.0e091daf@lxorguk.ukuu.org.uk>
+From: "Holger Hoffstaette" <holger@wizards.de>
+Subject: Re: SATA kernel-buffered read VERY slow (not raid, Promise TX300 card); 2.6.23.1(vanilla)
+Date: Thu, 03 Jan 2008 18:54:21 +0100
+Message-ID: <pan.2008.01.03.17.54.20.172625@wizards.de>
+References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no> <4777E08C.4000603@shaw.ca> <4779870E.5070507@tlinx.org> <pan.2008.01.01.01.45.23.430875@wizards.de> <477BDA87.7030702@tlinx.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:36576 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751527AbYACRYL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 12:24:11 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754870AbYACRyq@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
 
-It is legitimate (although annoying and silly) for a PCI IDE controller
-not to be assigned an interrupt and to be polled. The libata-sff code
-should therefore not try and request IRQ 0 in this case.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+I got my Promise card and everything is up and running without problems,
+using kernel 2.6.24-rc6 and the sata_promise driver out of the box:
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc6-mm1/drivers/ata/libata-sff.c linux-2.6.24-rc6-mm1/drivers/ata/libata-sff.c
---- linux.vanilla-2.6.24-rc6-mm1/drivers/ata/libata-sff.c	2008-01-02 16:04:19.000000000 +0000
-+++ linux-2.6.24-rc6-mm1/drivers/ata/libata-sff.c	2008-01-02 16:12:39.000000000 +0000
-@@ -808,7 +808,10 @@
- 	if (rc)
- 		goto err_out;
- 
--	if (!legacy_mode) {
-+	if (!legacy_mode && pdev->irq) {
-+		/* We may have no IRQ assigned in which case we can poll. This
-+		   shouldn't happen on a sane system but robustness is cheap
-+		   in this case */
- 		rc = devm_request_irq(dev, pdev->irq, pi->port_ops->irq_handler,
- 				      IRQF_SHARED, DRV_NAME, host);
- 		if (rc)
-@@ -816,7 +819,7 @@
- 
- 		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
- 		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
--	} else {
-+	} else if (legacy_mode) {
- 		if (!ata_port_is_dummy(host->ports[0])) {
- 			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
- 					      pi->port_ops->irq_handler,
- 
+00:0c.0 Mass storage controller: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus) (rev 02)
+        Subsystem: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus)
+        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 17
+        I/O ports at b400 [size=128]
+        I/O ports at b800 [size=256]
+        Memory at ef025000 (32-bit, non-prefetchable) [size=4K]
+        Memory at ef000000 (32-bit, non-prefetchable) [size=128K]
+        [virtual] Expansion ROM at 98020000 [disabled] [size=32K]
+        Capabilities: [60] Power Management version 2
+        Kernel driver in use: sata_promise
+
+Drive is a Samsung HD321KJ 320 GB and hdparm says the drive does ~75
+MB/s; with dd it does buffered writes at ~85 MB/s and reads ~295 MB/s. So
+all in all I'd say it's not the card or the driver..
+
+hth,
+Holger
+
+
