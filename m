@@ -1,58 +1,46 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Wed, 02 Jan 2008 18:27:00 -0600
-Message-ID: <477C2BD4.4030808@shaw.ca>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu>
- <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com>
- <477B0CFD.1030603@shaw.ca> <477B10F2.9000107@shaw.ca>
- <477B1233.3090706@gmail.com> <477B2CE4.8070602@garzik.org>
- <477B318E.4030309@shaw.ca> <477B3571.6080500@gmail.com>
+Subject: Re: [PATCH] ide: delete filenames/versions from comments
+Date: Wed, 02 Jan 2008 18:40:08 -0600
+Message-ID: <477C2EE8.50301@shaw.ca>
+References: <fa.CAem1qRl3AG/KJjVoPZU/Cn8U1g@ifi.uio.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:43328 "EHLO
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:31932 "EHLO
 	pd3mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753943AbYACA14 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 19:27:56 -0500
-In-reply-to: <477B3571.6080500@gmail.com>
+	with ESMTP id S1753442AbYACAkQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jan 2008 19:40:16 -0500
+In-reply-to: <fa.CAem1qRl3AG/KJjVoPZU/Cn8U1g@ifi.uio.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kluo@nvidia.com, AMartin@nvidia.com, pchen@nvidia.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Tejun Heo wrote:
-> Robert Hancock wrote:
->> Jeff Garzik wrote:
->>> Tejun Heo wrote:
->>>> Thanks a lot for the detailed explanation.  Nvidia ppl, any ideas?
->>>> FLUSH is used regularly.  We really need to fix this.
->>>
->>> I reiterate my opinion :)  ...   We should remove ADMA support from
->>> sata_nv.  It's only in a few chips, it's not appearing in any new
->>> chips, and nasty problems have lingered since ADMA support was
->>> introduced.
->>>
->>> Definitely sounds like we should disable ADMA by default for
->>> 2.6.24-rc, too.
->> I wouldn't agree.. It's only in a few chips (CK804/MCP04), but those
->> chips are very common in desktop, workstation, even some server
->> machines. Given the huge number of these chips out there, problem
->> reports have been quite rare.
+Bartlomiej Zolnierkiewicz wrote:
+> Delete filenames/versions from comments.
 > 
-> I agree with Jeff here.  Maybe not remove but disable it by default and
-> when enabling warn loudly.  NCQ just doesn't enough for its cost when
-> the cost includes erratic behaviors.  Only very small fraction of error
-> cases actually make to bugzilla or this mailing list.
+> I'm leaving decisions about adding DRV_VERSION defines and MODULE_VERSION()-s
+> to maintainers of the respective drivers.
 > 
-> Nvidia gents, is there anyway (be it NDA or whatever) to get Robert or
-> any of us technical documentation?
+> While at it:
 > 
-> Thanks.
+> * Remove unused VERSION define from ide.c.
+> 
+> * Remove unused/stale DRV_VERSION define from au1xxx-ide.c.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Last I heard, NVIDIA management gave the thumbs down to any more NDAs 
-for ADMA documentation. It would be nice if they would reconsider. 
-Apparently Jeff does have the docs, though..
+How about getting rid of this stupid thing in drivers/ide/ide.c:
+
+#define	REVISION	"Revision: 7.00alpha2"
+
+which is used in:
+
+printk(KERN_INFO "Uniform Multi-Platform E-IDE driver " REVISION "\n");
+
+It's been 7.00alpha2 for god knows how long, so clearly this version 
+number is not useful..
 
 -- 
 Robert Hancock      Saskatoon, SK, Canada
