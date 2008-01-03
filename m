@@ -1,37 +1,41 @@
-From: "Holger Hoffstaette" <holger@wizards.de>
-Subject: Re: SATA kernel-buffered read VERY slow (not raid, Promise TX300 card); 2.6.23.1(vanilla)
-Date: Thu, 03 Jan 2008 18:54:21 +0100
-Message-ID: <pan.2008.01.03.17.54.20.172625@wizards.de>
-References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no> <4777E08C.4000603@shaw.ca> <4779870E.5070507@tlinx.org> <pan.2008.01.01.01.45.23.430875@wizards.de> <477BDA87.7030702@tlinx.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Fri, 04 Jan 2008 08:13:06 +1100
+Message-ID: <1199394786.7291.21.camel@pasglop>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu>
+	 <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com>
+	 <477B0CFD.1030603@shaw.ca>
+	 <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
+	 <477BDEA5.8040701@garzik.org>
+	 <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
+	 <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca>
+	 <477C6A85.9020607@shaw.ca> <477D02E0.5040301@rtr.ca>
+	 <477D039F.6000206@rtr.ca>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754870AbYACRyq@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:53806 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752554AbYACVOJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Jan 2008 16:14:09 -0500
+In-Reply-To: <477D039F.6000206@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Robert Hancock <hancockr@shaw.ca>, Mark Lord <lkml@rtr.ca>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
 
-I got my Promise card and everything is up and running without problems,
-using kernel 2.6.24-rc6 and the sata_promise driver out of the box:
+> Another thing about the PacDigi core:  one has to be very careful
+> to avoid sequential accesses to sequential PCI locations when
+> programming the chip -- it cannot handle merged register writes.
+> 
+> So for any group of sequentially laid out registers, the code has
+> to ensure it never writes two adjacent registers in sequence..
 
-00:0c.0 Mass storage controller: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus) (rev 02)
-        Subsystem: Promise Technology, Inc. PDC40775 (SATA 300 TX2plus)
-        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 17
-        I/O ports at b400 [size=128]
-        I/O ports at b800 [size=256]
-        Memory at ef025000 (32-bit, non-prefetchable) [size=4K]
-        Memory at ef000000 (32-bit, non-prefetchable) [size=128K]
-        [virtual] Expansion ROM at 98020000 [disabled] [size=32K]
-        Capabilities: [60] Power Management version 2
-        Kernel driver in use: sata_promise
+Ugh ? Write combining isn't permitted on normal registers afaik...
 
-Drive is a Samsung HD321KJ 320 GB and hdparm says the drive does ~75
-MB/s; with dd it does buffered writes at ~85 MB/s and reads ~295 MB/s. So
-all in all I'd say it's not the card or the driver..
-
-hth,
-Holger
+Ben.
 
 
