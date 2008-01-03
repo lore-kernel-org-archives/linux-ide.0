@@ -1,102 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
-	of	that provided by the block layer
-Date: Thu, 03 Jan 2008 09:12:31 -0600
-Message-ID: <1199373151.3122.3.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <20080103170148K.tomof@acm.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] sata_qstor: use hardreset instead of softreset
+Date: Fri, 04 Jan 2008 00:22:19 +0900
+Message-ID: <477CFDAB.3090705@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34647 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751005AbYACPMj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 10:12:39 -0500
-In-Reply-To: <20080103170148K.tomof@acm.org>
+Received: from nz-out-0506.google.com ([64.233.162.231]:43983 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbYACPW2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 10:22:28 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1167187nze.1
+        for <linux-ide@vger.kernel.org>; Thu, 03 Jan 2008 07:22:26 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jens.Axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org
+To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
+During conversion to new EH, sata_qstor was accidentaly changed to use
+softreset, which is buggy on this chip, instead of hardreset.  This
+patch updates sata_qstor such that it uses hardreset again.
 
-On Thu, 2008-01-03 at 16:58 +0900, FUJITA Tomonori wrote:
-> On Mon, 31 Dec 2007 15:56:08 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > @@ -1080,24 +1073,15 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
-> >  static inline struct scatterlist *
-> >  ata_qc_first_sg(struct ata_queued_cmd *qc)
-> >  {
-> > -	qc->n_iter = 0;
-> >  	if (qc->n_elem)
-> >  		return qc->__sg;
-> > -	if (qc->pad_len)
-> > -		return &qc->pad_sgent;
-> >  	return NULL;
-> >  }
-> >  
-> >  static inline struct scatterlist *
-> >  ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
-> >  {
-> > -	if (sg == &qc->pad_sgent)
-> > -		return NULL;
-> > -	if (++qc->n_iter < qc->n_elem)
-> > -		return sg_next(sg);
-> > -	if (qc->pad_len)
-> > -		return &qc->pad_sgent;
-> > -	return NULL;
-> > +	return sg_next(sg);
-> >  }
-> >  
-> >  #define ata_for_each_sg(sg, qc) \
-> 
-> How about removing ata_qc_first_sg and ata_qc_next_sg completely?
-> 
-> Now we can just replace ata_qc_next_sg with sg_next. qc->__sg seems to
-> be always initialized to NULL so we can remove ata_qc_first_sg too.
+This fixes bugzilla bug 9631.
 
-Sure ... I assumed (without actually looking) that the inlines were
-there because they were an API used throughout the drivers.  Actually,
-grep tells me they're only used in the ata_for_each_sg macro, so this
-patch looks good.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>
+---
+ drivers/ata/sata_qstor.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-James
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 4f6404c..2774882 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1054,25 +1054,8 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
->  			       const char *name);
->  #endif
->  
-> -/*
-> - * qc helpers
-> - */
-> -static inline struct scatterlist *
-> -ata_qc_first_sg(struct ata_queued_cmd *qc)
-> -{
-> -	if (qc->n_elem)
-> -		return qc->__sg;
-> -	return NULL;
-> -}
-> -
-> -static inline struct scatterlist *
-> -ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
-> -{
-> -	return sg_next(sg);
-> -}
-> -
->  #define ata_for_each_sg(sg, qc) \
-> -	for (sg = ata_qc_first_sg(qc); sg; sg = ata_qc_next_sg(sg, qc))
-> +	for (sg = qc->__sg; sg; sg = sg_next(sg))
->  
->  static inline unsigned int ata_tag_valid(unsigned int tag)
->  {
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index 2f1de6e..c68b241 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -270,7 +270,7 @@ static int qs_scr_read(struct ata_port *ap, unsigned int sc_reg, u32 *val)
+ static void qs_error_handler(struct ata_port *ap)
+ {
+ 	qs_enter_reg_mode(ap);
+-	ata_do_eh(ap, qs_prereset, ata_std_softreset, NULL,
++	ata_do_eh(ap, qs_prereset, NULL, sata_std_hardreset,
+ 		  ata_std_postreset);
+ }
+ 
