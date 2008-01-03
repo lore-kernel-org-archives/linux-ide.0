@@ -1,37 +1,46 @@
 From: Mark Lord <lkml@rtr.ca>
 Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Wed, 02 Jan 2008 23:14:02 -0500
-Message-ID: <477C610A.30805@rtr.ca>
+Date: Wed, 02 Jan 2008 23:17:23 -0500
+Message-ID: <477C61D3.30009@rtr.ca>
 References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org> <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com> <477C2A99.9010208@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758725AbYACEOT@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:1189 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753744AbYACERZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Jan 2008 23:17:25 -0500
 In-Reply-To: <477C2A99.9010208@shaw.ca>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockr@shaw.ca>
 Cc: Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
-List-Id: linux-ide@vger.kernel.org
 
 Robert Hancock wrote:
->
-> What we're doing to enter legacy mode is essentially:
-> 
-> -wait until ADMA status indicates IDLE bit set (max wait of 1 microsecond)
-> -clear GO bit in control register
-> -wait until status indicates LEGACY bit set (max wait of 1 microsecond)
-> 
-> and to enter ADMA mode:
-> 
-> -set GO bit in control register
-> -wait until status indicates LEGACY bit cleared and IDLE bit set (max 
-> wait of 1 microsecond)
+..
+>  From some of the traces I took previously (posted on LKML as "sata_nv 
+> ADMA controller lockup investigation" way back in Feb 07), what seems to 
+> occur is that when the second command is issued very rapidly (within 
+> less than 20 microseconds, or potentially longer) after the previous 
+> command's completion, the ADMA status changes from 0x500 (STOPPED and 
+> IDLE) to 0x400 (just IDLE) as it typically does, but then it sticks 
+> there, no interrupt is ever raised, and CPB response flags remain at 0.
 ..
 
-If there are outstanding TCQ/NCQ commands (any drive),
-then this could take (much) longer to enter legacy mode,
-as the ADMA engine will wait for them all to finish.
+Assuming that NVidia got their ADMA core logic from Pacific Digital
+(the inventors), then it may have some of the same bugs as the original.
 
-But for normal, "nothing outstanding" mode, it should be very quick.
+One of those bugs is that the aGO trigger is sampled in a "racey" way,
+such that it sometimes may miss a recent addition to the ring.
+
+The *only* way to guarantee things with the original Pacific Digital core
+was to (1) always retrigger aGO for a full ring scan with each new addition,
+and (2) poll periodically (every half second or so) rather than relying
+exclusively on the IRQ actually working..
+
+Dunno about the NVidia version.
 
 Cheers
+ 
+
