@@ -1,110 +1,130 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [RESEND PATCH 10/10] ide-floppy: replace ntoh{s,l} and hton{s,l} calls with the generic byteorder macros
-Date: Thu,  3 Jan 2008 14:20:09 +0100
-Message-ID: <1199366409-26016-11-git-send-email-bbpetkov@yahoo.de>
-References: <1199366409-26016-1-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-2-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-3-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-4-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-5-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-6-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-7-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-8-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-9-git-send-email-bbpetkov@yahoo.de>
- <1199366409-26016-10-git-send-email-bbpetkov@yahoo.de>
+From: Paul Neuwirth <mail@paul-neuwirth.de>
+Subject: sata_sil[24] / silicon image binary drivers / SiI4726 RAID
+Date: Thu, 3 Jan 2008 14:10:49 +0100
+Message-ID: <20080103141049.5c7534c8@pane.pane>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/cuaAyw6r+SjvheOFb3NsQz/";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp112.plus.mail.re1.yahoo.com ([69.147.102.75]:42510 "HELO
-	smtp112.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753283AbYACNXT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 08:23:19 -0500
-In-Reply-To: <1199366409-26016-10-git-send-email-bbpetkov@yahoo.de>
+Received: from server5.northern-solutions.de ([85.10.207.69]:55772 "EHLO
+	server5.northern-solutions.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750790AbYACNlf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 08:41:35 -0500
+Received: from pane.pane (pD95491AF.dip0.t-ipconnect.de [217.84.145.175])
+	by server5.northern-solutions.de (Postfix) with ESMTP id 250AF7911FA
+	for <linux-ide@vger.kernel.org>; Thu,  3 Jan 2008 14:11:04 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: bzolnier@gmail.com, Borislav Petkov <bbpetkov@yahoo.de>
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
----
- drivers/ide/ide-floppy.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+--Sig_/cuaAyw6r+SjvheOFb3NsQz/
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 6c29b5f..ddab66c 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -695,8 +695,8 @@ static void idefloppy_create_format_unit_cmd(idefloppy_pc_t *pc, int b, int l,
- 		pc->buffer[1] ^= 0x20;		/* ... turn off DCRT bit */
- 	pc->buffer[3] = 8;
- 
--	put_unaligned(htonl(b), (unsigned int *)(&pc->buffer[4]));
--	put_unaligned(htonl(l), (unsigned int *)(&pc->buffer[8]));
-+	put_unaligned(cpu_to_be32(b), (unsigned int *)(&pc->buffer[4]));
-+	put_unaligned(cpu_to_be32(l), (unsigned int *)(&pc->buffer[8]));
- 	pc->buffer_size=12;
- 	set_bit(PC_WRITING, &pc->flags);
- }
-@@ -723,7 +723,7 @@ static void idefloppy_create_mode_sense_cmd(idefloppy_pc_t *pc, u8 page_code,
- 			printk(KERN_ERR "ide-floppy: unsupported page code "
- 				"in create_mode_sense_cmd\n");
- 	}
--	put_unaligned(htons(length), (u16 *) &pc->c[7]);
-+	put_unaligned(cpu_to_be16(length), (u16 *) &pc->c[7]);
- 	pc->request_transfer = length;
- }
- 
-@@ -753,12 +753,12 @@ static void idefloppy_create_rw_cmd(idefloppy_t *floppy, idefloppy_pc_t *pc,
- 	idefloppy_init_pc(pc);
- 	if (idefl_use_rw(floppy)) {
- 		pc->c[0] = cmd == READ ? GPCMD_READ_12 : GPCMD_WRITE_12;
--		put_unaligned(htonl(blocks), (unsigned int *) &pc->c[6]);
-+		put_unaligned(cpu_to_be32(blocks), (unsigned int *) &pc->c[6]);
- 	} else {
- 		pc->c[0] = cmd == READ ? GPCMD_READ_10 : GPCMD_WRITE_10;
--		put_unaligned(htons(blocks), (unsigned short *) &pc->c[7]);
-+		put_unaligned(cpu_to_be16(blocks), (unsigned short *) &pc->c[7]);
- 	}
--	put_unaligned(htonl(block), (unsigned int *) &pc->c[2]);
-+	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
- 	pc->callback = &idefloppy_rw_callback;
- 	pc->rq = rq;
- 	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
-@@ -890,10 +890,10 @@ static int idefloppy_get_flexible_disk_page(ide_drive_t *drive)
- 	set_disk_ro(floppy->disk, floppy->wp);
- 	page = (idefloppy_flex_disk_page_t *) (header + 1);
- 
--	page->transfer_rate = ntohs(page->transfer_rate);
--	page->sector_size = ntohs(page->sector_size);
--	page->cyls = ntohs(page->cyls);
--	page->rpm = ntohs(page->rpm);
-+	page->transfer_rate = be16_to_cpu(page->transfer_rate);
-+	page->sector_size = be16_to_cpu(page->sector_size);
-+	page->cyls = be16_to_cpu(page->cyls);
-+	page->rpm = be16_to_cpu(page->rpm);
- 	capacity = page->cyls * page->heads * page->sectors * page->sector_size;
- 
- 	if (memcmp (page, &floppy->flex_disk_page,
-@@ -972,8 +972,8 @@ static int idefloppy_get_capacity(ide_drive_t *drive)
- 	descriptor = (idefloppy_cap_desc_t *) (header + 1);
- 
- 	for (i = 0; i < descriptors; i++, descriptor++) {
--		blocks = descriptor->blocks = ntohl(descriptor->blocks);
--		length = descriptor->length = ntohs(descriptor->length);
-+		blocks = descriptor->blocks = be32_to_cpu(descriptor->blocks);
-+		length = descriptor->length = be16_to_cpu(descriptor->length);
- 
- 		if (!i)
- 		{
-@@ -1100,8 +1100,8 @@ static int idefloppy_get_format_capacities(ide_drive_t *drive, int __user *arg)
- 		if (i == 0)
- 			continue;	/* Skip the first descriptor */
- 
--		blocks = ntohl(descriptor->blocks);
--		length = ntohs(descriptor->length);
-+		blocks = be32_to_cpu(descriptor->blocks);
-+		length = be16_to_cpu(descriptor->length);
- 
- 		if (put_user(blocks, argp))
- 			return(-EFAULT);
--- 
-1.5.3.7
+Hallo,
+i hope I am here at the right address. I am using a Silicon Image 3124
+SATA-Controller with the Silicon Image 4726 pm /
+hardware-RAID product, using the sata_sil24 driver.
+The pm is also a hardware raid-controller (not SATARAID - fake, see
+docs on http://www.siliconimage.com/products/product.aspx?id=3D74).
+For the configuration of hardware raid, you can download a software
+from the sii website (SiI4726 Manager). But this software only seems to
+work with the precompiled proprietary drivers from sii (e.g.
+sii3124.ko), i think there are unimplemented specific commands in the
+sil_sata(24) drivers.
+Isn't it possible to make a opensource way to configure the hardware
+raid controller or make the sil_sata(24) driver be usable with the
+sii's RAID manager? (If the hardware would be needed therefor i could
+provide)
+The binary drivers from sii for their controllers are unfortunately only
+available for a very low number of kernels (e.g. suse enterprise, RHEL
+kernels, see
+http://www.siliconimage.com/support/supportsearchresults.aspx?pid=3D27&cid=
+=3D3&ctid=3D2&osid=3D1&).=20
+I don't know whom to contact at sii to get specifications or (more
+improbably) a suiting driver... Nor am I an kernel programmer...
+I only know following:
+-for the configuration a "config disk" is provided by the pm (hwinfo is
+below)
+-the sii configuration manager recognizes all SATA-disks, but doesn't
+detect serial numbers or the config disk.
 
+Thanks for advice and help,
+Paul Neuwirth
+
+
+hwinfo
+[disk]
+IDE 250.0: 10600 Disk
+  [Created at block.233]
+  UDI: /org/freedesktop/Hal/devices/storage_serial_SATA_Config_Disk_0000000=
+_0703517__5_0
+  Unique ID: by2M.OswvJFVubC7
+  Parent ID: qnJ_.+pLfg7up4B3
+  SysFS ID: /block/sde
+  SysFS BusID: 2:5:0:0
+  SysFS Device
+Link: /devices/pci0000:00/0000:00:0d.0/host2/target2:5:0/2:5:0:0
+Hardware Class: disk Model: "Config Disk"
+  Vendor: "Config"
+  Device: "Disk"
+  Revision: "PLS1"
+  Serial ID: "0000000_0703517__5_0"
+  Driver: "sata_sil24", "sd"
+  Driver Modules: "sata_sil24"
+  Device File: /dev/sde
+  Device
+Files: /dev/sde, /dev/disk/by-id/scsi-SATA_Config_Disk_0000000_0703517__5_0=
+, /dev/disk/by-id/ata-Config_Disk_0000000_0703517__5_0, /dev/disk/by-path/p=
+ci-0000:00:0d.0-scsi-2:5:0:0
+Device Number: block 8:64-8:79 Geometry (Logical): CHS 0/255/63
+  Size: 640 sectors a 512 bytes
+  Config Status: cfg=3Dno, avail=3Dyes, need=3Dno, active=3Dunknown
+  Attached to: #7 (RAID bus controller)
+[pci]
+PCI 0d.0: 0104 RAID bus controller
+  [Created at pci.301]
+  UDI: /org/freedesktop/Hal/devices/pci_1095_3124
+  Unique ID: qnJ_.+pLfg7up4B3
+  SysFS ID: /devices/pci0000:00/0000:00:0d.0
+  SysFS BusID: 0000:00:0d.0
+  Hardware Class: storage
+  Model: "Silicon Image SiI 3124 PCI-X Serial ATA Controller"
+  Vendor: pci 0x1095 "Silicon Image, Inc."
+  Device: pci 0x3124 "SiI 3124 PCI-X Serial ATA Controller"
+  SubVendor: pci 0x1095 "Silicon Image, Inc."
+  SubDevice: pci 0x6124=20
+  Revision: 0x02
+  Driver: "sata_sil24"
+  Driver Modules: "sata_sil24"
+  Memory Range: 0xeb008000-0xeb00807f (rw,non-prefetchable)
+  Memory Range: 0xeb000000-0xeb007fff (rw,non-prefetchable)
+  I/O Ports: 0xb000-0xb00f (rw)
+  Memory Range: 0x40000000-0x4007ffff (ro,prefetchable,disabled)
+  IRQ: 16 (6136 events)
+  Module Alias: "pci:v00001095d00003124sv00001095sd00006124bc01sc04i00"
+  Driver Info #0:
+    Driver Status: sata_sil24 is active
+    Driver Activation Cmd: "modprobe sata_sil24"
+  Config Status: cfg=3Dno, avail=3Dyes, need=3Dno, active=3Dunknown
+
+
+--=20
+Teraz mamy jeszcze lepszy spos=F3b by upewni=E6 si=EA, =BFe jeden uszkodzony
+plik z danymi rozprzestrzeni si=EA na ca=B3=B1 sie=E6: nazywamy go OLE 2.0.
+
+                    --- Bill Gates (mia=B3 powiedzie=E6)
+
+--Sig_/cuaAyw6r+SjvheOFb3NsQz/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.5 (GNU/Linux)
+
+iD8DBQFHfN7mUzPtJrIXoaMRAkL8AKDSyBZpa73/GPINzjF0lW+IQ5wbSgCghuN8
+YrJqE9MN/tyq0UGtOUqNVpc=
+=xHvR
+-----END PGP SIGNATURE-----
+
+--Sig_/cuaAyw6r+SjvheOFb3NsQz/--
