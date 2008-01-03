@@ -1,70 +1,71 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Thu, 03 Jan 2008 10:44:32 -0500
-Message-ID: <477D02E0.5040301@rtr.ca>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org> <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com> <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
+Date: Thu, 03 Jan 2008 10:47:43 -0500
+Message-ID: <477D039F.6000206@rtr.ca>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org> <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com> <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca> <477D02E0.5040301@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2520 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4390 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759372AbYACPod (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Jan 2008 10:44:33 -0500
-In-Reply-To: <477C6A85.9020607@shaw.ca>
+	id S1756095AbYACPrp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Jan 2008 10:47:45 -0500
+In-Reply-To: <477D02E0.5040301@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockr@shaw.ca>
 Cc: Mark Lord <lkml@rtr.ca>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Robert Hancock wrote:
-> Mark Lord wrote:
->> Robert Hancock wrote:
->> ..
->>>  From some of the traces I took previously (posted on LKML as 
->>> "sata_nv ADMA controller lockup investigation" way back in Feb 07), 
->>> what seems to occur is that when the second command is issued very 
->>> rapidly (within less than 20 microseconds, or potentially longer) 
->>> after the previous command's completion, the ADMA status changes from 
->>> 0x500 (STOPPED and IDLE) to 0x400 (just IDLE) as it typically does, 
->>> but then it sticks there, no interrupt is ever raised, and CPB 
->>> response flags remain at 0.
->> ..
+Mark Lord wrote:
+> Robert Hancock wrote:
+>> Mark Lord wrote:
+>>> Robert Hancock wrote:
+>>> ..
+>>>>  From some of the traces I took previously (posted on LKML as "sata_nv ADMA controller lockup investigation" way back in Feb 07), what seems to occur is that when the second command is issued very rapidly (within less than 20 microseconds, or potentially longer) after the previous command's completion, the ADMA status changes from 0x500 (STOPPED and IDLE) to 0x400 (just IDLE) as it typically does, but then it sticks there, no interrupt is ever raised, and CPB response flags remain at 0.
+>>> ..
+>>>
+>>> Assuming that NVidia got their ADMA core logic from Pacific Digital
+>>> (the inventors), then it may have some of the same bugs as the original.
+>>>
+>>> One of those bugs is that the aGO trigger is sampled in a "racey" way,
+>>> such that it sometimes may miss a recent addition to the ring.
+>>>
+>>> The *only* way to guarantee things with the original Pacific Digital core
+>>> was to (1) always retrigger aGO for a full ring scan with each new addition,
+>>> and (2) poll periodically (every half second or so) rather than relying
+>>> exclusively on the IRQ actually working..
+>>>
+>>> Dunno about the NVidia version.
 >>
->> Assuming that NVidia got their ADMA core logic from Pacific Digital
->> (the inventors), then it may have some of the same bugs as the original.
->>
->> One of those bugs is that the aGO trigger is sampled in a "racey" way,
->> such that it sometimes may miss a recent addition to the ring.
->>
->> The *only* way to guarantee things with the original Pacific Digital core
->> was to (1) always retrigger aGO for a full ring scan with each new 
->> addition,
->> and (2) poll periodically (every half second or so) rather than relying
->> exclusively on the IRQ actually working..
->>
->> Dunno about the NVidia version.
+>> Theirs works rather differently - the GO bit is there, but there's another append register which is used to tell the controller that a new tag has been added to the CPB list.
+> ..
 > 
-> Theirs works rather differently - the GO bit is there, but there's 
-> another append register which is used to tell the controller that a new 
-> tag has been added to the CPB list.
+> The PacDigi core uses a "search count" register for that purpose,
+> but the buggy nature of the core required that it always be set
+> to "2 * ring_size" to ensure nothing got missed.
+> 
+> Here's some comments from the original ADMA driver.
+> Maybe something from here might help with the NV stuff, too.
+> 
+>       // There is a chance that the chip will skip over a CPB if a SERVICE interrupt
+>        // occurs while it's reading the CPB header.  This won't cause us to get
+>        // stuck anywhere, but it might slow down execution of the new CPB if
+>        // it has to wait for the next time we hit aGO.  So.. Dxxx/Dxxx suggest
+>        // that all we need to do is tell the chip to do two passes around the ring
+>        // from an aGO instead of one pass, so that it will find the "missed" CPB
+>        // on the second pass.  This isn't as bad as it first looks.
+>        //
+>        writew(channel->num_cpbs * 2, &adma_regs->cpb_search_count);
+> 
+> Or again, the NV stuff may be completely different (?).
 ..
 
-The PacDigi core uses a "search count" register for that purpose,
-but the buggy nature of the core required that it always be set
-to "2 * ring_size" to ensure nothing got missed.
+Another thing about the PacDigi core:  one has to be very careful
+to avoid sequential accesses to sequential PCI locations when
+programming the chip -- it cannot handle merged register writes.
 
-Here's some comments from the original ADMA driver.
-Maybe something from here might help with the NV stuff, too.
+So for any group of sequentially laid out registers, the code has
+to ensure it never writes two adjacent registers in sequence..
 
-       // There is a chance that the chip will skip over a CPB if a SERVICE interrupt
-        // occurs while it's reading the CPB header.  This won't cause us to get
-        // stuck anywhere, but it might slow down execution of the new CPB if
-        // it has to wait for the next time we hit aGO.  So.. Dxxx/Dxxx suggest
-        // that all we need to do is tell the chip to do two passes around the ring
-        // from an aGO instead of one pass, so that it will find the "missed" CPB
-        // on the second pass.  This isn't as bad as it first looks.
-        //
-        writew(channel->num_cpbs * 2, &adma_regs->cpb_search_count);
-
-Or again, the NV stuff may be completely different (?).
+-ml
