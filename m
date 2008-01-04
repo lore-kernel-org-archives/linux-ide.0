@@ -1,43 +1,56 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: SATA kernel-buffered read VERY slow (not raid,
- Promise TX300 card); 2.6.23.1(vanilla)
-Date: Thu, 03 Jan 2008 20:56:31 -0600
-Message-ID: <477DA05F.4080503@shaw.ca>
-References: <fa.o9uy6Qaq3PtHs2Z9lAKGUKvD85I@ifi.uio.no>
- <fa.1kDEq2SPE3FqpM5Mfw9CVGbvVdY@ifi.uio.no>
- <fa.hIZ5+XhGRugySB/HuLxr5qd6gAY@ifi.uio.no>
- <fa.iefWPg3R6g5Pnm/ktSCK9XWVFVw@ifi.uio.no>
- <fa.FhpaleM/osLTMJ85/PuxjxyJeGI@ifi.uio.no>
- <fa.MP5rgMp4TS2+Cfemd/uFOQOuquQ@ifi.uio.no> <477D9B6E.7060000@shaw.ca>
- <477D9D66.3080502@tlinx.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Fri, 04 Jan 2008 16:51:38 +1100
+Message-ID: <1199425898.7291.30.camel@pasglop>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu>
+	 <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com>
+	 <477B0CFD.1030603@shaw.ca>
+	 <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
+	 <477BDEA5.8040701@garzik.org>
+	 <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
+	 <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca>
+	 <477C6A85.9020607@shaw.ca> <477D02E0.5040301@rtr.ca>
+	 <477D039F.6000206@rtr.ca> <1199394786.7291.21.camel@pasglop>
+	 <477D8F4B.6000601@shaw.ca>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:32502 "EHLO
-	pd3mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754015AbYADC5Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 21:57:25 -0500
-In-reply-to: <477D9D66.3080502@tlinx.org>
+Received: from gate.crashing.org ([63.228.1.57]:56232 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752909AbYADFw0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Jan 2008 00:52:26 -0500
+In-Reply-To: <477D8F4B.6000601@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Mark Lord <liml@rtr.ca>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Linda Walsh wrote:
-> Robert Hancock wrote:
->>
->> Looks like the drive reports ERR/ABRT (command aborted), meaning it 
->> likely doesn't support those commands.
->>
-> ---
->    Except the PATA version of the drive does (same capacity, & other 
-> specs).  Seagate would
-> disable "advanced" features for SATA but leave them for the older 
-> technology?  Possible,
-> but doesn't seem likely.
 
-If this is a Seagate, I believe that they don't have AAM enabled on any 
-of their newer drives (something about a lawsuit for patent infringement 
-on that feature, or something). Quite likely they don't support that 
-power management command, either.
+On Thu, 2008-01-03 at 19:43 -0600, Robert Hancock wrote:
+> Benjamin Herrenschmidt wrote:
+> >> Another thing about the PacDigi core:  one has to be very careful
+> >> to avoid sequential accesses to sequential PCI locations when
+> >> programming the chip -- it cannot handle merged register writes.
+> >>
+> >> So for any group of sequentially laid out registers, the code has
+> >> to ensure it never writes two adjacent registers in sequence..
+> > 
+> > Ugh ? Write combining isn't permitted on normal registers afaik...
+> > 
+> > Ben.
+> 
+> Byte merging can be done by the chipset on MMIO writes (merging multiple 
+> 8 or 16-bit writes into a single 32-bit cycle).
+
+That is true, if they are consecutive. You mean that this HW is f*cked
+up enough to actually have separate 8/16 bits registers that are
+contiguous ? Yuck... I'm afraid you -have- to add reads in between to
+guarantee that no merging will occur.
+
+Cheers,
+
+Ben.
+
+
