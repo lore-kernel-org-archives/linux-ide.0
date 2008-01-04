@@ -1,41 +1,30 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/2] ide: don't include <linux/hdsmart.h>
-Date: Fri, 4 Jan 2008 21:52:11 +0100
-Message-ID: <200801042152.11312.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/15] ide: fixes/cleanups for IDE devices probing
+Date: Fri, 04 Jan 2008 22:24:24 +0100
+Message-ID: <20080104212424.6978.93646.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:2020 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:37216 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbYADUls (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jan 2008 15:41:48 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so2830996ugc.16
-        for <linux-ide@vger.kernel.org>; Fri, 04 Jan 2008 12:41:45 -0800 (PST)
-Content-Disposition: inline
+	with ESMTP id S1753719AbYADVMs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jan 2008 16:12:48 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so2833655ugc.16
+        for <linux-ide@vger.kernel.org>; Fri, 04 Jan 2008 13:12:47 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 
-IDE doesn't need it.
+This is a preparation for a more sophisticated changes.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- include/linux/ide.h |    1 -
- 1 file changed, 1 deletion(-)
+diffstat:
 
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -9,7 +9,6 @@
- #include <linux/init.h>
- #include <linux/ioport.h>
- #include <linux/hdreg.h>
--#include <linux/hdsmart.h>
- #include <linux/blkdev.h>
- #include <linux/proc_fs.h>
- #include <linux/interrupt.h>
+ drivers/ide/ide-iops.c            |    2
+ drivers/ide/ide-probe.c           |  199 ++++++++++++++++----------------------
+ drivers/ide/ide.c                 |  109 ++++++++++----------
+ drivers/ide/legacy/ide_platform.c |   34 +-----
+ drivers/ide/pci/ns87415.c         |    4
+ include/linux/ide.h               |   15 --
+ 6 files changed, 157 insertions(+), 206 deletions(-)
+
+Bart
