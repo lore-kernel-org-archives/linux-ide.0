@@ -1,65 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pata_pdc202xx_old: Further fixups
-Date: Fri, 4 Jan 2008 00:08:49 +0000
-Message-ID: <20080104000849.588592ea@lxorguk.ukuu.org.uk>
+From: "Allen Martin" <AMartin@nvidia.com>
+Subject: RE: sata_nv + ADMA + Samsung disk problem
+Date: Thu, 3 Jan 2008 16:41:52 -0800
+Message-ID: <F72FA20C31DD4F4C997B91C5B3690A09505598@hqemmail07.nvidia.com>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu> <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca> <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com> <477BDEA5.8040701@garzik.org> <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com> <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38816 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756850AbYADAKm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 19:10:42 -0500
+Received: from hqemgate04.nvidia.com ([216.228.112.152]:16353 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbYADAoM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2008 19:44:12 -0500
+In-Reply-To: <477C6A85.9020607@shaw.ca>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@osdl.org, jeff@garzik.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>, Mark Lord <lkml@rtr.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Turns out distros always enabled burst mode and it is pretty essential so
-do the same. Also sort out the post DMA mode restore properly.
+ 
+> > Dunno about the NVidia version.
+> 
+> Theirs works rather differently - the GO bit is there, but there's 
+> another append register which is used to tell the controller 
+> that a new 
+> tag has been added to the CPB list.
+> 
+> The only thing we currently use the GO bit for is to switch 
+> between ADMA 
+> and port register mode. Could be there's something we need to 
+> do there, 
+> though, who knows..
+> 
 
-My 20263 card now seems happy but needs some four drive tests done yet
-(when I've persuaded the kernel not to hang in the edd boot code if I
-plug them in ..)
+You shouldn't ever need to touch GO other than the ADMA / legacy mode
+switch as you say.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc6-mm1/drivers/ata/pata_pdc202xx_old.c linux-2.6.24-rc6-mm1/drivers/ata/pata_pdc202xx_old.c
---- linux.vanilla-2.6.24-rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2008-01-02 16:04:19.000000000 +0000
-+++ linux-2.6.24-rc6-mm1/drivers/ata/pata_pdc202xx_old.c	2008-01-02 16:13:14.000000000 +0000
-@@ -214,8 +214,8 @@
- 	/* Flip back to 33Mhz for PIO */
- 	if (adev->dma_mode >= XFER_UDMA_2)
- 		iowrite8(ioread8(clock) & ~sel66, clock);
--
- 	ata_bmdma_stop(qc);
-+	pdc202xx_set_piomode(ap, adev);
- }
- 
- /**
-@@ -232,6 +232,17 @@
- 	adev->max_sectors = 256;
- }
- 
-+static int pdc2026x_port_start(struct ata_port *ap)
-+{
-+	void __iomem *bmdma = ap->ioaddr.bmdma_addr;
-+	if (bmdma) {
-+		/* Enable burst mode */
-+		u8 burst = ioread8(bmdma + 0x1f);
-+		iowrite8(burst | 0x01, bmdma + 0x1f);
-+	}
-+	return ata_sff_port_start(ap);
-+}
-+
- static struct scsi_host_template pdc202xx_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -312,7 +323,7 @@
- 	.irq_clear	= ata_bmdma_irq_clear,
- 	.irq_on		= ata_irq_on,
- 
--	.port_start	= ata_sff_port_start,
-+	.port_start	= pdc2026x_port_start,
- };
- 
- static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+The NVIDIA ADMA hw is not based on the Pacific Digital core.
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
