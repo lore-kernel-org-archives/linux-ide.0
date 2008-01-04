@@ -1,56 +1,278 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Fri, 04 Jan 2008 16:51:38 +1100
-Message-ID: <1199425898.7291.30.camel@pasglop>
-References: <20070808120804.GB5257@boogie.lpds.sztaki.hu>
-	 <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com>
-	 <477B0CFD.1030603@shaw.ca>
-	 <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
-	 <477BDEA5.8040701@garzik.org>
-	 <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
-	 <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca>
-	 <477C6A85.9020607@shaw.ca> <477D02E0.5040301@rtr.ca>
-	 <477D039F.6000206@rtr.ca> <1199394786.7291.21.camel@pasglop>
-	 <477D8F4B.6000601@shaw.ca>
-Reply-To: benh@kernel.crashing.org
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH 3/5] libata: factor out ata_pci_activate_sff_host() from ata_pci_one()
+Date: Fri,  4 Jan 2008 18:42:22 +0900
+Message-ID: <11994397443430-git-send-email-htejun@gmail.com>
+References: <1199439744356-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56232 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752909AbYADFw0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Jan 2008 00:52:26 -0500
-In-Reply-To: <477D8F4B.6000601@shaw.ca>
+Received: from rv-out-0910.google.com ([209.85.198.188]:59923 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756336AbYADJmb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jan 2008 04:42:31 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so6064372rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 04 Jan 2008 01:42:30 -0800 (PST)
+In-Reply-To: <1199439744356-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Allen Martin <AMartin@nvidia.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+To: jeff@garzik.org, torvalds@linux-foundation.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
+Factor out ata_pci_activate_sff_host() from ata_pci_one().  This does
+about the same thing as ata_host_activate() but needs to be separate
+because SFF controllers use different and multiple IRQs in legacy
+mode.
 
-On Thu, 2008-01-03 at 19:43 -0600, Robert Hancock wrote:
-> Benjamin Herrenschmidt wrote:
-> >> Another thing about the PacDigi core:  one has to be very careful
-> >> to avoid sequential accesses to sequential PCI locations when
-> >> programming the chip -- it cannot handle merged register writes.
-> >>
-> >> So for any group of sequentially laid out registers, the code has
-> >> to ensure it never writes two adjacent registers in sequence..
-> > 
-> > Ugh ? Write combining isn't permitted on normal registers afaik...
-> > 
-> > Ben.
-> 
-> Byte merging can be done by the chipset on MMIO writes (merging multiple 
-> 8 or 16-bit writes into a single 32-bit cycle).
+This will be used to make SFF LLD initialization more flexible.
 
-That is true, if they are consecutive. You mean that this HW is f*cked
-up enough to actually have separate 8/16 bits registers that are
-contiguous ? Yuck... I'm afraid you -have- to add reads in between to
-guarantee that no merging will occur.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ drivers/ata/libata-sff.c  |  184 +++++++++++++++++++++++++--------------------
+ include/linux/libata.h    |    3 +
+ 3 files changed, 107 insertions(+), 81 deletions(-)
 
-Cheers,
-
-Ben.
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9d040a3..c731e4f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -7642,6 +7642,7 @@ EXPORT_SYMBOL_GPL(pci_test_config_bits);
+ EXPORT_SYMBOL_GPL(ata_pci_init_sff_host);
+ EXPORT_SYMBOL_GPL(ata_pci_init_bmdma);
+ EXPORT_SYMBOL_GPL(ata_pci_prepare_sff_host);
++EXPORT_SYMBOL_GPL(ata_pci_activate_sff_host);
+ EXPORT_SYMBOL_GPL(ata_pci_init_one);
+ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
+ #ifdef CONFIG_PM
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 16eb9e9..1be9364 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -714,6 +714,99 @@ int ata_pci_prepare_sff_host(struct pci_dev *pdev,
+ }
+ 
+ /**
++ *	ata_pci_activate_sff_host - start SFF host, request IRQ and register it
++ *	@host: target SFF ATA host
++ *	@irq_handler: irq_handler used when requesting IRQ(s)
++ *	@sht: scsi_host_template to use when registering the host
++ *
++ *	This is the counterpart of ata_host_activate() for SFF ATA
++ *	hosts.  This separate helper is necessary because SFF hosts
++ *	use two separate interrupts in legacy mode.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int ata_pci_activate_sff_host(struct ata_host *host,
++			      irq_handler_t irq_handler,
++			      struct scsi_host_template *sht)
++{
++	struct device *dev = host->dev;
++	struct pci_dev *pdev = to_pci_dev(dev);
++	const char *drv_name = dev_driver_string(host->dev);
++	int legacy_mode = 0, rc;
++
++	rc = ata_host_start(host);
++	if (rc)
++		return rc;
++
++	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
++		u8 tmp8, mask;
++
++		/* TODO: What if one channel is in native mode ... */
++		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
++		mask = (1 << 2) | (1 << 0);
++		if ((tmp8 & mask) != mask)
++			legacy_mode = 1;
++#if defined(CONFIG_NO_ATA_LEGACY)
++		/* Some platforms with PCI limits cannot address compat
++		   port space. In that case we punt if their firmware has
++		   left a device in compatibility mode */
++		if (legacy_mode) {
++			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
++			return -EOPNOTSUPP;
++		}
++#endif
++	}
++
++	if (!devres_open_group(dev, NULL, GFP_KERNEL))
++		return -ENOMEM;
++
++	if (!legacy_mode) {
++		rc = devm_request_irq(dev, pdev->irq, irq_handler,
++				      IRQF_SHARED, drv_name, host);
++		if (rc)
++			goto out;
++
++		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
++		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
++	} else {
++		if (!ata_port_is_dummy(host->ports[0])) {
++			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
++					      irq_handler, IRQF_SHARED,
++					      drv_name, host);
++			if (rc)
++				goto out;
++
++			ata_port_desc(host->ports[0], "irq %d",
++				      ATA_PRIMARY_IRQ(pdev));
++		}
++
++		if (!ata_port_is_dummy(host->ports[1])) {
++			rc = devm_request_irq(dev, ATA_SECONDARY_IRQ(pdev),
++					      irq_handler, IRQF_SHARED,
++					      drv_name, host);
++			if (rc)
++				goto out;
++
++			ata_port_desc(host->ports[1], "irq %d",
++				      ATA_SECONDARY_IRQ(pdev));
++		}
++	}
++
++	rc = ata_host_register(host, sht);
++ out:
++	if (rc == 0)
++		devres_remove_group(dev, NULL);
++	else
++		devres_release_group(dev, NULL);
++
++	return rc;
++}
++
++/**
+  *	ata_pci_init_one - Initialize/register PCI IDE host controller
+  *	@pdev: Controller to be initialized
+  *	@ppi: array of port_info, must be enough for two ports
+@@ -742,9 +835,6 @@ int ata_pci_init_one(struct pci_dev *pdev,
+ 	struct device *dev = &pdev->dev;
+ 	const struct ata_port_info *pi = NULL;
+ 	struct ata_host *host = NULL;
+-	const char *drv_name = dev_driver_string(&pdev->dev);
+-	u8 mask;
+-	int legacy_mode = 0;
+ 	int i, rc;
+ 
+ 	DPRINTK("ENTER\n");
+@@ -766,92 +856,24 @@ int ata_pci_init_one(struct pci_dev *pdev,
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+ 		return -ENOMEM;
+ 
+-	/* FIXME: Really for ATA it isn't safe because the device may be
+-	   multi-purpose and we want to leave it alone if it was already
+-	   enabled. Secondly for shared use as Arjan says we want refcounting
+-
+-	   Checking dev->is_enabled is insufficient as this is not set at
+-	   boot for the primary video which is BIOS enabled
+-	  */
+-
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+-		goto err_out;
++		goto out;
+ 
+-	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
+-		u8 tmp8;
+-
+-		/* TODO: What if one channel is in native mode ... */
+-		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
+-		mask = (1 << 2) | (1 << 0);
+-		if ((tmp8 & mask) != mask)
+-			legacy_mode = 1;
+-#if defined(CONFIG_NO_ATA_LEGACY)
+-		/* Some platforms with PCI limits cannot address compat
+-		   port space. In that case we punt if their firmware has
+-		   left a device in compatibility mode */
+-		if (legacy_mode) {
+-			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
+-			rc = -EOPNOTSUPP;
+-			goto err_out;
+-		}
+-#endif
+-	}
+-
+-	/* prepare host */
++	/* prepare and activate SFF host */
+ 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
+ 	if (rc)
+-		goto err_out;
++		goto out;
+ 
+ 	pci_set_master(pdev);
++	rc = ata_pci_activate_sff_host(host, pi->port_ops->irq_handler,
++				       pi->sht);
++ out:
++	if (rc == 0)
++		devres_remove_group(&pdev->dev, NULL);
++	else
++		devres_release_group(&pdev->dev, NULL);
+ 
+-	/* start host and request IRQ */
+-	rc = ata_host_start(host);
+-	if (rc)
+-		goto err_out;
+-
+-	if (!legacy_mode) {
+-		rc = devm_request_irq(dev, pdev->irq, pi->port_ops->irq_handler,
+-				      IRQF_SHARED, drv_name, host);
+-		if (rc)
+-			goto err_out;
+-
+-		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
+-		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
+-	} else {
+-		if (!ata_port_is_dummy(host->ports[0])) {
+-			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
+-					      pi->port_ops->irq_handler,
+-					      IRQF_SHARED, drv_name, host);
+-			if (rc)
+-				goto err_out;
+-
+-			ata_port_desc(host->ports[0], "irq %d",
+-				      ATA_PRIMARY_IRQ(pdev));
+-		}
+-
+-		if (!ata_port_is_dummy(host->ports[1])) {
+-			rc = devm_request_irq(dev, ATA_SECONDARY_IRQ(pdev),
+-					      pi->port_ops->irq_handler,
+-					      IRQF_SHARED, drv_name, host);
+-			if (rc)
+-				goto err_out;
+-
+-			ata_port_desc(host->ports[1], "irq %d",
+-				      ATA_SECONDARY_IRQ(pdev));
+-		}
+-	}
+-
+-	/* register */
+-	rc = ata_host_register(host, pi->sht);
+-	if (rc)
+-		goto err_out;
+-
+-	devres_remove_group(dev, NULL);
+-	return 0;
+-
+-err_out:
+-	devres_release_group(dev, NULL);
+ 	return rc;
+ }
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index ccb0556..4374c42 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1033,6 +1033,9 @@ extern int ata_pci_init_bmdma(struct ata_host *host);
+ extern int ata_pci_prepare_sff_host(struct pci_dev *pdev,
+ 				    const struct ata_port_info * const * ppi,
+ 				    struct ata_host **r_host);
++extern int ata_pci_activate_sff_host(struct ata_host *host,
++				     irq_handler_t irq_handler,
++				     struct scsi_host_template *sht);
+ extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
+ extern unsigned long ata_pci_default_filter(struct ata_device *dev,
+ 					    unsigned long xfer_mask);
+-- 
+1.5.2.4
 
