@@ -1,46 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: pata_ixp4xx_cf: fix compilation introduced by ata_port_desc() conversion
-Date: Sun, 06 Jan 2008 10:05:28 +0900
-Message-ID: <47802958.4080602@gmail.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [RESEND PATCH 06/10] ide-floppy: report DMA handling in
+	idefloppy_pc_intr() properly
+Date: Sat, 5 Jan 2008 22:45:19 +0100
+Message-ID: <20080105214519.GA4470@gollum.tnic>
+References: <1199366409-26016-1-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-6-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-7-git-send-email-bbpetkov@yahoo.de> <200801051646.05131.bzolnier@gmail.com>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:47567 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754146AbYAFBFf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jan 2008 20:05:35 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so6616763rvb.1
-        for <linux-ide@vger.kernel.org>; Sat, 05 Jan 2008 17:05:34 -0800 (PST)
+Received: from smtp113.plus.mail.re1.yahoo.com ([69.147.102.76]:35638 "HELO
+	smtp113.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750961AbYAFFkB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 00:40:01 -0500
+Content-Disposition: inline
+In-Reply-To: <200801051646.05131.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, rod@whitby.id.au
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Rod Whitby <rod@whitby.id.au>
+On Sat, Jan 05, 2008 at 04:46:05PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+> Hmm, no.  The driver is called ide-floppy (ide_floppy) and it is more
+> readable this way.
+>=20
+> >  {
+> >  	idefloppy_t *floppy =3D drive->driver_data;
+> >  	struct gendisk *g =3D floppy->disk;
+> > @@ -1479,7 +1450,7 @@ static ide_proc_entry_t idefloppy_proc[] =3D =
+{
+> >  };
+> >  #endif	/* CONFIG_IDE_PROC_FS */
+> > =20
+> > -static int ide_floppy_probe(ide_drive_t *);
+> > +static int idefloppy_probe(ide_drive_t *);
+>=20
+> ditto
+> =20
+> [...]
+>=20
+> > @@ -1733,7 +1704,7 @@ static struct block_device_operations ideflop=
+py_ops =3D {
+> >  	.revalidate_disk=3D idefloppy_revalidate_disk
+> >  };
+> > =20
+> > -static int ide_floppy_probe(ide_drive_t *drive)
+> > +static int idefloppy_probe(ide_drive_t *drive)
+>=20
+> ditto
+Shouldn't those also conform to the driver function format idefloppy_bl=
+a() -
+after all, those function names are unambiguous for the whole file...?
 
-Fixes a compilation error caused by ata_port_desc() conversion
-(cbcdd87593a1d85c5c4b259945a3a09eee12814d).
-
-Signed-off-by: Rod Whitby <rod@whitby.id.au>
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/pata_ixp4xx_cf.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index fcd532a..120b5bf 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -130,10 +130,11 @@ static struct ata_port_operations ixp4xx_port_ops = {
- 	.port_start		= ata_port_start,
- };
- 
--static void ixp4xx_setup_port(struct ata_ioports *ioaddr,
-+static void ixp4xx_setup_port(struct ata_port *ap,
- 			      struct ixp4xx_pata_data *data,
- 			      unsigned long raw_cs0, unsigned long raw_cs1)
- {
-+	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	unsigned long raw_cmd = raw_cs0;
- 	unsigned long raw_ctl = raw_cs1 + 0x06;
- 
+--=20
+Regards/Gru=DF,
+    Boris.
