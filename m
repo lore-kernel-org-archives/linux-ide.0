@@ -1,46 +1,56 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RESEND PATCH 09/10] ide-floppy: use test_bit wrappers for testing flags
-Date: Sat, 5 Jan 2008 17:10:58 +0100
-Message-ID: <200801051710.58924.bzolnier@gmail.com>
-References: <1199366409-26016-1-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-9-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-10-git-send-email-bbpetkov@yahoo.de>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] libata and starting/stopping ATAPI floppy devices
+Date: Sat, 5 Jan 2008 16:47:57 +0100
+Message-ID: <200801051647.58866.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:7645 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753770AbYAEP75 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jan 2008 10:59:57 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so2920584ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 05 Jan 2008 07:59:56 -0800 (PST)
-In-Reply-To: <1199366409-26016-10-git-send-email-bbpetkov@yahoo.de>
+Received: from ns.gsystems.sk ([62.176.172.50]:38280 "EHLO 192.168.0.33"
+	rhost-flags-OK-OK-FAIL-FAIL) by vger.kernel.org with ESMTP
+	id S1755847AbYAEQil (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 5 Jan 2008 11:38:41 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+
+Hello,
+I switched to libata drivers for my onboard PATA controller (PIIX4) recently. 
+Everything works fine except that kernel tries to start not only my hard 
+drive (sda) but also LS-120 floppy drive (sdb) which does not like it:
+
+sd 0:0:0:0: [sda] Starting disk
+ata1.00: configured for UDMA/33
+sd 0:0:0:0: [sda] 58633344 512-byte hardware sectors (30020 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support 
+DPO or FUA
+sd 1:0:1:0: [sdb] Starting disk
+ata2.00: configured for UDMA/33
+ata2.01: configured for PIO2
+sd 1:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
+sd 1:0:1:0: [sdb] Sense Key : 0x2 [current]
+sd 1:0:1:0: [sdb] ASC=0x3a ASCQ=0x0
 
 
-There are two issues here:
+The question is: is it correct? Or a patch like this should be applied?
 
-* set_bit()/test_bit() are atomic operations and they don't see to be
-  necessary in case of ide-floppy.c (standard '|'/'&' should be enough)
+--- linux-2.6.23-orig/drivers/ata/libata-scsi.c	2007-10-09 22:31:38.000000000 +0200
++++ linux-2.6.23-pentium/drivers/ata/libata-scsi.c	2008-01-05 15:50:16.000000000 +0100
+@@ -802,7 +802,8 @@
+ 
+ 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+ 
+-	sdev->manage_start_stop = 1;
++	if (dev->class == ATA_DEV_ATA)
++		sdev->manage_start_stop = 1;
+ 
+ 	if (dev)
+ 		ata_scsi_dev_config(sdev, dev);
 
-* using wrappers for these operations is not a bad idea but doing it _now_
-  just makes it harder for us to figure out how to introduced common ATA
-  Packet command interface for all ATAPI device drivers (the other drivers
-  are using very similar flag handling and flag names currently)
 
-so I would say that we should defer introducting these wrappers for now
-(patch converting set_bit()/test_bit() to '|'/'&' would still be welcomed).
-
-On Thursday 03 January 2008, Borislav Petkov wrote:
-> also, fix header comments and remove superfluous ones. There should be no
-> functionality change resulting from this patch.
-
-fixes for comments look fine but they should be merged with the other
-patch (the one containing checkpatch.pl/comments fixes)
-
-Thanks,
-Bart
+-- 
+Ondrej Zary
