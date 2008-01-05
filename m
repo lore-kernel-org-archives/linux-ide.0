@@ -1,159 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RESEND PATCH 05/10] ide-floppy: factor out ioctl handlers from idefloppy_ioctl()
-Date: Sat, 5 Jan 2008 16:12:19 +0100
-Message-ID: <200801051612.19425.bzolnier@gmail.com>
-References: <1199366409-26016-1-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-5-git-send-email-bbpetkov@yahoo.de> <1199366409-26016-6-git-send-email-bbpetkov@yahoo.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Sat, 05 Jan 2008 09:31:12 -0600
+Message-ID: <1199547072.3399.15.camel@localhost.localdomain>
+References: <200712191731.26512.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:9955 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbYAEPBP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jan 2008 10:01:15 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so2915885ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 05 Jan 2008 07:01:13 -0800 (PST)
-In-Reply-To: <1199366409-26016-6-git-send-email-bbpetkov@yahoo.de>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200712191731.26512.rusty@rustcorp.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-looks good, some minor issues noted below
-
-On Thursday 03 January 2008, Borislav Petkov wrote:
-> There should be no functional change resulting from this patch.
+On Wed, 2007-12-19 at 17:31 +1100, Rusty Russell wrote:
+> This patch series is the start of my attempt to simplify and make explicit
+> the chained scatterlist logic.
 > 
-> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
-> ---
->  drivers/ide/ide-floppy.c |   90 +++++++++++++++++++++++++++++-----------------
->  1 files changed, 57 insertions(+), 33 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 196a697..7823447 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -1600,6 +1600,58 @@ static int idefloppy_getgeo(struct block_device *bdev, struct hd_geometry *geo)
->  	return 0;
->  }
->  
-> +static int idefloppy_lockdoor(struct inode *inode, idefloppy_pc_t *pc,
-> +		int event, unsigned int cmd)
-> +{
-> +	struct block_device *bdev = inode->i_bdev;
+> It's not complete: my SATA box boots and seems happy, but all the other
+> users of SCSI need to be updated and checked.  But I've gotten far enough
+> to believe it's worth persuing.
 
-if 'drive' is passed as an argument, 'inode' and 'bdev' can be removed
-('floppy' can be obtained from drive->driver_data)
+Sorry for the delay in looking at this, I was busy with Holidays and
+things.
 
-> +	struct ide_floppy_obj *floppy = ide_floppy_g(bdev->bd_disk);
-> +	ide_drive_t *drive = floppy->drive;
-> +
-> +	if (floppy->openers > 1)
-> +		return -EBUSY;
-> +
-> +	/* The IOMEGA Clik! Drive doesn't support this command -
-> +	 * no room for an eject mechanism */
-> +	if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-> +		idefloppy_create_prevent_cmd(pc, event);
-> +		(void) idefloppy_queue_pc_tail(drive, pc);
-> +	}
-> +
-> +	if (cmd == CDROMEJECT) {
-> +		idefloppy_create_start_stop_cmd(pc, 2);
-> +		(void) idefloppy_queue_pc_tail(drive, pc);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static
-> +int idefloppy_format_start(struct file *file, struct inode *inode,
-> +		void __user *argp)
-> +{
-> +	struct block_device *bdev = inode->i_bdev;
-> +	struct ide_floppy_obj *floppy = ide_floppy_g(bdev->bd_disk);
-> +	ide_drive_t *drive = floppy->drive;
-> +	int err;
-> +
-> +	if (!(file->f_mode & 2))
-> +		return -EPERM;
+When I compare sg_ring with the current sg_chain (and later sg_table)
+implementations, I'm actually struck by how similar they are.
 
-if this check is left in idefloppy_ioctl() it is enough to pass 'drive'
-and 'argp' to idefloppy_format_start()
+The other thing I note is that the problem you're claiming to solve with
+sg_ring (the ability to add extra scatterlists to the front or the back
+of an existing one) is already solved with sg_chain, so the only real
+advantage of sg_ring was that it contains explicit counts, which
+sg_table (in -mm) also introduces.
 
-> +	if (floppy->openers > 1) {
-> +		/* Don't format if someone is using the disk */
-> +		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-> +		return -EBUSY;
-> +	}
-> +
-> +	set_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-> +
-> +	err = idefloppy_begin_format(drive, argp);
+The other differences are that sg_ring only allows adding at the front
+or back of an existing sg_ring, it doesn't allow splicing at any point
+like sg_chain does, so I'd say it's less functional (not that I actually
+want anyone ever to do this, of course ...)
 
-idefloppy_begin_format() is called only by idefloppy_format_start() so it
-would make sense to just merge the latter function into the former one
+The final point is that sg_ring requires a two level traversal:  ring
+list then scatterlist, whereas sg_chain only requires a single level
+traversal.  I grant that we can abstract out the traversal into
+something that would make users think they're only doing a single level,
+but I don't see what the extra level really buys us.
 
-> +	if (err)
-> +		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-> +
-> +	return err;
-> +}
-> +
->  static int idefloppy_ioctl(struct inode *inode, struct file *file,
->  			unsigned int cmd, unsigned long arg)
->  {
-> @@ -1612,47 +1664,19 @@ static int idefloppy_ioctl(struct inode *inode, struct file *file,
->  	idefloppy_pc_t pc;
->  
->  	switch (cmd) {
-> +
+The above analysis seems to suggest that sg_chain is simpler and has
+more functionality than sg_ring, unless I've missed anything?
 
-stray newline, no need for it
+The only thing missing from sg_chain perhaps is an accessor function
+that does the splicing, which I can easily construct if you want to try
+it out in virtio.
 
->  	case CDROMEJECT:
->  		prevent = 0;
+James
 
-by adding:
 
-	if (cmd == CDROMEJECT)
-		prevent = 0;
-
-to idefloppy_lockdoor() it is possible to remove the above line
-(together with 'prevent' variable)
-
->  		/* fall through */
-> -	case CDROM_LOCKDOOR:
-> -		if (floppy->openers > 1)
-> -			return -EBUSY;
->  
-> -		/* The IOMEGA Clik! Drive doesn't support this command -
-> -		 * no room for an eject mechanism */
-> -                if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-> -			idefloppy_create_prevent_cmd(&pc, prevent);
-> -			(void) idefloppy_queue_pc_tail(drive, &pc);
-> -		}
-> -		if (cmd == CDROMEJECT) {
-> -			idefloppy_create_start_stop_cmd(&pc, 2);
-> -			(void) idefloppy_queue_pc_tail(drive, &pc);
-> -		}
-> -		return 0;
-> +	case CDROM_LOCKDOOR:
-> +		return idefloppy_lockdoor(inode, &pc, prevent, cmd);
-
-[...]
-
-> @@ -1669,7 +1693,7 @@ static int idefloppy_ioctl(struct inode *inode, struct file *file,
->  	 */
->  	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
->  		err = scsi_cmd_ioctl(file, bdev->bd_disk->queue,
-> -					bdev->bd_disk, cmd, argp);
-> +				bdev->bd_disk, cmd, argp);
->  	else
->  		err = -ENOTTY;
->  
-
-this chunk doesn't seem to be needed
