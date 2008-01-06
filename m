@@ -1,77 +1,85 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 0/8] ide: more IDE probing code rework
-Date: Sun, 06 Jan 2008 18:02:20 +0100
-Message-ID: <20080106170220.6861.4814.sendpatchset@localhost.localdomain>
+Subject: [PATCH 1/8] dtc2278: fix ->io_32bit handling
+Date: Sun, 06 Jan 2008 18:02:27 +0100
+Message-ID: <20080106170227.6861.71421.sendpatchset@localhost.localdomain>
+References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.173]:18967 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754710AbYAFQuf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 11:50:35 -0500
+	with ESMTP id S1757549AbYAFQul (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 11:50:41 -0500
 Received: by ug-out-1314.google.com with SMTP id z38so3036620ugc.16
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2008 08:50:33 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2008 08:50:40 -0800 (PST)
+In-Reply-To: <20080106170220.6861.4814.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
+On DTC2278 32-bit I/O has to be enabled for both devices on the port
+so always enable it during init time and disallow further changes.
 
-* Convert legacy host drivers to use struct ide_port_info + ide_device_add()
-  instead of open-coding initialization of IDE port data structures.
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/ide.c            |    4 ----
+ drivers/ide/legacy/dtc2278.c |   12 ++++++------
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
-* Add ->cable_detect method for cable detection + use it in PCI host drivers.
-
-* Fix some bugs in the process (handling of "idex=ata66" in atiixp, cs5535
-  and scc_pata and handling I/O 32-bit setting in dtc2278 and au1xxx-ide).
-
-diffstat:
-
- drivers/ide/arm/icside.c          |   25 ++++---
- drivers/ide/arm/ide_arm.c         |    2
- drivers/ide/arm/rapide.c          |    2
- drivers/ide/cris/ide-cris.c       |   18 +++--
- drivers/ide/h8300/ide-h8300.c     |    2
- drivers/ide/ide-generic.c         |    2
- drivers/ide/ide-pnp.c             |    2
- drivers/ide/ide-probe.c           |   87 +++++++++++++++++++++++++-
- drivers/ide/ide.c                 |    6 -
- drivers/ide/legacy/ali14xx.c      |   24 ++-----
- drivers/ide/legacy/buddha.c       |    2
- drivers/ide/legacy/dtc2278.c      |   36 ++++-------
- drivers/ide/legacy/falconide.c    |    2
- drivers/ide/legacy/gayle.c        |    2
- drivers/ide/legacy/ht6560b.c      |   22 +++---
- drivers/ide/legacy/ide_platform.c |    2
- drivers/ide/legacy/macide.c       |   12 ---
- drivers/ide/legacy/q40ide.c       |    2
- drivers/ide/legacy/qd65xx.c       |   23 ++++---
- drivers/ide/legacy/umc8672.c      |   24 ++-----
- drivers/ide/mips/au1xxx-ide.c     |   34 +++-------
- drivers/ide/mips/swarm.c          |    2
- drivers/ide/pci/aec62xx.c         |   25 +++----
- drivers/ide/pci/alim15x3.c        |    5 -
- drivers/ide/pci/amd74xx.c         |   18 ++---
- drivers/ide/pci/atiixp.c          |   30 ++++-----
- drivers/ide/pci/cmd640.c          |   31 ++++-----
- drivers/ide/pci/cmd64x.c          |    5 -
- drivers/ide/pci/cs5520.c          |    2
- drivers/ide/pci/cs5535.c          |   14 +---
- drivers/ide/pci/hpt366.c          |   84 ++++++++++++++-----------
- drivers/ide/pci/it8213.c          |   21 +++---
- drivers/ide/pci/it821x.c          |    5 -
- drivers/ide/pci/jmicron.c         |    6 -
- drivers/ide/pci/pdc202xx_new.c    |    8 --
- drivers/ide/pci/pdc202xx_old.c    |   10 +--
- drivers/ide/pci/piix.c            |    7 --
- drivers/ide/pci/scc_pata.c        |   12 ++-
- drivers/ide/pci/serverworks.c     |    9 --
- drivers/ide/pci/sgiioc4.c         |   18 +++--
- drivers/ide/pci/siimage.c         |    5 -
- drivers/ide/pci/sis5513.c         |    5 -
- drivers/ide/pci/slc90e66.c        |   19 +++--
- drivers/ide/pci/tc86c001.c        |   24 ++++---
- drivers/ide/pci/via82cxxx.c       |    6 -
- drivers/ide/ppc/mpc8xx.c          |    2
- drivers/ide/ppc/pmac.c            |   84 ++++++++++---------------
- drivers/ide/setup-pci.c           |  123 +++++++++++---------------------------
- include/linux/ide.h               |   15 ++++
- 49 files changed, 459 insertions(+), 467 deletions(-)
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -791,10 +791,6 @@ int set_io_32bit(ide_drive_t *drive, int
+ 		return -EBUSY;
+ 
+ 	drive->io_32bit = arg;
+-#ifdef CONFIG_BLK_DEV_DTC2278
+-	if (HWIF(drive)->chipset == ide_dtc2278)
+-		HWIF(drive)->drives[!drive->select.b.unit].io_32bit = arg;
+-#endif /* CONFIG_BLK_DEV_DTC2278 */
+ 
+ 	spin_unlock_irq(&ide_lock);
+ 
+Index: b/drivers/ide/legacy/dtc2278.c
+===================================================================
+--- a/drivers/ide/legacy/dtc2278.c
++++ b/drivers/ide/legacy/dtc2278.c
+@@ -84,12 +84,6 @@ static void dtc2278_set_pio_mode(ide_dri
+ 		/* Actually we do - there is a data sheet available for the
+ 		   Winbond but does anyone actually care */
+ 	}
+-
+-	/*
+-	 * 32bit I/O has to be enabled for *both* drives at the same time.
+-	 */
+-	drive->io_32bit = 1;
+-	HWIF(drive)->drives[!drive->select.b.unit].io_32bit = 1;
+ }
+ 
+ static int __init dtc2278_probe(void)
+@@ -123,18 +117,24 @@ static int __init dtc2278_probe(void)
+ 	local_irq_restore(flags);
+ 
+ 	hwif->serialized = 1;
++	hwif->no_io_32bit = 1;	/* disallow ->io_32bit changes */
+ 	hwif->chipset = ide_dtc2278;
+ 	hwif->pio_mask = ATA_PIO4;
+ 	hwif->set_pio_mode = &dtc2278_set_pio_mode;
+ 	hwif->drives[0].no_unmask = 1;
+ 	hwif->drives[1].no_unmask = 1;
++	hwif->drives[0].io_32bit = 1;
++	hwif->drives[1].io_32bit = 1;
+ 	hwif->mate = mate;
+ 
+ 	mate->serialized = 1;
++	mate->no_io_32bit = 1;
+ 	mate->chipset = ide_dtc2278;
+ 	mate->pio_mask = ATA_PIO4;
+ 	mate->drives[0].no_unmask = 1;
+ 	mate->drives[1].no_unmask = 1;
++	mate->drives[0].io_32bit = 1;
++	mate->drives[1].io_32bit = 1;
+ 	mate->mate = hwif;
+ 	mate->channel = 1;
+ 
