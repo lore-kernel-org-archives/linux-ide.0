@@ -1,115 +1,82 @@
-From: George Kibardin <george-kibardin@yandex.ru>
-Subject: Re: 80 wire cable detection patch
-Date: Sun, 06 Jan 2008 22:00:36 +0300
-Message-ID: <47812554.4060606@yandex.ru>
-References: <477D0BDF.6020801@yandex.ru> <200801051921.45084.bzolnier@gmail.com>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: Re: Believed resolved: SATA kern-buffRd read slow: based on promise
+ driver bug
+Date: Sun, 06 Jan 2008 12:21:09 -0800
+Message-ID: <47813835.3020508@tlinx.org>
+References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no>	<4777E08C.4000603@shaw.ca>	<4779870E.5070507@tlinx.org>	<20080101015812.59e9ebf0@the-village.bc.nu>	<477BEF8D.8090307@tlinx.org>	<477C2B71.7040504@shaw.ca>	<477C63AA.8080006@tlinx.org>	<18300.40661.199761.488061@harpo.it.uu.se>	<477D9C00.8060600@tlinx.org> <18302.5940.173422.967902@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp10.yandex.ru ([213.180.223.92]:41864 "EHLO smtp10.yandex.ru"
+Received: from ishtar.tlinx.org ([64.81.245.74]:40792 "EHLO ishtar.tlinx.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753852AbYAFTfU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 6 Jan 2008 14:35:20 -0500
-Received: from [85.30.241.83] ([85.30.241.83]:6149 "EHLO [192.168.74.75]"
-        smtp-auth: "george-kibardin" TLS-CIPHER: <none> TLS-PEER-CN1: <none>)
-        by mail.yandex.ru with ESMTP id S5865601AbYAFTAk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 22:00:40 +0300
-In-Reply-To: <200801051921.45084.bzolnier@gmail.com>
+	id S1754301AbYAFUVO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Jan 2008 15:21:14 -0500
+In-Reply-To: <18302.5940.173422.967902@harpo.it.uu.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Signed-off-by: George Kibardin <george-kibardin@yandex.ru>
-
---- drivers/ide/ide-iops.c.orig 2008-01-03 18:35:23.000000000 +0300
-+++ drivers/ide/ide-iops.c      2008-01-03 18:12:29.000000000 +0300
-@@ -612,12 +612,12 @@
-               printk(KERN_DEBUG "%s: skipping word 93 validity check\n",
-                                 drive->name);
-
--       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
--               goto no_80w;
--
-       if (ide_dev_is_sata(id) && !ivb)
-               return 1;
-
-+       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
-+               goto no_80w;
-+
-       /*
-        * FIXME:
-        * - change master/slave IDENTIFY order
-
-Best,
-George
-
-
-> Hi,
->
-> On Thursday 03 January 2008, George Kibardin wrote:
+Mikael Pettersson wrote:
+> Linda Walsh writes:
+>  > Mikael Pettersson wrote:
+>  > > Linda Walsh writes:
+>  > >  > > Linda Walsh wrote:
+>  > >  > >>>> read rate began falling; (.25 - .3); 
+>  > >  > more importantly; a chronic error message associated
+>  > >  > with drive may be causing some or all of the problem(s):
+>  > >  > ---
+>  > >  > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
+>  > >  > ata1.00: port_status 0x20080000
+>  > >  > ata1.00: cmd c8/00:10:30:06:03/00:00:00:00:00/e0 tag 0 cdb 0x0 data 8192 in
+>  > >  >          res 50/00:00:3f:06:03/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+>  > >  > ata1: limiting SATA link speed to 1.5 Gbps
+>  > >
+>  > > Looks like the Promise ASIC SG bug. Apply
+>  > > <http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_promise-1-asic-sg-bug-fix-v3-2.6.23>
+>  > > and let us know if things improve.
+>  > > /Mikael
+>  > ---
+>  >     Yep!  Hope that's making it into a patch soon or, at least 2.6.24.
+>  >     Kernel buffered
+> Good to hear that it solved this problem.
+> The patch is in 2.6.24-rc2 and newer kernels, and will be sent
+> to -stable for the 2.6.23 and 2.6.22 series.
 >   
->> Hi Bartlomiej,
->>
->> I hope that you are the right person to look at my proposal.
->> I use 2.6.23-gentoo-r3 kernel on VIA Epia EX motherboard with WD SATA 
->> HDD connected to it. (I don't understand exactly why, but kernel thinks 
->> that this is not SATA HDD. It assigns name hda to it, there is no words 
->> SATA in logs, loading via_sata modules doesn't change situation, 
->> via82cxxx module detect this chipset correctly, there is no word SATA in 
->> BIOS etc.). During boot I get:
->>     
+---
+    Will 'likely' wait till -stable since I use the machine as a 'server'
+for just about any/everything that needs "serving" or "proxy" services.
+>  >  That and I'd like to find out why TCQ/NCQ doesn't work with the Seagate drives --
 >
-> There is probably PATA->SATA bridge on the motherboard.
->
->   
->> host side 80-wire cable detection failed, limiting max speed to UDMA33
->>
->> (of course it is true - I don't have even 40 wires :-)
->> Digging the code I've figured out that for some reason checking that 
->> there is 80 wire cable connected happens before checking that drive is 
->> SATA. I've changed the order and this fixed my problem. Unfortunately, I 
->> have not enough hardware to test this. The only thing I'm wondering - is 
->> this bug or feature? Maybe you know the reason why sata check should go 
->> almost last?
->>     
->
-> Your fix looks fine and is similar to how libata handles PATA->SATA bridges.
->
-> Please add "Signed-off-by:" line,
->
->   
->> --- drivers/ide/ide-iops.c.orig 2008-01-03 18:35:23.000000000 +0300
->> +++ drivers/ide/ide-iops.c      2008-01-03 18:12:29.000000000 +0300
->> @@ -612,12 +612,12 @@
->>                 printk(KERN_DEBUG "%s: skipping word 93 validity check\n",
->>                                   drive->name);
->>
->> -       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
->> -               goto no_80w;
->> -
->>         if (ide_dev_is_sata(id))
->>                 return 1;
->>     
->
-> change it to 'if (ide_dev_is_sata(id) && !ivb)' (some ATAPI devices needing
-> IVB quirk like to identify themselves like SATA ones, but they aren't),
->
->   
->> +       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
->> +               goto no_80w;
->> +
->>         /*
->>          * FIXME:
->>          * - change master/slave IDENTIFY order
->>
->>     
->
-> and resubmit (cc:ing linux-ide@vger.kernel.org mailing list).
->
-> Thanks,
-> Bart
->
->   
+> The driver doesn't yet support NCQ.
+----
+    Is 'main' diff between NCQ/TCQ that TCQ can re-arrange 'write'
+priority under driver control, whereas NCQ is mostly a FIFO queue?
+
+    On a Journal'ed file system, isn't "write-order" control required
+for integrity?  That would seem to imply TCQ could be used, but
+NCQ doesn't seem to offer much benefit, since the higher level
+kernel drivers usually have a "larger picture" of sectors that need
+to be written.  The only advantage I can see for NCQ drives might
+be that the kernel may not know the drive's internal physical
+structure nor where the disk is in its current revolution.  That could
+allow drive write re-ordering where based on the exact-current state
+of the drive that the kernel might not have access to, but it seems
+this would be a minor benefit -- and, depending on firmware,
+possibly higher overhead in command processing?
+
+Am trying to differentiate NCQ/TCQ and SAS v. SCSI benefits.
+It seems both support (SAS & SATA) some type of port-multiplier/
+multiplexor/ option to allow more disks/port.
+
+However, (please correct?) SATA uses a hub type architecture while
+SAS uses a switch architecture.  My experience with network hubs vs.
+switches is that network hubs can be much slower if there is
+communication contention.  Is the word 'hub' being used in the
+"shared-communication media sense", or is someone using the term
+'hub' as a [sic] replacement for a 'switch'?
+
+
+
 
