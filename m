@@ -1,52 +1,77 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [RFC PATCH] ide-floppy: remove struct idefloppy_capabilities_page
-Date: Sun, 6 Jan 2008 17:18:58 +0100
-Message-ID: <200801061718.58903.bzolnier@gmail.com>
-References: <20080106094614.GA25272@gollum.tnic>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/8] ide: more IDE probing code rework
+Date: Sun, 06 Jan 2008 18:02:20 +0100
+Message-ID: <20080106170220.6861.4814.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:42024 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:18967 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755505AbYAFQMF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 11:12:05 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so3032835ugc.16
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2008 08:12:04 -0800 (PST)
-In-Reply-To: <20080106094614.GA25272@gollum.tnic>
-Content-Disposition: inline
+	with ESMTP id S1754710AbYAFQuf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 11:50:35 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so3036620ugc.16
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2008 08:50:33 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bbpetkov@yahoo.de
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-On Sunday 06 January 2008, Borislav Petkov wrote:
-> Hi Bart,
-> 
-> before removing all those typedefs in ide-floppy i wanted to check with you whether what
-> i have in mind is in the right direction before doing all the work for nothing.
-> Here's the first patch removing struct idefloppy_capabilities_page. Please, tell
-> me whether it is similar to what you guys have in mind or is it missing the
-> point.
-> 
-> Thanks.
 
-You are 100% on the right track. :)
+* Convert legacy host drivers to use struct ide_port_info + ide_device_add()
+  instead of open-coding initialization of IDE port data structures.
 
-> From 41c791f40e3fcf2287aa245f25796fa58bb17afc Mon Sep 17 00:00:00 2001
-> From: Borislav Petkov <bbpetkov@yahoo.de>
-> Date: Sun, 6 Jan 2008 10:37:47 +0100
-> Subject: [PATCH] ide-floppy: remove struct idefloppy_capabilities_page
-> 
-> This change is rather temporary and is in preparation of using generic commands
-> as is the case with ide-cd and the uniform cdrom layer (i.e. init_cdrom_command())
-> However, before this happens, we'll have to remove all typedefs and teach
-> idefloppy_create_mode_sense_cmd() to work directly on u8 buffers.
-> 
-> Also, since idefloppy_get_capability_page() was used to read only the sfrp bit,
-> rename the latter so that the name reflects what it does.
-> 
-> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
+* Add ->cable_detect method for cable detection + use it in PCI host drivers.
 
-applied
+* Fix some bugs in the process (handling of "idex=ata66" in atiixp, cs5535
+  and scc_pata and handling I/O 32-bit setting in dtc2278 and au1xxx-ide).
+
+diffstat:
+
+ drivers/ide/arm/icside.c          |   25 ++++---
+ drivers/ide/arm/ide_arm.c         |    2
+ drivers/ide/arm/rapide.c          |    2
+ drivers/ide/cris/ide-cris.c       |   18 +++--
+ drivers/ide/h8300/ide-h8300.c     |    2
+ drivers/ide/ide-generic.c         |    2
+ drivers/ide/ide-pnp.c             |    2
+ drivers/ide/ide-probe.c           |   87 +++++++++++++++++++++++++-
+ drivers/ide/ide.c                 |    6 -
+ drivers/ide/legacy/ali14xx.c      |   24 ++-----
+ drivers/ide/legacy/buddha.c       |    2
+ drivers/ide/legacy/dtc2278.c      |   36 ++++-------
+ drivers/ide/legacy/falconide.c    |    2
+ drivers/ide/legacy/gayle.c        |    2
+ drivers/ide/legacy/ht6560b.c      |   22 +++---
+ drivers/ide/legacy/ide_platform.c |    2
+ drivers/ide/legacy/macide.c       |   12 ---
+ drivers/ide/legacy/q40ide.c       |    2
+ drivers/ide/legacy/qd65xx.c       |   23 ++++---
+ drivers/ide/legacy/umc8672.c      |   24 ++-----
+ drivers/ide/mips/au1xxx-ide.c     |   34 +++-------
+ drivers/ide/mips/swarm.c          |    2
+ drivers/ide/pci/aec62xx.c         |   25 +++----
+ drivers/ide/pci/alim15x3.c        |    5 -
+ drivers/ide/pci/amd74xx.c         |   18 ++---
+ drivers/ide/pci/atiixp.c          |   30 ++++-----
+ drivers/ide/pci/cmd640.c          |   31 ++++-----
+ drivers/ide/pci/cmd64x.c          |    5 -
+ drivers/ide/pci/cs5520.c          |    2
+ drivers/ide/pci/cs5535.c          |   14 +---
+ drivers/ide/pci/hpt366.c          |   84 ++++++++++++++-----------
+ drivers/ide/pci/it8213.c          |   21 +++---
+ drivers/ide/pci/it821x.c          |    5 -
+ drivers/ide/pci/jmicron.c         |    6 -
+ drivers/ide/pci/pdc202xx_new.c    |    8 --
+ drivers/ide/pci/pdc202xx_old.c    |   10 +--
+ drivers/ide/pci/piix.c            |    7 --
+ drivers/ide/pci/scc_pata.c        |   12 ++-
+ drivers/ide/pci/serverworks.c     |    9 --
+ drivers/ide/pci/sgiioc4.c         |   18 +++--
+ drivers/ide/pci/siimage.c         |    5 -
+ drivers/ide/pci/sis5513.c         |    5 -
+ drivers/ide/pci/slc90e66.c        |   19 +++--
+ drivers/ide/pci/tc86c001.c        |   24 ++++---
+ drivers/ide/pci/via82cxxx.c       |    6 -
+ drivers/ide/ppc/mpc8xx.c          |    2
+ drivers/ide/ppc/pmac.c            |   84 ++++++++++---------------
+ drivers/ide/setup-pci.c           |  123 +++++++++++---------------------------
+ include/linux/ide.h               |   15 ++++
+ 49 files changed, 459 insertions(+), 467 deletions(-)
