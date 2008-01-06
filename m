@@ -1,93 +1,115 @@
-From: Volker Sauer <vsauer@dvs.tu-darmstadt.de>
-Subject: Re: Still having problems after sata_promise: ASIC PRD table bug
-	workaround
-Date: Sun, 6 Jan 2008 19:22:38 +0100
-Message-ID: <20080106182238.GA6037@volker-sauer.de>
-References: <20080105202346.GA23026@dvs.tu-darmstadt.de>
+From: George Kibardin <george-kibardin@yandex.ru>
+Subject: Re: 80 wire cable detection patch
+Date: Sun, 06 Jan 2008 22:00:36 +0300
+Message-ID: <47812554.4060606@yandex.ru>
+References: <477D0BDF.6020801@yandex.ru> <200801051921.45084.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
+Content-Type: text/plain; charset=KOI8-R; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lnx130.hrz.tu-darmstadt.de ([130.83.174.24]:55079 "EHLO
-	lnx130.hrz.tu-darmstadt.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755376AbYAFSWz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 13:22:55 -0500
-Received: from a603.volker-sauer.de (A603.ps.wh.tu-darmstadt.de [130.83.208.238])
-	by lnx130.hrz.tu-darmstadt.de (8.13.4/8.12.10) with ESMTP id m06IMci4013846
-	for <linux-ide@vger.kernel.org>; Sun, 6 Jan 2008 19:22:38 +0100
-Received: from zaphod.volker-sauer.de (zaphod.volker-sauer.de [192.168.0.3])
-	by a603.volker-sauer.de (Postfix) with ESMTP id A228A3831F03
-	for <linux-ide@vger.kernel.org>; Sun,  6 Jan 2008 19:22:38 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <20080105202346.GA23026@dvs.tu-darmstadt.de>
+Received: from smtp10.yandex.ru ([213.180.223.92]:41864 "EHLO smtp10.yandex.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753852AbYAFTfU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Jan 2008 14:35:20 -0500
+Received: from [85.30.241.83] ([85.30.241.83]:6149 "EHLO [192.168.74.75]"
+        smtp-auth: "george-kibardin" TLS-CIPHER: <none> TLS-PEER-CN1: <none>)
+        by mail.yandex.ru with ESMTP id S5865601AbYAFTAk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 22:00:40 +0300
+In-Reply-To: <200801051921.45084.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Signed-off-by: George Kibardin <george-kibardin@yandex.ru>
+
+--- drivers/ide/ide-iops.c.orig 2008-01-03 18:35:23.000000000 +0300
++++ drivers/ide/ide-iops.c      2008-01-03 18:12:29.000000000 +0300
+@@ -612,12 +612,12 @@
+               printk(KERN_DEBUG "%s: skipping word 93 validity check\n",
+                                 drive->name);
+
+-       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
+-               goto no_80w;
+-
+       if (ide_dev_is_sata(id) && !ivb)
+               return 1;
+
++       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
++               goto no_80w;
++
+       /*
+        * FIXME:
+        * - change master/slave IDENTIFY order
+
+Best,
+George
 
 
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Hi,
+>
+> On Thursday 03 January 2008, George Kibardin wrote:
+>   
+>> Hi Bartlomiej,
+>>
+>> I hope that you are the right person to look at my proposal.
+>> I use 2.6.23-gentoo-r3 kernel on VIA Epia EX motherboard with WD SATA 
+>> HDD connected to it. (I don't understand exactly why, but kernel thinks 
+>> that this is not SATA HDD. It assigns name hda to it, there is no words 
+>> SATA in logs, loading via_sata modules doesn't change situation, 
+>> via82cxxx module detect this chipset correctly, there is no word SATA in 
+>> BIOS etc.). During boot I get:
+>>     
+>
+> There is probably PATA->SATA bridge on the motherboard.
+>
+>   
+>> host side 80-wire cable detection failed, limiting max speed to UDMA33
+>>
+>> (of course it is true - I don't have even 40 wires :-)
+>> Digging the code I've figured out that for some reason checking that 
+>> there is 80 wire cable connected happens before checking that drive is 
+>> SATA. I've changed the order and this fixed my problem. Unfortunately, I 
+>> have not enough hardware to test this. The only thing I'm wondering - is 
+>> this bug or feature? Maybe you know the reason why sata check should go 
+>> almost last?
+>>     
+>
+> Your fix looks fine and is similar to how libata handles PATA->SATA bridges.
+>
+> Please add "Signed-off-by:" line,
+>
+>   
+>> --- drivers/ide/ide-iops.c.orig 2008-01-03 18:35:23.000000000 +0300
+>> +++ drivers/ide/ide-iops.c      2008-01-03 18:12:29.000000000 +0300
+>> @@ -612,12 +612,12 @@
+>>                 printk(KERN_DEBUG "%s: skipping word 93 validity check\n",
+>>                                   drive->name);
+>>
+>> -       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
+>> -               goto no_80w;
+>> -
+>>         if (ide_dev_is_sata(id))
+>>                 return 1;
+>>     
+>
+> change it to 'if (ide_dev_is_sata(id) && !ivb)' (some ATAPI devices needing
+> IVB quirk like to identify themselves like SATA ones, but they aren't),
+>
+>   
+>> +       if (hwif->cbl != ATA_CBL_PATA80 && !ivb)
+>> +               goto no_80w;
+>> +
+>>         /*
+>>          * FIXME:
+>>          * - change master/slave IDENTIFY order
+>>
+>>     
+>
+> and resubmit (cc:ing linux-ide@vger.kernel.org mailing list).
+>
+> Thanks,
+> Bart
+>
+>   
 
-On Sa, 05 Jan 2008, Volker Sauer <vsauer@dvs.tu-darmstadt.de> wrote:
-> I'm running a Promise Technology PDC20318 (SATA150 TX4) (rev 02)=20
-> controller in on of my servers and I gettig the following error from time
-> to time - espacially when there's high load on the disks:
-
-[...]
-
-> /dev/sda: Seagate ST3250620AS
-> /dev/sdb: Hitachi HDS722525VLSA80
-> /dev/sdc: Seagate ST3250620AS
-> /dev/sdd: Hitachi HDS722525VLSA80
-
-Hi,
-
-now I got an error from sdb, too:
-
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-ata4.00: port_status 0x20200000
-ata4.00: cmd 35/00:f8:b5:35:95/00:03:02:00:00/e0 tag 0 dma 520192 out
-         res 51/84:00:ac:39:95/84:00:02:00:00/e2 Emask 0x10 (ATA bus error)
-ata4.00: status: { DRDY ERR }
-ata4.00: error: { ICRC ABRT }
-ata4: soft resetting link
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata4.00: configured for UDMA/100
-ata4: EH complete
-sd 3:0:0:0: [sdb] 488397168 512-byte hardware sectors (250059 MB)
-sd 3:0:0:0: [sdb] Write Protect is off
-sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't suppor=
-t DPO or FUA
-
-I built the latest smartmontools which can query SATA disks and get:
-
-/dev/sda: ATA Error Count: 0
-/dev/sdb: ATA Error Count: 16
-/dev/sdc: ATA Error Count: 0
-/dev/sdd: ATA Error Count: 33
-
-I'm thinking about replacing the Hitachi disks by 2 Seagate
-ST3250620AS.....
-
-Any comments on this?
-
-Regards
-Volker
-
---sdtB3X0nJg68CQEu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHgRxufjVOTV3V0OARAjYcAKCi+P+FyQSN4VmIch1wpwzcfcj9hQCeOV+/
-/wZcGQW3sUTcbuRzlg8KUOU=
-=TFGZ
------END PGP SIGNATURE-----
-
---sdtB3X0nJg68CQEu--
