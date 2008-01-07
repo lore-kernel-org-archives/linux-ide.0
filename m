@@ -1,55 +1,64 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH] [RFC] [resend] libata and starting/stopping ATAPI floppy devices
-Date: Mon, 7 Jan 2008 21:34:47 +0100
-Message-ID: <200801072134.49174.linux@rainbow-software.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: disabling sata_nv ADMA for 2.6.24
+Date: Mon, 07 Jan 2008 17:35:23 -0600
+Message-ID: <4782B73B.8080309@shaw.ca>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.gsystems.sk ([62.176.172.50]:46289 "EHLO www.gsystems.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753501AbYAGUfP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jan 2008 15:35:15 -0500
-Content-Disposition: inline
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:20189 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991AbYAGXfv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jan 2008 18:35:51 -0500
+Received: from pd4mr3so.prod.shaw.ca
+ (pd4mr3so-qfe3.prod.shaw.ca [10.0.141.214]) by l-daemon
+ (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JUA003YIS74IS50@l-daemon> for linux-ide@vger.kernel.org; Mon,
+ 07 Jan 2008 16:35:28 -0700 (MST)
+Received: from pn2ml7so.prod.shaw.ca ([10.0.121.151])
+ by pd4mr3so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
+ 5 2006)) with ESMTP id <0JUA000TDS74R410@pd4mr3so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Mon, 07 Jan 2008 16:35:28 -0700 (MST)
+Received: from [192.168.1.113] ([70.64.130.4])
+ by l-daemon (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JUA007Z8S73UTA0@l-daemon> for linux-ide@vger.kernel.org; Mon,
+ 07 Jan 2008 16:35:27 -0700 (MST)
+In-reply-to: <4782422C.8020202@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
-I switched to libata drivers for my onboard PATA controller (PIIX4) recently. 
-Everything works fine except that kernel tries to start not only my hard 
-drive (sda) but also LS-120 floppy drive (sdb) which does not like it:
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Hello, guys.
+>>
+>> We still have three problems with ADMA.
+>>
+>> * hard lockup during resume
+>> * occasional hard lockup after hotplug or other erros (probably related
+>> to the above?)
 
-sd 0:0:0:0: [sda] Starting disk
-ata1.00: configured for UDMA/33
-sd 0:0:0:0: [sda] 58633344 512-byte hardware sectors (30020 MB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 1:0:1:0: [sdb] Starting disk
-ata2.00: configured for UDMA/33
-ata2.01: configured for PIO2
-sd 1:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
-sd 1:0:1:0: [sdb] Sense Key : 0x2 [current]
-sd 1:0:1:0: [sdb] ASC=0x3a ASCQ=0x0
+This has only been reported on one person's MSI board. Apparently 
+another revision of the same board is reported to work, and I can't 
+duplicate the problem on my Asus board, so it could just be some 
+hardware problem on that motherboard.
 
+>> * occasional timeout of FLUSH after NCQ writes
+>>
+>> I think we should disable ADMA for 2.6.24 and -stable for now.  What do
+>> you guys think?
 
-The question is: is it correct? Or a patch like this should be applied?
+I still can't say I'm really in favor of it.. In particular to do so for 
+2.6.24 right now seems excessive, as none of these problems are 
+regressions from 2.6.23, and these controllers haven't been tested in 
+non-ADMA mode very much since it was made the default, so that change 
+might actually cause regressions.
 
---- linux-2.6.23-orig/drivers/ata/libata-scsi.c	2007-10-09 22:31:38.000000000 +0200
-+++ linux-2.6.23-pentium/drivers/ata/libata-scsi.c	2008-01-05 15:50:16.000000000 +0100
-@@ -802,7 +802,8 @@
- 
- 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
- 
--	sdev->manage_start_stop = 1;
-+	if (dev->class == ATA_DEV_ATA)
-+		sdev->manage_start_stop = 1;
- 
- 	if (dev)
- 		ata_scsi_dev_config(sdev, dev);
-
-
--- 
-Ondrej Zary
+> 
+> Heck, given the active vendor neglect here,
+> I'm surprised we even bother with it at all!
+> 
+> Cheers
+> 
