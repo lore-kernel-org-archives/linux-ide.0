@@ -1,126 +1,114 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Believed resolved: SATA kern-buffRd read slow: based on promise
- driver bug
-Date: Sun, 06 Jan 2008 22:11:28 -0600
-Message-ID: <4781A670.3000507@shaw.ca>
-References: <fa.o9uy6Qaq3PtHs2Z9lAKGUKvD85I@ifi.uio.no>
- <fa.MP5rgMp4TS2+Cfemd/uFOQOuquQ@ifi.uio.no>
- <fa.K6LghyRzngM8LZiR3Md+1999xh4@ifi.uio.no>
- <fa.7jD9zpCEjhqr9wMenw8PLx0AHyY@ifi.uio.no>
- <fa.vg33sDPLrdDUNnRMIgKMOA12eKs@ifi.uio.no>
- <fa.leUU92dZvqrjftqKQxk4q8qTM64@ifi.uio.no>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Mon, 7 Jan 2008 15:38:58 +1100
+Message-ID: <200801071538.58875.rusty@rustcorp.com.au>
+References: <200712191731.26512.rusty@rustcorp.com.au> <1199547072.3399.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:31677 "EHLO
-	pd4mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036AbYAGEMR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2008 23:12:17 -0500
-In-reply-to: <fa.leUU92dZvqrjftqKQxk4q8qTM64@ifi.uio.no>
+Received: from ozlabs.org ([203.10.76.45]:54565 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753275AbYAGEjF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 6 Jan 2008 23:39:05 -0500
+In-Reply-To: <1199547072.3399.15.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Linda Walsh wrote:
-> Mikael Pettersson wrote:
->> Linda Walsh writes:
->>  > Mikael Pettersson wrote:
->>  > > Linda Walsh writes:
->>  > >  > > Linda Walsh wrote:
->>  > >  > >>>> read rate began falling; (.25 - .3);  > >  > more 
->> importantly; a chronic error message associated
->>  > >  > with drive may be causing some or all of the problem(s):
->>  > >  > ---
->>  > >  > ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
->>  > >  > ata1.00: port_status 0x20080000
->>  > >  > ata1.00: cmd c8/00:10:30:06:03/00:00:00:00:00/e0 tag 0 cdb 0x0 
->> data 8192 in
->>  > >  >          res 50/00:00:3f:06:03/00:00:00:00:00/e0 Emask 0x2 
->> (HSM violation)
->>  > >  > ata1: limiting SATA link speed to 1.5 Gbps
->>  > >
->>  > > Looks like the Promise ASIC SG bug. Apply
->>  > > 
->> <http://user.it.uu.se/~mikpe/linux/patches/sata_promise/patch-sata_promise-1-asic-sg-bug-fix-v3-2.6.23> 
->>
->>  > > and let us know if things improve.
->>  > > /Mikael
->>  > ---
->>  >     Yep!  Hope that's making it into a patch soon or, at least 2.6.24.
->>  >     Kernel buffered
->> Good to hear that it solved this problem.
->> The patch is in 2.6.24-rc2 and newer kernels, and will be sent
->> to -stable for the 2.6.23 and 2.6.22 series.
->>   
-> ---
->    Will 'likely' wait till -stable since I use the machine as a 'server'
-> for just about any/everything that needs "serving" or "proxy" services.
->>  >  That and I'd like to find out why TCQ/NCQ doesn't work with the 
->> Seagate drives --
->>
->> The driver doesn't yet support NCQ.
-> ----
->    Is 'main' diff between NCQ/TCQ that TCQ can re-arrange 'write'
-> priority under driver control, whereas NCQ is mostly a FIFO queue?
+On Sunday 06 January 2008 02:31:12 James Bottomley wrote:
+> On Wed, 2007-12-19 at 17:31 +1100, Rusty Russell wrote:
+> > This patch series is the start of my attempt to simplify and make
+> > explicit the chained scatterlist logic.
+> >
+> > It's not complete: my SATA box boots and seems happy, but all the other
+> > users of SCSI need to be updated and checked.  But I've gotten far enough
+> > to believe it's worth persuing.
+>
+> Sorry for the delay in looking at this, I was busy with Holidays and
+> things.
 
-First off one has to distinguish between ATA TCQ and SCSI TCQ. ATA TCQ 
-is essentially abandoned, very few drives and fewer still controllers 
-and matching drivers ever supported it.
+Thankyou for your consideration.
 
-SCSI TCQ has "head of queue", "ordered" and "simple" queueing modes. ATA 
-NCQ effectively only has "simple" where the drive always decides what 
-order to service the requests in. There is a FUA mode, which tells the 
-drive that the command (normally a write) has to access the physical 
-media before reporting completion.
+> When I compare sg_ring with the current sg_chain (and later sg_table)
+> implementations, I'm actually struck by how similar they are.
 
-> 
->    On a Journal'ed file system, isn't "write-order" control required
-> for integrity?  That would seem to imply TCQ could be used, but
-> NCQ doesn't seem to offer much benefit, since the higher level
-> kernel drivers usually have a "larger picture" of sectors that need
-> to be written.  The only advantage I can see for NCQ drives might
+I agree, they're solving the same problem.  It is possible that the pain of 
+change is no longer worthwhile, but I hate to see us give up on this.  We're 
+adding complexity without making it harder to misuse.
 
-There are cases where writes need to complete in a specific order. This 
-can be done either by using FUA bits (though libata doesn't do this by 
-default currently) or by issuing cache flushes before and after certain 
-commands.
+> The other thing I note is that the problem you're claiming to solve with
+> sg_ring (the ability to add extra scatterlists to the front or the back
+> of an existing one) is already solved with sg_chain, so the only real
+> advantage of sg_ring was that it contains explicit counts, which
+> sg_table (in -mm) also introduces.
 
-> be that the kernel may not know the drive's internal physical
-> structure nor where the disk is in its current revolution.  That could
-> allow drive write re-ordering where based on the exact-current state
-> of the drive that the kernel might not have access to, but it seems
-> this would be a minor benefit -- and, depending on firmware,
-> possibly higher overhead in command processing?
+I just converted virtio using latest Linus for fair comparison, and it's still 
+pretty ugly.  sg_ring needs more work to de-scsi it.  sg_table is almost 
+sg_ring except it retains all the chaining warts.
 
-That's a big part of it. The kernel doesn't necessarily know what 
-sectors will be the fastest to access at any given time whereas the 
-drive can.
+But we hit the same problems:
 
-Also, NCQ has some other improvements that are independent of actually 
-queueing commands - for instance, because the drive controls the DMA 
-data transfer, it can transfer the data for one request in an 
-out-of-order fashion instead of having to transfer to the host strictly 
-from beginning to end as in traditional ATA.
+1) sg_chain loses information.  The clever chain packaging makes reading easy, 
+but manipulation is severely limited.  You can append to your own chains by 
+padding, but not someone elses.  This works for SCSI, but what about the rest 
+of us?  And don't even think of joining mapped chains: it will almost work.
 
-> 
-> Am trying to differentiate NCQ/TCQ and SAS v. SCSI benefits.
-> It seems both support (SAS & SATA) some type of port-multiplier/
-> multiplexor/ option to allow more disks/port.
-> 
-> However, (please correct?) SATA uses a hub type architecture while
-> SAS uses a switch architecture.  My experience with network hubs vs.
-> switches is that network hubs can be much slower if there is
-> communication contention.  Is the word 'hub' being used in the
-> "shared-communication media sense", or is someone using the term
-> 'hub' as a [sic] replacement for a 'switch'?
+2) sg_chain's end marker is only for reading non-dma elements, not for mapped 
+chains, nor for writing into chains.  Plus it's a duplicate of the num arg, 
+which is still passed around for efficiency.  (virtio had to implement 
+count_sg() because I didn't want those two redundant num args).
 
-I believe that they're essentially the same in that regard, though 
-someone can correct me if I'm wrong..
+3) By overloading struct scatterlist, it's invisible what code has been 
+converted to chains, and which hasn't.  Too clever by half!
 
--- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
+Look at sg_chain(): it claims to join two scatterlists, but it doesn't.  It 
+assumes that prv is an array, not a chain.  Because you've overloaded an 
+existing type, this happens everywhere.  Try passing skb_to_sgvec a chained 
+skb.
 
+sg_ring would not have required any change to existing drivers, just those 
+that want to use long sg lists.  And then it's damn obvious which are which.
+
+4) sg_chain missed a chance to combine all the relevent information (max, num, 
+num_dma and the sg array). sg_table comes close, but you still can't join 
+them (no max information, and even if there were, what if it's full?).  
+Unlike sg_ring, it's unlikely to reduce bugs.
+
+5) (A little moot now) sg_ring didn't require arch changes.
+
+> The other differences are that sg_ring only allows adding at the front
+> or back of an existing sg_ring, it doesn't allow splicing at any point
+> like sg_chain does, so I'd say it's less functional (not that I actually
+> want anyone ever to do this, of course ...)
+
+Well it's just as possible, but you might have to copy more elements (with sg 
+chaining you need only copy 1 sg element to make room for the chain elem).  
+Agreed that it's a little out there...
+
+> The final point is that sg_ring requires a two level traversal:  ring
+> list then scatterlist, whereas sg_chain only requires a single level
+> traversal.  I grant that we can abstract out the traversal into
+> something that would make users think they're only doing a single level,
+> but I don't see what the extra level really buys us.
+
+We hide the real complexity from users and it makes it less safe for 
+non-trivial cases.
+
+Hence the introduction of YA datastructure: sg_table.  This is getting close: 
+just hang the array off it and you'll have sg_ring and no requirement for 
+dynamic alloc all the time.  And once you have a header, no need for chaining 
+tricks...
+
+> The only thing missing from sg_chain perhaps is an accessor function
+> that does the splicing, which I can easily construct if you want to try
+> it out in virtio.
+
+I don't need that (I prepend and append), but it'd be nice if sg_next took a 
+const struct scatterlist *.
+
+Cheers,
+Rusty.
