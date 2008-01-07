@@ -1,40 +1,37 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
-Date: Mon, 07 Jan 2008 23:17:12 +1100
-Message-ID: <E1JBqum-0006wC-00@gondolin.me.apana.org.au>
-References: <4781E6BB.2010900@gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: disabling sata_nv ADMA for 2.6.24
+Date: Mon, 07 Jan 2008 10:15:56 -0500
+Message-ID: <4782422C.8020202@rtr.ca>
+References: <4781F008.9070404@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:1404 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753998AbYAGMR3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jan 2008 07:17:29 -0500
-In-Reply-To: <4781E6BB.2010900@gmail.com>
+Received: from rtr.ca ([76.10.145.34]:1207 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753037AbYAGPP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jan 2008 10:15:57 -0500
+In-Reply-To: <4781F008.9070404@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: rusty@rustcorp.com.au, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Robert Hancock <hancockr@shaw.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo <htejun@gmail.com> wrote:
->
-> /me agrees.  As long as this can be made sane using one unified
-> interface, I don't care whether it's sg_ring, table or dish.
+Tejun Heo wrote:
+> Hello, guys.
+> 
+> We still have three problems with ADMA.
+> 
+> * hard lockup during resume
+> * occasional hard lockup after hotplug or other erros (probably related
+> to the above?)
+> * occasional timeout of FLUSH after NCQ writes
+> 
+> I think we should disable ADMA for 2.6.24 and -stable for now.  What do
+> you guys think?
+..
 
-Give us sg_annulus :)
+Heck, given the active vendor neglect here,
+I'm surprised we even bother with it at all!
 
-On a more serious note, having played with SG chaining for a couple
-of years in the crypto layer, I must say Rusty's proposal is a great
-improvement for me.  The reason is that if the crypto layer gets an
-SG list from its user, it is not at liberty to just modify it.  As
-such chaining at the end is cumbersome with the current interface
-because we have to duplicate the whole list in order to add just a
-single block at the end.
-
-While with sg_ring we could just put the original list along with the
-new one in a new list.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Cheers
