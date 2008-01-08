@@ -1,64 +1,60 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: don't normalize UNKNOWN to NONE after
- reset
-Date: Tue, 08 Jan 2008 20:26:12 +0900
-Message-ID: <47835DD4.4000609@gmail.com>
+Subject: Re: SATA PMP support in 2.6.24-rc3?
+Date: Tue, 08 Jan 2008 21:27:34 +0900
+Message-ID: <47836C36.4040701@gmail.com>
+References: <39B20DF628532344BC7A2692CB6AEE070201BD83@orsmsx420.amr.corp.intel.com> <474CC423.70705@gmail.com> <474E2F5E.1010509@23palmer.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070406060605090006070604"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:39910 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754039AbYAHL0U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 06:26:20 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so13140644wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 03:26:19 -0800 (PST)
+Received: from rv-out-0910.google.com ([209.85.198.190]:41579 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbYAHM1l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 07:27:41 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so7455167rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 04:27:40 -0800 (PST)
+In-Reply-To: <474E2F5E.1010509@23palmer.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Robert Hancock <hancockr@shaw.ca>
+To: Tom Evans <tom@23palmer.net>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
 
-After non-classifying reset, ehc->classes[] could contain
-ATA_DEV_UNKNOWN which used to be normalized to ATA_DEV_NONE for
-consistency.  However, this causes unfortunate side effect for drivers
-which have non-classifying hardresets (e.g. sata_nv) by making
-hardreset report ATA_DEV_NONE for non-classifying resets and thus
-makes EH believe that the port is unoccupied and recovery can be
-skipped.  The end result is that after a device is swapped with
-another one, the new device isn't attached after the old one is
-detached.
+This is a multi-part message in MIME format.
+--------------070406060605090006070604
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-This patch makes ata_eh_reset() not normalize UNKNOWN to NONE after
-non-classifying resets.  This fixes the above problem.  As UNKNOWN and
-NONE are handled differently by only EH hotplug logic, this doesn't
-cause other behavior changes.
+Tom Evans wrote:
+> 
+> I'm also seeing this with 2.6.23-rc3 on my Alpha system - sata_sil24 and
+> a SiliconImage PMP.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockr@shaw.ca>
----
-Robert, missing new device was a bug in core EH logic not sata_nv.
-BTW, I did quite a few hotplug tests with adma=0 and it works just
-fine.  No lock up.
+Gaston, Tom, can you guys please apply the attached patch on top of
+2.6.24-rc7 and see whether the problem goes away.
 
- drivers/ata/libata-eh.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thanks.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index f0124a8..e7757dd 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2157,13 +2157,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		if (ata_link_offline(link))
- 			continue;
+-- 
+tejun
+
+--------------070406060605090006070604
+Content-Type: text/x-patch;
+ name="limit-link-to-1.5Gbps.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="limit-link-to-1.5Gbps.patch"
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4753a18..8dcf08f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6726,6 +6726,7 @@ int sata_link_init_spd(struct ata_link *link)
+ 	spd = (scontrol >> 4) & 0xf;
+ 	if (spd)
+ 		link->hw_sata_spd_limit &= (1 << spd) - 1;
++	link->hw_sata_spd_limit = 1;
  
--		/* apply class override and convert UNKNOWN to NONE */
-+		/* apply class override */
- 		if (lflags & ATA_LFLAG_ASSUME_ATA)
- 			classes[dev->devno] = ATA_DEV_ATA;
- 		else if (lflags & ATA_LFLAG_ASSUME_SEMB)
- 			classes[dev->devno] = ATA_DEV_SEMB_UNSUP; /* not yet */
--		else if (classes[dev->devno] == ATA_DEV_UNKNOWN)
--			classes[dev->devno] = ATA_DEV_NONE;
- 	}
+ 	link->sata_spd_limit = link->hw_sata_spd_limit;
  
- 	/* record current link speed */
 
+--------------070406060605090006070604--
