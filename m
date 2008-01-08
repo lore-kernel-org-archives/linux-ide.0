@@ -1,65 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Tue, 08 Jan 2008 08:56:56 +0900
-Message-ID: <4782BC48.4000309@gmail.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Mon, 07 Jan 2008 18:10:29 -0600
+Message-ID: <4782BF75.9040803@shaw.ca>
+References: <20070808120804.GB5257@boogie.lpds.sztaki.hu>
+ <20080101164416.GA29574@boogie.lpds.sztaki.hu> <477B0429.7040909@gmail.com>
+ <477B0CFD.1030603@shaw.ca>
+ <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
+ <477BDEA5.8040701@garzik.org>
+ <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
+ <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
+ <F72FA20C31DD4F4C997B91C5B3690A09505598@hqemmail07.nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.180]:32238 "EHLO
-	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752993AbYAGX5D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jan 2008 18:57:03 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so2142890roc.5
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jan 2008 15:57:02 -0800 (PST)
-In-Reply-To: <4782B73B.8080309@shaw.ca>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:13875 "EHLO
+	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbYAHALq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jan 2008 19:11:46 -0500
+In-reply-to: <F72FA20C31DD4F4C997B91C5B3690A09505598@hqemmail07.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Allen Martin <AMartin@nvidia.com>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Robert Hancock wrote:
-> Mark Lord wrote:
->> Tejun Heo wrote:
->>> Hello, guys.
->>> 
->>> We still have three problems with ADMA.
->>> 
->>> * hard lockup during resume * occasional hard lockup after
->>> hotplug or other erros (probably related to the above?)
+Allen Martin wrote:
+>  
+>>> Dunno about the NVidia version.
+>> Theirs works rather differently - the GO bit is there, but there's 
+>> another append register which is used to tell the controller 
+>> that a new 
+>> tag has been added to the CPB list.
+>>
+>> The only thing we currently use the GO bit for is to switch 
+>> between ADMA 
+>> and port register mode. Could be there's something we need to 
+>> do there, 
+>> though, who knows..
+>>
 > 
-> This has only been reported on one person's MSI board. Apparently 
-> another revision of the same board is reported to work, and I can't 
-> duplicate the problem on my Asus board, so it could just be some 
-> hardware problem on that motherboard.
+> You shouldn't ever need to touch GO other than the ADMA / legacy mode
+> switch as you say.
+> 
+> The NVIDIA ADMA hw is not based on the Pacific Digital core.
 
-IIRC, I have two from suse bug reports and both resolved with adma=0.
-I'm not too sure whether post 2.6.23-rcX changes would have fixed those
-problems tho.  FWIW, I've disabled ADMA mode on all suse products.
-
-> I still can't say I'm really in favor of it.. In particular to do so
-> for 2.6.24 right now seems excessive, as none of these problems are
-> regressions from 2.6.23, and these controllers haven't been tested in
-> non-ADMA mode very much since it was made the default, so that change
-> might actually cause regressions.
-
-Technically, they're regressions from pre-ADMA days - pretty grave ones
-considering some of the failure modes include hard lock up.  Also, they
-don't seem resolvable in foreseeable future at this point.  If this
-isn't gonna improve, I think we should just drop ADMA support altogether
-and concentrate on stabilizing non-ADMA operation.  Stability is far
-more important than small performance improvements or feature supports.
-
-But, yeah, you're right in that the change might cause more problems.
-What's your estimation of such possibility?  I generally feel good about
-non-ADMA mode operation as they seem to solve most reported sata_nv bugs
-but I haven't really followed sata_nv code changes recently.
-
-Maybe this can be resolved by going through one more -rc cycle after the
-change if that's possible.
-
-Thanks.
-
--- 
-tejun
+Gabor, I just noticed you said that it worked OK in 2.6.20, yet 2.6.22 
+fails. 2.6.20 had ADMA support as well, so I wonder what change started 
+causing the problem. Would it be possible for you to do a git bisect (or 
+at least try 2.6.21 to try and narrow it down)?
