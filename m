@@ -1,83 +1,332 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Tue, 08 Jan 2008 12:08:02 +0900
-Message-ID: <4782E912.1050204@gmail.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Tue, 8 Jan 2008 11:39:13 +1100
+Message-ID: <200801081139.14748.rusty@rustcorp.com.au>
+References: <200712191731.26512.rusty@rustcorp.com.au> <200801071538.58875.rusty@rustcorp.com.au> <1199720904.3126.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from po-out-1718.google.com ([72.14.252.159]:24261 "EHLO
-	po-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753005AbYAHDIK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jan 2008 22:08:10 -0500
-Received: by po-out-1718.google.com with SMTP id c31so1758429poi.1
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jan 2008 19:08:09 -0800 (PST)
-In-Reply-To: <4782E78F.9050205@shaw.ca>
+Received: from ozlabs.org ([203.10.76.45]:59494 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753255AbYAHDQp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jan 2008 22:16:45 -0500
+In-Reply-To: <1199720904.3126.24.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Robert Hancock wrote:
-> Tejun Heo wrote:
->> Tejun Heo wrote:
->>> Robert Hancock wrote:
->>>>> Okay, just succeeded on the current #upstream-fixes, attaching the
->>>>> log.
->>>>>  The machine is a brick after the crash.
->>>> I assume the cable got reconnected at 325 seconds? It looks like that
->>>> was during error handling for the previous unplug?
->>> I don't remember too well (the console was more than two meters away and
->>> I was just keeping disconnecting and reconnecting.  I noticed the
->>> machine was frozen after I came back to console, so...
->>>
->>>> [  314.987885] ata3: timeout waiting for ADMA IDLE, stat=0x400
->>>> [  314.993556] ata3: timeout waiting for ADMA LEGACY, stat=0x400
->>>> [  315.009915] ata3.00: exception Emask 0x10 SAct 0x1 SErr 0x1910000
->>>> action 0xa frozen
->>>> [  315.017708] ata3.00: ADMA status 0x00000402: , hot unplug
->>>> [  315.017714] ata3: SError: { PHYRdyChg Dispar LinkSeq TrStaTrns }
->>>> [  315.029239] ata3.00: cmd 60/01:00:92:d7:12/00:00:05:00:00/40 tag 0
->>>> ncq 512 in
->>>> [  315.029240]          res 40/00:04:92:d7:12/00:04:92:d7:12/40 Emask
->>>> 0x10 (ATA bus error)
->>>> [  315.029243] ata3.00: status: { DRDY }
->>>> [  315.048236] ata3: hard resetting link
->>>> [  315.774982] ata3: SATA link down (SStatus 0 SControl 300)
->>>> [  315.780498] ata3: failed to recover some devices, retrying in 5 secs
->>>> [  320.788427] ata3: hard resetting link
->>>> [  325.242220] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>>
->>>> Not sure if the port would be frozen at this point or not?
->>>>
->>>> It would be useful to add some printks to narrow down at what point the
->>>> lockup happens. If it's a loop, interrupt storm or something then we
->>>> can
->>>> likely fix it, but if the controller's just locking up then we may be
->>>> out of luck..
->>> I think it's machine hard lock up.  NMI watchdog doesn't get triggered.
-> 
-> Is NMI watchdog actually working on this machine?
-> 
-> [   34.466899] testing NMI watchdog ... <4>WARNING: CPU#0: NMI appears
-> to be stuck (0->0)!
-> [   34.555056] WARNING: CPU#1: NMI appears to be stuck (0->0)!
+On Tuesday 08 January 2008 02:48:23 James Bottomley wrote:
+> We're always open to new APIs (or more powerful and expanded old ones).
+> The way we've been doing the sg_chain conversion is to slide API layers
+> into the drivers so sg_chain becomes a simple API flip when we turn it
+> on.  Unfortunately sg_ring doesn't quite fit nicely into this.
 
-Oops, missed that.  I'll see whether there's IRQ storm going on.
+Hi James,
 
->> Ah.. another thing.  Sometimes when I swap two drives, sata_nv fails to
->> detect the new drive.  If I pull out the plug and replug it, it then
->> recognizes the new drive.
-> 
-> No output in that case, I assume?
+   Well, it didn't touch any drivers.  The only ones which needed altering 
+were those which wanted to use large scatter-gather lists.  You think of the 
+subtlety of sg-chain conversion as a feature; it's a bug :)
 
-It seems what happens is sata_nv EH loses hotplug events during
-hardreset is going on.  This is a bit tricky.  I'm not sure whether it's
-sata_nv's fault or other drivers are working out of dumb luck.  I'll
-reproduce the problem and post the log when I get some time.
+> > > The other thing I note is that the problem you're claiming to solve
+> > > with sg_ring (the ability to add extra scatterlists to the front or the
+> > > back of an existing one) is already solved with sg_chain, so the only
+> > > real advantage of sg_ring was that it contains explicit counts, which
+> > > sg_table (in -mm) also introduces.
+> >
+> > I just converted virtio using latest Linus for fair comparison
+>
+> Erm, but that's not really a fair comparison; you need the sg_table code
+> in
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
+>
+> branch sg as well.
 
-Thanks.
+Actually, I think it's a wash.  Now callers need to set up an sg_table as 
+well.  It will save the count_sg() calls though.
 
--- 
-tejun
+> > , and it's still
+> > pretty ugly.  sg_ring needs more work to de-scsi it.  sg_table is almost
+> > sg_ring except it retains all the chaining warts.
+> >
+> > But we hit the same problems:
+> >
+> > 1) sg_chain loses information.  The clever chain packaging makes reading
+> > easy, but manipulation is severely limited.  You can append to your own
+> > chains by padding, but not someone elses.  This works for SCSI, but what
+> > about the rest of us?  And don't even think of joining mapped chains: it
+> > will almost work.
+>
+> OK, but realistically some of your criticisms are way outside of the
+> design intent.  Scatterlists (and now sg_chains) are the way the block
+> subsystem hands pages to its underlying block devices.
+
+James, scatterlists are used for more than the block subsystem.  I know you're 
+designing for that, but we can do better.
+
+    Because a single sg_ring is trivially convertable to and from a 
+scatterlist *, the compatibility story is nice.  You can implement a 
+subsystem (say, the block layer) with sg_ring, and still hand out struct 
+scatterlist arrays for backwards compat: old code won't ask for v. long 
+scatterlist arrays anyway.
+
+    Now we have sg_chaining, we can actually convert complex sg_rings into sg 
+chains when someone asks, as my most recent patch does.  I think that's one 
+abstraction too many, but it provides a transition path.
+
+> There have never until now been any requirements to join already
+> dma_map_sg() converted scatterlists ... that would wreak havoc with the
+> way we reuse the list plus damage the idempotence of map/unmap.  What is
+> the use case you have for this?
+
+(This was, admittedly, a made-up example).
+
+> > 2) sg_chain's end marker is only for reading non-dma elements, not for
+> > mapped chains, nor for writing into chains.  Plus it's a duplicate of the
+> > num arg, which is still passed around for efficiency.  (virtio had to
+> > implement count_sg() because I didn't want those two redundant num args).
+> >
+> > 3) By overloading struct scatterlist, it's invisible what code has been
+> > converted to chains, and which hasn't.  Too clever by half!
+>
+> No it's not ... that's the whole point.  Code not yet converted to use
+> the API accessors is by definition unable to use chaining.  Code
+> converted to use the accessors by design doesn't care (and so is
+> "converted to chains").
+
+But you've overloaded the type: what's the difference between:
+	/* Before conversion */
+	int foo(struct scatterlist *, int);
+And:
+	/* After conversion */
+	int foo(struct scatterlist *, int);
+
+You have to wade through the implementation to see the difference: does this 
+function take a "chained scatterlist" or an "array scatterlist"?
+
+Then you add insult to injury by implementing sg_chain() *which doesn't handle 
+chained scatterlists!*.
+
+> > sg_ring would not have required any change to existing drivers, just
+> > those that want to use long sg lists.  And then it's damn obvious which
+> > are which.
+>
+> Which, by definition, would have been pretty much all of them.
+
+But it would have started with none of them, and it would have been done over 
+time.  Eventually we might have had a flag day to remove raw scatterlist 
+arrays.
+
+> > 4) sg_chain missed a chance to combine all the relevent information (max,
+> > num, num_dma and the sg array). sg_table comes close, but you still can't
+> > join them (no max information, and even if there were, what if it's
+> > full?). Unlike sg_ring, it's unlikely to reduce bugs.
+>
+> sg_table is sg_chain ... they're incremental extensions of the same body
+> of work.
+
+Yes.
+
+> The only such example of a driver like that I know is the
+> crypto API and now your virtio.  Once we have the actual requirements
+> and then the API, I think the natural data structures will probably drop
+> out.
+
+ATA wants to chain sgs (Tejun cc'd).  It hasn't been practical to chain up 
+until now, but I'd say it's going to be more widely used now it is.
+
+Basically, sg_chain solves one problem: larger sg lists for scsi.  That's 
+fine, but I want to see better use of scatterlists everywhere in the kernel.
+
+sg_chains suck for manipulation, and AFAICT that's inherent.  Here, take a 
+look at the sg_ring conversion of scsi_alloc_sgtable and scsi_free_sgtable 
+and you can see why I'm unhappy with the sg_chain code:
+
+@@ -737,21 +745,41 @@ static inline unsigned int scsi_sgtable_
+ 	return index;
+ }
+ 
+-struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++static void free_sgring(struct sg_ring *head)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+-	struct scatterlist *sgl, *prev, *ret;
++	struct sg_ring *sg, *n;
++
++	/* Free any other entries in the ring. */
++	list_for_each_entry_safe(sg, n, &head->list, list) {
++		list_del(&sg->list);
++		sgp = scsi_sg_pools + scsi_sgtable_index(sg->max);
++		mempool_free(sg, sgp->pool);
++	}
++
++	/* Now free the head of the ring. */
++	BUG_ON(!list_empty(&head->list));
++
++	sgp = scsi_sg_pools + scsi_sgtable_index(head->max);
++	mempool_free(head, sgp->pool);
++}
++
++struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *cmd, unsigned int num,
++				  gfp_t gfp_mask)
++{
++	struct scsi_host_sg_pool *sgp;
++	struct sg_ring *sg, *ret;
+ 	unsigned int index;
+ 	int this, left;
+ 
+-	BUG_ON(!cmd->use_sg);
++	BUG_ON(!num);
+ 
+-	left = cmd->use_sg;
+-	ret = prev = NULL;
++	left = num;
++	ret = NULL;
+ 	do {
+ 		this = left;
+ 		if (this > SCSI_MAX_SG_SEGMENTS) {
+-			this = SCSI_MAX_SG_SEGMENTS - 1;
++			this = SCSI_MAX_SG_SEGMENTS;
+ 			index = SG_MEMPOOL_NR - 1;
+ 		} else
+ 			index = scsi_sgtable_index(this);
+@@ -760,32 +788,20 @@ struct scatterlist *scsi_alloc_sgtable(s
+ 
+ 		sgp = scsi_sg_pools + index;
+ 
+-		sgl = mempool_alloc(sgp->pool, gfp_mask);
+-		if (unlikely(!sgl))
++		sg = mempool_alloc(sgp->pool, gfp_mask);
++		if (unlikely(!sg))
+ 			goto enomem;
+ 
+-		sg_init_table(sgl, sgp->size);
++		sg_ring_init(sg, sgp->size - SCSI_SG_PAD);
+ 
+ 		/*
+-		 * first loop through, set initial index and return value
++		 * first loop through, set return value, otherwise
++		 * attach this to the tail.
+ 		 */
+ 		if (!ret)
+-			ret = sgl;
+-
+-		/*
+-		 * chain previous sglist, if any. we know the previous
+-		 * sglist must be the biggest one, or we would not have
+-		 * ended up doing another loop.
+-		 */
+-		if (prev)
+-			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
+-
+-		/*
+-		 * if we have nothing left, mark the last segment as
+-		 * end-of-list
+-		 */
+-		if (!left)
+-			sg_mark_end(&sgl[this - 1]);
++			ret = sg;
++		else
++			list_add_tail(&sg->list, &ret->list);
+ 
+ 		/*
+ 		 * don't allow subsequent mempool allocs to sleep, it would
+@@ -793,85 +809,21 @@ struct scatterlist *scsi_alloc_sgtable(s
+ 		 */
+ 		gfp_mask &= ~__GFP_WAIT;
+ 		gfp_mask |= __GFP_HIGH;
+-		prev = sgl;
+ 	} while (left);
+ 
+-	/*
+-	 * ->use_sg may get modified after dma mapping has potentially
+-	 * shrunk the number of segments, so keep a copy of it for free.
+-	 */
+-	cmd->__use_sg = cmd->use_sg;
+ 	return ret;
+ enomem:
+-	if (ret) {
+-		/*
+-		 * Free entries chained off ret. Since we were trying to
+-		 * allocate another sglist, we know that all entries are of
+-		 * the max size.
+-		 */
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-		prev = ret;
+-		ret = &ret[SCSI_MAX_SG_SEGMENTS - 1];
+-
+-		while ((sgl = sg_chain_ptr(ret)) != NULL) {
+-			ret = &sgl[SCSI_MAX_SG_SEGMENTS - 1];
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		mempool_free(prev, sgp->pool);
+-	}
++	if (ret)
++		free_sgring(ret);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(scsi_alloc_sgring);
+ 
+-EXPORT_SYMBOL(scsi_alloc_sgtable);
+-
+-void scsi_free_sgtable(struct scsi_cmnd *cmd)
++void scsi_free_sgring(struct scsi_cmnd *cmd)
+ {
+-	struct scatterlist *sgl = cmd->request_buffer;
+-	struct scsi_host_sg_pool *sgp;
+-
+-	/*
+-	 * if this is the biggest size sglist, check if we have
+-	 * chained parts we need to free
+-	 */
+-	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
+-		unsigned short this, left;
+-		struct scatterlist *next;
+-		unsigned int index;
+-
+-		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
+-		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
+-		while (left && next) {
+-			sgl = next;
+-			this = left;
+-			if (this > SCSI_MAX_SG_SEGMENTS) {
+-				this = SCSI_MAX_SG_SEGMENTS - 1;
+-				index = SG_MEMPOOL_NR - 1;
+-			} else
+-				index = scsi_sgtable_index(this);
+-
+-			left -= this;
+-
+-			sgp = scsi_sg_pools + index;
+-
+-			if (left)
+-				next = sg_chain_ptr(&sgl[sgp->size - 1]);
+-
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		/*
+-		 * Restore original, will be freed below
+-		 */
+-		sgl = cmd->request_buffer;
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-	} else
+-		sgp = scsi_sg_pools + scsi_sgtable_index(cmd->__use_sg);
+-
+-	mempool_free(sgl, sgp->pool);
++	free_sgring(cmd->sg);
+ }
+-
+-EXPORT_SYMBOL(scsi_free_sgtable);
++EXPORT_SYMBOL(scsi_free_sgring);
+ 
+ /*
+  * Function:    scsi_release_buffers()
+
+Hope that clarifies,
+Rusty.
