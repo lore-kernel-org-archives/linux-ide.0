@@ -1,37 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
- of	that provided by the block layer
-Date: Wed, 09 Jan 2008 14:13:50 +0900
-Message-ID: <4784580E.3060000@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>	 <47842D29.8020509@gmail.com> <1199852673.3534.76.camel@localhost.localdomain>
+Subject: Re: Do SATA tape drives work?
+Date: Wed, 09 Jan 2008 14:18:21 +0900
+Message-ID: <4784591D.3060000@gmail.com>
+References: <200801090329.m093T7Op019488@turbo.physics.adelaide.edu.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1199852673.3534.76.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.186]:53071 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184AbYAIFS3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 00:18:29 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so97567rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 21:18:28 -0800 (PST)
+In-Reply-To: <200801090329.m093T7Op019488@turbo.physics.adelaide.edu.au>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
-James Bottomley wrote:
->>  Also, DMA alignment at
->> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
->> commands with variable length response.  :-(
+[cc'ing linux-ide]
+
+Jonathan Woithe wrote:
+> Hi guys
 > 
-> OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
-> so this drain, I assume is only a word long?  Given the word alignment
-> requirements of ATA doesn't this still mean it's only draining up to the
-> word boundary anyway (so the code is still correct)?
+> I was wondering whether anyone can shed any light on the status of SATA tape
+> drives.  There's very little info on the net about this at least in the
+> places I've checked; the only thing of any significance I've found thus far
+> is a note in a Bacula document dated April 2007 which states that drives
+> other than real SCSI units don't generally work with Bacula.
+> 
+> To put this into context, I'm looking at purchasing a Sony SDX470VRB SATA
+> AIT-1 tape drive for use with the SATA controller on an Intel DG31PR
+> mainboard.  The drive will be used primarily with tar/cpio.  Obvsiouly
+> however I only want to make the purchase if there's a reasonable chance of
+> it working.
+> 
+> I would appreciate any information you can shed on this issue.
 
-Patch is acked but not merged yet.
-
-http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=commit;h=6cd22a0febc74bebe52d58eb22271b8770892a2d
-
-The full function can be read from the following.  It's
-ata_sg_setup_extra().
-
-http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=d763c072e6cefc724ea24cb68a7adf47b340f054;hb=6cd22a0febc74bebe52d58eb22271b8770892a2d
+It's supposed to with recent updates.  Mark, right?
 
 -- 
 tejun
