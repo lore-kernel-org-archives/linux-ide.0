@@ -1,664 +1,435 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] ide: remove needless includes from PCI host drivers
-Date: Thu, 10 Jan 2008 00:48:56 +0100
-Message-ID: <200801100048.56192.bzolnier@gmail.com>
+Subject: [PATCH] ide-cd: remove struct atapi_capabilities_page (take 2)
+Date: Thu, 10 Jan 2008 00:48:26 +0100
+Message-ID: <200801100048.26473.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:63767 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.168]:63946 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758431AbYAIXhf (ORCPT
+	with ESMTP id S1758414AbYAIXhf (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 18:37:35 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so157004ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 15:37:33 -0800 (PST)
+Received: by ug-out-1314.google.com with SMTP id z38so156997ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 15:37:31 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
 
+* Remove struct atapi_capabilities_page.
+
+* Add ATAPI_CAPABILITIES_PAGE[_PAD]_SIZE define.
+
+v2:
+* The buf[] array access indexes were swapped between 'curspeed'/'maxspeed'.
+  (Noticed by Borislav Petkov).
+
+Cc: Borislav Petkov <bbpetkov@yahoo.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/aec62xx.c      |    1 -
- drivers/ide/pci/alim15x3.c     |    1 -
- drivers/ide/pci/amd74xx.c      |    3 ---
- drivers/ide/pci/atiixp.c       |    4 ----
- drivers/ide/pci/cmd640.c       |    4 ----
- drivers/ide/pci/cmd64x.c       |    1 -
- drivers/ide/pci/cs5520.c       |   10 ----------
- drivers/ide/pci/cs5530.c       |    8 +-------
- drivers/ide/pci/cy82c693.c     |    1 -
- drivers/ide/pci/delkin_cb.c    |    5 ++---
- drivers/ide/pci/generic.c      |    7 -------
- drivers/ide/pci/hpt34x.c       |    7 -------
- drivers/ide/pci/hpt366.c       |    5 -----
- drivers/ide/pci/it8213.c       |    3 ---
- drivers/ide/pci/it821x.c       |    3 ---
- drivers/ide/pci/jmicron.c      |    3 ---
- drivers/ide/pci/ns87415.c      |    4 ----
- drivers/ide/pci/opti621.c      |    5 -----
- drivers/ide/pci/pdc202xx_new.c |    6 ------
- drivers/ide/pci/pdc202xx_old.c |    5 -----
- drivers/ide/pci/piix.c         |    2 --
- drivers/ide/pci/rz1000.c       |    7 -------
- drivers/ide/pci/sc1200.c       |    8 +-------
- drivers/ide/pci/serverworks.c  |    2 --
- drivers/ide/pci/sgiioc4.c      |    2 --
- drivers/ide/pci/siimage.c      |    1 -
- drivers/ide/pci/sis5513.c      |    9 ---------
- drivers/ide/pci/sl82c105.c     |    6 ------
- drivers/ide/pci/slc90e66.c     |    4 ----
- drivers/ide/pci/triflex.c      |    5 -----
- drivers/ide/pci/trm290.c       |    2 --
- drivers/ide/pci/via82cxxx.c    |    4 ----
- 32 files changed, 4 insertions(+), 134 deletions(-)
+this is the replacement patch for the one currently in the IDE tree
 
-Index: b/drivers/ide/pci/aec62xx.c
+ drivers/ide/ide-cd.c |   62 +++++++-------
+ drivers/ide/ide-cd.h |  223 ---------------------------------------------------
+ 2 files changed, 37 insertions(+), 248 deletions(-)
+
+Index: b/drivers/ide/ide-cd.c
 ===================================================================
---- a/drivers/ide/pci/aec62xx.c
-+++ b/drivers/ide/pci/aec62xx.c
-@@ -7,7 +7,6 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
-Index: b/drivers/ide/pci/alim15x3.c
-===================================================================
---- a/drivers/ide/pci/alim15x3.c
-+++ b/drivers/ide/pci/alim15x3.c
-@@ -31,7 +31,6 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
-Index: b/drivers/ide/pci/amd74xx.c
-===================================================================
---- a/drivers/ide/pci/amd74xx.c
-+++ b/drivers/ide/pci/amd74xx.c
-@@ -17,12 +17,9 @@
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -2373,13 +2373,12 @@ int ide_cdrom_lock_door (struct cdrom_de
+ 	return cdrom_lockdoor(drive, lock, NULL);
+ }
  
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
--#include <asm/io.h>
- 
- #include "ide-timing.h"
- 
-Index: b/drivers/ide/pci/atiixp.c
-===================================================================
---- a/drivers/ide/pci/atiixp.c
-+++ b/drivers/ide/pci/atiixp.c
-@@ -6,15 +6,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
- #include <linux/pci.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
--#include <linux/delay.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
--
- #define ATIIXP_IDE_PIO_TIMING		0x40
- #define ATIIXP_IDE_MDMA_TIMING		0x44
- #define ATIIXP_IDE_PIO_CONTROL		0x48
-Index: b/drivers/ide/pci/cmd640.c
-===================================================================
---- a/drivers/ide/pci/cmd640.c
-+++ b/drivers/ide/pci/cmd640.c
-@@ -103,10 +103,6 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
-Index: b/drivers/ide/pci/cmd64x.c
-===================================================================
---- a/drivers/ide/pci/cmd64x.c
-+++ b/drivers/ide/pci/cmd64x.c
-@@ -13,7 +13,6 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
-Index: b/drivers/ide/pci/cs5520.c
-===================================================================
---- a/drivers/ide/pci/cs5520.c
-+++ b/drivers/ide/pci/cs5520.c
-@@ -35,22 +35,12 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
--
--#include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/ide.h>
- #include <linux/dma-mapping.h>
- 
--#include <asm/io.h>
--#include <asm/irq.h>
--
- struct pio_clocks
+-static
+-int ide_cdrom_get_capabilities(ide_drive_t *drive, struct atapi_capabilities_page *cap)
++static int ide_cdrom_get_capabilities(ide_drive_t *drive, u8 *buf)
  {
- 	int address;
-Index: b/drivers/ide/pci/cs5530.c
-===================================================================
---- a/drivers/ide/pci/cs5530.c
-+++ b/drivers/ide/pci/cs5530.c
-@@ -15,18 +15,12 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
--#include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
-+
- #include <asm/io.h>
--#include <asm/irq.h>
+ 	struct cdrom_info *info = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &info->devinfo;
+ 	struct packet_command cgc;
+-	int stat, attempts = 3, size = sizeof(*cap);
++	int stat, attempts = 3, size = ATAPI_CAPABILITIES_PAGE_SIZE;
  
- /*
-  * Here are the standard PIO mode 0-4 timings for each "format".
-Index: b/drivers/ide/pci/cy82c693.c
-===================================================================
---- a/drivers/ide/pci/cy82c693.c
-+++ b/drivers/ide/pci/cy82c693.c
-@@ -45,7 +45,6 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/ide.h>
- #include <linux/init.h>
+ 	/*
+ 	 * ACER50 (and others?) require the full spec length mode sense
+@@ -2387,9 +2386,9 @@ int ide_cdrom_get_capabilities(ide_drive
+ 	 */
+ 	if (!(!strcmp(drive->id->model, "ATAPI CD ROM DRIVE 50X MAX") ||
+ 	    !strcmp(drive->id->model, "WPI CDS-32X")))
+-		size -= sizeof(cap->pad);
++		size -= ATAPI_CAPABILITIES_PAGE_PAD_SIZE;
  
-Index: b/drivers/ide/pci/delkin_cb.c
-===================================================================
---- a/drivers/ide/pci/delkin_cb.c
-+++ b/drivers/ide/pci/delkin_cb.c
-@@ -16,15 +16,14 @@
-  *  License.  See the file COPYING in the main directory of this archive for
-  *  more details.
-  */
--#include <linux/autoconf.h>
-+
- #include <linux/types.h>
- #include <linux/module.h>
--#include <linux/mm.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
- #include <linux/pci.h>
-+
- #include <asm/io.h>
+-	init_cdrom_command(&cgc, cap, size, CGC_DATA_UNKNOWN);
++	init_cdrom_command(&cgc, buf, size, CGC_DATA_UNKNOWN);
+ 	do { /* we seem to get stat=0x01,err=0x00 the first time (??) */
+ 		stat = cdrom_mode_sense(cdi, &cgc, GPMODE_CAPABILITIES_PAGE, 0);
+ 		if (!stat)
+@@ -2398,20 +2397,22 @@ int ide_cdrom_get_capabilities(ide_drive
+ 	return stat;
+ }
  
- /*
-Index: b/drivers/ide/pci/generic.c
-===================================================================
---- a/drivers/ide/pci/generic.c
-+++ b/drivers/ide/pci/generic.c
-@@ -22,18 +22,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
- #include <linux/ide.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
--
- static int ide_generic_all;		/* Set to claim all devices */
- 
- /*
-Index: b/drivers/ide/pci/hpt34x.c
-===================================================================
---- a/drivers/ide/pci/hpt34x.c
-+++ b/drivers/ide/pci/hpt34x.c
-@@ -26,20 +26,13 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
- #include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- 
--#include <asm/io.h>
--#include <asm/irq.h>
--
- #define HPT343_DEBUG_DRIVE_INFO		0
- 
- static void hpt34x_set_mode(ide_drive_t *drive, const u8 speed)
-Index: b/drivers/ide/pci/hpt366.c
-===================================================================
---- a/drivers/ide/pci/hpt366.c
-+++ b/drivers/ide/pci/hpt366.c
-@@ -121,12 +121,8 @@
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
- #include <linux/blkdev.h>
- #include <linux/hdreg.h>
--
- #include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
-@@ -134,7 +130,6 @@
- 
- #include <asm/uaccess.h>
- #include <asm/io.h>
--#include <asm/irq.h>
- 
- /* various tuning parameters */
- #define HPT_RESET_STATE_ENGINE
-Index: b/drivers/ide/pci/it8213.c
-===================================================================
---- a/drivers/ide/pci/it8213.c
-+++ b/drivers/ide/pci/it8213.c
-@@ -10,13 +10,10 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
--
- /**
-  *	it8213_set_pio_mode	-	set host controller for PIO mode
-  *	@drive: drive
-Index: b/drivers/ide/pci/it821x.c
-===================================================================
---- a/drivers/ide/pci/it821x.c
-+++ b/drivers/ide/pci/it821x.c
-@@ -63,13 +63,10 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
--
- struct it821x_dev
+-static
+-void ide_cdrom_update_speed (ide_drive_t *drive, struct atapi_capabilities_page *cap)
++static void ide_cdrom_update_speed(ide_drive_t *drive, u8 *buf)
  {
- 	unsigned int smart:1,		/* Are we in smart raid mode */
-Index: b/drivers/ide/pci/jmicron.c
-===================================================================
---- a/drivers/ide/pci/jmicron.c
-+++ b/drivers/ide/pci/jmicron.c
-@@ -8,13 +8,10 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	u16 curspeed, maxspeed;
  
--#include <asm/io.h>
--
- typedef enum {
- 	PORT_PATA0 = 0,
- 	PORT_PATA1 = 1,
-Index: b/drivers/ide/pci/ns87415.c
-===================================================================
---- a/drivers/ide/pci/ns87415.c
-+++ b/drivers/ide/pci/ns87415.c
-@@ -10,11 +10,7 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
- #include <linux/interrupt.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
- #include <linux/delay.h>
-Index: b/drivers/ide/pci/opti621.c
-===================================================================
---- a/drivers/ide/pci/opti621.c
-+++ b/drivers/ide/pci/opti621.c
-@@ -87,11 +87,6 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/pci.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
-Index: b/drivers/ide/pci/pdc202xx_new.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_new.c
-+++ b/drivers/ide/pci/pdc202xx_new.c
-@@ -19,18 +19,12 @@
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
--#include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- 
- #include <asm/io.h>
--#include <asm/irq.h>
- 
- #ifdef CONFIG_PPC_PMAC
- #include <asm/prom.h>
-Index: b/drivers/ide/pci/pdc202xx_old.c
-===================================================================
---- a/drivers/ide/pci/pdc202xx_old.c
-+++ b/drivers/ide/pci/pdc202xx_old.c
-@@ -32,18 +32,13 @@
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
- #include <linux/blkdev.h>
- #include <linux/hdreg.h>
--#include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- 
- #include <asm/io.h>
--#include <asm/irq.h>
- 
- #define PDC202XX_DEBUG_DRIVE_INFO	0
- 
-Index: b/drivers/ide/pci/piix.c
-===================================================================
---- a/drivers/ide/pci/piix.c
-+++ b/drivers/ide/pci/piix.c
-@@ -47,11 +47,9 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
- #include <linux/pci.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
--#include <linux/delay.h>
- #include <linux/init.h>
- 
- #include <asm/io.h>
-Index: b/drivers/ide/pci/rz1000.c
-===================================================================
---- a/drivers/ide/pci/rz1000.c
-+++ b/drivers/ide/pci/rz1000.c
-@@ -16,18 +16,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
- #include <linux/ide.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
--
- static void __devinit init_hwif_rz1000 (ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
-Index: b/drivers/ide/pci/sc1200.c
-===================================================================
---- a/drivers/ide/pci/sc1200.c
-+++ b/drivers/ide/pci/sc1200.c
-@@ -14,19 +14,13 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
--#include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- #include <linux/pm.h>
++	curspeed = *(u16 *)&buf[8 + 14];
++	maxspeed = *(u16 *)&buf[8 +  8];
 +
- #include <asm/io.h>
--#include <asm/irq.h>
+ 	/* The ACER/AOpen 24X cdrom has the speed fields byte-swapped */
+ 	if (!drive->id->model[0] &&
+ 	    !strncmp(drive->id->fw_rev, "241N", 4)) {
+-		curspeed = le16_to_cpu(cap->curspeed);
+-		maxspeed = le16_to_cpu(cap->maxspeed);
++		curspeed = le16_to_cpu(curspeed);
++		maxspeed = le16_to_cpu(maxspeed);
+ 	} else {
+-		curspeed = be16_to_cpu(cap->curspeed);
+-		maxspeed = be16_to_cpu(cap->maxspeed);
++		curspeed = be16_to_cpu(curspeed);
++		maxspeed = be16_to_cpu(maxspeed);
+ 	}
  
- #define SC1200_REV_A	0x00
- #define SC1200_REV_B1	0x01
-Index: b/drivers/ide/pci/serverworks.c
-===================================================================
---- a/drivers/ide/pci/serverworks.c
-+++ b/drivers/ide/pci/serverworks.c
-@@ -31,12 +31,10 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
- #include <linux/pci.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
--#include <linux/delay.h>
+ 	cd->state_flags.current_speed = (curspeed + (176/2)) / 176;
+@@ -2424,14 +2425,14 @@ int ide_cdrom_select_speed (struct cdrom
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	struct request_sense sense;
+-	struct atapi_capabilities_page cap;
++	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
+ 	int stat;
  
- #include <asm/io.h>
+ 	if ((stat = cdrom_select_speed(drive, speed, &sense)) < 0)
+ 		return stat;
  
-Index: b/drivers/ide/pci/sgiioc4.c
+-	if (!ide_cdrom_get_capabilities(drive, &cap)) {
+-		ide_cdrom_update_speed(drive, &cap);
++	if (!ide_cdrom_get_capabilities(drive, buf)) {
++		ide_cdrom_update_speed(drive, buf);
+ 		cdi->speed = cd->state_flags.current_speed;
+ 	}
+         return 0;
+@@ -2615,7 +2616,8 @@ int ide_cdrom_probe_capabilities (ide_dr
+ {
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	struct cdrom_device_info *cdi = &cd->devinfo;
+-	struct atapi_capabilities_page cap;
++	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
++	mechtype_t mechtype;
+ 	int nslots = 1;
+ 
+ 	cdi->mask = (CDC_CD_R | CDC_CD_RW | CDC_DVD | CDC_DVD_R |
+@@ -2645,26 +2647,28 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	cdi->handle = drive;
+ 	cdi->ops = &ide_cdrom_dops;
+ 
+-	if (ide_cdrom_get_capabilities(drive, &cap))
++	if (ide_cdrom_get_capabilities(drive, buf))
+ 		return 0;
+ 
+-	if (cap.lock == 0)
++	if ((buf[8 + 6] & 0x01) == 0)
+ 		cd->config_flags.no_doorlock = 1;
+-	if (cap.eject)
++	if (buf[8 + 6] & 0x08)
+ 		cd->config_flags.no_eject = 0;
+-	if (cap.cd_r_write)
++	if (buf[8 + 3] & 0x01)
+ 		cdi->mask &= ~CDC_CD_R;
+-	if (cap.cd_rw_write)
++	if (buf[8 + 3] & 0x02)
+ 		cdi->mask &= ~(CDC_CD_RW | CDC_RAM);
+-	if (cap.dvd_ram_read || cap.dvd_r_read || cap.dvd_rom)
++	if (buf[8 + 2] & 0x38)
+ 		cdi->mask &= ~CDC_DVD;
+-	if (cap.dvd_ram_write)
++	if (buf[8 + 3] & 0x20)
+ 		cdi->mask &= ~(CDC_DVD_RAM | CDC_RAM);
+-	if (cap.dvd_r_write)
++	if (buf[8 + 3] & 0x10)
+ 		cdi->mask &= ~CDC_DVD_R;
+-	if (cap.audio_play)
++	if (buf[8 + 4] & 0x01)
+ 		cdi->mask &= ~CDC_PLAY_AUDIO;
+-	if (cap.mechtype == mechtype_caddy || cap.mechtype == mechtype_popup)
++
++	mechtype = buf[8 + 6] >> 5;
++	if (mechtype == mechtype_caddy || mechtype == mechtype_popup)
+ 		cdi->mask |= CDC_CLOSE_TRAY;
+ 
+ 	/* Some drives used by Apple don't advertise audio play
+@@ -2684,14 +2688,14 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 
+ 	else
+ #endif /* not STANDARD_ATAPI */
+-	if (cap.mechtype == mechtype_individual_changer ||
+-	    cap.mechtype == mechtype_cartridge_changer) {
++	if (mechtype == mechtype_individual_changer ||
++	    mechtype == mechtype_cartridge_changer) {
+ 		nslots = cdrom_number_of_slots(cdi);
+ 		if (nslots > 1)
+ 			cdi->mask &= ~CDC_SELECT_DISC;
+ 	}
+ 
+-	ide_cdrom_update_speed(drive, &cap);
++	ide_cdrom_update_speed(drive, buf);
+ 
+ 	printk(KERN_INFO "%s: ATAPI", drive->name);
+ 
+@@ -2716,7 +2720,7 @@ int ide_cdrom_probe_capabilities (ide_dr
+ 	else
+ 		printk(KERN_CONT " drive");
+ 
+-	printk(KERN_CONT ", %dkB Cache\n", be16_to_cpu(cap.buffer_size));
++	printk(KERN_CONT ", %dkB Cache\n", be16_to_cpu(*(u16 *)&buf[8 + 12]));
+ 
+ 	return nslots;
+ }
+Index: b/drivers/ide/ide-cd.h
 ===================================================================
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -25,8 +25,6 @@
- #include <linux/hdreg.h>
- #include <linux/init.h>
- #include <linux/kernel.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
- #include <linux/ioport.h>
- #include <linux/blkdev.h>
- #include <linux/scatterlist.h>
-Index: b/drivers/ide/pci/siimage.c
-===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -39,7 +39,6 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
- #include <linux/init.h>
-Index: b/drivers/ide/pci/sis5513.c
-===================================================================
---- a/drivers/ide/pci/sis5513.c
-+++ b/drivers/ide/pci/sis5513.c
-@@ -47,20 +47,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -50,6 +50,10 @@
+ #define SECTORS_PER_FRAME	(CD_FRAMESIZE >> SECTOR_BITS)
+ #define SECTOR_BUFFER_SIZE	(CD_FRAMESIZE * 32)
+ 
++/* Capabilities Page size including 8 bytes of Mode Page Header */
++#define ATAPI_CAPABILITIES_PAGE_SIZE		(8 + 20)
++#define ATAPI_CAPABILITIES_PAGE_PAD_SIZE	4
++
+ /* Configuration flags.  These describe the capabilities of the drive.
+    They generally do not change after initialization, unless we learn
+    more about the drive from stuff failing. */
+@@ -124,225 +128,6 @@ struct atapi_toc {
+ 	  /* One extra for the leadout. */
+ };
+ 
+-/* This should probably go into cdrom.h along with the other
+- * generic stuff now in the Mt. Fuji spec.
+- */
+-struct atapi_capabilities_page {
+-	struct mode_page_header header;
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 parameters_saveable : 1;
+-	__u8 reserved1           : 1;
+-	__u8 page_code           : 6;
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	__u8 page_code           : 6;
+-	__u8 reserved1           : 1;
+-	__u8 parameters_saveable : 1;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
 -
--#include <linux/interrupt.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- 
--#include <asm/irq.h>
+-	byte     page_length;
 -
- #include "ide-timing.h"
- 
- /* registers layout and init values are chipset family dependant */
-Index: b/drivers/ide/pci/sl82c105.c
-===================================================================
---- a/drivers/ide/pci/sl82c105.c
-+++ b/drivers/ide/pci/sl82c105.c
-@@ -17,17 +17,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/interrupt.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
- #include <linux/ide.h>
- 
- #include <asm/io.h>
--#include <asm/dma.h>
- 
- #undef DEBUG
- 
-Index: b/drivers/ide/pci/slc90e66.c
-===================================================================
---- a/drivers/ide/pci/slc90e66.c
-+++ b/drivers/ide/pci/slc90e66.c
-@@ -10,15 +10,11 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
- #include <linux/pci.h>
- #include <linux/hdreg.h>
- #include <linux/ide.h>
--#include <linux/delay.h>
- #include <linux/init.h>
- 
--#include <asm/io.h>
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 reserved2           : 2;
+-	/* Drive supports reading of DVD-RAM discs */
+-	__u8 dvd_ram_read        : 1;
+-	/* Drive supports reading of DVD-R discs */
+-	__u8 dvd_r_read          : 1;
+-	/* Drive supports reading of DVD-ROM discs */
+-	__u8 dvd_rom             : 1;
+-	/* Drive supports reading CD-R discs with addressing method 2 */
+-	__u8 method2             : 1; /* reserved in 1.2 */
+-	/* Drive can read from CD-R/W (CD-E) discs (orange book, part III) */
+-	__u8 cd_rw_read		 : 1; /* reserved in 1.2 */
+-	/* Drive supports read from CD-R discs (orange book, part II) */
+-	__u8 cd_r_read           : 1; /* reserved in 1.2 */
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	/* Drive supports read from CD-R discs (orange book, part II) */
+-	__u8 cd_r_read           : 1; /* reserved in 1.2 */
+-	/* Drive can read from CD-R/W (CD-E) discs (orange book, part III) */
+-	__u8 cd_rw_read          : 1; /* reserved in 1.2 */
+-	/* Drive supports reading CD-R discs with addressing method 2 */
+-	__u8 method2             : 1;
+-	/* Drive supports reading of DVD-ROM discs */
+-	__u8 dvd_rom             : 1;
+-	/* Drive supports reading of DVD-R discs */
+-	__u8 dvd_r_read          : 1;
+-	/* Drive supports reading of DVD-RAM discs */
+-	__u8 dvd_ram_read        : 1;
+-	__u8 reserved2		 : 2;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
 -
- static DEFINE_SPINLOCK(slc90e66_lock);
- 
- static void slc90e66_set_pio_mode(ide_drive_t *drive, const u8 pio)
-Index: b/drivers/ide/pci/triflex.c
-===================================================================
---- a/drivers/ide/pci/triflex.c
-+++ b/drivers/ide/pci/triflex.c
-@@ -28,11 +28,6 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/delay.h>
--#include <linux/timer.h>
--#include <linux/mm.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
- #include <linux/ide.h>
-Index: b/drivers/ide/pci/trm290.c
-===================================================================
---- a/drivers/ide/pci/trm290.c
-+++ b/drivers/ide/pci/trm290.c
-@@ -131,14 +131,12 @@
- #include <linux/types.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/mm.h>
- #include <linux/ioport.h>
- #include <linux/interrupt.h>
- #include <linux/blkdev.h>
- #include <linux/init.h>
- #include <linux/hdreg.h>
- #include <linux/pci.h>
--#include <linux/delay.h>
- #include <linux/ide.h>
- 
- #include <asm/io.h>
-Index: b/drivers/ide/pci/via82cxxx.c
-===================================================================
---- a/drivers/ide/pci/via82cxxx.c
-+++ b/drivers/ide/pci/via82cxxx.c
-@@ -26,15 +26,11 @@
- 
- #include <linux/module.h>
- #include <linux/kernel.h>
--#include <linux/ioport.h>
--#include <linux/blkdev.h>
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/ide.h>
- #include <linux/dmi.h>
- 
--#include <asm/io.h>
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 reserved3           : 2;
+-	/* Drive can write DVD-RAM discs */
+-	__u8 dvd_ram_write       : 1;
+-	/* Drive can write DVD-R discs */
+-	__u8 dvd_r_write         : 1;
+-	__u8 reserved3a          : 1;
+-	/* Drive can fake writes */
+-	__u8 test_write          : 1;
+-	/* Drive can write to CD-R/W (CD-E) discs (orange book, part III) */
+-	__u8 cd_rw_write	 : 1; /* reserved in 1.2 */
+-	/* Drive supports write to CD-R discs (orange book, part II) */
+-	__u8 cd_r_write          : 1; /* reserved in 1.2 */
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	/* Drive can write to CD-R discs (orange book, part II) */
+-	__u8 cd_r_write          : 1; /* reserved in 1.2 */
+-	/* Drive can write to CD-R/W (CD-E) discs (orange book, part III) */
+-	__u8 cd_rw_write	 : 1; /* reserved in 1.2 */
+-	/* Drive can fake writes */
+-	__u8 test_write          : 1;
+-	__u8 reserved3a          : 1;
+-	/* Drive can write DVD-R discs */
+-	__u8 dvd_r_write         : 1;
+-	/* Drive can write DVD-RAM discs */
+-	__u8 dvd_ram_write       : 1;
+-	__u8 reserved3           : 2;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
 -
- #ifdef CONFIG_PPC_CHRP
- #include <asm/processor.h>
- #endif
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 reserved4           : 1;
+-	/* Drive can read multisession discs. */
+-	__u8 multisession        : 1;
+-	/* Drive can read mode 2, form 2 data. */
+-	__u8 mode2_form2         : 1;
+-	/* Drive can read mode 2, form 1 (XA) data. */
+-	__u8 mode2_form1         : 1;
+-	/* Drive supports digital output on port 2. */
+-	__u8 digport2            : 1;
+-	/* Drive supports digital output on port 1. */
+-	__u8 digport1            : 1;
+-	/* Drive can deliver a composite audio/video data stream. */
+-	__u8 composite           : 1;
+-	/* Drive supports audio play operations. */
+-	__u8 audio_play          : 1;
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	/* Drive supports audio play operations. */
+-	__u8 audio_play          : 1;
+-	/* Drive can deliver a composite audio/video data stream. */
+-	__u8 composite           : 1;
+-	/* Drive supports digital output on port 1. */
+-	__u8 digport1            : 1;
+-	/* Drive supports digital output on port 2. */
+-	__u8 digport2            : 1;
+-	/* Drive can read mode 2, form 1 (XA) data. */
+-	__u8 mode2_form1         : 1;
+-	/* Drive can read mode 2, form 2 data. */
+-	__u8 mode2_form2         : 1;
+-	/* Drive can read multisession discs. */
+-	__u8 multisession        : 1;
+-	__u8 reserved4           : 1;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
+-
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 reserved5           : 1;
+-	/* Drive can return Media Catalog Number (UPC) info. */
+-	__u8 upc                 : 1;
+-	/* Drive can return International Standard Recording Code info. */
+-	__u8 isrc                : 1;
+-	/* Drive supports C2 error pointers. */
+-	__u8 c2_pointers         : 1;
+-	/* R-W data will be returned deinterleaved and error corrected. */
+-	__u8 rw_corr             : 1;
+-	/* Subchannel reads can return combined R-W information. */
+-	__u8 rw_supported        : 1;
+-	/* Drive can continue a read cdda operation from a loss of streaming.*/
+-	__u8 cdda_accurate       : 1;
+-	/* Drive can read Red Book audio data. */
+-	__u8 cdda                : 1;
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-	/* Drive can read Red Book audio data. */
+-	__u8 cdda                : 1;
+-	/* Drive can continue a read cdda operation from a loss of streaming.*/
+-	__u8 cdda_accurate       : 1;
+-	/* Subchannel reads can return combined R-W information. */
+-	__u8 rw_supported        : 1;
+-	/* R-W data will be returned deinterleaved and error corrected. */
+-	__u8 rw_corr             : 1;
+-	/* Drive supports C2 error pointers. */
+-	__u8 c2_pointers         : 1;
+-	/* Drive can return International Standard Recording Code info. */
+-	__u8 isrc                : 1;
+-	/* Drive can return Media Catalog Number (UPC) info. */
+-	__u8 upc                 : 1;
+-	__u8 reserved5           : 1;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
+-
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	/* Drive mechanism types. */
+-	mechtype_t mechtype	 : 3;
+-	__u8 reserved6           : 1;
+-	/* Drive can eject a disc or changer cartridge. */
+-	__u8 eject               : 1;
+-	/* State of prevent/allow jumper. */
+-	__u8 prevent_jumper      : 1;
+-	/* Present state of door lock. */
+-	__u8 lock_state          : 1;
+-	/* Drive can lock the door. */
+-	__u8 lock                : 1;
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-
+-	/* Drive can lock the door. */
+-	__u8 lock                : 1;
+-	/* Present state of door lock. */
+-	__u8 lock_state          : 1;
+-	/* State of prevent/allow jumper. */
+-	__u8 prevent_jumper      : 1;
+-	/* Drive can eject a disc or changer cartridge. */
+-	__u8 eject               : 1;
+-	__u8 reserved6           : 1;
+-	/* Drive mechanism types. */
+-	mechtype_t mechtype	 : 3;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
+-
+-#if defined(__BIG_ENDIAN_BITFIELD)
+-	__u8 reserved7           : 4;
+-	/* Drive supports software slot selection. */
+-	__u8 sss                 : 1;  /* reserved in 1.2 */
+-	/* Changer can report exact contents of slots. */
+-	__u8 disc_present        : 1;  /* reserved in 1.2 */
+-	/* Audio for each channel can be muted independently. */
+-	__u8 separate_mute       : 1;
+-	/* Audio level for each channel can be controlled independently. */
+-	__u8 separate_volume     : 1;
+-#elif defined(__LITTLE_ENDIAN_BITFIELD)
+-
+-	/* Audio level for each channel can be controlled independently. */
+-	__u8 separate_volume     : 1;
+-	/* Audio for each channel can be muted independently. */
+-	__u8 separate_mute       : 1;
+-	/* Changer can report exact contents of slots. */
+-	__u8 disc_present        : 1;  /* reserved in 1.2 */
+-	/* Drive supports software slot selection. */
+-	__u8 sss                 : 1;  /* reserved in 1.2 */
+-	__u8 reserved7           : 4;
+-#else
+-#error "Please fix <asm/byteorder.h>"
+-#endif
+-
+-	/* Note: the following four fields are returned in big-endian form. */
+-	/* Maximum speed (in kB/s). */
+-	unsigned short maxspeed;
+-	/* Number of discrete volume levels. */
+-	unsigned short n_vol_levels;
+-	/* Size of cache in drive, in kB. */
+-	unsigned short buffer_size;
+-	/* Current speed (in kB/s). */
+-	unsigned short curspeed;
+-	char pad[4];
+-};
+-
+ /* Extra per-device info for cdrom drives. */
+ struct cdrom_info {
+ 	ide_drive_t	*drive;
