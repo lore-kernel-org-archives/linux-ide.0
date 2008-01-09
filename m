@@ -1,66 +1,73 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Tue, 08 Jan 2008 21:50:09 -0600
-Message-ID: <47844471.4070705@shaw.ca>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca>
- <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com>
- <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com>
- <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca>
- <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com>
- <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com>
- <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca>
- <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+	of	that provided by the block layer
+Date: Tue, 08 Jan 2008 22:24:32 -0600
+Message-ID: <1199852673.3534.76.camel@localhost.localdomain>
+References: <1199138168.3110.12.camel@localhost.localdomain>
+	 <47842D29.8020509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:31836 "EHLO
-	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067AbYAIDuR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 22:50:17 -0500
-Received: from pd2mr3so.prod.shaw.ca
- (pd2mr3so-qfe3.prod.shaw.ca [10.0.141.108]) by l-daemon
- (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
- with ESMTP id <0JUC00GTVYNS1XB0@l-daemon> for linux-ide@vger.kernel.org; Tue,
- 08 Jan 2008 20:50:16 -0700 (MST)
-Received: from pn2ml1so.prod.shaw.ca ([10.0.121.145])
- by pd2mr3so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
- 5 2006)) with ESMTP id <0JUC000E8YNSDU30@pd2mr3so.prod.shaw.ca> for
- linux-ide@vger.kernel.org; Tue, 08 Jan 2008 20:50:16 -0700 (MST)
-Received: from [192.168.1.113] ([70.64.130.4])
- by l-daemon (Sun Java System Messaging Server 6.2-7.05 (built Sep  5 2006))
- with ESMTP id <0JUC00NZRYNQ1A30@l-daemon> for linux-ide@vger.kernel.org; Tue,
- 08 Jan 2008 20:50:15 -0700 (MST)
-In-reply-to: <47842ABA.2060605@gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:46343 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752482AbYAIEYp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 23:24:45 -0500
+In-Reply-To: <47842D29.8020509@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 
-Tejun Heo wrote:
-> Tejun Heo wrote:
->> Robert Hancock wrote:
->>> Tejun Heo wrote:
->>>> Tejun Heo wrote:
->>>>>> [   34.466899] testing NMI watchdog ... <4>WARNING: CPU#0: NMI appears
->>>>>> to be stuck (0->0)!
->>>>>> [   34.555056] WARNING: CPU#1: NMI appears to be stuck (0->0)!
->>>>> Oops, missed that.  I'll see whether there's IRQ storm going on.
->>>> I made the nv irq handler to print message every 100th time and it says
->>>> nothing after lock up and no response to keyboard, sysrq or serial.  It
->>>> seems like a solid lock up to me.  Anything else you want me to try out?
->>> I assume that replugging or unplugging cables after that point doesn't
->>> bring it back to life?
->> Nope.  The machine is a solid brick.
->>
+
+On Wed, 2008-01-09 at 11:10 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > ATA requires that all DMA transfers begin and end on word boundaries.
+> > Because of this, a large amount of machinery grew up in ide to adjust
+> > scatterlists on this basis.  However, as of 2.5, the block layer has a
+> > dma_alignment variable which ensures both the beginning and length of a
+> > DMA transfer are aligned on the dma_alignment boundary.  Although the
+> > block layer does adjust the beginning of the transfer to ensure this
+> > happens, it doesn't actually adjust the length, it merely makes sure
+> > that space is allocated for transfers beyond the declared length.  The
+> > upshot of this is that scatterlists may be padded to any size between
+> > the actual length and the length adjusted to the dma_alignment safely
+> > knowing that memory is allocated in this region.
+> > 
+> > Right at the moment, SCSI takes the default dma_aligment which is on a
+> > 512 byte boundary.  Note that this aligment only applies to transfers
+> > coming in from user space.  However, since all kernel allocations are
+> > automatically aligned on a minimum of 32 byte boundaries, it is safe to
+> > adjust them in this manner as well.
+> > 
+> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > 
+> > ---
+> > 
+> > This also fixes a current panic in libsas with SATAPI devices.  I was
+> > trying to trace a bad interaction between the libata padding and the new
+> > sglist code which was the root cause, and ended up concluding that the
+> > whole libata padding thing was redundant.
+> > 
+> > In a future improvement, I think we can relax SCSI dma_alignemnt (it's
+> > causing almost every user space command to be copied instead of directly
+> > passed through) and allow devices and transports to build up their own
+> > requirements instead.
 > 
-> If you want, I can ship the board + processor + cooler to you for
-> debugging.  I guess it will be more useful in your hands than mine.
+> Great but this intersects with currently queued and pending changes for
+> libata-dev#upstream and needs to be merged. 
 
-If it's an A8N-E I'd be surprised if it behaved differently from my 
-A8N-SLI Deluxe, though maybe it's a different chipset revision or 
-something.. The last time I tested hotplug on here it seemed to work 
-fine, though I haven't done any rapid disconnect/reconnect tests.
+That's OK, I can do the merge .. that's what git is for.
 
-How about putting a bunch of printks inside the interrupt handler? That 
-would tell us if it's even reaching the interrupt handler..
+>  Also, DMA alignment at
+> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+> commands with variable length response.  :-(
+
+OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
+so this drain, I assume is only a word long?  Given the word alignment
+requirements of ATA doesn't this still mean it's only draining up to the
+word boundary anyway (so the code is still correct)?
+
+James
+
+
