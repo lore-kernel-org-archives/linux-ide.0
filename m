@@ -1,43 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Wed, 09 Jan 2008 11:00:26 +0900
-Message-ID: <47842ABA.2060605@gmail.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+ of	that provided by the block layer
+Date: Wed, 09 Jan 2008 11:10:49 +0900
+Message-ID: <47842D29.8020509@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:57170 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbYAICAe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:00:34 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so90168wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:00:33 -0800 (PST)
-In-Reply-To: <47842A54.2060107@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1199138168.3110.12.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
 
-Tejun Heo wrote:
-> Robert Hancock wrote:
->> Tejun Heo wrote:
->>> Tejun Heo wrote:
->>>>> [   34.466899] testing NMI watchdog ... <4>WARNING: CPU#0: NMI appears
->>>>> to be stuck (0->0)!
->>>>> [   34.555056] WARNING: CPU#1: NMI appears to be stuck (0->0)!
->>>> Oops, missed that.  I'll see whether there's IRQ storm going on.
->>> I made the nv irq handler to print message every 100th time and it says
->>> nothing after lock up and no response to keyboard, sysrq or serial.  It
->>> seems like a solid lock up to me.  Anything else you want me to try out?
->> I assume that replugging or unplugging cables after that point doesn't
->> bring it back to life?
+James Bottomley wrote:
+> ATA requires that all DMA transfers begin and end on word boundaries.
+> Because of this, a large amount of machinery grew up in ide to adjust
+> scatterlists on this basis.  However, as of 2.5, the block layer has a
+> dma_alignment variable which ensures both the beginning and length of a
+> DMA transfer are aligned on the dma_alignment boundary.  Although the
+> block layer does adjust the beginning of the transfer to ensure this
+> happens, it doesn't actually adjust the length, it merely makes sure
+> that space is allocated for transfers beyond the declared length.  The
+> upshot of this is that scatterlists may be padded to any size between
+> the actual length and the length adjusted to the dma_alignment safely
+> knowing that memory is allocated in this region.
 > 
-> Nope.  The machine is a solid brick.
+> Right at the moment, SCSI takes the default dma_aligment which is on a
+> 512 byte boundary.  Note that this aligment only applies to transfers
+> coming in from user space.  However, since all kernel allocations are
+> automatically aligned on a minimum of 32 byte boundaries, it is safe to
+> adjust them in this manner as well.
 > 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> This also fixes a current panic in libsas with SATAPI devices.  I was
+> trying to trace a bad interaction between the libata padding and the new
+> sglist code which was the root cause, and ended up concluding that the
+> whole libata padding thing was redundant.
+> 
+> In a future improvement, I think we can relax SCSI dma_alignemnt (it's
+> causing almost every user space command to be copied instead of directly
+> passed through) and allow devices and transports to build up their own
+> requirements instead.
 
-If you want, I can ship the board + processor + cooler to you for
-debugging.  I guess it will be more useful in your hands than mine.
+Great but this intersects with currently queued and pending changes for
+libata-dev#upstream and needs to be merged.  Also, DMA alignment at
+block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+commands with variable length response.  :-(
 
 -- 
 tejun
