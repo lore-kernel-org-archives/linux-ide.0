@@ -1,53 +1,34 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Believed resolved: SATA kern-buffRd read slow: based on promise
- driver bug
-Date: Wed, 09 Jan 2008 11:30:21 +0900
-Message-ID: <478431BD.4030109@gmail.com>
-References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no>	<4777E08C.4000603@shaw.ca>	<4779870E.5070507@tlinx.org>	<20080101015812.59e9ebf0@the-village.bc.nu>	<477BEF8D.8090307@tlinx.org>	<477C2B71.7040504@shaw.ca>	<477C63AA.8080006@tlinx.org>	<18300.40661.199761.488061@harpo.it.uu.se>	<477D9C00.8060600@tlinx.org> <18302.5940.173422.967902@harpo.it.uu.se> <47813835.3020508@tlinx.org>
+Subject: Re: Sg/libata hotplug kernel error
+Date: Wed, 09 Jan 2008 11:33:18 +0900
+Message-ID: <4784326E.4070404@gmail.com>
+References: <8202f4270801021417n2d7fdffbg9eaa33829eeca475@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:3854 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.181]:10928 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbYAICa1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:30:27 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so103835wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:30:26 -0800 (PST)
-In-Reply-To: <47813835.3020508@tlinx.org>
+	with ESMTP id S1758163AbYAICdZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:33:25 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so105120wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:33:24 -0800 (PST)
+In-Reply-To: <8202f4270801021417n2d7fdffbg9eaa33829eeca475@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linda Walsh <lkml@tlinx.org>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Linda Walsh wrote:
->    Is 'main' diff between NCQ/TCQ that TCQ can re-arrange 'write'
-> priority under driver control, whereas NCQ is mostly a FIFO queue?
-
-No, NCQ can reorder although I recently heard that windows issues
-overlapping NCQ commands and expects them to be processed in order (what
-were they thinking?).
-
-The biggest difference between TCQ and NCQ is that TCQ is for SCSI while
-NCQ is for ATA.  Functional difference includes more number of available
-tags and ordered tags for TCQ.  The former doesn't matter for single
-disk.  The latter may make some difference but on single disk not by much.
-
-> Am trying to differentiate NCQ/TCQ and SAS v. SCSI benefits.
-> It seems both support (SAS & SATA) some type of port-multiplier/
-> multiplexor/ option to allow more disks/port.
+Fajun Chen wrote:
+> Hi All,
 > 
-> However, (please correct?) SATA uses a hub type architecture while
-> SAS uses a switch architecture.  My experience with network hubs vs.
-> switches is that network hubs can be much slower if there is
-> communication contention.  Is the word 'hub' being used in the
-> "shared-communication media sense", or is someone using the term
-> 'hub' as a [sic] replacement for a 'switch'?
+> Has anyone seen this kernel error before? The controller is Sil3124
+> and kernel version 2.6.18-rc2.  This seems to happen very rarely since
+> this is the first time I 've seen this error message. Thanks for your
+> feedback!
 
-Port multiplier is a switch too.  It doesn't broadcast anything and
-definitely has forwarding buffers inside.  An allegory which makes more
-sense is expander to router and port multiplier to switch.  Unless you
-wanna nest them, they aren't that different.
+2.6.18?  Sadly, you're on your own && there have been lots of hotplug
+related fixes since then.  :-(
 
 -- 
 tejun
