@@ -1,55 +1,53 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
- driver
-Date: Thu, 10 Jan 2008 10:40:48 +1100
-Message-ID: <20080110104048.2fea6ab3.sfr@canb.auug.org.au>
-References: <20080109190852.GA18827@localhost.localdomain>
-	<20080109191041.GB23283@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] libata and starting/stopping ATAPI floppy devices
+Date: Thu, 10 Jan 2008 08:41:13 +0900
+Message-ID: <47855B99.3080302@gmail.com>
+References: <200801051647.58866.linux@rainbow-software.org> <4784344C.5060208@gmail.com> <200801091853.15601.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__10_Jan_2008_10_40_48_+1100_aNdF._OFk=L5Qh94"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:43436 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757556AbYAIXlK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Jan 2008 18:41:10 -0500
-In-Reply-To: <20080109191041.GB23283@localhost.localdomain>
+Received: from wa-out-1112.google.com ([209.85.146.177]:2512 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757789AbYAIXlT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 18:41:19 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so700039wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 15:41:19 -0800 (PST)
+In-Reply-To: <200801091853.15601.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, Paul Mundt <lethal@linux-sh.org>, Jeff Garzik <jeff@garzik.org>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 
---Signature=_Thu__10_Jan_2008_10_40_48_+1100_aNdF._OFk=L5Qh94
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Hi Anton,
+Prevent libata from starting/stopping non-ATA devices (like ATAPI floppy 
+drives) as they don't seem to like it:
 
-Juts one small trivial comment (could be fixed later).
+sd 1:0:1:0: [sdb] Starting disk
+ata2.01: configured for PIO2
+sd 1:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
+sd 1:0:1:0: [sdb] Sense Key : 0x2 [current]
+sd 1:0:1:0: [sdb] ASC=0x3a ASCQ=0x0
 
-On Wed, 9 Jan 2008 22:10:41 +0300 Anton Vorontsov <avorontsov@ru.mvista.com=
-> wrote:
->
-> +static struct of_device_id pata_of_platform_match[] =3D {
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+Trimmed message body and reformatted such that it's script friendly.
 
-This could be declared const.
+ drivers/ata/libata-scsi.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+--- linux-2.6.23-orig/drivers/ata/libata-scsi.c	2007-10-09 22:31:38.000000000 +0200
++++ linux-2.6.23-pentium/drivers/ata/libata-scsi.c	2008-01-05 15:50:16.000000000 +0100
+@@ -802,7 +802,8 @@
+ 
+ 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+ 
+-	sdev->manage_start_stop = 1;
++	if (dev->class == ATA_DEV_ATA)
++		sdev->manage_start_stop = 1;
+ 
+ 	if (dev)
+ 		ata_scsi_dev_config(sdev, dev);
 
---Signature=_Thu__10_Jan_2008_10_40_48_+1100_aNdF._OFk=L5Qh94
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHhVuJTgG2atn1QN8RAlr7AJsEN75lL0OqFKaqj7Yqva3k6sv8GgCffw/V
-bSReSUpNRukeVOgeRxbLK3s=
-=2Ex6
------END PGP SIGNATURE-----
-
---Signature=_Thu__10_Jan_2008_10_40_48_+1100_aNdF._OFk=L5Qh94--
