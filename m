@@ -1,56 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
- of	that provided by the block layer
-Date: Wed, 09 Jan 2008 11:10:49 +0900
-Message-ID: <47842D29.8020509@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>
+Subject: Re: [PATCH 2.6.24 1/1] sata_sil24: prevent hba lockup when pass-through
+ ATA commands are used
+Date: Wed, 09 Jan 2008 11:17:17 +0900
+Message-ID: <47842EAD.9010302@gmail.com>
+References: <e7510f760801010850l11b14086oc80ebe5b1f738eb5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1199138168.3110.12.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.183]:36326 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbYAICRX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:17:23 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so97848wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:17:23 -0800 (PST)
+In-Reply-To: <e7510f760801010850l11b14086oc80ebe5b1f738eb5@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-James Bottomley wrote:
-> ATA requires that all DMA transfers begin and end on word boundaries.
-> Because of this, a large amount of machinery grew up in ide to adjust
-> scatterlists on this basis.  However, as of 2.5, the block layer has a
-> dma_alignment variable which ensures both the beginning and length of a
-> DMA transfer are aligned on the dma_alignment boundary.  Although the
-> block layer does adjust the beginning of the transfer to ensure this
-> happens, it doesn't actually adjust the length, it merely makes sure
-> that space is allocated for transfers beyond the declared length.  The
-> upshot of this is that scatterlists may be padded to any size between
-> the actual length and the length adjusted to the dma_alignment safely
-> knowing that memory is allocated in this region.
-> 
-> Right at the moment, SCSI takes the default dma_aligment which is on a
-> 512 byte boundary.  Note that this aligment only applies to transfers
-> coming in from user space.  However, since all kernel allocations are
-> automatically aligned on a minimum of 32 byte boundaries, it is safe to
-> adjust them in this manner as well.
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> This also fixes a current panic in libsas with SATAPI devices.  I was
-> trying to trace a bad interaction between the libata padding and the new
-> sglist code which was the root cause, and ended up concluding that the
-> whole libata padding thing was redundant.
-> 
-> In a future improvement, I think we can relax SCSI dma_alignemnt (it's
-> causing almost every user space command to be copied instead of directly
-> passed through) and allow devices and transports to build up their own
-> requirements instead.
+Gwendal Grignou wrote:
+> Fix commands timeout with Sil3124/3132 based HBA when pass-through ATA
+> commands [where ATA_QCFLAG_RESULT_TF is set] are used while other
+> commands are active on other devices
+> connected to the same port with a Port Multiplier.
+> Due to a hardware bug, these commands must be sent alone, like ATAPI commands.
 
-Great but this intersects with currently queued and pending changes for
-libata-dev#upstream and needs to be merged.  Also, DMA alignment at
-block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
-commands with variable length response.  :-(
+Thanks a lot.  You forgot S-O-B.
+
+Acked-by: Tejun Heo <htejun@gmail.com>
+
+Jeff, please queue this for 2.6.24.  Gwendal, IIRC you guys use lots of
+PMPs on your server farms, right?  How is the current code working
+there?  Do you guys see any detection problems?
 
 -- 
 tejun
