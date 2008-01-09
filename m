@@ -1,39 +1,53 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 2.6.24 1/1] sata_sil24: prevent hba lockup when pass-through
- ATA commands are used
-Date: Wed, 09 Jan 2008 11:17:17 +0900
-Message-ID: <47842EAD.9010302@gmail.com>
-References: <e7510f760801010850l11b14086oc80ebe5b1f738eb5@mail.gmail.com>
+Subject: Re: Believed resolved: SATA kern-buffRd read slow: based on promise
+ driver bug
+Date: Wed, 09 Jan 2008 11:30:21 +0900
+Message-ID: <478431BD.4030109@gmail.com>
+References: <fa.6TIOCGhBpW0r4XW9rqR+Ad8P+Js@ifi.uio.no>	<4777E08C.4000603@shaw.ca>	<4779870E.5070507@tlinx.org>	<20080101015812.59e9ebf0@the-village.bc.nu>	<477BEF8D.8090307@tlinx.org>	<477C2B71.7040504@shaw.ca>	<477C63AA.8080006@tlinx.org>	<18300.40661.199761.488061@harpo.it.uu.se>	<477D9C00.8060600@tlinx.org> <18302.5940.173422.967902@harpo.it.uu.se> <47813835.3020508@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:36326 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.182]:3854 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575AbYAICRX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:17:23 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so97848wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:17:23 -0800 (PST)
-In-Reply-To: <e7510f760801010850l11b14086oc80ebe5b1f738eb5@mail.gmail.com>
+	with ESMTP id S1752542AbYAICa1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:30:27 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so103835wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:30:26 -0800 (PST)
+In-Reply-To: <47813835.3020508@tlinx.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Linda Walsh <lkml@tlinx.org>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Gwendal Grignou wrote:
-> Fix commands timeout with Sil3124/3132 based HBA when pass-through ATA
-> commands [where ATA_QCFLAG_RESULT_TF is set] are used while other
-> commands are active on other devices
-> connected to the same port with a Port Multiplier.
-> Due to a hardware bug, these commands must be sent alone, like ATAPI commands.
+Linda Walsh wrote:
+>    Is 'main' diff between NCQ/TCQ that TCQ can re-arrange 'write'
+> priority under driver control, whereas NCQ is mostly a FIFO queue?
 
-Thanks a lot.  You forgot S-O-B.
+No, NCQ can reorder although I recently heard that windows issues
+overlapping NCQ commands and expects them to be processed in order (what
+were they thinking?).
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+The biggest difference between TCQ and NCQ is that TCQ is for SCSI while
+NCQ is for ATA.  Functional difference includes more number of available
+tags and ordered tags for TCQ.  The former doesn't matter for single
+disk.  The latter may make some difference but on single disk not by much.
 
-Jeff, please queue this for 2.6.24.  Gwendal, IIRC you guys use lots of
-PMPs on your server farms, right?  How is the current code working
-there?  Do you guys see any detection problems?
+> Am trying to differentiate NCQ/TCQ and SAS v. SCSI benefits.
+> It seems both support (SAS & SATA) some type of port-multiplier/
+> multiplexor/ option to allow more disks/port.
+> 
+> However, (please correct?) SATA uses a hub type architecture while
+> SAS uses a switch architecture.  My experience with network hubs vs.
+> switches is that network hubs can be much slower if there is
+> communication contention.  Is the word 'hub' being used in the
+> "shared-communication media sense", or is someone using the term
+> 'hub' as a [sic] replacement for a 'switch'?
+
+Port multiplier is a switch too.  It doesn't broadcast anything and
+definitely has forwarding buffers inside.  An allegory which makes more
+sense is expander to router and port multiplier to switch.  Unless you
+wanna nest them, they aren't that different.
 
 -- 
 tejun
