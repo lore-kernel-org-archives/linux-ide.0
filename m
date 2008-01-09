@@ -1,45 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [CALL-FOR-HELP] pata_ali: can't get MWDMA working!
-Date: Thu, 10 Jan 2008 02:01:48 +0900
-Message-ID: <4784FDFC.7050908@gmail.com>
+Date: Wed, 9 Jan 2008 17:16:35 +0000
+Message-ID: <20080109171635.27d625f0@lxorguk.ukuu.org.uk>
 References: <4784FBC1.7070804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ro-out-1112.google.com ([72.14.202.182]:33682 "EHLO
-	ro-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944AbYAIRB5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 12:01:57 -0500
-Received: by ro-out-1112.google.com with SMTP id p4so356423roc.5
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 09:01:55 -0800 (PST)
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52736 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752421AbYAIRTF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 12:19:05 -0500
 In-Reply-To: <4784FBC1.7070804@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, Alan Cox <alan@lxorguk.ukuu.org.uk>, IDE/ATA development list <linux-ide@vger.kernel.org>, andre@linux-ide.org, Bartlomiej
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, andre@linux-ide.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Oh... I forgot to mention something.
+> trying to fix it for some time now && finally got a machine with
+> pata_ali and non-working MWDMA2 ATAPI device on my desk a few weeks ago.
 
-I traced DMA command execution and the following is what happens.
+Oh good. I've been through a pile of ones that just work.
 
-1. host setups DMA engine (programs BMDMA controller)
-2. host issues PACKET
-3. device sets BSY
-4. host transfers CDB when BSY clears and DRQ sets (Status turns to 0xd0)
-5. host activates BMDMA engine
-6. device reports 0xd0 for all TF regs for short moment and then it
-   clears BSY and sets DRQ and other regs.
-7. nothing happens for quite long time (>10s)
-8. after a while, device seems to give up and clears DRQ and sets
-   DRDY.
-9. BMDMA status is 0x21 and doesn't change.
-10. after a while, timeout occurrs.
+Which North and south does it have and what revision ?
 
-I cleared the buffer before issuing commnad and checked whether DMA
-engine delievered anything from EH.  It transfered nothing.  It looks
-like for some reason the BMDMA engine is losing its chance to start.
+> I walked through IDE and libata codes and found some differences in the
+> order registers are accessed and which values are written (e.g. libata
+> never turns on device 0/1 DMA capable bits in BMDMA status register
+> while IDE does).  I made them access the registers in the same order and
+> write the same values.  Still no go.
 
-Thanks.
+Tried that.
 
--- 
-tejun
+> Then, I made libata probing sequence very close to IDE such that no
+> reset is performed and NIEN isn't tempered with.  No go.
+
+Ditto, and removing the taskfile writing optimisations
+
+> So, I'm out of ideas at this point.  Any suggestions?  Ideas?
+
+Short of doing a printk of each access to the PCI and I/O space and
+comparing them no. I ran out of ideas as well. I guess some kind of weird
+chance alignment bug but who knows, and the docs I have don't explain it.
+
+Alan
