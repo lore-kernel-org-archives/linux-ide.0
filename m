@@ -1,73 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
-	of	that provided by the block layer
-Date: Tue, 08 Jan 2008 22:24:32 -0600
-Message-ID: <1199852673.3534.76.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <47842D29.8020509@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] libata: implement libata.force_cbl parameter
+Date: Wed, 09 Jan 2008 14:07:10 +0900
+Message-ID: <4784567E.1050600@gmail.com>
+References: <4783786A.6040608@gmail.com>	<20080108144004.30a18457@lxorguk.ukuu.org.uk>	<4784213F.4070203@gmail.com>	<20080109013728.3b213cfb@lxorguk.ukuu.org.uk>	<4784275B.8050506@gmail.com> <20080109030502.54914b01@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46343 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752482AbYAIEYp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 23:24:45 -0500
-In-Reply-To: <47842D29.8020509@gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.176]:23721 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbYAIFHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 00:07:16 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so173225wah.23
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 21:07:16 -0800 (PST)
+In-Reply-To: <20080109030502.54914b01@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-
-On Wed, 2008-01-09 at 11:10 +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> > ATA requires that all DMA transfers begin and end on word boundaries.
-> > Because of this, a large amount of machinery grew up in ide to adjust
-> > scatterlists on this basis.  However, as of 2.5, the block layer has a
-> > dma_alignment variable which ensures both the beginning and length of a
-> > DMA transfer are aligned on the dma_alignment boundary.  Although the
-> > block layer does adjust the beginning of the transfer to ensure this
-> > happens, it doesn't actually adjust the length, it merely makes sure
-> > that space is allocated for transfers beyond the declared length.  The
-> > upshot of this is that scatterlists may be padded to any size between
-> > the actual length and the length adjusted to the dma_alignment safely
-> > knowing that memory is allocated in this region.
-> > 
-> > Right at the moment, SCSI takes the default dma_aligment which is on a
-> > 512 byte boundary.  Note that this aligment only applies to transfers
-> > coming in from user space.  However, since all kernel allocations are
-> > automatically aligned on a minimum of 32 byte boundaries, it is safe to
-> > adjust them in this manner as well.
-> > 
-> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > 
-> > ---
-> > 
-> > This also fixes a current panic in libsas with SATAPI devices.  I was
-> > trying to trace a bad interaction between the libata padding and the new
-> > sglist code which was the root cause, and ended up concluding that the
-> > whole libata padding thing was redundant.
-> > 
-> > In a future improvement, I think we can relax SCSI dma_alignemnt (it's
-> > causing almost every user space command to be copied instead of directly
-> > passed through) and allow devices and transports to build up their own
-> > requirements instead.
+Alan Cox wrote:
+>>> In which case we only need to be able to force UDMA33 or less ?
+>> Cable detection goes wrong and 40c is detected as 80c.  However, we got
 > 
-> Great but this intersects with currently queued and pending changes for
-> libata-dev#upstream and needs to be merged. 
+> In which case we only (see first question). I don't see why we need to
+> force anything but "max speed UDMA 33"
 
-That's OK, I can do the merge .. that's what git is for.
+Ah.. yeah, right.  I somehow missed the negation in the question.
+There's no need to force 80c usually.  The parameter might be as well
+force_40c and only force 40c limit.
 
->  Also, DMA alignment at
-> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
-> commands with variable length response.  :-(
-
-OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
-so this drain, I assume is only a word long?  Given the word alignment
-requirements of ATA doesn't this still mean it's only draining up to the
-word boundary anyway (so the code is still correct)?
-
-James
-
-
+-- 
+tejun
