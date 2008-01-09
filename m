@@ -1,39 +1,27 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] libata: implement libata.force_cbl parameter
-Date: Wed, 09 Jan 2008 10:19:59 +0900
-Message-ID: <4784213F.4070203@gmail.com>
-References: <4783786A.6040608@gmail.com> <20080108144004.30a18457@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes] libata: implement libata.force_cbl
+ parameter
+Date: Wed, 9 Jan 2008 01:37:28 +0000
+Message-ID: <20080109013728.3b213cfb@lxorguk.ukuu.org.uk>
+References: <4783786A.6040608@gmail.com>
+	<20080108144004.30a18457@lxorguk.ukuu.org.uk>
+	<4784213F.4070203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:45596 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757828AbYAIBUH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 20:20:07 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so39989rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 17:20:05 -0800 (PST)
-In-Reply-To: <20080108144004.30a18457@lxorguk.ukuu.org.uk>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43255 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752946AbYAIBjr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 20:39:47 -0500
+In-Reply-To: <4784213F.4070203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Tejun Heo <htejun@gmail.com>
 Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
-> On Tue, 08 Jan 2008 22:19:38 +0900
-> Tejun Heo <htejun@gmail.com> wrote:
-> 
->> Implement libata.force_cbl parameter to work around incorrect PATA
->> cable detection.
-> 
-> This seems to be a pretty hopeless hack as it assumes all your devices
-> are on the same cable (most boxes now have SATA and PATA). If we are
-> going to do this we need a way to specify which controller/device as we
-> will do for geometry forcing and other stuff.
+> This only forces PATA controllers to certain cable type.  It's a last
+> resort method for installation or live media - just enough to get things
+> going.
 
-This only forces PATA controllers to certain cable type.  It's a last
-resort method for installation or live media - just enough to get things
-going.
-
--- 
-tejun
+In which case we only need to be able to force UDMA33 or less ?
