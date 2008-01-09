@@ -1,54 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem setting dma using pata_it821x driver in vanilla 2.6.23.12
- and gentoo-sources 2.6.23-r3
-Date: Wed, 09 Jan 2008 11:43:16 +0900
-Message-ID: <478434C4.5000209@gmail.com>
-References: <200801051734.18088.marc@fallon.classyad.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH #upstream-fixes] libata: implement libata.force_cbl
+ parameter
+Date: Wed, 9 Jan 2008 03:05:02 +0000
+Message-ID: <20080109030502.54914b01@lxorguk.ukuu.org.uk>
+References: <4783786A.6040608@gmail.com>
+	<20080108144004.30a18457@lxorguk.ukuu.org.uk>
+	<4784213F.4070203@gmail.com>
+	<20080109013728.3b213cfb@lxorguk.ukuu.org.uk>
+	<4784275B.8050506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:55245 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893AbYAICnY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 21:43:24 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so59775rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 18:43:22 -0800 (PST)
-In-Reply-To: <200801051734.18088.marc@fallon.classyad.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:41094 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751277AbYAIDHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2008 22:07:16 -0500
+In-Reply-To: <4784275B.8050506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Zuckman <marc@fallon.classyad.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
-
-Marc Zuckman wrote:
-> I recently compiled gentoo-sources-2.6.23-r3 and subsequently vanilla 
-> 2.6.23.12 , but could not get hdparm v 7.7 (or earlier) to set my it8212f 
-> controlled raid array to use dma. 
+> > In which case we only need to be able to force UDMA33 or less ?
 > 
-> From past experience, I have learned that  my raid 1 array (using the it8212f 
-> raid controller present on my Gigabyte motherboard ) will not function 
-> properly unless it is set to use dma with hdparm. As a result, I execute 
-> hdparm -d1 /dev/hde in both the Gentoo boot and ordinary run levels. The 
-> system has worked fine with multiple 2.6.x kernels. The last kernel that I 
-> have successfully used is 2.6.20-gentoo-r7 (gentoo-sources).
+> Cable detection goes wrong and 40c is detected as 80c.  However, we got
 
-hdparm -d1 isn't supported (yet).  pata_it821x will configure DMA
-automatically.
-
-> I have checked linux kernel archives several times and have posted this 
-> problem on gentoo forums, but have not been able to find similar reports.
-> 
-> Perhaps related, but I doubt it, are boot messages that I initially received 
-> about disabling speeds > udma 33 due to failure to detect proper cabling on 
-> the host side of several ide interfaces (more details unfortunately vague).  
-> My cabling is definitely proper.  I haven't noted the cabling messages with 
-> recent boot attempts with the problem kernels  and I think (not 100% sure) 
-> they were abolished by using the "OBSOLETE" lilo boot loader append 
-> commands "ide0=ata66, ide2=ata66"
-
-Can you post full boot log?
-
--- 
-tejun
+In which case we only (see first question). I don't see why we need to
+force anything but "max speed UDMA 33"
