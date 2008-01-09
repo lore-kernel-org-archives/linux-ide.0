@@ -1,62 +1,37 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Wed, 09 Jan 2008 14:09:28 +0900
-Message-ID: <47845708.6060900@gmail.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+ of	that provided by the block layer
+Date: Wed, 09 Jan 2008 14:13:50 +0900
+Message-ID: <4784580E.3060000@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>	 <47842D29.8020509@gmail.com> <1199852673.3534.76.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:30657 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbYAIFJh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 00:09:37 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so174277wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2008 21:09:35 -0800 (PST)
-In-Reply-To: <47844471.4070705@shaw.ca>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1199852673.3534.76.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
 
-Robert Hancock wrote:
-> Tejun Heo wrote:
->> Tejun Heo wrote:
->>> Robert Hancock wrote:
->>>> Tejun Heo wrote:
->>>>> Tejun Heo wrote:
->>>>>>> [   34.466899] testing NMI watchdog ... <4>WARNING: CPU#0: NMI
->>>>>>> appears
->>>>>>> to be stuck (0->0)!
->>>>>>> [   34.555056] WARNING: CPU#1: NMI appears to be stuck (0->0)!
->>>>>> Oops, missed that.  I'll see whether there's IRQ storm going on.
->>>>> I made the nv irq handler to print message every 100th time and it
->>>>> says
->>>>> nothing after lock up and no response to keyboard, sysrq or
->>>>> serial.  It
->>>>> seems like a solid lock up to me.  Anything else you want me to try
->>>>> out?
->>>> I assume that replugging or unplugging cables after that point doesn't
->>>> bring it back to life?
->>> Nope.  The machine is a solid brick.
->>>
->>
->> If you want, I can ship the board + processor + cooler to you for
->> debugging.  I guess it will be more useful in your hands than mine.
+James Bottomley wrote:
+>>  Also, DMA alignment at
+>> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+>> commands with variable length response.  :-(
 > 
-> If it's an A8N-E I'd be surprised if it behaved differently from my
-> A8N-SLI Deluxe, though maybe it's a different chipset revision or
-> something.. The last time I tested hotplug on here it seemed to work
-> fine, though I haven't done any rapid disconnect/reconnect tests.
-> 
-> How about putting a bunch of printks inside the interrupt handler? That
-> would tell us if it's even reaching the interrupt handler..
+> OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
+> so this drain, I assume is only a word long?  Given the word alignment
+> requirements of ATA doesn't this still mean it's only draining up to the
+> word boundary anyway (so the code is still correct)?
 
-If you give me a patch, I'll apply it and cause lock up and report the
-result.  Just shoot the patches my way.  But maybe reproducing the lock
-up on your machine would be the better solution.  It isn't difficult at
-all.  Plug in, fire up IO, disconnect, wait.  Connect different drive.
-Rinse and repeat.  It will lock up pretty soon.
+Patch is acked but not merged yet.
+
+http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=commit;h=6cd22a0febc74bebe52d58eb22271b8770892a2d
+
+The full function can be read from the following.  It's
+ata_sg_setup_extra().
+
+http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=d763c072e6cefc724ea24cb68a7adf47b340f054;hb=6cd22a0febc74bebe52d58eb22271b8770892a2d
 
 -- 
 tejun
