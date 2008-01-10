@@ -1,66 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata-pmp: propagate timeout to host link
-Date: Thu, 10 Jan 2008 13:41:23 +0900
-Message-ID: <4785A1F3.1090903@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2.6.24 1/1] sata_sil24: prevent hba lockup when pass-through
+ ATA commands are used
+Date: Wed, 09 Jan 2008 23:53:58 -0500
+Message-ID: <4785A4E6.90107@garzik.org>
+References: <e7510f760801010850l11b14086oc80ebe5b1f738eb5@mail.gmail.com> <47842EAD.9010302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.191]:17272 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754403AbYAJElb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 23:41:31 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so447276rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 20:41:28 -0800 (PST)
+Received: from srv5.dvmed.net ([207.36.208.214]:50241 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756518AbYAJEyC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Jan 2008 23:54:02 -0500
+In-Reply-To: <47842EAD.9010302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Gwendal Grignou <gwendal@google.com>, linux-ide@vger.kernel.org
 
-Timeout on downstream command may indicate transmission problem on
-host link.  Propagate timeouts to host link.
+Tejun Heo wrote:
+> Gwendal Grignou wrote:
+>> Fix commands timeout with Sil3124/3132 based HBA when pass-through ATA
+>> commands [where ATA_QCFLAG_RESULT_TF is set] are used while other
+>> commands are active on other devices
+>> connected to the same port with a Port Multiplier.
+>> Due to a hardware bug, these commands must be sent alone, like ATAPI commands.
+> 
+> Thanks a lot.  You forgot S-O-B.
+> 
+> Acked-by: Tejun Heo <htejun@gmail.com>
+> 
+> Jeff, please queue this for 2.6.24.  Gwendal, IIRC you guys use lots of
+> PMPs on your server farms, right?  How is the current code working
+> there?  Do you guys see any detection problems?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-eh.c |   20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+hrm, I don't see the original message in my inbox.  Would one of you 
+mind resending the original?
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index f0124a8..74269ed 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1733,11 +1733,15 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ehc->i.action &= ~ATA_EH_PERDEV_MASK;
- 	}
- 
--	/* consider speeding down */
-+	/* propagate timeout to host link */
-+	if ((all_err_mask & AC_ERR_TIMEOUT) && !ata_is_host_link(link))
-+		ap->link.eh_context.i.err_mask |= AC_ERR_TIMEOUT;
-+
-+	/* record error and consider speeding down */
- 	dev = ehc->i.dev;
--	if (!dev && ata_link_max_devices(link) == 1 &&
--	    ata_dev_enabled(link->device))
--		dev = link->device;
-+	if (!dev && ((ata_link_max_devices(link) == 1 &&
-+		      ata_dev_enabled(link->device))))
-+	    dev = link->device;
- 
- 	if (dev)
- 		ehc->i.action |= ata_eh_speed_down(dev, is_io, all_err_mask);
-@@ -1759,8 +1763,14 @@ void ata_eh_autopsy(struct ata_port *ap)
- {
- 	struct ata_link *link;
- 
--	__ata_port_for_each_link(link, ap)
-+	ata_port_for_each_link(link, ap)
- 		ata_eh_link_autopsy(link);
-+
-+	/* Autopsy of fanout ports can affect host link autopsy.
-+	 * Perform host link autopsy last.
-+	 */
-+	if (ap->nr_pmp_links)
-+		ata_eh_link_autopsy(&ap->link);
- }
- 
- /**
+	Jeff
+
+
+
