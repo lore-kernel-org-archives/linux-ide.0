@@ -1,44 +1,31 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Sata 4726 Testing
-Date: Thu, 10 Jan 2008 12:19:27 +0900
-Message-ID: <47858EBF.7050300@gmail.com>
-References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47850894.6090403@shaw.ca> <47856C6E.7090200@gmail.com> <39B20DF628532344BC7A2692CB6AEE07022FA8D0@orsmsx420.amr.corp.intel.com>
+Date: Thu, 10 Jan 2008 12:29:54 +0900
+Message-ID: <47859132.1000700@gmail.com>
+References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:12536 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051AbYAJDTe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 22:19:34 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so428234rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 19:19:33 -0800 (PST)
-In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07022FA8D0@orsmsx420.amr.corp.intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.183]:11817 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756215AbYAJDaB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 22:30:01 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so803332wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 19:30:00 -0800 (PST)
+In-Reply-To: <47845F91.9000705@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Cc: Andrew Ryder <tireman@shaw.ca>, linux-ide@vger.kernel.org
+To: Andrew Ryder <tireman@shaw.ca>, "Gaston, Jason D" <jason.d.gaston@intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Gaston, Jason D wrote:
-> Attached are two dmesg outputs from 2.6.24-rc7 with only this simg quirk
-> patch applied.
-> 
-> The first (dmesg_wSipatch) was generated with the PMP turned off during
-> boot and then powered on, while connected to eSATA.
-> 
-> The second (dmesg_poweronoff) was generated with the PMP turned on and
-> connected to eSATA during boot.  Then I turned the PMP off, let the
-> drives disappear from /sys/block/ and then turned on the PMP and let the
-> drives reappear in /sys/block/.
-> 
-> Please let me know if there is something else I can do.
+Tejun Heo wrote:
+> Please apply the attached patch on top of 2.6.24-rc7 and report the
+> result.  Thanks.
 
-Thanks for testing.  It seems the errors you're seeing occur while the
-drives are initializing.  I'll look into that more but with or without
-the patch, all the devices are detected and usable, right?
-
-On 3726, the quirk patch has an unfortunate side effect of causing the
-first DMA commands to timeout.  I'll go and test 4726.
+Andrew, with the patch applied, please try to turn off and on the PMP
+array while the system is running and verify that each time the array
+gets detected correctly and disks are accessible.
 
 Thanks.
 
