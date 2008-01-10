@@ -1,44 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sata 4726 Testing
-Date: Thu, 10 Jan 2008 13:20:42 +0900
-Message-ID: <47859D1A.8010006@gmail.com>
-References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47859132.1000700@gmail.com> <4785521B.6070205@shaw.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] [libata] sata_mv: Remove PCI dependency
+Date: Wed, 09 Jan 2008 23:35:45 -0500
+Message-ID: <4785A0A1.7000003@garzik.org>
+References: <11966101971581-git-send-email-saeed.bishara@gmail.com>	 <1196610199229-git-send-email-saeed.bishara@gmail.com>	 <47684270.5030405@garzik.org>	 <c70ff3ad0712250842n5c5383b1x2f53406fbf34dfb5@mail.gmail.com> <c70ff3ad0801090359n669471fap45b67228ded564a5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:15220 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756815AbYAJEUs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 23:20:48 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so826880wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 20:20:48 -0800 (PST)
-In-Reply-To: <4785521B.6070205@shaw.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:60577 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbYAJEfs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Jan 2008 23:35:48 -0500
+In-Reply-To: <c70ff3ad0801090359n669471fap45b67228ded564a5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Ryder <tireman@shaw.ca>
-Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: linux-ide@vger.kernel.org, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>
 
-Andrew Ryder wrote:
-> Tejun,
-> 
-> I rebooted with the 4726 online during bootup, verified everything was
-> there by re-formatting the fs on each drive. I powered off the 4726 for
-> approx 15 seconds, turned it back on, and repeated the power on/off
-> again about 1 minute later.
-> 
-> The first 3 drives are accessible, but the 4th drive on ata1.03 failed
-> to be recognized.
+saeed bishara wrote:
+>> Here is the updated patch according your comments:
+>> From af124a0fd4984db4fbc8638e0af4e6a41561588d Mon Sep 17 00:00:00 2001
+>> From: Saeed Bishara <saeed@marvell.com>
+>> Date: Sun, 2 Dec 2007 10:43:10 +0200
+>> Subject: [PATCH] sata_mv: Remove PCI dependency
+>>
+>> The integrated SATA controller is connected directly to the SoC's
+>> internal bus, not via PCI interface. this patch removes the dependency
+>> on the PCI interface.
+> guys, any other comments for this patch?
 
-Hmmm... That's interesting.  The fourth drive seemed to have gone out
-for lunch.  If you can, does connecting the drive to another port (be it
-PMP port or not) without removing power make the drive work again?  If
-you can't do that, does removing the drive and re-plugging revives it?
-Please try to determine who went out for lunch - the PMP port or the
-drive.  Also, can you please turn on CONFIG_PRINTK_TIME so that I can
-tell what's happening when?
+sorry, I've been away dealing with some family matters.  So, the "patch 
+queue and review" stuff on my side hasn't moved during the holidays. 
+Should get going again now...
 
-Thanks.
+	Jeff
 
--- 
-tejun
+
+
