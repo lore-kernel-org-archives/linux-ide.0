@@ -1,56 +1,65 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_nv does not function in kernel > 2.6.20.21
-Date: Thu, 10 Jan 2008 00:45:48 -0500
-Message-ID: <4785B10C.3040107@garzik.org>
-References: <20080110024733.GC9461@mhcomputing.net> <4785A1CF.7050006@garzik.org> <20080110052520.GA9901@mhcomputing.net>
+Subject: Re: [PATCH #upstream-fixes] sata_nv: disable ADMA mode by default
+Date: Thu, 10 Jan 2008 00:58:14 -0500
+Message-ID: <4785B3F6.4000802@garzik.org>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <478246AE.3020500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34628 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33500 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750962AbYAJFpu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Jan 2008 00:45:50 -0500
-In-Reply-To: <20080110052520.GA9901@mhcomputing.net>
+	id S1750785AbYAJF6U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jan 2008 00:58:20 -0500
+In-Reply-To: <478246AE.3020500@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Hall <mhall@mhcomputing.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <liml@rtr.ca>, Robert Hancock <hancockr@shaw.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Matthew Hall wrote:
-> On Wed, Jan 09, 2008 at 11:40:47PM -0500, Jeff Garzik wrote:
->> Error -16 is EBUSY, which causes the driver load to fail due to the "Unable 
->> to reserve mem region" message.
->>
->> This means that the sata_nv driver needed to use PCI BAR 6, but was unable 
->> to for some reason.  Given that sata_nv uses devres like other libata 
->> drivers, IMO the likely cause is outside the ATA subsystem (PCI? ACPI?).
+Tejun Heo wrote:
+> There still are remaining issues with ADMA support.  Disable it by
+> default and warn when enabling.
 > 
-> I will follow up on this with the appropriate subsystem lists ASAP. 
-> Thanks for getting me redirected appropriately.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> ---
+> Jeff, please hold off till Robert acks.  Robert, what do you think?
 > 
->> One workaround to try is setting sata_nv module option 'adma' to zero (0), 
->> in the hopes that it ignores that final region and work anyway.
-> 
-> I am not quite sure what to do about this part... my boot device for the 
-> system is on one of the sata_nv channels which remains functional and 
-> does not get disabled by the resource conflict.
-> 
-> How shall I best attempt the suggested workaround without having to 
-> delete the sata_nv driver from the kernel thus rendering the kernel 
-> unbootable on this machine? Is there some way to pass the appropriate 
-> option at boot instead of at module load time or some file I could 
-> modify to enable the specified option in the code?
+>  drivers/ata/sata_nv.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 
-If you build the driver into the kernel, then pass "sata_nv.adma=0" on 
-the kernel command line.
+Don't worry, I won't "pull the trigger" immediately and without a lot of 
+discussion.  (and please help keep nvidia cc'd on changes to sata_nv)
 
-Otherwise, look into how your distro sets module options... probably 
-editing /etc/modprobe.conf.  You may need to regenerate critical boot 
-files such as initramfs (aka initrd) afterwards, again distro specific 
-(try mkinitrd).  Set module option "adma=0" for the sata_nv module.
+Current sleepless (thus discountable? :)) thoughts:
+
+* definitely leaning towards adma=0 default.  if distros are disabling 
+it, and upstream is not, that's a big hint :)
+
+* By switching to the tried-and-true legacy-IDE-like interface, adma=0 
+seems to make a lot of problems go away.
+
+* It is so late in 2.6.24-rc, it seems unlikely that we have enough time 
+for testing such a major, fundamental behavior change in sata_nv, this 
+late in the game.
+
+If it weren't for the time factor, I would be in favor of applying the 
+patch and getting test results.
+
+Overall, while I do have docs under NDA (the only one in the world 
+outside of NV?), they are pretty bare bones.  And the ADMA interface, 
+while found on many thousands of NV chips, was only one rev -- CK804 -- 
+and is no longer being used.  NV uses AHCI now.
+
+I think ADMA is an experiment that failed, in both the software sense 
+and the hardware sense.  The effort Robert has put into the ADMA code, 
+fixing many bugs (I think I have a fix from him still to be applied, 
+during my absence) is frankly amazing given the limits, but IMO ADMA is 
+just "not there."
+
+If docs were available and NV actively supported the ADMA mode, things 
+would probably be different, but they aren't.
 
 	Jeff
-
 
 
