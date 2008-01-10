@@ -1,67 +1,109 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH] libata and starting/stopping ATAPI floppy devices
-Date: Thu, 10 Jan 2008 18:42:15 +0100
-Message-ID: <200801101842.19688.linux@rainbow-software.org>
-References: <fa.BDdayWpk9nIIgpj7VGhVqIbyE8o@ifi.uio.no> <fa.EGIY7yNytG7Ky56/SjBE7Jpn2PY@ifi.uio.no> <47856F53.4010805@shaw.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC 2/2] libata: implement drain buffers
+Date: Thu, 10 Jan 2008 11:42:50 -0600
+Message-ID: <1199986970.3141.59.camel@localhost.localdomain>
+References: <11992723701811-git-send-email-htejun@gmail.com>
+	 <11992723711076-git-send-email-htejun@gmail.com>
+	 <1199986236.3141.51.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.gsystems.sk ([62.176.172.50]:33005 "EHLO www.gsystems.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750AbYAJRmw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Jan 2008 12:42:52 -0500
-In-Reply-To: <47856F53.4010805@shaw.ca>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:55515 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757096AbYAJRm4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 12:42:56 -0500
+In-Reply-To: <1199986236.3141.51.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Tejun Heo <htejun@gmail.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Thursday 10 January 2008 02:05:23 Robert Hancock wrote:
-> Tejun Heo wrote:
-> > From: Ondrej Zary <linux@rainbow-software.org>
-> >
-> > Prevent libata from starting/stopping non-ATA devices (like ATAPI floppy
-> > drives) as they don't seem to like it:
-> >
-> > sd 1:0:1:0: [sdb] Starting disk
-> > ata2.01: configured for PIO2
-> > sd 1:0:1:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
-> > sd 1:0:1:0: [sdb] Sense Key : 0x2 [current]
-> > sd 1:0:1:0: [sdb] ASC=0x3a ASCQ=0x0
->
-> Well, all that error is saying is "No medium present". We could just
-> make sd suppress that error on disk starting/stopping..
+This just updates the libata slave configure routine to take advantage
+of the block layer drain buffers.
 
-Yes, provided that the start/stop command is valid for ATAPI drives and is the 
-correct thing to do. I don't know.
+I suspect I should also be checking for AHCI as well as ATA_DEV_ATAPI,
+but I couldn't see how to do that easily.
 
->
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> > ---
-> > Trimmed message body and reformatted such that it's script friendly.
-> >
-> >  drivers/ata/libata-scsi.c |    3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > --- linux-2.6.23-orig/drivers/ata/libata-scsi.c	2007-10-09
-> > 22:31:38.000000000 +0200 +++
-> > linux-2.6.23-pentium/drivers/ata/libata-scsi.c	2008-01-05
-> > 15:50:16.000000000 +0100 @@ -802,7 +802,8 @@
-> >
-> >  	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
-> >
-> > -	sdev->manage_start_stop = 1;
-> > +	if (dev->class == ATA_DEV_ATA)
-> > +		sdev->manage_start_stop = 1;
-> >
-> >  	if (dev)
-> >  		ata_scsi_dev_config(sdev, dev);
+James
+
+---
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a883bb0..ce8f63c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -826,8 +826,8 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+ 	sdev->max_device_blocked = 1;
+ }
+ 
+-static void ata_scsi_dev_config(struct scsi_device *sdev,
+-				struct ata_device *dev)
++static int ata_scsi_dev_config(struct scsi_device *sdev,
++			       struct ata_device *dev)
+ {
+ 	/* configure max sectors */
+ 	blk_queue_max_sectors(sdev->request_queue, dev->max_sectors);
+@@ -838,7 +838,12 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+ 	 */
+ 	if (dev->class == ATA_DEV_ATAPI) {
+ 		struct request_queue *q = sdev->request_queue;
+-		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
++		void *buf = kmalloc(ATAPI_MAX_DRAIN, GFP_KERNEL);
++		if (!buf) {
++			sdev_printk(KERN_ERR, sdev, "drain buffer allocation failed\n");
++			return -ENOMEM;
++		}
++		blk_queue_dma_drain(q, buf, ATAPI_MAX_DRAIN);
+ 	}
+ 
+ 	if (dev->flags & ATA_DFLAG_AN)
+@@ -851,6 +856,8 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+ 		depth = min(ATA_MAX_QUEUE - 1, depth);
+ 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
+ 	}
++
++	return 0;
+ }
+ 
+ /**
+@@ -869,15 +876,16 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
++	int rc = 0;
+ 
+ 	ata_scsi_sdev_config(sdev);
+ 
+ 	sdev->manage_start_stop = 1;
+ 
+ 	if (dev)
+-		ata_scsi_dev_config(sdev, dev);
++		rc = ata_scsi_dev_config(sdev, dev);
+ 
+-	return 0;	/* scsi layer doesn't check return value, sigh */
++	return rc;
+ }
+ 
+ /**
+@@ -899,6 +907,7 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	unsigned long flags;
+ 	struct ata_device *dev;
++	struct request_queue *q = sdev->request_queue;
+ 
+ 	if (!ap->ops->error_handler)
+ 		return;
+@@ -912,6 +921,10 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ 		ata_port_schedule_eh(ap);
+ 	}
+ 	spin_unlock_irqrestore(ap->lock, flags);
++
++	kfree(q->dma_drain_buffer);
++	q->dma_drain_buffer = NULL;
++	q->dma_drain_size = 0;
+ }
+ 
+ /**
 
 
-
--- 
-Ondrej Zary
