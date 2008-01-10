@@ -1,38 +1,57 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: disabling sata_nv ADMA for 2.6.24
-Date: Thu, 10 Jan 2008 15:59:20 +0900
-Message-ID: <4785C248.6000804@gmail.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver (draft)
+Date: Thu, 10 Jan 2008 02:09:00 -0500
+Message-ID: <4785C48C.50705@garzik.org>
+References: <6b2481670801092253v666e969doe5ec2bd77e10a87e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:51520 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbYAJG71 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 01:59:27 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so898452wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 22:59:26 -0800 (PST)
-In-Reply-To: <478567D8.10601@shaw.ca>
+Received: from srv5.dvmed.net ([207.36.208.214]:41360 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752381AbYAJHJF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jan 2008 02:09:05 -0500
+In-Reply-To: <6b2481670801092253v666e969doe5ec2bd77e10a87e@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, Kuan Luo <kluo@nvidia.com>
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> However, how about putting in a printk in nv_adma_interrupt handler here:
+Ke Wei wrote:
+> The 88SE6440 driver :
 > 
-> /* freeze if hotplugged or controller error */
-> if (unlikely(status & (NV_ADMA_STAT_HOTPLUG |
->                NV_ADMA_STAT_HOTUNPLUG |
->                NV_ADMA_STAT_TIMEOUT |
->                NV_ADMA_STAT_SERROR))) {
->     struct ata_eh_info *ehi = &ap->link.eh_info;
->         ata_ehi_clear_desc(ehi);
-> --->    ata_port_printk("ADMA status 0x%08x: ", status);
->     __ata_ehi_push_desc(ehi, "ADMA status 0x%08x: ", status);
+> The driver is based on bare code from Jeff Garzik. And it can work
+> under linux kernel 2.6.23.
+> By far, Can discover and find SAS HDD, but SATA is currently
+> unsupported. Command queue depth can be above 1.
+> Most error handling, and some phy handling code is notably missing.
+> 
+> 
+> contains the following updates:
+> 
+> --- mvsas_orig.c	2007-12-06 19:21:32.000000000 -0500
+> +++ mvsas.c	2008-01-09 04:53:14.000000000 -0500
 
-Alright, will do when I get some time.
+Fantastic!  I'm delighted to see this is moving, and thanks much for 
+getting the driver to that critical "it works" milestone.
 
--- 
-tejun
+We should note for the linux-scsi audience and potential testers that 
+the base driver upon which this is based is available on the "sas" branch of
+
+git://git.kernel.org:/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
+
+I will give some substantive comments tomorrow (just got back from long 
+trip).  Two quick suggestions:
+
+1) To make it easier for people to review and test the driver, I would 
+suggest posting a diff against 2.6.24-rc7 (or 2.6.23), ignoring my 
+original code.  Thus, it would result in a patch
+
+2) In future patches, include a Signed-off-by: line when you are ready 
+for your patch to be included in the kernel.
+
+Thanks!
+
+	Jeff
+
+
