@@ -1,36 +1,29 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] sata_qstor: use hardreset instead of
- softreset
-Date: Thu, 10 Jan 2008 16:54:20 -0500
-Message-ID: <4786940C.7050002@garzik.org>
-References: <477CFDAB.3090705@gmail.com>
+Subject: Re: [PATCH] libata-sff: PCI IRQ handling fix
+Date: Thu, 10 Jan 2008 16:54:30 -0500
+Message-ID: <47869416.4080502@garzik.org>
+References: <20080103172228.0e091daf@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33671 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:33681 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754153AbYAJVyX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Jan 2008 16:54:23 -0500
-In-Reply-To: <477CFDAB.3090705@gmail.com>
+	id S1757702AbYAJVyg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jan 2008 16:54:36 -0500
+In-Reply-To: <20080103172228.0e091daf@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-ide@vger.kernel.org
 
-Tejun Heo wrote:
-> During conversion to new EH, sata_qstor was accidentaly changed to use
-> softreset, which is buggy on this chip, instead of hardreset.  This
-> patch updates sata_qstor such that it uses hardreset again.
+Alan Cox wrote:
+> It is legitimate (although annoying and silly) for a PCI IDE controller
+> not to be assigned an interrupt and to be polled. The libata-sff code
+> should therefore not try and request IRQ 0 in this case.
 > 
-> This fixes bugzilla bug 9631.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> Cc: Mark Lord <mlord@pobox.com>
-> ---
->  drivers/ata/sata_qstor.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-applied
+applied #upstream-fixes (2.6.24)
 
 
