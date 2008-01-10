@@ -1,46 +1,44 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [Fwd: Re: libata , Silicon Image 3124]
-Date: Thu, 10 Jan 2008 13:08:26 +0900
-Message-ID: <47859A3A.105@gmail.com>
-References: <473A5B03.2020808@gmail.com> <4780B387.1050600@kasimir-mueller.de> <4782F243.6060606@gmail.com> <47850506.4040806@kasimir-mueller.de>
+Subject: Re: Sata 4726 Testing
+Date: Thu, 10 Jan 2008 13:20:42 +0900
+Message-ID: <47859D1A.8010006@gmail.com>
+References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47859132.1000700@gmail.com> <4785521B.6070205@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:29020 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755136AbYAJEIf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 23:08:35 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so439406rvb.1
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 20:08:32 -0800 (PST)
-In-Reply-To: <47850506.4040806@kasimir-mueller.de>
+Received: from wa-out-1112.google.com ([209.85.146.177]:15220 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756815AbYAJEUs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 23:20:48 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so826880wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 20:20:48 -0800 (PST)
+In-Reply-To: <4785521B.6070205@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-15?Q?Kasimir_M=FCller?= <kjm@kasimir-mueller.de>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, christian.kuehn@hamburg.de
+To: Andrew Ryder <tireman@shaw.ca>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
 
-Hello,
+Andrew Ryder wrote:
+> Tejun,
+> 
+> I rebooted with the 4726 online during bootup, verified everything was
+> there by re-formatting the fs on each drive. I powered off the 4726 for
+> approx 15 seconds, turned it back on, and repeated the power on/off
+> again about 1 minute later.
+> 
+> The first 3 drives are accessible, but the 4th drive on ata1.03 failed
+> to be recognized.
 
-Kasimir M=FCller wrote:
-> thanks very much again for your time and readiness to help.
->=20
-> I applied the patch as you proposed without problem.
->=20
-> I attach the kernel logs of the past few days. As far as I can see, w=
-ith
-> the patched kernel errors appear only under heavy load .
->=20
-> If you want, I could provide a (temporary) ssh-login to my machine.
-> Maybe it would make it easier for you to debug the problem.
-> If you want to use it, I need your public ssh-certificate and your
-> login-name and I would send the login-details to you.
-
-Your log is pretty interesting.  Lots of timeouts are on FLUSH and
-previously other non-data commands like CHECK POWER or SMART, which is
-very unusual.  I wonder what's going on.  Yeap, I wanna log in and take
-a look.  I'll send you my pubkey in a private mail.
+Hmmm... That's interesting.  The fourth drive seemed to have gone out
+for lunch.  If you can, does connecting the drive to another port (be it
+PMP port or not) without removing power make the drive work again?  If
+you can't do that, does removing the drive and re-plugging revives it?
+Please try to determine who went out for lunch - the PMP port or the
+drive.  Also, can you please turn on CONFIG_PRINTK_TIME so that I can
+tell what's happening when?
 
 Thanks.
 
---=20
+-- 
 tejun
