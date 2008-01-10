@@ -1,64 +1,25 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem setting dma using pata_it821x driver in vanilla 2.6.23.12
- and gentoo-sources 2.6.23-r3
-Date: Thu, 10 Jan 2008 22:17:57 +0900
-Message-ID: <47861B05.2010201@gmail.com>
-References: <200801051734.18088.marc@fallon.classyad.com> <478434C4.5000209@gmail.com> <Pine.LNX.4.64.0801100741580.6632@classyad.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: bugme-admin@linux-foundation.org
+Subject: [Kernel Bug Tracker] Your account linux-ide@vger.kernel.org is being impersonated
+Date: Thu, 10 Jan 2008 07:24:27 -0800 (PST)
+Message-ID: <20080110152427.D62A7108069@picon.linux-foundation.org>
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:65058 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767AbYAJNSe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 08:18:34 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1082174wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 05:18:34 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.0801100741580.6632@classyad.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:49798 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753907AbYAJPY4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 10:24:56 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0AFORaE013759
+	for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 07:24:28 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Howard Zuckman <marc@fallon.classyad.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Marc Howard Zuckman wrote:
-> With apologies if this was supposed to be an attachment:
+    Martin J. Bligh <mbligh@mbligh.org> has used the 'sudo' feature to access 
+Kernel Bug Tracker using your account.
 
-Inline is fine.
+    Martin J. Bligh <mbligh@mbligh.org> did not provide a reason for doing this.
 
-> IT8212: IDE controller at PCI slot 0000:03:0c.0
-> IT8212: chipset revision 17
-> it821x: controller in smart mode.
-> IT8212: 100% native mode on irq 21
->     ide2: BM-DMA at 0xb800-0xb807, BIOS settings: hde:DMA, hdf:pio
->     ide3: BM-DMA at 0xb808-0xb80f, BIOS settings: hdg:pio, hdh:pio
-> Probing IDE interface ide2...
-> hde: Integrated Technology Express Inc, ATA DISK drive
-> hde: IT8212 RAID 1 volume.
-> hde: selected mode 0x0
-> ide2 at 0xa810-0xa817,0xac02 on irq 21
-> Probing IDE interface ide3...
-> Probing IDE interface ide3...
-> Probing IDE interface ide4...
-> Probing IDE interface ide5...
-> hda: max request size: 128KiB
-> hda: Host Protected Area detected.
->     current capacity is 195369455 sectors (100029 MB)
->     native  capacity is 195371568 sectors (100030 MB)
-> hda: Host Protected Area disabled.
-> hda: 195371568 sectors (100030 MB) w/2048KiB Cache, CHS=65535/16/63,
-> UDMA(100)
-> hda: cache flushes not supported
->  hda: hda1 hda2 hda3 < hda5 hda6 hda7 >
-
-Oh... I thought you were using libata drivers because you mentioned
-pata_it821x on the subject.  The IDE driver supports 'hdparm -d 1' fine.
- I wonder why that's not working.  Also, the driver is configuring your
-disk to PIO0.
-
-Cc'ing Alan and Bartlomiej.  Guys, is this the smart mode problem?  Do
-ide and libata have this fixed in 2.6.24-rc?
-
-Thanks.
-
--- 
-tejun
+    If you feel that this action was inappropiate, please contact 
+bugme-admin@linux-foundation.org.  For more information on this feature, 
+visit <http://bugzilla.kernel.org/page.cgi?id=sudo.html>.
