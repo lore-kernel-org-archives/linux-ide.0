@@ -1,85 +1,46 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 2/3] [libata] pata_of_platform: OF-Platform PATA device
-	driver
-Date: Thu, 10 Jan 2008 13:17:34 +1100
-Message-ID: <20080110131734.b267187c.sfr@canb.auug.org.au>
-References: <20080109190852.GA18827@localhost.localdomain>
-	<20080109191041.GB23283@localhost.localdomain>
-	<20080110104048.2fea6ab3.sfr@canb.auug.org.au>
-	<20080110003634.GA19966@lixom.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Sata 4726 Testing
+Date: Thu, 10 Jan 2008 12:19:27 +0900
+Message-ID: <47858EBF.7050300@gmail.com>
+References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47850894.6090403@shaw.ca> <47856C6E.7090200@gmail.com> <39B20DF628532344BC7A2692CB6AEE07022FA8D0@orsmsx420.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============2060594349=="
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20080110003634.GA19966@lixom.net>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Mime-version: 1.0
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Olof Johansson <olof@lixom.net>
-Cc: Paul Mundt <lethal@linux-sh.org>, linuxppc-dev@ozlabs.org, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-
---===============2060594349==
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__10_Jan_2008_13_17_34_+1100_rzlQLkdYc=Rx1oLu"
-
---Signature=_Thu__10_Jan_2008_13_17_34_+1100_rzlQLkdYc=Rx1oLu
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 9 Jan 2008 18:36:34 -0600 Olof Johansson <olof@lixom.net> wrote:
->
-> On Thu, Jan 10, 2008 at 10:40:48AM +1100, Stephen Rothwell wrote:
-> > Hi Anton,
-> >=20
-> > Juts one small trivial comment (could be fixed later).
-> >=20
-> > On Wed, 9 Jan 2008 22:10:41 +0300 Anton Vorontsov <avorontsov@ru.mvista=
-.com> wrote:
-> > >
-> > > +static struct of_device_id pata_of_platform_match[] =3D {
-> >=20
-> > This could be declared const.
->=20
-> Good point, but let's not hold up merge based on this. Need something
-> for janitors to do too, and it's good enough to merge as-is. :)
-
-Absolutely. To me that is what "(could be fixed later)" means.  :-)
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Thu__10_Jan_2008_13_17_34_+1100_rzlQLkdYc=Rx1oLu
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHhYBCTgG2atn1QN8RAgl7AJwP44WTJurK/asFDwyjLuopzrtJnACggcEU
-QNGKykytLKYldJKxF/nSe4Y=
-=+vOv
------END PGP SIGNATURE-----
-
---Signature=_Thu__10_Jan_2008_13_17_34_+1100_rzlQLkdYc=Rx1oLu--
-
---===============2060594349==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.189]:12536 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051AbYAJDTe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2008 22:19:34 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so428234rvb.1
+        for <linux-ide@vger.kernel.org>; Wed, 09 Jan 2008 19:19:33 -0800 (PST)
+In-Reply-To: <39B20DF628532344BC7A2692CB6AEE07022FA8D0@orsmsx420.amr.corp.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Cc: Andrew Ryder <tireman@shaw.ca>, linux-ide@vger.kernel.org
 
-_______________________________________________
-Linuxppc-dev mailing list
-Linuxppc-dev@ozlabs.org
-https://ozlabs.org/mailman/listinfo/linuxppc-dev
---===============2060594349==--
+Gaston, Jason D wrote:
+> Attached are two dmesg outputs from 2.6.24-rc7 with only this simg quirk
+> patch applied.
+> 
+> The first (dmesg_wSipatch) was generated with the PMP turned off during
+> boot and then powered on, while connected to eSATA.
+> 
+> The second (dmesg_poweronoff) was generated with the PMP turned on and
+> connected to eSATA during boot.  Then I turned the PMP off, let the
+> drives disappear from /sys/block/ and then turned on the PMP and let the
+> drives reappear in /sys/block/.
+> 
+> Please let me know if there is something else I can do.
+
+Thanks for testing.  It seems the errors you're seeing occur while the
+drives are initializing.  I'll look into that more but with or without
+the patch, all the devices are detected and usable, right?
+
+On 3726, the quirk patch has an unfortunate side effect of causing the
+first DMA commands to timeout.  I'll go and test 4726.
+
+Thanks.
+
+-- 
+tejun
