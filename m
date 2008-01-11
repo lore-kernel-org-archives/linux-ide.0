@@ -1,96 +1,144 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: Serverworks Oops with the very latest git kernel...
-Date: Fri, 11 Jan 2008 12:24:26 +0100
-Message-ID: <200801111224.26783.bzolnier@gmail.com>
-References: <1200017238.20100.16.camel@heimdal.trondhjem.org> <4786D35F.6030604@garzik.org> <1200024181.20100.20.camel@heimdal.trondhjem.org>
+From: =?UTF-8?B?VG9iaWFzIE3DvGxsZXI=?= <Tobias_Mueller@twam.info>
+Subject: Re: 40-wire cable detected when directly connected
+Date: Fri, 11 Jan 2008 12:47:33 +0100
+Message-ID: <47875755.4000109@twam.info>
+References: <200801101824.04863.Tobias_Mueller@twam.info> <4786E82A.7010208@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms000704050701040509060006"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:49832 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756861AbYAKLPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 06:15:17 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so454658ugc.16
-        for <linux-ide@vger.kernel.org>; Fri, 11 Jan 2008 03:15:15 -0800 (PST)
-In-Reply-To: <1200024181.20100.20.camel@heimdal.trondhjem.org>
-Content-Disposition: inline
+Received: from ceres.twam.info ([84.16.224.131]:37027 "EHLO smtp.twam.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755071AbYAKLrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Jan 2008 06:47:52 -0500
+Received: from [192.168.23.51] (p5B2EF9CA.dip.t-dialin.net [91.46.249.202])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp.twam.info (Postfix) with ESMTP id 130972094A
+	for <linux-ide@vger.kernel.org>; Fri, 11 Jan 2008 12:47:52 +0100 (CET)
+In-Reply-To: <4786E82A.7010208@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Trond Myklebust <trond.myklebust@fys.uio.no>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Friday 11 January 2008, Trond Myklebust wrote:
-> 
-> On Thu, 2008-01-10 at 21:24 -0500, Jeff Garzik wrote:
-> > Trond Myklebust wrote:
-> > > Hi,
-> > > 
-> > > I'm getting the following Oops on boot with kernel 2.6.24-rc7-g88fb61e4.
-> > > 
-> > > Starting udev: BUG: unable to handle kernel paging request at virtual address 2d6d3a65
-> > > printing eip: c04e1af1 *pde = 00000000 
-> > > Oops: 0000 [#1] PREEMPT SMP 
-> > > Modules linked in: evdev evbug rtc_cmos pcspkr floppy rtc_core rtc_lib shpchp pci_hotplug serverworks 
-tg3 generic i2c_piix4 i2c_core
-> > > 
-> > > Pid: 1820, comm: modprobe Not tainted (2.6.24-rc7-g88fb61e4 #2)
-> > > EIP: 0060:[<c04e1af1>] EFLAGS: 00210286 CPU: 0
-> > > EIP is at strstr+0x11/0x34
-> > > EAX: 00000000 EBX: 2d6d3a65 ECX: ffffffff EDX: 2d6d3a65
-> > > ESI: c0513f75 EDI: 2d6d3a65 EBP: f65bccec ESP: f65bcce0
-> > >  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-> > > Process modprobe (pid: 1820, ti=f65bc000 task=f795a2f0 task.ti=f65bc000)
-> > > Stack: f8921a44 00000001 00000000 f65bcd00 c054a0b9 f892e394 f892e080 f892e5f8 
-> > >        f65bcd20 f892133b c04d7c9d f892da80 f891d339 f892e394 f892e080 f892e5f8 
-> > >        f65bcd64 f891d11f f891d339 f891bc38 f892e080 00000000 00000001 00000000 
-> > > Call Trace:
-> > >  [<c0405170>] show_trace_log_lvl+0x1a/0x2f
-> > >  [<c0405222>] show_stack_log_lvl+0x9d/0xa5
-> > >  [<c04052cd>] show_registers+0xa3/0x1df
-> > >  [<c040552a>] die+0x121/0x204
-> > >  [<c05b40dd>] do_page_fault+0x557/0x63e
-> > >  [<c05b278a>] error_code+0x72/0x78
-> > >  [<c054a0b9>] dmi_check_system+0x2f/0x58
-> > >  [<f892133b>] ide_acpi_init+0x28/0x195 [ide_core]
-> > >  [<f891d11f>] hwif_init+0x324/0x37c [ide_core]
-> > >  [<f891d29a>] ide_device_add+0x3b/0xa6 [ide_core]
-> > >  [<f891ee9a>] ide_setup_pci_device+0x36/0x40 [ide_core]
-> > >  [<f885f11c>] svwks_init_one+0x5b/0x62 [serverworks]
-> > >  [<c04eada1>] pci_device_probe+0x39/0x5b
-> > >  [<c05369a8>] driver_probe_device+0xe9/0x16a
-> > >  [<c0536b43>] __driver_attach+0x6c/0xa5
-> > >  [<c0535e92>] bus_for_each_dev+0x36/0x5b
-> > >  [<c05367f3>] driver_attach+0x19/0x1b
-> > >  [<c05361b1>] bus_add_driver+0x73/0x1aa
-> > >  [<c0536d29>] driver_register+0x67/0x6c
-> > >  [<c04eaef9>] __pci_register_driver+0x56/0x83
-> > >  [<f890f017>] svwks_ide_init+0x17/0x19 [serverworks]
-> > >  [<c0447f1e>] sys_init_module+0x15da/0x1715
-> > >  [<c04040b2>] sysenter_past_esp+0x5f/0xa5
-> > >  =======================
-> > > Code: e5 89 c1 89 c8 eb 06 80 38 00 74 07 40 4a 83 fa ff 75 f4 29 c8 5d c3 90 90 90 55 89 e5 57 56 53 89 
-c6 89 d3 31 c0 83 c9 ff 89 
-> > > EIP: [<c04e1af1>] strstr+0x11/0x34 SS:ESP 0068:f65bcce0
-> > > ---[ end trace f0316f13333e9ff3 ]---
-> > > udevd-event[1819]: run_program: '/sbin/modprobe' abnormal exit
-> > > 
-> > > 
-> > > Any ideas? As far as I can see, 2.6.24-rc7 itself is good, so I suspect
-> > > the recent merge by Bart.
-> > > 
-> > > I've set up a bugzilla entry for the regression on
-> > >         http://bugzilla.kernel.org/show_bug.cgi?id=9728
-> > 
-> > Does this patch fix it?
-> > 
-> > Looks like an unterminated DMI table...
+This is a cryptographically signed message in MIME format.
 
-Eh, sorry for overlooking it during review...
+--------------ms000704050701040509060006
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-> Yup. That seems to have solved it. Thanks Jeff!
+Tejun Heo schrieb:
+> I don't know very well about CF but does it even fill UDMA/33?  What
+> does 'dd if=3D/dev/sdc of=3D/dev/null bs=3D1M count=3D16 iflag=3Ddirect=
+' say?  You
+> can increase count for more reliable result.
 
-Thanks guys.
+16+0 Datens=C3=A4tze ein
+16+0 Datens=C3=A4tze aus
+16777216 Bytes (17 MB) kopiert, 0,561688 s, 29,9 MB/s
 
-Bart
+And hdparm -I /dev/sdc says it should be compatible to udma5.
+
+/dev/sdc:
+
+ATA device, with non-removable media
+         Model Number:       SanDisk SDCFX4-8192
+         Serial Number:      010611E2297S0510
+         Firmware Revision:  HDX 4.20
+Standards:
+         Supported: 4
+         Likely used: 4
+Configuration:
+         Logical         max     current
+         cylinders       15880   15880
+         heads           16      16
+         sectors/track   63      63
+         --
+         CHS current addressable sectors:   16007040
+         LBA    user addressable sectors:   16007040
+         device size with M =3D 1024*1024:        7815 MBytes
+         device size with M =3D 1000*1000:        8195 MBytes (8 GB)
+Capabilities:
+         LBA, IORDY(may be)(cannot be disabled)
+         Standby timer values: spec'd by Vendor
+         R/W multiple sector transfer: Max =3D 4   Current =3D 0
+         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
+              Cycle time: min=3D120ns recommended=3D120ns
+         PIO: pio0 pio1 pio2 pio3 pio4
+              Cycle time: no flow control=3D120ns  IORDY flow control=3D1=
+20ns
+Commands/features:
+         Enabled Supported:
+                 Write cache
+            *    CFA feature set
+
+
+--------------ms000704050701040509060006
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJmzCC
+AygwggKRoAMCAQICEDdfXmLiPCut3WRIWKcEfrgwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UE
+BhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMT
+I1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTIxMTE0NDIyNVoX
+DTA4MTIxMDE0NDIyNVowgYcxEDAOBgNVBAQTB011ZWxsZXIxIDAeBgNVBCoTF1RvYmlhcyBX
+b2xmZ2FuZyBBbmRyZWFzMSgwJgYDVQQDEx9Ub2JpYXMgV29sZmdhbmcgQW5kcmVhcyBNdWVs
+bGVyMScwJQYJKoZIhvcNAQkBFhhUb2JpYXNfTXVlbGxlckB0d2FtLmluZm8wggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC3vN/xQv+Nqk74OxgDpqJHwYGdwWOemIfl/W1sOlIE
+FXzO9IDR57fa4FlqIUFrezqlolzipm1ZJAfxVhO4pdSjtwNj/4Z6ap5c3LbTjZYwL2abiFPi
+qQPrwyIzYYKTyRpWetnTs0BVohEHMR38/sA3LMI4VQQEBYAd/XnPQPOLObLqbUggI1JZwmgO
+zLEI1GSUEI2fUVyMeKIyXqX293cgw/5zQuoyZ87PQX80LsBkRx7JOnyUZ94+togZU/NtHso4
+u+GcxVK8II/BN5wXYCoIQvNxsR0jc1AGJ7Y2xnjACjUVFeK/n1gZYTa4ZPPm3F/4XyGbd88U
+3Qd2cBgP4cF5AgMBAAGjNTAzMCMGA1UdEQQcMBqBGFRvYmlhc19NdWVsbGVyQHR3YW0uaW5m
+bzAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBQUAA4GBACk9SGx4seRUhysubF04VghMmHFt
+ap3+um/34i+t7rAFxAjA3Fj1NRxyTDuy3TT6M0yO4Toak4778ssDJP8fWIY71DvP5VYhHUJw
+F+nCPacU2HRORLTXf61GhqzQzrvujj/yj3Z6z6c2OLc90CaDaoVjTb3nf9F6+1L7ID5ecozo
+MIIDKDCCApGgAwIBAgIQN19eYuI8K63dZEhYpwR+uDANBgkqhkiG9w0BAQUFADBiMQswCQYD
+VQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UE
+AxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDcxMjExMTQ0MjI1
+WhcNMDgxMjEwMTQ0MjI1WjCBhzEQMA4GA1UEBBMHTXVlbGxlcjEgMB4GA1UEKhMXVG9iaWFz
+IFdvbGZnYW5nIEFuZHJlYXMxKDAmBgNVBAMTH1RvYmlhcyBXb2xmZ2FuZyBBbmRyZWFzIE11
+ZWxsZXIxJzAlBgkqhkiG9w0BCQEWGFRvYmlhc19NdWVsbGVyQHR3YW0uaW5mbzCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBALe83/FC/42qTvg7GAOmokfBgZ3BY56Yh+X9bWw6
+UgQVfM70gNHnt9rgWWohQWt7OqWiXOKmbVkkB/FWE7il1KO3A2P/hnpqnlzcttONljAvZpuI
+U+KpA+vDIjNhgpPJGlZ62dOzQFWiEQcxHfz+wDcswjhVBAQFgB39ec9A84s5suptSCAjUlnC
+aA7MsQjUZJQQjZ9RXIx4ojJepfb3dyDD/nNC6jJnzs9BfzQuwGRHHsk6fJRn3j62iBlT820e
+yji74ZzFUrwgj8E3nBdgKghC83GxHSNzUAYntjbGeMAKNRUV4r+fWBlhNrhk8+bcX/hfIZt3
+zxTdB3ZwGA/hwXkCAwEAAaM1MDMwIwYDVR0RBBwwGoEYVG9iaWFzX011ZWxsZXJAdHdhbS5p
+bmZvMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAKT1IbHix5FSHKy5sXThWCEyY
+cW1qnf66b/fiL63usAXECMDcWPU1HHJMO7LdNPozTI7hOhqTjvvyywMk/x9YhjvUO8/lViEd
+QnAX6cI9pxTYdE5EtNd/rUaGrNDOu+6OP/KPdnrPpzY4tz3QJoNqhWNNved/0Xr7UvsgPl5y
+jOgwggM/MIICqKADAgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMG
+A1UECBMMV2VzdGVybiBDYXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0
+ZSBDb25zdWx0aW5nMSgwJgYDVQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9u
+MSQwIgYDVQQDExtUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEW
+HHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2
+MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0
+eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0Ew
+gZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVzVftOucqZWh5owHUEcJ3f6f+jHuy9
+zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Vaqj9xVsuvPAsH5/EfkTYkKhPP
+K9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20TxhBEAeZBlyYLf7AgMBAAGj
+gZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3Js
+LnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNVHQ8EBAMCAQYw
+KQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqGSIb3DQEB
+BQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCTcDz9
+reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
+5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDZDCCA2ACAQEwdjBiMQswCQYDVQQGEwJa
+QTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhh
+d3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEDdfXmLiPCut3WRIWKcEfrgwCQYF
+Kw4DAhoFAKCCAcMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcN
+MDgwMTExMTE0NzMzWjAjBgkqhkiG9w0BCQQxFgQUNghsZBQdaSod5v+3i9Rk3fL9kBEwUgYJ
+KoZIhvcNAQkPMUUwQzAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwIC
+AUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwgYUGCSsGAQQBgjcQBDF4MHYwYjELMAkGA1UE
+BhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMT
+I1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhA3X15i4jwrrd1kSFinBH64
+MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
+b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
+bCBJc3N1aW5nIENBAhA3X15i4jwrrd1kSFinBH64MA0GCSqGSIb3DQEBAQUABIIBAA+JKk1u
+VAoOOm/tSf2BrO/tTA8HJa2otrIds5RGonJC5mGWNYZZ5q24bHsUNO9mgktNwwewQqK8+U2O
+2GI0AUGjcNskjgsJTUNJ6SFs5cjbAHmZsg6ebgUjfr1LWT87eO/L/eQPwIRdvwvArXrQUiiw
+76nk8HEpjB3BkXhXxRiK6elniAXTi7NqQQC6m7uM54vIY/9cXSBQxlqI4psIzfg+DdcrVU9p
+c/qwBCzvHGSiQQy1V8enamv4N6BJNMXRyuXN6bUZ7wqXmX/W3EBbJuhZSJNnzGmJxzquwDSN
+DGoKdly3Hcs9/2jhI7gC2SX1J7+HOBKOkLid+8LYgMJSfPgAAAAAAAA=
+--------------ms000704050701040509060006--
