@@ -1,109 +1,136 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 14/21] ide-floppy: mv idefloppy_{should_,}report_error
-Date: Fri, 11 Jan 2008 12:58:12 +0100
-Message-ID: <1200052699-28420-15-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 05/21] ide-floppy: remove struct idefloppy_capabilities_page
+Date: Fri, 11 Jan 2008 12:58:03 +0100
+Message-ID: <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
 References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-3-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-4-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-5-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-8-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-13-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp115.plus.mail.re1.yahoo.com ([69.147.102.78]:34569 "HELO
-	smtp115.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759059AbYAKMDk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:40 -0500
-In-Reply-To: <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp114.plus.mail.re1.yahoo.com ([69.147.102.77]:33011 "HELO
+	smtp114.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758873AbYAKMDj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:39 -0500
+In-Reply-To: <1200052699-28420-5-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej@gollum.tnic, Zolnierkiewicz@gollum.tnic, bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-In addition to shortening the function name, move the printk-call into the
-function thereby saving some code lines. Also, make the function out_of_line
-since it is not on a performance critical path.
+BIG FAT WARNING: This patch has already been applied to Bart's quilt tree!
+
+This change is rather temporary and is in preparation of using generic commands
+as is the case with ide-cd and the uniform cdrom layer (i.e. init_cdrom_command())
+However, before this happens, we'll have to remove all typedefs and teach
+idefloppy_create_mode_sense_cmd() to work directly on u8 buffers.
+
+Also, since idefloppy_get_capability_page() was used to read only the sfrp bit,
+rename the latter so that the name reflects what it does.
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |   37 ++++++++++++++-----------------------
- 1 files changed, 14 insertions(+), 23 deletions(-)
+ drivers/ide/ide-floppy.c |   55 +++++-----------------------------------------
+ 1 files changed, 6 insertions(+), 49 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 49d83a1..b718615 100644
+index e8fe8ef..2b9885f 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -707,16 +707,18 @@ static ide_startstop_t idefloppy_transfer_pc1(ide_drive_t *drive)
- 	return ide_started;
- }
+@@ -120,44 +120,6 @@ typedef struct idefloppy_packet_command_s {
+ #define	PC_SUPPRESS_ERROR		6	/* Suppress error reporting */
  
--/*
-- * Suppresses error messages resulting from Medium not present.
+ /*
+- *	Removable Block Access Capabilities Page
 - */
--static inline int idefloppy_should_report_error(idefloppy_floppy_t *floppy)
-+static void idefloppy_report_error(idefloppy_floppy_t *floppy,
-+		idefloppy_pc_t *pc)
- {
- 	if (floppy->sense_key == 0x02 &&
- 	    floppy->asc       == 0x3a &&
- 	    floppy->ascq      == 0x00)
--		return 0;
--	return 1;
-+		return;
-+
-+	printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x, key = %2x, "
-+			"asc = %2x, ascq = %2x\n",
-+			floppy->drive->name, pc->c[0], floppy->sense_key,
-+			floppy->asc, floppy->ascq);
+-typedef struct {
+-#if defined(__LITTLE_ENDIAN_BITFIELD)
+-	unsigned	page_code	:6;	/* Page code - Should be 0x1b */
+-	unsigned	reserved1_6	:1;	/* Reserved */
+-	unsigned	ps		:1;	/* Should be 0 */
+-#elif defined(__BIG_ENDIAN_BITFIELD)
+-	unsigned	ps		:1;	/* Should be 0 */
+-	unsigned	reserved1_6	:1;	/* Reserved */
+-	unsigned	page_code	:6;	/* Page code - Should be 0x1b */
+-#else
+-#error "Bitfield endianness not defined! Check your byteorder.h"
+-#endif
+-	u8		page_length;		/* Page Length - Should be 0xa */
+-#if defined(__LITTLE_ENDIAN_BITFIELD)
+-	unsigned	reserved2	:6;
+-	unsigned	srfp		:1;	/* Supports reporting progress of format */
+-	unsigned	sflp		:1;	/* System floppy type device */
+-	unsigned	tlun		:3;	/* Total logical units supported by the device */
+-	unsigned	reserved3	:3;
+-	unsigned	sml		:1;	/* Single / Multiple lun supported */
+-	unsigned	ncd		:1;	/* Non cd optical device */
+-#elif defined(__BIG_ENDIAN_BITFIELD)
+-	unsigned	sflp		:1;	/* System floppy type device */
+-	unsigned	srfp		:1;	/* Supports reporting progress of format */
+-	unsigned	reserved2	:6;
+-	unsigned	ncd		:1;	/* Non cd optical device */
+-	unsigned	sml		:1;	/* Single / Multiple lun supported */
+-	unsigned	reserved3	:3;
+-	unsigned	tlun		:3;	/* Total logical units supported by the device */
+-#else
+-#error "Bitfield endianness not defined! Check your byteorder.h"
+-#endif
+-	u8		reserved[8];
+-} idefloppy_capabilities_page_t;
+-
+-/*
+  *	Flexible disk page.
+  */
+ typedef struct {
+@@ -397,7 +359,8 @@ typedef struct {
+ } idefloppy_request_sense_result_t;
+ 
+ /*
+- *	Pages of the SELECT SENSE / MODE SENSE packet commands.
++ * Pages of the SELECT SENSE / MODE SENSE packet commands.
++ * See SFF-8070i spec.
+  */
+ #define	IDEFLOPPY_CAPABILITIES_PAGE	0x1b
+ #define IDEFLOPPY_FLEXIBLE_DISK_PAGE	0x05
+@@ -1273,25 +1236,20 @@ static int idefloppy_get_flexible_disk_page (ide_drive_t *drive)
+ 	return 0;
  }
  
- static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
-@@ -741,15 +743,8 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 		 *	a legitimate error code was received.
- 		 */
- 		if (!test_bit(PC_ABORT, &pc->flags)) {
--			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags)) {
--				if (idefloppy_should_report_error(floppy))
--					printk(KERN_ERR "ide-floppy: %s: I/O error, "
--					       "pc = %2x, key = %2x, "
--					       "asc = %2x, ascq = %2x\n",
--					       drive->name, pc->c[0],
--					       floppy->sense_key,
--					       floppy->asc, floppy->ascq);
--			}
-+			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags))
-+				idefloppy_report_error(floppy, pc);
- 			/* Giving up */
- 			pc->error = IDEFLOPPY_ERROR_GENERAL;
- 		}
-@@ -958,16 +953,12 @@ static ide_startstop_t idefloppy_do_request(ide_drive_t *drive,
- 			rq->nr_sectors, rq->current_nr_sectors);
+-static int idefloppy_get_capability_page(ide_drive_t *drive)
++static int idefloppy_get_sfrp_bit(ide_drive_t *drive)
+ {
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+ 	idefloppy_pc_t pc;
+-	idefloppy_mode_parameter_header_t *header;
+-	idefloppy_capabilities_page_t *page;
  
- 	if (rq->errors >= ERROR_MAX) {
--		if (floppy->failed_pc != NULL) {
--			if (idefloppy_should_report_error(floppy))
--				printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x,"
--				       " key = %2x, asc = %2x, ascq = %2x\n",
--				       drive->name, floppy->failed_pc->c[0],
--				       floppy->sense_key, floppy->asc, floppy->ascq);
--		}
-+		if (floppy->failed_pc != NULL)
-+			idefloppy_report_error(floppy, floppy->failed_pc);
- 		else
- 			printk(KERN_ERR "ide-floppy: %s: I/O error\n",
--				drive->name);
-+					drive->name);
-+
- 		idefloppy_do_end_request(drive, 0, 0);
- 		return ide_stopped;
+ 	floppy->srfp = 0;
+ 	idefloppy_create_mode_sense_cmd(&pc, IDEFLOPPY_CAPABILITIES_PAGE,
+ 						 MODE_SENSE_CURRENT);
+ 
+ 	set_bit(PC_SUPPRESS_ERROR, &pc.flags);
+-	if (idefloppy_queue_pc_tail(drive,&pc)) {
++	if (idefloppy_queue_pc_tail(drive, &pc))
+ 		return 1;
+-	}
+ 
+-	header = (idefloppy_mode_parameter_header_t *) pc.buffer;
+-	page= (idefloppy_capabilities_page_t *)(header+1);
+-	floppy->srfp = page->srfp;
++	floppy->srfp = pc.buffer[8 + 2] & 0x40;
+ 	return (0);
+ }
+ 
+@@ -1497,8 +1455,7 @@ static int idefloppy_begin_format(ide_drive_t *drive, int __user *arg)
+ 		return (-EFAULT);
  	}
+ 
+-	/* Get the SFRP bit */
+-	(void) idefloppy_get_capability_page(drive);
++	(void) idefloppy_get_sfrp_bit(drive);
+ 	idefloppy_create_format_unit_cmd(&pc, blocks, length, flags);
+ 	if (idefloppy_queue_pc_tail(drive, &pc)) {
+                 return (-EIO);
 -- 
 1.5.3.7
 
