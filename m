@@ -1,76 +1,45 @@
-From: Trond Myklebust <trond.myklebust@fys.uio.no>
-Subject: Serverworks Oops with the very latest git kernel...
-Date: Thu, 10 Jan 2008 21:07:17 -0500
-Message-ID: <1200017238.20100.16.camel@heimdal.trondhjem.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH #upstream-fixes] ata_piix: ignore ATA_DMA_ERR on vmware
+ ich4
+Date: Fri, 11 Jan 2008 10:00:48 +0900
+Message-ID: <4786BFC0.3010704@gmail.com>
+References: <4782013D.7010304@gmail.com> <47869313.7060306@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pat.uio.no ([129.240.10.15]:44547 "EHLO pat.uio.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756028AbYAKCHV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Jan 2008 21:07:21 -0500
+Received: from rv-out-0910.google.com ([209.85.198.184]:6826 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756203AbYAKCWq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 21:22:46 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so775503rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 18:22:45 -0800 (PST)
+In-Reply-To: <47869313.7060306@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi,
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+>> VMware ich4 emulation incorrectly sets DMA_ERR on TF error.  Ignore
+>> it.
+>>
+>> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> hrm.  IIRC, the old-IDE code just sorta ignores this, and in the
+> original libata I followed old-IDE's habit of acking events with
+> 
+>     write-to-dma-status-register(err | intr)
+> 
+> so what part of libata-core cares about this distinction?  what is the
+> specific behavior from the original problem report that this solves?
 
-I'm getting the following Oops on boot with kernel 2.6.24-rc7-g88fb61e4.
+Well, basically, some versions of vmware sets DMA_ERR on CHECK_SENSE, so
+cdroms get reset when they try to report sense data.
 
-Starting udev: BUG: unable to handle kernel paging request at virtual address 2d6d3a65
-printing eip: c04e1af1 *pde = 00000000 
-Oops: 0000 [#1] PREEMPT SMP 
-Modules linked in: evdev evbug rtc_cmos pcspkr floppy rtc_core rtc_lib shpchp pci_hotplug serverworks tg3 generic i2c_piix4 i2c_core
+Thanks.
 
-Pid: 1820, comm: modprobe Not tainted (2.6.24-rc7-g88fb61e4 #2)
-EIP: 0060:[<c04e1af1>] EFLAGS: 00210286 CPU: 0
-EIP is at strstr+0x11/0x34
-EAX: 00000000 EBX: 2d6d3a65 ECX: ffffffff EDX: 2d6d3a65
-ESI: c0513f75 EDI: 2d6d3a65 EBP: f65bccec ESP: f65bcce0
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process modprobe (pid: 1820, ti=f65bc000 task=f795a2f0 task.ti=f65bc000)
-Stack: f8921a44 00000001 00000000 f65bcd00 c054a0b9 f892e394 f892e080 f892e5f8 
-       f65bcd20 f892133b c04d7c9d f892da80 f891d339 f892e394 f892e080 f892e5f8 
-       f65bcd64 f891d11f f891d339 f891bc38 f892e080 00000000 00000001 00000000 
-Call Trace:
- [<c0405170>] show_trace_log_lvl+0x1a/0x2f
- [<c0405222>] show_stack_log_lvl+0x9d/0xa5
- [<c04052cd>] show_registers+0xa3/0x1df
- [<c040552a>] die+0x121/0x204
- [<c05b40dd>] do_page_fault+0x557/0x63e
- [<c05b278a>] error_code+0x72/0x78
- [<c054a0b9>] dmi_check_system+0x2f/0x58
- [<f892133b>] ide_acpi_init+0x28/0x195 [ide_core]
- [<f891d11f>] hwif_init+0x324/0x37c [ide_core]
- [<f891d29a>] ide_device_add+0x3b/0xa6 [ide_core]
- [<f891ee9a>] ide_setup_pci_device+0x36/0x40 [ide_core]
- [<f885f11c>] svwks_init_one+0x5b/0x62 [serverworks]
- [<c04eada1>] pci_device_probe+0x39/0x5b
- [<c05369a8>] driver_probe_device+0xe9/0x16a
- [<c0536b43>] __driver_attach+0x6c/0xa5
- [<c0535e92>] bus_for_each_dev+0x36/0x5b
- [<c05367f3>] driver_attach+0x19/0x1b
- [<c05361b1>] bus_add_driver+0x73/0x1aa
- [<c0536d29>] driver_register+0x67/0x6c
- [<c04eaef9>] __pci_register_driver+0x56/0x83
- [<f890f017>] svwks_ide_init+0x17/0x19 [serverworks]
- [<c0447f1e>] sys_init_module+0x15da/0x1715
- [<c04040b2>] sysenter_past_esp+0x5f/0xa5
- =======================
-Code: e5 89 c1 89 c8 eb 06 80 38 00 74 07 40 4a 83 fa ff 75 f4 29 c8 5d c3 90 90 90 55 89 e5 57 56 53 89 c6 89 d3 31 c0 83 c9 ff 89 
-EIP: [<c04e1af1>] strstr+0x11/0x34 SS:ESP 0068:f65bcce0
----[ end trace f0316f13333e9ff3 ]---
-udevd-event[1819]: run_program: '/sbin/modprobe' abnormal exit
-
-
-Any ideas? As far as I can see, 2.6.24-rc7 itself is good, so I suspect
-the recent merge by Bart.
-
-I've set up a bugzilla entry for the regression on
-        http://bugzilla.kernel.org/show_bug.cgi?id=9728
-
-Cheers
-  Trond
+-- 
+tejun
 
