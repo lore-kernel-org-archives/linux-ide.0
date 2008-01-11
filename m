@@ -1,164 +1,142 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 06/21] ide-floppy: remove struct idefloppy_flexible_disk_page
-Date: Fri, 11 Jan 2008 12:58:04 +0100
-Message-ID: <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 09/21] ide-floppy: remove struct idefloppy_request_sense_result
+Date: Fri, 11 Jan 2008 12:58:07 +0100
+Message-ID: <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
 References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-3-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-4-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-5-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-8-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp106.plus.mail.re1.yahoo.com ([69.147.102.69]:26924 "HELO
-	smtp106.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759674AbYAKMDr (ORCPT
+Received: from smtp112.plus.mail.re1.yahoo.com ([69.147.102.75]:27215 "HELO
+	smtp112.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759821AbYAKMDr (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:47 -0500
-In-Reply-To: <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
+In-Reply-To: <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej@gollum.tnic, Zolnierkiewicz@gollum.tnic, bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-The driver used to test whether the flexible disk page has changed by memcmp-ing
-it with a cached copy of a previous version of the page from a different remo-
-vable medium. Since, according to the SFF-8070i spec, the flexible disk page
-"specifies parameters relating to the currently installed medium type," this
-comparison is now done by simply checking whether the medium has changed.
+While at it, collapse idefloppy_analyze_error() into
+idefloppy_request_sense_callback() since the latter was its only user.
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |   89 ++++++++++++++++-----------------------------
- 1 files changed, 32 insertions(+), 57 deletions(-)
+ drivers/ide/ide-floppy.c |   82 +++++++++++++--------------------------------
+ 1 files changed, 24 insertions(+), 58 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 2b9885f..679d48e 100644
+index d98264e..7d4ac0b 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -120,33 +120,6 @@ typedef struct idefloppy_packet_command_s {
- #define	PC_SUPPRESS_ERROR		6	/* Suppress error reporting */
+@@ -232,39 +232,6 @@ struct idefloppy_id_gcw {
+ };
  
  /*
-- *	Flexible disk page.
+- *	REQUEST SENSE packet command result - Data Format.
 - */
 -typedef struct {
 -#if defined(__LITTLE_ENDIAN_BITFIELD)
--	unsigned	page_code	:6;	/* Page code - Should be 0x5 */
--	unsigned	reserved1_6	:1;	/* Reserved */
--	unsigned	ps		:1;	/* The device is capable of saving the page */
+-	unsigned	error_code	:7;	/* Current error (0x70) */
+-	unsigned	valid		:1;	/* The information field conforms to SFF-8070i */
+-	u8		reserved1	:8;	/* Reserved */
+-	unsigned	sense_key	:4;	/* Sense Key */
+-	unsigned	reserved2_4	:1;	/* Reserved */
+-	unsigned	ili		:1;	/* Incorrect Length Indicator */
+-	unsigned	reserved2_67	:2;
 -#elif defined(__BIG_ENDIAN_BITFIELD)
--	unsigned	ps		:1;	/* The device is capable of saving the page */
--	unsigned	reserved1_6	:1;	/* Reserved */
--	unsigned	page_code	:6;	/* Page code - Should be 0x5 */
+-	unsigned	valid		:1;	/* The information field conforms to SFF-8070i */
+-	unsigned	error_code	:7;	/* Current error (0x70) */
+-	u8		reserved1	:8;	/* Reserved */
+-	unsigned	reserved2_67	:2;
+-	unsigned	ili		:1;	/* Incorrect Length Indicator */
+-	unsigned	reserved2_4	:1;	/* Reserved */
+-	unsigned	sense_key	:4;	/* Sense Key */
 -#else
 -#error "Bitfield endianness not defined! Check your byteorder.h"
 -#endif
--	u8		page_length;		/* Page Length - Should be 0x1e */
--	u16		transfer_rate;		/* In kilobits per second */
--	u8		heads, sectors;		/* Number of heads, Number of sectors per track */
--	u16		sector_size;		/* Byes per sector */
--	u16		cyls;			/* Number of cylinders */
--	u8		reserved10[10];
--	u8		motor_delay;		/* Motor off delay */
--	u8		reserved21[7];
--	u16		rpm;			/* Rotations per minute */
--	u8		reserved30[2];
--} idefloppy_flexible_disk_page_t;
-- 
+-	u32		information __attribute__ ((packed));
+-	u8		asl;			/* Additional sense length (n-7) */
+-	u32		command_specific;	/* Additional command specific information */
+-	u8		asc;			/* Additional Sense Code */
+-	u8		ascq;			/* Additional Sense Code Qualifier */
+-	u8		replaceable_unit_code;	/* Field Replaceable Unit Code */
+-	u8		sksv[3];
+-	u8		pad[2];			/* Padding to 20 bytes */
+-} idefloppy_request_sense_result_t;
+-
 -/*
-  *	Format capacity
+  * Pages of the SELECT SENSE / MODE SENSE packet commands.
+  * See SFF-8070i spec.
   */
- typedef struct {
-@@ -213,8 +186,6 @@ typedef struct ide_floppy_obj {
- 	int blocks, block_size, bs_factor;
- 	/* Last format capacity */
- 	idefloppy_capacity_descriptor_t capacity;
--	/* Copy of the flexible disk page */
--	idefloppy_flexible_disk_page_t flexible_disk_page;
- 	/* Write protect */
- 	int wp;
- 	/* Supports format progress report */
-@@ -1188,50 +1159,54 @@ static int idefloppy_queue_pc_tail (ide_drive_t *drive,idefloppy_pc_t *pc)
+@@ -480,39 +447,38 @@ static struct request *idefloppy_next_rq_storage (ide_drive_t *drive)
+ 	return (&floppy->rq_stack[floppy->rq_stack_index++]);
  }
  
- /*
-- *	Look at the flexible disk page parameters. We will ignore the CHS
-- *	capacity parameters and use the LBA parameters instead.
-+ * Look at the flexible disk page parameters. We will ignore the CHS capacity
-+ * parameters and use the LBA parameters instead.
-  */
--static int idefloppy_get_flexible_disk_page (ide_drive_t *drive)
-+static int idefloppy_get_flexible_disk_page(ide_drive_t *drive)
+-/*
+- *	idefloppy_analyze_error is called on each failed packet command retry
+- *	to analyze the request sense.
+- */
+-static void idefloppy_analyze_error (ide_drive_t *drive,idefloppy_request_sense_result_t *result)
+-{
+-	idefloppy_floppy_t *floppy = drive->driver_data;
+-
+-	floppy->sense_key = result->sense_key;
+-	floppy->asc = result->asc;
+-	floppy->ascq = result->ascq;
+-	floppy->progress_indication = result->sksv[0] & 0x80 ?
+-		(u16)get_unaligned((u16 *)(result->sksv+1)):0x10000;
+-	if (floppy->failed_pc)
+-		debug_log("pc = %x, sense key = %x, asc = %x, ascq = %x\n",
+-				floppy->failed_pc->c[0], result->sense_key,
+-				result->asc, result->ascq);
+-	else
+-		debug_log("sense key = %x, asc = %x, ascq = %x\n",
+-				result->sense_key, result->asc, result->ascq);
+-}
+-
+-static void idefloppy_request_sense_callback (ide_drive_t *drive)
++static void idefloppy_request_sense_callback(ide_drive_t *drive)
  {
  	idefloppy_floppy_t *floppy = drive->driver_data;
- 	idefloppy_pc_t pc;
--	idefloppy_mode_parameter_header_t *header;
--	idefloppy_flexible_disk_page_t *page;
- 	int capacity, lba_capacity;
-+	u8 heads, sectors;
-+	u16 transfer_rate, sector_size, cyls, rpm;
++	u8 *buf = floppy->pc->buffer;
  
--	idefloppy_create_mode_sense_cmd(&pc, IDEFLOPPY_FLEXIBLE_DISK_PAGE, MODE_SENSE_CURRENT);
--	if (idefloppy_queue_pc_tail(drive,&pc)) {
--		printk(KERN_ERR "ide-floppy: Can't get flexible disk "
--			"page parameters\n");
-+	idefloppy_create_mode_sense_cmd(&pc, IDEFLOPPY_FLEXIBLE_DISK_PAGE,
-+			MODE_SENSE_CURRENT);
+ 	debug_log("Reached %s\n", __FUNCTION__);
+ 
+ 	if (!floppy->pc->error) {
+-		idefloppy_analyze_error(drive,(idefloppy_request_sense_result_t *) floppy->pc->buffer);
++		floppy->sense_key = buf[2] & 0x0F;
++		floppy->asc = buf[12];
++		floppy->ascq = buf[13];
++		floppy->progress_indication = buf[15] & 0x80 ?
++			(u16)get_unaligned((u16 *)&buf[16]) : 0x10000;
 +
-+	if (idefloppy_queue_pc_tail(drive, &pc)) {
-+		printk(KERN_ERR "ide-floppy: Can't get flexible disk page"
-+				" parameters\n");
- 		return 1;
++		if (floppy->failed_pc)
++			debug_log("pc = %x, sense key = %x, asc = %x,"
++					" ascq = %x\n",
++					floppy->failed_pc->c[0],
++					floppy->sense_key,
++					floppy->asc,
++					floppy->ascq);
++		else
++			debug_log("sense key = %x, asc = %x, ascq = %x\n",
++					floppy->sense_key,
++					floppy->asc,
++					floppy->ascq);
++
++
+ 		idefloppy_do_end_request(drive, 1, 0);
+ 	} else {
+-		printk(KERN_ERR "Error in REQUEST SENSE itself - Aborting request!\n");
++		printk(KERN_ERR "Error in REQUEST SENSE itself - Aborting"
++				" request!\n");
+ 		idefloppy_do_end_request(drive, 0, 0);
  	}
--	header = (idefloppy_mode_parameter_header_t *) pc.buffer;
--	floppy->wp = header->wp;
-+	floppy->wp = pc.buffer[3] & 0x80;
- 	set_disk_ro(floppy->disk, floppy->wp);
--	page = (idefloppy_flexible_disk_page_t *) (header + 1);
--
--	page->transfer_rate = be16_to_cpu(page->transfer_rate);
--	page->sector_size = be16_to_cpu(page->sector_size);
--	page->cyls = be16_to_cpu(page->cyls);
--	page->rpm = be16_to_cpu(page->rpm);
--	capacity = page->cyls * page->heads * page->sectors * page->sector_size;
--	if (memcmp (page, &floppy->flexible_disk_page, sizeof (idefloppy_flexible_disk_page_t)))
-+
-+	transfer_rate = be16_to_cpu(*(u16 *)&pc.buffer[8 + 2]);
-+	sector_size   = be16_to_cpu(*(u16 *)&pc.buffer[8 + 6]);
-+	cyls          = be16_to_cpu(*(u16 *)&pc.buffer[8 + 8]);
-+	rpm           = be16_to_cpu(*(u16 *)&pc.buffer[8 + 28]);
-+	heads         = pc.buffer[8 + 4];
-+	sectors       = pc.buffer[8 + 5];
-+
-+	capacity = cyls * heads * sectors * sector_size;
-+
-+	if ((1UL << IDEFLOPPY_MEDIA_CHANGED) & floppy->flags)
- 		printk(KERN_INFO "%s: %dkB, %d/%d/%d CHS, %d kBps, "
- 				"%d sector size, %d rpm\n",
--			drive->name, capacity / 1024, page->cyls,
--			page->heads, page->sectors,
--			page->transfer_rate / 8, page->sector_size, page->rpm);
--
--	floppy->flexible_disk_page = *page;
--	drive->bios_cyl = page->cyls;
--	drive->bios_head = page->heads;
--	drive->bios_sect = page->sectors;
-+			drive->name, capacity / 1024, cyls, heads, sectors,
-+			transfer_rate / 8, sector_size, rpm);
-+
-+	drive->bios_cyl = cyls;
-+	drive->bios_head = heads;
-+	drive->bios_sect = sectors;
- 	lba_capacity = floppy->blocks * floppy->block_size;
-+
- 	if (capacity < lba_capacity) {
- 		printk(KERN_NOTICE "%s: The disk reports a capacity of %d "
- 			"bytes, but the drive only handles %d\n",
- 			drive->name, lba_capacity, capacity);
--		floppy->blocks = floppy->block_size ? capacity / floppy->block_size : 0;
-+		floppy->blocks = floppy->block_size ?
-+			capacity / floppy->block_size : 0;
- 	}
- 	return 0;
  }
 -- 
 1.5.3.7
