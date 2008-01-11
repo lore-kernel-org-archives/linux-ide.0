@@ -1,52 +1,28 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9728] New: Serverworks initialisation fails
-Date: Thu, 10 Jan 2008 17:59:51 -0800 (PST)
-Message-ID: <bug-9728-11633@http.bugzilla.kernel.org/>
+From: Trond Myklebust <trond.myklebust@fys.uio.no>
+Subject: Serverworks Oops with the very latest git kernel...
+Date: Thu, 10 Jan 2008 21:07:17 -0500
+Message-ID: <1200017238.20100.16.camel@heimdal.trondhjem.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40807 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751746AbYAKB7x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 20:59:53 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0B1xpdR008198
-	for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 17:59:52 -0800
+Received: from pat.uio.no ([129.240.10.15]:44547 "EHLO pat.uio.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756028AbYAKCHV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jan 2008 21:07:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9728
+Hi,
 
-           Summary: Serverworks initialisation fails
-           Product: IO/Storage
-           Version: 2.5
-     KernelVersion: 2.6.24-rc7-g88fb61e4
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: trond.myklebust@fys.uio.no
-        Regression: 1
+I'm getting the following Oops on boot with kernel 2.6.24-rc7-g88fb61e4.
 
-
-Latest working kernel version: 2.6.24-rc7
-Earliest failing kernel version: 2.6.24-rc7-g88fb61e4
-Distribution: Fedora Core 7
-Hardware Environment: Dell PowerEdge 2650
-Software Environment:
-Problem Description:
-
-Oops when starting udev...
-
-Starting udev: BUG: unable to handle kernel paging request at virtual address
-2d6d3a65
+Starting udev: BUG: unable to handle kernel paging request at virtual address 2d6d3a65
 printing eip: c04e1af1 *pde = 00000000 
 Oops: 0000 [#1] PREEMPT SMP 
-Modules linked in: evdev evbug rtc_cmos pcspkr floppy rtc_core rtc_lib shpchp
-pci_hotplug serverworks tg3 generic i2c_piix4 i2c_core
+Modules linked in: evdev evbug rtc_cmos pcspkr floppy rtc_core rtc_lib shpchp pci_hotplug serverworks tg3 generic i2c_piix4 i2c_core
 
 Pid: 1820, comm: modprobe Not tainted (2.6.24-rc7-g88fb61e4 #2)
 EIP: 0060:[<c04e1af1>] EFLAGS: 00210286 CPU: 0
@@ -83,17 +59,18 @@ Call Trace:
  [<c0447f1e>] sys_init_module+0x15da/0x1715
  [<c04040b2>] sysenter_past_esp+0x5f/0xa5
  =======================
-Code: e5 89 c1 89 c8 eb 06 80 38 00 74 07 40 4a 83 fa ff 75 f4 29 c8 5d c3 90
-90 90 55 89 e5 57 56 53 89 c6 89 d3 31 c0 83 c9 ff 89 
+Code: e5 89 c1 89 c8 eb 06 80 38 00 74 07 40 4a 83 fa ff 75 f4 29 c8 5d c3 90 90 90 55 89 e5 57 56 53 89 c6 89 d3 31 c0 83 c9 ff 89 
 EIP: [<c04e1af1>] strstr+0x11/0x34 SS:ESP 0068:f65bcce0
 ---[ end trace f0316f13333e9ff3 ]---
 udevd-event[1819]: run_program: '/sbin/modprobe' abnormal exit
 
 
-Steps to reproduce: Just boot...
+Any ideas? As far as I can see, 2.6.24-rc7 itself is good, so I suspect
+the recent merge by Bart.
 
+I've set up a bugzilla entry for the regression on
+        http://bugzilla.kernel.org/show_bug.cgi?id=9728
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Cheers
+  Trond
+
