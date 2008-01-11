@@ -1,345 +1,96 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 21/21] ide-floppy: remove atomic test_*bit macros
-Date: Fri, 11 Jan 2008 12:58:19 +0100
-Message-ID: <1200052699-28420-22-git-send-email-bbpetkov@yahoo.de>
-References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-3-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-4-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-5-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-8-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-13-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-15-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-16-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-17-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-18-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-19-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-20-git-send-email-bbpetkov@yahoo.de>
- <1200052699-28420-21-git-send-email-bbpetkov@yahoo.de>
+From: James Chapman <jchapman@katalix.com>
+Subject: buffer_head list oops with new PATA driver: help request
+Date: Fri, 11 Jan 2008 10:20:22 +0000
+Message-ID: <478742E6.6020001@katalix.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp116.plus.mail.re1.yahoo.com ([69.147.102.79]:39113 "HELO
-	smtp116.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1760357AbYAKMDv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:51 -0500
-In-Reply-To: <1200052699-28420-21-git-send-email-bbpetkov@yahoo.de>
+Received: from s36.avahost.net ([74.53.95.194]:40346 "EHLO s36.avahost.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757155AbYAKMcJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Jan 2008 07:32:09 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej@gollum.tnic, Zolnierkiewicz@gollum.tnic, bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Stuart James <sjames@katalix.com>
 
-This change is temporary and after unification of the IDE subsystem proper
-bit setting and testing macros will be introduced.
+I'm seeking help for a problem we're having with a new PATA driver for a
+Toshiba TX4939 MIPS SoC.
 
-Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
----
- drivers/ide/ide-floppy.c |   82 +++++++++++++++++++++++++---------------------
- 1 files changed, 45 insertions(+), 37 deletions(-)
+The driver works fine for most use cases, but we get an oops when stress
+testing with bonnie++. The oops is always a null pointer while walking a
+buffer_head list (b_this_page is null) when bonnie++ reads back its
+data. This only happens when DMA is enabled, and only when bonnie++
+parameters are chosen to stress memory usage such that buffers are
+recycled by the kernel. The oops still happens if the CPU cache is
+disabled or if bonnie++'s -b option is specified to force a sync() on
+every write.
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 4106eb4..29c1983 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -479,12 +479,12 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
- 
- 	debug_log("Reached %s interrupt handler\n", __FUNCTION__);
- 
--	if (test_bit(PC_DMA_IN_PROGRESS, &pc->flags)) {
-+	if ((1UL << PC_DMA_IN_PROGRESS) & pc->flags) {
- 		dma_error = HWIF(drive)->ide_dma_end(drive);
- 		if (dma_error) {
- 			printk(KERN_ERR "%s: DMA %s error\n", drive->name,
- 					write ?	"write" : "read");
--			set_bit(PC_DMA_ERROR, &pc->flags);
-+			pc->flags |= (1UL << PC_DMA_ERROR);
- 		} else {
- 			pc->actually_transferred = pc->request_transfer;
- 			idefloppy_update_buffers(drive, pc);
-@@ -499,11 +499,11 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
- 		/* No more interrupts */
- 		debug_log("Packet command completed, %d bytes transferred\n",
- 				pc->actually_transferred);
--		clear_bit(PC_DMA_IN_PROGRESS, &pc->flags);
-+		pc->flags &= ((1UL << PC_DMA_IN_PROGRESS) ^ ~0UL);
- 
- 		local_irq_enable_in_hardirq();
- 
--		if ((stat & ERR_STAT) || test_bit(PC_DMA_ERROR, &pc->flags)) {
-+		if ((stat & ERR_STAT) || ((1UL << PC_DMA_ERROR) & pc->flags)) {
- 			/* Error detected */
- 			debug_log("I/O error\n", drive->name);
- 			rq->errors++;
-@@ -525,7 +525,8 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
- 		return ide_stopped;
- 	}
- 
--	if (test_and_clear_bit(PC_DMA_IN_PROGRESS, &pc->flags)) {
-+	if ((1UL << PC_DMA_IN_PROGRESS) & pc->flags) {
-+		pc->flags &= ((1UL << PC_DMA_IN_PROGRESS) ^ ~0UL);
- 		printk(KERN_ERR "ide-floppy: The floppy wants to issue "
- 			"more interrupts in DMA mode\n");
- 		ide_dma_off(drive);
-@@ -704,13 +705,13 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 	floppy->pc = pc;
- 
- 	if (pc->retries > IDEFLOPPY_MAX_PC_RETRIES ||
--	    test_bit(PC_ABORT, &pc->flags)) {
-+			((1UL << PC_ABORT) & pc->flags)) {
- 		/*
- 		 *	We will "abort" retrying a packet command in case
- 		 *	a legitimate error code was received.
- 		 */
--		if (!test_bit(PC_ABORT, &pc->flags)) {
--			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags))
-+		if (!((1UL << PC_ABORT) & pc->flags)) {
-+			if (!((1UL << PC_SUPPRESS_ERROR) & pc->flags))
- 				idefloppy_report_error(floppy, pc);
- 			/* Giving up */
- 			pc->error = IDEFLOPPY_ERROR_GENERAL;
-@@ -728,12 +729,14 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 	pc->current_position = pc->buffer;
- 	bcount = min(pc->request_transfer, 63 * 1024);
- 
--	if (test_and_clear_bit(PC_DMA_ERROR, &pc->flags))
-+	if ((1UL << PC_DMA_ERROR) & pc->flags) {
-+		pc->flags &= ((1UL << PC_DMA_ERROR) ^ ~0UL);
- 		ide_dma_off(drive);
-+	}
- 
- 	dma = 0;
- 
--	if (test_bit(PC_DMA_RECOMMENDED, &pc->flags) && drive->using_dma)
-+	if (((1UL << PC_DMA_RECOMMENDED) & pc->flags) && drive->using_dma)
- 		dma = !hwif->dma_setup(drive);
- 
- 	ide_pktcmd_tf_load(drive, IDE_TFLAG_NO_SELECT_MASK |
-@@ -741,12 +744,12 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 
- 	if (dma) {
- 		/* Begin DMA, if necessary */
--		set_bit(PC_DMA_IN_PROGRESS, &pc->flags);
-+		pc->flags |= 1UL << PC_DMA_IN_PROGRESS;
- 		hwif->dma_start(drive);
- 	}
- 
- 	/* Can we transfer the packet when we get the interrupt or wait? */
--	if (test_bit(IDEFLOPPY_ZIP_DRIVE, &floppy->flags)) {
-+	if ((1UL << IDEFLOPPY_ZIP_DRIVE) & floppy->flags) {
- 		/* wait */
- 		pkt_xfer_routine = &idefloppy_transfer_pc1;
- 	} else {
-@@ -754,7 +757,7 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
- 		pkt_xfer_routine = &idefloppy_transfer_pc;
- 	}
- 
--	if (test_bit(IDEFLOPPY_DRQ_INTERRUPT, &floppy->flags)) {
-+	if ((1UL << IDEFLOPPY_DRQ_INTERRUPT) & floppy->flags) {
- 		/* Issue the packet command */
- 		ide_execute_command(drive, WIN_PACKETCMD,
- 				pkt_xfer_routine,
-@@ -812,7 +815,7 @@ static void idefloppy_create_format_unit_cmd(idefloppy_pc_t *pc, int b, int l,
- 	put_unaligned(cpu_to_be32(b), (unsigned int *)(&pc->buffer[4]));
- 	put_unaligned(cpu_to_be32(l), (unsigned int *)(&pc->buffer[8]));
- 	pc->buffer_size = 12;
--	set_bit(PC_WRITING, &pc->flags);
-+	pc->flags |= 1 << PC_WRITING;
- }
- 
- /* A mode sense command is used to "sense" floppy parameters. */
-@@ -862,11 +865,11 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
- 	int cmd = rq_data_dir(rq);
- 
- 	debug_log("create_rw1%d_cmd: block == %d, blocks == %d\n",
--		2 * test_bit(IDEFLOPPY_USE_READ12, &floppy->flags),
-+		2 * ((1UL << IDEFLOPPY_USE_READ12) & floppy->flags),
- 		block, blocks);
- 
- 	idefloppy_init_pc(pc);
--	if (test_bit(IDEFLOPPY_USE_READ12, &floppy->flags)) {
-+	if ((1UL << IDEFLOPPY_USE_READ12) & floppy->flags) {
- 		pc->c[0] = cmd == READ ? GPCMD_READ_12 : GPCMD_WRITE_12;
- 		put_unaligned(cpu_to_be32(blocks), (unsigned int *) &pc->c[6]);
- 	} else {
-@@ -878,10 +881,10 @@ static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
- 	pc->rq = rq;
- 	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
- 	if (rq->cmd_flags & REQ_RW)
--		set_bit(PC_WRITING, &pc->flags);
-+		pc->flags |= 1UL << PC_WRITING;
- 	pc->buffer = NULL;
- 	pc->request_transfer = pc->buffer_size = blocks * floppy->block_size;
--	set_bit(PC_DMA_RECOMMENDED, &pc->flags);
-+	pc->flags |= 1UL << PC_DMA_RECOMMENDED;
- }
- 
- static void idefloppy_blockpc_cmd(idefloppy_floppy_t *floppy,
-@@ -893,10 +896,10 @@ static void idefloppy_blockpc_cmd(idefloppy_floppy_t *floppy,
- 	pc->rq = rq;
- 	pc->b_count = rq->data_len;
- 	if (rq->data_len && rq_data_dir(rq) == WRITE)
--		set_bit(PC_WRITING, &pc->flags);
-+		pc->flags |= 1UL << PC_WRITING;
- 	pc->buffer = rq->data;
- 	if (rq->bio)
--		set_bit(PC_DMA_RECOMMENDED, &pc->flags);
-+		pc->flags |= 1UL << PC_DMA_RECOMMENDED;
- 
- 	/*
- 	 * possibly problematic, doesn't look like ide-floppy correctly handled
-@@ -1035,7 +1038,7 @@ static int idefloppy_get_sfrp_bit(ide_drive_t *drive)
- 	idefloppy_create_mode_sense_cmd(&pc, IDEFLOPPY_CAPABILITIES_PAGE,
- 						 MODE_SENSE_CURRENT);
- 
--	set_bit(PC_SUPPRESS_ERROR, &pc.flags);
-+	pc.flags |= 1UL << PC_SUPPRESS_ERROR;
- 	if (idefloppy_queue_pc_tail(drive, &pc))
- 		return 1;
- 
-@@ -1078,7 +1081,7 @@ static int idefloppy_get_capacity(ide_drive_t *drive)
- 		switch (pc.buffer[desc_start + 4] & 0x03) {
- 		/* Clik! drive returns this instead of CAPACITY_CURRENT */
- 		case CAPACITY_UNFORMATTED:
--			if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags))
-+			if (!((1UL << IDEFLOPPY_CLIK_DRIVE) & floppy->flags))
- 				/*
- 				 * If it is not a clik drive, break out
- 				 * (maintains previous driver behaviour)
-@@ -1126,7 +1129,7 @@ static int idefloppy_get_capacity(ide_drive_t *drive)
- 	}
- 
- 	/* Clik! disk does not support get_flexible_disk_page */
--	if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags))
-+	if (!((1UL << IDEFLOPPY_CLIK_DRIVE) & floppy->flags))
- 		(void) idefloppy_get_flexible_disk_page(drive);
- 
- 	set_capacity(floppy->disk, floppy->blocks * floppy->bs_factor);
-@@ -1356,7 +1359,7 @@ static void idefloppy_setup(ide_drive_t *drive, idefloppy_floppy_t *floppy)
- 	*((u16 *) &gcw) = drive->id->config;
- 	floppy->pc = floppy->pc_stack;
- 	if (gcw.drq_type == 1)
--		set_bit(IDEFLOPPY_DRQ_INTERRUPT, &floppy->flags);
-+		floppy->flags |= 1UL << IDEFLOPPY_DRQ_INTERRUPT;
- 
- 	/*
- 	 * We used to check revisions here. At this point however I'm giving up.
-@@ -1369,7 +1372,7 @@ static void idefloppy_setup(ide_drive_t *drive, idefloppy_floppy_t *floppy)
- 	 */
- 
- 	if (!strncmp(drive->id->model, "IOMEGA ZIP 100 ATAPI", 20)) {
--		set_bit(IDEFLOPPY_ZIP_DRIVE, &floppy->flags);
-+		floppy->flags |= 1UL << IDEFLOPPY_ZIP_DRIVE;
- 		/* This value will be visible in the /proc/ide/hdx/settings */
- 		floppy->ticks = IDEFLOPPY_TICKS_DELAY;
- 		blk_queue_max_sectors(drive->queue, 64);
-@@ -1381,7 +1384,7 @@ static void idefloppy_setup(ide_drive_t *drive, idefloppy_floppy_t *floppy)
- 	 */
- 	if (strncmp(drive->id->model, "IOMEGA Clik!", 11) == 0) {
- 		blk_queue_max_sectors(drive->queue, 64);
--		set_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags);
-+		floppy->flags |= 1UL << IDEFLOPPY_CLIK_DRIVE;
- 	}
- 
- 	(void) idefloppy_get_capacity(drive);
-@@ -1471,7 +1474,7 @@ static int idefloppy_open(struct inode *inode, struct file *filp)
- 	floppy->openers++;
- 
- 	if (floppy->openers == 1) {
--		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-+		floppy->flags &= (1UL << IDEFLOPPY_FORMAT_IN_PROGRESS) ^ ~0UL;
- 		/* Just in case */
- 
- 		idefloppy_create_test_unit_ready_cmd(&pc);
-@@ -1496,14 +1499,14 @@ static int idefloppy_open(struct inode *inode, struct file *filp)
- 			ret = -EROFS;
- 			goto out_put_floppy;
- 		}
--		set_bit(IDEFLOPPY_MEDIA_CHANGED, &floppy->flags);
-+		floppy->flags |= 1UL << IDEFLOPPY_MEDIA_CHANGED;
- 		/* IOMEGA Clik! drives do not support lock/unlock commands */
--		if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-+		if (!((1UL << IDEFLOPPY_CLIK_DRIVE) & floppy->flags)) {
- 			idefloppy_create_prevent_cmd(&pc, 1);
- 			(void) idefloppy_queue_pc_tail(drive, &pc);
- 		}
- 		check_disk_change(inode->i_bdev);
--	} else if (test_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags)) {
-+	} else if ((1UL << IDEFLOPPY_FORMAT_IN_PROGRESS) & floppy->flags) {
- 		ret = -EBUSY;
- 		goto out_put_floppy;
- 	}
-@@ -1526,12 +1529,12 @@ static int idefloppy_release(struct inode *inode, struct file *filp)
- 
- 	if (floppy->openers == 1) {
- 		/* IOMEGA Clik! drives do not support lock/unlock commands */
--		if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-+		if (!((1UL << IDEFLOPPY_CLIK_DRIVE) & floppy->flags)) {
- 			idefloppy_create_prevent_cmd(&pc, 0);
- 			(void) idefloppy_queue_pc_tail(drive, &pc);
- 		}
- 
--		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-+		floppy->flags &= (1UL << IDEFLOPPY_FORMAT_IN_PROGRESS) ^ ~0UL;
- 	}
- 
- 	floppy->openers--;
-@@ -1560,7 +1563,7 @@ static int idefloppy_lockdoor(idefloppy_floppy_t *floppy, idefloppy_pc_t *pc,
- 
- 	/* The IOMEGA Clik! Drive doesn't support this command -
- 	 * no room for an eject mechanism */
--	if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-+	if (!((1UL << IDEFLOPPY_CLIK_DRIVE) & floppy->flags)) {
- 		int prevent = (arg) ? 1 : 0;
- 
- 		if (cmd == CDROMEJECT)
-@@ -1586,11 +1589,11 @@ static int idefloppy_format_unit(idefloppy_floppy_t *floppy, unsigned long arg)
- 
- 	if (floppy->openers > 1) {
- 		/* Don't format if someone is using the disk */
--		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-+		floppy->flags &= (1UL << IDEFLOPPY_FORMAT_IN_PROGRESS) ^ ~0UL;
- 		return -EBUSY;
- 	}
- 
--	set_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-+	floppy->flags |= 1UL << IDEFLOPPY_FORMAT_IN_PROGRESS;
- 
- 	/*
- 	 * Send ATAPI_FORMAT_UNIT to the drive.
-@@ -1624,7 +1627,7 @@ static int idefloppy_format_unit(idefloppy_floppy_t *floppy, unsigned long arg)
- 
- out:
- 	if (err)
--		clear_bit(IDEFLOPPY_FORMAT_IN_PROGRESS, &floppy->flags);
-+		floppy->flags &= (1UL << IDEFLOPPY_FORMAT_IN_PROGRESS) ^ ~0UL;
- 	return err;
- }
- 
-@@ -1661,13 +1664,18 @@ static int idefloppy_media_changed(struct gendisk *disk)
- {
- 	struct ide_floppy_obj *floppy = ide_floppy_g(disk);
- 	ide_drive_t *drive = floppy->drive;
-+	int ret;
- 
- 	/* do not scan partitions twice if this is a removable device */
- 	if (drive->attach) {
- 		drive->attach = 0;
- 		return 0;
- 	}
--	return test_and_clear_bit(IDEFLOPPY_MEDIA_CHANGED, &floppy->flags);
-+	/* test_and_clear_bit */
-+	ret = (1UL << IDEFLOPPY_MEDIA_CHANGED) & floppy->flags;
-+	floppy->flags &= (1UL << IDEFLOPPY_MEDIA_CHANGED) ^ ~0UL;
-+
-+	return ret;
- }
- 
- static int idefloppy_revalidate_disk(struct gendisk *disk)
+Below is the most common oops trace. I'm wondering if this can be caused
+by a bug in the driver or if there is a platform-specific issue? I can
+post the driver source here if it would be useful.
+
+Kernel: 2.6.22 (also happens with 2.6.23)
+Arch: mips
+RAM: 256M
+
+# bonnie++ -d bench -s 512 -n 1 -x 1 -u root -r 256 -f
+Writing intelligently...done
+Rewriting...Unhandled kernel unaligned access[#1]:
+Cpu 0
+$ 0   : 00000000 fffdffff 00000000 00000000
+$ 4   : 00000000 00000000 01010101 8463d4d0
+$ 8   : 81118880 81118860 00000000 8f0d6884
+$12   : 00000001 00000008 00000001 8f0d6884
+$16   : 81118880 00000000 00000000 8f0d67b8
+$20   : 812d1f08 ffffffff 00000001 842c9700
+$24   : 00000001 0000000e
+$28   : 812d0000 812d1c48 0000000c 8016e1f8
+Hi    : 00000000
+Lo    : 00000005
+epc   : 801d88d4 __mpage_writepage+0xc0/0x8e8     Not tainted
+ra    : 8016e1f8 write_cache_pages+0x35c/0x4fc
+Status: 10008403    KERNEL EXL IE
+Cause : 10000010
+BadVA : 01010101
+PrId  : 00002d40
+Modules linked in: pata_tx49xx
+Process pdflush (pid: 76, threadinfo=812d0000, task=812fa900)
+Stack : 00000060 801334b4 00000000 81a9c930 00000020 00000070 00446d85
+00000000
+        8fe07600 00000000 8030b5ec 812d1f08 0000031a 802ff96c 00000000
+fffdffff
+        842c9100 842c9100 00000060 00000000 00000008 00000000 8f1342d0
+8fdd0c90
+        00000060 00000060 00000000 802fb94c 00000968 00000000 0000000e
+8f0d6880
+        00000000 812d1d58 8f0d6890 812d1d90 80165dd4 00000001 8f0d6880
+00000000
+        ...
+Call Trace:
+[<801d88d4>] __mpage_writepage+0xc0/0x8e8
+[<8016e1f8>] write_cache_pages+0x35c/0x4fc
+[<801d9140>] mpage_writepages+0x44/0xa8
+[<8016e438>] do_writepages+0x74/0x7c
+[<801c3528>] __writeback_single_inode+0xb4/0x47c
+[<801c3fa0>] sync_sb_inodes+0x208/0x33c
+[<801c4420>] writeback_inodes+0x11c/0x13c
+[<8016ce98>] background_writeout+0xcc/0x120
+[<8016efc0>] pdflush+0x1e0/0x2d0
+[<80147820>] kthread+0x88/0xc4
+[<80105ee4>] kernel_thread_helper+0x10/0x18
+
+
+Code: 00009021  8d07000c  00e03021 <8cc20000> 00021082  30420001
+00028036  8cc
+
+
+
 -- 
-1.5.3.7
+James Chapman
+Katalix Systems Ltd
+http://www.katalix.com
+Catalysts for your Embedded Linux software development
+
 
