@@ -1,7 +1,7 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 10/21] ide-floppy: remove struct idefloppy_mode_parameter_header
-Date: Fri, 11 Jan 2008 12:58:08 +0100
-Message-ID: <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 14/21] ide-floppy: mv idefloppy_{should_,}report_error
+Date: Fri, 11 Jan 2008 12:58:12 +0100
+Message-ID: <1200052699-28420-15-git-send-email-bbpetkov@yahoo.de>
 References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-3-git-send-email-bbpetkov@yahoo.de>
@@ -12,66 +12,98 @@ References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-8-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
  <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-13-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp101.plus.mail.re1.yahoo.com ([69.147.102.64]:33567 "HELO
-	smtp101.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758863AbYAKMDi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:38 -0500
-In-Reply-To: <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp115.plus.mail.re1.yahoo.com ([69.147.102.78]:34569 "HELO
+	smtp115.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759059AbYAKMDk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:40 -0500
+In-Reply-To: <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej@gollum.tnic, Zolnierkiewicz@gollum.tnic, bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
+In addition to shortening the function name, move the printk-call into the
+function thereby saving some code lines. Also, make the function out_of_line
+since it is not on a performance critical path.
+
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |   25 ++++---------------------
- 1 files changed, 4 insertions(+), 21 deletions(-)
+ drivers/ide/ide-floppy.c |   37 ++++++++++++++-----------------------
+ 1 files changed, 14 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 7d4ac0b..11c2c9b 100644
+index 49d83a1..b718615 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -238,24 +238,6 @@ struct idefloppy_id_gcw {
- #define	IDEFLOPPY_CAPABILITIES_PAGE	0x1b
- #define IDEFLOPPY_FLEXIBLE_DISK_PAGE	0x05
+@@ -707,16 +707,18 @@ static ide_startstop_t idefloppy_transfer_pc1(ide_drive_t *drive)
+ 	return ide_started;
+ }
  
 -/*
-- *	Mode Parameter Header for the MODE SENSE packet command
+- * Suppresses error messages resulting from Medium not present.
 - */
--typedef struct {
--	u16		mode_data_length;	/* Length of the following data transfer */
--	u8		medium_type;		/* Medium Type */
--#if defined(__LITTLE_ENDIAN_BITFIELD)
--	unsigned	reserved3	:7;
--	unsigned	wp		:1;	/* Write protect */
--#elif defined(__BIG_ENDIAN_BITFIELD)
--	unsigned	wp		:1;	/* Write protect */
--	unsigned	reserved3	:7;
--#else
--#error "Bitfield endianness not defined! Check your byteorder.h"
--#endif
--	u8		reserved[4];
--} idefloppy_mode_parameter_header_t;
--
- static DEFINE_MUTEX(idefloppy_ref_mutex);
- 
- #define to_ide_floppy(obj) container_of(obj, struct ide_floppy_obj, kref)
-@@ -899,10 +881,11 @@ static void idefloppy_create_format_unit_cmd (idefloppy_pc_t *pc, int b, int l,
- /*
-  *	A mode sense command is used to "sense" floppy parameters.
-  */
--static void idefloppy_create_mode_sense_cmd (idefloppy_pc_t *pc, u8 page_code, u8 type)
-+static void idefloppy_create_mode_sense_cmd(idefloppy_pc_t *pc, u8 page_code,
-+		u8 type)
+-static inline int idefloppy_should_report_error(idefloppy_floppy_t *floppy)
++static void idefloppy_report_error(idefloppy_floppy_t *floppy,
++		idefloppy_pc_t *pc)
  {
--	u16 length = sizeof(idefloppy_mode_parameter_header_t);
--	
-+	u16 length = 8; /* sizeof(Mode Parameter Header) = 8 Bytes */
+ 	if (floppy->sense_key == 0x02 &&
+ 	    floppy->asc       == 0x3a &&
+ 	    floppy->ascq      == 0x00)
+-		return 0;
+-	return 1;
++		return;
 +
- 	idefloppy_init_pc(pc);
- 	pc->c[0] = GPCMD_MODE_SENSE_10;
- 	pc->c[1] = 0;
++	printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x, key = %2x, "
++			"asc = %2x, ascq = %2x\n",
++			floppy->drive->name, pc->c[0], floppy->sense_key,
++			floppy->asc, floppy->ascq);
+ }
+ 
+ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
+@@ -741,15 +743,8 @@ static ide_startstop_t idefloppy_issue_pc(ide_drive_t *drive,
+ 		 *	a legitimate error code was received.
+ 		 */
+ 		if (!test_bit(PC_ABORT, &pc->flags)) {
+-			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags)) {
+-				if (idefloppy_should_report_error(floppy))
+-					printk(KERN_ERR "ide-floppy: %s: I/O error, "
+-					       "pc = %2x, key = %2x, "
+-					       "asc = %2x, ascq = %2x\n",
+-					       drive->name, pc->c[0],
+-					       floppy->sense_key,
+-					       floppy->asc, floppy->ascq);
+-			}
++			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags))
++				idefloppy_report_error(floppy, pc);
+ 			/* Giving up */
+ 			pc->error = IDEFLOPPY_ERROR_GENERAL;
+ 		}
+@@ -958,16 +953,12 @@ static ide_startstop_t idefloppy_do_request(ide_drive_t *drive,
+ 			rq->nr_sectors, rq->current_nr_sectors);
+ 
+ 	if (rq->errors >= ERROR_MAX) {
+-		if (floppy->failed_pc != NULL) {
+-			if (idefloppy_should_report_error(floppy))
+-				printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x,"
+-				       " key = %2x, asc = %2x, ascq = %2x\n",
+-				       drive->name, floppy->failed_pc->c[0],
+-				       floppy->sense_key, floppy->asc, floppy->ascq);
+-		}
++		if (floppy->failed_pc != NULL)
++			idefloppy_report_error(floppy, floppy->failed_pc);
+ 		else
+ 			printk(KERN_ERR "ide-floppy: %s: I/O error\n",
+-				drive->name);
++					drive->name);
++
+ 		idefloppy_do_end_request(drive, 0, 0);
+ 		return ide_stopped;
+ 	}
 -- 
 1.5.3.7
 
