@@ -1,41 +1,29 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 17/21] ide-floppy: include the proper headers
-Date: Fri, 11 Jan 2008 14:19:32 +0100
-Message-ID: <1200057572-29230-1-git-send-email-bbpetkov@yahoo.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 40-wire cable detected when directly connected
+Date: Fri, 11 Jan 2008 13:56:30 +0000
+Message-ID: <20080111135630.5ca76a30@lxorguk.ukuu.org.uk>
+References: <200801101824.04863.Tobias_Mueller@twam.info>
+	<4786E82A.7010208@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp104.plus.mail.re1.yahoo.com ([69.147.102.67]:45608 "HELO
-	smtp104.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759120AbYAKNWv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 08:22:51 -0500
-In-Reply-To: 1200052699-28420-1-git-send-email-bbpetkov@yahoo.de
-References: 1200052699-28420-1-git-send-email-bbpetkov@yahoo.de
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49443 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751964AbYAKN7A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 08:59:00 -0500
+In-Reply-To: <4786E82A.7010208@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Tobias =?UTF-8?B?TcO8bGxlcg==?= <Tobias_Mueller@twam.info>, linux-ide@vger.kernel.org
 
-Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
----
- drivers/ide/ide-floppy.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> I don't know very well about CF but does it even fill UDMA/33?  What
+> does 'dd if=/dev/sdc of=/dev/null bs=1M count=16 iflag=direct' say?  You
+> can increase count for more reliable result.
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index c889c16..89b26ea 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -37,9 +37,9 @@
- #include <scsi/scsi_ioctl.h>
- 
- #include <asm/byteorder.h>
--#include <asm/irq.h>
--#include <asm/uaccess.h>
--#include <asm/io.h>
-+#include <linux/irq.h>
-+#include <linux/uaccess.h>
-+#include <linux/io.h>
- #include <asm/unaligned.h>
- 
- /* The following are used to debug the driver. */
--- 
-1.5.3.7
+Some CF hardware can manage UDMA33, almost no adapters and cable
+convertors can however. I don't know if any of the 40pin CF connectors
+are rated for over UDMA33 (but they are 40 wire so that is correct ;))
 
+Alan
