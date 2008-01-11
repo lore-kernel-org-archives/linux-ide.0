@@ -1,49 +1,54 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Problem setting dma using pata_it821x driver in vanilla 2.6.23.12
- and gentoo-sources 2.6.23-r3
-Date: Fri, 11 Jan 2008 12:11:30 +0900
-Message-ID: <4786DE62.6090604@gmail.com>
-References: <200801051734.18088.marc@fallon.classyad.com> <478434C4.5000209@gmail.com> <Pine.LNX.4.64.0801100741580.6632@classyad.com> <47861B05.2010201@gmail.com> <Pine.LNX.4.64.0801102143150.11200@classyad.com>
+Subject: Re: 40-wire cable detected when directly connected
+Date: Fri, 11 Jan 2008 12:53:14 +0900
+Message-ID: <4786E82A.7010208@gmail.com>
+References: <200801101824.04863.Tobias_Mueller@twam.info>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:53852 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755439AbYAKDLk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 22:11:40 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1465660wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 19:11:38 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.64.0801102143150.11200@classyad.com>
+Received: from rv-out-0910.google.com ([209.85.198.185]:31380 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155AbYAKDxV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jan 2008 22:53:21 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so795959rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 19:53:20 -0800 (PST)
+In-Reply-To: <200801101824.04863.Tobias_Mueller@twam.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Howard Zuckman <marc@fallon.classyad.com>
+To: =?ISO-8859-1?Q?Tobias_M=FCller?= <Tobias_Mueller@twam.info>
 Cc: linux-ide@vger.kernel.org
 
-Marc Howard Zuckman wrote:
-> On Thu, 10 Jan 2008, Tejun Heo wrote:
-> 
->>
->> Oh... I thought you were using libata drivers because you mentioned
->> pata_it821x on the subject.  The IDE driver supports 'hdparm -d 1' fine.
->> I wonder why that's not working.  Also, the driver is configuring your
->> disk to PIO0.
->>
->> Cc'ing Alan and Bartlomiej.  Guys, is this the smart mode problem?  Do
->> ide and libata have this fixed in 2.6.24-rc?
->>
-> And I thought I was using pata_it821x because pata_it821x.o is compiled
-> as an object file in my source tree.  On the other hand, it821x.o  is
-> also compiled.
-> Looking back at the .config file, CONFIG_ATA is not set, so I'm not
-> quite sure why pata_821x.o does exist.
-> 
-> Is it possible that both drivers are present in the kernel and conflict
-> with one another in some fashion?
+Tobias M=FCller wrote:
+> Hello!
+>=20
+> I'm running 2.6.24-rc7 with an Addonics AD4CFPRJ Quad-CF PCI Controll=
+er=20
+> (http://www.addonics.com/products/flash_memory_reader/ad4cfprj.asp) u=
+sing=20
+> Silicon Image PCI0680 chipset which is connected direct (no cables) w=
+ith 2=20
+> Compact-Flash Cards.
+>=20
+> In configured
+> CONFIG_ATA=3Dy
+> CONFIG_PATA_SIL680=3Dy
+>=20
+> and the controller is correclty found, but it complains about 40-wire=
+ cables,=20
+> but I'm not using any cables
+> at all.
+>=20
+> Is there a solution to disable this check or to correct this?
 
-The don't conflict.  If both are in the kernel, IDE drivers have
-priority.  Can you please try the libata driver and see if anything is
-different?
+The usual way to correct this is to add a whitelist to override cable
+detection.  Laptops can be identified using dmi data and add-on cards
+hopefully with subsystem.  Dang...  Addonics didn't set Subsystem.
 
--- 
+I don't know very well about CF but does it even fill UDMA/33?  What
+does 'dd if=3D/dev/sdc of=3D/dev/null bs=3D1M count=3D16 iflag=3Ddirect=
+' say?  You
+can increase count for more reliable result.
+
+--=20
 tejun
