@@ -1,87 +1,96 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Sata 4726 Testing
-Date: Fri, 11 Jan 2008 16:49:28 +0900
-Message-ID: <47871F88.8070109@gmail.com>
-References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47859132.1000700@gmail.com> <4785521B.6070205@shaw.ca> <47859D1A.8010006@gmail.com> <47855F02.3010407@shaw.ca> <4785BD03.10809@gmail.com> <4786C42A.10403@shaw.ca>
+From: "Kuan Luo" <kluo@nvidia.com>
+Subject: RE: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
+Date: Fri, 11 Jan 2008 15:54:05 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090201080801090000090805"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:60792 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759646AbYAKHte (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 02:49:34 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so853914rvb.1
-        for <linux-ide@vger.kernel.org>; Thu, 10 Jan 2008 23:49:34 -0800 (PST)
-In-Reply-To: <4786C42A.10403@shaw.ca>
+Received: from hqemgate04.nvidia.com ([216.228.112.152]:3574 "EHLO
+	hqemgate04.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752177AbYAKHyg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 02:54:36 -0500
+In-Reply-To: <478567D8.10601@shaw.ca>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Ryder <tireman@shaw.ca>
-Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-This is a multi-part message in MIME format.
---------------090201080801090000090805
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+hi robert,
+	I have fixed a bug in rhel4u5 2.6.9-55 when running adma mode
+with HDS7250SASUN500G.
+	Could you check this code and if no problem,  then help me to
+submit to the newest kernel.
 
-Andrew Ryder wrote:
-> For the regular power on detected, are you referring to cold/warm
-> booting the system and verifying initialization or only power cycling
-> the 4726?
-> 
-> Here are my test results, TestingRoutine.txt is the procedure I followed
-> and test results obtained. If I missed something, please let me know.
-> 
-> From what I could find, the problem with ata1.03 not being detected is
-> consistent with the port. In my testing, I moved the last drive to the
-> 5th port on the 4726 and the problem carried through. The issue seemed
-> to only occur when the 4726 was powered on/off, not when it was
-> unplugged and re-plugged with the power on.
-> 
-> If I have some time on the weekend, I will do a test routine of several
-> hot un-plugs / re-plugs of the 4726 and see what happens.
+for 2.6.9-55
+diff -Nupr a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+--- a/drivers/ata/sata_nv.c	2008-01-14 14:37:32.000000000 +0800
++++ b/drivers/ata/sata_nv.c	2008-01-14 14:37:21.000000000 +0800
+@@ -802,7 +802,7 @@ static irqreturn_t nv_adma_interrupt(int
+ 				ata_port_printk(ap, KERN_ERR, "CPB
+error, stat=0x%x\n", status);
+ 				have_global_err = 1;
+ 			}
+-			if ((status & NV_ADMA_STAT_DONE) ||
+have_global_err) {
++			if ((status & (NV_ADMA_STAT_CMD_COMPLETE |
+NV_ADMA_STAT_DONE)) || have_global_err) {
+ 				/** Check CPBs for completed commands */
+ 
+ 				if(ata_tag_valid(ap->active_tag))
+@@ -814,6 +814,7 @@ static irqreturn_t nv_adma_interrupt(int
+ 					u32 active = ap->sactive;
+ 					while( (pos = ffs(active)) ) {
+ 						pos--;
++						if ((notifier_clears[i]
+& (1 << pos)) || have_global_err)
+ 						nv_adma_check_cpb(ap,
+pos, have_global_err ||
+ 							(notifier_error
+& (1 << pos)) );
+ 						active &= ~(1 << pos );
 
-Thanks a lot for all the testing.  Can you please apply the attached
-patch and see whether things improve?
+for 2.6.24-rc7
 
-Thanks.
-
--- 
-tejun
-
---------------090201080801090000090805
-Content-Type: text/x-patch;
- name="sil24-freeze-fix.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sil24-freeze-fix.patch"
-
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index b4c674d..864c1c1 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -301,7 +301,7 @@ static struct sil24_cerr_info {
- 	[PORT_CERR_PKT_PROT]	= { AC_ERR_HSM, ATA_EH_SOFTRESET,
- 				    "invalid data directon for ATAPI CDB" },
- 	[PORT_CERR_SGT_BOUNDARY] = { AC_ERR_SYSTEM, ATA_EH_SOFTRESET,
--				     "SGT no on qword boundary" },
-+				     "SGT not on qword boundary" },
- 	[PORT_CERR_SGT_TGTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
- 				    "PCI target abort while fetching SGT" },
- 	[PORT_CERR_SGT_MSTABRT]	= { AC_ERR_HOST_BUS, ATA_EH_SOFTRESET,
-@@ -1094,10 +1094,13 @@ static void sil24_error_intr(struct ata_port *ap)
- 		if (ci && ci->desc) {
- 			err_mask |= ci->err_mask;
- 			action |= ci->action;
-+			if (action & ATA_EH_RESET_MASK)
-+				freeze = 1;
- 			ata_ehi_push_desc(ehi, "%s", ci->desc);
- 		} else {
- 			err_mask |= AC_ERR_OTHER;
- 			action |= ATA_EH_SOFTRESET;
-+			freeze = 1;
- 			ata_ehi_push_desc(ehi, "unknown command error %d",
- 					  cerr);
- 		}
-
---------------090201080801090000090805--
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index ed5dc7c..6bffd39 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1010,8 +1010,7 @@ static irqreturn_t nv_adma_interrupt(int irq, void
+*dev_instance)
+ 				continue;
+ 			}
+ 
+-			if (status & (NV_ADMA_STAT_DONE |
+-				      NV_ADMA_STAT_CPBERR)) {
++			if (status & (NV_ADMA_STAT_DONE |
+NV_ADMA_STAT_CMD_COMPLETE | NV_ADMA_STAT_CPBERR)) {
+ 				u32 check_commands;
+ 				int pos, error = 0;
+ 
+@@ -1023,8 +1022,8 @@ static irqreturn_t nv_adma_interrupt(int irq, void
+*dev_instance)
+ 				/** Check CPBs for completed commands */
+ 				while ((pos = ffs(check_commands)) &&
+!error) {
+ 					pos--;
+-					error = nv_adma_check_cpb(ap,
+pos,
+-						notifier_error & (1 <<
+pos));
++					if ((notifier_clears[i] & (1 <<
+pos)) || (status & NV_ADMA_STAT_CPBERR))
++						error =
+nv_adma_check_cpb(ap, pos, notifier_error & (1 << pos));
+ 					check_commands &= ~(1 << pos);
+ 				}
+ 			}
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
