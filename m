@@ -1,34 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: sata_nv does not function in kernel > 2.6.20.21
-Date: Fri, 11 Jan 2008 15:17:58 +0000
-Message-ID: <20080111151758.1d702b50@lxorguk.ukuu.org.uk>
-References: <20080110024733.GC9461@mhcomputing.net>
-	<4785A1CF.7050006@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9728] Serverworks initialisation fails
+Date: Fri, 11 Jan 2008 07:40:19 -0800 (PST)
+Message-ID: <20080111154019.EF25810806A@picon.linux-foundation.org>
+References: <bug-9728-11633@http.bugzilla.kernel.org/>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:38752 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759590AbYAKPUb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 10:20:31 -0500
-In-Reply-To: <4785A1CF.7050006@garzik.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48151 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759982AbYAKPkV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 10:40:21 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0BFeKuj005718
+	for <linux-ide@vger.kernel.org>; Fri, 11 Jan 2008 07:40:21 -0800
+In-Reply-To: <bug-9728-11633@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Matthew Hall <mhall@mhcomputing.net>, linux-scsi@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-> Error -16 is EBUSY, which causes the driver load to fail due to the 
-> "Unable to reserve mem region" message.
-> 
-> This means that the sata_nv driver needed to use PCI BAR 6, but was 
-> unable to for some reason.  Given that sata_nv uses devres like other 
-> libata drivers, IMO the likely cause is outside the ATA subsystem (PCI? 
-> ACPI?).
+http://bugzilla.kernel.org/show_bug.cgi?id=9728
 
-Actually it looks to me like there is something very odd going on here.
-The sata_nv code checks each of the 6 resources exists (wrongly - it does
-it before pcim_enable_device so the check is probably not valid). That
-would report -ENODEV.
 
-EBUSY implies all 6 resources were assigned but one couldn't be mapped.
+
+
+
+------- Comment #1 from trond.myklebust@fys.uio.no  2008-01-11 07:40 -------
+Created an attachment (id=14413)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=14413&action=view)
+Looks like an unterminated DMI table...
+
+The following patch, which terminates the ide_acpi_dmi_table appears to
+fix the problem.
+Credit goes to Jeff Garzik...
+
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
