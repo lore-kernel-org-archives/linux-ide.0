@@ -1,167 +1,181 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 01/21] ide-floppy: convert to generic packet commands
-Date: Fri, 11 Jan 2008 12:57:59 +0100
-Message-ID: <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 20/21] ide-floppy: merge idefloppy_{input,output}_buffers
+Date: Fri, 11 Jan 2008 12:58:18 +0100
+Message-ID: <1200052699-28420-21-git-send-email-bbpetkov@yahoo.de>
 References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-2-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-3-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-4-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-5-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-8-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-9-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-10-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-13-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-14-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-15-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-16-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-17-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-18-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-19-git-send-email-bbpetkov@yahoo.de>
+ <1200052699-28420-20-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp116.plus.mail.re1.yahoo.com ([69.147.102.79]:39094 "HELO
-	smtp116.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759130AbYAKMDk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:40 -0500
-In-Reply-To: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp110.plus.mail.re1.yahoo.com ([69.147.102.73]:21111 "HELO
+	smtp110.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759853AbYAKMDr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 07:03:47 -0500
+In-Reply-To: <1200052699-28420-20-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej@gollum.tnic, Zolnierkiewicz@gollum.tnic, bzolnier@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-Replace the ide-floppy packet commands opcode defines with the generic ones.
-Add a missing GPCMD_WRITE_12 (opcode 0xaa) to the generic ones in cdrom.h. The
-last one can be found in the current version of INF-8090, p.905.
+We merge idefloppy_{input,output}_buffers() into idefloppy_io_buffers() by
+introducing a 4th arg. called direction. According to its value
+we atapi_input_bytes() or atapi_output_bytes(). Also, simplify the interrupt
+handler by removing multiple calls testing the data direction and using a local
+variable instead.
 
-CC: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |   44 ++++++++++++--------------------------------
- include/linux/cdrom.h    |    1 +
- 2 files changed, 13 insertions(+), 32 deletions(-)
+ drivers/ide/ide-floppy.c |   67 +++++++++++----------------------------------
+ 1 files changed, 17 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 3512637..e4ebb21 100644
+index 3d9b1e5..4106eb4 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -273,26 +273,6 @@ typedef struct ide_floppy_obj {
- #define IDEFLOPPY_ZIP_DRIVE		5	/* Requires BH algorithm for packets */
+@@ -295,42 +295,8 @@ static int idefloppy_do_end_request(ide_drive_t *drive, int uptodate, int nsecs)
+ 	return 0;
+ }
  
- /*
-- *	ATAPI floppy drive packet commands
-- */
--#define IDEFLOPPY_FORMAT_UNIT_CMD	0x04
--#define IDEFLOPPY_INQUIRY_CMD		0x12
--#define IDEFLOPPY_MODE_SELECT_CMD	0x55
--#define IDEFLOPPY_MODE_SENSE_CMD	0x5a
--#define IDEFLOPPY_READ10_CMD		0x28
--#define IDEFLOPPY_READ12_CMD		0xa8
--#define IDEFLOPPY_READ_CAPACITY_CMD	0x23
--#define IDEFLOPPY_REQUEST_SENSE_CMD	0x03
--#define IDEFLOPPY_PREVENT_REMOVAL_CMD	0x1e
--#define IDEFLOPPY_SEEK_CMD		0x2b
--#define IDEFLOPPY_START_STOP_CMD	0x1b
--#define IDEFLOPPY_TEST_UNIT_READY_CMD	0x00
--#define IDEFLOPPY_VERIFY_CMD		0x2f
--#define IDEFLOPPY_WRITE10_CMD		0x2a
--#define IDEFLOPPY_WRITE12_CMD		0xaa
--#define IDEFLOPPY_WRITE_VERIFY_CMD	0x2e
+-static void idefloppy_input_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
+-		unsigned int bcount)
+-{
+-	struct request *rq = pc->rq;
+-	struct bio_vec *bvec;
+-	struct req_iterator iter;
+-	unsigned long flags;
+-	char *data;
+-	int count, done = 0;
 -
--/*
-  *	Defines for the mode sense command
-  */
- #define MODE_SENSE_CURRENT		0x00
-@@ -696,8 +676,8 @@ static void idefloppy_init_pc (idefloppy_pc_t *pc)
- 
- static void idefloppy_create_request_sense_cmd (idefloppy_pc_t *pc)
+-	rq_for_each_segment(bvec, rq, iter) {
+-		if (!bcount)
+-			break;
+-
+-		count = min(bvec->bv_len, bcount);
+-
+-		data = bvec_kmap_irq(bvec, &flags);
+-		drive->hwif->atapi_input_bytes(drive, data, count);
+-		bvec_kunmap_irq(data, &flags);
+-
+-		bcount -= count;
+-		pc->b_count += count;
+-		done += count;
+-	}
+-
+-	idefloppy_do_end_request(drive, 1, done >> 9);
+-
+-	if (bcount) {
+-		printk(KERN_ERR "%s: leftover data in %s, bcount == %d\n",
+-				drive->name, __FUNCTION__, bcount);
+-		idefloppy_discard_data(drive, bcount);
+-	}
+-}
+-
+-static void idefloppy_output_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
+-		unsigned int bcount)
++static void idefloppy_io_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
++		unsigned int bcount, int direction)
  {
--	idefloppy_init_pc(pc);	
--	pc->c[0] = IDEFLOPPY_REQUEST_SENSE_CMD;
-+	idefloppy_init_pc(pc);
-+	pc->c[0] = GPCMD_REQUEST_SENSE;
- 	pc->c[4] = 255;
- 	pc->request_transfer = 18;
- 	pc->callback = &idefloppy_request_sense_callback;
-@@ -762,7 +742,7 @@ static ide_startstop_t idefloppy_pc_intr (ide_drive_t *drive)
- 			debug_log(KERN_INFO "ide-floppy: %s: I/O error\n",
- 				drive->name);
- 			rq->errors++;
--			if (pc->c[0] == IDEFLOPPY_REQUEST_SENSE_CMD) {
-+			if (pc->c[0] == GPCMD_REQUEST_SENSE) {
- 				printk(KERN_ERR "ide-floppy: I/O error in "
- 					"request sense command\n");
- 				return ide_do_reset(drive);
-@@ -962,7 +942,7 @@ static ide_startstop_t idefloppy_issue_pc (ide_drive_t *drive, idefloppy_pc_t *p
- 	u8 dma;
+ 	struct request *rq = pc->rq;
+ 	struct req_iterator iter;
+@@ -346,7 +312,10 @@ static void idefloppy_output_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
+ 		count = min(bvec->bv_len, bcount);
  
- 	if (floppy->failed_pc == NULL &&
--	    pc->c[0] != IDEFLOPPY_REQUEST_SENSE_CMD)
-+	    pc->c[0] != GPCMD_REQUEST_SENSE)
- 		floppy->failed_pc = pc;
- 	/* Set the current packet command */
- 	floppy->pc = pc;
-@@ -1052,14 +1032,14 @@ static void idefloppy_create_prevent_cmd (idefloppy_pc_t *pc, int prevent)
- 		"prevent = %d\n", prevent);
+ 		data = bvec_kmap_irq(bvec, &flags);
+-		drive->hwif->atapi_output_bytes(drive, data, count);
++		if (direction)
++			drive->hwif->atapi_output_bytes(drive, data, count);
++		else
++			drive->hwif->atapi_input_bytes(drive, data, count);
+ 		bvec_kunmap_irq(data, &flags);
  
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_PREVENT_REMOVAL_CMD;
-+	pc->c[0] = GPCMD_PREVENT_ALLOW_MEDIUM_REMOVAL;
- 	pc->c[4] = prevent;
- }
- 
- static void idefloppy_create_read_capacity_cmd (idefloppy_pc_t *pc)
- {
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_READ_CAPACITY_CMD;
-+	pc->c[0] = GPCMD_READ_FORMAT_CAPACITIES;
- 	pc->c[7] = 255;
- 	pc->c[8] = 255;
- 	pc->request_transfer = 255;
-@@ -1069,7 +1049,7 @@ static void idefloppy_create_format_unit_cmd (idefloppy_pc_t *pc, int b, int l,
- 					      int flags)
- {
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_FORMAT_UNIT_CMD;
-+	pc->c[0] = GPCMD_FORMAT_UNIT;
- 	pc->c[1] = 0x17;
- 
- 	memset(pc->buffer, 0, 12);
-@@ -1094,7 +1074,7 @@ static void idefloppy_create_mode_sense_cmd (idefloppy_pc_t *pc, u8 page_code, u
- 	u16 length = sizeof(idefloppy_mode_parameter_header_t);
- 	
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_MODE_SENSE_CMD;
-+	pc->c[0] = GPCMD_MODE_SENSE_10;
- 	pc->c[1] = 0;
- 	pc->c[2] = page_code + (type << 6);
- 
-@@ -1116,14 +1096,14 @@ static void idefloppy_create_mode_sense_cmd (idefloppy_pc_t *pc, u8 page_code, u
- static void idefloppy_create_start_stop_cmd (idefloppy_pc_t *pc, int start)
- {
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_START_STOP_CMD;
-+	pc->c[0] = GPCMD_START_STOP_UNIT;
- 	pc->c[4] = start;
- }
- 
- static void idefloppy_create_test_unit_ready_cmd(idefloppy_pc_t *pc)
- {
- 	idefloppy_init_pc(pc);
--	pc->c[0] = IDEFLOPPY_TEST_UNIT_READY_CMD;
-+	pc->c[0] = GPCMD_TEST_UNIT_READY;
- }
- 
- static void idefloppy_create_rw_cmd (idefloppy_floppy_t *floppy, idefloppy_pc_t *pc, struct request *rq, unsigned long sector)
-@@ -1138,10 +1118,10 @@ static void idefloppy_create_rw_cmd (idefloppy_floppy_t *floppy, idefloppy_pc_t
- 
- 	idefloppy_init_pc(pc);
- 	if (test_bit(IDEFLOPPY_USE_READ12, &floppy->flags)) {
--		pc->c[0] = cmd == READ ? IDEFLOPPY_READ12_CMD : IDEFLOPPY_WRITE12_CMD;
-+		pc->c[0] = cmd == READ ? GPCMD_READ_12 : GPCMD_WRITE_12;
- 		put_unaligned(htonl(blocks), (unsigned int *) &pc->c[6]);
- 	} else {
--		pc->c[0] = cmd == READ ? IDEFLOPPY_READ10_CMD : IDEFLOPPY_WRITE10_CMD;
-+		pc->c[0] = cmd == READ ? GPCMD_READ_10 : GPCMD_WRITE_10;
- 		put_unaligned(htons(blocks), (unsigned short *) &pc->c[7]);
+ 		bcount -= count;
+@@ -360,7 +329,10 @@ static void idefloppy_output_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
+ 	if (bcount) {
+ 		printk(KERN_ERR "%s: leftover data in %s, bcount == %d\n",
+ 				drive->name, __FUNCTION__, bcount);
+-		idefloppy_write_zeros(drive, bcount);
++		if (direction)
++			idefloppy_write_zeros(drive, bcount);
++		else
++			idefloppy_discard_data(drive, bcount);
  	}
- 	put_unaligned(htonl(block), (unsigned int *) &pc->c[2]);
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index ba32479..dd8e72b 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -480,6 +480,7 @@ struct cdrom_generic_command
- #define GPCMD_TEST_UNIT_READY		    0x00
- #define GPCMD_VERIFY_10			    0x2f
- #define GPCMD_WRITE_10			    0x2a
-+#define GPCMD_WRITE_12			    0xaa
- #define GPCMD_WRITE_AND_VERIFY_10	    0x2e
- /* This is listed as optional in ATAPI 2.6, but is (curiously) 
-  * missing from Mt. Fuji, Table 57.  It _is_ mentioned in Mt. Fuji
+ #endif
+ }
+@@ -491,8 +463,6 @@ static void idefloppy_retry_pc(ide_drive_t *drive)
+ 	idefloppy_queue_pc_head(drive, pc, rq);
+ }
+ 
+-typedef void (io_buf_t)(ide_drive_t *, idefloppy_pc_t *, unsigned int);
+-
+ /*  The usual interrupt handler called during a packet command. */
+ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ {
+@@ -501,7 +471,6 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 	idefloppy_pc_t *pc = floppy->pc;
+ 	struct request *rq = pc->rq;
+ 	xfer_func_t *xferfunc;
+-	io_buf_t *iobuf_func;
+ 	unsigned int temp;
+ 	u16 bcount;
+ 	u8 stat, ireason;
+@@ -573,7 +542,7 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 		printk(KERN_ERR "ide-floppy: CoD != 0 in %s\n", __FUNCTION__);
+ 		return ide_do_reset(drive);
+ 	}
+-	if (((ireason & IO) == IO) == test_bit(PC_WRITING, &pc->flags)) {
++	if (((ireason & IO) == IO) == write) {
+ 		/* Hopefully, we will never get here */
+ 		printk(KERN_ERR "ide-floppy: We wanted to %s, ",
+ 				(ireason & IO) ? "Write" : "Read");
+@@ -581,7 +550,7 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 				(ireason & IO) ? "Read" : "Write");
+ 		return ide_do_reset(drive);
+ 	}
+-	if (!test_bit(PC_WRITING, &pc->flags)) {
++	if (!write) {
+ 		/* Reading - Check that we have enough space */
+ 		temp = pc->actually_transferred + bcount;
+ 		if (temp > pc->request_transfer) {
+@@ -601,18 +570,16 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 					" expected - allowing transfer\n");
+ 		}
+ 	}
+-	if (test_bit(PC_WRITING, &pc->flags)) {
++
++	if (write)
+ 		xferfunc = hwif->atapi_output_bytes;
+-		iobuf_func = &idefloppy_output_buffers;
+-	} else {
++	 else
+ 		xferfunc = hwif->atapi_input_bytes;
+-		iobuf_func = &idefloppy_input_buffers;
+-	}
+ 
+-	if (pc->buffer != NULL)
++	if (pc->buffer)
+ 		xferfunc(drive, pc->current_position, bcount);
+ 	else
+-		iobuf_func(drive, pc, bcount);
++		idefloppy_io_buffers(drive, pc, bcount, write);
+ 
+ 	/* Update the current position */
+ 	pc->actually_transferred += bcount;
 -- 
 1.5.3.7
 
