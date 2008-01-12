@@ -1,32 +1,56 @@
-From: Alexander <aledin@mail.ru>
-Subject: Re: PROBLEM REMAINS: [sata_nv ADMA breaks ATAPI] Crash on accessing
- DVD-RAM
-Date: Sat, 12 Jan 2008 10:25:38 +0200
-Message-ID: <47887982.6050805@mail.ru>
-References: <fa.krOVfyFmB2aqGjJIoHCLmQxecWc@ifi.uio.no> <478702C7.80401@shaw.ca>
+From: Stephan =?iso-8859-1?Q?Windm=FCller?= <windy@white-hawk.de>
+Subject: Updated shutdown in Debian Lenny/Sid
+Date: Sat, 12 Jan 2008 10:09:08 +0100
+Message-ID: <20080112090907.GA29512@speutel.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762083AbYALIZz@vger.kernel.org>
-In-Reply-To: <478702C7.80401@shaw.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from speutel.de ([213.239.215.137]:51930 "EHLO speutel.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761878AbYALJvo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Jan 2008 04:51:44 -0500
+Received: from windy by speutel.de with local (Exim 4.63)
+	(envelope-from <windy@white-hawk.de>)
+	id 1JDcMW-0007hD-2Y
+	for linux-ide@vger.kernel.org; Sat, 12 Jan 2008 10:09:08 +0100
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Robert Hancock wrote:
-> There's this patch which was intended to fix it:
-> 
-> http://lkml.org/lkml/2007/11/22/148
 
-I applied this patch to 2.6.24-rc7. Now at boot time my DVD-RW is
-normaly detected as:
+--M9NhX3UHpAaciwkO
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+Hello!
 
-But I cannot mount it. All my attempts failed with
+The issue mentioned on [0] happened on my system a few weeks ago. But
+now it seems that Debian Testing (Lenny) and Unstable (Sid) corrected
+this problem with sysvinit (2.86.ds1-47)[1].
 
-ISOFS: Unable to identify CD-ROM format.
+Perhaps you can add the distro to your list of fixed distros with
+updated shutdown.
 
-With mem<=4098M or sata_nv.adma=0 it still mounts and works ok.
+Regards
+ Stephan Windm=FCller
 
+[0] http://linux-ata.org/shutdown.html
+[1] http://packages.debian.org/lenny/sysvinit
+
+--M9NhX3UHpAaciwkO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHiIOzi8rkj8W4fFURAlcjAKCl6pSpVJl28sOQWov+2wtDXKbjvgCgwAgU
+aTVZqgIdpq18+9EgouUlr2c=
+=7ct+
+-----END PGP SIGNATURE-----
+
+--M9NhX3UHpAaciwkO--
