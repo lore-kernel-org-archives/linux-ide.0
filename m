@@ -1,47 +1,68 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 18/21] ide-floppy: fix error handling in idefloppy_probe()
-Date: Sat, 12 Jan 2008 21:18:01 +0100
-Message-ID: <200801122118.01949.bzolnier@gmail.com>
-References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-18-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-19-git-send-email-bbpetkov@yahoo.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: PROBLEM REMAINS: [sata_nv ADMA breaks ATAPI] Crash on
+	accessing DVD-RAM
+Date: Sat, 12 Jan 2008 14:35:17 -0600
+Message-ID: <1200170117.3656.66.camel@localhost.localdomain>
+References: <fa.krOVfyFmB2aqGjJIoHCLmQxecWc@ifi.uio.no>
+	 <478702C7.80401@shaw.ca> <47887982.6050805@mail.ru>
+	 <47891426.1020604@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:21337 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758823AbYALUUF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:20:05 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so640516ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 12 Jan 2008 12:20:04 -0800 (PST)
-In-Reply-To: <1200052699-28420-19-git-send-email-bbpetkov@yahoo.de>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:50089 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753825AbYALUfZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:35:25 -0500
+In-Reply-To: <47891426.1020604@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bbpetkov@yahoo.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Alexander <aledin@mail.ru>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
 
-On Friday 11 January 2008, Borislav Petkov wrote:
-> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
-> ---
->  drivers/ide/ide-floppy.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+
+On Sat, 2008-01-12 at 13:25 -0600, Robert Hancock wrote:
+> Alexander wrote:
+> > Robert Hancock wrote:
+> >> There's this patch which was intended to fix it:
+> >>
+> >> http://lkml.org/lkml/2007/11/22/148
+> > 
+> > I applied this patch to 2.6.24-rc7. Now at boot time my DVD-RW is
+> > normaly detected as:
+> > 
+> > sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
+> > 
+> > But I cannot mount it. All my attempts failed with
+> > 
+> > ISOFS: Unable to identify CD-ROM format.
+> > 
+> > With mem<=4098M or sata_nv.adma=0 it still mounts and works ok.
 > 
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 89b26ea..0729df5 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -1737,7 +1737,8 @@ static int ide_floppy_probe(ide_drive_t *drive)
->  				" emulation.\n", drive->name);
->  		goto failed;
->  	}
-> -	if ((floppy = kzalloc(sizeof (idefloppy_floppy_t), GFP_KERNEL)) == NULL) {
-> +	floppy = kzalloc(sizeof(idefloppy_floppy_t), GFP_KERNEL);
-> +	if (!floppy) {
->  		printk(KERN_ERR "ide-floppy: %s: Can't allocate a floppy"
->  				" structure\n", drive->name);
->  		goto failed;
+> As I wrote, it would appear that somehow the blk_queue_bounce_limit 
+> setting that the driver has made is not being respected and the block 
+> layer is still trying to feed it addresses over 4GB. Any ideas anyone?
 
-I'm unable to see any problem with error handling here?
+Actually, I'd be very sceptical that the blk_queue_bounce_limit isn't
+working as advertised; there'd be a large number of failures if it were
+not.
 
-This change should be combined with the rest of checkpatch.pl fixes.
+However, the "as advertised" part doesn't seem to be generally well
+understood.  The point being that block commands are only bounced if
+they come from the filesystem or the user, not if they're generated
+directly inside the kernel.  Since the fault occurs before mount, it's
+suggestive of the latter.
+
+A long time ago, GFP_KERNEL allocations meant that the memory allocated
+was physically under 4GB.  Then x86_64 (and before it ia64) wanted to
+break this.  So they introduced a new flag:  GFP_DMA32 that behaved like
+the old GFP_KERNEL and then changed GFP_KERNEL on their architectures to
+return memory from anywhere.  I'd strongly suggest some piece of kernel
+memory was allocated for a transfer buffer without GFP_DMA32 and then
+passed in to the driver.  Unfortunately, that could be anywhere inside
+cdrom or sr.  Knowing what the actual command is might help ... some of
+the distinctive MMC media ones only have a single source.
+
+James
+
+
