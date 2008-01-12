@@ -1,68 +1,95 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 00/21] ide-floppy redux v2
-Date: Sat, 12 Jan 2008 21:14:39 +0100
-Message-ID: <200801122114.40047.bzolnier@gmail.com>
-References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de> <200801121446.00276.bzolnier@gmail.com>
+Subject: Re: [PATCH 11/21] ide-floppy: fix comments formatting
+Date: Sat, 12 Jan 2008 21:16:23 +0100
+Message-ID: <200801122116.23951.bzolnier@gmail.com>
+References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-11-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:20776 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.173]:20602 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757168AbYALUUB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:20:01 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so640513ugc.16
-        for <linux-ide@vger.kernel.org>; Sat, 12 Jan 2008 12:19:59 -0800 (PST)
-In-Reply-To: <200801121446.00276.bzolnier@gmail.com>
+	with ESMTP id S1758095AbYALUUC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:20:02 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so640512ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 12 Jan 2008 12:20:02 -0800 (PST)
+In-Reply-To: <1200052699-28420-12-git-send-email-bbpetkov@yahoo.de>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Borislav Petkov <bbpetkov@yahoo.de>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Friday 11 January 2008, Borislav Petkov wrote:
+> That is,
+> - remove unnecessary comments
+> - shorten comments
+> - shorten lines longer 80 columns
+> - cleanup whitespace
+> - add a missing loglevel KERN_ to a printk-call
+> - fix misc checkpatch warnings
 
-Hi,
+Majority of this patch consists of checkpatch.pl fixes so it should be merged
+with patch #20.  Also a lot of code beautified here is _heavily_ modified in
+later patches so some of fixups below could be moved there (which would also
+decrease the size of this patch significantly).
 
-On Saturday 12 January 2008, Bartlomiej Zolnierkiewicz wrote:
-> On Friday 11 January 2008, Borislav Petkov wrote:
-> > 
-> > Hi Bart,
-> > 
-> >    here's the second version of the ide-floppy refactoring trail. All the
-> > patches are based on the version of your quilt tree from the 05.01. Also, you've
-> > already applied patch 5 in this series but i'm submitting it still for the sake
-> > of completeness.
-> > 
-> > 
-> >  drivers/ide/ide-cd.c     |    2 -
-> >  drivers/ide/ide-floppy.c | 1403 ++++++++++++++++++----------------------------
-> >  include/linux/cdrom.h    |    1 +
-> >  include/linux/ide.h      |    3 +
-> >  4 files changed, 558 insertions(+), 851 deletions(-)
-> 
-> applied patches #1-4, #8
-> (#4 with some changes)
-> 
-> #5 was already applied so I just re-ordered it into the right spot
-> 
-> I have some comments for #6-7
+> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
+> ---
+>  drivers/ide/ide-floppy.c |  402 +++++++++++++++++++++-------------------------
+>  1 files changed, 181 insertions(+), 221 deletions(-)
 
-applied #9, #15 and #17
+[...]
 
-some comments for #11-12, #14 and #18-21 in separate mails
+> +#define	PC_ABORT		0	/* Set when an error is considered\
+> +					   normal - We won't retry */
 
-#10 and #16 are fine but because they depend on unmerged patches
-I'm unable to apply them currently
+'\' shouldn't be there and
 
-Overall: good job!  300 LOC removed from the driver, code size savings
-and a lot of preparations for the future ATAPI handling unification. :)
+/* ... */
+#define		PC_ABORT		0
 
-Thanks,
-Bart
+would be probably more readable
 
-PS1 Please rebase the patches still needing polishing on top of updated
-IDE quilt tree, recast them and respin the patch series (no need to post
-already merged patches).
+> +#define PC_DMA_RECOMMENDED	2	/* DMA use preferred, if possible */
 
-PS2 what happend to "fix DMA error reporting" patch? (#13 is missing, hmm?)
+please make it match the other flags while at it (space -> tab)
+
+[...]
+
+> -#define IDEFLOPPY_USE_READ12		2	/* Use READ12/WRITE12 or READ10/WRITE10 */
+> +#define IDEFLOPPY_USE_READ12		2	/* READ(10|12)/WRITE(10|12) */
+
+The original comment was way more informative.
+
+Moreover this particular flag is never set so it could be just removed
+(together with some dead code for handling it) in a separate (pre-)patch.
+
+>  #define	IDEFLOPPY_FORMAT_IN_PROGRESS	3	/* Format in progress */
+
+please make it match the other flags while at it (tab -> space)
+
+> -#define IDEFLOPPY_CLIK_DRIVE	        4       /* Avoid commands not supported in Clik drive */
+> -#define IDEFLOPPY_ZIP_DRIVE		5	/* Requires BH algorithm for packets */
+> +#define IDEFLOPPY_CLIK_DRIVE	        4       /* Avoid commands not supported\
+> +						   in Clik drive */
+> +#define IDEFLOPPY_ZIP_DRIVE		5	/* Requires BH algorithm for\
+> +						   packets */
+
+no need for '\' characters
+
+[...]
+
+> -static void idefloppy_queue_pc_head (ide_drive_t *drive,idefloppy_pc_t *pc,struct request *rq)
+> +static void idefloppy_queue_pc_head(ide_drive_t *drive, idefloppy_pc_t *pc,
+> +		struct request *rq)
+
+minor CodingStyle nitpick:
+
+static void idefloppy_queue_pc_head(ide_drive_t *drive, idefloppy_pc_t *pc,
+				    struct request *rq)
+
+would be more readable IMO but it is a matter of personal taste
+
+[ same applies for other similar modifications done by this patch series ]
