@@ -1,58 +1,52 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
-Date: Fri, 11 Jan 2008 19:07:21 -0600
-Message-ID: <478812C9.1000901@shaw.ca>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca>
- <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com>
- <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com>
- <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca>
- <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com>
- <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com>
- <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca>
- <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com>
- <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com>
- <478567D8.10601@shaw.ca>
- <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com>
+Subject: Re: sata_nv + ADMA + Samsung disk problem
+Date: Fri, 11 Jan 2008 19:10:15 -0600
+Message-ID: <47881377.4070508@shaw.ca>
+References: <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca>
+ <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
+ <477BDEA5.8040701@garzik.org>
+ <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
+ <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
+ <F72FA20C31DD4F4C997B91C5B3690A09505598@hqemmail07.nvidia.com>
+ <4782BF75.9040803@shaw.ca> <20080111231813.GB7052@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:8244 "EHLO
-	pd2mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762582AbYALBHd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 20:07:33 -0500
-In-reply-to: <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:33478 "EHLO
+	pd4mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932091AbYALBKy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 20:10:54 -0500
+In-reply-to: <20080111231813.GB7052@boogie.lpds.sztaki.hu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kuan Luo <kluo@nvidia.com>
-Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Allen Martin <AMartin@nvidia.com>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
 
-Kuan Luo wrote:
-> hi robert,
-> 	I have fixed a bug in rhel4u5 2.6.9-55 when running adma mode
-> with HDS7250SASUN500G.
-> 	Could you check this code and if no problem,  then help me to
-> submit to the newest kernel.
+Gabor Gombas wrote:
+> On Mon, Jan 07, 2008 at 06:10:29PM -0600, Robert Hancock wrote:
 > 
+>> Gabor, I just noticed you said that it worked OK in 2.6.20, yet 2.6.22  
+>> fails. 2.6.20 had ADMA support as well, so I wonder what change started  
+>> causing the problem. Would it be possible for you to do a git bisect (or  
+>> at least try 2.6.21 to try and narrow it down)?
+> 
+> I've now booted 2.6.21.7, we'll see. The problem with the bisection is
+> that I can't explicitely trigger the bug so I can't say for sure if a
+> kernel is good or it is just needs more time to trigger. The average
+> uptime of this machine is just a couple hours a day.
+> 
+> For example, with 2.6.24-rc6 it took over 3 hours for the first disk to
+> trigger the bug and the second disk needed more than 7 hours. This
+> machine is seldom turned on for that long.
 
-What problem does this resolve? I tested it against the cache flush/NCQ 
-write switching problem we've been trying to solve, and it doesn't look 
-like it fixes that one - if I apply this patch and then remove the 
-udelay(20) in sata_nv.c that I added which prevented me from seeing this 
-problem before, it shows up.
+If you want to try to reproduce the problem more rapidly, you can try 
+the recipe I just suggested to the NVIDIA guys:
 
-If you want to try and reproduce that problem, you can take out this 
-udelay(20) from the current version:
-
-if (curr_ncq != pp->last_issue_ncq) {
-	/* Seems to need some delay before switching between NCQ and
-	   non-NCQ commands, else we get command timeouts and such. */
-	udelay(20);
-	pp->last_issue_ncq = curr_ncq;
-}
-
-then run 2 instances of this C program, with different output files as 
-the argument:
+Run 2 instances of this C program, with different output files as the 
+argument, i.e. save this to fsynctest.c, and do
+gcc fsynctest.c -o fsynctest
+./fsynctest testfile & ./fsynctest testfile2 &
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -63,32 +57,33 @@ the argument:
 
 int main(int argc, char* argv[])
 {
-	int i;
-	int fd = open( argv[1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-	if(fd == -1)
-	{
-		perror("open");
-		return 1;
-	}
-	for(i=0;i<1000000;i++)
-	{
-		int rc = write(fd, "0", 1);
-		if( rc != 1 )
-		{
-			perror("write");
-			return 2;
-		}
-		rc = fsync(fd);
-		if(rc)
-		{
-			perror("fsync");
-			return 2;
-		}
-	}
-	return 0;
+     int i;
+     int fd = open( argv[1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | 
+S_IWUSR);
+     if(fd == -1)
+     {
+         perror("open");
+         return 1;
+     }
+     for(i=0;i<1000000;i++)
+     {
+         int rc = write(fd, "0", 1);
+         if( rc != 1 )
+         {
+             perror("write");
+             return 2;
+         }
+         rc = fsync(fd);
+         if(rc)
+         {
+             perror("fsync");
+             return 2;
+         }
+     }
+     return 0;
 }
-	
-and one instance of this:
+
+Also run one instance of this:
 
 dd if=/dev/zero of=blankfile bs=512 count=100000 oflag=direct
 
@@ -121,3 +116,4 @@ ata4: soft resetting link
 ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 ata4.00: configured for UDMA/133
 ata4: EH complete
+
