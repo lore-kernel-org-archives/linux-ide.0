@@ -1,119 +1,103 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: sata_nv + ADMA + Samsung disk problem
-Date: Fri, 11 Jan 2008 19:10:15 -0600
-Message-ID: <47881377.4070508@shaw.ca>
-References: <477B0429.7040909@gmail.com> <477B0CFD.1030603@shaw.ca>
- <F72FA20C31DD4F4C997B91C5B3690A09505577@hqemmail07.nvidia.com>
- <477BDEA5.8040701@garzik.org>
- <F72FA20C31DD4F4C997B91C5B3690A0950557D@hqemmail07.nvidia.com>
- <477C2A99.9010208@shaw.ca> <477C61D3.30009@rtr.ca> <477C6A85.9020607@shaw.ca>
- <F72FA20C31DD4F4C997B91C5B3690A09505598@hqemmail07.nvidia.com>
- <4782BF75.9040803@shaw.ca> <20080111231813.GB7052@boogie.lpds.sztaki.hu>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: 40-wire cable detected when directly connected
+Date: Sat, 12 Jan 2008 12:26:48 +0900
+Message-ID: <47883378.9060507@gmail.com>
+References: <200801101824.04863.Tobias_Mueller@twam.info> <4786E82A.7010208@gmail.com> <47875755.4000109@twam.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020709090409050304070201"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:33478 "EHLO
-	pd4mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932091AbYALBKy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 20:10:54 -0500
-In-reply-to: <20080111231813.GB7052@boogie.lpds.sztaki.hu>
+Received: from wa-out-1112.google.com ([209.85.146.176]:63101 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757556AbYALD0z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 22:26:55 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2144522wah.23
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jan 2008 19:26:53 -0800 (PST)
+In-Reply-To: <47875755.4000109@twam.info>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Allen Martin <AMartin@nvidia.com>, Mark Lord <lkml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kuan Luo <kluo@nvidia.com>, Peer Chen <pchen@nvidia.com>
+To: =?UTF-8?B?VG9iaWFzIE3DvGxsZXI=?= <Tobias_Mueller@twam.info>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Gabor Gombas wrote:
-> On Mon, Jan 07, 2008 at 06:10:29PM -0600, Robert Hancock wrote:
+This is a multi-part message in MIME format.
+--------------020709090409050304070201
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+[cc'ing Alan, thanks for the information on the other message]
+
+Tobias Müller wrote:
+> Tejun Heo schrieb:
+>> I don't know very well about CF but does it even fill UDMA/33?  What
+>> does 'dd if=/dev/sdc of=/dev/null bs=1M count=16 iflag=direct' say?  You
+>> can increase count for more reliable result.
 > 
->> Gabor, I just noticed you said that it worked OK in 2.6.20, yet 2.6.22  
->> fails. 2.6.20 had ADMA support as well, so I wonder what change started  
->> causing the problem. Would it be possible for you to do a git bisect (or  
->> at least try 2.6.21 to try and narrow it down)?
+> 16+0 Datensätze ein
+> 16+0 Datensätze aus
+> 16777216 Bytes (17 MB) kopiert, 0,561688 s, 29,9 MB/s
+
+Hmmm... yeah, it almost fills UDMA/33.  I wonder whether it would go higher.
+
+> And hdparm -I /dev/sdc says it should be compatible to udma5.
 > 
-> I've now booted 2.6.21.7, we'll see. The problem with the bisection is
-> that I can't explicitely trigger the bug so I can't say for sure if a
-> kernel is good or it is just needs more time to trigger. The average
-> uptime of this machine is just a couple hours a day.
-> 
-> For example, with 2.6.24-rc6 it took over 3 hours for the first disk to
-> trigger the bug and the second disk needed more than 7 hours. This
-> machine is seldom turned on for that long.
+>         DMA: mdma0 mdma1 mdma2 udma0 udma1 *udma2 udma3 udma4
 
-If you want to try to reproduce the problem more rapidly, you can try 
-the recipe I just suggested to the NVIDIA guys:
+Please apply the attached patch and specify libata.force_cbl=80 as
+kernel boot parameter.  If you load libata from initrd or after boot you
+need to pass 'force_cbl=80' as module parameter.  How you do it depends
+on your distro.
 
-Run 2 instances of this C program, with different output files as the 
-argument, i.e. save this to fsynctest.c, and do
-gcc fsynctest.c -o fsynctest
-./fsynctest testfile & ./fsynctest testfile2 &
+Thanks.
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
+-- 
+tejun
 
-int main(int argc, char* argv[])
-{
-     int i;
-     int fd = open( argv[1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | 
-S_IWUSR);
-     if(fd == -1)
-     {
-         perror("open");
-         return 1;
-     }
-     for(i=0;i<1000000;i++)
-     {
-         int rc = write(fd, "0", 1);
-         if( rc != 1 )
-         {
-             perror("write");
-             return 2;
-         }
-         rc = fsync(fd);
-         if(rc)
-         {
-             perror("fsync");
-             return 2;
-         }
-     }
-     return 0;
-}
+--------------020709090409050304070201
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="patch"
 
-Also run one instance of this:
-
-dd if=/dev/zero of=blankfile bs=512 count=100000 oflag=direct
-
-and one of this:
-
-while /bin/true; do sdparm --command=sync /dev/sdb; done
-
-all at the same time. In my experience, it helps to disable cpufreq (on 
-Red Hat/Fedora, /sbin/service cpuspeed stop) to force the CPU to run at 
-max frequency all the time. After a few minutes I got this:
-
-ata4: EH in ADMA mode, notifier 0x0 notifier_error 0x0 gen_ctl 0x1501000 
-status 0x400 next cpb count 0x2 next cpb idx 0x0
-ata4: CPB 0: ctl_flags 0x1f, resp_flags 0x0
-ata4: CPB 1: ctl_flags 0x1f, resp_flags 0x0
-ata4: CPB 2: ctl_flags 0x1f, resp_flags 0x0
-ata4: timeout waiting for ADMA IDLE, stat=0x400
-ata4: timeout waiting for ADMA LEGACY, stat=0x400
-ata4.00: exception Emask 0x0 SAct 0x7 SErr 0x0 action 0x2 frozen
-ata4.00: cmd 61/08:00:e0:74:64/00:00:0a:00:00/40 tag 0 ncq 4096 out
-          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata4.00: status: { DRDY }
-ata4.00: cmd 61/08:08:30:5b:76/00:00:0c:00:00/40 tag 1 ncq 4096 out
-          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata4.00: status: { DRDY }
-ata4.00: cmd 61/01:10:ba:51:77/00:00:0c:00:00/40 tag 2 ncq 512 out
-          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata4.00: status: { DRDY }
-ata4: soft resetting link
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata4.00: configured for UDMA/133
-ata4: EH complete
-
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMgYi9kcml2ZXJzL2F0YS9s
+aWJhdGEtY29yZS5jCmluZGV4IDQ3NTNhMTguLjhjOTM4NzggMTAwNjQ0Ci0tLSBhL2RyaXZl
+cnMvYXRhL2xpYmF0YS1jb3JlLmMKKysrIGIvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYwpA
+QCAtMTE5LDYgKzExOSwxMCBAQCBpbnQgbGliYXRhX25vYWNwaSA9IDA7CiBtb2R1bGVfcGFy
+YW1fbmFtZWQobm9hY3BpLCBsaWJhdGFfbm9hY3BpLCBpbnQsIDA0NDQpOwogTU9EVUxFX1BB
+Uk1fREVTQyhub2FjcGksICJEaXNhYmxlcyB0aGUgdXNlIG9mIEFDUEkgaW4gcHJvYmUvc3Vz
+cGVuZC9yZXN1bWUgd2hlbiBzZXQiKTsKIAoraW50IGxpYmF0YV9mb3JjZV9jYmwgPSAwOwor
+bW9kdWxlX3BhcmFtX25hbWVkKGZvcmNlX2NibCwgbGliYXRhX2ZvcmNlX2NibCwgaW50LCAw
+NjQ0KTsKK01PRFVMRV9QQVJNX0RFU0MoZm9yY2VfY2JsLCAiZm9yY2UgUEFUQSBjYWJsZSB0
+eXBlICgwPWtlZXAsIDQwPTQwYywgODA9ODBjKSIpOworCiBNT0RVTEVfQVVUSE9SKCJKZWZm
+IEdhcnppayIpOwogTU9EVUxFX0RFU0NSSVBUSU9OKCJMaWJyYXJ5IG1vZHVsZSBmb3IgQVRB
+IGRldmljZXMiKTsKIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvYXRhL2xpYmF0YS1laC5jIGIvZHJpdmVycy9hdGEvbGliYXRhLWVoLmMKaW5kZXggMjFh
+ODFjZC4uN2U1MzIxNSAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLWVoLmMKKysr
+IGIvZHJpdmVycy9hdGEvbGliYXRhLWVoLmMKQEAgLTIyOTYsOSArMjI5NiwyNyBAQCBzdGF0
+aWMgaW50IGF0YV9laF9yZXZhbGlkYXRlX2FuZF9hdHRhY2goc3RydWN0IGF0YV9saW5rICps
+aW5rLAogCiAJLyogUERJQUctIHNob3VsZCBoYXZlIGJlZW4gcmVsZWFzZWQsIGFzayBjYWJs
+ZSB0eXBlIGlmIHBvc3QtcmVzZXQgKi8KIAlpZiAoYXRhX2lzX2hvc3RfbGluayhsaW5rKSAm
+JiBhcC0+b3BzLT5jYWJsZV9kZXRlY3QgJiYKLQkgICAgKGVoYy0+aS5mbGFncyAmIEFUQV9F
+SElfRElEX1JFU0VUKSkKKwkgICAgKGVoYy0+aS5mbGFncyAmIEFUQV9FSElfRElEX1JFU0VU
+KSkgewogCQlhcC0+Y2JsID0gYXAtPm9wcy0+Y2FibGVfZGV0ZWN0KGFwKTsKIAorCQlpZiAo
+IShhcC0+ZmxhZ3MgJiBBVEFfRkxBR19TQVRBKSAmJiBsaWJhdGFfZm9yY2VfY2JsKSB7CisJ
+CQlzd2l0Y2ggKGxpYmF0YV9mb3JjZV9jYmwpIHsKKwkJCWNhc2UgNDA6CisJCQkJYXRhX3Bv
+cnRfcHJpbnRrKGFwLCBLRVJOX0lORk8sICJmb3JjaW5nIDQwY1xuIik7CisJCQkJYXAtPmNi
+bCA9IEFUQV9DQkxfUEFUQTQwOworCQkJCWJyZWFrOworCQkJY2FzZSA4MDoKKwkJCQlhdGFf
+cG9ydF9wcmludGsoYXAsIEtFUk5fSU5GTywgImZvcmNpbmcgODBjXG4iKTsKKwkJCQlhcC0+
+Y2JsID0gQVRBX0NCTF9QQVRBODA7CisJCQkJYnJlYWs7CisJCQlkZWZhdWx0OgorCQkJCWF0
+YV9wb3J0X3ByaW50ayhhcCwgS0VSTl9XQVJOSU5HLAorCQkJCQkJImludmFsaWQgZm9yY2Vf
+Y2JsIHZhbHVlICVkXG4iLAorCQkJCQkJbGliYXRhX2ZvcmNlX2NibCk7CisJCQl9CisJCX0K
+Kwl9CisKIAkvKiBDb25maWd1cmUgbmV3IGRldmljZXMgZm9yd2FyZCBzdWNoIHRoYXQgdXNl
+ciBkb2Vzbid0IHNlZQogCSAqIGRldmljZSBkZXRlY3Rpb24gbWVzc2FnZXMgYmFja3dhcmRz
+LgogCSAqLwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLmggYi9kcml2ZXJzL2F0
+YS9saWJhdGEuaAppbmRleCBiYmU1OWMyLi5iOTkwYThkIDEwMDY0NAotLS0gYS9kcml2ZXJz
+L2F0YS9saWJhdGEuaAorKysgYi9kcml2ZXJzL2F0YS9saWJhdGEuaApAQCAtNjAsNiArNjAs
+NyBAQCBleHRlcm4gaW50IGF0YXBpX2RtYWRpcjsKIGV4dGVybiBpbnQgYXRhcGlfcGFzc3Ro
+cnUxNjsKIGV4dGVybiBpbnQgbGliYXRhX2Z1YTsKIGV4dGVybiBpbnQgbGliYXRhX25vYWNw
+aTsKK2V4dGVybiBpbnQgbGliYXRhX2ZvcmNlX2NibDsKIGV4dGVybiBzdHJ1Y3QgYXRhX3F1
+ZXVlZF9jbWQgKmF0YV9xY19uZXdfaW5pdChzdHJ1Y3QgYXRhX2RldmljZSAqZGV2KTsKIGV4
+dGVybiBpbnQgYXRhX2J1aWxkX3J3X3RmKHN0cnVjdCBhdGFfdGFza2ZpbGUgKnRmLCBzdHJ1
+Y3QgYXRhX2RldmljZSAqZGV2LAogCQkJICAgdTY0IGJsb2NrLCB1MzIgbl9ibG9jaywgdW5z
+aWduZWQgaW50IHRmX2ZsYWdzLAo=
+--------------020709090409050304070201--
