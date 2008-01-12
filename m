@@ -1,57 +1,47 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: LIBATA SCSI command validation changed in 2.6.24
-Date: Fri, 11 Jan 2008 18:28:04 -0500
-Message-ID: <4787FB84.2040509@redhat.com>
-References: <4787DFE2.2000504@redhat.com> <4787E114.2030301@garzik.org> <4787E574.6020304@redhat.com> <4787FA06.9090204@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Trouble with hdparm -d on Dell D610
+Date: Sat, 12 Jan 2008 00:06:37 +0000
+Message-ID: <20080112000637.6cc07bfc@lxorguk.ukuu.org.uk>
+References: <7f68de3e0801111118x3fecace5n5c1f10b90b595d2f@mail.gmail.com>
+	<20080111193036.787a9fdc@lxorguk.ukuu.org.uk>
+	<7f68de3e0801111149x15afd429sf48ed7db5fff8fa1@mail.gmail.com>
+	<20080111195521.7e771e45@lxorguk.ukuu.org.uk>
+	<7f68de3e0801111227x50c9ff31n1435d005e6b6b1f3@mail.gmail.com>
+	<20080111210557.390271a0@lxorguk.ukuu.org.uk>
+	<7f68de3e0801111327m1363b681ree81fbc5f7f43848@mail.gmail.com>
+	<20080111213415.56d90f0d@lxorguk.ukuu.org.uk>
+	<87f94c370801111351g132674fam295ba82a78f17842@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43180 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761400AbYAKX2N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Jan 2008 18:28:13 -0500
-In-Reply-To: <4787FA06.9090204@garzik.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32928 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762059AbYALAJB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jan 2008 19:09:01 -0500
+In-Reply-To: <87f94c370801111351g132674fam295ba82a78f17842@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Kristin Vadas Marsicano <kristin.marsicano@gmail.com>, linux-ide@vger.kernel.org
 
-On 01/11/2008 06:21 PM, Jeff Garzik wrote:
-> Chuck Ebbert wrote:
->> On 01/11/2008 04:35 PM, Jeff Garzik wrote:
->>> Chuck Ebbert wrote:
->>>> commit 607126c2a21cd6e9bb807fdd415c1a992f7b9009 changed command
->>>> validation
->>>> to allow short commands in 16-byte CDBs, but it also made checking more
->>>> strict. Before the change, a 10-byte SG_IO command could have its
->>>> length set
->>>> to 9 and still work. Now it fails. Not sure if this is a bug, but it
->>>> has
->>>> caused at least one application to fail that used to work (qpxtool.)
->>>>
->>>> [https://bugzilla.redhat.com/show_bug.cgi?id=428281]
->>> Can you get us an example CDB?  Its unclear if the hexdump in the bug
->>> report is a returned mode page or the CDB or what...?
->>>
->>
->> Not easily, but the maintainer of that program forced the length of
->> the MODE_SENSE(10) command to 10 and that command started working.
->>
->> By looking at the source I could tell that it was setting the command
->> length to (1 + the index of the last byte written to the CDB) and
->> only wrote up to offset 8 when building the command, so it must have
->> been sending the command with a length of 9. (It zeroed the whole CDB
->> first and only wrote what it needed to.)
->>
->> (And it used the C++ operator [] to build the command, that was fun
->> to trace...)
+> I was talking to Kristin this morning about doing that.  I was
+> concerned that there is not anybody certifying that each individual
+> disk drive model / firmware release is properly implementing the
+> Security Erase function.
 > 
-> Even if allocation length is present in the CDB, the CDB may be missing
-> important information that is required to process the command.  So it
-> may have caught a bug in the program... depending on the CDB.
-> 
+> Are you aware of testing body, etc. that publishes a white-list of
+> drives that are known to have a proper implementation of Security
+> Erase?  Lacking something like that and realizing how rarely it is
+> used, I'm not sure it should be trusted.
 
-Yeah, the change is probably good. We should have been validating that
-the length was at least as long the expected length all along. But some
-programs are going to break because of this...
+That would be a question to ask some of the security bodies - or possible
+T13 (the standards people). Given there are only about 4 major drive
+vendors left it sohuldn't take long to ask them however.
+
+> Performing both a Security Erase and calling shred on the drive might
+> be the ultimate one-two punch.
+
+Can't do any harm - and in theory drives can reject (not ignore!)
+security erase. Some mini ones seem to.
+
