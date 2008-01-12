@@ -1,68 +1,98 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: PROBLEM REMAINS: [sata_nv ADMA breaks ATAPI] Crash on
-	accessing DVD-RAM
-Date: Sat, 12 Jan 2008 14:35:17 -0600
-Message-ID: <1200170117.3656.66.camel@localhost.localdomain>
-References: <fa.krOVfyFmB2aqGjJIoHCLmQxecWc@ifi.uio.no>
-	 <478702C7.80401@shaw.ca> <47887982.6050805@mail.ru>
-	 <47891426.1020604@shaw.ca>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 06/21] ide-floppy: remove struct
+	idefloppy_flexible_disk_page
+Date: Sat, 12 Jan 2008 21:38:48 +0100
+Message-ID: <20080112203848.GA31954@gollum.tnic>
+References: <1200052699-28420-1-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-6-git-send-email-bbpetkov@yahoo.de> <1200052699-28420-7-git-send-email-bbpetkov@yahoo.de> <200801120158.57895.bzolnier@gmail.com>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50089 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753825AbYALUfZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:35:25 -0500
-In-Reply-To: <47891426.1020604@shaw.ca>
+Received: from smtp110.plus.mail.re1.yahoo.com ([69.147.102.73]:45557 "HELO
+	smtp110.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751463AbYALUmX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 15:42:23 -0500
+Content-Disposition: inline
+In-Reply-To: <200801120158.57895.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Alexander <aledin@mail.ru>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-On Sat, 2008-01-12 at 13:25 -0600, Robert Hancock wrote:
-> Alexander wrote:
-> > Robert Hancock wrote:
-> >> There's this patch which was intended to fix it:
-> >>
-> >> http://lkml.org/lkml/2007/11/22/148
-> > 
-> > I applied this patch to 2.6.24-rc7. Now at boot time my DVD-RW is
-> > normaly detected as:
-> > 
-> > sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw xa/form2 cdda tray
-> > 
-> > But I cannot mount it. All my attempts failed with
-> > 
-> > ISOFS: Unable to identify CD-ROM format.
-> > 
-> > With mem<=4098M or sata_nv.adma=0 it still mounts and works ok.
-> 
-> As I wrote, it would appear that somehow the blk_queue_bounce_limit 
-> setting that the driver has made is not being respected and the block 
-> layer is still trying to feed it addresses over 4GB. Any ideas anyone?
+[...]
 
-Actually, I'd be very sceptical that the blk_queue_bounce_limit isn't
-working as advertised; there'd be a large number of failures if it were
-not.
+> This is not an equivalent transformation:
+>=20
+> header->wp is 0 or 1
+> pc.buffer[3] & 0x80 is 0 or 0x80
+>=20
+> It seems to work fine for ->wp (because it is needlessly defined as '=
+int')
+> but may seriously confuse set_disk_ro() and thus bdev_read_only() use=
+rs.
+>=20
+> Should be fixed to '(pc.buffer[3] & 0x80) ? 1 : 0' (or something simi=
+lar).
 
-However, the "as advertised" part doesn't seem to be generally well
-understood.  The point being that block commands are only bounced if
-they come from the filesystem or the user, not if they're generated
-directly inside the kernel.  Since the fault occurs before mount, it's
-suggestive of the latter.
+upps, sorry, that was silly. I changed it to:
 
-A long time ago, GFP_KERNEL allocations meant that the memory allocated
-was physically under 4GB.  Then x86_64 (and before it ia64) wanted to
-break this.  So they introduced a new flag:  GFP_DMA32 that behaved like
-the old GFP_KERNEL and then changed GFP_KERNEL on their architectures to
-return memory from anywhere.  I'd strongly suggest some piece of kernel
-memory was allocated for a transfer buffer without GFP_DMA32 and then
-passed in to the driver.  Unfortunately, that could be anywhere inside
-cdrom or sr.  Knowing what the actual command is might help ... some of
-the distinctive MMC media ones only have a single source.
+        floppy->wp =3D !!(pc.buffer[3] & 0x80);
 
-James
+> >  	set_disk_ro(floppy->disk, floppy->wp);
+> > -	page =3D (idefloppy_flexible_disk_page_t *) (header + 1);
+> > -
+> > -	page->transfer_rate =3D be16_to_cpu(page->transfer_rate);
+> > -	page->sector_size =3D be16_to_cpu(page->sector_size);
+> > -	page->cyls =3D be16_to_cpu(page->cyls);
+> > -	page->rpm =3D be16_to_cpu(page->rpm);
+> > -	capacity =3D page->cyls * page->heads * page->sectors * page->sec=
+tor_size;
+> > -	if (memcmp (page, &floppy->flexible_disk_page, sizeof (idefloppy_=
+flexible_disk_page_t)))
+> > +
+> > +	transfer_rate =3D be16_to_cpu(*(u16 *)&pc.buffer[8 + 2]);
+> > +	sector_size   =3D be16_to_cpu(*(u16 *)&pc.buffer[8 + 6]);
+> > +	cyls          =3D be16_to_cpu(*(u16 *)&pc.buffer[8 + 8]);
+> > +	rpm           =3D be16_to_cpu(*(u16 *)&pc.buffer[8 + 28]);
+> > +	heads         =3D pc.buffer[8 + 4];
+> > +	sectors       =3D pc.buffer[8 + 5];
+> > +
+> > +	capacity =3D cyls * heads * sectors * sector_size;
+> > +
+> > +	if ((1UL << IDEFLOPPY_MEDIA_CHANGED) & floppy->flags)
+>=20
+> IDEFLOPPY_MEDIA_CHANGED is set when block device is opened for the fi=
+rst
+> time (please check idefloppy_open() for details) so I don't think it =
+is
+> the right change.  'Flexible Disk Page' is only 32 bytes so we are be=
+tter
+> off with leaving 'u8 flexible_disk_page[32]' in idefloppy_floppy_t an=
+d
+> doing things the old way.
+>=20
+> Besides please do not intermix real changes like the above one with p=
+urely
+> cleanup ones like idefloppy_flexible_disk_page_t removal.  This is ba=
+d from
+> maintainability point of view.  If some patch causes problems it is e=
+asier
+> to narrow it down by heaving purely cleanup changes separated out + i=
+f we
+> would need to revert the real change we would have to make a separate=
+ patch
+> doing it instead of just reverting the guilty commit (given that we d=
+on't
+> want cleanup changes to be reverted as well).
 
+How about we get rid of that chunk altogether? floppy->flexible_disk_pa=
+ge is
+used only here for the purpose of printk-ing to the syslog and has no "=
+real"
+purpose otherwise. Do we need that info spewed into the syslog at all?
 
+--=20
+Regards/Gru=DF,
+    Boris.
