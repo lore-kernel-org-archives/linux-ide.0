@@ -1,131 +1,73 @@
-From: =?UTF-8?B?VG9iaWFzIE3DvGxsZXI=?= <Tobias_Mueller@twam.info>
-Subject: Re: 40-wire cable detected when directly connected
-Date: Sat, 12 Jan 2008 15:29:34 +0100
-Message-ID: <4788CECE.5090207@twam.info>
-References: <200801101824.04863.Tobias_Mueller@twam.info> <4786E82A.7010208@gmail.com> <47875755.4000109@twam.info> <200801121538.47692.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: Problem setting dma using pata_it821x driver in vanilla 2.6.23.12 and gentoo-sources 2.6.23-r3
+Date: Sat, 12 Jan 2008 15:42:34 +0100
+Message-ID: <200801121542.34435.bzolnier@gmail.com>
+References: <200801051734.18088.marc@fallon.classyad.com> <Pine.LNX.4.64.0801100741580.6632@classyad.com> <47861B05.2010201@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms090708070502070101090803"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ceres.twam.info ([84.16.224.131]:35371 "EHLO smtp.twam.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759465AbYALO35 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Jan 2008 09:29:57 -0500
-In-Reply-To: <200801121538.47692.bzolnier@gmail.com>
+Received: from ug-out-1314.google.com ([66.249.92.169]:60721 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758169AbYALOhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 09:37:12 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so611681ugc.16
+        for <linux-ide@vger.kernel.org>; Sat, 12 Jan 2008 06:37:11 -0800 (PST)
+In-Reply-To: <47861B05.2010201@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
-
-This is a cryptographically signed message in MIME format.
-
---------------ms090708070502070101090803
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Bartlomiej Zolnierkiewicz schrieb:
-> Please send 'hdparm --Istdout /dev/hdc' output.
-
-/dev/sdc:
-044a 3e08 0000 0010 0000 0240 003f 00f4
-3f80 0000 2020 2020 3031 3036 3131 4532
-3239 3753 3035 3130 0002 0002 0004 4844
-5820 342e 3230 5361 6e44 6973 6b20 5344
-4346 5834 2d38 3139 3220 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 0004
-0000 0300 0000 0200 0000 0007 3e08 0010
-003f 3f80 00f4 0100 3f80 00f4 0000 0007
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0010 0000 0020 4004 4000 0000 0004 4000
-041f 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0082 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
+To: Tejun Heo <htejun@gmail.com>
+Cc: Marc Howard Zuckman <marc@fallon.classyad.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 
---------------ms090708070502070101090803
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+On Thursday 10 January 2008, Tejun Heo wrote:
+> Marc Howard Zuckman wrote:
+> > With apologies if this was supposed to be an attachment:
+> 
+> Inline is fine.
+> 
+> > IT8212: IDE controller at PCI slot 0000:03:0c.0
+> > IT8212: chipset revision 17
+> > it821x: controller in smart mode.
+> > IT8212: 100% native mode on irq 21
+> >     ide2: BM-DMA at 0xb800-0xb807, BIOS settings: hde:DMA, hdf:pio
+> >     ide3: BM-DMA at 0xb808-0xb80f, BIOS settings: hdg:pio, hdh:pio
+> > Probing IDE interface ide2...
+> > hde: Integrated Technology Express Inc, ATA DISK drive
+> > hde: IT8212 RAID 1 volume.
+> > hde: selected mode 0x0
+> > ide2 at 0xa810-0xa817,0xac02 on irq 21
+> > Probing IDE interface ide3...
+> > Probing IDE interface ide3...
+> > Probing IDE interface ide4...
+> > Probing IDE interface ide5...
+> > hda: max request size: 128KiB
+> > hda: Host Protected Area detected.
+> >     current capacity is 195369455 sectors (100029 MB)
+> >     native  capacity is 195371568 sectors (100030 MB)
+> > hda: Host Protected Area disabled.
+> > hda: 195371568 sectors (100030 MB) w/2048KiB Cache, CHS=65535/16/63,
+> > UDMA(100)
+> > hda: cache flushes not supported
+> >  hda: hda1 hda2 hda3 < hda5 hda6 hda7 >
+> 
+> Oh... I thought you were using libata drivers because you mentioned
+> pata_it821x on the subject.  The IDE driver supports 'hdparm -d 1' fine.
+>  I wonder why that's not working.  Also, the driver is configuring your
+> disk to PIO0.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJmzCC
-AygwggKRoAMCAQICEDdfXmLiPCut3WRIWKcEfrgwDQYJKoZIhvcNAQEFBQAwYjELMAkGA1UE
-BhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMT
-I1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBMB4XDTA3MTIxMTE0NDIyNVoX
-DTA4MTIxMDE0NDIyNVowgYcxEDAOBgNVBAQTB011ZWxsZXIxIDAeBgNVBCoTF1RvYmlhcyBX
-b2xmZ2FuZyBBbmRyZWFzMSgwJgYDVQQDEx9Ub2JpYXMgV29sZmdhbmcgQW5kcmVhcyBNdWVs
-bGVyMScwJQYJKoZIhvcNAQkBFhhUb2JpYXNfTXVlbGxlckB0d2FtLmluZm8wggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC3vN/xQv+Nqk74OxgDpqJHwYGdwWOemIfl/W1sOlIE
-FXzO9IDR57fa4FlqIUFrezqlolzipm1ZJAfxVhO4pdSjtwNj/4Z6ap5c3LbTjZYwL2abiFPi
-qQPrwyIzYYKTyRpWetnTs0BVohEHMR38/sA3LMI4VQQEBYAd/XnPQPOLObLqbUggI1JZwmgO
-zLEI1GSUEI2fUVyMeKIyXqX293cgw/5zQuoyZ87PQX80LsBkRx7JOnyUZ94+togZU/NtHso4
-u+GcxVK8II/BN5wXYCoIQvNxsR0jc1AGJ7Y2xnjACjUVFeK/n1gZYTa4ZPPm3F/4XyGbd88U
-3Qd2cBgP4cF5AgMBAAGjNTAzMCMGA1UdEQQcMBqBGFRvYmlhc19NdWVsbGVyQHR3YW0uaW5m
-bzAMBgNVHRMBAf8EAjAAMA0GCSqGSIb3DQEBBQUAA4GBACk9SGx4seRUhysubF04VghMmHFt
-ap3+um/34i+t7rAFxAjA3Fj1NRxyTDuy3TT6M0yO4Toak4778ssDJP8fWIY71DvP5VYhHUJw
-F+nCPacU2HRORLTXf61GhqzQzrvujj/yj3Z6z6c2OLc90CaDaoVjTb3nf9F6+1L7ID5ecozo
-MIIDKDCCApGgAwIBAgIQN19eYuI8K63dZEhYpwR+uDANBgkqhkiG9w0BAQUFADBiMQswCQYD
-VQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UE
-AxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwHhcNMDcxMjExMTQ0MjI1
-WhcNMDgxMjEwMTQ0MjI1WjCBhzEQMA4GA1UEBBMHTXVlbGxlcjEgMB4GA1UEKhMXVG9iaWFz
-IFdvbGZnYW5nIEFuZHJlYXMxKDAmBgNVBAMTH1RvYmlhcyBXb2xmZ2FuZyBBbmRyZWFzIE11
-ZWxsZXIxJzAlBgkqhkiG9w0BCQEWGFRvYmlhc19NdWVsbGVyQHR3YW0uaW5mbzCCASIwDQYJ
-KoZIhvcNAQEBBQADggEPADCCAQoCggEBALe83/FC/42qTvg7GAOmokfBgZ3BY56Yh+X9bWw6
-UgQVfM70gNHnt9rgWWohQWt7OqWiXOKmbVkkB/FWE7il1KO3A2P/hnpqnlzcttONljAvZpuI
-U+KpA+vDIjNhgpPJGlZ62dOzQFWiEQcxHfz+wDcswjhVBAQFgB39ec9A84s5suptSCAjUlnC
-aA7MsQjUZJQQjZ9RXIx4ojJepfb3dyDD/nNC6jJnzs9BfzQuwGRHHsk6fJRn3j62iBlT820e
-yji74ZzFUrwgj8E3nBdgKghC83GxHSNzUAYntjbGeMAKNRUV4r+fWBlhNrhk8+bcX/hfIZt3
-zxTdB3ZwGA/hwXkCAwEAAaM1MDMwIwYDVR0RBBwwGoEYVG9iaWFzX011ZWxsZXJAdHdhbS5p
-bmZvMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEFBQADgYEAKT1IbHix5FSHKy5sXThWCEyY
-cW1qnf66b/fiL63usAXECMDcWPU1HHJMO7LdNPozTI7hOhqTjvvyywMk/x9YhjvUO8/lViEd
-QnAX6cI9pxTYdE5EtNd/rUaGrNDOu+6OP/KPdnrPpzY4tz3QJoNqhWNNved/0Xr7UvsgPl5y
-jOgwggM/MIICqKADAgECAgENMA0GCSqGSIb3DQEBBQUAMIHRMQswCQYDVQQGEwJaQTEVMBMG
-A1UECBMMV2VzdGVybiBDYXBlMRIwEAYDVQQHEwlDYXBlIFRvd24xGjAYBgNVBAoTEVRoYXd0
-ZSBDb25zdWx0aW5nMSgwJgYDVQQLEx9DZXJ0aWZpY2F0aW9uIFNlcnZpY2VzIERpdmlzaW9u
-MSQwIgYDVQQDExtUaGF3dGUgUGVyc29uYWwgRnJlZW1haWwgQ0ExKzApBgkqhkiG9w0BCQEW
-HHBlcnNvbmFsLWZyZWVtYWlsQHRoYXd0ZS5jb20wHhcNMDMwNzE3MDAwMDAwWhcNMTMwNzE2
-MjM1OTU5WjBiMQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0
-eSkgTHRkLjEsMCoGA1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0Ew
-gZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMSmPFVzVftOucqZWh5owHUEcJ3f6f+jHuy9
-zfVb8hp2vX8MOmHyv1HOAdTlUAow1wJjWiyJFXCO3cnwK4Vaqj9xVsuvPAsH5/EfkTYkKhPP
-K9Xzgnc9A74r/rsYPge/QIACZNenprufZdHFKlSFD0gEf6e20TxhBEAeZBlyYLf7AgMBAAGj
-gZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBDBgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3Js
-LnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVlbWFpbENBLmNybDALBgNVHQ8EBAMCAQYw
-KQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVMYWJlbDItMTM4MA0GCSqGSIb3DQEB
-BQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0whuPg2H6otnzYvwPQcUCCTcDz9
-reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBPZV+V2vf3h9bGCE6u9uo0
-5RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDZDCCA2ACAQEwdjBiMQswCQYDVQQGEwJa
-QTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UEAxMjVGhh
-d3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEDdfXmLiPCut3WRIWKcEfrgwCQYF
-Kw4DAhoFAKCCAcMwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcN
-MDgwMTEyMTQyOTM0WjAjBgkqhkiG9w0BCQQxFgQUC6gvl9TlBZY/Bf67L0CinnvOg/EwUgYJ
-KoZIhvcNAQkPMUUwQzAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwIC
-AUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwgYUGCSsGAQQBgjcQBDF4MHYwYjELMAkGA1UE
-BhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMT
-I1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhA3X15i4jwrrd1kSFinBH64
-MIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBD
-b25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFp
-bCBJc3N1aW5nIENBAhA3X15i4jwrrd1kSFinBH64MA0GCSqGSIb3DQEBAQUABIIBAKsBdHbA
-zMM91DTa7pmPbIk5loF4jqKGp0lQj2qj3t4fM/IDcLXwG/1bWx39M0oozTQC0/Bw6KceSFKY
-c1E8rQeT3f7XuwjqhC4fxwqMNVqoIQVDxafCK78E5/SMBDyU6S8+miqGp2FmChkzggv7U6CM
-ApWGGDeMynWaucasj6jQwh4V1TqHj7v/ojfJHBArxIqRqMvUjM7AMFGLiNZlaggUEXUin6l/
-gZCVB/H4x/DT2m15pDCPeelqhVRqfznNp9O/+Ac/Y8GbsCQH08rDPAWYOv7BvHr5dB9Rx+EV
-i1/nPmTq5SV1JBolY+TGcO0UQ+3HPe/7+NLfPk0Zf3LAx4wAAAAAAAA=
---------------ms090708070502070101090803--
+In "smart mode" controller takes care of mode programming.
+ 
+> Cc'ing Alan and Bartlomiej.  Guys, is this the smart mode problem?  Do
+> ide and libata have this fixed in 2.6.24-rc?
+
+[ added Alan and myself ;) to cc: ]
+
+Possibly.
+
+Marc, please also send output of 'hdparm --Istdout /dev/hde' command.
+
+Thanks,
+Bart
