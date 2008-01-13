@@ -1,78 +1,26 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 9/12] ide-floppy: remove unused IDEFLOPPY_USE_READ12
-Date: Sun, 13 Jan 2008 21:18:22 +0100
-Message-ID: <1200255505-31418-10-git-send-email-bbpetkov@yahoo.de>
-References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-2-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-3-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-4-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-5-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-6-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-7-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-8-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-9-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 0/12] ide-floppy redux v2.5
+Date: Sun, 13 Jan 2008 21:18:13 +0100
+Message-ID: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp102.plus.mail.re1.yahoo.com ([69.147.102.65]:35948 "HELO
-	smtp102.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753747AbYAMUWN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:13 -0500
-In-Reply-To: <1200255505-31418-9-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp108.plus.mail.re1.yahoo.com ([69.147.102.71]:32339 "HELO
+	smtp108.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753924AbYAMUWT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:19 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-This flag is not being set anywhere in the driver so it can go.
+Hi Bart,
 
-Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
----
- drivers/ide/ide-floppy.c |   17 ++++++-----------
- 1 files changed, 6 insertions(+), 11 deletions(-)
+here are the remaining patches which had issues to be worked out. I decided
+to keep the Flexible Disk Page and Capacity Descriptor in
+idefloppy_floppy_t for the sake of the two printk calls for which they are
+used. Otherwise, we'll be changing long-known driver behavior and this won't
+be acceptable. I'll audit the driver to see whether rq_data_dir() can replace
+the PC_WRITING flag completely and get rid of that one too.
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 6c917fc..790e33f 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -180,7 +180,6 @@ typedef struct ide_floppy_obj {
-  */
- #define IDEFLOPPY_DRQ_INTERRUPT		0	/* DRQ interrupt device */
- #define IDEFLOPPY_MEDIA_CHANGED		1	/* Media may have changed */
--#define IDEFLOPPY_USE_READ12		2	/* Use READ12/WRITE12 or READ10/WRITE10 */
- #define	IDEFLOPPY_FORMAT_IN_PROGRESS	3	/* Format in progress */
- #define IDEFLOPPY_CLIK_DRIVE	        4       /* Avoid commands not supported in Clik drive */
- #define IDEFLOPPY_ZIP_DRIVE		5	/* Requires BH algorithm for packets */
-@@ -889,25 +888,21 @@ static void idefloppy_create_test_unit_ready_cmd(idefloppy_pc_t *pc)
- 	pc->c[0] = GPCMD_TEST_UNIT_READY;
- }
- 
--static void idefloppy_create_rw_cmd (idefloppy_floppy_t *floppy, idefloppy_pc_t *pc, struct request *rq, unsigned long sector)
-+static void idefloppy_create_rw_cmd(idefloppy_floppy_t *floppy,
-+		idefloppy_pc_t *pc, struct request *rq, unsigned long sector)
- {
- 	int block = sector / floppy->bs_factor;
- 	int blocks = rq->nr_sectors / floppy->bs_factor;
- 	int cmd = rq_data_dir(rq);
- 
--	debug_log("create_rw1%d_cmd: block == %d, blocks == %d\n",
--		2 * test_bit (IDEFLOPPY_USE_READ12, &floppy->flags),
-+	debug_log("create_rw10_cmd: block == %d, blocks == %d\n",
- 		block, blocks);
- 
- 	idefloppy_init_pc(pc);
--	if (test_bit(IDEFLOPPY_USE_READ12, &floppy->flags)) {
--		pc->c[0] = cmd == READ ? GPCMD_READ_12 : GPCMD_WRITE_12;
--		put_unaligned(cpu_to_be32(blocks), (unsigned int *) &pc->c[6]);
--	} else {
--		pc->c[0] = cmd == READ ? GPCMD_READ_10 : GPCMD_WRITE_10;
--		put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
--	}
-+	pc->c[0] = cmd == READ ? GPCMD_READ_10 : GPCMD_WRITE_10;
-+	put_unaligned(cpu_to_be16(blocks), (unsigned short *)&pc->c[7]);
- 	put_unaligned(cpu_to_be32(block), (unsigned int *) &pc->c[2]);
-+
- 	pc->callback = &idefloppy_rw_callback;
- 	pc->rq = rq;
- 	pc->b_count = cmd == READ ? 0 : rq->bio->bi_size;
--- 
-1.5.3.7
+By the way, I have an Iomega ZIP 100 drive somewhere in my hardware pile and
+will do some testing with the "new" :) driver just in case.
 
