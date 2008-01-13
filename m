@@ -1,87 +1,168 @@
-From: Georgi Chulkov <g.chulkov@jacobs-university.de>
-Subject: ATA device reset, shoud I be concerned?
-Date: Mon, 14 Jan 2008 00:19:20 +0200
-Message-ID: <200801140019.20668.g.chulkov@jacobs-university.de>
+From: Kurt Roeckx <kurt@roeckx.be>
+Subject: sata_promise: Keeps saying SATA link down (SStatus 0 SControl 0)
+Date: Mon, 14 Jan 2008 00:43:20 +0100
+Message-ID: <20080113234320.GA6225@roeckx.be>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermes.jacobs-university.de ([212.201.44.23]:45292 "EHLO
-	hermes.jacobs-university.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753572AbYAMWyE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 17:54:04 -0500
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:51632 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640AbYAMXoF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 18:44:05 -0500
+Received: from monty.telenet-ops.be (monty.telenet-ops.be [195.130.132.56])
+	by hoefnix.telenet-ops.be (Postfix) with ESMTP id 9135F9C59E
+	for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2008 00:44:02 +0100 (CET)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by monty.telenet-ops.be (Postfix) with SMTP id D90E55401D
+	for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2008 00:43:20 +0100 (CET)
+Received: from intrepid.roeckx.be (d54C3F9BC.access.telenet.be [84.195.249.188])
+	by monty.telenet-ops.be (Postfix) with ESMTP id B22535401C
+	for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2008 00:43:20 +0100 (CET)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-During heavy disk load on my laptop, sometimes the IDE disk will pause for a 
-second and then continue. I get this in my kernel log:
+I've just tried the 2.6.24-rc7 kernel (from Debian's experimental kernel
+archive), running the x86_64 kernel.
 
-[ 9031.028000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
-frozen
-[ 9031.028000] ata1.00: cmd c8/00:08:90:ca:ce/00:00:00:00:00/e0 tag 0 cdb 0x0 
-data 4096 in
-[ 9031.028000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-(timeout)
-[ 9036.068000] ata1: port is slow to respond, please be patient (Status 0xd0)
-[ 9041.052000] ata1: device not ready (errno=-16), forcing hardreset
-[ 9041.052000] ata1: soft resetting port
-[ 9041.232000] ata1.00: configured for UDMA/100
-[ 9041.232000] ata1: EH complete
-[ 9041.248000] sd 0:0:0:0: [sda] 78140160 512-byte hardware sectors (40008 MB)
-[ 9041.248000] sd 0:0:0:0: [sda] Write Protect is off
-[ 9041.248000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[ 9041.248000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, 
-doesn't support DPO or FUA
 
-My question: What is this telling me, and do I need to be concerned? 
-Everything continues to work normally after the message: no I/O errors, no 
-fsck errors, etc.
+I keep getting things like this in my log:
+Jan 13 19:21:10 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa frozen
+Jan 13 19:21:10 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:21:11 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:11 intrepid kernel: ata2: SATA link down (SStatus 0 SControl 0)
+Jan 13 19:21:11 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t4
+Jan 13 19:21:11 intrepid kernel: ata2: hotplug_status 0x2
+Jan 13 19:21:11 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:11 intrepid kernel: ata2: SATA link down (SStatus 100 SControl 0)
+Jan 13 19:21:11 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t3
+Jan 13 19:21:11 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:21:13 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:13 intrepid kernel: ata2: SATA link down (SStatus 100 SControl 0)
+Jan 13 19:21:13 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t2
+Jan 13 19:21:13 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:21:14 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:14 intrepid kernel: ata2: SATA link down (SStatus 0 SControl 0)
+Jan 13 19:21:14 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t1
+Jan 13 19:21:14 intrepid kernel: ata2: hotplug_status 0x2
+Jan 13 19:21:15 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:15 intrepid kernel: ata2: SATA link down (SStatus 100 SControl 0)
+Jan 13 19:21:15 intrepid kernel: ata2: EH pending after 5 tries, giving up
+Jan 13 19:21:15 intrepid kernel: ata2: EH complete
+Jan 13 19:21:15 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa frozen
+Jan 13 19:21:15 intrepid kernel: ata2: hotplug_status 0x2
+Jan 13 19:21:16 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:16 intrepid kernel: ata2: SATA link down (SStatus 100 SControl 0)
+Jan 13 19:21:16 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t4
+Jan 13 19:21:16 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:21:17 intrepid kernel: ata2: soft resetting link
+Jan 13 19:21:17 intrepid kernel: ata2: SATA link down (SStatus 0 SControl 0)
+Jan 13 19:21:17 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t3
+Jan 13 19:21:17 intrepid kernel: ata2: hotplug_status 0x2
+[...]
 
-I've seen some similar reports on the mailing list, but they include slightly 
-different messages. I would appreciate any information!
 
-uname -a (on Kubuntu Gutsy, CPU is a single-core 32-bit Pentium M):
+ata2 is the second port of my promise controller in which nothing
+is plugged in.
 
-Linux superfly 2.6.22-14-386 #1 Tue Dec 18 07:34:24 UTC 2007 i686 GNU/Linux
+I also have an sata_via with 2 disks plugged in.
 
-lspci:
+All 3 disks seem to come up properly as far as I can see from the log,
+but I've just rebooted in an older kernel version.
 
-00:00.0 Host bridge: Intel Corporation 82855PM Processor to I/O Controller 
-(rev 03)
-00:01.0 PCI bridge: Intel Corporation 82855PM Processor to AGP Controller (rev 
-03)
-00:1d.0 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) 
-USB UHCI Controller #1 (rev 01)
-00:1d.1 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) 
-USB UHCI Controller #2 (rev 01)
-00:1d.2 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) 
-USB UHCI Controller #3 (rev 01)
-00:1d.7 USB Controller: Intel Corporation 82801DB/DBM (ICH4/ICH4-M) USB2 EHCI 
-Controller (rev 01)
-00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 81)
-00:1f.0 ISA bridge: Intel Corporation 82801DBM (ICH4-M) LPC Interface Bridge 
-(rev 01)
-00:1f.1 IDE interface: Intel Corporation 82801DBM (ICH4-M) IDE Controller (rev 
-01)
-00:1f.5 Multimedia audio controller: Intel Corporation 82801DB/DBL/DBM 
-(ICH4/ICH4-L/ICH4-M) AC'97 Audio Controller (rev 01)
-01:00.0 VGA compatible controller: nVidia Corporation NV28 [GeForce4 Ti 4200 
-Go AGP 8x] (rev a1)
-02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5705M Gigabit 
-Ethernet (rev 01)
-02:01.0 CardBus bridge: Texas Instruments PCI7510 PC card Cardbus Controller 
-(rev 01)
-02:01.2 FireWire (IEEE 1394): Texas Instruments PCI7410,7510,7610 OHCI-Lynx 
-Controller
-02:01.3 System peripheral: Texas Instruments PCI7410,7510,7610 PCI Firmware 
-Loading Function
-02:03.0 CardBus bridge: Texas Instruments PCI1410 PC card Cardbus Controller 
-(rev 01)
+With my current 2.6.22 kernel I just get 1 line saying that the link
+is down and then it stops.
 
-Thanks!
+I think the important part of the log I get when booting is:
+Jan 13 19:20:45 intrepid kernel: sata_promise 0000:00:08.0: version 2.11
+Jan 13 19:20:45 intrepid kernel: ACPI: PCI Interrupt 0000:00:08.0[A] ->
+GSI 18 (level, low) -> IRQ 18
+Jan 13 19:20:45 intrepid kernel: scsi0 : sata_promise
+Jan 13 19:20:45 intrepid kernel: scsi1 : sata_promise
+Jan 13 19:20:45 intrepid kernel: scsi2 : sata_promise
+Jan 13 19:20:45 intrepid kernel: ata1: SATA max UDMA/133 mmio m4096@0xfdf00000 port 0xfdf00200 irq 18
+Jan 13 19:20:45 intrepid kernel: ata2: SATA max UDMA/133 mmio m4096@0xfdf00000 port 0xfdf00280 irq 18
+Jan 13 19:20:45 intrepid kernel: ata3: PATA max UDMA/133 mmio m4096@0xfdf00000 port 0xfdf00300 irq 18
+Jan 13 19:20:45 intrepid kernel: ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Jan 13 19:20:45 intrepid kernel: ata1.00: ATA-7: WDC WD5000YS-01MPB1, 09.02E09, max UDMA/133
+Jan 13 19:20:45 intrepid kernel: ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+Jan 13 19:20:45 intrepid kernel: ata1.00: configured for UDMA/133 
+Jan 13 19:20:45 intrepid kernel: ata2: SATA link down (SStatus 0 SControl 0)
+Jan 13 19:20:45 intrepid kernel: scsi 0:0:0:0: Direct-Access     ATA      WDC WD5000YS-01M 09.0 PQ: 0 ANSI: 5
+Jan 13 19:20:45 intrepid kernel: sata_via 0000:00:0f.0: version 2.3
+Jan 13 19:20:45 intrepid kernel: ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 20
+Jan 13 19:20:45 intrepid kernel: sata_via 0000:00:0f.0: routed to hard irq line
+10
+Jan 13 19:20:45 intrepid kernel: scsi3 : sata_via
+Jan 13 19:20:45 intrepid kernel: scsi4 : sata_via
+Jan 13 19:20:45 intrepid kernel: ata4: SATA max UDMA/133 cmd 0xe800 ctl 0xe400 bmdma 0xd400 irq 20
+Jan 13 19:20:45 intrepid kernel: ata5: SATA max UDMA/133 cmd 0xe000 ctl 0xd800 bmdma 0xd408 irq 20
+Jan 13 19:20:45 intrepid kernel: Driver 'sd' needs updating - please use bus_type methods
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] 976773168 512-byte hardware sectors (500108 MB)
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel:  sda: unknown partition table
+Jan 13 19:20:45 intrepid kernel: sd 0:0:0:0: [sda] Attached SCSI disk
+Jan 13 19:20:45 intrepid kernel: ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Jan 13 19:20:45 intrepid kernel: ata4.00: ATA-7: Maxtor 6Y080M0, YAR51EW0, max UDMA/133
+Jan 13 19:20:45 intrepid kernel: ata4.00: 160086528 sectors, multi 16: LBA
+Jan 13 19:20:45 intrepid kernel: ata4.00: configured for UDMA/133
+Jan 13 19:20:45 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xa frozen
+Jan 13 19:20:45 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:20:45 intrepid kernel: ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+Jan 13 19:20:45 intrepid kernel: ata5.00: ATA-6: ST3200822AS, 3.01, max UDMA/133Jan 13 19:20:45 intrepid kernel: ata5.00: 390721968 sectors, multi 16: LBA48
+Jan 13 19:20:45 intrepid kernel: ata5.00: configured for UDMA/133
+Jan 13 19:20:45 intrepid kernel: scsi 3:0:0:0: Direct-Access     ATA      Maxtor 6Y080M0   YAR5 PQ: 0 ANSI: 5
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] 160086528 512-byte hardware sectors (81964 MB)
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] 160086528 512-byte hardware sectors (81964 MB)
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel:  sdb: sdb1 sdb2 sdb3 sdb4
+Jan 13 19:20:45 intrepid kernel: sd 3:0:0:0: [sdb] Attached SCSI disk
+Jan 13 19:20:45 intrepid kernel: scsi 4:0:0:0: Direct-Access     ATA      ST3200822AS      3.01 PQ: 0 ANSI: 5
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] 390721968 512-byte hardware sectors (200050 MB)
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] 390721968 512-byte hardware sectors (200050 MB)
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Write Protect is off
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 13 19:20:45 intrepid kernel:  sdc: unknown partition table
+Jan 13 19:20:45 intrepid kernel: sd 4:0:0:0: [sdc] Attached SCSI disk
+Jan 13 19:20:45 intrepid kernel: ACPI: PCI Interrupt 0000:00:10.4[C] -> GSI 21 (level, low) -> IRQ 21
+Jan 13 19:20:45 intrepid kernel: ehci_hcd 0000:00:10.4: EHCI Host Controller
+Jan 13 19:20:45 intrepid kernel: ehci_hcd 0000:00:10.4: new USB bus registered,
+assigned bus number 5
+Jan 13 19:20:45 intrepid kernel: ehci_hcd 0000:00:10.4: irq 21, io mem 0xfde00000
+Jan 13 19:20:45 intrepid kernel: ehci_hcd 0000:00:10.4: USB 2.0 started, EHCI 1.00, driver 10 Dec 2004
+Jan 13 19:20:45 intrepid kernel: usb usb5: configuration #1 chosen from 1 choiceJan 13 19:20:45 intrepid kernel: hub 5-0:1.0: USB hub found
+Jan 13 19:20:45 intrepid kernel: hub 5-0:1.0: 8 ports detected
+Jan 13 19:20:45 intrepid kernel: hda: ATAPI 40X DVD-ROM DVD-R CD-R/RW drive, 2048kB Cache
+Jan 13 19:20:45 intrepid kernel: Uniform CD-ROM driver Revision: 3.20
+Jan 13 19:20:45 intrepid kernel: ata2: soft resetting link
+Jan 13 19:20:45 intrepid kernel: ata2: SATA link down (SStatus 100 SControl 0)
+Jan 13 19:20:45 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t4
+Jan 13 19:20:45 intrepid kernel: ata2: hotplug_status 0x20
+Jan 13 19:20:45 intrepid kernel: ata2: soft resetting link
+Jan 13 19:20:45 intrepid kernel: ata2: SATA link down (SStatus 0 SControl 0)
+Jan 13 19:20:45 intrepid kernel: ata2: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xb t3
+Jan 13 19:20:45 intrepid kernel: ata2: hotplug_status 0x2
+
+
+Kurt
+
+PS: Please CC me, I'm not subscribed.
+
