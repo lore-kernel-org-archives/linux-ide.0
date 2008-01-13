@@ -1,320 +1,160 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 3/12] ide-floppy: remove struct idefloppy_capacity_descriptor
-Date: Sun, 13 Jan 2008 21:18:16 +0100
-Message-ID: <1200255505-31418-4-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 8/12] ide-floppy: merge idefloppy_{input,output}_buffers
+Date: Sun, 13 Jan 2008 21:18:21 +0100
+Message-ID: <1200255505-31418-9-git-send-email-bbpetkov@yahoo.de>
 References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-2-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-3-git-send-email-bbpetkov@yahoo.de>
+ <1200255505-31418-4-git-send-email-bbpetkov@yahoo.de>
+ <1200255505-31418-5-git-send-email-bbpetkov@yahoo.de>
+ <1200255505-31418-6-git-send-email-bbpetkov@yahoo.de>
+ <1200255505-31418-7-git-send-email-bbpetkov@yahoo.de>
+ <1200255505-31418-8-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp111.plus.mail.re1.yahoo.com ([69.147.102.74]:23244 "HELO
-	smtp111.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753404AbYAMUWG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:06 -0500
-In-Reply-To: <1200255505-31418-3-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp115.plus.mail.re1.yahoo.com ([69.147.102.78]:35764 "HELO
+	smtp115.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753640AbYAMUWM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:12 -0500
+In-Reply-To: <1200255505-31418-8-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-Also,
-- remove the accompanying 4 byte idefloppy_capacity_header.
-- rename functions from idefloppy_... to ide_floppy_... after cleanup.
-- simplify loop in ide_floppy_get_capacity() by reversing if-test condition
-logically.
-- finally, fix white space and checkpatch.pl issues
+We merge idefloppy_{input,output}_buffers() into idefloppy_io_buffers() by
+introducing a 4th arg. called direction. According to its value
+we atapi_input_bytes() or atapi_output_bytes(). Also, this simplifies the
+interrupt handler logic a bit. Finally, rename idefloppy_io_buffers() to
+ide_floppy_io_buffers().
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |  176 ++++++++++++++++++++--------------------------
- 1 files changed, 76 insertions(+), 100 deletions(-)
+ drivers/ide/ide-floppy.c |   67 +++++++++++++--------------------------------
+ 1 files changed, 20 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 06d83cb..caeffb7 100644
+index e7cc9dd..6c917fc 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -119,29 +119,7 @@ typedef struct idefloppy_packet_command_s {
- 
- #define	PC_SUPPRESS_ERROR		6	/* Suppress error reporting */
- 
--/*
-- *	Format capacity
-- */
--typedef struct {
--	u8		reserved[3];
--	u8		length;			/* Length of the following descriptors in bytes */
--} idefloppy_capacity_header_t;
--
--typedef struct {
--	u32		blocks;			/* Number of blocks */
--#if defined(__LITTLE_ENDIAN_BITFIELD)
--	unsigned	dc		:2;	/* Descriptor Code */
--	unsigned	reserved	:6;
--#elif defined(__BIG_ENDIAN_BITFIELD)
--	unsigned	reserved	:6;
--	unsigned	dc		:2;	/* Descriptor Code */
--#else
--#error "Bitfield endianness not defined! Check your byteorder.h"
--#endif
--	u8		length_msb;		/* Block Length (MSB)*/
--	u16		length;			/* Block Length */
--} idefloppy_capacity_descriptor_t;
--
-+/* format capacities descriptor codes */
- #define CAPACITY_INVALID	0x00
- #define CAPACITY_UNFORMATTED	0x01
- #define CAPACITY_CURRENT	0x02
-@@ -184,8 +162,8 @@ typedef struct ide_floppy_obj {
- 	 */
- 	/* Current format */
- 	int blocks, block_size, bs_factor;
--	/* Last format capacity */
--	idefloppy_capacity_descriptor_t capacity;
-+	/* Last format capacity descriptor */
-+	u8 cap_desc[8];
- 	/* Copy of the flexible disk page */
- 	u8 flexible_disk_page[32];
- 	/* Write protect */
-@@ -1216,17 +1194,17 @@ static int idefloppy_get_sfrp_bit(ide_drive_t *drive)
+@@ -321,39 +321,8 @@ static int idefloppy_do_end_request(ide_drive_t *drive, int uptodate, int nsecs)
+ 	return 0;
  }
  
- /*
-- *	Determine if a media is present in the floppy drive, and if so,
-- *	its LBA capacity.
-+ * Determine if a media is present in the floppy drive, and if so, its LBA
-+ * capacity.
-  */
--static int idefloppy_get_capacity (ide_drive_t *drive)
-+static int ide_floppy_get_capacity(ide_drive_t *drive)
+-static void idefloppy_input_buffers (ide_drive_t *drive, idefloppy_pc_t *pc, unsigned int bcount)
+-{
+-	struct request *rq = pc->rq;
+-	struct bio_vec *bvec;
+-	struct req_iterator iter;
+-	unsigned long flags;
+-	char *data;
+-	int count, done = 0;
+-
+-	rq_for_each_segment(bvec, rq, iter) {
+-		if (!bcount)
+-			break;
+-
+-		count = min(bvec->bv_len, bcount);
+-
+-		data = bvec_kmap_irq(bvec, &flags);
+-		drive->hwif->atapi_input_bytes(drive, data, count);
+-		bvec_kunmap_irq(data, &flags);
+-
+-		bcount -= count;
+-		pc->b_count += count;
+-		done += count;
+-	}
+-
+-	idefloppy_do_end_request(drive, 1, done >> 9);
+-
+-	if (bcount) {
+-		printk(KERN_ERR "%s: leftover data in idefloppy_input_buffers, bcount == %d\n", drive->name, bcount);
+-		idefloppy_discard_data(drive, bcount);
+-	}
+-}
+-
+-static void idefloppy_output_buffers (ide_drive_t *drive, idefloppy_pc_t *pc, unsigned int bcount)
++static void ide_floppy_io_buffers(ide_drive_t *drive, idefloppy_pc_t *pc,
++		unsigned int bcount, int direction)
+ {
+ 	struct request *rq = pc->rq;
+ 	struct req_iterator iter;
+@@ -369,7 +338,10 @@ static void idefloppy_output_buffers (ide_drive_t *drive, idefloppy_pc_t *pc, un
+ 		count = min(bvec->bv_len, bcount);
+ 
+ 		data = bvec_kmap_irq(bvec, &flags);
+-		drive->hwif->atapi_output_bytes(drive, data, count);
++		if (direction)
++			drive->hwif->atapi_output_bytes(drive, data, count);
++		else
++			drive->hwif->atapi_input_bytes(drive, data, count);
+ 		bvec_kunmap_irq(data, &flags);
+ 
+ 		bcount -= count;
+@@ -380,8 +352,13 @@ static void idefloppy_output_buffers (ide_drive_t *drive, idefloppy_pc_t *pc, un
+ 	idefloppy_do_end_request(drive, 1, done >> 9);
+ 
+ 	if (bcount) {
+-		printk(KERN_ERR "%s: leftover data in idefloppy_output_buffers, bcount == %d\n", drive->name, bcount);
+-		idefloppy_write_zeros(drive, bcount);
++		printk(KERN_ERR "%s: leftover data in idefloppy_output_buffers,"
++			" bcount == %d\n", drive->name, bcount);
++		if (direction)
++			idefloppy_write_zeros(drive, bcount);
++		else
++			idefloppy_discard_data(drive, bcount);
++
+ 	}
+ }
+ 
+@@ -516,8 +493,6 @@ static void idefloppy_retry_pc (ide_drive_t *drive)
+ 	idefloppy_queue_pc_head(drive, pc, rq);
+ }
+ 
+-typedef void (io_buf_t)(ide_drive_t *, idefloppy_pc_t *, unsigned int);
+-
+ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
  {
  	idefloppy_floppy_t *floppy = drive->driver_data;
- 	idefloppy_pc_t pc;
--	idefloppy_capacity_header_t *header;
--	idefloppy_capacity_descriptor_t *descriptor;
--	int i, descriptors, rc = 1, blocks, length;
--	
-+	u8 *cap_desc;
-+	u8 header_len, desc_cnt;
-+	int i, rc = 1, blocks, length;
-+
- 	drive->bios_cyl = 0;
- 	drive->bios_head = drive->bios_sect = 0;
- 	floppy->blocks = 0;
-@@ -1238,17 +1216,26 @@ static int idefloppy_get_capacity (ide_drive_t *drive)
- 		printk(KERN_ERR "ide-floppy: Can't get floppy parameters\n");
- 		return 1;
- 	}
--	header = (idefloppy_capacity_header_t *) pc.buffer;
--	descriptors = header->length / sizeof(idefloppy_capacity_descriptor_t);
--	descriptor = (idefloppy_capacity_descriptor_t *) (header + 1);
-+	header_len = pc.buffer[3];
-+	cap_desc = &pc.buffer[4];
-+	desc_cnt = header_len / 8; /* capacity descriptor of 8 bytes */
-+
-+	for (i = 0; i < desc_cnt; i++) {
-+		unsigned int desc_start = 4 + i*8;
-+
-+		blocks = be32_to_cpu(*(u32 *)&pc.buffer[desc_start]);
-+		length = be16_to_cpu(*(u16 *)&pc.buffer[desc_start + 6]);
-+
-+		debug_log("Descriptor %d: %dkB, %d blocks, %d sector size\n",
-+				i, blocks * length / 1024, blocks, length);
- 
--	for (i = 0; i < descriptors; i++, descriptor++) {
--		blocks = descriptor->blocks = be32_to_cpu(descriptor->blocks);
--		length = descriptor->length = be16_to_cpu(descriptor->length);
-+		if (i)
-+			continue;
-+		/*
-+		 * the code below is valid only for the 1st descriptor, ie i=0
-+		 */
- 
--		if (!i) 
--		{
--		switch (descriptor->dc) {
-+		switch (pc.buffer[desc_start + 4] & 0x03) {
- 		/* Clik! drive returns this instead of CAPACITY_CURRENT */
- 		case CAPACITY_UNFORMATTED:
- 			if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags))
-@@ -1259,23 +1246,25 @@ static int idefloppy_get_capacity (ide_drive_t *drive)
- 				break;
- 		case CAPACITY_CURRENT:
- 			/* Normal Zip/LS-120 disks */
--			if (memcmp(descriptor, &floppy->capacity, sizeof (idefloppy_capacity_descriptor_t)))
-+			if (memcmp(cap_desc, &floppy->cap_desc, 8))
- 				printk(KERN_INFO "%s: %dkB, %d blocks, %d "
- 					"sector size\n", drive->name,
- 					blocks * length / 1024, blocks, length);
--			floppy->capacity = *descriptor;
-+			memcpy(&floppy->cap_desc, cap_desc, 8);
-+
- 			if (!length || length % 512) {
- 				printk(KERN_NOTICE "%s: %d bytes block size "
- 					"not supported\n", drive->name, length);
- 			} else {
--                                floppy->blocks = blocks;
--                                floppy->block_size = length;
--                                if ((floppy->bs_factor = length / 512) != 1)
--                                        printk(KERN_NOTICE "%s: warning: non "
-+				floppy->blocks = blocks;
-+				floppy->block_size = length;
-+				floppy->bs_factor = length / 512;
-+				if (floppy->bs_factor != 1)
-+					printk(KERN_NOTICE "%s: warning: non "
- 						"512 bytes block size not "
- 						"fully supported\n",
- 						drive->name);
--                                rc = 0;
-+				rc = 0;
- 			}
- 			break;
- 		case CAPACITY_NO_CARTRIDGE:
-@@ -1290,52 +1279,42 @@ static int idefloppy_get_capacity (ide_drive_t *drive)
- 				"in drive\n", drive->name);
- 			break;
+@@ -525,7 +500,6 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 	idefloppy_pc_t *pc = floppy->pc;
+ 	struct request *rq = pc->rq;
+ 	xfer_func_t *xferfunc;
+-	io_buf_t *iobuf_func;
+ 	unsigned int temp;
+ 	u16 bcount;
+ 	u8 stat, ireason;
+@@ -625,24 +599,23 @@ static ide_startstop_t idefloppy_pc_intr(ide_drive_t *drive)
+ 					" expected - allowing transfer\n");
  		}
--		}
--		if (!i) {
--			debug_log("Descriptor 0 Code: %d\n", descriptor->dc);
--		}
--		debug_log("Descriptor %d: %dkB, %d blocks, %d sector size\n",
--				i, blocks * length / 1024, blocks, length);
-+		debug_log("Descriptor 0 Code: %d\n",
-+			  pc.buffer[desc_start + 4] & 0x03);
  	}
- 
- 	/* Clik! disk does not support get_flexible_disk_page */
--        if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags)) {
-+	if (!test_bit(IDEFLOPPY_CLIK_DRIVE, &floppy->flags))
- 		(void) ide_floppy_get_flexible_disk_page(drive);
+-	if (test_bit(PC_WRITING, &pc->flags)) {
++	if (test_bit(PC_WRITING, &pc->flags))
+ 		xferfunc = hwif->atapi_output_bytes;
+-		iobuf_func = &idefloppy_output_buffers;
+-	} else {
++	else
+ 		xferfunc = hwif->atapi_input_bytes;
+-		iobuf_func = &idefloppy_input_buffers;
 -	}
  
- 	set_capacity(floppy->disk, floppy->blocks * floppy->bs_factor);
- 	return rc;
+-	if (pc->buffer != NULL)
++	if (pc->buffer)
+ 		xferfunc(drive, pc->current_position, bcount);
+ 	else
+-		iobuf_func(drive, pc, bcount);
++		ide_floppy_io_buffers(drive, pc, bcount,
++				test_bit(PC_WRITING, &pc->flags));
+ 
+ 	/* Update the current position */
+ 	pc->actually_transferred += bcount;
+ 	pc->current_position += bcount;
+ 
+-	ide_set_handler(drive, &idefloppy_pc_intr, IDEFLOPPY_WAIT_CMD, NULL);		/* And set the interrupt handler again */
++	/* And set the interrupt handler again */
++	ide_set_handler(drive, &idefloppy_pc_intr, IDEFLOPPY_WAIT_CMD, NULL);
+ 	return ide_started;
  }
  
- /*
--** Obtain the list of formattable capacities.
--** Very similar to idefloppy_get_capacity, except that we push the capacity
--** descriptors to userland, instead of our own structures.
--**
--** Userland gives us the following structure:
--**
--** struct idefloppy_format_capacities {
--**        int nformats;
--**        struct {
--**                int nblocks;
--**                int blocksize;
--**                } formats[];
--**        } ;
--**
--** userland initializes nformats to the number of allocated formats[]
--** records.  On exit we set nformats to the number of records we've
--** actually initialized.
--**
--*/
-+ * Obtain the list of formattable capacities.
-+ * Very similar to ide_floppy_get_capacity, except that we push the capacity
-+ * descriptors to userland, instead of our own structures.
-+ *
-+ * Userland gives us the following structure:
-+ *
-+ * struct idefloppy_format_capacities {
-+ *	int nformats;
-+ *	struct {
-+ *		int nblocks;
-+ *		int blocksize;
-+ *	} formats[];
-+ * };
-+ *
-+ * userland initializes nformats to the number of allocated formats[] records.
-+ * On exit we set nformats to the number of records we've actually initialized.
-+ */
- 
--static int idefloppy_get_format_capacities(ide_drive_t *drive, int __user *arg)
-+static int ide_floppy_get_format_capacities(ide_drive_t *drive, int __user *arg)
- {
--        idefloppy_pc_t pc;
--	idefloppy_capacity_header_t *header;
--        idefloppy_capacity_descriptor_t *descriptor;
--	int i, descriptors, blocks, length;
--	int u_array_size;
--	int u_index;
-+	idefloppy_pc_t pc;
-+	u8 header_len, desc_cnt;
-+	int i, blocks, length, u_array_size, u_index;
- 	int __user *argp;
- 
- 	if (get_user(u_array_size, arg))
-@@ -1347,30 +1326,27 @@ static int idefloppy_get_format_capacities(ide_drive_t *drive, int __user *arg)
- 	idefloppy_create_read_capacity_cmd(&pc);
- 	if (idefloppy_queue_pc_tail(drive, &pc)) {
- 		printk(KERN_ERR "ide-floppy: Can't get floppy parameters\n");
--                return (-EIO);
--        }
--        header = (idefloppy_capacity_header_t *) pc.buffer;
--        descriptors = header->length /
--		sizeof(idefloppy_capacity_descriptor_t);
--	descriptor = (idefloppy_capacity_descriptor_t *) (header + 1);
-+		return (-EIO);
-+	}
-+	header_len = pc.buffer[3];
-+	desc_cnt = header_len / 8; /* capacity descriptor of 8 bytes */
- 
- 	u_index = 0;
- 	argp = arg + 1;
- 
- 	/*
--	** We always skip the first capacity descriptor.  That's the
--	** current capacity.  We are interested in the remaining descriptors,
--	** the formattable capacities.
--	*/
-+	 * We always skip the first capacity descriptor.  That's the current
-+	 * capacity.  We are interested in the remaining descriptors, the
-+	 * formattable capacities.
-+	 */
-+	for (i = 1; i < desc_cnt; i++) {
-+		unsigned int desc_start = 4 + i*8;
- 
--	for (i=0; i<descriptors; i++, descriptor++) {
- 		if (u_index >= u_array_size)
- 			break;	/* User-supplied buffer too small */
--		if (i == 0)
--			continue;	/* Skip the first descriptor */
- 
--		blocks = be32_to_cpu(descriptor->blocks);
--		length = be16_to_cpu(descriptor->length);
-+		blocks = be32_to_cpu(*(u32 *)&pc.buffer[desc_start]);
-+		length = be16_to_cpu(*(u16 *)&pc.buffer[desc_start + 6]);
- 
- 		if (put_user(blocks, argp))
- 			return(-EFAULT);
-@@ -1610,7 +1586,7 @@ static void idefloppy_setup (ide_drive_t *drive, idefloppy_floppy_t *floppy)
- 	}
- 
- 
--	(void) idefloppy_get_capacity(drive);
-+	(void) ide_floppy_get_capacity(drive);
- 	idefloppy_add_settings(drive);
- }
- 
-@@ -1705,7 +1681,7 @@ static int idefloppy_open(struct inode *inode, struct file *filp)
- 			(void) idefloppy_queue_pc_tail(drive, &pc);
- 		}
- 
--		if (idefloppy_get_capacity (drive)
-+		if (ide_floppy_get_capacity(drive)
- 		   && (filp->f_flags & O_NDELAY) == 0
- 		    /*
- 		    ** Allow O_NDELAY to open a drive without a disk, or with
-@@ -1809,7 +1785,7 @@ static int idefloppy_ioctl(struct inode *inode, struct file *file,
- 	case IDEFLOPPY_IOCTL_FORMAT_SUPPORTED:
- 		return 0;
- 	case IDEFLOPPY_IOCTL_FORMAT_GET_CAPACITY:
--		return idefloppy_get_format_capacities(drive, argp);
-+		return ide_floppy_get_format_capacities(drive, argp);
- 	case IDEFLOPPY_IOCTL_FORMAT_START:
- 
- 		if (!(file->f_mode & 2))
 -- 
 1.5.3.7
 
