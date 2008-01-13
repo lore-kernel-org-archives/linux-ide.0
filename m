@@ -1,87 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: PROBLEM REMAINS: [sata_nv ADMA breaks ATAPI]
-	Crash	on	accessing DVD-RAM
-Date: Sat, 12 Jan 2008 21:12:43 -0600
-Message-ID: <1200193963.3656.90.camel@localhost.localdomain>
-References: <fa.krOVfyFmB2aqGjJIoHCLmQxecWc@ifi.uio.no>
-	 <478702C7.80401@shaw.ca> <47887982.6050805@mail.ru>
-	 <47891426.1020604@shaw.ca> <1200170117.3656.66.camel@localhost.localdomain>
-	 <47894785.2050508@shaw.ca> <1200180440.3656.76.camel@localhost.localdomain>
-	 <47896BA8.4030609@shaw.ca>
+From: "Paul Surgeon" <surgpm@gmail.com>
+Subject: SATA timeouts on CD DVD RW
+Date: Sun, 13 Jan 2008 05:57:15 +0200
+Message-ID: <6d98c5450801121957jb4c5a10xe5a3b8b866585732@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46696 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751507AbYAMDMv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 22:12:51 -0500
-In-Reply-To: <47896BA8.4030609@shaw.ca>
+Received: from wa-out-1112.google.com ([209.85.146.183]:28558 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbYAMD5Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jan 2008 22:57:16 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2791796wah.23
+        for <linux-ide@vger.kernel.org>; Sat, 12 Jan 2008 19:57:15 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Alexander <aledin@mail.ru>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>
+To: linux-ide@vger.kernel.org
 
-On Sat, 2008-01-12 at 19:38 -0600, Robert Hancock wrote:
-> James Bottomley wrote:
-> > On Sat, 2008-01-12 at 17:04 -0600, Robert Hancock wrote:
-> >> I don't think the problem is that there's some buffer which is getting 
-> >> allocated above 4GB and never bounced, since the problem goes away if 
-> >> ADMA is disabled entirely and the DMA mask remains 32-bit always. My 
-> >> guess is something is basing its decision on whether to bounce or not on 
-> >> the device DMA mask. That can't possibly work properly for sata_nv since 
-> >> the same PCI device has 2 ports, one of which can be in ADMA mode and 
-> >> 64-bit capable and the other can be in legacy mode and only 32-bit capable.
-> > 
-> > Erm, well, you can't decouple them.  Having a differing blk queue bounce
-> > mask and device mask is going to cause huge trouble.  The reason is this
-> > insidious nasty called swiotlb.  Basically, with it enabled (and again,
-> > it can be on ia64 or x86_64), the kernel can bypass the bounce limit
-> > safe in the knowledge that swiotlb will fix up behind in the dma_map_
-> > Unfortunately, if the device mask doesn't match the queue mask then
-> > swiotlb will never kick in and you'll end up with mapped pages beyond
-> > the 4GB limit.
-> 
-> Yuck.. All the IOMMU DMA mapping code checks against the device DMA 
-> mask, so it looks like if we get to the point of doing the DMA mapping 
-> on >4GB addresses in libata we're screwed with this approach.
-> 
-> The key problem is that both ata_ports share the same struct device with 
-> one DMA mask which really doesn't match what this controller wants. I 
-> wonder if we could do a different struct device for each port?
-> 
-> Other than that, I guess the solutions would be to just set a 32-bit 
-> mask on the device if either port has an ATAPI device connected (which 
-> is fairly ugly, considering that you could do things like hotplug an 
-> ATAPI device when the other port was in use, for example), or do 
-> something to prevent requests from reaching this point with >4GB 
-> addresses in the first place..
+I keep getting the following error messages during bootup with kernel
+2.6.23.12 :
 
-Well ... assuming this is the problem (and perhaps we'd better get the
-traces to confirm) there are at least three possible solutions:
+scsi 4:0:0:0: CD-ROM            TSSTcorp CDDVDW TS-L633A  UO00 PQ: 0 ANSI: 5
+ata3.00: qc timeout (cmd 0xa0)
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata3.00: (irq_stat 0x40000001)
+ata3.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
+        res 51/60:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
+ata3: soft resetting port
+ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata3.00: configured for PIO4
+ata3: EH complete
 
-     1. As you say, just take the pci device mask down to 32 bits.
-     2. Find the problematic allocations and add GFP_DMA32
-     3. set the mask on the actual SCSI device rather than the PCI
-        device and pass that into dma_map_ (this approach would have to
-        get signoff from the arch people; I know it will work on parisc
-        and x86 but I'm not sure about any other arch).
- 
-> >> Tejun, I believe you had a patch that was printing warnings when libata 
-> >> tried to program a legacy PRD with an address over 4GB. Could we change 
-> >> that to WARN_ON and get someone experiencing this to try it and
-> >> see what the stack trace points to?
-> > 
-> > Unfortunately, the stack trace probably won't help, since the command
-> > likely gets issued from the block request function, so the trace won't
-> > go back to the culpable initiator; that's why the command would be
-> > helpful.
-> 
-> Well, dumping the ATA command surely isn't helpful, as I'm sure it will 
-> be PACKET. I guess we'd have to dump out the actual CDB..
+The error repeats many times and it takes about 10 minutes for the box to boot.
+If I unplug the DVD drive the problem naturally disappears.
+The machine is an Intel SR1530SH.
 
-Sorry, when a SCSI person says dump the command, they mean the CDB.
+Below is the output from lspci :
+00:00.0 Host bridge: Intel Corporation Server DRAM Controller
+00:01.0 PCI bridge: Intel Corporation Server Host-Primary PCI Express Bridge
+00:19.0 Ethernet controller: Intel Corporation 82566DM-2 Gigabit
+Network Connection (rev 02)
+00:1c.0 PCI bridge: Intel Corporation PCI Express Port 1 (rev 02)
+00:1c.4 PCI bridge: Intel Corporation PCI Express Port 5 (rev 02)
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
+00:1f.0 ISA bridge: Intel Corporation LPC Interface Controller (rev 02)
+00:1f.2 SATA controller: Intel Corporation 6 port SATA AHCI Controller (rev 02)
+00:1f.3 SMBus: Intel Corporation SMBus Controller (rev 02)
+01:00.0 Ethernet controller: Intel Corporation 82571EB Gigabit
+Ethernet Controller (rev 06)
+01:00.1 Ethernet controller: Intel Corporation 82571EB Gigabit
+Ethernet Controller (rev 06)
+03:00.0 VGA compatible controller: Matrox Graphics, Inc. MGA G200e
+[Pilot] ServerEngines (SEP1) (rev 02)
+04:02.0 Ethernet controller: Intel Corporation 82541GI Gigabit
+Ethernet Controller (rev 05)
 
-James
+I've tried switching acpi off, using irqpoll, switching from AHCI to
+RAID in the BIOS but it makes no difference at all.
+I also tried kernel 2.6.21.5 (Slackware 12.0) and the problem is still there.
+Any ideas?
 
-
+Thanks
+Paul
