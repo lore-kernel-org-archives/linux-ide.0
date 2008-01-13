@@ -1,136 +1,101 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 11/12] ide-floppy: remove IDEFLOPPY_DEBUG_INFO
-Date: Sun, 13 Jan 2008 21:18:24 +0100
-Message-ID: <1200255505-31418-12-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 6/12] ide-floppy: mv idefloppy_{should_,}report_error
+Date: Sun, 13 Jan 2008 21:18:19 +0100
+Message-ID: <1200255505-31418-7-git-send-email-bbpetkov@yahoo.de>
 References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-2-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-3-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-4-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-5-git-send-email-bbpetkov@yahoo.de>
  <1200255505-31418-6-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-7-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-8-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-9-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-10-git-send-email-bbpetkov@yahoo.de>
- <1200255505-31418-11-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp116.plus.mail.re1.yahoo.com ([69.147.102.79]:32314 "HELO
-	smtp116.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753690AbYAMUWM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:12 -0500
-In-Reply-To: <1200255505-31418-11-git-send-email-bbpetkov@yahoo.de>
+Received: from smtp114.plus.mail.re1.yahoo.com ([69.147.102.77]:48708 "HELO
+	smtp114.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753706AbYAMUWN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:13 -0500
+In-Reply-To: <1200255505-31418-6-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-This info is already available through ioctl() and /proc
+In addition to shortening the function name, move the printk-call into the
+function thereby saving some code lines. Also, make the function out_of_line
+since it is not on a performance critical path. Finally, rename the reworked
+function to ide_floppy..().
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-floppy.c |   63 +++++++++------------------------------------
- 1 files changed, 13 insertions(+), 50 deletions(-)
+ drivers/ide/ide-floppy.c |   38 ++++++++++++++------------------------
+ 1 files changed, 14 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 8e7714a..f9faf26 100644
+index 5004773..f1ae9af 100644
 --- a/drivers/ide/ide-floppy.c
 +++ b/drivers/ide/ide-floppy.c
-@@ -47,11 +47,8 @@
- #include <linux/io.h>
- #include <asm/unaligned.h>
+@@ -739,18 +739,20 @@ static ide_startstop_t idefloppy_transfer_pc1 (ide_drive_t *drive)
+ 	return ide_started;
+ }
  
--/*
-- *	The following are used to debug the driver.
+-/**
+- * idefloppy_should_report_error()
+- *
+- * Supresses error messages resulting from Medium not present
 - */
-+/* define to see debug info */
- #define IDEFLOPPY_DEBUG_LOG		0
--#define IDEFLOPPY_DEBUG_INFO		0
- 
- /* #define IDEFLOPPY_DEBUG(fmt, args...) printk(KERN_INFO fmt, ## args) */
- #define IDEFLOPPY_DEBUG( fmt, args... )
-@@ -1314,15 +1311,12 @@ static sector_t idefloppy_capacity (ide_drive_t *drive)
+-static inline int idefloppy_should_report_error(idefloppy_floppy_t *floppy)
++static void ide_floppy_report_error(idefloppy_floppy_t *floppy,
++		idefloppy_pc_t *pc)
+ {
++	/* supress error messages resulting from Medium not present */
+ 	if (floppy->sense_key == 0x02 &&
+ 	    floppy->asc       == 0x3a &&
+ 	    floppy->ascq      == 0x00)
+-		return 0;
+-	return 1;
++		return;
++
++	printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x, key = %2x, "
++			"asc = %2x, ascq = %2x\n",
++			floppy->drive->name, pc->c[0], floppy->sense_key,
++			floppy->asc, floppy->ascq);
++
  }
  
  /*
-- *	idefloppy_identify_device checks if we can support a drive,
-- *	based on the ATAPI IDENTIFY command results.
-+ * Check whether we can support a drive, based on the ATAPI IDENTIFY command
-+ * results.
-  */
--static int idefloppy_identify_device (ide_drive_t *drive,struct hd_driveid *id)
-+static int idefloppy_identify_device(ide_drive_t *drive, struct hd_driveid *id)
- {
- 	struct idefloppy_id_gcw gcw;
--#if IDEFLOPPY_DEBUG_INFO
--	char buffer[80];
--#endif /* IDEFLOPPY_DEBUG_INFO */
+@@ -777,15 +779,8 @@ static ide_startstop_t idefloppy_issue_pc (ide_drive_t *drive, idefloppy_pc_t *p
+ 		 *	a legitimate error code was received.
+ 		 */
+ 		if (!test_bit(PC_ABORT, &pc->flags)) {
+-			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags)) {
+-				if (idefloppy_should_report_error(floppy))
+-					printk(KERN_ERR "ide-floppy: %s: I/O error, "
+-					       "pc = %2x, key = %2x, "
+-					       "asc = %2x, ascq = %2x\n",
+-					       drive->name, pc->c[0],
+-					       floppy->sense_key,
+-					       floppy->asc, floppy->ascq);
+-			}
++			if (!test_bit(PC_SUPPRESS_ERROR, &pc->flags))
++				ide_floppy_report_error(floppy, pc);
+ 			/* Giving up */
+ 			pc->error = IDEFLOPPY_ERROR_GENERAL;
+ 		}
+@@ -995,13 +990,8 @@ static ide_startstop_t idefloppy_do_request (ide_drive_t *drive, struct request
+ 			rq->nr_sectors, rq->current_nr_sectors);
  
- 	*((u16 *) &gcw) = id->config;
- 
-@@ -1331,54 +1325,23 @@ static int idefloppy_identify_device (ide_drive_t *drive,struct hd_driveid *id)
- 	if ((gcw.device_type == 5) &&
- 	    !strstr(id->model, "CD-ROM") &&
- 	    strstr(id->model, "ZIP"))
--		gcw.device_type = 0;			
-+		gcw.device_type = 0;
- #endif
- 
--#if IDEFLOPPY_DEBUG_INFO
--	printk(KERN_INFO "Dumping ATAPI Identify Device floppy parameters\n");
--	switch (gcw.protocol) {
--		case 0: case 1: sprintf(buffer, "ATA");break;
--		case 2:	sprintf(buffer, "ATAPI");break;
--		case 3: sprintf(buffer, "Reserved (Unknown to ide-floppy)");break;
--	}
--	printk(KERN_INFO "Protocol Type: %s\n", buffer);
--	switch (gcw.device_type) {
--		case 0: sprintf(buffer, "Direct-access Device");break;
--		case 1: sprintf(buffer, "Streaming Tape Device");break;
--		case 2: case 3: case 4: sprintf (buffer, "Reserved");break;
--		case 5: sprintf(buffer, "CD-ROM Device");break;
--		case 6: sprintf(buffer, "Reserved");
--		case 7: sprintf(buffer, "Optical memory Device");break;
--		case 0x1f: sprintf(buffer, "Unknown or no Device type");break;
--		default: sprintf(buffer, "Reserved");
--	}
--	printk(KERN_INFO "Device Type: %x - %s\n", gcw.device_type, buffer);
--	printk(KERN_INFO "Removable: %s\n",gcw.removable ? "Yes":"No");	
--	switch (gcw.drq_type) {
--		case 0: sprintf(buffer, "Microprocessor DRQ");break;
--		case 1: sprintf(buffer, "Interrupt DRQ");break;
--		case 2: sprintf(buffer, "Accelerated DRQ");break;
--		case 3: sprintf(buffer, "Reserved");break;
--	}
--	printk(KERN_INFO "Command Packet DRQ Type: %s\n", buffer);
--	switch (gcw.packet_size) {
--		case 0: sprintf(buffer, "12 bytes");break;
--		case 1: sprintf(buffer, "16 bytes");break;
--		default: sprintf(buffer, "Reserved");break;
--	}
--	printk(KERN_INFO "Command Packet Size: %s\n", buffer);
--#endif /* IDEFLOPPY_DEBUG_INFO */
--
- 	if (gcw.protocol != 2)
--		printk(KERN_ERR "ide-floppy: Protocol is not ATAPI\n");
-+		printk(KERN_ERR "ide-floppy: Protocol 0x%02x not ATAPI\n",
-+			gcw.protocol);
- 	else if (gcw.device_type != 0)
--		printk(KERN_ERR "ide-floppy: Device type is not set to floppy\n");
-+		printk(KERN_ERR "ide-floppy: Device type 0x%02x is not set to "
-+				"floppy\n", gcw.device_type);
- 	else if (!gcw.removable)
- 		printk(KERN_ERR "ide-floppy: The removable flag is not set\n");
- 	else if (gcw.drq_type == 3) {
--		printk(KERN_ERR "ide-floppy: Sorry, DRQ type %d not supported\n", gcw.drq_type);
-+		printk(KERN_ERR "ide-floppy: Sorry, DRQ type %d not "
-+				"supported\n", gcw.drq_type);
- 	} else if (gcw.packet_size != 0) {
--		printk(KERN_ERR "ide-floppy: Packet size is not 12 bytes long\n");
-+		printk(KERN_ERR "ide-floppy: Packet size is not 12 bytes "
-+				"long\n");
- 	} else
- 		return 1;
- 	return 0;
+ 	if (rq->errors >= ERROR_MAX) {
+-		if (floppy->failed_pc != NULL) {
+-			if (idefloppy_should_report_error(floppy))
+-				printk(KERN_ERR "ide-floppy: %s: I/O error, pc = %2x,"
+-				       " key = %2x, asc = %2x, ascq = %2x\n",
+-				       drive->name, floppy->failed_pc->c[0],
+-				       floppy->sense_key, floppy->asc, floppy->ascq);
+-		}
++		if (floppy->failed_pc != NULL)
++			ide_floppy_report_error(floppy, floppy->failed_pc);
+ 		else
+ 			printk(KERN_ERR "ide-floppy: %s: I/O error\n",
+ 				drive->name);
 -- 
 1.5.3.7
 
