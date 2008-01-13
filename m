@@ -1,51 +1,83 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 5911] siimage.c interrupts screaming
-Date: Sun, 13 Jan 2008 11:05:36 -0800 (PST)
-Message-ID: <20080113190536.0FD69108074@picon.linux-foundation.org>
-References: <bug-5911-11633@http.bugzilla.kernel.org/>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: [PATCH 1/12] ide-floppy: remove struct idefloppy_mode_parameter_header
+Date: Sun, 13 Jan 2008 21:18:14 +0100
+Message-ID: <1200255505-31418-2-git-send-email-bbpetkov@yahoo.de>
+References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:50942 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753381AbYAMTGN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 14:06:13 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0DJ5alx024711
-	for <linux-ide@vger.kernel.org>; Sun, 13 Jan 2008 11:05:37 -0800
-In-Reply-To: <bug-5911-11633@http.bugzilla.kernel.org/>
+Received: from smtp109.plus.mail.re1.yahoo.com ([69.147.102.72]:45585 "HELO
+	smtp109.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753369AbYAMUWE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Jan 2008 15:22:04 -0500
+In-Reply-To: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=5911
+Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
+---
+ drivers/ide/ide-floppy.c |   26 +++-----------------------
+ 1 files changed, 3 insertions(+), 23 deletions(-)
 
-
-
-
-
-------- Comment #12 from James_McMechan@hotmail.com  2008-01-13 11:05 -------
-Created an attachment (id=14437)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=14437&action=view)
-copy of minicom bootlog panic.txt
-
-2.6.24-r6-mm1 does not seem quite ready yet
-I patched 2.6.23->2.6.24-rc6->2.6.24-rc6-mm1
-and copied .config from 2.6.23.9
-make oldconfig
-it failed to compile with nfs on.
-turned nfs off.
-won't boot panics in __find_get_block/__getblk
-is there something else I should try?
-I have been running with the pata_sil on 2.6.23.9
-looking over my notes I seem to remember that it appeared to be a problem with
-enabling the board interrupt before initializing the second channel and
-something BIOS? may have left a pending interrupt on the second channel
-since the board is enabled but the second channel is not configured yet the
-interrupt is not cleared and stays active. ~800000 later it dies due to the
-timeout. then the second channel is configured and has more trouble since the
-interrupt is disabled...
-
-
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 2b9885f..7648684 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -365,24 +365,6 @@ typedef struct {
+ #define	IDEFLOPPY_CAPABILITIES_PAGE	0x1b
+ #define IDEFLOPPY_FLEXIBLE_DISK_PAGE	0x05
+ 
+-/*
+- *	Mode Parameter Header for the MODE SENSE packet command
+- */
+-typedef struct {
+-	u16		mode_data_length;	/* Length of the following data transfer */
+-	u8		medium_type;		/* Medium Type */
+-#if defined(__LITTLE_ENDIAN_BITFIELD)
+-	unsigned	reserved3	:7;
+-	unsigned	wp		:1;	/* Write protect */
+-#elif defined(__BIG_ENDIAN_BITFIELD)
+-	unsigned	wp		:1;	/* Write protect */
+-	unsigned	reserved3	:7;
+-#else
+-#error "Bitfield endianness not defined! Check your byteorder.h"
+-#endif
+-	u8		reserved[4];
+-} idefloppy_mode_parameter_header_t;
+-
+ static DEFINE_MUTEX(idefloppy_ref_mutex);
+ 
+ #define to_ide_floppy(obj) container_of(obj, struct ide_floppy_obj, kref)
+@@ -1029,7 +1011,7 @@ static void idefloppy_create_format_unit_cmd (idefloppy_pc_t *pc, int b, int l,
+  */
+ static void idefloppy_create_mode_sense_cmd (idefloppy_pc_t *pc, u8 page_code, u8 type)
+ {
+-	u16 length = sizeof(idefloppy_mode_parameter_header_t);
++	u16 length = 8; /* sizeof(Mode Parameter Header) = 8 Bytes */
+ 	
+ 	idefloppy_init_pc(pc);
+ 	pc->c[0] = GPCMD_MODE_SENSE_10;
+@@ -1195,7 +1177,6 @@ static int idefloppy_get_flexible_disk_page (ide_drive_t *drive)
+ {
+ 	idefloppy_floppy_t *floppy = drive->driver_data;
+ 	idefloppy_pc_t pc;
+-	idefloppy_mode_parameter_header_t *header;
+ 	idefloppy_flexible_disk_page_t *page;
+ 	int capacity, lba_capacity;
+ 
+@@ -1205,10 +1186,9 @@ static int idefloppy_get_flexible_disk_page (ide_drive_t *drive)
+ 			"page parameters\n");
+ 		return 1;
+ 	}
+-	header = (idefloppy_mode_parameter_header_t *) pc.buffer;
+-	floppy->wp = header->wp;
++	floppy->wp = !!(pc.buffer[3] & 0x80);
+ 	set_disk_ro(floppy->disk, floppy->wp);
+-	page = (idefloppy_flexible_disk_page_t *) (header + 1);
++	page = (idefloppy_flexible_disk_page_t *) &pc.buffer[8];
+ 
+ 	page->transfer_rate = be16_to_cpu(page->transfer_rate);
+ 	page->sector_size = be16_to_cpu(page->sector_size);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+1.5.3.7
+
