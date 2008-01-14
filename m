@@ -1,39 +1,41 @@
-From: Martin Bligh <mbligh@mbligh.org>
-Subject: Re: sudo: User Impersonation / Receiving bugzilla status emails
-Date: Mon, 14 Jan 2008 08:06:28 -0800
-Message-ID: <478B8884.9080509@mbligh.org>
-References: <4788B577.5070704@gmx.de>
+From: "Gaston, Jason D" <jason.d.gaston@intel.com>
+Subject: RE: Sata 4726 Testing
+Date: Mon, 14 Jan 2008 11:07:09 -0800
+Message-ID: <39B20DF628532344BC7A2692CB6AEE0702337662@orsmsx420.amr.corp.intel.com>
+References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com> <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com> <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com> <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com> <47859132.1000700@gmail.com> <4785521B.6070205@shaw.ca> <47859D1A.8010006@gmail.com> <47855F02.3010407@shaw.ca> <4785BD03.10809@gmail.com> <4786C42A.10403@shaw.ca> <47871F88.8070109@gmail.com> <4787F82C.80709@shaw.ca> <47899D39.4050108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dvhart.com ([64.146.134.43]:41827 "EHLO dvhart.com"
+Received: from mga02.intel.com ([134.134.136.20]:2220 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbYANQjQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jan 2008 11:39:16 -0500
-In-Reply-To: <4788B577.5070704@gmx.de>
+	id S1753431AbYANTJe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jan 2008 14:09:34 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47899D39.4050108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ansgar Knappheide <ansgar.knappheide@gmx.de>
-Cc: bugme-admin@linux-foundation.org, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Tejun Heo <htejun@gmail.com>, Andrew Ryder <tireman@shaw.ca>
+Cc: linux-ide@vger.kernel.org
 
-Ansgar Knappheide wrote:
-> Hello,
-> 
-> I think something went wrong on your mailinglist, because I'm not aware 
-> to be member of "Kernel Bug Tracker" nor the bugzilla.kernel.org 
-> mailinglist, none the less I got an email that someone is impersonating 
-> me on "Kernel Bug Tracker" 2 days ago. Since then I'm getting email like 
-> this:
+>Gaston, for the initial detection failure messages when connected to
+ICH
+>AHCI, I don't really have much idea what's going on or how to fix it.
+I
+>suspect it's related to initial FISes from drives arriving
+>asynchronously after hard resets but can't tell much without bus
+>analyzer.  Anyways, as EH can handle the case quickly enough, I guess
+we
+>can leave it at that for now.  If you have ideas on what's going on or
+>how to fix it, please lemme know.
+>
+>Thanks.
+>
+>--
+>Tejun
 
-cc'ed to the list, as doubtless others have the same question
+Ok, thank you for all the work that you have done!
 
-We were asked by Bart to send bugzilla email to the IDE mailing list,
-which presumably you're subscribed to.
-
-The default owner for all kernel bugzilla bugs is:
-
-io_ide@kernel-bugs.osdl.org, which the list user is "watching".
-Once each bug is assigned to a developer, the bug will no longer send
-email.
+Jason
 
