@@ -1,48 +1,47 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: libata-scsi.c: new check-after-use
-Date: Mon, 14 Jan 2008 23:08:05 +0200
-Message-ID: <20080114210805.GH9847@does.not.exist>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 0/12] ide-floppy redux v2.5
+Date: Mon, 14 Jan 2008 22:38:17 +0100
+Message-ID: <200801142238.17282.bzolnier@gmail.com>
+References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:56575 "EHLO smtp6.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801AbYANVJE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jan 2008 16:09:04 -0500
+Received: from ug-out-1314.google.com ([66.249.92.168]:2242 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbYANVoK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jan 2008 16:44:10 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so900338ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2008 13:44:07 -0800 (PST)
+In-Reply-To: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Borislav Petkov <bbpetkov@yahoo.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 
-Commit 9b8e8de7e59b3a2dab3113d620b52dc8ba890fb3 did:
+Hi,
 
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -872,7 +872,8 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- 
- 	ata_scsi_sdev_config(sdev);
- 
--	sdev->manage_start_stop = 1;
-+	if (dev->class == ATA_DEV_ATA)
-+		sdev->manage_start_stop = 1;
- 
- 	if (dev)
- 		ata_scsi_dev_config(sdev, dev);
+On Sunday 13 January 2008, Borislav Petkov wrote:
+> Hi Bart,
+> 
+> here are the remaining patches which had issues to be worked out. I decided
+> to keep the Flexible Disk Page and Capacity Descriptor in
+> idefloppy_floppy_t for the sake of the two printk calls for which they are
+> used. Otherwise, we'll be changing long-known driver behavior and this won't
+> be acceptable. I'll audit the driver to see whether rq_data_dir() can replace
+> the PC_WRITING flag completely and get rid of that one too.
 
+Thanks, I applied patches #1-9 and #11, #10 needs small corrections and will
+be applied once they are addressed (#12 is fine but since it depends on #11
+it has also to wait a bit more).
 
-The Coverity checker spotted that this introduced a check-after-use
-for "dev".
+> By the way, I have an Iomega ZIP 100 drive somewhere in my hardware pile and
+> will do some testing with the "new" :) driver just in case.
 
+This would be great. :)
 
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Cheers,
+Bart
