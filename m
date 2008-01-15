@@ -1,34 +1,70 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Tue, 15 Jan 2008 11:35:52 +0000
-Message-ID: <20080115113552.75731bf8@lxorguk.ukuu.org.uk>
-References: <200801140019.20668.g.chulkov@jacobs-university.de>
-	<20080115025435.1e21b703.akpm@linux-foundation.org>
+From: Olof Johansson <olof@lixom.net>
+Subject: Re: [PATCH v4 0/3] OF-platform PATA driver
+Date: Tue, 15 Jan 2008 10:40:22 -0600
+Message-ID: <20080115164022.GA24590@lixom.net>
+References: <20080109190852.GA18827@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43127 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750708AbYAOLim (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 06:38:42 -0500
-In-Reply-To: <20080115025435.1e21b703.akpm@linux-foundation.org>
+Received: from lixom.net ([66.141.50.11]:42908 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750841AbYAOQaD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Jan 2008 11:30:03 -0500
+Content-Disposition: inline
+In-Reply-To: <20080109190852.GA18827@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: linuxppc-dev@ozlabs.org, linux-ide@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Jeff Garzik <jeff@garzik.org>
 
-> > [ 9031.028000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
-> > frozen
-> > [ 9031.028000] ata1.00: cmd c8/00:08:90:ca:ce/00:00:00:00:00/e0 tag 0 cdb 0x0 
-> > data 4096 in
-> > [ 9031.028000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-> > (timeout)
+Hi,
 
-We got bored of waiting for the drive to respond to our request. I still
-think we have the timeouts too short or are accounting queue time
-somewhere we shouldn't as there a few other examples where we don't allow
-long enough for a drive to retry out and fail with a media error on a bad
-sector.
+I've applied 1/3 and 2/3 together with my electra_ide move to pasemi.git
+for-2.6.25, and will ask Paul to pull that. Kumar said he'd take 3/3.
 
-Alan
+I also added the const to the match table as spotted by Stephen.
+
+
+-Olof
+
+On Wed, Jan 09, 2008 at 10:08:52PM +0300, Anton Vorontsov wrote:
+> Hi all,
+> 
+> Here is the resend (aka v4) version of the OF-platform PATA
+> driver and related patches.
+> 
+> Changes since v3:
+> - Acked-by: Paul Mundt <lethal@linux-sh.org>
+> - In the powerpc specific patch: update defconfig and use
+>   machine_device_initcall -- this is new call found in the
+>   galak/powerpc.git.
+> 
+> Changes since v2:
+> - "PPC" added to PATA_PLATFORM "depends on" Kconfig entry;
+>   I didn't remove EMBEDDED "depends on" -- this wasn't discussed
+>   much and these patches should not depend on the decision.
+> - cosmetic fixes;
+> - "s/ioport_shift/reg_shift/g" patch dropped.
+> 
+> Changes since v1:
+> - __pata_platform_probe now accepts pio_mask argument;
+> - pata-platform compatible property renamed to ata-generic;
+> - pata_of_platform understands pio-mode property. It's used to pass
+>   pio_mask to the __pata_platform_probe. That is, in ata-generic
+>   context pio-mode means "pio mode the bus already configured for";
+> - New optional patch that renames pata_platform_info's
+>   ioport_shift to reg_shift.
+> 
+> Changes since RFC:
+> - nuked drivers/ata/pata_platform.h;
+> - powerpc bits: proper localbus node added.
+> 
+> -- 
+> Anton Vorontsov
+> email: cbou@mail.ru
+> backup email: ya-cbou@yandex.ru
+> irc://irc.freenode.net/bd2
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@ozlabs.org
+> https://ozlabs.org/mailman/listinfo/linuxppc-dev
