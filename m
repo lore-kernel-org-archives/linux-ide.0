@@ -1,56 +1,40 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Tue, 15 Jan 2008 02:54:35 -0800
-Message-ID: <20080115025435.1e21b703.akpm@linux-foundation.org>
-References: <200801140019.20668.g.chulkov@jacobs-university.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: unable to use cdrom/dvd drive after some usage
+Date: Tue, 15 Jan 2008 11:34:06 +0000
+Message-ID: <20080115113406.10d691e3@lxorguk.ukuu.org.uk>
+References: <20080115044608.GA13420@www>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:56430 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751112AbYAOKyf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 05:54:35 -0500
-In-Reply-To: <200801140019.20668.g.chulkov@jacobs-university.de>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43121 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750757AbYAOLgw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 06:36:52 -0500
+In-Reply-To: <20080115044608.GA13420@www>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Georgi Chulkov <g.chulkov@jacobs-university.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Johnny Luong <johnny.linux-ide@compfazed.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 14 Jan 2008 00:19:20 +0200 Georgi Chulkov <g.chulkov@jacobs-university.de> wrote:
+On Mon, 14 Jan 2008 20:46:08 -0800
+Johnny Luong <johnny.linux-ide@compfazed.com> wrote:
 
-> Hello,
+> Hi,
 > 
-> During heavy disk load on my laptop, sometimes the IDE disk will pause for a 
-> second and then continue. I get this in my kernel log:
-> 
-> [ 9031.028000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
-> frozen
-> [ 9031.028000] ata1.00: cmd c8/00:08:90:ca:ce/00:00:00:00:00/e0 tag 0 cdb 0x0 
-> data 4096 in
-> [ 9031.028000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-> (timeout)
-> [ 9036.068000] ata1: port is slow to respond, please be patient (Status 0xd0)
-> [ 9041.052000] ata1: device not ready (errno=-16), forcing hardreset
-> [ 9041.052000] ata1: soft resetting port
-> [ 9041.232000] ata1.00: configured for UDMA/100
-> [ 9041.232000] ata1: EH complete
-> [ 9041.248000] sd 0:0:0:0: [sda] 78140160 512-byte hardware sectors (40008 MB)
-> [ 9041.248000] sd 0:0:0:0: [sda] Write Protect is off
-> [ 9041.248000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [ 9041.248000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, 
-> doesn't support DPO or FUA
-> 
-> My question: What is this telling me, and do I need to be concerned? 
-> Everything continues to work normally after the message: no I/O errors, no 
-> fsck errors, etc.
-> 
-> I've seen some similar reports on the mailing list, but they include slightly 
-> different messages. I would appreciate any information!
-> 
-> uname -a (on Kubuntu Gutsy, CPU is a single-core 32-bit Pentium M):
-> 
-> Linux superfly 2.6.22-14-386 #1 Tue Dec 18 07:34:24 UTC 2007 i686 GNU/Linux
-> 
+> If possible, I would like to know if its worthwhile simply just to get another
+> SATA drive / different controller / cable rather than trying to figure out
+> this PATA drive on SATA/PATA controller...  see attached for bug report and
+> config file.  I'm not on this email list so if you can CC that would be 
+> appreciated.
 
-Has it done this in all kernel versions or did some earler version work OK?
+I don't think so. Wine seems to have fed the drive a command that upset
+it to the point it needed power cycling. That may also however be a
+drive/controller that don't know how to clear data stuck after a wrong
+transfer length from an application. In that case 2.6.24-rc6 (or 2.6.24
+once out) may actually fix the problem.
+
+If it doesn't then we need to look at it further and find out what is
+going on to crash the drive.
+
+Alan
