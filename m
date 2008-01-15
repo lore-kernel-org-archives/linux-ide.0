@@ -1,40 +1,34 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: unable to use cdrom/dvd drive after some usage
-Date: Tue, 15 Jan 2008 11:34:06 +0000
-Message-ID: <20080115113406.10d691e3@lxorguk.ukuu.org.uk>
-References: <20080115044608.GA13420@www>
+Subject: Re: ATA device reset, shoud I be concerned?
+Date: Tue, 15 Jan 2008 11:35:52 +0000
+Message-ID: <20080115113552.75731bf8@lxorguk.ukuu.org.uk>
+References: <200801140019.20668.g.chulkov@jacobs-university.de>
+	<20080115025435.1e21b703.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43121 "EHLO
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:43127 "EHLO
 	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750757AbYAOLgw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 06:36:52 -0500
-In-Reply-To: <20080115044608.GA13420@www>
+	with ESMTP id S1750708AbYAOLim (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 06:38:42 -0500
+In-Reply-To: <20080115025435.1e21b703.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Johnny Luong <johnny.linux-ide@compfazed.com>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, 14 Jan 2008 20:46:08 -0800
-Johnny Luong <johnny.linux-ide@compfazed.com> wrote:
+> > [ 9031.028000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 
+> > frozen
+> > [ 9031.028000] ata1.00: cmd c8/00:08:90:ca:ce/00:00:00:00:00/e0 tag 0 cdb 0x0 
+> > data 4096 in
+> > [ 9031.028000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
+> > (timeout)
 
-> Hi,
-> 
-> If possible, I would like to know if its worthwhile simply just to get another
-> SATA drive / different controller / cable rather than trying to figure out
-> this PATA drive on SATA/PATA controller...  see attached for bug report and
-> config file.  I'm not on this email list so if you can CC that would be 
-> appreciated.
-
-I don't think so. Wine seems to have fed the drive a command that upset
-it to the point it needed power cycling. That may also however be a
-drive/controller that don't know how to clear data stuck after a wrong
-transfer length from an application. In that case 2.6.24-rc6 (or 2.6.24
-once out) may actually fix the problem.
-
-If it doesn't then we need to look at it further and find out what is
-going on to crash the drive.
+We got bored of waiting for the drive to respond to our request. I still
+think we have the timeouts too short or are accounting queue time
+somewhere we shouldn't as there a few other examples where we don't allow
+long enough for a drive to retry out and fail with a media error on a bad
+sector.
 
 Alan
