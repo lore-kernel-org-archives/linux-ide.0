@@ -1,40 +1,69 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk
-Date: Wed, 16 Jan 2008 11:58:37 +0900
-Message-ID: <478D72DD.6030107@gmail.com>
-References: <1200445210549-git-send-email-htejun@gmail.com> <20080115184808.e64aed5e.randy.dunlap@oracle.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 3/4] printk: implement merging printk
+Date: Tue, 15 Jan 2008 19:02:57 -0800
+Message-ID: <20080115190257.f0546a63.randy.dunlap@oracle.com>
+References: <1200445210549-git-send-email-htejun@gmail.com>
+	<12004452113770-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:38117 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755030AbYAPC6o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 21:58:44 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so148958wah.23
-        for <linux-ide@vger.kernel.org>; Tue, 15 Jan 2008 18:58:43 -0800 (PST)
-In-Reply-To: <20080115184808.e64aed5e.randy.dunlap@oracle.com>
+Received: from rgminet01.oracle.com ([148.87.113.118]:27594 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753134AbYAPDEy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 22:04:54 -0500
+In-Reply-To: <12004452113770-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, jeff@garzik.org, linux-ide@vger.kernel.org
 
-Hello,
+On Wed, 16 Jan 2008 10:00:09 +0900 Tejun Heo wrote:
 
-Randy Dunlap wrote:
->>   mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
->>   mprintk_push(&mp, "ATA %d", 7);
->>   mprintk_push(&mp, ", %u sectors\n", 1024);
->>   mprintk(&mp, "everything seems dandy\n");
+
+> ---
+>  include/linux/kernel.h |   71 ++++++++++++++++
+>  kernel/printk.c        |  215 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 286 insertions(+), 0 deletions(-)
 > 
-> Looks pretty good to me except that I would change mprintk_push to
-> mprintk_add or mprintk_append (I think that I prefer _add).
+> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+> index ade3ac9..f92a4a1 100644
+> --- a/include/linux/kernel.h
+> +++ b/include/linux/kernel.h
+> @@ -175,6 +175,29 @@ extern struct pid *session_of_pgrp(struct pid *pgrp);
+>  extern void dump_thread(struct pt_regs *regs, struct user *dump);
+>  
+>  #ifdef CONFIG_PRINTK
+> +struct mprintk {
+> +	char *		header;
+> +	char *		body;
+> +	char *		cur;
+> +	char *		prv;
+> +	char *		end;
 
-I think push and flush sound good when used together but then again the
-flush function isn't visible in the interface and push has LIFO ring to
-it.  I'm okay with add.  append seems a bit too long.
+We aren't very consistent about this, but I think that we would prefer
 
-Thanks.
+	char		*header;
 
--- 
-tejun
+etc. there.
+
+
+> +	int		overflowed;
+> +};
+> +
+> +#define MPRINTK_INITIALIZER(_buf, _size)				\
+> +	{								\
+> +		.header		= NULL,					\
+> +		.body		= _buf,					\
+> +		.cur		= _buf,					\
+> +		.prv		= NULL,					\
+> +		.end		= _buf + _size,				\
+> +		.overflowed	= 0,					\
+> +	}
+> +
+> +#define DEFINE_MPRINTK(name, size)					\
+> +	char __##name##_buf[size];					\
+> +	struct mprintk name = MPRINTK_INITIALIZER(__##name##_buf, size)
+
+---
+~Randy
