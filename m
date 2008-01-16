@@ -1,14 +1,14 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 2/4] printk: implement [v]printk_header()
-Date: Wed, 16 Jan 2008 10:00:08 +0900
-Message-ID: <12004452112039-git-send-email-htejun@gmail.com>
+Subject: [PATCH 1/4] printk: keep log level on multiline messages
+Date: Wed, 16 Jan 2008 10:00:07 +0900
+Message-ID: <1200445211195-git-send-email-htejun@gmail.com>
 References: <1200445210549-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:3796 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.186]:4286 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385AbYAPBAS (ORCPT
+	with ESMTP id S1752366AbYAPBAS (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 20:00:18 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so49374rvb.1
+Received: by rv-out-0910.google.com with SMTP id k20so49372rvb.1
         for <linux-ide@vger.kernel.org>; Tue, 15 Jan 2008 17:00:17 -0800 (PST)
 In-Reply-To: <1200445210549-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,203 +16,115 @@ List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, randy.dunlap@oracle.com, jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Implement [v]printk_header() which takes @header argument and
-automatically prints header in front of or indents multiline messages.
-For example, if @header is "<7>ata1.00: " and the formatted message is
-"<6>line0\nline1\n", the following gets written to the console.
+When printing multiline messages, printk() resets log level to
+default_message_loglevel after the first line.  This changes log level
+unexpectedly when printing multiline messages.
 
-<6>ata1.00: line0
-<6>         line1
+For example, libata error messages are printed like the following.
 
-Header is printed only on the first lines and when log level changes
-in the middle in case messages of different log level are sent to
-different destinations.  Other lines are indented the same amount as
-the length of the header.  This helps to distinguish where a multiline
-message begins when messages of similar pattern repeats, for
-example...
+<3>ata8.00: cmd 60/01:00:e0:71:02/00:00:00:00:00/40 tag 0 ncq 512 in
+<4>         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
 
-ata8.00: cmd 60/80:20:e1:71:02/00:00:00:00:00/40 tag 4 ncq 65536 in
-         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-ata8.00: cmd 60/0e:28:d0:71:02/00:00:00:00:00/40 tag 5 ncq 7168 in
-         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-ata8.00: cmd 60/7f:38:61:72:02/00:00:00:00:00/40 tag 7 ncq 65024 in
-         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
+This patch makes printk use the log level of the last line if the
+current line doesn't specify log level explicitly.
+
+While at it, separate out is_loglevel() test.  This will be used by
+later changes.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- include/linux/kernel.h |   12 ++++++
- kernel/printk.c        |   94 ++++++++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 100 insertions(+), 6 deletions(-)
+ kernel/printk.c |   51 ++++++++++++++++++++++++---------------------------
+ 1 files changed, 24 insertions(+), 27 deletions(-)
 
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 94bc996..ade3ac9 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -175,6 +175,10 @@ extern struct pid *session_of_pgrp(struct pid *pgrp);
- extern void dump_thread(struct pt_regs *regs, struct user *dump);
- 
- #ifdef CONFIG_PRINTK
-+asmlinkage int vprintk_header(const char *header, const char *fmt, va_list args)
-+	__attribute__ ((format (printf, 2, 0)));
-+asmlinkage int printk_header(const char *header, const char * fmt, ...)
-+	__attribute__ ((format (printf, 2, 3))) __cold;
- asmlinkage int vprintk(const char *fmt, va_list args)
- 	__attribute__ ((format (printf, 1, 0)));
- asmlinkage int printk(const char * fmt, ...)
-@@ -183,6 +187,14 @@ extern int log_buf_get_len(void);
- extern int log_buf_read(int idx);
- extern int log_buf_copy(char *dest, int idx, int len);
- #else
-+static inline int vprintk_header(const char *header, const char *s, va_list args)
-+	__attribute__ ((format (printf, 2, 0)));
-+static inline int vprintk_header(const char *header, const char *s, va_list args)
-+{ return 0; }
-+static inline int printk_header(const char *header, const char *s, ...)
-+	__attribute__ ((format (printf, 2, 3)));
-+static inline int __cold printk_header(const char *header, const char *s, ...)
-+{ return 0; }
- static inline int vprintk(const char *s, va_list args)
- 	__attribute__ ((format (printf, 1, 0)));
- static inline int vprintk(const char *s, va_list args) { return 0; }
 diff --git a/kernel/printk.c b/kernel/printk.c
-index 6df1872..1cde1d6 100644
+index 89011bf..6df1872 100644
 --- a/kernel/printk.c
 +++ b/kernel/printk.c
-@@ -619,23 +619,86 @@ asmlinkage int printk(const char *fmt, ...)
- 	int r;
+@@ -628,11 +628,17 @@ asmlinkage int printk(const char *fmt, ...)
+ /* cpu currently holding logbuf_lock */
+ static volatile unsigned int printk_cpu = UINT_MAX;
  
- 	va_start(args, fmt);
--	r = vprintk(fmt, args);
-+	r = vprintk_header(NULL, fmt, args);
- 	va_end(args);
- 
- 	return r;
- }
-+EXPORT_SYMBOL(printk);
- 
--/* cpu currently holding logbuf_lock */
--static volatile unsigned int printk_cpu = UINT_MAX;
-+asmlinkage int vprintk(const char *fmt, va_list args)
++static int is_loglevel(const char *p)
 +{
-+	return vprintk_header(NULL, fmt, args);
++	return p[0] == '<' && p[1] >= '0' && p[1] <= '7' && p[2] == '>';
 +}
-+EXPORT_SYMBOL(vprintk);
 +
-+/**
-+ * printk_header - print a kernel message with header
-+ * @header: header string
-+ * @fmt: format string
-+ *
-+ * This is printk() with a twist.  @header points to string which will
-+ * be used as message header.  If @header is NULL, this function is
-+ * identical to printk().
-+ *
-+ * @header may contain loglevel in front of it.  Each new line
-+ * including the first one in the message formatted from @fmt can also
-+ * have loglevel.  When both exist, the latter is used.  In multiline
-+ * messages, log level is inherited from the previous line if not
-+ * explicitly specified.
-+ *
-+ * @header is printed when new line starts if @header hasn't been
-+ * printed yet for the current log level.  That means, in a multiline
-+ * message where all the lines are of the same log level, @header is
-+ * printed only once before the first line.
-+ *
-+ * Lines which don't have @header printed in front of them are
-+ * indented by the same number of characters in @header - they are
-+ * aligned with lines which have @header in front of them.
-+ *
-+ * For example, if @header is "<7>ata1.00: " and the formatted message
-+ * is "<6>line0\nline1\n<4>line2\nline3\n", the following gets written to
-+ * the console.
-+ *
-+ * <6>ata1.00: line0
-+ * <6>         line1
-+ * <4>ata1.00: line2
-+ * <4>         line3
-+ */
-+asmlinkage int printk_header(const char *header, const char *fmt, ...)
-+{
-+	va_list args;
-+	int r;
-+
-+	va_start(args, fmt);
-+	r = vprintk_header(header, fmt, args);
-+	va_end(args);
-+
-+	return r;
-+}
-+EXPORT_SYMBOL(printk_header);
- 
- static int is_loglevel(const char *p)
+ asmlinkage int vprintk(const char *fmt, va_list args)
  {
- 	return p[0] == '<' && p[1] >= '0' && p[1] <= '7' && p[2] == '>';
- }
- 
--asmlinkage int vprintk(const char *fmt, va_list args)
-+/* cpu currently holding logbuf_lock */
-+static volatile unsigned int printk_cpu = UINT_MAX;
-+
-+/**
-+ * vprintk_header - a variant of printk_header() which takes va_list argument
-+ * @header: header string
-+ * @fmt: format string
-+ * @args: va_list to format @fmt
-+ *
-+ * This function is identical to printk_header() except that it takes
-+ * va_list @args instead of variable argument list.
-+ */
-+asmlinkage int vprintk_header(const char *header, const char *fmt, va_list args)
- {
- 	int last_lv = default_message_loglevel;
-+	unsigned int printed_header = 0;
++	int last_lv = default_message_loglevel;
  	unsigned long flags;
  	int printed_len;
- 	const char *p;
-@@ -656,6 +719,12 @@ asmlinkage int vprintk(const char *fmt, va_list args)
- 	spin_lock(&logbuf_lock);
- 	printk_cpu = smp_processor_id();
+-	char *p;
++	const char *p;
+ 	static char printk_buf[1024];
+ 	static int log_level_unknown = 1;
  
-+	/* Parse header log level */
-+	if (header && is_loglevel(header)) {
-+		last_lv = header[1] - '0';
-+		header += 3;
-+	}
+@@ -659,48 +665,39 @@ asmlinkage int vprintk(const char *fmt, va_list args)
+ 	 */
+ 	for (p = printk_buf; *p; p++) {
+ 		if (log_level_unknown) {
+-                        /* log_level_unknown signals the start of a new line */
++			/* log_level_unknown signals the start of a new line */
++			int lv = last_lv;
 +
- 	/* Emit the output into the temporary buffer */
- 	printed_len = vscnprintf(printk_buf, sizeof(printk_buf), fmt, args);
- 
-@@ -697,6 +766,20 @@ asmlinkage int vprintk(const char *fmt, va_list args)
- 				printed_len += tlen;
- 			}
- 
-+			if (header) {
-+				const char *h = header;
-+
-+				while (*h) {
-+					if (!(printed_header & (1 << lv)))
-+						emit_log_char(*h);
-+					else
-+						emit_log_char(' ');
-+					h++;
-+					printed_len++;
-+				}
-+				printed_header |= 1 << lv;
++			if (is_loglevel(p)) {
++				lv = p[1] - '0';
++				p += 3;
++				printed_len -= 3;
 +			}
 +
- 			last_lv = lv;
++			emit_log_char('<');
++			emit_log_char(lv + '0');
++			emit_log_char('>');
++			printed_len += 3;
++
+ 			if (printk_time) {
+-				int loglev_char;
+ 				char tbuf[50], *tp;
+ 				unsigned tlen;
+ 				unsigned long long t;
+ 				unsigned long nanosec_rem;
+ 
+-				/*
+-				 * force the log level token to be
+-				 * before the time output.
+-				 */
+-				if (p[0] == '<' && p[1] >='0' &&
+-				   p[1] <= '7' && p[2] == '>') {
+-					loglev_char = p[1];
+-					p += 3;
+-					printed_len -= 3;
+-				} else {
+-					loglev_char = default_message_loglevel
+-						+ '0';
+-				}
+ 				t = printk_clock();
+ 				nanosec_rem = do_div(t, 1000000000);
+ 				tlen = sprintf(tbuf,
+-						"<%c>[%5lu.%06lu] ",
+-						loglev_char,
++						"[%5lu.%06lu] ",
+ 						(unsigned long)t,
+ 						nanosec_rem/1000);
+ 
+ 				for (tp = tbuf; tp < tbuf + tlen; tp++)
+ 					emit_log_char(*tp);
+ 				printed_len += tlen;
+-			} else {
+-				if (p[0] != '<' || p[1] < '0' ||
+-				   p[1] > '7' || p[2] != '>') {
+-					emit_log_char('<');
+-					emit_log_char(default_message_loglevel
+-						+ '0');
+-					emit_log_char('>');
+-					printed_len += 3;
+-				}
+ 			}
++
++			last_lv = lv;
  			log_level_unknown = 0;
  			if (!*p)
-@@ -747,8 +830,7 @@ asmlinkage int vprintk(const char *fmt, va_list args)
- 	preempt_enable();
- 	return printed_len;
- }
--EXPORT_SYMBOL(printk);
--EXPORT_SYMBOL(vprintk);
-+EXPORT_SYMBOL(vprintk_header);
- 
- #else
- 
+ 				break;
 -- 
 1.5.2.4
 
