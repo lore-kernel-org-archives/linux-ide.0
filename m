@@ -1,96 +1,49 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 13/22] ide: merge init_gendisk() into hwif_register_devices()
-Date: Thu, 17 Jan 2008 00:27:36 +0100
-Message-ID: <20080116232736.9166.99723.sendpatchset@localhost.localdomain>
+Subject: [PATCH 11/22] ide: move blk_register_region() call out from init_gendisk()
+Date: Thu, 17 Jan 2008 00:27:23 +0100
+Message-ID: <20080116232723.9166.48965.sendpatchset@localhost.localdomain>
 References: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:10937 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.174]:10411 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823AbYAPXO4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:14:56 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so275986ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:14:56 -0800 (PST)
+	with ESMTP id S1755567AbYAPXOm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:14:42 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so275985ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:14:42 -0800 (PST)
 In-Reply-To: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
+Move blk_register_region() call out from init_gendisk() to hwif_init().
+
 There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |   44 ++++++++++++++++----------------------------
- 1 file changed, 16 insertions(+), 28 deletions(-)
+ drivers/ide/ide-probe.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -1182,26 +1182,6 @@ static void drive_release_dev (struct de
- 	complete(&drive->gendev_rel_comp);
- }
- 
--static void init_gendisk (ide_hwif_t *hwif)
--{
--	unsigned int unit;
--
--	for (unit = 0; unit < MAX_DRIVES; ++unit) {
--		ide_drive_t * drive = &hwif->drives[unit];
--
--		if (!drive->present)
--			continue;
--
--		ide_add_generic_settings(drive);
--		snprintf(drive->gendev.bus_id,BUS_ID_SIZE,"%u.%u",
--			 hwif->index,unit);
--		drive->gendev.parent = &hwif->gendev;
--		drive->gendev.bus = &ide_bus_type;
--		drive->gendev.driver_data = drive;
--		drive->gendev.release = drive_release_dev;
--	}
--}
--
- static int hwif_init(ide_hwif_t *hwif)
- {
- 	int old_irq;
-@@ -1261,7 +1241,6 @@ done:
- 	blk_register_region(MKDEV(hwif->major, 0), MAX_DRIVES << PARTN_BITS,
- 			    THIS_MODULE, ata_probe, ata_lock, hwif);
- 	ide_acpi_init(hwif);
--	init_gendisk(hwif);
- 	return 1;
- 
- out:
-@@ -1275,15 +1254,24 @@ static void hwif_register_devices(ide_hw
- 
- 	for (i = 0; i < MAX_DRIVES; i++) {
- 		ide_drive_t *drive = &hwif->drives[i];
-+		struct device *dev = &drive->gendev;
-+		int ret;
- 
--		if (drive->present) {
--			int ret = device_register(&drive->gendev);
-+		if (!drive->present)
-+			continue;
- 
--			if (ret < 0)
--				printk(KERN_WARNING "IDE: %s: "
--					"device_register error: %d\n",
--					__FUNCTION__, ret);
--		}
-+		ide_add_generic_settings(drive);
-+
-+		snprintf(dev->bus_id, BUS_ID_SIZE, "%u.%u", hwif->index, i);
-+		dev->parent = &hwif->gendev;
-+		dev->bus = &ide_bus_type;
-+		dev->driver_data = drive;
-+		dev->release = drive_release_dev;
-+
-+		ret = device_register(dev);
-+		if (ret < 0)
-+			printk(KERN_WARNING "IDE: %s: device_register error: "
-+					    "%d\n", __func__, ret);
+@@ -1200,8 +1200,6 @@ static void init_gendisk (ide_hwif_t *hw
+ 		drive->gendev.driver_data = drive;
+ 		drive->gendev.release = drive_release_dev;
  	}
+-	blk_register_region(MKDEV(hwif->major, 0), MAX_DRIVES << PARTN_BITS,
+-			THIS_MODULE, ata_probe, ata_lock, hwif);
  }
+ 
+ static int hwif_init(ide_hwif_t *hwif)
+@@ -1261,6 +1259,8 @@ static int hwif_init(ide_hwif_t *hwif)
+ 
+ done:
+ 	init_gendisk(hwif);
++	blk_register_region(MKDEV(hwif->major, 0), MAX_DRIVES << PARTN_BITS,
++			    THIS_MODULE, ata_probe, ata_lock, hwif);
+ 	ide_acpi_init(hwif);
+ 	return 1;
  
