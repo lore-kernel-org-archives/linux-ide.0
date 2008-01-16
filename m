@@ -1,97 +1,164 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/22] ide: factor out devices setup from init_irq()
-Date: Thu, 17 Jan 2008 00:27:57 +0100
-Message-ID: <20080116232757.9166.7078.sendpatchset@localhost.localdomain>
+Subject: [PATCH 20/22] ide: factor out devices setup from ide_acpi_init()
+Date: Thu, 17 Jan 2008 00:28:25 +0100
+Message-ID: <20080116232825.9166.31653.sendpatchset@localhost.localdomain>
 References: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:10411 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.175]:10937 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755417AbYAPXPR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:15:17 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so275985ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:15:16 -0800 (PST)
+	with ESMTP id S1755946AbYAPXPp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:15:45 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so275986ugc.16
+        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:15:44 -0800 (PST)
 In-Reply-To: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-* Factor out devices setup from init_irq() to ide_port_setup_devices().
+* Factor out devices setup from ide_acpi_init() to
+  ide_acpi_port_init_devices().
+
+* Call ide_acpi_port_init_devices() in ide_device_add_all().
 
 While at it:
-* Do devices setup after printing port information.
+* Remove no longer needed 'drive' field from struct ide_acpi_drive_link.
+
+There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |   44 ++++++++++++++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 16 deletions(-)
+ drivers/ide/ide-acpi.c  |   49 +++++++++++++++++++-----------------------------
+ drivers/ide/ide-probe.c |    1 
+ include/linux/ide.h     |    2 +
+ 3 files changed, 23 insertions(+), 29 deletions(-)
 
+Index: b/drivers/ide/ide-acpi.c
+===================================================================
+--- a/drivers/ide/ide-acpi.c
++++ b/drivers/ide/ide-acpi.c
+@@ -39,7 +39,6 @@ struct GTM_buffer {
+ };
+ 
+ struct ide_acpi_drive_link {
+-	ide_drive_t	*drive;
+ 	acpi_handle	 obj_handle;
+ 	u8		 idbuff[512];
+ };
+@@ -675,11 +674,6 @@ void ide_acpi_set_state(ide_hwif_t *hwif
+  */
+ void ide_acpi_init(ide_hwif_t *hwif)
+ {
+-	int unit;
+-	int			err;
+-	struct ide_acpi_drive_link	*master;
+-	struct ide_acpi_drive_link	*slave;
+-
+ 	ide_acpi_blacklist();
+ 
+ 	hwif->acpidata = kzalloc(sizeof(struct ide_acpi_hwif_link), GFP_KERNEL);
+@@ -691,40 +685,38 @@ void ide_acpi_init(ide_hwif_t *hwif)
+ 		DEBPRINT("no ACPI object for %s found\n", hwif->name);
+ 		kfree(hwif->acpidata);
+ 		hwif->acpidata = NULL;
+-		return;
+ 	}
++}
++
++void ide_acpi_port_init_devices(ide_hwif_t *hwif)
++{
++	ide_drive_t *drive;
++	int i, err;
++
++	if (hwif->acpidata == NULL)
++		return;
+ 
+ 	/*
+ 	 * The ACPI spec mandates that we send information
+ 	 * for both drives, regardless whether they are connected
+ 	 * or not.
+ 	 */
+-	hwif->acpidata->master.drive = &hwif->drives[0];
+ 	hwif->drives[0].acpidata = &hwif->acpidata->master;
+-	master = &hwif->acpidata->master;
+-
+-	hwif->acpidata->slave.drive = &hwif->drives[1];
+ 	hwif->drives[1].acpidata = &hwif->acpidata->slave;
+-	slave = &hwif->acpidata->slave;
+-
+ 
+ 	/*
+ 	 * Send IDENTIFY for each drive
+ 	 */
+-	if (master->drive->present) {
+-		err = taskfile_lib_get_identify(master->drive, master->idbuff);
+-		if (err) {
+-			DEBPRINT("identify device %s failed (%d)\n",
+-				 master->drive->name, err);
+-		}
+-	}
++	for (i = 0; i < MAX_DRIVES; i++) {
++		drive = &hwif->drives[i];
++
++		if (!drive->present)
++			continue;
+ 
+-	if (slave->drive->present) {
+-		err = taskfile_lib_get_identify(slave->drive, slave->idbuff);
+-		if (err) {
++		err = taskfile_lib_get_identify(drive, drive->acpidata->idbuff);
++		if (err)
+ 			DEBPRINT("identify device %s failed (%d)\n",
+-				 slave->drive->name, err);
+-		}
++				 drive->name, err);
+ 	}
+ 
+ 	if (ide_noacpionboot) {
+@@ -740,12 +732,11 @@ void ide_acpi_init(ide_hwif_t *hwif)
+ 	ide_acpi_get_timing(hwif);
+ 	ide_acpi_push_timing(hwif);
+ 
+-	for (unit = 0; unit < MAX_DRIVES; ++unit) {
+-		ide_drive_t *drive = &hwif->drives[unit];
++	for (i = 0; i < MAX_DRIVES; i++) {
++		drive = &hwif->drives[i];
+ 
+-		if (drive->present) {
++		if (drive->present)
+ 			/* Execute ACPI startup code */
+ 			ide_acpi_exec_tfs(drive);
+-		}
+ 	}
+ }
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -929,6 +929,31 @@ static void ide_add_drive_to_hwgroup(ide
- }
+@@ -1430,6 +1430,7 @@ int ide_device_add_all(u8 idx[MAX_HWIFS]
+ 		}
  
- /*
-+ * For any present drive:
-+ * - allocate the block device queue
-+ * - link drive into the hwgroup
-+ */
-+static void ide_port_setup_devices(ide_hwif_t *hwif)
-+{
-+	int i;
-+
-+	for (i = 0; i < MAX_DRIVES; i++) {
-+		ide_drive_t *drive = &hwif->drives[i];
-+
-+		if (!drive->present)
-+			continue;
-+
-+		if (ide_init_queue(drive)) {
-+			printk(KERN_ERR "ide: failed to init %s\n",
-+					drive->name);
-+			continue;
-+		}
-+
-+		ide_add_drive_to_hwgroup(drive);
-+	}
-+}
-+
-+/*
-  * This routine sets up the irq for an ide interface, and creates a new
-  * hwgroup for the irq/hwif if none was previously assigned.
-  *
-@@ -1037,22 +1062,6 @@ static int init_irq (ide_hwif_t *hwif)
- 			hwif->rqsize = 65536;
+ 		ide_acpi_init(hwif);
++		ide_acpi_port_init_devices(hwif);
  	}
  
--	/*
--	 * For any present drive:
--	 * - allocate the block device queue
--	 * - link drive into the hwgroup
--	 */
--	for (index = 0; index < MAX_DRIVES; ++index) {
--		ide_drive_t *drive = &hwif->drives[index];
--		if (!drive->present)
--			continue;
--		if (ide_init_queue(drive)) {
--			printk(KERN_ERR "ide: failed to init %s\n",drive->name);
--			continue;
--		}
--		ide_add_drive_to_hwgroup(drive);
--	}
--
- #if !defined(__mc68000__) && !defined(CONFIG_APUS)
- 	printk("%s at 0x%03lx-0x%03lx,0x%03lx on irq %d", hwif->name,
- 		hwif->io_ports[IDE_DATA_OFFSET],
-@@ -1066,6 +1075,9 @@ static int init_irq (ide_hwif_t *hwif)
- 		printk(" (%sed with %s)",
- 			hwif->sharing_irq ? "shar" : "serializ", match->name);
- 	printk("\n");
-+
-+	ide_port_setup_devices(hwif);
-+
- 	mutex_unlock(&ide_cfg_mtx);
- 	return 0;
- out_unlink:
+ 	for (i = 0; i < MAX_HWIFS; i++) {
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1205,12 +1205,14 @@ extern int ide_acpi_exec_tfs(ide_drive_t
+ extern void ide_acpi_get_timing(ide_hwif_t *hwif);
+ extern void ide_acpi_push_timing(ide_hwif_t *hwif);
+ extern void ide_acpi_init(ide_hwif_t *hwif);
++void ide_acpi_port_init_devices(ide_hwif_t *);
+ extern void ide_acpi_set_state(ide_hwif_t *hwif, int on);
+ #else
+ static inline int ide_acpi_exec_tfs(ide_drive_t *drive) { return 0; }
+ static inline void ide_acpi_get_timing(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_push_timing(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_init(ide_hwif_t *hwif) { ; }
++static inline void ide_acpi_port_init_devices(ide_hwif_t *hwif) { ; }
+ static inline void ide_acpi_set_state(ide_hwif_t *hwif, int on) {}
+ #endif
+ 
