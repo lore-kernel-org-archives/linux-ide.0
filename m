@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 17/22] ide: move ide_acpi_init() call to ide_device_add_all()
-Date: Thu, 17 Jan 2008 00:28:04 +0100
-Message-ID: <20080116232804.9166.57061.sendpatchset@localhost.localdomain>
+Subject: [PATCH 13/22] ide: merge init_gendisk() into hwif_register_devices()
+Date: Thu, 17 Jan 2008 00:27:36 +0100
+Message-ID: <20080116232736.9166.99723.sendpatchset@localhost.localdomain>
 References: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.175]:10937 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755562AbYAPXPY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:15:24 -0500
+	with ESMTP id S1755823AbYAPXO4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2008 18:14:56 -0500
 Received: by ug-out-1314.google.com with SMTP id z38so275986ugc.16
-        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:15:23 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2008 15:14:56 -0800 (PST)
 In-Reply-To: <20080116232556.9166.13457.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,27 +20,77 @@ There should be no functionality changes caused by this patch.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-probe.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ide/ide-probe.c |   44 ++++++++++++++++----------------------------
+ 1 file changed, 16 insertions(+), 28 deletions(-)
 
 Index: b/drivers/ide/ide-probe.c
 ===================================================================
 --- a/drivers/ide/ide-probe.c
 +++ b/drivers/ide/ide-probe.c
-@@ -1260,7 +1260,6 @@ static int hwif_init(ide_hwif_t *hwif)
- done:
+@@ -1182,26 +1182,6 @@ static void drive_release_dev (struct de
+ 	complete(&drive->gendev_rel_comp);
+ }
+ 
+-static void init_gendisk (ide_hwif_t *hwif)
+-{
+-	unsigned int unit;
+-
+-	for (unit = 0; unit < MAX_DRIVES; ++unit) {
+-		ide_drive_t * drive = &hwif->drives[unit];
+-
+-		if (!drive->present)
+-			continue;
+-
+-		ide_add_generic_settings(drive);
+-		snprintf(drive->gendev.bus_id,BUS_ID_SIZE,"%u.%u",
+-			 hwif->index,unit);
+-		drive->gendev.parent = &hwif->gendev;
+-		drive->gendev.bus = &ide_bus_type;
+-		drive->gendev.driver_data = drive;
+-		drive->gendev.release = drive_release_dev;
+-	}
+-}
+-
+ static int hwif_init(ide_hwif_t *hwif)
+ {
+ 	int old_irq;
+@@ -1261,7 +1241,6 @@ done:
  	blk_register_region(MKDEV(hwif->major, 0), MAX_DRIVES << PARTN_BITS,
  			    THIS_MODULE, ata_probe, ata_lock, hwif);
--	ide_acpi_init(hwif);
+ 	ide_acpi_init(hwif);
+-	init_gendisk(hwif);
  	return 1;
  
  out:
-@@ -1429,6 +1428,8 @@ int ide_device_add_all(u8 idx[MAX_HWIFS]
- 			rc = -1;
- 			continue;
- 		}
-+
-+		ide_acpi_init(hwif);
- 	}
+@@ -1275,15 +1254,24 @@ static void hwif_register_devices(ide_hw
  
- 	for (i = 0; i < MAX_HWIFS; i++) {
+ 	for (i = 0; i < MAX_DRIVES; i++) {
+ 		ide_drive_t *drive = &hwif->drives[i];
++		struct device *dev = &drive->gendev;
++		int ret;
+ 
+-		if (drive->present) {
+-			int ret = device_register(&drive->gendev);
++		if (!drive->present)
++			continue;
+ 
+-			if (ret < 0)
+-				printk(KERN_WARNING "IDE: %s: "
+-					"device_register error: %d\n",
+-					__FUNCTION__, ret);
+-		}
++		ide_add_generic_settings(drive);
++
++		snprintf(dev->bus_id, BUS_ID_SIZE, "%u.%u", hwif->index, i);
++		dev->parent = &hwif->gendev;
++		dev->bus = &ide_bus_type;
++		dev->driver_data = drive;
++		dev->release = drive_release_dev;
++
++		ret = device_register(dev);
++		if (ret < 0)
++			printk(KERN_WARNING "IDE: %s: device_register error: "
++					    "%d\n", __func__, ret);
+ 	}
+ }
+ 
