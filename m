@@ -1,85 +1,218 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] printk: implement printk_header() and merging printk
-Date: Wed, 16 Jan 2008 10:00:06 +0900
-Message-ID: <1200445210549-git-send-email-htejun@gmail.com>
+Subject: [PATCH 2/4] printk: implement [v]printk_header()
+Date: Wed, 16 Jan 2008 10:00:08 +0900
+Message-ID: <12004452112039-git-send-email-htejun@gmail.com>
+References: <1200445210549-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:3861 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.189]:3796 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752609AbYAPBAU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 20:00:20 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so49377rvb.1
-        for <linux-ide@vger.kernel.org>; Tue, 15 Jan 2008 17:00:18 -0800 (PST)
+	with ESMTP id S1752385AbYAPBAS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2008 20:00:18 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so49374rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 15 Jan 2008 17:00:17 -0800 (PST)
+In-Reply-To: <1200445210549-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, randy.dunlap@oracle.com, jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 
-Hello, all.
+Implement [v]printk_header() which takes @header argument and
+automatically prints header in front of or indents multiline messages.
+For example, if @header is "<7>ata1.00: " and the formatted message is
+"<6>line0\nline1\n", the following gets written to the console.
 
-This patchset implements printk_header() and mprintk - merging printk
-- to make printing multiline messages and assembling message
-piece-by-piece easier.
+<6>ata1.00: line0
+<6>         line1
 
-In a nutshell, printk_header() lets you do the following atomically
-(against other messages).
+Header is printed only on the first lines and when log level changes
+in the middle in case messages of different log level are sent to
+different destinations.  Other lines are indented the same amount as
+the length of the header.  This helps to distinguish where a multiline
+message begins when messages of similar pattern repeats, for
+example...
 
- code:
-  printk(KERN_INFO "ata1.00: ", "line0\nline1\nline2\n");
+ata8.00: cmd 60/80:20:e1:71:02/00:00:00:00:00/40 tag 4 ncq 65536 in
+         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
+ata8.00: cmd 60/0e:28:d0:71:02/00:00:00:00:00/40 tag 5 ncq 7168 in
+         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
+ata8.00: cmd 60/7f:38:61:72:02/00:00:00:00:00/40 tag 7 ncq 65024 in
+         res 40/00:34:de:71:02/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
 
- output:
-  <6>ata1.00: line0
-  <6>         line1
-  <6>         line2
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ include/linux/kernel.h |   12 ++++++
+ kernel/printk.c        |   94 ++++++++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 100 insertions(+), 6 deletions(-)
 
-And mprintk the following.
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index 94bc996..ade3ac9 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -175,6 +175,10 @@ extern struct pid *session_of_pgrp(struct pid *pgrp);
+ extern void dump_thread(struct pt_regs *regs, struct user *dump);
+ 
+ #ifdef CONFIG_PRINTK
++asmlinkage int vprintk_header(const char *header, const char *fmt, va_list args)
++	__attribute__ ((format (printf, 2, 0)));
++asmlinkage int printk_header(const char *header, const char * fmt, ...)
++	__attribute__ ((format (printf, 2, 3))) __cold;
+ asmlinkage int vprintk(const char *fmt, va_list args)
+ 	__attribute__ ((format (printf, 1, 0)));
+ asmlinkage int printk(const char * fmt, ...)
+@@ -183,6 +187,14 @@ extern int log_buf_get_len(void);
+ extern int log_buf_read(int idx);
+ extern int log_buf_copy(char *dest, int idx, int len);
+ #else
++static inline int vprintk_header(const char *header, const char *s, va_list args)
++	__attribute__ ((format (printf, 2, 0)));
++static inline int vprintk_header(const char *header, const char *s, va_list args)
++{ return 0; }
++static inline int printk_header(const char *header, const char *s, ...)
++	__attribute__ ((format (printf, 2, 3)));
++static inline int __cold printk_header(const char *header, const char *s, ...)
++{ return 0; }
+ static inline int vprintk(const char *s, va_list args)
+ 	__attribute__ ((format (printf, 1, 0)));
+ static inline int vprintk(const char *s, va_list args) { return 0; }
+diff --git a/kernel/printk.c b/kernel/printk.c
+index 6df1872..1cde1d6 100644
+--- a/kernel/printk.c
++++ b/kernel/printk.c
+@@ -619,23 +619,86 @@ asmlinkage int printk(const char *fmt, ...)
+ 	int r;
+ 
+ 	va_start(args, fmt);
+-	r = vprintk(fmt, args);
++	r = vprintk_header(NULL, fmt, args);
+ 	va_end(args);
+ 
+ 	return r;
+ }
++EXPORT_SYMBOL(printk);
+ 
+-/* cpu currently holding logbuf_lock */
+-static volatile unsigned int printk_cpu = UINT_MAX;
++asmlinkage int vprintk(const char *fmt, va_list args)
++{
++	return vprintk_header(NULL, fmt, args);
++}
++EXPORT_SYMBOL(vprintk);
++
++/**
++ * printk_header - print a kernel message with header
++ * @header: header string
++ * @fmt: format string
++ *
++ * This is printk() with a twist.  @header points to string which will
++ * be used as message header.  If @header is NULL, this function is
++ * identical to printk().
++ *
++ * @header may contain loglevel in front of it.  Each new line
++ * including the first one in the message formatted from @fmt can also
++ * have loglevel.  When both exist, the latter is used.  In multiline
++ * messages, log level is inherited from the previous line if not
++ * explicitly specified.
++ *
++ * @header is printed when new line starts if @header hasn't been
++ * printed yet for the current log level.  That means, in a multiline
++ * message where all the lines are of the same log level, @header is
++ * printed only once before the first line.
++ *
++ * Lines which don't have @header printed in front of them are
++ * indented by the same number of characters in @header - they are
++ * aligned with lines which have @header in front of them.
++ *
++ * For example, if @header is "<7>ata1.00: " and the formatted message
++ * is "<6>line0\nline1\n<4>line2\nline3\n", the following gets written to
++ * the console.
++ *
++ * <6>ata1.00: line0
++ * <6>         line1
++ * <4>ata1.00: line2
++ * <4>         line3
++ */
++asmlinkage int printk_header(const char *header, const char *fmt, ...)
++{
++	va_list args;
++	int r;
++
++	va_start(args, fmt);
++	r = vprintk_header(header, fmt, args);
++	va_end(args);
++
++	return r;
++}
++EXPORT_SYMBOL(printk_header);
+ 
+ static int is_loglevel(const char *p)
+ {
+ 	return p[0] == '<' && p[1] >= '0' && p[1] <= '7' && p[2] == '>';
+ }
+ 
+-asmlinkage int vprintk(const char *fmt, va_list args)
++/* cpu currently holding logbuf_lock */
++static volatile unsigned int printk_cpu = UINT_MAX;
++
++/**
++ * vprintk_header - a variant of printk_header() which takes va_list argument
++ * @header: header string
++ * @fmt: format string
++ * @args: va_list to format @fmt
++ *
++ * This function is identical to printk_header() except that it takes
++ * va_list @args instead of variable argument list.
++ */
++asmlinkage int vprintk_header(const char *header, const char *fmt, va_list args)
+ {
+ 	int last_lv = default_message_loglevel;
++	unsigned int printed_header = 0;
+ 	unsigned long flags;
+ 	int printed_len;
+ 	const char *p;
+@@ -656,6 +719,12 @@ asmlinkage int vprintk(const char *fmt, va_list args)
+ 	spin_lock(&logbuf_lock);
+ 	printk_cpu = smp_processor_id();
+ 
++	/* Parse header log level */
++	if (header && is_loglevel(header)) {
++		last_lv = header[1] - '0';
++		header += 3;
++	}
++
+ 	/* Emit the output into the temporary buffer */
+ 	printed_len = vscnprintf(printk_buf, sizeof(printk_buf), fmt, args);
+ 
+@@ -697,6 +766,20 @@ asmlinkage int vprintk(const char *fmt, va_list args)
+ 				printed_len += tlen;
+ 			}
+ 
++			if (header) {
++				const char *h = header;
++
++				while (*h) {
++					if (!(printed_header & (1 << lv)))
++						emit_log_char(*h);
++					else
++						emit_log_char(' ');
++					h++;
++					printed_len++;
++				}
++				printed_header |= 1 << lv;
++			}
++
+ 			last_lv = lv;
+ 			log_level_unknown = 0;
+ 			if (!*p)
+@@ -747,8 +830,7 @@ asmlinkage int vprintk(const char *fmt, va_list args)
+ 	preempt_enable();
+ 	return printed_len;
+ }
+-EXPORT_SYMBOL(printk);
+-EXPORT_SYMBOL(vprintk);
++EXPORT_SYMBOL(vprintk_header);
+ 
+ #else
+ 
+-- 
+1.5.2.4
 
- code:
-  DEFINE_MPRINTK(mp, 2 * 80);
-
-  mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
-  mprintk_push(&mp, "ATA %d", 7);
-  mprintk_push(&mp, ", %u sectors\n", 1024);
-  mprintk(&mp, "everything seems dandy\n");
-
- output:
-  <6>ata1.00: ATA 7, 1024 sectors
-  <6>         everything seems dandy
-
-Please read the commit messages and comments for more detail.  If this
-patchset is accepted, I'll write up Documentation/printk.txt which
-contains describtion of the API and guidelines - "don't pack unrelated
-messages into one" kind of stuff.
-
-This patchset is against the current linux-2.6#master (031f2dcd) and
-contains the following patches.
-
-0001-printk-keep-log-level-on-multiline-messages.patch
-0002-printk-implement-v-printk_header.patch
-0003-printk-implement-merging-printk.patch
-0004-libata-make-libata-use-printk_header-and-mprintk.patch
-
- drivers/ata/libata-core.c   |  202 +++++++++++++++----------
- drivers/ata/libata-eh.c     |  150 ++++++++----------
- drivers/ata/libata-pmp.c    |    5 
- drivers/ata/libata-scsi.c   |    6 
- drivers/ata/sata_inic162x.c |    2 
- drivers/ata/sata_nv.c       |    4 
- include/linux/kernel.h      |   83 ++++++++++
- include/linux/libata.h      |   35 ++--
- kernel/printk.c             |  354 ++++++++++++++++++++++++++++++++++++++++----
- 9 files changed, 630 insertions(+), 211 deletions(-)
-
-More than half of the code increase in kernel.h are from the dummy
-declarations for !CONFIG_PRINTK.  More than one third of printk.c
-increase are comments.  On my x86-64 configuration, printk.o grows
-from 30152 to 34128.
-
-libata code grows slightly but the increase is from converting the
-printk wrapper from #define to proper functions.  The converted areas
-- device configuration and EH reporting - were reduced in comlexity
-and size.  With all-y, drivers/ata/built-in.o shrinks from 726509 to
-717657 mostly due to the conversion away from macros.
-
-Thanks.
-
---
-tejun
