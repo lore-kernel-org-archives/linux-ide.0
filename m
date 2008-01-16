@@ -1,38 +1,31 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/5] libata: factor out ata_pci_activate_sff_host() from
- ata_pci_one()
-Date: Wed, 16 Jan 2008 05:13:29 -0500
-Message-ID: <478DD8C9.3090405@garzik.org>
-References: <1199439744356-git-send-email-htejun@gmail.com> <11994397443430-git-send-email-htejun@gmail.com>
+Subject: Re: [PATCH 1/4] sata_qstor: convert to new data_xfer prototype
+Date: Wed, 16 Jan 2008 05:24:32 -0500
+Message-ID: <478DDB60.7050904@garzik.org>
+References: <11992723701811-git-send-email-htejun@gmail.com> <11992723713373-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45776 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:37608 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbYAPKNb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Jan 2008 05:13:31 -0500
-In-Reply-To: <11994397443430-git-send-email-htejun@gmail.com>
+	id S1752014AbYAPKYe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Jan 2008 05:24:34 -0500
+In-Reply-To: <11992723713373-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: torvalds@linux-foundation.org, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
 Tejun Heo wrote:
-> Factor out ata_pci_activate_sff_host() from ata_pci_one().  This does
-> about the same thing as ata_host_activate() but needs to be separate
-> because SFF controllers use different and multiple IRQs in legacy
-> mode.
-> 
-> This will be used to make SFF LLD initialization more flexible.
+> While merging data_xfer prototype change, pata_pcmcia was left out.
+> Convert it.
 > 
 > Signed-off-by: Tejun Heo <htejun@gmail.com>
 > ---
->  drivers/ata/libata-core.c |    1 +
->  drivers/ata/libata-sff.c  |  184 +++++++++++++++++++++++++--------------------
->  include/linux/libata.h    |    3 +
->  3 files changed, 107 insertions(+), 81 deletions(-)
+>  drivers/ata/pata_pcmcia.c |   19 +++++++++++--------
+>  1 files changed, 11 insertions(+), 8 deletions(-)
 
-ACK patches 3-5, but they failed to apply to #upstream
+applied
 
 
