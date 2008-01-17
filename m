@@ -1,46 +1,50 @@
-From: James Andrewartha <jamesa@daa.com.au>
-Subject: SX8 docs (was: The SX4 challenge)
-Date: Fri, 18 Jan 2008 00:42:06 +0900
-Message-ID: <1200584526.7112.19.camel@zarvora>
-References: <478EA794.8080608@garzik.org>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: sata_mv oops on module removal
+Date: Thu, 17 Jan 2008 18:03:22 +0100
+Message-ID: <478F8A5A.3030003@wpkg.org>
+References: <478F5F1C.80608@wpkg.org> <478F6DB5.4080308@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:22170
-	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750949AbYAQPwX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2008 10:52:23 -0500
-In-Reply-To: <478EA794.8080608@garzik.org>
+Received: from mail.syneticon.net ([213.239.212.131]:34720 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbYAQRD3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2008 12:03:29 -0500
+In-Reply-To: <478F6DB5.4080308@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: Mark Lord <liml@rtr.ca>
+Cc: Linux IDE <linux-ide@vger.kernel.org>
 
-On Wed, 2008-01-16 at 19:55 -0500, Jeff Garzik wrote:
-> Promise just gave permission to post the docs for their PDC20621 (i.e. 
-> SX4) hardware:
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
-> 
-> joining the existing PDC20621 DIMM and PLL docs:
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
-> http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
-> 
-> 
-> So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
-> becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
-> conversion in libata-dev.git.
-> 
-> But now is a good time to remind people how lame the sata_sx4 driver 
-> software really is -- and I should know, I wrote it.
+Mark Lord schrieb:
+> Tomasz Chmielewski wrote:
+>> This is what happened when I tried to remove sata_mv module:
+>>
+>>
+>> ACPI: PCI interrupt for device 0000:01:00.0 disabled
+>> BUG: unable to handle kernel paging request at virtual address e0122028
+>>  printing eip:
+>> e0015599
+>> *pde = 1f557067
+>> *pte = 00000000
+>> Oops: 0000 [#1]
+>> Modules linked in: cpufreq_ondemand p4_clockmod speedstep_lib 
+>> iscsi_scst crc32c libcrc32c scst_vdisk scst bonding dm_mirror 
+>> dm_snapshot sata_mv
+>> CPU:    0
+>> EIP:    0060:[<e0015599>]    Not tainted VLI
+>> EFLAGS: 00010046   (2.6.23.14-N5200-3 #8)
+                        ^^^^^^^^^
 
-Hi Jeff,
+> You did not say which exact kernel version this is from.
+> A bug just like this was fixed not long ago.
 
-What are the chances of the SX8 docs being opened? The vendor GPL driver
-has bitrotted and the kernel driver offers poor performance or data
-corruption. IIRC it's not part of libata but its own block device,
-although you were considering porting it to get ATAPI support?
+It's 2.6.23.14.
+I didn't find anything similar.
+Am I looking wrong, or was it a fix for 2.6.24?
 
-Thanks,
 
-James Andrewartha
+-- 
+Tomasz Chmielewski
+http://wpkg.org
