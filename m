@@ -1,281 +1,298 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 1/3] libata: factor out ata_pci_activate_sff_host() from ata_pci_one()
-Date: Fri, 18 Jan 2008 18:36:28 +0900
-Message-ID: <12006489903674-git-send-email-htejun@gmail.com>
+Subject: [PATCH 2/3] ata_piix: convert to prepare - activate initialization
+Date: Fri, 18 Jan 2008 18:36:29 +0900
+Message-ID: <1200648990900-git-send-email-htejun@gmail.com>
 References: <12006489901911-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:36433 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.185]:36351 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754595AbYARJgj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 04:36:39 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so835842rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2008 01:36:37 -0800 (PST)
+	with ESMTP id S1755281AbYARJgl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 04:36:41 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so835837rvb.1
+        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2008 01:36:36 -0800 (PST)
 In-Reply-To: <12006489901911-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-Factor out ata_pci_activate_sff_host() from ata_pci_one().  This does
-about the same thing as ata_host_activate() but needs to be separate
-because SFF controllers use different and multiple IRQs in legacy
-mode.
+ata_piix requires more configuration during initialization than most
+other SFF compliant controllers and one-go initialzation with
+ata_pci_one() is too rigid.
 
-This will be used to make SFF LLD initialization more flexible.
+This patch converts ata_piix to use two step prepare - activate
+initialization used by other more advanced controllers.  This
+conversion brings the happy side effect of enabling PCI device before
+accessing PCI configuration registers.  Other than that, there
+shouldn't be any behavior change.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-sff.c  |  187 +++++++++++++++++++++++++--------------------
- include/linux/libata.h    |    3 +
- 3 files changed, 107 insertions(+), 84 deletions(-)
+ drivers/ata/ata_piix.c |   79 ++++++++++++++++++++++-------------------------
+ 1 files changed, 37 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 06ff781..8fc664d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7644,6 +7644,7 @@ EXPORT_SYMBOL_GPL(pci_test_config_bits);
- EXPORT_SYMBOL_GPL(ata_pci_init_sff_host);
- EXPORT_SYMBOL_GPL(ata_pci_init_bmdma);
- EXPORT_SYMBOL_GPL(ata_pci_prepare_sff_host);
-+EXPORT_SYMBOL_GPL(ata_pci_activate_sff_host);
- EXPORT_SYMBOL_GPL(ata_pci_init_one);
- EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 97dd8f2..60cd4b1 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -714,6 +714,99 @@ int ata_pci_prepare_sff_host(struct pci_dev *pdev,
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ba10520..58b9c89 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -316,7 +316,6 @@ static const struct ata_port_operations piix_pata_ops = {
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.cable_detect		= ata_cable_40wire,
+ 
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+@@ -348,7 +347,6 @@ static const struct ata_port_operations ich_pata_ops = {
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 	.cable_detect		= ich_pata_cable_detect,
+ 
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+@@ -375,7 +373,6 @@ static const struct ata_port_operations piix_sata_ops = {
+ 	.error_handler		= ata_bmdma_error_handler,
+ 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
+ 
+-	.irq_handler		= ata_interrupt,
+ 	.irq_clear		= ata_bmdma_irq_clear,
+ 	.irq_on			= ata_irq_on,
+ 
+@@ -521,7 +518,6 @@ static const struct piix_map_db *piix_map_db_table[] = {
+ static struct ata_port_info piix_port_info[] = {
+ 	[piix_pata_mwdma] = 	/* PIIX3 MWDMA only */
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 ?? CHECK 0 should be ok but slow */
+@@ -530,7 +526,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[piix_pata_33] =	/* PIIX4 at 33MHz */
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 ?? CHECK 0 should be ok but slow */
+@@ -540,7 +535,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich_pata_33] = 	/* ICH0 - ICH at 33Mhz*/
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS,
+ 		.pio_mask 	= 0x1f,	/* pio 0-4 */
+ 		.mwdma_mask	= 0x06, /* Check: maybe 0x07  */
+@@ -550,7 +544,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich_pata_66] = 	/* ICH controllers up to 66MHz */
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS,
+ 		.pio_mask 	= 0x1f,	/* pio 0-4 */
+ 		.mwdma_mask	= 0x06, /* MWDMA0 is broken on chip */
+@@ -560,7 +553,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich_pata_100] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_CHECKINTR,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x06, /* mwdma1-2 */
+@@ -570,7 +562,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich5_sata] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -580,7 +571,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich6_sata] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -590,7 +580,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich6_sata_ahci] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -600,7 +589,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich6m_sata_ahci] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -610,7 +598,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8_sata_ahci] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -620,7 +607,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8_2port_sata] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -630,7 +616,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[tolapai_sata_ahci] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -640,7 +625,6 @@ static struct ata_port_info piix_port_info[] = {
+ 
+ 	[ich8m_apple_sata_ahci] =
+ 	{
+-		.sht		= &piix_sht,
+ 		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_AHCI,
+ 		.pio_mask	= 0x1f,	/* pio0-4 */
+ 		.mwdma_mask	= 0x07, /* mwdma0-2 */
+@@ -1242,10 +1226,10 @@ static int __devinit piix_check_450nx_errata(struct pci_dev *ata_dev)
+ 	return no_piix_dma;
  }
  
- /**
-+ *	ata_pci_activate_sff_host - start SFF host, request IRQ and register it
-+ *	@host: target SFF ATA host
-+ *	@irq_handler: irq_handler used when requesting IRQ(s)
-+ *	@sht: scsi_host_template to use when registering the host
-+ *
-+ *	This is the counterpart of ata_host_activate() for SFF ATA
-+ *	hosts.  This separate helper is necessary because SFF hosts
-+ *	use two separate interrupts in legacy mode.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_pci_activate_sff_host(struct ata_host *host,
-+			      irq_handler_t irq_handler,
-+			      struct scsi_host_template *sht)
-+{
-+	struct device *dev = host->dev;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	const char *drv_name = dev_driver_string(host->dev);
-+	int legacy_mode = 0, rc;
+-static void __devinit piix_init_pcs(struct pci_dev *pdev,
+-				    struct ata_port_info *pinfo,
++static void __devinit piix_init_pcs(struct ata_host *host,
+ 				    const struct piix_map_db *map_db)
+ {
++	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	u16 pcs, new_pcs;
+ 
+ 	pci_read_config_word(pdev, ICH5_PCS, &pcs);
+@@ -1259,11 +1243,10 @@ static void __devinit piix_init_pcs(struct pci_dev *pdev,
+ 	}
+ }
+ 
+-static void __devinit piix_init_sata_map(struct pci_dev *pdev,
+-					 struct ata_port_info *pinfo,
+-					 const struct piix_map_db *map_db)
++static const int *__devinit piix_init_sata_map(struct pci_dev *pdev,
++					       struct ata_port_info *pinfo,
++					       const struct piix_map_db *map_db)
+ {
+-	struct piix_host_priv *hpriv = pinfo[0].private_data;
+ 	const int *map;
+ 	int i, invalid_map = 0;
+ 	u8 map_value;
+@@ -1287,7 +1270,6 @@ static void __devinit piix_init_sata_map(struct pci_dev *pdev,
+ 		case IDE:
+ 			WARN_ON((i & 1) || map[i + 1] != IDE);
+ 			pinfo[i / 2] = piix_port_info[ich_pata_100];
+-			pinfo[i / 2].private_data = hpriv;
+ 			i++;
+ 			printk(" IDE IDE");
+ 			break;
+@@ -1305,7 +1287,7 @@ static void __devinit piix_init_sata_map(struct pci_dev *pdev,
+ 		dev_printk(KERN_ERR, &pdev->dev,
+ 			   "invalid MAP value %u\n", map_value);
+ 
+-	hpriv->map = map;
++	return map;
+ }
+ 
+ static void piix_iocfg_bit18_quirk(struct pci_dev *pdev)
+@@ -1364,8 +1346,10 @@ static int piix_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct device *dev = &pdev->dev;
+ 	struct ata_port_info port_info[2];
+ 	const struct ata_port_info *ppi[] = { &port_info[0], &port_info[1] };
+-	struct piix_host_priv *hpriv;
+ 	unsigned long port_flags;
++	struct ata_host *host;
++	struct piix_host_priv *hpriv;
++	int rc;
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+@@ -1375,17 +1359,31 @@ static int piix_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!in_module_init)
+ 		return -ENODEV;
+ 
++	port_info[0] = piix_port_info[ent->driver_data];
++	port_info[1] = piix_port_info[ent->driver_data];
 +
-+	rc = ata_host_start(host);
++	port_flags = port_info[0].flags;
++
++	/* enable device and prepare host */
++	rc = pcim_enable_device(pdev);
 +	if (rc)
 +		return rc;
 +
-+	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
-+		u8 tmp8, mask;
-+
-+		/* TODO: What if one channel is in native mode ... */
-+		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
-+		mask = (1 << 2) | (1 << 0);
-+		if ((tmp8 & mask) != mask)
-+			legacy_mode = 1;
-+#if defined(CONFIG_NO_ATA_LEGACY)
-+		/* Some platforms with PCI limits cannot address compat
-+		   port space. In that case we punt if their firmware has
-+		   left a device in compatibility mode */
-+		if (legacy_mode) {
-+			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
-+			return -EOPNOTSUPP;
-+		}
-+#endif
-+	}
-+
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-+		return -ENOMEM;
-+
-+	if (!legacy_mode && pdev->irq) {
-+		rc = devm_request_irq(dev, pdev->irq, irq_handler,
-+				      IRQF_SHARED, drv_name, host);
-+		if (rc)
-+			goto out;
-+
-+		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
-+		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
-+	} else if (legacy_mode) {
-+		if (!ata_port_is_dummy(host->ports[0])) {
-+			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
-+					      irq_handler, IRQF_SHARED,
-+					      drv_name, host);
-+			if (rc)
-+				goto out;
-+
-+			ata_port_desc(host->ports[0], "irq %d",
-+				      ATA_PRIMARY_IRQ(pdev));
-+		}
-+
-+		if (!ata_port_is_dummy(host->ports[1])) {
-+			rc = devm_request_irq(dev, ATA_SECONDARY_IRQ(pdev),
-+					      irq_handler, IRQF_SHARED,
-+					      drv_name, host);
-+			if (rc)
-+				goto out;
-+
-+			ata_port_desc(host->ports[1], "irq %d",
-+				      ATA_SECONDARY_IRQ(pdev));
-+		}
-+	}
-+
-+	rc = ata_host_register(host, sht);
-+ out:
-+	if (rc == 0)
-+		devres_remove_group(dev, NULL);
-+	else
-+		devres_release_group(dev, NULL);
-+
-+	return rc;
-+}
-+
-+/**
-  *	ata_pci_init_one - Initialize/register PCI IDE host controller
-  *	@pdev: Controller to be initialized
-  *	@ppi: array of port_info, must be enough for two ports
-@@ -742,9 +835,6 @@ int ata_pci_init_one(struct pci_dev *pdev,
- 	struct device *dev = &pdev->dev;
- 	const struct ata_port_info *pi = NULL;
- 	struct ata_host *host = NULL;
--	const char *drv_name = dev_driver_string(&pdev->dev);
--	u8 mask;
--	int legacy_mode = 0;
- 	int i, rc;
- 
- 	DPRINTK("ENTER\n");
-@@ -766,95 +856,24 @@ int ata_pci_init_one(struct pci_dev *pdev,
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
++	/* SATA map init can change port_info, do it before prepping host */
+ 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+ 	if (!hpriv)
  		return -ENOMEM;
  
--	/* FIXME: Really for ATA it isn't safe because the device may be
--	   multi-purpose and we want to leave it alone if it was already
--	   enabled. Secondly for shared use as Arjan says we want refcounting
--
--	   Checking dev->is_enabled is insufficient as this is not set at
--	   boot for the primary video which is BIOS enabled
--	  */
--
- 	rc = pcim_enable_device(pdev);
- 	if (rc)
--		goto err_out;
-+		goto out;
+-	port_info[0] = piix_port_info[ent->driver_data];
+-	port_info[1] = piix_port_info[ent->driver_data];
+-	port_info[0].private_data = hpriv;
+-	port_info[1].private_data = hpriv;
++	if (port_flags & ATA_FLAG_SATA)
++		hpriv->map = piix_init_sata_map(pdev, port_info,
++					piix_map_db_table[ent->driver_data]);
  
--	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
--		u8 tmp8;
--
--		/* TODO: What if one channel is in native mode ... */
--		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
--		mask = (1 << 2) | (1 << 0);
--		if ((tmp8 & mask) != mask)
--			legacy_mode = 1;
--#if defined(CONFIG_NO_ATA_LEGACY)
--		/* Some platforms with PCI limits cannot address compat
--		   port space. In that case we punt if their firmware has
--		   left a device in compatibility mode */
--		if (legacy_mode) {
--			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
--			rc = -EOPNOTSUPP;
--			goto err_out;
--		}
--#endif
+-	port_flags = port_info[0].flags;
++	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
++	if (rc)
++		return rc;
++	host->private_data = hpriv;
+ 
++	/* initialize controller */
+ 	if (port_flags & PIIX_FLAG_AHCI) {
+ 		u8 tmp;
+ 		pci_read_config_byte(pdev, PIIX_SCC, &tmp);
+@@ -1396,13 +1394,8 @@ static int piix_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 
+-	/* Initialize SATA map */
+-	if (port_flags & ATA_FLAG_SATA) {
+-		piix_init_sata_map(pdev, port_info,
+-				   piix_map_db_table[ent->driver_data]);
+-		piix_init_pcs(pdev, port_info,
+-			      piix_map_db_table[ent->driver_data]);
 -	}
--
--	/* prepare host */
-+	/* prepare and activate SFF host */
- 	rc = ata_pci_prepare_sff_host(pdev, ppi, &host);
- 	if (rc)
--		goto err_out;
-+		goto out;
++	if (port_flags & ATA_FLAG_SATA)
++		piix_init_pcs(host, piix_map_db_table[ent->driver_data]);
  
- 	pci_set_master(pdev);
-+	rc = ata_pci_activate_sff_host(host, pi->port_ops->irq_handler,
-+				       pi->sht);
-+ out:
-+	if (rc == 0)
-+		devres_remove_group(&pdev->dev, NULL);
-+	else
-+		devres_release_group(&pdev->dev, NULL);
- 
--	/* start host and request IRQ */
--	rc = ata_host_start(host);
--	if (rc)
--		goto err_out;
--
--	if (!legacy_mode && pdev->irq) {
--		/* We may have no IRQ assigned in which case we can poll. This
--		   shouldn't happen on a sane system but robustness is cheap
--		   in this case */
--		rc = devm_request_irq(dev, pdev->irq, pi->port_ops->irq_handler,
--				      IRQF_SHARED, drv_name, host);
--		if (rc)
--			goto err_out;
--
--		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
--		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
--	} else if (legacy_mode) {
--		if (!ata_port_is_dummy(host->ports[0])) {
--			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
--					      pi->port_ops->irq_handler,
--					      IRQF_SHARED, drv_name, host);
--			if (rc)
--				goto err_out;
--
--			ata_port_desc(host->ports[0], "irq %d",
--				      ATA_PRIMARY_IRQ(pdev));
--		}
--
--		if (!ata_port_is_dummy(host->ports[1])) {
--			rc = devm_request_irq(dev, ATA_SECONDARY_IRQ(pdev),
--					      pi->port_ops->irq_handler,
--					      IRQF_SHARED, drv_name, host);
--			if (rc)
--				goto err_out;
--
--			ata_port_desc(host->ports[1], "irq %d",
--				      ATA_SECONDARY_IRQ(pdev));
--		}
--	}
--
--	/* register */
--	rc = ata_host_register(host, pi->sht);
--	if (rc)
--		goto err_out;
--
--	devres_remove_group(dev, NULL);
--	return 0;
--
--err_out:
--	devres_release_group(dev, NULL);
- 	return rc;
+ 	/* apply IOCFG bit18 quirk */
+ 	piix_iocfg_bit18_quirk(pdev);
+@@ -1420,12 +1413,14 @@ static int piix_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		/* This writes into the master table but it does not
+ 		   really matter for this errata as we will apply it to
+ 		   all the PIIX devices on the board */
+-		port_info[0].mwdma_mask = 0;
+-		port_info[0].udma_mask = 0;
+-		port_info[1].mwdma_mask = 0;
+-		port_info[1].udma_mask = 0;
++		host->ports[0]->mwdma_mask = 0;
++		host->ports[0]->udma_mask = 0;
++		host->ports[1]->mwdma_mask = 0;
++		host->ports[1]->udma_mask = 0;
+ 	}
+-	return ata_pci_init_one(pdev, ppi);
++
++	pci_set_master(pdev);
++	return ata_pci_activate_sff_host(host, ata_interrupt, &piix_sht);
  }
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ccb0556..4374c42 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1033,6 +1033,9 @@ extern int ata_pci_init_bmdma(struct ata_host *host);
- extern int ata_pci_prepare_sff_host(struct pci_dev *pdev,
- 				    const struct ata_port_info * const * ppi,
- 				    struct ata_host **r_host);
-+extern int ata_pci_activate_sff_host(struct ata_host *host,
-+				     irq_handler_t irq_handler,
-+				     struct scsi_host_template *sht);
- extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
- extern unsigned long ata_pci_default_filter(struct ata_device *dev,
- 					    unsigned long xfer_mask);
+ static int __init piix_init(void)
 -- 
 1.5.2.4
 
