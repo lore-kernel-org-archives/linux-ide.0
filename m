@@ -1,37 +1,36 @@
-From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: linux-next: Tree for July 16 (crash on quad core AMD)
-Date: Mon, 21 Jul 2008 09:38:36 +0900
-Message-ID: <4883DA8C.5030306@gmail.com>
-References: <20080716235011.ac9643aa.sfr@canb.auug.org.au>	<200807170053.36661.rjw@sisk.pl>	<1216249292.3358.66.camel@localhost.localdomain>	<200807170109.30655.rjw@sisk.pl>	<48808EE0.2060603@gmail.com>	<20080719004736.626ef169@mjolnir.drzeus.cx>	<48813C5F.70007@gmail.com>	<20080719033050.552f9b49@mjolnir.drzeus.cx>	<48814D81.8060001@gmail.com>	<20080719140717.7b296eae@mjolnir.drzeus.cx>	<4881F437.7000503@gmail.com> <20080721004033.1fc66aa3@mjolnir.drzeus.cx>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20080721004033.1fc66aa3-OhHrUh4vRMSnewYJFaQfwJ5kstrrjoWp@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Pierre Ossman <drzeus-p3sGCRWkH8CeZLLa646FqQ@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-ide <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, tino.keitel-Mmb7MZpHnFY@public.gmane.org
+From: Chuck Short <zulcss@ubuntu.com>
+Subject: [PATCH 2/7] ata: blacklist FUJITSU MHW2160BH PL
+Date: Fri, 18 Jan 2008 13:21:16 -0500
+Message-ID: <E1KKl4I-00068E-Ob@swissweb.swissdisk.com>
+References: <24762.90.138.930.038.1036103001.ben.collins@canonical.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760400AbYGUEfy@vger.kernel.org>
+In-Reply-To: <24762.90.138.930.038.1036103001.ben.collins@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Pierre.
+Reference: https://launchpad.net/bugs/175834
 
-Pierre Ossman wrote:
-> I've converted my code to use your implementation instead, and it seems
-> to be working perfectly.
+CC: linux-ide@vger.kernel.org
+Signed-off-by: Chuck Short <zulcss@ubuntu.com>
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: Ben Collins <ben.collins@canonical.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Cool.
-
-> How comfortable to you feel about your patch? :)
-
-I think it should be okay (well, of course :-) and tested a few corner
-cases by modifying the copy function.
-
-> This fixes a big problem in the sdhci driver where falling back on PIO
-> (because of hw DMA bugs) would create lots of potential issues as the
-> driver couldn't access highmem pages. I'd like to get this fix in for
-> 2.6.27, which means that your patch also needs to go in now.
-
-I think it needs an ACK from Jens.  Jens?
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9bef1a8..2664082 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3935,6 +3935,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
++	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
+ 
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
 -- 
-tejun
+1.5.4.3
