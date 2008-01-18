@@ -1,32 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] Palmchip BK3710 IDE driver
-Date: Fri, 18 Jan 2008 21:03:41 +0300
-Message-ID: <4790E9FD.8060506@ru.mvista.com>
-References: <200801172150.57059.asalnikov@ru.mvista.com>	<20080117232303.3f34c87a@lxorguk.ukuu.org.uk>	<4790B459.3000407@ru.mvista.com> <20080118150402.16a3a387@lxorguk.ukuu.org.uk>
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk
+Date: Fri, 18 Jan 2008 12:41:08 -0600
+Message-ID: <1200681668.25782.9.camel@cinder.waste.org>
+References: <1200445210549-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h155.mvista.com ([63.81.120.155]:8428 "EHLO imap.sh.mvista.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752292AbYARSCu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jan 2008 13:02:50 -0500
-In-Reply-To: <20080118150402.16a3a387@lxorguk.ukuu.org.uk>
+Received: from waste.org ([66.93.16.53]:56676 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759676AbYARSmi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Jan 2008 13:42:38 -0500
+In-Reply-To: <1200445210549-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Anton Salnikov <asalnikov@ru.mvista.com>, linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, randy.dunlap@oracle.com, jeff@garzik.org, linux-ide@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-Alan Cox wrote:
 
->>    It won't -- we can *not* call ide_setup_dma() which fills them out as this 
->>is not a PCI chip.
+On Wed, 2008-01-16 at 10:00 +0900, Tejun Heo wrote:
+> And mprintk the following.
+> 
+>  code:
+>   DEFINE_MPRINTK(mp, 2 * 80);
+> 
+>   mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
+>   mprintk_push(&mp, "ATA %d", 7);
+>   mprintk_push(&mp, ", %u sectors\n", 1024);
+>   mprintk(&mp, "everything seems dandy\n");
 
-> Gak.
+I prefer Matthew Wilcox's stringbuf approach which does proper memory
+management and isn't specific to printk:
 
-    Or maybe we still can -- with hwif->mmio set?
-    AFAIR (from the 2006 discussion) Bart said it's *only* for PCI devices...
+http://www.ussg.iu.edu/hypermail/linux/kernel/0710.3/0517.html
 
-> Alan
+-- 
+Mathematics is the supreme nostalgia of our time.
 
-MBR, Sergei
