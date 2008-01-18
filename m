@@ -1,32 +1,39 @@
-From: kfc@10k.org
-Subject: libata makes SATA 40xDVDRW appear as 0xCDROM
-Date: Fri, 18 Jan 2008 16:45:58 -0500 (EST)
-Message-ID: <Pine.BSO.4.64.0801181631210.2837@transpose.10k.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Palmchip BK3710 IDE driver
+Date: Fri, 18 Jan 2008 23:20:14 +0100
+Message-ID: <200801182320.15096.bzolnier@gmail.com>
+References: <200801172150.57059.asalnikov@ru.mvista.com> <20080118150402.16a3a387@lxorguk.ukuu.org.uk> <4790E9FD.8060506@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bruno.cs.columbia.edu ([128.59.18.129]:48348 "EHLO
-	bruno.cs.columbia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758568AbYARVqa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 16:46:30 -0500
+Received: from ug-out-1314.google.com ([66.249.92.173]:46210 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762858AbYARWIe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 17:08:34 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so536791ugc.16
+        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2008 14:08:33 -0800 (PST)
+In-Reply-To: <4790E9FD.8060506@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Anton Salnikov <asalnikov@ru.mvista.com>, linux-ide@vger.kernel.org
 
-Hello, Jeff:
 
-I am on an Nforce4-Ultra board with a mix of ATA/SATA
-disk drives and a SATA burner(GSA-H30L), while the
-writer has been working well under a 2.6.16 kernel
-with the old IDE-SATA driver. My recent upgrade to
-2.6.23 resulted the drive being identified as a 0xCDROM
-drive(I have disabled the entire IDE branch and am now
-only using the libata drivers). Same result on an unpatched
-2.6.24-rc7 kernel. An extended discussion can be found here
+On Friday 18 January 2008, Sergei Shtylyov wrote:
+> Alan Cox wrote:
+> 
+> >>    It won't -- we can *not* call ide_setup_dma() which fills them out as this 
+> >>is not a PCI chip.
+> 
+> > Gak.
+> 
+>     Or maybe we still can -- with hwif->mmio set?
+>     AFAIR (from the 2006 discussion) Bart said it's *only* for PCI devices...
 
-http://forums.gentoo.org/viewtopic-t-644915.html
+Well, since BLK_DEV_PALMCHIP_BK3710 selects BLK_DEV_IDEDMA_PCI it should be
+possible to call ide_setup_dma() in this driver...
 
-would you please shed some light on this?
-
-Thank you, Jake
+Bart
