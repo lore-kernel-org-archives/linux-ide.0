@@ -1,60 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver (draft)
-Date: Fri, 18 Jan 2008 11:58:44 -0600
-Message-ID: <1200679124.3111.28.camel@localhost.localdomain>
-References: <6b2481670801092253v666e969doe5ec2bd77e10a87e@mail.gmail.com>
-	 <4785C48C.50705@garzik.org>  <4785C764.3070407@garzik.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Palmchip BK3710 IDE driver
+Date: Fri, 18 Jan 2008 21:03:41 +0300
+Message-ID: <4790E9FD.8060506@ru.mvista.com>
+References: <200801172150.57059.asalnikov@ru.mvista.com>	<20080117232303.3f34c87a@lxorguk.ukuu.org.uk>	<4790B459.3000407@ru.mvista.com> <20080118150402.16a3a387@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:49657 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758233AbYARR6u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 12:58:50 -0500
-In-Reply-To: <4785C764.3070407@garzik.org>
+Received: from h155.mvista.com ([63.81.120.155]:8428 "EHLO imap.sh.mvista.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752292AbYARSCu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Jan 2008 13:02:50 -0500
+In-Reply-To: <20080118150402.16a3a387@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Anton Salnikov <asalnikov@ru.mvista.com>, linux-ide@vger.kernel.org, bzolnier@gmail.com
 
+Alan Cox wrote:
 
-On Thu, 2008-01-10 at 02:21 -0500, Jeff Garzik wrote:
-> Jeff Garzik wrote:
-> > 1) To make it easier for people to review and test the driver, I would 
-> > suggest posting a diff against 2.6.24-rc7 (or 2.6.23), ignoring my 
-> > original code.  Thus, it would result in a patch
-> 
-> Er, that sentence was incomplete.  Continuing...
-> 
-> 
-> Thus it would result in a patch that adds a new file 
-> drivers/scsi/mvsas.c to the 2.6.24-rc7 kernel, and modifies 
-> drivers/scsi/Makefile and drivers/scsi/Kconfig to enable this new driver.
-> 
-> That is the format that developers and users are most familiar with, 
-> when reviewing (and testing) a new driver.
-> 
-> But of course this is a draft, so these guidelines are certainly loose...
+>>    It won't -- we can *not* call ide_setup_dma() which fills them out as this 
+>>is not a PCI chip.
 
-OK, in order to try to expedite this, I've created a mvsas branch in
+> Gak.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+    Or maybe we still can -- with hwif->mmio set?
+    AFAIR (from the 2006 discussion) Bart said it's *only* for PCI devices...
 
-I think the first patch (the infrastructure change) is safe to go in
-immediately.  Unfortunately, I can't put the marvell update in because
-the emailed patch is corrupt (it looks like the mailer has added line
-breaks).
+> Alan
 
-Ke, If you can't get your email tool to insert plain text (as a lot of
-microsoft based one's can't), you can add the patch as an attachment; I
-can apply it from that (Although in line plain text is by far the
-preferred method for review if you can do it, we have a bunch of other
-driver writers who have problematic email tools, so we're reasonably
-used to this).
-
-Thanks,
-
-James
-
-
+MBR, Sergei
