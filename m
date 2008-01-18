@@ -1,49 +1,32 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk
-Date: Fri, 18 Jan 2008 13:06:23 -0600
-Message-ID: <1200683183.25782.15.camel@cinder.waste.org>
-References: <1200445210549-git-send-email-htejun@gmail.com>
-	 <1200681668.25782.9.camel@cinder.waste.org>
-	 <20080118184457.GC20490@parisc-linux.org>
+From: kfc@10k.org
+Subject: libata makes SATA 40xDVDRW appear as 0xCDROM
+Date: Fri, 18 Jan 2008 16:45:58 -0500 (EST)
+Message-ID: <Pine.BSO.4.64.0801181631210.2837@transpose.10k.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:58971 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757005AbYARTHI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jan 2008 14:07:08 -0500
-In-Reply-To: <20080118184457.GC20490@parisc-linux.org>
+Received: from bruno.cs.columbia.edu ([128.59.18.129]:48348 "EHLO
+	bruno.cs.columbia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758568AbYARVqa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2008 16:46:30 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, randy.dunlap@oracle.com, jeff@garzik.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
+Hello, Jeff:
 
-On Fri, 2008-01-18 at 11:44 -0700, Matthew Wilcox wrote:
-> On Fri, Jan 18, 2008 at 12:41:08PM -0600, Matt Mackall wrote:
-> > On Wed, 2008-01-16 at 10:00 +0900, Tejun Heo wrote:
-> > > And mprintk the following.
-> > > 
-> > >  code:
-> > >   DEFINE_MPRINTK(mp, 2 * 80);
-> > > 
-> > >   mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
-> > >   mprintk_push(&mp, "ATA %d", 7);
-> > >   mprintk_push(&mp, ", %u sectors\n", 1024);
-> > >   mprintk(&mp, "everything seems dandy\n");
-> > 
-> > I prefer Matthew Wilcox's stringbuf approach which does proper memory
-> > management and isn't specific to printk:
-> > 
-> > http://www.ussg.iu.edu/hypermail/linux/kernel/0710.3/0517.html
-> 
-> Do you have any strong feelings whether we should merge my stringbufs or
-> rusty's version?  I have no particular preference.
+I am on an Nforce4-Ultra board with a mix of ATA/SATA
+disk drives and a SATA burner(GSA-H30L), while the
+writer has been working well under a 2.6.16 kernel
+with the old IDE-SATA driver. My recent upgrade to
+2.6.23 resulted the drive being identified as a 0xCDROM
+drive(I have disabled the entire IDE branch and am now
+only using the libata drivers). Same result on an unpatched
+2.6.24-rc7 kernel. An extended discussion can be found here
 
-My vague recollection was that I preferred Rusty's. But it's been a
-while.
+http://forums.gentoo.org/viewtopic-t-644915.html
 
--- 
-Mathematics is the supreme nostalgia of our time.
+would you please shed some light on this?
 
+Thank you, Jake
