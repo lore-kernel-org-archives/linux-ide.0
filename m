@@ -1,49 +1,68 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pdc2026x: remove surplus initialiser
-Date: Sat, 19 Jan 2008 20:00:59 +0000
-Message-ID: <20080119200059.7484baea@lxorguk.ukuu.org.uk>
-References: <20080119155525.0d361552@lxorguk.ukuu.org.uk>
-	<47922B2B.5010807@ru.mvista.com>
+From: Andrew Ryder <tireman@shaw.ca>
+Subject: Re: Sata 4726 Testing
+Date: Sat, 19 Jan 2008 17:05:37 -0500
+Message-ID: <47927431.6030009@shaw.ca>
+References: <4769A17A.8070806@shaw.ca> <4769F974.2020905@gmail.com>
+ <476D16E2.1050909@shaw.ca> <47824F69.6080007@gmail.com>
+ <4782A79E.5000607@shaw.ca> <4782F3DB.6000906@gmail.com>
+ <47832D82.2020106@shaw.ca> <47845F91.9000705@gmail.com>
+ <47859132.1000700@gmail.com> <4785521B.6070205@shaw.ca>
+ <47859D1A.8010006@gmail.com> <47855F02.3010407@shaw.ca>
+ <4785BD03.10809@gmail.com> <4786C42A.10403@shaw.ca>
+ <47871F88.8070109@gmail.com> <4787F82C.80709@shaw.ca>
+ <47899D39.4050108@gmail.com> <478A6017.5060509@shaw.ca>
+ <478AAE44.2000003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57674 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751441AbYASUC5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jan 2008 15:02:57 -0500
-In-Reply-To: <47922B2B.5010807@ru.mvista.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:39342 "EHLO
+	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702AbYATDMh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jan 2008 22:12:37 -0500
+Received: from pd3mr1so.prod.shaw.ca
+ (pd3mr1so-qfe3.prod.shaw.ca [10.0.141.177]) by l-daemon
+ (Sun ONE Messaging Server 6.0 HotFix 1.01 (built Mar 15 2004))
+ with ESMTP id <0JUX009RFA90FJA0@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 19 Jan 2008 20:12:36 -0700 (MST)
+Received: from pn2ml1so.prod.shaw.ca ([10.0.121.145])
+ by pd3mr1so.prod.shaw.ca (Sun Java System Messaging Server 6.2-7.05 (built Sep
+ 5 2006)) with ESMTP id <0JUX00KJIA90NB00@pd3mr1so.prod.shaw.ca> for
+ linux-ide@vger.kernel.org; Sat, 19 Jan 2008 20:12:37 -0700 (MST)
+Received: from [192.168.0.2] ([70.76.194.32])
+ by l-daemon (Sun Java System Messaging Server 6.2-7.05 (built Sep  5 2006))
+ with ESMTP id <0JUX005S8A8VR200@l-daemon> for linux-ide@vger.kernel.org; Sat,
+ 19 Jan 2008 20:12:35 -0700 (MST)
+In-reply-to: <478AAE44.2000003@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Gaston, Jason D" <jason.d.gaston@intel.com>, linux-ide@vger.kernel.org
 
-On Sat, 19 Jan 2008 19:54:03 +0300
-Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
+Tejun,
 
-> Hello.
-> 
-> Alan Cox wrote:
-> 
-> > Signed-off-by: Alan Cox <alan@redhat.com>
-> 
-> > diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c
-> > --- linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 14:47:56.000000000 +0000
-> > +++ linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 15:00:08.000000000 +0000
-> > @@ -138,7 +138,7 @@
-> >  static u8 __devinit pdc2026x_old_cable_detect(ide_hwif_t *hwif)
-> >  {
-> >  	struct pci_dev *dev = to_pci_dev(hwif->dev);
-> > -	u16 CIS = 0, mask = (hwif->channel) ? (1<<11) : (1<<10);
-> > +	u16 CIS, mask = (hwif->channel) ? (1<<11) : (1<<10);
-> >  
-> >  	pci_read_config_word(dev, 0x50, &CIS);
-> 
->     Since we ignore the result of this function, if it fails CIS may be left 
-> uninitialized if the function fails. So, the initializer is not as useless as 
-> it seems (and there's a lot more of such cases in drivers/ide/pci/ :-)..
+I've got the hardware fixed and everything is working great. I have two
+PMP's attached to the system both with 4 drives and have had no problems.
 
-If pci_read_config_word fails you are in very deep doodoo anyway. I don't
-think anyone checks it because there isn't an answer to "now what"
+Thanks
 
-Alan
+
+Tejun Heo wrote:
+> Andrew Ryder wrote:
+>   
+>> Tejun,
+>>
+>> I have completed some of the testing, things were working fine.. then
+>> something died. It will not even recognize the 4726 anymore. During book
+>> when the HBA does it scan nor in windows 2000 does anything work or be
+>> recognized.
+>>
+>> I will have a new eSATA cable this week sometime, maybe a pin got
+>> shmucked if lucky. I've attached the logs of the good and the gone dead.
+>>     
+>
+> Ah... definitely looks like a hardware problem.  Hopefully cable is the
+> culprit.  I wish the warranty of your port multiplier hasn't expired yet.
+>
+>   
+
