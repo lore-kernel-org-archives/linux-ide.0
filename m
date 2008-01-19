@@ -1,31 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] pdc2026x: remove surplus initialiser
-Date: Sat, 19 Jan 2008 15:55:25 +0000
-Message-ID: <20080119155525.0d361552@lxorguk.ukuu.org.uk>
+From: "Jim MacBaine" <jmacbaine@gmail.com>
+Subject: Re: SATA timeouts on two disks
+Date: Sat, 19 Jan 2008 17:22:13 +0100
+Message-ID: <3afbacad0801190822v19be782er3d48cbc94293e262@mail.gmail.com>
+References: <3afbacad0801121656u7318de7l57ba5064da259f3f@mail.gmail.com>
+	 <18313.65287.290482.369023@harpo.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:40371 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758529AbYASP5I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jan 2008 10:57:08 -0500
+Received: from py-out-1112.google.com ([64.233.166.179]:51528 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591AbYASQWO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jan 2008 11:22:14 -0500
+Received: by py-out-1112.google.com with SMTP id u52so2040293pyb.10
+        for <linux-ide@vger.kernel.org>; Sat, 19 Jan 2008 08:22:13 -0800 (PST)
+In-Reply-To: <18313.65287.290482.369023@harpo.it.uu.se>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, linux-ide@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: linux-ide@vger.kernel.org
 
+On Jan 13, 2008 1:07 PM, Mikael Pettersson <mikpe@it.uu.se> wrote:
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> The fact that the problems occur on different disks on
+> different controllers driven by different drivers indicates
+> that it's not a disk, controller, or driver problem.
+>
+> I strongly suspect an underdimensioned or failing PSU.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c
---- linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 14:47:56.000000000 +0000
-+++ linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 15:00:08.000000000 +0000
-@@ -138,7 +138,7 @@
- static u8 __devinit pdc2026x_old_cable_detect(ide_hwif_t *hwif)
- {
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	u16 CIS = 0, mask = (hwif->channel) ? (1<<11) : (1<<10);
-+	u16 CIS, mask = (hwif->channel) ? (1<<11) : (1<<10);
- 
- 	pci_read_config_word(dev, 0x50, &CIS);
- 
+Thanks a lot for your clues.
+
+I bought a new PSU on Monday and didn't get any new disk failures for
+days.  But last night the same time-outs occurred again on two disks.
+I guess I will try to replace the motherboard including the two SATA
+controllers next.
+
+Regards,
+Jim
