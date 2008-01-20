@@ -1,97 +1,86 @@
-From: "Tony Mugan" <tony@mugan.com>
-Subject: SIlicon Image Controller 3512A or Seagate Barracuda ST3160827AS Issue
-Date: Sun, 20 Jan 2008 16:51:32 +1100
-Message-ID: <4764b0290801192151h15405acahda1769621ba3b4cd@mail.gmail.com>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 0/12] ide-floppy redux v2.5
+Date: Sun, 20 Jan 2008 13:38:15 +0100
+Message-ID: <20080120123815.GA20082@gollum.tnic>
+References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de> <200801142238.17282.bzolnier@gmail.com>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_8805_28009908.1200808292444"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:30171 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752277AbYATFvd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Jan 2008 00:51:33 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2828091wah.23
-        for <linux-ide@vger.kernel.org>; Sat, 19 Jan 2008 21:51:33 -0800 (PST)
+Received: from smtp113.plus.mail.re1.yahoo.com ([69.147.102.76]:24034 "HELO
+	smtp113.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752656AbYATMmK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Jan 2008 07:42:10 -0500
+Content-Disposition: inline
+In-Reply-To: <200801142238.17282.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-------=_Part_8805_28009908.1200808292444
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Mon, Jan 14, 2008 at 10:38:17PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+> > By the way, I have an Iomega ZIP 100 drive somewhere in my hardware=
+ pile and
+> > will do some testing with the "new" :) driver just in case.
+>=20
+> This would be great. :)
+Hi Bart,
 
-Hello Jeff,
+i just whipped rc8 along with your pata-2.6 tree on top and had several=
+ test
+runs of the ide-floppy driver (raw reads, software floppy disk eject, e=
+tc) and
+everything seems to work fine. I will keep this hardware setup here so =
+that we
+could at least test ide-floppy occasionally. We should probably acknowl=
+edge this
+major driver cleanup with a new driver version?
 
-I've tried a few recent Kernels (incl 2.6.23.14) attempting to have my
-SATA Raid configuration detected to no avail.  My SATA drives are not
-on your blacklist in sata_sil.c so I decided to contact you to see if
-I am missing something or can offer a testbed to get this resolved.
+---
+=46rom 6f948b93839cdf397cb38ca75c3c6cc9a21e6070 Mon Sep 17 00:00:00 200=
+1
+=46rom: Borislav Petkov <bbpetkov@yahoo.de>
+Date: Sun, 20 Jan 2008 13:32:24 +0100
+Subject: [PATCH] ide-floppy: bump driver version number
 
-I have found a kernel forum posting from you back in 2004 relating to
-an issue with a slightly different Sil controller but the same drives.
-http://www.ussg.iu.edu/hypermail/linux/kernel/0412.0/0535.html
-You refer to updates in firmware resolving Raid-related issues but I
-cannot find any updates beyond my current v3.42 for these drives.  Nor
-were there an newer Mobo firmwares beyond "FK" which I have installed.
+Acknowledge major ide-floppy code refactoring and cleanup by bumping th=
+e driver
+version number. Also, remove a wrong comment.
 
-I'd be grateful for any pointers and would be very interested in
-assisting where I can in providing information if possible.
+Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
+---
+ drivers/ide/ide-floppy.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-I have attached some general information regarding my setup.
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 0bf6596..b455cf1 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -5,9 +5,6 @@
+  * Copyright (C) 2000-2002  Paul Bristow <paul@paulbristow.net>
+  * Copyright (C) 2005       Bartlomiej Zolnierkiewicz
+  *
+- * The driver currently doesn't have any fancy features, just the bare
+- * minimum read/write support.
+- *
+  * This driver supports the following IDE floppy drives:
+  *
+  * LS-120/240 SuperDisk
+@@ -18,7 +15,7 @@
+  * Documentation/ide/ChangeLog.ide-floppy.1996-2002
+  */
 
-Regards,
+-#define IDEFLOPPY_VERSION "0.99.newide"
++#define IDEFLOPPY_VERSION "1.00"
 
-Tony Mugan.
+ #include <linux/module.h>
+ #include <linux/types.h>
+--
+1.5.3.7
 
-------=_Part_8805_28009908.1200808292444
-Content-Type: text/plain; name="Sil 3512A SATA Issue"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file0
-Content-Disposition: attachment; filename="Sil 3512A SATA Issue"
 
-Ci0tLS0tLS0tLS0tLS0tCk15IE1vdGhlcmJvYXJkCi0tLS0tLS0tLS0tLS0tCkdpZ2FieXRlIEdB
-LTduNDAwIFBybzIgUmV2IDIueCBNb3RoZXJib2FyZApodHRwOi8vdHcuZ2lnYS1ieXRlLmNvbS9T
-dXBwb3J0L01vdGhlcmJvYXJkL0JJT1NfTW9kZWwuYXNweD9Qcm9kdWN0SUQ9MTc1NgoKLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCk15IE9uYm9hcmQgU0FUQSBDb250cm9sbGVyCi0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQpTaWxpY29uIEltYWdlIDM1MTJBIFNhdGFyYWlkIEZpcm13YXJlIDQuMy4z
-MwoKMDE6MGQuMCBSQUlEIGJ1cyBjb250cm9sbGVyOiBTaWxpY29uIEltYWdlLCBJbmMuIFNpSSAz
-NTEyIFtTQVRBTGluay9TQVRBUmFpZF0gU2VyaWFsIEFUQSBDb250cm9sbGVyIChyZXYgMDEpCgoK
-LS0tLS0tLS0tLS0tLS0KTXkgU0FUQSBEcml2ZXMKLS0tLS0tLS0tLS0tLS0KMiB4IFNlYWdhdGUg
-QmFyYWN1ZCBTYXRhMSAxNjBHYiA3MjAwLjcgTkNRCk1vZGVsIFNUMzE2MDgyN0FTIEYvVyAzLjQy
-Cmh0dHA6Ly93d3cuc2VhZ2F0ZS5jb20vd3cvdi9pbmRleC5qc3A/dmduZXh0b2lkPTYzMWMzYjBj
-MmFlZWYwMTBWZ25WQ00xMDAwMDBmNWVlMGEwYVJDUkQmbG9jYWxlPWVuLVVTJnJlcVBhZ2U9TGVn
-YWN5IwoKLS0tLS0tLS0tLS0tLS0tLQoqKioqbHNwY2kgb3V0cHV0Ci0tLS0tLS0tLS0tLS0tLS0K
-W3RvbnlAbG9jYWxob3N0IH5dJCAvc2Jpbi9sc3BjaQowMDowMC4wIEhvc3QgYnJpZGdlOiBuVmlk
-aWEgQ29ycG9yYXRpb24gbkZvcmNlMiBBR1AgKGRpZmZlcmVudCB2ZXJzaW9uPykgKHJldiBjMSkK
-MDA6MDAuMSBSQU0gbWVtb3J5OiBuVmlkaWEgQ29ycG9yYXRpb24gbkZvcmNlMiBNZW1vcnkgQ29u
-dHJvbGxlciAxIChyZXYgYzEpCjAwOjAwLjIgUkFNIG1lbW9yeTogblZpZGlhIENvcnBvcmF0aW9u
-IG5Gb3JjZTIgTWVtb3J5IENvbnRyb2xsZXIgNCAocmV2IGMxKQowMDowMC4zIFJBTSBtZW1vcnk6
-IG5WaWRpYSBDb3Jwb3JhdGlvbiBuRm9yY2UyIE1lbW9yeSBDb250cm9sbGVyIDMgKHJldiBjMSkK
-MDA6MDAuNCBSQU0gbWVtb3J5OiBuVmlkaWEgQ29ycG9yYXRpb24gbkZvcmNlMiBNZW1vcnkgQ29u
-dHJvbGxlciAyIChyZXYgYzEpCjAwOjAwLjUgUkFNIG1lbW9yeTogblZpZGlhIENvcnBvcmF0aW9u
-IG5Gb3JjZTIgTWVtb3J5IENvbnRyb2xsZXIgNSAocmV2IGMxKQowMDowMS4wIElTQSBicmlkZ2U6
-IG5WaWRpYSBDb3Jwb3JhdGlvbiBuRm9yY2UyIElTQSBCcmlkZ2UgKHJldiBhNCkKMDA6MDEuMSBT
-TUJ1czogblZpZGlhIENvcnBvcmF0aW9uIG5Gb3JjZTIgU01CdXMgKE1DUCkgKHJldiBhMikKMDA6
-MDIuMCBVU0IgQ29udHJvbGxlcjogblZpZGlhIENvcnBvcmF0aW9uIG5Gb3JjZTIgVVNCIENvbnRy
-b2xsZXIgKHJldiBhNCkKMDA6MDIuMSBVU0IgQ29udHJvbGxlcjogblZpZGlhIENvcnBvcmF0aW9u
-IG5Gb3JjZTIgVVNCIENvbnRyb2xsZXIgKHJldiBhNCkKMDA6MDIuMiBVU0IgQ29udHJvbGxlcjog
-blZpZGlhIENvcnBvcmF0aW9uIG5Gb3JjZTIgVVNCIENvbnRyb2xsZXIgKHJldiBhNCkKMDA6MDYu
-MCBNdWx0aW1lZGlhIGF1ZGlvIGNvbnRyb2xsZXI6IG5WaWRpYSBDb3Jwb3JhdGlvbiBuRm9yY2Uy
-IEFDOTcgQXVkaW8gQ29udHJvbGVyIChNQ1ApIChyZXYgYTEpCjAwOjA4LjAgUENJIGJyaWRnZTog
-blZpZGlhIENvcnBvcmF0aW9uIG5Gb3JjZTIgRXh0ZXJuYWwgUENJIEJyaWRnZSAocmV2IGEzKQow
-MDowOS4wIElERSBpbnRlcmZhY2U6IG5WaWRpYSBDb3Jwb3JhdGlvbiBuRm9yY2UyIElERSAocmV2
-IGEyKQowMDoxZS4wIFBDSSBicmlkZ2U6IG5WaWRpYSBDb3Jwb3JhdGlvbiBuRm9yY2UyIEFHUCAo
-cmV2IGMxKQowMTowOC4wIE5ldHdvcmsgY29udHJvbGxlcjogVGV4YXMgSW5zdHJ1bWVudHMgQUNY
-IDExMSA1NE1icHMgV2lyZWxlc3MgSW50ZXJmYWNlCjAxOjBiLjAgRXRoZXJuZXQgY29udHJvbGxl
-cjogUmVhbHRlayBTZW1pY29uZHVjdG9yIENvLiwgTHRkLiBSVEwtODE2OSBHaWdhYml0IEV0aGVy
-bmV0IChyZXYgMTApCjAxOjBjLjAgUkFJRCBidXMgY29udHJvbGxlcjogSW50ZWdyYXRlZCBUZWNo
-bm9sb2d5IEV4cHJlc3MsIEluYy4gSVQvSVRFODIxMiBEdWFsIGNoYW5uZWwgQVRBIFJBSUQgY29u
-dHJvbGxlciAocmV2IDExKQowMTowZC4wIFJBSUQgYnVzIGNvbnRyb2xsZXI6IFNpbGljb24gSW1h
-Z2UsIEluYy4gU2lJIDM1MTIgW1NBVEFMaW5rL1NBVEFSYWlkXSBTZXJpYWwgQVRBIENvbnRyb2xs
-ZXIgKHJldiAwMSkKMDE6MGUuMCBGaXJlV2lyZSAoSUVFRSAxMzk0KTogVGV4YXMgSW5zdHJ1bWVu
-dHMgVFNCNDNBQjIzIElFRUUtMTM5NGEtMjAwMCBDb250cm9sbGVyIChQSFkvTGluaykKMDI6MDAu
-MCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyOiBuVmlkaWEgQ29ycG9yYXRpb24gTlY0MyBbR2VG
-b3JjZSA2NjAwIEdUXSAocmV2IGEyKQoKCg==
-------=_Part_8805_28009908.1200808292444--
+--=20
+Regards/Gru=DF,
+    Boris.
