@@ -1,86 +1,99 @@
-From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: Re: [PATCH 0/12] ide-floppy redux v2.5
-Date: Sun, 20 Jan 2008 13:38:15 +0100
-Message-ID: <20080120123815.GA20082@gollum.tnic>
-References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de> <200801142238.17282.bzolnier@gmail.com>
-Reply-To: bbpetkov@yahoo.de
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: The SX4 challenge
+Date: Sun, 20 Jan 2008 16:23:10 +0100
+Message-ID: <18323.26462.56221.912431@harpo.it.uu.se>
+References: <478EA794.8080608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp113.plus.mail.re1.yahoo.com ([69.147.102.76]:24034 "HELO
-	smtp113.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752656AbYATMmK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Jan 2008 07:42:10 -0500
-Content-Disposition: inline
-In-Reply-To: <200801142238.17282.bzolnier@gmail.com>
+Received: from aun.it.uu.se ([130.238.12.36]:39783 "EHLO aun.it.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753720AbYATPX2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 20 Jan 2008 10:23:28 -0500
+In-Reply-To: <478EA794.8080608@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 
-On Mon, Jan 14, 2008 at 10:38:17PM +0100, Bartlomiej Zolnierkiewicz wro=
-te:
-> > By the way, I have an Iomega ZIP 100 drive somewhere in my hardware=
- pile and
-> > will do some testing with the "new" :) driver just in case.
->=20
-> This would be great. :)
-Hi Bart,
+Jeff Garzik writes:
+ > 
+ > Promise just gave permission to post the docs for their PDC20621 (i.e. 
+ > SX4) hardware:
+ > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
+ > 
+ > joining the existing PDC20621 DIMM and PLL docs:
+ > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
+ > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
+ > 
+ > 
+ > So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
+ > becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
+ > conversion in libata-dev.git.
 
-i just whipped rc8 along with your pata-2.6 tree on top and had several=
- test
-runs of the ide-floppy driver (raw reads, software floppy disk eject, e=
-tc) and
-everything seems to work fine. I will keep this hardware setup here so =
-that we
-could at least test ide-floppy occasionally. We should probably acknowl=
-edge this
-major driver cleanup with a new driver version?
+The best solution would be if some storage driver person would
+take on the SX4 challenge and work towards integrating the SX4
+into Linux' RAID framework.
 
----
-=46rom 6f948b93839cdf397cb38ca75c3c6cc9a21e6070 Mon Sep 17 00:00:00 200=
-1
-=46rom: Borislav Petkov <bbpetkov@yahoo.de>
-Date: Sun, 20 Jan 2008 13:32:24 +0100
-Subject: [PATCH] ide-floppy: bump driver version number
+If no-one steps forward I'll take over Jeff's SX4 card and just
+maintain sata_sx4 as a plain non-RAID driver. Unfortunately I
+don't have the time needed to turn it into a decent RAID or
+RAID-offload driver myself.
 
-Acknowledge major ide-floppy code refactoring and cleanup by bumping th=
-e driver
-version number. Also, remove a wrong comment.
+/Mikael
 
-Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
----
- drivers/ide/ide-floppy.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 0bf6596..b455cf1 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -5,9 +5,6 @@
-  * Copyright (C) 2000-2002  Paul Bristow <paul@paulbristow.net>
-  * Copyright (C) 2005       Bartlomiej Zolnierkiewicz
-  *
-- * The driver currently doesn't have any fancy features, just the bare
-- * minimum read/write support.
-- *
-  * This driver supports the following IDE floppy drives:
-  *
-  * LS-120/240 SuperDisk
-@@ -18,7 +15,7 @@
-  * Documentation/ide/ChangeLog.ide-floppy.1996-2002
-  */
-
--#define IDEFLOPPY_VERSION "0.99.newide"
-+#define IDEFLOPPY_VERSION "1.00"
-
- #include <linux/module.h>
- #include <linux/types.h>
---
-1.5.3.7
-
-
---=20
-Regards/Gru=DF,
-    Boris.
+ > 
+ > But now is a good time to remind people how lame the sata_sx4 driver 
+ > software really is -- and I should know, I wrote it.
+ > 
+ > The SX4 hardware, simplified, is three pieces:  XOR engine (for raid5), 
+ > host<->board memcpy engine, and several ATA engines (and some helpful 
+ > transaction sequencing features).  Data for each WRITE command is first 
+ > copied to the board RAM, then the ATA engines DMA to/from the board RAM. 
+ >   Data for each READ command is copied to board RAM via the ATA engines, 
+ > then DMA'd across PCI to your host memory.
+ > 
+ > Therefore, while it is not hardware RAID, the SX4 provides all the 
+ > pieces necessary to offload RAID1 and RAID5, and handle other RAID 
+ > levels optimally.  RAID1 and 5 copies can be offloaded (provided all 
+ > copies go to SX4-attached devices of course).  RAID5 XOR gen and 
+ > checking can be offloaded, allowing the OS to see a single request, 
+ > while the hardware processes a sequence of low-level requests sent in a 
+ > batch.
+ > 
+ > This hardware presents an interesting challenge:  it does not really fit 
+ > into software RAID (i.e. no RAID) /or/ hardware RAID categories.  The 
+ > sata_sx4 driver presents the no-RAID configuration, while is terribly 
+ > inefficient:
+ > 
+ > 	WRITE:
+ > 		submit host DMA (copy to board)
+ > 		host DMA completion via interrupt
+ > 		submit ATA command
+ > 		ATA command completion via interrupt
+ > 	READ:
+ > 		submit ATA command
+ > 		ATA command completion via interrupt
+ > 		submit host DMA (copy from board)
+ > 		host DMA completion via interrupt
+ > 
+ > Thus, the "SX4 challenge" is a challenge to developers to figure out the 
+ > most optimal configuration for this hardware, given the existing MD and 
+ > DM work going on.
+ > 
+ > Now, it must be noted that the SX4 is not current-gen technology.  Most 
+ > vendors have moved towards an "IOP" model, where the hw vendor puts most 
+ > of their hard work into an ARM/MIPS firmware, running on an embedded 
+ > chip specially tuned for storage purposes.  (ref "hptiop" and "stex" 
+ > drivers, very very small SCSI drivers)
+ > 
+ > I know Dan Williams @ Intel is working on very similar issues on the IOP 
+ > -- async memcpy, XOR offload, etc. -- and I am hoping that, due to that 
+ > current work, some of the good ideas can be reused with the SX4.
+ > 
+ > Anyway...  it's open, it's interesting, even if it's not current-gen 
+ > tech anymore.  You can probably find them on Ebay or in an 
+ > out-of-the-way computer shop somewhere.
+ > 
+ > 	Jeff
