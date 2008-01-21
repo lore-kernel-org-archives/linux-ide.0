@@ -1,44 +1,214 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pdc2026x: remove surplus initialiser
-Date: Tue, 22 Jan 2008 00:13:29 +0100
-Message-ID: <200801220013.29341.bzolnier@gmail.com>
-References: <20080119155525.0d361552@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ide-disk: use do_rw_taskfile() (take 2)
+Date: Tue, 22 Jan 2008 00:13:46 +0100
+Message-ID: <200801220013.46413.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:19020 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.171]:19431 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755409AbYAUXBI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:01:08 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so973152ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:01:06 -0800 (PST)
-In-Reply-To: <20080119155525.0d361552@lxorguk.ukuu.org.uk>
+	with ESMTP id S1755252AbYAUXBJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:01:09 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so973141ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:01:09 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 
-On Saturday 19 January 2008, Alan Cox wrote:
-> 
-> Signed-off-by: Alan Cox <alan@redhat.com>
+* Add IDE_TFLAG_DMA_PIO_FALLBACK taskfile flag to indicate the need
+  to skip loading taskfile registers in do_rw_taskfile().
 
-applied with:
+* Export do_rw_taskfile().
 
-- s/pdc2026x/pdc202xx_old/ in patch summary
-- drive-by CodingStyle fixups
+* Convert __ide_do_rw_disk() to use do_rw_taskfile().
 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c
-> --- linux.vanilla-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 14:47:56.000000000 +0000
-> +++ linux-2.6.24-rc8-mm1/drivers/ide/pci/pdc202xx_old.c	2008-01-19 15:00:08.000000000 +0000
-> @@ -138,7 +138,7 @@
->  static u8 __devinit pdc2026x_old_cable_detect(ide_hwif_t *hwif)
->  {
->  	struct pci_dev *dev = to_pci_dev(hwif->dev);
-> -	u16 CIS = 0, mask = (hwif->channel) ? (1<<11) : (1<<10);
-> +	u16 CIS, mask = (hwif->channel) ? (1<<11) : (1<<10);
->  
->  	pci_read_config_word(dev, 0x50, &CIS);
+* Unexport ide_tf_load().
+
+* Unexport {pre_task_out,task_in}_intr() and make it static.
+
+* Remove incorrect comment about do_rw_taskfile() from <linux/ide.h>.
+
+There should be no functionality changes caused by this patch.
+
+v2:
+* Add missing blk_fs_request() check to task_dma_ok() (for VDMA).
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+replacement patch for the one in the IDE quilt tree
+
+ drivers/ide/ide-disk.c     |   29 ++++++++++-------------------
+ drivers/ide/ide-taskfile.c |   16 ++++++++--------
+ include/linux/ide.h        |    9 ++-------
+ 3 files changed, 20 insertions(+), 34 deletions(-)
+
+Index: b/drivers/ide/ide-disk.c
+===================================================================
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -185,6 +185,7 @@ static ide_startstop_t __ide_do_rw_disk(
+ 	u8 lba48		= (drive->addressing == 1) ? 1 : 0;
+ 	ide_task_t		task;
+ 	struct ide_taskfile	*tf = &task.tf;
++	ide_startstop_t		rc;
+ 
+ 	if ((hwif->host_flags & IDE_HFLAG_NO_LBA48_DMA) && lba48 && dma) {
+ 		if (block + rq->nr_sectors > 1ULL << 28)
+@@ -252,32 +253,22 @@ static ide_startstop_t __ide_do_rw_disk(
+ 		task.tf_flags |= IDE_TFLAG_WRITE;
+ 
+ 	ide_tf_set_cmd(drive, &task, dma);
++	if (!dma)
++		hwif->data_phase = task.data_phase;
++	task.rq = rq;
+ 
+-	ide_tf_load(drive, &task);
++	rc = do_rw_taskfile(drive, &task);
+ 
+-	if (dma) {
+-		if (!hwif->dma_setup(drive)) {
+-			hwif->dma_exec_cmd(drive, tf->command);
+-			hwif->dma_start(drive);
+-			return ide_started;
+-		}
++	if (rc == ide_stopped && dma) {
+ 		/* fallback to PIO */
++		task.tf_flags |= IDE_TFLAG_DMA_PIO_FALLBACK;
+ 		ide_tf_set_cmd(drive, &task, 0);
++		hwif->data_phase = task.data_phase;
+ 		ide_init_sg_cmd(drive, rq);
++		rc = do_rw_taskfile(drive, &task);
+ 	}
+ 
+-	hwif->data_phase = task.data_phase;
+-
+-	if (rq_data_dir(rq) == READ) {
+-		ide_execute_command(drive, tf->command, &task_in_intr,
+-				    WAIT_WORSTCASE, NULL);
+-		return ide_started;
+-	} else {
+-		hwif->OUTBSYNC(drive, tf->command, IDE_COMMAND_REG);
+-		ndelay(400);	/* FIXME */
+-
+-		return pre_task_out_intr(drive, rq);
+-	}
++	return rc;
+ }
+ 
+ /*
+Index: b/drivers/ide/ide-taskfile.c
+===================================================================
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -114,8 +114,6 @@ void ide_tf_load(ide_drive_t *drive, ide
+ 		hwif->OUTB((tf->device & HIHI) | drive->select.all, IDE_SELECT_REG);
+ }
+ 
+-EXPORT_SYMBOL_GPL(ide_tf_load);
+-
+ int taskfile_lib_get_identify (ide_drive_t *drive, u8 *buf)
+ {
+ 	ide_task_t args;
+@@ -133,7 +131,7 @@ int taskfile_lib_get_identify (ide_drive
+ 
+ static int inline task_dma_ok(ide_task_t *task)
+ {
+-	if (task->tf_flags & IDE_TFLAG_FLAGGED)
++	if (blk_fs_request(task->rq) || (task->tf_flags & IDE_TFLAG_FLAGGED))
+ 		return 1;
+ 
+ 	switch (task->tf.command) {
+@@ -154,6 +152,8 @@ static ide_startstop_t task_no_data_intr
+ static ide_startstop_t set_geometry_intr(ide_drive_t *);
+ static ide_startstop_t recal_intr(ide_drive_t *);
+ static ide_startstop_t set_multmode_intr(ide_drive_t *);
++static ide_startstop_t pre_task_out_intr(ide_drive_t *, struct request *);
++static ide_startstop_t task_in_intr(ide_drive_t *);
+ 
+ ide_startstop_t do_rw_taskfile (ide_drive_t *drive, ide_task_t *task)
+ {
+@@ -173,7 +173,8 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 	if (task->tf_flags & IDE_TFLAG_FLAGGED)
+ 		task->tf_flags |= IDE_TFLAG_FLAGGED_SET_IN_FLAGS;
+ 
+-	ide_tf_load(drive, task);
++	if ((task->tf_flags & IDE_TFLAG_DMA_PIO_FALLBACK) == 0)
++		ide_tf_load(drive, task);
+ 
+ 	switch (task->data_phase) {
+ 	case TASKFILE_MULTI_OUT:
+@@ -208,6 +209,7 @@ ide_startstop_t do_rw_taskfile (ide_driv
+ 		return ide_started;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(do_rw_taskfile);
+ 
+ /*
+  * set_multmode_intr() is invoked on completion of a WIN_SETMULT cmd.
+@@ -446,7 +448,7 @@ static void task_end_request(ide_drive_t
+ /*
+  * Handler for command with PIO data-in phase (Read/Read Multiple).
+  */
+-ide_startstop_t task_in_intr (ide_drive_t *drive)
++static ide_startstop_t task_in_intr(ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct request *rq = HWGROUP(drive)->rq;
+@@ -477,7 +479,6 @@ ide_startstop_t task_in_intr (ide_drive_
+ 
+ 	return ide_started;
+ }
+-EXPORT_SYMBOL(task_in_intr);
+ 
+ /*
+  * Handler for command with PIO data-out phase (Write/Write Multiple).
+@@ -507,7 +508,7 @@ static ide_startstop_t task_out_intr (id
+ 	return ide_started;
+ }
+ 
+-ide_startstop_t pre_task_out_intr (ide_drive_t *drive, struct request *rq)
++static ide_startstop_t pre_task_out_intr(ide_drive_t *drive, struct request *rq)
+ {
+ 	ide_startstop_t startstop;
+ 
+@@ -528,7 +529,6 @@ ide_startstop_t pre_task_out_intr (ide_d
+ 
+ 	return ide_started;
+ }
+-EXPORT_SYMBOL(pre_task_out_intr);
+ 
+ int ide_raw_taskfile(ide_drive_t *drive, ide_task_t *task, u8 *buf, u16 nsect)
+ {
+Index: b/include/linux/ide.h
+===================================================================
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -912,6 +912,7 @@ enum {
+ 	IDE_TFLAG_FLAGGED_SET_IN_FLAGS	= (1 << 16),
+ 	IDE_TFLAG_IN_DATA		= (1 << 17),
+ 	IDE_TFLAG_CUSTOM_HANDLER	= (1 << 18),
++	IDE_TFLAG_DMA_PIO_FALLBACK	= (1 << 19),
+ };
+ 
+ struct ide_taskfile {
+@@ -965,13 +966,7 @@ extern int drive_is_ready(ide_drive_t *)
+ 
+ void ide_pktcmd_tf_load(ide_drive_t *, u32, u16, u8);
+ 
+-/*
+- * taskfile io for disks for now...and builds request from ide_ioctl
+- */
+-extern ide_startstop_t do_rw_taskfile(ide_drive_t *, ide_task_t *);
+-
+-extern ide_startstop_t task_in_intr(ide_drive_t *);
+-extern ide_startstop_t pre_task_out_intr(ide_drive_t *, struct request *);
++ide_startstop_t do_rw_taskfile(ide_drive_t *, ide_task_t *);
+ 
+ int ide_raw_taskfile(ide_drive_t *, ide_task_t *, u8 *, u16);
+ int ide_no_data_taskfile(ide_drive_t *, ide_task_t *);
