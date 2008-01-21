@@ -1,731 +1,531 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: add enclosure management support
-Date: Mon, 21 Jan 2008 12:12:32 -0600
-Message-ID: <1200939152.3157.32.camel@localhost.localdomain>
-References: <20080115164417.4a5e2789@appleyard>
-	 <1200610243.3255.47.camel@localhost.localdomain>
-	 <20080118085227.4b7a379f@appleyard>
-	 <1200676281.3111.20.camel@localhost.localdomain>
-	 <20080118094116.7ac94f2e@appleyard>
-	 <1200701795.3111.89.camel@localhost.localdomain>
-	 <20080118165243.412fe397@appleyard>
+From: Anton Salnikov <asalnikov@ru.mvista.com>
+Subject: [PATCH] Palmchip BK3710 IDE driver
+Date: Mon, 21 Jan 2008 21:44:29 +0300
+Message-ID: <200801212144.29511.asalnikov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:54175 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751404AbYAUSMo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 13:12:44 -0500
-In-Reply-To: <20080118165243.412fe397@appleyard>
+Received: from rtsoft3.corbina.net ([85.21.88.6]:38129 "EHLO
+	buildserver.ru.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751501AbYAUSoe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 13:44:34 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kristen.c.accardi@intel.com
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: bzolnier@gmail.com
 
-On Fri, 2008-01-18 at 16:52 -0800, Kristen Carlson Accardi wrote:
-> On Fri, 18 Jan 2008 18:16:34 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> 
-> > On Fri, 2008-01-18 at 09:41 -0800, Kristen Carlson Accardi wrote:
-> > > On Fri, 18 Jan 2008 11:11:21 -0600
-> > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > 
-> > > > 
-> > > > On Fri, 2008-01-18 at 08:52 -0800, Kristen Carlson Accardi wrote:
-> > > > > On Thu, 17 Jan 2008 16:50:42 -0600
-> > > > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > > > 
-> > > > > > On Tue, 2008-01-15 at 16:44 -0800, Kristen Carlson Accardi
-> > > > > > wrote:
-> > > > > > > Add Enclosure Management support to libata and ahci.
-> > > > > > > 
-> > > > > > > This patch adds support for the LED protocol, as defined in
-> > > > > > > the AHCI spec. It adds a generic em_message and em_type
-> > > > > > > sysfs entry per host.  It also adds a sw_activity field per
-> > > > > > > existing drive.
-> > > > > > > 
-> > > > > > > The em_message field can be used by the driver to take
-> > > > > > > enclosure management commands from userspace.  In the case
-> > > > > > > of the LED protocol, writes and reads from em_message
-> > > > > > > correspond to the LED message format as defined in the AHCI
-> > > > > > > spec.
-> > > > > > > 
-> > > > > > > em_message type is a read only file that displays the
-> > > > > > > current enclosure management protocol that is used by the
-> > > > > > > driver.
-> > > > > > > 
-> > > > > > > sw_activity is used by drivers which support software
-> > > > > > > controlled activity LEDs. It has the following valid values:
-> > > > > > > 
-> > > > > > > 0	OFF - the LED is not activated on activity
-> > > > > > > 1	BLINK_ON - the LED blinks on every 10ms when
-> > > > > > > activity is detected. 2	BLINK_OFF - the LED is on
-> > > > > > > when idle, and blinks off every 10ms when activity is
-> > > > > > > detected.
-> > > > > > > 
-> > > > > > > It's important to note that the user must turn sw_activity
-> > > > > > > OFF it they wish to control the activity LED via the
-> > > > > > > em_message file.
-> > > > > > 
-> > > > > > One of the things we really need to do is to get some type of
-> > > > > > generic enclosure support.  I note that ahci support three
-> > > > > > standard eclosure management protocols (SAF-TE, SES-2,
-> > > > > > SFF-8485 SGPIO) as well as the one proprietary one you've
-> > > > > > chosen to implement.  Is that because no-one in the field has
-> > > > > > actually connected AHCI up to anything supporting one of the
-> > > > > > standard protocols?
-> > > > > > 
-> > > > > > I'm looking at this from slightly the other way around:  the
-> > > > > > SAS protocol is virtually mandating SFF-8485 as the enclosure
-> > > > > > protocol to the point that it's actually built into the sas
-> > > > > > management protocol ... I was starting to wonder how we
-> > > > > > should be taking advantage of this.
-> > > > > > 
-> > > > > > The implementation probably should be generic (above SCSI or
-> > > > > > IDE or ATA) but it would obviously need to tap into the
-> > > > > > subsytem/transport/device specific pieces, so possibly block
-> > > > > > looks to be the right place to start?
-> > > > > > 
-> > > > > > James
-> > > > > > 
-> > > > > > 
-> > > > > 
-> > > > > I originally thought to try to make a generic enclosure
-> > > > > management framework that we could hook individual EM protocols
-> > > > > into.  Then I started to wonder why we needed to add knowledge
-> > > > > of these protocols into the kernel.  At least the AHCI hardware
-> > > > > which I'm familiar with, has no need to know anything about the
-> > > > > protocol.  It abstracts everything into just a message.  So,
-> > > > > the design that I did in this patch does the same thing.  You
-> > > > > export the type of protocol the driver is configured to accept,
-> > > > > then the message buffer and leave it up to user space to
-> > > > > understand the individual protocol.  This works for all
-> > > > > supported EM protocols.  As far as I can see, most of these
-> > > > > management protocols are better suited to being implemented in
-> > > > > user space anyway. 
-> > > > 
-> > > > It's one way to look at it, if we go with SFF-8485 and the AHCI
-> > > > specific protocol.  Basically both of them are only about flashing
-> > > > LEDs.  The SAF-TE and SES protocols are much more comprehensive
-> > > > (and include things like environmental monitors, temperature,
-> > > > fans, etc.).
-> > > 
-> > > Even these though can be boiled down to read a message/write a
-> > > message.
-> > 
-> > That's true of almost every protocol in the end.  I was thinking of
-> > the abstraction.  The messages lead to flashing lights in the
-> > enclosures. They also have interactive knobs that users twiddle on
-> > the other end. We really need a uniform user interface abstraction
-> > for enclosures.
-> > 
-> 
-> I guess I'm still not seeing why this abstraction needs to be in the
-> kernel.  Why can't it be a user space library with a generic buffer to
-> send/receive messages.
+This is Palmchip BK3710 IDE controller support for kernel version 2.6.24-rc8.
+The IDE controller logic supports PIO, multiword DMA and ultra-DMA modes.
+Supports interface to compact Flash (CF) configured in True-IDE mode.
 
-OK, code demonstrates better I suppose.  Here's an enclosure abstraction
-that manifests correctly in sysfs and should allow us all (AHCI, SGPIO
-and SES) to play in the same sandbox.
+Use ide_setup_dma() since BLK_DEV_PALMCHIP_BK3710 selects BLK_DEV_IDEDMA_PCI
+So I deleted exports from ide-dma.c
 
-James
-
+Signed-off-by: Anton Salnikov <asalnikov@ru.mvista.com>
 ---
 
->From c4d1deff6105831ec7d71641aeb74b945474fef2 Mon Sep 17 00:00:00 2001
-From: James Bottomley <jejb@localhost.localdomain>
-Date: Sun, 20 Jan 2008 07:34:58 -0600
-Subject: [SCSI] enclosure: add support for enclosure services
+ drivers/ide/Kconfig           |    8 
+ drivers/ide/arm/Makefile      |    1 
+ drivers/ide/arm/palm_bk3710.c |  434 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/ide/ide-proc.c        |    1 
+ include/linux/ide.h           |    2 
+ 5 files changed, 445 insertions(+), 1 deletion(-)
 
-The enclosure misc device is really just a library providing sysfs
-support for physical enclosure devices and their components.
-
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/misc/Kconfig      |   10 +
- drivers/misc/Makefile     |    1 +
- drivers/misc/enclosure.c  |  409 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/enclosure.h |  116 +++++++++++++
- 4 files changed, 536 insertions(+), 0 deletions(-)
- create mode 100644 drivers/misc/enclosure.c
- create mode 100644 include/linux/enclosure.h
-
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index b5e67c0..c6e5c09 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -11,6 +11,7 @@ menuconfig MISC_DEVICES
+Index: 2.6.24-rc8.ide/drivers/ide/Kconfig
+===================================================================
+--- 2.6.24-rc8.ide.orig/drivers/ide/Kconfig
++++ 2.6.24-rc8.ide/drivers/ide/Kconfig
+@@ -1008,6 +1008,14 @@ config BLK_DEV_Q40IDE
+ 	  normally be on; disable it only if you are running a custom hard
+ 	  drive subsystem through an expansion card.
  
- 	  If you say N, all options in this submenu will be skipped and disabled.
- 
-+
- if MISC_DEVICES
- 
- config IBM_ASM
-@@ -232,4 +233,13 @@ config ATMEL_SSC
- 
- 	  If unsure, say N.
- 
-+config ENCLOSURE_SERVICES
-+	tristate "Enclosure Services"
-+	default n
++config BLK_DEV_PALMCHIP_BK3710
++	bool "Palmchip bk3710 IDE controller support"
++	depends on ARCH_DAVINCI
++	select BLK_DEV_IDEDMA_PCI
 +	help
-+	  Provides support for intelligent enclosures (bays which
-+	  contain storage devices).  You also need either a host
-+	  driver (SCSI/ATA) which supports enclosures
-+	  or a SCSI enclosure device (SES) to use these services.
++	  Say Y here if you want to support the onchip IDE controller on the
++	  TI DaVinci SoC
 +
- endif # MISC_DEVICES
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 87f2685..de9f1f5 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -17,3 +17,4 @@ obj-$(CONFIG_SONY_LAPTOP)	+= sony-laptop.o
- obj-$(CONFIG_THINKPAD_ACPI)	+= thinkpad_acpi.o
- obj-$(CONFIG_FUJITSU_LAPTOP)	+= fujitsu-laptop.o
- obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
-+obj-$(CONFIG_ENCLOSURE_SERVICES) += enclosure.o
-\ No newline at end of file
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-new file mode 100644
-index 0000000..6d4746f
+ config BLK_DEV_MPC8xx_IDE
+ 	bool "MPC8xx IDE support"
+ 	depends on 8xx && (LWMON || IVMS8 || IVML24 || TQM8xxL) && IDE=y && 
+BLK_DEV_IDE=y && !PPC_MERGE
+Index: 2.6.24-rc8.ide/drivers/ide/arm/Makefile
+===================================================================
+--- 2.6.24-rc8.ide.orig/drivers/ide/arm/Makefile
++++ 2.6.24-rc8.ide/drivers/ide/arm/Makefile
+@@ -2,5 +2,6 @@
+ obj-$(CONFIG_BLK_DEV_IDE_ICSIDE)	+= icside.o
+ obj-$(CONFIG_BLK_DEV_IDE_RAPIDE)	+= rapide.o
+ obj-$(CONFIG_BLK_DEV_IDE_BAST)		+= bast-ide.o
++obj-$(CONFIG_BLK_DEV_PALMCHIP_BK3710)	+= palm_bk3710.o
+ 
+ EXTRA_CFLAGS	:= -Idrivers/ide
+Index: 2.6.24-rc8.ide/drivers/ide/arm/palm_bk3710.c
+===================================================================
 --- /dev/null
-+++ b/drivers/misc/enclosure.c
-@@ -0,0 +1,409 @@
++++ 2.6.24-rc8.ide/drivers/ide/arm/palm_bk3710.c
+@@ -0,0 +1,434 @@
 +/*
-+ * Enclosure Services
++ * Palmchip bk3710 IDE controller
 + *
-+ * Copyright (C) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
++ * Copyright (C) 2006 Texas Instruments.
++ * Copyright (C) 2007 MontaVista Software, Inc., <source@mvista.com>
 + *
-+**-----------------------------------------------------------------------------
-+**
-+**  This program is free software; you can redistribute it and/or
-+**  modify it under the terms of the GNU General Public License
-+**  version 2 as published by the Free Software Foundation.
-+**
-+**  This program is distributed in the hope that it will be useful,
-+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+**  GNU General Public License for more details.
-+**
-+**  You should have received a copy of the GNU General Public License
-+**  along with this program; if not, write to the Free Software
-+**  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+**
-+**-----------------------------------------------------------------------------
-+*/
-+#include <linux/device.h>
-+#include <linux/enclosure.h>
-+#include <linux/err.h>
-+#include <linux/list.h>
-+#include <linux/kernel.h>
++ * ----------------------------------------------------------------------------
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ * ----------------------------------------------------------------------------
++ *
++ */
++
++#include <linux/types.h>
 +#include <linux/module.h>
-+#include <linux/mutex.h>
++#include <linux/kernel.h>
++#include <linux/ioport.h>
++#include <linux/hdreg.h>
++#include <linux/ide.h>
++#include <linux/delay.h>
++#include <linux/init.h>
++#include <linux/clk.h>
++#include <linux/platform_device.h>
 +
-+static LIST_HEAD(container_list);
-+static DEFINE_MUTEX(container_list_lock);
-+static struct class enclosure_class;
-+static struct class enclosure_component_class;
++/* Offset of the primary interface registers */
++#define IDE_PALM_ATA_PRI_REG_OFFSET 0x1F0
 +
-+struct enclosure_device *enclosure_find(struct device *dev)
-+{
-+	struct enclosure_device *edev = NULL;
-+
-+	mutex_lock(&container_list_lock);
-+	list_for_each_entry(edev, &container_list, node) {
-+		if (edev->cdev.dev == dev) {
-+			mutex_unlock(&container_list_lock);
-+			return edev;
-+		}
-+	}
-+	mutex_unlock(&container_list_lock);
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(enclosure_find);
-+
-+/**
-+ * enclosure_register - register device as an enclosure
-+ *
-+ * @dev:	device containing the enclosure
-+ * @components:	number of components in the enclosure
-+ *
-+ * This sets up the device for being an enclosure.  Note that @dev does
-+ * not have to be a dedicated enclosure device.  It may be some other type
-+ * of device that additionally responds to enclosure services
-+ */
-+struct enclosure_device *
-+enclosure_register(struct device *dev, const char *name, int components,
-+		   struct enclosure_component_callbacks *cb)
-+{
-+	struct enclosure_device *edev =
-+		kzalloc(sizeof(struct enclosure_device) +
-+			sizeof(struct enclosure_component)*components,
-+			GFP_KERNEL);
-+	int err, i;
-+
-+	if (!edev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	if (!cb)
-+		return ERR_PTR(-EINVAL);
-+
-+	edev->components = components;
-+
-+	edev->cdev.class = &enclosure_class;
-+	edev->cdev.dev = get_device(dev);
-+	edev->cb = cb;
-+	snprintf(edev->cdev.class_id, BUS_ID_SIZE, "%s", name);
-+	err = class_device_register(&edev->cdev);
-+	if (err)
-+		goto err;
-+
-+	for (i = 0; i < components; i++)
-+		edev->component[i].number = -1;
-+
-+	mutex_lock(&container_list_lock);
-+	list_add_tail(&edev->node, &container_list);
-+	mutex_unlock(&container_list_lock);
-+
-+	return edev;
-+
-+ err:
-+	put_device(edev->cdev.dev);
-+	kfree(edev);
-+	return ERR_PTR(err);
-+}
-+EXPORT_SYMBOL_GPL(enclosure_register);
-+
-+static struct enclosure_component_callbacks enclosure_null_callbacks;
-+
-+/**
-+ * enclosure_unregister - remove an enclosure
-+ *
-+ * @edev:	the registered enclosure to remove;
-+ */
-+void enclosure_unregister(struct enclosure_device *edev)
-+{
-+	int i;
-+
-+	if (!edev)
-+		return;
-+
-+	mutex_lock(&container_list_lock);
-+	list_del(&edev->node);
-+	mutex_unlock(&container_list_lock);
-+
-+	for (i = 0; i < edev->components; i++)
-+		if (edev->component[i].number != -1)
-+			class_device_unregister(&edev->component[i].cdev);
-+
-+	class_device_unregister(&edev->cdev);
-+	/* prevent any callbacks into service user */
-+	edev->cb = &enclosure_null_callbacks;
-+}
-+EXPORT_SYMBOL_GPL(enclosure_unregister);
-+
-+static void enclosure_release(struct class_device *cdev)
-+{
-+	struct enclosure_device *edev = to_enclosure_device(cdev);
-+
-+	put_device(cdev->dev);
-+	kfree(edev);
-+}
-+
-+static void enclosure_component_release(struct class_device *cdev)
-+{
-+	if (cdev->dev)
-+		put_device(cdev->dev);
-+	class_device_put(cdev->parent);
-+}
-+
-+int enclosure_component_register(struct enclosure_device *edev,
-+				 unsigned int number,
-+				 enum enclosure_component_type type,
-+				 const char *name)
-+{
-+	struct enclosure_component *ecomp;
-+	struct class_device *cdev;
-+	int err;
-+
-+	if (!edev || number >= edev->components)
-+		return -EINVAL;
-+
-+	ecomp = &edev->component[number];
-+
-+	if (ecomp->number != -1)
-+		return -EINVAL;
-+
-+	ecomp->type = type;
-+	ecomp->number = number;
-+	cdev = &ecomp->cdev;
-+	cdev->parent = class_device_get(&edev->cdev);
-+	cdev->class = &enclosure_component_class;
-+	if (name)
-+		snprintf(cdev->class_id, BUS_ID_SIZE, "%s", name);
-+	else
-+		snprintf(cdev->class_id, BUS_ID_SIZE, "%d", number);
-+
-+	err = class_device_register(cdev);
-+
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(enclosure_component_register);
-+
-+int enclosure_add_device(struct enclosure_device *edev, int component,
-+			 struct device *dev)
-+{
-+	struct class_device *cdev;
-+
-+	if (!edev || component >= edev->components)
-+		return -EINVAL;
-+
-+	cdev = &edev->component[component].cdev;
-+
-+	class_device_del(cdev);
-+	if (cdev->dev)
-+		put_device(cdev->dev);
-+	cdev->dev = get_device(dev);
-+	return class_device_add(cdev);
-+}
-+EXPORT_SYMBOL_GPL(enclosure_add_device);
-+
-+int enclosure_remove_device(struct enclosure_device *edev, int component)
-+{
-+	struct class_device *cdev;
-+
-+	if (!edev || component >= edev->components)
-+		return -EINVAL;
-+
-+	cdev = &edev->component[component].cdev;
-+
-+	class_device_del(cdev);
-+	if (cdev->dev)
-+		put_device(cdev->dev);
-+	cdev->dev = NULL;
-+	return class_device_add(cdev);
-+}
-+EXPORT_SYMBOL_GPL(enclosure_remove_device);
++/* Primary Control Offset */
++#define IDE_PALM_ATA_PRI_CTL_OFFSET 0x3F6
 +
 +/*
-+ * sysfs pieces below
++ * PalmChip 3710 IDE Controller UDMA timing structure Definition
 + */
-+
-+static ssize_t enclosure_show_components(struct class_device *cdev, char *buf)
-+{
-+	struct enclosure_device *edev = to_enclosure_device(cdev);
-+
-+	return snprintf(buf, 40, "%d\n", edev->components);
-+}
-+
-+static struct class_device_attribute enclosure_attrs[] = {
-+	__ATTR(components, S_IRUGO, enclosure_show_components, NULL),
-+	__ATTR_NULL
++struct palm_bk3710_udmatiming {
++	unsigned int rptime;	/* Ready to pause time  */
++	unsigned int cycletime;	/* Cycle Time           */
 +};
 +
-+static struct class enclosure_class = {
-+	.name			= "enclosure",
-+	.owner			= THIS_MODULE,
-+	.release		= enclosure_release,
-+	.class_dev_attrs	= enclosure_attrs,
++#define BK3710_BMICP		0x00
++#define BK3710_BMISP		0x02
++#define BK3710_BMIDTP		0x04
++#define BK3710_BMICS		0x08
++#define BK3710_BMISS		0x0A
++#define BK3710_BMIDTS		0x0C
++#define BK3710_IDETIMP		0x40
++#define BK3710_IDETIMS		0x42
++#define BK3710_SIDETIM		0x44
++#define BK3710_SLEWCTL		0x45
++#define BK3710_IDESTATUS	0x47
++#define BK3710_UDMACTL		0x48
++#define BK3710_UDMATIM		0x4A
++#define BK3710_MISCCTL		0x50
++#define BK3710_REGSTB		0x54
++#define BK3710_REGRCVR		0x58
++#define BK3710_DATSTB		0x5C
++#define BK3710_DATRCVR		0x60
++#define BK3710_DMASTB		0x64
++#define BK3710_DMARCVR		0x68
++#define BK3710_UDMASTB		0x6C
++#define BK3710_UDMATRP		0x70
++#define BK3710_UDMAENV		0x74
++#define BK3710_IORDYTMP		0x78
++#define BK3710_IORDYTMS		0x7C
++
++#include "../ide-timing.h"
++
++static long ide_palm_clk;
++static u32 base;
++
++static const struct palm_bk3710_udmatiming palm_bk3710_udmatimings[6] = {
++	{160, 240},		/* UDMA Mode 0 */
++	{125, 160},		/* UDMA Mode 1 */
++	{100, 120},		/* UDMA Mode 2 */
++	{100, 90},		/* UDMA Mode 3 */
++	{85,  60},		/* UDMA Mode 4 */
 +};
 +
-+static char *enclosure_status [] = {
-+	[ENCLOSURE_STATUS_UNSUPPORTED] = "unsupported",
-+	[ENCLOSURE_STATUS_OK] = "OK",
-+	[ENCLOSURE_STATUS_CRITICAL] = "critical",
-+	[ENCLOSURE_STATUS_NON_CRITICAL] = "non-critical",
-+	[ENCLOSURE_STATUS_UNRECOVERABLE] = "unrecoverable",
-+	[ENCLOSURE_STATUS_NOT_INSTALLED] = "not installed",
-+	[ENCLOSURE_STATUS_UNKNOWN] = "unknown",
-+	[ENCLOSURE_STATUS_UNAVAILABLE] = "unavailable",
-+};
++static struct clk *ideclkp;
 +
-+static char *enclosure_type [] = {
-+	[ENCLOSURE_COMPONENT_DEVICE] = "device",
-+	[ENCLOSURE_COMPONENT_ARRAY_DEVICE] = "array device",
-+};
-+
-+static ssize_t get_component_fault(struct class_device *cdev, char *buf)
++static inline u32 ioread(u32 reg)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-+
-+	if (edev->cb->get_fault)
-+		edev->cb->get_fault(edev, ecomp);
-+	return snprintf(buf, 40, "%d\n", ecomp->fault);
++	return ioread32(base + reg);
 +}
 +
-+static ssize_t set_component_fault(struct class_device *cdev, const char *buf,
-+				   size_t count)
++static inline void iowrite(u32 val, u32 reg)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-+	int val = simple_strtoul(buf, NULL, 0);
-+
-+	if (edev->cb->set_fault)
-+		edev->cb->set_fault(edev, ecomp, val);
-+	return count;
++	iowrite32(val, base + reg);
 +}
 +
-+static ssize_t get_component_status(struct class_device *cdev, char *buf)
++static void palm_bk3710_setudmamode(unsigned int dev, unsigned int mode)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
++	u8 tenv, trp, t0;
++	u32 val;
 +
-+	if (edev->cb->get_status)
-+		edev->cb->get_status(edev, ecomp);
-+	return snprintf(buf, 40, "%s\n", enclosure_status[ecomp->status]);
++	/* DMA Data Setup */
++	t0 = (palm_bk3710_udmatimings[mode].cycletime + ide_palm_clk - 1)
++			/ ide_palm_clk - 1;
++	tenv = (20 + ide_palm_clk - 1) / ide_palm_clk - 1;
++	trp = (palm_bk3710_udmatimings[mode].rptime + ide_palm_clk - 1)
++			/ ide_palm_clk - 1;
++
++	/* udmatim Register */
++	val = ioread(BK3710_UDMATIM) & ((!dev) ? 0xFFF0 : 0xFF0F);
++	iowrite(val, BK3710_UDMATIM);
++	val = ioread(BK3710_UDMATIM) | (mode << ((!dev) ? 0 : 4));
++	iowrite(val, BK3710_UDMATIM);
++
++	/* udmastb Ultra DMA Access Strobe Width */
++	val = ioread(BK3710_UDMASTB) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_UDMASTB);
++	val = ioread(BK3710_UDMASTB) | (t0 << (dev << 4));
++	iowrite(val, BK3710_UDMASTB);
++
++	/* udmatrp Ultra DMA Ready to Pause Time */
++	val = ioread(BK3710_UDMATRP) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_UDMATRP);
++	val = ioread(BK3710_UDMATRP) | (trp << (dev << 4));
++	iowrite(val, BK3710_UDMATRP);
++
++	/* udmaenv Ultra DMA envelop Time */
++	val = ioread(BK3710_UDMAENV) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_UDMAENV);
++	val = ioread(BK3710_UDMAENV) | (tenv << (dev << 4));
++	iowrite(val, BK3710_UDMAENV);
++
++	/* Enable UDMA for Device */
++	val = ioread(BK3710_UDMACTL) | (1 << dev);
++	iowrite(val, BK3710_UDMACTL);
 +}
 +
-+static ssize_t set_component_status(struct class_device *cdev, const char *buf,
-+				   size_t count)
++static void palm_bk3710_setdmamode(unsigned int dev, unsigned int cycletime,
++				  unsigned int mode)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-+	int i;
++	u8 td, tkw, t0;
++	u32 val;
 +
-+	for (i = 0; enclosure_status[i]; i++) {
-+		if (strncmp(buf, enclosure_status[i],
-+			    strlen(enclosure_status[i])) == 0 &&
-+		    buf[strlen(enclosure_status[i])] == '\n')
-+			break;
++	if (cycletime < ide_timing[mode].cycle)
++		cycletime = ide_timing[mode].cycle;
++
++	/* DMA Data Setup */
++	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
++	td = (ide_timing_find_mode(mode)->active + ide_palm_clk - 1)
++			/ ide_palm_clk;
++	tkw = t0 - td - 1;
++	td -= 1;
++
++	val = ioread(BK3710_DMASTB) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_DMASTB);
++	val = ioread(BK3710_DMASTB) | (td << (dev << 4));
++	iowrite(val, BK3710_DMASTB);
++
++	val = ioread(BK3710_DMARCVR) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_DMARCVR);
++	val = ioread(BK3710_DMARCVR) | (tkw << (dev << 4));
++	iowrite(val, BK3710_DMARCVR);
++
++	/* Disable UDMA for Device */
++	val = ioread(BK3710_UDMACTL) & (0xFF00 | (1 << (!dev)));
++	iowrite(val, BK3710_UDMACTL);
++}
++
++static void palm_bk3710_setpiomode(ide_drive_t *mate, unsigned int dev,
++				  unsigned int cycletime, unsigned int mode)
++{
++	u8 t2, t2i, t0;
++	u32 val;
++	struct ide_timing *t;
++
++	/* PIO Data Setup */
++	t0 = (cycletime + ide_palm_clk - 1) / ide_palm_clk;
++	t2 = (ide_timing_find_mode(XFER_PIO_0 + mode)->active + ide_palm_clk - 1)
++			/ ide_palm_clk;
++
++	t2i = t0 - t2 - 1;
++	t2 -= 1;
++
++	val = ioread(BK3710_DATSTB) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_DATSTB);
++	val = ioread(BK3710_DATSTB) | (t2 << (dev << 4));
++	iowrite(val, BK3710_DATSTB);
++
++	val = ioread(BK3710_DATRCVR) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_DATRCVR);
++	val = ioread(BK3710_DATRCVR) | (t2i << (dev << 4));
++	iowrite(val, BK3710_DATRCVR);
++
++	if (mate && mate->present) {
++		u8 mode2 = ide_get_best_pio_mode(mate, 255, 4);
++
++		if (mode2 < mode)
++			mode = mode2;
 +	}
 +
-+	if (enclosure_status[i] && edev->cb->set_status) {
-+		edev->cb->set_status(edev, ecomp, i);
-+		return count;
-+	} else
-+		return -EINVAL;
++	/* TASKFILE Setup */
++	t = ide_timing_find_mode(XFER_PIO_0 + mode);
++	t0 = (t->cyc8b + ide_palm_clk - 1)
++			/ ide_palm_clk;
++	t2 = (t->act8b + ide_palm_clk - 1)
++			/ ide_palm_clk;
++
++	t2i = t0 - t2 - 1;
++	t2 -= 1;
++
++	val = ioread(BK3710_REGSTB) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_REGSTB);
++	val = ioread(BK3710_REGSTB) | (t2 << (dev << 4));
++	iowrite(val, BK3710_REGSTB);
++
++	val = ioread(BK3710_REGRCVR) & (0xFF << ((!dev) << 4));
++	iowrite(val, BK3710_REGRCVR);
++	val = ioread(BK3710_REGRCVR) | (t2i << (dev << 4));
++	iowrite(val, BK3710_REGRCVR);
 +}
 +
-+static ssize_t get_component_active(struct class_device *cdev, char *buf)
++static void palm_bk3710_set_dma_mode(ide_drive_t *drive, u8 xferspeed)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
++	int is_slave = drive->dn & 1;
 +
-+	if (edev->cb->get_active)
-+		edev->cb->get_active(edev, ecomp);
-+	return snprintf(buf, 40, "%d\n", ecomp->active);
++	if (xferspeed >= XFER_UDMA_0) {
++		palm_bk3710_setudmamode(is_slave, xferspeed - XFER_UDMA_0);
++	} else {
++		int nspeed = 10 - xferspeed + XFER_MW_DMA_0;
++		unsigned ide_cycle = max_t(int, ide_timing[nspeed].cycle,
++					   drive->id->eide_dma_min);
++
++		palm_bk3710_setdmamode(is_slave, ide_cycle, nspeed);
++	}
 +}
 +
-+static ssize_t set_component_active(struct class_device *cdev, const char *buf,
-+				   size_t count)
++static void palm_bk3710_set_pio_mode(ide_drive_t *drive, u8 pio)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-+	int val = simple_strtoul(buf, NULL, 0);
++	unsigned int cycle_time;
++	int is_slave = drive->dn & 1;
++	ide_drive_t *mate;
 +
-+	if (edev->cb->set_active)
-+		edev->cb->set_active(edev, ecomp, val);
-+	return count;
++	/*
++	 * Obtain the drive PIO data for tuning the Palm Chip registers
++	 */
++	cycle_time = ide_pio_cycle_time(drive, pio);
++	mate = ide_get_paired_drive(drive);
++	palm_bk3710_setpiomode(mate, is_slave, cycle_time, pio);
 +}
 +
-+static ssize_t get_component_locate(struct class_device *cdev, char *buf)
++static void __devinit palm_bk3710_chipinit(void)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
++	/*
++	 * enable the reset_en of ATA controller so that when ata signals
++	 * are brought out, by writing into device config. at that
++	 * time por_n signal should not be 'Z' and have a stable value.
++	 */
++	iowrite(0x0300, BK3710_MISCCTL);
 +
-+	if (edev->cb->get_locate)
-+		edev->cb->get_locate(edev, ecomp);
-+	return snprintf(buf, 40, "%d\n", ecomp->locate);
++	/* wait for some time and deassert the reset of ATA Device. */
++	mdelay(100);
++
++	/* Deassert the Reset */
++	iowrite(0x0200, BK3710_MISCCTL);
++
++	/*
++	 * Program the IDETIMP Register Value based on the following assumptions
++	 *
++	 * (ATA_IDETIMP_IDEEN		, ENABLE ) |
++	 * (ATA_IDETIMP_SLVTIMEN	, DISABLE) |
++	 * (ATA_IDETIMP_RDYSMPL		, 70NS)    |
++	 * (ATA_IDETIMP_RDYRCVRY	, 50NS)    |
++	 * (ATA_IDETIMP_DMAFTIM1	, PIOCOMP) |
++	 * (ATA_IDETIMP_PREPOST1	, DISABLE) |
++	 * (ATA_IDETIMP_RDYSEN1		, DISABLE) |
++	 * (ATA_IDETIMP_PIOFTIM1	, DISABLE) |
++	 * (ATA_IDETIMP_DMAFTIM0	, PIOCOMP) |
++	 * (ATA_IDETIMP_PREPOST0	, DISABLE) |
++	 * (ATA_IDETIMP_RDYSEN0		, DISABLE) |
++	 * (ATA_IDETIMP_PIOFTIM0	, DISABLE)
++	 */
++	iowrite(0xB388, BK3710_IDETIMP);
++
++	/*
++	 * Configure  SIDETIM  Register
++	 * (ATA_SIDETIM_RDYSMPS1	,120NS ) |
++	 * (ATA_SIDETIM_RDYRCYS1	,120NS )
++	 */
++	iowrite(0, BK3710_SIDETIM);
++
++	/*
++	 * UDMACTL Ultra-ATA DMA Control
++	 * (ATA_UDMACTL_UDMAP1	, 0 ) |
++	 * (ATA_UDMACTL_UDMAP0	, 0 )
++	 *
++	 */
++	iowrite(0, BK3710_UDMACTL);
++
++	/*
++	 * MISCCTL Miscellaneous Conrol Register
++	 * (ATA_MISCCTL_RSTMODEP	, 1) |
++	 * (ATA_MISCCTL_RESETP		, 0) |
++	 * (ATA_MISCCTL_TIMORIDE	, 1)
++	 */
++	iowrite(0x201, BK3710_MISCCTL);
++
++	/*
++	 * IORDYTMP IORDY Timer for Primary Register
++	 * (ATA_IORDYTMP_IORDYTMP     , 0xffff  )
++	 */
++	iowrite(0xFFFF, BK3710_IORDYTMP);
++
++	/*
++	 * Configure BMISP Register
++	 * (ATA_BMISP_DMAEN1	, DISABLE )	|
++	 * (ATA_BMISP_DMAEN0	, DISABLE )	|
++	 * (ATA_BMISP_IORDYINT	, CLEAR)	|
++	 * (ATA_BMISP_INTRSTAT	, CLEAR)	|
++	 * (ATA_BMISP_DMAERROR	, CLEAR)
++	 */
++	iowrite(0, BK3710_BMISP);
++
++	palm_bk3710_setpiomode(NULL, 0, 600, 0);
++	palm_bk3710_setpiomode(NULL, 1, 600, 0);
 +}
 +
-+static ssize_t set_component_locate(struct class_device *cdev, const char *buf,
-+				   size_t count)
++static int __devinit palm_bk3710_probe(struct platform_device *pdev)
 +{
-+	struct enclosure_device *edev = to_enclosure_device(cdev->parent);
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-+	int val = simple_strtoul(buf, NULL, 0);
++	hw_regs_t ide_ctlr_info;
++	int index = 0;
++	int pribase;
++	struct clk *clkp;
++	struct resource *mem, *irq;
++	ide_hwif_t *hwif;
 +
-+	if (edev->cb->set_locate)
-+		edev->cb->set_locate(edev, ecomp, val);
-+	return count;
-+}
++	clkp = clk_get(NULL, "IDECLK");
++	if (IS_ERR(clkp))
++		return -ENODEV;
 +
-+static ssize_t get_component_type(struct class_device *cdev, char *buf)
-+{
-+	struct enclosure_component *ecomp = to_enclosure_component(cdev);
++	ideclkp = clkp;
++	clk_enable(ideclkp);
++	ide_palm_clk = clk_get_rate(ideclkp)/100000;
++	ide_palm_clk = (10000/ide_palm_clk) + 1;
++	/* Register the IDE interface with Linux ATA Interface */
++	memset(&ide_ctlr_info, 0, sizeof(ide_ctlr_info));
 +
-+	return snprintf(buf, 40, "%s\n", enclosure_type[ecomp->type]);
-+}
++	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (mem == NULL) {
++		printk(KERN_INFO "failed to get memory region resource\n");
++		return -ENODEV;
++	}
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (irq == NULL) {
++		printk(KERN_INFO "failed to get IRQ resource\n");
++		return -ENODEV;
++	}
 +
++	base = mem->start;
++	/* Configure the Palm Chip controller */
++	palm_bk3710_chipinit();
 +
-+static struct class_device_attribute enclosure_component_attrs[] = {
-+	__ATTR(fault, S_IRUGO | S_IWUSR, get_component_fault,
-+	       set_component_fault),
-+	__ATTR(status, S_IRUGO | S_IWUSR, get_component_status,
-+	       set_component_status),
-+	__ATTR(active, S_IRUGO | S_IWUSR, get_component_active,
-+	       set_component_active),
-+	__ATTR(locate, S_IRUGO | S_IWUSR, get_component_locate,
-+	       set_component_locate),
-+	__ATTR(type, S_IRUGO, get_component_type, NULL),
-+	__ATTR_NULL
-+};
++	pribase = mem->start + IDE_PALM_ATA_PRI_REG_OFFSET;
++	for (index = 0; index < IDE_NR_PORTS - 2; index++)
++		ide_ctlr_info.io_ports[index] = pribase + index;
++	ide_ctlr_info.io_ports[IDE_CONTROL_OFFSET] = mem->start +
++			IDE_PALM_ATA_PRI_CTL_OFFSET;
++	ide_ctlr_info.irq = irq->start;
++	ide_ctlr_info.chipset = ide_palm3710;
 +
-+static struct class enclosure_component_class =  {
-+	.name			= "enclosure_component",
-+	.owner			= THIS_MODULE,
-+	.class_dev_attrs	= enclosure_component_attrs,
-+	.release		= enclosure_component_release,
-+};
++	if (!request_region(mem->start, 8, "palm_bk3710")) {
++		printk(KERN_ERR "Error, ports in use.\n");
++		return -EBUSY;
++	}
 +
-+static int __init enclosure_init(void)
-+{
-+	int err;
++	if (ide_register_hw(&ide_ctlr_info, NULL, 0, &hwif) < 0) {
++		printk(KERN_WARNING "Palm Chip BK3710 IDE Register Fail\n");
++		return -ENODEV;
++	}
 +
-+	err = class_register(&enclosure_class);
-+	if (err)
-+		return err;
-+	err = class_register(&enclosure_component_class);
-+	if (err)
-+		goto err_out;
++	hwif->set_pio_mode = &palm_bk3710_set_pio_mode;
++	hwif->set_dma_mode = &palm_bk3710_set_dma_mode;
++	hwif->mmio = 1;
++	hwif->ultra_mask = 0x1f;	/* Ultra DMA Mode 4 Max
++						(input clk 99MHz) */
++	hwif->mwdma_mask = 0x7;
++	hwif->drives[0].autotune = 1;
++	hwif->drives[1].autotune = 1;
++
++	hwif->dmatable_cpu = dma_alloc_coherent(
++				NULL,
++				PRD_ENTRIES * PRD_BYTES,
++				&hwif->dmatable_dma,
++				GFP_ATOMIC);
++
++	if (!hwif->dmatable_cpu) {
++		printk(KERN_ERR "Error, unable to allocate DMA table.\n");
++		hwif->ultra_mask = 0;
++		hwif->mwdma_mask = 0;
++		return 0;
++	}
++
++	hwif->dma_base = mem->start;
++
++	hwif->dma_master = mem->start;
++
++	hwif->dma_command = mem->start;
++	hwif->dma_status = mem->start + 2;
++	hwif->dma_prdtable = mem->start + 4;
++	ide_setup_dma(hwif, mem->start, 8);
 +
 +	return 0;
-+ err_out:
-+	class_unregister(&enclosure_class);
-+
-+	return err;
 +}
 +
-+static void __exit enclosure_exit(void)
++static struct platform_driver platform_bk_driver = {
++	.driver = {
++		.name = "palm_bk3710",
++	},
++	.probe = palm_bk3710_probe,
++	.remove = NULL,
++};
++
++static int __init palm_bk3710_init(void)
 +{
-+	class_unregister(&enclosure_component_class);
-+	class_unregister(&enclosure_class);
++	return platform_driver_register(&platform_bk_driver);
 +}
 +
-+module_init(enclosure_init);
-+module_exit(enclosure_exit);
++module_init(palm_bk3710_init);
++MODULE_LICENSE("GPL");
 +
-+MODULE_AUTHOR("James Bottomley");
-+MODULE_DESCRIPTION("Enclosure Services");
-+MODULE_LICENSE("GPL v2");
-diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
-new file mode 100644
-index 0000000..cc83acf
---- /dev/null
-+++ b/include/linux/enclosure.h
-@@ -0,0 +1,116 @@
-+/*
-+ * Enclosure Services
-+ *
-+ * Copyright (C) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
-+ *
-+**-----------------------------------------------------------------------------
-+**
-+**  This program is free software; you can redistribute it and/or
-+**  modify it under the terms of the GNU General Public License
-+**  version 2 as published by the Free Software Foundation.
-+**
-+**  This program is distributed in the hope that it will be useful,
-+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+**  GNU General Public License for more details.
-+**
-+**  You should have received a copy of the GNU General Public License
-+**  along with this program; if not, write to the Free Software
-+**  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+**
-+**-----------------------------------------------------------------------------
-+*/
-+#ifndef _LINUX_ENCLOSURE_H_
-+#define _LINUX_ENCLOSURE_H_
-+
-+#include <linux/device.h>
-+#include <linux/list.h>
-+
-+/* A few generic types ... taken from ses-2 */
-+enum enclosure_component_type {
-+	ENCLOSURE_COMPONENT_DEVICE = 0x01,
-+	ENCLOSURE_COMPONENT_ARRAY_DEVICE = 0x17,
-+};
-+
-+/* ses-2 common element status */
-+enum enclosure_status {
-+	ENCLOSURE_STATUS_UNSUPPORTED = 0,
-+	ENCLOSURE_STATUS_OK,
-+	ENCLOSURE_STATUS_CRITICAL,
-+	ENCLOSURE_STATUS_NON_CRITICAL,
-+	ENCLOSURE_STATUS_UNRECOVERABLE,
-+	ENCLOSURE_STATUS_NOT_INSTALLED,
-+	ENCLOSURE_STATUS_UNKNOWN,
-+	ENCLOSURE_STATUS_UNAVAILABLE,
-+};
-+
-+/* SFF-8485 activity light settings */
-+enum enclosure_component_setting {
-+	ENCLOSURE_SETTING_DISABLED = 0,
-+	ENCLOSURE_SETTING_ENABLED = 1,
-+	ENCLOSURE_SETTING_BLINK_A_ON_OFF = 2,
-+	ENCLOSURE_SETTING_BLINK_A_OFF_ON = 3,
-+	ENCLOSURE_SETTING_BLINK_B_ON_OFF = 6,
-+	ENCLOSURE_SETTING_BLINK_B_OFF_ON = 7,
-+};
-+
-+struct enclosure_device;
-+struct enclosure_component;
-+struct enclosure_component_callbacks {
-+	void (*get_status)(struct enclosure_device *,
-+			     struct enclosure_component *);
-+	int (*set_status)(struct enclosure_device *,
-+			  struct enclosure_component *,
-+			  enum enclosure_status);
-+	void (*get_fault)(struct enclosure_device *,
-+			  struct enclosure_component *);
-+	int (*set_fault)(struct enclosure_device *,
-+			 struct enclosure_component *,
-+			 enum enclosure_component_setting);
-+	void (*get_active)(struct enclosure_device *,
-+			   struct enclosure_component *);
-+	int (*set_active)(struct enclosure_device *,
-+			  struct enclosure_component *,
-+			  enum enclosure_component_setting);
-+	void (*get_locate)(struct enclosure_device *,
-+			   struct enclosure_component *);
-+	int (*set_locate)(struct enclosure_device *,
-+			  struct enclosure_component *,
-+			  enum enclosure_component_setting);
-+};
-+
-+
-+struct enclosure_component {
-+	struct class_device cdev;
-+	enum enclosure_component_type type;
-+	int number;
-+	int fault;
-+	int active;
-+	int locate;
-+	enum enclosure_status status;
-+};
-+
-+struct enclosure_device {
-+	void *scratch;
-+	struct list_head node;
-+	struct class_device cdev;
-+	struct enclosure_component_callbacks *cb;
-+	int components;
-+	struct enclosure_component component[0];
-+};
-+
-+#define to_enclosure_device(x) container_of((x), struct enclosure_device, cdev)
-+#define to_enclosure_component(x) container_of((x), struct enclosure_component, cdev)
-+
-+struct enclosure_device *
-+enclosure_register(struct device *, const char *, int,
-+		   struct enclosure_component_callbacks *);
-+void enclosure_unregister(struct enclosure_device *);
-+int enclosure_component_register(struct enclosure_device *, unsigned int,
-+				 enum enclosure_component_type, const char *);
-+int enclosure_add_device(struct enclosure_device *enclosure, int component,
-+			 struct device *dev);
-+int enclosure_remove_device(struct enclosure_device *enclosure, int component);
-+struct enclosure_device *enclosure_find(struct device *dev);
-+
-+#endif /* _LINUX_ENCLOSURE_H_ */
--- 
-1.5.3.8
-
-
-
+Index: 2.6.24-rc8.ide/drivers/ide/ide-proc.c
+===================================================================
+--- 2.6.24-rc8.ide.orig/drivers/ide/ide-proc.c
++++ 2.6.24-rc8.ide/drivers/ide/ide-proc.c
+@@ -67,6 +67,7 @@ static int proc_ide_read_imodel
+ 		case ide_4drives:	name = "4drives";	break;
+ 		case ide_pmac:		name = "mac-io";	break;
+ 		case ide_au1xxx:	name = "au1xxx";	break;
++		case ide_palm3710:      name = "palm3710";      break;
+ 		case ide_etrax100:	name = "etrax100";	break;
+ 		case ide_acorn:		name = "acorn";		break;
+ 		default:		name = "(unknown)";	break;
+Index: 2.6.24-rc8.ide/include/linux/ide.h
+===================================================================
+--- 2.6.24-rc8.ide.orig/include/linux/ide.h
++++ 2.6.24-rc8.ide/include/linux/ide.h
+@@ -202,7 +202,7 @@ enum {		ide_unknown,	ide_generic,	ide_pc
+ 		ide_rz1000,	ide_trm290,
+ 		ide_cmd646,	ide_cy82c693,	ide_4drives,
+ 		ide_pmac,	ide_etrax100,	ide_acorn,
+-		ide_au1xxx, ide_forced
++		ide_au1xxx,	ide_palm3710,	ide_forced
+ };
+ 
+ typedef u8 hwif_chipset_t;
