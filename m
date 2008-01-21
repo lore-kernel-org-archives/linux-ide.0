@@ -1,35 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Mon, 21 Jan 2008 16:44:14 +0000
-Message-ID: <20080121164414.6cd7d8fc@lxorguk.ukuu.org.uk>
-References: <200801140019.20668.g.chulkov@jacobs-university.de>
-	<20080115025435.1e21b703.akpm@linux-foundation.org>
-	<20080115113552.75731bf8@lxorguk.ukuu.org.uk>
-	<4794501E.90306@gmail.com>
-	<20080121130256.2443d7c1@lxorguk.ukuu.org.uk>
-	<47949AA4.9090601@gmail.com>
-	<20080121141425.45aa9c61@lxorguk.ukuu.org.uk>
-	<4794ACAF.70505@gmail.com>
-	<4794AD3F.40309@gmail.com>
+From: Thomas Evans <evans02472@gmail.com>
+Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
+Date: Mon, 21 Jan 2008 11:47:07 -0500
+Message-ID: <4794CC8B.1010907@gmail.com>
+References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com> <4794CB8B.1070600@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48232 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753240AbYAUQq0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 11:46:26 -0500
-In-Reply-To: <4794AD3F.40309@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.230]:42780 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753552AbYAUQrQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 11:47:16 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1050212wxd.4
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 08:47:12 -0800 (PST)
+In-Reply-To: <4794CB8B.1070600@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> Just a data point, even ICHs lock up after PHY event if the wrong TF
-> register is accessed.  I just don't think tempting with TF regs after
-> timeout is worth the cost.
+I should have mentioned that in 1 of the failing logs, it finds the PMP 
+device, that is rare, it usually doesn't even see it.
+That happened this morning and I was hopeful that somehow it was more 
+meaningful than the usual case where it doesn't even notice the PMP.
 
-For SATA maybe, for PATA I don't have any controllers with your bug so
-its wrong for libata to cripple the PATA support or working controllers.
+...tom
 
-Alan
+Thomas Evans wrote:
+> I've attached a few logs - one that references how things looked when 
+> it all worked.
+> I've logs of both the original Norco 4618 card (lspci64.2 and 
+> dmesg.txt.2) and with the
+> newer generic 3124 card (dmesg.txt.newcard lspci.newcard.2).
+>
+> I'm not so good with deciphering the PCI-isms - maybe I just need a 
+> shorter cable now!?
+>
+> ...tom
+>
+>
+
