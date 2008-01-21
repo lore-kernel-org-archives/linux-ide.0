@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 09/16] ide: remove SATA_*_REG macros
-Date: Tue, 22 Jan 2008 00:31:37 +0100
-Message-ID: <20080121233137.30311.8668.sendpatchset@localhost.localdomain>
+Subject: [PATCH 05/16] ide-probe: remove needless Status register reads
+Date: Tue, 22 Jan 2008 00:31:10 +0100
+Message-ID: <20080121233110.30311.7772.sendpatchset@localhost.localdomain>
 References: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:43432 "EHLO
+Received: from ug-out-1314.google.com ([66.249.92.169]:43625 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760357AbYAUXSc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:18:32 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so975307ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:18:31 -0800 (PST)
+	with ESMTP id S1756919AbYAUXSG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:18:06 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so975308ugc.16
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:18:04 -0800 (PST)
 In-Reply-To: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -17,91 +17,96 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 
-* siimage.c: use hwif->sata_scr[SATA_{ERROR,STATUS}_OFFSET] instead of
-  SATA_{ERROR,STATUS}_REG macros.
-
-* Remove no longer needed SATA_*_REG macros.
+* Cache value read from the Status register in 'stat' variable in do_probe()
+  and enable_nest(), then remove remove needless Status register reads.
 
 While at it:
 
-* Remove needless SATA Status register read from sil_sata_reset_poll().
+* Add proper KERN_* levels to printk() calls.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/pci/siimage.c |   25 ++++++++++++++++---------
- include/linux/ide.h       |    6 ------
- 2 files changed, 16 insertions(+), 15 deletions(-)
+ drivers/ide/ide-probe.c |   35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
-Index: b/drivers/ide/pci/siimage.c
+Index: b/drivers/ide/ide-probe.c
 ===================================================================
---- a/drivers/ide/pci/siimage.c
-+++ b/drivers/ide/pci/siimage.c
-@@ -331,15 +331,18 @@ static int siimage_mmio_ide_dma_test_irq
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -423,8 +423,9 @@ static int ide_busy_sleep(ide_hwif_t *hw
+ 
+ static int do_probe (ide_drive_t *drive, u8 cmd)
  {
- 	ide_hwif_t *hwif	= HWIF(drive);
- 	unsigned long addr	= siimage_selreg(hwif, 0x1);
-+	void __iomem *sata_error_addr
-+		= (void __iomem *)hwif->sata_scr[SATA_ERROR_OFFSET];
+-	int rc;
+ 	ide_hwif_t *hwif = HWIF(drive);
++	int rc;
++	u8 stat;
  
--	if (SATA_ERROR_REG) {
-+	if (sata_error_addr) {
- 		unsigned long base = (unsigned long)hwif->hwif_data;
--
- 		u32 ext_stat = readl((void __iomem *)(base + 0x10));
- 		u8 watchdog = 0;
-+
- 		if (ext_stat & ((hwif->channel) ? 0x40 : 0x10)) {
--			u32 sata_error = readl((void __iomem *)SATA_ERROR_REG);
--			writel(sata_error, (void __iomem *)SATA_ERROR_REG);
-+			u32 sata_error = readl(sata_error_addr);
-+
-+			writel(sata_error, sata_error_addr);
- 			watchdog = (sata_error & 0x00680000) ? 1 : 0;
- 			printk(KERN_WARNING "%s: sata_error = 0x%08x, "
- 				"watchdog = %d, %s\n",
-@@ -418,13 +421,17 @@ static int sil_sata_busproc(ide_drive_t 
- 
- static int sil_sata_reset_poll(ide_drive_t *drive)
- {
--	if (SATA_STATUS_REG) {
--		ide_hwif_t *hwif	= HWIF(drive);
-+	ide_hwif_t *hwif = drive->hwif;
-+	void __iomem *sata_status_addr
-+		= (void __iomem *)hwif->sata_scr[SATA_STATUS_OFFSET];
-+
-+	if (sata_status_addr) {
-+		/* SATA Status is available only when in MMIO mode */
-+		u32 sata_stat = readl(sata_status_addr);
- 
--		/* SATA_STATUS_REG is valid only when in MMIO mode */
--		if ((readl((void __iomem *)SATA_STATUS_REG) & 0x03) != 0x03) {
-+		if ((sata_stat & 0x03) != 0x03) {
- 			printk(KERN_WARNING "%s: reset phy dead, status=0x%08x\n",
--				hwif->name, readl((void __iomem *)SATA_STATUS_REG));
-+					    hwif->name, sata_stat);
- 			HWGROUP(drive)->polling = 0;
- 			return ide_started;
+ 	if (drive->present) {
+ 		/* avoid waiting for inappropriate probes */
+@@ -461,15 +462,17 @@ static int do_probe (ide_drive_t *drive,
+ 			/* failed: try again */
+ 			rc = try_to_identify(drive,cmd);
  		}
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -112,18 +112,12 @@ typedef unsigned char	byte;	/* used ever
- #define SATA_NR_PORTS		(3)	/* 16 possible ?? */
+-		if (hwif->INB(IDE_STATUS_REG) == (BUSY_STAT|READY_STAT))
++
++		stat = hwif->INB(IDE_STATUS_REG);
++
++		if (stat == (BUSY_STAT | READY_STAT))
+ 			return 4;
  
- #define SATA_STATUS_OFFSET	(0)
--#define SATA_STATUS_REG		(HWIF(drive)->sata_scr[SATA_STATUS_OFFSET])
- #define SATA_ERROR_OFFSET	(1)
--#define SATA_ERROR_REG		(HWIF(drive)->sata_scr[SATA_ERROR_OFFSET])
- #define SATA_CONTROL_OFFSET	(2)
--#define SATA_CONTROL_REG	(HWIF(drive)->sata_scr[SATA_CONTROL_OFFSET])
+ 		if ((rc == 1 && cmd == WIN_PIDENTIFY) &&
+ 			((drive->autotune == IDE_TUNE_DEFAULT) ||
+ 			(drive->autotune == IDE_TUNE_AUTO))) {
+-			printk("%s: no response (status = 0x%02x), "
+-				"resetting drive\n", drive->name,
+-				hwif->INB(IDE_STATUS_REG));
++			printk(KERN_ERR "%s: no response (status = 0x%02x), "
++					"resetting drive\n", drive->name, stat);
+ 			msleep(50);
+ 			hwif->OUTB(drive->select.all, IDE_SELECT_REG);
+ 			msleep(50);
+@@ -477,11 +480,13 @@ static int do_probe (ide_drive_t *drive,
+ 			(void)ide_busy_sleep(hwif);
+ 			rc = try_to_identify(drive, cmd);
+ 		}
++
++		/* ensure drive IRQ is clear */
++		stat = hwif->INB(IDE_STATUS_REG);
++
+ 		if (rc == 1)
+-			printk("%s: no response (status = 0x%02x)\n",
+-				drive->name, hwif->INB(IDE_STATUS_REG));
+-		/* ensure drive irq is clear */
+-		(void) hwif->INB(IDE_STATUS_REG);
++			printk(KERN_ERR "%s: no response (status = 0x%02x)\n",
++					drive->name, stat);
+ 	} else {
+ 		/* not present or maybe ATAPI */
+ 		rc = 3;
+@@ -502,6 +507,7 @@ static int do_probe (ide_drive_t *drive,
+ static void enable_nest (ide_drive_t *drive)
+ {
+ 	ide_hwif_t *hwif = HWIF(drive);
++	u8 stat;
  
- #define SATA_MISC_OFFSET	(0)
--#define SATA_MISC_REG		(HWIF(drive)->sata_misc[SATA_MISC_OFFSET])
- #define SATA_PHY_OFFSET		(1)
--#define SATA_PHY_REG		(HWIF(drive)->sata_misc[SATA_PHY_OFFSET])
- #define SATA_IEN_OFFSET		(2)
--#define SATA_IEN_REG		(HWIF(drive)->sata_misc[SATA_IEN_OFFSET])
+ 	printk("%s: enabling %s -- ", hwif->name, drive->id->model);
+ 	SELECT_DRIVE(drive);
+@@ -515,11 +521,12 @@ static void enable_nest (ide_drive_t *dr
  
- /*
-  * Our Physical Region Descriptor (PRD) table should be large enough
+ 	msleep(50);
+ 
+-	if (!OK_STAT((hwif->INB(IDE_STATUS_REG)), 0, BAD_STAT)) {
+-		printk("failed (status = 0x%02x)\n", hwif->INB(IDE_STATUS_REG));
+-	} else {
+-		printk("success\n");
+-	}
++	stat = hwif->INB(IDE_STATUS_REG);
++
++	if (!OK_STAT(stat, 0, BAD_STAT))
++		printk(KERN_CONT "failed (status = 0x%02x)\n", stat);
++	else
++		printk(KERN_CONT "success\n");
+ 
+ 	/* if !(success||timed-out) */
+ 	if (do_probe(drive, WIN_IDENTIFY) >= 2) {
