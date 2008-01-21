@@ -1,81 +1,62 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ATA, SATA Disk Problems
-Date: Mon, 21 Jan 2008 17:11:00 +0900
-Message-ID: <47945394.7090100@gmail.com>
-References: <478E24EE.2060409@brown.edu>
+From: Johnny Luong <johnny.linux-ide@compfazed.com>
+Subject: Re: unable to use cdrom/dvd drive after some usage
+Date: Mon, 21 Jan 2008 00:38:06 -0800
+Message-ID: <20080121083806.GA28080@www>
+References: <20080115044608.GA13420@www>
+ <20080115113406.10d691e3@lxorguk.ukuu.org.uk> <47945166.4060907@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:23345 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757512AbYAUILH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 03:11:07 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so3553238wah.23
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 00:11:05 -0800 (PST)
-In-Reply-To: <478E24EE.2060409@brown.edu>
+Received: from smtpauth.rollernet.us ([208.11.75.5]:58100 "EHLO
+	smtpauth.rollernet.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758033AbYAUIa2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 03:30:28 -0500
+Received: from smtpauth.rollernet.us (localhost.localdomain [127.0.0.1])
+	by smtpauth.rollernet.us (Postfix) with ESMTP id C09A2594099
+	for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 00:30:27 -0800 (PST)
+Received: from www.compfazed.com (cpe-66-75-83-220.socal.res.rr.com
+ [66.75.83.220]) 	by smtpauth.rollernet.us (Postfix) with ESMTP 	for
+ <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 00:30:27 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <47945166.4060907@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: rgheck <rgheck@brown.edu>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
-
-rgheck wrote:
-> Hi, and sorry if this turns out to be a known issue. Actually, I'll be
-> thrilled if this turns out to be a known issue. But I've searched on it
-> forever, and although I've found some information, I've not found a
-> definite fix. Possibly my fault, but this is driving me nuts.
+On Mon, Jan 21, 2008 at 05:01:42PM +0900, Tejun Heo wrote:
+> Alan Cox wrote:
+> > On Mon, 14 Jan 2008 20:46:08 -0800
+> > Johnny Luong <johnny.linux-ide@compfazed.com> wrote:
+> > 
+> >> Hi,
+> >>
+> >> If possible, I would like to know if its worthwhile simply just to get another
+> >> SATA drive / different controller / cable rather than trying to figure out
+> >> this PATA drive on SATA/PATA controller...  see attached for bug report and
+> >> config file.  I'm not on this email list so if you can CC that would be 
+> >> appreciated.
+> > 
+> > I don't think so. Wine seems to have fed the drive a command that upset
+> > it to the point it needed power cycling. That may also however be a
+> > drive/controller that don't know how to clear data stuck after a wrong
+> > transfer length from an application. In that case 2.6.24-rc6 (or 2.6.24
+> > once out) may actually fix the problem.
+> > 
+> > If it doesn't then we need to look at it further and find out what is
+> > going on to crash the drive.
 > 
-> System: Asus P5N32E MB, Intel Quad Core; on SATA: two HDs, SATA Pioneer
-> DVD-RW; on PATA: Plextor CDRW, one HD. (Can send more info of course.)
-> Kernel is 2.6.23.9 on Fedora 8.
-> [root@rghquad lyxsvn]# lsmod | grep ata
-> pata_amd               20293  2
-> pata_pdc2027x          17477  0
-> sata_nv                25157  6
-> ata_generic            14405  0
-> libata                114673  4 pata_amd,pata_pdc2027x,sata_nv,ata_generic
-> scsi_mod              145657  5 sr_mod,sg,usb_storage,libata,sd_mod
+> Another possibility is that the drive requires DEVICE RESET to clear its
+> FIFO or whatever.  I'm working on DEVICE RESET.  Will post patch soon.
+> Johnny, please hold on to the hardware for testing.
 > 
-> The issue concerns locks ups and other errors that seem to be focused on
-> the optical drives. I'm getting this kind of error:
-> Jan 16 01:33:19 rghquad kernel: ata7.01: exception Emask 0x0 SAct 0x0
-> SErr 0x0 action 0x2 frozen
-> Jan 16 01:33:19 rghquad kernel: ata7.01: cmd
-> a0/00:00:00:00:20/00:00:00:00:00/b0 tag 0 cdb 0x0 data 0
-> Jan 16 01:33:19 rghquad kernel: ata7: soft resetting port
-> Jan 16 01:33:19 rghquad kernel: ata7.01: configured for MWDMA2
-> Jan 16 01:33:19 rghquad kernel: ata7: EH complete
-> repeatedly, sometimes with the Plextor, sometimes with the Pioneer. But
-> then things sometimes get worse:
-> Jan 16 01:36:22 rghquad kernel: sr1: CDROM (ioctl) error, command:
-> <6>ata7: EH complete
-> Jan 16 01:36:22 rghquad kernel: __journal_remove_journal_head: freeing
-> b_committed_data
-> Jan 16 01:36:22 rghquad kernel: __journal_remove_journal_head: freeing
-> b_frozen_data
-> Jan 16 01:36:22 rghquad kernel: __journal_remove_journal_head: freeing
-> b_committed_data
-> and it seems as if the whole ATA system locks up. The main drive gets
-> reset to read-only, and, well, things are not then good.
+> Thanks.
 > 
-> The fact that this sometimes happens on SATA and sometimes on PATA
-> suggests its not a cable issue. (That particular case was the Plextor.)
-> 
-> Is it worth trying a larger PS? I believe I have 450W in this system.
-> 
-> Any help or suggestions more than welcome.
+> -- 
+> tejun
 
-* Please post full kernel log including boot messages and error messages.
+Since it may be a software issue, I've simply kept the drive in place.
+I did upgrade to 2.6.24-rc8 a couple of days ago though and haven't 
+seen that strange HSM error.  
 
-* If you have an extra power supply lying around, connecting some of
-SATA devices to a separate PSU (don't do it for PATA) and seeing whether
-the problem continues and on which devices is a great way to rule out
-power problem.  You can power up a PSU without connecting it to a system
-by...
-
-  http://modtown.co.uk/mt/article2.php?id=psumod
-
--- 
-tejun
+Thanks for the help,
+-Johnny
