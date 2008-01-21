@@ -1,15 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 12/16] ide: remove set_transfer()
-Date: Tue, 22 Jan 2008 00:31:57 +0100
-Message-ID: <20080121233157.30311.41552.sendpatchset@localhost.localdomain>
+Subject: [PATCH 13/16] ide: remove ide_ata66_check()
+Date: Tue, 22 Jan 2008 00:32:05 +0100
+Message-ID: <20080121233205.30311.62567.sendpatchset@localhost.localdomain>
 References: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from ug-out-1314.google.com ([66.249.92.169]:43625 "EHLO
 	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760954AbYAUXSy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:18:54 -0500
+	with ESMTP id S1761035AbYAUXTC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:19:02 -0500
 Received: by ug-out-1314.google.com with SMTP id z38so975308ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:18:53 -0800 (PST)
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:18:59 -0800 (PST)
 In-Reply-To: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,33 +19,30 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ide/ide-iops.c     |   18 ------------------
- drivers/ide/ide-taskfile.c |    6 +++++-
+ drivers/ide/ide-iops.c     |   15 ---------------
+ drivers/ide/ide-taskfile.c |    5 ++++-
  include/linux/ide.h        |    1 -
- 3 files changed, 5 insertions(+), 20 deletions(-)
+ 3 files changed, 4 insertions(+), 17 deletions(-)
 
 Index: b/drivers/ide/ide-iops.c
 ===================================================================
 --- a/drivers/ide/ide-iops.c
 +++ b/drivers/ide/ide-iops.c
-@@ -627,24 +627,6 @@ int ide_ata66_check (ide_drive_t *drive,
+@@ -612,21 +612,6 @@ no_80w:
  	return 0;
  }
  
--/*
-- * Backside of HDIO_DRIVE_CMD call of SETFEATURES_XFER.
-- * 1 : Safe to update drive->id DMA registers.
-- * 0 : OOPs not allowed.
-- */
--int set_transfer (ide_drive_t *drive, ide_task_t *args)
+-int ide_ata66_check (ide_drive_t *drive, ide_task_t *args)
 -{
 -	if (args->tf.command == WIN_SETFEATURES &&
--	    args->tf.nsect >= XFER_SW_DMA_0 &&
--	    args->tf.feature == SETFEATURES_XFER &&
--	    (drive->id->dma_ultra ||
--	     drive->id->dma_mword ||
--	     drive->id->dma_1word))
--		return 1;
+-	    args->tf.nsect > XFER_UDMA_2 &&
+-	    args->tf.feature == SETFEATURES_XFER) {
+-		if (eighty_ninty_three(drive) == 0) {
+-			printk(KERN_WARNING "%s: UDMA speeds >UDMA33 cannot "
+-					    "be set\n", drive->name);
+-			return 1;
+-		}
+-	}
 -
 -	return 0;
 -}
@@ -57,35 +54,28 @@ Index: b/drivers/ide/ide-taskfile.c
 ===================================================================
 --- a/drivers/ide/ide-taskfile.c
 +++ b/drivers/ide/ide-taskfile.c
-@@ -755,6 +755,7 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
- 	u8 args[4], xfer_rate = 0;
- 	ide_task_t tfargs;
- 	struct ide_taskfile *tf = &tfargs.tf;
-+	struct hd_driveid *id = drive->id;
- 
- 	if (NULL == (void *) arg) {
- 		struct request rq;
-@@ -792,7 +793,10 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
- 			return -ENOMEM;
+@@ -798,8 +798,11 @@ int ide_cmd_ioctl (ide_drive_t *drive, u
+ 	    tf->nsect >= XFER_SW_DMA_0 &&
+ 	    (id->dma_ultra || id->dma_mword || id->dma_1word)) {
+ 		xfer_rate = args[1];
+-		if (ide_ata66_check(drive, &tfargs))
++		if (tf->nsect > XFER_UDMA_2 && !eighty_ninty_three(drive)) {
++			printk(KERN_WARNING "%s: UDMA speeds >UDMA33 cannot "
++					    "be set\n", drive->name);
+ 			goto abort;
++		}
  	}
  
--	if (set_transfer(drive, &tfargs)) {
-+	if (tf->command == WIN_SETFEATURES &&
-+	    tf->feature == SETFEATURES_XFER &&
-+	    tf->nsect >= XFER_SW_DMA_0 &&
-+	    (id->dma_ultra || id->dma_mword || id->dma_1word)) {
- 		xfer_rate = args[1];
- 		if (ide_ata66_check(drive, &tfargs))
- 			goto abort;
+ 	err = ide_raw_taskfile(drive, &tfargs, buf, args[3]);
 Index: b/include/linux/ide.h
 ===================================================================
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -993,7 +993,6 @@ extern int ide_driveid_update(ide_drive_
- extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
+@@ -990,7 +990,6 @@ int ide_task_ioctl(ide_drive_t *, unsign
+ extern int system_bus_clock(void);
+ 
+ extern int ide_driveid_update(ide_drive_t *);
+-extern int ide_ata66_check(ide_drive_t *, ide_task_t *);
  extern int ide_config_drive_speed(ide_drive_t *, u8);
  extern u8 eighty_ninty_three (ide_drive_t *);
--extern int set_transfer(ide_drive_t *, ide_task_t *);
  extern int taskfile_lib_get_identify(ide_drive_t *drive, u8 *);
- 
- extern int ide_wait_not_busy(ide_hwif_t *hwif, unsigned long timeout);
