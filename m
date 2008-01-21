@@ -1,31 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Mon, 21 Jan 2008 13:02:56 +0000
-Message-ID: <20080121130256.2443d7c1@lxorguk.ukuu.org.uk>
-References: <200801140019.20668.g.chulkov@jacobs-university.de>
-	<20080115025435.1e21b703.akpm@linux-foundation.org>
-	<20080115113552.75731bf8@lxorguk.ukuu.org.uk>
-	<4794501E.90306@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk,
+ take #2
+Date: Mon, 21 Jan 2008 22:04:54 +0900
+Message-ID: <47949876.6070001@gmail.com>
+References: <1200892437108-git-send-email-htejun@gmail.com> <20080121124821.GH27250@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53864 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751820AbYAUNFF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 08:05:05 -0500
-In-Reply-To: <4794501E.90306@gmail.com>
+Received: from rv-out-0910.google.com ([209.85.198.186]:52841 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542AbYAUNFD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 08:05:03 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1783606rvb.1
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 05:05:00 -0800 (PST)
+In-Reply-To: <20080121124821.GH27250@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-> transmission failure as timeouts.  Of course, if we're ticking the timer
-> while the command is not in flight, that's a bug.  If there are cases
-> where 30 secs isn't enough, can you please point me to those reports?
+Matthew Wilcox wrote:
+> On Mon, Jan 21, 2008 at 02:13:52PM +0900, Tejun Heo wrote:
+>> In a nutshell, printk_header() lets you do the following atomically
+>> (against other messages).
+>>
+>>  code:
+>>   printk(KERN_INFO "ata1.00: ", "line0\nline1\nline2\n");
+>>
+>>  output:
+>>   <6>ata1.00: line0
+>>   <6>         line1
+>>   <6>         line2
+> 
+> I think this is a really bad idea.  It's much better to have:
+> 
+> <6>ata1.00: line0
+> <6>ata1.00: line1
+> <6>ata1.00: line2
+> 
+> That way you can grep for ata1.00 and get all messages relevant to that
+> device.
 
-I have been, in bugzilla - the raid failure example where old IDE
-eventually reports a media error while libata keeps timing out,
-resetting, repeating.
+It has some pros and cons.  Having indentation makes things easier on
+human eyes but more difficult on scripts, but not too difficult -
+indented lines can easily be matched with a bit of scripting.  Changing
+the behavior is easy but I'm still inclined toward indentation because
+printing header every line loses information about message boundaries.
+Maybe there's a way to satisfy both like omitting the separator from the
+second line on.
 
-Alan
+ata1.00: line0
+ata1.00  line1
+ata1.00  line2
+
+Hmm... Any better ideas?
+
+-- 
+tejun
