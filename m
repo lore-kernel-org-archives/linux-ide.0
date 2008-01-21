@@ -1,99 +1,97 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: The SX4 challenge
-Date: Sun, 20 Jan 2008 16:23:10 +0100
-Message-ID: <18323.26462.56221.912431@harpo.it.uu.se>
-References: <478EA794.8080608@garzik.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCHSET] printk: implement printk_header() and merging printk, take #2
+Date: Mon, 21 Jan 2008 14:13:52 +0900
+Message-ID: <1200892437108-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aun.it.uu.se ([130.238.12.36]:39783 "EHLO aun.it.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753720AbYATPX2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 20 Jan 2008 10:23:28 -0500
-In-Reply-To: <478EA794.8080608@garzik.org>
+Received: from wa-out-1112.google.com ([209.85.146.183]:17273 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbYAUFOE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 00:14:04 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3470939wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 20 Jan 2008 21:14:03 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux RAID list <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, matthew@wil.cx, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik writes:
- > 
- > Promise just gave permission to post the docs for their PDC20621 (i.e. 
- > SX4) hardware:
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-1.2.pdf.bz2
- > 
- > joining the existing PDC20621 DIMM and PLL docs:
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-dimm-1.6.pdf.bz2
- > http://gkernel.sourceforge.net/specs/promise/pdc20621-pguide-pll-ata-timing-1.2.pdf.bz2
- > 
- > 
- > So, the SX4 is now open.  Yay :)  I am hoping to talk Mikael into 
- > becoming the sata_sx4 maintainer, and finally integrating my 'new-eh' 
- > conversion in libata-dev.git.
+Hello, all.
 
-The best solution would be if some storage driver person would
-take on the SX4 challenge and work towards integrating the SX4
-into Linux' RAID framework.
+This is the second take of implement-printk_header-and-mprintk
+patchset.
 
-If no-one steps forward I'll take over Jeff's SX4 card and just
-maintain sata_sx4 as a plain non-RAID driver. Unfortunately I
-don't have the time needed to turn it into a decent RAID or
-RAID-offload driver myself.
+  Changes from the last take[L] are...
 
-/Mikael
+  * s/mprintk_push/mprintk_add/ and other changes suggested by Randy
+    Dunlap.
 
- > 
- > But now is a good time to remind people how lame the sata_sx4 driver 
- > software really is -- and I should know, I wrote it.
- > 
- > The SX4 hardware, simplified, is three pieces:  XOR engine (for raid5), 
- > host<->board memcpy engine, and several ATA engines (and some helpful 
- > transaction sequencing features).  Data for each WRITE command is first 
- > copied to the board RAM, then the ATA engines DMA to/from the board RAM. 
- >   Data for each READ command is copied to board RAM via the ATA engines, 
- > then DMA'd across PCI to your host memory.
- > 
- > Therefore, while it is not hardware RAID, the SX4 provides all the 
- > pieces necessary to offload RAID1 and RAID5, and handle other RAID 
- > levels optimally.  RAID1 and 5 copies can be offloaded (provided all 
- > copies go to SX4-attached devices of course).  RAID5 XOR gen and 
- > checking can be offloaded, allowing the OS to see a single request, 
- > while the hardware processes a sequence of low-level requests sent in a 
- > batch.
- > 
- > This hardware presents an interesting challenge:  it does not really fit 
- > into software RAID (i.e. no RAID) /or/ hardware RAID categories.  The 
- > sata_sx4 driver presents the no-RAID configuration, while is terribly 
- > inefficient:
- > 
- > 	WRITE:
- > 		submit host DMA (copy to board)
- > 		host DMA completion via interrupt
- > 		submit ATA command
- > 		ATA command completion via interrupt
- > 	READ:
- > 		submit ATA command
- > 		ATA command completion via interrupt
- > 		submit host DMA (copy from board)
- > 		host DMA completion via interrupt
- > 
- > Thus, the "SX4 challenge" is a challenge to developers to figure out the 
- > most optimal configuration for this hardware, given the existing MD and 
- > DM work going on.
- > 
- > Now, it must be noted that the SX4 is not current-gen technology.  Most 
- > vendors have moved towards an "IOP" model, where the hw vendor puts most 
- > of their hard work into an ARM/MIPS firmware, running on an embedded 
- > chip specially tuned for storage purposes.  (ref "hptiop" and "stex" 
- > drivers, very very small SCSI drivers)
- > 
- > I know Dan Williams @ Intel is working on very similar issues on the IOP 
- > -- async memcpy, XOR offload, etc. -- and I am hoping that, due to that 
- > current work, some of the good ideas can be reused with the SX4.
- > 
- > Anyway...  it's open, it's interesting, even if it's not current-gen 
- > tech anymore.  You can probably find them on Ebay or in an 
- > out-of-the-way computer shop somewhere.
- > 
- > 	Jeff
+  * mp->buf instead of mp->header to ease freeing kmalloc'd buffer
+    later.
+
+  * mprintk multiline log level handling fixed and improved.  mp->prv is
+    removed and mp->flags is used to track whether header log level
+    exists and log level is overridden.  One critical bug was re-using
+    va_list more than once resulting in dereferences of wrong addresses.
+    Fixed by using va_copy().
+
+This patchset aims to make printing multiline messages and assembling
+message piece-by-piece easier.
+
+In a nutshell, printk_header() lets you do the following atomically
+(against other messages).
+
+ code:
+  printk(KERN_INFO "ata1.00: ", "line0\nline1\nline2\n");
+
+ output:
+  <6>ata1.00: line0
+  <6>         line1
+  <6>         line2
+
+And mprintk the following.
+
+ code:
+  DEFINE_MPRINTK(mp, 2 * 80);
+
+  mprintk_set_header(&mp, KERN_INFO "ata%u.%2u: ", 1, 0);
+  mprintk_push(&mp, "ATA %d", 7);
+  mprintk_push(&mp, ", %u sectors\n", 1024);
+  mprintk(&mp, "everything seems dandy\n");
+
+ output:
+  <6>ata1.00: ATA 7, 1024 sectors
+  <6>         everything seems dandy
+
+For more info, please read Documentation/printk.txt which is created
+by the fourth patch.
+
+This patchset is against the current linux-2.6#master (a7da60f4) and
+contains the following patches.
+
+0001-printk-keep-log-level-on-multiline-messages.patch
+0002-printk-implement-v-printk_header.patch
+0003-printk-implement-merging-printk.patch
+0004-printk-add-Documentation-printk.txt.patch
+0005-libata-make-libata-use-printk_header-and-mprintk.patch
+
+ Documentation/00-INDEX      |    2 
+ Documentation/printk.txt    |  711 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-core.c   |  202 +++++++-----
+ drivers/ata/libata-eh.c     |  150 ++++-----
+ drivers/ata/libata-pmp.c    |    5 
+ drivers/ata/libata-scsi.c   |    6 
+ drivers/ata/sata_inic162x.c |    2 
+ drivers/ata/sata_nv.c       |    4 
+ include/linux/kernel.h      |   81 +++++
+ include/linux/libata.h      |   35 +-
+ kernel/printk.c             |  392 ++++++++++++++++++++++--
+ 11 files changed, 1379 insertions(+), 211 deletions(-)
+
+Randy, Jeff, if this take gets acked, how about pushing this through
+libata-dev as it's the first user and I have other libata changes
+depending on mprintk?
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.ide/27199
