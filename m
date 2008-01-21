@@ -1,70 +1,36 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA CDDVDRW and kernel 2.6.23.12 problems
-Date: Mon, 21 Jan 2008 16:36:22 +0900
-Message-ID: <47944B76.5030804@gmail.com>
-References: <6d98c5450801110719t3979a4f4j6a515e2c3b7ffcd8@mail.gmail.com>
+Subject: Re: SATA port multiplier(Sil 3132)  and JMicron 361-363
+Date: Mon, 21 Jan 2008 16:42:01 +0900
+Message-ID: <47944CC9.7020308@gmail.com>
+References: <20080112140232.58b171b4.mikpolniak@roadrunner.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.189]:7215 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757226AbYAUHg3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 02:36:29 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1697205rvb.1
-        for <linux-ide@vger.kernel.org>; Sun, 20 Jan 2008 23:36:28 -0800 (PST)
-In-Reply-To: <6d98c5450801110719t3979a4f4j6a515e2c3b7ffcd8@mail.gmail.com>
+Received: from wa-out-1112.google.com ([209.85.146.178]:10566 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757357AbYAUHmI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 02:42:08 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so3539219wah.23
+        for <linux-ide@vger.kernel.org>; Sun, 20 Jan 2008 23:42:06 -0800 (PST)
+In-Reply-To: <20080112140232.58b171b4.mikpolniak@roadrunner.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paul Surgeon <surgpm@gmail.com>
+To: mikp <mikpolniak@roadrunner.com>
 Cc: linux-ide@vger.kernel.org
 
-Paul Surgeon wrote:
-> I keep getting the following error messages during bootup with kernel
-> 2.6.23.12 :
+mikp wrote:
+> My SII 3132 port multiplier works with the JMB363 controller on my motherboard using kernel-2.6.24-rc3 but not with the JMB361 esata controller which i have on a second motherboard.
 > 
-> scsi 4:0:0:0: CD-ROM            TSSTcorp CDDVDW TS-L633A  UO00 PQ: 0 ANSI: 5
-> ata3.00: qc timeout (cmd 0xa0)
-> ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-> ata3.00: (irq_stat 0x40000001)
-> ata3.00: cmd a0/00:00:00:00:20/00:00:00:00:00/a0 tag 0 cdb 0x0 data 0
->          res 51/60:03:00:00:00/00:00:00:00:00/a0 Emask 0x5 (timeout)
-> ata3: soft resetting port
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata3.00: configured for PIO4
-> ata3: EH complete
+> I get messages:
+>    ata5.15: failed to read PMP GSCR[1] (Emask=0x4)
+>    ahci 0000:00:12.0: controller can't do PMP, turning off CAP_PMP
 > 
-> The error repeats many times and it takes about 10 minutes for the box to boot.
-> If I unplug the DVD drive the problem naturally disappears.
-> The machine is an Intel SR1530SH.
+> The motherboard maker (ECS) and JMicron data claim that JMB361 has a port multiplier.
 > 
-> Below is the output from lspci :
-> 00:00.0 Host bridge: Intel Corporation Server DRAM Controller
-> 00:01.0 PCI bridge: Intel Corporation Server Host-Primary PCI Express Bridge
-> 00:19.0 Ethernet controller: Intel Corporation 82566DM-2 Gigabit
-> Network Connection (rev 02)
-> 00:1c.0 PCI bridge: Intel Corporation PCI Express Port 1 (rev 02)
-> 00:1c.4 PCI bridge: Intel Corporation PCI Express Port 5 (rev 02)
-> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
-> 00:1f.0 ISA bridge: Intel Corporation LPC Interface Controller (rev 02)
-> 00:1f.2 SATA controller: Intel Corporation 6 port SATA AHCI Controller (rev 02)
-> 00:1f.3 SMBus: Intel Corporation SMBus Controller (rev 02)
-> 01:00.0 Ethernet controller: Intel Corporation 82571EB Gigabit
-> Ethernet Controller (rev 06)
-> 01:00.1 Ethernet controller: Intel Corporation 82571EB Gigabit
-> Ethernet Controller (rev 06)
-> 03:00.0 VGA compatible controller: Matrox Graphics, Inc. MGA G200e
-> [Pilot] ServerEngines (SEP1) (rev 02)
-> 04:02.0 Ethernet controller: Intel Corporation 82541GI Gigabit
-> Ethernet Controller (rev 05)
-> 
-> I've tried switching acpi off, using irqpoll, switching from AHCI to
-> RAID in the BIOS but it makes no difference at all.
-> I also tried kernel 2.6.21.5 (Slackware 12.0) and the problem is still there.
-> Any ideas?
+> Is there any chance this controller can be made to work in linux? I am willing to test patches.
 
-Hmm... Can you please give a shot at 2.6.24-rc8 and if that fails post
-full kernel log?
+361 should be able to do PMP.  Care to post full boot log?
 
 -- 
 tejun
