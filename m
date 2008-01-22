@@ -1,85 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Hugh Dickins <hugh@veritas.com>
 Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 11:29:45 -0600
-Message-ID: <1201022985.3210.24.camel@localhost.localdomain>
+Date: Tue, 22 Jan 2008 18:36:18 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0801221813540.8693@blonde.site>
 References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
+ <1201022985.3210.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:58245 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681AbYAVStv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 13:49:51 -0500
+In-Reply-To: <1201022985.3210.24.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-Added linux-scsi to the cc.
-
-On Tue, 2008-01-22 at 17:11 +0000, Hugh Dickins wrote:
-> 2.6.24-rc8-mm1 is corrupting.  smartd does some sg_ioctl into its stack,
-> and depending on how its stack randomization worked out, this is liable
-> to end up writing into the adjacent physical page too.  If you're lucky
-> you have highmem, and ioread16_rep oopses on the virtual address beyond
-> what ata_pio_sector's kmap_atomic set up; when you're unlucky, it'll go
-> ahead and corrupt the next page more obscurely.
+On Tue, 22 Jan 2008, James Bottomley wrote:
+> > --- 2.6.24-rc8-mm1/drivers/ata/libata-scsi.c	2008-01-17 16:49:47.000000000 +0000
+> > +++ linux/drivers/ata/libata-scsi.c	2008-01-22 15:45:40.000000000 +0000
+> > @@ -826,7 +826,7 @@ static void ata_scsi_sdev_config(struct 
+> >  	sdev->max_device_blocked = 1;
+> >  
+> >  	/* set the min alignment */
+> > -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
+> > +	blk_queue_update_dma_alignment(sdev->request_queue, ATA_SECT_SIZE - 1);
+> >  }
+> >  
+> >  static void ata_scsi_dev_config(struct scsi_device *sdev,
 > 
-> Bisect led to scsi-misc-2.6.git's 465ff3185e0cb76d46137335a4d21d0d9d3ac8a2
-> [SCSI] relax scsi dma alignment, and the patch below is good for a hot-fix.
-> Though I doubt it'll be the final fix, since it appears to undo the whole
-> point of blk_queue_update_dma_alignment: perhaps libata is at fault to be
-> going through sectory code for unsectory I/O - I wouldn't know.
-> 
-> Signed-off-by: Hugh Dickins <hugh@veritas.com>
-> ---
-> 
->  drivers/ata/libata-scsi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- 2.6.24-rc8-mm1/drivers/ata/libata-scsi.c	2008-01-17 16:49:47.000000000 +0000
-> +++ linux/drivers/ata/libata-scsi.c	2008-01-22 15:45:40.000000000 +0000
-> @@ -826,7 +826,7 @@ static void ata_scsi_sdev_config(struct 
->  	sdev->max_device_blocked = 1;
->  
->  	/* set the min alignment */
-> -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
-> +	blk_queue_update_dma_alignment(sdev->request_queue, ATA_SECT_SIZE - 1);
->  }
->  
->  static void ata_scsi_dev_config(struct scsi_device *sdev,
+> Unfortunately, that's likely not the entire hot fix ... the implication
+> is that we have some mapping error in the way we do direct SG_IO.
 
-Unfortunately, that's likely not the entire hot fix ... the implication
-is that we have some mapping error in the way we do direct SG_IO.
+Quite possibly, I'm not sure.
 
-What the fix you propose does is make it far more likely that block will
-copy, perform I/O then uncopy (almost certain, since most smartd data
-transfers are well under ATA_SECT_SIZE, which is 512).  However,
-implicating a generic path like this implies that we would get the same
-problem for SCSI commands as well, so the correct hot fix is below.
+> What the fix you propose does is make it far more likely that block will
+> copy, perform I/O then uncopy (almost certain, since most smartd data
+> transfers are well under ATA_SECT_SIZE, which is 512).  However,
+> implicating a generic path like this implies that we would get the same
+> problem for SCSI commands as well, so the correct hot fix is below.
 
-However, I'd like to see if we can track the problem through the SG_IO
-direct path ... how many adjacent page bytes are corrupt?  Just a few or
-a large number (I'm wondering if it's an off by one or off by alignment
-type bug)?
+I've not noticed any problems from the normal activity of the system,
+only from smartd's sg_ioctl.  My impression was that it's a libata
+issue, because it's going through ata_pio_sector, which does 
 
-James
+	ap->ops->data_xfer(qc->dev, buf + offset, qc->sect_size, do_write);
 
----
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4cf902e..13376e9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1673,8 +1673,11 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
- 	 * set a reasonable default alignment on word boundaries: the
- 	 * host and device may alter it using
- 	 * blk_queue_update_dma_alignment() later.
-+	 *
-+	 * FIXME: Corruption showing up in SG_IO leads this to be
-+	 * raised to 511 again.
- 	 */
--	blk_queue_dma_alignment(q, 0x03);
-+	blk_queue_dma_alignment(q, 511);
- 
- 	return q;
- }
+referring to sect_size, without considering the possibility of any smaller
+I/O size.  (Me, I don't even know why it's going PIO rather than DMA:
+I'm assuming smartd does things that way, but there's no limit to my
+ignorance here.)
 
+> However, I'd like to see if we can track the problem through the SG_IO
+> direct path ... how many adjacent page bytes are corrupt?  Just a few or
+> a large number (I'm wondering if it's an off by one or off by alignment
+> type bug)?
 
+I've assumed it's just the one next page: because ata_pio_sector is
+doing a data_xfer of sect_size ATA_SECT_SIZE 512 to an offset above
+0xe00 in the smartd stack page.  The time I actually saw corruption
+rather than an oops at startup, it was in a tmpfs swap vector page
+running 64-bit kernel, and I didn't examine any further pages (just
+checked the page before and matched it up to smartd's stack, already
+suspecting that).
+
+I don't believe it's an off-by-one at your SCSI end.
+
+Hugh
