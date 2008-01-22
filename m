@@ -1,34 +1,43 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 22:41:11 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0801222238140.30816@blonde.site>
-References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
- <1201022985.3210.24.camel@localhost.localdomain> <20080122221214.1c825949@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] ide-cs: use ide_std_init_ports()
+Date: Wed, 23 Jan 2008 00:03:06 +0100
+Message-ID: <200801230003.07211.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from extu-mxob-1.symantec.com ([216.10.194.28]:49581 "EHLO
-	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbYAVWme (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 17:42:34 -0500
-In-Reply-To: <20080122221214.1c825949@lxorguk.ukuu.org.uk>
+Received: from ug-out-1314.google.com ([66.249.92.172]:6365 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754294AbYAVW74 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 17:59:56 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so13788ugc.16
+        for <linux-ide@vger.kernel.org>; Tue, 22 Jan 2008 14:59:54 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Tue, 22 Jan 2008, Alan Cox wrote:
-> > However, I'd like to see if we can track the problem through the SG_IO
-> > direct path ... how many adjacent page bytes are corrupt?  Just a few or
-> > a large number (I'm wondering if it's an off by one or off by alignment
-> > type bug)?
 
-We moved away from that concern ....
+No reason to use ide_init_hwif_ports() in ide-cs (as a nice side-effect
+this makes ide-cs work on archs that don't define IDE_ARCH_OBSOLETE_INIT).
 
-> Which ATA controller is involved - in theory ATA DMA is byte aligned safe
-> (or dword anyway) in practice I don't know if we've ever tested the non
-> 512 byte aligned case historically for ATA just ATAPI ?
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/legacy/ide-cs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-.... but if it's still relevant, this was with ata_piix.
-
-Hugh
+Index: b/drivers/ide/legacy/ide-cs.c
+===================================================================
+--- a/drivers/ide/legacy/ide-cs.c
++++ b/drivers/ide/legacy/ide-cs.c
+@@ -151,7 +151,7 @@ static int idecs_register(unsigned long 
+     u8 idx[4] = { 0xff, 0xff, 0xff, 0xff };
+ 
+     memset(&hw, 0, sizeof(hw));
+-    ide_init_hwif_ports(&hw, io, ctl, NULL);
++    ide_std_init_ports(&hw, io, ctl);
+     hw.irq = irq;
+     hw.chipset = ide_pci;
+     hw.dev = &handle->dev;
