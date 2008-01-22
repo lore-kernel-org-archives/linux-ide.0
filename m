@@ -1,49 +1,56 @@
-From: Jake <kfc@10k.org>
-Subject: Re: dvdrw->cdrom
-Date: Mon, 21 Jan 2008 22:42:44 -0500 (EST)
-Message-ID: <Pine.BSO.4.64.0801212237230.13449@transpose.10k.org>
-References: <6d98c5450801110719t3979a4f4j6a515e2c3b7ffcd8@mail.gmail.com>
- <47944B76.5030804@gmail.com> <Pine.BSO.4.64.0801210243230.22203@transpose.10k.org>
- <47945CB5.4040708@gmail.com> <Pine.BSO.4.64.0801210454430.19381@transpose.10k.org>
- <47947036.2050402@gmail.com> <4794A863.8010801@shaw.ca>
+From: Borislav Petkov <bbpetkov@yahoo.de>
+Subject: Re: [PATCH 0/12] ide-floppy redux v2.5
+Date: Tue, 22 Jan 2008 06:32:31 +0100
+Message-ID: <20080122053231.GA20570@gollum.tnic>
+References: <1200255505-31418-1-git-send-email-bbpetkov@yahoo.de> <200801142238.17282.bzolnier@gmail.com> <20080120123815.GA20082@gollum.tnic> <200801212345.35762.bzolnier@gmail.com>
+Reply-To: bbpetkov@yahoo.de
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bruno.cs.columbia.edu ([128.59.18.129]:5292 "EHLO
-	bruno.cs.columbia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbYAVDnU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 22:43:20 -0500
-In-Reply-To: <4794A863.8010801@shaw.ca>
+Received: from smtp113.plus.mail.re1.yahoo.com ([69.147.102.76]:30210 "HELO
+	smtp113.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751146AbYAVFcq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 00:32:46 -0500
+Content-Disposition: inline
+In-Reply-To: <200801212345.35762.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockr@shaw.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
->> Jake wrote:
->>>>> http://marc.info/?l=linux-ide&m=120069298104580&w=4
->>>>> 
->>>>> It has been 2 weeks here hunting for some solutions, can you 
->>>>> recommend anything that I should try? Thank you.
->>>> Can you please post full boot log from the working kernel && broken 
->>>> kernel?  It seems you were using ide-scsi driver previously, right? 
->>>> Also, w/ libata driver, does the reading part work okay?  Can you 
->>>> read cd's?
->>> 
->>> I will reboot as soon as my batch job completes to test the cds.
->> 
->> Does sata_nv.adma=0 fix your problem?
->
-> This is almost certainly the already-known DMA mask issue with ADMA enabled 
-> and memory over 4GB present.
+On Mon, Jan 21, 2008 at 11:45:35PM +0100, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> Hi Borislav,
+>=20
+> On Sunday 20 January 2008, Borislav Petkov wrote:
+> > On Mon, Jan 14, 2008 at 10:38:17PM +0100, Bartlomiej Zolnierkiewicz=
+ wrote:
+> > > > By the way, I have an Iomega ZIP 100 drive somewhere in my hard=
+ware pile and
+> > > > will do some testing with the "new" :) driver just in case.
+> > >=20
+> > > This would be great. :)
+> > Hi Bart,
+> >=20
+> > i just whipped rc8 along with your pata-2.6 tree on top and had sev=
+eral test
+> > runs of the ide-floppy driver (raw reads, software floppy disk ejec=
+t, etc) and
+> > everything seems to work fine. I will keep this hardware setup here=
+ so that we
+> > could at least test ide-floppy occasionally. We should probably ack=
+nowledge this
+>=20
+> Big thanks for all great ide-floppy work!  I hope that you'll continu=
+e with
+> putting IDE device drivers in shape. :)
 
-Tejun,
+Sure, no problem :). I'm on ide-tape right now and probably will have m=
+ost of it
+ready for submission on the weekend so keep your fingers crossed... :)
 
-the boot flag made the difference!
-Ahh, so it is > and = 4GB (I have exactly 4GB).
-
-I will pass on the wisdom in hope to save someone
-else a few hours down the road.
-
-Thank you!
-
-Jake
+--=20
+Regards/Gru=DF,
+    Boris.
