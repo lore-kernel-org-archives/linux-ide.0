@@ -1,42 +1,55 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 17:58:54 -0600
-Message-ID: <1201046335.14436.92.camel@cinder.waste.org>
-References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
-	 <1201022985.3210.24.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801221813540.8693@blonde.site>
-	 <1201031028.3210.61.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801222009070.16267@blonde.site>
-	 <1201039931.3210.96.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801222241460.30816@blonde.site>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] ppc: fix #ifdef-s in mediabay driver
+Date: Wed, 23 Jan 2008 10:59:54 +1100
+Message-ID: <1201046394.6807.49.camel@pasglop>
+References: <200801230012.38516.bzolnier@gmail.com>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:45451 "EHLO waste.org"
+Received: from gate.crashing.org ([63.228.1.57]:57797 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751949AbYAVX7Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Jan 2008 18:59:25 -0500
-In-Reply-To: <Pine.LNX.4.64.0801222241460.30816@blonde.site>
+	id S1751578AbYAWAAR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jan 2008 19:00:17 -0500
+In-Reply-To: <200801230012.38516.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
 
-On Tue, 2008-01-22 at 22:59 +0000, Hugh Dickins wrote:
-> On Tue, 22 Jan 2008, James Bottomley wrote:
-> > 
-> > libsas looks to be OK because it specifically kmallocs a 512 byte buffer
-> > which should (for off slab data) be 512 byte aligned.
+On Wed, 2008-01-23 at 00:12 +0100, Bartlomiej Zolnierkiewicz wrote:
+> * Replace incorrect CONFIG_BLK_DEV_IDE #ifdef in
+>   check_media_bay() by CONFIG_MAC_FLOPPY one.
 > 
-> I don't remember the various SLAB and SLOB and SLUB rules offhand:
-> I'm not sure it's safe to rely on such alignment on all of them ....
+> * Replace incorrect CONFIG_BLK_DEV_IDE #ifdef-s by
+>   CONFIG_BLK_DEV_IDE_PMAC ones.
+> 
+> * check_media_bay() is used only by drivers/block/swim3.c
+>   so make this function available only if CONFIG_MAC_FLOPPY
+>   is defined.
+> 
+> * check_media_bay_by_base() and media_bay_set_ide_infos()
+>   are used only by drivers/ide/ppc/pmac.c so so make these
+>   functions available only if CONFIG_MAC_FLOPPY is defined.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> Ben, IMO this patch is safe for 2.6.24 (assuming that it builds fine :),
+> otherwise I would like to ask for permission to merge it through IDE
+> tree since I have other pending IDE patches depending on this one.
 
-It doesn't work that way with SLOB kmalloc (nor did it in pre-slabified
-kmalloc). One shouldn't be surprised if a SLAB/SLUB debugging feature
-breaks that alignment either.
+I'd rather avoid touching 2.6.24 unless it actually fixes a bug or
+regression...
 
--- 
-Mathematics is the supreme nostalgia of our time.
+I'm tempted to actually remove all ifdef's ... if you have a media-bay,
+then there are about 99% chances it contains an IDE device, with the
+remaining percent being split with putting a floppy or a battery in. I
+doubt anybody will care building a kernel without the support for these
+and with the mediabay support, and still want to save a handful of bytes
+in that driver.
+
+Ben.
+
 
