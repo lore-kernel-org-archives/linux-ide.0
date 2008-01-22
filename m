@@ -1,34 +1,42 @@
-From: Jan Engelhardt <jengelh@computergmbh.de>
-Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk,
- take #2
-Date: Wed, 23 Jan 2008 00:57:09 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0801230056510.9183@fbirervta.pbzchgretzou.qr>
-References: <1200892437108-git-send-email-htejun@gmail.com>
- <20080121124821.GH27250@parisc-linux.org> <Pine.LNX.4.64.0801230036250.9183@fbirervta.pbzchgretzou.qr>
- <47968183.3050704@gmail.com>
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
+Date: Tue, 22 Jan 2008 17:58:54 -0600
+Message-ID: <1201046335.14436.92.camel@cinder.waste.org>
+References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
+	 <1201022985.3210.24.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0801221813540.8693@blonde.site>
+	 <1201031028.3210.61.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0801222009070.16267@blonde.site>
+	 <1201039931.3210.96.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0801222241460.30816@blonde.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sovereign.computergmbh.de ([85.214.69.204]:46631 "EHLO
-	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbYAVX5K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 18:57:10 -0500
-In-Reply-To: <47968183.3050704@gmail.com>
+Received: from waste.org ([66.93.16.53]:45451 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751949AbYAVX7Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jan 2008 18:59:25 -0500
+In-Reply-To: <Pine.LNX.4.64.0801222241460.30816@blonde.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, randy.dunlap@oracle.com, daniel.ritz-ml@swissonline.ch, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-On Jan 23 2008 08:51, Tejun Heo wrote:
->
->What do you think about the second suggestion then?
->
->ata1.00: line0
->ata1.00  line1
->ata1.00  line2
->
->It allows you to grab for the header && has indication for message
->boundaries.
+On Tue, 2008-01-22 at 22:59 +0000, Hugh Dickins wrote:
+> On Tue, 22 Jan 2008, James Bottomley wrote:
+> > 
+> > libsas looks to be OK because it specifically kmallocs a 512 byte buffer
+> > which should (for off slab data) be 512 byte aligned.
+> 
+> I don't remember the various SLAB and SLOB and SLUB rules offhand:
+> I'm not sure it's safe to rely on such alignment on all of them ....
 
-Then again, why not "[ata1.00] line0", then it matches what sd_mod does :)
+It doesn't work that way with SLOB kmalloc (nor did it in pre-slabified
+kmalloc). One shouldn't be surprised if a SLAB/SLUB debugging feature
+breaks that alignment either.
+
+-- 
+Mathematics is the supreme nostalgia of our time.
+
