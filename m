@@ -1,124 +1,64 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 16/16] ide: move check_dma_crc() to ide-dma.c
-Date: Tue, 22 Jan 2008 00:32:26 +0100
-Message-ID: <20080121233226.30311.40535.sendpatchset@localhost.localdomain>
-References: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ATA device reset, shoud I be concerned?
+Date: Tue, 22 Jan 2008 09:31:31 +0900
+Message-ID: <47953963.3040101@gmail.com>
+References: <200801140019.20668.g.chulkov@jacobs-university.de>	<20080115025435.1e21b703.akpm@linux-foundation.org>	<20080115113552.75731bf8@lxorguk.ukuu.org.uk>	<4794501E.90306@gmail.com>	<20080121130256.2443d7c1@lxorguk.ukuu.org.uk>	<47949AA4.9090601@gmail.com>	<20080121141425.45aa9c61@lxorguk.ukuu.org.uk>	<4794ACAF.70505@gmail.com>	<20080121164744.2f7d0ed1@lxorguk.ukuu.org.uk>	<4794D020.4060204@gmail.com> <20080121172715.0e3e5e4d@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:43625 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760809AbYAUXTW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 18:19:22 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so975308ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 15:19:20 -0800 (PST)
-In-Reply-To: <20080121233036.30311.76015.sendpatchset@localhost.localdomain>
+Received: from wa-out-1112.google.com ([209.85.146.177]:24928 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017AbYAVAbj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 19:31:39 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so4037008wah.23
+        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 16:31:38 -0800 (PST)
+In-Reply-To: <20080121172715.0e3e5e4d@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
 
+Hello,
 
-* Move check_dma_crc() to ide-dma.c and add inline version for
-  CONFIG_BLK_DEV_IDEDMA=n case.
+Alan Cox wrote:
+>> I still don't think it's worth the trouble.  There's currently only one
+>> reported device which forgets to raise IRQ on media error.  The behavior
+> 
+> Most people wouldn't realise what is going on.
 
-* Rename check_dma_crc() to ide_check_dma_crc().
+Yeap, true but I don't think we have many timeouts due to media errors.
+ I've seen lots of SMART logs for drives which caused timeouts but
+haven't seen any which logged related media errors.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-dma.c  |   20 ++++++++++++++++++++
- drivers/ide/ide-iops.c |   24 +-----------------------
- include/linux/ide.h    |    2 ++
- 3 files changed, 23 insertions(+), 23 deletions(-)
+>>> Old IDE says it works for PATA. For SATA I can see it might need more
+>>> care and you might simply not be able to get the info.
+>> Old IDE often locks up the machine hard after timeouts.  I'm all for
+> 
+> The code paths are racy - it didn't use to in 2.4 (except for the promise
+> drain bug)
 
-Index: b/drivers/ide/ide-dma.c
-===================================================================
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -821,6 +821,26 @@ int ide_set_dma(ide_drive_t *drive)
- 	return 0;
- }
- 
-+void ide_check_dma_crc(ide_drive_t *drive)
-+{
-+	u8 mode;
-+
-+	ide_dma_off_quietly(drive);
-+	drive->crc_count = 0;
-+	mode = drive->current_speed;
-+	/*
-+	 * Don't try non Ultra-DMA modes without iCRC's.  Force the
-+	 * device to PIO and make the user enable SWDMA/MWDMA modes.
-+	 */
-+	if (mode > XFER_UDMA_0 && mode <= XFER_UDMA_7)
-+		mode--;
-+	else
-+		mode = XFER_PIO_4;
-+	ide_set_xfer_rate(drive, mode);
-+	if (drive->current_speed >= XFER_SW_DMA_0)
-+		ide_dma_on(drive);
-+}
-+
- #ifdef CONFIG_BLK_DEV_IDEDMA_PCI
- void ide_dma_lost_irq (ide_drive_t *drive)
- {
-Index: b/drivers/ide/ide-iops.c
-===================================================================
---- a/drivers/ide/ide-iops.c
-+++ b/drivers/ide/ide-iops.c
-@@ -938,28 +938,6 @@ static ide_startstop_t reset_pollfunc (i
- 	return ide_stopped;
- }
- 
--static void check_dma_crc(ide_drive_t *drive)
--{
--#ifdef CONFIG_BLK_DEV_IDEDMA
--	u8 mode;
--
--	ide_dma_off_quietly(drive);
--	drive->crc_count = 0;
--	mode = drive->current_speed;
--	/*
--	 * Don't try non Ultra-DMA modes without iCRC's.  Force the
--	 * device to PIO and make the user enable SWDMA/MWDMA modes.
--	 */
--	if (mode > XFER_UDMA_0 && mode <= XFER_UDMA_7)
--		mode--;
--	else
--		mode = XFER_PIO_4;
--	ide_set_xfer_rate(drive, mode);
--	if (drive->current_speed >= XFER_SW_DMA_0)
--		ide_dma_on(drive);
--#endif
--}
--
- static void ide_disk_pre_reset(ide_drive_t *drive)
- {
- 	int legacy = (drive->id->cfs_enable_2 & 0x0400) ? 0 : 1;
-@@ -983,7 +961,7 @@ static void pre_reset(ide_drive_t *drive
- 
- 	if (drive->using_dma) {
- 		if (drive->crc_count)
--			check_dma_crc(drive);
-+			ide_check_dma_crc(drive);
- 		else
- 			ide_dma_off(drive);
- 	}
-Index: b/include/linux/ide.h
-===================================================================
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1158,6 +1158,7 @@ void ide_dma_off_quietly(ide_drive_t *);
- void ide_dma_off(ide_drive_t *);
- void ide_dma_on(ide_drive_t *);
- int ide_set_dma(ide_drive_t *);
-+void ide_check_dma_crc(ide_drive_t *);
- ide_startstop_t ide_dma_intr(ide_drive_t *);
- 
- int ide_build_sglist(ide_drive_t *, struct request *);
-@@ -1185,6 +1186,7 @@ static inline void ide_dma_off(ide_drive
- static inline void ide_dma_on(ide_drive_t *drive) { ; }
- static inline void ide_dma_verbose(ide_drive_t *drive) { ; }
- static inline int ide_set_dma(ide_drive_t *drive) { return 1; }
-+static inline void ide_check_dma_crc(ide_drive_t *drive) { ; }
- #endif /* CONFIG_BLK_DEV_IDEDMA */
- 
- #ifndef CONFIG_BLK_DEV_IDEDMA_PCI
+My jmicron locks up hard under certain conditions.  I haven't
+investigated it too deep but it looks like a hard lockup (controller
+dying while holding PCI bus).  NMI watchdog doesn't work afterwards.
+
+>> gathering more info but benefit vs. risk equation just doesn't look good
+>> here.  Why take risk for a rare device which forgets to raise IRQ on
+>> media error?  If such behavior is wide spread among PATA drives && we
+>> can verify that TF register access after timeout is safe for PATA
+>> controllers, sure, but currently we aren't sure about either.
+> 
+> We lose IRQs in lots of other cases. Promise PATA is particularly bad at
+> forgetting to give us the completion interrupt.
+
+In that case, completing commands after 30secs doesn't really help as
+long as normal operation can be recovered afterward.  The driver should
+take measures against lost interrupts like polling for interrupts after
+a while.  Those are two different problems and require different almost
+opposite solutions.  Some controllers need registers polled once in a
+while while others die when registers are read unexpectedly.
+
+Thanks.
+
+-- 
+tejun
