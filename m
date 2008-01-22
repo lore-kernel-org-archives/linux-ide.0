@@ -1,44 +1,76 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Tue, 22 Jan 2008 02:31:22 +0100
-Message-ID: <200801220231.22609.bzolnier@gmail.com>
-References: <200801140019.20668.g.chulkov@jacobs-university.de> <20080121164744.2f7d0ed1@lxorguk.ukuu.org.uk> <4794D020.4060204@gmail.com>
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: [PATCHSET] printk: implement printk_header() and merging printk
+Date: Mon, 21 Jan 2008 19:28:11 -0600
+Message-ID: <1200965291.3860.38.camel@cinder.waste.org>
+References: <1200445210549-git-send-email-htejun@gmail.com>
+	 <1200681668.25782.9.camel@cinder.waste.org>  <47912F02.6070801@gmail.com>
+	 <1200951757.3860.24.camel@cinder.waste.org>  <47954047.90609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:9709 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520AbYAVBSa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 20:18:30 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so987996ugc.16
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 17:18:29 -0800 (PST)
-In-Reply-To: <4794D020.4060204@gmail.com>
-Content-Disposition: inline
+Received: from waste.org ([66.93.16.53]:48728 "EHLO waste.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753306AbYAVBak (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Jan 2008 20:30:40 -0500
+In-Reply-To: <47954047.90609@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Georgi Chulkov <g.chulkov@jacobs-university.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Mark Lord <liml@rtr.ca>
+Cc: linux-kernel@vger.kernel.org, daniel.ritz-ml@swissonline.ch, randy.dunlap@oracle.com, jeff@garzik.org, linux-ide@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Monday 21 January 2008, Tejun Heo wrote:
 
-[...]
-
-> > Old IDE says it works for PATA. For SATA I can see it might need more
-> > care and you might simply not be able to get the info.
+On Tue, 2008-01-22 at 10:00 +0900, Tejun Heo wrote:
+> Matt Mackall wrote:
+> > I suppose. I still find this approach less than ideal, especially
+> > putting something potentially large on the stack. The dangers are
+> > perhaps worse than a malloc, really. 
 > 
-> Old IDE often locks up the machine hard after timeouts.  I'm all for
+> I pondered on this a bit but the thing is we already use several
+> hundreds bytes in a function which builds complex messages.
 
-Could you point me to some bugreports?
+Well there are lots of current and potential future users of this
+function, many of them down at the end of long call chains. So I'm more
+worried about the new cases that embrace this approach and suddenly add
+300 bytes of stack. In fact, if this is at all popular, we can expect to
+have more than one of these frames on the stack in various paths. 
 
-I would like to know more about hosts/conditions for which it happens.
+Given that it only exists to make output prettier, it doesn't -really-
+justify increased stack usage.
 
-> gathering more info but benefit vs. risk equation just doesn't look good
-> here.  Why take risk for a rare device which forgets to raise IRQ on
-> media error?  If such behavior is wide spread among PATA drives && we
-> can verify that TF register access after timeout is safe for PATA
-> controllers, sure, but currently we aren't sure about either.
+> > I also don't like your interface much. Consider this alternative:
+> > 
+> > struct mprintk *mp = mprintk_begin(KERN_INFO "ata%u.%2u: ", 1, 0);
+> > mprintk(mp, "ATA %d", 7);
+> > mprintk(mp, ", %u sectors\n", 1024);
+> > mprintk(mp, "everything seems dandy\n");
+> > mprintk_end(mp);
+> > 
+> > That keeps all the "normal" printks short and makes the flush more
+> > explict.
+> 
+> I like that the more used function is shorter.  Hmmm... The reason why I
+> first used mprintk_push() is to make it clear that the function
+> accumulates messages unlike mprintk() which flushes what's accumulated
+> and prints its own message.
+> 
+> > Now we make mprintk_begin attempt to do a kmalloc of a moderate size
+> > (512 bytes?) and failing that, return null. Then mprintk can fall
+> > through to printk in the NULL case.
+> 
+> If you wanna do that implicitly, you need GFP_ flag in mprintk_begin()
+> and atomic allocation should be used from interrupt handlers and friends
+> and they fail easily under the right (or wrong) conditions.  Forcing
+> kmalloc isn't a good idea.  Having multiple initializers is one way to
+> do it.  Any suggestions?
 
-Thanks,
-Bart
+Adding a gfp_flags arg isn't too painful. And we've generally avoided
+having separate function calls for atomic vs non-atomic allocation.
+
+Btw, we can also easily hide Willy or Rusty's stringbuf implementation
+under the covers here and still have a scheme that automatically falls
+back to direct printk..
+
+-- 
+Mathematics is the supreme nostalgia of our time.
+
