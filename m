@@ -1,69 +1,80 @@
-From: Georgi Chulkov <g.chulkov@jacobs-university.de>
-Subject: Re: ATA device reset, shoud I be concerned?
-Date: Tue, 22 Jan 2008 21:29:57 +0100
-Message-ID: <200801222129.57359.g.chulkov@jacobs-university.de>
-References: <200801140019.20668.g.chulkov@jacobs-university.de> <20080115025435.1e21b703.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
+Date: Tue, 22 Jan 2008 15:32:18 -0500
+Message-ID: <479652D2.10800@garzik.org>
+References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>	 <1201022985.3210.24.camel@localhost.localdomain>	 <Pine.LNX.4.64.0801221813540.8693@blonde.site> <1201031028.3210.61.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermes.jacobs-university.de ([212.201.44.23]:40521 "EHLO
-	hermes.jacobs-university.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751574AbYAVUaI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 15:30:08 -0500
-In-Reply-To: <20080115025435.1e21b703.akpm@linux-foundation.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:45593 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750767AbYAVUc1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jan 2008 15:32:27 -0500
+In-Reply-To: <1201031028.3210.61.camel@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-It appears that the problem was caused by a faulty power supply. Thanks 
-anyway!
+James Bottomley wrote:
+> Actually, I don't think it's a smaller I/O issue.  The SMART protocol
+> specifically mandates that the transfers for SMART READ DATA and SMART
+> READ LOG shall be 512 bytes).  However, the pio transfer routine does
+> seem to be assuming sector alignment as well, which will be where your
+> problems are coming from.  I think we need to specify sector minimum
+> alignment for ata (but not atapi, which has its own non sector size pio
+> routine).  How about the attached?
+> 
+> We have to do this for all ATA devices, because they'll likely all
+> support SMART, and SMART is defined to be a PIO command.
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 4bb268b..bc5cf6b 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -824,9 +824,6 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+>  	 * requests.
+>  	 */
+>  	sdev->max_device_blocked = 1;
+> -
+> -	/* set the min alignment */
+> -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
+>  }
+>  
+>  static void ata_scsi_dev_config(struct scsi_device *sdev,
+> @@ -842,7 +839,14 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+>  	if (dev->class == ATA_DEV_ATAPI) {
+>  		struct request_queue *q = sdev->request_queue;
+>  		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
+> -	}
+> +
+> +		/* set the min alignment */
+> +		blk_queue_update_dma_alignment(sdev->request_queue,
+> +					       ATA_DMA_PAD_SZ - 1);
+> +	} else
+> +		/* ATA devices must be sector aligned */
+> +		blk_queue_update_dma_alignment(sdev->request_queue,
+> +					       ATA_SECT_SIZE - 1);
+>  
+>  	if (dev->flags & ATA_DFLAG_AN)
+>  		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
 
-On Tuesday 15 January 2008 11:54:35 Andrew Morton wrote:
-> On Mon, 14 Jan 2008 00:19:20 +0200 Georgi Chulkov 
-<g.chulkov@jacobs-university.de> wrote:
-> > Hello,
-> >
-> > During heavy disk load on my laptop, sometimes the IDE disk will pause
-> > for a second and then continue. I get this in my kernel log:
-> >
-> > [ 9031.028000] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2
-> > frozen
-> > [ 9031.028000] ata1.00: cmd c8/00:08:90:ca:ce/00:00:00:00:00/e0 tag 0 cdb
-> > 0x0 data 4096 in
-> > [ 9031.028000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4
-> > (timeout)
-> > [ 9036.068000] ata1: port is slow to respond, please be patient (Status
-> > 0xd0) [ 9041.052000] ata1: device not ready (errno=-16), forcing
-> > hardreset [ 9041.052000] ata1: soft resetting port
-> > [ 9041.232000] ata1.00: configured for UDMA/100
-> > [ 9041.232000] ata1: EH complete
-> > [ 9041.248000] sd 0:0:0:0: [sda] 78140160 512-byte hardware sectors
-> > (40008 MB) [ 9041.248000] sd 0:0:0:0: [sda] Write Protect is off
-> > [ 9041.248000] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> > [ 9041.248000] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
-> > enabled, doesn't support DPO or FUA
-> >
-> > My question: What is this telling me, and do I need to be concerned?
-> > Everything continues to work normally after the message: no I/O errors,
-> > no fsck errors, etc.
-> >
-> > I've seen some similar reports on the mailing list, but they include
-> > slightly different messages. I would appreciate any information!
-> >
-> > uname -a (on Kubuntu Gutsy, CPU is a single-core 32-bit Pentium M):
-> >
-> > Linux superfly 2.6.22-14-386 #1 Tue Dec 18 07:34:24 UTC 2007 i686
-> > GNU/Linux
->
-> Has it done this in all kernel versions or did some earler version work OK?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+
+ACK
+
+Unlike ATAPI, ATA is indeed all 512-byte alignment transfers (_not_ 
+sector size, which may or may not be 512 bytes)
+
+Does this apply to libata?  libata + jejb dma alignment patch?
+
+What tree...
+
+	Jeff
+
 
 
