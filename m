@@ -1,60 +1,49 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
-Date: Tue, 22 Jan 2008 11:26:38 +0900
-Message-ID: <4795545E.5010908@gmail.com>
-References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com> <4794CB8B.1070600@gmail.com>
+From: Jake <kfc@10k.org>
+Subject: Re: dvdrw->cdrom
+Date: Mon, 21 Jan 2008 22:42:44 -0500 (EST)
+Message-ID: <Pine.BSO.4.64.0801212237230.13449@transpose.10k.org>
+References: <6d98c5450801110719t3979a4f4j6a515e2c3b7ffcd8@mail.gmail.com>
+ <47944B76.5030804@gmail.com> <Pine.BSO.4.64.0801210243230.22203@transpose.10k.org>
+ <47945CB5.4040708@gmail.com> <Pine.BSO.4.64.0801210454430.19381@transpose.10k.org>
+ <47947036.2050402@gmail.com> <4794A863.8010801@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:36051 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752236AbYAVC0o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 21:26:44 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1970463rvb.1
-        for <linux-ide@vger.kernel.org>; Mon, 21 Jan 2008 18:26:43 -0800 (PST)
-In-Reply-To: <4794CB8B.1070600@gmail.com>
+Received: from bruno.cs.columbia.edu ([128.59.18.129]:5292 "EHLO
+	bruno.cs.columbia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbYAVDnU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2008 22:43:20 -0500
+In-Reply-To: <4794A863.8010801@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Evans <evans02472@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello, Thomas.
+>> Jake wrote:
+>>>>> http://marc.info/?l=linux-ide&m=120069298104580&w=4
+>>>>> 
+>>>>> It has been 2 weeks here hunting for some solutions, can you 
+>>>>> recommend anything that I should try? Thank you.
+>>>> Can you please post full boot log from the working kernel && broken 
+>>>> kernel?  It seems you were using ide-scsi driver previously, right? 
+>>>> Also, w/ libata driver, does the reading part work okay?  Can you 
+>>>> read cd's?
+>>> 
+>>> I will reboot as soon as my batch job completes to test the cds.
+>> 
+>> Does sata_nv.adma=0 fix your problem?
+>
+> This is almost certainly the already-known DMA mask issue with ADMA enabled 
+> and memory over 4GB present.
 
-Thomas Evans wrote:
->> What do you mean by eSata PMP enclosure?  Is it a different PMP device?
->>   
-> It is an external PMP box, 5 drive bays - it is the exact same
-> manufacturer and is based on the same PMP:
-> 0x1095:0x4726 r31, 7 ports, feat 0x1/0x9
+Tejun,
 
-Okay.
+the boot flag made the difference!
+Ahh, so it is > and = 4GB (I have exactly 4GB).
 
->>> I can hook the card and storage enclosure to a windows box and can see
->>> the PM and the drives (and the config space).
->>
->> Hmmm.......
->>   
-> Yeah - I was perplexed at this point as well ...  I even upgraded the
-> BIOS in the card, just hoping ...
+I will pass on the wisdom in hope to save someone
+else a few hours down the road.
 
-Can you install linux on a x86 machine and see whether anything is
-different?
+Thank you!
 
-> I've attached a few logs - one that references how things looked when it
-> all worked.
-> I've logs of both the original Norco 4618 card (lspci64.2 and
-> dmesg.txt.2) and with the
-> newer generic 3124 card (dmesg.txt.newcard lspci.newcard.2).
-
-Hmmm.........
-
- I'm not so good with deciphering the PCI-isms - maybe I just need a
-> shorter cable now!?
-
-I have no idea but trying a shorter cable is definitely an option.
-
-Thanks.
-
--- 
-tejun
+Jake
