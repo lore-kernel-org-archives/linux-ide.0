@@ -1,67 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 17:19:30 -0600
-Message-ID: <1201043970.30007.6.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
-	 <1201022985.3210.24.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801221813540.8693@blonde.site>
-	 <1201031028.3210.61.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801222009070.16267@blonde.site>
-	 <1201039931.3210.96.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801222241460.30816@blonde.site>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: SATA port multiplier(Sil 3132)  and JMicron 361-363
+Date: Wed, 23 Jan 2008 08:19:30 +0900
+Message-ID: <47967A02.1030607@gmail.com>
+References: <20080112140232.58b171b4.mikpolniak@roadrunner.com>	<47944CC9.7020308@gmail.com>	<20080121140513.4356d551.mikpolniak@roadrunner.com>	<4795482B.5090009@gmail.com> <20080122123550.a1652dca.mikpolniak@roadrunner.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:44028 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754128AbYAVXTd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 18:19:33 -0500
-In-Reply-To: <Pine.LNX.4.64.0801222241460.30816@blonde.site>
+Received: from rv-out-0910.google.com ([209.85.198.190]:33408 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756388AbYAVXTv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jan 2008 18:19:51 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so2274633rvb.1
+        for <linux-ide@vger.kernel.org>; Tue, 22 Jan 2008 15:19:51 -0800 (PST)
+In-Reply-To: <20080122123550.a1652dca.mikpolniak@roadrunner.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: mikp <mikpolniak@roadrunner.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
+mikp wrote:
+>>> The JMB361 controller is more quirky. I had to reboot and replug 3 or 4
+>>> times before the PMP box started working normal. Here is syslog and dmesg of boot 
+>>> and reboot to finally get JMB361 working:
+>> The log messages are truncated.  Can you please post a clean kernel log
+>> including booting, detection of ata5 and detection failure?  Also,
+>> please give a shot at different shorter cable.
+>>
+> I tested this morning with different cables (long and short) and the JMB361 
+> worked successfully with the PMP every time. So it appears the previous 
+> problem was related to the cable. Although the same cable did work with the 
+> SI 3132.
 
-On Tue, 2008-01-22 at 22:59 +0000, Hugh Dickins wrote:
-> On Tue, 22 Jan 2008, James Bottomley wrote:
-> > 
-> > libsas looks to be OK because it specifically kmallocs a 512 byte buffer
-> > which should (for off slab data) be 512 byte aligned.
-> 
-> I don't remember the various SLAB and SLOB and SLUB rules offhand:
-> I'm not sure it's safe to rely on such alignment on all of them ....
-> 
-> > libata actually
-> > has an issue because the usual location for IDENTIFY_DEVICE data is
-> > inside a struct ata_device, which is highly unlikely to be correctly
-> > aligned.  Fortunately, I think we can only get the bug if we actually
-> > cross a page boundary for non contiguous pages in the identify data,
-> > which a kernel allocation will never do, so libata should be safe as
-> > well.
-> 
-> .... but this would trump it: yes, we don't need 512-byte alignment
-> for this, and it is okay to cross a page boundary, just so long as
-> the start of the next page really belongs to our buffer not somebody
-> else's.
-> 
-> There doesn't seem much likelihood of anyone vmalloc'ing the buffer
-> in which that IDENTIFY_DEVICE gets done.  Though this discussion
-> does make me wonder whether ata_pio_sector ought to have a BUG_ON
-> (and yes, a BUG_ON rather than a WARN_ON) against the possibility.
+I've seen that sometimes.  I don't know whether PMP devices are picky
+about cable or e-SATA cables are crappy tho.
 
-Oh ... never say never.  One of the things the shift we did in SCSI to
-the block submission api and elimination of the single map path actually
-enables you to send kernel vmalloc areas straight into the storage APIs
-(which was previously absolutely forbidden) ... fortunately no-one has
-yet.
+Thanks.
 
-However, I think you're right we could do with a check in the PIO path
-to make sure each sector is physically contiguous ... unfortunately, an
-easy alignment check would trip on the IDENTIFY and other kernel
-commands, sigh.
-
-James
-
-
+-- 
+tejun
