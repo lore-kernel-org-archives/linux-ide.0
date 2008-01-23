@@ -1,144 +1,152 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/5] libata: kill ATA_EHI_RESUME_LINK
-Date: Thu, 24 Jan 2008 00:21:39 +0900
-Message-ID: <12011017014096-git-send-email-htejun@gmail.com>
+Subject: [PATCH 5/5] libata: kill ata_ehi_schedule_probe()
+Date: Thu, 24 Jan 2008 00:21:41 +0900
+Message-ID: <12011017032529-git-send-email-htejun@gmail.com>
 References: <12011017011072-git-send-email-htejun@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:28192 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.177]:27671 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752238AbYAWPVu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 10:21:50 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so5108062wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 07:21:50 -0800 (PST)
+	with ESMTP id S1752263AbYAWPVv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 10:21:51 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so5108030wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 07:21:51 -0800 (PST)
 In-Reply-To: <12011017011072-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <htejun@gmail.com>
 
-ATA_EHI_RESUME_LINK has two functions - promote reset to hardreset if
-ATA_LFLAG_HRST_TO_RESUME is set and preventing EH from shortcutting
-reset action when probing is requested.  The former is gone now and
-the latter can easily be achieved by making EH to perform at least one
-reset if reset is requested, which also makes more sense than
-depending on RESUME_LINK flag.
+ata_ehi_schedule_probe() was created to hide details of link-resuming
+reset magic.  Now that all the softreset workarounds are gone,
+scheduling probe is very simple - set probe_mask and request RESET.
+Kill ata_ehi_schedule_probe() and open code it.  This also increases
+consistency as ata_ehi_schedule_probe() couldn't cover individual
+device probings so they were open-coded even when the helper existed.
 
-As ATA_EHI_RESUME_LINK was the only EHI reset modifier, this also
-kills reset modifier handling.
+While at it, define ATA_ALL_DEVICES as mask of all possible devices on
+a link and always use it when requesting probe on link level for
+simplicity and consistency.  Setting extra bits in the probe_mask
+doesn't hurt anybody.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 ---
- drivers/ata/libata-eh.c   |   21 ++++++++-------------
- drivers/ata/libata-pmp.c  |    1 -
- drivers/ata/libata-scsi.c |    1 -
- include/linux/libata.h    |    3 ---
- 4 files changed, 8 insertions(+), 18 deletions(-)
+ drivers/ata/libata-core.c |    3 +--
+ drivers/ata/libata-eh.c   |    2 +-
+ drivers/ata/libata-pmp.c  |   12 ++++++++----
+ drivers/ata/libata-scsi.c |    2 +-
+ include/linux/libata.h    |   12 ++++--------
+ 5 files changed, 15 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d3021bf..e71276b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -7069,8 +7069,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 			/* kick EH for boot probing */
+ 			spin_lock_irqsave(ap->lock, flags);
+ 
+-			ehi->probe_mask =
+-				(1 << ata_link_max_devices(&ap->link)) - 1;
++			ehi->probe_mask |= ATA_ALL_DEVICES;
+ 			ehi->action |= ATA_EH_RESET;
+ 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
+ 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 42f22ef..bef9187 100644
+index bef9187..64418f1 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1079,12 +1079,6 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	/* suck in and clear reset modifier */
--	if (action & ATA_EH_RESET) {
--		ehc->i.flags |= ehi->flags & ATA_EHI_RESET_MODIFIER_MASK;
--		ehi->flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
--	}
--
- 	ata_eh_clear_action(link, dev, ehi, action);
- 
- 	if (!(ehc->i.flags & ATA_EHI_QUIET))
-@@ -1110,10 +1104,6 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- {
- 	struct ata_eh_context *ehc = &link->eh_context;
- 
--	/* if reset is complete, clear reset modifier */
--	if (action & ATA_EH_RESET)
--		ehc->i.flags &= ~ATA_EHI_RESET_MODIFIER_MASK;
--
- 	ata_eh_clear_action(link, dev, &ehc->i, action);
- }
- 
-@@ -2479,6 +2469,7 @@ static int ata_link_nr_vacant(struct ata_link *link)
- 
- static int ata_eh_skip_recovery(struct ata_link *link)
- {
-+	struct ata_port *ap = link->ap;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev;
- 
-@@ -2486,9 +2477,13 @@ static int ata_eh_skip_recovery(struct ata_link *link)
- 	if (link->flags & ATA_LFLAG_DISABLED)
- 		return 1;
- 
--	/* thaw frozen port, resume link and recover failed devices */
--	if ((link->ap->pflags & ATA_PFLAG_FROZEN) ||
--	    (ehc->i.flags & ATA_EHI_RESUME_LINK) || ata_link_nr_enabled(link))
-+	/* thaw frozen port and recover failed devices */
-+	if ((ap->pflags & ATA_PFLAG_FROZEN) || ata_link_nr_enabled(link))
-+		return 0;
-+
-+	/* reset at least once if reset is requested */
-+	if ((ehc->i.action & ATA_EH_RESET) &&
-+	    !(ehc->i.flags & ATA_EHI_DID_RESET))
- 		return 0;
- 
- 	/* skip if class codes for all vacant slots are ATA_DEV_NONE */
+@@ -1746,7 +1746,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 		ata_eh_analyze_serror(link);
+ 	} else if (rc != -EOPNOTSUPP) {
+ 		/* SError read failed, force reset and probing */
+-		ata_ehi_schedule_probe(&ehc->i);
++		ehc->i.probe_mask |= ATA_ALL_DEVICES;
+ 		ehc->i.action |= ATA_EH_RESET;
+ 		ehc->i.err_mask |= AC_ERR_OTHER;
+ 	}
 diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 9d17158..ba3ad46 100644
+index ba3ad46..2e9eea8 100644
 --- a/drivers/ata/libata-pmp.c
 +++ b/drivers/ata/libata-pmp.c
-@@ -437,7 +437,6 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
+@@ -435,7 +435,7 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
+ 		struct ata_eh_context *ehc = &link->eh_context;
+ 
  		link->flags = 0;
- 		ehc->i.probe_mask |= 1;
+-		ehc->i.probe_mask |= 1;
++		ehc->i.probe_mask |= ATA_ALL_DEVICES;
  		ehc->i.action |= ATA_EH_RESET;
--		ehc->i.flags |= ATA_EHI_RESUME_LINK;
  	}
  
- 	return 0;
+@@ -831,8 +831,12 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 		ata_eh_thaw_port(ap);
+ 
+ 		/* PMP is reset, SErrors cannot be trusted, scan all */
+-		ata_port_for_each_link(tlink, ap)
+-			ata_ehi_schedule_probe(&tlink->eh_context.i);
++		ata_port_for_each_link(tlink, ap) {
++			struct ata_eh_context *ehc = &tlink->eh_context;
++
++			ehc->i.probe_mask |= ATA_ALL_DEVICES;
++			ehc->i.action |= ATA_EH_RESET;
++		}
+ 	}
+ 
+ 	/* If revalidation is requested, revalidate and reconfigure;
+@@ -847,7 +851,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 		tries--;
+ 
+ 		if (rc == -ENODEV) {
+-			ehc->i.probe_mask |= 1;
++			ehc->i.probe_mask |= ATA_ALL_DEVICES;
+ 			detach = 1;
+ 			/* give it just two more chances */
+ 			tries = min(tries, 2);
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 9860409..25b6444 100644
+index 25b6444..d84246a 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3451,7 +3451,6 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 			struct ata_eh_info *ehi = &dev->link->eh_info;
- 			ehi->probe_mask |= 1 << dev->devno;
+@@ -3441,7 +3441,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 
+ 		ata_port_for_each_link(link, ap) {
+ 			struct ata_eh_info *ehi = &link->eh_info;
+-			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
++			ehi->probe_mask |= ATA_ALL_DEVICES;
  			ehi->action |= ATA_EH_RESET;
--			ehi->flags |= ATA_EHI_RESUME_LINK;
- 		} else
- 			rc = -EINVAL;
- 	}
+ 		}
+ 	} else {
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 76bb797..4698c27 100644
+index f8d2b91..e345e71 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -300,7 +300,6 @@ enum {
+@@ -122,6 +122,8 @@ enum {
  
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
--	ATA_EHI_RESUME_LINK	= (1 << 1),  /* resume link (reset modifier) */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
- 	ATA_EHI_LPM		= (1 << 4),  /* link power management action */
-@@ -312,7 +311,6 @@ enum {
- 	ATA_EHI_POST_SETMODE	= (1 << 20), /* revaildating after setmode */
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
  
- 	ATA_EHI_DID_RESET	= ATA_EHI_DID_SOFTRESET | ATA_EHI_DID_HARDRESET,
--	ATA_EHI_RESET_MODIFIER_MASK = ATA_EHI_RESUME_LINK,
++	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
++
+ 	ATA_SHT_EMULATED	= 1,
+ 	ATA_SHT_CMD_PER_LUN	= 1,
+ 	ATA_SHT_THIS_ID		= -1,
+@@ -1096,17 +1098,11 @@ extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 2, 3)));
+ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
  
- 	/* max tries if error condition is still set after ->error_handler */
- 	ATA_EH_MAX_TRIES	= 5,
-@@ -1102,7 +1100,6 @@ extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
- 
- static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+-static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
+-{
+-	ehi->action |= ATA_EH_RESET;
+-	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+-}
+-
+ static inline void ata_ehi_hotplugged(struct ata_eh_info *ehi)
  {
--	ehi->flags |= ATA_EHI_RESUME_LINK;
- 	ehi->action |= ATA_EH_RESET;
- 	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+-	ata_ehi_schedule_probe(ehi);
++	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
+ 	ehi->flags |= ATA_EHI_HOTPLUGGED;
+-	ehi->action |= ATA_EH_ENABLE_LINK;
++	ehi->action |= ATA_EH_RESET | ATA_EH_ENABLE_LINK;
+ 	ehi->err_mask |= AC_ERR_ATA_BUS;
  }
+ 
 -- 
 1.5.2.4
 
