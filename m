@@ -1,38 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/3] libata: factor out ata_pci_activate_sff_host() from
- ata_pci_one()
-Date: Wed, 23 Jan 2008 05:12:21 -0500
-Message-ID: <47971305.7050101@garzik.org>
-References: <12006489901911-git-send-email-htejun@gmail.com> <12006489903674-git-send-email-htejun@gmail.com>
+From: Dan Nica <timi@crystal.rdstm.ro>
+Subject: Re: SiI 3512 Serial ATA Controller - kernel 2.6.23
+Date: Wed, 23 Jan 2008 12:48:44 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0801231244040.28840@crystal.rdstm.ro>
+References: <Pine.LNX.4.63.0801222230470.4758@crystal.rdstm.ro>
+ <47965AA7.4080703@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35887 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307AbYAWKMX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 23 Jan 2008 05:12:23 -0500
-In-Reply-To: <12006489903674-git-send-email-htejun@gmail.com>
+Received: from [193.231.233.15] ([193.231.233.15]:59781 "HELO crystal.rdstm.ro"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with SMTP
+	id S1751775AbYAWKsT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Jan 2008 05:48:19 -0500
+In-Reply-To: <47965AA7.4080703@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Factor out ata_pci_activate_sff_host() from ata_pci_one().  This does
-> about the same thing as ata_host_activate() but needs to be separate
-> because SFF controllers use different and multiple IRQs in legacy
-> mode.
+those errors apears only when I use the harddrives with
+the sii controller and only when I make operation between
+the onboard sata and the sii sata controller, operations between 
+ide and drives that are on sii works perfectly...
+
+On Tue, 22 Jan 2008, Jeff Garzik wrote:
+
+> Dan Nica wrote:
+> > hello
+> > 
+> > I have a problem with a serial ata controller
+> > that uses a SiI 3512 chip.
 > 
-> This will be used to make SFF LLD initialization more flexible.
+> A complete dmesg, complete lspci would be helpful.
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
->  drivers/ata/libata-core.c |    1 +
->  drivers/ata/libata-sff.c  |  187 +++++++++++++++++++++++++--------------------
->  include/linux/libata.h    |    3 +
->  3 files changed, 107 insertions(+), 84 deletions(-)
-
-applied
-
-
+> 
+> > when I'm trying to add a device thats on the 3512 controller to the array
+> > that I have, it give me lots of errors in dmesg
+> > like this:
+> > 
+> > ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x2400000 action 0x0
+> > ata3.00: BMDMA2 stat 0x8652001
+> > ata3.00: cmd 35/00:80:3f:5c:03/00:02:00:00:00/e0 tag 0 cdb 0x0 data 327680
+> > out
+> >          res 51/04:80:3f:5e:03/00:00:00:00:00/e0 Emask 0x1 (device error)
+> 
+> That's the device reporting an error, when the system issued a WRITE command
+> ("cmd 35/....."), and the SiI controller is happily reporting that error to
+> you.
+> 
+> I would worry about the device, if it is reporting errors on WRITE.
+> 
+> 	Jeff
+> 
+> 
+> 
+> 
