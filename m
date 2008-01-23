@@ -1,166 +1,94 @@
-From: "Shane Huang" <Shane.Huang@amd.com>
-Subject: About forcing 32bit DMA patch for AMD690G(SB600)
-Date: Wed, 23 Jan 2008 15:44:16 +0800
-Message-ID: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: sata_nv and 2.6.24 (was Re: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.)
+Date: Wed, 23 Jan 2008 04:32:46 -0500
+Message-ID: <479709BE.2090707@garzik.org>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com> <478812C9.1000901@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com> <478AF10D.5080805@shaw.ca>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="----_=_NextPart_001_01C85D93.C1F4B7AB"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outbound-sin.frontbridge.com ([207.46.51.80]:17993 "EHLO
-	outbound10-sin-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755646AbYAWHpS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 02:45:18 -0500
-Content-class: urn:content-classes:message
+Received: from srv5.dvmed.net ([207.36.208.214]:42500 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751784AbYAWJcx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Jan 2008 04:32:53 -0500
+In-Reply-To: <478AF10D.5080805@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sriharivijayaraghavan@yahoo.com.au, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
+To: Robert Hancock <hancockr@shaw.ca>, Kuan Luo <kluo@nvidia.com>
+Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 
-This is a multi-part message in MIME format.
+Robert Hancock wrote:
+> Kuan Luo wrote:
+>> Robert hancock wrote:
+>>> What problem does this resolve? I tested it against the cache 
+>>> flush/NCQ write switching problem we've been trying to solve, and it 
+>>> doesn't look like it fixes that one - if I apply this patch and then 
+>>> remove the udelay(20) in sata_nv.c that I added which prevented me 
+>>> from seeing this problem before, it shows up.
+>>>
+>>
+>> First thank  davide to help to send the attachment.
+>>
+>> Robert,
+>> The patch is to solve the error message "ata1: CPB flags CMD err,
+>> flags=0x11" when testing HDS7250SASUN500G in rhel4u5.
+>> I tested this hd in 2.6.24-rc7 which needed to remove the mask in
+>> blacklist to run the ncq and the same error also showed up.
+>> I traced the  bug and found that the interrupt finished a command (for
+>> example, tag=0) when the driver got that adma status is
+>> NV_ADMA_STAT_DONE  and  cpb->resp_flags is NV_CPB_RESP_DONE.
+>> However, For this hd, the drive maybe didn't clear bit 0 at this moment.
+>> It meaned the hardware  had not completely finished the command.
+>> If at the same time  the driver freed the command(tag 0) and sended
+>> another command (tag 0), the error happened.
+>>
+>> The notifier register is 32-bit register containing notifier value.
+>> Value is bit vector containing one bit per tag number (0-31) in
+>> corresponding bit positions (bit 0 is for tag 0, etc). When bit is set
+>> then ADMA indicates that command with corresponding tag number completed
+>> execution.
+>>
+>> So i added the check notifier code. Sometimes i saw that the notifier
+>> reg set some bits  , but the adma status set NV_ADMA_STAT_CMD_COMPLETE
+>> ,not NV_ADMA_STAT_DONE. So i added the NV_ADMA_STAT_CMD_COMPLETE check
+>> code.
+> 
+> That looks like a good fix then. (Though a possible optimization would 
+> be to and the check_commands value with the notifier clear value rather 
+> than testing against the notifier on each loop. That's fairly minor 
+> though.)
+> 
+> As I mentioned, this doesn't seem to resolve the problem we're seeing 
+> with rapidly intermixed NCQ commands and cache flushes (at least, if I 
+> take out the arbitrary 20usec delay from the driver and add this patch, 
+> the problem still shows up). It could be a similar problem, though, of 
+> commands being issued before the controller is really ready for them. If 
+> you or others at NVIDIA could assist in tracking down that problem it 
+> would be appreciated..
 
-------_=_NextPart_001_01C85D93.C1F4B7AB
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+Ping...  sata_nv status is still a bit open for 2.6.24, and I would like 
+to move us forward a bit.
 
-Resending this mail and adding linux-ide mail list...
+* Kuan's patch...  it has been confirmed (and is needed), correct?  can 
+someone work up a good patch for 2.6.24?  The only one I ever received 
+was badly word-wrapped, and at the time, Robert seemed uncertain of it, 
+so I waited.
 
+* ADMA ATAPI 4GB issues...  playing tricks with the ordering of 
+allocations and DMA masks is just way too fragile.  We just cannot 
+guarantee that all allocators work that way.  The obvious solution to me 
+seems to be hardcoding the consistent DMA mask to 32-bit, but using 
+64-bit for regular dma mask if-and-only-if ADMA is enabled.
 
-Quoting Tejun:
-> Uh-oh, wait a bit. Nope. Until we figure out what the something else
-is
-> and positively verify 64bit DMA works fine, the quirk stays in.
+* it sure seems like there are other open sata_nv ADMA issues -- can we 
+hard-confirm or deny this?  bugzilla wasn't very helpful for me.  It 
+doesn't seem like we can disable ADMA (to solve those issues) and get 
+enough test time in (which is what I said a week (or more?) ago too...)
 
-Our HW engineer has confirmed that our SB600 SATA controller indeed has
-some MSI issue, and we do not have any workaround.
+It seems like we should be able to tackle the first two issues promptly, 
+at least.
 
-The workaround "quirk_msi_intx_disable_bug" to SB700 SATA controller
-can NOT work to SB600 SATA controller in my debug, while disablement to
-RS690 MSI in kernel source can fix it.
+	Jeff
 
-As to the SB600 64 bit DMA capacity, do you have any methods to do
-further
-verification? I do NOT find any problem in my debug after I disabled
-RS690
-MSI in kernel 2.6.24-rc7.
-
-
-
-Thanks
-
-Best Regards
-Shane
-
-
------Original Message-----
-From: Shane Huang=20
-Sent: Wednesday, January 23, 2008 2:56 PM
-To: sriharivijayaraghavan@yahoo.com.au
-Cc: 'Tejun Heo'; Shane Huang
-Subject: About forcing 32bit DMA patch for AMD690G(SB600)
-Importance: High
-
-Hi Srihari:
-
-This Shane @ AMD. I'm sorry to disturb you.
-
-I find that there is one patch which forces SB600 use 32bit DMA:
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dco=
-mmi
-t;h=3Dc7a42156d99bcea7f8173ba7a6034bbaa2ecb77c
-
-This patch was submitted by Tejun to fix one issue on your platform:
-http://marc.info/?l=3Dlinux-ide&m=3D117810966106759&w=3D2
-
-But after a discussion with our hardware engineers, Tejun(the patch
-author),
-and some debugging, we believe that that SB600 can support 64 bit DMA,
-the root cause should be something else, while disablement to RS690 MSI
-in kernel source can be the workaround.
-So, we are going withdraw Tejun's patch ASAP.
-
-I wonder whether you still have that AMD690G platform or not?
-Are you able to help to do further confirmation before we withdraw it?
-
-You can just download kernel 2.6.21.1(which was used when you reported
-the bug), apply the attached disable_RS690_MSI.patch, and build the
-kernel.
-Please tell me if that patch can fix your issue without Tejun's patch.
-This patch has been proved to work on my RS690+SB600 under Fedora7
-x86_64.
-
-You can also try my another disable_MSI_and_withdraw_32bit.patch
-under linux kernel 2.6.24-rc7, to see whether this patch can fix your
-issue too. This method also can work on my RS690+SB600 platform.
-
-
-Thanks & waiting for your test result~~~ :-)
-
-
-Best Regards
-Shane
-
-
-------_=_NextPart_001_01C85D93.C1F4B7AB
-Content-Type: application/octet-stream;
- name=disable_RS690_MSI.patch
-Content-Transfer-Encoding: base64
-Content-Description: disable_RS690_MSI.patch
-Content-Disposition: attachment;
- filename=disable_RS690_MSI.patch
-
-ZGlmZiAtcnVOIGxpbnV4LTIuNi4yMS4xX29yZy9kcml2ZXJzL3BjaS9xdWlya3MuYyBsaW51eC0y
-LjYuMjEuMV9uZXcvZHJpdmVycy9wY2kvcXVpcmtzLmMKLS0tIGxpbnV4LTIuNi4yMS4xX29yZy9k
-cml2ZXJzL3BjaS9xdWlya3MuYwkyMDA4LTAxLTIzIDE0OjIyOjI1LjAwMDAwMDAwMCArMDgwMAor
-KysgbGludXgtMi42LjIxLjFfbmV3L2RyaXZlcnMvcGNpL3F1aXJrcy5jCTIwMDgtMDEtMjMgMTQ6
-MjI6NDQuMDAwMDAwMDAwICswODAwCkBAIC0xNzQzLDEyICsxNzQzLDEzIEBACiAgKiBJbnN0ZWFk
-IG9mIHNldHRpbmcgdGhlIGZsYWcgb24gYWxsIGJ1c3NlcyBpbiB0aGUgbWFjaGluZSwgc2ltcGx5
-IGRpc2FibGUgTVNJCiAgKiBnbG9iYWxseS4KICAqLwotc3RhdGljIHZvaWQgX19pbml0IHF1aXJr
-X3N2d19tc2koc3RydWN0IHBjaV9kZXYgKmRldikKK3N0YXRpYyB2b2lkIF9faW5pdCBxdWlya19k
-aXNhYmxlX2FsbF9tc2koc3RydWN0IHBjaV9kZXYgKmRldikKIHsKIAlwY2lfbm9fbXNpKCk7CiAJ
-cHJpbnRrKEtFUk5fV0FSTklORyAiUENJOiBNU0kgcXVpcmsgZGV0ZWN0ZWQuIE1TSSBkZWFjdGl2
-YXRlZC5cbiIpOwogfQotREVDTEFSRV9QQ0lfRklYVVBfRklOQUwoUENJX1ZFTkRPUl9JRF9TRVJW
-RVJXT1JLUywgUENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19HQ05CX0xFLCBxdWlya19zdndfbXNp
-KTsKK0RFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5ET1JfSURfU0VSVkVSV09SS1MsIFBD
-SV9ERVZJQ0VfSURfU0VSVkVSV09SS1NfR0NOQl9MRSwgcXVpcmtfZGlzYWJsZV9hbGxfbXNpKTsK
-K0RFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5ET1JfSURfQVRJLCAweDc5MTAsIHF1aXJr
-X2Rpc2FibGVfYWxsX21zaSk7Ly9SUzY5MAogCiAvKiBEaXNhYmxlIE1TSSBvbiBjaGlwc2V0cyB0
-aGF0IGFyZSBrbm93biB0byBub3Qgc3VwcG9ydCBpdCAqLwogc3RhdGljIHZvaWQgX19kZXZpbml0
-IHF1aXJrX2Rpc2FibGVfbXNpKHN0cnVjdCBwY2lfZGV2ICpkZXYpCg==
-
-------_=_NextPart_001_01C85D93.C1F4B7AB
-Content-Type: application/octet-stream;
- name=disable_MSI_and_withdraw_32bit.patch
-Content-Transfer-Encoding: base64
-Content-Description: disable_MSI_and_withdraw_32bit.patch
-Content-Disposition: attachment;
- filename=disable_MSI_and_withdraw_32bit.patch
-
-ZGlmZiAtcnVOIGxpbnV4LTIuNi4yNC1yYzdfb3JnL2RyaXZlcnMvYXRhL2FoY2kuYyBsaW51eC0y
-LjYuMjQtcmM3X25ldy9kcml2ZXJzL2F0YS9haGNpLmMKLS0tIGxpbnV4LTIuNi4yNC1yYzdfb3Jn
-L2RyaXZlcnMvYXRhL2FoY2kuYwkyMDA4LTAxLTIzIDE0OjQzOjU3LjAwMDAwMDAwMCArMDgwMAor
-KysgbGludXgtMi42LjI0LXJjN19uZXcvZHJpdmVycy9hdGEvYWhjaS5jCTIwMDgtMDEtMjMgMTQ6
-NDQ6MDguMDAwMDAwMDAwICswODAwCkBAIC00MjQsNyArNDI0LDcgQEAKIAkvKiBib2FyZF9haGNp
-X3NiNjAwICovCiAJewogCQlBSENJX0hGTEFHUwkoQUhDSV9IRkxBR19JR05fU0VSUl9JTlRFUk5B
-TCB8Ci0JCQkJIEFIQ0lfSEZMQUdfMzJCSVRfT05MWSB8IEFIQ0lfSEZMQUdfTk9fUE1QKSwKKwkJ
-CQkgQUhDSV9IRkxBR19OT19QTVApLAogCQkuZmxhZ3MJCT0gQUhDSV9GTEFHX0NPTU1PTiwKIAkJ
-LmxpbmtfZmxhZ3MJPSBBSENJX0xGTEFHX0NPTU1PTiwKIAkJLnBpb19tYXNrCT0gMHgxZiwgLyog
-cGlvMC00ICovCmRpZmYgLXJ1TiBsaW51eC0yLjYuMjQtcmM3X29yZy9kcml2ZXJzL3BjaS9xdWly
-a3MuYyBsaW51eC0yLjYuMjQtcmM3X25ldy9kcml2ZXJzL3BjaS9xdWlya3MuYwotLS0gbGludXgt
-Mi42LjI0LXJjN19vcmcvZHJpdmVycy9wY2kvcXVpcmtzLmMJMjAwOC0wMS0yMyAxNDo0NDo1My4w
-MDAwMDAwMDAgKzA4MDAKKysrIGxpbnV4LTIuNi4yNC1yYzdfbmV3L2RyaXZlcnMvcGNpL3F1aXJr
-cy5jCTIwMDgtMDEtMjMgMTQ6NDU6MDAuMDAwMDAwMDAwICswODAwCkBAIC0xNjIzLDYgKzE2MjMs
-NyBAQAogREVDTEFSRV9QQ0lfRklYVVBfRklOQUwoUENJX1ZFTkRPUl9JRF9TRVJWRVJXT1JLUywg
-UENJX0RFVklDRV9JRF9TRVJWRVJXT1JLU19HQ05CX0xFLCBxdWlya19kaXNhYmxlX2FsbF9tc2kp
-OwogREVDTEFSRV9QQ0lfRklYVVBfRklOQUwoUENJX1ZFTkRPUl9JRF9BVEksIFBDSV9ERVZJQ0Vf
-SURfQVRJX1JTNDAwXzIwMCwgcXVpcmtfZGlzYWJsZV9hbGxfbXNpKTsKIERFQ0xBUkVfUENJX0ZJ
-WFVQX0ZJTkFMKFBDSV9WRU5ET1JfSURfQVRJLCBQQ0lfREVWSUNFX0lEX0FUSV9SUzQ4MCwgcXVp
-cmtfZGlzYWJsZV9hbGxfbXNpKTsKK0RFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFMKFBDSV9WRU5ET1Jf
-SURfQVRJLCAweDc5MTAsIHF1aXJrX2Rpc2FibGVfYWxsX21zaSk7Ly9SUzY5MAogREVDTEFSRV9Q
-Q0lfRklYVVBfRklOQUwoUENJX1ZFTkRPUl9JRF9WSUEsIFBDSV9ERVZJQ0VfSURfVklBX1ZUMzM1
-MSwgcXVpcmtfZGlzYWJsZV9hbGxfbXNpKTsKIAogLyogRGlzYWJsZSBNU0kgb24gY2hpcHNldHMg
-dGhhdCBhcmUga25vd24gdG8gbm90IHN1cHBvcnQgaXQgKi8K
-
-------_=_NextPart_001_01C85D93.C1F4B7AB--
 
 
