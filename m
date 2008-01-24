@@ -1,37 +1,62 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 13/14] sata_mv No soft resets
-Date: Thu, 24 Jan 2008 16:03:59 -0500
-Message-ID: <4798FD3F.2050807@rtr.ca>
+Subject: [PATCH 14/14] sata_mv Comments and version bump
+Date: Thu, 24 Jan 2008 16:04:29 -0500
+Message-ID: <4798FD5D.4050209@rtr.ca>
 References: <4798FB68.70400@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4185 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:4193 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756573AbYAXVEA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Jan 2008 16:04:00 -0500
+	id S1754839AbYAXVEa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Jan 2008 16:04:30 -0500
 In-Reply-To: <4798FB68.70400@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-sata_mv No soft resets.
+sata_mv Comments and version bump.
 
-Soft resets rarely have significant effect with these chips,
-so always do a hard reset instead.
+Remove some obsolete comments, and bump up the driver version number.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-01-24 14:49:28.000000000 -0500
-+++ new/drivers/ata/sata_mv.c	2008-01-24 14:51:53.000000000 -0500
-@@ -2414,8 +2414,7 @@
+--- old/drivers/ata/sata_mv.c	2008-01-24 15:09:31.000000000 -0500
++++ new/drivers/ata/sata_mv.c	2008-01-24 15:41:17.000000000 -0500
+@@ -29,8 +29,6 @@
+   I distinctly remember a couple workarounds (one related to PCI-X)
+   are still needed.
  
- static void mv_error_handler(struct ata_port *ap)
+-  4) Add NCQ support (easy to intermediate, once new-EH support appears)
+-
+   5) Investigate problems with PCI Message Signalled Interrupts (MSI).
+ 
+   6) Add port multiplier support (intermediate)
+@@ -53,8 +51,6 @@
+   Target mode, for those without docs, is the ability to directly
+   connect two SATA controllers.
+ 
+-  13) Verify that 7042 is fully supported.  I only have a 6042.
+-
+ */
+ 
+ 
+@@ -73,7 +69,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"sata_mv"
+-#define DRV_VERSION	"1.01"
++#define DRV_VERSION	"1.20"
+ 
+ enum {
+ 	/* BAR's are enumerated in terms of pci_resource_start() terms */
+@@ -885,7 +881,7 @@
+ static void mv_start_dma(struct ata_port *ap, void __iomem *port_mmio,
+ 			 struct mv_port_priv *pp, u8 protocol)
  {
--	ata_do_eh(ap, mv_prereset, ata_std_softreset,
--		  mv_hardreset, mv_postreset);
-+	ata_do_eh(ap, mv_prereset, NULL, mv_hardreset, mv_postreset);
- }
+-	int want_ncq = ata_is_ncq(protocol);
++	int want_ncq = (protocol == ATA_PROT_NCQ);
  
- static void mv_post_int_cmd(struct ata_queued_cmd *qc)
+ 	if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
+ 		int using_ncq = ((pp->pp_flags & MV_PP_FLAG_NCQ_EN) != 0);
