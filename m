@@ -1,65 +1,51 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
-Date: Thu, 24 Jan 2008 11:20:51 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2ACA@hkemmail01.nvidia.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com> <478812C9.1000901@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com> <4797DF30.6050208@shaw.ca>
+From: "Thomas Evans" <evans02472@gmail.com>
+Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
+Date: Wed, 23 Jan 2008 22:39:24 -0500
+Message-ID: <864c1e490801231939k6008bc95tf40565a8ef6f430d@mail.gmail.com>
+References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com>
+	 <4794CB8B.1070600@gmail.com> <4795545E.5010908@gmail.com>
+	 <864c1e490801222034w32cd8799h3600fb902a3d97e6@mail.gmail.com>
+	 <4796DC44.6010100@gmail.com>
+	 <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
+	 <4797ECF3.5000306@gmail.com>
+	 <864c1e490801231823v3e9cf61ds2a0d553ed5b61fb2@mail.gmail.com>
+	 <4797F8D0.6060302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:13087 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbYAXDVa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 22:21:30 -0500
-In-Reply-To: <4797DF30.6050208@shaw.ca>
-Content-class: urn:content-classes:message
+Received: from nz-out-0506.google.com ([64.233.162.237]:7600 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbYAXDjZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 22:39:25 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so63874nze.1
+        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 19:39:24 -0800 (PST)
+In-Reply-To: <4797F8D0.6060302@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>, Allen Martin <AMartin@nvidia.com>
-Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert worte.
-> 
-> Kuan, does this patch (using the notifiers to see if the command is 
-> really done) still work if one port on the controller has 
-> ADMA disabled 
-> because it's in ATAPI mode? I seem to recall Allen Martin mentioning 
-> that notifiers wouldn't work in this case.
-> 
+Um, I can, but it's not all that different than the others - is there
+something I am missing that would collect more info in the logs?
 
-I just tried the 2.6.24-rc7 sata_nv driver with one hd and  one cdrom in
-the same controller. 
-I mkfs hd and mounted the cdrom and no error happened.
+Thanks,
 
-Allen,  is there anything about notifier that we should pay attention
-to?
+...tom
 
-> 
-> > 
-> > * it sure seems like there are other open sata_nv ADMA 
-> issues -- can we 
-> > hard-confirm or deny this?  bugzilla wasn't very helpful 
-> for me.  It 
-> > doesn't seem like we can disable ADMA (to solve those 
-> issues) and get 
-> > enough test time in (which is what I said a week (or more?) 
-> ago too...)
-> 
-> The NCQ/non-NCQ command switching issue is still hitting some people 
-> (last I heard Kuan was looking into this), also there's a 
-> hotplug issue 
-> that Tejun reported..
-> 
-I have not yet reproduced the switching issue even if i removed the
-udelay function according to your metholds.
-I tried the 2.6.24-rc7. 
- I don't know what kernel version can easily reproduce the issue or
-mabye i omit some steps during test.
-
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+On Jan 23, 2008 9:32 PM, Tejun Heo <htejun@gmail.com> wrote:
+>
+> Thomas Evans wrote:
+> > I hadn't tried that until just now - I have 2 3124 cards, 1 without
+> > internal connections.
+> > Just tried the 1 with internal sata ports - it fails in the same way on
+> > a single drive.
+>
+> There are cable which have SATA connector on one side and e-SATA on the
+> other.  You can connect harddrives directly using such cables.  Can you
+> please post the failing log?
+>
+> --
+> tejun
+>
