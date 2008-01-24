@@ -1,65 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_nv and 2.6.24 (was Re: fixed a bug of adma in rhel4u5 with
- HDS7250SASUN500G.)
-Date: Wed, 23 Jan 2008 20:42:16 -0500
-Message-ID: <4797ECF8.9000606@garzik.org>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com> <478812C9.1000901@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com> <478AF10D.5080805@shaw.ca> <479709BE.2090707@garzik.org> <479752D7.4020206@shaw.ca>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
+Date: Thu, 24 Jan 2008 10:42:11 +0900
+Message-ID: <4797ECF3.5000306@gmail.com>
+References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com>	 <4794CB8B.1070600@gmail.com> <4795545E.5010908@gmail.com>	 <864c1e490801222034w32cd8799h3600fb902a3d97e6@mail.gmail.com>	 <4796DC44.6010100@gmail.com> <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754004AbYAXBmi@vger.kernel.org>
-In-Reply-To: <479752D7.4020206@shaw.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Kuan Luo <kluo@nvidia.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.177]:20657 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbYAXBma (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 20:42:30 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so59891wah.23
+        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 17:42:30 -0800 (PST)
+In-Reply-To: <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Thomas Evans <evans02472@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Robert Hancock wrote:
-> Jeff Garzik wrote:
->> Ping...  sata_nv status is still a bit open for 2.6.24, and I would 
->> like to move us forward a bit.
->>
->> * Kuan's patch...  it has been confirmed (and is needed), correct?  
->> can someone work up a good patch for 2.6.24?  The only one I ever 
->> received was badly word-wrapped, and at the time, Robert seemed 
->> uncertain of it, so I waited.
+Thomas Evans wrote:
+> Hi All -
+>>> If I forget and get the "Plug and Play" error, disconnecting the
+>>> drives and resetting isn't enough, nor is power cycling *or*
+>>> unplugging the machine.  I have to physically remove the card and
+>>> restart without it, power down and then re-insert it.  I could only
+>>> plug the card into a 32bit slot, btw.
+>> So, except for BIOS weirdness, it works.
 > 
-> I can get you one later today hopefully.
+> I downgraded the BIOS in the card and it even works better on the x86 -
+> not more pnp errors.
 > 
->>
->> * ADMA ATAPI 4GB issues...  playing tricks with the ordering of 
->> allocations and DMA masks is just way too fragile.  We just cannot 
->> guarantee that all allocators work that way.  The obvious solution to 
->> me seems to be hardcoding the consistent DMA mask to 32-bit, but using 
->> 64-bit for regular dma mask if-and-only-if ADMA is enabled.
+>> On x86, BIOS runs, on alpha, it doesn't.  It could be that BIOS
+>> configures something.  Can you please post the result of 'lspci
+>> -nnvvvxxx' of the sil24 controller on alpha and x86?
 > 
-> That's not enough to fix the problem since there's issues with actual 
-> transfer data being allocated above 4GB as well, not just the consistent 
->  allocations (it appears that blk_queue_bounce_limit setting to 32-bit 
-> doesn't prevent this on x86_64). Either we play some funky games with 
-> changing the DMA mask of the entire device to 32-bit if either port is 
-> in ATAPI mode (which blew up when I tried it) or we add the ability to 
-> set the DMA mask independently on each port (like by setting the mask on 
-> the SCSI device and using that for DMA mapping instead) which requires 
-> core changes.
-
-Its all funky games that no other driver is doing...  There is one 
-guaranteed to work scenario -- set all masks and bounce limits etc. to 
-32-bit.  There is also one highly-likely-to-work scenario, disabling 
-ADMA by default.
-
-
->> * it sure seems like there are other open sata_nv ADMA issues -- can 
->> we hard-confirm or deny this?  bugzilla wasn't very helpful for me.  
->> It doesn't seem like we can disable ADMA (to solve those issues) and 
->> get enough test time in (which is what I said a week (or more?) ago 
->> too...)
+> I was attempting to look at that - SRM on Alpha won't run arbitrary
+> option BIOSs (at least that I can figure - it will run those of
+> devices it recognizes in some way via emulation).
 > 
-> The NCQ/non-NCQ command switching issue is still hitting some people 
-> (last I heard Kuan was looking into this), also there's a hotplug issue 
-> that Tejun reported..
+> With that said, I've attached the output ...
+> 
+> They are different, just don't understand the differences.
 
-The former implies we need to disable swncq for 2.6.24, if it's not 
-stable yet.
+The only differences are in the standard section - PCI bus
+configuration, BAR allocation, etc.  If you connect a regular harddrive
+instead of a PMP, it works well on alpha, right?
 
-	Jeff
+-- 
+tejun
