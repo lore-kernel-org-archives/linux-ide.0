@@ -1,152 +1,140 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 5/5] libata: kill ata_ehi_schedule_probe()
-Date: Thu, 24 Jan 2008 00:21:41 +0900
-Message-ID: <12011017032529-git-send-email-htejun@gmail.com>
-References: <12011017011072-git-send-email-htejun@gmail.com>
+From: "Thomas Evans" <evans02472@gmail.com>
+Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
+Date: Wed, 23 Jan 2008 19:22:49 -0500
+Message-ID: <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
+References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com>
+	 <4794CB8B.1070600@gmail.com> <4795545E.5010908@gmail.com>
+	 <864c1e490801222034w32cd8799h3600fb902a3d97e6@mail.gmail.com>
+	 <4796DC44.6010100@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_16980_7686900.1201134169890"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:27671 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263AbYAWPVv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 10:21:51 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so5108030wah.23
-        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 07:21:51 -0800 (PST)
-In-Reply-To: <12011017011072-git-send-email-htejun@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.225]:15232 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754903AbYAXAWx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 19:22:53 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so19278wxd.4
+        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 16:22:50 -0800 (PST)
+In-Reply-To: <4796DC44.6010100@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-ata_ehi_schedule_probe() was created to hide details of link-resuming
-reset magic.  Now that all the softreset workarounds are gone,
-scheduling probe is very simple - set probe_mask and request RESET.
-Kill ata_ehi_schedule_probe() and open code it.  This also increases
-consistency as ata_ehi_schedule_probe() couldn't cover individual
-device probings so they were open-coded even when the helper existed.
+------=_Part_16980_7686900.1201134169890
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-While at it, define ATA_ALL_DEVICES as mask of all possible devices on
-a link and always use it when requesting probe on link level for
-simplicity and consistency.  Setting extra bits in the probe_mask
-doesn't hurt anybody.
+Hi All -
+> > If I forget and get the "Plug and Play" error, disconnecting the
+> > drives and resetting isn't enough, nor is power cycling *or*
+> > unplugging the machine.  I have to physically remove the card and
+> > restart without it, power down and then re-insert it.  I could only
+> > plug the card into a 32bit slot, btw.
+>
+> So, except for BIOS weirdness, it works.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
----
- drivers/ata/libata-core.c |    3 +--
- drivers/ata/libata-eh.c   |    2 +-
- drivers/ata/libata-pmp.c  |   12 ++++++++----
- drivers/ata/libata-scsi.c |    2 +-
- include/linux/libata.h    |   12 ++++--------
- 5 files changed, 15 insertions(+), 16 deletions(-)
+I downgraded the BIOS in the card and it even works better on the x86 -
+not more pnp errors.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d3021bf..e71276b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7069,8 +7069,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 			/* kick EH for boot probing */
- 			spin_lock_irqsave(ap->lock, flags);
- 
--			ehi->probe_mask =
--				(1 << ata_link_max_devices(&ap->link)) - 1;
-+			ehi->probe_mask |= ATA_ALL_DEVICES;
- 			ehi->action |= ATA_EH_RESET;
- 			ehi->flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bef9187..64418f1 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1746,7 +1746,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ata_eh_analyze_serror(link);
- 	} else if (rc != -EOPNOTSUPP) {
- 		/* SError read failed, force reset and probing */
--		ata_ehi_schedule_probe(&ehc->i);
-+		ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 		ehc->i.action |= ATA_EH_RESET;
- 		ehc->i.err_mask |= AC_ERR_OTHER;
- 	}
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index ba3ad46..2e9eea8 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -435,7 +435,7 @@ static int sata_pmp_init_links(struct ata_port *ap, int nr_ports)
- 		struct ata_eh_context *ehc = &link->eh_context;
- 
- 		link->flags = 0;
--		ehc->i.probe_mask |= 1;
-+		ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 		ehc->i.action |= ATA_EH_RESET;
- 	}
- 
-@@ -831,8 +831,12 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 		ata_eh_thaw_port(ap);
- 
- 		/* PMP is reset, SErrors cannot be trusted, scan all */
--		ata_port_for_each_link(tlink, ap)
--			ata_ehi_schedule_probe(&tlink->eh_context.i);
-+		ata_port_for_each_link(tlink, ap) {
-+			struct ata_eh_context *ehc = &tlink->eh_context;
-+
-+			ehc->i.probe_mask |= ATA_ALL_DEVICES;
-+			ehc->i.action |= ATA_EH_RESET;
-+		}
- 	}
- 
- 	/* If revalidation is requested, revalidate and reconfigure;
-@@ -847,7 +851,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 		tries--;
- 
- 		if (rc == -ENODEV) {
--			ehc->i.probe_mask |= 1;
-+			ehc->i.probe_mask |= ATA_ALL_DEVICES;
- 			detach = 1;
- 			/* give it just two more chances */
- 			tries = min(tries, 2);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 25b6444..d84246a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3441,7 +3441,7 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 
- 		ata_port_for_each_link(link, ap) {
- 			struct ata_eh_info *ehi = &link->eh_info;
--			ehi->probe_mask |= (1 << ata_link_max_devices(link)) - 1;
-+			ehi->probe_mask |= ATA_ALL_DEVICES;
- 			ehi->action |= ATA_EH_RESET;
- 		}
- 	} else {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f8d2b91..e345e71 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -122,6 +122,8 @@ enum {
- 
- 	ATAPI_MAX_DRAIN		= 16 << 10,
- 
-+	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
-+
- 	ATA_SHT_EMULATED	= 1,
- 	ATA_SHT_CMD_PER_LUN	= 1,
- 	ATA_SHT_THIS_ID		= -1,
-@@ -1096,17 +1098,11 @@ extern void ata_ehi_push_desc(struct ata_eh_info *ehi, const char *fmt, ...)
- 	__attribute__ ((format (printf, 2, 3)));
- extern void ata_ehi_clear_desc(struct ata_eh_info *ehi);
- 
--static inline void ata_ehi_schedule_probe(struct ata_eh_info *ehi)
--{
--	ehi->action |= ATA_EH_RESET;
--	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
--}
--
- static inline void ata_ehi_hotplugged(struct ata_eh_info *ehi)
- {
--	ata_ehi_schedule_probe(ehi);
-+	ehi->probe_mask |= (1 << ATA_MAX_DEVICES) - 1;
- 	ehi->flags |= ATA_EHI_HOTPLUGGED;
--	ehi->action |= ATA_EH_ENABLE_LINK;
-+	ehi->action |= ATA_EH_RESET | ATA_EH_ENABLE_LINK;
- 	ehi->err_mask |= AC_ERR_ATA_BUS;
- }
- 
--- 
-1.5.2.4
+> On x86, BIOS runs, on alpha, it doesn't.  It could be that BIOS
+> configures something.  Can you please post the result of 'lspci
+> -nnvvvxxx' of the sil24 controller on alpha and x86?
 
+I was attempting to look at that - SRM on Alpha won't run arbitrary
+option BIOSs (at least that I can figure - it will run those of
+devices it recognizes in some way via emulation).
+
+With that said, I've attached the output ...
+
+They are different, just don't understand the differences.
+
+...tom
+
+------=_Part_16980_7686900.1201134169890
+Content-Type: text/plain; name=lspci.alpha
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file1
+Content-Disposition: attachment; filename=lspci.alpha
+
+MDAwMDowMDowNy4wIE1hc3Mgc3RvcmFnZSBjb250cm9sbGVyIFswMTgwXTogU2lsaWNvbiBJbWFn
+ZSwgSW5jLiBTaUkgMzEyNCBQQ0ktWCBTZXJpYWwgQVRBIENvbnRyb2xsZXIgWzEwOTU6MzEyNF0g
+KHJldiAwMikKCVN1YnN5c3RlbTogU2lsaWNvbiBJbWFnZSwgSW5jLiBTaUkgMzEyNCBQQ0ktWCBT
+ZXJpYWwgQVRBIENvbnRyb2xsZXIgWzEwOTU6MzEyNF0KCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNN
+YXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmcrIFNF
+UlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQisgUGFyRXJyLSBE
+RVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUisKCUxh
+dGVuY3k6IDI0MCwgQ2FjaGUgTGluZSBTaXplOiA2NCBieXRlcwoJSW50ZXJydXB0OiBwaW4gQSBy
+b3V0ZWQgdG8gSVJRIDMxCglSZWdpb24gMDogTWVtb3J5IGF0IDA5YWE5MDAwICg2NC1iaXQsIG5v
+bi1wcmVmZXRjaGFibGUpIFtzaXplPTEyOF0KCVJlZ2lvbiAyOiBNZW1vcnkgYXQgMDlhYTAwMDAg
+KDY0LWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MzJLXQoJUmVnaW9uIDQ6IEkvTyBwb3J0
+cyBhdCA5MDEwIFtzaXplPTE2XQoJRXhwYW5zaW9uIFJPTSBhdCAwOWEwMDAwMCBbZGlzYWJsZWRd
+IFtzaXplPTUxMktdCglDYXBhYmlsaXRpZXM6IFs2NF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9u
+IDIKCQlGbGFnczogUE1FQ2xrLSBEU0krIEQxKyBEMisgQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxE
+MS0sRDItLEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERT
+Y2FsZT0xIFBNRS0KCUNhcGFiaWxpdGllczogWzQwXSBQQ0ktWCBub24tYnJpZGdlIGRldmljZQoJ
+CUNvbW1hbmQ6IERQRVJFLSBFUk8rIFJCQz01MTIgT1NUPTEyCgkJU3RhdHVzOiBEZXY9ZmY6MWYu
+MCA2NGJpdCsgMTMzTUh6KyBTQ0QtIFVTQy0gREM9c2ltcGxlIERNTVJCQz0yMDQ4IERNT1NUPTEy
+IERNQ1JTPTEyOCBSU0NFTS0gMjY2TUh6LSA1MzNNSHotCglDYXBhYmlsaXRpZXM6IFs1NF0gTWVz
+c2FnZSBTaWduYWxsZWQgSW50ZXJydXB0czogTWFzay0gNjRiaXQrIFF1ZXVlPTAvMCBFbmFibGUt
+CgkJQWRkcmVzczogMDAwMDAwMDAwMDAwMDAwMCAgRGF0YTogMDAwMAowMDogOTUgMTAgMjQgMzEg
+ODcgMDAgYjAgODIgMDIgMDAgODAgMDEgMTAgZjAgMDAgMDAKMTA6IDA0IDkwIGFhIDA5IDAwIDAw
+IDAwIDAwIDA0IDAwIGFhIDA5IDAwIDAwIDAwIDAwCjIwOiAxMSA5MCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCA5NSAxMCAyNCAzMQozMDogMDAgMDAgOTAgMDEgNjQgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMWYgMDEgMDAgMDAKNDA6IDA3IDU0IDUyIDAwIGY4IGZmIGMzIDEyIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwCjUwOiAwMCAwMCAwMCAwMCAwNSAwMCA4MCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMAo2MDogMDAgMDAgMDAgMDAgMDEgNDAgMjIgMDYgMDAgMjAgMDAgMTkgMDAgMDAg
+MDAgMDAKNzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+CjgwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAo5MDog
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKYTA6IDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMApmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAKCg==
+------=_Part_16980_7686900.1201134169890
+Content-Type: text/plain; name=lspci.bios-6.3
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file2
+Content-Disposition: attachment; filename=lspci.bios-6.3
+
+MDM6MDUuMCBNYXNzIHN0b3JhZ2UgY29udHJvbGxlciBbMDE4MF06IFNpbGljb24gSW1hZ2UsIElu
+Yy4gU2lJIDMxMjQgUENJLVggU2VyaWFsIEFUQSBDb250cm9sbGVyIFsxMDk1OjMxMjRdIChyZXYg
+MDIpCglTdWJzeXN0ZW06IFNpbGljb24gSW1hZ2UsIEluYy4gU2lJIDMxMjQgUENJLVggU2VyaWFs
+IEFUQSBDb250cm9sbGVyIFsxMDk1OjMxMjRdCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVy
+KyBTcGVjQ3ljbGUrIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nKyBTRVJSKyBG
+YXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VM
+PW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5
+OiA2NCwgQ2FjaGUgTGluZSBTaXplOiAzMiBieXRlcwoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQg
+dG8gSVJRIDE5CglSZWdpb24gMDogTWVtb3J5IGF0IGZhZmZmYzAwICg2NC1iaXQsIG5vbi1wcmVm
+ZXRjaGFibGUpIFtzaXplPTEyOF0KCVJlZ2lvbiAyOiBNZW1vcnkgYXQgZmFmZjAwMDAgKDY0LWJp
+dCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MzJLXQoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBl
+Y2YwIFtzaXplPTE2XQoJRXhwYW5zaW9uIFJPTSBhdCBmYjAwMDAwMCBbZGlzYWJsZWRdIFtzaXpl
+PTUxMktdCglDYXBhYmlsaXRpZXM6IFs2NF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlG
+bGFnczogUE1FQ2xrLSBEU0krIEQxKyBEMisgQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxEMS0sRDIt
+LEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0x
+IFBNRS0KCUNhcGFiaWxpdGllczogWzQwXSBQQ0ktWCBub24tYnJpZGdlIGRldmljZQoJCUNvbW1h
+bmQ6IERQRVJFLSBFUk8rIFJCQz01MTIgT1NUPTEyCgkJU3RhdHVzOiBEZXY9ZmY6MWYuMCA2NGJp
+dCsgMTMzTUh6KyBTQ0QtIFVTQy0gREM9c2ltcGxlIERNTVJCQz0yMDQ4IERNT1NUPTEyIERNQ1JT
+PTEyOCBSU0NFTS0gMjY2TUh6LSA1MzNNSHotCglDYXBhYmlsaXRpZXM6IFs1NF0gTWVzc2FnZSBT
+aWduYWxsZWQgSW50ZXJydXB0czogTWFzay0gNjRiaXQrIFF1ZXVlPTAvMCBFbmFibGUtCgkJQWRk
+cmVzczogMDAwMDAwMDAwMDAwMDAwMCAgRGF0YTogMDAwMAowMDogOTUgMTAgMjQgMzEgOWYgMDEg
+YjAgMDIgMDIgMDAgODAgMDEgMDggNDAgMDAgMDAKMTA6IDA0IGZjIGZmIGZhIDAwIDAwIDAwIDAw
+IDA0IDAwIGZmIGZhIDAwIDAwIDAwIDAwCjIwOiBmMSBlYyAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCA5NSAxMCAyNCAzMQozMDogMDAgMDAgMDAgZmIgNjQgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMGIgMDEgMDAgMDAKNDA6IDA3IDU0IDUyIDAwIGY4IGZmIGMzIDEyIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwCjUwOiAwMCAwMCAwMCAwMCAwNSAwMCA4MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMAo2MDogMDAgMDAgMDAgMDAgMDEgNDAgMjIgMDYgMDAgMjAgMDAgMTkgMDAgMDAgMDAgMDAK
+NzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjgwOiAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAo5MDogMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKYTA6IDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwCmUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMApmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAKCg==
+------=_Part_16980_7686900.1201134169890--
