@@ -1,25 +1,313 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH 00/12] sata_mv NCQ support
-Date: Thu, 24 Jan 2008 16:06:25 -0500
-Message-ID: <4798FDD1.90503@rtr.ca>
-References: <4798FB68.70400@rtr.ca>
+From: <drtyc@centrum.cz>
+Subject: Re: excess timeouts accessing pci-sata card both ports
+Date: Thu, 24 Jan 2008 23:59:12 +0100
+Message-ID: <200801242359.10655@centrum.cz>
+References: <200801240919.2173@centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1250
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4221 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753358AbYAXVG1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Jan 2008 16:06:27 -0500
-In-Reply-To: <4798FB68.70400@rtr.ca>
+Received: from mail1011.centrum.cz ([213.29.7.122]:43803 "EHLO
+	mail1011.centrum.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156AbYAXW72 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 17:59:28 -0500
+Received: by mail1011.centrum.cz id S537160850AbYAXW7M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 23:59:12 +0100
+In-Reply-To: <200801240919.2173@centrum.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Here is a set of 12 patches that gradually add working NCQ support to 
-> sata_mv.
-..
+Hi.
 
-Well, 14 patches, not 12.
-But they're mostly very small.  :)
+More through test revealed that only the second port of each card is fa=
+iling.
+
+Accessing (cat /dev/sdX > /dev/null) just the sdb or sdd alone =3D one =
+drive at time produces the error message.
+
+Switched data cables on the card. ata1 port for ata2 port. This should =
+eliminate defective power cable to sdb.
+And also switched ata4 port for ata5 port data cable. This sould elimin=
+ate defective power cable to sdd.
+(ata3 and 6 are not connected PATA ports on each card)
+
+=46ailing is again port 2 and port 5 which is now originally flawlessly=
+ working drives now failing.
+
+
+______________________________________________________________
+> Od: drtyc@centrum.cz
+> Komu: <linux-ide@vger.kernel.org>
+> Datum: 24.01.2008 09:27
+> P=F8edm=ECt: excess timeouts accessing pci-sata card both ports
+>
+>Hello.
+>
+>The scenario:
+>PCI bus with 2 cards (sata_via)
+>Each card has 2 SATA ports connected.
+>Each disk does 40MB/s in hdparm -t read test.
+>
+>First card has the sda and sdb
+>Second card has the sdc and sdd
+>verified by watching the led blinking on the card
+>
+>ok - accessing two ports at same time but each port on different card:
+>cat /dev/sda > /dev/null & cat /dev/sdc > /dev/null
+>
+>problem - accessing two ports at same time and both ports on same card=
+:
+>cat /dev/sda > /dev/null & cat /dev/sdb > /dev/null
+>
+>side effect of the problem:
+>due to heavy traffic on one port the reset of the other port fails wit=
+h
+timeout and port is disabled
+>
+>logged error command at the initial problem (is it DMA read ext and DM=
+A
+write log?):
+>ata2.00: exception Emask 0x2 SAct 0x0 SErr 0x3000400 action 0x2 frozen
+>ata2.00: cmd 25/00:68:b8:83:13/00:01:00:00:00/e0 tag 0 cdb 0x0 data
+184320 in
+>         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x6 (timeout)
+>ata2: port is slow to respond, please be patient (Status 0xd0)
+>
+>ata2.00: exception Emask 0x2 SAct 0x0 SErr 0x3000400 action 0x2 frozen
+>ata2.00: cmd c8/00:60:70:50:08/00:00:00:00:00/e0 tag 0 cdb 0x0 data 49=
+152
+in
+>         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x6 (timeout)
+>ata2: port is slow to respond, please be patient (Status 0xd0)
+>
+>logged EH sequence failure:
+>ata2: port is slow to respond, please be patient (Status 0xd0)
+>ata2: device not ready (errno=3D-16), forcing hardreset
+>ata2: hard resetting port
+>ata2: port is slow to respond, please be patient (Status 0x80)
+>ata2: COMRESET failed (errno=3D-16)
+>ata2: hard resetting port
+>ata2: port is slow to respond, please be patient (Status 0x80)
+>ata2: COMRESET failed (errno=3D-16)
+>ata2: hard resetting port
+>ata2: port is slow to respond, please be patient (Status 0x80)
+>ata2: COMRESET failed (errno=3D-16)
+>ata2: hard resetting port
+>ata2: COMRESET failed (errno=3D-16)
+>ata2: reset failed, giving up
+>ata2.00: disabled
+>ata2: EH complete
+>sd 1:0:0:0: [sdb] Result: hostbyte=3D0x04 driverbyte=3D0x00
+>
+>tried does not work:
+>- multiply the ATA_TMOUT values by 10 and later by 100 against vanilla=
+=20
+>- increase retry counters
+>
+>some lines from dmesg below
+>libata version 2.21 loaded.
+>sata_via 0000:00:0d.0: version 2.3
+>ACPI: PCI Interrupt 0000:00:0d.0[A] -> Link [LNKA] -> GSI 11 (level, l=
+ow)
+-> IRQ 11
+>sata_via 0000:00:0d.0: routed to hard irq line 11
+>scsi0 : sata_via
+>scsi1 : sata_via
+>scsi2 : sata_via
+>ata1: SATA max UDMA/133 cmd 0x0001b800 ctl 0x0001b80a bmdma 0x0001a400
+irq 11
+>ata2: SATA max UDMA/133 cmd 0x0001b400 ctl 0x0001b40a bmdma 0x0001a408
+irq 11
+>ata3: PATA max UDMA/133 cmd 0x0001b000 ctl 0x0001b00a bmdma 0x0001a410
+irq 11
+>ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>ata1.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
+>ata1.00: 490234752 sectors, multi 16: LBA48 NCQ (not used)
+>ata1.00: configured for UDMA/133
+>ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>ata2.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
+>ata2.00: 490234752 sectors, multi 16: LBA48 NCQ (not used)
+>ata2.00: configured for UDMA/133
+>scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0
+ANSI: 5
+>sd 0:0:0:0: [sda] 490234752 512-byte hardware sectors (251000 MB)
+>sd 0:0:0:0: [sda] Write Protect is off
+>sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+>sd 0:0:0:0: [sda] 490234752 512-byte hardware sectors (251000 MB)
+>sd 0:0:0:0: [sda] Write Protect is off
+>sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+>sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+> sda: sda1 sda2 sda3
+>sd 0:0:0:0: [sda] Attached SCSI disk
+>sd 0:0:0:0: Attached scsi generic sg0 type 0
+>scsi 1:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0
+ANSI: 5
+>sd 1:0:0:0: [sdb] 490234752 512-byte hardware sectors (251000 MB)
+>sd 1:0:0:0: [sdb] Write Protect is off
+>sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+>sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+>sd 1:0:0:0: [sdb] 490234752 512-byte hardware sectors (251000 MB)
+>sd 1:0:0:0: [sdb] Write Protect is off
+>sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+>sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+> sdb: sdb1 sdb2 sdb3
+>sd 1:0:0:0: [sdb] Attached SCSI disk
+>sd 1:0:0:0: Attached scsi generic sg1 type 0
+>ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 10
+>PCI: setting IRQ 10 as level-triggered
+>ACPI: PCI Interrupt 0000:00:0e.0[A] -> Link [LNKB] -> GSI 10 (level, l=
+ow)
+-> IRQ 10
+>sata_via 0000:00:0e.0: routed to hard irq line 10
+>scsi3 : sata_via
+>scsi4 : sata_via
+>scsi5 : sata_via
+>ata4: SATA max UDMA/133 cmd 0x00019800 ctl 0x0001980a bmdma 0x00018400
+irq 10
+>ata5: SATA max UDMA/133 cmd 0x00019400 ctl 0x0001940a bmdma 0x00018408
+irq 10
+>ata6: PATA max UDMA/133 cmd 0x00019000 ctl 0x0001900a bmdma 0x00018410
+irq 10
+>ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>ata4.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
+>ata4.00: 490234752 sectors, multi 16: LBA48 NCQ (not used)
+>ata4.00: configured for UDMA/133
+>ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>ata5.00: ATA-7: Maxtor 6L250S0, BANC1G10, max UDMA/133
+>ata5.00: 490234752 sectors, multi 16: LBA48 NCQ (not used)
+>ata5.00: configured for UDMA/133
+>scsi 3:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0
+ANSI: 5
+>sd 3:0:0:0: [sdc] 490234752 512-byte hardware sectors (251000 MB)
+>sd 3:0:0:0: [sdc] Write Protect is off
+>sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+>sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+>sd 3:0:0:0: [sdc] 490234752 512-byte hardware sectors (251000 MB)
+>sd 3:0:0:0: [sdc] Write Protect is off
+>sd 3:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+>sd 3:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+> sdc: sdc1 sdc2 sdc3
+>sd 3:0:0:0: [sdc] Attached SCSI disk
+>sd 3:0:0:0: Attached scsi generic sg2 type 0
+>scsi 4:0:0:0: Direct-Access     ATA      Maxtor 6L250S0   BANC PQ: 0
+ANSI: 5
+>sd 4:0:0:0: [sdd] 490234752 512-byte hardware sectors (251000 MB)
+>sd 4:0:0:0: [sdd] Write Protect is off
+>sd 4:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+>sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+>sd 4:0:0:0: [sdd] 490234752 512-byte hardware sectors (251000 MB)
+>sd 4:0:0:0: [sdd] Write Protect is off
+>sd 4:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+>sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+> sdd: sdd1 sdd2 sdd3
+>sd 4:0:0:0: [sdd] Attached SCSI disk
+>sd 4:0:0:0: Attached scsi generic sg3 type 0
+>
+>The card information:
+>00:0d.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID
+Controller (rev 50)
+>        Subsystem: VIA Technologies, Inc. VT6421 IDE RAID Controller
+>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+>        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAb=
+ort-
+<TAbort- <MAbort- >SERR- <PERR-
+>        Latency: 32
+>        Interrupt: pin A routed to IRQ 11
+>        Region 0: I/O ports at b800 [size=3D16]
+>        Region 1: I/O ports at b400 [size=3D16]
+>        Region 2: I/O ports at b000 [size=3D16]
+>        Region 3: I/O ports at a800 [size=3D16]
+>        Region 4: I/O ports at a400 [size=3D32]
+>        Region 5: I/O ports at a000 [size=3D256]
+>        [virtual] Expansion ROM at 30100000 [disabled] [size=3D64K]
+>        Capabilities: [e0] Power Management version 2
+>                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
+>00: 06 11 49 32 07 00 90 02 50 00 04 01 00 20 00 00
+>10: 01 b8 00 00 01 b4 00 00 01 b0 00 00 01 a8 00 00
+>20: 01 a4 00 00 01 a0 00 00 00 00 00 00 06 11 49 32
+>30: 00 00 00 00 e0 00 00 00 00 00 00 00 0b 01 00 00
+>40: 33 03 f1 44 06 af 00 00 00 00 00 03 00 00 00 00
+>50: 00 00 00 00 00 00 00 00 00 10 10 00 05 00 20 00
+>60: 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 ff ff
+>70: 00 00 00 00 01 f0 00 00 01 00 01 00 00 00 00 00
+>80: 00 00 00 00 00 00 00 00 00 20 f2 1f 00 10 b7 1f
+>90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>a0: 0b f2 c9 35 10 ac c0 00 a8 a8 a8 a8 ff 00 b6 b6
+>b0: 0f 0f 0f 0f 34 00 00 00 00 00 20 00 00 00 00 00
+>c0: 00 02 00 00 00 00 00 00 00 02 00 00 00 00 00 00
+>d0: 02 01 00 00 00 00 00 00 02 01 00 00 00 00 00 00
+>e0: 01 00 02 00 00 00 00 00 50 01 49 32 06 11 49 32
+>f0: 00 00 70 00 00 00 00 00 00 00 00 00 00 00 00 00
+>
+>00:0e.0 RAID bus controller: VIA Technologies, Inc. VT6421 IDE RAID
+Controller (rev 50)
+>        Subsystem: VIA Technologies, Inc. VT6421 IDE RAID Controller
+>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+>        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmedium >TAb=
+ort-
+<TAbort- <MAbort- >SERR- <PERR-
+>        Latency: 32
+>        Interrupt: pin A routed to IRQ 10
+>        Region 0: I/O ports at 9800 [size=3D16]
+>        Region 1: I/O ports at 9400 [size=3D16]
+>        Region 2: I/O ports at 9000 [size=3D16]
+>        Region 3: I/O ports at 8800 [size=3D16]
+>        Region 4: I/O ports at 8400 [size=3D32]
+>        Region 5: I/O ports at 8000 [size=3D256]
+>        [virtual] Expansion ROM at 30110000 [disabled] [size=3D64K]
+>        Capabilities: [e0] Power Management version 2
+>                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                Status: D0 PME-Enable- DSel=3D0 DScale=3D0 PME-
+>00: 06 11 49 32 07 00 90 02 50 00 04 01 00 20 00 00
+>10: 01 98 00 00 01 94 00 00 01 90 00 00 01 88 00 00
+>20: 01 84 00 00 01 80 00 00 00 00 00 00 06 11 49 32
+>30: 00 00 00 00 e0 00 00 00 00 00 00 00 0a 01 00 00
+>40: 33 03 f1 44 06 af 00 00 00 00 00 03 00 00 00 00
+>50: 00 00 00 00 00 00 00 00 00 10 10 00 05 00 10 00
+>60: 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 ff ff
+>70: 00 00 00 00 01 f0 00 00 01 00 01 00 00 00 00 00
+>80: 00 00 00 00 00 00 00 00 00 80 b6 1f 00 70 bb 1f
+>90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>a0: 0b f2 c9 35 10 ac c0 00 a8 a8 a8 a8 ff 00 b6 b6
+>b0: 0f 0f 0f 0f 34 00 00 00 00 00 20 00 00 00 00 00
+>c0: 00 02 00 00 00 00 00 00 00 02 00 00 00 00 00 00
+>d0: 02 01 00 00 00 00 00 00 02 01 00 00 00 00 00 00
+>e0: 01 00 02 00 00 00 00 00 50 01 49 32 06 11 49 32
+>f0: 00 00 70 00 00 00 00 00 00 00 00 00 00 00 00 00
+>
+>Thanks for everything and anything.
+>
+>PS: to me it seems that the kernel treats both ports on one card as
+paralelly accessible SATA ports but the PCI/DMA makes it only one port =
+a
+time and this missed fact is causing the problem. So the question is th=
+is
+correct and where should I start looking for the port to pci slot mappi=
+ng
+to group ports and where to add some kind of locking - first/second por=
+t.
+(if nobody else has that already fixed somewhere)
+>Btw. how about 3 port and 4 port cards?
+>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-ide" i=
+n
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
