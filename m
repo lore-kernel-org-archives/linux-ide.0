@@ -1,29 +1,57 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
-Date: Fri, 25 Jan 2008 02:08:39 +0900
-Message-ID: <4798C617.10601@gmail.com>
-References: <4794459C.3090200@gmail.com> <4796DC44.6010100@gmail.com>	 <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>	 <4797ECF3.5000306@gmail.com>	 <864c1e490801231823v3e9cf61ds2a0d553ed5b61fb2@mail.gmail.com>	 <4797F8D0.6060302@gmail.com>	 <864c1e490801231939k6008bc95tf40565a8ef6f430d@mail.gmail.com>	 <47980B71.3000408@gmail.com>	 <864c1e490801240707x31ff53b1s3d72032968e1bcbc@mail.gmail.com>	 <4798AA88.5080107@gmail.com> <864c1e490801240840q5423a1beuf9b4b3a43416db2b@mail.gmail.com>
+From: "Jim MacBaine" <jmacbaine@gmail.com>
+Subject: Re: SATA timeouts on two disks
+Date: Thu, 24 Jan 2008 18:31:56 +0100
+Message-ID: <3afbacad0801240931w4587d79cj6a84f36320573a9a@mail.gmail.com>
+References: <3afbacad0801121656u7318de7l57ba5064da259f3f@mail.gmail.com>
+	 <18313.65287.290482.369023@harpo.it.uu.se>
+	 <3afbacad0801190822v19be782er3d48cbc94293e262@mail.gmail.com>
+	 <47944E2E.2070300@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.249]:8780 "EHLO
-	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755916AbYAXRIx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 12:08:53 -0500
-Received: by hs-out-2122.google.com with SMTP id 54so283949hsz.5
-        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 09:08:52 -0800 (PST)
-In-Reply-To: <864c1e490801240840q5423a1beuf9b4b3a43416db2b@mail.gmail.com>
+Received: from py-out-1112.google.com ([64.233.166.181]:2893 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364AbYAXRb7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 12:31:59 -0500
+Received: by py-out-1112.google.com with SMTP id u52so488041pyb.10
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 09:31:59 -0800 (PST)
+In-Reply-To: <47944E2E.2070300@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Evans <evans02472@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-Thomas Evans wrote:
-> That's what I thought - is there another chip that support the 4726
-> PMP that you think I could try?
+Hi,
 
-JMicron SATA controllers are ahci and support PMP.
+On Jan 21, 2008 8:47 AM, Tejun Heo <htejun@gmail.com> wrote:
 
--- 
-tejun
+> If you still have the old PSU lying around, please try to power one of
+> the failing drive with the old PSU.  Just leave everything else as-is,
+> power-up old PSU by itself as described in the following web page and
+> connect only one of the failing drive to the old PSU.
+>
+>   http://modtown.co.uk/mt/article2.php?id=psumod
+>
+> And see whether the problem continues and if so on which drives.
+> Connecting SATA drives to separate power is completely safe even if they
+> don't have common ground because SATA connection never directly connect
+> to each other.
+
+Yes, I still have the old PSU lying around.
+
+A co-worker, to whom I explained my problem, asked me whether I had
+properly grounded my drives. In fact I had not: The drives resided in
+a vibration-absorbing frame through which their exterior had no
+electrical contact with the grounded case. Since I grounded the drives
+two days ago, I got no new errors.  So maybe my problem is solved.
+
+If not, I will happily try out your suggestion. Would you be so kind
+to explain in a few words, what connecting one drive to a second
+(supposedly good) PSU will show?
+
+(Is this still on-topic on this list?)
+
+Thanks a lot,
+Jim
