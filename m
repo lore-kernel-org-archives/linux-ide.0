@@ -1,48 +1,61 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SATA timeouts on two disks
-Date: Fri, 25 Jan 2008 08:19:14 +0900
-Message-ID: <47991CF2.2000403@gmail.com>
-References: <3afbacad0801121656u7318de7l57ba5064da259f3f@mail.gmail.com>	 <18313.65287.290482.369023@harpo.it.uu.se>	 <3afbacad0801190822v19be782er3d48cbc94293e262@mail.gmail.com>	 <47944E2E.2070300@gmail.com> <3afbacad0801240931w4587d79cj6a84f36320573a9a@mail.gmail.com>
+Subject: Re: WARNING: at drivers/ata/libata-core.c:5988 ata_qc_issue()
+Date: Fri, 25 Jan 2008 08:36:53 +0900
+Message-ID: <47992115.6050501@gmail.com>
+References: <4798ACCC.3040104@rtr.ca> <4798AE28.4000408@gmail.com> <4798B526.4020709@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:32914 "EHLO
+Received: from rv-out-0910.google.com ([209.85.198.191]:60358 "EHLO
 	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753657AbYAXXTV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 18:19:21 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so439673rvb.1
-        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 15:19:20 -0800 (PST)
-In-Reply-To: <3afbacad0801240931w4587d79cj6a84f36320573a9a@mail.gmail.com>
+	with ESMTP id S1755130AbYAXXg7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 18:36:59 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so444165rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 15:36:58 -0800 (PST)
+In-Reply-To: <4798B526.4020709@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim MacBaine <jmacbaine@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
+Mark Lord wrote:
+> Tejun Heo wrote:
+>> Mark Lord wrote:
+>>> Tejun,
+>>>
+>>> During testing with NCQ on sata_mv (patches coming shortly),
+>>> I found this gem in the syslog.  This doesn't look like something
+>>> that a LLD could cause, but rather a race perhaps in libata-core.
+>>
+>> Hmmm... This isn't supposed to happen.
+>>
+>>> System is a 2.4GHz 32-bit Core2Quad, 2GB RAM (during this test),
+>>> running 2.6.24-rc6-git12 + newer sata_mv, with two sata_mv controller
+>>> cards, each with one NCQ drive performing heavy R/W activity.
+>>>
+>>> Other than that, I'm not sure what triggered this.
+>>
+>> Can you please tell me which version you were using?  Or tell me which
+>> one of the three WARN_ON()'s in ata_qc_issue() was triggered?  Thanks.
+> ..
+>>> [  289.892890] WARNING: at drivers/ata/libata-core.c:5988 ata_qc_issue()
+> ..
+> 
+> The first one shown below, at drivers/ata/libata-core.c:5988:
+> 
+>> void ata_qc_issue(struct ata_queued_cmd *qc)
+>> {
+>>         struct ata_port *ap = qc->ap;
+>>         struct ata_link *link = qc->dev->link;
+>>
+>>         /* Make sure only one non-NCQ command is outstanding.  The
+>>          * check is skipped for old EH because it reuses active qc to
+>>          * request ATAPI sense.
+>>          */
+> =         WARN_ON(ap->ops->error_handler &&
 
-Jim MacBaine wrote:
-> A co-worker, to whom I explained my problem, asked me whether I had
-> properly grounded my drives. In fact I had not: The drives resided in
-> a vibration-absorbing frame through which their exterior had no
-> electrical contact with the grounded case. Since I grounded the drives
-> two days ago, I got no new errors.  So maybe my problem is solved.
-
-Hmmm... Grounding..... Interesting.
-
-> If not, I will happily try out your suggestion. Would you be so kind
-> to explain in a few words, what connecting one drive to a second
-> (supposedly good) PSU will show?
-
-It's just a good way to isolate problems.  For example, the motherboard
-could be doing something strange on the 12v rail and the PSU could be
-too sensitive causing the whole rail to fluctuate slightly leading to
-occasional transmission errors.  SATA links are the first to be affected
-by those kinds of electrical problems.
-
-> (Is this still on-topic on this list?)
-
-Yeah, sure.
+Hmm... Thanks.  Do you have your ->qc_defer set?
 
 -- 
 tejun
