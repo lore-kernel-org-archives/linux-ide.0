@@ -1,140 +1,63 @@
-From: "Thomas Evans" <evans02472@gmail.com>
-Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
-Date: Wed, 23 Jan 2008 19:22:49 -0500
-Message-ID: <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
-References: <4794459C.3090200@gmail.com> <47944913.6000603@gmail.com>
-	 <4794CB8B.1070600@gmail.com> <4795545E.5010908@gmail.com>
-	 <864c1e490801222034w32cd8799h3600fb902a3d97e6@mail.gmail.com>
-	 <4796DC44.6010100@gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
+Date: Wed, 23 Jan 2008 18:43:28 -0600
+Message-ID: <4797DF30.6050208@shaw.ca>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca>
+ <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com>
+ <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com>
+ <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca>
+ <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com>
+ <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com>
+ <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca>
+ <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com>
+ <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com>
+ <478567D8.10601@shaw.ca>
+ <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com>
+ <478812C9.1000901@shaw.ca>
+ <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_16980_7686900.1201134169890"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:15232 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754903AbYAXAWx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 19:22:53 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so19278wxd.4
-        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2008 16:22:50 -0800 (PST)
-In-Reply-To: <4796DC44.6010100@gmail.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:29713 "EHLO
+	pd2mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407AbYAXAo1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jan 2008 19:44:27 -0500
+In-reply-to: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Kuan Luo <kluo@nvidia.com>
+Cc: Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Allen Martin <AMartin@nvidia.com>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 
-------=_Part_16980_7686900.1201134169890
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Kuan Luo wrote:
+> First thank  davide to help to send the attachment.
+> 
+> Robert,
+> The patch is to solve the error message "ata1: CPB flags CMD err,
+> flags=0x11" when testing HDS7250SASUN500G in rhel4u5.
+> I tested this hd in 2.6.24-rc7 which needed to remove the mask in
+> blacklist to run the ncq and the same error also showed up. 
+> 
+> I traced the  bug and found that the interrupt finished a command (for
+> example, tag=0) when the driver got that adma status is
+> NV_ADMA_STAT_DONE  and  cpb->resp_flags is NV_CPB_RESP_DONE.
+> However, For this hd, the drive maybe didn't clear bit 0 at this moment.
+> It meaned the hardware  had not completely finished the command.
+> If at the same time  the driver freed the command(tag 0) and sended
+> another command (tag 0), the error happened.
+> 
+> The notifier register is 32-bit register containing notifier value.
+> Value is bit vector containing one bit per tag number (0-31) in
+> corresponding bit positions (bit 0 is for tag 0, etc). When bit is set
+> then ADMA indicates that command with corresponding tag number completed
+> execution.
+> 
+> So i added the check notifier code. Sometimes i saw that the notifier
+> reg set some bits  , but the adma status set NV_ADMA_STAT_CMD_COMPLETE
+> ,not NV_ADMA_STAT_DONE. So i added the NV_ADMA_STAT_CMD_COMPLETE check
+> code.
 
-Hi All -
-> > If I forget and get the "Plug and Play" error, disconnecting the
-> > drives and resetting isn't enough, nor is power cycling *or*
-> > unplugging the machine.  I have to physically remove the card and
-> > restart without it, power down and then re-insert it.  I could only
-> > plug the card into a 32bit slot, btw.
->
-> So, except for BIOS weirdness, it works.
-
-I downgraded the BIOS in the card and it even works better on the x86 -
-not more pnp errors.
-
-> On x86, BIOS runs, on alpha, it doesn't.  It could be that BIOS
-> configures something.  Can you please post the result of 'lspci
-> -nnvvvxxx' of the sil24 controller on alpha and x86?
-
-I was attempting to look at that - SRM on Alpha won't run arbitrary
-option BIOSs (at least that I can figure - it will run those of
-devices it recognizes in some way via emulation).
-
-With that said, I've attached the output ...
-
-They are different, just don't understand the differences.
-
-...tom
-
-------=_Part_16980_7686900.1201134169890
-Content-Type: text/plain; name=lspci.alpha
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file1
-Content-Disposition: attachment; filename=lspci.alpha
-
-MDAwMDowMDowNy4wIE1hc3Mgc3RvcmFnZSBjb250cm9sbGVyIFswMTgwXTogU2lsaWNvbiBJbWFn
-ZSwgSW5jLiBTaUkgMzEyNCBQQ0ktWCBTZXJpYWwgQVRBIENvbnRyb2xsZXIgWzEwOTU6MzEyNF0g
-KHJldiAwMikKCVN1YnN5c3RlbTogU2lsaWNvbiBJbWFnZSwgSW5jLiBTaUkgMzEyNCBQQ0ktWCBT
-ZXJpYWwgQVRBIENvbnRyb2xsZXIgWzEwOTU6MzEyNF0KCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNN
-YXN0ZXIrIFNwZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmcrIFNF
-UlItIEZhc3RCMkItCglTdGF0dXM6IENhcCsgNjZNSHorIFVERi0gRmFzdEIyQisgUGFyRXJyLSBE
-RVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUisKCUxh
-dGVuY3k6IDI0MCwgQ2FjaGUgTGluZSBTaXplOiA2NCBieXRlcwoJSW50ZXJydXB0OiBwaW4gQSBy
-b3V0ZWQgdG8gSVJRIDMxCglSZWdpb24gMDogTWVtb3J5IGF0IDA5YWE5MDAwICg2NC1iaXQsIG5v
-bi1wcmVmZXRjaGFibGUpIFtzaXplPTEyOF0KCVJlZ2lvbiAyOiBNZW1vcnkgYXQgMDlhYTAwMDAg
-KDY0LWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MzJLXQoJUmVnaW9uIDQ6IEkvTyBwb3J0
-cyBhdCA5MDEwIFtzaXplPTE2XQoJRXhwYW5zaW9uIFJPTSBhdCAwOWEwMDAwMCBbZGlzYWJsZWRd
-IFtzaXplPTUxMktdCglDYXBhYmlsaXRpZXM6IFs2NF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9u
-IDIKCQlGbGFnczogUE1FQ2xrLSBEU0krIEQxKyBEMisgQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxE
-MS0sRDItLEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERT
-Y2FsZT0xIFBNRS0KCUNhcGFiaWxpdGllczogWzQwXSBQQ0ktWCBub24tYnJpZGdlIGRldmljZQoJ
-CUNvbW1hbmQ6IERQRVJFLSBFUk8rIFJCQz01MTIgT1NUPTEyCgkJU3RhdHVzOiBEZXY9ZmY6MWYu
-MCA2NGJpdCsgMTMzTUh6KyBTQ0QtIFVTQy0gREM9c2ltcGxlIERNTVJCQz0yMDQ4IERNT1NUPTEy
-IERNQ1JTPTEyOCBSU0NFTS0gMjY2TUh6LSA1MzNNSHotCglDYXBhYmlsaXRpZXM6IFs1NF0gTWVz
-c2FnZSBTaWduYWxsZWQgSW50ZXJydXB0czogTWFzay0gNjRiaXQrIFF1ZXVlPTAvMCBFbmFibGUt
-CgkJQWRkcmVzczogMDAwMDAwMDAwMDAwMDAwMCAgRGF0YTogMDAwMAowMDogOTUgMTAgMjQgMzEg
-ODcgMDAgYjAgODIgMDIgMDAgODAgMDEgMTAgZjAgMDAgMDAKMTA6IDA0IDkwIGFhIDA5IDAwIDAw
-IDAwIDAwIDA0IDAwIGFhIDA5IDAwIDAwIDAwIDAwCjIwOiAxMSA5MCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCA5NSAxMCAyNCAzMQozMDogMDAgMDAgOTAgMDEgNjQgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMWYgMDEgMDAgMDAKNDA6IDA3IDU0IDUyIDAwIGY4IGZmIGMzIDEyIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwCjUwOiAwMCAwMCAwMCAwMCAwNSAwMCA4MCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMAo2MDogMDAgMDAgMDAgMDAgMDEgNDAgMjIgMDYgMDAgMjAgMDAgMTkgMDAgMDAg
-MDAgMDAKNzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-CjgwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAo5MDog
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKYTA6IDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMApmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAKCg==
-------=_Part_16980_7686900.1201134169890
-Content-Type: text/plain; name=lspci.bios-6.3
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file2
-Content-Disposition: attachment; filename=lspci.bios-6.3
-
-MDM6MDUuMCBNYXNzIHN0b3JhZ2UgY29udHJvbGxlciBbMDE4MF06IFNpbGljb24gSW1hZ2UsIElu
-Yy4gU2lJIDMxMjQgUENJLVggU2VyaWFsIEFUQSBDb250cm9sbGVyIFsxMDk1OjMxMjRdIChyZXYg
-MDIpCglTdWJzeXN0ZW06IFNpbGljb24gSW1hZ2UsIEluYy4gU2lJIDMxMjQgUENJLVggU2VyaWFs
-IEFUQSBDb250cm9sbGVyIFsxMDk1OjMxMjRdCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVy
-KyBTcGVjQ3ljbGUrIE1lbVdJTlYrIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nKyBTRVJSKyBG
-YXN0QjJCLQoJU3RhdHVzOiBDYXArIDY2TUh6KyBVREYtIEZhc3RCMkIrIFBhckVyci0gREVWU0VM
-PW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItCglMYXRlbmN5
-OiA2NCwgQ2FjaGUgTGluZSBTaXplOiAzMiBieXRlcwoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQg
-dG8gSVJRIDE5CglSZWdpb24gMDogTWVtb3J5IGF0IGZhZmZmYzAwICg2NC1iaXQsIG5vbi1wcmVm
-ZXRjaGFibGUpIFtzaXplPTEyOF0KCVJlZ2lvbiAyOiBNZW1vcnkgYXQgZmFmZjAwMDAgKDY0LWJp
-dCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MzJLXQoJUmVnaW9uIDQ6IEkvTyBwb3J0cyBhdCBl
-Y2YwIFtzaXplPTE2XQoJRXhwYW5zaW9uIFJPTSBhdCBmYjAwMDAwMCBbZGlzYWJsZWRdIFtzaXpl
-PTUxMktdCglDYXBhYmlsaXRpZXM6IFs2NF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9uIDIKCQlG
-bGFnczogUE1FQ2xrLSBEU0krIEQxKyBEMisgQXV4Q3VycmVudD0wbUEgUE1FKEQwLSxEMS0sRDIt
-LEQzaG90LSxEM2NvbGQtKQoJCVN0YXR1czogRDAgUE1FLUVuYWJsZS0gRFNlbD0wIERTY2FsZT0x
-IFBNRS0KCUNhcGFiaWxpdGllczogWzQwXSBQQ0ktWCBub24tYnJpZGdlIGRldmljZQoJCUNvbW1h
-bmQ6IERQRVJFLSBFUk8rIFJCQz01MTIgT1NUPTEyCgkJU3RhdHVzOiBEZXY9ZmY6MWYuMCA2NGJp
-dCsgMTMzTUh6KyBTQ0QtIFVTQy0gREM9c2ltcGxlIERNTVJCQz0yMDQ4IERNT1NUPTEyIERNQ1JT
-PTEyOCBSU0NFTS0gMjY2TUh6LSA1MzNNSHotCglDYXBhYmlsaXRpZXM6IFs1NF0gTWVzc2FnZSBT
-aWduYWxsZWQgSW50ZXJydXB0czogTWFzay0gNjRiaXQrIFF1ZXVlPTAvMCBFbmFibGUtCgkJQWRk
-cmVzczogMDAwMDAwMDAwMDAwMDAwMCAgRGF0YTogMDAwMAowMDogOTUgMTAgMjQgMzEgOWYgMDEg
-YjAgMDIgMDIgMDAgODAgMDEgMDggNDAgMDAgMDAKMTA6IDA0IGZjIGZmIGZhIDAwIDAwIDAwIDAw
-IDA0IDAwIGZmIGZhIDAwIDAwIDAwIDAwCjIwOiBmMSBlYyAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCA5NSAxMCAyNCAzMQozMDogMDAgMDAgMDAgZmIgNjQgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMGIgMDEgMDAgMDAKNDA6IDA3IDU0IDUyIDAwIGY4IGZmIGMzIDEyIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwCjUwOiAwMCAwMCAwMCAwMCAwNSAwMCA4MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMAo2MDogMDAgMDAgMDAgMDAgMDEgNDAgMjIgMDYgMDAgMjAgMDAgMTkgMDAgMDAgMDAgMDAK
-NzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjgwOiAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAo5MDogMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKYTA6IDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCmIwOiAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMApjMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwCmUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMApmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAKCg==
-------=_Part_16980_7686900.1201134169890--
+Kuan, does this patch (using the notifiers to see if the command is 
+really done) still work if one port on the controller has ADMA disabled 
+because it's in ATAPI mode? I seem to recall Allen Martin mentioning 
+that notifiers wouldn't work in this case.
