@@ -1,52 +1,116 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 04/14] sata_mv rename base to port_mmio
-Date: Thu, 24 Jan 2008 15:59:03 -0500
-Message-ID: <4798FC17.2000802@rtr.ca>
+Subject: [PATCH 06/14] sata_mv Add want_ncq parameter for EDMA configuration
+Date: Thu, 24 Jan 2008 16:00:23 -0500
+Message-ID: <4798FC67.2040103@rtr.ca>
 References: <4798FB68.70400@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:1874 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:1900 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755800AbYAXU7F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Jan 2008 15:59:05 -0500
+	id S1756049AbYAXVAY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Jan 2008 16:00:24 -0500
 In-Reply-To: <4798FB68.70400@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-sata_mv rename base to port_mmio.
+sata_mv Add want_ncq parameter for EDMA configuration.
 
-Use naming consistent with elsewhere in this driver.
-This will keep things less confusing when we later add "hc_mmio" in this function.
+An extra EDMA config bit is required for NCQ operation.
+So set/clear it as needed, and cache current setting in port_priv.
+For now though, it will always be "off" (0).
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-01-24 11:23:05.000000000 -0500
-+++ new/drivers/ata/sata_mv.c	2008-01-24 11:26:33.000000000 -0500
-@@ -834,19 +834,19 @@
-  *      LOCKING:
+--- old/drivers/ata/sata_mv.c	2008-01-24 12:12:37.000000000 -0500
++++ new/drivers/ata/sata_mv.c	2008-01-24 12:07:16.000000000 -0500
+@@ -331,6 +331,7 @@
+ 
+ 	/* Port private flags (pp_flags) */
+ 	MV_PP_FLAG_EDMA_EN	= (1 << 0),	/* is EDMA engine enabled? */
++	MV_PP_FLAG_NCQ_EN	= (1 << 1),	/* is EDMA set up for NCQ? */
+ 	MV_PP_FLAG_HAD_A_RESET	= (1 << 2),	/* 1st hard reset complete? */
+ };
+ 
+@@ -471,8 +472,9 @@
+ static void mv_reset_pci_bus(struct pci_dev *pdev, void __iomem *mmio);
+ static void mv_channel_reset(struct mv_host_priv *hpriv, void __iomem *mmio,
+ 			     unsigned int port_no);
+-static void mv_edma_cfg(struct ata_port *ap, struct mv_host_priv *hpriv,
+-			void __iomem *port_mmio);
++static void mv_edma_cfg(struct mv_port_priv *pp, struct mv_host_priv *hpriv,
++			void __iomem *port_mmio, int want_ncq);
++static int __mv_stop_dma(struct ata_port *ap);
+ 
+ static struct scsi_host_template mv5_sht = {
+ 	.module			= THIS_MODULE,
+@@ -838,8 +840,15 @@
   *      Inherited from caller.
   */
--static void mv_start_dma(void __iomem *base, struct mv_host_priv *hpriv,
-+static void mv_start_dma(void __iomem *port_mmio, struct mv_host_priv *hpriv,
- 			 struct mv_port_priv *pp)
+ static void mv_start_dma(struct ata_port *ap, void __iomem *port_mmio,
+-			 struct mv_port_priv *pp)
++			 struct mv_port_priv *pp, u8 protocol)
  {
++	int want_ncq = ata_is_ncq(protocol);
++
++	if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
++		int using_ncq = ((pp->pp_flags & MV_PP_FLAG_NCQ_EN) != 0);
++		if (want_ncq != using_ncq)
++			__mv_stop_dma(ap);
++	}
  	if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
- 		/* clear EDMA event indicators, if any */
--		writelfl(0, base + EDMA_ERR_IRQ_CAUSE_OFS);
-+		writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 		struct mv_host_priv *hpriv = ap->host->private_data;
+ 		int hard_port = mv_hardport_from_port(ap->port_no);
+@@ -859,7 +868,7 @@
+ 				 hc_mmio + HC_IRQ_CAUSE_OFS);
+ 		}
  
--		mv_set_edma_ptrs(base, hpriv, pp);
-+		mv_set_edma_ptrs(port_mmio, hpriv, pp);
+-		mv_edma_cfg(ap, hpriv, port_mmio);
++		mv_edma_cfg(pp, hpriv, port_mmio, want_ncq);
  
--		writelfl(EDMA_EN, base + EDMA_CMD_OFS);
-+		writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
- 		pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
- 	}
--	WARN_ON(!(EDMA_EN & readl(base + EDMA_CMD_OFS)));
-+	WARN_ON(!(EDMA_EN & readl(port_mmio + EDMA_CMD_OFS)));
+ 		/* clear FIS IRQ Cause */
+ 		writelfl(0, port_mmio + SATA_FIS_IRQ_CAUSE_OFS);
+@@ -1045,8 +1054,8 @@
+ 		return -EINVAL;
  }
  
- /**
+-static void mv_edma_cfg(struct ata_port *ap, struct mv_host_priv *hpriv,
+-			void __iomem *port_mmio)
++static void mv_edma_cfg(struct mv_port_priv *pp, struct mv_host_priv *hpriv,
++			void __iomem *port_mmio, int want_ncq)
+ {
+ 	u32 cfg;
+ 
+@@ -1066,6 +1075,12 @@
+ 		cfg |= (1 << 17);	/* enab cut-through (dis stor&forwrd) */
+ 	}
+ 
++	if (want_ncq) {
++		cfg |= EDMA_CFG_NCQ;
++		pp->pp_flags |=  MV_PP_FLAG_NCQ_EN;
++	} else
++		pp->pp_flags &= ~MV_PP_FLAG_NCQ_EN;
++
+ 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
+ }
+ 
+@@ -1128,7 +1143,7 @@
+ 
+ 	spin_lock_irqsave(&ap->host->lock, flags);
+ 
+-	mv_edma_cfg(ap, hpriv, port_mmio);
++	mv_edma_cfg(pp, hpriv, port_mmio, 0);
+ 
+ 	mv_set_edma_ptrs(port_mmio, hpriv, pp);
+ 
+@@ -1396,7 +1411,7 @@
+ 		return ata_qc_issue_prot(qc);
+ 	}
+ 
+-	mv_start_dma(ap, port_mmio, pp);
++	mv_start_dma(ap, port_mmio, pp, qc->tf.protocol);
+ 
+ 	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
+ 
