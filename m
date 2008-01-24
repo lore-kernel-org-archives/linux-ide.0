@@ -1,58 +1,50 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: WARNING: at drivers/ata/libata-core.c:5988 ata_qc_issue()
-Date: Thu, 24 Jan 2008 10:56:22 -0500
-Message-ID: <4798B526.4020709@rtr.ca>
-References: <4798ACCC.3040104@rtr.ca> <4798AE28.4000408@gmail.com>
+From: "Thomas Evans" <evans02472@gmail.com>
+Subject: Re: sata_sil24 / Alpha / 4726 PMP issue ..
+Date: Thu, 24 Jan 2008 11:40:26 -0500
+Message-ID: <864c1e490801240840q5423a1beuf9b4b3a43416db2b@mail.gmail.com>
+References: <4794459C.3090200@gmail.com> <4796DC44.6010100@gmail.com>
+	 <864c1e490801231622n806b465g88a3f0448b5d8f29@mail.gmail.com>
+	 <4797ECF3.5000306@gmail.com>
+	 <864c1e490801231823v3e9cf61ds2a0d553ed5b61fb2@mail.gmail.com>
+	 <4797F8D0.6060302@gmail.com>
+	 <864c1e490801231939k6008bc95tf40565a8ef6f430d@mail.gmail.com>
+	 <47980B71.3000408@gmail.com>
+	 <864c1e490801240707x31ff53b1s3d72032968e1bcbc@mail.gmail.com>
+	 <4798AA88.5080107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4460 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754849AbYAXP40 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Jan 2008 10:56:26 -0500
-In-Reply-To: <4798AE28.4000408@gmail.com>
+Received: from wr-out-0506.google.com ([64.233.184.232]:21123 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbYAXQkb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 11:40:31 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so106558wra.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 08:40:27 -0800 (PST)
+In-Reply-To: <4798AA88.5080107@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Tejun Heo wrote:
-> Mark Lord wrote:
->> Tejun,
->>
->> During testing with NCQ on sata_mv (patches coming shortly),
->> I found this gem in the syslog.  This doesn't look like something
->> that a LLD could cause, but rather a race perhaps in libata-core.
-> 
-> Hmmm... This isn't supposed to happen.
-> 
->> System is a 2.4GHz 32-bit Core2Quad, 2GB RAM (during this test),
->> running 2.6.24-rc6-git12 + newer sata_mv, with two sata_mv controller
->> cards, each with one NCQ drive performing heavy R/W activity.
->>
->> Other than that, I'm not sure what triggered this.
-> 
-> Can you please tell me which version you were using?  Or tell me which
-> one of the three WARN_ON()'s in ata_qc_issue() was triggered?  Thanks.
-..
->> [  289.892890] WARNING: at drivers/ata/libata-core.c:5988 ata_qc_issue()
-..
+That's what I thought - is there another chip that support the 4726
+PMP that you think I could try?
 
-The first one shown below, at drivers/ata/libata-core.c:5988:
+...tom
 
-> void ata_qc_issue(struct ata_queued_cmd *qc)
-> {
->         struct ata_port *ap = qc->ap;
->         struct ata_link *link = qc->dev->link;
-> 
->         /* Make sure only one non-NCQ command is outstanding.  The
->          * check is skipped for old EH because it reuses active qc to
->          * request ATAPI sense.
->          */
-=         WARN_ON(ap->ops->error_handler && ata_tag_valid(link->active_tag));
-> 
->         if (qc->tf.protocol == ATA_PROT_NCQ) {
->                 WARN_ON(link->sactive & (1 << qc->tag));
-> 
-..
+
+On Jan 24, 2008 10:11 AM, Tejun Heo <htejun@gmail.com> wrote:
+> Thomas Evans wrote:
+> > I will work on getting that log - is there anything non-kernel that
+> > may have changed that could cause this?  udev changes or something
+> > like that?  Just so odd for it to start failing after having worked
+> > for so long.
+>
+> Nope, this is way before userland has any say in it.  The same kernel
+> version which used to work doesn't work on two slightly different
+> machines.  That's just weird.  :-(
+>
+> --
+> tejun
+>
