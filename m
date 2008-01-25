@@ -1,47 +1,33 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: WARNING: at drivers/ata/libata-core.c:5988 ata_qc_issue()
-Date: Fri, 25 Jan 2008 13:36:08 +0900
-Message-ID: <47996738.8030908@gmail.com>
-References: <4798ACCC.3040104@rtr.ca> <4798AE28.4000408@gmail.com> <4798B526.4020709@rtr.ca> <47992115.6050501@gmail.com> <479924B5.5060202@rtr.ca> <479925FF.4060501@gmail.com> <4799270D.3010009@rtr.ca> <4799285F.3060308@gmail.com> <47995EFD.8030102@rtr.ca> <479960DB.8050109@gmail.com> <479965C1.3070009@rtr.ca>
+Subject: Re: About forcing 32bit DMA patch for AMD690G(SB600)
+Date: Fri, 25 Jan 2008 14:50:06 +0900
+Message-ID: <4799788E.1030600@gmail.com>
+References: <B90463BC30D2E446BA423D888DC85E501BF3CB@sshaexmb1.amd.com>	 <47992BA3.3070104@gmail.com> <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:40562 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753240AbYAYEgO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 23:36:14 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so822250wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 20:36:14 -0800 (PST)
-In-Reply-To: <479965C1.3070009@rtr.ca>
+Received: from rv-out-0910.google.com ([209.85.198.190]:40926 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbYAYFuO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2008 00:50:14 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so567869rvb.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 21:50:13 -0800 (PST)
+In-Reply-To: <76366b180801242019h382fd604vd1458dab8b64dd4c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Andrew Paprocki <andrew@ishiboo.com>
+Cc: Shane Huang <Shane.Huang@amd.com>, sriharivijayaraghavan@yahoo.com.au, linux-ide@vger.kernel.org
 
-Mark Lord wrote:
-> Tejun Heo wrote:
->> Mark Lord wrote:
->> ..
->>> Super!  You've done a great job with this stuff, Tejun!
->>
->> Thanks but I can't really say nice things about how sata_sil24's
->> qc_defer() is implemented or how we generally handle command deferring.
->>  We really need the control at the higher level - request_queue group.
->> Oh well... I guess you guys will be talking about it over beer again
->> soon.  :-)
-> ..
-> 
-> You too?
+Andrew Paprocki wrote:
+> I have an SB600/RS690 here with SATA drives connected. I haven't been
+> following this thread, but I can help test something if it would help.
 
-Unfortunately not, overlapping family event && travel budget issues.  :-(
-
-> Another one for those beers, is a way to tell the IOMMU code about
-> physical segment limitations -- so we can stop having to allocate
-> PRD tables 2X as big as necessary in drivers like sata_mv.
-
-Hmmm... What's the restriction for sata_mv?  The same as BMDMA?  We need
-to update the block layer too to get the BMDMA right.
+We're trying to determine whether SB600 ahci controller can do 64bit DMA
+or not.  Srihari's couldn't but Shane's test result tells a different
+story.  Do you have memory mapped over 4G (if you have 4G some of them
+will be over 4G, you can know this by looking at the e820 map printed
+during boot)?
 
 -- 
 tejun
