@@ -1,33 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: AMD SB600  64 bit DMA issue
-Date: Fri, 25 Jan 2008 12:21:21 +0900
-Message-ID: <479955B1.3030600@gmail.com>
-References: <B90463BC30D2E446BA423D888DC85E5016993C@sshaexmb1.amd.com> <478D73C2.2070307@gmail.com> <B90463BC30D2E446BA423D888DC85E50169AC4@sshaexmb1.amd.com> <478D9572.4030404@gmail.com> <B90463BC30D2E446BA423D888DC85E50169B96@sshaexmb1.amd.com> <B90463BC30D2E446BA423D888DC85E50169CF4@sshaexmb1.amd.com> <478ED021.2010502@gmail.com> <B90463BC30D2E446BA423D888DC85E50169DD1@sshaexmb1.amd.com> <478EE947.1020805@gmail.com> <B90463BC30D2E446BA423D888DC85E50169F82@sshaexmb1.amd.com> <478F6ED3.4050102@gmail.com> <B90463BC30D2E446BA423D888DC85E5016A15B@sshaexmb1.amd.com> <B90463BC30D2E446BA423D888DC85E5016A698@sshaexmb1.amd.com> <47955DD2.3040405@gmail.com> <B90463BC30D2E446BA423D888DC85E5016A6EB@sshaexmb1.amd.com> <B90463BC30D2E446BA423D888DC85E5016A709@sshaexmb1.amd.com> <479923CD.4070701@gmail.
- com> <B90463BC30D2E446BA423D888DC85E501BF82D@sshaexmb1.amd.com> <47993EBC.4000504@gmail.com> <B90463BC30D2E446BA423D888DC85E501BF86A@sshaexmb1.amd.com>
+From: rgheck <rgheck@bobjweil.com>
+Subject: Re: SATA timeouts on two disks
+Date: Thu, 24 Jan 2008 22:24:46 -0500
+Message-ID: <4799567E.9010705@bobjweil.com>
+References: <3afbacad0801121656u7318de7l57ba5064da259f3f@mail.gmail.com>	 <18313.65287.290482.369023@harpo.it.uu.se>	 <3afbacad0801190822v19be782er3d48cbc94293e262@mail.gmail.com>	 <47944E2E.2070300@gmail.com> <3afbacad0801240931w4587d79cj6a84f36320573a9a@mail.gmail.com> <47991CF2.2000403@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:38839 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153AbYAYDV2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 22:21:28 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so788984wah.23
-        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2008 19:21:27 -0800 (PST)
-In-Reply-To: <B90463BC30D2E446BA423D888DC85E501BF86A@sshaexmb1.amd.com>
+Received: from qmta06.westchester.pa.mail.comcast.net ([76.96.62.56]:57239
+	"EHLO QMTA06.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752335AbYAYDYs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2008 22:24:48 -0500
+In-Reply-To: <47991CF2.2000403@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <Shane.Huang@amd.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jim MacBaine <jmacbaine@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-[cc'ing linux-ide]
+Tejun Heo wrote:
+> Hello,
+>
+> Jim MacBaine wrote:
+>   
+>> A co-worker, to whom I explained my problem, asked me whether I had
+>> properly grounded my drives. In fact I had not: The drives resided in
+>> a vibration-absorbing frame through which their exterior had no
+>> electrical contact with the grounded case. Since I grounded the drives
+>> two days ago, I got no new errors.  So maybe my problem is solved.
+>>     
+>
+> Hmmm... Grounding..... Interesting.
+>
+>   
+Can you say about more about this, Jim? This may also be my problem, or 
+part of it, as my drives too are mounted in such a way as not to be in 
+physical contact with the case. How did you go about grounding them? I 
+suppose one test would be just to remove the washers....
 
-Thanks, hmmm... weird.  The log is w/ MSI disabled, right?  SB600 is
-reporting MSI capability alright.  I wonder why MSI is not enabled with
-the quirk lifted.  Can you please post full boot log and the result of
-'lspci -nnvvvxxx' w/ the quirk removed?
+That said, in my case, 2.6.24 seems to make a big difference, too. I 
+accidentally booted into 2.6.23 today and, boom.
 
-Thanks.
+Richard
 
--- 
-tejun
