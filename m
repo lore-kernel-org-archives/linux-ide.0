@@ -1,33 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata error codes
-Date: Sat, 26 Jan 2008 10:54:19 +0900
-Message-ID: <479A92CB.7070504@gmail.com>
-References: <5d96567b0801150939y3802a73aqcbab553af5fe6015@mail.gmail.com>	 <47945202.8090107@gmail.com> <5d96567b0801250313x4f5d0b62q6147ec5d873bb002@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/14] sata_mv EH fixes
+Date: Fri, 25 Jan 2008 23:09:41 -0500
+Message-ID: <479AB285.2000707@pobox.com>
+References: <4798FB68.70400@rtr.ca> <4798FBA1.20202@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.190]:55329 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837AbYAZBy0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2008 20:54:26 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so926392rvb.1
-        for <linux-ide@vger.kernel.org>; Fri, 25 Jan 2008 17:54:25 -0800 (PST)
-In-Reply-To: <5d96567b0801250313x4f5d0b62q6147ec5d873bb002@mail.gmail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:52248 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992AbYAZEJo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Jan 2008 23:09:44 -0500
+In-Reply-To: <4798FBA1.20202@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Raz <raziebe@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Raz wrote:
-> I saw in Jeff Garzik the link to http://www.t13.org/ for the ata 's
-> documentation. Unfortunately , I do seem to be able to correlate the
-> errors in the specs to the errors appear in dmesg. If you would be
-> kind to direct me a little, I would write a code that dumps more
-> information, something like ata_error err = <error code > utility.
+Mark Lord wrote:
+> sata_mv EH fixes.
+> 
+> A hard reset is necessary after hotplug events.
+> Only clear the error irq bits that were set on entry.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- old/drivers/ata/sata_mv.c    2008-01-24 10:40:11.000000000 -0500
+> +++ new/drivers/ata/sata_mv.c    2008-01-24 11:11:26.000000000 -0500
+> @@ -1437,6 +1437,7 @@
+>         ata_ehi_hotplugged(ehi);
+>         ata_ehi_push_desc(ehi, edma_err_cause & EDMA_ERR_DEV_DCON ?
+>             "dev disconnect" : "dev connect");
+> +        action |= ATA_EH_HARDRESET;
+>     }
+> 
+>     if (IS_GEN_I(hpriv)) {
+> @@ -1465,7 +1466,7 @@
+>     }
+> 
+>     /* Clear EDMA now that SERR cleanup done */
+> -    writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+> +    writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
 
-What do you mean by 'utility'?  A separate program to interpret kernel
-error message?
+ACK
 
--- 
-tejun
+
