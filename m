@@ -1,41 +1,40 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>  (linux.* mail to news gateway)
-Date: Sat, 26 Jan 2008 22:08:28 +0100
-Message-ID: <200801262208.28859.bzolnier@gmail.com>
-References: <200801262043.17739.bzolnier@gmail.com> <E1JIrgj-0005cj-Gv@faramir.fjphome.nl> <Pine.LNX.4.64.0801262142300.15243@fbirervta.pbzchgretzou.qr>
+From: Mark Lord <liml@rtr.ca>
+Subject: [PATCH 01/13] sata_mv ncq EH fixes
+Date: Sat, 26 Jan 2008 18:28:23 -0500
+Message-ID: <479BC217.60709@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756146AbYAZU4I@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0801262142300.15243@fbirervta.pbzchgretzou.qr>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@computergmbh.de>
-Cc: Frans Pop <elendil@planet.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:4380 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752516AbYAZX2Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Jan 2008 18:28:24 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Saturday 26 January 2008, Jan Engelhardt wrote:
-> 
-> On Jan 26 2008 21:31, Frans Pop wrote:
-> >>  config BLK_DEV_IDE_PMAC
-> >> -       bool "Builtin PowerMac IDE support"
-> >> +       tristate "Builtin PowerMac IDE support"
+A hard reset is necessary after hotplug events.
+Only clear the error irq bits that were set on entry.
 
-this change is no-op at the moment because the next Kconfig line is:
+Signed-off-by: Mark Lord <mlord@pobox.com>
 
-	depends on PPC_PMAC && IDE=y && BLK_DEV_IDE=y
-
-[ PPC-specific IDE host drivers are still a special case because they are
-  using ppc_ide_md architecture hooks instead of doing proper host driver
-  initialization sequence - to be fixed after adding warm-plug support... ]
-
-> >This does not seem to make sense: if the option is now tristate, it is no
-> >longer "Builtin", so probably s/Builtin // in the description.
-> 
-> Or something like s/Builtin/Onboard/;
-
-Please send a patch.
-
-Thanks,
-Bart
+--- old/drivers/ata/sata_mv.c	2008-01-24 10:40:11.000000000 -0500
++++ new/drivers/ata/sata_mv.c	2008-01-24 11:11:26.000000000 -0500
+@@ -1437,6 +1437,7 @@
+ 		ata_ehi_hotplugged(ehi);
+ 		ata_ehi_push_desc(ehi, edma_err_cause & EDMA_ERR_DEV_DCON ?
+ 			"dev disconnect" : "dev connect");
++		action |= ATA_EH_HARDRESET;
+ 	}
+ 
+ 	if (IS_GEN_I(hpriv)) {
+@@ -1465,7 +1466,7 @@
+ 	}
+ 
+ 	/* Clear EDMA now that SERR cleanup done */
+-	writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
++	writelfl(~edma_err_cause, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
+ 
+ 	if (!err_mask) {
+ 		err_mask = AC_ERR_OTHER;
