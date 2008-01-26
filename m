@@ -1,210 +1,148 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: [PATCH 09/13] sata_mv ncq Use DMA memory pools for hardware memory
- tables
-Date: Sat, 26 Jan 2008 18:32:45 -0500
-Message-ID: <479BC31D.1050206@rtr.ca>
+Subject: [PATCH 10/13] sata_mv ncq Introduce per-tag SG tables
+Date: Sat, 26 Jan 2008 18:32:59 -0500
+Message-ID: <479BC32B.7010505@rtr.ca>
 References: <479BC217.60709@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:3068 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:3072 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752765AbYAZXcq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 26 Jan 2008 18:32:46 -0500
+	id S1752774AbYAZXdA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Jan 2008 18:33:00 -0500
 In-Reply-To: <479BC217.60709@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Create host-owned DMA memory pools, for use in allocating/freeing per-port
-command/response queues and SG tables.  This gives us a way to guarantee we
-meet the hardware address alignment requirements, and also reduces memory that
-might otherwise be wasted on alignment gaps.
+In preparation for supporting NCQ, we must allocate separate SG tables
+for each command tag, rather than just a single table per port as before.
+
+Gen-I hardware cannot do NCQ, though, so we still allocate just a single
+table for that, but populate it in all 32 slots to avoid special-cases
+elsewhere in hotter paths of the code.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- old/drivers/ata/sata_mv.c	2008-01-26 12:50:54.000000000 -0500
-+++ new/drivers/ata/sata_mv.c	2008-01-26 13:01:56.000000000 -0500
-@@ -107,14 +107,12 @@
+--- old/drivers/ata/sata_mv.c	2008-01-26 14:18:05.000000000 -0500
++++ new/drivers/ata/sata_mv.c	2008-01-26 14:19:12.000000000 -0500
+@@ -398,8 +398,8 @@
+ 	dma_addr_t		crqb_dma;
+ 	struct mv_crpb		*crpb;
+ 	dma_addr_t		crpb_dma;
+-	struct mv_sg		*sg_tbl;
+-	dma_addr_t		sg_tbl_dma;
++	struct mv_sg		*sg_tbl[MV_MAX_Q_DEPTH];
++	dma_addr_t		sg_tbl_dma[MV_MAX_Q_DEPTH];
  
- 	/* CRQB needs alignment on a 1KB boundary. Size == 1KB
- 	 * CRPB needs alignment on a 256B boundary. Size == 256B
--	 * SG count of 176 leads to MV_PORT_PRIV_DMA_SZ == 4KB
- 	 * ePRD (SG) entries need alignment on a 16B boundary. Size == 16B
- 	 */
- 	MV_CRQB_Q_SZ		= (32 * MV_MAX_Q_DEPTH),
- 	MV_CRPB_Q_SZ		= (8 * MV_MAX_Q_DEPTH),
--	MV_MAX_SG_CT		= 176,
-+	MV_MAX_SG_CT		= 256,
- 	MV_SG_TBL_SZ		= (16 * MV_MAX_SG_CT),
--	MV_PORT_PRIV_DMA_SZ	= (MV_CRQB_Q_SZ + MV_CRPB_Q_SZ + MV_SG_TBL_SZ),
+ 	unsigned int		req_idx;
+ 	unsigned int		resp_idx;
+@@ -483,6 +483,10 @@
+ 			void __iomem *port_mmio, int want_ncq);
+ static int __mv_stop_dma(struct ata_port *ap);
  
- 	MV_PORTS_PER_HC		= 4,
- 	/* == (port / MV_PORTS_PER_HC) to determine HC from 0-7 port */
-@@ -421,6 +419,14 @@
- 	u32			irq_cause_ofs;
- 	u32			irq_mask_ofs;
- 	u32			unmask_all_irqs;
++/* .sg_tablesize is (MV_MAX_SG_CT / 2) in the structures below
++ * because we have to allow room for worst case splitting of
++ * PRDs for 64K boundaries in mv_fill_sg().
++ */
+ static struct scsi_host_template mv5_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+@@ -1107,6 +1111,7 @@
+ {
+ 	struct mv_host_priv *hpriv = ap->host->private_data;
+ 	struct mv_port_priv *pp = ap->private_data;
++	int tag;
+ 
+ 	if (pp->crqb) {
+ 		dma_pool_free(hpriv->crqb_pool, pp->crqb, pp->crqb_dma);
+@@ -1116,9 +1121,18 @@
+ 		dma_pool_free(hpriv->crpb_pool, pp->crpb, pp->crpb_dma);
+ 		pp->crpb = NULL;
+ 	}
+-	if (pp->sg_tbl) {
+-		dma_pool_free(hpriv->sg_tbl_pool, pp->sg_tbl, pp->sg_tbl_dma);
+-		pp->sg_tbl = NULL;
 +	/*
-+	 * These consistent DMA memory pools give us guaranteed
-+	 * alignment for hardware-accessed data structures,
-+	 * and less memory waste in accomplishing the alignment.
++	 * For GEN_I, there's no NCQ, so we have only a single sg_tbl.
++	 * For later hardware, we have one unique sg_tbl per NCQ tag.
 +	 */
-+	struct dma_pool		*crqb_pool;
-+	struct dma_pool		*crpb_pool;
-+	struct dma_pool		*sg_tbl_pool;
- };
- 
- struct mv_hw_ops {
-@@ -1097,6 +1103,25 @@
- 	writelfl(cfg, port_mmio + EDMA_CFG_OFS);
++	for (tag = 0; tag < MV_MAX_Q_DEPTH; ++tag) {
++		if (pp->sg_tbl[tag]) {
++			if (tag == 0 || !IS_GEN_I(hpriv))
++				dma_pool_free(hpriv->sg_tbl_pool,
++					      pp->sg_tbl[tag],
++					      pp->sg_tbl_dma[tag]);
++			pp->sg_tbl[tag] = NULL;
++		}
+ 	}
  }
  
-+static void mv_port_free_dma_mem(struct ata_port *ap)
-+{
-+	struct mv_host_priv *hpriv = ap->host->private_data;
-+	struct mv_port_priv *pp = ap->private_data;
-+
-+	if (pp->crqb) {
-+		dma_pool_free(hpriv->crqb_pool, pp->crqb, pp->crqb_dma);
-+		pp->crqb = NULL;
-+	}
-+	if (pp->crpb) {
-+		dma_pool_free(hpriv->crpb_pool, pp->crpb, pp->crpb_dma);
-+		pp->crpb = NULL;
-+	}
-+	if (pp->sg_tbl) {
-+		dma_pool_free(hpriv->sg_tbl_pool, pp->sg_tbl, pp->sg_tbl_dma);
-+		pp->sg_tbl = NULL;
-+	}
-+}
-+
- /**
-  *      mv_port_start - Port specific init/start routine.
-  *      @ap: ATA channel to manipulate
-@@ -1113,51 +1138,36 @@
- 	struct mv_host_priv *hpriv = ap->host->private_data;
+@@ -1139,7 +1153,7 @@
  	struct mv_port_priv *pp;
  	void __iomem *port_mmio = mv_ap_base(ap);
--	void *mem;
--	dma_addr_t mem_dma;
  	unsigned long flags;
- 	int rc;
+-	int rc;
++	int tag, rc;
  
  	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
  	if (!pp)
- 		return -ENOMEM;
--
--	mem = dmam_alloc_coherent(dev, MV_PORT_PRIV_DMA_SZ, &mem_dma,
--				  GFP_KERNEL);
--	if (!mem)
--		return -ENOMEM;
--	memset(mem, 0, MV_PORT_PRIV_DMA_SZ);
-+	ap->private_data = pp;
+@@ -1160,10 +1174,21 @@
+ 		goto out_port_free_dma_mem;
+ 	memset(pp->crpb, 0, MV_CRPB_Q_SZ);
  
- 	rc = ata_pad_alloc(ap, dev);
- 	if (rc)
- 		return rc;
- 
--	/* First item in chunk of DMA memory:
--	 * 32-slot command request table (CRQB), 32 bytes each in size
--	 */
--	pp->crqb = mem;
--	pp->crqb_dma = mem_dma;
--	mem += MV_CRQB_Q_SZ;
--	mem_dma += MV_CRQB_Q_SZ;
--
--	/* Second item:
--	 * 32-slot command response table (CRPB), 8 bytes each in size
--	 */
--	pp->crpb = mem;
--	pp->crpb_dma = mem_dma;
--	mem += MV_CRPB_Q_SZ;
--	mem_dma += MV_CRPB_Q_SZ;
-+	pp->crqb = dma_pool_alloc(hpriv->crqb_pool, GFP_KERNEL, &pp->crqb_dma);
-+	if (!pp->crqb)
-+		return -ENOMEM;
-+	memset(pp->crqb, 0, MV_CRQB_Q_SZ);
- 
--	/* Third item:
--	 * Table of scatter-gather descriptors (ePRD), 16 bytes each
--	 */
--	pp->sg_tbl = mem;
--	pp->sg_tbl_dma = mem_dma;
-+	pp->crpb = dma_pool_alloc(hpriv->crpb_pool, GFP_KERNEL, &pp->crpb_dma);
-+	if (!pp->crpb)
-+		goto out_port_free_dma_mem;
-+	memset(pp->crpb, 0, MV_CRPB_Q_SZ);
-+
-+	pp->sg_tbl = dma_pool_alloc(hpriv->sg_tbl_pool, GFP_KERNEL,
-+							      &pp->sg_tbl_dma);
-+	if (!pp->sg_tbl)
-+		goto out_port_free_dma_mem;
+-	pp->sg_tbl = dma_pool_alloc(hpriv->sg_tbl_pool, GFP_KERNEL,
+-							      &pp->sg_tbl_dma);
+-	if (!pp->sg_tbl)
+-		goto out_port_free_dma_mem;
++	/*
++	 * For GEN_I, there's no NCQ, so we only allocate a single sg_tbl.
++	 * For later hardware, we need one unique sg_tbl per NCQ tag.
++	 */
++	for (tag = 0; tag < MV_MAX_Q_DEPTH; ++tag) {
++		if (tag == 0 || !IS_GEN_I(hpriv)) {
++			pp->sg_tbl[tag] = dma_pool_alloc(hpriv->sg_tbl_pool,
++					      GFP_KERNEL, &pp->sg_tbl_dma[tag]);
++			if (!pp->sg_tbl[tag])
++				goto out_port_free_dma_mem;
++		} else {
++			pp->sg_tbl[tag]     = pp->sg_tbl[0];
++			pp->sg_tbl_dma[tag] = pp->sg_tbl_dma[0];
++		}
++	}
  
  	spin_lock_irqsave(&ap->host->lock, flags);
  
- 	mv_edma_cfg(pp, hpriv, port_mmio, 0);
--
- 	mv_set_edma_ptrs(port_mmio, hpriv, pp);
+@@ -1213,7 +1238,7 @@
+	struct mv_sg *mv_sg, *last_sg = NULL;
+	unsigned int si;
  
- 	spin_unlock_irqrestore(&ap->host->lock, flags);
-@@ -1166,8 +1176,11 @@
- 	 * we'll be unable to send non-data, PIO, etc due to restricted access
- 	 * to shadow regs.
- 	 */
--	ap->private_data = pp;
- 	return 0;
-+
-+out_port_free_dma_mem:
-+	mv_port_free_dma_mem(ap);
-+	return -ENOMEM;
- }
+-	mv_sg = pp->sg_tbl;
++	mv_sg = pp->sg_tbl[qc->tag];
+	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		dma_addr_t addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
+@@ -1283,9 +1308,9 @@
+ 	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
  
- /**
-@@ -1182,6 +1195,7 @@
- static void mv_port_stop(struct ata_port *ap)
- {
- 	mv_stop_dma(ap);
-+	mv_port_free_dma_mem(ap);
- }
+ 	pp->crqb[in_index].sg_addr =
+-		cpu_to_le32(pp->sg_tbl_dma & 0xffffffff);
++		cpu_to_le32(pp->sg_tbl_dma[qc->tag] & 0xffffffff);
+ 	pp->crqb[in_index].sg_addr_hi =
+-		cpu_to_le32((pp->sg_tbl_dma >> 16) >> 16);
++		cpu_to_le32((pp->sg_tbl_dma[qc->tag] >> 16) >> 16);
+ 	pp->crqb[in_index].ctrl_flags = cpu_to_le16(flags);
  
- /**
-@@ -2765,6 +2779,26 @@
- 	       scc_s, (MV_HP_FLAG_MSI & hpriv->hp_flags) ? "MSI" : "INTx");
- }
+ 	cw = &pp->crqb[in_index].ata_cmd[0];
+@@ -1376,8 +1401,8 @@
+ 	in_index = pp->req_idx & MV_MAX_Q_DEPTH_MASK;
  
-+static int mv_create_dma_pools(struct mv_host_priv *hpriv, struct device *dev)
-+{
-+	hpriv->crqb_pool   = dmam_pool_create("crqb_q", dev, MV_CRQB_Q_SZ,
-+							     MV_CRQB_Q_SZ, 0);
-+	if (!hpriv->crqb_pool)
-+		return -ENOMEM;
-+
-+	hpriv->crpb_pool   = dmam_pool_create("crpb_q", dev, MV_CRPB_Q_SZ,
-+							     MV_CRPB_Q_SZ, 0);
-+	if (!hpriv->crpb_pool)
-+		return -ENOMEM;
-+
-+	hpriv->sg_tbl_pool = dmam_pool_create("sg_tbl", dev, MV_SG_TBL_SZ,
-+							     MV_SG_TBL_SZ, 0);
-+	if (!hpriv->sg_tbl_pool)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
- /**
-  *      mv_init_one - handle a positive probe of a Marvell host
-  *      @pdev: PCI device found
-@@ -2810,6 +2844,10 @@
- 	if (rc)
- 		return rc;
+ 	crqb = (struct mv_crqb_iie *) &pp->crqb[in_index];
+-	crqb->addr = cpu_to_le32(pp->sg_tbl_dma & 0xffffffff);
+-	crqb->addr_hi = cpu_to_le32((pp->sg_tbl_dma >> 16) >> 16);
++	crqb->addr = cpu_to_le32(pp->sg_tbl_dma[qc->tag] & 0xffffffff);
++	crqb->addr_hi = cpu_to_le32((pp->sg_tbl_dma[qc->tag] >> 16) >> 16);
+ 	crqb->flags = cpu_to_le32(flags);
  
-+	rc = mv_create_dma_pools(hpriv, &pdev->dev);
-+	if (rc)
-+		return rc;
-+
- 	/* initialize adapter */
- 	rc = mv_init_host(host, board_idx);
- 	if (rc)
+ 	tf = &qc->tf;
