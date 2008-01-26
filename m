@@ -1,51 +1,73 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 07/14] sata_mv Use hqtag instead of ioid
-Date: Fri, 25 Jan 2008 23:19:31 -0500
-Message-ID: <479AB4D3.6010805@pobox.com>
-References: <4798FB68.70400@rtr.ca> <4798FC87.3080102@rtr.ca>
+Subject: Re: [PATCH 09/14] sata_mv Restrict max_sectors to 8-bits on GenII
+ NCQ
+Date: Fri, 25 Jan 2008 23:21:04 -0500
+Message-ID: <479AB530.1080105@pobox.com>
+References: <4798FB68.70400@rtr.ca> <4798FCBD.1010900@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39457 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:39465 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752578AbYAZETd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jan 2008 23:19:33 -0500
-In-Reply-To: <4798FC87.3080102@rtr.ca>
+	id S1752579AbYAZEVG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Jan 2008 23:21:06 -0500
+In-Reply-To: <4798FCBD.1010900@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Mark Lord wrote:
-> sata_mv Use hqtag instead of ioid.
+> sata_mv Restrict max_sectors to 8-bits on GenII NCQ.
 > 
-> Simplify tag handling by using the cid/hqtag field instead of ioid,
-> as recommended by Marvell.
+> The GenII chips have only 8-bits for the sector_count field when 
+> performing NCQ.
+> Add a dev_config method to restrict this when necessary, taking care not to
+> override any other restriction already in place (likely none, but 
+> someday.. ?).
 > 
 > Signed-off-by: Mark Lord <mlord@pobox.com>
 > 
-> --- old/drivers/ata/sata_mv.c    2008-01-24 12:07:16.000000000 -0500
-> +++ new/drivers/ata/sata_mv.c    2008-01-24 12:35:14.000000000 -0500
-> @@ -132,15 +132,12 @@
+> --- old/drivers/ata/sata_mv.c    2008-01-24 12:35:43.000000000 -0500
+> +++ new/drivers/ata/sata_mv.c    2008-01-24 12:40:10.000000000 -0500
+> @@ -446,6 +446,7 @@
+> static void mv_post_int_cmd(struct ata_queued_cmd *qc);
+> static void mv_eh_freeze(struct ata_port *ap);
+> static void mv_eh_thaw(struct ata_port *ap);
+> +static void mv6_dev_config(struct ata_device *dev);
+> static int mv_init_one(struct pci_dev *pdev, const struct pci_device_id 
+> *ent);
 > 
->     CRQB_FLAG_READ        = (1 << 0),
->     CRQB_TAG_SHIFT        = 1,
-> -    CRQB_IOID_SHIFT        = 6,    /* CRQB Gen-II/IIE IO Id shift */
->     CRQB_HOSTQ_SHIFT    = 17,    /* CRQB Gen-II/IIE HostQueTag shift */
->     CRQB_CMD_ADDR_SHIFT    = 8,
->     CRQB_CMD_CS        = (0x2 << 11),
->     CRQB_CMD_LAST        = (1 << 15),
+> static void mv5_phy_errata(struct mv_host_priv *hpriv, void __iomem *mmio,
+> @@ -538,6 +539,7 @@
+> };
 > 
->     CRPB_FLAG_STATUS_SHIFT    = 8,
-> -    CRPB_IOID_SHIFT_6    = 5,    /* CRPB Gen-II IO Id shift */
-> -    CRPB_IOID_SHIFT_7    = 7,    /* CRPB Gen-IIE IO Id shift */
+> static const struct ata_port_operations mv6_ops = {
+> +    .dev_config             = mv6_dev_config,
+>     .tf_load        = ata_tf_load,
+>     .tf_read        = ata_tf_read,
+>     .check_status        = ata_check_status,
+> @@ -1051,6 +1053,17 @@
+>         return -EINVAL;
+> }
 > 
->     EPRD_FLAG_END_OF_TBL    = (1 << 31),
-> 
+> +static void mv6_dev_config(struct ata_device *adev)
+> +{
+> +    /*
+> +     * We don't have hob_nsect when doing NCQ commands on Gen-II.
+> +     * See mv_qc_prep() for more info.
+> +     */
+> +    if (adev->flags & ATA_DFLAG_NCQ)
+> +        if (adev->max_sectors > ATA_MAX_SECTORS)
+> +            adev->max_sectors = ATA_MAX_SECTORS;
+> +}
+> +
+> static void mv_edma_cfg(struct mv_port_priv *pp, struct mv_host_priv 
+> *hpriv,
+>             void __iomem *port_mmio, int want_ncq)
+> {
 
-don't delete details of otherwise undocumented [publicly] hardware
-
-everything else OK
+ACK patches 8-9
 
 
