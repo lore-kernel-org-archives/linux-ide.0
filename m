@@ -1,99 +1,57 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 02/14] sata_mv Mask transient IRQs.
-Date: Fri, 25 Jan 2008 23:10:56 -0500
-Message-ID: <479AB2D0.20001@pobox.com>
-References: <4798FB68.70400@rtr.ca> <4798FBCC.2040309@rtr.ca>
+Subject: Re: [PATCH 04/14] sata_mv rename base to port_mmio
+Date: Fri, 25 Jan 2008 23:11:15 -0500
+Message-ID: <479AB2E3.7030406@pobox.com>
+References: <4798FB68.70400@rtr.ca> <4798FC17.2000802@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52278 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:52286 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752202AbYAZEK6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jan 2008 23:10:58 -0500
-In-Reply-To: <4798FBCC.2040309@rtr.ca>
+	id S1752472AbYAZELR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Jan 2008 23:11:17 -0500
+In-Reply-To: <4798FC17.2000802@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Lord <liml@rtr.ca>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
 Mark Lord wrote:
-> sata_mv Mask transient IRQs.
+> sata_mv rename base to port_mmio.
 > 
-> The chips can handle many transient errors internally without a software 
-> IRQ.
-> We now mask/ignore those interrupts here.  This is necessary for NCQ, 
-> later on.
+> Use naming consistent with elsewhere in this driver.
+> This will keep things less confusing when we later add "hc_mmio" in this 
+> function.
 > 
 > Signed-off-by: Mark Lord <mlord@pobox.com>
 > 
-> --- old/drivers/ata/sata_mv.c    2008-01-24 11:11:26.000000000 -0500
-> +++ new/drivers/ata/sata_mv.c    2008-01-24 11:17:42.000000000 -0500
-> @@ -170,7 +170,7 @@
+> --- old/drivers/ata/sata_mv.c    2008-01-24 11:23:05.000000000 -0500
+> +++ new/drivers/ata/sata_mv.c    2008-01-24 11:26:33.000000000 -0500
+> @@ -834,19 +834,19 @@
+>  *      LOCKING:
+>  *      Inherited from caller.
+>  */
+> -static void mv_start_dma(void __iomem *base, struct mv_host_priv *hpriv,
+> +static void mv_start_dma(void __iomem *port_mmio, struct mv_host_priv 
+> *hpriv,
+>              struct mv_port_priv *pp)
+> {
+>     if (!(pp->pp_flags & MV_PP_FLAG_EDMA_EN)) {
+>         /* clear EDMA event indicators, if any */
+> -        writelfl(0, base + EDMA_ERR_IRQ_CAUSE_OFS);
+> +        writelfl(0, port_mmio + EDMA_ERR_IRQ_CAUSE_OFS);
 > 
->     PCIE_IRQ_CAUSE_OFS    = 0x1900,
->     PCIE_IRQ_MASK_OFS    = 0x1910,
-> -    PCIE_UNMASK_ALL_IRQS    = 0x70a,    /* assorted bits */
-> +    PCIE_UNMASK_ALL_IRQS    = 0x40a,    /* assorted bits */
+> -        mv_set_edma_ptrs(base, hpriv, pp);
+> +        mv_set_edma_ptrs(port_mmio, hpriv, pp);
 > 
->     HC_MAIN_IRQ_CAUSE_OFS    = 0x1d60,
->     HC_MAIN_IRQ_MASK_OFS    = 0x1d64,
-> @@ -241,17 +241,36 @@
->     EDMA_ERR_BIST_ASYNC    = (1 << 8),    /* BIST FIS or Async Notify */
->     EDMA_ERR_TRANS_IRQ_7    = (1 << 8),    /* Gen IIE transprt layer irq */
->     EDMA_ERR_CRQB_PAR    = (1 << 9),    /* CRQB parity error */
-> -    EDMA_ERR_CRPB_PAR    = (1 << 10),    /* CRPB parity error */
-> -    EDMA_ERR_INTRL_PAR    = (1 << 11),    /* internal parity error */
-> -    EDMA_ERR_IORDY        = (1 << 12),    /* IORdy timeout */
-> -    EDMA_ERR_LNK_CTRL_RX    = (0xf << 13),    /* link ctrl rx error */
-> -    EDMA_ERR_LNK_CTRL_RX_2    = (1 << 15),
-> -    EDMA_ERR_LNK_DATA_RX    = (0xf << 17),    /* link data rx error */
-> -    EDMA_ERR_LNK_CTRL_TX    = (0x1f << 21),    /* link ctrl tx error */
-> -    EDMA_ERR_LNK_DATA_TX    = (0x1f << 26),    /* link data tx error */
-> -    EDMA_ERR_TRANS_PROTO    = (1 << 31),    /* transport protocol error */
-> -    EDMA_ERR_OVERRUN_5    = (1 << 5),
-> -    EDMA_ERR_UNDERRUN_5    = (1 << 6),
-> +    EDMA_ERR_CRPB_PAR    = (1 << 10),    /* CRPB parity error */
-> +    EDMA_ERR_INTRL_PAR    = (1 << 11),    /* internal parity error */
-> +    EDMA_ERR_IORDY        = (1 << 12),    /* IORdy timeout */
-> +
-> +    EDMA_ERR_LNK_CTRL_RX    = (0xf << 13),    /* link ctrl rx error */
-> +    EDMA_ERR_LNK_CTRL_RX_0    = (1 << 13),    /* transient: CRC err */
-> +    EDMA_ERR_LNK_CTRL_RX_1    = (1 << 14),    /* transient: FIFO err */
-> +    EDMA_ERR_LNK_CTRL_RX_2    = (1 << 15),    /* fatal: caught SYNC */
-> +    EDMA_ERR_LNK_CTRL_RX_3    = (1 << 16),    /* transient: FIS rx err */
-> +
-> +    EDMA_ERR_LNK_DATA_RX    = (0xf << 17),    /* link data rx error */
-> +
-> +    EDMA_ERR_LNK_CTRL_TX    = (0x1f << 21),    /* link ctrl tx error */
-> +    EDMA_ERR_LNK_CTRL_TX_0    = (1 << 21),    /* transient: CRC err */
-> +    EDMA_ERR_LNK_CTRL_TX_1    = (1 << 22),    /* transient: FIFO err */
-> +    EDMA_ERR_LNK_CTRL_TX_2    = (1 << 23),    /* transient: caught SYNC */
-> +    EDMA_ERR_LNK_CTRL_TX_3    = (1 << 24),    /* transient: caught DMAT */
-> +    EDMA_ERR_LNK_CTRL_TX_4    = (1 << 25),    /* transient: FIS 
-> collision */
-> +
-> +    EDMA_ERR_LNK_DATA_TX    = (0x1f << 26),    /* link data tx error */
-> +
-> +    EDMA_ERR_TRANS_PROTO    = (1 << 31),    /* transport protocol error */
-> +    EDMA_ERR_OVERRUN_5    = (1 << 5),
-> +    EDMA_ERR_UNDERRUN_5    = (1 << 6),
-> +
-> +    EDMA_ERR_IRQ_TRANSIENT  = EDMA_ERR_LNK_CTRL_RX_0 |
-> +                  EDMA_ERR_LNK_CTRL_RX_1 |
-> +                  EDMA_ERR_LNK_CTRL_RX_3 |
-> +                  EDMA_ERR_LNK_CTRL_TX,
-> +
->     EDMA_EH_FREEZE        = EDMA_ERR_D_PAR |
->                   EDMA_ERR_PRD_PAR |
->                   EDMA_ERR_DEV_DCON |
+> -        writelfl(EDMA_EN, base + EDMA_CMD_OFS);
+> +        writelfl(EDMA_EN, port_mmio + EDMA_CMD_OFS);
+>         pp->pp_flags |= MV_PP_FLAG_EDMA_EN;
+>     }
+> -    WARN_ON(!(EDMA_EN & readl(base + EDMA_CMD_OFS)));
+> +    WARN_ON(!(EDMA_EN & readl(port_mmio + EDMA_CMD_OFS)));
 
-Overall operational changes -- ACK
-
-However, I do not want to remove definitions for unchecked hardware 
-bits, because the documentation is not public.
-
-	Jeff
-
+ACK patches 3-4
 
 
