@@ -1,13 +1,13 @@
 From: Borislav Petkov <petkovbb@gmail.com>
-Subject: [PATCH 28/32] ide-tape: shorten some function names
-Date: Sun, 27 Jan 2008 10:48:16 +0100
-Message-ID: <1201427300-3954-23-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 22/32] ide-tape: struct idetape_packet_command_s: shorten member names
+Date: Sun, 27 Jan 2008 10:48:10 +0100
+Message-ID: <1201427300-3954-17-git-send-email-petkovbb@gmail.com>
 References: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.23.103.76] ([212.23.103.76]:59287 "EHLO gollum.tnic"
+Received: from [212.23.103.76] ([212.23.103.76]:58878 "EHLO gollum.tnic"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756754AbYA0Jtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Jan 2008 04:49:32 -0500
+	id S1756576AbYA0Jto (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Jan 2008 04:49:44 -0500
 In-Reply-To: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,135 +18,246 @@ From: Borislav Petkov <bbpetkov@yahoo.de>
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-tape.c |   29 +++++++++++++++--------------
- 1 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/ide/ide-tape.c |   88 ++++++++++++++++++++++++-----------------------
+ 1 files changed, 45 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index f8a4b27..d4c4255 100644
+index b487d56..4690f71 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -1066,7 +1066,7 @@ static void idetape_postpone_request (ide_drive_t *drive)
-  * command. We will transfer some of the data (as requested by the drive) and
-  * will re-point interrupt handler to us. When data transfer is finished, we
-  * will act according to the algorithm described before
-- * idetape_issue_packet_command.
-+ * idetape_issue_pc.
-  */
+@@ -193,24 +193,25 @@ struct idetape_bh {
+ 	char *b_data;
+ };
  
- typedef void idetape_io_buf(ide_drive_t *, idetape_pc_t *, uint);
-@@ -1249,7 +1249,7 @@ static ide_startstop_t idetape_pc_intr(ide_drive_t *drive)
-  *
-  *	The handling will be done in three stages:
-  *
-- *	1.	idetape_issue_packet_command will send the packet command to the
-+ *	1.	idetape_issue_pc will send the packet command to the
-  *		drive, and will set the interrupt handler to idetape_pc_intr.
-  *
-  *	2.	On each interrupt, idetape_pc_intr will be called. This step
-@@ -1324,7 +1324,7 @@ static ide_startstop_t idetape_transfer_pc(ide_drive_t *drive)
- 	return ide_started;
- }
- 
--static ide_startstop_t idetape_issue_packet_command (ide_drive_t *drive, idetape_pc_t *pc)
-+static ide_startstop_t idetape_issue_pc(ide_drive_t *drive, idetape_pc_t *pc)
- {
- 	ide_hwif_t *hwif = drive->hwif;
- 	idetape_tape_t *tape = drive->driver_data;
-@@ -1638,7 +1638,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	 */
- 	if (tape->failed_pc != NULL &&
- 	    tape->pc->c[0] == REQUEST_SENSE) {
--		return idetape_issue_packet_command(drive, tape->failed_pc);
-+		return idetape_issue_pc(drive, tape->failed_pc);
- 	}
- 	if (postponed_rq != NULL)
- 		if (rq != postponed_rq) {
-@@ -1732,7 +1732,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	}
- 	BUG();
- out:
--	return idetape_issue_packet_command(drive, pc);
-+	return idetape_issue_pc(drive, pc);
- 
- err:
- 	printk(KERN_ERR "ide-tape: Error processing request %u\n", rq->cmd[0]);
-@@ -2290,10 +2290,10 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks, struct
- }
+-/*
+- *	Our view of a packet command.
+- */
+ typedef struct idetape_packet_command_s {
+-	u8 c[12];				/* Actual packet bytes */
+-	int retries;				/* On each retry, we increment retries */
+-	int error;				/* Error code */
+-	int request_transfer;			/* Bytes to transfer */
+-	int actually_transferred;		/* Bytes actually transferred */
+-	int buffer_size;			/* Size of our data buffer */
++	u8 c[12];		/* Actual packet bytes */
++	int retries;		/* On each retry, we increment retries */
++	int error;		/* Error code */
++	int rq_xfer;		/* Request bytes to transfer */
++	int xferred;		/* Bytes actually transferred */
++	int buf_size;		/* Size of our data buffer */
+ 	struct idetape_bh *bh;
+ 	char *b_data;
+ 	int b_count;
+-	u8 *buffer;				/* Data buffer */
+-	u8 *current_position;			/* Pointer into the above buffer */
+-	ide_startstop_t (*callback) (ide_drive_t *);	/* Called when this packet command is completed */
++	u8 *buffer;		/* Data buffer */
++	u8 *cur_pos;		/* Pointer into the above buffer */
++
++	/* Called when this packet command is completed */
++	ide_startstop_t (*callback) (ide_drive_t *);
+ 	u8 pc_buffer[IDETAPE_PC_BUFFER_SIZE];	/* Temporary buffer */
+-	unsigned long flags;			/* Status/Action bit flags: long for set_bit */
++
++	/* Status/Action bit flags: long for set_bit */
++	unsigned long flags;
+ } idetape_pc_t;
  
  /*
-- *	idetape_insert_pipeline_into_queue is used to start servicing the
-+ *	idetape_ins_ppl_into_queue is used to start servicing the
-  *	pipeline stages, starting from tape->next_stage.
-  */
--static void idetape_insert_pipeline_into_queue (ide_drive_t *drive)
-+static void idetape_ins_ppl_into_queue(ide_drive_t *drive)
+@@ -684,7 +685,7 @@ static void idetape_update_buffers (idetape_pc_t *pc)
  {
- 	idetape_tape_t *tape = drive->driver_data;
+ 	struct idetape_bh *bh = pc->bh;
+ 	int count;
+-	unsigned int bcount = pc->actually_transferred;
++	unsigned int bcount = pc->xferred;
  
-@@ -2385,7 +2385,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
- 			spin_unlock_irqrestore(&tape->que_lock, flags);
- 		} else {
- 			spin_unlock_irqrestore(&tape->que_lock, flags);
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_ins_ppl_into_queue(drive);
- 			if (idetape_pipeline_active(tape))
- 				continue;
- 			/*
-@@ -2421,7 +2421,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
- 			tape->ins_time = jiffies;
- 			tape->ins_size = 0;
- 			tape->ins_speed = 0;
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_ins_ppl_into_queue(drive);
+ 	if (test_bit(PC_WRITING, &pc->flags))
+ 		return;
+@@ -752,9 +753,9 @@ static void idetape_init_pc (idetape_pc_t *pc)
+ 	memset(pc->c, 0, 12);
+ 	pc->retries = 0;
+ 	pc->flags = 0;
+-	pc->request_transfer = 0;
++	pc->rq_xfer = 0;
+ 	pc->buffer = pc->pc_buffer;
+-	pc->buffer_size = IDETAPE_PC_BUFFER_SIZE;
++	pc->buf_size = IDETAPE_PC_BUFFER_SIZE;
+ 	pc->bh = NULL;
+ 	pc->b_data = NULL;
+ }
+@@ -775,9 +776,9 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
+ 	debug_log(DBG_ERR, "pc = %x, sense key = %x, asc = %x, ascq = %x\n",
+ 		 pc->c[0], tape->sense_key, tape->asc, tape->ascq);
+ 
+-	/* Correct pc->actually_transferred by asking the tape.	 */
++	/* Correct pc->xferred by asking the tape.	 */
+ 	if (test_bit(PC_DMA_ERROR, &pc->flags)) {
+-		pc->actually_transferred = pc->request_transfer -
++		pc->xferred = pc->rq_xfer -
+ 			tape->tape_block_size *
+ 			be32_to_cpu(get_unaligned((u32 *)&sense[3]));
+ 		idetape_update_buffers(pc);
+@@ -817,7 +818,7 @@ static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
+ 			set_bit(PC_ABORT, &pc->flags);
  		}
+ 		if (!test_bit(PC_ABORT, &pc->flags) &&
+-		    pc->actually_transferred)
++		    pc->xferred)
+ 			pc->retries = IDETAPE_MAX_PC_RETRIES + 1;
  	}
- 	if (test_and_clear_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
-@@ -2440,7 +2440,7 @@ static void idetape_wait_for_pipeline (ide_drive_t *drive)
- 	unsigned long flags;
- 
- 	while (tape->next_stage || idetape_pipeline_active(tape)) {
--		idetape_insert_pipeline_into_queue(drive);
-+		idetape_ins_ppl_into_queue(drive);
- 		spin_lock_irqsave(&tape->que_lock, flags);
- 		if (idetape_pipeline_active(tape))
- 			idetape_wait_for_request(drive, tape->act_data_rq);
-@@ -2532,7 +2532,7 @@ static void idetape_restart_speed_control (ide_drive_t *drive)
- 	tape->ctl_prev_htime = tape->unctl_prev_htime = jiffies;
+ }
+@@ -1047,7 +1048,7 @@ static void idetape_create_request_sense_cmd (idetape_pc_t *pc)
+ 	idetape_init_pc(pc);	
+ 	pc->c[0] = REQUEST_SENSE;
+ 	pc->c[4] = 20;
+-	pc->request_transfer = 20;
++	pc->rq_xfer = 20;
+ 	pc->callback = &idetape_request_sense_callback;
  }
  
--static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
-+static int idetape_init_read(ide_drive_t *drive, int max_stages)
+@@ -1172,7 +1173,7 @@ static ide_startstop_t idetape_pc_intr (ide_drive_t *drive)
+ 			 */
+ 			set_bit(PC_DMA_ERROR, &pc->flags);
+ 		} else {
+-			pc->actually_transferred = pc->request_transfer;
++			pc->xferred = pc->rq_xfer;
+ 			idetape_update_buffers(pc);
+ 		}
+ 		debug_log(DBG_PROCS, "DMA finished\n");
+@@ -1182,7 +1183,7 @@ static ide_startstop_t idetape_pc_intr (ide_drive_t *drive)
+ 	/* No more interrupts */
+ 	if ((stat & DRQ_STAT) == 0) {
+ 		debug_log(DBG_SENSE, "Packet command completed, %d bytes"
+-				" transferred\n", pc->actually_transferred);
++				" transferred\n", pc->xferred);
+ 
+ 		clear_bit(PC_DMA_IN_PROGRESS, &pc->flags);
+ 		local_irq_enable();
+@@ -1256,9 +1257,9 @@ static ide_startstop_t idetape_pc_intr (ide_drive_t *drive)
+ 	}
+ 	if (!test_bit(PC_WRITING, &pc->flags)) {
+ 		/* Reading - Check that we have enough space */
+-		temp = pc->actually_transferred + bcount;
+-		if (temp > pc->request_transfer) {
+-			if (temp > pc->buffer_size) {
++		temp = pc->xferred + bcount;
++		if (temp > pc->rq_xfer) {
++			if (temp > pc->buf_size) {
+ 				printk(KERN_ERR "ide-tape: The tape wants to send us more data than expected - discarding data\n");
+ 				idetape_discard_data(drive, bcount);
+ 				ide_set_handler(drive, &idetape_pc_intr, IDETAPE_WAIT_CMD, NULL);
+@@ -1274,19 +1275,19 @@ static ide_startstop_t idetape_pc_intr (ide_drive_t *drive)
+ 			idetape_output_buffers(drive, pc, bcount);
+ 		else
+ 			/* Write the current buffer */
+-			hwif->atapi_output_bytes(drive, pc->current_position,
++			hwif->atapi_output_bytes(drive, pc->cur_pos,
+ 						 bcount);
+ 	} else {
+ 		if (pc->bh != NULL)
+ 			idetape_input_buffers(drive, pc, bcount);
+ 		else
+ 			/* Read the current buffer */
+-			hwif->atapi_input_bytes(drive, pc->current_position,
++			hwif->atapi_input_bytes(drive, pc->cur_pos,
+ 						bcount);
+ 	}
+ 	/* Update the current position */
+-	pc->actually_transferred += bcount;
+-	pc->current_position += bcount;
++	pc->xferred += bcount;
++	pc->cur_pos += bcount;
+ 
+ 	debug_log(DBG_SENSE, "[cmd %x] transferred %d bytes on that intr.\n",
+ 			pc->c[0], bcount);
+@@ -1427,10 +1428,10 @@ static ide_startstop_t idetape_issue_packet_command (ide_drive_t *drive, idetape
+ 
+ 	pc->retries++;
+ 	/* We haven't transferred any data yet */
+-	pc->actually_transferred = 0;
+-	pc->current_position = pc->buffer;
++	pc->xferred = 0;
++	pc->cur_pos = pc->buffer;
+ 	/* Request to transfer the entire buffer at once */
+-	bcount = pc->request_transfer;
++	bcount = pc->rq_xfer;
+ 
+ 	if (test_and_clear_bit(PC_DMA_ERROR, &pc->flags)) {
+ 		printk(KERN_WARNING "ide-tape: DMA disabled, "
+@@ -1488,11 +1489,11 @@ static void idetape_create_mode_sense_cmd (idetape_pc_t *pc, u8 page_code)
+ 	pc->c[3] = 0;
+ 	pc->c[4] = 255;		/* (We will just discard data in that case) */
+ 	if (page_code == IDETAPE_BLOCK_DESCRIPTOR)
+-		pc->request_transfer = 12;
++		pc->rq_xfer = 12;
+ 	else if (page_code == IDETAPE_CAPABILITIES_PAGE)
+-		pc->request_transfer = 24;
++		pc->rq_xfer = 24;
+ 	else
+-		pc->request_transfer = 50;
++		pc->rq_xfer = 50;
+ 	pc->callback = &idetape_pc_callback;
+ }
+ 
+@@ -1575,7 +1576,7 @@ static ide_startstop_t idetape_rw_callback (ide_drive_t *drive)
  {
  	idetape_tape_t *tape = drive->driver_data;
- 	idetape_stage_t *new_stage;
-@@ -2593,7 +2593,7 @@ static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
- 			tape->ins_time = jiffies;
- 			tape->ins_size = 0;
- 			tape->ins_speed = 0;
--			idetape_insert_pipeline_into_queue(drive);
-+			idetape_ins_ppl_into_queue(drive);
- 		}
+ 	struct request *rq = HWGROUP(drive)->rq;
+-	int blocks = tape->pc->actually_transferred / tape->tape_block_size;
++	int blocks = tape->pc->xferred / tape->tape_block_size;
+ 
+ 	tape->avg_size += blocks * tape->tape_block_size;
+ 	tape->insert_size += blocks * tape->tape_block_size;
+@@ -1615,8 +1616,9 @@ static void idetape_create_read_cmd(idetape_tape_t *tape, idetape_pc_t *pc, unsi
+ 	pc->bh = bh;
+ 	atomic_set(&bh->b_count, 0);
+ 	pc->buffer = NULL;
+-	pc->request_transfer = pc->buffer_size = length * tape->tape_block_size;
+-	if (pc->request_transfer == tape->stage_size)
++	pc->buf_size = length * tape->tape_block_size;
++	pc->rq_xfer = pc->buf_size;
++	if (pc->rq_xfer == tape->stage_size)
+ 		set_bit(PC_DMA_RECOMMENDED, &pc->flags);
+ }
+ 
+@@ -1638,7 +1640,7 @@ static void idetape_create_read_buffer_cmd(idetape_tape_t *tape, idetape_pc_t *p
+ 		atomic_set(&p->b_count, 0);
+ 		p = p->b_reqnext;
  	}
- 	return 0;
-@@ -2623,7 +2623,7 @@ static int idetape_add_chrdev_read_request (ide_drive_t *drive,int blocks)
- 	 * Wait for the next block to be available at the head
- 	 * of the pipeline
- 	 */
--	idetape_initiate_read(drive, tape->max_stages);
-+	idetape_init_read(drive, tape->max_stages);
- 	if (tape->first_stage == NULL) {
- 		if (test_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
- 			return 0;
-@@ -2879,7 +2879,8 @@ static ssize_t idetape_chrdev_read (struct file *file, char __user *buf,
- 			    (count % tape->blk_sz) == 0)
- 				tape->user_bs_factor = count / tape->blk_sz;
- 	}
--	if ((rc = idetape_initiate_read(drive, tape->max_stages)) < 0)
-+	rc = idetape_init_read(drive, tape->max_stages);
-+	if (rc < 0)
- 		return rc;
- 	if (count == 0)
- 		return (0);
+-	pc->request_transfer = pc->buffer_size = size;
++	pc->rq_xfer = pc->buf_size = size;
+ }
+ 
+ static void idetape_create_write_cmd(idetape_tape_t *tape, idetape_pc_t *pc, unsigned int length, struct idetape_bh *bh)
+@@ -1653,8 +1655,8 @@ static void idetape_create_write_cmd(idetape_tape_t *tape, idetape_pc_t *pc, uns
+ 	pc->b_data = bh->b_data;
+ 	pc->b_count = atomic_read(&bh->b_count);
+ 	pc->buffer = NULL;
+-	pc->request_transfer = pc->buffer_size = length * tape->tape_block_size;
+-	if (pc->request_transfer == tape->stage_size)
++	pc->rq_xfer = pc->buf_size = length * tape->tape_block_size;
++	if (pc->rq_xfer == tape->stage_size)
+ 		set_bit(PC_DMA_RECOMMENDED, &pc->flags);
+ }
+ 
+@@ -2156,7 +2158,7 @@ static void idetape_create_read_position_cmd (idetape_pc_t *pc)
+ {
+ 	idetape_init_pc(pc);
+ 	pc->c[0] = READ_POSITION;
+-	pc->request_transfer = 20;
++	pc->rq_xfer = 20;
+ 	pc->callback = &idetape_read_position_callback;
+ }
+ 
+@@ -2346,7 +2348,7 @@ static void idetape_create_inquiry_cmd (idetape_pc_t *pc)
+ {
+ 	idetape_init_pc(pc);
+ 	pc->c[0] = INQUIRY;
+-	pc->c[4] = pc->request_transfer = 254;
++	pc->c[4] = pc->rq_xfer = 254;
+ 	pc->callback = &idetape_pc_callback;
+ }
+ 
 -- 
 1.5.3.7
 
