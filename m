@@ -1,13 +1,13 @@
 From: Borislav Petkov <petkovbb@gmail.com>
-Subject: [PATCH 10/32] ide-tape: remove struct idetape_read_position_result_t
-Date: Sun, 27 Jan 2008 10:47:58 +0100
-Message-ID: <1201427300-3954-5-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 09/32] ide-tape: remove struct idetape_inquiry_result_t
+Date: Sun, 27 Jan 2008 10:47:57 +0100
+Message-ID: <1201427300-3954-4-git-send-email-petkovbb@gmail.com>
 References: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.23.103.76] ([212.23.103.76]:58596 "EHLO gollum.tnic"
+Received: from [212.23.103.76] ([212.23.103.76]:58594 "EHLO gollum.tnic"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753942AbYA0Js4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Jan 2008 04:48:56 -0500
+	id S1754228AbYA0Js6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Jan 2008 04:48:58 -0500
 In-Reply-To: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -20,87 +20,91 @@ There should be no functional changes resulting from this patch.
 
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-tape.c |   49 +++++++++++++++++------------------------------
- 1 files changed, 18 insertions(+), 31 deletions(-)
+ drivers/ide/ide-tape.c |   51 ++++++++++++-----------------------------------
+ 1 files changed, 13 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 31c1a20..9f1fc50 100644
+index 0f846bc..31c1a20 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -653,24 +653,6 @@ struct idetape_id_gcw {
+@@ -653,31 +653,6 @@ struct idetape_id_gcw {
  };
  
  /*
-- *	READ POSITION packet command - Data Format (From Table 6-57)
+- *	INQUIRY packet command - Data Format (From Table 6-8 of QIC-157C)
 - */
 -typedef struct {
--	unsigned	reserved0_10	:2;	/* Reserved */
--	unsigned	bpu		:1;	/* Block Position Unknown */	
--	unsigned	reserved0_543	:3;	/* Reserved */
--	unsigned	eop		:1;	/* End Of Partition */
--	unsigned	bop		:1;	/* Beginning Of Partition */
--	u8		partition;		/* Partition Number */
--	u8		reserved2, reserved3;	/* Reserved */
--	u32		first_block;		/* First Block Location */
--	u32		last_block;		/* Last Block Location (Optional) */
--	u8		reserved12;		/* Reserved */
--	u8		blocks_in_buffer[3];	/* Blocks In Buffer - (Optional) */
--	u32		bytes_in_buffer;	/* Bytes In Buffer (Optional) */
--} idetape_read_position_result_t;
+-	unsigned	device_type	:5;	/* Peripheral Device Type */
+-	unsigned	reserved0_765	:3;	/* Peripheral Qualifier - Reserved */
+-	unsigned	reserved1_6t0	:7;	/* Reserved */
+-	unsigned	rmb		:1;	/* Removable Medium Bit */
+-	unsigned	ansi_version	:3;	/* ANSI Version */
+-	unsigned	ecma_version	:3;	/* ECMA Version */
+-	unsigned	iso_version	:2;	/* ISO Version */
+-	unsigned	response_format :4;	/* Response Data Format */
+-	unsigned	reserved3_45	:2;	/* Reserved */
+-	unsigned	reserved3_6	:1;	/* TrmIOP - Reserved */
+-	unsigned	reserved3_7	:1;	/* AENC - Reserved */
+-	__u8		additional_length;	/* Additional Length (total_length-4) */
+-	__u8		rsv5, rsv6, rsv7;	/* Reserved */
+-	__u8		vendor_id[8];		/* Vendor Identification */
+-	__u8		product_id[16];		/* Product Identification */
+-	__u8		revision_level[4];	/* Revision Level */
+-	__u8		vendor_specific[20];	/* Vendor Specific - Optional */
+-	__u8		reserved56t95[40];	/* Reserved - Optional */
+-						/* Additional information may be returned */
+-} idetape_inquiry_result_t;
 -
 -/*
-  *	Follows structures which are related to the SELECT SENSE / MODE SENSE
-  *	packet commands. Those packet commands are still not supported
-  *	by ide-tape.
-@@ -2153,30 +2135,35 @@ static void idetape_wait_for_request (ide_drive_t *drive, struct request *rq)
- 	spin_lock_irq(&tape->spinlock);
+  *	READ POSITION packet command - Data Format (From Table 6-57)
+  */
+ typedef struct {
+@@ -3662,32 +3637,32 @@ static int idetape_identify_device (ide_drive_t *drive)
+ 	return 0;
  }
  
--static ide_startstop_t idetape_read_position_callback (ide_drive_t *drive)
-+static ide_startstop_t idetape_read_position_callback(ide_drive_t *drive)
+-/*
+- * Use INQUIRY to get the firmware revision
+- */
+-static void idetape_get_inquiry_results (ide_drive_t *drive)
++static void idetape_get_inquiry_results(ide_drive_t *drive)
  {
+ 	char *r;
  	idetape_tape_t *tape = drive->driver_data;
--	idetape_read_position_result_t *result;
-+	u8 *readpos = tape->pc->buffer;
- 
- 	debug_log(DBG_PROCS, "Enter %s\n", __func__);
- 
- 	if (!tape->pc->error) {
--		result = (idetape_read_position_result_t *) tape->pc->buffer;
--		debug_log(DBG_SENSE, "BOP - %s\n", result->bop ? "Yes" : "No");
--		debug_log(DBG_SENSE, "EOP - %s\n", result->eop ? "Yes" : "No");
-+		debug_log(DBG_SENSE, "BOP - %s\n",
-+				!!(readpos[0] & 0x80) ? "Yes" : "No");
-+		debug_log(DBG_SENSE, "EOP - %s\n",
-+				!!(readpos[0] & 0x40) ? "Yes" : "No");
+ 	idetape_pc_t pc;
+-	idetape_inquiry_result_t *inquiry;
+-	
 +
-+		if (!!(readpos[0] & 0x4)) {
-+			printk(KERN_INFO "ide-tape: Block location is unknown"
-+					"to the tape\n");
- 
--		if (result->bpu) {
--			printk(KERN_INFO "ide-tape: Block location is unknown to the tape\n");
- 			clear_bit(IDETAPE_ADDRESS_VALID, &tape->flags);
- 			idetape_end_request(drive, 0, 0);
- 		} else {
- 			debug_log(DBG_SENSE, "Block Location - %u\n",
--					ntohl(result->first_block));
--
--			tape->partition = result->partition;
--			tape->first_frame_position = ntohl(result->first_block);
--			tape->last_frame_position = ntohl(result->last_block);
--			tape->blocks_in_buffer = result->blocks_in_buffer[2];
-+					be32_to_cpu(*(u32 *)&readpos[4]));
+ 	idetape_create_inquiry_cmd(&pc);
+ 	if (idetape_queue_pc_tail(drive, &pc)) {
+-		printk(KERN_ERR "ide-tape: %s: can't get INQUIRY results\n", tape->name);
++		printk(KERN_ERR "ide-tape: %s: can't get INQUIRY results\n",
++				tape->name);
+ 		return;
+ 	}
+-	inquiry = (idetape_inquiry_result_t *) pc.buffer;
+-	memcpy(tape->vendor_id, inquiry->vendor_id, 8);
+-	memcpy(tape->product_id, inquiry->product_id, 16);
+-	memcpy(tape->firmware_revision, inquiry->revision_level, 4);
++	memcpy(tape->vendor_id, &pc.buffer[8], 8);
++	memcpy(tape->product_id, &pc.buffer[16], 16);
++	memcpy(tape->firmware_revision, &pc.buffer[32], 4);
 +
-+			tape->partition = readpos[1];
-+			tape->first_frame_position =
-+				be32_to_cpu(*(u32 *)&readpos[4]);
-+			tape->last_frame_position =
-+				be32_to_cpu(*(u32 *)&readpos[8]);
-+			tape->blocks_in_buffer = readpos[15];
- 			set_bit(IDETAPE_ADDRESS_VALID, &tape->flags);
- 			idetape_end_request(drive, 1, 0);
- 		}
+ 	ide_fixstring(tape->vendor_id, 10, 0);
+ 	ide_fixstring(tape->product_id, 18, 0);
+ 	ide_fixstring(tape->firmware_revision, 6, 0);
+ 	r = tape->firmware_revision;
+ 	if (*(r + 1) == '.')
+-		tape->firmware_revision_num = (*r - '0') * 100 + (*(r + 2) - '0') * 10 + *(r + 3) - '0';
+-	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n", drive->name, tape->name, tape->vendor_id, tape->product_id, tape->firmware_revision);
++		tape->firmware_revision_num = (*r - '0') * 100 +
++			(*(r + 2) - '0') * 10 +	*(r + 3) - '0';
++	printk(KERN_INFO "ide-tape: %s <-> %s: %s %s rev %s\n",
++			drive->name, tape->name, tape->vendor_id,
++			tape->product_id, tape->firmware_revision);
+ }
+ 
+ /*
 -- 
 1.5.3.7
 
