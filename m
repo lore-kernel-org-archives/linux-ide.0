@@ -1,82 +1,79 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 22/32] ide-tape: struct idetape_packet_command_s: shorten member names
-Date: Sun, 27 Jan 2008 20:40:49 +0100
-Message-ID: <200801272040.49377.bzolnier@gmail.com>
-References: <1201427300-3954-1-git-send-email-petkovbb@gmail.com> <1201427300-3954-17-git-send-email-petkovbb@gmail.com>
+From: "dusty@gmx.li" <dusty@gmx.li>
+Subject: Re: libata pm
+Date: Sun, 27 Jan 2008 19:34:35 -0000 (UTC)
+Message-ID: <49713.82.140.63.93.1201462475.squirrel@ssl.cavemail.org>
+References: <52279.82.140.50.2.1201370600.squirrel@ssl.cavemail.org>   
+    <49398.82.140.50.2.1201377943.squirrel@ssl.cavemail.org>   
+    <479BC34D.2000007@gmail.com>
+    <49407.82.140.63.93.1201397926.squirrel@ssl.cavemail.org>
+Reply-To: dusty@gmx.li
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:9418 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756096AbYA0TcZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2008 14:32:25 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so1431428fga.17
-        for <linux-ide@vger.kernel.org>; Sun, 27 Jan 2008 11:32:23 -0800 (PST)
-In-Reply-To: <1201427300-3954-17-git-send-email-petkovbb@gmail.com>
-Content-Disposition: inline
+Received: from cavemail.org ([62.75.189.85]:59546 "EHLO mail.cavemail.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759795AbYA0Tem (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Jan 2008 14:34:42 -0500
+In-Reply-To: <49407.82.140.63.93.1201397926.squirrel@ssl.cavemail.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <petkovbb@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
+Cc: Tejun Heo <htejun@gmail.com>, dusty@gmx.li, linux-ide@vger.kernel.org
 
-On Sunday 27 January 2008, Borislav Petkov wrote:
-> From: Borislav Petkov <bbpetkov@yahoo.de>
-> 
-> Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
-> ---
->  drivers/ide/ide-tape.c |   88 ++++++++++++++++++++++++-----------------------
->  1 files changed, 45 insertions(+), 43 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-> index b487d56..4690f71 100644
-> --- a/drivers/ide/ide-tape.c
-> +++ b/drivers/ide/ide-tape.c
-> @@ -193,24 +193,25 @@ struct idetape_bh {
->  	char *b_data;
->  };
->  
-> -/*
-> - *	Our view of a packet command.
-> - */
->  typedef struct idetape_packet_command_s {
-> -	u8 c[12];				/* Actual packet bytes */
-> -	int retries;				/* On each retry, we increment retries */
-> -	int error;				/* Error code */
-> -	int request_transfer;			/* Bytes to transfer */
-> -	int actually_transferred;		/* Bytes actually transferred */
-> -	int buffer_size;			/* Size of our data buffer */
-> +	u8 c[12];		/* Actual packet bytes */
-> +	int retries;		/* On each retry, we increment retries */
-> +	int error;		/* Error code */
-> +	int rq_xfer;		/* Request bytes to transfer */
-> +	int xferred;		/* Bytes actually transferred */
-> +	int buf_size;		/* Size of our data buffer */
->  	struct idetape_bh *bh;
->  	char *b_data;
->  	int b_count;
-> -	u8 *buffer;				/* Data buffer */
-> -	u8 *current_position;			/* Pointer into the above buffer */
-> -	ide_startstop_t (*callback) (ide_drive_t *);	/* Called when this packet command is completed */
-> +	u8 *buffer;		/* Data buffer */
-> +	u8 *cur_pos;		/* Pointer into the above buffer */
-> +
-> +	/* Called when this packet command is completed */
-> +	ide_startstop_t (*callback) (ide_drive_t *);
->  	u8 pc_buffer[IDETAPE_PC_BUFFER_SIZE];	/* Temporary buffer */
-> -	unsigned long flags;			/* Status/Action bit flags: long for set_bit */
-> +
-> +	/* Status/Action bit flags: long for set_bit */
-> +	unsigned long flags;
->  } idetape_pc_t;
+Am So, 27.01.2008, 01:38, schrieb dusty@gmx.li:
+> Am Sa, 26.01.2008, 23:33, schrieb Tejun Heo:
+>
+>> dusty@gmx.li wrote:
+>>> I could solve the problem by ncq blacklisting the "Maxtor 6V300F0"
+>>> devices in libata-core.c
+>>
+>> That's a strange story.  The reported error was PHY readiness changed
+>> and Device exchanged, both of which point to hotplug event.  Maybe
+>> something causes the firmware to reset?  What happen if you only leave
+>> two drives on the port multiplier and remove the NCQ blacklist?  Also,
+>> does the error ever occur on the drives which are connected directly to
+>> the controller?
+>>
+>>
+>> --
+>> tejun
+>>
+>>
+>
+> No the error only occures on the drives on the pm. I can test the pm with
+>  two Maxtor drives tomorrow (currently backing up the raid).
+>
+>
 
-ide-{floppy,scsi} are using 'request_transfer', 'actually_transferred',
-'buffer_size' and 'current_position' in their packet command structures.
+With one, two and three drives on the pm I got no errors, so I tried to
+change the power supply. I got two power supplies for the 16 harddrives
+and the second one (with all Maxtor drives and the first pm) was failing.
+After changing the power supply all problems where gone. Sorry for the
+confusion.
 
-We are going to unify ATAPI packet command handling for all ATAPI
-device drivers and this patch is a change in the opposite direction.
-(IOW I suggest to drop it until ATAPI handling gets unified). 
+The only remaining issue is that some sata links are only working with 1.5
+gbps and I can't figure out why. (ata3,4,5,6.x are the Maxtor drives and
+ata7,8,9,10.x are the Samsung ones)
 
-Thanks,
-Bart
+jasmin ~ # dmesg | grep Gbps
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata6.00: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata6.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata6.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata6.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata6.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata6.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata10.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.05: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+
