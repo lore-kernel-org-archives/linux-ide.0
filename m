@@ -1,140 +1,174 @@
 From: Borislav Petkov <bbpetkov@yahoo.de>
-Subject: [PATCH 5/32] ide-tape: remove IDETAPE_DEBUG_INFO
-Date: Sun, 27 Jan 2008 09:41:25 +0100
-Message-ID: <1201423312-2460-6-git-send-email-bbpetkov@yahoo.de>
+Subject: [PATCH 3/32] ide-tape: remove struct idetape_request_sense_result_t
+Date: Sun, 27 Jan 2008 09:41:23 +0100
+Message-ID: <1201423312-2460-4-git-send-email-bbpetkov@yahoo.de>
 References: <1201423312-2460-1-git-send-email-bbpetkov@yahoo.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp111.plus.mail.re1.yahoo.com ([69.147.102.74]:31697 "HELO
-	smtp111.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756274AbYA0Imi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2008 03:42:38 -0500
+Received: from smtp109.plus.mail.re1.yahoo.com ([69.147.102.72]:26256 "HELO
+	smtp109.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756061AbYA0Imh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2008 03:42:37 -0500
 In-Reply-To: <1201423312-2460-1-git-send-email-bbpetkov@yahoo.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: bzolnier@gmail.com
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bbpetkov@yahoo.de>
 
-The device capabilities are probed for during device initialization so this
-info is available through proc/ioctl() und it is redundant here.
-
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-tape.c |   74 ------------------------------------------------
- 1 files changed, 0 insertions(+), 74 deletions(-)
+ drivers/ide/ide-tape.c |   83 +++++++++++++++--------------------------------
+ 1 files changed, 27 insertions(+), 56 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 0542b07..dbececc 100644
+index 3bedeb8..173ac0d 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -106,7 +106,6 @@ typedef struct os_dat_s {
+@@ -333,32 +333,6 @@ typedef struct idetape_stage_s {
+ } idetape_stage_t;
+ 
  /*
-  *	The following are used to debug the driver:
-  *
-- *	Setting IDETAPE_DEBUG_INFO to 1 will report device capabilities.
-  *	Setting IDETAPE_DEBUG_LOG to 1 will log driver flow control.
-  *	Setting IDETAPE_DEBUG_BUGS to 1 will enable self-sanity checks in
-  *	some places.
-@@ -121,7 +120,6 @@ typedef struct os_dat_s {
-  *	is verified to be stable enough. This will make it much more
-  *	esthetic.
+- *	REQUEST SENSE packet command result - Data Format.
+- */
+-typedef struct {
+-	unsigned	error_code	:7;	/* Current of deferred errors */
+-	unsigned	valid		:1;	/* The information field conforms to QIC-157C */
+-	__u8		reserved1	:8;	/* Segment Number - Reserved */
+-	unsigned	sense_key	:4;	/* Sense Key */
+-	unsigned	reserved2_4	:1;	/* Reserved */
+-	unsigned	ili		:1;	/* Incorrect Length Indicator */
+-	unsigned	eom		:1;	/* End Of Medium */
+-	unsigned	filemark 	:1;	/* Filemark */
+-	__u32		information __attribute__ ((packed));
+-	__u8		asl;			/* Additional sense length (n-7) */
+-	__u32		command_specific;	/* Additional command specific information */
+-	__u8		asc;			/* Additional Sense Code */
+-	__u8		ascq;			/* Additional Sense Code Qualifier */
+-	__u8		replaceable_unit_code;	/* Field Replaceable Unit Code */
+-	unsigned	sk_specific1 	:7;	/* Sense Key Specific */
+-	unsigned	sksv		:1;	/* Sense Key Specific information is valid */
+-	__u8		sk_specific2;		/* Sense Key Specific */
+-	__u8		sk_specific3;		/* Sense Key Specific */
+-	__u8		pad[2];			/* Padding to 20 bytes */
+-} idetape_request_sense_result_t;
+-
+-
+-/*
+  *	Most of our global data which we need to save even as we leave the
+  *	driver due to an interrupt or a timer event is stored in a variable
+  *	of type idetape_tape_t, defined below.
+@@ -512,9 +486,6 @@ typedef struct ide_tape_obj {
+ 	int avg_size;
+ 	int avg_speed;
+ 
+-	/* last sense information */
+-	idetape_request_sense_result_t sense;
+-
+ 	char vendor_id[10];
+ 	char product_id[18];
+ 	char firmware_revision[6];
+@@ -1025,67 +996,67 @@ static void idetape_init_pc (idetape_pc_t *pc)
+ }
+ 
+ /*
+- *	idetape_analyze_error is called on each failed packet command retry
+- *	to analyze the request sense. We currently do not utilize this
+- *	information.
++ * called on each failed packet command retry to analyze the request sense. We
++ * currently do not utilize this information.
   */
--#define IDETAPE_DEBUG_INFO		0
- #define IDETAPE_DEBUG_LOG		0
- #define IDETAPE_DEBUG_BUGS		1
+-static void idetape_analyze_error (ide_drive_t *drive, idetape_request_sense_result_t *result)
++static void idetape_analyze_error(ide_drive_t *drive, u8 *sense)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	idetape_pc_t *pc = tape->failed_pc;
  
-@@ -3817,41 +3815,6 @@ static int idetape_identify_device (ide_drive_t *drive)
+-	tape->sense     = *result;
+-	tape->sense_key = result->sense_key;
+-	tape->asc       = result->asc;
+-	tape->ascq      = result->ascq;
++	tape->sense_key = sense[2] & 0xF;
++	tape->asc       = sense[12];
++	tape->ascq      = sense[13];
+ #if IDETAPE_DEBUG_LOG
+ 	/*
+-	 *	Without debugging, we only log an error if we decided to
+-	 *	give up retrying.
++	 * Without debugging, we only log an error if we decided to give up
++	 * retrying.
+ 	 */
+ 	if (tape->debug_level >= 1)
+ 		printk(KERN_INFO "ide-tape: pc = %x, sense key = %x, "
+ 			"asc = %x, ascq = %x\n",
+-			pc->c[0], result->sense_key,
+-			result->asc, result->ascq);
++			pc->c[0], tape->sense_key,
++			tape->asc, tape->ascq);
+ #endif /* IDETAPE_DEBUG_LOG */
  
- 	*((unsigned short *) &gcw) = id->config;
+-	/*
+-	 *	Correct pc->actually_transferred by asking the tape.
+-	 */
++	/* Correct pc->actually_transferred by asking the tape.	 */
+ 	if (test_bit(PC_DMA_ERROR, &pc->flags)) {
+-		pc->actually_transferred = pc->request_transfer - tape->tape_block_size * ntohl(get_unaligned(&result->information));
++		pc->actually_transferred = pc->request_transfer -
++			tape->tape_block_size *
++			ntohl(get_unaligned((u32 *)&sense[3]));
+ 		idetape_update_buffers(pc);
+ 	}
  
--#if IDETAPE_DEBUG_INFO
--	printk(KERN_INFO "ide-tape: Dumping ATAPI Identify Device tape parameters\n");
--	printk(KERN_INFO "ide-tape: Protocol Type: ");
--	switch (gcw.protocol) {
--		case 0: case 1: printk("ATA\n");break;
--		case 2:	printk("ATAPI\n");break;
--		case 3: printk("Reserved (Unknown to ide-tape)\n");break;
--	}
--	printk(KERN_INFO "ide-tape: Device Type: %x - ",gcw.device_type);	
--	switch (gcw.device_type) {
--		case 0: printk("Direct-access Device\n");break;
--		case 1: printk("Streaming Tape Device\n");break;
--		case 2: case 3: case 4: printk("Reserved\n");break;
--		case 5: printk("CD-ROM Device\n");break;
--		case 6: printk("Reserved\n");
--		case 7: printk("Optical memory Device\n");break;
--		case 0x1f: printk("Unknown or no Device type\n");break;
--		default: printk("Reserved\n");
--	}
--	printk(KERN_INFO "ide-tape: Removable: %s",gcw.removable ? "Yes\n":"No\n");	
--	printk(KERN_INFO "ide-tape: Command Packet DRQ Type: ");
--	switch (gcw.drq_type) {
--		case 0: printk("Microprocessor DRQ\n");break;
--		case 1: printk("Interrupt DRQ\n");break;
--		case 2: printk("Accelerated DRQ\n");break;
--		case 3: printk("Reserved\n");break;
--	}
--	printk(KERN_INFO "ide-tape: Command Packet Size: ");
--	switch (gcw.packet_size) {
--		case 0: printk("12 bytes\n");break;
--		case 1: printk("16 bytes\n");break;
--		default: printk("Reserved\n");break;
--	}
--#endif /* IDETAPE_DEBUG_INFO */
--
- 	/* Check that we can support this device */
- 
- 	if (gcw.protocol !=2 )
-@@ -3939,39 +3902,6 @@ static void idetape_get_mode_sense_results (ide_drive_t *drive)
- 		tape->tape_block_size = 512;
- 	else if (capabilities->blk1024)
- 		tape->tape_block_size = 1024;
--
--#if IDETAPE_DEBUG_INFO
--	printk(KERN_INFO "ide-tape: Dumping the results of the MODE SENSE packet command\n");
--	printk(KERN_INFO "ide-tape: Mode Parameter Header:\n");
--	printk(KERN_INFO "ide-tape: Mode Data Length - %d\n", pc.buffer[0]);
--	printk(KERN_INFO "ide-tape: Medium Type - %d\n", pc.buffer[1]);
--	printk(KERN_INFO "ide-tape: Device Specific Parameter - %d\n",
--			pc.buffer[2]);
--	printk(KERN_INFO "ide-tape: Block Descriptor Length - %d\n",
--			pc.buffer[3]);
--
--	printk(KERN_INFO "ide-tape: Capabilities and Mechanical Status Page:\n");
--	printk(KERN_INFO "ide-tape: Page code - %d\n",capabilities->page_code);
--	printk(KERN_INFO "ide-tape: Page length - %d\n",capabilities->page_length);
--	printk(KERN_INFO "ide-tape: Read only - %s\n",capabilities->ro ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports reverse space - %s\n",capabilities->sprev ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports erase initiated formatting - %s\n",capabilities->efmt ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports QFA two Partition format - %s\n",capabilities->qfa ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports locking the medium - %s\n",capabilities->lock ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: The volume is currently locked - %s\n",capabilities->locked ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: The device defaults in the prevent state - %s\n",capabilities->prevent ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports ejecting the medium - %s\n",capabilities->eject ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports error correction - %s\n",capabilities->ecc ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports data compression - %s\n",capabilities->cmprs ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports 512 bytes block size - %s\n",capabilities->blk512 ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports 1024 bytes block size - %s\n",capabilities->blk1024 ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Supports 32768 bytes block size / Restricted byte count for PIO transfers - %s\n",capabilities->blk32768 ? "Yes":"No");
--	printk(KERN_INFO "ide-tape: Maximum supported speed in KBps - %d\n",capabilities->max_speed);
--	printk(KERN_INFO "ide-tape: Continuous transfer limits in blocks - %d\n",capabilities->ctl);
--	printk(KERN_INFO "ide-tape: Current speed in KBps - %d\n",
--			capabilities->speed);
--	printk(KERN_INFO "ide-tape: Buffer size - %d\n",capabilities->buffer_size*512);
--#endif /* IDETAPE_DEBUG_INFO */
- }
- 
- /*
-@@ -3997,10 +3927,6 @@ static void idetape_get_blocksize_from_block_descriptor(ide_drive_t *drive)
- 	block_descrp = (idetape_parameter_block_descriptor_t *) pc.buffer + 4;
- 	tape->tape_block_size =( block_descrp->length[0]<<16) + (block_descrp->length[1]<<8) + block_descrp->length[2];
- 	tape->drv_write_prot = (pc.buffer[2] & 0x80) >> 7;
--
--#if IDETAPE_DEBUG_INFO
--	printk(KERN_INFO "ide-tape: Adjusted block size - %d\n", tape->tape_block_size);
--#endif /* IDETAPE_DEBUG_INFO */
- }
- 
- #ifdef CONFIG_IDE_PROC_FS
+ 	/*
+-	 * If error was the result of a zero-length read or write command,
+-	 * with sense key=5, asc=0x22, ascq=0, let it slide.  Some drives
+-	 * (i.e. Seagate STT3401A Travan) don't support 0-length read/writes.
++	 * If error was the result of a zero-length read or write command, with
++	 * sense key=5, asc=0x22, ascq=0, let it slide.  Some drives (i.e.
++	 * Seagate STT3401A Travan) don't support 0-length read/writes.
+ 	 */
+ 	if ((pc->c[0] == IDETAPE_READ_CMD || pc->c[0] == IDETAPE_WRITE_CMD)
+-	    && pc->c[4] == 0 && pc->c[3] == 0 && pc->c[2] == 0) { /* length==0 */
+-		if (result->sense_key == 5) {
++		/* length==0 */
++		&& pc->c[4] == 0 && pc->c[3] == 0 && pc->c[2] == 0) {
++		if (tape->sense_key == 5) {
+ 			/* don't report an error, everything's ok */
+ 			pc->error = 0;
+ 			/* don't retry read/write */
+ 			set_bit(PC_ABORT, &pc->flags);
+ 		}
+ 	}
+-	if (pc->c[0] == IDETAPE_READ_CMD && result->filemark) {
++	if (pc->c[0] == IDETAPE_READ_CMD && !!(sense[2] & 0x80)) {
+ 		pc->error = IDETAPE_ERROR_FILEMARK;
+ 		set_bit(PC_ABORT, &pc->flags);
+ 	}
+ 	if (pc->c[0] == IDETAPE_WRITE_CMD) {
+-		if (result->eom ||
+-		    (result->sense_key == 0xd && result->asc == 0x0 &&
+-		     result->ascq == 0x2)) {
++		if (!!(sense[2] & 0x40) ||
++				(tape->sense_key == 0xd &&
++				 tape->asc == 0x0 &&
++				 tape->ascq == 0x2)) {
+ 			pc->error = IDETAPE_ERROR_EOD;
+ 			set_bit(PC_ABORT, &pc->flags);
+ 		}
+ 	}
+ 	if (pc->c[0] == IDETAPE_READ_CMD || pc->c[0] == IDETAPE_WRITE_CMD) {
+-		if (result->sense_key == 8) {
++		if (tape->sense_key == 8) {
+ 			pc->error = IDETAPE_ERROR_EOD;
+ 			set_bit(PC_ABORT, &pc->flags);
+ 		}
+@@ -1327,7 +1298,7 @@ static ide_startstop_t idetape_request_sense_callback (ide_drive_t *drive)
+ 		printk(KERN_INFO "ide-tape: Reached idetape_request_sense_callback\n");
+ #endif /* IDETAPE_DEBUG_LOG */
+ 	if (!tape->pc->error) {
+-		idetape_analyze_error(drive, (idetape_request_sense_result_t *) tape->pc->buffer);
++		idetape_analyze_error(drive, tape->pc->buffer);
+ 		idetape_end_request(drive, 1, 0);
+ 	} else {
+ 		printk(KERN_ERR "ide-tape: Error in REQUEST SENSE itself - Aborting request!\n");
 -- 
 1.5.3.7
 
