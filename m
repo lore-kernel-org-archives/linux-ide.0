@@ -1,13 +1,13 @@
 From: Borislav Petkov <petkovbb@gmail.com>
-Subject: [RFC PATCH 26/32] ide-tape: remove packet command and struct request memory buffers
-Date: Sun, 27 Jan 2008 10:48:14 +0100
-Message-ID: <1201427300-3954-21-git-send-email-petkovbb@gmail.com>
+Subject: [PATCH 28/32] ide-tape: shorten some function names
+Date: Sun, 27 Jan 2008 10:48:16 +0100
+Message-ID: <1201427300-3954-23-git-send-email-petkovbb@gmail.com>
 References: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.23.103.76] ([212.23.103.76]:59285 "EHLO gollum.tnic"
+Received: from [212.23.103.76] ([212.23.103.76]:59287 "EHLO gollum.tnic"
 	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756731AbYA0Jtd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 27 Jan 2008 04:49:33 -0500
+	id S1756754AbYA0Jtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 27 Jan 2008 04:49:32 -0500
 In-Reply-To: <1201427300-3954-1-git-send-email-petkovbb@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,250 +16,137 @@ Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Borislav Petkov <bb
 
 From: Borislav Petkov <bbpetkov@yahoo.de>
 
-Bart,
-this one is rather intrusive so please doublecheck it wrt to kzalloc/kfree
-balancing on all the codepaths so that we don't leak memory all over the place.
-I free all the alloc'd pc's and rq's in idetape_end_request() which is called
-from the callback idetape_pc_callback() registered with the packet command
-struct when creating the respective ATAPI cmd.
-
----
-These buffers were always statically allocated during driver initialization no
-matter what. Remove them by allocating GFP_ATOMIC memory on demand. In the case
-of allocation error, we only issue error msg in the *alloc_{pc,rq} thus postponing
-the final error handling and cleanup in their callers. Packet command and
-request memory is freed in idetape_end_request() which is at the end of the
-request path entered from all the callbacks.
-
 Signed-off-by: Borislav Petkov <bbpetkov@yahoo.de>
 ---
- drivers/ide/ide-tape.c |  122 ++++++++++++++++++++++-------------------------
- 1 files changed, 57 insertions(+), 65 deletions(-)
+ drivers/ide/ide-tape.c |   29 +++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 041edcd..3c1a7db 100644
+index f8a4b27..d4c4255 100644
 --- a/drivers/ide/ide-tape.c
 +++ b/drivers/ide/ide-tape.c
-@@ -105,13 +105,6 @@ enum {
- #define IDETAPE_PC_BUFFER_SIZE		256
- 
- /*
-- *	In various places in the driver, we need to allocate storage
-- *	for packet commands and requests, which will remain valid while
-- *	we leave the driver to wait for an interrupt or a timeout event.
-- */
--#define IDETAPE_PC_STACK		(10 + IDETAPE_MAX_PC_RETRIES)
--
--/*
-  * Some drives (for example, Seagate STT3401A Travan) require a very long
-  * timeout, because they don't return an interrupt or clear their busy bit
-  * until after the command completes (even retension commands).
-@@ -271,13 +264,6 @@ typedef struct ide_tape_obj {
- 	 */
- 	idetape_pc_t *failed_pc;
- 
--	idetape_pc_t pc_stack[IDETAPE_PC_STACK];
--	/* Next free packet command storage space */
--	int pc_stack_idx;
--	struct request rq_stack[IDETAPE_PC_STACK];
--	/* We implement a circular array */
--	int rq_stack_idx;
--
- 	/*
- 	 * DSC polling variables.
- 	 *
-@@ -669,45 +655,32 @@ static void idetape_update_buffers (idetape_pc_t *pc)
- 	pc->bh = bh;
- }
- 
--/*
-- *	idetape_next_pc_storage returns a pointer to a place in which we can
-- *	safely store a packet command, even though we intend to leave the
-- *	driver. A storage space for a maximum of IDETAPE_PC_STACK packet
-- *	commands is allocated at initialization time.
-- */
--static idetape_pc_t *idetape_next_pc_storage (ide_drive_t *drive)
-+static idetape_pc_t *ide_tape_alloc_pc(void)
- {
--	idetape_tape_t *tape = drive->driver_data;
-+	idetape_pc_t *pc;
- 
--	debug_log(DBG_PCRQ_STACK, "pc_stack_index=%d\n", tape->pc_stack_idx);
-+	pc = kzalloc(sizeof(idetape_pc_t), GFP_ATOMIC);
-+	if (!pc)
-+		printk(KERN_ERR "ide-tape: %s: memory allocation error.",
-+				__func__);
- 
--	if (tape->pc_stack_idx == IDETAPE_PC_STACK)
--		tape->pc_stack_idx = 0;
--	return (&tape->pc_stack[tape->pc_stack_idx++]);
-+	return pc;
- }
- 
- /*
-- *	idetape_next_rq_storage is used along with idetape_next_pc_storage.
-- *	Since we queue packet commands in the request queue, we need to
-- *	allocate a request, along with the allocation of a packet command.
-+ * Since we queue packet commands in the request queue, we need to allocate a
-+ * request, along with a packet command.
+@@ -1066,7 +1066,7 @@ static void idetape_postpone_request (ide_drive_t *drive)
+  * command. We will transfer some of the data (as requested by the drive) and
+  * will re-point interrupt handler to us. When data transfer is finished, we
+  * will act according to the algorithm described before
+- * idetape_issue_packet_command.
++ * idetape_issue_pc.
   */
-- 
--/**************************************************************
-- *                                                            *
-- *  This should get fixed to use kmalloc(.., GFP_ATOMIC)      *
-- *  followed later on by kfree().   -ml                       *
-- *                                                            *
-- **************************************************************/
-- 
--static struct request *idetape_next_rq_storage (ide_drive_t *drive)
-+static struct request *ide_tape_alloc_rq(void)
- {
--	idetape_tape_t *tape = drive->driver_data;
-+	struct request *rq;
  
--	debug_log(DBG_PCRQ_STACK, "rq_stack_index=%d\n", tape->rq_stack_idx);
-+	rq = kzalloc(sizeof(struct request), GFP_ATOMIC);
-+	if (!rq)
-+		printk(KERN_ERR "ide-tape: %s: memory allocation error.",
-+				__func__);
- 
--	if (tape->rq_stack_idx == IDETAPE_PC_STACK)
--		tape->rq_stack_idx = 0;
--	return (&tape->rq_stack[tape->rq_stack_idx++]);
-+	return rq;
+ typedef void idetape_io_buf(ide_drive_t *, idetape_pc_t *, uint);
+@@ -1249,7 +1249,7 @@ static ide_startstop_t idetape_pc_intr(ide_drive_t *drive)
+  *
+  *	The handling will be done in three stages:
+  *
+- *	1.	idetape_issue_packet_command will send the packet command to the
++ *	1.	idetape_issue_pc will send the packet command to the
+  *		drive, and will set the interrupt handler to idetape_pc_intr.
+  *
+  *	2.	On each interrupt, idetape_pc_intr will be called. This step
+@@ -1324,7 +1324,7 @@ static ide_startstop_t idetape_transfer_pc(ide_drive_t *drive)
+ 	return ide_started;
  }
  
- /*
-@@ -981,9 +954,8 @@ static int idetape_end_request(ide_drive_t *drive, int uptodate, int nr_sects)
- 		}
- 	}
- 	ide_end_drive_cmd(drive, 0, 0);
--//	blkdev_dequeue_request(rq);
--//	drive->rq = NULL;
--//	end_that_request_last(rq);
-+	kfree(tape->pc);
-+	kfree(rq);
- 
- 	if (remove_stage)
- 		idetape_remove_stage_head(drive);
-@@ -1032,13 +1004,9 @@ static void idetape_init_rq(struct request *rq, u8 cmd)
-  *
-  *	idetape_queue_pc_head is called from the request handling part of
-  *	the driver (the "bottom" part). Safe storage for the request should
-- *	be allocated with idetape_next_pc_storage and idetape_next_rq_storage
-+ *	be allocated with ide_tape_alloc_pc and ide_tape_alloc_rq
-  *	before calling idetape_queue_pc_head.
-  *
-- *	Memory for those requests is pre-allocated at initialization time, and
-- *	is limited to IDETAPE_PC_STACK requests. We assume that we have enough
-- *	space for the maximum possible number of inter-dependent packet commands.
-- *
-  *	The higher level of the driver - The ioctl handler and the character
-  *	device handling functions should queue request to the lower level part
-  *	and wait for their completion using idetape_queue_pc_tail or
-@@ -1055,19 +1023,27 @@ static void idetape_queue_pc_head (ide_drive_t *drive, idetape_pc_t *pc,struct r
- }
- 
- /*
-- *	idetape_retry_pc is called when an error was detected during the
-- *	last packet command. We queue a request sense packet command in
-- *	the head of the request list.
-+ * Called when an error was detected during the last packet command. We queue a
-+ * request sense packet command in the head of the request list.
-  */
--static ide_startstop_t idetape_retry_pc (ide_drive_t *drive)
-+static ide_startstop_t idetape_retry_pc(ide_drive_t *drive)
+-static ide_startstop_t idetape_issue_packet_command (ide_drive_t *drive, idetape_pc_t *pc)
++static ide_startstop_t idetape_issue_pc(ide_drive_t *drive, idetape_pc_t *pc)
  {
+ 	ide_hwif_t *hwif = drive->hwif;
  	idetape_tape_t *tape = drive->driver_data;
- 	idetape_pc_t *pc;
- 	struct request *rq;
- 
- 	(void)drive->hwif->INB(IDE_ERROR_REG);
--	pc = idetape_next_pc_storage(drive);
--	rq = idetape_next_rq_storage(drive);
-+	pc = ide_tape_alloc_pc();
-+	rq = ide_tape_alloc_rq();
-+
-+	if (!pc || !rq) {
-+		printk(KERN_ERR "ide-tape: Cannot retry packet command due to "
-+				"low memory.");
-+		kfree(pc);
-+		kfree(rq);
-+		return ide_stopped;
-+	}
-+
- 	idetape_create_request_sense_cmd(pc);
- 	set_bit(IDETAPE_IGNORE_DSC, &tape->flags);
- 	idetape_queue_pc_head(drive, pc, rq);
-@@ -1719,21 +1695,33 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 	if (rq->cmd[0] & REQ_IDETAPE_READ) {
- 		tape->buffer_head++;
- 		tape->postpone_cnt = 0;
--		pc = idetape_next_pc_storage(drive);
--		idetape_create_read_cmd(tape, pc, rq->current_nr_sectors, (struct idetape_bh *)rq->special);
-+		pc = ide_tape_alloc_pc();
-+		if (!pc)
-+			goto err;
-+
-+		idetape_create_read_cmd(tape, pc, rq->current_nr_sectors,
-+				(struct idetape_bh *)rq->special);
- 		goto out;
+@@ -1638,7 +1638,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
+ 	 */
+ 	if (tape->failed_pc != NULL &&
+ 	    tape->pc->c[0] == REQUEST_SENSE) {
+-		return idetape_issue_packet_command(drive, tape->failed_pc);
++		return idetape_issue_pc(drive, tape->failed_pc);
  	}
- 	if (rq->cmd[0] & REQ_IDETAPE_WRITE) {
- 		tape->buffer_head++;
- 		tape->postpone_cnt = 0;
--		pc = idetape_next_pc_storage(drive);
--		idetape_create_write_cmd(tape, pc, rq->current_nr_sectors, (struct idetape_bh *)rq->special);
-+		pc = ide_tape_alloc_pc();
-+		if (!pc)
-+			goto err;
-+
-+		idetape_create_write_cmd(tape, pc, rq->current_nr_sectors,
-+				(struct idetape_bh *)rq->special);
- 		goto out;
+ 	if (postponed_rq != NULL)
+ 		if (rq != postponed_rq) {
+@@ -1732,7 +1732,7 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
  	}
- 	if (rq->cmd[0] & REQ_IDETAPE_READ_BUFFER) {
- 		tape->postpone_cnt = 0;
--		pc = idetape_next_pc_storage(drive);
--		idetape_create_read_buffer_cmd(tape, pc, rq->current_nr_sectors, (struct idetape_bh *)rq->special);
-+		pc = ide_tape_alloc_pc();
-+		if (!pc)
-+			goto err;
-+
-+		idetape_create_read_buffer_cmd(tape, pc, rq->current_nr_sectors,
-+				(struct idetape_bh *)rq->special);
- 		goto out;
- 	}
- 	if (rq->cmd[0] & REQ_IDETAPE_PC1) {
-@@ -1749,6 +1737,11 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
  	BUG();
  out:
- 	return idetape_issue_packet_command(drive, pc);
-+
-+err:
-+	printk(KERN_ERR "ide-tape: Error processing request %u\n", rq->cmd[0]);
-+	idetape_end_request(drive, 0, 0);
-+	return ide_stopped;
+-	return idetape_issue_packet_command(drive, pc);
++	return idetape_issue_pc(drive, pc);
+ 
+ err:
+ 	printk(KERN_ERR "ide-tape: Error processing request %u\n", rq->cmd[0]);
+@@ -2290,10 +2290,10 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int blocks, struct
  }
  
  /*
-@@ -2055,7 +2048,7 @@ static void idetape_create_test_unit_ready_cmd(idetape_pc_t *pc)
-  *	for an interrupt or a timer event.
-  *
-  *	From the bottom part of the driver, we should allocate safe memory
-- *	using idetape_next_pc_storage and idetape_next_rq_storage, and add
-+ *	using ide_tape_alloc_pc and ide_tape_alloc_rq, and add
-  *	the request to the request list without waiting for it to be serviced !
-  *	In that case, we usually use idetape_queue_pc_head.
+- *	idetape_insert_pipeline_into_queue is used to start servicing the
++ *	idetape_ins_ppl_into_queue is used to start servicing the
+  *	pipeline stages, starting from tape->next_stage.
   */
-@@ -3644,7 +3637,6 @@ static void idetape_setup (ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 	tape->name[1] = 't';
- 	tape->name[2] = '0' + minor;
- 	tape->chrdev_dir = idetape_dir_none;
--	tape->pc = tape->pc_stack;
- 	tape->max_ins_speed = 10000;
- 	tape->speed_ctl = 1;
- 	*((unsigned short *) &gcw) = drive->id->config;
+-static void idetape_insert_pipeline_into_queue (ide_drive_t *drive)
++static void idetape_ins_ppl_into_queue(ide_drive_t *drive)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+ 
+@@ -2385,7 +2385,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
+ 			spin_unlock_irqrestore(&tape->que_lock, flags);
+ 		} else {
+ 			spin_unlock_irqrestore(&tape->que_lock, flags);
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_ins_ppl_into_queue(drive);
+ 			if (idetape_pipeline_active(tape))
+ 				continue;
+ 			/*
+@@ -2421,7 +2421,7 @@ static int idetape_add_chrdev_write_request (ide_drive_t *drive, int blocks)
+ 			tape->ins_time = jiffies;
+ 			tape->ins_size = 0;
+ 			tape->ins_speed = 0;
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_ins_ppl_into_queue(drive);
+ 		}
+ 	}
+ 	if (test_and_clear_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
+@@ -2440,7 +2440,7 @@ static void idetape_wait_for_pipeline (ide_drive_t *drive)
+ 	unsigned long flags;
+ 
+ 	while (tape->next_stage || idetape_pipeline_active(tape)) {
+-		idetape_insert_pipeline_into_queue(drive);
++		idetape_ins_ppl_into_queue(drive);
+ 		spin_lock_irqsave(&tape->que_lock, flags);
+ 		if (idetape_pipeline_active(tape))
+ 			idetape_wait_for_request(drive, tape->act_data_rq);
+@@ -2532,7 +2532,7 @@ static void idetape_restart_speed_control (ide_drive_t *drive)
+ 	tape->ctl_prev_htime = tape->unctl_prev_htime = jiffies;
+ }
+ 
+-static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
++static int idetape_init_read(ide_drive_t *drive, int max_stages)
+ {
+ 	idetape_tape_t *tape = drive->driver_data;
+ 	idetape_stage_t *new_stage;
+@@ -2593,7 +2593,7 @@ static int idetape_initiate_read (ide_drive_t *drive, int max_stages)
+ 			tape->ins_time = jiffies;
+ 			tape->ins_size = 0;
+ 			tape->ins_speed = 0;
+-			idetape_insert_pipeline_into_queue(drive);
++			idetape_ins_ppl_into_queue(drive);
+ 		}
+ 	}
+ 	return 0;
+@@ -2623,7 +2623,7 @@ static int idetape_add_chrdev_read_request (ide_drive_t *drive,int blocks)
+ 	 * Wait for the next block to be available at the head
+ 	 * of the pipeline
+ 	 */
+-	idetape_initiate_read(drive, tape->max_stages);
++	idetape_init_read(drive, tape->max_stages);
+ 	if (tape->first_stage == NULL) {
+ 		if (test_bit(IDETAPE_PIPELINE_ERROR, &tape->flags))
+ 			return 0;
+@@ -2879,7 +2879,8 @@ static ssize_t idetape_chrdev_read (struct file *file, char __user *buf,
+ 			    (count % tape->blk_sz) == 0)
+ 				tape->user_bs_factor = count / tape->blk_sz;
+ 	}
+-	if ((rc = idetape_initiate_read(drive, tape->max_stages)) < 0)
++	rc = idetape_init_read(drive, tape->max_stages);
++	if (rc < 0)
+ 		return rc;
+ 	if (count == 0)
+ 		return (0);
 -- 
 1.5.3.7
 
