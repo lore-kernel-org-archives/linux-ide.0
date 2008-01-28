@@ -1,55 +1,67 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] ide: make wait_drive_not_busy() static again
-Date: Tue, 29 Jan 2008 00:10:06 +0200
-Message-ID: <20080128221006.GK8767@does.not.exist>
+Subject: [2.6 patch] small ide-scan-pci.c cleanup
+Date: Tue, 29 Jan 2008 00:09:50 +0200
+Message-ID: <20080128220950.GJ8767@does.not.exist>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:46394 "EHLO smtp6.pp.htv.fi"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:52175 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759392AbYA1WJk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 17:09:40 -0500
+	id S1757202AbYA1WJY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jan 2008 17:09:24 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.o
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-After commit 7267c3377443322588cddaf457cf106839a60463 
-wait_drive_not_busy() can become static again.
+- ide_scan_pcibus() can become static
+- instead of ide_scan_pci() we can use ide_scan_pcibus() directly
+  in module_init()
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
- drivers/ide/ide-taskfile.c |    2 +-
- include/linux/ide.h        |    2 --
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/ide/ide-scan-pci.c |    9 ++-------
+ include/linux/ide.h        |    1 -
+ 2 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 5eb6fa1..d320001 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -260,7 +260,7 @@ static ide_startstop_t task_no_data_intr(ide_drive_t *drive)
- 	return ide_stopped;
+03f221931265eda3ae7dfad9eaa8191e171d2c0c 
+diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+index 7ffa332..93d2e41 100644
+--- a/drivers/ide/ide-scan-pci.c
++++ b/drivers/ide/ide-scan-pci.c
+@@ -81,7 +81,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+  *	module ordering not traditionally ordered.
+  */
+ 
+-int __init ide_scan_pcibus(void)
++static int __init ide_scan_pcibus(void)
+ {
+ 	struct pci_dev *dev = NULL;
+ 	struct pci_driver *d;
+@@ -113,9 +113,4 @@ int __init ide_scan_pcibus(void)
+ 	return 0;
  }
  
--u8 wait_drive_not_busy(ide_drive_t *drive)
-+static u8 wait_drive_not_busy(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = HWIF(drive);
- 	int retries;
+-static int __init ide_scan_pci(void)
+-{
+-	return ide_scan_pcibus();
+-}
+-
+-module_init(ide_scan_pci);
++module_init(ide_scan_pcibus);
 diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 27cb39d..5d3d88e 100644
+index 5d3d88e..7072c53 100644
 --- a/include/linux/ide.h
 +++ b/include/linux/ide.h
-@@ -986,8 +986,6 @@ ide_startstop_t do_rw_taskfile(ide_drive_t *, ide_task_t *);
+@@ -1015,7 +1015,6 @@ void ide_init_disk(struct gendisk *, ide_drive_t *);
  
- void task_end_request(ide_drive_t *, struct request *, u8);
- 
--u8 wait_drive_not_busy(ide_drive_t *);
--
- int ide_raw_taskfile(ide_drive_t *, ide_task_t *, u8 *, u16);
- int ide_no_data_taskfile(ide_drive_t *, ide_task_t *);
- 
+ #ifdef CONFIG_IDEPCI_PCIBUS_ORDER
+ extern int ide_scan_direction;
+-int __init ide_scan_pcibus(void);
+ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *owner, const char *mod_name);
+ #define ide_pci_register_driver(d) __ide_pci_register_driver(d, THIS_MODULE, KBUILD_MODNAME)
+ #else
 
