@@ -1,61 +1,160 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 15:01:41 -0500 (EST)
-Message-ID: <alpine.LNX.1.00.0801281445200.13593@iabervon.org>
-References: <200801272122.21823.gene.heskett@gmail.com> <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost> <200801281230.32910.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281248190.13593@iabervon.org> <479E1D9E.3000900@bobjweil.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 7/8] ide: add struct ide_port_info instances to legacy
+ host drivers
+Date: Mon, 28 Jan 2008 23:28:26 +0300
+Message-ID: <479E3AEA.5090600@ru.mvista.com>
+References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170310.6861.14522.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:49216 "EHLO iabervon.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761984AbYA1UBu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 15:01:50 -0500
-In-Reply-To: <479E1D9E.3000900@bobjweil.com>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:64774 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751321AbYA1U1c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 15:27:32 -0500
+In-Reply-To: <20080106170310.6861.14522.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Heck <rgheck@bobjweil.com>
-Cc: Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 28 Jan 2008, Richard Heck wrote:
+Hello.
 
-> Daniel Barkalow wrote:
-> > Can you switch back to old IDE to get your work done (and to make sure it's
-> > not a hardware issue that's developed recently)? 
-> I think it'd be really, REALLY helpful to a lot of people if you, or someone,
-> could explain in moderate detail how this might be done. I tried doing it
-> myself, but I'm not sufficiently expert at configuring kernels that I was ever
-> able to figure out how to do it.
+Bartlomiej Zolnierkiewicz wrote:
 
-As far as configuring the kernel, I can help:
+> * Remove 'struct pci_dev *dev' argument from ide_hwif_setup_dma().
 
-Go to Device Drivers, ATA/ATAPI/MFM/RLL support, and turn on anything that 
-looks relevant; go to Device Drivers, Serial ATA and Parallel ATA drivers, 
-and turn off anything that's PATA and looks relevant.
+> * Un-static ide_hwif_setup_dma() and add CONFIG_BLK_DEV_IDEDMA_PCI=n version.
 
-(Whether a device uses IDE or PATA depends on which driver that supports 
-the device is present and find it first, not on any sort of global 
-configuration, which is probably what tripped you up)
+> * Add 'const struct ide_port_info *d' argument to ide_device_add[_all]().
 
-Building this and installing it along with the appropriate initrd (which 
-might be handled by Fedora's install scripts) will either get you back to 
-old IDE or will make your kernel panic on boot, depending on whether you 
-got it right (so make sure you can still boot the kernel you're sure of or 
-something from a boot disk). This will also cause your hard drives to show 
-up as different device nodes, so if your boot process doesn't mount by 
-disk uuid but by some other feature (and I don't know what Fedora does), 
-you'll also need to change it to something either stable across access 
-methods or which works for the one you're now using.
+> * Factor out generic ports init from ide_pci_setup_ports() to ide_init_port(),
+>   move it to ide-probe.c and call it in in ide_device_add_all() instead of
+>   ide_pci_setup_ports().
 
-> Obviously, the short version is: switch back to Fedora 6. But this kind of
-> problem with libata---and yes, you're almost surely right that it's not one
-> problem but lots---is sufficiently widespread that a Mini HOWTO, say, would be
-> really welcome and, I'm guessing, widely used.
+> * Move ->mate setup to ide_device_add_all() from ide_port_init().
 
-Fedora really ought to provide documentation, because there's some 
-distro-specific stuff (like how you deal with the kernel's device node for 
-the root partition changing), and they're using code by default that's at 
-least somewhat documented as experimental (although it doesn't seem to be 
-actually marked as experimental in all cases).
+> * Add IDE_HFLAG_NO_AUTOTUNE host flag for host drivers that don't enable
+>   ->autotune currently.
 
-	-Daniel
-*This .sig left intentionally blank*
+> * Setup hwif->chipset in ide_init_port() but iff pi->chipset is set
+>   (to not override setup done by ide_hwif_configure()).
+
+> * Add ETRAX host handling to ide_device_add_all().
+
+> * cmd640.c: set IDE_HFLAG_ABUSE_* also for CONFIG_BLK_DEV_CMD640_ENHANCED=n.
+
+> * pmac.c: make pmac_ide_setup_dma() return an error value and move DMA masks
+>   setup to pmac_ide_setup_device().
+
+> * Add 'struct ide_port_info' instances to legacy host drivers, pass them to
+>   ide_device_add() calls and then remove open-coded ports initialization.
+
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+> Index: b/drivers/ide/arm/icside.c
+> ===================================================================
+> --- a/drivers/ide/arm/icside.c
+> +++ b/drivers/ide/arm/icside.c
+> @@ -459,11 +456,19 @@ icside_register_v5(struct icside_state *
+>  
+>  	idx[0] = hwif->index;
+>  
+> -	ide_device_add(idx);
+> +	ide_device_add(idx, NULL);
+>  
+>  	return 0;
+>  }
+>  
+> +static const struct ide_port_info icside_v6_port_info __initdata = {
+> +	.host_flags		= IDE_HFLAG_SERIALIZE |
+> +				  IDE_HFLAG_NO_DMA | /* no SFF-style DMA */
+> +				  IDE_HFLAG_NO_AUTOTUNE,
+> +	.mwdma_mask		= ATA_MWDMA2,
+> +	.swdma_mask		= ATA_SWDMA2,
+> +};
+> +
+
+    Interesting... this driver's support for SWDMA0 is broken since the cycle 
+should be 960 ns long, not 480, and SWDMA2 is underclocked using the same 
+cycle as SWDMA1, 480 ns...
+
+> Index: b/drivers/ide/cris/ide-cris.c
+> ===================================================================
+> --- a/drivers/ide/cris/ide-cris.c
+> +++ b/drivers/ide/cris/ide-cris.c
+> @@ -753,6 +753,15 @@ static void cris_set_dma_mode(ide_drive_
+>  		cris_ide_set_speed(TYPE_DMA, 0, strobe, hold);
+>  }
+>  
+> +static const struct ide_port_info cris_port_info __initdata = {
+> +	.chipset		= ide_etrax100,
+> +	.host_flags		= IDE_HFLAG_NO_ATAPI_DMA |
+> +				  IDE_HFLAG_NO_DMA, /* no SFF-style DMA */
+> +	.pio_mask		= ATA_PIO4,
+> +	.udma_mask		= cris_ultra_mask,
+
+    Hm, I wonder which value it will assume, 0x07 or 0?  Not sure even after 
+looking at the source... :-)
+
+> +	.mwdma_mask		= ATA_MWDMA2,
+> +};
+> +
+>  static int __init init_e100_ide(void)
+>  {
+>  	hw_regs_t hw;
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c
+> +++ b/drivers/ide/ide-probe.c
+> @@ -1289,12 +1289,86 @@ static void hwif_register_devices(ide_hw
+>  	}
+>  }
+>  
+> -int ide_device_add_all(u8 *idx)
+> +static void ide_init_port(ide_hwif_t *hwif, unsigned int port,
+> +			  const struct ide_port_info *d)
+>  {
+> -	ide_hwif_t *hwif;
+> +	if (d->chipset != ide_etrax100)
+> +		hwif->channel = port;
+
+   Hm, what's so special about ide_etrax100?
+
+> +int ide_device_add_all(u8 idx[MAX_HWIFS], const struct ide_port_info *d)
+
+    Function prototype doesn't match with one from <linux/ide.h> which has the 
+first argument as a pointer...
+
+> +{
+> +	ide_hwif_t *hwif, *mate = NULL;
+>  	int i, rc = 0;
+>  
+>  	for (i = 0; i < MAX_HWIFS; i++) {
+> +		if (d == NULL || idx[i] == 0xff) {
+
+    Why check for (d == NULL) every time and not do it once and break from the 
+loop or even do it before the loop?
+
+> +			mate = NULL;
+> +			continue;
+> +		}
+> +
+> +		hwif = &ide_hwifs[idx[i]];
+> +
+> +		if (d->chipset != ide_etrax100 && (i & 1) && mate) {
+> +			hwif->mate = mate;
+> +			mate->mate = hwif;
+> +		}
+> +
+> +		mate = (i & 1) ? NULL : hwif;
+> +
+> +		ide_init_port(hwif, i & 1, d);
+> +	}
+> +
+> +	for (i = 0; i < MAX_HWIFS; i++) {
+>  		if (idx[i] == 0xff)
+>  			continue;
+
+MBR, Sergei
+
