@@ -1,47 +1,105 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 13:38:40 -0500
-Message-ID: <479E2130.5020208@rtr.ca>
-References: <200801272122.21823.gene.heskett@gmail.com> <18333.36746.819935.641383@harpo.it.uu.se> <1201521783.6149.33.camel@lappy> <200801280754.53768.gene.heskett@gmail.com>
+Date: Mon, 28 Jan 2008 14:01:56 -0500
+Message-ID: <479E26A4.2020103@rtr.ca>
+References: <200801272122.21823.gene.heskett@gmail.com> <479E24F7.4090502@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2121 "EHLO mail.rtr.ca"
+Received: from rtr.ca ([76.10.145.34]:1506 "EHLO mail.rtr.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752415AbYA1Sim (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 13:38:42 -0500
-In-Reply-To: <200801280754.53768.gene.heskett@gmail.com>
+	id S1754707AbYA1TB5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jan 2008 14:01:57 -0500
+In-Reply-To: <479E24F7.4090502@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>, Alan Cox <alan@redhat.com>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Added Alan to CC: list.
-
-> [   30.703188] scsi0 : pata_amd
-> [   30.709313] scsi1 : pata_amd
-> [   30.710076] ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
-> [   30.710079] ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
-> [   30.864753] ata1.00: ATA-6: WDC WD2000JB-00EVA0, 15.05R15, max UDMA/100
-> [   30.864756] ata1.00: 390721968 sectors, multi 16: LBA48 
-> [   30.871629] ata1.00: configured for UDMA/100
+Gene Heskett wrote:
+> Greeting;
+>
+> I had to reboot early this morning due to a freezeup, and I had a bunch of these in the messages log:
+> ==============
+> Jan 27 19:42:11 coyote kernel: [42461.915961] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> Jan 27 19:42:11 coyote kernel: [42461.915973] ata1.00: cmd ca/00:08:b1:66:46/00:00:00:00:00/e8 tag 0 dma 4096 out
+> Jan 27 19:42:11 coyote kernel: [42461.915974]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jan 27 19:42:11 coyote kernel: [42461.915978] ata1.00: status: { DRDY }
+> Jan 27 19:42:11 coyote kernel: [42461.916005] ata1: soft resetting link
+> Jan 27 19:42:12 coyote kernel: [42462.078216] ata1.00: configured for UDMA/100
+> Jan 27 19:42:12 coyote kernel: [42462.078232] ata1: EH complete
+> Jan 27 19:42:12 coyote kernel: [42462.090700] sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
+> Jan 27 19:42:12 coyote kernel: [42462.114230] sd 0:0:0:0: [sda] Write Protect is off
+> Jan 27 19:42:12 coyote kernel: [42462.115079] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> ===============
+> That one showed up about 2 hours ago, so I expect I'll be locked up again before I've managed a 24 hour uptime.  This drive passed
+> a 'smartctl -t long /dev/sda' with flying colors after the reboot
+> this morning.
+>
+> Two instances were logged after I had rebooted to 2.6.24 from 2.6.24-rc8:
+>
+> Jan 24 20:46:33 coyote kernel: [    0.000000] Linux version 2.6.24 (root@coyote.coyote.den) (gcc version 4.1.2 20070925 (Red Hat 4.1.2-33)) #1 SMP Thu Jan 24 20:17:55 EST 2008
+> ----
+> Jan 27 02:28:29 coyote kernel: [193207.445158] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> Jan 27 02:28:29 coyote kernel: [193207.445170] ata1.00: cmd 35/00:08:f9:24:0a/00:00:17:00:00/e0 tag 0 dma 4096 out
+> Jan 27 02:28:29 coyote kernel: [193207.445172]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jan 27 02:28:29 coyote kernel: [193207.445175] ata1.00: status: { DRDY }
+> Jan 27 02:28:29 coyote kernel: [193207.445202] ata1: soft resetting link
+> Jan 27 02:28:29 coyote kernel: [193207.607384] ata1.00: configured for UDMA/100
+> Jan 27 02:28:29 coyote kernel: [193207.607399] ata1: EH complete
+> Jan 27 02:28:29 coyote kernel: [193207.609681] sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
+> Jan 27 02:28:29 coyote kernel: [193207.619277] sd 0:0:0:0: [sda] Write Protect is off
+> Jan 27 02:28:29 coyote kernel: [193207.649041] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> Jan 27 02:30:06 coyote kernel: [193304.336929] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+> Jan 27 02:30:06 coyote kernel: [193304.336940] ata1.00: cmd ca/00:20:69:22:a6/00:00:00:00:00/e7 tag 0 dma 16384 out
+> Jan 27 02:30:06 coyote kernel: [193304.336942]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jan 27 02:30:06 coyote kernel: [193304.336945] ata1.00: status: { DRDY }
+> Jan 27 02:30:06 coyote kernel: [193304.336972] ata1: soft resetting link
+> Jan 27 02:30:06 coyote kernel: [193304.499210] ata1.00: configured for UDMA/100
+> Jan 27 02:30:06 coyote kernel: [193304.499226] ata1: EH complete
+> Jan 27 02:30:06 coyote kernel: [193304.499714] sd 0:0:0:0: [sda] 390721968 512-byte hardware sectors (200050 MB)
+> Jan 27 02:30:06 coyote kernel: [193304.499857] sd 0:0:0:0: [sda] Write Protect is off
+> Jan 27 02:30:06 coyote kernel: [193304.502315] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+>
+> None were logged during the time I was running an -rc7 or -rc8.
+>
+> The previous hits on this resulted in the udma speed being downgraded till it was actually running in pio just before the freeze that required the hardware reset button.
+>
+> I'll reboot to -rc8 right now and resume.  If its the drive, I should see it.
+> If not, then 2.6.24 is where I'll point the finger.
 ..
 
-Gene, please confirm with us that your primary/master hard drive (above)
-is connected with an 80-wire UDMA cable, as opposed to the older 40-wire cables.
+The only libata change I can see that could possibly affect your setup,
+is this one here, which went in sometime between -rc7 and -final:
 
-> [   31.195305] ata2.00: ATAPI: LITE-ON DVDRW SHM-165H6S, HS06, max UDMA/66
-> [   31.243813] ata2.01: ATA-7: MAXTOR STM3320620A, 3.AAE, max UDMA/100
-> [   31.243816] ata2.01: 625142448 sectors, multi 16: LBA48 
-> [   31.243825] ata2.00: limited to UDMA/33 due to 40-wire cable
-> [   31.417074] ata2.00: configured for UDMA/33
-> [   31.451769] ata2.01: configured for UDMA/100
-..
+--- linux-2.6.24-rc7/drivers/ata/libata-eh.c    2008-01-06 16:45:38.000000000 -0500
++++ linux-2.6.24/drivers/ata/libata-eh.c        2008-01-24 17:58:37.000000000 -0500
+@@ -1733,11 +1733,15 @@
+               ehc->i.action &= ~ATA_EH_PERDEV_MASK;
+       }
 
-That looks like an unrelated bug to me: the driver says "40-wire cable"
-but then goes and chooses UDMA/100 on one of the drives.
+-       /* consider speeding down */
++       /* propagate timeout to host link */
++       if ((all_err_mask & AC_ERR_TIMEOUT) && !ata_is_host_link(link))
++               ap->link.eh_context.i.err_mask |= AC_ERR_TIMEOUT;
++
 
-Alan?
+It looks pretty innocent to me, though.
+If you want to try reverting just that change
+(comment out the two lines and rebuild),
+then that might provide useful information here.
 
+If -final is still b0rked even with those two lines changed back,
+then I suspect you're just "getting lucky" when switching between
+the -rc7/-rc8 kernel and the -final kernel.
 
+"Lucky" in a bad way, that is.
+
+The real test would be to rebuild the kernel without libata,
+and *with* the old IDE driver instead, and see if the problems persist.
+
+If you need help with that, then perhaps someone familiar with Fedora
+might be able to assist.
+
+Cheers
