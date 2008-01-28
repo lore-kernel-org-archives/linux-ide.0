@@ -1,160 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 7/8] ide: add struct ide_port_info instances to legacy
- host drivers
-Date: Mon, 28 Jan 2008 23:28:26 +0300
-Message-ID: <479E3AEA.5090600@ru.mvista.com>
-References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170310.6861.14522.sendpatchset@localhost.localdomain>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Problem with ata layer in 2.6.24
+Date: Mon, 28 Jan 2008 15:29:27 -0500
+Message-ID: <479E3B27.9030402@rtr.ca>
+References: <200801272122.21823.gene.heskett@gmail.com> <18333.36746.819935.641383@harpo.it.uu.se> <1201521783.6149.33.camel@lappy> <200801280754.53768.gene.heskett@gmail.com> <479E2130.5020208@rtr.ca> <20080128200105.GA20201@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:64774 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751321AbYA1U1c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 15:27:32 -0500
-In-Reply-To: <20080106170310.6861.14522.sendpatchset@localhost.localdomain>
+Received: from rtr.ca ([76.10.145.34]:2576 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757879AbYA1U33 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jan 2008 15:29:29 -0500
+In-Reply-To: <20080128200105.GA20201@devserv.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@redhat.com>
+Cc: Gene Heskett <gene.heskett@gmail.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-Hello.
+Alan Cox wrote:
+> On Mon, Jan 28, 2008 at 01:38:40PM -0500, Mark Lord wrote:
+>>> [   31.195305] ata2.00: ATAPI: LITE-ON DVDRW SHM-165H6S, HS06, max UDMA/66
+>>> [   31.243813] ata2.01: ATA-7: MAXTOR STM3320620A, 3.AAE, max UDMA/100
+>>> [   31.243816] ata2.01: 625142448 sectors, multi 16: LBA48 
+>>> [   31.243825] ata2.00: limited to UDMA/33 due to 40-wire cable
+>>> [   31.417074] ata2.00: configured for UDMA/33
+>>> [   31.451769] ata2.01: configured for UDMA/100
+>> ..
+>>
+>> That looks like an unrelated bug to me: the driver says "40-wire cable"
+>> but then goes and chooses UDMA/100 on one of the drives.
+> 
+> We currently assume that
+> - If we have host side detecting 40 that we use 40
+> - If we have drive side detecting 40 use 40
+> - If we have drive side detecting 80 and host thinks 80 use 80
+> 
+> The case where the drives disagree isn't currently considered.
+..
 
-Bartlomiej Zolnierkiewicz wrote:
+Ahh.  Tricky mess, that stuff.
+I believe that if we have a drive that only sees 40W,
+then it is probably best to restrict the other drive as well.
 
-> * Remove 'struct pci_dev *dev' argument from ide_hwif_setup_dma().
+Just in case the drive that reports 40W cannot actually keep up
+with the 80W timings, even when they're for the other drive.
 
-> * Un-static ide_hwif_setup_dma() and add CONFIG_BLK_DEV_IDEDMA_PCI=n version.
+That's my 2p.
 
-> * Add 'const struct ide_port_info *d' argument to ide_device_add[_all]().
-
-> * Factor out generic ports init from ide_pci_setup_ports() to ide_init_port(),
->   move it to ide-probe.c and call it in in ide_device_add_all() instead of
->   ide_pci_setup_ports().
-
-> * Move ->mate setup to ide_device_add_all() from ide_port_init().
-
-> * Add IDE_HFLAG_NO_AUTOTUNE host flag for host drivers that don't enable
->   ->autotune currently.
-
-> * Setup hwif->chipset in ide_init_port() but iff pi->chipset is set
->   (to not override setup done by ide_hwif_configure()).
-
-> * Add ETRAX host handling to ide_device_add_all().
-
-> * cmd640.c: set IDE_HFLAG_ABUSE_* also for CONFIG_BLK_DEV_CMD640_ENHANCED=n.
-
-> * pmac.c: make pmac_ide_setup_dma() return an error value and move DMA masks
->   setup to pmac_ide_setup_device().
-
-> * Add 'struct ide_port_info' instances to legacy host drivers, pass them to
->   ide_device_add() calls and then remove open-coded ports initialization.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-> Index: b/drivers/ide/arm/icside.c
-> ===================================================================
-> --- a/drivers/ide/arm/icside.c
-> +++ b/drivers/ide/arm/icside.c
-> @@ -459,11 +456,19 @@ icside_register_v5(struct icside_state *
->  
->  	idx[0] = hwif->index;
->  
-> -	ide_device_add(idx);
-> +	ide_device_add(idx, NULL);
->  
->  	return 0;
->  }
->  
-> +static const struct ide_port_info icside_v6_port_info __initdata = {
-> +	.host_flags		= IDE_HFLAG_SERIALIZE |
-> +				  IDE_HFLAG_NO_DMA | /* no SFF-style DMA */
-> +				  IDE_HFLAG_NO_AUTOTUNE,
-> +	.mwdma_mask		= ATA_MWDMA2,
-> +	.swdma_mask		= ATA_SWDMA2,
-> +};
-> +
-
-    Interesting... this driver's support for SWDMA0 is broken since the cycle 
-should be 960 ns long, not 480, and SWDMA2 is underclocked using the same 
-cycle as SWDMA1, 480 ns...
-
-> Index: b/drivers/ide/cris/ide-cris.c
-> ===================================================================
-> --- a/drivers/ide/cris/ide-cris.c
-> +++ b/drivers/ide/cris/ide-cris.c
-> @@ -753,6 +753,15 @@ static void cris_set_dma_mode(ide_drive_
->  		cris_ide_set_speed(TYPE_DMA, 0, strobe, hold);
->  }
->  
-> +static const struct ide_port_info cris_port_info __initdata = {
-> +	.chipset		= ide_etrax100,
-> +	.host_flags		= IDE_HFLAG_NO_ATAPI_DMA |
-> +				  IDE_HFLAG_NO_DMA, /* no SFF-style DMA */
-> +	.pio_mask		= ATA_PIO4,
-> +	.udma_mask		= cris_ultra_mask,
-
-    Hm, I wonder which value it will assume, 0x07 or 0?  Not sure even after 
-looking at the source... :-)
-
-> +	.mwdma_mask		= ATA_MWDMA2,
-> +};
-> +
->  static int __init init_e100_ide(void)
->  {
->  	hw_regs_t hw;
-> Index: b/drivers/ide/ide-probe.c
-> ===================================================================
-> --- a/drivers/ide/ide-probe.c
-> +++ b/drivers/ide/ide-probe.c
-> @@ -1289,12 +1289,86 @@ static void hwif_register_devices(ide_hw
->  	}
->  }
->  
-> -int ide_device_add_all(u8 *idx)
-> +static void ide_init_port(ide_hwif_t *hwif, unsigned int port,
-> +			  const struct ide_port_info *d)
->  {
-> -	ide_hwif_t *hwif;
-> +	if (d->chipset != ide_etrax100)
-> +		hwif->channel = port;
-
-   Hm, what's so special about ide_etrax100?
-
-> +int ide_device_add_all(u8 idx[MAX_HWIFS], const struct ide_port_info *d)
-
-    Function prototype doesn't match with one from <linux/ide.h> which has the 
-first argument as a pointer...
-
-> +{
-> +	ide_hwif_t *hwif, *mate = NULL;
->  	int i, rc = 0;
->  
->  	for (i = 0; i < MAX_HWIFS; i++) {
-> +		if (d == NULL || idx[i] == 0xff) {
-
-    Why check for (d == NULL) every time and not do it once and break from the 
-loop or even do it before the loop?
-
-> +			mate = NULL;
-> +			continue;
-> +		}
-> +
-> +		hwif = &ide_hwifs[idx[i]];
-> +
-> +		if (d->chipset != ide_etrax100 && (i & 1) && mate) {
-> +			hwif->mate = mate;
-> +			mate->mate = hwif;
-> +		}
-> +
-> +		mate = (i & 1) ? NULL : hwif;
-> +
-> +		ide_init_port(hwif, i & 1, d);
-> +	}
-> +
-> +	for (i = 0; i < MAX_HWIFS; i++) {
->  		if (idx[i] == 0xff)
->  			continue;
-
-MBR, Sergei
-
+Cheers
