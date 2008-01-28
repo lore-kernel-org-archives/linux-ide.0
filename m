@@ -1,77 +1,75 @@
-From: Zan Lynx <zlynx@acm.org>
+From: Gene Heskett <gene.heskett@gmail.com>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 10:20:30 -0700
-Message-ID: <1201540830.6526.19.camel@localhost>
+Date: Mon, 28 Jan 2008 12:30:32 -0500
+Message-ID: <200801281230.32910.gene.heskett@gmail.com>
 References: <200801272122.21823.gene.heskett@gmail.com>
-	 <200801280754.53768.gene.heskett@gmail.com>
-	 <18333.57152.472830.608248@harpo.it.uu.se>
-	 <200801281135.14555.gene.heskett@gmail.com>  <1201539043.31293.7.camel@zem>
+ <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rbt0sZQVa8wgMzyfU6Z6"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762109AbYA1RUo@vger.kernel.org>
-In-Reply-To: <1201539043.31293.7.camel@zem>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Walton <calvin.walton@gmail.com>
-Cc: Gene Heskett <gene.heskett@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vms042pub.verizon.net ([206.46.252.42]:46162 "EHLO
+	vms042pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbYA1RbZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 12:31:25 -0500
+In-reply-to: <1201540830.6526.19.camel@localhost>
+Content-disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Zan Lynx <zlynx@acm.org>
+Cc: Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+
+On Monday 28 January 2008, Zan Lynx wrote:
+>On Mon, 2008-01-28 at 11:50 -0500, Calvin Walton wrote:
+>> On Mon, 2008-01-28 at 11:35 -0500, Gene Heskett wrote:
+>> > On Monday 28 January 2008, Mikael Pettersson wrote:
+>> > >Unfortunately we also see:
+>> > > > [   48.285456] nvidia: module license 'NVIDIA' taints kernel.
+>> > > > [   48.549725] ACPI: PCI Interrupt 0000:02:00.0[A] -> Link [APC4] ->
+>> > > > GSI 19 (level, high) -> IRQ 20 [   48.550149] NVRM: loading NVIDIA
+>> > > > UNIX x86 Kernel Module  169.07  Thu Dec 13 18:42:56 PST 2007
+>> > >
+>> > >We have no way of debugging that module, so please try 2.6.24 without
+>> > > it.
+>> >
+>> > Sorry, I can't do this and have a working machine.  The nv driver has
+>> > suffered bit rot or something since the FC2 days when it COULD run a 19"
+>> > crt at 1600x1200, and will not drive this 20" wide screen lcd 1680x1050
+>> > monitor at more than 800x600, which is absolutely butt ugly fuzzy,
+>> > looking like a jpg compressed to 10%.  The system is not usable on a day
+>> > to basis without the nvidia driver.
+>>
+>> You should probably give the nouveau[1] driver a try, if only for
+>> testing purposes; if you are running an NV4x (G6x or G7x) card in
+>> particular, it works a lot better than the nv driver for 2d support.
+>>
+>> 1. http://nouveau.freedesktop.org/wiki/InstallNouveau
+>
+>But nouveau is much less stable than nv.  For testing purposes, go with
+>stable.
+>
+I believe at this point, its moot.  I captured quite a few instances of that 
+error message while rebooting the last time, all of which occurred long 
+before I logged in and did a startx (I boot to runlevel 3 here), so the 
+kernel was NOT tainted at that point.  That dmesg has been posted and some 
+questions asked.
+
+As this has gone on for a while, it seems to me that with 14,800 google hits 
+on this problem, Linus should call a halt until this is found and fixed.  But 
+I'm not Linus.  I'm also locking up for 30 at a time, & probably ready for 
+reboot #7 today.
+
+>I'm not sure why it won't run his screen though.  I can use nv to run a
+>1920x1200 laptop LCD.  It *is* dog slow (although nouveau was not any
+>better with a NV17 / 440-Go -- render support for AA fonts seems to be
+>missing), but it does work.
 
 
---=-rbt0sZQVa8wgMzyfU6Z6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-
-On Mon, 2008-01-28 at 11:50 -0500, Calvin Walton wrote:
-> On Mon, 2008-01-28 at 11:35 -0500, Gene Heskett wrote:
-> > On Monday 28 January 2008, Mikael Pettersson wrote:
-> > >Unfortunately we also see:
-> > > > [   48.285456] nvidia: module license 'NVIDIA' taints kernel.
-> > > > [   48.549725] ACPI: PCI Interrupt 0000:02:00.0[A] -> Link [APC4] -=
-> GSI
-> > > > 19 (level, high) -> IRQ 20 [   48.550149] NVRM: loading NVIDIA UNIX=
- x86
-> > > > Kernel Module  169.07  Thu Dec 13 18:42:56 PST 2007
-> > >
-> > >We have no way of debugging that module, so please try 2.6.24 without =
-it.
-> >=20
-> > Sorry, I can't do this and have a working machine.  The nv driver has s=
-uffered=20
-> > bit rot or something since the FC2 days when it COULD run a 19" crt at=20
-> > 1600x1200, and will not drive this 20" wide screen lcd 1680x1050 monito=
-r at=20
-> > more than 800x600, which is absolutely butt ugly fuzzy, looking like a =
-jpg=20
-> > compressed to 10%.  The system is not usable on a day to basis without =
-the=20
-> > nvidia driver.
->=20
-> You should probably give the nouveau[1] driver a try, if only for
-> testing purposes; if you are running an NV4x (G6x or G7x) card in
-> particular, it works a lot better than the nv driver for 2d support.
->=20
-> 1. http://nouveau.freedesktop.org/wiki/InstallNouveau
-
-But nouveau is much less stable than nv.  For testing purposes, go with
-stable.
-
-I'm not sure why it won't run his screen though.  I can use nv to run a
-1920x1200 laptop LCD.  It *is* dog slow (although nouveau was not any
-better with a NV17 / 440-Go -- render support for AA fonts seems to be
-missing), but it does work.
---=20
-Zan Lynx <zlynx@acm.org>
-
---=-rbt0sZQVa8wgMzyfU6Z6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.7 (GNU/Linux)
-
-iD8DBQBHng7eG8fHaOLTWwgRAhMlAJ0Uzwl/qwupf9IoWkBLLiQCu0/i/QCfVx25
-a7yZlkrffM2PZwl/qINLPyo=
-=jYrN
------END PGP SIGNATURE-----
-
---=-rbt0sZQVa8wgMzyfU6Z6--
+-- 
+Cheers, Gene
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+There cannot be a crisis next week.  My schedule is already full.
+		-- Henry Kissinger
