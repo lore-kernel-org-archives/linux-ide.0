@@ -1,38 +1,61 @@
-From: Alan Cox <alan@redhat.com>
+From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 15:01:05 -0500
-Message-ID: <20080128200105.GA20201@devserv.devel.redhat.com>
-References: <200801272122.21823.gene.heskett@gmail.com> <18333.36746.819935.641383@harpo.it.uu.se> <1201521783.6149.33.camel@lappy> <200801280754.53768.gene.heskett@gmail.com> <479E2130.5020208@rtr.ca>
+Date: Mon, 28 Jan 2008 15:01:41 -0500 (EST)
+Message-ID: <alpine.LNX.1.00.0801281445200.13593@iabervon.org>
+References: <200801272122.21823.gene.heskett@gmail.com> <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost> <200801281230.32910.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281248190.13593@iabervon.org> <479E1D9E.3000900@bobjweil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37008 "EHLO mx1.redhat.com"
+Received: from iabervon.org ([66.92.72.58]:49216 "EHLO iabervon.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756077AbYA1UBR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 15:01:17 -0500
-Content-Disposition: inline
-In-Reply-To: <479E2130.5020208@rtr.ca>
+	id S1761984AbYA1UBu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jan 2008 15:01:50 -0500
+In-Reply-To: <479E1D9E.3000900@bobjweil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Gene Heskett <gene.heskett@gmail.com>, Alan Cox <alan@redhat.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Richard Heck <rgheck@bobjweil.com>
+Cc: Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-On Mon, Jan 28, 2008 at 01:38:40PM -0500, Mark Lord wrote:
-> >[   31.195305] ata2.00: ATAPI: LITE-ON DVDRW SHM-165H6S, HS06, max UDMA/66
-> >[   31.243813] ata2.01: ATA-7: MAXTOR STM3320620A, 3.AAE, max UDMA/100
-> >[   31.243816] ata2.01: 625142448 sectors, multi 16: LBA48 
-> >[   31.243825] ata2.00: limited to UDMA/33 due to 40-wire cable
-> >[   31.417074] ata2.00: configured for UDMA/33
-> >[   31.451769] ata2.01: configured for UDMA/100
-> ..
-> 
-> That looks like an unrelated bug to me: the driver says "40-wire cable"
-> but then goes and chooses UDMA/100 on one of the drives.
+On Mon, 28 Jan 2008, Richard Heck wrote:
 
-We currently assume that
-- If we have host side detecting 40 that we use 40
-- If we have drive side detecting 40 use 40
-- If we have drive side detecting 80 and host thinks 80 use 80
+> Daniel Barkalow wrote:
+> > Can you switch back to old IDE to get your work done (and to make sure it's
+> > not a hardware issue that's developed recently)? 
+> I think it'd be really, REALLY helpful to a lot of people if you, or someone,
+> could explain in moderate detail how this might be done. I tried doing it
+> myself, but I'm not sufficiently expert at configuring kernels that I was ever
+> able to figure out how to do it.
 
-The case where the drives disagree isn't currently considered.
+As far as configuring the kernel, I can help:
 
+Go to Device Drivers, ATA/ATAPI/MFM/RLL support, and turn on anything that 
+looks relevant; go to Device Drivers, Serial ATA and Parallel ATA drivers, 
+and turn off anything that's PATA and looks relevant.
+
+(Whether a device uses IDE or PATA depends on which driver that supports 
+the device is present and find it first, not on any sort of global 
+configuration, which is probably what tripped you up)
+
+Building this and installing it along with the appropriate initrd (which 
+might be handled by Fedora's install scripts) will either get you back to 
+old IDE or will make your kernel panic on boot, depending on whether you 
+got it right (so make sure you can still boot the kernel you're sure of or 
+something from a boot disk). This will also cause your hard drives to show 
+up as different device nodes, so if your boot process doesn't mount by 
+disk uuid but by some other feature (and I don't know what Fedora does), 
+you'll also need to change it to something either stable across access 
+methods or which works for the one you're now using.
+
+> Obviously, the short version is: switch back to Fedora 6. But this kind of
+> problem with libata---and yes, you're almost surely right that it's not one
+> problem but lots---is sufficiently widespread that a Mini HOWTO, say, would be
+> really welcome and, I'm guessing, widely used.
+
+Fedora really ought to provide documentation, because there's some 
+distro-specific stuff (like how you deal with the kernel's device node for 
+the root partition changing), and they're using code by default that's at 
+least somewhat documented as experimental (although it doesn't seem to be 
+actually marked as experimental in all cases).
+
+	-Daniel
+*This .sig left intentionally blank*
