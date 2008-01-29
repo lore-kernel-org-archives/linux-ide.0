@@ -1,45 +1,31 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 19:34:03 +0000
-Message-ID: <20080129193403.62fe95e8@core>
-References: <200801272122.21823.gene.heskett@gmail.com>
-	<1201539043.31293.7.camel@zem>
-	<1201540830.6526.19.camel@localhost>
-	<200801281230.32910.gene.heskett@gmail.com>
-	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>
-	<479E1D9E.3000900@bobjweil.com>
-	<20080129121201.2f727f5f@core>
-	<alpine.LNX.1.00.0801291202550.13593@iabervon.org>
-	<20080129184613.16846ae5@core>
-	<alpine.LNX.1.00.0801291354240.13593@iabervon.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 5/8] ide: always set DMA masks in ide_pci_setup_ports()
+Date: Tue, 29 Jan 2008 23:02:50 +0300
+Message-ID: <479F866A.1030207@ru.mvista.com>
+References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170255.6861.36960.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53302 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752839AbYA2Tii (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 14:38:38 -0500
-In-Reply-To: <alpine.LNX.1.00.0801291354240.13593@iabervon.org>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:8877 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753845AbYA2UB4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 15:01:56 -0500
+In-Reply-To: <20080106170255.6861.36960.sendpatchset@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Barkalow <barkalow@iabervon.org>
-Cc: Richard Heck <rgheck@bobjweil.com>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> I've seen a lot of verbosity out of SCSI messages, but I haven't seen a 
-> straightforward interpretation of the problem in there. It's all 
-> information useful for debugging, not information useful for system 
-> administration.
+Hello.
 
-It tells you what is going on. Unfortunately that frequently requires
-some basic knowledge of how to interpret the error report. Drive
-interface behaviour simply doesn't boil down to a fault light on the
-dashboard or a "tighten the cable". For most common fault types you'll
-get errors most administrators should find meaningful - like "Media error"
+Bartlomiej Zolnierkiewicz wrote:
 
-> On the other hand, bringing the system down because a device is 
-> misbehaving is a poor idea. I've personally recovered most of the data off 
+> Always set DMA masks in ide_pci_setup_ports() to make sure that the valid
+> masks for a host are set.
 
-Hence we have RAID and SATA hotplug.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Alan
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
