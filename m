@@ -1,35 +1,45 @@
 From: Mark Lord <liml@rtr.ca>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 13:09:14 -0500
-Message-ID: <479F6BCA.4090701@rtr.ca>
-References: <200801272122.21823.gene.heskett@gmail.com> <200801291004.12565.gene.heskett@gmail.com> <479F507A.1030203@rtr.ca> <200801291136.42612.gene.heskett@gmail.com>
+Date: Tue, 29 Jan 2008 13:11:55 -0500
+Message-ID: <479F6C6B.7090505@rtr.ca>
+References: <200801272122.21823.gene.heskett@gmail.com>	<1201539043.31293.7.camel@zem>	<1201540830.6526.19.camel@localhost>	<200801281230.32910.gene.heskett@gmail.com>	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>	<479E1D9E.3000900@bobjweil.com> <20080129121201.2f727f5f@core> <479F5D29.1020705@bobjweil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933278AbYA2SJr@vger.kernel.org>
-In-Reply-To: <200801291136.42612.gene.heskett@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Florian Attenberger <valdyn@gmail.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rtr.ca ([76.10.145.34]:2880 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933690AbYA2SL5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2008 13:11:57 -0500
+In-Reply-To: <479F5D29.1020705@bobjweil.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: rgheck <rgheck@bobjweil.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel Barkalow <barkalow@iabervon.org>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-Gene Heskett wrote:
-> On Tuesday 29 January 2008, Mark Lord wrote:
->> Gene Heskett wrote:
->>> ..
->>> Does anyone know why my dvdwriter isn't being assigned a '/dev/sdx' number
->>> when dmesg says its found ok at ata2.00?  I've turned on an option that
->>> says something about using the bios for device access this build, but I'll
->>> be surprised if that's it. :)
->> ..
+rgheck wrote:
+> Alan Cox wrote:
+>>> not one problem but lots---is sufficiently widespread that a Mini 
+>>> HOWTO, say, would be really welcome and, I'm guessing, widely used.
+>>>     
 >>
->> It should show up as /dev/scd0 or something very similar.
-> 
-> Tisn't.  Darnit.
+>> We don't see very many libata problems at the distro level and they for
+>> the most part boil down to
+>>
+>> - sata_nv with >4GB of RAM, knowing being worked on, no old IDE driver
+>> anyway
+>>   
+> Is this >4GB or >=4GB? I've seen contradictory reports, and I've got 4GB.
 ..
 
-It requires CONFIG_SCSI, CONFIG_BLK_DEV_SD, CONFIG_BLK_DEV_SR, in the kernel .config.
+For all practical purposes, most memory over 3GB (or sometimes even 2GB)
+on a 32-bit x86 system is treated as >4GB by the motherboard.
 
-The _SR one ("SCSI Reader") is for CD/DVD support.
+Because it's not the amount of *memory* that matters so much,
+but rather the amount of *used address space*.  Video cards,
+PCI devices, other motherboard resources etc.. can all subtract
+from the available address space, leaving much less than 4GB
+for your RAM. 
 
-Cheers
+-ml
+
