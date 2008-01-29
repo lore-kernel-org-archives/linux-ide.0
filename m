@@ -1,26 +1,60 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 18:54:45 +0000
-Message-ID: <20080129185445.1c7d3a83@core>
-References: <200801272122.21823.gene.heskett@gmail.com>
-	<200801291132.41657.gene.heskett@gmail.com>
-	<18335.22763.625990.528217@alkaid.it.uu.se>
-	<200801291204.44671.gene.heskett@gmail.com>
+Date: Tue, 29 Jan 2008 14:14:13 -0500 (EST)
+Message-ID: <alpine.LNX.1.00.0801291354240.13593@iabervon.org>
+References: <200801272122.21823.gene.heskett@gmail.com> <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost> <200801281230.32910.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281248190.13593@iabervon.org> <479E1D9E.3000900@bobjweil.com>
+ <20080129121201.2f727f5f@core> <alpine.LNX.1.00.0801291202550.13593@iabervon.org> <20080129184613.16846ae5@core>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:56658 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756589AbYA2S7R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 13:59:17 -0500
-In-Reply-To: <200801291204.44671.gene.heskett@gmail.com>
+Received: from iabervon.org ([66.92.72.58]:35053 "EHLO iabervon.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933675AbYA2TOY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2008 14:14:24 -0500
+In-Reply-To: <20080129184613.16846ae5@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Richard Heck <rgheck@bobjweil.com>, Daniel Barkalow <barkalow@iabervon.org>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Richard Heck <rgheck@bobjweil.com>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-> That could stand to be moved or renamed, it is well buried in the menu for the 
-> REAL scsi stuffs, which I don't have any of.  
+On Tue, 29 Jan 2008, Alan Cox wrote:
 
-Yes you do - USB storage and ATAPI are SCSI
+> > The SCSI error reporting really ought to include a simple interpretation 
+> > of the error for end users ("The drive doesn't support this command" "A 
+> > sector's data got lost" "The drive timed out" "The drive failed" "The 
+> > drive is entirely gone"). There's too much similarity between the message 
+> > you get when you try a SMART test that doesn't apply to the drive and what 
+> > you get when the drive is broken.
+> 
+> That would be the SCSI verbose messages option. I think the Eric
+> Youngdale consortium added it about Linux 1.2. Nowdays its always built
+> that way.
+
+I've seen a lot of verbosity out of SCSI messages, but I haven't seen a 
+straightforward interpretation of the problem in there. It's all 
+information useful for debugging, not information useful for system 
+administration.
+
+> > And it's possible that the error recovery is suboptimal in some cases. It 
+> > seems to like resetting drives too much; perhaps if it keeps seeing the 
+> > same problem and resetting the drive, it should decide that the drive's 
+> > error reporting is just bad and just ignore that error like the old IDE 
+> > did (but, in this case, after saying what it's doing).
+> 
+> Nothing like casually praying the users data hasn't gone for a walk is
+> there. If we don't act on them the users don't report them until
+> something really bad occurs so that isn't an option.
+
+On the other hand, bringing the system down because a device is 
+misbehaving is a poor idea. I've personally recovered most of the data off 
+of a dying drive because the system was willing to let me keep using the 
+drive anyway; IIRC, the drive didn't work at all after a reboot, so I 
+would have lost all the data instead of only a little had the system 
+insisted on a perfectly functioning drive in order to use it at all.
+
+There ought to be some middle ground between doing nothing until the 
+computer really breaks and breaking the computer before then, but that's 
+an issue not specific to libata.
+
+	-Daniel
+*This .sig left intentionally blank*
