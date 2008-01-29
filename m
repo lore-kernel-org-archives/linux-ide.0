@@ -1,38 +1,57 @@
 From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 13:12:10 -0500 (EST)
-Message-ID: <alpine.LNX.1.00.0801291252120.13593@iabervon.org>
-References: <200801272122.21823.gene.heskett@gmail.com> <200801291132.41657.gene.heskett@gmail.com> <18335.22763.625990.528217@alkaid.it.uu.se> <200801291204.44671.gene.heskett@gmail.com> <alpine.LNX.1.00.0801291220540.13593@iabervon.org>
- <20080129174455.62742b82@core>
+Date: Tue, 29 Jan 2008 13:14:15 -0500 (EST)
+Message-ID: <alpine.LNX.1.00.0801291202550.13593@iabervon.org>
+References: <200801272122.21823.gene.heskett@gmail.com> <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost> <200801281230.32910.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281248190.13593@iabervon.org> <479E1D9E.3000900@bobjweil.com>
+ <20080129121201.2f727f5f@core>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:47501 "EHLO iabervon.org"
+Received: from iabervon.org ([66.92.72.58]:32775 "EHLO iabervon.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933548AbYA2SMP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2008 13:12:15 -0500
-In-Reply-To: <20080129174455.62742b82@core>
+	id S933665AbYA2SOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2008 13:14:18 -0500
+In-Reply-To: <20080129121201.2f727f5f@core>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Gene Heskett <gene.heskett@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, Richard Heck <rgheck@bobjweil.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+Cc: Richard Heck <rgheck@bobjweil.com>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
 On Tue, 29 Jan 2008, Alan Cox wrote:
 
-> > things in the kernel that refer to SCSI probably should say "storage" (or 
-> > "ATA", really, but that would make the acronyms confusing).
+> > not one problem but lots---is sufficiently widespread that a Mini HOWTO, 
+> > say, would be really welcome and, I'm guessing, widely used.
 > 
-> SCSI is a command protocol. It is what your CD-ROM drive and USB storage
-> devices talk (albeit with a bit of an accent).
+> We don't see very many libata problems at the distro level and they for
+> the most part boil down to
+> 
+> - error messages looking different - Most bugs I get are things like
+> media errors (timeout looks different, UNC report looks different)
 
-Among other things, yes. But SCSI standards also specify electrical 
-interfaces that aren't at all related to the electrical interfaces used by 
-a lot of devices, and a lot of the places the kernel uses the term suggest 
-that it's also talking about the electrical interface (or, at least, 
-connector shape). For example, it's misleading to talk about "SCSI CDROM 
-support" meaning the command protocol when hardly anybody has ever seen a 
-CDROM drive that doesn't use the SCSI command protocol, but most people 
-know about both SCSI-connector and PATA-connector CDROM drives.
+The SCSI error reporting really ought to include a simple interpretation 
+of the error for end users ("The drive doesn't support this command" "A 
+sector's data got lost" "The drive timed out" "The drive failed" "The 
+drive is entirely gone"). There's too much similarity between the message 
+you get when you try a SMART test that doesn't apply to the drive and what 
+you get when the drive is broken.
+
+> - faulty hardware being picked up because we actually do real error
+> checking now. We now check for and give some devices more slack while
+> still doing error checking. Both IDE layers also added blacklists for
+> stuff like the TSScorp DVD drives. Qemu has now had its bugs patched.
+
+I think this is the big source of unhappy users (and, of course, they all 
+look the same and the reports stay findable by Google, so it looks a lot 
+worse than it is). People getting this problem in distro kernels probably 
+really do want to have a way to report it with enough detail from logs to 
+get it dealt with and then switch back to old IDE until the fix propagates 
+through.
+
+And it's possible that the error recovery is suboptimal in some cases. It 
+seems to like resetting drives too much; perhaps if it keeps seeing the 
+same problem and resetting the drive, it should decide that the drive's 
+error reporting is just bad and just ignore that error like the old IDE 
+did (but, in this case, after saying what it's doing).
 
 	-Daniel
 *This .sig left intentionally blank*
