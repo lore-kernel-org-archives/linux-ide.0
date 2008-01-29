@@ -1,64 +1,35 @@
-From: "Gaston, Jason D" <jason.d.gaston@intel.com>
-Subject: RE: [PATCH 2.6.24] ata_piix:  IDE mode SATA patch for Intel ICH10 DeviceID's
-Date: Tue, 29 Jan 2008 10:03:04 -0800
-Message-ID: <39B20DF628532344BC7A2692CB6AEE0702403EBE@orsmsx420.amr.corp.intel.com>
-References: <200801281736.45574.jason.d.gaston@intel.com> <479F5EDF.9010601@pobox.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Problem with ata layer in 2.6.24
+Date: Tue, 29 Jan 2008 13:09:14 -0500
+Message-ID: <479F6BCA.4090701@rtr.ca>
+References: <200801272122.21823.gene.heskett@gmail.com> <200801291004.12565.gene.heskett@gmail.com> <479F507A.1030203@rtr.ca> <200801291136.42612.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765911AbYA2SFB@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <479F5EDF.9010601@pobox.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933278AbYA2SJr@vger.kernel.org>
+In-Reply-To: <200801291136.42612.gene.heskett@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Florian Attenberger <valdyn@gmail.com>, Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
->-----Original Message-----
->From: Jeff Garzik [mailto:jgarzik@pobox.com]
->Sent: Tuesday, January 29, 2008 9:14 AM
->To: Gaston, Jason D
->Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org;
->htejun@gmail.com
->Subject: Re: [PATCH 2.6.24] ata_piix: IDE mode SATA patch for Intel
-ICH10
->DeviceID's
->
->Jason Gaston wrote:
->> This patch adds the Intel ICH10 IDE mode SATA Controller DeviceID's.
+Gene Heskett wrote:
+> On Tuesday 29 January 2008, Mark Lord wrote:
+>> Gene Heskett wrote:
+>>> ..
+>>> Does anyone know why my dvdwriter isn't being assigned a '/dev/sdx' number
+>>> when dmesg says its found ok at ata2.00?  I've turned on an option that
+>>> says something about using the bios for device access this build, but I'll
+>>> be surprised if that's it. :)
+>> ..
 >>
->> Signed-off-by:  Jason Gaston <jason.d.gaston@intel.com>
->>
->> --- linux-2.6.24/drivers/ata/ata_piix.c.orig	2008-01-24
->14:58:37.000000000 -0800
->> +++ linux-2.6.24/drivers/ata/ata_piix.c	2008-01-28
-14:58:22.000000000 -
->0800
->> @@ -263,6 +263,14 @@
->>  	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
-},
->>  	/* SATA Controller IDE (Tolapai) */
->>  	{ 0x8086, 0x5028, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-tolapai_sata_ahci },
->> +	/* SATA Controller IDE (ICH10) */
->> +	{ 0x8086, 0x3a00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
-},
->> +	/* SATA Controller IDE (ICH10) */
->> +	{ 0x8086, 0x3a06, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata
-},
->> +	/* SATA Controller IDE (ICH10) */
->> +	{ 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_ahci
-},
->> +	/* SATA Controller IDE (ICH10) */
->> +	{ 0x8086, 0x3a26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata
-},
->
->can these do AHCI mode without losing any PATA ports?
->
->if so, I would prefer to always drive the hardware in AHCI mode, if it
->is capable of doing so.
+>> It should show up as /dev/scd0 or something very similar.
+> 
+> Tisn't.  Darnit.
+..
 
-They do not have PATA.
+It requires CONFIG_SCSI, CONFIG_BLK_DEV_SD, CONFIG_BLK_DEV_SR, in the kernel .config.
 
-Jason
+The _SR one ("SCSI Reader") is for CD/DVD support.
+
+Cheers
