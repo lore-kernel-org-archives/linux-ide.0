@@ -1,97 +1,61 @@
-From: Borislav Petkov <petkovbb@gmail.com>
-Subject: Re: [PATCH 0/32] ide-tape redux v1
-Date: Mon, 28 Jan 2008 06:43:43 +0100
-Message-ID: <20080128054343.GB3074@gollum.tnic>
-References: <1201423312-2460-1-git-send-email-bbpetkov@yahoo.de> <200801272045.40712.bzolnier@gmail.com>
-Reply-To: petkovbb@gmail.com
+From: "Kuan Luo" <kluo@nvidia.com>
+Subject: RE: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
+Date: Tue, 29 Jan 2008 12:59:00 +0800
+Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AD4@hkemmail01.nvidia.com>
+References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com> <478812C9.1000901@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com> <4797DF30.6050208@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ACA@hkemmail01.nvidia.com> <479E6A60
+ .5070208@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [212.23.103.107] ([212.23.103.107]:65500 "EHLO gollum.tnic"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755495AbYA2EuB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 23:50:01 -0500
-Content-Disposition: inline
-In-Reply-To: <200801272045.40712.bzolnier@gmail.com>
+Received: from hqemgate03.nvidia.com ([216.228.112.145]:3628 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753445AbYA2E7K convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 23:59:10 -0500
+In-Reply-To: <479E6A60.5070208@shaw.ca>
+Content-class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Allen Martin <AMartin@nvidia.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 
-Hi Bart,
+Robert wrote:
+> Kuan Luo wrote:
+> > Robert worte.
+> >> Kuan, does this patch (using the notifiers to see if the 
+> command is 
+> >> really done) still work if one port on the controller has 
+> >> ADMA disabled 
+> >> because it's in ATAPI mode? I seem to recall Allen Martin 
+> mentioning 
+> >> that notifiers wouldn't work in this case.
+> >>
+> > 
+> > I just tried the 2.6.24-rc7 sata_nv driver with one hd and  
+> one cdrom in
+> > the same controller. 
+> > I mkfs hd and mounted the cdrom and no error happened.
+> > 
+> > Allen,  is there anything about notifier that we should pay 
+> attention
+> > to?
+> 
+> Assuming not, then this patch should be applied..
+> 
+> 
 
-[...]
+The patch should be applied.
+We use the notifier register  and there is nothing to do with our
+notifier register in atapi mode.
 
-> > the BKL in idetape_write_release() with finer-grained locking etc, =
-probably also
-> > some pipeline improvements, removal of OnStream support, etc. but t=
-hat'll come
-> > later.
->=20
-> On-Stream support has been long gone but it seems that deprecation
-> warning etc. managed to survive.
->=20
-> w.r.t. to the pipeline-mode: it should be pipelined into /dev/null
->=20
-> rationale:
-> - it is _very_ complex
-> - causes errors to be deferred till the next user-space access
-> - direct I/O using blk_rq_map_user() will offer superior performance
->=20
-> the only question is whether to remove it...
-
-Well, on the one hand, since the driver is only being maintained we sho=
-uld not
-remove code that works. Also, i don't know how many users ide-tape real=
-ly has
-but, would it be worth the trouble at all? Because if nobody's using it=
-, we
-could just as well pipe the whole thing into /dev/null.. On the other h=
-and, the
-pipelining part _is_ kinda big and, right, it is not that straightfowar=
-d to
-look at it and know what it actually does - it truly is a student proje=
-ct :)
-
-> >  Documentation/ide/ChangeLog.ide-tape.1995-2002 |  405 +++
-> >  drivers/ide/Kconfig                            |    3 +-
-> >  drivers/ide/ide-tape.c                         | 4146 +++++++++---=
-------------
-> >  3 files changed, 1991 insertions(+), 2563 deletions(-)
-
-[...]
-
-> BTW what happend to patch #23?
-
-Well, it appeared in my lkml mailbox having gone over vger which means =
-at least
-somebody got it :). But, yeah, that was a real nightmare yesterday send=
-ing all
-those patches in one go. See, i got a stupid umts modem behind a not so=
- transparent
-proxy :) whose subnet is listed in almost every spam database on the pl=
-anet
-and whenever i try to send more than one mail i hit all sorts of mail s=
-erver
-restrictions like yahoo's maximum messages per day crap.. Gmail seems a=
- bit
-smarter ?! and scans the mail message and then says all kinds of funny =
-stuff :):
-
-27 10:48:31 gollum postfix/smtp[4011]: F1710123BFD: to=3D<linux-ide@vge=
-r.kernel.org>, relay=3Dvger.kernel.org[209.132.176.167]:25,
-delay=3D10, delays=3D0.19/0.29/2.7/7.2, dsn=3D2.7.1,	status=3Dsent (250=
- 2.7.1 Looks like Linux source DIFF email.. BF:<H 1.55041e-06>; S175394=
-2AbYA0Js4)
-
-what's next, probably something like:
-
-=2E..(250 3.x.x uh, ok, i'm gonna relay your mail but please have anoth=
-er coffee, please) <hash>;
-
-Anyway, resending #23 to you in a private mail.
-
---=20
-Regards/Gru=DF,
-    Boris.
+Allen wrote:
+I think that's one of the cases where memory notifiers don't work (one
+of the drives is not in ADMA mode either because it's ATAPI or it's in
+legacy mode).  There's no issue with the notifier registers though. 
+-----------------------------------------------------------------------------------
+This email message is for the sole use of the intended recipient(s) and may contain
+confidential information.  Any unauthorized review, use, disclosure or distribution
+is prohibited.  If you are not the intended recipient, please contact the sender by
+reply email and destroy all copies of the original message.
+-----------------------------------------------------------------------------------
