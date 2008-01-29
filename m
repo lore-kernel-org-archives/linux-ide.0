@@ -1,49 +1,33 @@
-From: Gene Heskett <gene.heskett@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 12:12:03 -0500
-Message-ID: <200801291212.03910.gene.heskett@gmail.com>
+Date: Tue, 29 Jan 2008 17:12:19 +0000
+Message-ID: <20080129171219.53a8efed@core>
 References: <200801272122.21823.gene.heskett@gmail.com>
- <200801291004.12565.gene.heskett@gmail.com> <479F5B39.1000708@garzik.org>
+	<1201539043.31293.7.camel@zem>
+	<1201540830.6526.19.camel@localhost>
+	<200801281230.32910.gene.heskett@gmail.com>
+	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>
+	<479E1D9E.3000900@bobjweil.com>
+	<20080129121201.2f727f5f@core>
+	<479F5D29.1020705@bobjweil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173003pub.verizon.net ([206.46.173.3]:52288 "EHLO
-	vms173003pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbYA2RQF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 12:16:05 -0500
-In-reply-to: <479F5B39.1000708@garzik.org>
-Content-disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60065 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753833AbYA2RQv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 12:16:51 -0500
+In-Reply-To: <479F5D29.1020705@bobjweil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Florian Attenberger <valdyn@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: rgheck <rgheck@bobjweil.com>
+Cc: Daniel Barkalow <barkalow@iabervon.org>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-On Tuesday 29 January 2008, Jeff Garzik wrote:
->Gene Heskett wrote:
->> Does anyone know why my dvdwriter isn't being assigned a '/dev/sdx' number
->> when dmesg says its found ok at ata2.00?  I've turned on an option that
->> says something about using the bios for device access this build, but I'll
->> be surprised if that's it. :)
->
->I think you mean /dev/scdx not /dev/sdx.  Make sure you have the 'sr'
->driver compiled and load (CONFIG_BLK_DEV_SR).
->
-That menu item COULD be moved, I don't have any REAL scsi stuff, so I didn't 
-look there.  My bad, with help from hiding it like that. :-)
+  
+> Is this >4GB or >=4GB? I've seen contradictory reports, and I've got 4GB.
 
->The bios-for-dev-access thing definitely won't help, and may hurt (by
->taking over the device you wanted to test).
->
-Ok, if BLK_DEV_SR fails, I'll take that back out.  I'm heating the room making 
-kernels here. :)
+Depends how the memory is mapped. Any memory physically above the 4GB
+boundary
 
-Thanks Jeff.
-
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-Life sucks, but death doesn't put out at all.
-		-- Thomas J. Kopp
+Alan
