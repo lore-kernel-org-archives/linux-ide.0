@@ -1,34 +1,35 @@
-From: rgheck <rgheck@bobjweil.com>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 12:06:49 -0500
-Message-ID: <479F5D29.1020705@bobjweil.com>
-References: <200801272122.21823.gene.heskett@gmail.com>	<1201539043.31293.7.camel@zem>	<1201540830.6526.19.camel@localhost>	<200801281230.32910.gene.heskett@gmail.com>	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>	<479E1D9E.3000900@bobjweil.com> <20080129121201.2f727f5f@core>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 09/13] sata_mv ncq Use DMA memory pools for hardware memory
+ tables
+Date: Tue, 29 Jan 2008 12:10:55 -0500
+Message-ID: <479F5E1F.8030508@pobox.com>
+References: <479BC217.60709@rtr.ca> <479BC31D.1050206@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qmta03.westchester.pa.mail.comcast.net ([76.96.62.32]:45621
-	"EHLO QMTA03.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763764AbYA2RGv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 12:06:51 -0500
-In-Reply-To: <20080129121201.2f727f5f@core>
+Received: from srv5.dvmed.net ([207.36.208.214]:45468 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760192AbYA2RK5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2008 12:10:57 -0500
+In-Reply-To: <479BC31D.1050206@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Daniel Barkalow <barkalow@iabervon.org>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Alan Cox wrote:
->> not one problem but lots---is sufficiently widespread that a Mini HOWTO, 
->> say, would be really welcome and, I'm guessing, widely used.
->>     
->
-> We don't see very many libata problems at the distro level and they for
-> the most part boil down to
->
-> - sata_nv with >4GB of RAM, knowing being worked on, no old IDE driver
-> anyway
->   
-Is this >4GB or >=4GB? I've seen contradictory reports, and I've got 4GB.
+Mark Lord wrote:
+> Create host-owned DMA memory pools, for use in allocating/freeing per-port
+> command/response queues and SG tables.  This gives us a way to guarantee we
+> meet the hardware address alignment requirements, and also reduces 
+> memory that
+> might otherwise be wasted on alignment gaps.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
 
-Richard
+ACK patches 1-13
+
+applied patches 1-9 to #upstream.  patch #10 failed, with git-am 
+reporting it as a corrupt patch.
+
 
