@@ -1,32 +1,52 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 22:16:00 -0500
-Message-ID: <479E9A70.6090108@rtr.ca>
-References: <200801272122.21823.gene.heskett@gmail.com> <200801281359.24050.gene.heskett@gmail.com> <479E3E7A.7000308@rtr.ca> <200801281906.44892.gene.heskett@gmail.com>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: DMA mapping on SCSI device?
+Date: Tue, 29 Jan 2008 14:21:39 +1100
+Message-ID: <da824cf30801281921n603458c4wc8caf34791401514@mail.gmail.com>
+References: <479E6E8C.2090501@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:4369 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448AbYA2DQD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Jan 2008 22:16:03 -0500
-In-Reply-To: <200801281906.44892.gene.heskett@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <479E6E8C.2090501@shaw.ca>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Mark Lord <lkml@rtr.ca>, Mikael Pettersson <mikpe@it.uu.se>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-Gene Heskett wrote:
-..
-> That's ok, dd seemed to do the job also.
-..
+On Jan 29, 2008 11:08 AM, Robert Hancock <hancockr@shaw.ca> wrote:
+...
+> The last solution I tried was to set the DMA mask on both ports to
+> 32-bit on slave_configure when an ATAPI device is connected. However,
+> this runs into complications as well. This is run on initialization and
+> when trying to set the other port into 32-bit DMA, it may not be
+> initialized yet. Plus, it forces the port with a hard drive on it into
+> 32-bit DMA needlessly.
 
-The two programs operate entirely differently from each other,
-so it may still be worth trying the make_bad_sector utility there.
+Have you measured the impact of setting the PCI dma mask to 32-bit?
 
-dd goes through the regular kernel I/O calls,
-whereas make_bad_sector sends raw ATA commands
-directly (more or less) to the drive.
+Last time Alex Williamson (HP) measured this on IA64, we deliberately
+forced pci_map_sg() to use the IOMMU even for devices that were 64-bit
+capable. We got 3-5% better throughput since the device had fewer
+entries to retrieve and the devices (at the time) weren't that good at
+processing SG lists.
 
--ml
+>
+> The ideal solution would be to do mapping against a different struct
+> device for each port, so that we could maintain the proper DMA mask for
+> each of them at all times. However I'm not sure if that's possible. The
+> thought of using the SCSI struct device for DMA mapping was brought up
+> at one point.. any thoughts on that?
+
+I'm pretty sure that's not possible (using two PCI dev structs). I'm
+skeptical it's worth converting DMA services to use SCSI devs since
+that's an extremely invasive change for a marginal benefit.
+
+hth,
+grant
+
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
