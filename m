@@ -1,99 +1,61 @@
-From: Gene Heskett <gene.heskett@gmail.com>
+From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Mon, 28 Jan 2008 20:31:57 -0500
-Message-ID: <200801282031.58429.gene.heskett@gmail.com>
-References: <200801272122.21823.gene.heskett@gmail.com>
- <200801281905.35278.gene.heskett@gmail.com>
- <alpine.LNX.1.00.0801281909170.13593@iabervon.org>
+Date: Mon, 28 Jan 2008 20:51:45 -0500 (EST)
+Message-ID: <alpine.LNX.1.00.0801282040080.13593@iabervon.org>
+References: <200801272122.21823.gene.heskett@gmail.com> <200801281905.35278.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281909170.13593@iabervon.org> <200801282031.58429.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173001pub.verizon.net ([206.46.173.1]:51173 "EHLO
-	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbYA2BcL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 20:32:11 -0500
-In-reply-to: <alpine.LNX.1.00.0801281909170.13593@iabervon.org>
-Content-disposition: inline
+Received: from iabervon.org ([66.92.72.58]:35360 "EHLO iabervon.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751831AbYA2Bvr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jan 2008 20:51:47 -0500
+In-Reply-To: <200801282031.58429.gene.heskett@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Barkalow <barkalow@iabervon.org>
+To: Gene Heskett <gene.heskett@gmail.com>
 Cc: Richard Heck <rgheck@bobjweil.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-On Monday 28 January 2008, Daniel Barkalow wrote:
->On Mon, 28 Jan 2008, Gene Heskett wrote:
->> On Monday 28 January 2008, Daniel Barkalow wrote:
->> >Building this and installing it along with the appropriate initrd (which
->> >might be handled by Fedora's install scripts)
->>
->> Or mine, which I've been using for years.
->
->You're ahead of a surprising number of people, including me, if you
->understand making initrds.
+On Mon, 28 Jan 2008, Gene Heskett wrote:
 
-In my script, its one line:
-mkinitrd -f initrd-$VER.img $VER && \
+> On Monday 28 January 2008, Daniel Barkalow wrote:
+> >On Mon, 28 Jan 2008, Gene Heskett wrote:
+> >> On Monday 28 January 2008, Daniel Barkalow wrote:
+> >> >Building this and installing it along with the appropriate initrd (which
+> >> >might be handled by Fedora's install scripts)
+> >>
+> >> Or mine, which I've been using for years.
+> >
+> >You're ahead of a surprising number of people, including me, if you
+> >understand making initrds.
+> 
+> In my script, its one line:
+> mkinitrd -f initrd-$VER.img $VER && \
+> 
+> where $VER is the shell variable I edit to = the version number, located at 
+> the top of the script.
+> 
+> Unforch, its failing:
+> No module pata_amd found for kernel 2.6.24, aborting.
+> 
+> This is with pata_amd turned off and its counterpart under ATA/RLL/etc turned 
+> on.  So something is still dependent on it. 
 
-where $VER is the shell variable I edit to = the version number, located at 
-the top of the script.
+That looks like something in the guts of the initrd; it probably thinks 
+you need pata_amd and it's unhappy that you don't have it.
 
-Unforch, its failing:
-No module pata_amd found for kernel 2.6.24, aborting.
+Actually, another thing to try is making the ATA/etc one be "y" and 
+pata_amd be "m". Most likely, this should lead to the ATA one claiming the 
+drive before the module is loaded (but the module would be loaded later, 
+to avoid upsetting the initrd); you should be able to tell from dmesg (or 
+/dev, for that matter) which one got it, and I think built-in drivers will 
+claim everything they can before an initrd gets loaded.
 
-This is with pata_amd turned off and its counterpart under ATA/RLL/etc turned 
-on.  So something is still dependent on it.  I do have one sata drive, on an 
-accessory card in the box, so I need the rest of the sata_sil and friends 
-stuff.  Its my virtual tapes for amanda.  Also home built, the amanda 
-security model cannot be successfully bent into the shape of an rpm.  They 
-BTW are #2 on coverity's list of most secure software.
+> I do have one sata drive, on an accessory card in the box, so I need the 
+> rest of the sata_sil and friends stuff. 
 
-So I've rebuilt 2.6.24 as it originally was, and added the acpi timer line to 
-the 2.6.24-rc8 stanza's kernel argument list.  It will boot one or the other 
-when I next reboot.  Its been about 8 hours since the last error was logged, 
-which is totally weirdsville to this old fart.  Phase of the moon maybe?  The 
-visit to the sawbones to see about my heart?  They are going to fit me with a 
-30 day recorder tomorrow, my skip a beat problem is getting worse.  The sort 
-of stuff that goes with the 7nth decade I guess.  Officially, I'm wearing out 
-me, too much sugar, too many times nearly electrocuted=shingles yadda 
-yadda. :-)  Oh, and don't forget Arther, he moved in uninvited about 25 years 
-ago too.  Those people that talk about the golden years?  They're full of 
-excrement...
+Assuming it isn't picking up your hard drive, which it isn't, that 
+shouldn't matter.
 
->> >will either get you back to
->> >old IDE or will make your kernel panic on boot, depending on whether you
->> >got it right (so make sure you can still boot the kernel you're sure of
->> > or something from a boot disk). This will also cause your hard drives to
->> > show up as different device nodes, so if your boot process doesn't mount
->> > by disk uuid but by some other feature (and I don't know what Fedora
->> > does), you'll also need to change it to something either stable across
->> > access methods or which works for the one you're now using.
->>
->> It mounts by LABEL=.  All of it.
->
->That'll save a huge amount of hassle. So long as you manage to get the
->right drivers included and the wrong drivers not included, you should be
->pretty much set.
->
->> Fedora is not the only people having trouble,  name a distro, its probably
->> someplace in that 14,800 hit google returns.
->
->Yeah, but they each may need different instructions, particularly if
->they're not mounting by label in general, or not mounting the root
->partition by label. That was the big hassle going the opposite direction.
->And the procedure is 4 lines to describe to somebody who knows how to
->build and install a new kernel for the distro, which is much shorter than
->the explanation of how you generally build and install a kernel. A real
->howto would have to explain where to get the distro's kernel sources and
->default configuration, for example.
->
->	-Daniel
->*This .sig left intentionally blank*
-
-
-
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-Never drink from your finger bowl -- it contains only water.
+	-Daniel
+*This .sig left intentionally blank*
