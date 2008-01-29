@@ -1,32 +1,53 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: [Bugme-new] [Bug 9845] New: libata still broken for Pegasos on
- 2.6.24
-Date: Tue, 29 Jan 2008 17:01:28 -0500
-Message-ID: <479FA238.5080004@redhat.com>
-References: <bug-9845-10286@http.bugzilla.kernel.org/> <20080129134214.69b7b5bc.akpm@linux-foundation.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: DMA mapping on SCSI device?
+Date: Tue, 29 Jan 2008 14:09:52 -0800 (PST)
+Message-ID: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+References: <479E6E8C.2090501@shaw.ca>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50177 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969AbYA2WCM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2008 17:02:12 -0500
-In-Reply-To: <20080129134214.69b7b5bc.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <479E6E8C.2090501@shaw.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, bugme-daemon@bugzilla.kernel.org, morgoth6@gmail.com
 
-On 01/29/2008 04:42 PM, Andrew Morton wrote:
-> 
-> Gargh.  How does one go from
-> https://bugzilla.redhat.com/attachment.cgi?id=167747 back to the bug to
-> which it is attached?
-> 
+--- On Mon, 1/28/08, Robert Hancock <hancockr@shaw.ca> wrote:
+> The trick is that if an ATAPI device is connected, we (as
+> far as I'm 
+> aware) can't use ADMA mode, so we have to switch that
+> port into legacy 
+> mode.
 
-You can't do that because the attachments are plain text in view mode.
+Can you double check this with the HW architect of the
+HW DMA engine of the ASIC?
 
-There is a backlink to the bug in edit mode, though:
+> This means it's only capable of 32-bit DMA.
+> However the other port 
+> on the controller may be connected to a hard drive and
+> therefore still 
+> capable of 64-bit DMA.
 
-https://bugzilla.redhat.com/attachment.cgi?id=167747&action=edit
+If this is indeed the case as you've presented it here,
+it sounds like a HW shortcoming.  I cannot see how the device
+type (or protocol) dictate how the DMA engine operates.
+They live in two different domains.
+
+> The ideal solution would be to do mapping against a
+> different struct 
+> device for each port, so that we could maintain the proper
+> DMA mask for 
+> each of them at all times. However I'm not sure if
+> that's possible. The 
+> thought of using the SCSI struct device for DMA mapping was
+> brought up 
+> at one point.. any thoughts on that?
+
+The reason for this is that the object that a struct scsi_dev
+represents has nothing to do with HW DMA engines.
+
+It looks like your current solution is correct and
+x86_64's blk_queue_bounce_limit needs work.
+
+    Luben
+
