@@ -1,119 +1,71 @@
-From: Gene Heskett <gene.heskett@gmail.com>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 10:04:12 -0500
-Message-ID: <200801291004.12565.gene.heskett@gmail.com>
-References: <200801272122.21823.gene.heskett@gmail.com>
- <200801281413.21347.gene.heskett@gmail.com>
- <20080129074127.5699afcf.valdyn@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: DMA mapping on SCSI device?
+Date: Tue, 29 Jan 2008 10:33:50 -0500
+Message-ID: <1201620830.3069.5.camel@localhost.localdomain>
+References: <479E6E8C.2090501@shaw.ca>  <200801290528.00934.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vms173001pub.verizon.net ([206.46.173.1]:58700 "EHLO
-	vms173001pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754242AbYA2PFI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 10:05:08 -0500
-In-reply-to: <20080129074127.5699afcf.valdyn@gmail.com>
-Content-disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:58964 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754256AbYA2Pd6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 10:33:58 -0500
+In-Reply-To: <200801290528.00934.ak@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Florian Attenberger <valdyn@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Andi Kleen <ak@suse.de>
+Cc: Robert Hancock <hancockr@shaw.ca>, linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tuesday 29 January 2008, Florian Attenberger wrote:
->On Mon, 28 Jan 2008 14:13:21 -0500
->
->Gene Heskett <gene.heskett@gmail.com> wrote:
->> >> I had to reboot early this morning due to a freezeup, and I had a
->> >> bunch of these in the messages log:
->> >> ==============
->> >> Jan 27 19:42:11 coyote kernel: [42461.915961] ata1.00: exception Emask
->> >> 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen Jan 27 19:42:11 coyote kernel:
->> >> [42461.915973] ata1.00: cmd ca/00:08:b1:66:46/00:00:00:00:00/e8 tag 0
->> >> dma 4096 out Jan 27 19:42:11 coyote kernel: [42461.915974]          res
->> >> 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout) Jan 27 19:42:11
->> >> coyote kernel: [42461.915978] ata1.00: status: { DRDY } Jan 27 19:42:11
->> >> coyote kernel: [42461.916005] ata1: soft resetting link Jan 27 19:42:12
->> >> coyote kernel: [42462.078216] ata1.00: configured for UDMA/100 Jan 27
->> >> 19:42:12 coyote kernel: [42462.078232] ata1: EH complete
->> >> Jan 27 19:42:12 coyote kernel: [42462.090700] sd 0:0:0:0: [sda]
->> >> 390721968 512-byte hardware sectors (200050 MB) Jan 27 19:42:12 coyote
->> >> kernel: [42462.114230] sd 0:0:0:0: [sda] Write Protect is off Jan 27
->> >> 19:42:12 coyote kernel: [42462.115079] sd 0:0:0:0: [sda] Write cache:
->> >> enabled, read cache: enabled, doesn't support DPO or FUA
->> >> ===============
->
->I had this error too, or maybe only a similar one, and another, neither
->of which of i still have the error output laying around, so I'm posting both
->fixes, that i found here on lkml:
->1) disabling ncq like that:
->"echo 1 > /sys/block/sda/device/queue_depth"
 
-Interesting..
+On Tue, 2008-01-29 at 05:28 +0100, Andi Kleen wrote:
+> > The ideal solution would be to do mapping against a different struct
+> > device for each port, so that we could maintain the proper DMA mask for
+> > each of them at all times. However I'm not sure if that's possible.
+> 
+> I cannot imagine why it should be that difficult. The PCI subsystem
+> could over a pci_clone_device() or similar function.   For all complicated
+> purposes (sysfs etc)  the original device could be used, so it would
+> be hopefully not that difficult.
 
->2) this patch: libata_drain_fifo_on_stuck_drq_hsm.patch
->( applies to 2.6.24 too )
->
->Signed-off-by: Mark Lord <mlord@pobox.com>
->---
->
->--- old/drivers/ata/libata-sff.c	2007-09-28 09:29:22.000000000 -0400
->+++ linux/drivers/ata/libata-sff.c	2007-09-28 09:39:44.000000000 -0400
->@@ -420,6 +420,28 @@
-> 	ap->ops->irq_on(ap);
-> }
->
->+static void ata_drain_fifo(struct ata_port *ap, struct ata_queued_cmd *qc)
->+{
->+	u8 stat = ata_chk_status(ap);
->+	/*
->+	 * Try to clear stuck DRQ if necessary,
->+	 * by reading/discarding up to two sectors worth of data.
->+	 */
->+	if ((stat & ATA_DRQ) && (!qc || qc->dma_dir != DMA_TO_DEVICE)) {
->+		unsigned int i;
->+		unsigned int limit = qc ? qc->sect_size : ATA_SECT_SIZE;
->+
->+		printk(KERN_WARNING "Draining up to %u words from data FIFO.\n",
->+									limit);
->+		for (i = 0; i < limit ; ++i) {
->+			ioread16(ap->ioaddr.data_addr);
->+			if (!(ata_chk_status(ap) & ATA_DRQ))
->+				break;
->+		}
->+		printk(KERN_WARNING "Drained %u/%u words.\n", i, limit);
->+	}
->+}
->+
-> /**
->  *	ata_bmdma_drive_eh - Perform EH with given methods for BMDMA controller
->  *	@ap: port to handle error for
->@@ -476,7 +498,7 @@
-> 	}
->
-> 	ata_altstatus(ap);
->-	ata_chk_status(ap);
->+	ata_drain_fifo(ap, qc);
-> 	ap->ops->irq_clear(ap);
->
-> 	spin_unlock_irqrestore(ap->lock, flags);
->-
+I know it works for parisc ... all we care about for DMA mapping is the
+mask in the actual device and the location of the iommu.  For the
+latter, we just go up device->parent until we find it, so as long as
+manufactured devices are properly parented we have no problems with
+mapping them.
 
-This too.  Thanks Florian.  I'll keep these in mind as there may be more than 
-one cat in need of skinning here.
+The concern matthew has is this code in asm-generic/dma-mapping.h:
 
-See a couple of posts I made to lkml this morning for the investigation I'm 
-doing re the kernel argument 'acpi_use_timer_override', experimental builds 
-under way right now.
+static inline void *
+dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t
+*dma_handle,
+                   gfp_t flag)
+{
+        BUG_ON(dev->bus != &pci_bus_type);
 
-Does anyone know why my dvdwriter isn't being assigned a '/dev/sdx' number 
-when dmesg says its found ok at ata2.00?  I've turned on an option that says 
-something about using the bios for device access this build, but I'll be 
-surprised if that's it. :)
+        return pci_alloc_consistent(to_pci_dev(dev), size, dma_handle);
+}
 
--- 
-Cheers, Gene
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-Ah, sweet Springtime, when a young man lightly turns his fancy over!
+The manufactured devices wouldn't be PCI devices (otherwise they'd show
+up in PCI and cause all sorts of confusion), so any architectures which
+haven't converted to using the dma_ functions internally will BUG here.
+
+However, a quick audit shows that to be just m68k, v850 and sparc (not
+sparc64), so they're probably none the driver cares about.
+
+> The alternative would be to add a new family of PCI mapping
+> functions that take an explicit mask. Disadvantage would be changing 
+> all architectures, but on the other hand the interface could be phase
+> in one by one (and nF4 primarily only works on x86 anyways) 
+
+I suppose it would allow us to clean dma_mask and dma_coherent_mask out
+of the device structures ... on the other hand, the mask isn't simply
+what the device wants, it's also what the platform allows you to set, so
+it would have to be stored somewhere anyway.
+
+> I suspect the later would be a little cleaner, although they don't
+> make much difference.
+
+James
+
+
