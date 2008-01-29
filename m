@@ -1,50 +1,59 @@
-From: rgheck <rgheck@bobjweil.com>
-Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 13:28:25 -0500
-Message-ID: <479F7049.3080904@bobjweil.com>
-References: <200801272122.21823.gene.heskett@gmail.com>	<1201539043.31293.7.camel@zem>	<1201540830.6526.19.camel@localhost>	<200801281230.32910.gene.heskett@gmail.com>	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>	<479E1D9E.3000900@bobjweil.com> <20080129121201.2f727f5f@core> <479F5D29.1020705@bobjweil.com> <479F6C6B.7090505@rtr.ca>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] Palmchip BK3710 IDE driver
+Date: Tue, 29 Jan 2008 21:36:38 +0300
+Message-ID: <479F7236.40404@ru.mvista.com>
+References: <200801251512.09836.asalnikov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qmta09.emeryville.ca.mail.comcast.net ([76.96.30.96]:57160 "EHLO
-	QMTA09.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757050AbYA2Sfd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 13:35:33 -0500
-In-Reply-To: <479F6C6B.7090505@rtr.ca>
+Received: from gateway-1237.mvista.com ([63.81.120.155]:8454 "EHLO
+	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754739AbYA2Sfo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 13:35:44 -0500
+In-Reply-To: <200801251512.09836.asalnikov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Daniel Barkalow <barkalow@iabervon.org>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: Anton Salnikov <asalnikov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-Mark Lord wrote:
-> rgheck wrote:
->> Alan Cox wrote:
->>>> not one problem but lots---is sufficiently widespread that a Mini 
->>>> HOWTO, say, would be really welcome and, I'm guessing, widely used.
->>>>     
->>>
->>> We don't see very many libata problems at the distro level and they for
->>> the most part boil down to
->>>
->>> - sata_nv with >4GB of RAM, knowing being worked on, no old IDE driver
->>> anyway
->>>   
->> Is this >4GB or >=4GB? I've seen contradictory reports, and I've got 
->> 4GB.
-> ..
->
-> For all practical purposes, most memory over 3GB (or sometimes even 2GB)
-> on a 32-bit x86 system is treated as >4GB by the motherboard.
->
-> Because it's not the amount of *memory* that matters so much,
-> but rather the amount of *used address space*.  Video cards,
-> PCI devices, other motherboard resources etc.. can all subtract
-> from the available address space, leaving much less than 4GB
-> for your RAM.
+Hello.
 
-Right. So it looks like I do have this issue, though I haven't seen any 
-actual problems on 24. Is there a known workaround?
+Anton Salnikov wrote:
 
-rh
+> This is Palmchip BK3710 IDE controller support for kernel version 2.6.24.
+> The IDE controller logic supports PIO, multiword DMA and ultra-DMA modes.
+> Supports interface to compact Flash (CF) configured in True-IDE mode.
 
+> Signed-off-by: Anton Salnikov <asalnikov@ru.mvista.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Index: 2.6.24.ide/drivers/ide/arm/palm_bk3710.c
+> ===================================================================
+> --- /dev/null
+> +++ 2.6.24.ide/drivers/ide/arm/palm_bk3710.c
+
+> +static void palm_bk3710_setudmamode(u32 base, unsigned int dev,
+> +				    unsigned int mode)
+> +{
+> +	u8 tenv, trp, t0;
+> +	u32 val32;
+> +	u16 val16;
+> +
+> +	/* DMA Data Setup */
+> +	t0 = (palm_bk3710_udmatimings[mode].cycletime + ide_palm_clk - 1)
+> +			/ ide_palm_clk - 1;
+> +	tenv = (20 + ide_palm_clk - 1) / ide_palm_clk - 1;
+> +	trp = (palm_bk3710_udmatimings[mode].rptime + ide_palm_clk - 1)
+> +			/ ide_palm_clk - 1;
+> +
+> +	/* udmatim Register */
+> +	val16 = hwif_read16(base, BK3710_UDMATIM) & (dev ? 0xFF0F : 0xFFF0);
+> +	val16 |= (mode << (dev ? 4 : 0));
+
+    Needless parens all over the code like this...
+    Also, you could have made it either 2 (getting rid of |= operator) or 4 
+lines (read/write, &=, and |=).
+
+MBR, Sergei
