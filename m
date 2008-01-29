@@ -1,31 +1,29 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 5/8] ide: always set DMA masks in ide_pci_setup_ports()
-Date: Tue, 29 Jan 2008 23:02:50 +0300
-Message-ID: <479F866A.1030207@ru.mvista.com>
-References: <20080106170220.6861.4814.sendpatchset@localhost.localdomain> <20080106170255.6861.36960.sendpatchset@localhost.localdomain>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: Re: [PATCH 1/2 v2] sata_mv: Remove PCI dependency
+Date: Tue, 29 Jan 2008 22:17:57 +0200
+Message-ID: <c70ff3ad0801291217p4e966dceud26f272fe4623b7f@mail.gmail.com>
+References: <12016269901324-git-send-email-saeed.bishara@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.155]:8877 "EHLO
-	imap.sh.mvista.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753845AbYA2UB4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 15:01:56 -0500
-In-Reply-To: <20080106170255.6861.36960.sendpatchset@localhost.localdomain>
+Received: from wx-out-0506.google.com ([66.249.82.225]:26040 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbYA2USA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 15:18:00 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so1696608wxd.4
+        for <linux-ide@vger.kernel.org>; Tue, 29 Jan 2008 12:17:59 -0800 (PST)
+In-Reply-To: <12016269901324-git-send-email-saeed.bishara@gmail.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: saeed@marvell.com, htejun@gmail.com, Mark Lord <liml@rtr.ca>
 
-Hello.
+Hi Jeff,
+ I've the two patches ready and rebased on the version that you have
+in the master branch, specifically on the commit "libata: convert to
+chained sg".
+Do you prefer to get those rebased patches?
 
-Bartlomiej Zolnierkiewicz wrote:
-
-> Always set DMA masks in ide_pci_setup_ports() to make sure that the valid
-> masks for a host are set.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-
-Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-MBR, Sergei
+Saeed
