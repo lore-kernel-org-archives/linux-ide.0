@@ -1,39 +1,41 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 12:38:23 -0500 (EST)
-Message-ID: <alpine.LNX.1.00.0801291220540.13593@iabervon.org>
-References: <200801272122.21823.gene.heskett@gmail.com> <200801291132.41657.gene.heskett@gmail.com> <18335.22763.625990.528217@alkaid.it.uu.se> <200801291204.44671.gene.heskett@gmail.com>
+Date: Tue, 29 Jan 2008 17:40:08 +0000
+Message-ID: <20080129174008.0ef69d0a@core>
+References: <200801272122.21823.gene.heskett@gmail.com>
+	<1201539043.31293.7.camel@zem>
+	<1201540830.6526.19.camel@localhost>
+	<200801281230.32910.gene.heskett@gmail.com>
+	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>
+	<479E1D9E.3000900@bobjweil.com>
+	<20080129121201.2f727f5f@core>
+	<479F5D29.1020705@bobjweil.com>
+	<20080129171219.53a8efed@core>
+	<479F6149.4090304@bobjweil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:57478 "EHLO iabervon.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652AbYA2RiZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2008 12:38:25 -0500
-In-Reply-To: <200801291204.44671.gene.heskett@gmail.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57039 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754095AbYA2RoT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 12:44:19 -0500
+In-Reply-To: <479F6149.4090304@bobjweil.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gene Heskett <gene.heskett@gmail.com>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Richard Heck <rgheck@bobjweil.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
+To: rgheck <rgheck@bobjweil.com>
+Cc: Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-On Tue, 29 Jan 2008, Gene Heskett wrote:
 
-> >For starters, enable CONFIG_BLK_DEV_SR.
-> 
-> That could stand to be moved or renamed, it is well buried in the menu for the 
-> REAL scsi stuffs, which I don't have any of.  Enabled & building now.  
+> Don't know. Is there an easy way to find out?
 
-The "SCSI support type (disk, tape, CD-ROM)" section of that menu actually 
-applies to all ATA-command-set devices that don't use the old IDE code. 
-For example, usb-storage uses "SCSI disk" out of that section, and 
-I've only seen "Probe all LUNs on each SCSI device" be needed for a 
-particular USB card reader with two slots. At this point, most of the 
-things in the kernel that refer to SCSI probably should say "storage" (or 
-"ATA", really, but that would make the acronyms confusing).
+E820 map on boot shows you I think.
 
-Incidentally, you should be able to save debugging time for problems like 
-missing "sr" by building it as a module, which will build really quickly 
-and not require a reboot to test.
+> By the way, and on a totally different subject. I wonder if this:
+> MODULE_DESCRIPTION("low-level driver for AMD PATA IDE");
+> mightn't be changed to something like:
+> MODULE_DESCRIPTION("low-level driver for AMD and nVidia PATA IDE");
 
-	-Daniel
-*This .sig left intentionally blank*
+Fair point. I'll add that so people can find the early Nvidia stuff.
+
+Alan
