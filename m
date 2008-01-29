@@ -1,71 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: DMA mapping on SCSI device?
-Date: Tue, 29 Jan 2008 10:33:50 -0500
-Message-ID: <1201620830.3069.5.camel@localhost.localdomain>
-References: <479E6E8C.2090501@shaw.ca>  <200801290528.00934.ak@suse.de>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Make_bad_sector
+Date: Tue, 29 Jan 2008 10:39:21 -0500
+Message-ID: <87f94c370801290739t39640bf5w960576ae4b273156@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58964 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754256AbYA2Pd6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 10:33:58 -0500
-In-Reply-To: <200801290528.00934.ak@suse.de>
+Received: from hs-out-0708.google.com ([64.233.178.250]:30748 "EHLO
+	hs-out-2122.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757762AbYA2PjY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 10:39:24 -0500
+Received: by hs-out-2122.google.com with SMTP id 54so1985842hsz.5
+        for <linux-ide@vger.kernel.org>; Tue, 29 Jan 2008 07:39:23 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>, Philipp Thomas <pth@suse.de>
+Cc: Gene Heskett <gene.heskett@gmail.com>, Mikael Pettersson <mikpe@it.uu.se>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
+On Jan 28, 2008 3:43 PM, Mark Lord <lkml@rtr.ca> wrote:
+> Gene Heskett wrote:
+> > On Monday 28 January 2008, Mark Lord wrote:
+> >..
+> >> Another way is to use the "make_bad_sector" utility that
+> >> is included in the source tarball for hdparm-7.7, as follows:
+> >>
+> >>   make_bad_sector --readback /dev/sda 474507
+> >>
+> > Apparently not in the rpm, darnit.
+> ..
+>
+> That's okay.  It should still be in the SRPM source file.
+> And it's a tiny download from sourceforge.net:
+>
+> http://sourceforge.net/search/?type_of_search=soft&type_of_search=soft&words=hdparm
+>
+Mark,
 
-On Tue, 2008-01-29 at 05:28 +0100, Andi Kleen wrote:
-> > The ideal solution would be to do mapping against a different struct
-> > device for each port, so that we could maintain the proper DMA mask for
-> > each of them at all times. However I'm not sure if that's possible.
-> 
-> I cannot imagine why it should be that difficult. The PCI subsystem
-> could over a pci_clone_device() or similar function.   For all complicated
-> purposes (sysfs etc)  the original device could be used, so it would
-> be hopefully not that difficult.
+I asked on the SUSE list and was informed by Philipp Thomas of Novell
+(cc'ed) that the only mention of make_bad_sector in the hdparm-7.7
+source is in a todo list.
 
-I know it works for parisc ... all we care about for DMA mapping is the
-mask in the actual device and the location of the iommu.  For the
-latter, we just go up device->parent until we find it, so as long as
-manufactured devices are properly parented we have no problems with
-mapping them.
+Sounds like a useful tool, so I was hoping to encourage suse to
+include it with future releases.
 
-The concern matthew has is this code in asm-generic/dma-mapping.h:
+Thanks
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
 
-static inline void *
-dma_alloc_coherent(struct device *dev, size_t size, dma_addr_t
-*dma_handle,
-                   gfp_t flag)
-{
-        BUG_ON(dev->bus != &pci_bus_type);
-
-        return pci_alloc_consistent(to_pci_dev(dev), size, dma_handle);
-}
-
-The manufactured devices wouldn't be PCI devices (otherwise they'd show
-up in PCI and cause all sorts of confusion), so any architectures which
-haven't converted to using the dma_ functions internally will BUG here.
-
-However, a quick audit shows that to be just m68k, v850 and sparc (not
-sparc64), so they're probably none the driver cares about.
-
-> The alternative would be to add a new family of PCI mapping
-> functions that take an explicit mask. Disadvantage would be changing 
-> all architectures, but on the other hand the interface could be phase
-> in one by one (and nF4 primarily only works on x86 anyways) 
-
-I suppose it would allow us to clean dma_mask and dma_coherent_mask out
-of the device structures ... on the other hand, the mask isn't simply
-what the device wants, it's also what the platform allows you to set, so
-it would have to be stored somewhere anyway.
-
-> I suspect the later would be a little cleaner, although they don't
-> make much difference.
-
-James
-
-
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
