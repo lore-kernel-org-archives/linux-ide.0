@@ -1,90 +1,59 @@
-From: rgheck <rgheck@bobjweil.com>
-Subject: ATA Problems: Back in the Land of the Unhappy Camper
-Date: Tue, 29 Jan 2008 16:14:48 -0500
-Message-ID: <479F9748.5010301@bobjweil.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9845] New: libata still broken for Pegasos on
+ 2.6.24
+Date: Tue, 29 Jan 2008 13:42:14 -0800
+Message-ID: <20080129134214.69b7b5bc.akpm@linux-foundation.org>
+References: <bug-9845-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qmta09.westchester.pa.mail.comcast.net ([76.96.62.96]:57618
-	"EHLO QMTA09.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751865AbYA2VOu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 16:14:50 -0500
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:41891 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750987AbYA2VmZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 16:42:25 -0500
+In-Reply-To: <bug-9845-10286@http.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: bugme-daemon@bugzilla.kernel.org, morgoth6@gmail.com
 
+On Tue, 29 Jan 2008 12:56:37 -0800 (PST)
+bugme-daemon@bugzilla.kernel.org wrote:
 
-Well, it looks as if my problems weren't solved after all. I took out a 
-Plextor PX-W4012TA and re-installed me cherished Plextor PX-W1610A---the 
-latter burns at 1X, which produces glorious sounding CDs. Anyway, with 
-this change, my problems have re-appeared. See the dmesg excerpt below. 
-The short version is:
-    ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-Now, at the end, I get:
-    scsi scan: 96 byte inquiry failed.  Consider BLIST_INQUIRY_36 for 
-this device
-Is this worth trying? If so, how do I try it?
+> http://bugzilla.kernel.org/show_bug.cgi?id=9845
+> 
+>            Summary: libata still broken for Pegasos on 2.6.24
+>            Product: Platform Specific/Hardware
+>            Version: 2.5
+>      KernelVersion: 2.6.24
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PPC-32
+>         AssignedTo: platform_ppc-32@kernel-bugs.osdl.org
+>         ReportedBy: morgoth6@gmail.com
+> 
+> 
+> As 2.6.24 contains fix for pata_via on Pegasos I decide to give a try to this
+> version. Unfortunatly it seems it is still broken. Quick look on dmesg from
+> faulty boot shows both channels are configured to use IRQ 14 and this is not
+> correct in this case.
+> 
+> ....
+> ata1: PATA max UDMA/100 cmd 0x1000 ctl 0x100c bmdma 0x1020 irq 14^
+> ata2: PATA max UDMA/100 cmd 0x1010 ctl 0x101c bmdma 0x1028 irq 14^
+> ....
+> 
+> libata works fine on 2.6.23 when using patch
+> https://bugzilla.redhat.com/attachment.cgi?id=167747. Reported also
+> https://bugzilla.redhat.com/show_bug.cgi?id=430802
+> 
 
-It's possible, I suppose, that there's something wrong with this old 
-drive. I have another one, I believe, at work, so I'll bring it home and 
-see if it does better. But I wasn't having these sorts of problems 
-before upgrading to Fedora 8 and so libata, so I'm doubtful that's it.
-
-Anyway, thanks to everyone here for their patience and willingness to help.
-
-Richard
-
-=====
-
-pata_amd 0000:00:0d.0: version 0.3.10
-PCI: Setting latency timer of device 0000:00:0d.0 to 64
-scsi6 : pata_amd
-scsi7 : pata_amd
-ata7: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
-ata8: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15
-ata7.00: ATAPI: PLEXTOR CD-R   PX-W1610A, 1.05, max MWDMA2
-ata7.00: configured for MWDMA2
-ata8: port disabled. ignoring.
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata7.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
-         cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
-         res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata7.00: status: { DRDY }
-ata7: soft resetting link
-ata7.00: configured for MWDMA2
-ata7: EH complete
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata7.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
-         cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
-         res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata7.00: status: { DRDY }
-ata7: soft resetting link
-ata7.00: configured for MWDMA2
-ata7: EH complete
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata7.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
-         cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
-         res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata7.00: status: { DRDY }
-ata7: soft resetting link
-ata7.00: configured for MWDMA2
-ata7: EH complete
-ata7.00: limiting speed to MWDMA1:PIO4
-ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata7.00: cmd a0/01:00:00:60:00/00:00:00:00:00/a0 tag 0 dma 96 in
-         cdb 12 00 00 00 60 00 00 00  00 00 00 00 00 00 00 00
-         res 40/00:02:00:24:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-ata7.00: status: { DRDY }
-ata7: soft resetting link
-ata7.00: configured for MWDMA1
-ata7: EH complete
-scsi scan: 96 byte inquiry failed.  Consider BLIST_INQUIRY_36 for this 
-device
-scsi 6:0:0:0: CD-ROM            PLEXTOR  CD-R   PX-W1610A 1.05 PQ: 0 ANSI: 5
-
-etc
-etc
-
-and then it just plain won't work, at least to write....
+Gargh.  How does one go from
+https://bugzilla.redhat.com/attachment.cgi?id=167747 back to the bug to
+which it is attached?
 
