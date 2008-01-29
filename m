@@ -1,60 +1,45 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Problem with ata layer in 2.6.24
-Date: Tue, 29 Jan 2008 14:14:13 -0500 (EST)
-Message-ID: <alpine.LNX.1.00.0801291354240.13593@iabervon.org>
-References: <200801272122.21823.gene.heskett@gmail.com> <1201539043.31293.7.camel@zem> <1201540830.6526.19.camel@localhost> <200801281230.32910.gene.heskett@gmail.com> <alpine.LNX.1.00.0801281248190.13593@iabervon.org> <479E1D9E.3000900@bobjweil.com>
- <20080129121201.2f727f5f@core> <alpine.LNX.1.00.0801291202550.13593@iabervon.org> <20080129184613.16846ae5@core>
+Date: Tue, 29 Jan 2008 19:34:03 +0000
+Message-ID: <20080129193403.62fe95e8@core>
+References: <200801272122.21823.gene.heskett@gmail.com>
+	<1201539043.31293.7.camel@zem>
+	<1201540830.6526.19.camel@localhost>
+	<200801281230.32910.gene.heskett@gmail.com>
+	<alpine.LNX.1.00.0801281248190.13593@iabervon.org>
+	<479E1D9E.3000900@bobjweil.com>
+	<20080129121201.2f727f5f@core>
+	<alpine.LNX.1.00.0801291202550.13593@iabervon.org>
+	<20080129184613.16846ae5@core>
+	<alpine.LNX.1.00.0801291354240.13593@iabervon.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:35053 "EHLO iabervon.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933675AbYA2TOY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2008 14:14:24 -0500
-In-Reply-To: <20080129184613.16846ae5@core>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53302 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752839AbYA2Tii (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2008 14:38:38 -0500
+In-Reply-To: <alpine.LNX.1.00.0801291354240.13593@iabervon.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Daniel Barkalow <barkalow@iabervon.org>
 Cc: Richard Heck <rgheck@bobjweil.com>, Gene Heskett <gene.heskett@gmail.com>, Zan Lynx <zlynx@acm.org>, Calvin Walton <calvin.walton@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-On Tue, 29 Jan 2008, Alan Cox wrote:
+> I've seen a lot of verbosity out of SCSI messages, but I haven't seen a 
+> straightforward interpretation of the problem in there. It's all 
+> information useful for debugging, not information useful for system 
+> administration.
 
-> > The SCSI error reporting really ought to include a simple interpretation 
-> > of the error for end users ("The drive doesn't support this command" "A 
-> > sector's data got lost" "The drive timed out" "The drive failed" "The 
-> > drive is entirely gone"). There's too much similarity between the message 
-> > you get when you try a SMART test that doesn't apply to the drive and what 
-> > you get when the drive is broken.
-> 
-> That would be the SCSI verbose messages option. I think the Eric
-> Youngdale consortium added it about Linux 1.2. Nowdays its always built
-> that way.
+It tells you what is going on. Unfortunately that frequently requires
+some basic knowledge of how to interpret the error report. Drive
+interface behaviour simply doesn't boil down to a fault light on the
+dashboard or a "tighten the cable". For most common fault types you'll
+get errors most administrators should find meaningful - like "Media error"
 
-I've seen a lot of verbosity out of SCSI messages, but I haven't seen a 
-straightforward interpretation of the problem in there. It's all 
-information useful for debugging, not information useful for system 
-administration.
+> On the other hand, bringing the system down because a device is 
+> misbehaving is a poor idea. I've personally recovered most of the data off 
 
-> > And it's possible that the error recovery is suboptimal in some cases. It 
-> > seems to like resetting drives too much; perhaps if it keeps seeing the 
-> > same problem and resetting the drive, it should decide that the drive's 
-> > error reporting is just bad and just ignore that error like the old IDE 
-> > did (but, in this case, after saying what it's doing).
-> 
-> Nothing like casually praying the users data hasn't gone for a walk is
-> there. If we don't act on them the users don't report them until
-> something really bad occurs so that isn't an option.
+Hence we have RAID and SATA hotplug.
 
-On the other hand, bringing the system down because a device is 
-misbehaving is a poor idea. I've personally recovered most of the data off 
-of a dying drive because the system was willing to let me keep using the 
-drive anyway; IIRC, the drive didn't work at all after a reboot, so I 
-would have lost all the data instead of only a little had the system 
-insisted on a perfectly functioning drive in order to use it at all.
-
-There ought to be some middle ground between doing nothing until the 
-computer really breaks and breaking the computer before then, but that's 
-an issue not specific to libata.
-
-	-Daniel
-*This .sig left intentionally blank*
+Alan
