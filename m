@@ -1,61 +1,101 @@
-From: "Kuan Luo" <kluo@nvidia.com>
-Subject: RE: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
-Date: Tue, 29 Jan 2008 12:59:00 +0800
-Message-ID: <15F501D1A78BD343BE8F4D8DB854566B1BFE2AD4@hkemmail01.nvidia.com>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca> <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com> <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com> <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca> <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com> <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com> <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca> <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com> <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com> <478567D8.10601@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com> <478812C9.1000901@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com> <4797DF30.6050208@shaw.ca> <15F501D1A78BD343BE8F4D8DB854566B1BFE2ACA@hkemmail01.nvidia.com> <479E6A60
- .5070208@shaw.ca>
+From: Kasper Sandberg <lkml@metanurb.dk>
+Subject: Re: Problem with ata layer in 2.6.24
+Date: Tue, 29 Jan 2008 06:01:15 +0100
+Message-ID: <1201582875.12795.15.camel@localhost>
+References: <200801272122.21823.gene.heskett@gmail.com>
+	 <200801281135.14555.gene.heskett@gmail.com>
+	 <1201580616.12795.2.camel@localhost>
+	 <200801282349.11696.gene.heskett@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate03.nvidia.com ([216.228.112.145]:3628 "EHLO
-	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753445AbYA2E7K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 23:59:10 -0500
-In-Reply-To: <479E6A60.5070208@shaw.ca>
-Content-class: urn:content-classes:message
+Received: from pasmtpb.tele.dk ([80.160.77.98]:47386 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750738AbYA2FCN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2008 00:02:13 -0500
+In-Reply-To: <200801282349.11696.gene.heskett@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: Allen Martin <AMartin@nvidia.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
+To: Gene Heskett <gene.heskett@gmail.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ide Mailing list <linux-ide@vger.kernel.org>
 
-Robert wrote:
-> Kuan Luo wrote:
-> > Robert worte.
-> >> Kuan, does this patch (using the notifiers to see if the 
-> command is 
-> >> really done) still work if one port on the controller has 
-> >> ADMA disabled 
-> >> because it's in ATAPI mode? I seem to recall Allen Martin 
-> mentioning 
-> >> that notifiers wouldn't work in this case.
-> >>
-> > 
-> > I just tried the 2.6.24-rc7 sata_nv driver with one hd and  
-> one cdrom in
-> > the same controller. 
-> > I mkfs hd and mounted the cdrom and no error happened.
-> > 
-> > Allen,  is there anything about notifier that we should pay 
-> attention
-> > to?
-> 
-> Assuming not, then this patch should be applied..
-> 
-> 
+On Mon, 2008-01-28 at 23:49 -0500, Gene Heskett wrote:
+> On Monday 28 January 2008, Kasper Sandberg wrote:
+>  [...]
+<snip>
+> >
+> >I can invalidate this theory...
+> >i helped a guy on irc debug this problem, and he had ati. I tried having
+> >him stop using fglrx, and go to r300.. same problem, and same problem
+> >even with vesa.. :)
+> >
+> No Kasper, you are validating it, that it is not nvidia related, which is what 
+> I was also saying.
+yeah thats what i mean - i can invalidate the theory that all the
+affected boxes run nvidia.
 
-The patch should be applied.
-We use the notifier register  and there is nothing to do with our
-notifier register in atapi mode.
+> 
+> >also, i have this on my fileserver with .20, which doesent even run X,
+> >or module support in kernel :)
+> 
+> That far back?  Although ISTR I saw it happen once only when I was running 
+> 2.6.18-somethingorother.
 
-Allen wrote:
-I think that's one of the cases where memory notifiers don't work (one
-of the drives is not in ADMA mode either because it's ATAPI or it's in
-legacy mode).  There's no issue with the notifier registers though. 
------------------------------------------------------------------------------------
-This email message is for the sole use of the intended recipient(s) and may contain
-confidential information.  Any unauthorized review, use, disclosure or distribution
-is prohibited.  If you are not the intended recipient, please contact the sender by
-reply email and destroy all copies of the original message.
------------------------------------------------------------------------------------
+Yes im afraid so.. i will now provide some complete details, as i feel
+they are relevant.
+
+the thing is, i run 6x300gb disks, IDE, in raid5.
+
+i have both an onboard via ide controller, and then i bought a promise
+pdc 202 new thingie. i had problem however..
+
+after a bit of time, i would get DMA reset error thing, and it all
+kindof went NUTS. it was as if all data access were skewed, and as you
+might imagine, this made everything fail badly.
+
+i purchased an ITE based controller for the drives on the promise, but
+exactly the same thing happened.
+
+the errors i got was:
+hdf: dma_intr: bad DMA status (dma_stat=75)
+hdf: dma_intr: status=0x50 { DriveReady SeekComplete }
+ide: failed opcode was: unknown
+---
+
+i then found new hope, when i heard that libata provided much better
+error handling, so i upgraded to .20.
+
+this made my box usable.
+
+the error happens once or twice a day, the disk led will turn on
+constantly, and all IO freezes for about half a minute, where it returns
+PROPERLY(thank you libata!). as far as i can tell, the only side effect
+is that i get those messages like described here, and flooded with on
+google.
+
+to put some timeline perspective into this.
+i believe it was in 2005 i assembled the system, and when i realized it
+was faulty, on old ide driver, i stopped using it - that miht have been
+in beginning of 2006. then for almost a year i werent using it, hoping
+to somehow fix it, but in january 2007 i think it was, atleast in the
+very beginning of 2007, i hit upon the idea of trying libata, and ever
+since the system has been running 24/7 - doing these errors around 2
+times a day.
+
+i have multiple times reported my problems to lkml, but nothing has
+happened, i also tried to aproeach jgarzik direcly, but he was not
+interested.
+
+i really hope this can be solved now, its a huge problem
+
+my fileserver has an asus k8v motherboard, with via chipset (k8t880 i
+think it is, or something like it). currently using the promise
+controller again(strangely enough all the timeouts seems to happen here,
+and when the ITE was on, there, not the onboard one), in conjunction
+with the onboard via.
+
+
+> >> complaint.  Again, fix the nv driver so it will run my screen & I'll be
+<snip>
+
