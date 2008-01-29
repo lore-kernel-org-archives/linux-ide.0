@@ -1,51 +1,54 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: fixed a bug of adma in rhel4u5 with HDS7250SASUN500G.
-Date: Mon, 28 Jan 2008 17:50:56 -0600
-Message-ID: <479E6A60.5070208@shaw.ca>
-References: <4781F008.9070404@gmail.com> <4782422C.8020202@rtr.ca>
- <4782B73B.8080309@shaw.ca> <4782BC48.4000309@gmail.com>
- <4782C008.3030902@shaw.ca> <4782CB62.7040901@gmail.com>
- <4782CEF9.3040708@gmail.com> <4782DFFE.50301@shaw.ca>
- <4782E5A8.9010305@gmail.com> <4782E63E.1000606@gmail.com>
- <4782E78F.9050205@shaw.ca> <4782E912.1050204@gmail.com>
- <4783493A.7070800@gmail.com> <47838B57.8020407@shaw.ca>
- <47842A54.2060107@gmail.com> <47842ABA.2060605@gmail.com>
- <47844471.4070705@shaw.ca> <47845708.6060900@gmail.com>
- <478567D8.10601@shaw.ca>
- <15F501D1A78BD343BE8F4D8DB854566B1BFE2ABF@hkemmail01.nvidia.com>
- <478812C9.1000901@shaw.ca>
- <15F501D1A78BD343BE8F4D8DB854566B1BFE2AC0@hkemmail01.nvidia.com>
- <4797DF30.6050208@shaw.ca>
- <15F501D1A78BD343BE8F4D8DB854566B1BFE2ACA@hkemmail01.nvidia.com>
+Subject: DMA mapping on SCSI device?
+Date: Mon, 28 Jan 2008 18:08:44 -0600
+Message-ID: <479E6E8C.2090501@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:7701 "EHLO
-	pd2mo2so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbYA1XuF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 18:50:05 -0500
-In-reply-to: <15F501D1A78BD343BE8F4D8DB854566B1BFE2ACA@hkemmail01.nvidia.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:26213 "EHLO
+	pd3mo3so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbYA2AGs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2008 19:06:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kuan Luo <kluo@nvidia.com>
-Cc: Allen Martin <AMartin@nvidia.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jeff@garzik.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Peer Chen <pchen@nvidia.com>, linux-kernel <linux-kernel@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
+To: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Kuan Luo wrote:
-> Robert worte.
->> Kuan, does this patch (using the notifiers to see if the command is 
->> really done) still work if one port on the controller has 
->> ADMA disabled 
->> because it's in ATAPI mode? I seem to recall Allen Martin mentioning 
->> that notifiers wouldn't work in this case.
->>
-> 
-> I just tried the 2.6.24-rc7 sata_nv driver with one hd and  one cdrom in
-> the same controller. 
-> I mkfs hd and mounted the cdrom and no error happened.
-> 
-> Allen,  is there anything about notifier that we should pay attention
-> to?
+We've got a bit of a problem with the sata_nv driver that I'm trying to 
+figure out a decent solution to (hence all the lists CCed). This is the 
+situation:
 
-Assuming not, then this patch should be applied..
+The nForce4 ADMA hardware has 2 modes: legacy mode, where it acts like a 
+normal ATA controller with 32-bit DMA limits, and ADMA mode where it can 
+access all of 64-bit memory. Each PCI device has 2 SATA ports, and the 
+legacy/ADMA mode can be controlled independently on both of them.
 
+The trick is that if an ATAPI device is connected, we (as far as I'm 
+aware) can't use ADMA mode, so we have to switch that port into legacy 
+mode. This means it's only capable of 32-bit DMA. However the other port 
+on the controller may be connected to a hard drive and therefore still 
+capable of 64-bit DMA. (To make things more complicated, devices can be 
+hotplugged and so this can change dynamically.) Since the device that 
+libata is doing DMA mapping against is attached to the PCI device and 
+not the port, it creates a problem here. If we change the mask on one it 
+affects the other one as well.
+
+The original solution used by the driver was to leave the DMA mask at 
+64-bit and use blk_queue_bounce_limit to try to force the block layer 
+not to send any requests with DMA addresses over 4GB into the driver. 
+However it seems on x86_64 this doesn't work, since it pushes high 
+addresses through anyway and expects the IOMMU to take care of it (which 
+it doesn't because of the 64-bit mask).
+
+The last solution I tried was to set the DMA mask on both ports to 
+32-bit on slave_configure when an ATAPI device is connected. However, 
+this runs into complications as well. This is run on initialization and 
+when trying to set the other port into 32-bit DMA, it may not be 
+initialized yet. Plus, it forces the port with a hard drive on it into 
+32-bit DMA needlessly.
+
+The ideal solution would be to do mapping against a different struct 
+device for each port, so that we could maintain the proper DMA mask for 
+each of them at all times. However I'm not sure if that's possible. The 
+thought of using the SCSI struct device for DMA mapping was brought up 
+at one point.. any thoughts on that?
